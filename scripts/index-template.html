@@ -6,118 +6,263 @@
     <title>tools — jalulia</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --bg: #fafafa;
         --fg: #111;
         --muted: #888;
-        --hover: #f0f0f0;
-        --rule: #eaeaea;
+        --rule: rgba(0,0,0,0.12);
+        --hover-shift: 10px;
       }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #0c0c0c;
-          --fg: #f2f2f2;
-          --muted: #777;
-          --hover: #181818;
-          --rule: #1c1c1c;
-        }
-      }
+
       * { box-sizing: border-box; }
+
       html, body {
         margin: 0;
         padding: 0;
-        background: var(--bg);
+        min-height: 100vh;
         color: var(--fg);
-        font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
         font-feature-settings: 'ss01', 'cv11';
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        transition: background-color 0.4s ease;
       }
-      main {
-        max-width: 640px;
+
+      /* ── Layout ─────────────────────────────────────────── */
+      .page {
+        max-width: 880px;
         margin: 0 auto;
-        padding: 96px 32px 128px;
+        padding: 0 40px;
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
       }
+
+      /* ── Two-column structure ───────────────────────────── */
+      .col-layout {
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        gap: 0 48px;
+      }
+
+      /* ── Header ─────────────────────────────────────────── */
       header {
-        margin-bottom: 64px;
+        padding: 48px 0 40px;
+        border-bottom: 1px solid var(--rule);
+        margin-bottom: 0;
       }
-      header h1 {
-        margin: 0;
-        font-weight: 600;
-        font-size: 14px;
-        letter-spacing: -0.01em;
+
+      .header-inner {
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        gap: 0 48px;
+        align-items: end;
       }
-      header p {
-        margin: 8px 0 0;
-        font-size: 14px;
-        color: var(--muted);
+
+      .header-label {
+        font-size: 10px;
         font-weight: 400;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding-bottom: 4px;
       }
+
+      .header-right {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .tag {
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 400;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+        border: 1px solid var(--rule);
+        padding: 3px 8px;
+        align-self: flex-start;
+      }
+
+      h1 {
+        margin: 0;
+        font-weight: 300;
+        font-size: clamp(28px, 4vw, 40px);
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+        font-style: italic;
+      }
+
+      /* ── Tool list ──────────────────────────────────────── */
+      .list-section {
+        padding: 0;
+      }
+
       ul {
         list-style: none;
         margin: 0;
         padding: 0;
-        border-top: 1px solid var(--rule);
       }
+
       li {
         border-bottom: 1px solid var(--rule);
       }
+
       li a {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 120px 1fr auto;
+        gap: 0 48px;
         align-items: baseline;
-        column-gap: 24px;
-        padding: 20px 0 20px 0;
+        padding: 22px 0;
         text-decoration: none;
         color: var(--fg);
-        transition: background 120ms ease, padding 120ms ease;
+        transition: padding 150ms ease;
       }
+
       li a:hover {
-        background: var(--hover);
-        padding-left: 12px;
-        padding-right: 12px;
+        padding-left: var(--hover-shift);
+        padding-right: var(--hover-shift);
       }
-      .name {
-        font-weight: 500;
-        font-size: 16px;
-        letter-spacing: -0.01em;
-      }
-      .desc {
-        display: block;
-        grid-column: 1;
-        margin-top: 4px;
-        font-size: 13px;
+
+      .tool-index {
+        font-size: 11px;
         color: var(--muted);
         font-weight: 400;
+        font-variant-numeric: tabular-nums;
+        align-self: center;
       }
-      .date {
+
+      .tool-body {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .name {
+        font-size: 18px;
+        font-weight: 400;
+        letter-spacing: -0.01em;
+      }
+
+      .desc {
         font-size: 12px;
+        color: var(--muted);
+        font-weight: 300;
+      }
+
+      .date {
+        font-size: 11px;
         color: var(--muted);
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
+        align-self: center;
       }
+
+      /* ── Footer ─────────────────────────────────────────── */
       footer {
-        margin-top: 64px;
+        padding: 32px 0 40px;
+        border-top: 1px solid var(--rule);
+      }
+
+      .footer-inner {
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        gap: 0 48px;
+      }
+
+      footer a {
         font-size: 11px;
         color: var(--muted);
+        text-decoration: none;
+        letter-spacing: 0.02em;
       }
-      footer a { color: inherit; }
+
+      footer a:hover {
+        color: var(--fg);
+      }
+
+      /* ── Vertical rule accent ───────────────────────────── */
+      .v-rule {
+        position: fixed;
+        left: calc((100vw - 880px) / 2 + 40px + 120px + 24px);
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: var(--rule);
+        pointer-events: none;
+      }
+
+      @media (max-width: 680px) {
+        .page { padding: 0 24px; }
+        .header-inner,
+        .col-layout,
+        .footer-inner { grid-template-columns: 1fr; gap: 0; }
+        li a { grid-template-columns: 1fr auto; }
+        .tool-index { display: none; }
+        .v-rule { display: none; }
+        h1 { font-size: 28px; }
+      }
     </style>
   </head>
   <body>
-    <main>
+    <div class="v-rule"></div>
+    <div class="page">
       <header>
-        <h1>tools</h1>
-        <p>small browser things, in progress and shipped.</p>
+        <div class="header-inner">
+          <div class="header-label">jalulia</div>
+          <div class="header-right">
+            <span class="tag">browser tools</span>
+            <h1>tools</h1>
+          </div>
+        </div>
       </header>
-      <ul>
+
+      <main class="list-section">
+        <ul>
 <!-- TOOL_ROWS -->
-      </ul>
+        </ul>
+      </main>
+
       <footer>
-        <a href="https://github.com/jalulia/tools">github.com/jalulia/tools</a>
+        <div class="footer-inner">
+          <div></div>
+          <div>
+            <a href="https://github.com/jalulia/tools">github.com/jalulia/tools</a>
+          </div>
+        </div>
       </footer>
-    </main>
+    </div>
+
+    <script>
+      // 20 muted pastel backgrounds — cycles randomly on each load
+      const COLORS = [
+        '#dde8d8', // sage
+        '#ddd8f0', // lavender
+        '#f0ddd8', // blush
+        '#ede8cc', // warm yellow
+        '#ccdff0', // dusty blue
+        '#ece8dc', // warm sand
+        '#c8e4dc', // mint
+        '#f0e0cc', // peach
+        '#e0dce8', // lavender grey
+        '#f0d4d4', // dusty rose
+        '#f0ece4', // warm cream
+        '#d0dce8', // slate blue
+        '#e8d8e8', // pale mauve
+        '#f0ddd0', // terracotta light
+        '#d0e4e4', // pale aqua
+        '#e8e4dc', // warm grey
+        '#dcecd0', // light lime
+        '#f0d8e4', // dusty pink
+        '#ece0c0', // pale gold
+        '#d8ece4', // cool mint
+      ];
+      const bg = COLORS[Math.floor(Math.random() * COLORS.length)];
+      document.documentElement.style.background = bg;
+      document.body.style.background = bg;
+    </script>
   </body>
 </html>

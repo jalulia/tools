@@ -19,9 +19,12 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
-const TOOLS_DIR = join(ROOT, 'tools');
 const SITE_DIR = join(ROOT, '_site');
 const TEMPLATE = join(__dirname, 'index-template.html');
+
+// Tools live directly at the repo root as subfolders (e.g. meshviz/, halftone/).
+// We skip well-known non-tool dirs.
+const SKIP_DIRS = new Set(['.git', '.github', 'node_modules', 'scripts', '_site', 'dist', '.vite']);
 
 function sh(cmd, opts = {}) {
   return execSync(cmd, { stdio: 'inherit', ...opts });
@@ -31,17 +34,17 @@ function shOut(cmd, opts = {}) {
 }
 
 function discoverTools() {
-  if (!existsSync(TOOLS_DIR)) return [];
-  return readdirSync(TOOLS_DIR)
+  return readdirSync(ROOT)
     .filter((name) => {
-      const p = join(TOOLS_DIR, name);
+      if (SKIP_DIRS.has(name) || name.startsWith('.')) return false;
+      const p = join(ROOT, name);
       return statSync(p).isDirectory() && existsSync(join(p, 'package.json'));
     })
     .sort();
 }
 
 function readMeta(name) {
-  const metaPath = join(TOOLS_DIR, name, 'tool.json');
+  const metaPath = join(ROOT, name, 'tool.json');
   let meta = { title: name, description: '', status: 'active', hidden: false };
   if (existsSync(metaPath)) {
     try {
@@ -74,7 +77,7 @@ function formatDate(iso) {
 }
 
 function buildTool(name) {
-  const cwd = join(TOOLS_DIR, name);
+  const cwd = join(ROOT, name);
   console.log(`\n── building ${name} ──`);
   // Prefer npm ci for reproducibility; fall back to install.
   if (existsSync(join(cwd, 'package-lock.json'))) {
@@ -98,15 +101,19 @@ function renderIndex(tools) {
   visible.sort((a, b) => (b.lastTouched || '').localeCompare(a.lastTouched || ''));
 
   const rows = visible
-    .map((t) => {
+    .map((t, i) => {
       const title = escapeHtml(t.meta.title || t.name);
       const desc = t.meta.description ? `<span class="desc">${escapeHtml(t.meta.description)}</span>` : '';
       const date = formatDate(t.lastTouched);
-      // Status is intentionally embedded as a data attribute only — not rendered yet.
+      const index = String(i + 1).padStart(2, '0');
+      // Status is embedded as a data attribute only — not rendered yet.
       return `      <li data-status="${escapeHtml(t.meta.status || 'active')}">
         <a href="./${encodeURIComponent(t.name)}/">
-          <span class="name">${title}</span>
-          ${desc}
+          <span class="tool-index">${index}</span>
+          <span class="tool-body">
+            <span class="name">${title}</span>
+            ${desc}
+          </span>
           <span class="date">${date}</span>
         </a>
       </li>`;
