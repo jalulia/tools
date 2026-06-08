@@ -38,14 +38,14 @@ function discoverTools() {
     .filter((name) => {
       if (SKIP_DIRS.has(name) || name.startsWith('.')) return false;
       const p = join(ROOT, name);
-      return statSync(p).isDirectory() && existsSync(join(p, 'package.json'));
+      return statSync(p).isDirectory() && (existsSync(join(p, 'package.json')) || existsSync(join(p, 'index.html')));
     })
     .sort();
 }
 
 function readMeta(name) {
   const metaPath = join(ROOT, name, 'tool.json');
-  let meta = { title: name, description: '', status: 'active', hidden: false };
+  let meta = { title: name, description: '', status: 'active', hidden: false, section: null };
   if (existsSync(metaPath)) {
     try {
       meta = { ...meta, ...JSON.parse(readFileSync(metaPath, 'utf8')) };
@@ -59,7 +59,8 @@ function readMeta(name) {
 function lastTouched(name) {
   // ISO date of the most recent commit that touched this tool's folder.
   try {
-    const date = shOut(`git log -1 --format=%cs -- tools/${name}`, { cwd: ROOT });
+    let date = shOut(`git log -1 --format=%cs -- ${name}`, { cwd: ROOT });
+    if (!date) date = shOut(`git log -1 --format=%cs -- tools/${name}`, { cwd: ROOT });
     return date || null;
   } catch {
     return null;
@@ -94,20 +95,55 @@ function buildTool(name) {
   cpSync(dist, out, { recursive: true });
 }
 
+// Static tools: a folder with index.html and no build step. Copy as-is.
+function copyStaticTool(name) {
+  const cwd = join(ROOT, name);
+  console.log(`\n── copying static ${name} ──`);
+  const out = join(SITE_DIR, name);
+  cpSync(cwd, out, {
+    recursive: true,
+    filter: (src) => {
+      const base = src.split('/').pop();
+      return !['tool.json', 'package.json', 'node_modules', '.git', 'dist', '_site'].includes(base);
+    },
+  });
+}
+
 function renderIndex(tools) {
   const template = readFileSync(TEMPLATE, 'utf8');
-  // Sort: most recently touched first.
   const visible = tools.filter((t) => !t.meta.hidden);
-  visible.sort((a, b) => (b.lastTouched || '').localeCompare(a.lastTouched || ''));
 
-  const rows = visible
-    .map((t, i) => {
+  // Group by section. Empty/missing section = ungrouped (rendered first, no header).
+  const groups = new Map();
+  for (const t of visible) {
+    const key = (t.meta.section || '').trim();
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(t);
+  }
+  // Most-recently-touched first within each group.
+  for (const arr of groups.values()) {
+    arr.sort((a, b) => (b.lastTouched || '').localeCompare(a.lastTouched || ''));
+  }
+  // Ungrouped pinned first; named sections ordered by their most recent tool.
+  const keys = [...groups.keys()].sort((a, b) => {
+    if (a === '') return -1;
+    if (b === '') return 1;
+    return (groups.get(b)[0]?.lastTouched || '').localeCompare(groups.get(a)[0]?.lastTouched || '');
+  });
+
+  const blocks = [];
+  for (const key of keys) {
+    if (key) {
+      blocks.push(
+        `      <li class="sec-row"><div class="sec-inner"><span class="sec-label">${escapeHtml(key)}</span><span></span></div></li>`
+      );
+    }
+    groups.get(key).forEach((t, i) => {
       const title = escapeHtml(t.meta.title || t.name);
       const desc = t.meta.description ? `<span class="desc">${escapeHtml(t.meta.description)}</span>` : '';
       const date = formatDate(t.lastTouched);
       const index = String(i + 1).padStart(2, '0');
-      // Status is embedded as a data attribute only — not rendered yet.
-      return `      <li data-status="${escapeHtml(t.meta.status || 'active')}">
+      blocks.push(`      <li data-status="${escapeHtml(t.meta.status || 'active')}">
         <a href="./${encodeURIComponent(t.name)}/">
           <span class="tool-index">${index}</span>
           <span class="tool-body">
@@ -116,11 +152,11 @@ function renderIndex(tools) {
           </span>
           <span class="date">${date}</span>
         </a>
-      </li>`;
-    })
-    .join('\n');
+      </li>`);
+    });
+  }
 
-  const html = template.replace('<!-- TOOL_ROWS -->', rows);
+  const html = template.replace('<!-- TOOL_ROWS -->', blocks.join('\n'));
   writeFileSync(join(SITE_DIR, 'index.html'), html);
 }
 
@@ -137,7 +173,9 @@ function main() {
 
   const tools = [];
   for (const name of names) {
-    buildTool(name);
+    const isStatic = !existsSync(join(ROOT, name, 'package.json'));
+    if (isStatic) copyStaticTool(name);
+    else buildTool(name);
     tools.push({ name, meta: readMeta(name), lastTouched: lastTouched(name) });
   }
 
