@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ki · Landscape Atelier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Sans+JP:wght@500&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f6f2; --panel:#fbfaf7; --sub:#f1f0ea; --hair:#e4e1d7; --hair2:#eeece4;
+  --ink:#0a0908; --ink2:#565553; --ink3:#9a978e; --gold:#b88a59; --gold2:#f4ead9;
+  --black:#0d0d0d; --cola:#c0434a;
+  --sans:"Schibsted Grotesk",system-ui,sans-serif;
+  --jp:"Noto Sans JP",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);overflow:hidden;
+  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;font-size:14px}
+::selection{background:var(--gold2)}
+
+#app{display:grid;grid-template-columns:232px 1fr;grid-template-rows:53px 1fr;height:100vh}
+
+/* header */
+header{grid-column:1/3;display:flex;align-items:center;gap:14px;padding:0 18px;
+  border-bottom:1px solid var(--hair);background:var(--panel)}
+.kimark{width:30px;height:30px;background:var(--black);display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;position:relative}
+.kimark b{color:#fff;font-weight:800;font-size:13px}
+.kimark i{position:absolute;top:2px;right:3px;color:var(--cola);font-family:var(--jp);font-size:7px;font-style:normal}
+.htitle h1{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.htitle .eye{font-family:var(--jp);font-size:9.5px;color:var(--gold);letter-spacing:.12em;margin-top:1px}
+header .sp{flex:1}
+.hbtn{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--ink2);background:var(--bg);border:1px solid var(--hair);padding:7px 12px;
+  cursor:pointer;transition:.13s;display:flex;align-items:center;gap:7px}
+.hbtn:hover{border-color:var(--ink3);color:var(--ink)}
+.hbtn.go{background:var(--ink);color:#fff;border-color:var(--ink)}
+.hbtn.go:hover{background:#000}
+
+/* nav */
+nav{background:var(--panel);border-right:1px solid var(--hair);overflow-y:auto;padding:10px 0 40px}
+nav .grp{padding:15px 20px 5px;font-family:var(--jp);font-size:10px;letter-spacing:.1em;color:var(--gold);font-weight:500}
+nav .item{display:flex;align-items:baseline;gap:10px;padding:7px 20px;cursor:pointer;
+  border-left:2px solid transparent;transition:.12s}
+nav .item:hover{background:var(--sub)}
+nav .item .n{font-family:var(--mono);font-size:10px;color:var(--ink3);width:16px;flex:none}
+nav .item .t{font-size:12.5px;color:var(--ink2);transition:.12s}
+nav .item:hover .t{color:var(--ink)}
+nav .item.on{border-left-color:var(--gold);background:var(--gold2)}
+nav .item.on .t{color:var(--ink);font-weight:600}
+nav .item.on .n{color:var(--gold)}
+
+/* main */
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);overflow:hidden}
+.left{display:flex;flex-direction:column;border-right:1px solid var(--hair);overflow:hidden}
+.right{display:flex;flex-direction:column;overflow:hidden}
+
+/* canvas stage */
+.stage{flex:none;padding:18px 18px 12px;background:var(--bg)}
+.canvaswrap{position:relative;border:1px solid var(--hair);background:#fff;aspect-ratio:16/9;overflow:hidden}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.meta{display:flex;justify-content:space-between;margin-top:9px;font-family:var(--mono);
+  font-size:10px;letter-spacing:.03em;color:var(--ink3)}
+.meta b{color:var(--ink2);font-weight:500}
+.meta .stat{color:#5b8c5e}.meta .stat.err{color:var(--cola)}
+
+/* controls */
+.controls{flex:1;overflow-y:auto;padding:6px 20px 30px;border-top:1px solid var(--hair)}
+.controls .lab{font-family:var(--jp);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink3);margin:14px 0 12px;font-weight:500}
+.ctrl{margin-bottom:14px}
+.ctrl .lr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
+.ctrl label{font-size:12px;font-weight:500;color:var(--ink)}
+.ctrl .val{font-family:var(--mono);font-size:11px;color:var(--gold);font-weight:500}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:1px;background:var(--hair);
+  outline:none;cursor:pointer;margin:8px 0 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+  background:var(--ink);box-shadow:0 0 0 3px var(--panel);transition:.12s}
+input[type=range]::-webkit-slider-thumb:hover{background:var(--gold);transform:scale(1.14)}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border:none;border-radius:50%;background:var(--ink)}
+.pills{display:flex;flex-wrap:wrap;gap:5px}
+.pills button{font-family:var(--mono);font-size:10px;letter-spacing:.03em;text-transform:uppercase;
+  color:var(--ink2);background:var(--bg);border:1px solid var(--hair);padding:7px 10px;cursor:pointer;transition:.12s}
+.pills button:hover{border-color:var(--ink3)}
+.pills button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* reading */
+.read{flex:none;height:40%;overflow-y:auto;padding:20px 22px;border-bottom:1px solid var(--hair)}
+.read .num{font-family:var(--jp);font-size:10px;letter-spacing:.12em;color:var(--gold);text-transform:uppercase}
+.read h2{font-size:19px;font-weight:700;letter-spacing:-.01em;margin:4px 0 12px}
+.read p{color:var(--ink2);font-size:13px;line-height:1.6;margin-bottom:10px}
+.read code{font-family:var(--mono);font-size:11.5px;background:var(--sub);padding:1px 5px;color:#8a5a2a}
+.read .tip{border-left:2px solid var(--gold);background:var(--gold2);padding:9px 13px;margin-top:14px}
+.read .tip .l{font-family:var(--jp);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:4px;font-weight:500}
+.read .tip p{margin:0;color:var(--ink2);font-size:12.5px}
+
+/* editor */
+.edhead{display:flex;align-items:center;gap:10px;height:38px;padding:0 14px;flex:none;
+  border-bottom:1px solid var(--hair);background:var(--panel)}
+.edhead .file{font-family:var(--mono);font-size:11px;color:var(--ink2)}
+.edhead .file .x{color:var(--ink3)}
+.edhead .sp{flex:1}
+.minibtn{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--ink2);background:var(--bg);border:1px solid var(--hair);padding:4px 9px;cursor:pointer}
+.minibtn:hover{color:var(--gold);border-color:var(--gold)}
+.editorwrap{flex:1;display:flex;overflow:hidden;background:var(--panel)}
+.lines{flex:none;min-width:42px;text-align:right;padding:13px 0;font-family:var(--mono);font-size:12px;
+  line-height:1.55;color:var(--ink3);background:var(--sub);border-right:1px solid var(--hair);overflow:hidden}
+.lines div{padding:0 11px 0 12px}
+.code{flex:1;position:relative;overflow:hidden}
+#hl,#ta{margin:0;padding:13px 15px;font-family:var(--mono);font-size:12px;line-height:1.55;
+  white-space:pre;tab-size:2;-moz-tab-size:2;border:0}
+#hl{position:absolute;top:0;left:0;min-width:100%;color:var(--ink);pointer-events:none}
+#ta{position:absolute;inset:0;width:100%;height:100%;overflow:auto;background:transparent;color:transparent;
+  caret-color:var(--gold);resize:none;outline:none;-webkit-text-fill-color:transparent}
+.t-key{color:#a85d2a}.t-num{color:#b03f5a}.t-str{color:#5a7d48}.t-com{color:var(--ink3);font-style:italic}
+.t-fn{color:#3f6f8c}.t-punc{color:#6a665d}.t-lib{color:#8a5a2a}
+.console{flex:none;max-height:28%;overflow-y:auto;padding:8px 14px;border-top:1px solid var(--hair);
+  background:#fbeeec;font-family:var(--mono);font-size:11px;line-height:1.5;color:var(--cola);white-space:pre-wrap;display:none}
+.console.show{display:block}
+
+*::-webkit-scrollbar{width:9px;height:9px}
+*::-webkit-scrollbar-thumb{background:var(--hair);border-radius:5px;border:2px solid var(--panel)}
+
+@media(max-width:900px){
+  #app{grid-template-columns:1fr;grid-template-rows:53px auto 1fr}
+  nav{display:none}
+  main{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .left{border-right:0;border-bottom:1px solid var(--hair)}
+  .read{height:auto;max-height:220px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="kimark"><b>K</b><i>気</i></div>
+    <div class="htitle">
+      <h1>Landscape Atelier</h1>
+      <div class="eye">生成 · field guide</div>
+    </div>
+    <div class="sp"></div>
+    <button class="hbtn" id="rerollBtn">↻ Reroll</button>
+    <button class="hbtn go" id="runBtn">▶ Run</button>
+  </header>
+
+  <nav id="nav"></nav>
+
+  <main>
+    <div class="left">
+      <div class="stage">
+        <div class="canvaswrap"><canvas id="cv"></canvas></div>
+        <div class="meta"><span id="mLeft">—</span><span class="stat" id="mStat">ready</span></div>
+      </div>
+      <div class="controls"><div class="lab">Parameters — drag to explore</div><div id="ctrls"></div></div>
+    </div>
+
+    <div class="right">
+      <div class="read" id="read"></div>
+      <div class="edhead">
+        <span class="file">lesson<span class="x">.js</span></span>
+        <span class="sp"></span>
+        <button class="minibtn" id="resetBtn">Reset code</button>
+      </div>
+      <div class="editorwrap">
+        <div class="lines" id="lines"></div>
+        <div class="code" id="codeScroll"><pre id="hl"></pre><textarea id="ta" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea></div>
+      </div>
+      <div class="console" id="console"></div>
+    </div>
+  </main>
+</div>
+<script>
+/* ============================================================
+   LIB — the real Ki primitives, ported from the visualizer.
+   Lessons reimplement the concept being taught inline, and lean
+   on LIB for primitives already covered earlier in the guide.
+   ============================================================ */
+const LIB=(function(){
+  const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  function smooth(a,b,x){if(a===b)return x<a?0:1;const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);}
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+  function makeNoise(seed,nodes){const r=mulberry32(seed);const a=new Array(nodes);for(let i=0;i<nodes;i++)a[i]=r()*2-1;
+    return x=>{const i=Math.floor(x),f=x-i;const a0=a[((i%nodes)+nodes)%nodes],a1=a[(((i+1)%nodes)+nodes)%nodes];const u=f*f*f*(f*(f*6-15)+10);return a0+(a1-a0)*u;};}
+  function fbm1D(seed,nodes,octaves,persist){const octs=[];let n=nodes,amp=1,sum=0;
+    for(let o=0;o<octaves;o++){octs.push({fn:makeNoise(seed+o*317,n),n,amp});sum+=amp;n=Math.min(256,n*2);amp*=persist;}
+    return u=>{let v=0;for(const o of octs)v+=o.fn(u*o.n)*o.amp;return v/sum;};}
+  const s2l=x=>{x/=255;return x<=0.04045?x/12.92:((x+0.055)/1.055)**2.4;};
+  function rgbToOklch(r,g,b){r=s2l(r);g=s2l(g);b=s2l(b);
+    let l=Math.cbrt(0.4122214708*r+0.5363325363*g+0.0514459929*b),m=Math.cbrt(0.2119034982*r+0.6806995451*g+0.1073969566*b),s=Math.cbrt(0.0883024619*r+0.2817188376*g+0.6299787005*b);
+    let L=0.2104542553*l+0.7936177850*m-0.0040720468*s,A=1.9779984951*l-2.4285922050*m+0.4505937099*s,B=0.0259040371*l+0.7827717662*m-0.8086757660*s;
+    return {L,C:Math.hypot(A,B),H:(Math.atan2(B,A)*180/Math.PI+360)%360};}
+  function oklabToRgb(L,a,b){let l=(L+0.3963377774*a+0.2158037573*b)**3,m=(L-0.1055613458*a-0.0638541728*b)**3,s=(L-0.0894841775*a-1.2914855480*b)**3;
+    let r=4.0767416621*l-3.3077115913*m+0.2309699292*s,g=-1.2684380046*l+2.6097574011*m-0.3413193965*s,bl=-0.0041960863*l-0.7034186147*m+1.7076147010*s;
+    const f=x=>{x=clamp(x,0,1);return Math.round((x<=0.0031308?12.92*x:1.055*x**(1/2.4)-0.055)*255);};return [f(r),f(g),f(bl)];}
+  const okToLab=ok=>({L:ok.L,a:ok.C*Math.cos(ok.H*Math.PI/180),b:ok.C*Math.sin(ok.H*Math.PI/180)});
+  const lerpLab=(p,q,t)=>({L:lerp(p.L,q.L,t),a:lerp(p.a,q.a,t),b:lerp(p.b,q.b,t)});
+  const labStr=l=>'rgb('+oklabToRgb(l.L,l.a,l.b).join(',')+')';
+  const hex2rgb=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+  const BIOMES={
+    maple:{label:'Maple Coffee',hex:['#B98448','#8E5320','#633203','#381B00']},
+    hokkaido:{label:'Hokkaido Mint',hex:['#E5F1DC','#8DCAA7','#2A624F','#072538']},
+    yuzu:{label:'Yuzu Mint',hex:['#B7C055','#7C9D3D','#336832','#212A15']},
+    cola:{label:'Tokyo Cola',hex:['#E33D41','#C82033','#5A0D20','#270F14']},
+    satsuma:{label:'Satsuma Citrus',hex:['#FCD10A','#F7932C','#ED722D','#3E1B12']}};
+  for(const k in BIOMES)BIOMES[k].labs=BIOMES[k].hex.map(h=>okToLab(rgbToOklch(...hex2rgb(h))));
+  function biomeLab(labs,t){const n=labs.length-1,i=Math.min(n-1,Math.floor(t*n)),u=t*n-i;return lerpLab(labs[i],labs[i+1],u);}
+  const skyTopLab=okToLab(rgbToOklch(0xF8,0xF7,0xF4)), skyHorLab=okToLab(rgbToOklch(0xF5,0xF1,0xEB));
+  let _grain=null;
+  function grainTile(){if(_grain)return _grain;const size=256;
+    function nl(cells,seed){const r=mulberry32(seed),g=new Float32Array(cells*cells);for(let i=0;i<g.length;i++)g[i]=r();
+      return (x,y)=>{const fx=x/size*cells,fy=y/size*cells,xi=Math.floor(fx),yi=Math.floor(fy),x0=((xi%cells)+cells)%cells,y0=((yi%cells)+cells)%cells,x1=(x0+1)%cells,y1=(y0+1)%cells;
+        let tx=fx-xi,ty=fy-yi;tx=tx*tx*(3-2*tx);ty=ty*ty*(3-2*ty);
+        const a=g[y0*cells+x0],b=g[y0*cells+x1],c=g[y1*cells+x0],d=g[y1*cells+x1];return (a*(1-tx)+b*tx)*(1-ty)+(c*(1-tx)+d*tx)*ty;};}
+    const fns=[{f:nl(80,7),amp:1},{f:nl(160,21),amp:.55}];
+    const c=document.createElement('canvas');c.width=c.height=size;const cx=c.getContext('2d'),id=cx.createImageData(size,size);
+    for(let y=0;y<size;y++)for(let x=0;x<size;x++){let v=0,s=0;for(const L of fns){v+=L.f(x,y)*L.amp;s+=L.amp;}v/=s;
+      const g2=clamp(128+(v-0.5)*90,0,255),i=(y*size+x)*4;id.data[i]=id.data[i+1]=id.data[i+2]=g2;id.data[i+3]=255;}
+    cx.putImageData(id,0,0);_grain=c;return c;}
+  return {lerp,clamp,smooth,mulberry32,makeNoise,fbm1D,rgbToOklch,oklabToRgb,okToLab,lerpLab,labStr,hex2rgb,biomes:BIOMES,biomeLab,skyTopLab,skyHorLab,grainTile};
+})();
+
+/* ============================================================
+   LESSONS
+   ============================================================ */
+const MODULES=[
+{grp:"Foundations", n:"01", title:"A seed, repeatable",
+ blurb:`<p>Every Ki landscape begins with one integer: the <b>seed</b>. A pseudo-random generator turns it into an endless stream of numbers — and crucially, the <em>same</em> seed always yields the <em>same</em> stream. That's why "reroll" gives a fresh world you can return to exactly.</p><p>This is <code>mulberry32</code>, the exact generator the visualizer uses.</p>
+ <div class="tip"><span class="l">Try it</span><p>Drag <code>seed</code> — the whole field reshuffles, but each value is reproducible. Edit the code: feed <code>rand()</code> into color or width too.</p></div>`,
+ params:[{key:"seed",label:"seed",type:"range",min:1,max:9999,step:1,def:2471},
+         {key:"bars",label:"count",type:"range",min:8,max:72,step:1,def:32}],
+ code:`// A seed in, a deterministic stream of numbers out.
+// Same seed -> same numbers, every single time.
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;   // 0..1
+  };
+}
+
+const rand = mulberry32(p.seed);
+const n = p.bars, bw = W / n;
+
+ctx.fillStyle = 'rgb(247,246,242)'; ctx.fillRect(0, 0, W, H);
+for (let i = 0; i < n; i++){
+  const r = rand();                 // next number in the stream
+  const h = r * H * 0.82;
+  ctx.fillStyle = 'rgb(13,13,13)';
+  ctx.fillRect(i * bw + bw * 0.16, H - h, bw * 0.68, h);
+}`},
+
+{grp:"Foundations", n:"02", title:"Smoothstep",
+ blurb:`<p>A hard cut between two values looks mechanical. <code>smoothstep</code> eases between them with the curve <code>t·t·(3−2t)</code> — zero slope at both ends, so transitions feel soft and natural. It's the single most-used shaping function in the whole system: every soft horizon, feathered mask, and crest glow is built on it.</p>
+ <div class="tip"><span class="l">Try it</span><p>The cola line is the naive hard step; the gold curve is smoothstep between your two edges. Pull <code>edge0</code> and <code>edge1</code> together to sharpen, apart to soften.</p></div>`,
+ params:[{key:"edge0",label:"edge 0",type:"range",min:0,max:1,step:0.01,def:0.22},
+         {key:"edge1",label:"edge 1",type:"range",min:0,max:1,step:0.01,def:0.78}],
+ code:`// Ease from 0 to 1 between two edges. t*t*(3-2t) is the curve.
+function smooth(a, b, x){
+  if (a === b) return x < a ? 0 : 1;
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+}
+
+ctx.fillStyle = 'rgb(247,246,242)'; ctx.fillRect(0, 0, W, H);
+
+// naive hard step, for contrast
+ctx.strokeStyle = 'rgba(192,67,74,.55)'; ctx.lineWidth = 1.5;
+ctx.beginPath();
+ctx.moveTo(0, H - 2); ctx.lineTo(W * 0.5, H - 2);
+ctx.lineTo(W * 0.5, 2); ctx.lineTo(W, 2);
+ctx.stroke();
+
+// the eased ramp
+ctx.strokeStyle = 'rgb(184,138,89)'; ctx.lineWidth = 2.5;
+ctx.beginPath();
+for (let x = 0; x <= W; x++){
+  const v = smooth(p.edge0, p.edge1, x / W);
+  const y = (H - 4) - v * (H - 4) + 2;
+  x ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+}
+ctx.stroke();`},
+
+{grp:"Foundations", n:"03", title:"Value noise → a ridge",
+ blurb:`<p>Random heights at integer positions, smoothly interpolated between, give a continuous wavy line — a ridge. The number of control points sets the frequency; the interpolation curve sets the smoothness. Ki uses a <em>quintic</em> smootherstep <code>6t⁵−15t⁴+10t³</code> for extra-soft crests.</p>
+ <div class="tip"><span class="l">Try it</span><p><code>nodes</code> is the frequency (few = broad swell, many = busy). <code>amp</code> is the height. Note it wraps, so the ridge tiles seamlessly.</p></div>`,
+ params:[{key:"seed",label:"seed",type:"range",min:1,max:9999,step:1,def:41},
+         {key:"nodes",label:"nodes (freq)",type:"range",min:2,max:24,step:1,def:6},
+         {key:"amp",label:"amplitude",type:"range",min:0,max:1,step:0.01,def:0.6}],
+ code:`// Random control points + smootherstep between them = a ridgeline.
+function makeNoise(seed, nodes){
+  const r = lib.mulberry32(seed);
+  const a = []; for (let i = 0; i < nodes; i++) a[i] = r() * 2 - 1;
+  return function(x){
+    const i = Math.floor(x), f = x - i;
+    const a0 = a[((i % nodes) + nodes) % nodes];
+    const a1 = a[(((i + 1) % nodes) + nodes) % nodes];
+    const u = f * f * f * (f * (f * 6 - 15) + 10);   // quintic
+    return a0 + (a1 - a0) * u;
+  };
+}
+
+const noise = makeNoise(p.seed, p.nodes);
+ctx.fillStyle = 'rgb(248,247,244)'; ctx.fillRect(0, 0, W, H);
+
+ctx.beginPath(); ctx.moveTo(0, H);
+for (let x = 0; x <= W; x++){
+  const y = H * 0.52 - noise(x / W * p.nodes) * H * 0.36 * p.amp;
+  ctx.lineTo(x, y);
+}
+ctx.lineTo(W, H); ctx.closePath();
+ctx.fillStyle = 'rgb(45,98,79)';      // a Hokkaido mid-tone
+ctx.fill();`},
+
+{grp:"Foundations", n:"04", title:"fBm: stacking octaves",
+ blurb:`<p>One noise layer is too plain. <b>Fractal Brownian motion</b> sums several — each at double the frequency and a fraction of the amplitude. Low octaves give the big shape; high octaves add fine tooth. This is what lets one control move a ridge from smooth swell to jagged peaks.</p>
+ <div class="tip"><span class="l">Try it</span><p>Raise <code>octaves</code> and watch detail accumulate. <code>persist</code> is how much each finer octave contributes — high persistence = rough; low = smooth.</p></div>`,
+ params:[{key:"seed",label:"seed",type:"range",min:1,max:9999,step:1,def:7},
+         {key:"octaves",label:"octaves",type:"range",min:1,max:7,step:1,def:5},
+         {key:"persist",label:"persistence",type:"range",min:0.25,max:0.85,step:0.01,def:0.55},
+         {key:"amp",label:"amplitude",type:"range",min:0,max:1,step:0.01,def:0.7}],
+ code:`// Sum octaves: each 2x finer in frequency, persist x in amplitude.
+const octs = []; let nodes = 6, amp = 1, sum = 0;
+for (let o = 0; o < p.octaves; o++){
+  octs.push({ fn: lib.makeNoise(p.seed + o * 317, nodes), nodes, amp });
+  sum += amp; nodes = Math.min(256, nodes * 2); amp *= p.persist;
+}
+function fbm(u){
+  let v = 0;
+  for (const o of octs) v += o.fn(u * o.nodes) * o.amp;
+  return v / sum;                        // normalized
+}
+
+ctx.fillStyle = 'rgb(248,247,244)'; ctx.fillRect(0, 0, W, H);
+ctx.beginPath(); ctx.moveTo(0, H);
+for (let x = 0; x <= W; x++){
+  const y = H * 0.56 - fbm(x / W) * H * 0.42 * p.amp;
+  ctx.lineTo(x, y);
+}
+ctx.lineTo(W, H); ctx.closePath();
+ctx.fillStyle = 'rgb(45,98,79)';
+ctx.fill();`},
+
+{grp:"Form & light", n:"05", title:"Layering & depth",
+ blurb:`<p>Depth is built by drawing many ridges <b>back to front</b> (the painter's algorithm). Distance <code>t</code> does two jobs at once: far ridges sit higher and flatter, and their color <b>hazes toward the sky</b>. Ki scales the haze by <code>(1−t)²</code> so it falls off naturally into the foreground.</p>
+ <div class="tip"><span class="l">Try it</span><p><code>haze</code> is atmospheric perspective — push it up for misty distance. <code>layers</code> adds ridges; each new one is drawn in front of the last.</p></div>`,
+ params:[{key:"seed",label:"seed",type:"range",min:1,max:9999,step:1,def:2471},
+         {key:"layers",label:"layers",type:"range",min:3,max:16,step:1,def:9},
+         {key:"haze",label:"haze",type:"range",min:0,max:1,step:0.01,def:0.5},
+         {key:"amp",label:"amplitude",type:"range",min:0,max:1,step:0.01,def:0.5}],
+ code:`const biome = lib.biomes.hokkaido.labs, sky = lib.skyHorLab;
+ctx.fillStyle = 'rgb(248,247,244)'; ctx.fillRect(0, 0, W, H);  // cream sky
+
+const N = p.layers;
+for (let i = 0; i < N; i++){
+  const t = i / (N - 1);                       // 0 = far, 1 = near
+  const ridge = lib.fbm1D(p.seed + i * 977, 6, 4, 0.5);
+  const ground = lib.lerp(H * 0.30, H * 0.97, t);
+  const a = (0.25 + 0.8 * t) * p.amp;
+
+  // color at depth, hazed toward sky by (1-t)^2
+  let lab = lib.biomeLab(biome, 0.15 + 0.8 * t);
+  const hz = p.haze * (1 - t) * (1 - t);
+  lab = { L: lib.lerp(lab.L, sky.L, hz),
+          a: lib.lerp(lab.a, sky.a, hz * 0.85),
+          b: lib.lerp(lab.b, sky.b, hz * 0.85) };
+
+  ctx.beginPath(); ctx.moveTo(0, H);
+  for (let x = 0; x <= W; x++)
+    ctx.lineTo(x, ground - ridge(x / W) * H * 0.34 * a);
+  ctx.lineTo(W, H); ctx.closePath();
+  ctx.fillStyle = lib.labStr(lab);
+  ctx.fill();
+}`},
+
+{grp:"Form & light", n:"06", title:"Color in OKLab",
+ blurb:`<p>Each Ki biome is a four-stop palette, light→dark. To shade a ridge by depth we walk that palette — but <em>where</em> we interpolate matters. Naive RGB blending muddies the mid-tones (greens drift gray). <b>OKLab</b> is perceptually uniform, so the same blend stays clean and saturated.</p>
+ <div class="tip"><span class="l">Try it</span><p>Top half is OKLab, bottom is RGB — same palette, same stops. Switch biomes and watch the mid-band: the difference is sharpest in Hokkaido Mint and Yuzu.</p></div>`,
+ params:[{key:"biome",label:"biome",type:"select",options:[["maple","Maple"],["hokkaido","Hokkaido"],["yuzu","Yuzu"],["cola","Cola"],["satsuma","Satsuma"]],def:"hokkaido"},
+         {key:"bands",label:"bands",type:"range",min:6,max:48,step:1,def:28}],
+ code:`const labs = lib.biomes[p.biome].labs;
+const hexes = lib.biomes[p.biome].hex;
+const n = p.bands;
+
+function rgbMix(t){                      // naive RGB channel lerp
+  const m = labs.length - 1, i = Math.min(m - 1, Math.floor(t * m)), u = t * m - i;
+  const c0 = lib.hex2rgb(hexes[i]), c1 = lib.hex2rgb(hexes[i + 1]);
+  return 'rgb(' + c0.map((v, k) => Math.round(lib.lerp(v, c1[k], u))).join(',') + ')';
+}
+
+for (let i = 0; i < n; i++){
+  const t = i / (n - 1), x = i / n * W, bw = W / n + 1;
+  ctx.fillStyle = lib.labStr(lib.biomeLab(labs, t));   // OKLab (top)
+  ctx.fillRect(x, 0, bw, H * 0.5);
+  ctx.fillStyle = rgbMix(t);                           // RGB (bottom)
+  ctx.fillRect(x, H * 0.5, bw, H * 0.5);
+}
+ctx.fillStyle = 'rgba(10,9,8,.6)';
+ctx.font = '600 12px "IBM Plex Mono", monospace';
+ctx.fillText('OKLab', 11, 21);
+ctx.fillText('RGB',   11, H * 0.5 + 21);`},
+
+{grp:"Form & light", n:"07", title:"Light & the sun",
+ blurb:`<p>Light reads as two soft cues: a low-contrast <b>sun</b> (a flat disc with a wide radial bloom) and a <b>catch-light</b> hugging each ridge crest — brighter on ridges nearer the sun. No harsh shadows; the Ki world stays calm and matte.</p>
+ <div class="tip"><span class="l">Try it</span><p>Move the sun with <code>sunX/Y</code>. <code>crest</code> sets how strongly the catch-light traces each ridge top.</p></div>`,
+ params:[{key:"sunX",label:"sun x",type:"range",min:0,max:1,step:0.01,def:0.64},
+         {key:"sunY",label:"sun y",type:"range",min:0,max:0.6,step:0.01,def:0.16},
+         {key:"sunSize",label:"sun size",type:"range",min:0.2,max:1.3,step:0.01,def:0.6},
+         {key:"crest",label:"crest light",type:"range",min:0,max:1,step:0.01,def:0.5}],
+ code:`ctx.fillStyle = 'rgb(248,247,244)'; ctx.fillRect(0, 0, W, H);
+
+// soft sun: wide bloom + flat disc
+const sx = p.sunX * W, sy = p.sunY * H, R = H * 0.12 * p.sunSize;
+let g = ctx.createRadialGradient(sx, sy, 0, sx, sy, R * 3.4);
+g.addColorStop(0, 'rgba(236,213,107,.85)');
+g.addColorStop(1, 'rgba(236,213,107,0)');
+ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+ctx.beginPath(); ctx.arc(sx, sy, R, 0, 7);
+ctx.fillStyle = 'rgb(236,213,107)'; ctx.fill();
+
+const N = 7, labs = lib.biomes.maple.labs;
+for (let i = 0; i < N; i++){
+  const t = i / (N - 1), ridge = lib.fbm1D(2471 + i * 977, 6, 4, 0.5);
+  const ground = lib.lerp(H * 0.34, H * 0.97, t), ys = [];
+  ctx.beginPath(); ctx.moveTo(0, H);
+  for (let x = 0; x <= W; x++){
+    const y = ground - ridge(x / W) * H * 0.32 * (0.3 + 0.8 * t);
+    ys.push(y); ctx.lineTo(x, y);
+  }
+  ctx.lineTo(W, H); ctx.closePath();
+  ctx.fillStyle = lib.labStr(lib.biomeLab(labs, 0.2 + 0.75 * t)); ctx.fill();
+
+  // catch-light along the crest, brighter near the sun
+  const near = 1 - Math.min(1, Math.abs(p.sunX - 0.5) * 0.7);
+  ctx.beginPath();
+  for (let x = 0; x <= W; x++) x ? ctx.lineTo(x, ys[x]) : ctx.moveTo(0, ys[0]);
+  ctx.strokeStyle = 'rgba(255,250,235,' + (p.crest * 0.6 * near) + ')';
+  ctx.lineWidth = 2; ctx.stroke();
+}`},
+
+{grp:"Form & light", n:"08", title:"The horizon curve",
+ blurb:`<p>The distant horizon isn't flat — it's a handful of <b>control points</b> connected with smoothstep. Bending it tilts the whole far field, while the foreground stays grounded. In the full visualizer this is the draggable horizon strip; here it's five sliders.</p>
+ <div class="tip"><span class="l">Try it</span><p>Each slider lifts or drops one point (gold dots). Smoothstep keeps the curve between them gentle — no kinks.</p></div>`,
+ params:[{key:"h0",label:"point 1",type:"range",min:0.05,max:0.6,step:0.01,def:0.30},
+         {key:"h1",label:"point 2",type:"range",min:0.05,max:0.6,step:0.01,def:0.22},
+         {key:"h2",label:"point 3",type:"range",min:0.05,max:0.6,step:0.01,def:0.30},
+         {key:"h3",label:"point 4",type:"range",min:0.05,max:0.6,step:0.01,def:0.20},
+         {key:"h4",label:"point 5",type:"range",min:0.05,max:0.6,step:0.01,def:0.27}],
+ code:`const pts = [p.h0, p.h1, p.h2, p.h3, p.h4];
+function horizon(u){
+  const s = u * (pts.length - 1), i = Math.floor(s), f = s - i;
+  const a = pts[i], b = pts[Math.min(pts.length - 1, i + 1)];
+  return lib.lerp(a, b, f * f * (3 - 2 * f));   // smoothstep between points
+}
+
+ctx.fillStyle = 'rgb(248,247,244)'; ctx.fillRect(0, 0, W, H);
+ctx.beginPath(); ctx.moveTo(0, H);
+for (let x = 0; x <= W; x++) ctx.lineTo(x, horizon(x / W) * H);
+ctx.lineTo(W, H); ctx.closePath();
+ctx.fillStyle = 'rgb(141,202,167)';   // Hokkaido light
+ctx.fill();
+
+for (let i = 0; i < pts.length; i++){
+  ctx.beginPath();
+  ctx.arc(i / (pts.length - 1) * W, pts[i] * H, 4, 0, 7);
+  ctx.fillStyle = 'rgb(184,138,89)'; ctx.fill();
+}`},
+
+{grp:"Surface & assembly", n:"09", title:"Masks & feathering",
+ blurb:`<p>A <b>mask</b> says <em>where</em> a flavor lives. Inside it, one biome shows; outside, another. The edge is <b>feathered</b> (softened) with smoothstep so the two blend instead of cutting. The real tool paints 2-D masks and blurs them; the 1-D version here shows the principle.</p>
+ <div class="tip"><span class="l">Try it</span><p><code>cx</code> moves the region, <code>width</code> resizes it, <code>feather</code> softens the seam. The gold curve up top is the mask value.</p></div>`,
+ params:[{key:"cx",label:"center",type:"range",min:0,max:1,step:0.01,def:0.68},
+         {key:"width",label:"half-width",type:"range",min:0.04,max:0.5,step:0.01,def:0.2},
+         {key:"feather",label:"feather",type:"range",min:0,max:1,step:0.01,def:0.35}],
+ code:`function mask(u){
+  const d = Math.abs(u - p.cx);
+  return 1 - lib.smooth(p.width, p.width + p.feather * 0.4 + 0.001, d);
+}
+const A = lib.biomeLab(lib.biomes.hokkaido.labs, 0.5);   // base flavor
+const B = lib.biomeLab(lib.biomes.satsuma.labs, 0.5);    // painted-in flavor
+const ridge = lib.fbm1D(2471, 7, 4, 0.5);
+
+ctx.fillStyle = 'rgb(248,247,244)'; ctx.fillRect(0, 0, W, H);
+const cols = Math.min(W, 380);
+for (let c = 0; c < cols; c++){
+  const u = c / cols, x = u * W, w = W / cols + 1, m = mask(u);
+  const lab = { L: lib.lerp(A.L, B.L, m), a: lib.lerp(A.a, B.a, m), b: lib.lerp(A.b, B.b, m) };
+  const y = H * 0.58 - ridge(u) * H * 0.3;
+  ctx.fillStyle = lib.labStr(lab);
+  ctx.fillRect(x, y, w, H - y);
+}
+// the mask curve
+ctx.beginPath();
+for (let x = 0; x <= W; x++){ const y = 18 + (1 - mask(x / W)) * 42; x ? ctx.lineTo(x, y) : ctx.moveTo(0, y); }
+ctx.strokeStyle = 'rgba(184,138,89,.9)'; ctx.lineWidth = 2; ctx.stroke();`},
+
+{grp:"Surface & assembly", n:"10", title:"Paper grain",
+ blurb:`<p>The painterly tooth is 2-D value noise composited with the <code>overlay</code> blend. The grain tile is centered on mid-grey (128), so overlay perturbs luminance <em>both</em> ways — it brightens and darkens — giving crisp paper texture rather than a dull darkening veil.</p>
+ <div class="tip"><span class="l">Try it</span><p><code>scale</code> sets grain size (low = coarse), <code>strength</code> the bite, <code>octaves</code> the fineness. Comment out the <code>overlay</code> line to see why the blend mode matters.</p></div>`,
+ params:[{key:"scale",label:"grain scale",type:"range",min:4,max:60,step:1,def:18},
+         {key:"strength",label:"strength",type:"range",min:0,max:1,step:0.01,def:0.6},
+         {key:"octaves",label:"octaves",type:"range",min:1,max:6,step:1,def:4}],
+ code:`const size = 256;
+function noiseLayer(cells, seed){
+  const r = lib.mulberry32(seed), g = new Float32Array(cells * cells);
+  for (let i = 0; i < g.length; i++) g[i] = r();
+  return function(x, y){
+    const fx = x / size * cells, fy = y / size * cells, xi = Math.floor(fx), yi = Math.floor(fy);
+    const x0 = ((xi % cells) + cells) % cells, y0 = ((yi % cells) + cells) % cells, x1 = (x0 + 1) % cells, y1 = (y0 + 1) % cells;
+    let tx = fx - xi, ty = fy - yi; tx = tx * tx * (3 - 2 * tx); ty = ty * ty * (3 - 2 * ty);
+    const a = g[y0*cells+x0], b = g[y0*cells+x1], c = g[y1*cells+x0], d = g[y1*cells+x1];
+    return (a*(1-tx)+b*tx)*(1-ty) + (c*(1-tx)+d*tx)*ty;
+  };
+}
+const fns = []; let cells = p.scale, amp = 1, sum = 0;
+for (let o = 0; o < p.octaves; o++){ fns.push({ f: noiseLayer(Math.round(cells), 7 + o*317), amp }); sum += amp; cells *= 2; amp *= 0.55; }
+
+const tile = document.createElement('canvas'); tile.width = tile.height = size;
+const tx = tile.getContext('2d'), id = tx.createImageData(size, size);
+for (let y = 0; y < size; y++) for (let x = 0; x < size; x++){
+  let v = 0; for (const L of fns) v += L.f(x, y) * L.amp; v /= sum;
+  const g2 = Math.max(0, Math.min(255, 128 + (v - 0.5) * 100 * p.strength * 2));
+  const i = (y * size + x) * 4; id.data[i] = id.data[i+1] = id.data[i+2] = g2; id.data[i+3] = 255;
+}
+tx.putImageData(id, 0, 0);
+
+ctx.fillStyle = lib.labStr(lib.biomeLab(lib.biomes.maple.labs, 0.45));
+ctx.fillRect(0, 0, W, H);
+ctx.globalCompositeOperation = 'overlay';        // <- the key
+ctx.fillStyle = ctx.createPattern(tile, 'repeat');
+ctx.fillRect(0, 0, W, H);
+ctx.globalCompositeOperation = 'source-over';`},
+
+{grp:"Surface & assembly", n:"11", title:"Assembling a field",
+ blurb:`<p>Everything together: a cream sky, a soft sun, layered ridges shaded by depth in OKLab and hazed into the distance, crest catch-light, and a paper-grain overlay. This is a compact Ki landscape — the same moves the full visualizer scales up across painted regions and biomes.</p>
+ <div class="tip"><span class="l">Try it</span><p>Reroll the <code>seed</code> (or the header button), switch <code>biome</code>, and balance <code>haze</code> / <code>grain</code>. Then open the real visualizer to see these controls multiplied per flavor.</p></div>`,
+ params:[{key:"seed",label:"seed",type:"range",min:1,max:9999,step:1,def:2471},
+         {key:"biome",label:"biome",type:"select",options:[["maple","Maple"],["hokkaido","Hokkaido"],["yuzu","Yuzu"],["cola","Cola"],["satsuma","Satsuma"]],def:"hokkaido"},
+         {key:"layers",label:"layers",type:"range",min:4,max:14,step:1,def:9},
+         {key:"haze",label:"haze",type:"range",min:0,max:1,step:0.01,def:0.5},
+         {key:"sun",label:"sun",type:"toggle",def:1},
+         {key:"grain",label:"grain",type:"range",min:0,max:0.8,step:0.01,def:0.4}],
+ code:`const labs = lib.biomes[p.biome].labs, sky = lib.skyHorLab;
+ctx.fillStyle = 'rgb(248,247,244)'; ctx.fillRect(0, 0, W, H);
+
+if (p.sun){
+  const sx = W * 0.66, sy = H * 0.17, R = H * 0.1;
+  let g = ctx.createRadialGradient(sx, sy, 0, sx, sy, R * 3.4);
+  g.addColorStop(0, 'rgba(236,213,107,.8)'); g.addColorStop(1, 'rgba(236,213,107,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.beginPath(); ctx.arc(sx, sy, R, 0, 7); ctx.fillStyle = 'rgb(236,213,107)'; ctx.fill();
+}
+
+const N = p.layers;
+for (let i = 0; i < N; i++){
+  const t = i / (N - 1), ridge = lib.fbm1D(p.seed + i * 977, 6, 4, 0.5);
+  const ground = lib.lerp(H * 0.30, H * 0.98, t);
+  let lab = lib.biomeLab(labs, 0.15 + 0.8 * t);
+  const hz = p.haze * (1 - t) * (1 - t);
+  lab = { L: lib.lerp(lab.L, sky.L, hz), a: lib.lerp(lab.a, sky.a, hz*0.85), b: lib.lerp(lab.b, sky.b, hz*0.85) };
+  const ys = []; ctx.beginPath(); ctx.moveTo(0, H);
+  for (let x = 0; x <= W; x++){ const y = ground - ridge(x / W) * H * 0.32 * (0.3 + 0.8 * t); ys.push(y); ctx.lineTo(x, y); }
+  ctx.lineTo(W, H); ctx.closePath(); ctx.fillStyle = lib.labStr(lab); ctx.fill();
+  ctx.beginPath(); for (let x = 0; x <= W; x++) x ? ctx.lineTo(x, ys[x]) : ctx.moveTo(0, ys[0]);
+  ctx.strokeStyle = 'rgba(255,250,235,' + (0.32 * t) + ')'; ctx.lineWidth = 1.5; ctx.stroke();
+}
+
+if (p.grain > 0){
+  ctx.globalAlpha = p.grain; ctx.globalCompositeOperation = 'overlay';
+  ctx.fillStyle = ctx.createPattern(lib.grainTile(), 'repeat');
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+}`},
+];
+</script>
+<script>
+/* ============================================================
+   ENGINE
+   ============================================================ */
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const ta=document.getElementById('ta'), hl=document.getElementById('hl'), linesEl=document.getElementById('lines');
+const consoleEl=document.getElementById('console'), mStat=document.getElementById('mStat'), mLeft=document.getElementById('mLeft');
+let P={}, current=-1, rafPending=false;
+
+function sizeCanvas(){
+  const wrap=cv.parentElement, dpr=Math.min(window.devicePixelRatio||1,2);
+  const w=Math.round(wrap.clientWidth*dpr), h=Math.round(wrap.clientHeight*dpr);
+  if(w>0&&h>0&&(cv.width!==w||cv.height!==h)){cv.width=w;cv.height=h;}
+}
+function run(){
+  sizeCanvas();
+  const W=cv.width, H=cv.height;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
+  ctx.clearRect(0,0,W,H);
+  try{
+    const fn=new Function('ctx','W','H','p','lib', ta.value);
+    fn(ctx,W,H,P,LIB);
+    mStat.textContent='rendered'; mStat.classList.remove('err');
+    consoleEl.classList.remove('show'); consoleEl.textContent='';
+  }catch(e){
+    mStat.textContent='error'; mStat.classList.add('err');
+    consoleEl.classList.add('show'); consoleEl.textContent=String(e&&e.message||e);
+  }
+}
+function scheduleRun(){ if(rafPending)return; rafPending=true; requestAnimationFrame(()=>{rafPending=false;run();}); }
+
+/* ---------- controls ---------- */
+function buildControls(mod){
+  const wrap=document.getElementById('ctrls'); wrap.innerHTML='';
+  P={};
+  mod.params.forEach(par=>{
+    P[par.key]=par.def;
+    const c=document.createElement('div'); c.className='ctrl';
+    if(par.type==='range'){
+      c.innerHTML=`<div class="lr"><label>${par.label}</label><span class="val" id="v-${par.key}">${fmt(par.def,par.step)}</span></div>`;
+      const inp=document.createElement('input');
+      inp.type='range'; inp.min=par.min; inp.max=par.max; inp.step=par.step; inp.value=par.def;
+      inp.addEventListener('input',()=>{P[par.key]=parseFloat(inp.value);document.getElementById('v-'+par.key).textContent=fmt(P[par.key],par.step);scheduleRun();});
+      c.appendChild(inp);
+    } else if(par.type==='select'){
+      c.innerHTML=`<div class="lr"><label>${par.label}</label></div>`;
+      const pills=document.createElement('div'); pills.className='pills';
+      par.options.forEach(([v,lbl])=>{const b=document.createElement('button');b.textContent=lbl;if(v===par.def)b.className='on';
+        b.onclick=()=>{P[par.key]=v;[...pills.children].forEach(x=>x.classList.toggle('on',x===b));run();};pills.appendChild(b);});
+      c.appendChild(pills);
+    } else if(par.type==='toggle'){
+      c.innerHTML=`<div class="lr"><label>${par.label}</label></div>`;
+      const pills=document.createElement('div'); pills.className='pills';
+      [[0,'Off'],[1,'On']].forEach(([v,lbl])=>{const b=document.createElement('button');b.textContent=lbl;if(v===par.def)b.className='on';
+        b.onclick=()=>{P[par.key]=v;[...pills.children].forEach(x=>x.classList.toggle('on',x===b));run();};pills.appendChild(b);});
+      c.appendChild(pills);
+    }
+    wrap.appendChild(c);
+  });
+}
+function fmt(v,step){ return (step&&step<1)? (+v).toFixed(step<0.05?2:2) : String(v); }
+
+/* ---------- JS syntax highlight ---------- */
+const JS_KEY=new Set(['const','let','var','function','return','if','else','for','while','do','of','in','new','break','continue','true','false','null','undefined','typeof']);
+const JS_LIB=new Set(['Math','lib','ctx','document','window','p','W','H','Float32Array','Array','Image']);
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function highlight(src){
+  const re=/(\/\*[\s\S]*?\*\/)|(\/\/[^\n]*)|('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")|(0x[0-9a-fA-F]+|\b\d+\.?\d*(?:e[+-]?\d+)?\b|\.\d+)|([A-Za-z_$][\w$]*)(?=\s*\()|([A-Za-z_$][\w$]*)|([{}()\[\];,.:?=<>!&|+\-*/%^~]+)/g;
+  return src.replace(re,(m,bc,lc,str,num,fnc,word,punc)=>{
+    if(bc!==undefined||lc!==undefined) return '<span class="t-com">'+esc(m)+'</span>';
+    if(str!==undefined) return '<span class="t-str">'+esc(str)+'</span>';
+    if(num!==undefined) return '<span class="t-num">'+esc(num)+'</span>';
+    if(fnc!==undefined) return JS_KEY.has(fnc)?'<span class="t-key">'+fnc+'</span>':'<span class="t-fn">'+fnc+'</span>';
+    if(word!==undefined){ if(JS_KEY.has(word))return '<span class="t-key">'+word+'</span>';
+      if(JS_LIB.has(word))return '<span class="t-lib">'+word+'</span>'; return esc(word); }
+    if(punc!==undefined) return '<span class="t-punc">'+esc(punc)+'</span>';
+    return esc(m);
+  });
+}
+function renderGutter(n){let s='<div id="linesInner">';for(let i=1;i<=n;i++)s+='<div>'+i+'</div>';linesEl.innerHTML=s+'</div>';}
+function paint(){ hl.innerHTML=highlight(ta.value)+'\n'; renderGutter(ta.value.split('\n').length); syncScroll(); }
+function syncScroll(){ hl.style.transform=`translate(${-ta.scrollLeft}px,${-ta.scrollTop}px)`;
+  const inner=document.getElementById('linesInner'); if(inner)inner.style.transform=`translateY(${-ta.scrollTop}px)`; }
+let typeTimer=null;
+ta.addEventListener('input',()=>{paint();clearTimeout(typeTimer);typeTimer=setTimeout(run,200);});
+ta.addEventListener('scroll',syncScroll);
+ta.addEventListener('keydown',e=>{ if(e.key==='Tab'){e.preventDefault();const s=ta.selectionStart,en=ta.selectionEnd;
+  ta.value=ta.value.slice(0,s)+'  '+ta.value.slice(en);ta.selectionStart=ta.selectionEnd=s+2;paint();clearTimeout(typeTimer);typeTimer=setTimeout(run,200);} });
+
+/* ---------- navigation ---------- */
+const nav=document.getElementById('nav'), read=document.getElementById('read');
+function buildNav(){
+  let last=null, html='';
+  MODULES.forEach((m,i)=>{ if(m.grp!==last){html+=`<div class="grp">${m.grp}</div>`;last=m.grp;}
+    html+=`<div class="item" data-i="${i}"><span class="n">${m.n}</span><span class="t">${m.title}</span></div>`; });
+  nav.innerHTML=html;
+  nav.querySelectorAll('.item').forEach(el=>el.addEventListener('click',()=>load(+el.dataset.i)));
+}
+function load(i){
+  current=i; const m=MODULES[i];
+  nav.querySelectorAll('.item').forEach(el=>el.classList.toggle('on',+el.dataset.i===i));
+  buildControls(m);
+  ta.value=m.code; paint(); ta.scrollTop=0; syncScroll();
+  read.innerHTML=`<div class="num">§ ${m.n} · ${m.grp}</div><h2>${m.title}</h2>${m.blurb}`;
+  read.scrollTop=0;
+  mLeft.textContent='§'+m.n+' · '+m.title;
+  run();
+}
+
+/* ---------- buttons ---------- */
+document.getElementById('runBtn').onclick=run;
+document.getElementById('resetBtn').onclick=()=>{ if(current<0)return; ta.value=MODULES[current].code; paint(); ta.scrollTop=0; syncScroll(); run(); };
+document.getElementById('rerollBtn').onclick=()=>{
+  if(current<0)return; const m=MODULES[current]; const sp=m.params.find(x=>x.key==='seed');
+  if(!sp){mStat.textContent='no seed here';return;}
+  P.seed=Math.floor(Math.random()*(sp.max-sp.min))+sp.min;
+  const inp=document.querySelector('#ctrls input[type=range]'); // seed is first range in these modules
+  document.querySelectorAll('#ctrls .ctrl').forEach(c=>{const lab=c.querySelector('label');if(lab&&lab.textContent==='seed'){const r=c.querySelector('input');if(r){r.value=P.seed;c.querySelector('.val').textContent=P.seed;}}});
+  run();
+};
+window.addEventListener('keydown',e=>{ if(document.activeElement===ta)return;
+  if(e.key==='ArrowDown'||e.key==='ArrowRight'){if(current<MODULES.length-1)load(current+1);}
+  if(e.key==='ArrowUp'||e.key==='ArrowLeft'){if(current>0)load(current-1);} });
+
+/* ---------- boot ---------- */
+buildNav();
+let rt=null; window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(run,120);});
+load(0);
+</script>
+</body>
+</html>
