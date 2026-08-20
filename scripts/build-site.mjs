@@ -45,7 +45,7 @@ function discoverTools() {
 
 function readMeta(name) {
   const metaPath = join(ROOT, name, 'tool.json');
-  let meta = { title: name, description: '', status: 'active', hidden: false, section: null };
+  let meta = { title: name, description: '', status: 'active', hidden: false, section: null, skill: null, skillLabel: 'skill' };
   if (existsSync(metaPath)) {
     try {
       meta = { ...meta, ...JSON.parse(readFileSync(metaPath, 'utf8')) };
@@ -109,6 +109,10 @@ function copyStaticTool(name) {
   });
 }
 
+const DL_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 20h16"/></svg>';
+
 function renderIndex(tools) {
   const template = readFileSync(TEMPLATE, 'utf8');
   const visible = tools.filter((t) => !t.meta.hidden);
@@ -143,15 +147,21 @@ function renderIndex(tools) {
       const desc = t.meta.description ? `<span class="desc">${escapeHtml(t.meta.description)}</span>` : '';
       const date = formatDate(t.lastTouched);
       const index = String(i + 1).padStart(2, '0');
+      const skillHref = t.meta.skill
+        ? `./${encodeURIComponent(t.name)}/${encodeURIComponent(t.meta.skill)}`
+        : null;
+      const skill = skillHref
+        ? `<a class="skill-dl" href="${skillHref}" download title="Download ${escapeHtml(t.meta.skillLabel || 'skill')} — ${title}" aria-label="Download ${escapeHtml(t.meta.skillLabel || 'skill')} for ${title}">${DL_ICON}</a>`
+        : '';
       blocks.push(`      <li data-status="${escapeHtml(t.meta.status || 'active')}">
-        <a href="./${encodeURIComponent(t.name)}/">
+        <a class="tool-link" href="./${encodeURIComponent(t.name)}/">
           <span class="tool-index">${index}</span>
           <span class="tool-body">
             <span class="name">${title}</span>
             ${desc}
           </span>
           <span class="date">${date}</span>
-        </a>
+        </a>${skill}
       </li>`);
     });
   }
