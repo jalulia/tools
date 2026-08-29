@@ -53,6 +53,34 @@
   window.addEventListener('load', reportHeight);
   reportHeight();
 
+  /* ------------------------------------------------------------ byte cost
+     CK8. The host's mount cap used to be a COUNT — four frames on a desktop,
+     two on a phone — and a count is the wrong unit for a budget measured in
+     megabytes: two neighbouring lenses in this library cost 13.99 MB together
+     against a 12 MB phone budget (PLAN §7.10), while ten others cost nothing
+     at all because they allocate no canvas. Only the fragment can know what it
+     allocated, and it cannot be asked across an opaque origin, so it reports.
+     The host caches the figure per lens and predicts the next mount from it. */
+  var lastBytes = -1;
+  function canvasBytes() {
+    var n = 0, cs = document.getElementsByTagName('canvas');
+    for (var i = 0; i < cs.length; i++) n += (cs[i].width || 0) * (cs[i].height || 0) * 4;
+    return n;
+  }
+  function reportBytes() {
+    var b = canvasBytes();
+    if (b === lastBytes) return;
+    lastBytes = b;
+    post({ type: 'bytes', bytes: b });
+  }
+  window.addEventListener('load', reportBytes);
+  // A lens that sizes its canvases from a rAF or an image decode reports late.
+  // Three cheap re-reads cover every lens in the library; the message is a
+  // no-op when nothing changed.
+  setTimeout(reportBytes, 60);
+  setTimeout(reportBytes, 400);
+  setTimeout(reportBytes, 1500);
+
   /* --------------------------------------------------------- keyboard exit */
   window.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' || e.key === '/' || e.key === '?') post({ type: 'key', key: e.key });
@@ -111,5 +139,5 @@
     if (d.type === 'resume') setPaused(false);
   });
 
-  post({ type: 'ready', title: document.title });
+  post({ type: 'ready', title: document.title, bytes: canvasBytes() });
 })();

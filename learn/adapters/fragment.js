@@ -14,9 +14,12 @@
      have failed silently on a real file.)
    · The entry route mounts exactly one frame.
    · The contact sheet mounts on approach and UNMOUNTS ON EXIT — src about:blank
-     and the element removed — with a hard concurrency cap: 4 at >= 840px, 2
-     below. Mount-on-approach without eviction is what accumulates 20 live
-     frames at 390 and never releases one.
+     and the element removed — under TWO caps: a count (4 at >= 840px, 2 below)
+     and, since checkpoint 8, a BYTE cap on canvas backing store (40 MB / 12 MB,
+     PLAN §7.10) fed by the fragments' own reports. Mount-on-approach without
+     eviction is what accumulates 20 live frames at 390 and never releases one;
+     a count without a byte cap is what let two neighbours cost 13.99 MB on a
+     12 MB phone budget. See "the BYTE cap" below.
    · A card at rest is a thumb <img>, so an unmounted card still shows the lens.
    · A preview renders at the fragment's own designWidth and is CSS-scaled with
      an authored thumb.crop [scale, offsetY]. A lens reflowed into a 240px card
@@ -35,6 +38,47 @@
 
   function cap() {
     return window.matchMedia('(min-width: 840px)').matches ? 4 : 2;
+  }
+
+  /* ---- the BYTE cap (CK8) ------------------------------------------------
+     PLAN §7.10 states the contact-sheet budget in megabytes of canvas backing
+     store — 40 at 1440, 12 at 390 — and until this checkpoint the only cap was
+     a COUNT of frames. A count is not a budget. Measured over the thirty
+     lenses at their design widths, the cost of one preview runs from 0.00 MB
+     (six lenses allocate no canvas at all) to 11.12 MB (B1), so two frames can
+     cost anything between nothing and 20.6 MB. In the shipped manifest order
+     the worst ADJACENT PAIR is D3 + B4 = 13.99 MB against a 12 MB phone
+     budget: the sheet was over budget by 17%, and it was over by a different
+     amount every time anyone reordered the manifest.
+
+     A host cannot measure a fragment: the child is an opaque origin, which is
+     the whole point of the isolation. So the fragment reports its own store on
+     `ready` and again as it settles (fragment-boot.js), the host CACHES that
+     figure per lens id, and every mount after the first is predicted from the
+     cache. The first sighting of an unknown lens is the one case that cannot
+     be predicted, so at most one unknown-cost preview is admitted at a time
+     when the known load is already past half the budget.
+
+     Eviction is by distance from the middle of the viewport, farthest first,
+     and the nearest card is never evicted — a budget that blanks the card you
+     are looking at is not a budget, it is a bug. */
+  var BUDGET = { wide: 40, phone: 12 };       // MB, PLAN §7.10
+  var RESERVE = 0.5;                          // MB left for the chrome's own paint
+  var costMB = Object.create(null);           // entry id -> measured MB, cached
+
+  function budgetMB() {
+    // Shell.canvasBudgetMB is an override, and it exists so the cap is
+    // TESTABLE: today's thirty lenses happen to fit two-up on a phone, so the
+    // only way to prove the policy rather than the content is to squeeze the
+    // budget until it bites. The QA matrix sets it to 3 and asserts the sheet
+    // never carries more than one lens' worth of store.
+    if (typeof S.canvasBudgetMB === 'number') return S.canvasBudgetMB;
+    return (window.matchMedia('(min-width: 840px)').matches ? BUDGET.wide : BUDGET.phone) - RESERVE;
+  }
+  function known(id) { return Object.prototype.hasOwnProperty.call(costMB, id); }
+  function costOf(id) { return known(id) ? costMB[id] : null; }
+  function liveMB() {
+    return live.reduce(function (a, r) { return a + (costOf(r.entry.id) || 0); }, 0);
   }
 
   function srcFor(entry, example) {
@@ -68,6 +112,8 @@
   function report() {
     var el = document.getElementById('mountcount');
     if (el) el.textContent = String(live.length);
+    var mb = document.getElementById('mountbytes');
+    if (mb) mb.textContent = liveMB().toFixed(1) + ' / ' + budgetMB().toFixed(1) + ' MB';
   }
 
   /* the mat's visible surround, read from the token rather than hard-coded */
@@ -88,6 +134,7 @@
     var crop = (entry.thumb && entry.thumb.crop) || null;   // [scale, offsetY]
     var f = makeFrame((entry.title || entry.id) + ' — preview', srcFor(entry));
     f.setAttribute('data-lens', 'preview');
+    f.setAttribute('data-lens-id', entry.id);      // CK8 · the key the byte cache is kept under
     f.dataset.autoHeight = 'false';
     f.style.width = dw + 'px';
     f.style.height = (frame.previewHeight || 900) + 'px';
@@ -122,7 +169,23 @@
       if (el.isConnected) keep.push({ el: el, entry: entry, d: distance(el) });
     });
     keep.sort(function (a, b) { return a.d - b.d; });
-    keep = keep.slice(0, cap());
+    keep = keep.slice(0, cap());                    // the count cap, unchanged
+
+    /* the BYTE cap, applied nearest-first over the count-capped set */
+    var budget = budgetMB(), spent = 0, unknowns = 0, admitted = [];
+    for (var i = 0; i < keep.length; i++) {
+      var c = costOf(keep[i].entry.id);
+      if (i === 0) { admitted.push(keep[i]); spent += (c || 0); continue; }   // never drop the nearest
+      if (c === null) {
+        // unknown cost: admit at most one speculatively, and only while there
+        // is at least half the budget still free to absorb whatever it turns
+        // out to be. The bytes message corrects us within a frame either way.
+        if (unknowns === 0 && spent < budget * 0.5) { unknowns++; admitted.push(keep[i]); }
+        continue;
+      }
+      if (spent + c <= budget) { admitted.push(keep[i]); spent += c; }
+    }
+    keep = admitted;
     var keepEls = keep.map(function (k) { return k.el; });
 
     live.slice().forEach(function (rec) {
@@ -131,6 +194,19 @@
     keep.forEach(function (k) {
       if (!live.some(function (r) { return r.el === k.el; })) mountPreview(k.el, k.entry);
     });
+    report();
+  }
+
+  /* Called when a fragment reports what it actually allocated. If the live set
+     is now over budget, shed from the far end until it is not — never the
+     nearest card, and never the last one standing. */
+  function enforceBytes() {
+    var budget = budgetMB();
+    if (live.length < 2 || liveMB() <= budget) { report(); return; }
+    var order = live.slice().sort(function (a, b) { return distance(a.el) - distance(b.el); });
+    while (order.length > 1 && liveMB() > budget) {
+      evict(order.pop());
+    }
     report();
   }
 
@@ -156,6 +232,16 @@
         if (st) adapter.applyFit(st, +st.dataset.designWidth || DESIGN_W);
       }
       if (d.type === 'ready') hit.setAttribute('data-ready', 'true');
+      // CK8 · the byte report. Cache it against the lens id and re-check the
+      // budget. `ready` carries it too, so the first frame is priced at load.
+      if ((d.type === 'bytes' || d.type === 'ready') && typeof d.bytes === 'number') {
+        var id = hit.getAttribute('data-lens-id');
+        if (id) {
+          var mb = d.bytes / 1048576;
+          if (costMB[id] !== mb) { costMB[id] = mb; hit.setAttribute('data-mb', mb.toFixed(2)); }
+        }
+        enforceBytes();
+      }
     });
   }
 
@@ -167,6 +253,7 @@
       var src = srcFor(entry, o.example);
       var f = makeFrame((entry.title || entry.id) + ' — lens', src);
       f.setAttribute('data-lens', 'entry');
+      f.setAttribute('data-lens-id', entry.id);    // priced too, so the sheet knows it later
       var frame = entry.frame || {};
       var auto = frame.height === 'auto';
       var dw0 = frame.designWidth || DESIGN_W;

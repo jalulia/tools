@@ -377,8 +377,13 @@ void main() {
   },
 
   ruling: {
-    text: 'paper grain — FINE tooth, MID-GREY (128) so SOFT-LIGHT perturbs luminance both ways (mean preserved) = tooth, NOT a darkening film. razor grain — PER-PIXEL speckle (sharp 1px tooth), NOT smooth value-noise (which made soft ~2px blobs = "clunky"). — Ki-Landscapes/index.html:120',
-    by: 'julia'
+    // CK8 · verbatim from two comments of hers; the citation moves out of the
+    // prose into `source`, which is what build-site.mjs now checks. The source
+    // comment carries no date, and inventing one would be the same offence as
+    // signing a ruling she never made.
+    text: 'paper grain — FINE tooth, MID-GREY (128) so SOFT-LIGHT perturbs luminance both ways (mean preserved) = tooth, NOT a darkening film. razor grain — PER-PIXEL speckle (sharp 1px tooth), NOT smooth value-noise (which made soft ~2px blobs = "clunky").',
+    by: 'julia',
+    source: 'Ki-Landscapes/index.html:120-121'
   },
 
   related: [

@@ -497,8 +497,10 @@ ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
   },
 
   ruling: {
-    text: 'wash · granulation · edge · bloom · crest-light · pooling · grain are ALL per-band; no pinned global film. — Ki-Landscapes/index.html:327',
-    by: 'julia'
+    // CK8 · verbatim from her comment; citation moved into `source`.
+    text: 'wash · granulation · edge · bloom · crest-light · pooling · grain are ALL per-band; no pinned global film.',
+    by: 'julia',
+    source: 'Ki-Landscapes/index.html:327'
   },
 
   related: [

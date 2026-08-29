@@ -234,6 +234,31 @@ function verifyOne({ manifest, dir, entries, missingScripts }, schema, say, load
     }
   }
 
+  /* 7b. the ATTRIBUTION gate (checkpoint 8) ----------------------------
+     `ruling` exists to promote Julia's own dated decisions out of source
+     comments into data. The QA audit at checkpoint 8 found four rulings signed
+     `julia` that were written during the build and trace to no comment in her
+     repositories — which makes the field worse than useless, because a reader
+     cannot tell a decision from a suggestion. Two cheap rules keep it honest:
+     a ruling attributed to a PERSON must carry a date (an undated decision
+     cannot be checked against anything), and anything not yet hers says so by
+     using the reserved author `proposed`, which the shell labels. Whether the
+     quoted text is really in the corpus is a human check — see
+     team/qa/cite-audit.mjs — but an undated signature is machine-catchable. */
+  for (const e of entries) {
+    const r = e.ruling;
+    if (!r || !r.text) continue;
+    const by = String(r.by || '').trim();
+    if (!by) { say(`entry "${e.id}": ruling has no "by" — use a name, or "proposed" if it is not yet a decision`); continue; }
+    if (by.toLowerCase() !== 'proposed' && !r.date && !r.source) {
+      say(`entry "${e.id}": ruling is attributed to "${by}" but carries neither a date nor a source. ` +
+          `A decision has to be checkable: date it, or cite the file:line its comment lives at.`);
+    }
+    if (r.source && !/:\d/.test(r.source)) {
+      say(`entry "${e.id}": ruling.source "${r.source}" names no line. Cite file:line.`);
+    }
+  }
+
   /* 8. every count on the page derives from entries -------------------- */
   const derived = {
     entries: entries.length, entry: entries.length,

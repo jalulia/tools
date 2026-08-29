@@ -382,8 +382,10 @@ void main() {
   },
 
   ruling: {
+    // CK8 · AUDIT. Written during the build, signed 'julia', not traceable to
+    // any comment in her repositories. Proposed until she makes it.
     text: 'The rebuild states in `source` that the depth is procedural and that the original reads a DepthTexture. A worked example that quietly changes its own premise is worth less than no worked example.',
-    by: 'julia',
+    by: 'proposed',
     date: '2026-08-29'
   },
 

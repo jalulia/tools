@@ -287,10 +287,9 @@
     });
     // A deep link to the twelfth chip must not land on a strip showing the
     // first. Below 840 the strip still scrolls, so this is where it matters.
-    var here = box.querySelector('button[aria-current="true"]');
-    if (here && here.scrollIntoView) {
-      here.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-    }
+    // scrollIntoView() would move the tab-order starting point into the strip
+    // (see shell.js reveal()); write the scroller's scrollLeft instead.
+    S.reveal(box.querySelector('button[aria-current="true"]'), 'x');
   }
 
   /* ==========================================================================
@@ -538,12 +537,29 @@
       }).join('') + '</div></section>';
   }
 
+  /* CK8 · A RULING IS AN ATTRIBUTION, AND AN ATTRIBUTION IS A CORRECTNESS
+     PROBLEM. The field was added (PLAN §2.7) to promote Julia's own dated
+     decisions out of source comments — `// … CANON, do not soften (julia
+     2026-06-10)` — into data. Four of the seven rulings on the branch at
+     checkpoint 8 could not be traced to any comment in her repositories: they
+     were written during the build and signed with her name. They now carry
+     `by: 'proposed'`, and a proposed ruling is LABELLED as one in the same
+     furniture rather than sitting silently in the same voice as a real one.
+     Anything that says `julia` traces to a line in /home/claude/corpus. */
   function rulingHTML(e) {
     var r = e.ruling;
     if (!r || !r.text) return '';
-    return '<section class="ruling"><span class="lab">Ruling</span>' +
+    var proposed = String(r.by || '').toLowerCase() === 'proposed';
+    // The heading already says PROPOSED, so the by-line carries only the date
+    // and the citation — saying it twice reads as shouting rather than as a
+    // label.
+    var by = proposed
+      ? ['written for this build', r.date, r.source].filter(Boolean).join(' · ')
+      : [r.by, r.date, r.source].filter(Boolean).join(' · ');
+    return '<section class="ruling"' + (proposed ? ' data-proposed="true"' : '') + '>' +
+      '<span class="lab">' + (proposed ? 'Proposed ruling — not yet Julia’s' : 'Ruling') + '</span>' +
       '<p>' + esc(r.text) + '</p>' +
-      '<span class="by">' + esc([r.by, r.date].filter(Boolean).join(' · ')) + '</span></section>';
+      '<span class="by">' + esc(by) + '</span></section>';
   }
 
   function relatedHTML(e) {
@@ -612,8 +628,11 @@
       // The mount counter is a statement about iframes. A course tool has none,
       // so on a course sheet the line said "0 mounted" forever, about nothing.
       (S.manifest.mode === 'catalogue'
+        // CK8 · the budget is stated where it is spent. The cap is bytes as
+        // well as frames now, and a reader watching the number move is the
+        // cheapest possible check that the eviction policy is running.
         ? '<span class="tags right">Live frames mount on approach · ' +
-          '<span id="mountcount">0</span> mounted</span>'
+          '<span id="mountcount">0</span> mounted · <span id="mountbytes">0.0 MB</span></span>'
         : '') + '</div>';
 
     el('view').innerHTML = head + '<div class="sheet">' +

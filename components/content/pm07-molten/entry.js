@@ -94,8 +94,12 @@ Shell.registerEntry({
   },
 
   ruling: {
+    // CK8 · AUDIT. This was written during the build and signed 'julia'. It
+    // does not trace to any comment in her repositories (grep of
+    // /home/claude/corpus finds nothing for it), so it is a PROPOSAL until she
+    // makes it. The argument stands; the attribution did not.
     text: 'The glow comes out of the field or it does not go on the sheet. No blur passes.',
-    by: 'julia',
+    by: 'proposed',
     date: '2026-08-29'
   },
 

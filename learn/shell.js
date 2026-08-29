@@ -144,13 +144,28 @@
      They are tiny and local; the rail fills in as they land and the router
      re-runs itself when the entry it is waiting for arrives. */
   function injectEntryScripts() {
-    S.entries.forEach(function (e) {
-      if (!e.__needsScript || e.__loaded) return;
+    /* CK8 · THE ROUTED ENTRY GOES FIRST. `async = false` makes these execute in
+       injection order, so before this the chapter you actually asked for waited
+       behind every chapter ahead of it in the manifest: a deep link to W1, the
+       twenty-third of twenty-six, was interactive at 535–614 ms against PLAN
+       §7.10's 400 ms budget, while chapter 02 was at 129 ms. Hoisting the one
+       script the hash names costs nothing — every entry declares an explicit
+       numeric `order`, so the sort no longer depends on registration order —
+       and the rest still stream in behind it to fill the rail. */
+    var want = null;
+    var p = String(location.hash || '').replace(/^#\/?/, '').split('?')[0].split('/').filter(Boolean)[0];
+    if (p && p !== 'index' && p !== 'style') { try { want = decodeURIComponent(p); } catch (err) { want = p; } }
+
+    var list = S.entries.filter(function (e) { return e.__needsScript && !e.__loaded; });
+    if (want) {
+      list.sort(function (a, b) { return (b.id === want) - (a.id === want); });
+    }
+    list.forEach(function (e) {
       var src = (e.path || ('content/' + e.id + '/')) + (e.entry || 'entry.js');
       S.pending[e.id] = true;
       var s = document.createElement('script');
       s.src = src;
-      s.async = false;                // keep registration order == manifest order
+      s.async = false;                // execute in injection order
       s.onerror = function () {
         delete S.pending[e.id];
         S.failed[e.id] = true;
@@ -398,8 +413,12 @@
     order.forEach(function (id) {
       var list = groups[id];
       if (!list) return;
-      html += '<li class="sec" role="presentation">' + esc(S.sectionOf(id).title) +
-              '<span class="n">' + list.length + '</span></li>';
+      // CK8 · was <li role="presentation">, which axe grades a serious `list`
+      // violation on every route: a <ul> may not have a direct child with a
+      // presentational role. The divider stays an ordinary <li> — it IS in the
+      // list — and the part that is a heading says so instead.
+      html += '<li class="sec"><span role="heading" aria-level="3">' + esc(S.sectionOf(id).title) +
+              '</span><span class="n">' + list.length + '</span></li>';
       html += list.map(entryRow).join('');
     });
     spine.innerHTML = html;
@@ -422,13 +441,43 @@
       '<span class="t">' + esc(e.title || e.id) + '</span>' + st + stub + '</a></li>';
   }
 
+  /* CK8 · Element.scrollIntoView() sets Chromium's SEQUENTIAL FOCUS NAVIGATION
+     STARTING POINT. Calling it on the current rail entry during boot therefore
+     moved the start of the tab order into the middle of the index: the first
+     Tab on a freshly loaded page landed on the SECOND chapter, and the skip
+     link, the Index toggle, the two tool links, Edit, ? and the search box were
+     unreachable going forwards. PLAN §7.5 asks for every control reachable by
+     Tab in DOM order, so scrolling a scroller is done by writing its scrollTop
+     / scrollLeft instead — same pixels, no effect on focus. */
+  function reveal(el, axis) {
+    if (!el) return;
+    var box = el.parentNode;
+    while (box && box !== document.body) {
+      var s = getComputedStyle(box);
+      var scrolls = axis === 'x'
+        ? (/(auto|scroll)/.test(s.overflowX) && box.scrollWidth > box.clientWidth)
+        : (/(auto|scroll)/.test(s.overflowY) && box.scrollHeight > box.clientHeight);
+      if (scrolls) break;
+      box = box.parentNode;
+    }
+    if (!box || box === document.body || !box.getBoundingClientRect) return;
+    var r = el.getBoundingClientRect(), b = box.getBoundingClientRect();
+    if (axis === 'x') {
+      if (r.left < b.left) box.scrollLeft -= (b.left - r.left);
+      else if (r.right > b.right) box.scrollLeft += (r.right - b.right);
+    } else {
+      if (r.top < b.top) box.scrollTop -= (b.top - r.top);
+      else if (r.bottom > b.bottom) box.scrollTop += (r.bottom - b.bottom);
+    }
+  }
+  S.reveal = reveal;
+
   function markCurrent() {
     document.querySelectorAll('.ent').forEach(function (a) {
       if (S.current && a.dataset.id === S.current.id) a.setAttribute('aria-current', 'true');
       else a.removeAttribute('aria-current');
     });
-    var cur = document.querySelector('.ent[aria-current="true"]');
-    if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest' });
+    reveal(document.querySelector('.ent[aria-current="true"]'));
   }
   S.markCurrent = markCurrent;
 
@@ -437,7 +486,7 @@
     S.kfocus = Math.max(0, Math.min(S.filtered.length - 1, S.kfocus + d));
     document.querySelectorAll('.ent.kfocus').forEach(function (n) { n.classList.remove('kfocus'); });
     var el = document.querySelector('.ent[data-id="' + cssId(S.filtered[S.kfocus].id) + '"]');
-    if (el) { el.classList.add('kfocus'); el.scrollIntoView({ block: 'nearest' }); }
+    if (el) { el.classList.add('kfocus'); reveal(el); }
   }
 
   /* ==========================================================================

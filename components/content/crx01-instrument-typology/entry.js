@@ -106,8 +106,10 @@ Shell.registerEntry({
   },
 
   ruling: {
+    // CK8 · AUDIT. Written during the build, signed 'julia', not traceable to
+    // any comment in her repositories. Proposed until she makes it.
     text: 'No raster anywhere on this sheet. If it needs grain to look finished it is not finished.',
-    by: 'julia',
+    by: 'proposed',
     date: '2026-08-29'
   },
 

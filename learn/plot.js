@@ -156,10 +156,19 @@
     var dom = spec.domain || [0, 1];
     var ran = spec.range || [0, 1];
 
+    /* CK8 · A plot's backing store is allocated ON APPROACH and released on
+       exit, and it is sized to the display rather than pinned at 2x.
+       Before: every plot on a chapter allocated 1120x520x4 = 2.33 MB at load,
+       whatever the screen, whatever was on it — chapter 10 carries three, so
+       an entry route opened with FOUR canvases and 8.9 MB of store against
+       PLAN §7.10's budget of two. The canvas starts at 0x0 (no store), an
+       IntersectionObserver sizes it and draws when it comes within a viewport
+       of the fold, and zeroes it again on exit. Nothing above the fold
+       changes; the plots still redraw on every keystroke. */
     host.innerHTML =
       '<div class="plot">' +
-        '<canvas width="' + (W * 2) + '" height="' + (H * 2) +
-          '" style="aspect-ratio:' + W + '/' + H + '" role="img" aria-label="Plot of ' +
+        '<canvas width="0" height="0"' +
+          ' style="aspect-ratio:' + W + '/' + H + '" role="img" aria-label="Plot of ' +
           S.esc(spec.expr) + '"></canvas>' +
         '<div class="pf"><span class="y">y =</span>' +
           '<input id="' + id + '" value="' + S.esc(spec.expr) + '" spellcheck="false" ' +
@@ -177,6 +186,16 @@
     var err = host.querySelector('.err');
     var ctx = cv.getContext('2d');
 
+    /* The store is capped at 2x so a 3x phone does not triple the bytes for a
+       line drawing, and floored at 1x so it is never softer than the screen. */
+    function scale() { return Math.max(1, Math.min(2, window.devicePixelRatio || 1)); }
+    function allocate() {
+      var s = scale();
+      if (cv.width === Math.round(W * s)) return;
+      cv.width = Math.round(W * s); cv.height = Math.round(H * s);
+    }
+    function release() { cv.width = 0; cv.height = 0; }
+
     function draw() {
       var fn;
       try { fn = parse(input.value, vars); }
@@ -186,13 +205,16 @@
       var t = slider ? parseFloat(slider.value) : 0;
       if (tval) tval.textContent = t.toFixed(2);
 
-      var w = W * 2, h = H * 2, pad = 24;
+      allocate();
+      var w = cv.width, h = cv.height, pad = 12 * scale();
+      if (!w || !h) return;                     // released: nothing to draw on
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, w, h);
       ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h);
 
       // grid: quarters of the declared domain and range
-      ctx.strokeStyle = '#f0f0f1'; ctx.lineWidth = 2;
+      var k = scale();                                  // stroke/type in store pixels
+      ctx.strokeStyle = '#f0f0f1'; ctx.lineWidth = 1 * k;
       for (var i = 0; i <= 4; i++) {
         var gx = pad + (w - 2 * pad) * i / 4, gy = pad + (h - 2 * pad) * i / 4;
         ctx.beginPath(); ctx.moveTo(gx, pad); ctx.lineTo(gx, h - pad); ctx.stroke();
@@ -207,7 +229,7 @@
       });
 
       // the curve
-      ctx.strokeStyle = '#0b0b0c'; ctx.lineWidth = 3; ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#0b0b0c'; ctx.lineWidth = 1.5 * k; ctx.lineJoin = 'round';
       ctx.beginPath();
       var started = false, bad = false;
       for (var px = 0; px <= w - 2 * pad; px++) {
@@ -225,18 +247,29 @@
 
       // the machine's labels, in mono, on the frame
       ctx.fillStyle = '#74747a';
-      ctx.font = '20px ui-monospace, "DejaVu Sans Mono", monospace';
-      ctx.fillText(String(dom[0]), pad, h - 6);
+      ctx.font = (10 * k) + 'px ui-monospace, "DejaVu Sans Mono", monospace';
+      ctx.fillText(String(dom[0]), pad, h - 3 * k);
       ctx.textAlign = 'right';
-      ctx.fillText(String(dom[1]), w - pad, h - 6);
-      ctx.fillText(String(ran[1]), pad - 4, pad + 8);
-      ctx.fillText(String(ran[0]), pad - 4, h - pad + 8);
+      ctx.fillText(String(dom[1]), w - pad, h - 3 * k);
+      ctx.fillText(String(ran[1]), pad - 2 * k, pad + 4 * k);
+      ctx.fillText(String(ran[0]), pad - 2 * k, h - pad + 4 * k);
       ctx.textAlign = 'left';
     }
 
     input.addEventListener('input', draw);
     if (slider) slider.addEventListener('input', draw);
-    draw();
+
+    /* Mount on approach, release on exit. Without IntersectionObserver every
+       plot simply allocates and draws, which is the old behaviour. */
+    if (window.IntersectionObserver) {
+      var io = new IntersectionObserver(function (rows) {
+        rows.forEach(function (r) { if (r.isIntersecting) draw(); else release(); });
+      }, { rootMargin: '100% 0px' });
+      io.observe(cv);
+      // a plot already on screen at mount draws in the observer's first callback
+    } else {
+      draw();
+    }
   }
 
   S.plot = { build: build, parse: parse };

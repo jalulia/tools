@@ -90,7 +90,12 @@ Shell.registerEntry({
     shader, you have found it in one read.</p>`,
 
   examples: [
-    { id: 'broken', title: 'Does not link', lane: 'glsl', file: 'main.frag', code:
+    // CK8 · the assertion moves out of prose and into data: PLAN §7.7 exempts a
+    // known-failure and asserts it fails, and until now the only statement of
+    // WHICH example fails was this page's own text, so the QA matrix had to
+    // hard-code the id. `status` is already on the example schema.
+    { id: 'broken', title: 'Does not link', lane: 'glsl', file: 'main.frag',
+      status: 'known-failure', code:
 `// THIS SHADER IS MEANT TO FAIL. It is the point of the page.
 //
 // Every line here is legal GLSL ES 1.00 and the fragment compiler accepts all
@@ -124,7 +129,8 @@ void main() {
 }
 ` },
 
-    { id: 'fixed', title: 'The word deleted', lane: 'glsl', file: 'fixed.frag', code:
+    { id: 'fixed', title: 'The word deleted', lane: 'glsl', file: 'fixed.frag',
+      status: 'canonical', code:
 `// THE FIX. One qualifier gone, and one line that keeps the promise here rather
 // than asking another stage to keep it.
 //
@@ -180,8 +186,10 @@ void main() {
   },
 
   ruling: {
+    // CK8 · AUDIT. Written during the build, signed 'julia', not traceable to
+    // any comment in her repositories. Proposed until she makes it.
     text: 'A failure ships when it is the lesson. Filing this as an exploration would be a lie about what it is, and hiding it would be a lie about what the work is like.',
-    by: 'julia',
+    by: 'proposed',
     date: '2026-08-29'
   },
 
