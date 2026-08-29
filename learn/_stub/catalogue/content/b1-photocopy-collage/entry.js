@@ -24,6 +24,7 @@ Shell.registerEntry({
       "previewHeight": 900
     },
     "thumb": {
+      "file": "thumb.png",
       "crop": [1, 30]
     },
     "text": "<p>Third-generation photocopy: the photograph was never a photograph. It is a\n    generated greyscale scene reproduced <em>through</em> an ordered screen, which is why\n    the darks break into dots rather than fading. A gradient with grain over it would look\n    like a gradient with grain over it.</p>",

@@ -16,6 +16,7 @@ import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, cpSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { verifyManifests } from './lib/manifests.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -174,12 +175,37 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }
 
+// Verify every learn/-shell manifest before anything is copied. It generates
+// nothing — the deploy stays a folder copy — but it fails the build on a schema
+// error, a missing folder or declared file, a folder that is on disk and absent
+// from the manifest, an unknown section or style, an unresolvable `related`
+// link, a duplicate or mismatched id, a count stated anywhere that does not
+// derive from entries, or an entry presented as canonical work whose critique
+// block does not state its read, its coupling and its pass order.
+//
+// This is the layer that would have caught the drift that exists today: 27 lens
+// sections against 26 gallery cards, and a hero, a footer and a tool.json
+// giving three different counts.
+function verify(names) {
+  const schemaFile = join(ROOT, 'learn', 'manifest.schema.json');
+  if (!existsSync(schemaFile)) return;            // no shell in this checkout yet
+  console.log('\n── verifying manifests ──');
+  const problems = verifyManifests(ROOT, { toolDirs: names, schemaFile });
+  if (problems.length) {
+    console.error(`\n✘ ${problems.length} manifest problem(s):`);
+    for (const p of problems) console.error('  · ' + p);
+    throw new Error('manifest verification failed');
+  }
+  console.log('  all manifests verified');
+}
+
 function main() {
   rmSync(SITE_DIR, { recursive: true, force: true });
   mkdirSync(SITE_DIR, { recursive: true });
 
   const names = discoverTools();
   console.log(`Discovered tools: ${names.join(', ') || '(none)'}`);
+  verify(names);
 
   const tools = [];
   for (const name of names) {

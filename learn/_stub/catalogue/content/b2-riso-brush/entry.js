@@ -23,6 +23,7 @@ Shell.registerEntry({
       "previewHeight": 900
     },
     "thumb": {
+      "file": "thumb.png",
       "crop": [1.2, 345]
     },
     "text": "<p>Two drums, and the second one is not a colour choice. The black drum lays the\n    word; the orange drum is registered a couple of millimetres off and only survives where\n    the black is thin — so the warm edge is the misregistration, not a stroke somebody\n    drew.</p>",

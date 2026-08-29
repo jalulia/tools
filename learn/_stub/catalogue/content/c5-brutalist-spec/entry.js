@@ -22,6 +22,7 @@ Shell.registerEntry({
       "previewHeight": 900
     },
     "thumb": {
+      "file": "thumb.png",
       "crop": [1, 30]
     },
     "reference": null,

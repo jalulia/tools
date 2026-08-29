@@ -23,6 +23,7 @@ Shell.registerEntry({
       "previewHeight": 900
     },
     "thumb": {
+      "file": "thumb.png",
       "crop": [1.15, 40]
     },
     "text": "<p>The paper is a bone 120 gsm with its own tooth; the toner starve is a hole punch\n    through the ink layer rather than a noise overlay, which is why the pinholes sit on the\n    fibre and not on top of the whole frame.</p>\n    <p>The edition stamp is over-inked by running the same filter at a higher amplitude —\n    the same operator at a different setting, not a second operator.</p>",

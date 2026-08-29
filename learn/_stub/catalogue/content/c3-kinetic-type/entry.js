@@ -22,6 +22,7 @@ Shell.registerEntry({
       "previewHeight": 900
     },
     "thumb": {
+      "file": "thumb.png",
       "crop": [1.25, 90]
     },
     "text": "<p>Three bands, one loop length, one direction reversed. The chrome has no opinion\n    about how fast this runs — content speed is whatever the specimen does — but the shell\n    does stop it when the card leaves the screen, which is what <code>lens:pause</code> is\n    for.</p>",
