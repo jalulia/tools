@@ -71,5 +71,11 @@ Shell.registerEntry({
       "banner flat digital blue",
       "global .foot chrome rule leaked 80px of padding into the card"
     ]
-  }
+  },
+  "related": [
+    {
+      "entry": "crx01-instrument-typology",
+      "relation": "source-of"
+    }
+  ]
 });

@@ -72,13 +72,20 @@ export function verifyManifests(root, { toolDirs, schemaFile, quiet = false } = 
     ? toolDirs.flatMap((d) => findManifests(join(root, d)))
     : findManifests(root);
 
-  // Every manifest first, so cross-tool `related` links can be resolved.
+  // Every manifest is LOADED, even when only one tool is being VERIFIED, so a
+  // cross-tool `related` link still has something to resolve against.
+  // `index-tools.mjs --tool components` narrows the check to one tool, and
+  // before this it also narrowed the resolution table — which turned eleven
+  // correct links to the Book of Shaders into eleven reported failures.
   const loaded = new Map();
-  for (const file of files) {
+  const context = new Map();
+  for (const file of findManifests(root)) {
     try {
-      loaded.set(file, loadManifest(file));
+      const m = loadManifest(file);
+      context.set(file, m);
+      if (files.includes(file)) loaded.set(file, m);
     } catch (e) {
-      problems.push(`${relative(root, file)}: ${e.message}`);
+      if (files.includes(file)) problems.push(`${relative(root, file)}: ${e.message}`);
     }
   }
 
@@ -92,7 +99,7 @@ export function verifyManifests(root, { toolDirs, schemaFile, quiet = false } = 
     if (!rel.includes('/') && m.manifest.id !== rel) {
       say(`manifest id "${m.manifest.id}" must equal the folder name "${rel}"`);
     }
-    verifyOne(m, schema, say, loaded, root);
+    verifyOne(m, schema, say, context, root);
     if (!quiet) {
       console.log(`  ✔ ${where} — ${m.entries.length} entries, ` +
         `${(m.manifest.sections || []).length} sections, ${(m.manifest.styles || []).length} styles`);

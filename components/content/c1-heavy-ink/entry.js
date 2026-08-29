@@ -89,6 +89,10 @@ Shell.registerEntry({
       "entry": "00-introduction",
       "relation": "shader-behind",
       "label": "The Book of Shaders — 00 Introduction"
+    },
+    {
+      "entry": "pm07-molten",
+      "relation": "source-of"
     }
   ]
 });

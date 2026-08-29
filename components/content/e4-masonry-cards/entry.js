@@ -78,6 +78,10 @@ Shell.registerEntry({
       "entry": "10-random",
       "relation": "shader-behind",
       "label": "The Book of Shaders — 10 Random"
+    },
+    {
+      "entry": "kls01-ki-landscape",
+      "relation": "source-of"
     }
   ]
 });

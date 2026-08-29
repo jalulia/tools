@@ -1,0 +1,394 @@
+<!doctype html>
+<!-- ============================================================================
+     PM-07 · Molten — an extruded-type poster, printed.
+
+     The melt is Julia's, from corpus/downloads/printed-matter-studies_6.html
+     :1536–1630 (ST.13 MOLTEN): a word is set hot at the top of a buffer and
+     then dragged downwards by a per-column decayed maximum, so every column
+     falls at its own rate and the letters run rather than blur. The drips
+     wander sideways by an amount that grows with depth. That engine is carried
+     across in structure and in its constants.
+
+     TWO THINGS CHANGED, and both are stated in entry.js under faults:
+
+     1. The source seeds its 1-D value noise with Math.random(), so the melt is
+        a different melt on every load and the plate has no identity. It is
+        Comp.mulberry32 here, and the seed is printed on the sheet.
+     2. The source's bloom is two blur() passes screened back over the image.
+        A blur standing in for light is the same move as a gradient standing in
+        for a photograph. Here the glow is a 1/9-scale copy of the melt buffer
+        upscaled — THE UPSCALE IS THE BLUR — so the light comes out of the same
+        field that made the letters, at no extra cost and with a cause.
+
+     The reproduction is this library's, not the study's: the plate is a two-
+     drum riso on bone stock. The hot ramp is the black drum's tone curve, the
+     brick drum is registered 5 px off and only survives where the black is
+     thin, and coverage fails as pinholes where the field is heaviest.
+     ============================================================================ -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>PM7 · Molten</title>
+<link rel="stylesheet" href="../_styles/riso-xerox.css">
+<style>
+html, body { background:#fff; }
+body { width:1100px; margin:0 auto; }
+.lens-frame { position:relative; overflow:hidden; background:#fff; contain:paint; }
+
+#mt {
+  position:relative; width:100%;
+  aspect-ratio: 1100 / 1240;
+  container-type: inline-size;
+  background:#e4e0d6; color:#141210;
+  isolation:isolate; overflow:hidden;
+}
+#mt .l { position:absolute; }
+
+/* ---- the sheet ---------------------------------------------------------- */
+#mt .stock { inset:0; z-index:1; background-repeat:repeat; background-size:16cqw 16cqw;
+             mix-blend-mode:multiply; opacity:.9; }
+
+/* ---- the printed image block ------------------------------------------- */
+#mt .plate { left:5.5cqw; top:7.6cqw; width:56cqw; height:92cqw; z-index:10;
+             background:#2a0806; overflow:hidden; }
+#mt .plate canvas { display:block; width:100%; height:100%; }
+/* the coverage failure at the edge of a heavy field: the ink thins where the
+   squeegee leaves the plate, so the block does not end on a ruled line */
+#mt .plate .burn { position:absolute; inset:0; pointer-events:none;
+  background:
+    linear-gradient(90deg, rgba(228,224,214,.20), rgba(228,224,214,0) 3.2%),
+    linear-gradient(-90deg, rgba(228,224,214,.17), rgba(228,224,214,0) 2.8%),
+    linear-gradient(180deg, rgba(228,224,214,.17), rgba(228,224,214,0) 2.2%),
+    linear-gradient(0deg, rgba(228,224,214,.22), rgba(228,224,214,0) 2.6%);
+  mix-blend-mode:screen; }
+
+/* ---- the word, printed twice: black drum, then brick, out of register --- */
+#mt .word { left:64cqw; top:6.4cqw; width:31cqw; z-index:20;
+            font-family: var(--f-cond); font-size:13.4cqw; line-height:.86;
+            letter-spacing:-.028em; text-transform:uppercase; }
+#mt .word .k { color:#141210; position:relative; z-index:2; }
+#mt .word .brick { position:absolute; left:0; top:0; width:100%;
+                   color:#c2452c; z-index:1;
+                   transform: translate(5px, 4px) rotate(-.35deg); }
+
+#mt .sub { left:64cqw; top:38.5cqw; width:31cqw; z-index:20;
+           font-family: var(--f-cap); font-weight:700; font-size:2.35cqw;
+           line-height:1.16; letter-spacing:.005em; text-transform:uppercase;
+           color:#141210; }
+#mt .rule { left:64cqw; top:36cqw; width:31cqw; height:0; z-index:20;
+            border-top:2px solid #141210; }
+
+#mt .body { left:64cqw; top:52cqw; width:29.5cqw; z-index:20;
+            font-family: var(--f-text); font-size:1.62cqw; line-height:1.5;
+            color:#2b2724; }
+#mt .body em { font-style:italic; }
+
+/* ---- the drum legend, mono, on a rule ---------------------------------- */
+#mt .legend { left:64cqw; top:79cqw; width:31cqw; z-index:20;
+              font-family: var(--f-mono); font-size:1.05cqw; letter-spacing:.13em;
+              text-transform:uppercase; color:#4a4741;
+              border-top:1px solid #a9a396; padding-top:.9cqw; }
+#mt .legend div { display:flex; align-items:center; gap:.7cqw; margin-bottom:.5cqw; }
+#mt .legend i { width:1.15cqw; height:1.15cqw; display:block; }
+
+#mt .colophon { left:5.5cqw; bottom:3.4cqw; width:89cqw; z-index:20;
+                display:flex; justify-content:space-between;
+                font-family: var(--f-mono); font-size:1.02cqw; letter-spacing:.14em;
+                text-transform:uppercase; color:#4a4741;
+                border-top:1px solid #a9a396; padding-top:.9cqw; }
+
+/* the edition number is the one hand mark on the sheet: pencil, applied after
+   printing, so it takes the paper but never the ink */
+#mt .hand { left:63.6cqw; top:90cqw; z-index:30;
+            font-family: var(--f-script); font-size:2.5cqw; color:#3a3630;
+            transform: rotate(-2.5deg); opacity:.85; }
+
+@media (prefers-reduced-motion: reduce) { #mt * { animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="lens-frame">
+
+<section id="mt" aria-label="PM7 — Molten, extruded-type riso poster">
+
+  <div class="l stock" aria-hidden="true"></div>
+
+  <div class="l plate">
+    <canvas id="mt-melt" aria-label="A word set hot and dragged downwards until it runs, printed as a screened black drum with a brick second run"></canvas>
+    <span class="burn" aria-hidden="true"></span>
+  </div>
+
+  <div class="l word">
+    <span class="brick" aria-hidden="true">Mol<br>ten</span>
+    <span class="k">Mol<br>ten</span>
+  </div>
+
+  <div class="l rule" aria-hidden="true"></div>
+  <p class="l sub">Type at the temperature<br>it fails at</p>
+
+  <div class="l body">
+    <p>A word is set hot at the top of the plate and then dragged down by a
+    per-column decayed maximum, so each column falls at its own rate. The
+    letters <em>run</em>; they are not blurred. Where the run is thickest the
+    black drum lays more ink than the stock will take and coverage opens as
+    pinholes.</p>
+  </div>
+
+  <div class="l legend">
+    <div><i style="background:#141210"></i>Drum 01 · black · screen 12°</div>
+    <div><i style="background:#c2452c"></i>Drum 02 · brick · +5 px, −0.35°</div>
+    <div><i style="background:#e4e0d6;box-shadow:inset 0 0 0 1px #a9a396"></i>Bone 140 gsm · uncoated</div>
+  </div>
+
+  <div class="l colophon">
+    <span>Printed matter studies · ST.13 · <span id="mt-seed">seed 0</span></span>
+    <span>Two drums · one screen · one field</span>
+    <span>PM-07</span>
+  </div>
+
+  <div class="l hand" aria-hidden="true">7/40</div>
+
+</section>
+</div>
+
+<script src="../_engines/raster.js"></script>
+<script src="../_engines/rng.js"></script>
+<script src="../_engines/paper.js"></script>
+<script src="../_engines/scene.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var SEED = 1307;                    // the identity of this plate
+
+  /* 1-D value noise, seeded. The source builds its two noise tables from
+     Math.random(), so the melt was different on every load and the poster had
+     no identity — the same class of defect as an unseeded grain film. */
+  function vnoise1(seed) {
+    var r = Comp.mulberry32(Comp.spread(seed)), g = new Float32Array(256), i;
+    for (i = 0; i < 256; i++) g[i] = r();
+    return function (x) {
+      var j = Math.floor(x) & 255, f = x - Math.floor(x), u = f * f * (3 - 2 * f);
+      return g[j] * (1 - u) + g[(j + 1) & 255] * u;
+    };
+  }
+
+  /* The hot ramp: seven stops from the deep ground to a white core. It is the
+     BLACK DRUM'S TONE CURVE, not a colour choice — the plate is one ink and
+     this is how much of it is on the sheet at each value. */
+  var RAMP = [[42, 6, 5], [104, 14, 8], [180, 32, 12], [232, 74, 28],
+              [250, 168, 96], [255, 231, 197], [255, 248, 233]];
+
+  function paint() {
+    var cv = document.getElementById('mt-melt');
+    var host = cv.parentNode;
+    var cw = host.clientWidth, ch = host.clientHeight;
+    if (cw < 8 || ch < 8) return;
+
+    // 1.25 rather than 2: the plate is 56cqw of a 1100 px sheet, the screen
+    // pitch is 5 device px, and the melt is four full-buffer passes. The cap
+    // in _engines/raster.js takes this to 1 on a phone.
+    var dpr = Comp.dpr(1.25);
+    var W = Math.round(cw * dpr), H = Math.round(ch * dpr);
+    cv.width = W; cv.height = H;
+    var x = cv.getContext('2d');
+
+    /* -------- 1 · the word, set hot at the top ------------------------- */
+    var off = document.createElement('canvas');
+    off.width = W; off.height = H;
+    var o = off.getContext('2d');
+    o.fillStyle = '#000'; o.fillRect(0, 0, W, H);
+    o.save();
+    o.translate(W * 0.50, H * 0.300);
+    o.rotate(-0.16);
+    o.fillStyle = '#fff';
+    o.font = '400 ' + (W * 0.40) + 'px "Archivo Black", "Anton", sans-serif';
+    o.textAlign = 'center';
+    o.fillText('HOT', 0, 0);
+    o.restore();
+    var S = o.getImageData(0, 0, W, H).data;
+
+    /* -------- 2 · the melt: a per-column decayed maximum ----------------
+       acc = max(source, acc * decay) down the column. Each column has its own
+       decay length, so the run is ragged in a way a blur cannot be: a blur is
+       symmetric and this is not, and the asymmetry is the direction gravity
+       is pulling in. */
+    var nA = vnoise1(SEED), nB = vnoise1(SEED + 977);
+    var buf = new Float32Array(W * H);
+    var acc = new Float32Array(W), dec = new Float32Array(W);
+    var px, py;
+    for (px = 0; px < W; px++) {
+      var L = H * (0.10 + 0.50 * Math.pow(nA(px * 0.012), 1.6) + 0.08 * nA(px * 0.09));
+      dec[px] = Math.exp(-1 / Math.max(8, L));
+    }
+    for (py = 0; py < H; py++) {
+      for (px = 0; px < W; px++) {
+        var s = S[(py * W + px) * 4] / 255;
+        acc[px] = Math.max(s, acc[px] * dec[px]);
+        buf[py * W + px] = acc[px];
+      }
+    }
+
+    /* -------- 3 · the drips wander, and the wander grows with depth ----- */
+    var out = new Float32Array(W * H);
+    for (py = 0; py < H; py++) {
+      var amp = Math.max(0, (py - H * 0.30)) * 0.10;
+      for (px = 0; px < W; px++) {
+        var sh = (nB(px * 0.02 + py * 0.004) - 0.5) * 2 * amp;
+        var sx = Math.min(W - 1, Math.max(0, (px + sh) | 0));
+        out[py * W + px] = buf[py * W + sx];
+      }
+    }
+
+    /* -------- 4 · the ramp ---------------------------------------------- */
+    var idd = x.createImageData(W, H), d = idd.data;
+    for (py = 0; py < H; py++) {
+      for (px = 0; px < W; px++) {
+        var i = (py * W + px) * 4;
+        var t = Math.pow(out[py * W + px], 1.25);
+        var f = t * (RAMP.length - 1), i0 = Math.min(RAMP.length - 2, f | 0), fr = f - i0;
+        d[i]     = RAMP[i0][0] + (RAMP[i0 + 1][0] - RAMP[i0][0]) * fr;
+        d[i + 1] = RAMP[i0][1] + (RAMP[i0 + 1][1] - RAMP[i0][1]) * fr;
+        d[i + 2] = RAMP[i0][2] + (RAMP[i0 + 1][2] - RAMP[i0][2]) * fr;
+        d[i + 3] = 255;
+      }
+    }
+    x.putImageData(idd, 0, 0);
+
+    /* -------- 5 · the glow, out of the same field -----------------------
+       A ninth-scale copy of the melt, upscaled with smoothing and screened
+       back. THE UPSCALE IS THE BLUR: no filter, no second pass over the
+       image, and the light is necessarily the shape of the thing emitting it
+       because it is made of the same numbers. */
+    var g = document.createElement('canvas');
+    var gw = Math.max(8, Math.round(W / 9)), gh = Math.max(8, Math.round(H / 9));
+    g.width = gw; g.height = gh;
+    var gc = g.getContext('2d');
+    var gi = gc.createImageData(gw, gh), gd = gi.data;
+    for (py = 0; py < gh; py++) {
+      for (px = 0; px < gw; px++) {
+        // box-average the melt under this cell, so the glow is the field's
+        // own energy rather than a resampled picture of it
+        var sum = 0, n = 0;
+        for (var yy = py * 9; yy < Math.min(H, py * 9 + 9); yy++) {
+          for (var xx = px * 9; xx < Math.min(W, px * 9 + 9); xx++) { sum += out[yy * W + xx]; n++; }
+        }
+        var v = n ? sum / n : 0;
+        var f2 = Math.pow(v, 1.15) * (RAMP.length - 1);
+        var j0 = Math.min(RAMP.length - 2, f2 | 0), fr2 = f2 - j0, k = (py * gw + px) * 4;
+        gd[k]     = RAMP[j0][0] + (RAMP[j0 + 1][0] - RAMP[j0][0]) * fr2;
+        gd[k + 1] = RAMP[j0][1] + (RAMP[j0 + 1][1] - RAMP[j0][1]) * fr2;
+        gd[k + 2] = RAMP[j0][2] + (RAMP[j0 + 1][2] - RAMP[j0][2]) * fr2;
+        gd[k + 3] = 255;
+      }
+    }
+    gc.putImageData(gi, 0, 0);
+    x.save();
+    x.globalCompositeOperation = 'screen';
+    x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+    // kept low on purpose: at the study's strength the glow closes the
+    // counters and the word stops being a word
+    x.globalAlpha = 0.28; x.drawImage(g, 0, 0, W, H);
+    x.globalAlpha = 0.13; x.drawImage(g, -W * 0.012, -H * 0.008, W * 1.024, H * 1.016);
+    x.restore();
+
+    /* -------- 6 · drum 02, brick, out of register -----------------------
+       The second run is not a colour layer: it is the same field printed
+       again, offset by five device pixels and turned by a third of a degree,
+       and it only survives where the black is thin. That is what a second
+       drum does. */
+    var b = document.createElement('canvas');
+    b.width = W; b.height = H;
+    var bc = b.getContext('2d');
+    var bi = bc.createImageData(W, H), bd = bi.data;
+    for (py = 0; py < H; py++) {
+      for (px = 0; px < W; px++) {
+        var t2 = out[py * W + px];
+        var k2 = (py * W + px) * 4;
+        // brick where the black is THIN — the mid-tones, not the core
+        var a2 = Math.max(0, Math.min(1, (t2 - 0.06) * 2.6)) * Math.max(0, 1 - t2 * 1.55);
+        bd[k2] = 194; bd[k2 + 1] = 69; bd[k2 + 2] = 44; bd[k2 + 3] = (a2 * 210) | 0;
+      }
+    }
+    bc.putImageData(bi, 0, 0);
+    x.save();
+    x.globalCompositeOperation = 'screen';
+    x.translate(W * 0.5, H * 0.5); x.rotate(-0.0061); x.translate(-W * 0.5, -H * 0.5);
+    x.globalAlpha = 0.85;
+    x.drawImage(b, 5 * dpr, 4 * dpr);
+    x.restore();
+
+    /* -------- 7 · one screen, over both drums ---------------------------
+       A rotated dot lattice that bites hardest in the darks — where a
+       duplicator lays the most ink and the stock takes the least. Same
+       lattice geometry as _engines/halftone.js; it is applied here as a
+       multiply over a finished image rather than as a build from a field, so
+       it is written out rather than called. */
+    var pix = x.getImageData(0, 0, W, H), pd = pix.data;
+    var ang = 12 * Math.PI / 180, ca = Math.cos(ang), sa = Math.sin(ang);
+    var pitch = 5 * dpr / 1.25;
+    for (py = 0; py < H; py++) {
+      for (px = 0; px < W; px++) {
+        var ii = (py * W + px) * 4;
+        var rx = px * ca + py * sa, ry = -px * sa + py * ca;
+        var fx = rx / pitch - Math.round(rx / pitch), fy = ry / pitch - Math.round(ry / pitch);
+        var dd = Math.sqrt(fx * fx + fy * fy) * pitch;
+        var lum = (pd[ii] + pd[ii + 1] + pd[ii + 2]) / 765;
+        if (dd < 1.55 * (1 - lum * 0.75)) {
+          var kk = 1 - 0.6 * (1 - lum);
+          pd[ii] *= kk; pd[ii + 1] *= kk; pd[ii + 2] *= kk;
+        }
+      }
+    }
+
+    /* -------- 8 · pinholes, where the ink is heaviest -------------------
+       Coverage failure belongs to the ink, so it happens where there IS ink
+       to fail. Small type and thin tone do not starve. */
+    var rnd = Comp.mulberry32(Comp.spread(SEED + 31));
+    var holes = (W * H) / 900;
+    for (var q = 0; q < holes; q++) {
+      var hx = (rnd() * W) | 0, hy = (rnd() * H) | 0;
+      var hi = (hy * W + hx) * 4;
+      var l2 = (pd[hi] + pd[hi + 1] + pd[hi + 2]) / 765;
+      if (l2 < 0.30 && rnd() < 0.55) {
+        pd[hi] = 226; pd[hi + 1] = 220; pd[hi + 2] = 208;
+      }
+    }
+    x.putImageData(pix, 0, 0);
+
+    /* -------- 9 · the plate's own edge holds the light ------------------
+       The study's last line, kept: without it the run reaches the bottom
+       corners at full strength and the block reads as a flat field with a
+       bright thing in it. A press sheet is darkest where the roller has
+       already left. */
+    var eg = x.createRadialGradient(W * 0.5, H * 0.38, H * 0.16, W * 0.5, H * 0.52, H * 0.78);
+    eg.addColorStop(0, 'rgba(26,3,3,0)');
+    eg.addColorStop(1, 'rgba(22,2,2,.58)');
+    x.fillStyle = eg; x.fillRect(0, 0, W, H);
+
+    var tag = document.getElementById('mt-seed');
+    if (tag) tag.textContent = 'seed ' + SEED + ' · dpr ' + dpr;
+  }
+
+  function stock() {
+    var el = document.querySelector('#mt .stock');
+    if (!el || el.dataset.done) return;
+    el.dataset.done = '1';
+    // A repeating tile, not a full-size canvas: the sheet is 1100 x 1420 and a
+    // canvas that size at any useful multiple is megabytes of tooth nobody can
+    // see. The tile is 180 px of real per-pixel stock with fibres in it.
+    el.style.backgroundImage = 'url(' + Comp.paperTile({
+      size: 180, seed: 4242, base: 224, amp: 22, fibres: 46,
+      fibre: 'rgba(126,116,98,.13)'
+    }) + ')';
+  }
+
+  Comp.paint(function () { stock(); paint(); }, { threshold: 40 });
+})();
+</script>
+
+<script src="../../../learn/fragment-boot.js"></script>
+</body>
+</html>

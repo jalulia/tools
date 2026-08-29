@@ -717,10 +717,13 @@
     if (st.texture && st.texture.length) {
       blocks += '<div><span class="lab">Texture</span><p>' + esc(st.texture.join(' · ')) + '</p></div>';
     }
-    if (st.engines && st.engines.length) {
-      blocks += '<div><span class="lab">Engines</span>' + st.engines.map(function (g) {
-        return '<p><code>' + esc(g) + '</code></p>';
-      }).join('') + '</div>';
+    if (st.engines) {
+      // An EMPTY list is a statement, not a missing field: technical-doc
+      // declares one because no lens in it allocates a canvas, and a style
+      // page that simply omitted the block would look like an oversight.
+      blocks += '<div><span class="lab">Engines</span>' + (st.engines.length
+        ? st.engines.map(function (g) { return '<p><code>' + esc(g) + '</code></p>'; }).join('')
+        : '<p>None — no lens in this style allocates a canvas.</p>') + '</div>';
     }
     // The rules are the longest block and the only prose here, so it takes the
     // whole row under the four short declarations rather than sitting in a

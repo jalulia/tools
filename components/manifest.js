@@ -55,7 +55,7 @@ Shell.registerManifest({
       type: { display: "Anton", text: "EB Garamond", mono: "JetBrains Mono", script: "Caveat" },
       texture: ["dot-screen", "toner-starve", "misregistration", "paper-tooth", "edge-burn", "feed-jitter"],
       // the shared code every fragment in this style loads, relative to content/
-      engines: ["_engines/rng.js", "_engines/field.js", "_engines/halftone.js", "_engines/paper.js", "_engines/scene.js"],
+      engines: ["_engines/raster.js", "_engines/rng.js", "_engines/field.js", "_engines/halftone.js", "_engines/paper.js", "_engines/scene.js"],
       rules: [
         "A photograph is a generated greyscale SCENE that is then reproduced. Never a gradient standing in for one.",
         "Misregistration is the consequence of a second drum — its own seed, its own offset, its own twist. Never a drawn stroke or a copied layer.",
@@ -63,14 +63,14 @@ Shell.registerManifest({
         "The hand layer — marker, fineliner, pen — is applied AFTER printing and therefore takes the light but not the ink.",
         "Vinyl is not paper: a kiss-cut sticker gets a white lip, a sheen and a contact shadow, and no print filter at all."
       ],
-      entries: ["b1-photocopy-collage", "b2-riso-brush", "c1-heavy-ink", "d4-riso-print-set", "b3-wristband", "d6-social-tiles", "e5-case-card-alts"] },
+      entries: ["b1-photocopy-collage", "b2-riso-brush", "c1-heavy-ink", "d4-riso-print-set", "b3-wristband", "d6-social-tiles", "pm07-molten", "e5-case-card-alts"] },
     { id: "display-specimen", title: "Display specimen",
       summary: "One family, shown at the sizes it was drawn for. The plate exists to let the letterforms be judged, so anything that is not the type has to justify itself.",
       palette: ["#141210", "#ef5322", "#f4c20d", "#2aa355", "#f2f2f3"],
       type: { display: "Anton", text: "Archivo", mono: "JetBrains Mono", script: "Caveat" },
       texture: ["ink-chain", "overflow-crop", "kiss-cut vinyl", "none"],
       // the shared code every fragment in this style loads, relative to content/
-      engines: ["_engines/rng.js", "_engines/field.js", "_engines/halftone.js", "_engines/scene.js"],
+      engines: ["_engines/raster.js", "_engines/rng.js", "_engines/field.js", "_engines/halftone.js", "_engines/paper.js", "_engines/scene.js"],
       rules: [
         "No second family as a contrast device. A contrast of size is not a contrast of voice.",
         "Ink-chain amplitude follows type size: a display word may starve, an eight-point label may not.",
@@ -84,7 +84,7 @@ Shell.registerManifest({
       type: { display: "Fraunces", text: "EB Garamond", mono: "JetBrains Mono", script: "Caveat" },
       texture: ["paper-tooth", "stage-falloff", "contact-shadow", "hairline"],
       // the shared code every fragment in this style loads, relative to content/
-      engines: ["_engines/rng.js", "_engines/paper.js", "_engines/scene.js"],
+      engines: ["_engines/raster.js", "_engines/rng.js", "_engines/scene.js"],
       rules: [
         "Optical size is bound to rendered size. A display cut and a text cut are one family answering one question at two scales.",
         "Paper is under the ink and multiplied through it, so type sits IN the sheet. Grain over the top is an effect without a cause.",
@@ -98,7 +98,7 @@ Shell.registerManifest({
       type: { display: "Fraunces", text: "Inter", mono: "JetBrains Mono" },
       texture: ["none", "hairline", "tinted-track"],
       // the shared code every fragment in this style loads, relative to content/
-      engines: ["_engines/rng.js", "_engines/scene.js"],
+      engines: ["_engines/raster.js", "_engines/rng.js", "_engines/scene.js"],
       rules: [
         "Track widths are snapped to integers before anything is drawn, so hairlines land on device pixels.",
         "One accent colour on the whole sheet, and it means \"interactive\" or it means nothing.",
@@ -110,37 +110,40 @@ Shell.registerManifest({
       summary: "A document that looks like the machine that made it. Punches, ticks, a barcode, a grid — and no ornament of any kind.",
       palette: ["#0a0a0b", "#ffffff", "#9a9aa0", "#eaeaec"],
       type: { display: "Archivo", text: "Fraunces", mono: "JetBrains Mono" },
-      texture: ["punched-hole", "hairline-grid", "barcode"],
+      texture: ["punched-hole", "hairline-grid", "barcode", "drafting-line", "hatch"],
       // the shared code every fragment in this style loads, relative to content/
-      engines: ["_engines/rng.js", "_engines/scene.js"],
+      engines: [],   // none: no lens in this style allocates a canvas
       rules: [
         "Every hole is a real hole: the ground shows through, with an inner shadow for the thickness and a lit lip below.",
         "The only non-text mark is a legend. Ornament is not allowed on a spec sheet.",
-        "Signatures are fineliner and never starve — a pen is not a press."
+        "Signatures are fineliner and never starve — a pen is not a press.",
+        "No raster on a drawing sheet. If it needs grain to look finished it is not finished."
       ],
-      entries: ["c5-spec-sheet"] },
+      entries: ["c5-spec-sheet", "crx01-instrument-typology"] },
     { id: "atmospheric", title: "Atmospheric field",
       summary: "Colour fields painted small and upscaled, where the upscale is the blur and the grain is the emulsion. The picture and the type share one film.",
       palette: ["#e7e3d9", "#1a1815", "#2b57d6", "#dcd9d1", "#0a0a0a"],
       type: { display: "Fraunces", text: "Archivo", mono: "JetBrains Mono", script: "Caveat" },
-      texture: ["grain-gradient", "elliptical-belt", "film-grain", "dot-screen"],
+      texture: ["grain-gradient", "elliptical-belt", "film-grain", "dot-screen", "watercolour-wash", "granulation", "edge-pooling"],
       // the shared code every fragment in this style loads, relative to content/
-      engines: ["_engines/rng.js", "_engines/field.js", "_engines/halftone.js", "_engines/scene.js"],
+      engines: ["_engines/raster.js", "_engines/rng.js", "_engines/field.js", "_engines/halftone.js", "_engines/paper.js", "_engines/scene.js"],
       rules: [
         "Bodies are belts, not blobs. A chain of radial gradients is the AI-gradient tell and it has no field underneath.",
         "The blur IS the upscale. A separate blur pass is an effect looking for a cause.",
         "The film layer sits ABOVE the type, so the words are in the picture rather than on it."
       ],
-      entries: ["e4-masonry-cards", "e5-case-card"] }
+      entries: ["e4-masonry-cards", "e5-case-card", "kls01-ki-landscape"] }
   ],
   entries: [
-    /* Print & reproduction — 6 */
+    /* Print & reproduction — 8 */
     "b1-photocopy-collage",   // B1 · riso-xerox
     "b2-riso-brush",          // B2 · riso-xerox
     "c1-heavy-ink",           // C1 · riso-xerox
     "d4-riso-print-set",      // D4 · riso-xerox
     "b3-wristband",           // B3 · riso-xerox
     "d6-social-tiles",        // D6 · riso-xerox
+    "pm07-molten",            // PM7 · riso-xerox · original
+    "kls01-ki-landscape",     // KL1 · atmospheric · original
     /* Type & specimen — 7 */
     "e1-type-stack",          // E1 · editorial-serif
     "d3-interlocking-stack",  // D3 · display-specimen
@@ -149,11 +152,12 @@ Shell.registerManifest({
     "t1-type-specimen",       // T1 · display-specimen
     "t8-blobby-display",      // T8 · display-specimen
     "d2-circled-glyphs",      // D2 · display-specimen
-    /* Document & system — 4 */
+    /* Document & system — 5 */
     "c5-spec-sheet",          // C5 · technical-doc
     "c6-dossier",             // C6 · editorial-serif
     "c2-style-guide",         // C2 · editorial-serif
     "b5-brand-guide-grid",    // B5 · swiss-modular
+    "crx01-instrument-typology", // CX1 · technical-doc · original
     /* Motion & kinetic — 2 */
     "c3-kinetic-type",        // C3 · display-specimen
     "c4-ribbon-type",         // C4 · display-specimen

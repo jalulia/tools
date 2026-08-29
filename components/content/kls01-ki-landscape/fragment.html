@@ -1,0 +1,503 @@
+<!doctype html>
+<!-- ============================================================================
+     KLS-01 · Ki landscape — an edition print of a painted panorama.
+
+     The only lens in this library that is about PAINTING. Every other plate
+     reproduces something that was printed; this one reproduces something that
+     was painted, and the seven passes it takes to do that are the subject.
+
+     Per depth band, clipped to that band's own ridge, offset by that band's
+     own parallax drift, tinted from that band's own mid colour:
+
+       1 watercolour wash        soft-light, keeps the hue
+       2 granulation             pigment settling in the body, multiply
+       3 cut-paper edge          a crisp line following the ridge exactly
+       4 edge bloom              a 1 px strip stamped at every column's crest
+       5 crest catch-light       lifted by a FRACTION OF THE HEADROOM to white
+       6 edge pooling            a finer mottle burned inside the bloom
+       7 paper grain             mean-preserving, soft-light, last
+
+     From Julia's Ki-Landscapes/index.html:260–332, by way of the Book of
+     Shaders' worked example W1, which reduced it to one still frame. Two
+     things this build restores that W1 declared as losses: the colour is
+     interpolated in OKLab rather than sRGB, and the crest light lifts by a
+     fraction of the remaining headroom so a hazed far band cannot clip into a
+     flat white horizon. See entry.js.
+     ============================================================================ -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>KL1 · Ki landscape</title>
+<link rel="stylesheet" href="../_styles/atmospheric.css">
+<style>
+html, body { background:#fff; }
+body { width:1100px; margin:0 auto; }
+.lens-frame { position:relative; overflow:hidden; background:#fff; contain:paint; }
+
+#ki {
+  position:relative; width:100%;
+  aspect-ratio: 1100 / 1050;
+  container-type: inline-size;
+  background:#e7e3d9; color:#1a1815;
+  isolation:isolate; overflow:hidden;
+  padding: 4.4cqw 5cqw 3.2cqw;
+}
+#ki .stock { position:absolute; inset:0; z-index:1; background-repeat:repeat;
+             background-size:16cqw 16cqw; mix-blend-mode:multiply; opacity:.85; }
+#ki > * { position:relative; z-index:2; }
+
+/* ---- masthead ----------------------------------------------------------- */
+#ki .top { display:flex; align-items:baseline; justify-content:space-between;
+           border-bottom:1px solid #b6ad9c; padding-bottom:1cqw; }
+#ki .m { font-family: var(--f-mono); font-size:1.02cqw; letter-spacing:.15em;
+         text-transform:uppercase; color:#5d564c; font-variant-numeric:tabular-nums; }
+#ki .m.ink { color:#1a1815; }
+
+/* ---- the plate ---------------------------------------------------------- */
+#ki .plate { margin-top:2.6cqw; position:relative;
+             /* the print is inset from the sheet: an edition print has a
+                margin, and the margin is where the plate mark and the pencil
+                go. The 3px light rim is the paper's own edge catching, not a
+                drop shadow — the chrome never boxes a specimen and neither
+                does this. */
+             box-shadow: 0 0 0 1px rgba(26,24,21,.16); }
+#ki .plate canvas { display:block; width:100%; aspect-ratio: 99 / 50; }
+#ki .plate .haze { position:absolute; inset:0; pointer-events:none;
+  background: linear-gradient(180deg, rgba(231,227,217,.30), rgba(231,227,217,0) 9%);
+  mix-blend-mode:screen; }
+
+/* ---- title block -------------------------------------------------------- */
+#ki .title { margin-top:3cqw; display:grid; grid-template-columns: 1.35fr 1fr; gap:4cqw; }
+#ki h1 { margin:0; font-family: var(--f-display); font-weight:400;
+         font-size:5.4cqw; line-height:1.02; letter-spacing:-.018em; color:#1a1815; }
+#ki h1 em { font-style:italic; }
+#ki .title p { font-family: var(--f-text); font-size:1.5cqw; line-height:1.55;
+               color:#3a352e; margin:.4cqw 0 0; }
+#ki .title .side p { margin-top:0; }
+
+/* ---- the pass strip: a proof's own drawdown ---------------------------- */
+#ki .passes { margin-top:3cqw; border-top:1px solid #1a1815; padding-top:1.1cqw;
+              display:grid; grid-template-columns: repeat(7, 1fr); gap:1.1cqw; }
+#ki .passes .p { }
+#ki .passes .sw { display:block; height:1.5cqw; margin-bottom:.7cqw;
+                  box-shadow: inset 0 0 0 1px rgba(26,24,21,.22); }
+#ki .passes .n { display:block; font-family: var(--f-mono); font-size:.92cqw;
+                 letter-spacing:.14em; color:#8a8276; margin-bottom:.25cqw; }
+#ki .passes .t { display:block; font-family: var(--f-text); font-size:1.14cqw;
+                 line-height:1.3; color:#1a1815; }
+#ki .passes .o { display:block; font-family: var(--f-mono); font-size:.86cqw;
+                 letter-spacing:.1em; text-transform:uppercase; color:#8a8276;
+                 margin-top:.35cqw; }
+
+#ki .foot { position:absolute; left:5cqw; right:5cqw; bottom:3.2cqw;
+            display:flex; justify-content:space-between;
+            border-top:1px solid #b6ad9c; padding-top:.9cqw; z-index:2; }
+
+/* pencil, on the paper, after the printing — it takes the tooth, never the ink */
+#ki .hand { position:absolute; left:5.4cqw; bottom:8.4cqw; z-index:3;
+            font-family: var(--f-script); font-size:2.3cqw; color:#4a443b;
+            transform: rotate(-1.6deg); opacity:.9; }
+#ki .hand.r { left:auto; right:5.4cqw; }
+
+@media (prefers-reduced-motion: reduce) { #ki * { animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="lens-frame">
+
+<section id="ki" aria-label="KL1 — Ki landscape, seven-pass painted panorama as an edition print">
+
+  <div class="stock" aria-hidden="true"></div>
+
+  <div class="top">
+    <span class="m ink">Ki landscapes · plate 01</span>
+    <span class="m">Seven passes · eleven bands · one field</span>
+    <span class="m" id="ki-seed">seed 2471</span>
+  </div>
+
+  <div class="plate">
+    <canvas id="ki-cv" aria-label="A painted panorama in eleven depth bands, each one washed, granulated, edged, bloomed, lit, pooled and grained"></canvas>
+    <span class="haze" aria-hidden="true"></span>
+  </div>
+
+  <div class="title">
+    <div>
+      <h1>Hokkaido, <em>eleven bands</em></h1>
+      <p>Painted from the back forwards. Each band is a ridge line, a fill, and
+      then seven passes laid one over the other inside that band's own
+      silhouette — never across it.</p>
+    </div>
+    <div class="side">
+      <p>Three shared causes and seven consequences. Every pass is clipped to
+      the same path, offset by the same drift, and tinted from the same mid
+      colour, so all seven textures travel with the land instead of sitting in
+      front of it. That is the whole difference between a chain and a pile.</p>
+    </div>
+  </div>
+
+  <div class="passes" id="ki-passes"></div>
+
+  <span class="hand" aria-hidden="true">a/p 3</span>
+  <span class="hand r" aria-hidden="true">2026</span>
+
+  <div class="foot">
+    <span class="m">OKLab ramp · mean-preserving tooth · no pinned film</span>
+    <span class="m">Canvas2D · painted once, then stopped</span>
+    <span class="m ink">KLS-01</span>
+  </div>
+
+</section>
+</div>
+
+<script src="../_engines/raster.js"></script>
+<script src="../_engines/rng.js"></script>
+<script src="../_engines/paper.js"></script>
+<script src="../_engines/scene.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var SEED = 2471, BANDS = 11, EDGE = 0.62, JOURNEY = 0.31;
+
+  /* ------------------------------------------------------------ OKLab ----
+     W1 interpolates the band ramp in sRGB and lists that as a fault: a
+     straight line through sRGB between a warm haze and a cool near band
+     passes through a grey that neither end is, and the middle bands go dull.
+     OKLab is perceptually uniform, so the same five stops give a ramp whose
+     middle is the colour it looks like it should be. This is the loss the
+     worked example declared and could not fix inside its own lane. */
+  function oklabToRgb(L, a, b) {
+    var l = L + 0.3963377774 * a + 0.2158037573 * b;
+    var m = L - 0.1055613458 * a - 0.0638541728 * b;
+    var s = L - 0.0894841775 * a - 1.2914855480 * b;
+    l = l * l * l; m = m * m * m; s = s * s * s;
+    var r =  4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+    var g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+    var v = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+    function f(c) {
+      c = c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(Math.max(c, 0), 1 / 2.4) - 0.055;
+      return Math.max(0, Math.min(255, Math.round(c * 255)));
+    }
+    return [f(r), f(g), f(v)];
+  }
+  /* far → near. Warm and pale at the horizon, cool and deep at the foot:
+     aerial perspective, which is also why pass 5 has to lift by a fraction of
+     the headroom rather than by a fixed amount. */
+  var PAL = [
+    [0.885, 0.004, 0.038],
+    [0.760, 0.000, 0.032],
+    [0.610, -0.014, 0.024],
+    [0.450, -0.024, 0.010],
+    [0.300, -0.016, -0.008]
+  ];
+  function bandLab(t) {
+    var u = Math.max(0, Math.min(1, t)) * (PAL.length - 1);
+    var i = Math.min(PAL.length - 2, Math.floor(u)), f = u - i;
+    return [0, 1, 2].map(function (k) { return PAL[i][k] + (PAL[i + 1][k] - PAL[i][k]) * f; });
+  }
+  var lab2 = function (L) { return oklabToRgb(L[0], L[1], L[2]); };
+  var rgb  = function (c) { return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; };
+  /* shade and lift IN OKLab: moving L is a lightness move, and moving the
+     sRGB triple is not. lift() takes a fraction of the REMAINING HEADROOM to
+     white, which is the line the whole horizon depends on. */
+  var shade = function (L, k) { return [L[0] * k, L[1], L[2]]; };
+  var lift  = function (L, k) { return [L[0] + (1 - L[0]) * k, L[1] * (1 - k * 0.4), L[2] * (1 - k * 0.4)]; };
+
+  /* ---------------------------------------------------------- noise tiles */
+  function noiseLayer(size, cells, seed) {
+    var r = Comp.mulberry32(Comp.spread(seed)), g = new Float32Array(cells * cells), i;
+    for (i = 0; i < g.length; i++) g[i] = r();
+    return function (x, y) {
+      var fx = x / size * cells, fy = y / size * cells;
+      var xi = Math.floor(fx), yi = Math.floor(fy);
+      var x0 = ((xi % cells) + cells) % cells, y0 = ((yi % cells) + cells) % cells;
+      var x1 = (x0 + 1) % cells, y1 = (y0 + 1) % cells;
+      var tx = fx - xi, ty = fy - yi;
+      tx = tx * tx * (3 - 2 * tx); ty = ty * ty * (3 - 2 * ty);
+      var a = g[y0 * cells + x0], b = g[y0 * cells + x1],
+          c = g[y1 * cells + x0], d = g[y1 * cells + x1];
+      return (a * (1 - tx) + b * tx) * (1 - ty) + (c * (1 - tx) + d * tx) * ty;
+    };
+  }
+  function tile(size, fn, base, spread) {
+    var c = document.createElement('canvas'); c.width = c.height = size;
+    var cx = c.getContext('2d'), id = cx.createImageData(size, size);
+    for (var y = 0; y < size; y++) for (var x = 0; x < size; x++) {
+      var v = Math.max(0, Math.min(255, base + (fn(x, y) - 0.5) * spread));
+      var i = (y * size + x) * 4;
+      id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255;
+    }
+    cx.putImageData(id, 0, 0); return c;
+  }
+  var T = null;
+  function tiles() {
+    if (T) return T;
+    // The grain tile's base is MID-GREY so soft-light perturbs luminance both
+    // ways and the mean survives: a tooth, not a darkening film. KLS-02.
+    var rng = Comp.mulberry32(Comp.spread(7)), fib = noiseLayer(256, 40, 21);
+    var grain = tile(256, function (x, y) {
+      return 0.5 + (rng() - 0.5) * 0.85 + (fib(x, y) - 0.5) * 0.35;
+    }, 128, 80);
+    var wash = tile(256, noiseLayer(256, 6, 55), 128, 128);
+    var mf = noiseLayer(256, 46, 91), mg = noiseLayer(256, 104, 131);
+    var mottle = tile(256, function (x, y) {
+      return 0.5 + (mf(x, y) - 0.5) * 0.7 + (mg(x, y) - 0.5) * 0.42;
+    }, 206, 90);
+    T = { grain: grain, wash: wash, mottle: mottle };
+    return T;
+  }
+
+  /* a 1-D fbm for the ridges */
+  function fbm1D(seed, octaves, cells, persist) {
+    var ls = [], c = cells, a = 1, i;
+    for (i = 0; i < octaves; i++) {
+      ls.push({ fn: noiseLayer(256, c, seed + i * 317), amp: a });
+      c = Math.min(256, c * 2); a *= persist;
+    }
+    return function (x) {
+      var v = 0, n = 0;
+      for (var k = 0; k < ls.length; k++) { v += ls[k].fn(x * 256, 0) * ls[k].amp; n += ls[k].amp; }
+      return v / n - 0.5;
+    };
+  }
+
+  function paint() {
+    var cv = document.getElementById('ki-cv');
+    var r = cv.getBoundingClientRect();
+    if (r.width < 8) return;
+    // ×1.25 for a picture with no lattice in it to protect; the phone cap in
+    // _engines/raster.js takes it to 1.
+    var dpr = Comp.dpr(1.25);
+    var W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
+    cv.width = W; cv.height = H;
+    var ctx = cv.getContext('2d');
+    var TT = tiles();
+
+    // Two of the seven passes need a MASKED copy of a tile, and a canvas
+    // cannot mask what it has already painted without erasing it. So they are
+    // assembled off-screen and stamped. The buffer is released at the end —
+    // it is scratch, and scratch that stays allocated is a lens paying rent on
+    // a picture nobody is looking at.
+    var pad = document.createElement('canvas');
+    pad.width = W; pad.height = H;
+    var PX = pad.getContext('2d');
+
+    // sky
+    var sky = ctx.createLinearGradient(0, 0, 0, H * 0.72);
+    sky.addColorStop(0, rgb(lab2([0.955, 0.002, 0.024])));
+    sky.addColorStop(1, rgb(lab2([0.905, 0.006, 0.052])));
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+
+    // the sun: solid to 94% and then off. CANON, do not soften (julia
+    // 2026-06-10) — carried across from KLS-07 because a sun with a soft edge
+    // is a lamp, and this picture has weather in it, not lighting.
+    var sx = W * 0.735, sy = H * 0.20, R = H * 0.075;
+    var sg = ctx.createRadialGradient(sx, sy, R * 0.6, sx, sy, R);
+    var sc = rgb(lab2([0.985, 0.010, 0.060]));
+    sg.addColorStop(0, sc); sg.addColorStop(0.94, sc);
+    sg.addColorStop(1, sc.replace('rgb(', 'rgba(').replace(')', ',0)'));
+    ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(sx, sy, R, 0, 7); ctx.fill();
+
+    var PTS = 220;
+    for (var i = 0; i < BANDS; i++) {
+      var t = BANDS === 1 ? 1 : i / (BANDS - 1);       // 0 far, 1 near
+      var midL = bandLab(t), mid = lab2(midL);
+
+      // SHARED CAUSE 1 — the drift. Pixels scrolled at THIS band's parallax
+      // rate. Every one of the seven passes below offsets its own coordinate
+      // by this and by nothing else.
+      var drift = JOURNEY * (0.12 + 0.9 * t) * W / (0.8 + 1.6 * t);
+
+      var wave = fbm1D(1000 + i * 97, 4, 5, 0.55);
+      var base = H * 0.30 + (H * 0.90 - H * 0.30) * t;
+      var amp = H * (0.045 + 0.10 * t);
+      var ys = [], k;
+      for (k = 0; k <= PTS; k++) ys.push(base - amp * wave(k / PTS * 1.4 + drift / W * 0.6) * 2);
+      var top = Math.min.apply(null, ys);
+
+      var trace = function () {
+        ctx.beginPath(); ctx.moveTo(0, ys[0]);
+        for (var q = 1; q <= PTS; q++) {
+          var x0 = (q - 1) / PTS * W, x1 = q / PTS * W;
+          ctx.quadraticCurveTo(x0, ys[q - 1], (x0 + x1) / 2, (ys[q - 1] + ys[q]) / 2);
+        }
+      };
+
+      ctx.save();
+      trace(); ctx.lineTo(W, ys[PTS]); ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+      ctx.clip();
+
+      // the body: one gradient, and mid is its middle
+      var g = ctx.createLinearGradient(0, top, 0, H);
+      g.addColorStop(0, rgb(lab2(lift(midL, 0.12))));
+      g.addColorStop(1, rgb(lab2(shade(midL, 0.86))));
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+      /* ---- PASS 1 · watercolour wash. soft-light keeps the hue. --------- */
+      ctx.globalCompositeOperation = 'soft-light';
+      ctx.globalAlpha = 0.45;
+      var ws = W * 1.15, hs = ws * (H / W) * 1.4;
+      ctx.drawImage(TT.wash, -((i * 131 + drift * 0.6) % (ws * 0.5)),
+                    top - (i * 71) % (hs * 0.5), ws, hs);
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+
+      /* ---- PASS 2 · granulation. pigment settling in the BODY. ---------- */
+      PX.setTransform(1, 0, 0, 1, 0, 0);
+      PX.globalCompositeOperation = 'source-over';
+      PX.clearRect(0, 0, W, H);
+      PX.save();
+      PX.translate(-((i * 61 + drift) % 256), -((i * 97) % 256));
+      PX.fillStyle = PX.createPattern(TT.mottle, 'repeat');
+      PX.fillRect(0, 0, W + 256, H + 256); PX.restore();
+      PX.globalCompositeOperation = 'destination-in';
+      var gm = PX.createLinearGradient(0, top, 0, H);
+      gm.addColorStop(0, 'rgba(0,0,0,0)');
+      gm.addColorStop(0.45, 'rgba(0,0,0,1)');
+      gm.addColorStop(1, 'rgba(0,0,0,1)');
+      PX.fillStyle = gm; PX.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.globalAlpha = 0.20 + 0.30 * t;
+      ctx.drawImage(pad, 0, 0);
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+
+      /* ---- PASS 3 · the crisp cut-paper edge, easing as the bloom grows -- */
+      ctx.save(); trace();
+      var ec = lab2(shade(midL, 0.72));
+      ctx.strokeStyle = 'rgba(' + ec.join(',') + ',' +
+        Math.max(0.10, Math.min(0.46, 0.46 - 0.28 * EDGE)).toFixed(3) + ')';
+      ctx.lineWidth = Math.max(1, H * 0.0018);
+      ctx.lineJoin = ctx.lineCap = 'round';
+      ctx.stroke(); ctx.restore();
+
+      var reach = H * (0.03 + 0.42 * EDGE);
+
+      /* ---- PASS 4 · edge bloom: a 1 px strip stamped at every crest ------ */
+      if (EDGE > 0.02) {
+        var strip = document.createElement('canvas');
+        strip.width = 1; strip.height = Math.max(2, Math.ceil(reach));
+        var stx = strip.getContext('2d');
+        var lg = stx.createLinearGradient(0, 0, 0, strip.height);
+        var bc = lab2(shade(midL, 0.78));
+        lg.addColorStop(0, 'rgba(' + bc.join(',') + ',' + (0.10 + 0.30 * EDGE).toFixed(3) + ')');
+        lg.addColorStop(1, 'rgba(' + bc.join(',') + ',0)');
+        stx.fillStyle = lg; stx.fillRect(0, 0, 1, strip.height);
+        for (var xb = 0; xb < W; xb += 2) {
+          var fb = xb / W * PTS, ib = Math.floor(fb), ff = fb - ib;
+          var cyb = ys[ib] + (ys[Math.min(PTS, ib + 1)] - ys[ib]) * ff;
+          ctx.drawImage(strip, xb, cyb, 2, strip.height);
+        }
+      }
+
+      /* ---- PASS 5 · the crest catch-light. THE LINE THAT MATTERS. -------
+         Lifted by a FRACTION OF THE REMAINING HEADROOM to white, so a hazed
+         far band lifts gently and never clips into a flat white horizon. */
+      {
+        var lr = Math.max(2, Math.ceil(H * (0.014 + 0.030 * EDGE)));
+        var ls = document.createElement('canvas');
+        ls.width = 1; ls.height = lr;
+        var lx = ls.getContext('2d'), lgr = lx.createLinearGradient(0, 0, 0, lr);
+        var lc = lab2(lift(midL, 0.30));
+        lgr.addColorStop(0, 'rgba(' + lc.join(',') + ',' + (0.45 * (0.55 + 0.45 * t)).toFixed(3) + ')');
+        lgr.addColorStop(1, 'rgba(' + lc.join(',') + ',0)');
+        lx.fillStyle = lgr; lx.fillRect(0, 0, 1, lr);
+        for (var xl = 0; xl < W; xl += 2) {
+          var fl = xl / W * PTS, il = Math.floor(fl), fq = fl - il;
+          var cyl = ys[il] + (ys[Math.min(PTS, il + 1)] - ys[il]) * fq;
+          ctx.drawImage(ls, xl, cyl, 2, lr);
+        }
+      }
+
+      /* ---- PASS 6 · edge pooling, INSIDE the bloom's reach --------------- */
+      if (EDGE > 0.02) {
+        PX.setTransform(1, 0, 0, 1, 0, 0);
+        PX.globalCompositeOperation = 'source-over';
+        PX.clearRect(0, 0, W, H);
+        PX.save();
+        PX.translate(-((i * 53 + drift) % 256), -((i * 89) % 256));
+        PX.fillStyle = PX.createPattern(TT.mottle, 'repeat');
+        PX.fillRect(0, 0, W + 256, H + 256); PX.restore();
+        PX.globalCompositeOperation = 'destination-in';
+        var eg2 = PX.createLinearGradient(0, top, 0, top + reach);
+        eg2.addColorStop(0, 'rgba(0,0,0,1)');
+        eg2.addColorStop(1, 'rgba(0,0,0,0)');
+        PX.fillStyle = eg2; PX.fillRect(0, 0, W, H);
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.globalAlpha = 0.18 + 0.30 * EDGE;
+        ctx.drawImage(pad, 0, 0);
+        ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+      }
+
+      /* ---- PASS 7 · paper grain, last, because it is the paper ---------- */
+      ctx.globalCompositeOperation = 'soft-light';
+      ctx.globalAlpha = 0.42;
+      var gw = TT.grain.width, gh = TT.grain.height;
+      var gx0 = ((i * 53 + drift) % gw + gw) % gw, gy0 = (i * 97) % gh;
+      for (var gx = -gx0; gx < W; gx += gw) {
+        for (var gy = -gy0 + Math.floor((top + gy0) / gh) * gh; gy < H; gy += gh) {
+          ctx.drawImage(TT.grain, gx, gy);
+        }
+      }
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+      ctx.restore();
+    }
+
+    // No pinned global film. The vignette is the frame, not a treatment.
+    var vg = ctx.createRadialGradient(W / 2, H * 0.46, H * 0.3, W / 2, H * 0.5, W * 0.8);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, 'rgba(20,14,8,0.10)');
+    ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+
+    // release the scratch buffer
+    pad.width = pad.height = 1;
+
+    var tag = document.getElementById('ki-seed');
+    if (tag) tag.textContent = 'seed ' + SEED + ' · dpr ' + dpr;
+    swatches();
+  }
+
+  /* The drawdown strip. A proof carries a record of what the press actually
+     did, and this one is a painting, so it records the seven passes and the
+     colour each of them was tinted from — all seven of which are the SAME
+     mid colour read at different lightnesses, which is the point. */
+  var PASSES = [
+    ['01', 'Watercolour wash', 'soft-light', 0.00],
+    ['02', 'Granulation', 'multiply', -0.10],
+    ['03', 'Cut-paper edge', 'stroke', -0.28],
+    ['04', 'Edge bloom', 'stamp', -0.22],
+    ['05', 'Crest catch-light', 'headroom lift', 0.30],
+    ['06', 'Edge pooling', 'multiply', -0.14],
+    ['07', 'Paper grain', 'soft-light', 0.06]
+  ];
+  function swatches() {
+    var host = document.getElementById('ki-passes');
+    if (!host || host.dataset.done) return;
+    host.dataset.done = '1';
+    var midL = bandLab(0.62);          // one band, so the seven can be compared
+    host.innerHTML = PASSES.map(function (p) {
+      var L = p[3] >= 0 ? lift(midL, p[3]) : shade(midL, 1 + p[3]);
+      return '<div class="p"><span class="sw" style="background:' + rgb(lab2(L)) + '"></span>' +
+        '<span class="n">' + p[0] + '</span>' +
+        '<span class="t">' + p[1] + '</span>' +
+        '<span class="o">' + p[2] + '</span></div>';
+    }).join('');
+  }
+
+  function stock() {
+    var el = document.querySelector('#ki .stock');
+    if (!el || el.dataset.done) return;
+    el.dataset.done = '1';
+    el.style.backgroundImage = 'url(' + Comp.paperTile({
+      size: 180, seed: 5151, base: 228, amp: 18, fibres: 40,
+      fibre: 'rgba(120,112,96,.10)'
+    }) + ')';
+  }
+
+  Comp.paint(function () { stock(); paint(); }, { threshold: 40 });
+})();
+</script>
+
+<script src="../../../learn/fragment-boot.js"></script>
+</body>
+</html>

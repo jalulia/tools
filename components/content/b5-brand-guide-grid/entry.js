@@ -27,7 +27,10 @@ Shell.registerEntry({
   },
   "thumb": {
     "file": "thumb.png",
-    "crop": [1.05, 0]
+    "crop": [
+      1.05,
+      0
+    ]
   },
   "text": "<p>A flat mid-grey board with square-cornered white slides on a strict twelve-column grid. Digital-clean: no tooth, no grain, no shadow on the slides.</p> <p>The restraint is the point, so the only place effort shows is the merch renders — they are structured greyscale product forms lit from the top-left with a soft contact shadow, because a flat vector silhouette in this company would read as a placeholder. One neutral grotesque, three sizes, nothing else.</p>",
   "reference": {
@@ -97,5 +100,11 @@ Shell.registerEntry({
       "KPI fine",
       "phones fine. Restraint = precision, so no texture added"
     ]
-  }
+  },
+  "related": [
+    {
+      "entry": "crx01-instrument-typology",
+      "relation": "source-of"
+    }
+  ]
 });
