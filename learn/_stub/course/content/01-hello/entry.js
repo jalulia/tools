@@ -8,7 +8,7 @@ Shell.registerEntry({
   lane: 'glsl',
   tags: ['pixel', 'parallel', 'gl_FragCoord'],
   source: { kind: 'adapted', title: 'The Book of Shaders — chapter 01',
-            url: 'https://thebookofshaders.com/01/', license: 'CC BY-NC-SA 4.0' },
+            url: 'https://thebookofshaders.com/01/', license: 'All rights reserved (linking and citation only)' },
   text: `
     <p>A fragment shader is a tiny program that runs once for every pixel, all at the
     same time, and knows almost nothing. It does not know what the pixel next to it is

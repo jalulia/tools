@@ -83,7 +83,7 @@ Shell.registerEntry({
     title: 'The Book of Shaders — chapter 13',
     author: 'Patricio Gonzalez Vivo & Jen Lowe',
     url: 'https://thebookofshaders.com/13/',
-    license: 'CC BY-NC-SA 4.0'
+    license: 'All rights reserved (linking and citation only)'
   },
 
   text: `

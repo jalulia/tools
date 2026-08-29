@@ -8,7 +8,7 @@ Shell.registerEntry({
   lane: 'glsl',
   tags: ['sdf', 'distance field', 'polar'],
   source: { kind: 'adapted', title: 'The Book of Shaders — chapter 07',
-            url: 'https://thebookofshaders.com/07/', license: 'CC BY-NC-SA 4.0' },
+            url: 'https://thebookofshaders.com/07/', license: 'All rights reserved (linking and citation only)' },
   text: `
     <p>A shape here is not drawn. It is a <em>field</em> — a number defined everywhere,
     which happens to be zero along the outline you wanted — and then a threshold. Once

@@ -51,7 +51,7 @@ Shell.registerEntry({
   lane: 'glsl',
   tags: ['smoothstep', 'curve', 'interpolation'],
   source: { kind: 'adapted', title: 'The Book of Shaders — chapter 05',
-            url: 'https://thebookofshaders.com/05/', license: 'CC BY-NC-SA 4.0' },
+            url: 'https://thebookofshaders.com/05/', license: 'All rights reserved (linking and citation only)' },
   text: `
     <p>Control comes from shaping values, not from selecting effects. A shaping function
     takes the interval 0 to 1 and gives it a different personality — fast then slow, hard
