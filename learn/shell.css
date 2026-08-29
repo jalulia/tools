@@ -267,7 +267,12 @@ body[data-apparatus="open"] .draw .opt { display: none; }
 .read em { font-style: italic; }
 .read code, .cells code, .rungs code, .stage-note code {
   font-family: var(--f-mach); font-size: .82em; letter-spacing: 0;
-  background: var(--rule-3); padding: 1px 4px; color: var(--ink-2); }
+  background: var(--rule-3); padding: 1px 4px; color: var(--ink-2);
+  /* Found by the real chapters: an exercise like "try smoothstep(0.0, 1.0,
+     st.x)" wraps mid-call, and by default the tint box is sliced — the first
+     fragment loses its right padding and the second its left, so one call
+     reads as two tokens. `clone` gives each fragment the whole box. */
+  -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 .read a { color: inherit; text-decoration: underline; text-underline-offset: 3px;
           text-decoration-color: var(--ink-4); }
 .read a:hover { text-decoration-color: var(--ink); }

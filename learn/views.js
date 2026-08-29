@@ -221,8 +221,14 @@
   function head(e) {
     var sec = S.sectionOf(e.section);
     var right = [];
+    // The KIND leads, not the word "src". Four Book of Shaders chapters are
+    // original work filling holes upstream left, and PLAN §5.4's complaint was
+    // that nothing on the page said so. "adapted · The Book of Shaders —
+    // chapter 13" and "original · Written for this tool" both say it in one
+    // line, in the place a reader is already looking.
     if (e.source && (e.source.title || e.source.kind)) {
-      right.push('src · ' + (e.source.title || e.source.kind));
+      right.push(String(e.source.kind || 'src').replace('-', ' ') +
+                 (e.source.title ? ' · ' + e.source.title : ''));
     }
     if ((e.examples || []).length > 1) right.push((e.examples.length) + ' examples');
     if (e.style) right.push('style · ' + e.style);
@@ -549,7 +555,12 @@
       '<div class="meta"><span class="tags">' + S.entries.length + ' ' + noun +
         ((S.manifest.styles || []).length ? ' <b>·</b> ' + S.manifest.styles.length + ' styles' : '') +
         (studied ? ' <b>·</b> ' + studied + ' with a reference study' : '') + '</span>' +
-      '<span class="tags right">Live frames mount on approach · <span id="mountcount">0</span> mounted</span></div>';
+      // The mount counter is a statement about iframes. A course tool has none,
+      // so on a course sheet the line said "0 mounted" forever, about nothing.
+      (S.manifest.mode === 'catalogue'
+        ? '<span class="tags right">Live frames mount on approach · ' +
+          '<span id="mountcount">0</span> mounted</span>'
+        : '') + '</div>';
 
     el('view').innerHTML = head + '<div class="sheet">' +
       (list.length ? order.filter(function (id) { return groups[id]; }).map(function (id) {
@@ -586,8 +597,15 @@
       '</span>' +
       '<span class="cap"><span class="n">' + esc(e.index || S.pad(e.order)) + '</span>' +
       '<span class="t">' + esc(e.title) + '</span>' +
-      '<span class="r">' + esc((e.source && e.source.title) ? 'ref · ' + e.source.title :
-        String(e.status).replace('-', ' ')) + '</span></span></a>';
+      // Same rule as head(): the card names the KIND. "ref · Written for this
+      // tool" — which is what "ref ·" produced for every original entry — reads
+      // as a citation of something that does not exist. The source TITLE is not
+      // repeated here: at 20 cards it wrapped every caption to two lines, and
+      // the full attribution is one click away on the entry.
+      '<span class="r">' + esc([
+        e.source && String(e.source.kind).replace('-', ' '),
+        e.status !== 'canonical' && String(e.status).replace('-', ' ')
+      ].filter(Boolean).join(' · ')) + '</span></span></a>';
   }
 
   function styleDeclaration(st) {

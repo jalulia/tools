@@ -182,6 +182,50 @@
     bindTexImage(c);
   }
 
+  /* Bring-your-own-image. Chapters 00 and 15-19 read a source image; the tool
+     ships no asset, because the scene above is drawn. But being able to point
+     a convolution at your own photograph is one of the five things research/04
+     §4 names as better here than in the book, and losing it in the migration
+     would be a regression, so it lands with the chapters that need it
+     (checkpoint 3, deferred from checkpoint 1).
+
+     Read as a data: URL, not as a blob: URL the way the old tool did
+     (index.html:1067). Under file:// this document's origin is opaque, and an
+     <img> from a blob: URL can taint the WebGL upload; a data: URL never does.
+     Nothing is fetched — FileReader reads a file the user chose. */
+  function wantsTexture(e) {
+    var c = (e && e.stage && e.stage.controls) || [];
+    return !!(e && e.stage && e.stage.texture) || c.indexOf('texture-upload') >= 0;
+  }
+
+  function textureControl() {
+    return '<button type="button" class="lnk" id="tex-pick">Image</button>' +
+           '<input type="file" id="tex-file" accept="image/*" hidden ' +
+           'aria-label="Use your own image on this stage">';
+  }
+
+  function wireTexture() {
+    var btn = document.getElementById('tex-pick'), inp = document.getElementById('tex-file');
+    if (!btn || !inp) return;
+    btn.addEventListener('click', function () { inp.click(); });
+    inp.addEventListener('change', function () {
+      var f = inp.files && inp.files[0];
+      if (!f) return;
+      var r = new FileReader();
+      r.onload = function () {
+        var img = new Image();
+        img.onload = function () {
+          if (!gl || lost) return;
+          bindTexImage(img);
+          drawOnce();
+          btn.textContent = f.name.length > 18 ? f.name.slice(0, 16) + '…' : f.name;
+        };
+        img.src = r.result;
+      };
+      r.readAsDataURL(f);
+    });
+  }
+
   /* ---------------------------------------------------------- render loop */
   function resize() {
     if (!gl || !cv) return;
@@ -376,8 +420,10 @@
         bar.innerHTML =
           '<span class="rd" id="glread"></span>' +
           (shared ? '<span class="opt"><span class="k">source</span> shared edit</span>' : '') +
+          (wantsTexture(o.entry) ? textureControl() : '') +
           '<span class="r"><span id="compile">COMPILED</span></span>';
         setStatus(status, log);
+        wireTexture();
       }
       playing = !S.reduced();
       startLoop();
