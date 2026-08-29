@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Spike lens 3 — NOW/THEN</title>
+<!-- A fragment declares its own type. It links the style sheet its style owns
+     (content/_styles/<style>.css); it never expects the host to define a face. -->
+<link rel="stylesheet" href="../_styles/spike.css">
+<style>
+  body { margin:0; background:#e7e3d9; width:1100px; }
+  .plate { position:relative; padding:64px; height:772px; box-sizing:border-box; }
+  .block { position:absolute; inset:64px; background:#1f3fd6; }
+  .word  { position:relative; font-family:var(--f-display); font-size:150px; line-height:.9;
+           color:#e7e3d9; mix-blend-mode:normal; padding-top:220px; letter-spacing:-.02em; }
+  .spin  { position:absolute; right:64px; top:64px; width:96px; height:96px;
+           border:6px solid #e7e3d9; border-top-color:transparent; border-radius:50%;
+           animation: spin 1.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .tag { position:absolute; left:64px; bottom:40px; font-family:var(--f-mono); font-size:13px;
+         letter-spacing:.14em; text-transform:uppercase; color:#141210; }
+</style>
+</head><body>
+  <div class="plate">
+    <div class="block"></div>
+    <div class="spin"></div>
+    <div class="word">NOW/THEN</div>
+  </div>
+  <div class="tag">spike lens 3 · rAF + css animation</div>
+<script>
+  /* A deliberately busy rAF loop, so "pause" has something real to stop.
+     It also listens for lens:pause, which is the event fragment-boot fires. */
+  var n = 0, running = true;
+  function frame(){ n++; if (running) requestAnimationFrame(frame); }
+  requestAnimationFrame(frame);
+  window.addEventListener('lens:pause',  function(){ window.__lensPaused = true;  });
+  window.addEventListener('lens:resume', function(){ window.__lensPaused = false; });
+  window.__frames = function(){ return n; };
+</script>
+<script src="../../../fragment-boot.js"></script>
+</body></html>

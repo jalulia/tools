@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Transport spike — learn/ shell</title>
+<style>
+  /* Deliberately minimal. The spike proves transport and the iframe policy;
+     the visual system arrives with shell.css at checkpoint 1. */
+  :root { color-scheme: light; --ink:#0b0b0c; --ink-3:#74747a; --rule:#e3e3e5;
+          --paper:#fff; --bench:#f1f1f1; --bench-2:#e9e9e9; }
+  * { box-sizing: border-box; }
+  html, body { background: var(--paper); color: var(--ink); margin: 0;
+               font: 16px/1.6 Georgia, serif; overflow-x: hidden; }
+  .mast { display:flex; gap:16px; align-items:center; height:52px; padding:0 16px;
+          border-bottom:1px solid var(--rule); position:sticky; top:0; background:var(--paper); z-index:5; }
+  .lab, .m { font: 11px/1.4 ui-monospace, Menlo, monospace; letter-spacing:.12em;
+             text-transform: uppercase; color: var(--ink-3); }
+  .frame { display:grid; grid-template-columns:260px minmax(0,1fr); align-items:start; }
+  body[data-index="closed"] .frame { grid-template-columns:0 minmax(0,1fr); }
+  .rail { grid-column:1; position:sticky; top:52px; height:calc(100vh - 52px); overflow:auto;
+          padding:20px; border-right:1px solid var(--rule); }
+  body[data-index="closed"] .rail { display:none; }
+  .col { grid-column:2; padding:32px; min-width:0; }
+  .spine { list-style:none; margin:0; padding:0; }
+  .spine .sec { display:flex; font: 10.5px/1.4 ui-monospace, Menlo, monospace;
+                letter-spacing:.13em; text-transform:uppercase; color:var(--ink-3);
+                padding:18px 0 6px; }
+  .spine .sec .n { margin-left:auto; }
+  .ent { display:flex; gap:10px; align-items:baseline; text-decoration:none; color:inherit; padding:5px 0; }
+  .ent .n { font: 11px ui-monospace, Menlo, monospace; color:var(--ink-3); min-width:22px; }
+  .ent[aria-current] .t { font-weight:700; }
+  .find { width:100%; border:0; border-bottom:1px solid var(--rule); padding:0 0 8px;
+          font: 11.5px ui-monospace, Menlo, monospace; background:none; }
+  .chips { display:flex; gap:5px; flex-wrap:wrap; margin:14px 0; }
+  .chip { font: 9.5px ui-monospace, Menlo, monospace; letter-spacing:.1em; text-transform:uppercase;
+          border:1px solid var(--rule); background:none; padding:3px 6px; cursor:pointer; }
+  .chip[aria-pressed="false"] { opacity:.42; }
+  .mat { background:var(--bench); padding:24px; }
+  .stage { background:#0e0e10; aspect-ratio:3/2; overflow:hidden; position:relative; }
+  .stage iframe { display:block; border:0; }
+  .stub { color:#e8e3d8; font: 12px ui-monospace, Menlo, monospace; padding:16px; }
+  .draw { border-top:1px solid var(--rule); padding:8px 0; font:11.5px ui-monospace, Menlo, monospace;
+          color:var(--ink-3); display:flex; gap:20px; overflow:hidden; white-space:nowrap; }
+  .draw .r { margin-left:auto; }
+  .draw .lnk { background:none; border:0; font:inherit; color:inherit; cursor:pointer;
+               text-decoration:underline; margin-right:12px; }
+  .grid { display:grid; gap:14px; grid-template-columns:repeat(auto-fill, minmax(232px, 1fr)); }
+  .card { display:block; border:1px solid var(--rule); text-decoration:none; color:inherit; background:var(--paper); }
+  .prev { display:block; position:relative; height:196px; overflow:hidden; background:var(--bench-2); }
+  .prev iframe { position:absolute; top:0; left:0; }
+  .prev .queued { position:absolute; inset:0; display:grid; place-items:center;
+                  font:10.5px ui-monospace, Menlo, monospace; letter-spacing:.13em; color:var(--ink-3); }
+  .cap { display:block; padding:10px 12px; font-size:14px; }
+  h1 { font-size:30px; margin:8px 0 16px; }
+  h2 { font-size:14px; text-transform:uppercase; letter-spacing:.13em;
+       font-family: ui-monospace, Menlo, monospace; border-bottom:1px solid var(--rule);
+       padding-bottom:6px; margin:32px 0 16px; }
+  .read { padding-top:24px; max-width:66ch; }
+  @media (max-width: 839px) {
+    .frame, body[data-index="closed"] .frame { grid-template-columns:minmax(0,1fr); }
+    .rail { grid-column:1; position:static; height:auto; border-right:0;
+            border-bottom:1px solid var(--rule); }
+    body[data-index="closed"] .rail { display:none; }
+    .col { grid-column:1; padding:18px; }
+    .grid { grid-template-columns:minmax(0,1fr); }
+  }
+</style>
+</head>
+<body data-index="open" data-apparatus="closed">
+
+<header class="mast">
+  <button class="chip" id="idxbtn" aria-pressed="true">Index</button>
+  <span id="brand"></span>
+  <span class="m" id="crumb"></span>
+</header>
+
+<main class="frame">
+  <aside class="rail" aria-label="Index">
+    <input class="find" id="find" aria-label="Search">
+    <div class="chips" id="chips"></div>
+    <div class="lab" id="count"></div>
+    <ul class="spine" id="spine"></ul>
+  </aside>
+  <section class="col"><div id="view"></div></section>
+</main>
+
+<!-- Five classic scripts. No module, no fetch, no CDN. Order matters:
+     shell → adapters → view layer → manifest (the manifest boots the shell). -->
+<script src="../shell.js"></script>
+<script src="../adapters/fragment.js"></script>
+<script src="spike.js"></script>
+<script src="manifest.js"></script>
+</body>
+</html>
