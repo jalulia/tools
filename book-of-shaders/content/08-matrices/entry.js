@@ -15,7 +15,7 @@ Shell.registerEntry({
     title: 'The Book of Shaders — chapter 08',
     author: "Patricio Gonzalez Vivo & Jen Lowe",
     url: 'https://thebookofshaders.com/08/',
-    license: 'CC BY-NC-SA 4.0'
+    license: 'All rights reserved (linking and citation only)'
   },
   thumb: 'thumb.png',
 
