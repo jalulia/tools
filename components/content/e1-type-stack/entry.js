@@ -27,10 +27,7 @@ Shell.registerEntry({
   },
   "thumb": {
     "file": "thumb.png",
-    "crop": [
-      1,
-      0
-    ]
+    "crop": [1, 0]
   },
   "text": "<p>A near-black screen, hairlines at exactly 25% white, and a stack of Fraunces set at optical size 144 with negative leading. There is no texture on it at all: the 5% noise veil an earlier build wore was an effect with no cause, and removing it is the whole revision.</p> <p>Type is the layout. Mono superscript numerals hang at cap height, the highlighter blocks sit under the x-height, and the only other mark in the plate is a rule.</p>",
   "reference": null,

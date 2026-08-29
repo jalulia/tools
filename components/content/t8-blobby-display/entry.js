@@ -28,8 +28,9 @@ Shell.registerEntry({
   "thumb": {
     "file": "thumb.png",
     "crop": [
-      1,
-      0
+      1.4,
+      0,
+      157
     ]
   },
   "text": "<p>A flat digital green tile. No texture at all: grain was rejected here because it would fake a print that does not exist.</p> <p>The craft is in the drawing. The smiley that replaces the O is measured to the letterforms — cap height .615em plus stroke, stem .17em plus stroke, so the ring's weight matches the stem and its box matches the cap. The stylistic alternates are a real unicase set, not a rotation gimmick, which is the difference between a typeface and a filter.</p>",
@@ -87,7 +88,10 @@ Shell.registerEntry({
     ],
     "why_it_survives": "Set the ring to an arbitrary weight and the O reads as an icon; the rejection of grain is the removal test applied before the fact.",
     "faults": [
-      "O was .92em (towered over cap-height), ring stroke 12/100 ≠ stem, tracking loose, SS02 was rotation only"
+      "O was .92em (towered over cap-height)",
+      "ring stroke 12/100 ≠ stem",
+      "tracking loose",
+      "SS02 was rotation only"
     ]
   }
 });

@@ -49,7 +49,7 @@ Shell.registerEntry({
     },
     {
       "k": "Skeleton",
-      "v": "five ±30° strands on a 16cqw pitch, weave alternates per crossing. Faults fixed: shadows were \"0 12px\" straight down inside ROTATED frames (each strand had its own sun); flat ground; noise was isotropic (not fibre); stitches soft. Now every offset is the world light (dx 3, dy 6) rotated into the strand's local frame."
+      "v": "five ±30° strands on a 16cqw pitch, weave alternates per crossing."
     }
   ],
   "critique": {
@@ -62,6 +62,12 @@ Shell.registerEntry({
       "selvedge stitch",
       "fibre grain"
     ],
-    "why_it_survives": "Give each strand its own straight-down shadow and the picture acquires five suns — the exact fault this build fixed."
+    "why_it_survives": "Give each strand its own straight-down shadow and the picture acquires five suns — the exact fault this build fixed.",
+    "faults": [
+      "shadows were \"0 12px\" straight down inside ROTATED frames (each strand had its own sun)",
+      "flat ground",
+      "noise was isotropic (not fibre)",
+      "stitches soft. Now every offset is the world light (dx 3, dy 6) rotated into the strand's local frame"
+    ]
   }
 });

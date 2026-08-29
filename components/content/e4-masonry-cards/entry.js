@@ -28,7 +28,7 @@ Shell.registerEntry({
   "thumb": {
     "file": "thumb.png",
     "crop": [
-      1,
+      1.45,
       0
     ]
   },
@@ -72,6 +72,12 @@ Shell.registerEntry({
     {
       "entry": "e5-case-card",
       "relation": "technique-of"
+    },
+    {
+      "tool": "book-of-shaders",
+      "entry": "10-random",
+      "relation": "shader-behind",
+      "label": "The Book of Shaders — 10 Random"
     }
   ]
 });

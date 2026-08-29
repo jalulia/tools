@@ -29,7 +29,7 @@ Shell.registerEntry({
   "thumb": {
     "file": "thumb.png",
     "crop": [
-      1,
+      1.3,
       0
     ]
   },
@@ -54,7 +54,7 @@ Shell.registerEntry({
     },
     {
       "k": "Skeleton",
-      "v": "kit header row · 4×2 grid critique of previous build: photos were radial-gradient blobs (a \"bust\" made of two circles), tape was a flat rectangle with square ends, rings were a broken SVG lollipop pattern, scribbles were uniform vector strokes, hand notes inherited the gallery's global .note padding (pushed 60px up into the bar chart / phone), polaroids collided with headlines (t4, t5) and lists (t8), shadows were generic."
+      "v": "kit header row · 4×2 grid."
     }
   ],
   "critique": {
@@ -70,13 +70,25 @@ Shell.registerEntry({
     ],
     "why_it_survives": "Replace the scenes with gradient blobs and the duotone has nothing to map; square the tape ends and the whole board flattens into vector.",
     "faults": [
-      "photos were radial-gradient blobs (a \"bust\" made of two circles), tape was a flat rectangle with square ends, rings were a broken SVG lollipop pattern, scribbles were uniform vector strokes, hand notes inherited the gallery's global .note padding (pushed 60px up into the bar chart / phone), polaroids collided with headlines (t4, t5) and lists (t8), shadows were generic"
+      "photos were radial-gradient blobs (a \"bust\" made of two circles)",
+      "tape was a flat rectangle with square ends",
+      "rings were a broken SVG lollipop pattern",
+      "scribbles were uniform vector strokes",
+      "hand notes inherited the gallery's global .note padding (pushed 60px up into the bar chart / phone)",
+      "polaroids collided with headlines (t4, t5) and lists (t8)",
+      "shadows were generic"
     ]
   },
   "related": [
     {
       "entry": "b3-wristband",
       "relation": "technique-of"
+    },
+    {
+      "tool": "book-of-shaders",
+      "entry": "20-dithering-and-quantization",
+      "relation": "shader-behind",
+      "label": "The Book of Shaders — 20 Dithering and quantization"
     }
   ]
 });

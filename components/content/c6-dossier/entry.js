@@ -29,7 +29,7 @@ Shell.registerEntry({
   "thumb": {
     "file": "thumb.png",
     "crop": [
-      1,
+      1.35,
       0
     ]
   },
@@ -46,7 +46,7 @@ Shell.registerEntry({
     },
     {
       "k": "Hardware",
-      "v": "envelope flap with an occlusion strip along the crease + 1px lit edge, foil seal with pressure darkening + contact shadow, peeking slips with contact shadows and translucent edges · one light: top-left, every shadow falls down-right. Faults fixed: seal was a smooth conic gradient + boilerplate \"0 6px 16px\" drop; flap crease had no occlusion / lit edge; slips and paper used straight-down soft shadows; envelope tooth was faint."
+      "v": "envelope flap with an occlusion strip along the crease + 1px lit edge, foil seal with pressure darkening + contact shadow, peeking slips with contact shadows and translucent edges · one light: top-left, every shadow falls down-right."
     }
   ],
   "critique": {
@@ -59,6 +59,12 @@ Shell.registerEntry({
       "contact shadow",
       "envelope tooth"
     ],
-    "why_it_survives": "Replace the seal with a conic gradient and it floats; give everything a straight-down blur and the lamp disappears."
+    "why_it_survives": "Replace the seal with a conic gradient and it floats; give everything a straight-down blur and the lamp disappears.",
+    "faults": [
+      "seal was a smooth conic gradient + boilerplate \"0 6px 16px\" drop",
+      "flap crease had no occlusion / lit edge",
+      "slips and paper used straight-down soft shadows",
+      "envelope tooth was faint"
+    ]
   }
 });

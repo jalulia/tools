@@ -81,7 +81,7 @@ Shell.registerEntry({
     },
     {
       "k": "Skeleton",
-      "v": "ghost + brush share ONE baseline inside the poster; body copy anchored to the poster's foot; stickers spill past the edges critique of previous build: brush was a smooth ribbon (no dry-brush, no ink starve), the ghost floated on its own line, stickers wore a print grain (they're vinyl), sheets/poster/stickers all had one boilerplate 0 16px 34px shadow, orange had no riso grain."
+      "v": "ghost + brush share ONE baseline inside the poster; body copy anchored to the poster's foot; stickers spill past the edges."
     }
   ],
   "critique": {
@@ -96,7 +96,11 @@ Shell.registerEntry({
     ],
     "why_it_survives": "Take the dry-brush tails away and the black mark becomes a second typeface; take the shared baseline away and the ghost is wallpaper.",
     "faults": [
-      "brush was a smooth ribbon (no dry-brush, no ink starve), the ghost floated on its own line, stickers wore a print grain (they're vinyl), sheets/poster/stickers all had one boilerplate 0 16px 34px shadow, orange had no riso grain"
+      "brush was a smooth ribbon (no dry-brush, no ink starve)",
+      "the ghost floated on its own line",
+      "stickers wore a print grain (they're vinyl)",
+      "sheets/poster/stickers all had one boilerplate 0 16px 34px shadow",
+      "orange had no riso grain"
     ]
   },
   "related": [

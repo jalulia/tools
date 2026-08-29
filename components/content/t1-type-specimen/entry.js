@@ -96,13 +96,23 @@ Shell.registerEntry({
     ],
     "why_it_survives": "Give the small labels the same chain and the sheet reads as a filter pass; take the crop off the O and the word stops being oversized.",
     "faults": [
-      "photos were tonal smears (no figure), hero word timid (no bleed), no print physics on the word, stat band photo greyed the black (paper-coloured halftone at .62), dots flat"
+      "photos were tonal smears (no figure)",
+      "hero word timid (no bleed)",
+      "no print physics on the word",
+      "stat band photo greyed the black (paper-coloured halftone at .62)",
+      "dots flat"
     ]
   },
   "related": [
     {
       "entry": "b4-program-spread",
       "relation": "technique-of"
+    },
+    {
+      "tool": "book-of-shaders",
+      "entry": "00-introduction",
+      "relation": "shader-behind",
+      "label": "The Book of Shaders — 00 Introduction"
     }
   ]
 });

@@ -28,8 +28,8 @@ Shell.registerEntry({
   "thumb": {
     "file": "thumb.png",
     "crop": [
-      1,
-      0
+      1.12,
+      30
     ]
   },
   "text": "<p>A white grid-paper card on a grey studio field: hairline squares, seven binder punches, a gutter rule, a barcode, corner ticks. A spec sheet is a document that looks like the machine that made it, so there is no ornament anywhere on it.</p> <p>The punches are real holes — the stage colour shows through, with an inner shadow at the top for the thickness of the card and a one-pixel lit lip at the bottom. The signatures are fineliner and never starve.</p>",
@@ -49,7 +49,7 @@ Shell.registerEntry({
     },
     {
       "k": "Skeleton",
-      "v": "meta row / card / footer band where the ghost surfaces. Faults fixed: dots-for-holes; dot grid instead of hairlines; ghost hidden behind the card (crop was theatre); signatures crisp vector; banner flat digital blue; global .foot chrome rule leaked 80px of padding into the card."
+      "v": "meta row / card / footer band where the ghost surfaces."
     }
   ],
   "critique": {
@@ -62,6 +62,14 @@ Shell.registerEntry({
       "barcode",
       "fineliner"
     ],
-    "why_it_survives": "Draw the holes as dots and the card becomes a picture of a card; add any ornament at all and it stops being a spec sheet."
+    "why_it_survives": "Draw the holes as dots and the card becomes a picture of a card; add any ornament at all and it stops being a spec sheet.",
+    "faults": [
+      "dots-for-holes",
+      "dot grid instead of hairlines",
+      "ghost hidden behind the card (crop was theatre)",
+      "signatures crisp vector",
+      "banner flat digital blue",
+      "global .foot chrome rule leaked 80px of padding into the card"
+    ]
   }
 });

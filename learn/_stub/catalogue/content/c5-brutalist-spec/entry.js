@@ -23,7 +23,7 @@ Shell.registerEntry({
     },
     "thumb": {
       "file": "thumb.png",
-      "crop": [1, 30]
+      "crop": [1.1, 30]
     },
     "reference": null,
     "text": "<p>A document that looks like the machine that made it. There is no decorative\n    element on this plate at all: the only non-text mark is a hatch, and the hatch is a\n    legend, not a texture.</p>"

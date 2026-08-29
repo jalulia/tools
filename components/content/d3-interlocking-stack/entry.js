@@ -53,7 +53,7 @@ Shell.registerEntry({
     },
     {
       "k": "Skeleton",
-      "v": "rule / stack of five lines / rule; corner mono labels critique of previous build: flat digital fills (no paper, no ink texture, no misregistration), marker circle was a thin uniform vector ellipse under the display type, 2026 outline was CAD-clean."
+      "v": "rule / stack of five lines / rule; corner mono labels."
     }
   ],
   "critique": {
@@ -68,7 +68,9 @@ Shell.registerEntry({
     ],
     "why_it_survives": "Draw the script over the letters instead of out of them and the plate becomes two layers; give the marker the ink filter and it stops being a hand.",
     "faults": [
-      "flat digital fills (no paper, no ink texture, no misregistration), marker circle was a thin uniform vector ellipse under the display type, 2026 outline was CAD-clean"
+      "flat digital fills (no paper, no ink texture, no misregistration)",
+      "marker circle was a thin uniform vector ellipse under the display type",
+      "2026 outline was CAD-clean"
     ]
   },
   "related": [

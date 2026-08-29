@@ -28,7 +28,7 @@ Shell.registerEntry({
   "thumb": {
     "file": "thumb.png",
     "crop": [
-      1,
+      1.06,
       0
     ]
   },
@@ -108,6 +108,12 @@ Shell.registerEntry({
     {
       "entry": "t1-type-specimen",
       "relation": "technique-of"
+    },
+    {
+      "tool": "book-of-shaders",
+      "entry": "10-random",
+      "relation": "shader-behind",
+      "label": "The Book of Shaders — 10 Random"
     }
   ]
 });

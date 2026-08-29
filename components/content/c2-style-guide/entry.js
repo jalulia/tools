@@ -27,10 +27,7 @@ Shell.registerEntry({
   },
   "thumb": {
     "file": "thumb.png",
-    "crop": [
-      1,
-      0
-    ]
+    "crop": [1.3, 30]
   },
   "text": "<p>Two bone pages of a brand guide photographed on a warm-grey stage. Litho, so the hairlines are exact and the only texture is the paper's own tooth.</p> <p>The index tabs are physical: stepped, with a fold shadow at the root and a lit top edge, the active one charcoal. The business-card spec carries crop marks, dimension lines, bleed and safe dashes and a section through the stock — drafting language used as drafting language rather than as decoration.</p>",
   "reference": null,

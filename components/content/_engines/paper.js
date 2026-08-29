@@ -22,7 +22,7 @@
        opt { seed, base (0..255), amp, dpr, fibres, fibreAlpha }              */
   Comp.paperTooth = function (canvas, cssW, cssH, opt) {
     opt = opt || {};
-    var dpr = opt.dpr || 1.5;
+    var dpr = opt.dpr || (Comp.dpr ? Comp.dpr(1.5) : 1.5);
     var W = Math.round(cssW * dpr), H = Math.round(cssH * dpr);
     if (W < 2 || H < 2) return;
     canvas.width = W; canvas.height = H;

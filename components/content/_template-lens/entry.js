@@ -60,7 +60,11 @@ Shell.registerEntry({
     //           1.4 is a 1.4× detail. Relative, so the crop means the same
     //           thing when the rail closes and the card gets wider.
     //   offsetY the design-pixel row that lands at the top of the card.
-    crop: [1, 0]
+    // The rectangle this cuts must be the CARD's ratio, 232:196 — the build
+    // checks it. So scale is at least  designWidth*196/232 / (height-offsetY):
+    // a plate shorter than 929 design px has to be cropped INTO, or the card
+    // would silently trim the sides of what you authored.
+    crop: [1.25, 0]
   },
 
   /* -- the copy ----------------------------------------------------------- */

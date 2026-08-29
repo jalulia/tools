@@ -95,7 +95,11 @@ Shell.registerEntry({
     ],
     "why_it_survives": "Halftone the thumbnails and you have put print texture on a screen piece — the fault the previous build shipped.",
     "faults": [
-      "headline ragged (not architectural), timid tracking, thumbs were halftone tonal smears (print texture on a screen piece), loose nav tracking, soft padding"
+      "headline ragged (not architectural)",
+      "timid tracking",
+      "thumbs were halftone tonal smears (print texture on a screen piece)",
+      "loose nav tracking",
+      "soft padding"
     ]
   }
 });

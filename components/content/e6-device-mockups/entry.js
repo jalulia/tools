@@ -54,7 +54,7 @@ Shell.registerEntry({
     },
     {
       "k": "Skeleton",
-      "v": "230/230/1fr sheet at 1000px scaled to fit. Faults fixed here: every photo area was a flat CSS gradient (a gradient standing in for a photograph) → each is now a generated greyscale scene (still life / interior / architecture), one light, soft cast shadows, faint sensor grain; ONE accent (#2F5FD6) kept; the global .hero chrome rule was leaking padding into the browser plate (squashed headline) — neutralised."
+      "v": "230/230/1fr sheet at 1000px scaled to fit."
     }
   ],
   "critique": {
@@ -67,6 +67,22 @@ Shell.registerEntry({
       "single accent",
       "sensor grain"
     ],
-    "why_it_survives": "Fill the screens with CSS gradients and the sheet looks finished while proving nothing — which is the failure mode of every in-situ board."
-  }
+    "why_it_survives": "Fill the screens with CSS gradients and the sheet looks finished while proving nothing — which is the failure mode of every in-situ board.",
+    "faults": [
+      "every photo area was a flat CSS gradient (a gradient standing in for a photograph) → each is now a generated greyscale scene (still life / interior / architecture)",
+      "one light",
+      "soft cast shadows",
+      "faint sensor grain",
+      "ONE accent (#2F5FD6) kept",
+      "the global .hero chrome rule was leaking padding into the browser plate (squashed headline) — neutralised"
+    ]
+  },
+  "related": [
+    {
+      "tool": "book-of-shaders",
+      "entry": "10-random",
+      "relation": "shader-behind",
+      "label": "The Book of Shaders — 10 Random"
+    }
+  ]
 });

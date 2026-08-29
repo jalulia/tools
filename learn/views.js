@@ -519,18 +519,22 @@
   function critiqueHTML(e) {
     var c = e.critique;
     if (!c) return '';
+    // Five cells in an auto-fit grid left the fifth alone on a row with three
+    // empty columns beside it. The removal test is the conclusion of the
+    // block, not a fifth peer of it, so it takes the row.
     var rows = [
-      ['Reads as', c.reads_as],
-      ['Coupling', c.coupling],
-      ['Pass order', c.pass_order],
-      ['Operators', (c.operators || []).join(' · ')],
-      ['Why it survives', c.why_it_survives]
+      ['Reads as', c.reads_as, ''],
+      ['Coupling', c.coupling, ''],
+      ['Pass order', c.pass_order, ''],
+      ['Operators', (c.operators || []).join(' · '), ''],
+      ['Why it survives', c.why_it_survives, ' wide']
     ].filter(function (r) { return r[1]; });
     if (!rows.length) return '';
     return '<section class="blk"><div class="blk-head"><span class="lab">Critique</span>' +
       '<span class="n">stated before it may be shown as canon</span></div>' +
       '<div class="crit">' + rows.map(function (r) {
-        return '<div><span class="lab">' + esc(r[0]) + '</span><p>' + esc(r[1]) + '</p></div>';
+        return '<div class="c' + r[2] + '"><span class="lab">' + esc(r[0]) + '</span>' +
+               '<p>' + esc(r[1]) + '</p></div>';
       }).join('') + '</div></section>';
   }
 
@@ -593,7 +597,8 @@
     list.forEach(function (e) { (groups[e.section] = groups[e.section] || []).push(e); });
     Object.keys(groups).forEach(function (k) { if (order.indexOf(k) < 0) order.push(k); });
 
-    var studied = S.entries.filter(function (e) { return e.reference && e.reference.cells; }).length;
+    var studied = S.entries.filter(hasStudy).length;
+    var unstudied = S.entries.filter(noStudy).length;
     var noun = S.manifest.mode === 'catalogue' ? 'lenses' : 'chapters';
 
     var head = st ? styleDeclaration(st) :
@@ -601,7 +606,9 @@
       '<h1>Contact sheet</h1>' +
       '<div class="meta"><span class="tags">' + S.entries.length + ' ' + noun +
         ((S.manifest.styles || []).length ? ' <b>·</b> ' + S.manifest.styles.length + ' styles' : '') +
-        (studied ? ' <b>·</b> ' + studied + ' with a reference study' : '') + '</span>' +
+        (studied ? ' <b>·</b> ' + studied + ' with a reference study' : '') +
+        // the mark is defined where it is used, next to the count it stands for
+        (unstudied ? ' <b>·</b> ' + ND + ' ' + unstudied + ' without' : '') + '</span>' +
       // The mount counter is a statement about iframes. A course tool has none,
       // so on a course sheet the line said "0 mounted" forever, about nothing.
       (S.manifest.mode === 'catalogue'
@@ -615,7 +622,7 @@
           '<span class="n">' + groups[id].length + '</span></div>' +
           '<div class="grid">' + groups[id].map(cardHTML).join('') + '</div>';
       }).join('') : '<p class="empty">Nothing matches this filter.</p>') +
-      '</div>';
+      '</div>' + (st ? stylePager(st) : '');
 
     // current section in the rail while the sheet scrolls — no scroll handler
     var heads = el('view').querySelectorAll('.sheet-head[id^="sec-"]');
@@ -634,6 +641,51 @@
     S.observePreviews(el('view'));
   }
 
+  /* The caption's third line. It printed `source.kind`, which was the string
+     "reference study" on all twenty-seven cards — a label identical on every
+     card is doing no work, and checkpoint 5 flagged it. What a card can say
+     that is TRUE OF THAT CARD is either the reference it decomposes or, when
+     there is no external reference, the style it belongs to. `original` leads
+     when the work is Julia's own, because that is the one thing about a lens's
+     provenance a reader cannot infer from the picture. */
+  function subtitleOf(e) {
+    var st = S.styleById && e.style ? S.styleById(e.style) : null;
+    var styleName = (st && st.title) || e.style || '';
+    var src = e.source || {};
+    var bits = [];
+    if (String(src.kind) === 'original') {
+      bits.push(styleName ? 'original · ' + styleName : 'original');
+    } else {
+      bits.push(src.title || styleName || String(src.kind || '').replace('-', ' '));
+    }
+    if (e.status !== 'canonical') bits.push(String(e.status).replace('-', ' '));
+    return bits.filter(Boolean).join('  ·  ');
+  }
+
+  /* A lens with no decomposition on file. The entry page says it in a
+     sentence; the sheet is where the RATIO is visible, and it was not visible
+     at all. The mark is typographic and greyscale, like the status marks, but
+     it is deliberately NOT one of them: ■ □ ▨ ⬚ are four values of one
+     variable (editorial status) and a missing decomposition is a different
+     variable (what is documented). Reusing ⬚ would give one mark two meanings,
+     which is the thing PLAN §5.6 forbids. ∅ is the machine's own word for
+     none, it is in the mono face like everything else reported, and it
+     survives greyscale because it never had a colour. */
+  function hasStudy(e) {
+    return !!(e.reference && e.reference.cells && e.reference.cells.length);
+  }
+  /* DECLARED absent, not merely missing — the same distinction studyHTML()
+     already makes. `reference: null` is an entry saying "there is no
+     decomposition on file for this one"; `reference` undefined is a tool in
+     which the question does not arise. Without that line the Book of Shaders'
+     contact sheet grew twenty-six ∅ marks and a legend reading "26 without",
+     about a field no chapter has ever declared. */
+  function noStudy(e) {
+    return e.reference === null;
+  }
+  var ND = '<i class="nd" aria-hidden="true">∅</i>' +
+           '<span class="vh">no decomposition on file</span>';
+
   function cardHTML(e) {
     var thumb = e.thumb && (typeof e.thumb === 'string' ? e.thumb : e.thumb.file);
     return '<a class="card" href="#/' + esc(e.id) + '">' +
@@ -644,15 +696,8 @@
       '</span>' +
       '<span class="cap"><span class="n">' + esc(e.index || S.pad(e.order)) + '</span>' +
       '<span class="t">' + esc(e.title) + '</span>' +
-      // Same rule as head(): the card names the KIND. "ref · Written for this
-      // tool" — which is what "ref ·" produced for every original entry — reads
-      // as a citation of something that does not exist. The source TITLE is not
-      // repeated here: at 20 cards it wrapped every caption to two lines, and
-      // the full attribution is one click away on the entry.
-      '<span class="r">' + esc([
-        e.source && String(e.source.kind).replace('-', ' '),
-        e.status !== 'canonical' && String(e.status).replace('-', ' ')
-      ].filter(Boolean).join(' · ')) + '</span></span></a>';
+      '<span class="r">' + (noStudy(e) ? ND : '') + esc(subtitleOf(e)) +
+      '</span></span></a>';
   }
 
   function styleDeclaration(st) {
@@ -677,16 +722,48 @@
         return '<p><code>' + esc(g) + '</code></p>';
       }).join('') + '</div>';
     }
-    if (st.rules && st.rules.length) {
-      blocks += '<div><span class="lab">Rules</span><ul>' + st.rules.map(function (r) {
-        return '<li>' + esc(r) + '</li>';
-      }).join('') + '</ul></div>';
-    }
-    var n = S.entries.filter(function (e) { return e.style === st.id; }).length;
-    return '<p class="kicker">Style</p><h1>' + esc(st.title) + '</h1>' +
+    // The rules are the longest block and the only prose here, so it takes the
+    // whole row under the four short declarations rather than sitting in a
+    // 228px column with three empty ones beside it.
+    var rules = (st.rules && st.rules.length)
+      ? '<div class="rules"><span class="lab">Rules</span><ul>' + st.rules.map(function (r) {
+          return '<li>' + esc(r) + '</li>';
+        }).join('') + '</ul></div>'
+      : '';
+
+    var mine = S.entries.filter(function (e) { return e.style === st.id; });
+    var cat = S.manifest.mode === 'catalogue';
+    var noun = mine.length === 1 ? (cat ? 'lens' : 'entry') : (cat ? 'lenses' : 'entries');
+    var studied = mine.filter(hasStudy).length;
+    var unstudied = mine.filter(noStudy).length;
+
+    return '<p class="kicker"><a href="#/index">' + esc(S.manifest.title) +
+        '</a> · Style</p><h1>' + esc(st.title) + '</h1>' +
       (st.summary ? '<p class="read" style="padding-top:0;max-width:66ch">' + esc(st.summary) + '</p>' : '') +
-      '<div class="meta"><span class="tags">' + n + ' entries in this style</span></div>' +
-      (blocks ? '<div class="decl">' + blocks + '</div>' : '');
+      '<div class="meta"><span class="tags">' + mine.length + ' ' + noun + ' in this style' +
+        (studied ? ' <b>·</b> ' + studied + ' with a reference study' : '') +
+        (unstudied ? ' <b>·</b> ' + ND + ' ' + unstudied + ' without' : '') +
+      '</span>' +
+      // the style file is what every fragment in the style actually links, so
+      // the page says where it is, the way the course apparatus names its file
+      '<span class="tags right">content/_styles/' + esc(st.id) + '.css</span></div>' +
+      (blocks || rules ? '<div class="decl">' + blocks + rules + '</div>' : '');
+  }
+
+  /* Styles are a set of six, so they get the same prev/next an entry gets.
+     Without it a style page is a cul-de-sac: the rail lists lenses, not
+     styles, so the only way out was the browser's back button. */
+  function stylePager(st) {
+    var list = S.manifest.styles || [];
+    var i = list.map(function (s) { return s.id; }).indexOf(st.id);
+    if (i < 0 || list.length < 2) return '';
+    var prev = list[(i - 1 + list.length) % list.length];
+    var next = list[(i + 1) % list.length];
+    return '<nav class="pager style-pager" aria-label="Styles">' +
+      '<a href="#/style/' + esc(prev.id) + '"><span class="lab">← Previous style</span>' +
+        '<span class="t">' + esc(prev.title) + '</span></a>' +
+      '<a class="next" href="#/style/' + esc(next.id) + '"><span class="lab">Next style →</span>' +
+        '<span class="t">' + esc(next.title) + '</span></a></nav>';
   }
 
   function renderStyle(st) { renderSheet(st.id); }

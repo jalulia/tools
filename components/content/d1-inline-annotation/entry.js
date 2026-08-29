@@ -28,10 +28,7 @@ Shell.registerEntry({
   },
   "thumb": {
     "file": "thumb.png",
-    "crop": [
-      1,
-      0
-    ]
+    "crop": [2.0, 0]
   },
   "text": "<p>Two panels, flat process yellow and plain white, zero texture. A statement set in heavy caps with four inline annotation forms — pill, tab, bracket, lozenge — threaded through the sentence.</p> <p>The forms are measured, not placed: each is sized to the headline's x-height and sits on its baseline, which is why they read as punctuation rather than as stickers. The black-and-white alternate replaces them with torn paper strips, and that is the only print idea anywhere in the lens.</p>",
   "reference": null,

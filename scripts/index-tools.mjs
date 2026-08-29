@@ -4,6 +4,7 @@
 //   node scripts/index-tools.mjs                 check + print a diff, change nothing
 //   node scripts/index-tools.mjs --write         apply only the safe additions
 //   node scripts/index-tools.mjs --shots         render missing thumb.png (needs playwright)
+//   node scripts/index-tools.mjs --shots --force re-render every thumb.png
 //   node scripts/index-tools.mjs --mirror        copy main.frag / *.frag into entry.js
 //   node scripts/index-tools.mjs --tool components
 //
@@ -36,6 +37,8 @@ const argv = process.argv.slice(2);
 const has = (f) => argv.includes(f);
 const val = (f) => { const i = argv.indexOf(f); return i >= 0 ? argv[i + 1] : null; };
 const WRITE = has('--write');
+const FORCE = has('--force');
+const THUMB_W = 480;      // the widest a card is ever drawn, plus headroom
 const ONLY = val('--tool');
 
 const C = { dim: (s) => `\x1b[2m${s}\x1b[0m`, b: (s) => `\x1b[1m${s}\x1b[0m` };
@@ -244,6 +247,17 @@ async function shots(files) {
     console.log('\n--shots needs playwright locally: npm i -g playwright && npx playwright install chromium');
     return;
   }
+  // Optional second local dependency. A thumbnail rendered at the plate's own
+  // design width is 1100 px wide and 400-1600 KB of full-colour PNG; 27 of
+  // those is 16 MB in the repository for pictures that are never shown above
+  // 354 px. Print plates full of halftone and grain compress badly, so the
+  // saving is in the palette: 480 px and 192 colours is 1.9 MB for the set and
+  // is indistinguishable at card size. If sharp is not installed the shot is
+  // still correct, just large, and the run says so rather than failing.
+  let sharp = null;
+  try { ({ default: sharp } = await import('sharp')); }
+  catch { console.log(C.dim('  (no sharp: thumbs are written at full size — npm i sharp to shrink them)')); }
+
   const browser = await chromium.launch();
   for (const file of files) {
     const m = loadManifest(file);
@@ -254,7 +268,7 @@ async function shots(files) {
       // entry has a live stage the moment you open it.
       if (!declared && m.manifest.mode !== 'catalogue') continue;
       const out = join(m.dir, e.path, declared || 'thumb.png');
-      if (existsSync(out)) continue;
+      if (existsSync(out) && !FORCE) continue;
       const lane = e.lane || m.manifest.stage?.adapter;
       const dw = (e.frame && e.frame.designWidth) || 1100;
       const asp = String((e.frame && e.frame.aspect) || '3/2').split('/');
@@ -268,7 +282,16 @@ async function shots(files) {
         } else {
           await page.goto(pathToFileURL(join(m.dir, 'index.html')).href + '#/' + e.id, { waitUntil: 'load' });
         }
-        await page.waitForTimeout(1200);
+        // SETTLE. It was 1,200 ms, and 1,200 ms is not long enough: D2's marker
+        // circles fade in on a staggered per-mark delay that reaches ~1.4 s, so
+        // the shot caught a printed tile with no hand layer on it and nothing
+        // said so — the first D2 thumbnail shipped wrong (CHECKPOINT-5 §7.1).
+        // 2,600 ms clears the slowest authored delay in the library (D2 at
+        // 1.4 s) with room, and clears scene.js's own 2,500 ms fonts.ready
+        // backstop, so a face that never loads still cannot be photographed
+        // mid-swap. This is the value team/build/thumbs-5.mjs was using; it now
+        // lives in the shipped script and thumbs-5.mjs is retired.
+        await page.waitForTimeout(2600);
         mkdirSync(dirname(out), { recursive: true });
         // Bake the authored crop into the file, so a card at rest and a card
         // with a live frame in it show the same composition. The card aspect is
@@ -277,12 +300,20 @@ async function shots(files) {
         let clip = null;
         if (lane === 'fragment' && crop) {
           const cw = Math.min(dw, Math.round(dw / crop[0]));
-          const ch = Math.min(dh - crop[1], Math.round(cw * 196 / 232));
-          if (ch > 20) clip = { x: 0, y: crop[1], width: cw, height: ch };
+          const ox = Math.min(crop[2] || 0, dw - cw);
+          const ch = Math.min(dh - (crop[1] || 0), Math.round(cw * 196 / 232));
+          if (ch > 20) clip = { x: ox, y: crop[1] || 0, width: cw, height: ch };
         }
         const target = lane === 'fragment' ? page : await page.$('.stage');
-        await (target ?? page).screenshot(clip ? { path: out, clip } : { path: out });
-        console.log(`  ▣ ${relative(ROOT, out)}${clip ? '  ' + C.dim('crop baked in') : ''}`);
+        const shot = await (target ?? page).screenshot(clip ? { clip } : {});
+        if (sharp) {
+          await sharp(shot).resize({ width: THUMB_W, withoutEnlargement: true })
+                           .png({ palette: true, colours: 192, effort: 8 }).toFile(out);
+        } else {
+          writeFileSync(out, shot);
+        }
+        const kb = (statSync(out).size / 1024) | 0;
+        console.log(`  ▣ ${relative(ROOT, out)}  ${C.dim((clip ? 'crop baked in · ' : '') + kb + ' KB')}`);
         changed++;
       } catch (err) {
         console.log(`  ! ${e.id}: ${err.message}`);

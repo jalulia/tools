@@ -98,11 +98,19 @@
     //            is a 1.4x detail. Relative, so a card that changes width when
     //            the rail closes does not change what the crop means.
     //   crop[1]  the design-pixel row that lands at the top of the card.
+    //   crop[2]  optional: the design-pixel column that lands at its left edge.
     var fit = el.clientWidth / dw;
     var scale = fit * (crop ? crop[0] : 1);
-    var offY = crop ? crop[1] : 0;
+    var offY = crop ? crop[1] || 0 : 0;
+    // crop[2], optional: the design-pixel COLUMN that lands at the left edge.
+    // Two lenses cannot be cropped correctly without it — T8's wordmark and
+    // D2's glyph grid are centred on a plate too short to show whole, so the
+    // only crop that fits the card is a zoom, and a zoom anchored at x=0 cuts
+    // the L off NORMAL. Optional and defaulting to 0, so every existing
+    // two-element crop means exactly what it meant.
+    var offX = crop ? crop[2] || 0 : 0;
     f.style.transformOrigin = '0 0';
-    f.style.transform = 'scale(' + scale + ') translateY(' + (-offY) + 'px)';
+    f.style.transform = 'scale(' + scale + ') translate(' + (-offX) + 'px,' + (-offY) + 'px)';
     el.appendChild(f);
     el.setAttribute('data-mounted', 'true');
     live.push({ el: el, frame: f, entry: entry });

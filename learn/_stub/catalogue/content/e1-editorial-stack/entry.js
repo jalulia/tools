@@ -23,7 +23,7 @@ Shell.registerEntry({
     },
     "thumb": {
       "file": "thumb.png",
-      "crop": [1, 40]
+      "crop": [1.1, 40]
     },
     "reference": null,
     "text": "<p>Four sizes of one family, stacked so the optical sizes are visible against each\n    other. The italic is not a second voice; it is the same voice at a different volume, and\n    the indent is what says so.</p>"

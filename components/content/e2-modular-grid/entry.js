@@ -28,7 +28,7 @@ Shell.registerEntry({
   "thumb": {
     "file": "thumb.png",
     "crop": [
-      1,
+      1.01,
       0
     ]
   },
@@ -53,7 +53,7 @@ Shell.registerEntry({
     },
     {
       "k": "Skeleton",
-      "v": "12 tracks / 24 gutter, integer track widths (JS snap → --md-w) so hairlines are pixel-exact. Faults fixed: X-placeholder figure → generated grey still life; fractional track widths (blurred hairlines) → snapped."
+      "v": "12 tracks / 24 gutter, integer track widths (JS snap → --md-w) so hairlines are pixel-exact."
     }
   ],
   "critique": {
@@ -65,7 +65,11 @@ Shell.registerEntry({
       "hairline rule",
       "tinted track"
     ],
-    "why_it_survives": "Leave the tracks fractional and every rule blurs, which makes the grid an illustration of a grid."
+    "why_it_survives": "Leave the tracks fractional and every rule blurs, which makes the grid an illustration of a grid.",
+    "faults": [
+      "X-placeholder figure → generated grey still life",
+      "fractional track widths (blurred hairlines) → snapped"
+    ]
   },
   "related": [
     {

@@ -185,6 +185,34 @@ function verifyOne({ manifest, dir, entries, missingScripts }, schema, say, load
     }
   }
 
+  /* 6b. an authored crop must be a crop the card can show ---------------
+     The contact-sheet preview window is one ratio for every card, 232:196.
+     thumb.crop cuts [designWidth / scale] wide from row offsetY, and the card
+     shows that rectangle. If the rectangle is shorter than the ratio needs —
+     a plate under 929 design px tall at scale 1 — the browser trims the sides
+     of the composition instead, silently, and what ships is not what was
+     authored. It is invisible in the source and total in the output, which is
+     the class of defect this function exists for. */
+  for (const e of entries) {
+    const crop = e.thumb && e.thumb.crop;
+    if (!Array.isArray(crop)) continue;
+    const dw = (e.frame && e.frame.designWidth) || 1100;
+    const ph = (e.frame && e.frame.previewHeight) || 0;
+    if (!ph) continue;                       // height: auto — nothing to check against
+    const cw = Math.min(dw, Math.round(dw / (crop[0] || 1)));
+    const want = Math.round(cw * 196 / 232);
+    const have = ph - (crop[1] || 0);
+    if ((crop[2] || 0) + cw > dw) {
+      say(`entry "${e.id}": thumb.crop offsetX ${crop[2]} + ${cw} runs past the plate's ${dw} px width`);
+    }
+    if (have < want - 1) {
+      const min = (Math.ceil(dw * 196 / 232 / Math.max(1, have) * 100) / 100).toFixed(2);
+      say(`entry "${e.id}": thumb.crop ${JSON.stringify(crop)} cuts ${cw}x${have}, ` +
+          `but the card is 232:196 and needs ${cw}x${want} — raise the scale to at least ${min} ` +
+          `or lower offsetY, or the card trims the sides of the crop`);
+    }
+  }
+
   /* 7. the editorial gate ---------------------------------------------
      An entry cannot be presented as canonical work with a critique block that
      does not state its read, its coupling and its pass order. This is the move

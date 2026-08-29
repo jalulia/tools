@@ -81,7 +81,7 @@ Shell.registerEntry({
     },
     {
       "k": "Skeleton",
-      "v": "bands stacked with small offsets across the middle third; days in the four corners; doodles in the margins critique of previous build: bands were flat orange + generic noise, drop-shadow was a straight-down blur, perforation was a zigzag drawing, calendar had no tooth or light, doodles used a low-frequency wobble (not a marker), burst wore a shadow though it is print."
+      "v": "bands stacked with small offsets across the middle third; days in the four corners; doodles in the margins."
     }
   ],
   "critique": {
@@ -96,13 +96,24 @@ Shell.registerEntry({
     ],
     "why_it_survives": "Give the doodles the paper’s tooth and they become printed ornament; make the perforation a drawn zigzag and the band stops being a physical object.",
     "faults": [
-      "bands were flat orange + generic noise, drop-shadow was a straight-down blur, perforation was a zigzag drawing, calendar had no tooth or light, doodles used a low-frequency wobble (not a marker), burst wore a shadow though it is print"
+      "bands were flat orange + generic noise",
+      "drop-shadow was a straight-down blur",
+      "perforation was a zigzag drawing",
+      "calendar had no tooth or light",
+      "doodles used a low-frequency wobble (not a marker)",
+      "burst wore a shadow though it is print"
     ]
   },
   "related": [
     {
       "entry": "d6-social-tiles",
       "relation": "technique-of"
+    },
+    {
+      "tool": "book-of-shaders",
+      "entry": "10-random",
+      "relation": "shader-behind",
+      "label": "The Book of Shaders — 10 Random"
     }
   ]
 });

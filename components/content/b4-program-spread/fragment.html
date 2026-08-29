@@ -224,6 +224,7 @@ body {
      copies of mulberry32, three of the field builder, six of the dot screen
      and two of the paper tooth. Classic <script src>, relative, so this
      document opens by double-click with no server and no build step. -->
+<script src="../_engines/raster.js"></script>
 <script src="../_engines/rng.js"></script>
 <script src="../_engines/paper.js"></script>
 <script src="../_engines/scene.js"></script>
@@ -236,10 +237,11 @@ body {
     const cv=document.getElementById('stk-tooth'); if(!cv) return;
     const host=document.getElementById('stk'); const cw=host.clientWidth, ch=host.clientHeight; if(!cw||!ch) return;
     if(Math.abs(cw-stkW)<40 && cv.width) return; stkW=cw;
-    const W=Math.round(cw*1.5), H=Math.round(ch*1.5); cv.width=W; cv.height=H;
+    const dpr=Comp.dpr(1.5);
+    const W=Math.round(cw*dpr), H=Math.round(ch*dpr); cv.width=W; cv.height=H;
     /* the tooth is _engines/paper.js now — same seed, same amplitude,
        same fibre count, so the sheet is the same sheet. */
-    Comp.paperTooth(cv, cw, ch, { dpr:1.5, seed:4141, base:246, amp:22, fibreAlpha:.045 });
+    Comp.paperTooth(cv, cw, ch, { dpr:dpr, seed:4141, base:246, amp:22, fibreAlpha:.045 });
   }
   Comp.paint(stkPaint, { threshold: 40 });
 })();

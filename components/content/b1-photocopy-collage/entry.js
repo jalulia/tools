@@ -81,7 +81,7 @@ Shell.registerEntry({
     },
     {
       "k": "Skeleton",
-      "v": "block low-left, hero card centre-left, four xerox photos pinned to the corners, tape crossing everything critique of previous build: photos were blob fields (no scene), misregistration was a css copy, shadows boilerplate, tape/card type never went through the ink chain, edges too clean."
+      "v": "block low-left, hero card centre-left, four xerox photos pinned to the corners, tape crossing everything."
     }
   ],
   "critique": {
@@ -97,7 +97,11 @@ Shell.registerEntry({
     ],
     "why_it_survives": "Remove the scenes and the halftone has nothing to reproduce; remove the hand layer and the collage has no author.",
     "faults": [
-      "photos were blob fields (no scene), misregistration was a css copy, shadows boilerplate, tape/card type never went through the ink chain, edges too clean"
+      "photos were blob fields (no scene)",
+      "misregistration was a css copy",
+      "shadows boilerplate",
+      "tape/card type never went through the ink chain",
+      "edges too clean"
     ]
   },
   "related": [
@@ -108,6 +112,12 @@ Shell.registerEntry({
     {
       "entry": "c1-heavy-ink",
       "relation": "technique-of"
+    },
+    {
+      "tool": "book-of-shaders",
+      "entry": "00-introduction",
+      "relation": "shader-behind",
+      "label": "The Book of Shaders — 00 Introduction"
     }
   ]
 });

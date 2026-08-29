@@ -28,7 +28,7 @@ Shell.registerEntry({
   "thumb": {
     "file": "thumb.png",
     "crop": [
-      1,
+      1.4,
       0
     ]
   },
@@ -53,7 +53,7 @@ Shell.registerEntry({
     },
     {
       "k": "Skeleton",
-      "v": "4×3, integer column widths (JS snap → --bt-w). Faults fixed: X-placeholder media → generated grey architecture scene; chunky bar \"sparkline\" → crisp 1px SVG sparkline with hairline grid + accent endpoint; fractional columns → snapped."
+      "v": "4×3, integer column widths (JS snap → --bt-w)."
     }
   ],
   "related": [
@@ -61,5 +61,12 @@ Shell.registerEntry({
       "entry": "e2-modular-grid",
       "relation": "variant-of"
     }
-  ]
+  ],
+  "critique": {
+    "faults": [
+      "X-placeholder media → generated grey architecture scene",
+      "chunky bar \"sparkline\" → crisp 1px SVG sparkline with hairline grid + accent endpoint",
+      "fractional columns → snapped"
+    ]
+  }
 });

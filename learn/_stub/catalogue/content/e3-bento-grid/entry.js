@@ -22,7 +22,7 @@ Shell.registerEntry({
     },
     "thumb": {
       "file": "thumb.png",
-      "crop": [1, 30]
+      "crop": [1.1, 30]
     },
     "reference": null,
     "note": "Superseded by the modular grid; kept for the record, not for use.",

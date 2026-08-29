@@ -49,7 +49,7 @@ Shell.registerEntry({
     },
     {
       "k": "Skeleton",
-      "v": "eyebrow / head / taped plate / cols / foot. Faults fixed: plate was a grey gradient; tape was a multiplied strip with no shadow; card floated with no shadow."
+      "v": "eyebrow / head / taped plate / cols / foot."
     }
   ],
   "critique": {
@@ -62,7 +62,12 @@ Shell.registerEntry({
       "copier edge burn",
       "cellophane tape"
     ],
-    "why_it_survives": "Make the plate a grey gradient and there is nothing to reproduce; filter the tape and it stops being on top of the card."
+    "why_it_survives": "Make the plate a grey gradient and there is nothing to reproduce; filter the tape and it stops being on top of the card.",
+    "faults": [
+      "plate was a grey gradient",
+      "tape was a multiplied strip with no shadow",
+      "card floated with no shadow"
+    ]
   },
   "related": [
     {
@@ -72,6 +77,12 @@ Shell.registerEntry({
     {
       "entry": "e4-masonry-cards",
       "relation": "technique-of"
+    },
+    {
+      "tool": "book-of-shaders",
+      "entry": "00-introduction",
+      "relation": "shader-behind",
+      "label": "The Book of Shaders — 00 Introduction"
     }
   ]
 });

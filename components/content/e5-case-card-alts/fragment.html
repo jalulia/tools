@@ -437,6 +437,7 @@ CHANGE          8.00
      copies of mulberry32, three of the field builder, six of the dot screen
      and two of the paper tooth. Classic <script src>, relative, so this
      document opens by double-click with no server and no build step. -->
+<script src="../_engines/raster.js"></script>
 <script src="../_engines/rng.js"></script>
 <script src="../_engines/field.js"></script>
 <script src="../_engines/halftone.js"></script>
@@ -452,7 +453,7 @@ var caBuildField = Comp.buildField;   /* was an identical copy — see _engines/
 // opts: { paper, inks:[{ink,angle,dx,dy,gain}], radial }  — default = benchmark toner-on-paper
 function caHalftone(canvas, cssW, cssH, seed, darkBias, contrast, opts){
   opts=opts||{};
-  const dpr=2, W=Math.round(cssW*dpr), H=Math.round(cssH*dpr);
+  const dpr=Comp.dpr(2), W=Math.round(cssW*dpr), H=Math.round(cssH*dpr);
   if(W<2||H<2) return;
   canvas.width=W; canvas.height=H;
   const rnd=caMulberry(seed*2654435761>>>0);
@@ -502,7 +503,7 @@ function caBuildShow(el){
 function caRun(){
   document.querySelectorAll('#ca .a-plate canvas').forEach(cv=>{
     // structured site photo: timber rounds scene -> single toner halftone (photocopied)
-    const r=cv.getBoundingClientRect(); const dpr=2, W=Math.round((r.width||300)*dpr), H=Math.round((r.height||225)*dpr);
+    const r=cv.getBoundingClientRect(); const dpr=Comp.dpr(2), W=Math.round((r.width||300)*dpr), H=Math.round((r.height||225)*dpr);
     cv.width=W; cv.height=H; const rnd=caMulberry(311); const field=caScene(W,H,rnd);
     const samp = Comp.sampler({ data: field }, W, H, 1);   /* _engines/field.js */
     const ctx=cv.getContext('2d'); ctx.fillStyle='#e9e6de'; ctx.fillRect(0,0,W,H); ctx.fillStyle='#141210';
@@ -523,7 +524,7 @@ function caRun(){
 // CA-A halftone interior: coverage field (solid with a soft lighter zone) → 22° dot screen of the fragment's ink on transparent
 function caAHalf(el,ink,seed,cov){
   const cw=el.offsetWidth, ch=el.offsetHeight; if(cw<4||ch<4) return;
-  const dpr=2, W=Math.round(cw*dpr), H=Math.round(ch*dpr), c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+  const dpr=Comp.dpr(2), W=Math.round(cw*dpr), H=Math.round(ch*dpr), c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
   const rnd=caMulberry(seed*7919); const lx=(.2+rnd()*.6)*W, ly=(.2+rnd()*.6)*H, lr=Math.max(W,H)*(.45+rnd()*.3);
   x.fillStyle=ink; x.globalAlpha=1;
   const cell=2.2*dpr, ang=22*Math.PI/180, cs=Math.cos(ang), sn=Math.sin(ang), R=Math.ceil(Math.hypot(W,H)/cell)+2;
@@ -605,7 +606,7 @@ function caScene(W,H,rnd){
   return x.getImageData(0,0,W,H).data;
 }
 function caPoster(cv){
-  const r=cv.getBoundingClientRect(); const cssW=r.width||400, cssH=r.height||360; const dpr=2, W=Math.round(cssW*dpr), H=Math.round(cssH*dpr);
+  const r=cv.getBoundingClientRect(); const cssW=r.width||400, cssH=r.height||360; const dpr=Comp.dpr(2), W=Math.round(cssW*dpr), H=Math.round(cssH*dpr);
   cv.width=W; cv.height=H; const rnd=caMulberry(2026);
   const field=caScene(W,H,rnd);
   const samp = Comp.sampler({ data: field }, W, H, 1);   /* _engines/field.js */

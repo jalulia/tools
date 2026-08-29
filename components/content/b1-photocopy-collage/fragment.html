@@ -145,6 +145,7 @@ body {
      copies of mulberry32, three of the field builder, six of the dot screen
      and two of the paper tooth. Classic <script src>, relative, so this
      document opens by double-click with no server and no build step. -->
+<script src="../_engines/raster.js"></script>
 <script src="../_engines/rng.js"></script>
 <script src="../_engines/field.js"></script>
 <script src="../_engines/halftone.js"></script>
@@ -157,7 +158,7 @@ var anyMulberry = Comp.mulberry32;   /* was a local mulberry32 — see _engines/
 var anyBuildField = Comp.buildField;   /* was an identical copy — see _engines/field.js */
 
 function anyHalftone(canvas, cssW, cssH, seed, darkBias, contrast){
-  const dpr=2, W=Math.round(cssW*dpr), H=Math.round(cssH*dpr);
+  const dpr=Comp.dpr(2), W=Math.round(cssW*dpr), H=Math.round(cssH*dpr);
   canvas.width=W; canvas.height=H;
   /* one drum, positive screen, 20°, on the warm-grey copier stock. */
   Comp.halftone(canvas, cssW, cssH, {
@@ -257,7 +258,7 @@ function anyScene(W,H,rnd,kind){
   return x.getImageData(0,0,W,H).data;
 }
 function anyXerox(canvas, cssW, cssH, seed, kind){
-  const dpr=2, W=Math.round(cssW*dpr), H=Math.round(cssH*dpr);
+  const dpr=Comp.dpr(2), W=Math.round(cssW*dpr), H=Math.round(cssH*dpr);
   canvas.width=W; canvas.height=H;
   const rnd=anyMulberry(seed*2654435761>>>0);
   const field=anyScene(W,H,rnd,kind);

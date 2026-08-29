@@ -103,7 +103,8 @@
 
   Comp.mkScene = function (canvas, engine, opt) {
     opt = opt || {};
-    var dpr = Math.min(opt.dpr || 2, window.devicePixelRatio || 1, 2);
+    var dpr = Math.min(Comp.dpr ? Comp.dpr(opt.dpr || 2) : (opt.dpr || 2),
+                       window.devicePixelRatio || 1, 2);
     var s = { canvas: canvas, engine: engine, visible: false, ctx: null, W: 0, H: 0 };
 
     function size() {

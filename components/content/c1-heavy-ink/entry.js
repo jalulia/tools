@@ -30,7 +30,7 @@ Shell.registerEntry({
     "file": "thumb.png",
     "crop": [
       1,
-      250
+      369
     ]
   },
   "text": "<p>Two drums on 120 gsm bone stock: a heavy black run, then brick, mis-registered by about four pixels under it. The paper is a fibre mottle and a fine grain multiplied over everything, so nothing sits on top of the sheet.</p> <p>The screen here is <em>inverted</em>. Instead of dots that grow as the field darkens, the plate is solid and the dots are the places the ink did not take — un-inked holes at the same 20° pitch as the wordmark's line screen. That is why the starve and the misregistration cannot disagree about where the ink ran out: they are reading the same field.</p>",
@@ -83,6 +83,12 @@ Shell.registerEntry({
     {
       "entry": "d4-riso-print-set",
       "relation": "technique-of"
+    },
+    {
+      "tool": "book-of-shaders",
+      "entry": "00-introduction",
+      "relation": "shader-behind",
+      "label": "The Book of Shaders — 00 Introduction"
     }
   ]
 });

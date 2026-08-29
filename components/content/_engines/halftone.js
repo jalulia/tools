@@ -75,7 +75,8 @@
      inks[] = [{ ink, angle, dx, dy, gain, min, alpha, invert }]  */
   Comp.halftone = function (canvas, cssW, cssH, opt) {
     opt = opt || {};
-    var dpr = opt.dpr || 2;
+    // the phone cap lives in _engines/raster.js; without it, the old default
+    var dpr = opt.dpr || (Comp.dpr ? Comp.dpr(2) : 2);
     var W = Math.round(cssW * dpr), H = Math.round(cssH * dpr);
     if (W < 2 || H < 2) return;
     canvas.width = W; canvas.height = H;

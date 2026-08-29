@@ -29,8 +29,9 @@ Shell.registerEntry({
   "thumb": {
     "file": "thumb.png",
     "crop": [
-      1,
-      0
+      1.35,
+      0,
+      100
     ]
   },
   "text": "<p>A two-colour riso print set on a warm grey table: poster, ticket, two-up, cards, a drawdown chit. Ultramarine and orange, each its own drum, each its own registration.</p> <p>The sphere is the argument. It is a halftone of a <em>structured</em> field — lambert body, terminator, a tight specular, a rim of bounce — so it reads as an object that was photographed and then screened, not as a circle with a gradient in it. Everything small (the barcode guards, the mono captions, the die-line) stays crisp: the press only fails where there is enough ink to fail.</p>",
@@ -54,7 +55,7 @@ Shell.registerEntry({
     },
     {
       "k": "Skeleton",
-      "v": "poster + ticket left column; two-up + cards centre; chit right; annotations on the table critique of previous build: poster foot and card-b foot inherited the gallery's global .foot padding (jumped into the title), the drawdown chit was two flat swatches, shadows were soft/uniform with no contact core, the sphere lacked a highlight, the spectrum strip was a flat bar."
+      "v": "poster + ticket left column; two-up + cards centre; chit right; annotations on the table."
     }
   ],
   "critique": {
@@ -69,13 +70,23 @@ Shell.registerEntry({
     ],
     "why_it_survives": "Flatten the sphere’s shading and the halftone becomes a texture on a circle; remove the crisp small type and the whole sheet reads as one filter.",
     "faults": [
-      "poster foot and card-b foot inherited the gallery's global .foot padding (jumped into the title), the drawdown chit was two flat swatches, shadows were soft/uniform with no contact core, the sphere lacked a highlight, the spectrum strip was a flat bar"
+      "poster foot and card-b foot inherited the gallery's global .foot padding (jumped into the title)",
+      "the drawdown chit was two flat swatches",
+      "shadows were soft/uniform with no contact core",
+      "the sphere lacked a highlight",
+      "the spectrum strip was a flat bar"
     ]
   },
   "related": [
     {
       "entry": "c1-heavy-ink",
       "relation": "technique-of"
+    },
+    {
+      "tool": "book-of-shaders",
+      "entry": "00-introduction",
+      "relation": "shader-behind",
+      "label": "The Book of Shaders — 00 Introduction"
     }
   ]
 });

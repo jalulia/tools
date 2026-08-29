@@ -428,6 +428,7 @@ body {
      copies of mulberry32, three of the field builder, six of the dot screen
      and two of the paper tooth. Classic <script src>, relative, so this
      document opens by double-click with no server and no build step. -->
+<script src="../_engines/raster.js"></script>
 <script src="../_engines/rng.js"></script>
 <script src="../_engines/scene.js"></script>
 <script>
@@ -544,7 +545,7 @@ body {
   SO.hex=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
   SO.duotone=function(host){
     let cv=host.querySelector('canvas'); if(!cv){ cv=document.createElement('canvas'); host.insertBefore(cv,host.firstChild); }
-    const r=host.getBoundingClientRect(); const dpr=2, W=Math.round((r.width||120)*dpr), H=Math.round((r.height||120)*dpr); if(W<8||H<8) return;
+    const r=host.getBoundingClientRect(); const dpr=Comp.dpr(2), W=Math.round((r.width||120)*dpr), H=Math.round((r.height||120)*dpr); if(W<8||H<8) return;
     cv.width=W; cv.height=H; const kind=host.dataset.scene||'portrait'; const seed=[...kind].reduce((a,c)=>a+c.charCodeAt(0),W);
     const rnd=SO.mulberry(seed); const src=SO.scene(kind,W,H,rnd);
     const [dk,lt]=(SO.pal[host.dataset.pal]||SO.pal.py).map(SO.hex);
@@ -555,7 +556,7 @@ body {
 
   // ---- spiral notepad: painted metal wire loops through punched holes (light top-left → shadow bottom-right) ----
   SO.rings=function(cv){
-    const r=cv.getBoundingClientRect(); const cw=r.width||220, ch=r.height||30; const dpr=2, W=Math.round(cw*dpr), H=Math.round(ch*dpr);
+    const r=cv.getBoundingClientRect(); const cw=r.width||220, ch=r.height||30; const dpr=Comp.dpr(2), W=Math.round(cw*dpr), H=Math.round(ch*dpr);
     if(W<10) return; cv.width=W; cv.height=H; const x=cv.getContext('2d'); x.scale(dpr,dpr); const rnd=SO.mulberry(5);
     const padTop=ch*.53;                    // where the pad's top edge sits inside the canvas
     const pitch=Math.max(15,cw/10.5), n=Math.floor((cw-10)/pitch), x0=(cw-(n-1)*pitch)/2, wr=ch*.12;

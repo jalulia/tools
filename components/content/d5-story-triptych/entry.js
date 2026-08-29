@@ -29,7 +29,7 @@ Shell.registerEntry({
   "thumb": {
     "file": "thumb.png",
     "crop": [
-      1,
+      1.5,
       0
     ]
   },
@@ -54,7 +54,7 @@ Shell.registerEntry({
     },
     {
       "k": "Skeleton",
-      "v": "row of three · caption line critique of previous build: rings were a flat SVG pattern (clip-art), papers had no stage light or shadow (floating cutouts), frame 3 footer inherited the gallery's global .foot rule (jumped into the passage), frame 2 page header inherited the global .ph placeholder background, the signature was a clean vector."
+      "v": "row of three · caption line."
     }
   ],
   "critique": {
@@ -69,7 +69,11 @@ Shell.registerEntry({
     ],
     "why_it_survives": "Draw the rings as an SVG pattern and the notebook becomes clip-art; drop the stage light and the three cards become floating cutouts.",
     "faults": [
-      "rings were a flat SVG pattern (clip-art), papers had no stage light or shadow (floating cutouts), frame 3 footer inherited the gallery's global .foot rule (jumped into the passage), frame 2 page header inherited the global .ph placeholder background, the signature was a clean vector"
+      "rings were a flat SVG pattern (clip-art)",
+      "papers had no stage light or shadow (floating cutouts)",
+      "frame 3 footer inherited the gallery's global .foot rule (jumped into the passage)",
+      "frame 2 page header inherited the global .ph placeholder background",
+      "the signature was a clean vector"
     ]
   }
 });

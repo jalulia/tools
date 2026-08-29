@@ -29,7 +29,7 @@ Shell.registerEntry({
   "thumb": {
     "file": "thumb.png",
     "crop": [
-      1,
+      1.25,
       0
     ]
   },
@@ -70,6 +70,12 @@ Shell.registerEntry({
     {
       "entry": "e5-case-card",
       "relation": "variant-of"
+    },
+    {
+      "tool": "book-of-shaders",
+      "entry": "00-introduction",
+      "relation": "shader-behind",
+      "label": "The Book of Shaders — 00 Introduction"
     }
   ]
 });

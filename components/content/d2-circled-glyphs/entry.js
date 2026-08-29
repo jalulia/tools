@@ -28,8 +28,9 @@ Shell.registerEntry({
   "thumb": {
     "file": "thumb.png",
     "crop": [
-      1,
-      0
+      1.4,
+      0,
+      157
     ]
   },
   "text": "<p>One near-black screen-printed tile: cream display caps in a dead-even 9×4 grid, mono index tags, hairline rules. That is the press layer, and it is crisp.</p> <p>Over it, a hand layer in orange paint marker — circles, an underline, an arrow, four scrawled notes. Each stroke has pressure (thick and thin along its length), a waver, and sometimes a doubled pass, and no two circles are alike. The marks are opaque and never take the screen mottle, because they were made after the tile was printed.</p>",
@@ -53,7 +54,7 @@ Shell.registerEntry({
     },
     {
       "k": "Skeleton",
-      "v": "head row / grid / foot row; circles spill over cell edges but never over the rules critique of previous build: circles were uniform-width vector strokes (no pressure, no waver → \"SVG ellipse\"), footer row inherited the gallery's global .foot padding (indented 100px), note collided with an index tag, grain was flat white noise (no screen mottle)."
+      "v": "head row / grid / foot row; circles spill over cell edges but never over the rules."
     }
   ],
   "critique": {
@@ -68,7 +69,10 @@ Shell.registerEntry({
     ],
     "why_it_survives": "Draw the circles at uniform width and they become SVG ellipses; give them the print grain and the hand disappears into the press.",
     "faults": [
-      "circles were uniform-width vector strokes (no pressure, no waver → \"SVG ellipse\"), footer row inherited the gallery's global .foot padding (indented 100px), note collided with an index tag, grain was flat white noise (no screen mottle)"
+      "circles were uniform-width vector strokes (no pressure, no waver → \"SVG ellipse\")",
+      "footer row inherited the gallery's global .foot padding (indented 100px)",
+      "note collided with an index tag",
+      "grain was flat white noise (no screen mottle)"
     ]
   },
   "related": [

@@ -28,7 +28,7 @@ Shell.registerEntry({
   "thumb": {
     "file": "thumb.png",
     "crop": [
-      1,
+      1.69,
       0
     ]
   },
@@ -49,7 +49,7 @@ Shell.registerEntry({
     },
     {
       "k": "Skeleton",
-      "v": "16:9, rows edge-to-edge and cropped by the tile, sticker at 64/22, two mono corner labels. Faults fixed: ground was #141414 (grey, not black); scaleX(1.06) distorted glyphs; type sat small in the row (.86) leaving timid gaps; sticker shadow was a boilerplate soft drop; motion too fast for a subtle loop."
+      "v": "16:9, rows edge-to-edge and cropped by the tile, sticker at 64/22, two mono corner labels."
     }
   ],
   "critique": {
@@ -61,6 +61,13 @@ Shell.registerEntry({
       "seamless marquee",
       "kiss-cut vinyl"
     ],
-    "why_it_survives": "Scale the glyphs to fill the row and the type distorts; speed the loop up and the rows stop reading as a printed strip."
+    "why_it_survives": "Scale the glyphs to fill the row and the type distorts; speed the loop up and the rows stop reading as a printed strip.",
+    "faults": [
+      "ground was #141414 (grey, not black)",
+      "scaleX(1.06) distorted glyphs",
+      "type sat small in the row (.86) leaving timid gaps",
+      "sticker shadow was a boilerplate soft drop",
+      "motion too fast for a subtle loop"
+    ]
   }
 });
