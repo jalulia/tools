@@ -1,0 +1,548 @@
+<!doctype html>
+<!-- ============================================================================
+     CRX-01 · Instrument typology — a parametric drawing plate.
+
+     ZERO RASTER. There is no <canvas> in this document, no feTurbulence, no
+     noise of any kind, and that is the argument. Every other lens in this
+     library reproduces something: a field is screened, a drum misses register,
+     coverage fails as pinholes. This one draws, and the whole plate is
+     geometry computed from thirteen numbers.
+
+     A pen is declared as an array of segments IN MILLIMETRES —
+     {t:'cone'|'arc'|'dome', x0, x1, r0, r1, bow} — and one twenty-line
+     sampler, radiusAt(), turns that declaration into a silhouette, a scaled
+     elevation, an enlarged detail with drafting break-waves, patent shade
+     lines, dimension lines and numbered callouts. Drop a data object, get a
+     plate.
+
+     Adapted from Julia's Cross_Instrument_Typology_CRX-TYP-001_1.html
+     (corpus/repos/cross), :420–600 and the PENS table at :729. The sampler,
+     the outline builder, the shade-line convention and the pen data are hers;
+     the plate composition here is new, and the one thing deliberately NOT
+     carried across is the document's pinned feTurbulence film (:33–37), which
+     the inventory grades known_failure as HOP-03. See FAULTS in entry.js.
+     ============================================================================ -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>C7 · Instrument typology</title>
+<link rel="stylesheet" href="../_styles/technical-doc.css">
+<style>
+html, body { background:#fff; }
+body { width:1100px; margin:0 auto; }
+.lens-frame { position:relative; overflow:hidden; background:#fff; contain:paint; }
+
+#crx {
+  position:relative; width:100%;
+  container-type: inline-size;
+  background:#FCFCFA; color:#17171A;
+  isolation:isolate; overflow:hidden;
+  padding: 3.6cqw 4cqw 3.2cqw;
+  /* The 22px drafting dot lattice from the source document, kept because it is
+     the sheet the drawing is on — a real grid at a real pitch, not a texture.
+     It is drawn, not sampled: one radial-gradient, no filter. */
+  background-image: radial-gradient(circle at 1px 1px, rgba(23,23,26,.055) .5px, transparent 0);
+  background-size: 2cqw 2cqw;
+  background-position: -1px -1px;
+}
+
+/* ---- machine text: one face, three sizes, tabular figures --------------- */
+#crx .m   { font-family: var(--f-mono); font-variant-numeric: tabular-nums;
+            letter-spacing:.10em; text-transform:uppercase; color:#75757C; }
+#crx .m-l { font-size:1.09cqw; }
+#crx .m-s { font-size:.95cqw; }
+#crx .ink { color:#17171A; }
+
+/* ---- masthead ---------------------------------------------------------- */
+#crx .head { display:flex; align-items:flex-end; justify-content:space-between;
+             border-bottom:1px solid #17171A; padding-bottom:1.1cqw; }
+#crx .head h1 { margin:0; font-family: var(--f-display);
+                font-weight:700; font-size:3.1cqw; line-height:1;
+                letter-spacing:-.015em; color:#17171A; }
+#crx .head .sub { font-family: var(--f-text); font-size:1.35cqw; line-height:1.45;
+                  color:#3B3B40; margin:.5cqw 0 0; max-width:38cqw; }
+#crx .head .stamp { text-align:right; }
+#crx .head .stamp div { margin-bottom:.35cqw; }
+
+/* ---- the figure band --------------------------------------------------- */
+#crx .figs { margin-top:2.4cqw; }
+#crx .fig { position:relative; border-top:1px solid #D9D9D4; padding-top:1.2cqw;
+            margin-top:1.6cqw; }
+#crx .fig:first-child { border-top:0; margin-top:0; padding-top:0; }
+#crx .fig-cap { display:flex; justify-content:space-between; align-items:baseline;
+                margin-bottom:.7cqw; }
+#crx svg { display:block; width:100%; height:auto; }
+
+/* ---- the two-up detail row --------------------------------------------- */
+#crx .row2 { display:grid; grid-template-columns: 1fr 1fr; gap:3cqw;
+             border-top:1px solid #D9D9D4; padding-top:1.4cqw; margin-top:2cqw; }
+
+/* ---- the spec table ---------------------------------------------------- */
+#crx .spec { margin-top:2.4cqw; border-top:1px solid #17171A; padding-top:.9cqw; }
+#crx table { width:100%; border-collapse:collapse; }
+#crx th, #crx td { text-align:left; padding:.55cqw .8cqw .55cqw 0;
+                   border-bottom:1px solid #E6E6E1; vertical-align:baseline; }
+#crx th { font-family: var(--f-mono); font-size:.95cqw; letter-spacing:.11em;
+          text-transform:uppercase; color:#75757C; font-weight:500;
+          border-bottom:1px solid #C9C9C3; }
+#crx td { font-family: var(--f-mono); font-size:1.05cqw; letter-spacing:.04em;
+          font-variant-numeric: tabular-nums; color:#17171A; }
+#crx td.n { color:#75757C; }
+#crx td.note { font-family: var(--f-text); font-size:1.2cqw; letter-spacing:0;
+               text-transform:none; color:#3B3B40; }
+
+/* ---- the legend, which is the only non-text mark allowed ---------------- */
+#crx .legend { display:flex; gap:2.6cqw; align-items:center; flex-wrap:wrap;
+               margin-top:1.6cqw; border-top:1px solid #D9D9D4; padding-top:1cqw; }
+#crx .legend .k { display:flex; align-items:center; gap:.6cqw; }
+#crx .legend svg { width:5.2cqw; height:1.6cqw; }
+
+#crx .foot { display:flex; justify-content:space-between; margin-top:1.6cqw;
+             border-top:1px solid #17171A; padding-top:.8cqw; }
+
+@media (prefers-reduced-motion: reduce) { #crx * { animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="lens-frame">
+
+<section id="crx" aria-label="C7 — Instrument typology, parametric drawing plate">
+
+  <header class="head">
+    <div>
+      <p class="m m-s" style="margin:0 0 .6cqw">Cross · instrument typology · sheet 01 of 04</p>
+      <h1>Writing instruments</h1>
+      <p class="sub">Two barrels declared as segment arrays in millimetres, sampled to
+        elevations, an enlarged detail and a section. Nothing on this sheet is drawn by hand
+        and nothing is a photograph.</p>
+    </div>
+    <div class="stamp m m-s">
+      <div class="ink">CRX-TYP-001</div>
+      <div>REV C · 2026-08</div>
+      <div>SCALE 1 : 1.7 AT 1100 PX</div>
+      <div>PROJECTION · FIRST ANGLE</div>
+      <div>UNITS · MILLIMETRE</div>
+    </div>
+  </header>
+
+  <div class="figs">
+    <figure class="fig" style="margin:0">
+      <figcaption class="fig-cap">
+        <span class="m m-l ink">FIG. 1 — ASHFORD, TWO-YEAR WARRANTY SERIES · FULL ELEVATION</span>
+        <span class="m m-s">L 139.0 · Ø 11.8 MM NOM.</span>
+      </figcaption>
+      <div id="fig1"></div>
+    </figure>
+
+    <figure class="fig" style="margin-top:2.2cqw">
+      <figcaption class="fig-cap">
+        <span class="m m-l ink">FIG. 2 — ATX, STREAMLINED · FULL ELEVATION</span>
+        <span class="m m-s">L 145.8 · Ø 12.2 MM NOM.</span>
+      </figcaption>
+      <div id="fig2"></div>
+    </figure>
+  </div>
+
+  <div class="row2">
+    <figure style="margin:0">
+      <figcaption class="fig-cap">
+        <span class="m m-l ink">FIG. 1A — PAIRED CENTRE BANDS</span>
+        <span class="m m-s">×3.4 · BROKEN BOTH ENDS</span>
+      </figcaption>
+      <div id="fig1a"></div>
+    </figure>
+    <figure style="margin:0">
+      <figcaption class="fig-cap">
+        <span class="m m-l ink">FIG. 1B — SECTION A–A AT X 90.0</span>
+        <span class="m m-s">×3.4 · WALL 0.85 MM</span>
+      </figcaption>
+      <div id="fig1b"></div>
+    </figure>
+  </div>
+
+  <div class="spec">
+    <table>
+      <thead><tr><th style="width:5%">NO.</th><th style="width:19%">MODEL</th><th style="width:15%">LENGTH</th><th style="width:15%">DIAMETER</th><th style="width:20%">CROWN</th><th>REFERENCE</th></tr></thead>
+      <tbody>
+        <tr><td class="n">01</td><td>ASHFORD</td><td>139.0 MM</td><td>Ø 11.8 MM</td><td>DOUBLE BAND, DISC</td><td class="note">Chrome cone tip, paired centre bands, black crown disc.</td></tr>
+        <tr><td class="n">02</td><td>ATX</td><td>145.8 MM</td><td>Ø 12.2 MM</td><td>TAPERED, INTEGRATED</td><td class="note">Balanced tapered form; the clip is inside the profile, not on it.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="legend m m-s">
+    <span class="k"><svg viewBox="0 0 60 18" aria-hidden="true"><line x1="2" y1="9" x2="58" y2="9" stroke="#17171A" stroke-width="0.9"/></svg>OUTLINE 0.9</span>
+    <span class="k"><svg viewBox="0 0 60 18" aria-hidden="true"><line x1="2" y1="9" x2="58" y2="9" stroke="#17171A" stroke-width="0.55" opacity=".85"/></svg>SHADE 0.55</span>
+    <span class="k"><svg viewBox="0 0 60 18" aria-hidden="true"><line x1="2" y1="9" x2="58" y2="9" stroke="#17171A" stroke-width="0.55" stroke-dasharray="5 3"/></svg>HIDDEN</span>
+    <span class="k"><svg viewBox="0 0 60 18" aria-hidden="true"><line x1="2" y1="9" x2="58" y2="9" stroke="#8A6E22" stroke-width="0.7"/><path d="M2 6 L2 12 M58 6 L58 12" stroke="#8A6E22" stroke-width="0.7"/></svg>DIMENSION</span>
+    <span class="k"><svg viewBox="0 0 60 18" aria-hidden="true"><path d="M6 4 C2 7 10 10 6 14" fill="none" stroke="#17171A" stroke-width="0.7"/></svg>BREAK</span>
+  </div>
+
+  <div class="foot m m-s">
+    <span>DRAWN FROM DECLARED PROFILE · RADIUSAT(SEGS, X) · 0.35 MM SAMPLE STEP</span>
+    <span class="ink">CRX-TYP-001 · SHEET 01</span>
+  </div>
+
+</section>
+</div>
+
+<!-- No engines. This lens allocates no canvas, samples no noise and seeds no
+     generator: there is nothing in _engines/ it could reuse without lying
+     about what it is. -->
+<script>
+(function () {
+  'use strict';
+  var NS = 'http://www.w3.org/2000/svg';
+  var INK = '#17171A', INK3 = '#75757C', GOLD = '#8A6E22', PAPER = '#FCFCFA';
+  var HAIR = 0.9, FINE = 0.55;
+  var MONO = 'JetBrains Mono, ui-monospace, monospace';
+
+  function el(name, attrs, kids) {
+    var n = document.createElementNS(NS, name);
+    for (var k in attrs) if (attrs[k] != null) n.setAttribute(k, attrs[k]);
+    (kids || []).forEach(function (c) { n.appendChild(c); });
+    return n;
+  }
+  function txt(x, y, s, size, o) {
+    o = o || {};
+    var t = el('text', {
+      x: x, y: y, 'font-family': MONO, 'font-size': size,
+      fill: o.fill || INK3, 'letter-spacing': o.ls != null ? o.ls : '0.08em',
+      'text-anchor': o.anchor || 'start', 'font-weight': o.w || 500
+    });
+    t.textContent = s;
+    return t;
+  }
+
+  /* ---------------------------------------------------------- the sampler
+     A pen is segments left→right, point→crown, in MILLIMETRES:
+       {t:'cone', x0,x1,r0,r1}        linear taper or cylinder
+       {t:'arc',  x0,x1,r0,r1, bow}   eased taper, bow -1..1
+       {t:'dome', x0,x1,r0}           crown dome closing to 0
+     The craft move is the arc case: it picks sin(u·π/2) when the radius is
+     GROWING and 1−cos(u·π/2) when it is shrinking, so the curve always leaves
+     the barrel tangentially instead of meeting it at a visible corner. That
+     one ternary is the difference between a drawn pen and a pen made of
+     primitives. Verbatim from cross:437–457.                                */
+  function radiusAt(segs, x) {
+    for (var i = 0; i < segs.length; i++) {
+      var s = segs[i];
+      if (x >= s.x0 - 1e-6 && x <= s.x1 + 1e-6) {
+        var u = (x - s.x0) / Math.max(s.x1 - s.x0, 1e-6);
+        if (s.t === 'cone') return s.r0 + (s.r1 - s.r0) * u;
+        if (s.t === 'arc') {
+          var k = 1 - Math.min(Math.abs(s.bow || 0), 0.9) * 0.45;
+          var e = s.r1 > s.r0
+            ? Math.pow(Math.sin(u * Math.PI / 2), k)          // nose: tangent INTO the barrel
+            : Math.pow(1 - Math.cos(u * Math.PI / 2), k);     // crown: tangent OUT of it
+          return s.r0 + (s.r1 - s.r0) * e;
+        }
+        if (s.t === 'dome') return s.r0 * Math.sqrt(Math.max(0, 1 - u * u));
+      }
+    }
+    return 0;
+  }
+  function extent(segs) {
+    return { x0: segs[0].x0, x1: segs[segs.length - 1].x1 };
+  }
+  function samplePts(segs, a, b, step) {
+    var pts = [];
+    for (var x = a; x < b; x += step) pts.push([x, radiusAt(segs, x)]);
+    pts.push([b, radiusAt(segs, b)]);
+    return pts;
+  }
+
+  /* Outline as a closed path. Where the profile is CUT — an enlarged detail
+     window — the end is left square and a drafting break-wave is drawn over
+     it; where the profile genuinely ends, a quadratic closes the true end
+     face. A section line and a real end are different statements. */
+  function outline(segs, S, xr) {
+    var ex = extent(segs);
+    var a = xr ? Math.max(xr[0], ex.x0) : ex.x0;
+    var b = xr ? Math.min(xr[1], ex.x1) : ex.x1;
+    var atStart = a <= ex.x0 + 1e-6, atEnd = b >= ex.x1 - 1e-6;
+    var top = samplePts(segs, a, b, 0.35);
+    var px = function (v) { return (v * S).toFixed(2); };
+    var ra = top[0][1], rb = top[top.length - 1][1];
+    var d = 'M ' + px(a) + ' ' + px(-ra);
+    top.forEach(function (p) { d += ' L ' + px(p[0]) + ' ' + px(-p[1]); });
+    if (atEnd && rb > 0.04 && rb <= 2.0) d += ' Q ' + px(b + rb * 0.85) + ' 0 ' + px(b) + ' ' + px(rb);
+    else d += ' L ' + px(b) + ' ' + px(rb);
+    for (var i = top.length - 1; i >= 0; i--) d += ' L ' + px(top[i][0]) + ' ' + px(top[i][1]);
+    if (atStart && ra > 0.04 && ra <= 2.0) d += ' Q ' + px(a - ra * 0.85) + ' 0 ' + px(a) + ' ' + px(-ra);
+    d += ' Z';
+    return d;
+  }
+  function breakWave(segs, S, xc) {
+    var R = radiusAt(segs, xc), w = Math.min(1.1, R * 0.35);
+    var px = function (v) { return (v * S).toFixed(2); };
+    return 'M ' + px(xc) + ' ' + px(-R) +
+      ' C ' + px(xc - w) + ' ' + px(-R * 0.45) + ' ' + px(xc + w) + ' ' + px(-R * 0.12) + ' ' + px(xc) + ' 0' +
+      ' C ' + px(xc - w) + ' ' + px(R * 0.12) + ' ' + px(xc + w) + ' ' + px(R * 0.45) + ' ' + px(xc) + ' ' + px(R);
+  }
+
+  /* ------------------------------------------------------ patent shading
+     Longitudinal lines at y = t·r(x). DENSITY IS CURVATURE, NOT SHADOW: the
+     lines crowd towards the lower silhouette because that is where the
+     surface turns away fastest, and two ghost lines sit high with a clear
+     band above the axis for the highlight. It is a drawing convention, not a
+     light. There is one light in this library and it is not on this sheet. */
+  var SHADE_T = [-0.90, -0.795, 0.30, 0.475, 0.625, 0.75, 0.85, 0.925];
+  function shading(segs, S, xr) {
+    var ex = extent(segs);
+    var a = xr ? Math.max(xr[0], ex.x0) : ex.x0;
+    var b = xr ? Math.min(xr[1], ex.x1) : ex.x1;
+    var g = el('g', { stroke: INK, 'stroke-width': FINE, fill: 'none',
+                      opacity: 0.85, 'stroke-linecap': 'round' });
+    SHADE_T.forEach(function (t) {
+      var d = '', pen = false;
+      for (var x = a; x <= b + 1e-6; x += 0.5) {
+        var r = radiusAt(segs, Math.min(x, b));
+        if (r * S < 1.6) { pen = false; continue; }        // skip near the point
+        d += (pen ? ' L ' : ' M ') + (x * S).toFixed(2) + ' ' + (t * r * S).toFixed(2);
+        pen = true;
+      }
+      if (d) g.appendChild(el('path', { d: d }));
+    });
+    return g;
+  }
+
+  function bandTrim(segs, S, b) {
+    var r = radiusAt(segs, b.x + b.w / 2) + (b.proud || 0);
+    var g = el('g');
+    g.appendChild(el('rect', { x: b.x * S, y: -r * S, width: b.w * S, height: 2 * r * S,
+                               fill: PAPER, stroke: INK, 'stroke-width': HAIR }));
+    if (b.lined) {
+      var h = el('g', { stroke: INK, 'stroke-width': 0.4, opacity: 0.9 });
+      for (var xx = b.x + 0.5; xx < b.x + b.w - 0.25; xx += 0.55) {
+        h.appendChild(el('line', { x1: xx * S, y1: -r * S * 0.97, x2: xx * S, y2: r * S * 0.97 }));
+      }
+      g.appendChild(h);
+    }
+    return g;
+  }
+  function seam(segs, S, x) {
+    var r = radiusAt(segs, x);
+    return el('line', { x1: x * S, y1: -r * S, x2: x * S, y2: r * S,
+                        stroke: INK, 'stroke-width': FINE });
+  }
+
+  /* ---- an overall dimension line, with real arrow ticks and extensions --- */
+  function dimension(S, x0, x1, y, label) {
+    var g = el('g', { stroke: GOLD, 'stroke-width': 0.7, fill: 'none' });
+    g.appendChild(el('line', { x1: x0 * S, y1: y, x2: x1 * S, y2: y }));
+    [x0, x1].forEach(function (x) {
+      g.appendChild(el('line', { x1: x * S, y1: y - 4, x2: x * S, y2: y + 4 }));
+    });
+    var t = txt((x0 + x1) / 2 * S, y - 6, label, 9.5, { fill: GOLD, anchor: 'middle', w: 500 });
+    g.appendChild(t);
+    return g;
+  }
+
+  /* ---- numbered callouts: a leader, a tick and a number in the margin ---- */
+  function callouts(segs, S, list) {
+    var g = el('g');
+    list.forEach(function (c) {
+      var r = radiusAt(segs, c.x);
+      var up = c.side === 'up';
+      var y0 = (up ? -r : r) * S;
+      var y1 = y0 + (up ? -1 : 1) * c.len * S;
+      var x1 = c.x * S + (c.dx || 0) * S;
+      g.appendChild(el('path', {
+        d: 'M ' + (c.x * S).toFixed(2) + ' ' + y0.toFixed(2) +
+           ' L ' + x1.toFixed(2) + ' ' + y1.toFixed(2),
+        stroke: INK3, 'stroke-width': 0.5, fill: 'none'
+      }));
+      g.appendChild(el('circle', { cx: (c.x * S).toFixed(2), cy: y0.toFixed(2), r: 1.1, fill: INK }));
+      g.appendChild(txt(x1 + (c.dx < 0 ? -3 : 3), y1 + (up ? -2 : 8), String(c.num), 10,
+        { fill: INK, anchor: c.dx < 0 ? 'end' : 'start', w: 600, ls: '0.06em' }));
+      if (c.label) {
+        g.appendChild(txt(x1 + (c.dx < 0 ? -3 : 3), y1 + (up ? -12 : 18), c.label.toUpperCase(), 8.4,
+          { fill: INK3, anchor: c.dx < 0 ? 'end' : 'start', ls: '0.10em' }));
+      }
+    });
+    return g;
+  }
+
+  /* ================================================== the declared pens ==
+     Both tables are Julia's, verbatim from cross:729–815.                  */
+  var PENS = {
+    ashford: {
+      segs: [
+        { t: 'arc',  x0: 0,     x1: 16.0,  r0: 0.8, r1: 5.3, bow: 0.30 },
+        { t: 'cone', x0: 16.0,  x1: 17.0,  r0: 5.3, r1: 5.3 },
+        { t: 'arc',  x0: 17.0,  x1: 62.0,  r0: 5.3, r1: 5.9, bow: 0.45 },
+        { t: 'cone', x0: 62.0,  x1: 118.0, r0: 5.9, r1: 5.9 },
+        { t: 'arc',  x0: 118.0, x1: 133.0, r0: 5.9, r1: 4.3, bow: -0.35 },
+        { t: 'dome', x0: 133.0, x1: 139.0, r0: 4.2 }
+      ],
+      bands: [{ x: 63.0, w: 1.6, proud: 0.35 }, { x: 65.6, w: 1.6, proud: 0.35 },
+              { x: 133.0, w: 1.0 }],
+      seams: [16.5],
+      dark: [[137.2, 139.0]],
+      callouts: [
+        { x: 8,    side: 'up',   num: 10, len: 8,   dx: 4,  label: 'Chrome cone tip' },
+        { x: 38,   side: 'down', num: 12, len: 6,   dx: 5,  label: 'Barrel' },
+        { x: 64.6, side: 'up',   num: 14, len: 8.8, dx: 4,  label: 'Paired centre bands' },
+        { x: 114,  side: 'down', num: 18, len: 6,   dx: 5,  label: 'Cap' },
+        { x: 136,  side: 'up',   num: 20, len: 8.5, dx: -5, label: 'Crown, black disc' }
+      ],
+      dim: 'L 139.0'
+    },
+    atx: {
+      segs: [
+        { t: 'arc',  x0: 0,     x1: 34.0,  r0: 0.7, r1: 6.1, bow: 0.30 },
+        { t: 'cone', x0: 34.0,  x1: 100.0, r0: 6.1, r1: 6.1 },
+        { t: 'arc',  x0: 100.0, x1: 140.0, r0: 6.1, r1: 2.9, bow: -0.25 },
+        { t: 'dome', x0: 140.0, x1: 145.8, r0: 2.9 }
+      ],
+      bands: [{ x: 76.8, w: 1.3, lined: true }],
+      seams: [17.0],
+      dark: [],
+      callouts: [
+        { x: 10,   side: 'up',   num: 10, len: 8,    dx: 4,  label: 'Tapered tip' },
+        { x: 44,   side: 'down', num: 12, len: 6.5,  dx: 5,  label: 'Barrel' },
+        { x: 77.4, side: 'up',   num: 14, len: 8.5,  dx: 4,  label: 'Engraved centre ring' },
+        { x: 120,  side: 'down', num: 18, len: 6.5,  dx: 5,  label: 'Tapered crown' }
+      ],
+      dim: 'L 145.8'
+    }
+  };
+
+  /* ------------------------------------------------------------ plotting */
+  function elevation(host, pen, S, opt) {
+    opt = opt || {};
+    var ex = extent(pen.segs);
+    var rMax = 0;
+    for (var x = ex.x0; x <= ex.x1; x += 0.5) rMax = Math.max(rMax, radiusAt(pen.segs, x));
+    // The callouts are inside the viewBox, not overflowing it: a leader that
+    // draws over the figure caption above it is a leader pointing at the
+    // wrong sheet. Top clearance = the longest `up` leader plus its number
+    // plus its label; bottom = the same, plus the dimension line under it.
+    var padTop = opt.padTop == null ? 78 : opt.padTop;
+    var padBot = opt.padBot == null ? 104 : opt.padBot;
+    var W = ex.x1 * S + 24, H = rMax * S * 2 + padTop + padBot;
+
+    var svg = el('svg', { viewBox: '0 0 ' + W.toFixed(1) + ' ' + H.toFixed(1),
+                          role: 'img', 'aria-label': opt.alt || 'Elevation' });
+    var g = el('g', { transform: 'translate(12,' + (padTop + rMax * S).toFixed(1) + ')' });
+
+    g.appendChild(el('path', { d: outline(pen.segs, S), fill: PAPER, stroke: 'none' }));
+    g.appendChild(shading(pen.segs, S));
+    (pen.dark || []).forEach(function (r) {
+      g.appendChild(el('path', { d: outline(pen.segs, S, r), fill: INK, stroke: 'none' }));
+    });
+    g.appendChild(el('path', { d: outline(pen.segs, S), fill: 'none',
+                               stroke: INK, 'stroke-width': HAIR, 'stroke-linejoin': 'round' }));
+    (pen.bands || []).forEach(function (b) { g.appendChild(bandTrim(pen.segs, S, b)); });
+    (pen.seams || []).forEach(function (x) { g.appendChild(seam(pen.segs, S, x)); });
+
+    // centre line, the drafting convention: long-short-short
+    g.appendChild(el('line', { x1: -6, y1: 0, x2: ex.x1 * S + 6, y2: 0,
+                               stroke: INK3, 'stroke-width': 0.4,
+                               'stroke-dasharray': '14 3 2 3', opacity: 0.75 }));
+    g.appendChild(callouts(pen.segs, S, pen.callouts));
+    g.appendChild(dimension(S, ex.x0, ex.x1, (rMax * S + padBot - 26), pen.dim));
+
+    svg.appendChild(g);
+    host.appendChild(svg);
+  }
+
+  /* An enlarged detail: the same declaration, a window on it, and break-waves
+     where the window cuts the body — which is why the outline builder had to
+     know the difference between a cut and an end. */
+  function detail(host, pen, S, x0, x1) {
+    var rMax = 0;
+    for (var x = x0; x <= x1; x += 0.25) rMax = Math.max(rMax, radiusAt(pen.segs, x));
+    var W = (x1 - x0) * S + 30, H = rMax * S * 2 + 56;
+    var svg = el('svg', { viewBox: '0 0 ' + W.toFixed(1) + ' ' + H.toFixed(1),
+                          role: 'img', 'aria-label': 'Enlarged detail, paired centre bands' });
+    var g = el('g', { transform: 'translate(' + (15 - x0 * S).toFixed(1) + ',' + (28 + rMax * S).toFixed(1) + ')' });
+    g.appendChild(el('path', { d: outline(pen.segs, S, [x0, x1]), fill: PAPER, stroke: 'none' }));
+    g.appendChild(shading(pen.segs, S, [x0, x1]));
+    g.appendChild(el('path', { d: outline(pen.segs, S, [x0, x1]), fill: 'none',
+                               stroke: INK, 'stroke-width': HAIR, 'stroke-linejoin': 'round' }));
+    (pen.bands || []).forEach(function (b) {
+      if (b.x >= x0 - 1 && b.x <= x1 + 1) g.appendChild(bandTrim(pen.segs, S, b));
+    });
+    [x0 + 0.01, x1 - 0.01].forEach(function (xc) {
+      g.appendChild(el('path', { d: breakWave(pen.segs, S, xc), fill: 'none',
+                                 stroke: INK, 'stroke-width': 0.7 }));
+    });
+    g.appendChild(el('line', { x1: x0 * S - 8, y1: 0, x2: x1 * S + 8, y2: 0,
+                               stroke: INK3, 'stroke-width': 0.4,
+                               'stroke-dasharray': '14 3 2 3', opacity: 0.75 }));
+    g.appendChild(dimension(S, 63.0, 67.2, rMax * S + 26, '4.20'));
+    svg.appendChild(g);
+    host.appendChild(svg);
+  }
+
+  /* A section is the same number read one more way: r(x) at a single x,
+     drawn as two concentric circles and hatched at 45 degrees. The hatch is a
+     <pattern>, which is the whole point — a section is filled by a rule, not
+     by a texture. */
+  function section(host, pen, S, atX, wall) {
+    var r = radiusAt(pen.segs, atX);
+    var R = r * S, box = R * 2 + 74;
+    var svg = el('svg', { viewBox: '0 0 ' + box.toFixed(1) + ' ' + box.toFixed(1),
+                          role: 'img', 'aria-label': 'Section A–A' });
+    var defs = el('defs');
+    var pat = el('pattern', { id: 'crx-hatch', width: 5, height: 5,
+                              patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' });
+    pat.appendChild(el('line', { x1: 0, y1: 0, x2: 0, y2: 5, stroke: INK, 'stroke-width': 0.55 }));
+    defs.appendChild(pat);
+    svg.appendChild(defs);
+
+    var c = box / 2;
+    var g = el('g', { transform: 'translate(' + c.toFixed(1) + ',' + c.toFixed(1) + ')' });
+    g.appendChild(el('circle', { r: R, fill: 'url(#crx-hatch)', stroke: 'none' }));
+    g.appendChild(el('circle', { r: R - wall * S, fill: PAPER, stroke: 'none' }));
+    g.appendChild(el('circle', { r: R, fill: 'none', stroke: INK, 'stroke-width': HAIR }));
+    g.appendChild(el('circle', { r: R - wall * S, fill: 'none', stroke: INK, 'stroke-width': HAIR }));
+    ['0', '90'].forEach(function (a) {
+      g.appendChild(el('line', { x1: -R - 9, y1: 0, x2: R + 9, y2: 0,
+                                 transform: 'rotate(' + a + ')',
+                                 stroke: INK3, 'stroke-width': 0.4,
+                                 'stroke-dasharray': '14 3 2 3', opacity: 0.75 }));
+    });
+    g.appendChild(dimension(1, -R, R, R + 26, 'Ø ' + (r * 2).toFixed(1)));
+    g.appendChild(txt(R + 12, -R + 4, 'A', 11, { fill: INK, w: 600 }));
+    g.appendChild(txt(-R - 12, R + 2, 'A', 11, { fill: INK, w: 600, anchor: 'end' }));
+    svg.appendChild(g);
+    host.appendChild(svg);
+  }
+
+  function draw() {
+    var root = document.getElementById('crx');
+    if (!root || root.clientWidth < 4) return;
+    // px per millimetre, derived from the plate's own width so the two
+    // elevations are drawn TO THE SAME SCALE and can be compared. 5.9 px/mm
+    // puts the 145.8 mm ATX at 860 px inside a 1012 px interior.
+    var S = 5.9;
+    ['fig1', 'fig2', 'fig1a', 'fig1b'].forEach(function (id) {
+      var h = document.getElementById(id); if (h) h.innerHTML = '';
+    });
+    elevation(document.getElementById('fig1'), PENS.ashford, S,
+      { alt: 'Ashford, full elevation with numbered callouts' });
+    elevation(document.getElementById('fig2'), PENS.atx, S,
+      { alt: 'ATX, full elevation with numbered callouts' });
+    detail(document.getElementById('fig1a'), PENS.ashford, S * 3.4, 57, 72);
+    section(document.getElementById('fig1b'), PENS.ashford, S * 3.4, 90.0, 0.85);
+  }
+
+  /* SVG scales itself, so this only has to run once — but it runs through
+     Comp.paint's contract anyway (ready + a real resize), so the plate obeys
+     the same lifecycle as every other lens. There is no engine to load for
+     it, so the ready signal is inlined. */
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+  if (document.readyState === 'complete') draw();
+  else window.addEventListener('load', draw);
+  draw();
+})();
+</script>
+
+<script src="../../../learn/fragment-boot.js"></script>
+</body>
+</html>

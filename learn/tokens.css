@@ -1,0 +1,198 @@
+/* ============================================================================
+   learn/tokens.css — shared shell tokens.  PRESS ROOM.
+   One copy, loaded by every tool before shell.css.
+   Every value here is chrome. No lens colour, no shader colour, ever enters
+   this file — see the RULES block at the bottom.
+
+   Lifted from team/design/tokens.css with PLAN §5 corrections 6, 7, 8 and 9
+   applied. Each change is marked CORRECTION and says which one it is.
+   ============================================================================ */
+
+:root {
+  color-scheme: light;
+
+  /* ---------------------------------------------------------------- FACES
+     Two faces. Exactly two. The chrome adds nothing to the nine families
+     already living inside the Components lenses.
+       serif = what a person wrote to you   (prose, titles, entry names)
+       mono  = what the machine reports     (labels, readouts, code, controls)
+     Self-hosted as woff2 in learn/fonts/ — see learn/fonts/fonts.css. The
+     fallback stacks are real, not decorative: the scale is set in ch and at
+     these sizes Charter and DejaVu Sans Mono set at close to the same colour
+     and width, so nothing reflows when the woff2 files arrive.               */
+  --f-text: "Source Serif 4", "Source Serif Pro", Charter, "Bitstream Charter",
+            "Sitka Text", Georgia, "Times New Roman", serif;
+  --f-mach: "Commit Mono", "SFMono-Regular", "SF Mono", "DejaVu Sans Mono",
+            "Liberation Mono", ui-monospace, Menlo, monospace;
+
+  /* ---------------------------------------------------------------- INK
+     A single neutral ramp. There is no hue anywhere in the chrome — see the
+     FAULT block below for why the one that used to be here was cut.          */
+  --ink:        #0b0b0c;   /* body prose, current entry, active control      */
+  --ink-2:      #55555a;   /* secondary prose, machine labels     7.3:1      */
+  --ink-3:      #74747a;   /* tertiary: references, counts, placeholders.
+                              4.6:1 on paper — the floor for anything that is
+                              text. Nothing below this ever carries words.    */
+  --ink-4:      #b6b6bb;   /* NON-TEXT ONLY: spine, ticks, crop marks, hatch */
+  --rule:       #e3e3e5;   /* hairline, default                              */
+  --rule-2:     #d0d0d4;   /* hairline, structural (mat edge, table)         */
+  --rule-3:     #f0f0f1;   /* hairline, whisper (row separators in lists)    */
+
+  /* ---------------------------------------------------------------- GROUND
+     Two planes and only two.
+       paper = where you read      (masthead, rail, prose, cards)
+       bench = where specimens sit (the mat under a stage, the sheet ground)
+     The bench is dead neutral on purpose: a neutral surround is the viewing
+     condition for judging a colour specimen. It is the one colour decision
+     in the chrome made *for* the content rather than against it.            */
+  --paper:      #ffffff;
+  --bench:      #f1f1f1;   /* mat: the surround immediately around a specimen */
+  --bench-2:    #e9e9e9;   /* sheet: the ground a grid of specimens sits on   */
+  --bench-3:    #dedede;   /* well: recessed slots (example strip, console)   */
+
+  /* Stage ground — declared, never inherited. The page never goes dark;
+     the specimen may.                                                       */
+  --stage-ground: #0e0e10;
+  --stage-ink:    #e8e3d8;
+
+  /* -------------------------------------------------- FAULT — CORRECTION 6
+     CUT AS A HUE. A brick red sitting eight centimetres from a brick-red riso
+     specimen is the chrome adopting a lens colour, which is the one rule this
+     system carries forward verbatim. Failure is signalled by the FAULTS mark
+     instead — the hatched rule that already means "an admission that
+     something went wrong" — at full ink weight, plus the word FAILED. One
+     mark, one meaning, in three places (console, errored gutter line, compile
+     status), driven by one cause.
+
+     If Julia wants a hue after all, uncomment these two and the three rules
+     in shell.css marked "FAULT HUE, if reinstated". Permitted uses,
+     exhaustively: the compile-status word, the gutter tick and line number on
+     an errored line, the left rule of an open error console, a manifest
+     warning count. Never a fill, never a button, never a link, never a brand
+     mark.
+       --fault:     #c81e14;
+       --fault-dim: #e8b9b6;                                                 */
+
+  /* The hatch. The only ornamental gesture in the system, and it earns its
+     place by marking the one kind of block that is an admission.            */
+  --hatch: repeating-linear-gradient(135deg, var(--ink-4) 0 2px, transparent 2px 5px);
+  --hatch-ink: repeating-linear-gradient(135deg, var(--ink) 0 2px, transparent 2px 5px);
+
+  /* ---------------------------------------------------------------- FOCUS
+     Contrast, not hue. Ink on paper, paper on the stage; both declared, so a
+     dark specimen can never eat the ring.                                   */
+  --focus:      var(--ink);
+  --focus-on-stage: #ffffff;
+  --focus-w:    2px;
+  --focus-off:  2px;
+
+  /* ---------------------------------------------------------------- SPACE */
+  --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px; --s5: 24px;
+  --s6: 32px; --s7: 48px; --s8: 64px; --s9: 96px;
+
+  /* ----------------------------------------------------- GRID — CORRECTION 8
+     The rail width is derived, not chosen — but the derivation in the design
+     document omitted the mat's own padding:
+       1440 − rail(276) − 2×gutter(32) = 1100   ← the column, not the specimen
+       1100 − 2×mat-pad(24)            = 1052   ← what the lens actually got
+     which is why the comp's own drawdown strip reported "shown 0.96×".
+     --col-max is therefore 1148, so the mat interior is 1100 and closing the
+     rail — one keystroke — gives a lens at true 1:1. The rail stays 276.    */
+  --rail-w:     276px;
+  --gutter:     32px;
+  --col-max:    1148px;
+  --measure:    66ch;
+  --app-w:      min(46vw, 560px);
+  --mast-h:     52px;
+  --mat-pad:    24px;
+  --crop-arm:   13px;
+  --crop-w:     1px;
+
+  /* ------------------------------------------------- STAGE — CORRECTION 9
+     The cap is a BUDGET, not an aspect cap. min(58vh, 620px) was meant to
+     keep the first line of prose above the fold and does not, because ~400px
+     of furniture sits above and below the stage: at 1440×900 the first line
+     landed at y=935.
+       --furniture = masthead 52 + column top 48 + kicker 15 + h1 (43+26)
+                   + meta 52 + mat 48 + drawdown 28 + example strip 46
+                   + .read top 48   ≈ 406
+     Three lines of prose = 3 × 17 × 1.62 ≈ 83. Measured against the built
+     page at 1440×900 and 1280×800; see team/build/CHECKPOINT-1.md.          */
+  --furniture:  406px;
+  --prose-3:    83px;
+  --stage-cap:  min(58vh, 620px, calc(100vh - var(--furniture) - var(--prose-3)));
+  --stage-cap-phone: 38vh;
+  --stage-pin-phone: 26vh;          /* live strip when the editor is open    */
+
+  /* ---------------------------------------------------------------- TYPE */
+  --t-display:  clamp(28px, 2.6vw, 39px);
+  --t-display-lh: 1.1;
+  --t-h2:       21px;
+  --t-prose:    17px;
+  --t-prose-lh: 1.62;
+  --t-prose-sm: 15.5px;
+  --t-entry:    15px;
+  --t-code:     13px;
+  --t-code-lh:  1.55;
+  --t-mach:     11.5px;
+  --t-label:    10.5px;
+  --t-index:    11px;
+  --tr-label:   .13em;
+  --tr-mach:    .04em;
+  --tr-display: -.012em;
+
+  /* ---------------------------------------------------------------- MOTION
+     Two speeds and one curve. Planes translate; values do not move.         */
+  --m-state:     140ms;
+  --m-structure: 220ms;
+  --ease:        cubic-bezier(.2, .6, .2, 1);
+
+  /* ---------------------------------------------------------------- DEPTH
+     There is no glass. --lift is the ONLY shadow in the system and it is a
+     hairline, not a blur.                                                   */
+  --lift: -1px 0 0 var(--rule-2);
+  --lift-sheet: 0 -1px 0 var(--rule-2);
+}
+
+/* Status marks. Editorial standing is typographic, never chromatic.
+     canonical      ■  filled      ink 100%
+     exploration    □  hollow      ink  62%
+     historical     ▨  half        ink  48%
+     known-failure  ▧  hatched     ink 100%   ← CORRECTION 6: the failure mark
+                                                is the FAULTS hatch, not a hue
+     stub           ⬚  dotted      ink  48%   ← now a boolean flag on an entry,
+                                                rendered as a mark beside the
+                                                status rather than as a fifth
+                                                chip, so the chip row stays on
+                                                one line                     */
+:root {
+  --mark-size: 6px;
+  --st-canonical-ink:     var(--ink);
+  --st-exploration-ink:   var(--ink-2);
+  --st-historical-ink:    var(--ink-3);
+  --st-known-failure-ink: var(--ink);
+  --st-stub-ink:          var(--ink-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --m-state: 1ms; --m-structure: 1ms; }
+}
+
+/* ============================================================================
+   RULES — part of the token file because they are the reason the values above
+   are so few.
+
+   1.  The chrome never adopts a lens colour, a shader colour, or a section
+       colour. Carried forward verbatim from components/index.html:11-16.
+   2.  Two faces. A third family in the chrome is a bug.
+   3.  There is NO hue in the chrome. Failure is the hatch plus the word.
+   4.  Every ground is declared. html and body both carry --paper explicitly;
+       the stage carries --stage-ground explicitly. Nothing inherits a
+       background from the browser.
+   5.  No shadow except --lift, and --lift is a hairline, not a blur.
+   6.  A specimen is trimmed, not boxed. Four crop marks on a mat, and nothing
+       the chrome draws ever touches the specimen's edge.
+   7.  --ink-4 carries no words anywhere in the system.
+   8.  A fragment declares its own type in content/_styles/<style>.css. The
+       chrome's two faces stop at the iframe boundary.
+   ============================================================================ */

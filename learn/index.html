@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="description" content="Colophon for the shared shell behind the learning tools.">
+<title>learn/ — colophon</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+  /* The colophon is the one page in learn/ that is a document rather than a
+     tool, so it borrows the vocabulary and lays it out as a single column. */
+  .page { max-width: 760px; margin: 0 auto; padding: var(--s8) var(--gutter) var(--s9); }
+  .page h1 { margin-top: 0; }
+  .page h2 { font-size: var(--t-h2); font-weight: 600; margin: var(--s8) 0 var(--s4);
+             position: relative; }
+  .page h2::before { content: ""; position: absolute; top: -18px; left: 0; width: 26px;
+                     height: 1px; background: var(--ink); }
+  .page p, .page li { max-width: var(--measure); }
+  .page p { margin: 0 0 var(--s5); }
+  .page ul { padding-left: 20px; }
+  .page li { margin-bottom: var(--s3); }
+  .page code { font-family: var(--f-mach); font-size: .82em; background: var(--rule-3);
+               padding: 1px 4px; color: var(--ink-2); }
+  .page pre { font-family: var(--f-mach); font-size: var(--t-code); line-height: var(--t-code-lh);
+              background: var(--bench); padding: var(--s4); overflow-x: auto; }
+  .page a { color: inherit; text-decoration: underline; text-underline-offset: 3px;
+            text-decoration-color: var(--ink-4); }
+  .page a:hover { text-decoration-color: var(--ink); }
+  .page table { border-collapse: collapse; width: 100%; font-size: var(--t-prose-sm); }
+  .page th, .page td { text-align: left; padding: 8px 12px 8px 0;
+                       border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .page th { font-family: var(--f-mach); font-size: var(--t-label);
+             letter-spacing: var(--tr-label); text-transform: uppercase; color: var(--ink-3);
+             font-weight: 400; }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the colophon</a>
+
+<header class="mast">
+  <span class="brand">learn/</span>
+  <span class="crumb">the shared shell</span>
+  <span class="sp"></span>
+  <span class="pos">colophon</span>
+</header>
+
+<main class="page" id="main">
+  <p class="kicker">Press room</p>
+  <h1>One shell, two reading modes</h1>
+
+  <p>Everything in this folder is shared. A tool that uses it is a folder with an
+  <code>index.html</code> of about ninety lines — four regions and five script tags — a
+  <code>manifest.js</code>, and a <code>content/</code> directory with one folder per
+  entry. There is no build step and no framework. Adding a chapter, a lens, an example or
+  a style is dropping a folder and adding a line.</p>
+
+  <h2>The transport, and why it is not <code>fetch</code></h2>
+  <p>Under <code>file://</code> exactly one mechanism loads external data into a page: a
+  classic <code>&lt;script src&gt;</code>. <code>fetch</code>, <code>XMLHttpRequest</code>,
+  <code>import()</code> and module scripts all fail. These tools are opened by
+  double-click from a checkout, so there is no <code>fetch</code> anywhere in this folder
+  and there never will be. Data self-registers:</p>
+
+<pre>// manifest.js
+Shell.registerManifest({ schemaVersion: 1, id: 'book-of-shaders', mode: 'course',
+  sections: [ … ], entries: ['00-introduction', '01-what-is-a-shader', … ] });
+
+// content/13-fbm/entry.js
+Shell.registerEntry({ id: '13-fbm', index: '13', title: 'Fractal Brownian Motion',
+  section: 'generative', status: 'canonical', lane: 'glsl',
+  text: `&lt;p&gt;…&lt;/p&gt;`, examples: [ { id: 'warped-fbm', code: `…` } ] });</pre>
+
+  <p>The shell injects one classic script per entry at boot, in manifest order. The rail
+  and any list view fill in as they land. An entry may also be given inline in the
+  manifest as an object, for the six-line entry that does not need a folder.</p>
+
+  <h2>The files</h2>
+  <table>
+    <tr><th>file</th><th>what it is</th></tr>
+    <tr><td><code>tokens.css</code></td><td>Every value in the chrome. Two faces, one ink ramp, no hue, two speeds.</td></tr>
+    <tr><td><code>shell.css</code></td><td>The four regions, the three state attributes, and the responsive rules.</td></tr>
+    <tr><td><code>shell.js</code></td><td>Transport, router, index rail, keyboard, chrome state, share links.</td></tr>
+    <tr><td><code>views.js</code></td><td>Everything drawn: entry page, course furniture, contact sheet, style page, apparatus.</td></tr>
+    <tr><td><code>plot.js</code></td><td>The 1-D function plotter, with its own small expression parser.</td></tr>
+    <tr><td><code>fragment-boot.js</code></td><td>The contract a lens fragment honours: height, ready, key forwarding, pause.</td></tr>
+    <tr><td><code>adapters/</code></td><td><code>glsl.js</code> · <code>canvas2d.js</code> · <code>fragment.js</code> — the only per-tool seam.</td></tr>
+    <tr><td><code>manifest.schema.json</code></td><td>The contract. <code>scripts/build-site.mjs</code> fails the deploy on a violation.</td></tr>
+    <tr><td><code>fonts/</code></td><td>Source Serif 4 and Commit Mono, self-hosted. See <code>fonts/fonts.css</code>.</td></tr>
+  </table>
+
+  <h2>Rules that are not negotiable</h2>
+  <ul>
+    <li>No <code>fetch</code>, no <code>import()</code>, no <code>type="module"</code>, no CDN. Classic scripts only.</li>
+    <li>Never name a content file <code>tool.json</code> or <code>package.json</code>, and never name a folder <code>dist/</code> or <code>_site/</code> — the deploy copy filters those basenames at any depth.</li>
+    <li>Nothing touches <code>iframe.contentDocument</code>. Host and fragment talk by <code>postMessage</code> only.</li>
+    <li>The page is always light and says so: <code>color-scheme</code> on <code>:root</code>, a meta tag, and an explicit background on both <code>html</code> and <code>body</code>. The stage declares its own ground; the page never goes dark.</li>
+    <li>No accent hue in the chrome, no glass, no blur, no shadow. Failure is the FAULTS hatch plus the word <code>FAILED</code>.</li>
+    <li>A specimen is trimmed, not boxed: a neutral mat and four crop marks, and nothing the chrome draws touches the specimen’s edge.</li>
+    <li>A fragment declares its own type in <code>content/_styles/&lt;style&gt;.css</code>. The chrome’s two faces stop at the iframe boundary.</li>
+    <li>Every count on every page derives from <code>entries.length</code>. Nothing is typed by hand.</li>
+  </ul>
+
+  <h2>The adapter contract</h2>
+  <p>A tool’s only code is a stage adapter. Two methods are required and the rest are
+  optional:</p>
+<pre>{
+  mount({ stage, bar, entry, example, query, params }),   // required
+  unmount(),                                             // required — must be able to stop
+  fillSource(entry, example),   // feeds the apparatus's source pane
+  toggleRun(),                  // enables Space
+  setParam(name, value),        // binds a declared parameter
+  preview(el, entry, on),       // contact-sheet mount / evict
+  onApparatusOpen()             // e.g. refill the pane
+}</pre>
+
+  <h2>Keyboard</h2>
+  <p>One map, both tools, guarded once centrally on <code>INPUT</code>,
+  <code>TEXTAREA</code> and <code>isContentEditable</code> plus modifier pass-through.
+  <code>/</code> search · <code>j k ↓ ↑</code> entries · <code>← →</code> examples ·
+  <code>e</code> apparatus · <code>Space</code> run · <code>g i</code> contact sheet ·
+  <code>Esc</code> out · <code>?</code> the list. <code>Esc</code> works from inside a
+  field, which is how you leave the editor.</p>
+
+  <h2>Where the tools are</h2>
+  <p><a href="../">The tools index</a> · <a href="_stub/course/">course-mode stub</a> ·
+  <a href="_stub/catalogue/">catalogue-mode stub</a> ·
+  <a href="_spike/">the transport spike</a>. The three underscore folders are fixtures
+  used to render and measure the shell; they are not listed anywhere and they are not
+  tools.</p>
+</main>
+</body>
+</html>

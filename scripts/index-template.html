@@ -3,12 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- The page is always light and says so. Without these three the front
+         door of every tool has no background until script runs, which under a
+         forced-dark browser is black text on black. -->
+    <meta name="color-scheme" content="light" />
     <title>tools — jalulia</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
     <style>
       :root {
+        color-scheme: light;
+        --page-bg: #ece8dc;   /* the fallback ground, one of the 20 pastels.
+                                 The script picks a different one on load; this
+                                 is what the page looks like before it does, and
+                                 with JavaScript off. */
         --fg: #000;
         --muted: rgba(0,0,0,0.38);
         --rule: rgba(0,0,0,0.10);
@@ -21,6 +30,7 @@
         margin: 0;
         padding: 0;
         min-height: 100vh;
+        background: var(--page-bg);
         color: var(--fg);
         font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
         font-feature-settings: 'ss01', 'cv11';
@@ -221,7 +231,10 @@
       /* ── Vertical rule accent ───────────────────────────── */
       .v-rule {
         position: fixed;
-        left: calc((100vw - 880px) / 2 + 40px + 120px + 24px);
+        /* max() keeps the term from going negative below an 880px viewport,
+           where the rule used to slide off the left edge and sit there until
+           the 680px breakpoint hid it. */
+        left: calc(max(0px, (100vw - 880px) / 2) + 40px + 120px + 24px);
         top: 0;
         bottom: 0;
         width: 1px;
@@ -295,9 +308,11 @@
         '#ece0c0', // pale gold
         '#d8ece4', // cool mint
       ];
+      // Set the token, not the two elements: html and body already paint
+      // var(--page-bg) from the stylesheet, so there is one declaration of the
+      // ground and the page is never without it.
       const bg = COLORS[Math.floor(Math.random() * COLORS.length)];
-      document.documentElement.style.background = bg;
-      document.body.style.background = bg;
+      document.documentElement.style.setProperty('--page-bg', bg);
     </script>
   </body>
 </html>

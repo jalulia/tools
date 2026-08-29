@@ -1,0 +1,426 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jalulia.github.io/tools/learn/manifest.schema.json",
+  "title": "Tools shell manifest",
+  "description": "One manifest per tool, as a classic self-registering script: manifest.js calls Shell.registerManifest({...}) with this object. There is no fetch anywhere in the shipped shell, because under file:// a classic <script src> is the only mechanism that loads external data. Adding a chapter, lens, example or style is an edit to this file plus a folder drop; the deploy is a folder copy. scripts/build-site.mjs validates every manifest against this schema in a vm sandbox and fails the build on a violation.",
+  "type": "object",
+  "required": ["schemaVersion", "id", "title", "mode", "sections", "entries"],
+  "additionalProperties": false,
+
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+
+    "id": { "$ref": "#/$defs/slug", "description": "Must equal the tool's folder name." },
+    "title": { "type": "string" },
+    "subtitle": { "type": "string" },
+
+    "mode": {
+      "enum": ["course", "catalogue"],
+      "description": "course = ordered and pedagogical; prev/next is primary; the landing route is the first entry. catalogue = lateral and comparative; the landing route is the contact sheet."
+    },
+
+    "stage": {
+      "type": "object",
+      "required": ["adapter"],
+      "additionalProperties": false,
+      "properties": {
+        "adapter": {
+          "$ref": "#/$defs/lane",
+          "description": "The tool's DEFAULT lane. An entry or an example may override it — see `lane`."
+        },
+        "runtime": { "type": "string", "description": "Path to the adapter script, relative to the tool folder. Informational: the page loads its adapters with ordinary <script src> tags." },
+        "aspect": { "$ref": "#/$defs/aspect", "default": "3/2" },
+        "isolation": { "$ref": "#/$defs/isolation" }
+      }
+    },
+
+    "siblings": {
+      "type": "array",
+      "description": "The tool switcher. The same list in every tool's manifest.",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "href"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/slug" },
+          "title": { "type": "string" },
+          "href": { "type": "string" }
+        }
+      }
+    },
+
+    "vocabulary": {
+      "type": "object",
+      "description": "Editorial vocabulary, declared so the shell can render definitions rather than bare words.",
+      "additionalProperties": false,
+      "properties": {
+        "status": { "type": "object", "additionalProperties": { "type": "string" } },
+        "relation": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Level 1 of the nav. The rail's group order follows this array.",
+      "items": {
+        "type": "object",
+        "required": ["id", "title"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/slug" },
+          "title": { "type": "string" },
+          "order": { "type": "integer" },
+          "note": { "type": "string" }
+        }
+      }
+    },
+
+    "styles": {
+      "type": "array",
+      "description": "A style is a set of entries sharing a palette, type and texture system. Declared once; entries point at it by id. The shell renders #/style/<id> as the declaration followed by a filtered contact sheet.",
+      "items": { "$ref": "#/$defs/style" }
+    },
+
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Level 2 of the nav, in order. An item is EITHER a slug — meaning the entry registers itself from content/<slug>/entry.js, which the shell injects as a classic script — OR a complete entry object given inline, for the six-line entry that does not need a folder. Both forms may be mixed. entries.length is the only source of any count anywhere on any page.",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/slug" },
+          { "$ref": "#/$defs/entry" }
+        ]
+      }
+    }
+  },
+
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "aspect": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?/[0-9]+(\\.[0-9]+)?$" },
+
+    "lane": {
+      "enum": ["glsl", "canvas2d", "svg", "fragment"],
+      "description": "PLAN §5.2: the lane is per entry and per example, not per tool. The strongest order-dependence example in the corpus is Canvas2D and the strongest coupling example is GLSL, and they belong in the same chapter."
+    },
+
+    "isolation": {
+      "enum": ["iframe", "shadow", "scoped", "none"],
+      "description": "iframe is the only supported value for HTML fragments; shadow DOM cannot resolve url(#id) filter references and scoped prefixes leak. See ux/02-manifest-schema.md §5."
+    },
+
+    "status": {
+      "enum": ["canonical", "exploration", "historical", "known-failure"],
+      "description": "Editorial standing, not build state. PLAN §2.7 adds known-failure: the tools ship graded failures from Julia's own repos as teaching material, and filing one as `exploration` would be a lie. `stub` is a separate boolean flag rendered as a mark, so the chip row stays one line, and `technical_reference` is a tag."
+    },
+
+    "source": {
+      "type": "object",
+      "description": "Attribution. Required on anything not written here from scratch.",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": ["original", "adapted", "reference-study", "own-work", "quoted"],
+          "description": "original = written for this tool. adapted = derived from a named source. reference-study = a rebuild of someone else's designed artefact. own-work = a shipped ø / client piece. quoted = reproduced verbatim under licence."
+        },
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "license": { "type": "string" },
+        "date": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+
+    "related": {
+      "type": "object",
+      "description": "Cross-tool and in-tool links. Declared on ONE side; scripts/index-tools.mjs --mirror writes the back-link, so a broken back-link is not something a human can create by hand.",
+      "required": ["entry", "relation"],
+      "additionalProperties": false,
+      "properties": {
+        "tool": { "$ref": "#/$defs/slug", "description": "Omit for a link inside this tool." },
+        "entry": { "$ref": "#/$defs/slug" },
+        "relation": {
+          "enum": ["shader-behind", "technique-of", "variant-of", "source-of", "answers"]
+        },
+        "label": { "type": "string" },
+        "href": { "type": "string", "description": "Optional explicit href; otherwise ../<tool>/#/<entry>." }
+      }
+    },
+
+    "param": {
+      "type": "object",
+      "description": "A named knob, bound as a uniform (glsl) or as a key of `p` (canvas2d). Deliberately capped at 3 per example: a knob is an editorial decision and the default is zero knobs.",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "uniform": { "type": "string", "description": "glsl only. Defaults to u_<name>." },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "step": { "type": "number" },
+        "value": { "type": "number" },
+        "note": { "type": "string" }
+      }
+    },
+
+    "example": {
+      "type": "object",
+      "description": "Level 3 of the nav. Examples live in a strip under the stage, never in the rail — which is what lets one chapter carry 23 upstream .frag files without wrecking the index.",
+      "required": ["id", "title"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/slug" },
+        "title": { "type": "string" },
+        "lane": { "$ref": "#/$defs/lane", "description": "Overrides the entry's lane for this example." },
+        "file": { "type": "string", "description": "The file of record beside the entry (main.frag, main.js). Not loaded at runtime — file:// forbids it — but it is what scripts/index-tools.mjs --mirror copies into `code`, and what the apparatus prints as the path." },
+        "code": { "type": "string", "description": "The source, inline. This is what actually runs." },
+        "fragment": { "type": "string", "description": "HTML fragment document, relative to the entry path (fragment lane)." },
+        "thumb": { "$ref": "#/$defs/thumb" },
+        "status": { "$ref": "#/$defs/status" },
+        "uniforms": { "type": "array", "items": { "type": "string" } },
+        "params": { "type": "array", "maxItems": 3, "items": { "$ref": "#/$defs/param" } },
+        "source": { "$ref": "#/$defs/source" },
+        "note": { "type": "string" }
+      }
+    },
+
+    "thumb": {
+      "description": "A filename, or a filename plus an authored crop. PLAN §2.7: the contact-sheet crop is a picture editor's decision, not a computed one.",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "file": { "type": "string" },
+            "crop": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 3,
+              "items": { "type": "number" },
+              "description": "[scale, offsetY, offsetX?]. scale is a MULTIPLE of fit-to-card — 1 shows the whole plate width, 1.4 is a 1.4x detail — so a card that changes width when the rail closes does not change what the crop means. offsetY is the design-pixel row that lands at the top of the card; offsetX, optional and 0 by default, is the column that lands at its left edge. The rectangle the three of them cut must be the card's own ratio, 232:196, which build-site.mjs checks: a plate shorter than designWidth*196/232 has to be cropped INTO, and a zoom anchored at x=0 cuts the last letter off a centred wordmark."
+            }
+          }
+        }
+      ]
+    },
+
+    "style": {
+      "type": "object",
+      "required": ["id", "title"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/slug" },
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "palette": { "type": "array", "items": { "type": "string", "pattern": "^#[0-9a-fA-F]{3,8}$" } },
+        "type": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The three type roles. A fragment in this style links content/_styles/<id>.css, which is where these families and any @font-face actually live — PLAN §5.11.",
+          "properties": {
+            "display": { "type": "string" },
+            "text": { "type": "string" },
+            "mono": { "type": "string" },
+            "script": { "type": "string" }
+          }
+        },
+        "texture": { "type": "array", "items": { "type": "string" } },
+        "engines": { "type": "array", "items": { "type": "string" },
+          "description": "Shared engine scripts the style's fragments include — the machine-readable form of 'reuse, don't redefine'." },
+        "rules": { "type": "array", "items": { "type": "string" },
+          "description": "The non-negotiables for this style, in Julia's words. Printed on the style page, next to the work they govern." },
+        "entries": { "type": "array", "items": { "$ref": "#/$defs/slug" },
+          "description": "Optional and derivable: entries also declare their style." }
+      }
+    },
+
+    "exercise": {
+      "type": "object",
+      "description": "One rung of the ladder. research/04 §2(d): the book's exercises escalate and the playground kept only the bottom rung. Rungs 3 and 4 are where a shader stops being a demo and becomes a composition.",
+      "required": ["rung", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "rung": { "enum": ["tune", "substitute", "generalise", "compose"] },
+        "text": { "type": "string", "description": "May contain inline HTML." }
+      }
+    },
+
+    "stage_step": {
+      "type": "object",
+      "description": "One step of the build-up — codeAndCanvas used as a SEQUENCE, which is the move the book makes and the playground flattened into a destination.",
+      "required": ["label", "code"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string" },
+        "note": { "type": "string" },
+        "code": { "type": "string" },
+        "default": { "type": "boolean", "description": "The step the entry opens on. At most one." }
+      }
+    },
+
+    "variant": {
+      "type": "object",
+      "description": "One member of a family, shown side by side and loaded into the stage on click — the glslGallery move, restored.",
+      "required": ["label", "code"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string" },
+        "code": { "type": "string" },
+        "thumb": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+
+    "plot": {
+      "type": "object",
+      "description": "The 1-D function plotter — simpleFunction, restored. It isolates the shape of a value from everything else, which is the purest statement of 'control comes from shaping values, not selecting effects'. `expr` is evaluated by learn/plot.js: scalar GLSL-ish syntax over x and t, with the usual scalar builtins.",
+      "required": ["expr"],
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "expr": { "type": "string" },
+        "note": { "type": "string", "description": "May contain inline HTML." },
+        "domain": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" }, "default": [0, 1] },
+        "range": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" }, "default": [0, 1] }
+      }
+    },
+
+    "cell": {
+      "type": "object",
+      "required": ["k", "v"],
+      "additionalProperties": false,
+      "properties": {
+        "k": { "type": "string" },
+        "v": { "type": "string", "description": "For a reference study, 'what the source does → what the lens does'. The arrow splits the cell into its two halves." }
+      }
+    },
+
+    "entry": {
+      "type": "object",
+      "required": ["id", "title", "section", "status"],
+      "description": "An entry supplies its content EITHER inline here OR — the normal case — from content/<id>/entry.js, which the shell injects as a classic script and which calls Shell.registerEntry with this same shape. Registered fields win over inline ones of the same name.",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/slug", "description": "Also the URL segment: #/<id>. Unique within the tool." },
+        "index": { "type": "string", "description": "Display index shown in the rail (\"11\", \"B1\"). Editorial; NOT the sort key." },
+        "order": { "type": "number", "description": "The sort key. Sparse, so an entry can be inserted without renumbering." },
+        "title": { "type": "string" },
+        "section": { "$ref": "#/$defs/slug" },
+        "style": { "$ref": "#/$defs/slug" },
+        "lane": { "$ref": "#/$defs/lane", "description": "Overrides the tool's default lane for this entry." },
+
+        "path": { "type": "string", "pattern": "^content/[a-z0-9-]+/$",
+          "description": "The entry folder. MUST NOT be named dist/, _site/ or node_modules/ — scripts/build-site.mjs filters those basenames out of the deploy copy at any depth. Defaults to content/<id>/." },
+        "entry": { "type": "string", "default": "entry.js", "description": "The self-registering script inside `path`." },
+        "text": { "type": "string", "description": "Prose, as an HTML string. There is no fetch, so a prose FILE would need a second transport; a template literal next to the code it explains is the right authoring unit anyway." },
+        "fragment": { "type": "string", "default": "fragment.html", "description": "fragment lane: the standalone HTML document for this lens." },
+        "thumb": { "$ref": "#/$defs/thumb" },
+
+        "status": { "$ref": "#/$defs/status" },
+        "stub": { "type": "boolean", "description": "A flag, not a status: an entry can be canonical AND unfinished. Rendered as a mark beside the status." },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "note": { "type": "string" },
+
+        "isolation": { "$ref": "#/$defs/isolation" },
+        "frame": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "aspect": { "$ref": "#/$defs/aspect" },
+            "designWidth": { "type": "integer",
+              "description": "The width the fragment was composed at. The entry view shows it at this width and the page scrolls; contact-sheet previews render at this width and are CSS-scaled. Reflowing a lens into a 240px card is a different composition, not a thumbnail." },
+            "height": { "enum": ["aspect", "auto"],
+              "description": "auto asks the fragment for its height over postMessage (fragment-boot.js). Nothing ever reads contentDocument." },
+            "previewHeight": { "type": "integer" },
+            "minWidth": { "type": "integer" }
+          }
+        },
+
+        "stage": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Per-entry stage overrides.",
+          "properties": {
+            "controls": { "type": "array", "items": { "enum": ["texture-upload", "pause", "fullbleed", "reset"] } },
+            "texture": { "type": "boolean", "description": "This chapter needs a source image (was `tex:true` in the old LESSONS array)." },
+            "mouse": { "type": "boolean" }
+          }
+        },
+
+        "source": { "$ref": "#/$defs/source" },
+
+        "reference": {
+          "description": "The promoted REFERENCE STUDY table. Explicitly null means 'no decomposition on file' and the page says so out loud — a missing decomposition should be visible, not blank.",
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["cells"],
+              "additionalProperties": false,
+              "properties": {
+                "title": { "type": "string" },
+                "cells": { "type": "array", "items": { "$ref": "#/$defs/cell" } }
+              }
+            }
+          ]
+        },
+
+        "pass0": {
+          "type": "array",
+          "description": "PASS 0 — DECOMPOSITION, promoted out of a CSS comment into data. Conventionally substrate / process / type / hardware / skeleton.",
+          "items": { "$ref": "#/$defs/cell" }
+        },
+
+        "critique": {
+          "type": "object",
+          "description": "Required in full on any entry presented as a canonical worked example: build-site.mjs fails the deploy on a canonical entry with a critique block that lacks reads_as, coupling or pass_order. It is a gate made of a JSON field, which is the cheapest kind.",
+          "additionalProperties": false,
+          "properties": {
+            "reads_as": { "type": "string" },
+            "coupling": { "type": "string", "description": "PLAN §2.7: what drives what. The test that does the most work in the framework and had nowhere to live." },
+            "pass_order": { "type": "string", "description": "PLAN §2.7: the order of operations, and why a different order is a different picture." },
+            "operators": { "type": "array", "items": { "type": "string" } },
+            "why_it_survives": { "type": "string" },
+            "faults": { "type": "array", "items": { "type": "string" },
+              "description": "FAULTS (pre-refine), promoted out of a CSS comment. Rendered behind the hatched rule — the one ornamental mark in the system, which earns its place by marking the one block that is an admission." }
+          }
+        },
+
+        "ruling": {
+          "type": "object",
+          "description": "A dated, attributed decision — e.g. Ki-Landscapes/index.html:252, '// crisp edge (solid to 94%) — CANON, do not soften (julia 2026-06-10)'. The editorial layer these tools have never had; it belongs in data, not in a comment.",
+          "required": ["text"],
+          "additionalProperties": false,
+          "properties": {
+            "text": { "type": "string" },
+            "by": { "type": "string", "description": "The person who made the decision, or the reserved value \"proposed\" for a ruling written here that is not yet hers. A ruling attributed to a person must be checkable: it carries a date, or a `source` naming the file and line its comment lives at, or both. build-site.mjs fails the deploy on an attributed ruling with neither." },
+            "date": { "type": "string" },
+            "source": { "type": "string", "description": "file:line of the comment this ruling was promoted out of, e.g. \"Ki-Landscapes/index.html:120-121\". Added at checkpoint 8: two of the rulings that DO trace to Julia's own comments carry no date in the source, because the comment does not have one, and inventing a date would be worse than citing the line." }
+          }
+        },
+
+        "params": { "type": "array", "maxItems": 3, "items": { "$ref": "#/$defs/param" } },
+        "stages": { "type": "array", "items": { "$ref": "#/$defs/stage_step" } },
+        "exercises": { "type": "array", "items": { "$ref": "#/$defs/exercise" } },
+        "gallery": { "type": "array", "items": { "$ref": "#/$defs/variant" } },
+        "plots": { "type": "array", "items": { "$ref": "#/$defs/plot" } },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label", "url"],
+            "additionalProperties": false,
+            "properties": { "label": { "type": "string" }, "url": { "type": "string" } }
+          }
+        },
+
+        "examples": { "type": "array", "items": { "$ref": "#/$defs/example" } },
+        "related": { "type": "array", "items": { "$ref": "#/$defs/related" } }
+      }
+    }
+  }
+}

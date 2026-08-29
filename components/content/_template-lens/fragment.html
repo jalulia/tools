@@ -1,0 +1,199 @@
+<!doctype html>
+<!-- ============================================================================
+     content/_template-lens/fragment.html — the authoring template for a lens.
+
+     WHAT A LENS IS
+     A complete, standalone HTML document. You can double-click it in Finder
+     and it opens: no server, no build step, no bundler. The catalogue mounts
+     it in an iframe by src=, never srcdoc, so it behaves the same in both
+     places. Nothing outside this file can reach into it and nothing in it can
+     reach out — the host and the fragment speak only over postMessage, which
+     fragment-boot.js at the bottom handles for you.
+
+     TO ADD A LENS
+       cp -r content/_template-lens content/e7-my-lens
+       $EDITOR content/e7-my-lens/fragment.html    (this file)
+       $EDITOR content/e7-my-lens/entry.js         (title, style, PASS 0, …)
+       add 'e7-my-lens' to entries[] in components/manifest.js
+       node scripts/index-tools.mjs --shots        (renders thumb.png)
+       node scripts/build-site.mjs                 (verifies; fails loudly)
+
+     THE FIVE RULES THIS FILE ENCODES
+       1. No fetch, no import(), no type="module", no CDN. Classic <script src>
+          with relative paths only, or the double-click case breaks.
+       2. Exactly ONE style file. It owns your families and your @font-face.
+          Never write a font-family the style has not declared.
+       3. Reuse, don't redefine. If you are about to write mulberry32 or a dot
+          screen or a paper tooth, it is already in _engines/.
+       4. The plate is composed at ONE width and does not reflow. Size the
+          interior in cqw against a container-type, not in vw.
+       5. Anything that moves must stop when the host says stop. Paint through
+          Comp.paint/Comp.mkScene and that is free; own a timer yourself and
+          you must listen for lens:pause.
+     ============================================================================ -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Forced light: the meta here, color-scheme + the explicit backgrounds in
+     the style file. A lens declares its own ground; it never inherits one. -->
+<meta name="color-scheme" content="light">
+
+<!-- The display index, a middot, and the title. Same string as entry.js. -->
+<title>E7 · My lens</title>
+
+<!-- ONE style file — the whole type contract. Swap riso-xerox for whichever
+     of the six this lens belongs to; it must match `style` in entry.js.
+       riso-xerox · display-specimen · editorial-serif
+       swiss-modular · technical-doc · atmospheric
+     It gives you: the three roles (--f-display / --f-text / --f-mono), the
+     legacy vocabulary the older lenses are written against (--f-cond,
+     --f-black, --f-ui, --f-script, --f-serif …), the neutral --c-* palette,
+     --hair / --pad / --gutter, box-sizing, and the @font-face rules. -->
+<link rel="stylesheet" href="../_styles/riso-xerox.css">
+
+<style>
+/* ---------------------------------------------------------------------------
+   This lens owns its CSS outright. Scope EVERY selector under #e7 (or your
+   own root id). Nothing here can leak — the fragment is its own document —
+   but the scope is still what lets the next person cut this lens out again
+   without reading the other twenty-seven.
+   --------------------------------------------------------------------------- */
+html, body { background:#fff; }
+body {
+  /* The design width. The catalogue renders the fragment at exactly this
+     width and CSS-scales it — a lens reflowed into a 240px card is a
+     different composition, not a thumbnail of it. Declare the same number as
+     frame.designWidth in entry.js. 1100 is the mat interior with the rail
+     closed, which is what makes an entry page a true 1:1 view. */
+  width:1100px; margin:0 auto;
+}
+.lens-frame {
+  /* The clip. The chrome does not draw a border round a specimen — it lays a
+     neutral mat and puts crop marks outside the corners — so this element
+     only crops and contains paint. The crop is often load-bearing: T1's
+     display O is genuinely cut by this edge. */
+  position:relative; overflow:hidden; background:#fff; contain:paint;
+}
+
+/* -- the plate ------------------------------------------------------------ */
+#e7 {
+  position:relative;
+  width:100%;
+  aspect-ratio: 1100 / 780;        /* or leave it to the content and set
+                                      frame.height:"auto" in entry.js */
+  /* container-type is what makes the interior survive being scaled into a
+     240px contact-sheet card and a 1100px entry view with one set of numbers.
+     Size everything below in cqw, never in vw. */
+  container-type: inline-size;
+  background: var(--ground, #e7e3d9);
+  color: #141210;
+  isolation: isolate;              /* keep mix-blend-mode layers to this plate */
+  overflow: hidden;
+}
+#e7 .l { position:absolute; }      /* every layer is placed, not flowed */
+
+#e7 .word {
+  position:absolute; left:6cqw; top:34cqw;
+  font-family: var(--f-display);
+  font-size: 14cqw; line-height:.9; letter-spacing:-.02em;
+}
+#e7 .meta {
+  position:absolute; left:6cqw; bottom:5cqw;
+  font-family: var(--f-mono);
+  font-size: 1.2cqw; letter-spacing:.14em; text-transform:uppercase;
+  color:#4a4741;
+}
+
+/* The substrate goes UNDER the ink and multiplies through it, so type sits IN
+   the sheet. Grain laid over the top of a finished picture is an effect with
+   no cause — it makes a flat thing look busy without making it look printed. */
+#e7 .tooth {
+  position:absolute; inset:0; z-index:40; pointer-events:none;
+  mix-blend-mode:multiply; opacity:.62;
+}
+#e7 .tooth canvas { width:100%; height:100%; display:block; }
+
+/* Honour reduced motion inside the fragment as well as outside it. */
+@media (prefers-reduced-motion: reduce) {
+  #e7 * { animation:none !important; transition:none !important; }
+}
+</style>
+</head>
+<body>
+<div class="lens-frame">
+
+  <section id="e7" aria-label="E7 — my lens">
+    <!-- Real content, with real aria on complex figures. The lenses'
+         accessibility was better than the old chrome's; keep it that way. -->
+    <div class="word">MY<br>LENS</div>
+    <canvas class="tooth l" aria-hidden="true"></canvas>
+    <div class="meta">BONE 120 GSM · DRUM 01 BLACK · SCREENED 20°</div>
+  </section>
+
+</div>
+
+<!-- Shared engines. Load only the ones you call; each defines onto window.Comp
+     and the order between them does not matter.
+       _engines/rng.js       Comp.mulberry32(seed) · Comp.spread · Comp.hash2
+       _engines/field.js     Comp.buildField(W,H,rnd,darkBias,contrast)
+                             Comp.sampler(imageData,W,H,outside)
+       _engines/halftone.js  Comp.halftone(canvas,cssW,cssH,opt)   whole path
+                             Comp.dotScreen(ctx,W,H,samp,opt)      just the screen
+       _engines/paper.js     Comp.paperTooth(canvas,cssW,cssH,opt)
+                             Comp.paperTile(opt) → data: URL · Comp.grain(...)
+       _engines/scene.js     Comp.paint(fn,opt) · Comp.mkScene(canvas,engine)
+     halftone.js needs field.js; field.js and paper.js need rng.js. -->
+<script src="../_engines/rng.js"></script>
+<script src="../_engines/paper.js"></script>
+<script src="../_engines/scene.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  function paint() {
+    var root = document.getElementById('e7');
+    var cv = root.querySelector('canvas.tooth');
+    var r = root.getBoundingClientRect();
+    if (r.width < 4) return;
+    // Same seed, same sheet, every time. The seed is the identity of a plate:
+    // change it and you have printed a different one.
+    Comp.paperTooth(cv, r.width, r.height, { dpr: 1.5, seed: 4141, amp: 22 });
+  }
+
+  /* Comp.paint runs `paint` once when the document AND its fonts are ready,
+     and again — debounced, and only past a real size change — on resize. It
+     also stops repainting while the host has the lens paused.
+
+     This replaces the pattern the monolith used, which was to run the same
+     initialiser on DOMContentLoaded, again on load, again on fonts.ready and
+     again on every resize: 65 canvases, 67 MB of backing store, four times
+     over. Do not add your own listeners on top of this. */
+  Comp.paint(paint, { threshold: 40 });
+
+  /* If your lens animates, use Comp.mkScene instead — one shared rAF, an
+     IntersectionObserver so an off-screen plate costs nothing, one frame and
+     stop under prefers-reduced-motion, and a real halt on lens:pause:
+
+       Comp.mkScene(canvas, {
+         init:  function (ctx, W, H, dpr) { … },
+         frame: function (ctx, W, H, t)   { … }     // t in seconds
+       });
+
+     If you own something neither can reach — a worker, a setInterval, a video
+     — stop it yourself:
+
+       window.addEventListener('lens:pause',  function () { … });
+       window.addEventListener('lens:resume', function () { … });                */
+})();
+</script>
+
+<!-- ALWAYS LAST, and never edited. The only contract a fragment owes the host:
+     it reports its height and readiness over postMessage, forwards Escape / /
+     and ? so the host's keyboard model survives the isolation boundary, and
+     turns the host's pause into a real stop — it freezes requestAnimationFrame
+     and dispatches lens:pause. Nothing in the shell ever touches this
+     document; there is no contentDocument access anywhere in the codebase. -->
+<script src="../../../learn/fragment-boot.js"></script>
+</body>
+</html>
