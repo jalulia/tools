@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Forced light, all three legs, inside the frame as well as outside it:
+     the meta, color-scheme on :root (in the style file) and an explicit
+     background on html AND body. -->
+<meta name="color-scheme" content="light">
+<title>T8 · Rounded blobby display</title>
+<!-- Exactly one style file. It owns this lens's families, its @font-face
+     rules and the token vocabulary its CSS is written against. -->
+<link rel="stylesheet" href="../_styles/display-specimen.css">
+<style>
+/* ---------------------------------------------------------------------------
+   T8 · Rounded blobby display — ref Normal / Type Mafia
+   This lens owns its CSS outright. In the monolith these rules lived in a
+   1,481-selector stylesheet shared with the chrome and twenty-six other
+   lenses, scoped only by an "#t8" prefix convention that nothing
+   enforced. Ownership here was established by matching every parsed rule in
+   the document against every element inside this lens's frame, so what is
+   below is exactly what the browser was applying and nothing else.
+   --------------------------------------------------------------------------- */
+html, body { background:#fff; }
+body {
+  /* The plate is composed at its design width. The host renders the fragment
+     at exactly this width and CSS-scales it; opened alone by double-click it
+     centres itself rather than reflowing, because a lens reflowed into a
+     different measure is a different composition. */
+  width:1100px; margin:0 auto;
+}
+.lens-frame {
+  /* The monolith's .lens-frame drew a 1px border. The chrome does not draw a
+     border round a specimen any more — it lays a mat and puts crop marks
+     outside the corners — so only the clipping and the paint containment
+     survive. The crop is load-bearing: T1's display O is genuinely cropped
+     by this edge. */
+  position:relative; overflow:hidden; background:#fff; contain:paint;
+}
+#t8{ position:relative; box-sizing:border-box; width:100%; min-height:0; aspect-ratio:1/0.62; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:clamp(1.2rem,4vw,2.4rem);
+      padding:clamp(3rem,7vw,5.5rem) var(--gutter) clamp(3.4rem,8vw,6rem); background:var(--c-green); color:var(--c-ink); overflow:hidden; }
+#t8 *{ box-sizing:border-box; }
+#t8 .t8-stage{ width:100%; max-width:var(--maxw); display:flex; flex-direction:column; align-items:center; gap:clamp(1.4rem,4vw,2.6rem); }
+#t8 .t8-toggle{ position:relative; z-index:2; display:inline-flex; gap:.4rem; padding:.35rem; border:var(--hair) solid var(--c-ink); border-radius:var(--r-pill); background:transparent; }
+#t8 .t8-btn{ font-family:var(--f-mono); font-size:clamp(.66rem,1.4vw,.8rem); letter-spacing:.12em; text-transform:uppercase;
+      color:var(--c-ink); background:transparent; border:none; padding:.5rem .95rem; border-radius:var(--r-pill); cursor:pointer; line-height:1; transition:background .18s ease,color .18s ease,transform .18s ease; }
+#t8 .t8-btn:hover{ transform:translateY(-1px); }
+#t8 .t8-btn[aria-pressed="true"]{ background:var(--c-ink); color:var(--c-green); }
+#t8 .t8-wordmark{ display:flex; align-items:center; justify-content:center; flex-wrap:nowrap; font-family:var(--f-round); font-weight:800;
+      font-size:clamp(3.4rem,17.4vw,13.4rem); line-height:.86; letter-spacing:-.06em; color:var(--c-ink); text-align:center; max-width:100%;
+      -webkit-text-stroke:.022em var(--c-ink); paint-order:stroke fill; transform:scaleY(1.06); }
+#t8 .t8-l{ display:inline-block; line-height:1; transition:transform .3s cubic-bezier(.34,1.56,.64,1),letter-spacing .3s ease; transform-origin:center bottom; }
+#t8 .t8-l .g1{ display:inline; }
+#t8 .t8-l .g2{ display:none; }
+#t8 .t8-l[data-alt] .g2{ font-size:1.23em; line-height:.813; }
+#t8 .t8-o{ display:inline-flex; align-items:center; justify-content:center; width:.64em; height:.64em; margin:0 .012em; vertical-align:baseline; position:relative; top:.012em; transition:transform .3s cubic-bezier(.34,1.56,.64,1); }
+#t8 .t8-o svg{ width:100%;height:100%;display:block;overflow:visible; }
+#t8 .t8-o .t8-face{ fill:none; stroke:var(--c-ink); stroke-width:29.7; transform-box:fill-box; transform-origin:center; }
+#t8 .t8-o .t8-eye{ fill:var(--c-ink);transform-box:fill-box;transform-origin:center; }
+#t8 .t8-o .t8-mouth{ fill:none; stroke:var(--c-ink); stroke-width:7.5; stroke-linecap:round; }
+#t8 .t8-o .t8-wink{ display:none; fill:none; stroke:var(--c-ink); stroke-width:7.5; stroke-linecap:round; }
+#t8 .t8-o .t8-mouth-02{ display:none; }
+#t8 .t8-foot{ width:100%; max-width:var(--maxw); display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; }
+#t8 .t8-note{ font-family:var(--f-mono); font-size:clamp(.62rem,1.5vw,.82rem); letter-spacing:.02em; color:var(--c-ink); }
+#t8 .t8-sign{ font-family:var(--f-script); font-size:clamp(1.4rem,4vw,2.6rem); line-height:.9; color:var(--c-ink); transform:rotate(-6deg); }
+
+@media (prefers-reduced-motion: no-preference){
+  #t8 .t8-o{ animation:t8-wobble 4.2s ease-in-out infinite; }
+  #t8 .t8-o .t8-eye{ animation:t8-blink 4.2s ease-in-out infinite; }
+}
+
+
+    /* ---- T8 Pass 0 (Normal / Type Mafia) ------------------------------------------------------
+       substrate: flat digital green tile — screen piece, no texture (grain rejected: it would fake a print).
+       process:   none; the craft is in the drawing — inflated heavy rounded sans (Baloo 2 800 + .022em
+                  outer stroke), tracked tight (-.06em), the O replaced by a smiley whose ring is measured
+                  to the letters: Baloo 2 800 cap = .615em (+.011 stroke = .626), stem = .17em (+.022 = .19em)
+                  → O box .64em, ring stroke 30/100 units, sits on the baseline with a round overshoot.
+       type:      SS01 = caps; SS02 = a real per-glyph alternate set (unicase: n r m a at cap height + wink O),
+                  not a rotation gimmick. Mono caption + script signature stay crisp.
+       faults:    O was .92em (towered over cap-height), ring stroke 12/100 ≠ stem, tracking loose,
+                  SS02 was rotation only.
+    ------------------------------------------------------------------------------------------- */
+    #t8{ position:relative; box-sizing:border-box; width:100%; min-height:0; aspect-ratio:1/0.62; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:clamp(1.2rem,4vw,2.4rem);
+      padding:clamp(3rem,7vw,5.5rem) var(--gutter) clamp(3.4rem,8vw,6rem); background:var(--c-green); color:var(--c-ink); overflow:hidden; }
+    #t8 *{box-sizing:border-box;}
+    #t8 .t8-stage{ width:100%; max-width:var(--maxw); display:flex; flex-direction:column; align-items:center; gap:clamp(1.4rem,4vw,2.6rem); }
+    #t8 .t8-toggle{ position:relative; z-index:2; display:inline-flex; gap:.4rem; padding:.35rem; border:var(--hair) solid var(--c-ink); border-radius:var(--r-pill); background:transparent; }
+    #t8 .t8-btn{ font-family:var(--f-mono); font-size:clamp(.66rem,1.4vw,.8rem); letter-spacing:.12em; text-transform:uppercase;
+      color:var(--c-ink); background:transparent; border:none; padding:.5rem .95rem; border-radius:var(--r-pill); cursor:pointer; line-height:1; transition:background .18s ease,color .18s ease,transform .18s ease; }
+    #t8 .t8-btn:hover{transform:translateY(-1px);}
+    #t8 .t8-btn[aria-pressed="true"]{ background:var(--c-ink); color:var(--c-green); }
+    #t8 .t8-wordmark{ display:flex; align-items:center; justify-content:center; flex-wrap:nowrap; font-family:var(--f-round); font-weight:800;
+      font-size:clamp(3.4rem,17.4vw,13.4rem); line-height:.86; letter-spacing:-.06em; color:var(--c-ink); text-align:center; max-width:100%;
+      -webkit-text-stroke:.022em var(--c-ink); paint-order:stroke fill; transform:scaleY(1.06); }
+    #t8 .t8-l{ display:inline-block; line-height:1; transition:transform .3s cubic-bezier(.34,1.56,.64,1),letter-spacing .3s ease; transform-origin:center bottom; }
+    #t8 .t8-l .g1{ display:inline; } #t8 .t8-l .g2{ display:none; }
+    #t8 .t8-l[data-alt] .g2{ font-size:1.23em; line-height:.813; }   /* x-height glyph (.50em) raised to cap height (.615em) */
+    #t8 .t8-o{ display:inline-flex; align-items:center; justify-content:center; width:.64em; height:.64em; margin:0 .012em; vertical-align:baseline; position:relative; top:.012em; transition:transform .3s cubic-bezier(.34,1.56,.64,1); }
+    #t8 .t8-o svg{width:100%;height:100%;display:block;overflow:visible;}
+    #t8 .t8-o .t8-face{ fill:none; stroke:var(--c-ink); stroke-width:29.7; transform-box:fill-box; transform-origin:center; }
+    #t8 .t8-o .t8-eye{fill:var(--c-ink);transform-box:fill-box;transform-origin:center;}
+    #t8 .t8-o .t8-mouth{ fill:none; stroke:var(--c-ink); stroke-width:7.5; stroke-linecap:round; }
+    #t8 .t8-o .t8-wink{ display:none; fill:none; stroke:var(--c-ink); stroke-width:7.5; stroke-linecap:round; }
+    #t8 .t8-o .t8-mouth-02{display:none;}
+    #t8 .t8-wordmark.t8-ss02{ letter-spacing:-.05em; }
+    #t8 .t8-ss02 .t8-l[data-alt] .g1{ display:none; } #t8 .t8-ss02 .t8-l[data-alt] .g2{ display:inline; }
+    #t8 .t8-ss02 .t8-mouth-01{display:none;}
+    #t8 .t8-ss02 .t8-mouth-02{display:block;}
+    #t8 .t8-ss02 .t8-o .t8-eye.t8-eye-r{ display:none; }
+    #t8 .t8-ss02 .t8-o .t8-wink{ display:block; }
+    #t8 .t8-foot{ width:100%; max-width:var(--maxw); display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; }
+    #t8 .t8-note{ font-family:var(--f-mono); font-size:clamp(.62rem,1.5vw,.82rem); letter-spacing:.02em; color:var(--c-ink); }
+    #t8 .t8-sign{ font-family:var(--f-script); font-size:clamp(1.4rem,4vw,2.6rem); line-height:.9; color:var(--c-ink); transform:rotate(-6deg); }
+    @media (prefers-reduced-motion: no-preference){
+      #t8 .t8-o{animation:t8-wobble 4.2s ease-in-out infinite;}
+      #t8 .t8-o .t8-eye{animation:t8-blink 4.2s ease-in-out infinite;}
+      @keyframes t8-wobble{ 0%,100%{transform:rotate(0deg) scale(1);} 25%{transform:rotate(-3deg) scale(1.03);} 60%{transform:rotate(3deg) scale(.99);} }
+      @keyframes t8-blink{ 0%,42%,50%,100%{transform:scaleY(1);} 46%{transform:scaleY(.15);} }
+      #t8 .t8-ss02 .t8-o{animation:t8-wobble 3s ease-in-out infinite;}
+    }
+  
+
+/* the @keyframes this lens names. In the monolith these seven lived in
+   one document-global namespace where two lenses could silently share an
+   animation; inside a fragment the namespace is the fragment. */
+@keyframes t8-wobble{ 0%,100%{transform:rotate(0deg) scale(1);} 25%{transform:rotate(-3deg) scale(1.03);} 60%{transform:rotate(3deg) scale(.99);} }
+@keyframes t8-blink{ 0%,42%,50%,100%{transform:scaleY(1);} 46%{transform:scaleY(.15);} }
+</style>
+</head>
+<body>
+<div class="lens-frame">
+<section id="t8" class="sys">
+  
+  <div class="t8-stage">
+    <div class="t8-toggle" role="group" aria-label="Stylistic set">
+      <button type="button" class="t8-btn" data-ss="ss01" aria-pressed="true">SS01</button>
+      <button type="button" class="t8-btn" data-ss="ss02" aria-pressed="false">SS02</button>
+    </div>
+    <div class="t8-wordmark t8-ss01" aria-label="NORMAL">
+      <span class="t8-l" data-alt aria-hidden="true"><span class="g1">N</span><span class="g2">n</span></span>
+      <span class="t8-o" aria-hidden="true"><svg viewBox="0 0 100 100" role="img"><circle class="t8-face" cx="50" cy="50" r="35.15"/><circle class="t8-eye" cx="41.5" cy="43" r="5.2"/><circle class="t8-eye t8-eye-r" cx="58.5" cy="43" r="5.2"/><path class="t8-wink" d="M53.5 43.5 Q58.5 39.5 63.5 43.5"/><path class="t8-mouth t8-mouth-01" d="M39.5 55.5 Q50 65 60.5 55.5"/><path class="t8-mouth t8-mouth-02" d="M39 54 Q50 68 61 54"/></svg></span>
+      <span class="t8-l" data-alt aria-hidden="true"><span class="g1">R</span><span class="g2">r</span></span><span class="t8-l" data-alt aria-hidden="true"><span class="g1">M</span><span class="g2">m</span></span><span class="t8-l" data-alt aria-hidden="true"><span class="g1">A</span><span class="g2">a</span></span><span class="t8-l" aria-hidden="true">L</span>
+    </div>
+    <div class="t8-foot"><span class="t8-note">w/ 2 stylistic sets — SS02 unicase alternates</span><span class="t8-sign">Type Mafia</span></div>
+  </div>
+  
+</section>
+</div>
+
+<!-- Shared engines. Reuse, don't redefine: the monolith carried fifteen
+     copies of mulberry32, three of the field builder, six of the dot screen
+     and two of the paper tooth. Classic <script src>, relative, so this
+     document opens by double-click with no server and no build step. -->
+
+<script>
+    (function(){ var root=document.getElementById('t8'); if(!root) return;
+      var mark=root.querySelector('.t8-wordmark'); var btns=root.querySelectorAll('.t8-btn');
+      btns.forEach(function(b){ b.addEventListener('click',function(){ var set=b.getAttribute('data-ss');
+        mark.classList.remove('t8-ss01','t8-ss02'); mark.classList.add('t8-'+set);
+        btns.forEach(function(o){ o.setAttribute('aria-pressed', o===b?'true':'false'); }); }); });
+    })();
+  </script>
+<script>
+    (function(){ var root=document.getElementById('t8'); if(!root) return;
+      var mark=root.querySelector('.t8-wordmark'); var btns=root.querySelectorAll('.t8-btn');
+      btns.forEach(function(b){ b.addEventListener('click',function(){ var set=b.getAttribute('data-ss');
+        mark.classList.remove('t8-ss01','t8-ss02'); mark.classList.add('t8-'+set);
+        btns.forEach(function(o){ o.setAttribute('aria-pressed', o===b?'true':'false'); }); }); });
+    })();
+  </script>
+<!-- The one contract a fragment owes the host: height and ready over
+     postMessage, and a real stop on lens:pause. -->
+<script src="../../../learn/fragment-boot.js"></script>
+</body>
+</html>
