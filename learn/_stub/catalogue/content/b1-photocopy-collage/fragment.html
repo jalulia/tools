@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>B1 · Photocopy collage</title>
+<!-- A fragment declares its own type. The style owns the faces; the fragment
+     links the one file for its style and never expects the host to define
+     var(--f-display) for it. -->
+<link rel="stylesheet" href="../_styles/riso-xerox.css">
+<style>
+  html, body { margin: 0; background: var(--ground); }
+  body { width: 1100px; }
+  .plate { position: relative; width: 1100px; height: 900px; overflow: hidden; }
+
+  .frame { position:absolute; left:70px; top:70px; padding:18px; background:#efece4;
+           box-shadow:0 0 0 1px #d6d2c8; }
+  canvas { display:block; filter: contrast(1.35) grayscale(1); }
+  .cap { position:absolute; left:70px; bottom:120px; font-family:var(--f-mono);
+         font-size:15px; letter-spacing:.22em; color:#141210; }
+  .hangers { position:absolute; left:88px; top:560px; width:820px; height:40px;
+             background: repeating-linear-gradient(90deg, transparent 0 46px, #141210 46px 48px); }
+</style>
+</head><body>
+<div class="plate">
+
+  <div class="frame"><canvas id="c" width="820" height="520"></canvas></div>
+  <div class="cap">ANYDAY STUDIO · PHOTOCOPY COLLAGE · 3RD GENERATION</div>
+  <div class="hangers"></div>
+</div>
+<script>
+  var cv=document.getElementById('c'), x=cv.getContext('2d');
+  // a generated greyscale scene reproduced THROUGH a screen — never a gradient
+  var g=x.createLinearGradient(0,0,0,520); g.addColorStop(0,'#cfcabd'); g.addColorStop(1,'#6e6a62');
+  x.fillStyle=g; x.fillRect(0,0,820,520);
+  x.fillStyle='#1b1a18';
+  for(var i=0;i<3;i++){ x.beginPath(); x.ellipse(180+i*230, 250, 92, 132, i*0.2-0.2, 0, 7); x.fill(); }
+  var img=x.getImageData(0,0,820,520), d=img.data;
+  for(var y=0;y<520;y++)for(var xx=0;xx<820;xx++){
+    var i2=(y*820+xx)*4, v=d[i2];
+    // 4x4 Bayer, built from the 2x2: M2=[[0,2],[3,1]]
+    var m2=function(a,b){return (2*a+3*b)%4;};
+    var t=(4*m2(xx%2,y%2)+m2(Math.floor(xx%4/2),Math.floor(y%4/2)))/16;
+    var o=v/255 > t ? 235 : 20;
+    d[i2]=d[i2+1]=d[i2+2]=o;
+  }
+  x.putImageData(img,0,0);
+</script>
+<script src="../../../../fragment-boot.js"></script>
+</body></html>

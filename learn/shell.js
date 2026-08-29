@@ -306,7 +306,10 @@
   }
 
   /* Status is editorial standing, not build state. The chips are a row, never
-     a panel — and they are marks plus a word, never four colours. */
+     a panel — and they are marks plus a word, never four colours.
+     The row is rebuilt whenever the set of statuses in the tool changes, which
+     is how it fills in as the entry scripts land at boot. */
+  var chipSig = '';
   function buildChips() {
     var box = document.getElementById('chips');
     if (!box) return;
@@ -316,6 +319,9 @@
     });
     var ORDER = ['canonical', 'exploration', 'historical', 'known-failure'];
     seen.sort(function (a, b) { return ORDER.indexOf(a) - ORDER.indexOf(b); });
+    var sig = seen.join(',');
+    if (sig === chipSig) return;
+    chipSig = sig;
     box.innerHTML = seen.map(function (s) {
       return '<button type="button" class="chip st" data-st="' + esc(s) + '" data-status="' + esc(s) +
              '" aria-pressed="true">' + esc(s.replace('-', ' ')) + '</button>';
@@ -343,14 +349,21 @@
   function applyFilter() {
     S.filtered = S.entries.filter(matches);
     S.kfocus = -1;
+    buildChips();
     renderSpine();
     var count = document.getElementById('count');
     if (count) {
       var noun = S.manifest.mode === 'catalogue' ? 'lenses' : 'chapters';
-      var styles = ((S.manifest.styles || []).length);
-      // Every count on the page derives from entries.length. Nothing is typed.
+      // Every count on the page derives from entries. Nothing is typed by hand;
+      // that is what verifyManifests() enforces at deploy time.
+      var extra = (S.manifest.styles || []).length
+        ? ' · ' + S.manifest.styles.length + ' styles'
+        : (function () {
+            var n = S.entries.reduce(function (t, e) { return t + ((e.examples || []).length); }, 0);
+            return n ? ' · ' + n + ' examples' : '';
+          })();
       count.textContent = (S.filtered.length === S.entries.length)
-        ? S.entries.length + ' ' + noun + (styles ? ' · ' + styles + ' styles' : '')
+        ? S.entries.length + ' ' + noun + extra
         : S.filtered.length + ' / ' + S.entries.length + ' ' + noun;
     }
     var pillN = document.querySelector('#pill .n');

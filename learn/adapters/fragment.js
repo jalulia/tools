@@ -30,6 +30,7 @@
   var live = [];                // [{el, frame, entry}] currently mounted previews
   var wanted = new Map();       // el -> entry, everything inside the 200px band
   var stageFrame = null;        // the single entry-route frame
+  var settle = null;            // debounce handle for reconcile()
   var msgBound = false;
 
   function cap() {
@@ -69,6 +70,13 @@
     if (el) el.textContent = String(live.length);
   }
 
+  /* the mat's visible surround, read from the token rather than hard-coded */
+  function matPad(stage) {
+    var mat = stage.closest ? stage.closest('.mat') : null;
+    if (!mat) return 0;
+    return parseFloat(getComputedStyle(mat).paddingLeft) || 0;
+  }
+
   function distance(el) {
     var r = el.getBoundingClientRect();
     return Math.abs((r.top + r.bottom) / 2 - window.innerHeight / 2);
@@ -84,8 +92,14 @@
     f.style.width = dw + 'px';
     f.style.height = (frame.previewHeight || 900) + 'px';
     // Render at the fragment's own design width and CSS-scale it. The crop is
-    // authored per lens: a thumbnail crop is a picture editor's decision.
-    var scale = crop ? crop[0] : (el.clientWidth / dw);
+    // authored per lens: a thumbnail crop is a picture editor's decision, not a
+    // computed one.
+    //   crop[0]  a MULTIPLE of fit-to-card. 1 shows the whole plate width; 1.4
+    //            is a 1.4x detail. Relative, so a card that changes width when
+    //            the rail closes does not change what the crop means.
+    //   crop[1]  the design-pixel row that lands at the top of the card.
+    var fit = el.clientWidth / dw;
+    var scale = fit * (crop ? crop[0] : 1);
     var offY = crop ? crop[1] : 0;
     f.style.transformOrigin = '0 0';
     f.style.transform = 'scale(' + scale + ') translateY(' + (-offY) + 'px)';
@@ -129,9 +143,9 @@
       var hit = frames.filter(function (f) { return f.contentWindow === ev.source; })[0];
       if (!hit) return;
       if (d.type === 'height' && hit.dataset.autoHeight === 'true') {
-        hit.style.height = Math.max(120, d.height) + 'px';
+        hit.dataset.frameHeight = Math.max(120, d.height);
         var st = hit.closest('.stage');
-        if (st) st.style.height = Math.max(120, d.height) + 'px';
+        if (st) adapter.applyFit(st, +st.dataset.designWidth || DESIGN_W);
       }
       if (d.type === 'ready') hit.setAttribute('data-ready', 'true');
     });
@@ -147,8 +161,14 @@
       f.setAttribute('data-lens', 'entry');
       var frame = entry.frame || {};
       var auto = frame.height === 'auto';
+      var dw0 = frame.designWidth || DESIGN_W;
       f.dataset.autoHeight = String(auto);
-      if (!auto && frame.aspect) o.stage.style.aspectRatio = frame.aspect;
+      // Derive the frame's own height from the declared aspect, in design
+      // pixels. "auto" leaves it to the fragment's postMessage.
+      if (!auto) {
+        var a = String(frame.aspect || '3/2').split('/');
+        f.dataset.frameHeight = Math.round(dw0 * (+a[1] || 2) / (+a[0] || 3));
+      }
       o.stage.innerHTML = '';
       o.stage.appendChild(f);
       stageFrame = f;
@@ -180,6 +200,7 @@
         stageFrame = null;
       }
       wanted.clear();
+      clearTimeout(settle);
       live.slice().forEach(evict);
     },
 
@@ -199,15 +220,30 @@
       stage.dataset.designWidth = dw;
       stage.dataset.fit = adapter._fit ? 'fit' : 'lens';
       var f = stage.querySelector('iframe');
-      var avail = stage.clientWidth || dw;
+      // The stage's own width is the fit reference, so measure it before the
+      // frame is scaled into it.
+      var avail = stage.parentNode ? stage.parentNode.clientWidth - 2 * matPad(stage) : dw;
       var scale = adapter._fit ? Math.min(1, avail / dw) : 1;
       if (f) {
         f.style.width = dw + 'px';
+        // A transform does not affect layout, so the stage has to be told the
+        // height itself or it collapses to the iframe's default 150px. The
+        // height comes from the declared aspect (or from the fragment's own
+        // postMessage when it declares height:"auto").
+        var h = +f.dataset.frameHeight || 0;
+        if (h) {
+          f.style.height = h + 'px';
+          stage.style.height = Math.round(h * scale) + 'px';
+        }
         f.style.transformOrigin = '0 0';
         f.style.transform = scale === 1 ? 'none' : 'scale(' + scale.toFixed(4) + ')';
       }
       var read = document.getElementById('fitread');
-      if (read) read.textContent = scale === 1 ? 'shown 1:1' : 'shown ' + scale.toFixed(2) + '×';
+      if (read) {
+        var clip = Math.max(0, Math.round(dw * scale - avail));
+        read.textContent = (scale === 1 ? 'shown 1:1' : 'shown ' + scale.toFixed(2) + '×') +
+          (clip ? ' · ' + clip + ' px clipped' : '');
+      }
       var btn = document.getElementById('fitbtn');
       if (btn) { btn.textContent = adapter._fit ? '1:1' : 'Fit'; btn.setAttribute('aria-pressed', String(adapter._fit)); }
     },
@@ -222,7 +258,11 @@
     preview: function (el, entry, on) {
       bindMessages();
       if (on) wanted.set(el, entry); else wanted.delete(el);
-      reconcile();
+      // Debounced: during a fast scroll the wanted set changes several times a
+      // frame, and mounting a document only to abort its load a moment later is
+      // wasted work (and a stream of aborted requests in the network panel).
+      clearTimeout(settle);
+      settle = setTimeout(reconcile, 120);
     },
 
     pauseAll: function (yes) {

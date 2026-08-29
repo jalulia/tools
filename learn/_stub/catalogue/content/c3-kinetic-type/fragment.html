@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>C3 · Kinetic type repetition</title>
+<!-- A fragment declares its own type. The style owns the faces; the fragment
+     links the one file for its style and never expects the host to define
+     var(--f-display) for it. -->
+<link rel="stylesheet" href="../_styles/motion-kinetic.css">
+<style>
+  html, body { margin: 0; background: var(--ground); }
+  body { width: 1100px; }
+  .plate { position: relative; width: 1100px; height: 900px; overflow: hidden; }
+
+  .band { position:absolute; left:0; width:1100px; height:190px; overflow:hidden;
+          display:flex; align-items:center; white-space:nowrap;
+          font-family:var(--f-display); font-size:120px; }
+  .band span { display:inline-block; animation: run 7s linear infinite; }
+  .b1 { top:120px; background:#141210; color:#f0b400; }
+  .b2 { top:330px; color:#141210; }
+  .b2 span { animation-direction: reverse; }
+  .b3 { top:540px; background:#f0b400; color:#141210; }
+  @keyframes run { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+  .cap { position:absolute; left:56px; bottom:70px; font-family:var(--f-mono); font-size:14px;
+         letter-spacing:.22em; color:#141210; }
+</style>
+</head><body>
+<div class="plate">
+
+  <div class="band b1"><span>REPEAT&nbsp;·&nbsp;REPEAT&nbsp;·&nbsp;REPEAT&nbsp;·&nbsp;REPEAT&nbsp;·&nbsp;</span><span>REPEAT&nbsp;·&nbsp;REPEAT&nbsp;·&nbsp;REPEAT&nbsp;·&nbsp;REPEAT&nbsp;·&nbsp;</span></div>
+  <div class="band b2"><span>UNTIL&nbsp;IT&nbsp;IS&nbsp;A&nbsp;TEXTURE&nbsp;·&nbsp;</span><span>UNTIL&nbsp;IT&nbsp;IS&nbsp;A&nbsp;TEXTURE&nbsp;·&nbsp;</span></div>
+  <div class="band b3"><span>REPEAT&nbsp;·&nbsp;REPEAT&nbsp;·&nbsp;REPEAT&nbsp;·&nbsp;REPEAT&nbsp;·&nbsp;</span><span>REPEAT&nbsp;·&nbsp;REPEAT&nbsp;·&nbsp;REPEAT&nbsp;·&nbsp;</span></div>
+  <div class="cap">MOTION &amp; KINETIC · 7 S LOOP · CONTENT SPEED, NOT UI SPEED</div>
+</div>
+<script>
+  // a lens that owns a timer stops it when the host says so
+  var n = 0, id = setInterval(function(){ n++; }, 100);
+  window.addEventListener('lens:pause',  function(){ clearInterval(id); id = null; });
+  window.addEventListener('lens:resume', function(){ if(!id) id = setInterval(function(){ n++; }, 100); });
+</script>
+<script src="../../../../fragment-boot.js"></script>
+</body></html>
