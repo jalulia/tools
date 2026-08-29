@@ -36,6 +36,7 @@
 
   var view = { kind: null, styleId: null };   // what is on screen right now
   var localExample = null;                    // a stage / gallery variant, not a route
+  var paramState = {};                        // where the knobs actually are
 
   function el(id) { return document.getElementById(id); }
   function pathOf(e) { return e.path || ('content/' + e.id + '/'); }
@@ -179,6 +180,7 @@
     var list = e.examples || [];
     var ex = list.filter(function (x) { return x.id === exampleId; })[0] || list[0] || null;
     S.currentExample = ex;
+    paramState = {};                          // a new entry declares its own knobs
 
     var crumb = el('crumb');
     if (crumb) crumb.textContent = S.sectionOf(e.section).title + ' · ' + e.title;
@@ -211,7 +213,12 @@
       stage: el('stage'), bar: el('bar'), entry: e, example: ex,
       query: query || {}, params: paramValues(e, ex)
     });
-    if (mode === 'course') wireCourse(e, ex, query || {});
+    // Found by the real chapters: 07, 20 and W2 carry BOTH a build-up and an
+    // example strip. Applying the default stage unconditionally re-mounted it
+    // over whatever the route had just asked for, so every click in the strip
+    // bounced straight back to the stage. The route wins; the default stage
+    // only fills an unstated one.
+    if (mode === 'course') wireCourse(e, ex, query || {}, !!exampleId);
     wirePlots(e);
     S.markCurrent();
     fillPane(activeTab());
@@ -278,6 +285,12 @@
     box.querySelectorAll('button').forEach(function (b) {
       b.addEventListener('click', function () { S.go(e.id, b.dataset.id, true); });
     });
+    // A deep link to the twelfth chip must not land on a strip showing the
+    // first. Below 840 the strip still scrolls, so this is where it matters.
+    var here = box.querySelector('button[aria-current="true"]');
+    if (here && here.scrollIntoView) {
+      here.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
   }
 
   /* ==========================================================================
@@ -346,23 +359,38 @@
     return out;
   }
 
+  /* Found by chapter 07: an `edge` of 0.004 on a step of 0.001 printed as
+     "0.00", so the one control the chapter is about read as switched off. */
   function fmt(v, step) {
     if (v == null) return '';
-    return (step && step < 1) ? Number(v).toFixed(2) : String(v);
+    if (!step || step >= 1) return String(v);
+    return Number(v).toFixed(step < 0.01 ? 3 : 2);
   }
 
+  /* The declared defaults, once per entry — and after that the live positions
+     of the sliders. Switching stage or variant must not reset a knob the reader
+     has moved: the panel would still show the moved value and the stage would
+     be running the default, which is the worst of both. */
   function paramValues(e, ex) {
     var out = {};
     ((e.params) || []).forEach(function (p) { out[p.name] = p.value; });
     ((ex && ex.params) || []).forEach(function (p) { out[p.name] = p.value; });
+    for (var k in paramState) {
+      if (Object.prototype.hasOwnProperty.call(out, k)) out[k] = paramState[k];
+    }
     return out;
   }
 
-  function wireCourse(e, ex, query) {
+  function wireCourse(e, ex, query, routedExample) {
     var shared = !!(query && query.src);
     var stages = el('stages');
     if (stages) {
       var note = el('stagenote');
+      var clearStages = function () {
+        stages.querySelectorAll('button').forEach(function (b) {
+          b.setAttribute('aria-current', 'false');
+        });
+      };
       var apply = function (i) {
         var s = e.stages[i];
         stages.querySelectorAll('button').forEach(function (b) {
@@ -383,8 +411,18 @@
                         .filter(function (i) { return i >= 0; })[0];
       // A shared edit in the URL beats the file, so it also beats the default
       // stage — otherwise opening someone's link silently discards their code.
-      if (shared) { if (note) note.textContent = 'Showing a shared edit, not a stage.'; }
-      else if (def != null) apply(def);
+      // So does an example named in the route: #/07-shapes/polygon asked for
+      // the example, not for the build-up.
+      if (shared) {
+        clearStages();
+        if (note) note.textContent = 'Showing a shared edit, not a stage.';
+      } else if (routedExample) {
+        clearStages();
+        if (note) {
+          note.textContent = 'Showing the example ' +
+            ((ex && ex.title) || '') + ' — pick a stage to return to the build-up.';
+        }
+      } else if (def != null) { apply(def); }
       else if (note) note.textContent = e.stages[0].note || '';
     }
 
@@ -393,6 +431,7 @@
       params.querySelectorAll('input[type=range]').forEach(function (inp) {
         inp.addEventListener('input', function () {
           var v = parseFloat(inp.value);
+          paramState[inp.dataset.name] = v;
           var out = el('val-' + inp.dataset.name);
           if (out) out.textContent = fmt(v, parseFloat(inp.step));
           if (S.adapter && S.adapter.setParam) S.adapter.setParam(inp.dataset.name, v);
@@ -405,6 +444,14 @@
       gallery.querySelectorAll('button').forEach(function (b) {
         b.addEventListener('click', function () {
           var g = e.gallery[+b.dataset.i];
+          // A variant is not a stage: clear the build-up's current mark so the
+          // page never claims to be showing two things at once.
+          var st = el('stages'), sn = el('stagenote');
+          if (st) st.querySelectorAll('button').forEach(function (x) {
+            x.setAttribute('aria-current', 'false');
+          });
+          if (sn) sn.textContent = 'Showing the variant ' + g.label +
+            ' — pick a stage to return to the build-up.';
           localExample = { id: 'variant-' + b.dataset.i, title: g.label, code: g.code, lane: e.lane };
           S.mountAdapter({
             stage: el('stage'), bar: el('bar'), entry: e, example: localExample,

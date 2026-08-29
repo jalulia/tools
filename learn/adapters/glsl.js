@@ -31,7 +31,7 @@
   var clock = 0, lastT = 0, playing = true, lost = false;
   var mouse = [0, 0], res = [1, 1];
   var host = null, bar = null, entry = null, example = null;
-  var buffer = '', params = {}, uniformNames = [];
+  var buffer = '', params = {}, uniformNames = [], paramDefs = [];
   var errLine = -1, status = 'compiled', log = '';
   var compileTimer = null;
 
@@ -119,10 +119,25 @@
       tex:   gl.getUniformLocation(p, 'u_tex')
     };
     uniformNames.forEach(function (n) { uloc[n] = gl.getUniformLocation(p, n); });
+    markParams();
     errLine = -1;
     var lines = src.split('\n').length;
     setStatus('compiled', 'No errors · ' + lines + ' lines');
     return true;
+  }
+
+  /* A declared parameter whose uniform is not in the program that is actually
+     running — because the lane is per example and chapter 05's fourteen curves
+     each read the two or three knobs they need. The panel says so rather than
+     offering a slider that does nothing. */
+  function markParams() {
+    paramDefs.forEach(function (d) {
+      var inp = document.getElementById('par-' + d.name);
+      if (!inp) return;
+      var box = inp.parentNode;
+      while (box && box.className !== 'par') box = box.parentNode;
+      if (box) box.setAttribute('data-inactive', String(!uloc[d.uniform]));
+    });
   }
 
   function fail(l) {
@@ -290,8 +305,9 @@
         Math.round(mouse[0]) + ', ' + Math.round(mouse[1]) + '</span>' +
       (uniformNames.length
         ? '<span class="opt">' + uniformNames.map(function (n) {
+            var v = params[n];
             return '<span class="k">' + n.replace(/^u_/, '') + '</span> ' +
-                   (params[n] != null ? (+params[n]).toFixed(2) : '—');
+                   (v != null ? (+v).toFixed(Math.abs(+v) < 0.1 && +v !== 0 ? 3 : 2) : '—');
           }).join(' ') + '</span>'
         : '');
   }
@@ -406,9 +422,18 @@
       adapter.unmount();
       host = o.stage; bar = o.bar; entry = o.entry; example = o.example;
       params = o.params || {};
-      uniformNames = [];
+      uniformNames = []; paramDefs = [];
       ((o.entry.params) || []).concat((o.example && o.example.params) || [])
-        .forEach(function (p) { uniformNames.push(p.uniform || ('u_' + p.name)); params[p.uniform || ('u_' + p.name)] = p.value; });
+        .forEach(function (p) {
+          var u = p.uniform || ('u_' + p.name);
+          uniformNames.push(u);
+          paramDefs.push({ name: p.name, uniform: u });
+          // The caller may hand us the values the sliders are actually at —
+          // switching stages must not silently reset the uniforms to the
+          // declared defaults while the panel still shows the moved value.
+          params[u] = (o.params && o.params[p.name] !== undefined)
+            ? o.params[p.name] : p.value;
+        });
       // the shared edit in the URL wins over the file, and the strip says so
       var shared = S.readSharedSource(o.query);
       buffer = shared || sourceOf(o.entry, o.example);
@@ -455,7 +480,14 @@
     },
 
     setParam: function (name, value) {
-      var key = params.hasOwnProperty('u_' + name) ? 'u_' + name : name;
+      // Resolve through the declared parameters, so a param that names its own
+      // `uniform` still lands on the right key. The old lookup guessed
+      // u_<name> and silently wrote to a key nothing reads when it was wrong.
+      var key = null;
+      for (var i = 0; i < paramDefs.length; i++) {
+        if (paramDefs[i].name === name) { key = paramDefs[i].uniform; break; }
+      }
+      if (!key) key = params.hasOwnProperty('u_' + name) ? 'u_' + name : name;
       params[key] = value;
       if (!playing) drawOnce();
     },

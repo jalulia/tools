@@ -40,6 +40,11 @@ void main() {
     { rung: 'tune', text: "Change the three numbers. <code>vec4(0.0, 0.0, 1.0, 1.0)</code> is pure blue. Values clamp to 0–1." }
   ],
 
+  related: [
+    { entry: 'w4-a-shader-that-does-not-link', relation: 'source-of',
+      label: 'W4 A shader that does not link' }
+  ],
+
   links: [
     { label: "The chapter in the book", url: 'https://thebookofshaders.com/01/' }
   ]

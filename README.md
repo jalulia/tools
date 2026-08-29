@@ -6,7 +6,7 @@ Personal monorepo for small browser-based tools.
 - [signature-builder](./signature-builder) — node-wired email signature builder for Impossible Outcomes; edit, preview, copy into Gmail
 
 ### learn
-- [book-of-shaders](./book-of-shaders) — *The Book of Shaders* adapted onto the shared `learn/` shell: the book's chapters as a live GLSL bench, plus Fractals, Image operations, Kernel convolutions and Filters written here, where the book leaves stubs. One folder and one self-registering script per chapter; no build, no fetch, opens by double-click.
+- [book-of-shaders](./book-of-shaders) — *The Book of Shaders* adapted onto the shared `learn/` shell: the book's chapters as a live GLSL bench, plus Fractals, Image operations, Kernel convolutions, Filters, Dithering and quantization, and Domain warping written here where the book leaves stubs or nothing at all, and four worked examples that carry the critique they had to survive. Every shader in it is written here; the book is credited for the argument, never for code. One folder and one self-registering script per chapter; no build, no fetch, opens by double-click.
 
 ## Conventions
 Each top-level folder is a tool. Two kinds are supported:

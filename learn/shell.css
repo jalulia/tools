@@ -247,6 +247,15 @@ body[data-apparatus="open"] .draw .opt { display: none; }
 /* example strip */
 .strip { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
          padding: var(--s4) 0 0; scroll-snap-type: x proximity; }
+/* At scale the strip has to say how much of it there is. Chapter 05 carries
+   fourteen chips: at 1440 that is 2,235px of strip in a 1,100px column, and a
+   scroller with no scrollbar gives a reader one clipped chip as the only sign
+   that eleven more exist. Above 840 there is room to wrap and no reason to
+   hide anything; below it, wrapping fourteen chips would be seven rows of
+   furniture over the prose, so the scroller stays. */
+@media (min-width: 840px) {
+  .strip { flex-wrap: wrap; overflow-x: visible; row-gap: 6px; }
+}
 .strip::-webkit-scrollbar { display: none; }
 .strip button { flex: none; scroll-snap-align: start; background: none; cursor: pointer;
                 border: 1px solid var(--rule); padding: 5px 10px;
@@ -340,6 +349,17 @@ body[data-apparatus="open"] .draw .opt { display: none; }
 .par .val { margin-left: auto; font-family: var(--f-mach); font-size: var(--t-mach);
             color: var(--ink); }
 .par input[type="range"] { width: 100%; margin: 8px 0 0; accent-color: var(--ink); }
+
+/* A knob that the shader currently on the stage does not read. Found by the
+   real chapters: the lane is per EXAMPLE, so chapter 05's fourteen curves each
+   use the two or three of the three knobs they need, and a slider that does
+   nothing is worse than a slider that is not there — it teaches the wrong
+   thing about what a parameter is. The adapter reports which uniforms actually
+   resolved after each compile; this is the page saying so. */
+.par[data-inactive="true"] label,
+.par[data-inactive="true"] .val { color: var(--ink-3); }
+.par[data-inactive="true"] input[type="range"] { opacity: .4; }
+.par[data-inactive="true"] .val::after { content: " · unread"; color: var(--ink-3); }
 
 /* the four-rung ladder. The rung is named, because rungs 3 and 4 are where a
    shader stops being a demo and becomes a composition. */

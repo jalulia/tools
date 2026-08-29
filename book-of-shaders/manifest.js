@@ -24,7 +24,27 @@
    book's contents and was never given a chapter at all; it is kept, marked
    'original', and filed as an exploration rather than as canon.
 
-   SECTIONS are the book's own four groups, in the book's order.
+   CHECKPOINT 4 adds two more chapters and four worked examples.
+
+     20 Dithering and quantization   the book has no chapter on it at all
+     21 Domain warping               the chapter the book's own 13 promises
+
+   Both are 'original' and both sit in a fifth section, BEYOND THE BOOK, rather
+   than being filed into one of the book's four groups — because they are not
+   condensations of anything and the rail should say so without a footnote.
+
+   The sixth section, WORKED EXAMPLES, is a different kind of entry: four
+   finished pieces out of Julia's own repositories, ported to this stage, each
+   carrying the critique block it had to survive to be shown as canon. One is
+   status 'known-failure' and is asserted to fail.
+
+   LICENCE (2026-08-29). The upstream book is all-rights-reserved; it permits
+   linking and citation and not redistribution. No upstream .frag file exists
+   anywhere in this repository. Every shader here is written here, and the book
+   is credited as the source of the IDEA via source.kind 'adapted' plus a link.
+
+   SECTIONS are the book's own four groups, in the book's order, then two of
+   ours.
 
    COUNTS. entries.length is the only source of a count anywhere on any page —
    the masthead's "3 / 20", the rail, the contact sheet heading. Nothing
@@ -61,7 +81,11 @@ Shell.registerManifest({
     { id: 'generative',          title: 'Generative designs',  order: 3,
       note: 'Controlled disorder: hashes, noise, cells, octaves.' },
     { id: 'image-processing',    title: 'Image processing',    order: 4,
-      note: 'A shader with an image to read. Four of these five are ours.' }
+      note: 'A shader with an image to read. Four of these five are ours.' },
+    { id: 'beyond',              title: 'Beyond the book',     order: 5,
+      note: 'Two chapters the book does not have: what happens when a value runs out of levels, and what happens when a field warps its own input.' },
+    { id: 'worked-examples',     title: 'Worked examples',     order: 6,
+      note: 'Finished pieces with their reasoning attached — the read, the coupling, the pass order, and what would collapse if a pass were removed. One of them does not work, on purpose.' }
   ],
 
   entries: [
@@ -84,6 +108,14 @@ Shell.registerManifest({
     '16-image-operations',
     '17-kernel-convolutions',
     '18-filters',
-    '19-other-effects'
+    '19-other-effects',
+
+    '20-dithering-and-quantization',
+    '21-domain-warping',
+
+    'w1-seven-pass-band-chain',
+    'w2-depth-aware-dither',
+    'w3-hillshade-and-flow',
+    'w4-a-shader-that-does-not-link'
   ]
 });

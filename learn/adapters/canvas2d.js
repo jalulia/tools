@@ -246,7 +246,12 @@
       host = o.stage; bar = o.bar; entry = o.entry; example = o.example;
       P = {};
       ((o.entry.params) || []).concat((o.example && o.example.params) || [])
-        .forEach(function (p) { P[p.name] = p.value; });
+        .forEach(function (p) {
+          // prefer the value the panel is at over the declared default, so
+          // moving a slider and then switching example does not reset it
+          P[p.name] = (o.params && o.params[p.name] !== undefined)
+            ? o.params[p.name] : p.value;
+        });
       var shared = S.readSharedSource(o.query);
       buffer = shared || sourceOf(o.entry, o.example);
 
