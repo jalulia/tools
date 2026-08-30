@@ -790,6 +790,77 @@
 
   function renderStyle(st) { renderSheet(st.id); }
 
+  /* ck-e0 · the encyclopedia's new routes. This is a MINIMAL renderer: it
+     shows a page-per-route with a filtered contact sheet inside it. The
+     bespoke technique / atom / style / skill page templates are ck-e3+.
+     A route that matches nothing renders a page that says so out loud —
+     that is the whole point of "visible on purpose" as a state. */
+  function renderRoute(name, route, query) {
+    S.unmountAdapter();
+    S.unobservePreviews();
+    view.kind = 'route'; view.styleId = null; view.route = name;
+    S.current = null; S.currentExample = null; localExample = null;
+    S.markCurrent(); position();
+
+    var TITLES = {
+      techniques:   'Techniques',
+      atoms:        'Atoms',
+      styles:       'Styles',
+      explorations: 'Explorations',
+      sound:        'Sound',
+      symptoms:     'Symptoms',
+      unfiled:      'Unfiled',
+      skills:       'Skills',
+      couplings:    'Couplings'
+    };
+    var TAGLINES = {
+      techniques:   'A verb with a lesson. Every technique lists its instances.',
+      atoms:        'A noun with parameters. Substrate, process, texture, colour, type, engine, field, mark, voice, space, bus.',
+      styles:       'Six bounded houses. Palette, three type roles, texture vocabulary, engines, rules.',
+      explorations: 'Dated artefacts with provenance, status, faults and a technique stack.',
+      sound:        'A lane of the same practice. Six pieces doing compound causality before anyone asked.',
+      symptoms:     'Entries that overuse an atom. A visible gap, not a shame list.',
+      unfiled:      'Imported from the inventory without a ruling. Counted.',
+      skills:       'The fourteen skills that produce, critique or govern this work. Only competency rungs get pages.',
+      couplings:    'One driver, several consequences, one listen.'
+    };
+
+    var crumb = el('crumb');
+    if (crumb) crumb.textContent = TITLES[name] || name;
+
+    /* Styles and skills are declared in the manifest, not the entries[]. Their
+       lists come from a different place. */
+    var body;
+    if (route.kind === 'styles') {
+      var sts = S.manifest.styles || [];
+      body = sts.length ? '<ul class="route-list">' + sts.map(function (s) {
+        return '<li><a href="#/style/' + esc(s.id) + '"><b>' + esc(s.title) + '</b>' +
+          (s.summary ? '<span class="s">' + esc(s.summary) + '</span>' : '') + '</a></li>';
+      }).join('') + '</ul>' : '<p class="empty">No styles declared.</p>';
+    } else if (route.kind === 'skills') {
+      var sk = S.manifest.skills || [];
+      body = sk.length ? '<ul class="route-list">' + sk.map(function (s) {
+        var role = s.role ? '<span class="s">' + esc(s.role) + (s.rung ? ' · rung ' + s.rung : '') + '</span>' : '';
+        return '<li><a href="#/skills/' + esc(s.id) + '"><b>' + esc(s.title) + '</b>' + role + '</a></li>';
+      }).join('') + '</ul>' : '<p class="empty">No skills declared.</p>';
+    } else {
+      var list = S.entries.filter(route.filter || function () { return true; });
+      var counts = list.length + ' of ' + S.entries.length;
+      body = list.length
+        ? '<p class="meta"><span class="tags">' + counts + '</span></p>' +
+          '<div class="sheet"><div class="grid">' + list.map(cardHTML).join('') + '</div></div>'
+        : '<p class="empty">Nothing filed here yet. This page is empty on purpose — see BUILD-NOTES-ENCYC.md; the fold lands at ck-e1 and later checkpoints add the entities.</p>';
+    }
+
+    el('view').innerHTML =
+      '<p class="kicker">' + esc(S.manifest.title) + '</p>' +
+      '<h1>' + esc(TITLES[name] || name) + '</h1>' +
+      (TAGLINES[name] ? '<p class="lede">' + esc(TAGLINES[name]) + '</p>' : '') +
+      body;
+
+    S.observePreviews(el('view'));
+  }
+
   function renderLoading(e) {
     el('view').innerHTML = '<p class="empty">Loading ' + esc(e.id) + '…</p>';
   }
@@ -803,6 +874,10 @@
      changes — which is also what fills the sheet in as entry scripts land. */
   function onFilter() {
     if (view.kind === 'sheet' && el('view')) renderSheet(view.styleId);
+    if (view.kind === 'route' && el('view')) {
+      var r = S.ENCYCLOPEDIA_ROUTES && S.ENCYCLOPEDIA_ROUTES[view.route];
+      if (r) renderRoute(view.route, r, {});
+    }
     if (S.current) position();
   }
 
@@ -811,6 +886,7 @@
     renderEntry: renderEntry,
     renderSheet: renderSheet,
     renderStyle: renderStyle,
+    renderRoute: renderRoute,
     renderLoading: renderLoading,
     renderMissing: renderMissing,
     selectTab: selectTab,

@@ -85,14 +85,36 @@
 
     "entries": {
       "type": "array",
-      "minItems": 1,
-      "description": "Level 2 of the nav, in order. An item is EITHER a slug — meaning the entry registers itself from content/<slug>/entry.js, which the shell injects as a classic script — OR a complete entry object given inline, for the six-line entry that does not need a folder. Both forms may be mixed. entries.length is the only source of any count anywhere on any page.",
+      "description": "Level 2 of the nav, in order. An item is EITHER a slug — meaning the entry registers itself from content/<slug>/entry.js, which the shell injects as a classic script — OR a complete entry object given inline, for the six-line entry that does not need a folder. Both forms may be mixed. entries.length is the only source of any count anywhere on any page. An encyclopedia manifest may ship empty at ck-e0 — the front door then renders as a page that says so.",
       "items": {
         "oneOf": [
           { "$ref": "#/$defs/slug" },
           { "$ref": "#/$defs/entry" }
         ]
       }
+    },
+
+    "skills": {
+      "type": "array",
+      "description": "The fourteen skills that produce, critique or govern work in this archive. Only competency rungs get their own pages — an unbuilt rung is rendered empty, on purpose. An entity declares which skills touch it with `governed_by: [<skill-id>, ...]`; the shell resolves those against this list at ck-e8, and build-site.mjs fails the deploy on an unresolvable id.",
+      "items": {
+        "type": "object",
+        "required": ["id", "title"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/slug" },
+          "title": { "type": "string" },
+          "role": { "enum": ["produces", "critiques", "governs"] },
+          "rung": { "type": "integer", "minimum": 1, "maximum": 5 },
+          "note": { "type": "string" }
+        }
+      }
+    },
+
+    "redirects": {
+      "type": "object",
+      "description": "Old routes that resolve to a new hash in this manifest. ck-e1 uses this so a link to the pre-fold #/kls01-ki-landscape lands on the merged W1 exploration and a link to #/13-fbm lands on the fBm technique. Keys are old hash paths (without the leading #/); values are new hash paths (with #/).",
+      "additionalProperties": { "type": "string", "pattern": "^#/" }
     }
   },
 
@@ -101,8 +123,8 @@
     "aspect": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?/[0-9]+(\\.[0-9]+)?$" },
 
     "lane": {
-      "enum": ["glsl", "canvas2d", "svg", "fragment"],
-      "description": "PLAN §5.2: the lane is per entry and per example, not per tool. The strongest order-dependence example in the corpus is Canvas2D and the strongest coupling example is GLSL, and they belong in the same chapter."
+      "enum": ["glsl", "canvas2d", "svg", "fragment", "audio"],
+      "description": "PLAN §5.2: the lane is per entry and per example, not per tool. `audio` was added at ck-e0 (see team2/sound/SOUND-SECTION.md and REVIEW-SOUND.md §2.6): sound is a lane, not a parallel encyclopedia."
     },
 
     "isolation": {
@@ -111,8 +133,26 @@
     },
 
     "status": {
-      "enum": ["canonical", "exploration", "historical", "known-failure"],
-      "description": "Editorial standing, not build state. PLAN §2.7 adds known-failure: the tools ship graded failures from Julia's own repos as teaching material, and filing one as `exploration` would be a lie. `stub` is a separate boolean flag rendered as a mark, so the chip row stays one line, and `technical_reference` is a tag."
+      "enum": ["canonical", "exploration", "historical", "known-failure", "unsorted"],
+      "description": "Editorial standing, not build state. PLAN §2.7 adds known-failure: the tools ship graded failures from Julia's own repos as teaching material, and filing one as `exploration` would be a lie. ck-e0 adds `unsorted` for the 74-row inventory import that lands without a ruling — visible in `#/unfiled`, counted at the front door. `stub` is a separate boolean flag rendered as a mark, so the chip row stays one line, and `technical_reference` is a tag."
+    },
+
+    "entity": {
+      "enum": ["technique", "atom", "style", "exploration", "coupling"],
+      "description": "The five kinds of thing this archive holds (DOMAIN-MODEL §1). A technique is a verb with a lesson; an atom is a noun with parameters; a style is a bounded house; an exploration is a dated artefact; a coupling is an exploration that declares a `driver` and a `consequences[]` table (REVIEW-SOUND §2.2 — no new page-kind). Defaults to `exploration` on any entry that omits it, which is what every currently-shipped lens or chapter is."
+    },
+
+    "atom_kind": {
+      "enum": ["substrate", "process", "texture", "colour", "type", "engine", "field", "mark", "voice", "space", "bus"],
+      "description": "The eleven kinds an atom can be (DOMAIN-MODEL §1.2, RECOMMENDATION §5.3). Substrate, process and texture are siblings in that order — the answer to Julia's TEXTURE question rendered as column order rather than argued in a paragraph (DOMAIN-MODEL §4). `voice`, `space`, `bus` are the audio siblings of visual atoms and sit in the same grid."
+    },
+
+    "relation_kind": {
+      "enum": [
+        "shader-behind", "sound-behind", "technique-of", "variant-of", "source-of", "answers",
+        "shared-cause", "ancestor-of", "overuses"
+      ],
+      "description": "Relations declared on ONE side of an entry pair. scripts/index-tools.mjs --mirror writes the back-link, so a broken back-link is not something a human can create by hand. Six were shipped before ck-e0; three are added here: `sound-behind` is the mirror of `shader-behind` for the audio lane; `shared-cause` is the audio review's replacement for a parallel-vocabulary edge (REVIEW-SOUND §2.6); `ancestor-of` is the removal-test-with-a-URL edge (DOMAIN-MODEL §2.1). `overuses` is the symptoms relation (an entry that overuses an atom points at that atom)."
     },
 
     "source": {
@@ -142,9 +182,7 @@
       "properties": {
         "tool": { "$ref": "#/$defs/slug", "description": "Omit for a link inside this tool." },
         "entry": { "$ref": "#/$defs/slug" },
-        "relation": {
-          "enum": ["shader-behind", "technique-of", "variant-of", "source-of", "answers"]
-        },
+        "relation": { "$ref": "#/$defs/relation_kind" },
         "label": { "type": "string" },
         "href": { "type": "string", "description": "Optional explicit href; otherwise ../<tool>/#/<entry>." }
       }
@@ -419,7 +457,69 @@
         },
 
         "examples": { "type": "array", "items": { "$ref": "#/$defs/example" } },
-        "related": { "type": "array", "items": { "$ref": "#/$defs/related" } }
+        "related": { "type": "array", "items": { "$ref": "#/$defs/related" } },
+
+        "entity": { "$ref": "#/$defs/entity", "description": "What KIND of thing this record is. Defaults to `exploration` when omitted, which is what every currently-shipped lens or chapter is at ck-e0. A `technique` supplies a lesson and lists its instances; an `atom` carries `kind`, `params[]`, an engine file and a rendered swatch; a `style` is declared in the manifest's styles[] block (not here) and this value is used only for the six style landing entries; a `coupling` is an exploration with a `driver` + `consequences[]`." },
+        "kind": { "$ref": "#/$defs/atom_kind", "description": "Required when entity=atom. The eleven-kind list from DOMAIN-MODEL §1.2." },
+
+        "uses": {
+          "type": "array",
+          "description": "The atoms this entity is made of. Each item is an atom id, optionally with the parameters this instance chose — `{atom: 'paper-tooth', params: {tile: 180, blend: 'soft-light'}}`. build-site.mjs fails the deploy on an unresolvable atom id. This is the ladder: an exploration --uses--> atom <--produces-- technique is one join.",
+          "items": {
+            "oneOf": [
+              { "$ref": "#/$defs/slug" },
+              {
+                "type": "object",
+                "required": ["atom"],
+                "additionalProperties": false,
+                "properties": {
+                  "atom": { "$ref": "#/$defs/slug" },
+                  "params": { "type": "object", "additionalProperties": true },
+                  "note": { "type": "string" }
+                }
+              }
+            ]
+          }
+        },
+
+        "instance_of": {
+          "type": "array",
+          "description": "The technique stack of this exploration, ORDERED. The order is the content — see the `critique.pass_order` field, which reads the same list in prose. build-site.mjs fails the deploy on an id that does not resolve to a technique in this manifest.",
+          "items": { "$ref": "#/$defs/slug" }
+        },
+
+        "produces": {
+          "type": "array",
+          "description": "Required on a technique whose lesson has been reified into an atom (paper tooth, dot screen, Freeverb). Declared here; the atom page shows the reverse link automatically at ck-e3.",
+          "items": { "$ref": "#/$defs/slug" }
+        },
+
+        "governed_by": {
+          "type": "array",
+          "description": "The skill ids that produce, critique or govern this entity. Every one must resolve against manifest.skills[]. All 14 are tagged; only competency rungs render pages (an unbuilt rung is deliberately empty).",
+          "items": { "$ref": "#/$defs/slug" }
+        },
+
+        "driver": {
+          "type": "string",
+          "description": "Coupling entries only. One sentence naming the single shared cause that fans out into `consequences[]`. See REVIEW-SOUND §2.2 — a coupling is NOT a third page-kind, it is an ordinary entry that declares a driver plus a consequences table."
+        },
+        "consequences": {
+          "type": "array",
+          "description": "Coupling entries only. Rows of [consequence, mapping, source-citation]. The audio adapter's proto renders exactly this. `#/couplings` becomes a saved query over entries that carry this field.",
+          "items": {
+            "type": "array", "minItems": 2, "maxItems": 3,
+            "items": { "type": "string" }
+          }
+        },
+        "mute_test": {
+          "type": "string",
+          "description": "Coupling entries only. The removal test aimed across the medium boundary — mute it, does the picture still read? freeze it, does the sound still make sense?"
+        },
+        "headroom": {
+          "type": "string",
+          "description": "Audio entries only. Where the level decision lives in the graph, measured at the master output. Added at ck-e0 as the sixth test (REVIEW-SOUND §2.3)."
+        }
       }
     }
   }
