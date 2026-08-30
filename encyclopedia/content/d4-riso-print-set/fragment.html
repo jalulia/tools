@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Forced light, all three legs, inside the frame as well as outside it:
+     the meta, color-scheme on :root (in the style file) and an explicit
+     background on html AND body. -->
+<meta name="color-scheme" content="light">
+<title>D4 · Riso print artifacts</title>
+<!-- Exactly one style file. It owns this lens's families, its @font-face
+     rules and the token vocabulary its CSS is written against. -->
+<link rel="stylesheet" href="../_styles/riso-xerox.css">
+<style>
+/* ---------------------------------------------------------------------------
+   D4 · Riso print artifacts — ref circulus / now·then / light
+   This lens owns its CSS outright. In the monolith these rules lived in a
+   1,481-selector stylesheet shared with the chrome and twenty-six other
+   lenses, scoped only by an "#pr" prefix convention that nothing
+   enforced. Ownership here was established by matching every parsed rule in
+   the document against every element inside this lens's frame, so what is
+   below is exactly what the browser was applying and nothing else.
+   --------------------------------------------------------------------------- */
+html, body { background:#fff; }
+body {
+  /* The plate is composed at its design width. The host renders the fragment
+     at exactly this width and CSS-scales it; opened alone by double-click it
+     centres itself rather than reflowing, because a lens reflowed into a
+     different measure is a different composition. */
+  width:1100px; margin:0 auto;
+}
+.lens-frame {
+  /* The monolith's .lens-frame drew a 1px border. The chrome does not draw a
+     border round a specimen any more — it lays a mat and puts crop marks
+     outside the corners — so only the clipping and the paint containment
+     survive. The crop is load-bearing: T1's display O is genuinely cropped
+     by this edge. */
+  position:relative; overflow:hidden; background:#fff; contain:paint;
+}
+#pr{ --table:#cbc5b9; --table-2:#bdb6a9; --paper:#f2eee4; --paper-2:#ebe6da; --ultra:#2b3fd6; --orange:#ff5a1f;
+  --ink-p:#1c1a17; --mono-p:#3a3733; --shadow:20,16,10;
+  --f-heavy:"Archivo Black",Impact,sans-serif; --f-grot:"Archivo",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,monospace; --f-serif:"Fraunces",Georgia,serif;
+  position:relative; width:100%; aspect-ratio:1/0.64; overflow:hidden; isolation:isolate; container-type:inline-size;
+  background:
+    radial-gradient(120% 90% at 8% 4%, rgba(255,252,246,.42), rgba(255,252,246,0) 55%),
+    linear-gradient(160deg, var(--table) 0%, var(--table-2) 100%);
+  color:var(--ink-p); }
+#pr *{ box-sizing:border-box; }
+#pr .pr-obj{ position:absolute; background:var(--paper); overflow:hidden; color:var(--ink-p);
+  box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 .6px 1px rgba(var(--shadow),.28), 1.5px 3px 4px rgba(var(--shadow),.16), 4px 9px 14px -6px rgba(var(--shadow),.20); }
+#pr .pr-obj::after{ /* per-sheet stock texture (fibre) */
+  content:""; position:absolute; inset:0; pointer-events:none; opacity:.09; mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23p)'/></svg>"); }
+#pr .pr-mono{ font-family:var(--f-mono); font-weight:500; letter-spacing:.04em; color:var(--mono-p); }
+#pr .pr-grain{ position:absolute; inset:-6%; z-index:30; pointer-events:none; opacity:.14; mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"); }
+#pr .pr-corner{ position:absolute; z-index:25; font-size:.95cqw; color:#5a554d; letter-spacing:.08em; text-transform:uppercase; }
+#pr .pr-corner.tl{ left:2cqw; top:1.7cqw; }
+#pr .pr-corner.tr{ right:2cqw; top:1.7cqw; }
+#pr .pr-corner.bl{ left:2cqw; bottom:1.7cqw; }
+#pr .pr-corner.br{ right:2cqw; bottom:1.7cqw; }
+#pr .pr-corner .sw{ display:inline-block; width:.9cqw; height:.9cqw; vertical-align:-.1cqw; margin:0 .3cqw 0 .8cqw; }
+#pr .pr-poster{ left:5cqw; top:5cqw; width:27cqw; height:38.5cqw; transform:rotate(-1.2deg); z-index:3; padding:1.5cqw 1.6cqw 1.4cqw; }
+#pr .pr-poster .row{ display:flex; justify-content:space-between; align-items:baseline; font-size:.82cqw; }
+#pr .pr-poster .row .no{ color:var(--orange); }
+#pr .pr-poster .circ{ position:relative; width:19.6cqw; height:19.6cqw; margin:1.4cqw auto 0; }
+#pr .pr-poster .circ canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; border-radius:50%; }
+#pr .pr-poster .circ .ring{ position:absolute; inset:0; border-radius:50%; border:.16cqw solid var(--orange);
+  transform:translate(2px,-1.5px); mix-blend-mode:multiply; opacity:.95; }
+#pr .pr-poster .circ .cross{ position:absolute; left:50%; top:50%; width:1.6cqw; height:1.6cqw; transform:translate(-50%,-50%); }
+#pr .pr-poster .circ .cross::before, #pr .pr-poster .circ .cross::after{ content:""; position:absolute; background:var(--orange); mix-blend-mode:multiply; }
+#pr .pr-poster .circ .cross::before{ left:50%; top:0; width:1px; height:100%; }
+#pr .pr-poster .circ .cross::after{ top:50%; left:0; height:1px; width:100%; }
+#pr .pr-poster .title{ position:relative; margin:1.55cqw 0 0; font-family:var(--f-heavy); font-size:3.72cqw; line-height:.9; letter-spacing:-.025em; color:var(--ultra); white-space:nowrap; }
+#pr .pr-poster .title .mis{ position:absolute; left:0; top:0; color:var(--orange); transform:translate(2.5px,1.5px); mix-blend-mode:multiply; opacity:.55; z-index:-1; }
+#pr .pr-poster .meta{ margin-top:1.05cqw; display:grid; grid-template-columns:1fr auto; gap:.25cqw 1cqw; font-size:.86cqw; line-height:1.5; }
+#pr .pr-poster .meta b{ font-weight:600; color:var(--ultra); }
+#pr .pr-poster .foot{ position:absolute; left:1.6cqw; right:1.6cqw; bottom:1.2cqw; max-width:none; margin:0; border-top:1px solid var(--ultra); padding:.5cqw 0 0;
+  display:flex; justify-content:space-between; font-size:.75cqw; letter-spacing:.04em; text-transform:none; color:var(--mono-p); }
+#pr .pr-poster .foot .dots{ display:inline-flex; gap:.35cqw; align-items:center; }
+#pr .pr-poster .foot .dots i{ width:.7cqw; height:.7cqw; border-radius:50%; display:inline-block; }
+#pr .pr-ticket{ position:absolute; left:6.2cqw; top:47.4cqw; width:26cqw; height:9.6cqw; transform:rotate(2.2deg); z-index:4;
+  filter:drop-shadow(0 .5px .6px rgba(20,16,10,.24)) drop-shadow(1px 3px 4px rgba(20,16,10,.16)); }
+#pr .pr-ticket .in{ position:absolute; inset:0; background:var(--paper); overflow:hidden;
+  -webkit-mask:radial-gradient(circle at 66% 0, transparent .75cqw, #000 calc(.75cqw + .6px)),
+               radial-gradient(circle at 66% 100%, transparent .75cqw, #000 calc(.75cqw + .6px));
+  -webkit-mask-composite:source-in; mask:radial-gradient(circle at 66% 0, transparent .75cqw, #000 calc(.75cqw + .6px)),
+               radial-gradient(circle at 66% 100%, transparent .75cqw, #000 calc(.75cqw + .6px)); mask-composite:intersect; }
+#pr .pr-ticket .in::after{ content:""; position:absolute; inset:0; pointer-events:none; opacity:.09; mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23p)'/></svg>"); }
+#pr .pr-ticket .perf{ position:absolute; left:66%; top:.95cqw; bottom:.95cqw; width:0; border-left:1.5px dashed rgba(43,63,214,.55); }
+#pr .pr-ticket .perf::after{ content:""; position:absolute; left:-2.5px; top:0; bottom:0; width:1px; background:rgba(255,255,255,.55); }
+#pr .pr-ticket .perf::before{ content:""; position:absolute; left:.5px; top:0; bottom:0; width:1px; background:rgba(20,16,10,.10); }
+#pr .pr-ticket .main{ position:absolute; left:0; top:0; bottom:0; width:66%; padding:.85cqw 1cqw .8cqw 1.1cqw; }
+#pr .pr-ticket .main .hd{ display:flex; justify-content:space-between; align-items:baseline; }
+#pr .pr-ticket .main .hd .t{ font-family:var(--f-heavy); font-size:1.5cqw; letter-spacing:-.01em; color:var(--ultra); line-height:1; }
+#pr .pr-ticket .main .hd .s{ font-size:.72cqw; }
+#pr .pr-ticket .main .ln{ margin-top:.45cqw; font-size:.74cqw; line-height:1.45; }
+#pr .pr-ticket .main .bc{ position:absolute; left:1.1cqw; right:1cqw; bottom:.7cqw; display:flex; flex-direction:column; align-items:flex-start; }
+#pr .pr-ticket .main .bc svg{ height:2cqw; width:auto; display:block; }
+#pr .pr-ticket .main .bc .num{ font-size:.62cqw; letter-spacing:.2em; line-height:1; margin-top:.28cqw; white-space:nowrap; }
+#pr .pr-ticket .stub{ position:absolute; left:66%; right:0; top:0; bottom:0; padding:.9cqw 1.9cqw .8cqw 1.05cqw; display:flex; flex-direction:column; justify-content:space-between; }
+#pr .pr-ticket .stub .admit{ font-family:var(--f-heavy); font-size:1.42cqw; line-height:.95; letter-spacing:-.01em; color:var(--orange); position:relative; }
+#pr .pr-ticket .stub .admit .mis{ position:absolute; left:0; top:0; color:var(--ultra); transform:translate(-1.5px,1.5px); mix-blend-mode:multiply; opacity:.55; z-index:-1; }
+#pr .pr-ticket .stub .ser{ font-size:.66cqw; letter-spacing:.12em; }
+#pr .pr-ticket .stub .ser b{ display:block; font-weight:600; color:var(--ultra); font-size:.8cqw; letter-spacing:.06em; margin-top:.15cqw; }
+#pr .pr-ticket .stub .rot{ position:absolute; right:-1.35cqw; top:50%; transform:translateY(-50%) rotate(90deg); transform-origin:center; font-size:.56cqw; letter-spacing:.2em; color:#7b766d; white-space:nowrap; }
+#pr .pr-twoup{ left:36cqw; top:5cqw; width:42cqw; height:25cqw; transform:rotate(.7deg); z-index:2; }
+#pr .pr-twoup .pane{ position:absolute; top:0; bottom:0; width:50%; padding:1.4cqw 1.6cqw 3.4cqw; }
+#pr .pr-twoup .pane.l{ left:0; border-right:1px solid rgba(43,63,214,.5); }
+#pr .pr-twoup .pane.r{ right:0; }
+#pr .pr-twoup .pane .lab{ font-size:.78cqw; display:flex; gap:.9cqw; }
+#pr .pr-twoup .pane.r .lab{ justify-content:flex-end; }
+#pr .pr-twoup .pane .lab .ord{ color:var(--orange); }
+#pr .pr-twoup .pane .big{ position:absolute; left:1.35cqw; bottom:3.6cqw; margin:0; font-family:var(--f-heavy); font-size:6.3cqw; line-height:.86; letter-spacing:-.035em; }
+#pr .pr-twoup .pane .big .k{ position:relative; z-index:1; }
+#pr .pr-twoup .pane .big .m{ position:absolute; left:0; top:0; mix-blend-mode:multiply; opacity:.42; transform:translate(2.5px,-2px); }
+#pr .pr-twoup .pane.l .big .k{ color:var(--ultra); }
+#pr .pr-twoup .pane.l .big .m{ color:var(--orange); }
+#pr .pr-twoup .pane.r .big .k{ color:var(--orange); }
+#pr .pr-twoup .pane.r .big .m{ color:var(--ultra); transform:translate(-2px,2px); }
+#pr .pr-twoup .pane .sub{ position:absolute; left:1.6cqw; right:1.6cqw; top:3.9cqw; font-family:var(--f-grot); font-weight:500; font-size:.9cqw; line-height:1.4; color:#4a4640; max-width:15cqw; }
+#pr .pr-twoup .pane.r .sub{ text-align:right; left:auto; }
+#pr .pr-twoup .stat{ position:absolute; left:1.6cqw; right:1.6cqw; bottom:2.05cqw; display:flex; justify-content:space-between; font-size:.8cqw; border-top:1px solid rgba(28,26,23,.5); padding-top:.45cqw; }
+#pr .pr-twoup .stat .ar{ color:var(--orange); }
+#pr .pr-twoup .ticks-b{ position:absolute; left:1.6cqw; right:1.6cqw; bottom:0; height:1.55cqw; }
+#pr .pr-twoup .ticks-b svg{ width:100%; height:100%; display:block; }
+#pr .pr-twoup .ticks-l{ position:absolute; left:0; top:1.6cqw; bottom:3.9cqw; width:1.3cqw; }
+#pr .pr-twoup .ticks-l svg{ position:absolute; left:0; top:0; height:100%; width:100%; display:block; }
+#pr .pr-twoup .badge{ position:absolute; left:50%; top:1.1cqw; width:8.4cqw; height:8.4cqw; transform:translateX(-50%) rotate(-8deg); z-index:3; }
+#pr .pr-twoup .badge svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+#pr .pr-twoup .badge svg.m{ transform:translate(2.5px,2px); mix-blend-mode:multiply; }
+#pr .pr-twoup .badge .tx{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--paper);
+  font-family:var(--f-heavy); font-size:1.75cqw; letter-spacing:.02em; line-height:1; transform:rotate(8deg); }
+#pr .pr-twoup .badge .tx small{ font-family:var(--f-mono); font-weight:500; font-size:.6cqw; letter-spacing:.18em; margin-top:.25cqw; }
+#pr .pr-card{ width:22cqw; height:13.4cqw; padding:1.2cqw 1.3cqw 1.15cqw; }
+#pr .pr-card-f{ left:40.5cqw; top:35.2cqw; transform:rotate(-2.4deg); z-index:5; }
+#pr .pr-card-b{ left:53cqw; top:43.6cqw; transform:rotate(3.4deg); z-index:6; }
+#pr .pr-card-f .word{ position:relative; font-family:var(--f-serif); font-style:italic; font-weight:400; font-variation-settings:"opsz" 144; font-size:5.2cqw; line-height:.9; letter-spacing:-.02em; color:var(--ultra); margin:.4cqw 0 0 -.15cqw; }
+#pr .pr-card-f .word .m{ position:absolute; left:0; top:0; color:var(--orange); mix-blend-mode:multiply; opacity:.5; transform:translate(2px,1.5px); z-index:-1; }
+#pr .pr-card-f .word sup{ font-family:var(--f-mono); font-style:normal; font-size:.62cqw; letter-spacing:.14em; vertical-align:top; position:relative; top:.6cqw; margin-left:.4cqw; color:var(--mono-p); }
+#pr .pr-card-f .spec{ position:absolute; left:1.3cqw; bottom:3.6cqw; }
+#pr .pr-card-f .spec .strip{ display:flex; width:9.6cqw; height:.55cqw; position:relative; }
+#pr .pr-card-f .spec .strip i{ flex:1; opacity:.82; }
+#pr .pr-card-f .spec .strip::after{ content:""; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(112deg, rgba(255,255,255,0) 22%, rgba(255,255,255,.55) 40%, rgba(255,255,255,0) 52%, rgba(255,255,255,.28) 70%, rgba(255,255,255,0) 82%);
+  box-shadow:0 -1px 0 rgba(255,255,255,.5) inset, 0 1px 0 rgba(0,0,0,.18) inset; }
+#pr .pr-card-f .spec .lbl{ display:flex; justify-content:space-between; width:9.6cqw; font-size:.58cqw; letter-spacing:.06em; margin-top:.3cqw; }
+#pr .pr-card-f .spec .lbl span{ text-align:center; flex:1; }
+#pr .pr-card-f .nm{ position:absolute; left:1.3cqw; bottom:1.15cqw; font-size:.66cqw; line-height:1.5; }
+#pr .pr-card-f .nm b{ font-weight:600; color:var(--ink-p); }
+#pr .pr-card-f .bc{ position:absolute; right:1.3cqw; bottom:1.15cqw; height:2.1cqw; display:flex; flex-direction:column; align-items:flex-end; }
+#pr .pr-card-f .bc svg{ height:1.55cqw; width:auto; display:block; }
+#pr .pr-card-f .bc span{ font-size:.55cqw; letter-spacing:.14em; margin-top:.22cqw; }
+#pr .pr-card-f .tick{ position:absolute; right:1.3cqw; top:1.35cqw; font-size:.62cqw; letter-spacing:.14em; }
+#pr .pr-card-b .lines{ font-size:.74cqw; line-height:1.72; letter-spacing:.05em; }
+#pr .pr-card-b .lines b{ font-weight:600; color:var(--ultra); }
+#pr .pr-card-b .lines .dim{ color:#8a857c; }
+#pr .pr-card-b .rule{ position:absolute; left:1.3cqw; right:1.3cqw; top:6.75cqw; height:0; border-top:1px solid rgba(43,63,214,.55); }
+#pr .pr-card-b .plus{ position:absolute; right:1.25cqw; bottom:.95cqw; width:2.1cqw; height:2.1cqw; }
+#pr .pr-card-b .plus svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+#pr .pr-card-b .plus svg.m{ transform:translate(-1.5px,1.5px); mix-blend-mode:multiply; opacity:.6; }
+#pr .pr-card-b .foot{ position:absolute; left:1.3cqw; bottom:1.1cqw; max-width:none; margin:0; padding:0; border:0; display:block; font-size:.62cqw; letter-spacing:.12em; text-transform:none; color:#8a857c; }
+#pr .pr-chit{ left:83cqw; top:6.4cqw; width:12cqw; height:16.6cqw; transform:rotate(1.6deg); z-index:2; padding:1cqw 1cqw .9cqw; }
+#pr .pr-chit .hd{ font-size:.66cqw; letter-spacing:.14em; display:flex; justify-content:space-between; }
+#pr .pr-chit .sw{ margin-top:.8cqw; height:4.6cqw; position:relative; }
+#pr .pr-chit .sw canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+#pr .pr-chit .sw i.mis{ position:absolute; inset:auto 0 -.16cqw 0; height:.16cqw; opacity:.85; mix-blend-mode:multiply; }
+#pr .pr-chit .nm{ font-size:.62cqw; letter-spacing:.1em; margin-top:.5cqw; display:flex; justify-content:space-between; }
+#pr .pr-chit .nm b{ font-weight:600; }
+#pr .pr-note{ position:absolute; z-index:8; font-size:.72cqw; letter-spacing:.1em; text-transform:uppercase; color:#5a554d; }
+#pr .pr-note::before{ content:""; position:absolute; left:-2.4cqw; top:55%; width:1.9cqw; height:0; border-top:1px solid #5a554d; }
+#pr .pr-note.n1{ left:36.4cqw; top:33.2cqw; }
+#pr .pr-note.n2{ left:83.6cqw; top:26.6cqw; }
+#pr .pr-note.n3{ left:36.4cqw; top:56.4cqw; }
+#pr .pr-note.n2::before{ left:-2.4cqw; }
+.foot{ max-width:var(--maxw); margin:40px auto 0; padding: 30px var(--pad) 80px; border-top:1px solid var(--line);
+  display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  font-family:var(--f-mono); font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-3); }
+</style>
+</head>
+<body>
+<div class="lens-frame">
+<div id="pr">
+
+      <!-- corner labels -->
+      <span class="pr-mono pr-corner tl">Print · Set 02</span>
+      <span class="pr-mono pr-corner tr">Riso 2C</span>
+      <span class="pr-mono pr-corner bl">Ultramarine<span class="sw" style="background:#2b3fd6"></span>2B3FD6 &nbsp;·&nbsp; Orange<span class="sw" style="background:#ff5a1f"></span>FF5A1F</span>
+      <span class="pr-mono pr-corner br">D4 · 3 objects · flat lay</span>
+
+      <!-- 1) poster -->
+      <div class="pr-obj pr-poster">
+        <div class="pr-mono row"><span>CIRCULUS — EXHIBITION</span><span class="no">№ 01 / A2</span></div>
+        <div class="circ">
+          <canvas data-seed="17" data-dark=".26" data-contrast="1.5"></canvas>
+          <span class="ring"></span>
+          <span class="cross"></span>
+        </div>
+        <h2 class="title"><span class="mis" aria-hidden="true">CIRCULUS</span>CIRCULUS</h2>
+        <div class="pr-mono meta">
+          <span>12 SEP — 30 NOV 2026</span><span><b>HALL B</b></span>
+          <span>PIER 9 · EAST DOCK · N1</span><span><b>OPEN 10—18</b></span>
+        </div>
+        <div class="pr-mono foot">
+          <span class="dots"><i style="background:#2b3fd6"></i><i style="background:#ff5a1f"></i>&nbsp;2C · 350 GSM</span>
+          <span>EDITION 250</span>
+        </div>
+      </div>
+
+      <!-- 1b) ticket -->
+      <div class="pr-ticket">
+        <div class="in">
+          <div class="main">
+            <div class="hd"><span class="t">CIRCULUS</span><span class="pr-mono s">GATE 3</span></div>
+            <div class="pr-mono ln">SAT 12 SEP 2026 · 19:00<br>HALL B · ROW F · SEAT 14</div>
+            <div class="bc"><svg class="pr-barcode" data-seed="41" data-bars="34" aria-hidden="true"></svg><span class="pr-mono num">4 002127 000418</span></div>
+          </div>
+          <div class="perf"></div>
+          <div class="stub">
+            <div class="admit"><span class="mis" aria-hidden="true">ADMIT<br>ONE</span>ADMIT<br>ONE</div>
+            <div class="pr-mono ser">SERIAL<b>004127</b></div>
+            <span class="pr-mono rot">KEEP THIS STUB</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2) two-up -->
+      <div class="pr-obj pr-twoup">
+        <div class="pane l">
+          <div class="pr-mono lab"><span>PANEL A</span><span class="ord">01</span></div>
+          <p class="sub">The moment as printed. Ultramarine, one pass, drum 01.</p>
+          <h2 class="big"><span class="m" aria-hidden="true">NOW</span><span class="k">NOW</span></h2>
+        </div>
+        <div class="pane r">
+          <div class="pr-mono lab"><span>PANEL B</span><span class="ord">02</span></div>
+          <p class="sub">The moment as remembered. Orange, second pass, drum 02.</p>
+          <h2 class="big"><span class="m" aria-hidden="true">THEN</span><span class="k">THEN</span></h2>
+        </div>
+        <div class="badge">
+          <svg class="pr-star m" viewBox="0 0 100 100" data-fill="#2b3fd6" aria-hidden="true"></svg>
+          <svg class="pr-star" viewBox="0 0 100 100" data-fill="#ff5a1f" aria-hidden="true"></svg>
+          <div class="tx">RISO<small>2 COLOUR</small></div>
+        </div>
+        <div class="pr-mono stat"><span>1972 <span class="ar">→</span> 2026</span><span>2 COLOURS</span><span>350 GSM</span><span>148 × 105 · TWO-UP</span></div>
+        <div class="ticks-b"><svg class="pr-ticks" data-n="80" data-labels="1" aria-hidden="true"></svg></div>
+        <div class="ticks-l"><svg class="pr-ticks" data-n="30" data-vertical="1" aria-hidden="true"></svg></div>
+      </div>
+
+      <!-- 3) business card front / back -->
+      <div class="pr-obj pr-card pr-card-f">
+        <span class="pr-mono tick">FRONT · 85 × 55</span>
+        <div class="word"><span class="m" aria-hidden="true">light</span>light<sup>studio</sup></div>
+        <div class="spec">
+          <div class="strip">
+            <i style="background:#5f4f9c"></i><i style="background:#3752b8"></i><i style="background:#4a8f66"></i><i style="background:#c9a93f"></i><i style="background:#d9703a"></i><i style="background:#bf4a3f"></i>
+          </div>
+          <div class="pr-mono lbl"><span>V</span><span>B</span><span>G</span><span>Y</span><span>O</span><span>R</span></div>
+        </div>
+        <div class="pr-mono nm"><b>380 — 700 nm</b><br>visible · printed</div>
+        <div class="bc"><svg class="pr-barcode" data-seed="9" data-bars="26" aria-hidden="true"></svg><span class="pr-mono">LT 0093 22</span></div>
+      </div>
+
+      <div class="pr-obj pr-card pr-card-b">
+        <div class="pr-mono lines">
+          <b>LIGHT STUDIO</b><br>
+          hello@light.studio<br>
+          +44 20 7946 0113<br>
+          <span class="dim">9 Pier Street · London N1</span>
+        </div>
+        <div class="rule"></div>
+        <div class="pr-mono lines" style="position:absolute;left:1.3cqw;top:7.2cqw;">
+          <span class="dim">Photography · Colour · Print</span><br>
+          <span class="dim">Mon–Fri · by appointment</span>
+        </div>
+        <span class="pr-mono foot">BACK · RISO 2C</span>
+        <div class="plus">
+          <svg class="m" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="#2b3fd6" stroke-width="1.6"/><path d="M12 2v20M2 12h20" stroke="#2b3fd6" stroke-width="1.6"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="#ff5a1f" stroke-width="1.6"/><path d="M12 2v20M2 12h20" stroke="#ff5a1f" stroke-width="1.6"/></svg>
+        </div>
+      </div>
+
+      <!-- ink drawdown chit -->
+      <div class="pr-obj pr-chit">
+        <div class="pr-mono hd"><span>DRAWDOWN</span><span>02</span></div>
+        <div class="sw"><canvas class="pr-draw" data-ink="43,63,214" data-seed="3"></canvas><i class="mis" style="background:#ff5a1f"></i></div>
+        <div class="pr-mono nm"><b>ULTRA</b><span>DRUM 01</span></div>
+        <div class="sw"><canvas class="pr-draw" data-ink="255,90,31" data-seed="8"></canvas><i class="mis" style="background:#2b3fd6"></i></div>
+        <div class="pr-mono nm"><b>ORANGE</b><span>DRUM 02</span></div>
+      </div>
+
+      <!-- table annotations -->
+      <span class="pr-mono pr-note n1">02 — two-up · a6 pair</span>
+      <span class="pr-mono pr-note n2">ink chit</span>
+      <span class="pr-mono pr-note n3">03 — cards · 85 × 55</span>
+
+      <div class="pr-grain"></div>
+    </div>
+</div>
+
+<!-- Shared engines. Reuse, don't redefine: the monolith carried fifteen
+     copies of mulberry32, three of the field builder, six of the dot screen
+     and two of the paper tooth. Classic <script src>, relative, so this
+     document opens by double-click with no server and no build step. -->
+<script src="../_engines/raster.js"></script>
+<script src="../_engines/rng.js"></script>
+<script src="../_engines/field.js"></script>
+<script src="../_engines/halftone.js"></script>
+<script src="../_engines/scene.js"></script>
+<script>
+
+(function(){
+  'use strict';
+  // ---------- namespaced print engine ----------
+  const PR = {};
+
+  PR.mulberry = Comp.mulberry32;
+
+  // organic grayscale field + spherical shading (so the circle reads as an object, not noise)
+  PR.buildField = function(W,H,rnd,darkBias,contrast){
+    const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+    x.fillStyle='#8a8a8a'; x.fillRect(0,0,W,H);
+    const N=46;
+    for(let i=0;i<N;i++){
+      const px=rnd()*W, py=rnd()*H, r=(0.08+rnd()*0.42)*Math.max(W,H);
+      const light = rnd() > (0.5+darkBias);
+      const a = 0.05+rnd()*0.16;
+      const g=x.createRadialGradient(px,py,0,px,py,r);
+      const col = light? '245,245,245':'10,10,10';
+      g.addColorStop(0,'rgba('+col+','+a+')'); g.addColorStop(1,'rgba('+col+',0)');
+      x.fillStyle=g; x.beginPath(); x.arc(px,py,r,0,7); x.fill();
+    }
+    x.globalAlpha=.05;
+    for(let i=0;i<70;i++){ x.strokeStyle= rnd()<.5?'#000':'#fff'; x.lineWidth=1+rnd()*2;
+      const yy=rnd()*H; x.beginPath(); x.moveTo(0,yy); x.lineTo(W, yy+(rnd()-.5)*H*0.5); x.stroke(); }
+    x.globalAlpha=1;
+    const img=x.getImageData(0,0,W,H), d=img.data;
+    // light from top-left, sphere normal → lambert + terminator falloff
+    const Lx=-0.52, Ly=-0.58, Lz=0.63, cx=W/2, cy=H/2, R=Math.min(W,H)/2;
+    for(let yy=0; yy<H; yy++) for(let xx=0; xx<W; xx++){
+      const i=(yy*W+xx)*4;
+      const nx=(xx-cx)/R, ny=(yy-cy)/R; const dd=nx*nx+ny*ny;
+      const nz=Math.sqrt(Math.max(0,1-dd));
+      let lam=Math.max(0, nx*Lx+ny*Ly+nz*Lz);
+      lam=Math.pow(lam,1.35);
+      // structured object: lambert body + a tight specular (the lamp reflected in a glossy sphere) + a thin rim of bounce light
+      // on the shadow side, so the terminator reads as a lit sphere, not a vignette
+      const spec=Math.pow(Math.max(0, nx*-0.42+ny*-0.50+nz*0.76),42)*0.9;
+      const rim=Math.pow(Math.max(0,dd-0.72)/0.28,2.2)*(nx*0.5+ny*0.6>0?0.34:0.06);
+      const shade=Math.min(1,0.10+0.90*lam+spec+rim);
+      let v=d[i]*0.42 + shade*255*0.58;
+      v=(v-128)*contrast+128; v+=(rnd()-.5)*16; v=Math.max(0,Math.min(255,v));
+      d[i]=d[i+1]=d[i+2]=v;
+    }
+    x.putImageData(img,0,0);
+    return x.getImageData(0,0,W,H);
+  };
+
+  // true halftone: rotated screen, variable-radius round dots, ink on paper, clipped to a circle
+  PR.halftone = function(canvas, cssW, cssH, seed, darkBias, contrast, ink, paper){
+    const dpr=Comp.dpr(2), W=Math.round(cssW*dpr), H=Math.round(cssH*dpr);
+    if(W<4||H<4) return;
+    canvas.width=W; canvas.height=H;
+    const rnd=PR.mulberry(Comp.spread(seed));
+    const field=PR.buildField(W,H,rnd,darkBias,contrast);
+    const samp=Comp.sampler(field,W,H,1);
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+    ctx.save();
+    /* the screen is clipped to the sphere: outside it there is no plate at
+       all, which is why the dots stop rather than fade. */
+    ctx.beginPath(); ctx.arc(W/2,H/2,Math.min(W,H)/2,0,6.2832); ctx.clip();
+    ctx.fillStyle=paper; ctx.fillRect(0,0,W,H);
+    Comp.dotScreen(ctx, W, H, samp, { ink:ink, angle:22.5, cell:5*dpr/2, gain:0.72, min:0.18 });
+    ctx.restore();
+  };
+
+  // barcode: seeded module widths, EAN-like guard bars, crisp edges
+  PR.barcode = function(svg, seed, nBars){
+    const rnd=PR.mulberry((seed*747796405+2891336453)>>>0);
+    const H=40; let x=0; const parts=[];
+    const bar=(w,tall)=>{ parts.push('<rect x="'+x+'" y="0" width="'+w+'" height="'+(tall?H:H-5)+'"/>'); x+=w; };
+    const gap=(w)=>{ x+=w; };
+    const guard=()=>{ bar(1,true); gap(1); bar(1,true); };
+    guard(); gap(1);
+    const half=Math.floor(nBars/2);
+    for(let i=0;i<nBars;i++){
+      if(i===half){ gap(1); bar(1,true); gap(1); bar(1,true); gap(1); }
+      const wv=[1,1,1,2,2,3,4][Math.floor(rnd()*7)]; const gv=[1,1,2,2,3][Math.floor(rnd()*5)];
+      bar(wv,false); gap(gv);
+    }
+    gap(1); guard();
+    svg.setAttribute('viewBox','0 0 '+x+' '+H);
+    svg.setAttribute('preserveAspectRatio','none');
+    svg.setAttribute('shape-rendering','crispEdges');
+    svg.innerHTML='<g fill="#1c1a17">'+parts.join('')+'</g>';
+  };
+
+  // dimension ticks: minor / mid / major with mono numerals
+  PR.ticks = function(svg, n, vertical, labels){
+    const u=4, H=12; const w=n*u;
+    const parts=[];
+    for(let i=0;i<=n;i++){
+      const x=i*u; const major=i%10===0, mid=i%5===0;
+      const h=major?8:mid?5.2:3;
+      parts.push('<line x1="'+x+'" y1="'+H+'" x2="'+x+'" y2="'+(H-h)+'"/>');
+      if(labels && major && i>0 && i<n){ parts.push('<text x="'+(x+1.2)+'" y="'+(H-8.6)+'" font-size="3.1" font-family="JetBrains Mono, monospace" font-weight="500" letter-spacing=".2" fill="#3a3733" stroke="none">'+i+'</text>'); }
+    }
+    parts.push('<line x1="0" y1="'+H+'" x2="'+w+'" y2="'+H+'"/>');
+    const g='<g stroke="#2b3fd6" stroke-width=".55" stroke-linecap="butt" fill="none">'+parts.join('')+'</g>';
+    if(vertical){
+      // rotate: ticks along a vertical left edge, pointing right
+      svg.setAttribute('viewBox','0 0 '+H+' '+w);
+      svg.setAttribute('preserveAspectRatio','none');
+      // map (x,y) -> (H-y, x): baseline lands on x=0 (left edge), ticks point right
+      svg.innerHTML='<g transform="matrix(0,1,-1,0,'+H+',0)">'+g+'</g>';
+    } else {
+      svg.setAttribute('viewBox','0 0 '+w+' '+H);
+      svg.setAttribute('preserveAspectRatio','none');
+      svg.innerHTML=g;
+    }
+  };
+
+  // INK DRAWDOWN: a swatch of ink swept across the chit with a blade — a dense bead at the start, full film, then the film
+  // starves toward the tail with drag streaks along the sweep; grain and pinholes from the paper tooth
+  PR.drawdown = function(cv, ink, seed){
+    const r=cv.getBoundingClientRect(); const dpr=Comp.dpr(2), W=Math.round((r.width||120)*dpr), H=Math.round((r.height||46)*dpr);
+    if(W<4||H<4) return; cv.width=W; cv.height=H; const x=cv.getContext('2d'); const rnd=PR.mulberry(seed*7919+11);
+    x.fillStyle='#f2eee4'; x.fillRect(0,0,W,H);
+    // streak field: per-row drag noise (blade chatter), slowly varying along y
+    const rows=new Float32Array(H); let v=0; for(let y=0;y<H;y++){ v+=(rnd()-.5)*.35; v*=.9; rows[y]=v; }
+    const img=x.getImageData(0,0,W,H), d=img.data; const [R,G,B]=ink.split(',').map(Number);
+    const beadEnd=W*.06, fullEnd=W*.50, tailEnd=W*.98;
+    for(let y=0;y<H;y++){ const edge=Math.min(y,H-1-y)/H; const edgeFade=Math.min(1,edge*14); // blade doesn't reach the very edges
+      for(let xx=0;xx<W;xx++){ const i=(y*W+xx)*4; let a;
+        if(xx<beadEnd) a=1.0+ (beadEnd-xx)/beadEnd*.12;                       // ink bead: over-full, darker
+        else if(xx<fullEnd) a=1.0 - (xx-beadEnd)/(fullEnd-beadEnd)*.06;        // full film
+        else { const t=(xx-fullEnd)/(tailEnd-fullEnd); a=Math.pow(Math.max(0,1-t),1.6)*.94 + rows[y]*(.35+t*.5); } // starving tail + streaks
+        a*= edgeFade; a+= (rnd()-.5)*.09;                                        // tooth grain
+        if(rnd()<.006*(xx/W)) a*=.2;                                             // pinholes toward the tail
+        a=Math.max(0,Math.min(1.12,a)); const k=Math.min(1,a);
+        // dense bead darkens beyond the ink colour (film thickness)
+        const dk=Math.max(0,a-1)*2.2;
+        d[i]  = d[i]*(1-k)+R*k*(1-dk); d[i+1]=d[i+1]*(1-k)+G*k*(1-dk); d[i+2]=d[i+2]*(1-k)+B*k*(1-dk);
+      } }
+    x.putImageData(img,0,0);
+    // the blade's start line: a crisp vertical edge where the ink was laid down
+    x.fillStyle='rgba(0,0,0,.14)'; x.fillRect(0,0,Math.max(1,dpr*.6),H);
+  };
+
+  // 12-point starburst
+  PR.star = function(svg, points, R, r, fill){
+    const pts=[];
+    for(let i=0;i<points*2;i++){ const a=(Math.PI/points)*i - Math.PI/2; const rad=i%2===0?R:r; pts.push((50+Math.cos(a)*rad).toFixed(2)+','+(50+Math.sin(a)*rad).toFixed(2)); }
+    svg.innerHTML='<polygon points="'+pts.join(' ')+'" fill="'+fill+'"/>';
+  };
+
+  PR.lastW=0;
+  PR.run = function(){
+    const root=document.getElementById('pr'); if(!root) return;
+    root.querySelectorAll('svg.pr-barcode').forEach(s=>PR.barcode(s,+s.dataset.seed,+s.dataset.bars));
+    root.querySelectorAll('svg.pr-ticks').forEach(s=>PR.ticks(s,+s.dataset.n,!!s.dataset.vertical,!!s.dataset.labels));
+    root.querySelectorAll('svg.pr-star').forEach(s=>PR.star(s,12,49,40,s.dataset.fill));
+    const w=root.getBoundingClientRect().width;
+    if(Math.abs(w-PR.lastW)<2) return; PR.lastW=w;
+    root.querySelectorAll('.pr-poster canvas').forEach(cv=>{
+      const rect=cv.getBoundingClientRect();
+      PR.halftone(cv, rect.width, rect.height, +cv.dataset.seed, +cv.dataset.dark, +cv.dataset.contrast, '#2b3fd6', '#f2eee4');
+    });
+    root.querySelectorAll('canvas.pr-draw').forEach(cv=>PR.drawdown(cv, cv.dataset.ink, +cv.dataset.seed));
+  };
+  Comp.paint(PR.run, { debounce: 160, threshold: 0 });
+  window.PRLens=PR;
+})();
+
+</script>
+<!-- The one contract a fragment owes the host: height and ready over
+     postMessage, and a real stop on lens:pause. -->
+<script src="../../../learn/fragment-boot.js"></script>
+</body>
+</html>

@@ -101,8 +101,12 @@ export function verifyManifests(root, { toolDirs, schemaFile, quiet = false } = 
     }
     verifyOne(m, schema, say, context, root);
     if (!quiet) {
+      const uns = m.manifest.__unsortedCount;
+      const skillsPart = (m.manifest.skills || []).length ? `, ${(m.manifest.skills || []).length} skills` : '';
+      const unsortedPart = uns ? `, ${uns} unsorted` : '';
       console.log(`  ✔ ${where} — ${m.entries.length} entries, ` +
-        `${(m.manifest.sections || []).length} sections, ${(m.manifest.styles || []).length} styles`);
+        `${(m.manifest.sections || []).length} sections, ${(m.manifest.styles || []).length} styles` +
+        skillsPart + unsortedPart);
     }
   }
   return problems;
@@ -259,6 +263,105 @@ function verifyOne({ manifest, dir, entries, missingScripts }, schema, say, load
     }
   }
 
+  /* 7c. ck-e0 · the encyclopedia's entity-model gates -------------------
+     Every gate here degrades to a no-op when the manifest has none of the
+     new fields, so the pre-encyclopedia tools (book-of-shaders, components)
+     pass unchanged. */
+  const skills = new Set((manifest.skills || []).map((s) => s.id));
+  const techniqueIds = new Set(entries.filter((e) => e.entity === 'technique').map((e) => e.id));
+  const atomIds = new Set(entries.filter((e) => e.entity === 'atom').map((e) => e.id));
+  for (const e of entries) {
+    // every atom carries a kind
+    if (e.entity === 'atom' && !e.kind) {
+      say(`atom "${e.id}" has no kind — declare one of substrate/process/texture/colour/type/engine/field/mark/voice/space/bus`);
+    }
+    // a canonical technique with instances must state read + coupling + pass_order.
+    // `stub: true` is the escape hatch: a stub can be canonical AND unfinished
+    // (schema.status doc). ck-e3 lifts each stub off by carrying the worked
+    // example's critique block up to its parent technique.
+    if (e.entity === 'technique' && e.status === 'canonical' && !e.stub) {
+      const instances = entries.filter((x) => (x.instance_of || []).includes(e.id));
+      if (instances.length > 0) {
+        const c = e.critique || {};
+        for (const field of ['reads_as', 'coupling', 'pass_order']) {
+          if (!c[field]) {
+            say(`technique "${e.id}" is canonical and has ${instances.length} instance(s) but its critique block has no ${field}`);
+          }
+        }
+      }
+    }
+    // governed_by resolves against manifest.skills
+    for (const sid of e.governed_by || []) {
+      if (!skills.has(sid)) {
+        say(`entry "${e.id}": governed_by "${sid}" is not in manifest.skills`);
+      }
+    }
+    // uses[] resolves to an atom id in THIS manifest
+    for (const u of e.uses || []) {
+      const id = typeof u === 'string' ? u : (u && u.atom);
+      if (!id) { say(`entry "${e.id}": uses[] item has no atom id`); continue; }
+      if (!atomIds.has(id)) {
+        say(`entry "${e.id}": uses "${id}" — no atom with that id in this manifest`);
+      }
+    }
+    // instance_of[] resolves to a technique id in THIS manifest
+    for (const tid of e.instance_of || []) {
+      if (!techniqueIds.has(tid)) {
+        say(`entry "${e.id}": instance_of "${tid}" — no technique with that id in this manifest`);
+      }
+    }
+  }
+
+  /* 7d. shipped code must not fetch / use CDN / read contentDocument /
+     use srcdoc. This is the deploy-under-file:// contract, and it applies
+     to every entry.js and every fragment.html we ship. A grep on the
+     content folder is the cheapest possible enforcement of a promise the
+     tool depends on. */
+  const contentDir7d = join(dir, 'content');
+  if (existsSync(contentDir7d)) {
+    const BAD = [
+      { pat: /\bfetch\s*\(/,           name: 'fetch(' },
+      { pat: /XMLHttpRequest/,          name: 'XMLHttpRequest' },
+      { pat: /https?:\/\/(?:cdn|unpkg|jsdelivr|cdnjs)\./i, name: 'CDN URL' },
+      { pat: /\bcontentDocument\b/,     name: 'contentDocument' },
+      { pat: /\bsrcdoc\b/,              name: 'srcdoc' },
+      { pat: /\bimport\s*\(/,           name: 'dynamic import()' }
+    ];
+    /* Strip //-comments and /* *\/-comments before scanning, so a comment
+       naming a forbidden token (as the audit-of-record does — that is the
+       point of the check) does not trip its own gate. Fixture folders and
+       shared engines (_template, _engines, _styles) are excluded on principle:
+       they are not shipped as entries. */
+    const stripComments = (src) => src
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+    const walk = (d) => {
+      for (const name of readdirSync(d)) {
+        if (name.startsWith('.') || name.startsWith('_') || name === 'node_modules') continue;
+        const p = join(d, name);
+        const st = statSync(p);
+        if (st.isDirectory()) { walk(p); continue; }
+        if (!/\.(?:js|mjs|html|css)$/.test(name)) continue;
+        const txt = stripComments(readFileSync(p, 'utf8'));
+        for (const { pat, name: reason } of BAD) {
+          if (pat.test(txt)) {
+            say(`${relative(dir, p)}: forbidden token "${reason}" — shipped code opens by double-click and cannot fetch or CDN`);
+          }
+        }
+      }
+    };
+    walk(contentDir7d);
+  }
+
+  /* 7e. unsorted counter — permitted, but reported at verify time so the
+     inventory-import checkpoint (ck-e7) can watch it move. */
+  const unsortedCount = entries.filter((e) => e.status === 'unsorted').length;
+  if (unsortedCount > 0) {
+    // this is not a problem, so we don't push to problems[]; a note goes to
+    // stdout via the caller's summary line below.
+    manifest.__unsortedCount = unsortedCount;
+  }
+
   /* 8. every count on the page derives from entries -------------------- */
   const derived = {
     entries: entries.length, entry: entries.length,
@@ -266,7 +369,14 @@ function verifyOne({ manifest, dir, entries, missingScripts }, schema, say, load
     lens: entries.length, lenses: entries.length,
     style: (manifest.styles || []).length, styles: (manifest.styles || []).length,
     example: entries.reduce((n, e) => n + (e.examples || []).length, 0),
-    examples: entries.reduce((n, e) => n + (e.examples || []).length, 0)
+    examples: entries.reduce((n, e) => n + (e.examples || []).length, 0),
+    technique: [...techniqueIds].length, techniques: [...techniqueIds].length,
+    atom: [...atomIds].length, atoms: [...atomIds].length,
+    exploration: entries.filter((e) => !e.entity || e.entity === 'exploration').length,
+    explorations: entries.filter((e) => !e.entity || e.entity === 'exploration').length,
+    coupling: entries.filter((e) => e.entity === 'coupling' || Array.isArray(e.consequences)).length,
+    couplings: entries.filter((e) => e.entity === 'coupling' || Array.isArray(e.consequences)).length,
+    skill: (manifest.skills || []).length, skills: (manifest.skills || []).length
   };
   for (const f of ['index.html', 'tool.json', 'README.md']) {
     const p = join(dir, f);

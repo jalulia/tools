@@ -139,6 +139,95 @@ for (const file of manifests) {
   if (has('--mirror')) mirror(m);
 }
 
+/* -------------------------------------------------------- candidate techniques
+   ck-e6 · Read every exploration's uses[] and find atoms used by 2+
+   explorations with no technique above them (produces[] on any technique
+   in this manifest). Write a proposed-technique stub into the manifest
+   with status: 'proposed'. The shell renders these with a dashed border
+   and a "proposed by tool" label so nobody mistakes one for a ruling.
+   Julia rules by editing the stub.
+
+   Run always as a diff (no --write) so we can see what the detector would
+   surface; --write applies. */
+console.log(C.b('\ncandidate techniques (ck-e6)'));
+for (const file of manifests) {
+  const m = loadManifest(file);
+  if (!m.manifest.styles) continue;    /* only the encyclopedia has entities */
+  const usage = new Map();     /* atomId → [{entryId, params?}, ...] */
+  const producedBy = new Map();/* atomId → [techniqueId, ...] */
+  const proposed = new Set(
+    m.entries.filter((e) => e.status === 'proposed').map((e) => e.id)
+  );
+  for (const e of m.entries) {
+    if (e.entity === 'technique') {
+      for (const aid of e.produces || []) {
+        if (!producedBy.has(aid)) producedBy.set(aid, []);
+        producedBy.get(aid).push(e.id);
+      }
+    }
+    /* count uses from explorations and couplings — anything non-technique/atom */
+    if (e.entity === 'atom' || e.entity === 'technique') continue;
+    for (const u of e.uses || []) {
+      const id = typeof u === 'string' ? u : (u && u.atom);
+      if (!id) continue;
+      if (!usage.has(id)) usage.set(id, []);
+      usage.get(id).push(e.id);
+    }
+  }
+  const candidates = [];
+  for (const [aid, users] of usage) {
+    if (users.length < 2) continue;
+    if (producedBy.has(aid)) continue;                        /* already has a technique above it */
+    const atom = m.entries.find((e) => e.id === aid);
+    if (!atom || atom.entity !== 'atom') continue;
+    /* stable id — a candidate for atom "paper-tooth" becomes technique
+       "paper-tooth-driver". If already proposed, do not re-propose. */
+    const propId = aid + '-driver';
+    if (proposed.has(propId)) continue;
+    candidates.push({ atomId: aid, atomTitle: atom.title, users, propId,
+                      atomKind: atom.kind, atomLayer: atom.layer || null });
+  }
+  candidates.sort((a, b) => b.users.length - a.users.length);
+  const where = relative(ROOT, file);
+  console.log(C.dim(`  scanning ${where}`));
+  if (!candidates.length) {
+    console.log('  (no unpromoted atoms with 2+ uses)');
+    continue;
+  }
+  for (const c of candidates) {
+    const usersShown = c.users.slice(0, 3).join(', ') + (c.users.length > 3 ? `, +${c.users.length - 3}` : '');
+    console.log(`  ${C.b('candidate')} ${c.propId}  ${C.dim(`(${c.atomKind} atom ${c.atomId} · ${c.users.length} uses: ${usersShown})`)}`);
+    changed++;
+    if (WRITE) writeCandidate(file, c);
+  }
+}
+
+function writeCandidate(file, c) {
+  let s = readFileSync(file, 'utf8');
+  const marker = '// CANDIDATE TECHNIQUES · appended by index-tools.mjs --write';
+  if (!s.includes(marker)) {
+    /* insert a marker block just before the final `]});` of entries[] */
+    const close = s.lastIndexOf(']\n});');
+    if (close < 0) { console.log('    ! could not find entries[] closing — add candidates by hand'); return; }
+    s = s.slice(0, close) + `,\n\n    ${marker}\n` + s.slice(close);
+  }
+  const kindHint = c.atomKind === 'voice' || c.atomKind === 'space' || c.atomKind === 'bus'
+    ? 'audio' : 'visual';
+  const lane = kindHint === 'audio' ? 'audio' : 'canvas2d';
+  const stub = `    { id: '${c.propId}', title: '${c.atomTitle} as driver',
+      entity: 'technique', section: 'techniques', status: 'proposed',
+      lane: '${lane}',
+      description: 'PROPOSED BY TOOL — ${c.atomId} is used by ${c.users.length} explorations (${c.users.slice(0,4).join(', ')}) with no technique above it. The ${kindHint}-lane lesson would be about how ${c.atomId} decides X across those instances. Julia rules by editing this stub.',
+      produces: ['${c.atomId}'],
+      stub: true },
+`;
+  /* insert before the closing bracket */
+  const close = s.lastIndexOf(']\n});');
+  s = s.slice(0, close) + stub + s.slice(close);
+  writeFileSync(file, s);
+  console.log(`    → wrote proposed technique ${c.propId} into ${basename(file)}`);
+}
+
 /* ----------------------------------------------------------------- shots */
 if (has('--shots')) await shots(manifests);
 

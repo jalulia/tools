@@ -223,9 +223,31 @@
   S.parseHash = parseHash;
 
   S.landing = function () {
+    /* ck-e0: the encyclopedia's front door is the technique index. Every
+       other tool keeps its old landing rule (course = first entry, catalogue
+       = contact sheet). The check is on manifest.id rather than mode so a
+       catalogue tool that is not the encyclopedia is unaffected. */
+    if (S.manifest && S.manifest.id === 'encyclopedia') return '#/techniques';
     if (S.manifest && S.manifest.mode === 'catalogue') return '#/index';
     return S.entries.length ? '#/' + S.entries[0].id : '#/index';
   };
+
+  /* The seven new entity/facet routes the encyclopedia adds at ck-e0. Each
+     one names an entity kind or a saved query; the shell resolves it against
+     the views layer, which renders "empty on purpose" if nothing has been
+     filed under it yet. */
+  var ENCYCLOPEDIA_ROUTES = {
+    techniques:   { kind: 'entity',  filter: function (e) { return e.entity === 'technique'; } },
+    atoms:        { kind: 'entity',  filter: function (e) { return e.entity === 'atom'; } },
+    styles:       { kind: 'styles',  filter: null },       /* the manifest's styles[] */
+    explorations: { kind: 'entity',  filter: function (e) { return !e.entity || e.entity === 'exploration'; } },
+    sound:        { kind: 'facet',   filter: function (e) { return e.lane === 'audio' || e.section === 'sound'; } },
+    symptoms:     { kind: 'facet',   filter: function (e) { return (e.related || []).some(function (r) { return r.relation === 'overuses'; }); } },
+    unfiled:      { kind: 'facet',   filter: function (e) { return e.status === 'unsorted' || e.section === 'unfiled'; } },
+    skills:       { kind: 'skills',  filter: null },
+    couplings:    { kind: 'facet',   filter: function (e) { return e.entity === 'coupling' || Array.isArray(e.consequences); } }
+  };
+  S.ENCYCLOPEDIA_ROUTES = ENCYCLOPEDIA_ROUTES;
 
   S.go = function (entryId, exampleId, keep) {
     var h = '#/' + entryId + (exampleId ? '/' + exampleId : '');
@@ -249,11 +271,60 @@
 
     if (!p.length) return replaceWith(S.landing());
 
+    /* Explicit redirects, declared in the encyclopedia manifest. The whole
+       hash path (without leading #/) is the key. This is how old links to
+       #/13-fbm or #/kls01-ki-landscape resolve to their new home. */
+    var reds = (S.manifest && S.manifest.redirects) || null;
+    if (reds) {
+      var key = p.join('/');
+      if (reds[key]) return replaceWith(reds[key]);
+      if (reds[p[0]]) return replaceWith(reds[p[0]]);
+    }
+
     if (p[0] === 'index') return S.views && S.views.renderSheet(null, r.query);
     if (p[0] === 'style') {
       var st = styleById(p[1]);
       if (!st) return replaceWith(S.landing());
       return S.views && S.views.renderStyle(st, r.query);
+    }
+
+    /* ck-e0 encyclopedia routes. Each renders through views if the view
+       exists; otherwise fall through to the entry-lookup, which handles
+       #/entry/<id> and #/technique/<id> alike by treating the second segment
+       as the id. */
+    if (ENCYCLOPEDIA_ROUTES[p[0]]) {
+      var route = ENCYCLOPEDIA_ROUTES[p[0]];
+      if (S.views && S.views.renderRoute) return S.views.renderRoute(p[0], route, r.query);
+      /* Fallback: filtered sheet. Every view above degrades to a contact
+         sheet — a tool without views.renderRoute still shows something. */
+      return S.views && S.views.renderSheet(route.filter, r.query);
+    }
+    /* ck-e8 · #/skill/<id> — the per-skill page. Kept singular to match the
+       other entity prefixes (#/technique/<id>, #/atom/<id>). Falls through to
+       the landing route if the id is not a declared skill or if the views
+       layer does not know how to render skill pages. */
+    if (p[0] === 'skill' && p[1]) {
+      var skill = ((S.manifest && S.manifest.skills) || [])
+        .filter(function (s) { return s.id === p[1]; })[0];
+      if (!skill) return replaceWith(S.landing());
+      if (S.views && S.views.renderSkill) return S.views.renderSkill(skill, r.query);
+      return replaceWith(S.landing());
+    }
+    /* Explicit entity prefixes: #/technique/<id>, #/atom/<id>, #/entry/<id>
+       all resolve to the same entry lookup — the entity's page template is
+       chosen by its `entity` field at render time. */
+    if (p[0] === 'technique' || p[0] === 'atom' || p[0] === 'entry' || p[0] === 'coupling') {
+      var eByPrefix = S.routes.get(p[1]);
+      if (!eByPrefix) return replaceWith(S.landing());
+      if (!eByPrefix.__loaded && S.pending[eByPrefix.id]) {
+        S.wantRoute = location.hash;
+        if (S.views && S.views.renderLoading) S.views.renderLoading(eByPrefix);
+        return;
+      }
+      if (!eByPrefix.__loaded && S.failed[eByPrefix.id]) {
+        return S.views && S.views.renderMissing(eByPrefix.id);
+      }
+      return S.views && S.views.renderEntry(eByPrefix, p[2], r.query);
     }
 
     var e = S.routes.get(p[0]);
@@ -727,6 +798,113 @@
   }
   S.esc = esc; S.attr = attr; S.pad = pad; S.warn = warn;
   S.reduced = matchReduced;
+
+  /* ==========================================================================
+     ck-e8 · governedBy(entry) — the union of an entry's declared governed_by[]
+     and the skills its shape implies.
+
+     ck-e0 tagged only two of the fourteen skills on the corpus (composing-
+     computational-material-systems and components-craft) because only those
+     two were declared in a form the entries knew about. The rest were left as
+     visibly empty pages on purpose, to be filed at ck-e8.
+
+     Rather than edit 168 entry.js files by hand — half of which are one-line
+     imports — the rules are declared once here and evaluated at render time.
+     An entry.js may still assert an explicit governed_by[]; those wins. The
+     rules only ADD. The output is de-duplicated and, when the manifest is
+     available, filtered against known skill ids so a stale rule cannot smear
+     an id the deploy would fail on.
+     ========================================================================== */
+  S.governedBy = function (e) {
+    if (!e) return [];
+    var out = [];
+    var seen = Object.create(null);
+    var add = function (id) {
+      if (!id || seen[id]) return;
+      seen[id] = true;
+      out.push(id);
+    };
+    (e.governed_by || []).forEach(add);
+
+    var section = e.section || '';
+    var style = e.style || '';
+    var lane = e.lane || '';
+    var tags = (e.tags || []).map(String);
+    var id = String(e.id || '').toLowerCase();
+    var title = String(e.title || '').toLowerCase();
+    var kind = e.kind || '';
+
+    // AUDIO — every audio-lane entry
+    if (lane === 'audio' || section === 'sound' ||
+        ['voice','space','bus'].indexOf(kind) >= 0) add('composing-computational-sound-systems');
+
+    // RISO / PRINT / PAPER lens → creative-hifi-frontend + canvas-design
+    if (style === 'riso-xerox' || style === 'atmospheric' ||
+        section === 'print-reproduction' ||
+        /riso|paper|xerox|print|halftone/.test(tags.join(' ').toLowerCase())) {
+      add('creative-hifi-frontend');
+      add('canvas-design');
+    }
+
+    // TECHNICAL DOCUMENT style / dimensioned exploration / technical-doc atom
+    if (style === 'technical-doc' || /instrument|typology|spec|dossier|drafting|dimension|blueprint/.test((id + ' ' + title + ' ' + tags.join(' ')).toLowerCase())) {
+      add('technical-illustration');
+    }
+
+    // PATENT figure — very small overlap; only when the entry literally says so
+    if (/patent|figure|callout|exploded/.test((id + ' ' + title).toLowerCase())) {
+      add('patent-figure-drawing');
+    }
+
+    // ATOMS in the field/engine/texture kinds — the material rung
+    if (e.entity === 'atom' && ['field','engine','texture','process','substrate','colour','mark'].indexOf(kind) >= 0) {
+      add('composing-computational-material-systems');
+    }
+
+    // GENERATIVE FIELD / SHADER / p5-flavoured — algorithmic-art
+    if (kind === 'field' || lane === 'glsl' || /p5|generative|shader|noise|fbm|cellular/.test((id + ' ' + title).toLowerCase())) {
+      add('composing-computational-material-systems');
+      // algorithmic-art only when the piece reads as p5-style algorithm rather than a chapter
+      if (/p5|particle|flow[- ]?field|algorithmic/.test((id + ' ' + title + ' ' + tags.join(' ')).toLowerCase()) ||
+          (kind === 'field' && e.entity === 'atom')) {
+        add('algorithmic-art');
+      }
+    }
+
+    // Ki-brand entries
+    if (/^ki-|^kls-|-ki$/.test(id) || /\bki\b/.test(title) ||
+        /ki-landscape|ki brand|ki brief/.test(title)) {
+      add('ki-brief');
+    }
+
+    // Chart/plot atoms → dataviz
+    if (/chart|plot|dashboard|meter|kpi|axis|legend/.test((id + ' ' + title).toLowerCase())) {
+      add('dataviz');
+    }
+
+    // Sell-sheet-adjacent
+    if (/sell[- ]?sheet|line[- ]?sheet|spec[- ]?sheet|stock/i.test(id + ' ' + title + ' ' + tags.join(' '))) {
+      add('sell-sheet');
+    }
+
+    // Ledger note: components-craft was ck-e1's blanket for lenses; keep it
+    // where declared, no new inferences here (avoid smearing).
+
+    // Filter against manifest.skills[] so a rule that names a skill the
+    // manifest does not carry does not fire.
+    if (S.manifest && S.manifest.skills) {
+      var known = Object.create(null);
+      S.manifest.skills.forEach(function (s) { known[s.id] = true; });
+      out = out.filter(function (id) { return known[id]; });
+    }
+    return out;
+  };
+
+  /* Inverse: entries that a given skill governs. Every UI that lists a
+     skill's instances uses this so the rule set stays one place. */
+  S.entriesGovernedBy = function (sid) {
+    return S.entries.filter(function (e) { return S.governedBy(e).indexOf(sid) >= 0; });
+  };
 
   /* The adapter for a given entry/example. The lane is per entry and per
      example, not per tool: the best order-dependence example in the corpus is

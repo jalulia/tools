@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Forced light, all three legs, inside the frame as well as outside it:
+     the meta, color-scheme on :root (in the style file) and an explicit
+     background on html AND body. -->
+<meta name="color-scheme" content="light">
+<title>C2 · Editorial style guide</title>
+<!-- Exactly one style file. It owns this lens's families, its @font-face
+     rules and the token vocabulary its CSS is written against. -->
+<link rel="stylesheet" href="../_styles/editorial-serif.css">
+<style>
+/* ---------------------------------------------------------------------------
+   C2 · Editorial style guide — ref Studio X
+   This lens owns its CSS outright. In the monolith these rules lived in a
+   1,481-selector stylesheet shared with the chrome and twenty-six other
+   lenses, scoped only by an "#sx" prefix convention that nothing
+   enforced. Ownership here was established by matching every parsed rule in
+   the document against every element inside this lens's frame, so what is
+   below is exactly what the browser was applying and nothing else.
+   --------------------------------------------------------------------------- */
+html, body { background:#fff; }
+body {
+  /* The plate is composed at its design width. The host renders the fragment
+     at exactly this width and CSS-scales it; opened alone by double-click it
+     centres itself rather than reflowing, because a lens reflowed into a
+     different measure is a different composition. */
+  width:1100px; margin:0 auto;
+}
+.lens-frame {
+  /* The monolith's .lens-frame drew a 1px border. The chrome does not draw a
+     border round a specimen any more — it lays a mat and puts crop marks
+     outside the corners — so only the clipping and the paint containment
+     survive. The crop is load-bearing: T1's display O is genuinely cropped
+     by this edge. */
+  position:relative; overflow:hidden; background:#fff; contain:paint;
+}
+#sx{ --bone:#ede8df; --bone-2:#e6e0d5; --grey:#b9b3a6; --char:#1e1c19; --ox:#6b1f1f; --stage:#d6d1c7;
+  --serif:"Fraunces",Georgia,serif; --grot:"Inter",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+  position:relative; width:100%; color:var(--char); font-family:var(--grot); -webkit-font-smoothing:antialiased;
+  padding:2.4% 2.8% 3.2%; isolation:isolate;
+  background:
+    radial-gradient(120% 90% at 22% 6%, rgba(255,252,244,.55), rgba(255,252,244,0) 60%),
+    radial-gradient(110% 100% at 100% 100%, rgba(70,58,40,.16), rgba(70,58,40,0) 60%),
+    var(--stage); }
+#sx *{ box-sizing:border-box; margin:0; }
+#sx .pg{ position:relative; width:100%; aspect-ratio:1/0.66; background:var(--bone); overflow:hidden; isolation:isolate; container-type:inline-size;
+  box-shadow:0 1px 0 rgba(255,255,255,.45) inset, 0 1px 2px rgba(60,48,30,.28), 2px 5px 10px rgba(60,48,30,.16), 6px 14px 28px rgba(60,48,30,.10); }
+#sx .pg::after{ content:""; position:absolute; inset:0; z-index:12; pointer-events:none;
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.35), inset -1px -1px 0 rgba(60,48,30,.14); }
+#sx .tooth{ position:absolute; inset:0; z-index:9; pointer-events:none; mix-blend-mode:multiply; opacity:.55; }
+#sx .tooth canvas{ width:100%; height:100%; display:block; }
+#sx .grain{ position:absolute; inset:-6%; z-index:9; pointer-events:none; opacity:.05; mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.05' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"); }
+#sx .tone{ position:absolute; inset:0; z-index:10; pointer-events:none;
+  background:
+    radial-gradient(120% 100% at 14% 0%, rgba(255,253,246,.22), rgba(255,253,246,0) 55%),
+    radial-gradient(120% 90% at 100% 100%, rgba(50,40,25,.13), rgba(50,40,25,0) 58%),
+    linear-gradient(90deg, rgba(30,28,25,.055) 0%, rgba(30,28,25,0) 10.4%, rgba(30,28,25,0) 100%),
+    linear-gradient(90deg, rgba(50,40,25,0) 54%, rgba(50,40,25,.03) 59.5%, rgba(50,40,25,.085) 62.1%, rgba(50,40,25,.05) 62.7%, rgba(255,253,246,.05) 64%, rgba(255,253,246,.035) 67%, rgba(255,253,246,0) 72%),
+    linear-gradient(180deg, rgba(50,40,25,0) 94%, rgba(50,40,25,.07) 100%); }
+#sx .run{ position:absolute; z-index:3; font-family:var(--mono); font-size:.86cqw; letter-spacing:.12em; color:var(--char); text-transform:uppercase; }
+#sx .run.hd{ top:2.4cqw; left:12.4cqw; right:3.2cqw; display:flex; justify-content:space-between; padding-bottom:.7cqw;
+  border-bottom:.5px solid rgba(30,28,25,.55); }
+#sx .run.hd i{ font-style:normal; color:rgba(30,28,25,.55); }
+#sx .run.hd .ox{ color:var(--ox); }
+#sx .fol{ position:absolute; bottom:2.2cqw; z-index:3; font-family:var(--serif); font-variation-settings:"opsz" 30; font-size:1.25cqw; letter-spacing:.02em; color:var(--char); display:flex; align-items:baseline; gap:.7cqw; }
+#sx .fol small{ font-family:var(--mono); font-size:.72cqw; letter-spacing:.14em; text-transform:uppercase; color:rgba(30,28,25,.55); }
+#sx .fol.l{ left:12.4cqw; }
+#sx .fol.r{ right:3.2cqw; }
+#sx .spine{ position:absolute; z-index:4; left:0; top:0; bottom:0; width:10.4cqw; border-right:.5px solid rgba(30,28,25,.4);
+  display:flex; flex-direction:column; justify-content:center; gap:1.05cqw; padding:0 0 0 0; }
+#sx .tab{ display:grid; grid-template-columns:4.7cqw 1fr; align-items:center; gap:.9cqw; height:5.4cqw; }
+#sx .tab .num{ height:100%; margin-left:-1px; border:.5px solid var(--char); border-left:0; display:flex; align-items:center; justify-content:center;
+  font-family:var(--serif); font-variation-settings:"opsz" 72; font-weight:400; font-size:2.05cqw; line-height:1; letter-spacing:.02em; color:var(--char);
+  position:relative;
+  /* stepped index tab: a sheet on the sheet — lit top edge, fold shadow at its root (left), short contact shadow right/below */
+  background:linear-gradient(90deg, rgba(50,40,25,.10), rgba(50,40,25,.03) 18%, rgba(255,253,246,.35) 60%, var(--bone) 100%);
+  box-shadow:0 1px 0 rgba(255,255,255,.55) inset, 1px 1px 1.5px rgba(60,48,30,.22), 2px 3px 6px rgba(60,48,30,.10); }
+#sx .tab .num::after{ content:""; position:absolute; left:0; top:0; bottom:0; width:.5cqw; background:linear-gradient(90deg, rgba(30,28,25,.16), rgba(30,28,25,0)); pointer-events:none; }
+#sx .tab.on .num{ background:linear-gradient(90deg, #14120f, var(--char) 30%, #26231f); color:var(--bone); border-color:var(--char); font-weight:500;
+  box-shadow:0 1px 0 rgba(255,255,255,.12) inset, 1px 1px 1.5px rgba(60,48,30,.30), 2px 3px 6px rgba(60,48,30,.14); }
+#sx .tab.on .num::after{ background:linear-gradient(90deg, rgba(0,0,0,.45), rgba(0,0,0,0)); }
+#sx .tab .lab{ font-family:var(--mono); font-size:.78cqw; letter-spacing:.14em; text-transform:uppercase; color:rgba(30,28,25,.7); line-height:1.4; }
+#sx .tab .lab b{ display:block; font-weight:400; font-size:.62cqw; color:rgba(30,28,25,.42); letter-spacing:.1em; }
+#sx .tab.on .lab{ color:var(--char); }
+#sx .tab.on .lab b{ color:var(--ox); }
+#sx .spec{ position:absolute; z-index:2; left:12.4cqw; top:6.6cqw; width:47cqw; bottom:6.6cqw; display:flex; flex-direction:column; }
+#sx .kick{ display:flex; align-items:baseline; justify-content:space-between; font-family:var(--mono); font-size:.72cqw; letter-spacing:.14em; text-transform:uppercase; color:rgba(30,28,25,.55); }
+#sx .kick b{ font-weight:500; color:var(--char); }
+#sx .kick .ox{ color:var(--ox); }
+#sx .display{ display:grid; grid-template-columns:auto 1fr; align-items:end; gap:2.2cqw; margin-top:.4cqw; padding-bottom:1.1cqw; border-bottom:1px solid var(--char); }
+#sx .aa{ font-family:var(--serif); font-variation-settings:"opsz" 144; font-weight:300; font-size:15.4cqw; line-height:.78; letter-spacing:-.045em; color:var(--char);
+  transform:translateY(.02em); }
+#sx .aa i{ font-style:italic; font-weight:300; }
+#sx .word{ display:flex; flex-direction:column; gap:.55cqw; padding-bottom:.35cqw; }
+#sx .word .sxw{ font-family:var(--serif); font-variation-settings:"opsz" 96; font-weight:500; font-size:4.6cqw; line-height:.92; letter-spacing:-.02em; color:var(--char); white-space:nowrap; }
+#sx .word .sxw em{ font-style:italic; font-weight:400; color:var(--ox); }
+#sx .word .m{ font-family:var(--mono); font-size:.72cqw; letter-spacing:.1em; color:rgba(30,28,25,.6); display:flex; gap:1.6cqw; }
+#sx .word .m span::before{ content:"·"; margin-right:.5cqw; color:var(--grey); }
+#sx .word .m span:first-child::before{ content:none; }
+#sx .weights{ display:grid; grid-template-columns:repeat(4,1fr); border-bottom:.5px solid rgba(30,28,25,.5); }
+#sx .weights div{ padding:.85cqw 0 .8cqw; border-right:.5px solid rgba(30,28,25,.25); padding-left:.9cqw; }
+#sx .weights div:first-child{ padding-left:0; }
+#sx .weights div:last-child{ border-right:0; }
+#sx .weights .w{ font-family:var(--serif); font-variation-settings:"opsz" 48; font-size:2.05cqw; line-height:1; letter-spacing:-.01em; color:var(--char); }
+#sx .weights .w.l{ font-weight:300; }
+#sx .weights .w.r{ font-weight:400; }
+#sx .weights .w.m{ font-weight:500; }
+#sx .weights .w.b{ font-weight:600; }
+#sx .weights .k{ font-family:var(--mono); font-size:.66cqw; letter-spacing:.12em; text-transform:uppercase; color:rgba(30,28,25,.55); margin-top:.5cqw; }
+#sx .alpha{ padding:.9cqw 0 .8cqw; border-bottom:.5px solid rgba(30,28,25,.5); display:grid; grid-template-columns:1fr auto; column-gap:1.4cqw; align-items:baseline; row-gap:.4cqw; }
+#sx .alpha .u{ font-family:var(--grot); font-weight:500; font-size:1.55cqw; letter-spacing:.055em; color:var(--char); white-space:nowrap; line-height:1.15; }
+#sx .alpha .lc{ font-family:var(--grot); font-weight:300; font-size:1.55cqw; letter-spacing:.02em; color:var(--char); white-space:nowrap; line-height:1.15; }
+#sx .alpha .s{ font-family:var(--mono); font-size:.66cqw; letter-spacing:.1em; color:rgba(30,28,25,.55); text-transform:uppercase; white-space:nowrap; text-align:right; }
+#sx .body{ padding:.85cqw 0 .8cqw; border-bottom:.5px solid rgba(30,28,25,.5); display:grid; grid-template-columns:1fr 12cqw; gap:1.6cqw; }
+#sx .body p{ font-family:var(--grot); font-weight:400; font-size:.98cqw; line-height:1.55; color:var(--char); max-width:31cqw; }
+#sx .body p:first-letter{ font-family:var(--serif); font-weight:500; }
+#sx .body .s{ font-family:var(--mono); font-size:.66cqw; letter-spacing:.1em; color:rgba(30,28,25,.55); text-transform:uppercase; line-height:1.9; text-align:right; }
+#sx .body .s b{ font-weight:500; color:var(--char); }
+#sx .scale{ border-bottom:.5px solid rgba(30,28,25,.5); padding:.5cqw 0 .55cqw; }
+#sx .scale .row{ display:flex; justify-content:space-between; align-items:baseline; gap:2cqw; padding:.5cqw 0; border-top:.5px solid rgba(30,28,25,.18); }
+#sx .scale .row:first-child{ border-top:0; }
+#sx .scale .t{ font-family:var(--serif); color:var(--char); white-space:nowrap; line-height:1; }
+#sx .scale .h1{ font-variation-settings:"opsz" 96; font-weight:500; font-size:2.6cqw; letter-spacing:-.02em; }
+#sx .scale .h2{ font-variation-settings:"opsz" 48; font-weight:400; font-size:1.7cqw; letter-spacing:-.005em; }
+#sx .scale .h3{ font-family:var(--mono); font-weight:500; font-size:.72cqw; letter-spacing:.16em; color:var(--ox); }
+#sx .scale .s{ font-family:var(--mono); font-size:.66cqw; letter-spacing:.1em; text-transform:uppercase; color:rgba(30,28,25,.55); white-space:nowrap; }
+#sx .scale .s b{ font-weight:500; color:var(--char); }
+#sx .colour{ margin-top:auto; padding-top:.9cqw; display:grid; grid-template-columns:auto repeat(4,1fr); gap:1.1cqw; align-items:end; }
+#sx .colour .h{ font-family:var(--mono); font-size:.66cqw; letter-spacing:.14em; text-transform:uppercase; color:rgba(30,28,25,.55); writing-mode:vertical-rl; transform:rotate(180deg); line-height:1; padding-bottom:.1cqw; }
+#sx .sw{ display:flex; flex-direction:column; gap:.45cqw; }
+#sx .sw i{ display:block; height:2.6cqw; border:.5px solid rgba(30,28,25,.55); }
+#sx .sw .n{ font-family:var(--serif); font-variation-settings:"opsz" 30; font-size:.9cqw; color:var(--char); display:flex; justify-content:space-between; align-items:baseline; }
+#sx .sw .n code{ font-family:var(--mono); font-size:.62cqw; letter-spacing:.06em; color:rgba(30,28,25,.55); }
+#sx .cardspec{ position:absolute; z-index:2; left:62.4cqw; right:3.2cqw; top:6.6cqw; bottom:6.6cqw; border-left:.5px solid rgba(30,28,25,.4); padding-left:2.4cqw; display:flex; flex-direction:column; }
+#sx .cardspec .kick{ margin-bottom:.4cqw; }
+#sx .cardspec svg{ display:block; width:100%; height:auto; flex:1 1 auto; min-height:0; overflow:visible; }
+#sx .cardspec .fig{ font-family:var(--mono); font-size:.66cqw; letter-spacing:.12em; text-transform:uppercase; color:rgba(30,28,25,.55); display:flex; justify-content:space-between; margin-top:auto; padding-top:.7cqw; border-top:.5px solid rgba(30,28,25,.5); }
+#sx .cardspec .fig b{ font-weight:500; color:var(--char); }
+#sx svg .mono{ font-family:var(--mono); font-size:5.4px; letter-spacing:.7px; fill:rgba(30,28,25,.7); }
+#sx svg .mono.k{ fill:var(--char); font-weight:500; }
+#sx svg .wm{ font-family:var(--serif); font-variation-settings:"opsz" 96; font-weight:500; font-size:19px; letter-spacing:-.4px; fill:var(--char); }
+#sx svg .wm tspan.x{ font-style:italic; font-weight:400; fill:var(--ox); }
+#sx svg .cont{ font-family:var(--mono); font-size:4.9px; letter-spacing:.35px; fill:var(--char); }
+#sx svg .cont.dim{ fill:rgba(30,28,25,.55); }
+#sx svg .hair{ stroke:var(--char); stroke-width:.6; vector-effect:non-scaling-stroke; fill:none; shape-rendering:geometricPrecision; }
+#sx svg .hair.soft{ stroke:rgba(30,28,25,.45); }
+#sx svg .hair.ox{ stroke:var(--ox); }
+#sx svg .dash{ stroke:rgba(30,28,25,.55); stroke-width:.5; stroke-dasharray:2 1.6; vector-effect:non-scaling-stroke; fill:none; }
+#sx svg .paper{ fill:#f3efe6; }
+#sx svg .paper2{ fill:var(--char); }
+
+@media (prefers-reduced-motion:reduce){
+  #sx *{ animation:none !important; transition:none !important; }
+}
+</style>
+</head>
+<body>
+<div class="lens-frame">
+<div id="sx" role="img" aria-label="Spread from the Studio X brand guidelines: roman-numeral side tabs, a type specimen page, and a business-card specification with dimension lines.">
+     <div class="pg">
+      <div class="tone"></div>
+
+      <div class="run hd"><span>Studio X — Brand Guidelines <i>· v2.0</i></span><span><i>Section</i> II <i>/</i> Type <span class="ox">●</span> <i>Specimen</i></span></div>
+
+      <!-- spine -->
+      <nav class="spine" aria-hidden="true">
+        <div class="tab"><span class="num">I</span><span class="lab">Identity<b>p. 08</b></span></div>
+        <div class="tab on"><span class="num">II</span><span class="lab">Type<b>p. 24</b></span></div>
+        <div class="tab"><span class="num">III</span><span class="lab">Colour<b>p. 40</b></span></div>
+        <div class="tab"><span class="num">IV</span><span class="lab">Grid<b>p. 52</b></span></div>
+        <div class="tab"><span class="num">V</span><span class="lab">Imagery<b>p. 66</b></span></div>
+        <div class="tab"><span class="num">VI</span><span class="lab">Voice<b>p. 84</b></span></div>
+      </nav>
+
+      <!-- specimen -->
+      <div class="spec" aria-hidden="true">
+        <div class="kick"><span><b>2.1</b> Primary typeface — Fraunces</span><span>Display · Text · Italic <span class="ox">·</span> Variable</span></div>
+        <div class="display">
+          <div class="aa">A<i>a</i></div>
+          <div class="word">
+            <div class="sxw">Studio <em>X</em></div>
+            <div class="m"><span>Display · 96/88</span><span>Tracking −20</span><span>opsz 144</span></div>
+          </div>
+        </div>
+        <div class="weights">
+          <div><div class="w l">Light</div><div class="k">300 · Aa Gg Rr</div></div>
+          <div><div class="w r">Regular</div><div class="k">400 · Aa Gg Rr</div></div>
+          <div><div class="w m">Medium</div><div class="k">500 · Aa Gg Rr</div></div>
+          <div><div class="w b">Bold</div><div class="k">600 · Aa Gg Rr</div></div>
+        </div>
+        <div class="alpha">
+          <div class="u">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div><div class="s">Grotesque · Inter 500 · +5</div>
+          <div class="lc">abcdefghijklmnopqrstuvwxyz 0123456789</div><div class="s">Inter 300 · +2 · &amp;?!£€</div>
+        </div>
+        <div class="body">
+          <p>Type is set with restraint. Headlines take the serif at large optical sizes; running text takes the grotesque at 15 on 24. Never centre body copy. Never track lowercase.</p>
+          <div class="s">Body · <b>15/24</b><br>Caption · <b>11/16</b><br>Measure · <b>60–72 ch</b><br>Colour · <b>#1E1C19</b></div>
+        </div>
+        <div class="scale">
+          <div class="row"><span class="t h1">Quiet, archival, precise.</span><span class="s">H1 · Fraunces 500 · <b>48/52</b></span></div>
+          <div class="row"><span class="t h2">A spread you would flip through</span><span class="s">H2 · Fraunces 400 · <b>28/34</b></span></div>
+          <div class="row"><span class="t h3">SECTION MARKER · SMALL CAPS</span><span class="s">Label · Mono 500 · <b>10/14</b></span></div>
+        </div>
+        <div class="colour">
+          <div class="h">2.4 Palette</div>
+          <div class="sw"><i style="background:#ede8df"></i><div class="n">Bone <code>#EDE8DF</code></div></div>
+          <div class="sw"><i style="background:#b9b3a6"></i><div class="n">Warm grey <code>#B9B3A6</code></div></div>
+          <div class="sw"><i style="background:#1e1c19"></i><div class="n">Charcoal <code>#1E1C19</code></div></div>
+          <div class="sw"><i style="background:#6b1f1f"></i><div class="n">Oxblood <code>#6B1F1F</code></div></div>
+        </div>
+      </div>
+
+      <!-- business card spec -->
+      <div class="cardspec" aria-hidden="true">
+        <div class="kick"><span><b>2.7</b> Business card</span><span>Fig. 12</span></div>
+        <svg viewBox="0 0 306 392" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMin meet">
+          <!-- scale: 85×55 mm → 204×132 units (×2.4). front at (44,44); back offset (+54,+80) -->
+          <!-- back card -->
+          <g>
+            <rect class="paper2" x="98" y="150" width="204" height="132"/>
+            <line x1="112" y1="172" x2="288" y2="172" style="stroke:rgba(237,232,223,.3); stroke-width:.5; vector-effect:non-scaling-stroke"/>
+            <text class="cont" x="288" y="164" text-anchor="end" style="fill:#ede8df; font-size:5.2px; letter-spacing:.9px">STUDIO X</text>
+            <rect x="278" y="186" width="10" height="10" fill="#6b1f1f"/>
+            <text class="cont" x="112" y="216" style="fill:#ede8df">Julia Compton</text>
+            <text class="cont" x="112" y="225" style="fill:#b9b3a6">Creative Director</text>
+            <text class="cont" x="112" y="241" style="fill:#ede8df">julia@studiox.co</text>
+            <text class="cont" x="112" y="250" style="fill:#ede8df">+44 20 7946 0210</text>
+            <text class="cont" x="112" y="266" style="fill:#b9b3a6">14 Bone Yard · London EC1</text>
+            <text class="cont" x="288" y="266" text-anchor="end" style="fill:#b9b3a6">studiox.co</text>
+          </g>
+          <!-- back leader + label -->
+          <g class="hair soft"><line x1="302" y1="282" x2="302" y2="292"/><line x1="98" y1="292" x2="302" y2="292"/></g>
+          <text class="mono" x="98" y="302">B · BACK · CHARCOAL 100 · BONE INK</text>
+
+          <!-- bleed box (front) 3 mm = 7.2 units -->
+          <rect class="dash" x="36.8" y="36.8" width="218.4" height="146.4"/>
+          <!-- front card -->
+          <rect class="paper" x="44" y="44" width="204" height="132"/>
+          <rect class="hair" x="44" y="44" width="204" height="132"/>
+          <!-- safe area 5 mm = 12 units -->
+          <rect class="dash" x="56" y="56" width="180" height="108" style="stroke-dasharray:1 1.6; stroke:rgba(30,28,25,.35)"/>
+          <!-- wordmark -->
+          <text class="wm" x="60" y="118">Studio <tspan class="x">X</tspan></text>
+          <line class="hair" x1="60" y1="126" x2="138" y2="126"/>
+          <text class="cont" x="60" y="134" style="letter-spacing:.9px">DESIGN · EDITORIAL · IDENTITY</text>
+          <text class="cont dim" x="232" y="66" text-anchor="end">№ 024</text>
+          <!-- x-height / baseline hairlines on wordmark -->
+          <g class="hair soft">
+            <line x1="50" y1="118" x2="150" y2="118" style="stroke-dasharray:1 1.2"/>
+            <line x1="50" y1="104" x2="150" y2="104" style="stroke-dasharray:1 1.2"/>
+          </g>
+          <text class="mono" x="153" y="105.6" style="font-size:4.4px">x</text>
+          <text class="mono" x="153" y="119.6" style="font-size:4.4px">bl</text>
+          <!-- crop marks (trim) -->
+          <g class="hair">
+            <line x1="44" y1="26" x2="44" y2="34"/><line x1="26" y1="44" x2="34" y2="44"/>
+            <line x1="248" y1="26" x2="248" y2="34"/><line x1="258" y1="44" x2="266" y2="44"/>
+            <line x1="44" y1="186" x2="44" y2="194"/><line x1="26" y1="176" x2="34" y2="176"/>
+            <line x1="248" y1="186" x2="248" y2="194"/><line x1="258" y1="176" x2="266" y2="176"/>
+          </g>
+          <!-- registration mark -->
+          <g class="hair soft">
+            <circle cx="16" cy="16" r="3.2"/><line x1="11" y1="16" x2="21" y2="16"/><line x1="16" y1="11" x2="16" y2="21"/>
+          </g>
+
+          <!-- dimension: width, above -->
+          <g class="hair">
+            <line x1="44" y1="16" x2="248" y2="16"/>
+            <line x1="44" y1="13" x2="44" y2="19"/><line x1="248" y1="13" x2="248" y2="19"/>
+          </g>
+          <rect x="128" y="11" width="36" height="10" fill="#ede8df"/>
+          <text class="mono k" x="146" y="18.4" text-anchor="middle">85 mm</text>
+
+          <!-- dimension: height, left -->
+          <g class="hair">
+            <line x1="20" y1="44" x2="20" y2="176"/>
+            <line x1="17" y1="44" x2="23" y2="44"/><line x1="17" y1="176" x2="23" y2="176"/>
+          </g>
+          <rect x="15" y="98" width="10" height="24" fill="#ede8df"/>
+          <text class="mono k" x="22" y="110" text-anchor="middle" transform="rotate(-90 22 110)">55 mm</text>
+
+          <!-- bleed callout -->
+          <g class="hair ox">
+            <line x1="248" y1="97" x2="248" y2="103"/><line x1="255.2" y1="97" x2="255.2" y2="103"/>
+            <line x1="255.2" y1="100" x2="292" y2="100"/>
+          </g>
+          <text class="mono" x="258" y="96.5" style="fill:#6b1f1f">3 mm bleed</text>
+          <!-- safe callout -->
+          <g class="hair soft"><line x1="56" y1="164" x2="56" y2="200" style="stroke-dasharray:1 1.2"/></g>
+          <text class="mono" x="59" y="200" style="font-size:4.6px">safe 5 mm</text>
+
+          <!-- front label + material spec -->
+          <text class="mono" x="44" y="318">A · FRONT · BONE 350 GSM · UNCOATED</text>
+          <text class="mono" x="44" y="327">CHARCOAL LITHO · OXBLOOD PMS 490 · 1 : 1.4</text>
+          <line class="hair" x1="44" y1="334" x2="72" y2="334"/>
+          <!-- section through stock -->
+          <g>
+            <rect class="paper" x="44" y="356" width="204" height="7"/>
+            <rect class="hair" x="44" y="356" width="204" height="7"/>
+            <line class="hair" x1="44" y1="359.5" x2="248" y2="359.5" style="stroke:rgba(30,28,25,.35); stroke-dasharray:.8 1.4"/>
+            <g class="hair soft" style="stroke-dasharray:1 1.2">
+              <line x1="248" y1="356" x2="290" y2="356"/><line x1="248" y1="363" x2="290" y2="363"/>
+            </g>
+            <g class="hair"><line x1="286" y1="356" x2="286" y2="363"/><line x1="283" y1="356" x2="289" y2="356"/><line x1="283" y1="363" x2="289" y2="363"/></g>
+            <text class="mono" x="292" y="361.6" style="font-size:4.4px">0.42</text>
+            <text class="mono" x="44" y="349">C · SECTION · DUPLEX 2 × 175 GSM · CHARCOAL EDGE PAINT</text>
+            <rect x="44" y="362" width="204" height="1" fill="#1e1c19"/>
+            <text class="mono" x="44" y="376" style="font-size:4.4px">SCALE 1 : 1.4 · ALL DIMENSIONS IN MM · TOLERANCE ± 0.5</text>
+          </g>
+        </svg>
+        <div class="fig"><span>Trim <b>85 × 55 mm</b></span><span>Bleed <b>3 mm</b></span><span>Safe <b>5 mm</b></span><span>Corner <b>0 mm</b></span></div>
+      </div>
+
+      <div class="fol l">24 <small>Type · Specimen</small></div>
+      <div class="fol r"><small>Business card</small> 25</div>
+      <div class="tooth" aria-hidden="true"><canvas id="sx-tooth"></canvas></div>
+      <div class="grain"></div>
+     </div>
+    </div>
+</div>
+
+<!-- Shared engines. Reuse, don't redefine: the monolith carried fifteen
+     copies of mulberry32, three of the field builder, six of the dot screen
+     and two of the paper tooth. Classic <script src>, relative, so this
+     document opens by double-click with no server and no build step. -->
+<script src="../_engines/raster.js"></script>
+<script src="../_engines/rng.js"></script>
+<script src="../_engines/scene.js"></script>
+<script>
+(function(){
+  // SX: paper tooth (per-pixel value + faint fibres), one paint per size. Namespaced sx*.
+  var sxMulberry = Comp.mulberry32;   /* was a local mulberry32 — see _engines/rng.js */
+  let sxT=null, sxW=0;
+  function sxPaint(){
+    const cv=document.getElementById('sx-tooth'); if(!cv) return;
+    const host=cv.parentElement; const cw=host.clientWidth, ch=host.clientHeight; if(!cw||!ch) return;
+    if(Math.abs(cw-sxW)<40 && cv.width) return; sxW=cw;
+    const dpr=Comp.dpr(1.5);
+    const W=Math.round(cw*dpr), H=Math.round(ch*dpr); cv.width=W; cv.height=H;
+    const x=cv.getContext('2d'); const rnd=sxMulberry(2424);
+    x.fillStyle='#fff'; x.fillRect(0,0,W,H);
+    const img=x.getImageData(0,0,W,H), d=img.data;
+    for(let i=0;i<d.length;i+=4){ const n=(rnd()-.5)*20; d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,247+n)); }
+    x.putImageData(img,0,0);
+    x.globalAlpha=.035;
+    for(let i=0;i<Math.round(H/5.5);i++){ x.strokeStyle= rnd()<.5?'#000':'#fff'; x.lineWidth=1; const y=rnd()*H; x.beginPath(); x.moveTo(rnd()*W*.4,y); x.lineTo(W*.6+rnd()*W*.4,y+(rnd()-.5)*2.5); x.stroke(); }
+    x.globalAlpha=1;
+  }
+  Comp.paint(sxPaint, { threshold: 40 });
+})();
+</script>
+<!-- The one contract a fragment owes the host: height and ready over
+     postMessage, and a real stop on lens:pause. -->
+<script src="../../../learn/fragment-boot.js"></script>
+</body>
+</html>

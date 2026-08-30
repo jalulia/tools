@@ -190,14 +190,20 @@ body[data-index="closed"] .rail { display: none; }
 /* ================================================================= COLUMN */
 .col { min-width: 0; padding: var(--s7) var(--gutter) var(--s9);
        container-type: inline-size; container-name: col; }
-.colw { max-width: var(--col-max); margin: 0 auto; }
+.colw { max-width: var(--col-max); margin: 0 auto; min-width: 0; }
+/* ck-e9 · long uninterrupted strings the ck-e7 import prints in an entry's
+   prose (source file:line, math expressions like flow(x,y)=sin(x*.009)+…)
+   otherwise force a phone into horizontal scroll. Applied to the entry
+   pane; per-element opt-outs (pre, code with a scroll container) still win. */
+.colw p, .colw li, .colw h1, .colw h2, .colw h3, .colw h4 { overflow-wrap: anywhere; word-break: break-word; }
 
 .kicker { font-family: var(--f-mach); font-size: var(--t-label); letter-spacing: var(--tr-label);
           text-transform: uppercase; color: var(--ink-3); margin: 0; }
 h1 { font-size: var(--t-display); line-height: var(--t-display-lh); letter-spacing: var(--tr-display);
      font-weight: 600; margin: 10px 0 var(--s4); }
 .meta { display: flex; align-items: center; gap: var(--s4); flex-wrap: wrap;
-        padding-bottom: var(--s6); }
+        padding-bottom: var(--s6); min-width: 0; }
+.meta > * { min-width: 0; overflow-wrap: anywhere; }
 .meta .right { margin-left: auto; }
 .tags { font-family: var(--f-mach); font-size: var(--t-label); letter-spacing: var(--tr-label);
         text-transform: uppercase; color: var(--ink-3); }
@@ -292,14 +298,18 @@ body[data-apparatus="open"] .draw .opt { display: none; }
 .read h2::before { content: ""; position: absolute; top: -18px; left: 0; width: 26px; height: 1px;
                    background: var(--ink); }
 .read em { font-style: italic; }
-.read code, .cells code, .rungs code, .stage-note code {
+.read code, .cells code, .rungs code, .stage-note code,
+#view code, .colw code {
   font-family: var(--f-mach); font-size: .82em; letter-spacing: 0;
   background: var(--rule-3); padding: 1px 4px; color: var(--ink-2);
   /* Found by the real chapters: an exercise like "try smoothstep(0.0, 1.0,
      st.x)" wraps mid-call, and by default the tint box is sliced — the first
      fragment loses its right padding and the second its left, so one call
      reads as two tokens. `clone` gives each fragment the whole box. */
-  -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  /* ck-e9 · long file:line source cites the ck-e7 import prints inside
+     <code> — otherwise a 90-char path forces a phone into horizontal scroll. */
+  overflow-wrap: anywhere; word-break: break-word; }
 .read a { color: inherit; text-decoration: underline; text-underline-offset: 3px;
           text-decoration-color: var(--ink-4); }
 .read a:hover { text-decoration-color: var(--ink); }
@@ -550,7 +560,13 @@ body[data-apparatus="open"] .col { padding-right: calc(var(--app-w) + var(--gutt
 .card .cap { display: block; padding: 10px var(--s3) var(--s3); }
 .card .cap .n { font-family: var(--f-mach); font-size: var(--t-index); color: var(--ink-3); }
 .card .cap .t { display: block; font-size: var(--t-prose-sm); padding: 2px 0 3px; }
-.card .cap .r { font-family: var(--f-mach); font-size: 10px; color: var(--ink-3); }
+.card .cap .r { font-family: var(--f-mach); font-size: 10px; color: var(--ink-3);
+                overflow-wrap: anywhere; word-break: break-word; }
+.card .cap .t { overflow-wrap: anywhere; }
+/* ck-e9 · make sure a card never propagates a min-content that exceeds its
+   grid track — long file:line source paths, "PROPOSED BY ..." dashed chips,
+   and the tag row can otherwise force horizontal overflow on the phone. */
+.card { min-width: 0; overflow-wrap: anywhere; }
 /* ∅ — no decomposition on file. Not one of the four status marks: status and
    documentation are different variables and a mark may only mean one thing. */
 .nd { font-style: normal; color: var(--ink-3); padding-right: 5px; }
@@ -737,3 +753,414 @@ dialog.help dd { margin: 0; font-size: var(--t-prose-sm); color: var(--ink-2); }
   .app, .rail, .pill .car, .ctl, .chip, .card, .strip button, .stages button,
   .gallery button, .ent .t { transition: none !important; }
 }
+
+/* ============================================================================
+   ck-e2 · ATOMS TABLE — the shelves.
+   TEXTURE, SUBSTRATE, PROCESS sit as three side-by-side shelves in that order.
+   Every cell is an atom with a live swatch, a name, its parameter count and
+   its usage count. Paints on approach via observeSwatches() so 18 canvases
+   never all fire at once (research/03 measured ~250 ms of blocking work).
+   ============================================================================ */
+
+/* Shared intro paragraph — used across every route. */
+.lede { max-width: var(--measure); font-size: var(--t-prose); line-height: var(--t-prose-lh);
+        color: var(--ink-2); margin: 0 0 var(--s5); }
+.lede.sm { font-size: var(--t-prose-sm); color: var(--ink-3); }
+.lede b { color: var(--ink); font-weight: 600; }
+
+/* Small labelled chip. Route pages and technique pages carry many of these. */
+.pip { display: inline-flex; align-items: center; gap: 5px;
+       font-family: var(--f-mach); font-size: var(--t-label); letter-spacing: var(--tr-label);
+       text-transform: uppercase; color: var(--ink-2);
+       border: 1px solid var(--rule); padding: 3px 8px 2px; text-decoration: none;
+       background: var(--paper); border-radius: 1px; }
+a.pip:hover { border-color: var(--ink-4); color: var(--ink); }
+.pip .faint { color: var(--ink-3); }
+
+/* An intro-level route list, kept as fallback for routes without a bespoke
+   renderer. */
+.route-list { list-style: none; margin: 0; padding: 0; }
+.route-list li { border-bottom: 1px solid var(--rule); }
+.route-list a { display: flex; align-items: baseline; gap: var(--s4);
+                padding: var(--s4) 0; text-decoration: none; color: inherit; }
+.route-list a b { font-weight: 600; color: var(--ink); }
+.route-list a .s { color: var(--ink-3); font-size: var(--t-prose-sm); }
+.route-list a:hover b { text-decoration: underline; text-decoration-color: var(--ink-4);
+                        text-underline-offset: 3px; }
+
+.r { border: 0; border-top: 1px solid var(--rule-2); margin: var(--s7) 0 var(--s5); }
+
+/* --- shelf --- */
+.shelf { margin: var(--s6) 0 var(--s7); }
+.shelf-head { display: flex; align-items: baseline; gap: var(--s3); flex-wrap: wrap;
+              border-bottom: 1px solid var(--rule-2); padding-bottom: 8px; margin-bottom: var(--s4);
+              font-family: var(--f-mach); font-size: var(--t-label); letter-spacing: var(--tr-label);
+              text-transform: uppercase; color: var(--ink); }
+.shelf-head .n { color: var(--ink-3); font-weight: 400; }
+.shelf-head .nt { margin-left: auto; text-transform: none; color: var(--ink-3);
+                  letter-spacing: 0; font-family: var(--f-text); font-size: var(--t-prose-sm); }
+
+/* the atom grid — the cell width is tight enough that TEXTURE, SUBSTRATE and
+   PROCESS all fit into the first viewport at 1440 (D2's whole point). */
+.atoms-grid { display: grid; gap: 10px;
+              grid-template-columns: repeat(auto-fill, minmax(164px, 1fr)); }
+.sw-cell { display: block; text-decoration: none; color: inherit;
+           border: 1px solid var(--rule-2); background: var(--paper);
+           transition: border-color var(--m-state) var(--ease); }
+.sw-cell:hover { border-color: var(--ink); }
+.sw-cell .sw { display: block; aspect-ratio: 1 / 1; background: var(--bench);
+               position: relative; overflow: hidden; }
+.sw-cell .sw canvas { display: block; width: 100%; height: 100%; }
+.sw-cell .lbl { display: flex; align-items: baseline; gap: var(--s3);
+                padding: 8px 10px 0; }
+.sw-cell .lbl b { font-weight: 600; font-size: var(--t-prose-sm); color: var(--ink);
+                  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sw-cell .lbl .ct { margin-left: auto; font-family: var(--f-mach); font-size: var(--t-label);
+                    letter-spacing: var(--tr-label); color: var(--ink-3); font-style: normal; }
+.sw-cell .sub { display: block; padding: 2px 10px 8px;
+                font-family: var(--f-mach); font-size: 10px; letter-spacing: var(--tr-label);
+                text-transform: uppercase; color: var(--ink-3); }
+
+/* the ladder — atoms with no technique above them */
+.ladder { margin-top: var(--s6); }
+.lad-list { list-style: none; margin: 0; padding: 0; }
+.lad-list li { border-bottom: 1px solid var(--rule); }
+.lad-list a { display: grid; grid-template-columns: minmax(120px,220px) minmax(0,1fr);
+              gap: var(--s4); padding: var(--s3) 0;
+              text-decoration: none; color: inherit; font-size: var(--t-prose-sm); }
+@media (max-width: 640px) {
+  .lad-list a { grid-template-columns: 1fr; gap: 2px; }
+}
+.lad-list a b { color: var(--ink); font-weight: 600; }
+.lad-list a .s { color: var(--ink-3); }
+.lad-list a:hover b { text-decoration: underline; text-underline-offset: 3px;
+                      text-decoration-color: var(--ink-4); }
+
+/* ============================================================================
+   ck-e2 · ATOM ENTRY PAGE — swatch at design width, params inspector, used-by
+   strip. The atom-side rail holds produces-by / admitted-by / engine file /
+   governed-by.
+   ============================================================================ */
+
+.atom-split { display: grid; grid-template-columns: minmax(0, 1fr) 280px;
+              gap: var(--s7); align-items: start; margin-top: var(--s5); }
+@container col (max-width: 900px) { .atom-split { grid-template-columns: minmax(0, 1fr); } }
+.atom-main { min-width: 0; }
+.atom-side { min-width: 0; border-left: 1px solid var(--rule); padding-left: var(--s5); }
+.atom-side-block { margin-bottom: var(--s5); }
+.atom-side-block .lab { display: block; font-family: var(--f-mach); font-size: var(--t-label);
+                        letter-spacing: var(--tr-label); text-transform: uppercase;
+                        color: var(--ink-3); padding-bottom: 8px; }
+.atom-side-block .empty { color: var(--ink-2); font-size: var(--t-prose-sm); margin: 0; }
+.atom-side-block .empty.sm { font-size: var(--t-prose-sm); }
+.atom-side-block .src { font-family: var(--f-mach); font-size: var(--t-mach); color: var(--ink);
+                        background: var(--bench); padding: 6px 8px; margin: 0;
+                        overflow-x: auto; }
+.mini-card { display: block; text-decoration: none; color: inherit;
+             border: 1px solid var(--rule); padding: 8px 10px; margin-bottom: 6px; }
+.mini-card:hover { border-color: var(--ink); }
+.mini-card b { display: block; font-weight: 600; color: var(--ink); font-size: var(--t-prose-sm); }
+.mini-card .s { display: block; color: var(--ink-3); font-size: var(--t-prose-sm);
+                margin-top: 3px; }
+
+.atom-block { margin-top: var(--s6); }
+.atom-block .empty { font-family: var(--f-mach); font-size: var(--t-mach); color: var(--ink-2);
+                     padding: var(--s3) 0; }
+.atom-note { max-width: var(--measure); color: var(--ink-2); }
+
+.atom-swatch { background: var(--bench); padding: var(--mat-pad); }
+.atom-swatch canvas { display: block; width: 100%; height: 380px; background: var(--paper); }
+
+.atom-params { display: grid; gap: var(--s4) var(--s6);
+               grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.atom-params .par { min-width: 0; }
+.atom-params .par .lr { display: flex; align-items: baseline; gap: var(--s3); padding-bottom: 4px; }
+.atom-params .par label { font-family: var(--f-mach); font-size: var(--t-label); letter-spacing: var(--tr-label);
+                          text-transform: uppercase; color: var(--ink-2); }
+.atom-params .par label b { color: var(--ink); font-weight: 400; }
+.atom-params .par label .nt { color: var(--ink-3); text-transform: none; font-family: var(--f-text);
+                              font-size: var(--t-prose-sm); letter-spacing: 0; }
+.atom-params .par .val { margin-left: auto; font-family: var(--f-mach); font-size: var(--t-mach); color: var(--ink); }
+.atom-params .par input[type=range] { width: 100%; }
+.atom-params .par .mm { display: flex; justify-content: space-between; padding-top: 3px;
+                        font-family: var(--f-mach); font-size: 10px; color: var(--ink-3); font-style: normal; }
+.atom-params .par .mm i { font-style: normal; }
+
+/* used-by strip on the atom page: each cell is the piece's OWN thumb, or an
+   honest "no thumbnail on file" (never a re-render of the atom). */
+.used-strip { display: grid; gap: 10px;
+              grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.used-cell { display: block; text-decoration: none; color: inherit;
+             border: 1px solid var(--rule-2); background: var(--paper); }
+.used-cell:hover { border-color: var(--ink); }
+.used-cell .th { display: block; aspect-ratio: 1 / 1; background: var(--bench);
+                 position: relative; overflow: hidden; }
+.used-cell .th img { position: absolute; inset: 0; width: 100%; height: 100%;
+                     object-fit: cover; }
+.used-cell .th img.nothumb, .used-cell .th .nothumb { position: absolute; inset: 0;
+                     display: grid; place-items: center;
+                     font-family: var(--f-mach); font-size: 10px; letter-spacing: var(--tr-label);
+                     text-transform: uppercase; color: var(--ink-2); text-align: center; line-height: 1.4; }
+.used-cell .cap { display: block; padding: 6px 8px 8px; }
+.used-cell .cap b { display: block; font-weight: 600; font-size: var(--t-prose-sm); color: var(--ink); }
+.used-cell .cap .pv { display: block; font-family: var(--f-mach); font-size: 10px;
+                      color: var(--ink-3); padding-top: 2px; overflow: hidden;
+                      text-overflow: ellipsis; white-space: nowrap; }
+
+/* ============================================================================
+   ck-e3 · TECHNIQUE INDEX + TECHNIQUE PAGE
+   ============================================================================ */
+
+.unfiled-bar { border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule-2);
+               margin: var(--s5) 0 var(--s6); }
+.unfiled-bar a { display: flex; align-items: baseline; gap: var(--s4);
+                 padding: var(--s3) 0; text-decoration: none; color: inherit; }
+.unfiled-bar .lab { font-family: var(--f-mach); font-size: var(--t-label); letter-spacing: var(--tr-label);
+                    text-transform: uppercase; color: var(--ink-3); }
+.unfiled-bar b { font-size: var(--t-h2); font-weight: 600; color: var(--ink); }
+.unfiled-bar a { color: var(--ink-2); }
+.unfiled-bar a:hover b { text-decoration: underline; text-underline-offset: 4px; }
+
+.layer { margin: var(--s7) 0; }
+.layer-head { display: flex; align-items: baseline; gap: var(--s3);
+              border-bottom: 1px solid var(--ink); padding-bottom: 8px; margin-bottom: var(--s3);
+              font-family: var(--f-mach); font-size: var(--t-label); letter-spacing: var(--tr-label);
+              text-transform: uppercase; color: var(--ink); }
+.layer-head .n { margin-left: auto; color: var(--ink-3); }
+
+.tech-row { display: grid; grid-template-columns: 240px minmax(0, 1fr) minmax(260px, 340px);
+            gap: var(--s5); padding: var(--s4) 0;
+            border-bottom: 1px solid var(--rule);
+            text-decoration: none; color: inherit; align-items: start; }
+.tech-row:hover { background: var(--rule-3); }
+.tech-row:hover .tr-a b { text-decoration: underline; text-underline-offset: 3px; }
+.tech-row .tr-a { display: flex; flex-direction: column; gap: 6px; }
+.tech-row .tr-a b { font-weight: 600; color: var(--ink); font-size: var(--t-prose); line-height: 1.3; }
+.tech-row .tr-b { color: var(--ink-2); font-size: var(--t-prose-sm); line-height: 1.5; }
+.tech-row .tr-c { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.tech-row .tr-c .ct { font-family: var(--f-mach); font-size: var(--t-label); letter-spacing: var(--tr-label);
+                      text-transform: uppercase; color: var(--ink-3); }
+@container col (max-width: 800px) {
+  .tech-row { grid-template-columns: minmax(0,1fr); gap: 10px; padding: var(--s3) 0; }
+  .tech-row .tr-c { align-items: flex-start; }
+}
+
+.inst-strip { display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; overflow: hidden; }
+.inst-strip.empty .none { font-family: var(--f-mach); font-size: 10px; letter-spacing: var(--tr-label);
+                          text-transform: uppercase; color: var(--ink-3); }
+.inst-thumb { display: block; width: 44px; height: 44px; background: var(--bench);
+              border: 1px solid var(--rule); flex: none; position: relative; overflow: hidden; }
+.inst-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.inst-thumb .nothumb, .inst-thumb img.nothumb { position: absolute; inset: 0;
+              display: grid; place-items: center;
+              font-family: var(--f-mach); font-size: 8.5px; letter-spacing: 0.03em;
+              text-transform: uppercase; color: var(--ink-3); text-align: center; line-height: 1.15; }
+.inst-strip .more { font-family: var(--f-mach); font-size: var(--t-label); color: var(--ink-3);
+                    padding-left: 4px; }
+
+/* the five tests — a KV table */
+.tests { margin: var(--s4) 0 0; display: grid; grid-template-columns: 140px minmax(0, 1fr);
+         row-gap: 12px; column-gap: var(--s4); }
+.tests dt { font-family: var(--f-mach); font-size: var(--t-label); letter-spacing: var(--tr-label);
+            text-transform: uppercase; color: var(--ink-3); padding-top: 3px; }
+.tests dd { margin: 0; font-size: var(--t-prose-sm); line-height: 1.55; color: var(--ink-2); }
+.tests dd b { color: var(--ink); }
+
+/* the technique-page instance table */
+.inst-table { border-top: 1px solid var(--rule); }
+.ir { display: grid; grid-template-columns: 60px minmax(0, 1.4fr) minmax(0, 1.4fr) minmax(0, 1.2fr);
+      gap: var(--s3); padding: var(--s3) 0; border-bottom: 1px solid var(--rule-3);
+      text-decoration: none; color: inherit; align-items: center; }
+.ir.head { padding: 6px 0; color: var(--ink-3); font-family: var(--f-mach); font-size: var(--t-label);
+           letter-spacing: var(--tr-label); text-transform: uppercase; }
+.ir:hover:not(.head) { background: var(--rule-3); }
+.ir .th { display: block; width: 44px; height: 44px; background: var(--bench);
+          border: 1px solid var(--rule); position: relative; overflow: hidden; }
+.ir .th img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ir .th .nothumb, .ir .th img.nothumb { position: absolute; inset: 0;
+          display: grid; place-items: center;
+          font-family: var(--f-mach); font-size: 8.5px; letter-spacing: 0.02em;
+          text-transform: uppercase; color: var(--ink-3); text-align: center; line-height: 1.15; }
+.ir .a { color: var(--ink); font-size: var(--t-prose-sm); }
+.ir .a b { color: var(--ink); font-weight: 600; margin-right: 6px; }
+.ir .b { color: var(--ink-2); font-size: var(--t-prose-sm); }
+.ir .c { color: var(--ink-3); font-family: var(--f-mach); font-size: var(--t-label);
+         letter-spacing: var(--tr-label); text-transform: uppercase; }
+
+/* ============================================================================
+   ck-e4 · STYLES INDEX
+   ============================================================================ */
+
+.style-grid { display: grid; gap: var(--s4);
+              grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); margin-top: var(--s5); }
+.style-card { display: block; text-decoration: none; color: inherit;
+              border: 1px solid var(--rule-2); background: var(--paper);
+              padding: var(--s4) var(--s4) var(--s3); }
+.style-card:hover { border-color: var(--ink); }
+.style-card .sc-hd { display: flex; align-items: baseline; gap: var(--s3);
+                     border-bottom: 1px solid var(--rule); padding-bottom: 8px; margin-bottom: 8px; }
+.style-card .sc-hd b { font-weight: 600; color: var(--ink); font-size: var(--t-h2); line-height: 1.2; }
+.style-card .sc-hd .ct { margin-left: auto; font-family: var(--f-mach); font-size: var(--t-label);
+                          letter-spacing: var(--tr-label); text-transform: uppercase; color: var(--ink-3); }
+.style-card .sc-sum { margin: 0 0 var(--s3); font-size: var(--t-prose-sm); color: var(--ink-2);
+                      line-height: 1.5; }
+.style-card .sc-pal { display: flex; gap: 3px; margin-bottom: 8px; }
+.style-card .sc-pal i { display: block; width: 34px; height: 26px; border: 1px solid var(--rule-2); }
+.style-card .sc-type { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.style-card .sc-type span { font-family: var(--f-mach); font-size: 10px; letter-spacing: var(--tr-label);
+                            text-transform: uppercase; color: var(--ink); }
+.style-card .sc-type span i { font-style: normal; color: var(--ink-3); margin-right: 4px; }
+.style-card .sc-vocab { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.style-card .sc-vocab .pip { padding: 2px 6px 1px; font-size: 10px; }
+.style-card .sc-vocab .pip.more { color: var(--ink-3); }
+.style-card .sc-none { margin: 0 0 8px; font-family: var(--f-mach); font-size: 10px;
+                       letter-spacing: var(--tr-label); text-transform: uppercase; color: var(--ink-3); }
+.style-card .sc-eng { font-family: var(--f-mach); font-size: 10px; letter-spacing: var(--tr-label);
+                      text-transform: uppercase; color: var(--ink-3);
+                      border-top: 1px solid var(--rule-3); padding-top: 6px; }
+
+/* --- print / motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .tech-row, .sw-cell, .style-card, .used-cell, .mini-card { transition: none !important; }
+}
+
+/* ============================================================================
+   ck-e5 · COUPLING BLOCK — one driver, several consequences, one listen,
+   one mute test. Rendered by views.js couplingHTML for any entry with a
+   `driver` or `consequences[]`. Not a third page-kind; a section within an
+   ordinary entry page.
+   ============================================================================ */
+.blk.coupling { border-top: 1px solid var(--rule-2); }
+.coup-driver { font-family: var(--f-text); font-size: var(--t-prose-sm);
+               color: var(--ink); margin: 0 0 var(--s3); max-width: 66ch; line-height: 1.55; }
+.coup-driver b { font-family: var(--f-mach); font-size: var(--t-label);
+                 letter-spacing: var(--tr-label); text-transform: uppercase;
+                 color: var(--ink-3); font-weight: 400; margin-right: 8px; }
+table.cons { width: 100%; border-collapse: collapse; font-size: var(--t-prose-sm);
+             margin: var(--s2) 0 var(--s3); }
+table.cons th { font-family: var(--f-mach); font-size: var(--t-label);
+                letter-spacing: var(--tr-label); text-transform: uppercase;
+                color: var(--ink-3); font-weight: 400; text-align: left;
+                border-bottom: 1px solid var(--rule-2); padding: 0 10px 5px 0; }
+table.cons td { border-bottom: 1px solid var(--rule-3); padding: 6px 10px 6px 0;
+                vertical-align: top; color: var(--ink-2); line-height: 1.45; }
+table.cons td:first-child { color: var(--ink); font-weight: 600;
+                            overflow-wrap: anywhere; word-break: break-word; }
+table.cons td.c { font-family: var(--f-mach); font-size: var(--t-mach);
+                  letter-spacing: 0.02em; color: var(--ink-3);
+                  overflow-wrap: anywhere; word-break: break-word; }
+/* ck-e9 · a coupling entry lists source file:line pairs that are wider than
+   a phone. Allow the table to become a horizontal-scroll region within its
+   own container rather than pushing the page. */
+.blk.coupling { overflow-x: auto; }
+table.cons { min-width: 0; }
+.coup-mute { margin: var(--s3) 0 0; padding: 10px 12px; border-left: 2px solid var(--ink);
+             background: var(--bench-3); font-size: var(--t-prose-sm);
+             color: var(--ink-2); line-height: 1.55; max-width: 66ch; }
+.coup-mute b { color: var(--ink); font-weight: 600; }
+
+/* ck-e6 · PROPOSED status — a dashed rule marks a proposed row in any
+   listing so nobody mistakes a candidate for a ruling. */
+.st[data-st="proposed"] { border-style: dashed; color: var(--ink-2); }
+.tech-row[data-proposed], .card[data-proposed], .ir[data-proposed] {
+  border-style: dashed; }
+
+/* audio-lane pane styles — the still-frame and live readouts drawn by
+   adapters/audio.js. Height is set inline per pane kind. */
+.audio-pane { position: relative; }
+.audio-pane canvas { display: block; width: 100%; height: 100%; }
+
+/* ck-e6 · SYMPTOMS PAGE — anti-pattern index. A symptom is a name for a
+   defect that reaches its known_failure entries and the technique clauses
+   that overuse into it. */
+.symptom-row { display: grid; grid-template-columns: 1fr 2fr; gap: var(--s4);
+               padding: var(--s3) 0; border-bottom: 1px solid var(--rule); align-items: start; }
+.symptom-row .sr-a b { display: block; font-size: var(--t-h3); color: var(--ink);
+                       margin-bottom: 4px; font-weight: 600; }
+.symptom-row .sr-a p { font-size: var(--t-prose-sm); color: var(--ink-2);
+                       line-height: 1.5; margin: 0; }
+.symptom-row .sr-b .lab { font-family: var(--f-mach); font-size: var(--t-label);
+                          letter-spacing: var(--tr-label); text-transform: uppercase;
+                          color: var(--ink-3); display: block; margin-top: 10px; }
+.symptom-row .sr-b .lab:first-child { margin-top: 0; }
+.symptom-row .sr-b .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.symptom-row .sr-b .doinstead { margin-top: 10px; font-family: var(--f-text);
+                                font-size: var(--t-prose-sm); color: var(--ink);
+                                border-left: 2px solid var(--ink); padding-left: 10px;
+                                line-height: 1.5; max-width: 60ch; }
+
+/* ck-e6 · UNFILED BATCH — big affordance for classifying */
+.unfiled-batch { padding: var(--s3); border: 1px solid var(--rule-2); background: var(--bench);
+                 margin: var(--s3) 0 var(--s4); font-size: var(--t-prose-sm); color: var(--ink-2);
+                 line-height: 1.55; }
+.unfiled-batch b { color: var(--ink); }
+
+/* ck-e7 · PROPOSED_GRADE — from researcher, awaiting Julia. Distinct from
+   `ruling.by: 'proposed'` (a proposed text) and `status: 'proposed'` (a
+   tool-suggested row). This is a HUMAN's grade suggestion, imported. */
+.prop-grade { display: inline-block; margin-left: 10px; padding: 2px 8px;
+              font-family: var(--f-mach); font-size: 10px;
+              letter-spacing: var(--tr-label); text-transform: uppercase;
+              border: 1px dashed var(--ink-3); color: var(--ink-2); }
+.prop-grade b { color: var(--ink); }
+
+/* ck-e8 · SKILLS — the two-shelf index and the per-skill page.
+   Shelves reuse the atoms-page shelf idiom (already the visual grammar for a
+   grouped landing). Cards live on a responsive grid that wraps at ~280 px so
+   a phone shows one column, a tablet two, and 1440 fits four across. */
+.skill-shelf { margin: var(--s6) 0 var(--s7); }
+.skill-shelf .shelf-head { margin-bottom: var(--s3); }
+.skill-grid { display: grid; gap: var(--s3);
+              grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.skill-card { display: grid; gap: 6px; padding: var(--s3);
+              border: 1px solid var(--rule); background: var(--paper);
+              text-decoration: none; color: inherit; min-height: 108px; }
+.skill-card:hover { border-color: var(--ink-2); }
+.skill-card .skill-hd { display: flex; align-items: baseline; gap: var(--s2);
+                        justify-content: space-between; flex-wrap: wrap; }
+.skill-card .skill-hd b { font-weight: 600; color: var(--ink); font-size: var(--t-h4, 15px);
+                          line-height: 1.25; }
+.skill-card .s { font-family: var(--f-mach); font-size: 10px;
+                 letter-spacing: var(--tr-label); text-transform: uppercase;
+                 color: var(--ink-3); white-space: nowrap; }
+.skill-card .stub-lab { color: var(--ink-2); }
+.skill-card .skill-desc { color: var(--ink-2); font-size: var(--t-prose-sm);
+                          line-height: 1.45; }
+.skill-card .skill-count { margin-top: auto; font-family: var(--f-mach);
+                           font-size: 11px; letter-spacing: 0.02em; color: var(--ink-2); }
+.skill-card .skill-count.empty { color: var(--ink-2); }
+.skill-card.stub { border-style: dashed; background: var(--bench); }
+
+/* Per-skill page. Reuses .atom-block idiom (rows of head + body). */
+.skill-block { margin: var(--s4) 0; padding: var(--s3) 0;
+               border-top: 1px solid var(--rule); }
+.skill-block .blk-head { display: flex; align-items: baseline; gap: var(--s3);
+                         font-family: var(--f-mach); font-size: var(--t-label);
+                         letter-spacing: var(--tr-label); text-transform: uppercase;
+                         color: var(--ink-3); padding-bottom: var(--s2); }
+.skill-block .blk-head .n { color: var(--ink-3); }
+.skill-block .blk-head .lab { color: var(--ink-2); }
+.skill-block.stub-block { background: var(--bench); padding: var(--s3); border: 1px dashed var(--rule-2); }
+.skill-one { max-width: 68ch; font-size: var(--t-prose); line-height: 1.55;
+             color: var(--ink); margin: 0 0 var(--s3); }
+.skill-tests { padding-left: var(--s4); max-width: 72ch; }
+.skill-tests li { margin-bottom: var(--s2); line-height: 1.5; color: var(--ink); }
+.skill-tests li b { color: var(--ink); }
+
+.skill-instances { display: grid; gap: var(--s4);
+                   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.skill-instance-group .ig-hd { display: flex; align-items: baseline; gap: var(--s2);
+                               font-family: var(--f-mach); font-size: var(--t-label);
+                               letter-spacing: var(--tr-label); text-transform: uppercase;
+                               color: var(--ink-3); margin-bottom: var(--s2); }
+.skill-instance-group .ig-list { list-style: none; margin: 0; padding: 0; }
+.skill-instance-group .ig-list li { border-bottom: 1px solid var(--rule); }
+.skill-instance-group .ig-list a { display: grid; grid-template-columns: 44px 1fr auto;
+                                   gap: var(--s2); padding: 8px 0; align-items: baseline;
+                                   text-decoration: none; color: inherit; }
+.skill-instance-group .ig-list .ix { font-family: var(--f-mach); font-size: 11px;
+                                     color: var(--ink-3); }
+.skill-instance-group .ig-list b { font-weight: 500; color: var(--ink);
+                                   font-size: var(--t-prose-sm); }
+.skill-instance-group .ig-list a:hover b { text-decoration: underline;
+                                           text-decoration-color: var(--ink-4); }
