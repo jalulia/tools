@@ -275,8 +275,11 @@ function verifyOne({ manifest, dir, entries, missingScripts }, schema, say, load
     if (e.entity === 'atom' && !e.kind) {
       say(`atom "${e.id}" has no kind — declare one of substrate/process/texture/colour/type/engine/field/mark/voice/space/bus`);
     }
-    // a canonical technique with instances must state read + coupling + pass_order
-    if (e.entity === 'technique' && e.status === 'canonical') {
+    // a canonical technique with instances must state read + coupling + pass_order.
+    // `stub: true` is the escape hatch: a stub can be canonical AND unfinished
+    // (schema.status doc). ck-e3 lifts each stub off by carrying the worked
+    // example's critique block up to its parent technique.
+    if (e.entity === 'technique' && e.status === 'canonical' && !e.stub) {
       const instances = entries.filter((x) => (x.instance_of || []).includes(e.id));
       if (instances.length > 0) {
         const c = e.critique || {};
