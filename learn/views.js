@@ -175,12 +175,16 @@
     S.unobservePreviews();
     if (swatchIO) { swatchIO.disconnect(); swatchIO = null; }
     /* ck-e2/e3 · entity page templates. An atom needs a swatch and a param
-       inspector; a technique needs the five tests and its instance table.
-       Neither uses the course/catalogue stage furniture, so they branch
-       here before it renders. Anything that is not atom or technique gets
-       the shared entry template below. */
+       inspector; a technique STUB needs the five tests and its instance
+       table. A chapter (a technique that carries its own build-up, params,
+       gallery and exercises) keeps the course template — the tutorial IS
+       the technique for those, and folding the compact page over it would
+       hide the very thing the chapter exists to teach. */
     if (e.entity === 'atom')      return renderAtomPage(e);
-    if (e.entity === 'technique') return renderTechniquePage(e);
+    var isChapterTechnique = e.entity === 'technique' &&
+      ((e.stages || []).length || (e.gallery || []).length ||
+       (e.exercises || []).length || (e.params || []).length);
+    if (e.entity === 'technique' && !isChapterTechnique) return renderTechniquePage(e);
     view.kind = 'entry';
     S.current = e;
     localExample = null;
@@ -1217,24 +1221,62 @@
     var stChip = '<span class="st" data-st="' + esc(t.status || 'canonical') + '">' +
       esc(String(t.status || 'canonical').replace('-', ' ')) + '</span>' +
       (t.stub ? '<span class="st" data-st="stub">stub</span>' : '');
-    var strip = inst.length
-      ? '<div class="inst-strip">' + inst.slice(0, 6).map(function (e) {
-          var thumb = e.thumb && (typeof e.thumb === 'string' ? e.thumb : e.thumb.file);
-          var pathBase = e.path || ('content/' + e.id + '/');
-          var img = thumb
-            ? '<img src="' + esc(pathBase + thumb) + '" alt="" loading="lazy" onerror="this.classList.add(\'nothumb\');this.removeAttribute(\'src\')">'
-            : '<span class="nothumb">no<br>thumb</span>';
-          return '<a class="inst-thumb" href="#/' + esc(e.id) + '" title="' + esc(e.title) + '">' +
-            img + '</a>';
-        }).join('') +
-        (inst.length > 6 ? '<span class="more">+' + (inst.length - 6) + '</span>' : '') +
-        '</div>'
-      : '<div class="inst-strip empty"><span class="none">no instances on file</span></div>';
+
+    /* the contact strip. Three cases, in this order of preference:
+       1. This technique has external instances (explorations that carry
+          instance_of[]). Show up to six of their thumbs.
+       2. It has no external instances but has an internal `gallery[]` with
+          thumbs (the 22 chapters — the gallery IS the instance list, so a
+          chapter should not read as barren just because nobody has promoted
+          its variants to top-level entries yet).
+       3. Nothing — say so honestly. The `stub` chapters (unlinked etc.)
+          without instances will land here.                                   */
+    var stripHTML, countLbl;
+    if (inst.length) {
+      stripHTML = inst.slice(0, 6).map(function (e) {
+        var thumb = e.thumb && (typeof e.thumb === 'string' ? e.thumb : e.thumb.file);
+        var pathBase = e.path || ('content/' + e.id + '/');
+        var img = thumb
+          ? '<img src="' + esc(pathBase + thumb) + '" alt="" loading="lazy" onerror="this.classList.add(\'nothumb\');this.removeAttribute(\'src\')">'
+          : '<span class="nothumb">no<br>thumb</span>';
+        return '<a class="inst-thumb" href="#/' + esc(e.id) + '" title="' + esc(e.title) + '">' +
+          img + '</a>';
+      }).join('') + (inst.length > 6 ? '<span class="more">+' + (inst.length - 6) + '</span>' : '');
+      countLbl = inst.length + ' inst.';
+    } else {
+      /* fall back to a chapter's own gallery + main thumb — the built-in
+         examples that ck-e3 does not promote to top-level explorations
+         (judgment call — see CHECKPOINT-E3.md). */
+      var galleryThumbs = (t.gallery || []).filter(function (g) { return g.thumb; });
+      var mainThumb = t.thumb && (typeof t.thumb === 'string' ? t.thumb : t.thumb.file);
+      var pathBase = t.path || ('content/' + t.id + '/');
+      var chips = [];
+      if (mainThumb) {
+        chips.push('<span class="inst-thumb self" title="' + esc(t.title) + ' — this chapter’s own plate">' +
+          '<img src="' + esc(pathBase + mainThumb) + '" alt="" loading="lazy" onerror="this.classList.add(\'nothumb\');this.removeAttribute(\'src\')">' +
+          '</span>');
+      }
+      galleryThumbs.slice(0, 5).forEach(function (g) {
+        chips.push('<span class="inst-thumb self" title="' + esc(g.label) + '">' +
+          '<img src="' + esc(pathBase + g.thumb) + '" alt="" loading="lazy" onerror="this.classList.add(\'nothumb\');this.removeAttribute(\'src\')">' +
+          '</span>');
+      });
+      if (chips.length) {
+        stripHTML = chips.join('') +
+          '<span class="more" title="inline examples on the chapter, not promoted to top-level explorations">built-in</span>';
+        countLbl = chips.length + ' example' + (chips.length === 1 ? '' : 's');
+      } else {
+        stripHTML = '<span class="none">no instances on file</span>';
+        countLbl = '0 inst.';
+      }
+    }
+
     return '<a class="tech-row" href="#/technique/' + esc(t.id) + '">' +
       '<div class="tr-a"><b>' + esc(t.title) + '</b>' + stChip + '</div>' +
       '<div class="tr-b">' + esc(t.description || t.note || '') + '</div>' +
-      '<div class="tr-c">' + strip +
-        '<span class="ct">' + inst.length + ' inst.</span></div>' +
+      '<div class="tr-c"><div class="inst-strip' + (inst.length ? '' : ' self') + '">' +
+        stripHTML + '</div>' +
+        '<span class="ct">' + countLbl + '</span></div>' +
       '</a>';
   }
 
