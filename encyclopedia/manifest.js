@@ -161,20 +161,51 @@ Shell.registerManifest({
       entries: ["e4-masonry-cards", "e5-case-card", "w1-seven-pass-band-chain"] }
   ],
 
+  /* ck-e8 · Skills grouped into two shelves at #/skills:
+     - Competency RUNGS (rung >= 2): two real rungs at the top, plus four
+       LATER RUNGS (rung: 3, stub:true) named but visibly empty per the
+       creative-competencies-suite.md §"Later rungs" list. Only rungs get
+       their own #/skill/<id> page. Later rungs render as STUB.
+     - Format/craft skills (rung: 1): the 12 producers/governors of pieces
+       that make up the archive today. Each has a page listing every entry
+       it governs. Ships EMPTY on purpose if the rule below tags nothing. */
   skills: [
-    { id: 'composing-computational-material-systems', title: 'Composing computational material systems', role: 'critiques', rung: 2 },
-    { id: 'components-craft', title: 'Components craft', role: 'governs', rung: 1 },
-    { id: 'creative-hifi-frontend', title: 'Creative hi-fi frontend', role: 'produces', rung: 1 },
-    { id: 'algorithmic-art', title: 'Algorithmic art', role: 'produces', rung: 1 },
-    { id: 'material-systems-direction', title: 'Material systems direction', role: 'critiques', rung: 3 },
+    /* -- competency rungs -- */
+    { id: 'composing-computational-material-systems', title: 'Composing computational material systems',
+      role: 'critiques', rung: 2,
+      note: 'The material-systems rung: one source, several consequences, one read; the five tests (shared cause, distinct jobs, order dependence, single read, removal test) and the six anti-patterns.' },
+    { id: 'composing-computational-sound-systems', title: 'Composing computational sound systems',
+      role: 'critiques', rung: 2,
+      note: 'The sound-systems rung: parallels the material-systems rung for audio. Its five tests are the visual ones translated (shared cause · distinct voices · signal path order · single listen · the MUTE TEST). REVIEW-SOUND §1: 34 of 47 inventory rows have no governing skill; the rung is unbuilt on the skill side, filed against on the entry side.' },
+    { id: 'body-of-work-variation', title: 'Body-of-work variation',
+      role: 'critiques', rung: 3, stub: true,
+      note: 'LATER RUNG · unbuilt. A brand of work carries a shape across pieces, not inside one. This rung is empty on purpose — it calls DOWN into the two rung-2 skills for per-piece coherence.' },
+    { id: 'type-as-material', title: 'Type as material · editorial motion',
+      role: 'critiques', rung: 3, stub: true,
+      note: 'LATER RUNG · unbuilt. Type as a material governed by the same tests as the field around it, and editorial motion that has a metre. Calls DOWN into material-systems.' },
+    { id: 'art-direct-to-supplied-canon', title: 'Art-direct to a supplied canon',
+      role: 'critiques', rung: 3, stub: true,
+      note: 'LATER RUNG · unbuilt. Reading a canon file (a brand, a client, an established body) and enforcing it as a hard constraint, not an inspiration. Calls DOWN into material-systems.' },
+    { id: 'production-and-handoff', title: 'Production and handoff',
+      role: 'governs', rung: 3, stub: true,
+      note: 'LATER RUNG · unbuilt. From critique to shipped artefact — colour management, DPI, print pass, engineering handoff, version discipline. Calls DOWN into all rung-1 skills.' },
+    /* -- format / craft (rung 1) -- */
+    { id: 'canvas-design', title: 'Canvas design', role: 'produces', rung: 1 },
     { id: 'frontend-design', title: 'Frontend design', role: 'produces', rung: 1 },
+    { id: 'creative-hifi-frontend', title: 'Creative hi-fi frontend', role: 'produces', rung: 1 },
     { id: 'technical-illustration', title: 'Technical illustration', role: 'produces', rung: 1 },
     { id: 'patent-figure-drawing', title: 'Patent-figure drawing', role: 'produces', rung: 1 },
-    { id: 'canvas-design', title: 'Canvas design', role: 'produces', rung: 1 },
-    { id: 'dataviz', title: 'Data visualization', role: 'produces', rung: 1 },
-    { id: 'artifact-diagramming', title: 'Artifact diagramming', role: 'produces', rung: 1 },
+    { id: 'technical-svg-diagrams', title: 'Technical SVG diagrams', role: 'produces', rung: 1 },
+    { id: 'headless-render', title: 'Headless render', role: 'governs', rung: 1 },
+    { id: 'algorithmic-art', title: 'Algorithmic art', role: 'produces', rung: 1 },
     { id: 'brand-world', title: 'Brand world', role: 'governs', rung: 2 },
-    { id: 'composing-computational-sound-systems', title: 'Composing computational sound systems', role: 'critiques', rung: 2, note: 'proposed rung — parallels composing-computational-material-systems for audio: one source, several consequences, one listen, the mute test. REVIEW-SOUND §1: 34 of 47 inventory rows have no governing skill, the rung is unbuilt.' },
+    { id: 'dataviz', title: 'Data visualization', role: 'produces', rung: 1 },
+    { id: 'sell-sheet', title: 'Sell sheet', role: 'produces', rung: 1 },
+    { id: 'ki-brief', title: 'Ki brief', role: 'produces', rung: 1 },
+    /* -- carried from ck-e0/e1 for entries that already declare them -- */
+    { id: 'components-craft', title: 'Components craft', role: 'governs', rung: 1 },
+    { id: 'material-systems-direction', title: 'Material systems direction', role: 'critiques', rung: 3 },
+    { id: 'artifact-diagramming', title: 'Artifact diagramming', role: 'produces', rung: 1 },
     { id: 'proof-cleanup-upscale', title: 'Proof cleanup & upscale', role: 'produces', rung: 1 }
   ],
 

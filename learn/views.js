@@ -1125,7 +1125,7 @@
       ? '<div class="atom-side-block"><span class="lab">Governed by</span><div class="chips">' +
         a.governed_by.map(function (sid) {
           var sk = skillById(sid);
-          return '<a class="pip" href="#/skills/' + esc(sid) + '">' + esc((sk && sk.title) || sid) + '</a>';
+          return '<a class="pip" href="#/skill/' + esc(sid) + '">' + esc((sk && sk.title) || sid) + '</a>';
         }).join('') + '</div></div>'
       : '';
 
@@ -1413,7 +1413,7 @@
       ? '<section class="atom-block"><div class="blk-head"><span class="lab">Governed by</span></div>' +
         '<div class="chips">' + t.governed_by.map(function (sid) {
           var sk = skillById(sid);
-          return '<a class="pip" href="#/skills/' + esc(sid) + '">' + esc((sk && sk.title) || sid) + '</a>';
+          return '<a class="pip" href="#/skill/' + esc(sid) + '">' + esc((sk && sk.title) || sid) + '</a>';
         }).join('') + '</div></section>'
       : '';
 
@@ -1687,6 +1687,227 @@
     S.observePreviews(el('view'));
   }
 
+  /* ============================================================================
+     ck-e8 · SKILLS INDEX + PER-SKILL PAGE
+
+     `#/skills` — 18 cards on two shelves:
+       - Competency RUNGS (rung ≥ 2): the two REAL rungs
+         (composing-computational-material-systems + the proposed sound rung)
+         at the top; four LATER RUNGS below, declared with `stub: true`, shown
+         empty and named ("body-of-work variation", "type-as-material",
+         "art-direct-to-supplied-canon", "production-and-handoff") per
+         creative-competencies-suite.md §"Later rungs".
+       - Format / craft skills (rung 1) — the twelve producers of the
+         pieces the archive actually files. Every card carries N entries
+         governed by S.governedBy(entry) (declared + rule-derived).
+
+     `#/skill/<id>` — the single-skill page. Real rungs show contract summary
+     (from /home/claude/corpus/skills/<id>/SKILL.md where present) plus the
+     five tests; stub rungs render as STUB with a link to add via cowork.
+     ============================================================================ */
+  function skillCard(s) {
+    var entries = S.entriesGovernedBy(s.id);
+    var n = entries.length;
+    var isStub = !!s.stub;
+    var lab = isStub
+      ? '<span class="s stub-lab">LATER RUNG · not yet built</span>'
+      : (s.role ? '<span class="s">' + esc(s.role) + (s.rung ? ' · rung ' + s.rung : '') + '</span>' : '');
+    var count = isStub
+      ? '<span class="skill-count empty">0 entries · empty on purpose</span>'
+      : '<span class="skill-count' + (n ? '' : ' empty') + '">' + n + ' entr' + (n === 1 ? 'y' : 'ies') + ' governed' + (n ? '' : ' · empty for now') + '</span>';
+    var desc = s.note ? '<span class="skill-desc">' + esc(s.note) + '</span>' : '';
+    return '<a class="skill-card' + (isStub ? ' stub' : '') + '" href="#/skill/' + esc(s.id) + '">' +
+      '<span class="skill-hd"><b>' + esc(s.title) + '</b>' + lab + '</span>' +
+      desc + count + '</a>';
+  }
+
+  function renderSkillsIndex() {
+    var skills = (S.manifest.skills || []).slice();
+    var rungs = skills.filter(function (s) { return (s.rung || 0) >= 2; });
+    // rungs first by ascending rung, non-stub before stub inside a rung
+    rungs.sort(function (a, b) {
+      if ((a.rung || 0) !== (b.rung || 0)) return (a.rung || 0) - (b.rung || 0);
+      return (a.stub ? 1 : 0) - (b.stub ? 1 : 0);
+    });
+    var craft = skills.filter(function (s) { return (s.rung || 0) < 2; });
+
+    var head =
+      '<p class="kicker">Skills tagged on the archive</p>' +
+      '<h1>Skills</h1>' +
+      '<p class="lede">The competency rungs at the top, the format / craft ' +
+      'skills below. Every card is a live count of the entries filed against ' +
+      'that skill via <code>governed_by[]</code> — declared on the entry, or ' +
+      'inferred from the entry\'s shape (style, lane, kind, tags) by ' +
+      '<code>Shell.governedBy()</code>. Only rungs get their own page.</p>' +
+      '<div class="meta"><span class="tags">' + skills.length + ' skills <b>·</b> ' +
+        rungs.filter(function (s) { return !s.stub; }).length + ' rungs built <b>·</b> ' +
+        rungs.filter(function (s) { return s.stub; }).length + ' rungs empty (named) <b>·</b> ' +
+        craft.length + ' format/craft' +
+      '</span></div>';
+
+    var body =
+      '<section class="skill-shelf"><div class="shelf-head">' +
+        '<span class="lab">Competency rungs</span>' +
+        '<span class="n">' + rungs.length + '</span>' +
+        '<span class="nt">A rung critiques or governs a whole class of work. ' +
+        'Two shipping today; four LATER RUNGS declared empty per ' +
+        'creative-competencies-suite.md §"Later rungs".</span>' +
+      '</div>' +
+        '<div class="skill-grid">' + rungs.map(skillCard).join('') + '</div>' +
+      '</section>' +
+      '<section class="skill-shelf"><div class="shelf-head">' +
+        '<span class="lab">Format / craft</span>' +
+        '<span class="n">' + craft.length + '</span>' +
+        '<span class="nt">Rung-1 skills — the producers and governors of ' +
+        'individual pieces. Each card is a live entry count.</span>' +
+      '</div>' +
+        '<div class="skill-grid">' + craft.map(skillCard).join('') + '</div>' +
+      '</section>';
+
+    return head + body;
+  }
+
+  /* The five tests, per rung — the shape composing-computational-material-systems
+     names as its own contract. The sound rung translates them to audio. */
+  var RUNG_TESTS = {
+    'composing-computational-material-systems': {
+      one: 'One primary read — the material condition or compositional proposition, stated in one sentence. If you cannot, the piece has no idea yet.',
+      tests: [
+        ['shared cause',      'One field or event drives the visible consequences. If each operator has an independent, hand-tuned parameter, it is a pile.'],
+        ['distinct jobs',     'Each operator has its own job. Two doing the same job means one is decoration.'],
+        ['order dependence',  'The pass order is load-bearing — reordering changes the result.'],
+        ['single read',       'The viewer perceives one material condition, not a tour of techniques.'],
+        ['removal test',      'Take any layer out and the read collapses. If it does not, that layer was decoration.']
+      ],
+      antipatterns: ['the vibe stack', 'CSS filter as material', 'noise as texture',
+        'effect-first framing', 'animate-the-peak-only', 'symmetry-as-interest']
+    },
+    'composing-computational-sound-systems': {
+      one: 'One primary listen — the aural condition (room, character, event) stated in one sentence, not a list of nodes.',
+      tests: [
+        ['shared cause',      'A single scalar or gate drives voice(s), space and bus together — not three tracks with three envelopes.'],
+        ['distinct voices',   'Each voice has its own job. Two voices reaching for the same band on the same beat is one voice too many.'],
+        ['signal path order', 'Compressor before or after limiter is not the same device. Reverb before or after distortion changes the room.'],
+        ['single listen',     'The listener hears one place / one event, not a graph of nodes.'],
+        ['the MUTE TEST',     'Mute the driver; the whole system should go quiet in the same beat. If the room keeps talking, the coupling was decoration.']
+      ],
+      antipatterns: ['reverb as EQ', 'compressor as glue with nothing to glue',
+        'sidechain-for-effect', 'wet without dry', 'silent by default']
+    }
+  };
+
+  function renderSkill(s, query) {
+    S.unmountAdapter();
+    S.unobservePreviews();
+    view.kind = 'skill'; view.styleId = null; view.route = null;
+    S.current = null; S.currentExample = null; localExample = null;
+    S.markCurrent(); position();
+
+    var crumb = el('crumb');
+    if (crumb) crumb.textContent = 'Skill · ' + s.title;
+
+    var entries = S.entriesGovernedBy(s.id);
+    var isStub = !!s.stub;
+    var isRung = (s.rung || 0) >= 2;
+    var contract = RUNG_TESTS[s.id];
+
+    // group instances by entity for a legible table
+    var byEnt = { technique: [], atom: [], exploration: [], coupling: [] };
+    entries.forEach(function (e) {
+      var k = e.entity || 'exploration';
+      if (byEnt[k]) byEnt[k].push(e); else byEnt.exploration.push(e);
+    });
+
+    var head =
+      '<p class="kicker">Skill · ' + esc(s.role || 'skill') + (s.rung ? ' · rung ' + s.rung : '') + '</p>' +
+      '<h1>' + esc(s.title) + '</h1>' +
+      (s.note ? '<p class="lede">' + esc(s.note) + '</p>' : '') +
+      '<div class="meta">' +
+        (isStub ? '<span class="st" data-st="stub">STUB — not yet built</span>' : '') +
+        '<span class="tags">' + entries.length + ' entr' + (entries.length === 1 ? 'y' : 'ies') + ' governed</span>' +
+      '</div>';
+
+    var body = '';
+
+    if (isStub) {
+      body += '<section class="skill-block stub-block">' +
+        '<div class="blk-head"><span class="lab">STUB — not yet built</span></div>' +
+        '<p class="empty">This rung is declared here so the shape of the ladder ' +
+        'is visible even where a rung is not yet built. From ' +
+        '<code>creative-competencies-suite.md §"Later rungs"</code>: ' +
+        '<i>body-of-work / series variation; type-as-material + editorial ' +
+        'motion; art-direct-to-a-supplied-canon; production/handoff. Each calls ' +
+        'down into rung 1 for per-piece coherence.</i></p>' +
+        '<p class="empty">To draft this rung, open a cowork session against ' +
+        '<code>corpus/skills/</code> and file a new <code>SKILL.md</code>. ' +
+        'Then declare <code>governed_by: [\'' + esc(s.id) + '\']</code> on the ' +
+        'entries this rung critiques and the count on this page fills in.</p>' +
+        '</section>';
+    } else if (contract) {
+      body += '<section class="skill-block">' +
+        '<div class="blk-head"><span class="lab">The skill\'s own contract</span>' +
+        '<span class="n">from corpus/skills/' + esc(s.id) + '/SKILL.md</span></div>' +
+        '<p class="skill-one"><b>One ' + (s.id.indexOf('sound') >= 0 ? 'listen' : 'read') + '.</b> ' + esc(contract.one) + '</p>' +
+        '<div class="blk-head"><span class="lab">Five tests</span></div>' +
+        '<ol class="skill-tests">' +
+          contract.tests.map(function (t) {
+            return '<li><b>' + esc(t[0]) + '.</b> ' + esc(t[1]) + '</li>';
+          }).join('') +
+        '</ol>' +
+        (contract.antipatterns ? '<div class="blk-head"><span class="lab">Anti-patterns it refuses</span></div>' +
+          '<div class="chips">' + contract.antipatterns.map(function (a) {
+            return '<span class="pip">' + esc(a) + '</span>';
+          }).join('') + '</div>' : '') +
+        '</section>';
+    } else if (isRung) {
+      body += '<section class="skill-block stub-block">' +
+        '<div class="blk-head"><span class="lab">Contract summary</span></div>' +
+        '<p class="empty">No SKILL.md contract on file for this rung yet — ' +
+        'add one at <code>corpus/skills/' + esc(s.id) + '/SKILL.md</code>.</p>' +
+        '</section>';
+    }
+
+    // instances table
+    var ORDER = ['technique', 'atom', 'exploration', 'coupling'];
+    var hasAny = ORDER.some(function (k) { return byEnt[k].length; });
+    body += '<section class="skill-block">' +
+      '<div class="blk-head"><span class="lab">Instances governed</span>' +
+      '<span class="n">' + entries.length + ' filed against this skill</span></div>';
+    if (hasAny) {
+      body += '<div class="skill-instances">';
+      ORDER.forEach(function (k) {
+        var list = byEnt[k];
+        if (!list.length) return;
+        body += '<div class="skill-instance-group">' +
+          '<div class="ig-hd"><span class="lab">' + esc(k) + 's</span>' +
+            '<span class="n">' + list.length + '</span></div>' +
+          '<ul class="ig-list">' +
+            list.map(function (e) {
+              var prefix = (k === 'technique') ? '#/technique/' :
+                           (k === 'atom')      ? '#/atom/' :
+                           (k === 'coupling')  ? '#/coupling/' : '#/';
+              return '<li><a href="' + prefix + esc(e.id) + '">' +
+                '<span class="ix">' + esc(e.index || e.id) + '</span>' +
+                '<b>' + esc(e.title || e.id) + '</b>' +
+                (e.status && e.status !== 'canonical'
+                  ? '<span class="st" data-st="' + esc(e.status) + '">' + esc(String(e.status).replace('-', ' ')) + '</span>'
+                  : '') +
+              '</a></li>';
+            }).join('') +
+          '</ul></div>';
+      });
+      body += '</div>';
+    } else {
+      body += '<p class="empty">Nothing yet. This page is empty on purpose. Tag ' +
+        'an entry with <code>governed_by: [\'' + esc(s.id) + '\']</code> and it ' +
+        'lands here.</p>';
+    }
+    body += '</section>';
+
+    el('view').innerHTML = head + body;
+    window.scrollTo(0, 0);
+  }
+
   /* ck-e0 · the encyclopedia's new routes, now with bespoke renderers. */
   function renderRoute(name, route, query) {
     S.unmountAdapter();
@@ -1730,11 +1951,7 @@
     /* fallthrough — skills route-list, sheet-per-facet, empty-on-purpose */
     var body;
     if (route.kind === 'skills') {
-      var sk = S.manifest.skills || [];
-      body = sk.length ? '<ul class="route-list">' + sk.map(function (s) {
-        var role = s.role ? '<span class="s">' + esc(s.role) + (s.rung ? ' · rung ' + s.rung : '') + '</span>' : '';
-        return '<li><a href="#/skills/' + esc(s.id) + '"><b>' + esc(s.title) + '</b>' + role + '</a></li>';
-      }).join('') + '</ul>' : '<p class="empty">No skills declared.</p>';
+      body = renderSkillsIndex();
     } else {
       var list = S.entries.filter(route.filter || function () { return true; });
       var counts = list.length + ' of ' + S.entries.length;
@@ -1785,6 +2002,7 @@
     renderSheet: renderSheet,
     renderStyle: renderStyle,
     renderRoute: renderRoute,
+    renderSkill: renderSkill,
     renderLoading: renderLoading,
     renderMissing: renderMissing,
     selectTab: selectTab,
