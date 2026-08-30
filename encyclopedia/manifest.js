@@ -38,7 +38,8 @@ Shell.registerManifest({
       exploration: 'Kept because it asks a question, not because it answers one.',
       historical: 'Superseded, kept for the record.',
       'known-failure': 'Shown because it fails, and the failure is the lesson.',
-      unsorted: 'Imported from the inventory. No editorial ruling yet.'
+      unsorted: 'Imported from the inventory. No editorial ruling yet.',
+      proposed: 'Written by the tool (ck-e6 candidate-technique detector). Julia rules by editing the stub.'
     }
   },
 
@@ -582,5 +583,44 @@ Shell.registerManifest({
     'shepard-risset',
     'buzz-generator',
     'crowd-and-dither-shared-cause'
-  ]
+  ,
+
+    // CANDIDATE TECHNIQUES · appended by index-tools.mjs --write
+    { id: 'master-limiter-driver', title: 'Master compressor + limiter as driver',
+      entity: 'technique', section: 'techniques', status: 'proposed',
+      lane: 'audio',
+      description: 'PROPOSED BY TOOL — master-limiter is used by 5 explorations (cathedral-reverb, ki-soundscape-bands, shepard-risset, buzz-generator) with no technique above it. The audio-lane lesson would be about how master-limiter decides X across those instances. Julia rules by editing this stub.',
+      produces: ['master-limiter'],
+      stub: true },
+    { id: 'oklab-ramp-driver', title: 'OKLab colour ramp as driver',
+      entity: 'technique', section: 'techniques', status: 'proposed',
+      lane: 'canvas2d',
+      description: 'PROPOSED BY TOOL — oklab-ramp is used by 4 explorations (w1-seven-pass-band-chain, pm07-molten, e4-masonry-cards, e5-case-card) with no technique above it. The visual-lane lesson would be about how oklab-ramp decides X across those instances. Julia rules by editing this stub.',
+      produces: ['oklab-ramp'],
+      stub: true },
+    { id: 'mulberry32-driver', title: 'mulberry32(seed) as driver',
+      entity: 'technique', section: 'techniques', status: 'proposed',
+      lane: 'canvas2d',
+      description: 'PROPOSED BY TOOL — mulberry32 is used by 4 explorations (w1-seven-pass-band-chain, b1-photocopy-collage, b2-riso-brush, d4-riso-print-set) with no technique above it. The visual-lane lesson would be about how mulberry32 decides X across those instances. Julia rules by editing this stub.',
+      produces: ['mulberry32'],
+      stub: true },
+    { id: 'dot-screen-20-driver', title: 'Dot screen · 20° as driver',
+      entity: 'technique', section: 'techniques', status: 'proposed',
+      lane: 'canvas2d',
+      description: 'PROPOSED BY TOOL — dot-screen-20 is used by 4 explorations (b1-photocopy-collage, c1-heavy-ink, d4-riso-print-set, d6-social-tiles) with no technique above it. The visual-lane lesson would be about how dot-screen-20 decides X across those instances. Julia rules by editing this stub.',
+      produces: ['dot-screen-20'],
+      stub: true },
+    { id: 'fbm-noise-driver', title: 'fBm value noise as driver',
+      entity: 'technique', section: 'techniques', status: 'proposed',
+      lane: 'canvas2d',
+      description: 'PROPOSED BY TOOL — fbm-noise is used by 3 explorations (w2-depth-aware-dither, w3-hillshade-and-flow, e4-masonry-cards) with no technique above it. The visual-lane lesson would be about how fbm-noise decides X across those instances. Julia rules by editing this stub.',
+      produces: ['fbm-noise'],
+      stub: true },
+    { id: 'banded-burst-driver', title: 'Banded noise burst as driver',
+      entity: 'technique', section: 'techniques', status: 'proposed',
+      lane: 'audio',
+      description: 'PROPOSED BY TOOL — banded-burst is used by 3 explorations (cathedral-reverb, buzz-generator, crowd-and-dither-shared-cause) with no technique above it. The audio-lane lesson would be about how banded-burst decides X across those instances. Julia rules by editing this stub.',
+      produces: ['banded-burst'],
+      stub: true },
+]
 });

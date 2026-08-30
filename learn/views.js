@@ -1506,6 +1506,187 @@
     '</a>';
   }
 
+  /* ============================================================================
+     ck-e6 · SYMPTOMS PAGE — the anti-pattern index.
+
+     Six anti-patterns from composing-computational-material-systems/SKILL.md
+     plus two symptom entry-points from julia-proxy JOBS §6 ("blur + bloom
+     + grain", "busy"). Reach a technique's `.overuse` clause and its
+     known_failure entries from a symptom name without knowing the technique.
+     Each row: name · one-sentence read · techniques that overuse into it ·
+     the known_failure entries that instance it · "what to do instead".
+     ============================================================================ */
+  var SYMPTOMS = [
+    { id: 'vibe-stack',
+      name: 'The vibe stack',
+      read: 'Blur + bloom + grain + chromatic aberration + particles at unrelated strengths. Redundant jobs, no shared cause.',
+      atoms: ['fbm-noise', 'granulation', 'edge-bloom'],
+      overused_by: [],
+      instead: 'Find the one field that should drive them, or cut to the two that do distinct work.' },
+    { id: 'css-filter-as-material',
+      name: 'CSS filter as material',
+      read: '`backdrop-filter: blur()` fakes frosted glass but has no thickness, no refraction, no absorption — a screen filter, not a body.',
+      atoms: [],
+      overused_by: [],
+      instead: 'Fine for chrome; wrong for a hero material. Build the body when the material IS the body.' },
+    { id: 'noise-as-texture',
+      name: 'Noise as texture',
+      read: 'Noise is a source of continuously varying structure to drive something, not a grain layer sprinkled on top for busyness.',
+      atoms: ['fbm-noise', 'paper-tooth', 'granulation'],
+      overused_by: [],
+      instead: 'Use the noise to displace, threshold or modulate something else. If it is a texture, it is the CONSEQUENCE of a substrate — file it beside its cause.' },
+    { id: 'effect-first-framing',
+      name: 'Effect-first framing',
+      read: '"Add a nice gradient background" with no read. The visual decision precedes the question of what the surface is for.',
+      atoms: [],
+      overused_by: [],
+      instead: 'Ask what the surface is for first. A read decides which operators earn their place.' },
+    { id: 'animate-the-peak-only',
+      name: 'Animate the peak only',
+      read: 'The onset is designed; the hold, the decay, and the rest are not. Motion that never stops or that stops without an authored end.',
+      atoms: [],
+      overused_by: [],
+      instead: 'Stillness is part of the composition. The hold and the fade are as authored as the peak.' },
+    { id: 'symmetry-as-interest',
+      name: 'Symmetry / kaleidoscope as instant interest',
+      read: 'Powerful remaps — symmetry, kaleidoscope, polar — that read as a filter rather than as folding structure that was already there.',
+      atoms: [],
+      overused_by: [],
+      instead: 'Fold a pattern that ALREADY has structure. If nothing structured is being folded, the symmetry is the whole idea, and one-idea pieces get old fast.' },
+    /* two entry-points named in julia-proxy JOBS §6 — the ones a reader
+       arrives with in their mouth, not in the technique's name */
+    { id: 'blur-bloom-grain',
+      name: 'blur + bloom + grain',
+      read: 'The three moves you reach for when the render is "not doing enough". Together they read as pinned atmosphere, uncoupled to anything the piece is about.',
+      atoms: ['fbm-noise', 'granulation', 'edge-bloom'],
+      overused_by: [],
+      instead: 'Pick the ONE that carries the read. Ask what the other two are FOR; delete anything that answers "atmosphere".' },
+    { id: 'busy',
+      name: 'busy',
+      read: 'Motion, colour, texture and mark all doing something, none carrying the read. Every operator on and each at half its authored strength.',
+      atoms: [],
+      overused_by: [],
+      instead: 'Turn everything off. Turn back on the ONE thing that reads the piece; the others earn a place only when their removal changes what the piece means.' }
+  ];
+
+  function symptomRow(s) {
+    /* techniques that carry an `overuse` note mentioning the symptom's
+       atoms — a soft link, since the SKILL.md anti-patterns are named
+       in prose. */
+    var techs = S.entries.filter(function (e) {
+      if (e.entity !== 'technique') return false;
+      var t = ((e.tests && e.tests.overuse) || '').toLowerCase();
+      return s.atoms.some(function (a) { return t.indexOf(a.split('-')[0]) >= 0; });
+    });
+    var kfs = S.entries.filter(function (e) { return e.status === 'known-failure'; });
+    return '<article class="symptom-row" id="s-' + esc(s.id) + '">' +
+      '<div class="sr-a">' +
+        '<b>' + esc(s.name) + '</b>' +
+        '<p>' + esc(s.read) + '</p>' +
+      '</div>' +
+      '<div class="sr-b">' +
+        (s.atoms.length ? '<span class="lab">atoms in the family</span>' +
+          '<div class="chips">' + s.atoms.map(function (aid) {
+            var a = S.byId && S.byId[aid];
+            return '<a class="pip" href="#/atom/' + esc(aid) + '">' + esc((a && a.title) || aid) + '</a>';
+          }).join('') + '</div>' : '') +
+        (techs.length ? '<span class="lab">techniques whose .overuse names this</span>' +
+          '<div class="chips">' + techs.map(function (t) {
+            return '<a class="pip" href="#/technique/' + esc(t.id) + '">' + esc(t.title) + '</a>';
+          }).join('') + '</div>' : '') +
+        (kfs.length ? '<span class="lab">known failures on file</span>' +
+          '<div class="chips">' + kfs.map(function (e) {
+            return '<a class="pip" href="#/' + esc(e.id) + '">' + esc(e.title) + '</a>';
+          }).join('') + '</div>' : '') +
+        '<p class="doinstead"><b>Instead:</b> ' + esc(s.instead) + '</p>' +
+      '</div>' +
+    '</article>';
+  }
+
+  function renderSymptoms() {
+    var head =
+      '<p class="kicker">Anti-patterns</p>' +
+      '<h1>Symptoms</h1>' +
+      '<p class="lede">Reach a technique\'s <code>.overuse</code> clause and its ' +
+      '<b>known_failure</b> entries from a symptom name — without knowing the ' +
+      'technique. The eight rows below are the vocabulary a reader arrives with in ' +
+      'their mouth ("busy", "blur + bloom + grain") plus the six anti-patterns ' +
+      'named in <code>composing-computational-material-systems/SKILL.md</code>.</p>' +
+      '<p class="lede sm">A symptom is not a shame list. It is a route from the ' +
+      'complaint to the removal test on a real piece.</p>' +
+      '<div class="meta"><span class="tags">' + SYMPTOMS.length + ' symptoms <b>·</b> ' +
+        S.entries.filter(function (e) { return e.status === 'known-failure'; }).length +
+        ' known failures on file</span></div>';
+    el('view').innerHTML = head + SYMPTOMS.map(symptomRow).join('');
+  }
+
+  /* ============================================================================
+     ck-e6 · UNFILED PAGE — imports awaiting a ruling.
+
+     Reads from `manifest.entries` filtered by `status: 'unsorted'`. Home
+     page's UNFILED count already lands at the top of #/techniques from
+     ck-e3. The big "batch classify" affordance simply deep-links each row
+     to its own entry page — that is where the ruling is made.
+     ============================================================================ */
+  function unfiledCard(e) {
+    var thumb = e.thumb && (typeof e.thumb === 'string' ? e.thumb : e.thumb.file);
+    var pathBase = e.path || ('content/' + e.id + '/');
+    var thumbHTML = thumb
+      ? '<img src="' + esc(pathBase + thumb) + '" alt="" loading="lazy" onerror="this.classList.add(\'nothumb\');this.removeAttribute(\'src\')">'
+      : '<span class="nothumb">no thumbnail<br>on file</span>';
+    var pg = e.proposed_grade
+      ? '<span class="prop-grade"><b>' + esc(e.proposed_grade) + '</b> · proposed by researcher — awaiting julia</span>'
+      : '';
+    var src = e.source && (e.source.title || e.source.note) || '';
+    return '<a class="card" href="#/' + esc(e.id) + '" data-proposed>' +
+      '<span class="prev" data-id="' + esc(e.id) + '">' +
+        '<span class="queued">' + esc(e.index || e.id) + '</span>' +
+        thumbHTML +
+      '</span>' +
+      '<span class="cap">' +
+        '<span class="n">' + esc(e.index || e.id) + '</span>' +
+        '<span class="t">' + esc(e.title) + '</span>' +
+        '<span class="r">' + esc(src) + pg + '</span>' +
+      '</span></a>';
+  }
+
+  function renderUnfiled() {
+    var list = S.entries.filter(function (e) { return e.status === 'unsorted'; });
+    var propTech = S.entries.filter(function (e) { return e.status === 'proposed'; });
+
+    var head =
+      '<p class="kicker">Waiting on a ruling</p>' +
+      '<h1>Unfiled</h1>' +
+      '<p class="lede">Imported from the corpus inventory. Each row carries a real ' +
+      'id, title and source file:line. Where a researcher proposed a grade it ' +
+      'imports as <b>PROPOSED — awaiting julia</b>, never as a ruling ' +
+      '(DECISION-FRAMING D5).</p>' +
+      '<div class="meta"><span class="tags">' + list.length + ' unsorted' +
+        (propTech.length ? ' <b>·</b> ' + propTech.length + ' proposed by the tool' : '') +
+      '</span></div>' +
+      '<div class="unfiled-batch"><b>Batch classify.</b> Every card below is a ' +
+      'deep link to its own entry page. Open a row, read the source, rule the ' +
+      'status. The count at the top of <a href="#/techniques">#/techniques</a> ' +
+      'is what you drive down.</div>';
+
+    var body = list.length
+      ? '<div class="sheet"><div class="grid">' + list.map(unfiledCard).join('') + '</div></div>'
+      : '<p class="empty">Nothing unsorted. The ck-e7 import lands 74 rows here.</p>';
+
+    /* tool-proposed technique candidates (ck-e6 detector's output) sit
+       under their own heading */
+    if (propTech.length) {
+      body += '<hr class="r"><h2 style="margin-top:32px">Proposed by the tool</h2>' +
+        '<p class="lede sm">The candidate-technique detector (scripts/index-tools.mjs) ' +
+        'writes these. Each names ≥2 explorations that use the same atom with no ' +
+        'technique above it. Rule by editing the stub in the manifest.</p>' +
+        '<div class="sheet"><div class="grid">' + propTech.map(unfiledCard).join('') + '</div></div>';
+    }
+
+    el('view').innerHTML = head + body;
+    S.observePreviews(el('view'));
+  }
+
   /* ck-e0 · the encyclopedia's new routes, now with bespoke renderers. */
   function renderRoute(name, route, query) {
     S.unmountAdapter();
@@ -1538,11 +1719,13 @@
     var crumb = el('crumb');
     if (crumb) crumb.textContent = TITLES[name] || name;
 
-    /* Bespoke renderers for ck-e2/e3/e4. Others fall through to the minimal
-       filtered-sheet or route-list from ck-e0. */
+    /* Bespoke renderers for ck-e2/e3/e4/e6. Others fall through to the
+       minimal filtered-sheet or route-list from ck-e0. */
     if (name === 'atoms')      return renderAtomsShelves(query);
     if (name === 'techniques') return renderTechniquesIndex();
     if (name === 'styles')     return renderStylesIndex();
+    if (name === 'symptoms')   return renderSymptoms();
+    if (name === 'unfiled')    return renderUnfiled();
 
     /* fallthrough — skills route-list, sheet-per-facet, empty-on-purpose */
     var body;
