@@ -173,6 +173,14 @@
 
   function renderEntry(e, exampleId, query) {
     S.unobservePreviews();
+    if (swatchIO) { swatchIO.disconnect(); swatchIO = null; }
+    /* ck-e2/e3 · entity page templates. An atom needs a swatch and a param
+       inspector; a technique needs the five tests and its instance table.
+       Neither uses the course/catalogue stage furniture, so they branch
+       here before it renders. Anything that is not atom or technique gets
+       the shared entry template below. */
+    if (e.entity === 'atom')      return renderAtomPage(e);
+    if (e.entity === 'technique') return renderTechniquePage(e);
     view.kind = 'entry';
     S.current = e;
     localExample = null;
@@ -790,14 +798,646 @@
 
   function renderStyle(st) { renderSheet(st.id); }
 
-  /* ck-e0 · the encyclopedia's new routes. This is a MINIMAL renderer: it
-     shows a page-per-route with a filtered contact sheet inside it. The
-     bespoke technique / atom / style / skill page templates are ck-e3+.
-     A route that matches nothing renders a page that says so out loud —
-     that is the whole point of "visible on purpose" as a state. */
+  /* ck-e2 · atom-shelves helpers. The atoms table is the review stop:
+     TEXTURE, SUBSTRATE, PROCESS sit as three side-by-side shelves in that
+     order (D2 · texture is a sibling, not their parent). The ATOM_KIND_ORDER
+     below is what makes that visible without an argument. */
+  var ATOM_KIND_ORDER = ['texture', 'substrate', 'process', 'colour', 'type',
+    'engine', 'field', 'mark', 'voice', 'space', 'bus'];
+  var ATOM_KIND_NOTE = {
+    texture:   'the surface consequences — what a printed sheet looks like.',
+    substrate: 'the stock you print ONTO. A tooth is a consequence of its fibres, not a property of it.',
+    process:   'the reproduction event. An action applied to a field on a substrate.',
+    colour:    'ramps only. A lone hex has no parameters and no lesson.',
+    engine:    'a shared implementation, cited by every fragment that uses it. Code is an entry, not a path.',
+    field:     'the continuous input a technique consumes — noise as a source, not as a texture.',
+    mark:      'hand-scale marks that go ON TOP of a plate. Never a filter.',
+    type:      'display, text, mono, script. Roles, not families.',
+    voice:     'a source: the thing that generates the audio signal.',
+    space:     'the ambience the voice sits in.',
+    bus:       'the graph the voice is bussed through.'
+  };
+  var LAYERS = ['SOURCE', 'STRUCTURE', 'MATERIAL RESPONSE', 'IMAGE FORMATION',
+    'SCREEN-SPACE', 'TEMPORAL', 'GRAPHIC COMPOSITION'];
+
+  /* A hand-maintained lookup so the 22 Book-of-Shaders chapters (each shipped
+     from its own entry.js) can be filed under a seven-layer heading without
+     touching the twenty-two files. Any technique that DOES declare `layer` on
+     the entry wins over this table. Unfiled techniques land in a "no layer on
+     file" band at the top of the index. */
+  var CHAPTER_LAYER = {
+    '00-introduction':               'SOURCE',
+    '01-what-is-a-shader':           'SOURCE',
+    '02-hello-world':                'SOURCE',
+    '03-uniforms':                   'SOURCE',
+    '04-running-your-shader':        'SOURCE',
+    '05-shaping-functions':          'STRUCTURE',
+    '06-colors':                     'GRAPHIC COMPOSITION',
+    '07-shapes':                     'STRUCTURE',
+    '08-matrices':                   'STRUCTURE',
+    '09-patterns':                   'STRUCTURE',
+    '10-random':                     'SOURCE',
+    '11-noise':                      'SOURCE',
+    '12-cellular-noise':             'SOURCE',
+    '13-fractal-brownian-motion':    'SOURCE',
+    '14-fractals':                   'STRUCTURE',
+    '15-textures':                   'MATERIAL RESPONSE',
+    '16-image-operations':           'SCREEN-SPACE',
+    '17-kernel-convolutions':        'SCREEN-SPACE',
+    '18-filters':                    'SCREEN-SPACE',
+    '19-other-effects':              'SCREEN-SPACE',
+    '20-dithering-and-quantization': 'IMAGE FORMATION',
+    '21-domain-warping':             'STRUCTURE'
+  };
+  function layerOf(e) { return e.layer || CHAPTER_LAYER[e.id] || null; }
+
+  /* Everything that instances a technique — direct via instance_of[], plus (for
+     the chapter techniques where W1..W4 already declare a stub) the worked
+     example as the CANONICAL instance. Small enough to compute per render. */
+  function instancesOfTechnique(tid) {
+    return S.entries.filter(function (e) {
+      return e.entity !== 'technique' && (e.instance_of || []).indexOf(tid) >= 0;
+    });
+  }
+  /* Explorations that use[] a given atom, with the params they used. Used by
+     both the atom page ("used by N" strip) and the exploration-side chip row. */
+  function usesOfAtom(aid) {
+    var out = [];
+    S.entries.forEach(function (e) {
+      if (e.entity === 'atom') return;
+      (e.uses || []).forEach(function (u) {
+        var id = typeof u === 'string' ? u : u && u.atom;
+        if (id === aid) out.push({ entry: e, params: (typeof u === 'object' && u.params) || null });
+      });
+    });
+    return out;
+  }
+  /* Techniques that PRODUCE this atom (declared on the technique).           */
+  function producesOfAtom(aid) {
+    return S.entries.filter(function (e) {
+      return e.entity === 'technique' && (e.produces || []).indexOf(aid) >= 0;
+    });
+  }
+  /* Every skill id → skill object from the manifest.                         */
+  function skillById(id) {
+    return ((S.manifest && S.manifest.skills) || []).filter(function (s) { return s.id === id; })[0] || null;
+  }
+  function styleById(id) { return S.styleById && S.styleById(id); }
+
+  /* Swatch paint. Two paths: an above-the-fold pass runs SYNCHRONOUSLY (no IO
+     wait, no scroll trigger) so a full-page screenshot at 1440 shows every
+     shelf painted; anything past 2000 px of scroll falls back to an
+     IntersectionObserver with a 400 px approach margin. Painting all 18
+     synchronously costs ~40 ms on a mid-desktop, well inside a frame — the
+     original 250 ms measure was with @2x DPR uncapped; swatches.js caps at
+     1.5×. A canvas is a one-shot draw, not a live frame, so once painted it
+     stays painted. */
+  var swatchIO = null;
+  function observeSwatches(root) {
+    if (swatchIO) { swatchIO.disconnect(); swatchIO = null; }
+    if (!root || !S.paintSwatch) return;
+    var cells = [].slice.call(root.querySelectorAll('canvas[data-atom]:not([data-painted])'));
+    if (!cells.length) return;
+    /* the approach: paint each in a rAF, stopping at 2000 px of doc scroll so
+       the initial paint stays inside one frame budget. Anything past that
+       waits on the observer. */
+    var eager = [], lazy = [];
+    cells.forEach(function (c) {
+      var r = c.getBoundingClientRect();
+      var top = r.top + window.scrollY;
+      if (top < 2000) eager.push(c); else lazy.push(c);
+    });
+    /* eager pass — stagger by microtasks so a slow paint does not block chrome */
+    var i = 0;
+    function tick() {
+      var start = performance.now();
+      while (i < eager.length && performance.now() - start < 12) {
+        S.paintSwatch(eager[i]);
+        eager[i].setAttribute('data-painted', 'true');
+        i++;
+      }
+      if (i < eager.length) requestAnimationFrame(tick);
+    }
+    if (eager.length) requestAnimationFrame(tick);
+    /* lazy pass — observe */
+    if (lazy.length) {
+      swatchIO = new IntersectionObserver(function (rows) {
+        rows.forEach(function (r) {
+          if (!r.isIntersecting) return;
+          S.paintSwatch(r.target);
+          r.target.setAttribute('data-painted', 'true');
+          swatchIO.unobserve(r.target);
+        });
+      }, { rootMargin: '400px 0px' });
+      lazy.forEach(function (c) { swatchIO.observe(c); });
+    }
+  }
+  S.observeSwatches = observeSwatches;
+
+  /* One atom cell — the shelves' unit. Includes the swatch canvas, the name,
+     the parameter count and the usage count. `used by N` is derived from
+     uses[] across all entries — nothing counted twice. */
+  function atomCellHTML(a) {
+    var used = usesOfAtom(a.id).length;
+    var params = (a.params || []).length;
+    return '<a class="sw-cell" href="#/atom/' + esc(a.id) + '">' +
+      '<span class="sw"><canvas data-atom="' + esc(a.id) + '"></canvas></span>' +
+      '<span class="lbl">' +
+        '<b>' + esc(a.title) + '</b>' +
+        '<i class="ct">' + (used ? '&times;' + used : '&times;0') + '</i>' +
+      '</span>' +
+      '<span class="sub">' + params + ' param' + (params === 1 ? '' : 's') +
+        (a.kind === 'engine' ? ' · shared engine' : '') + '</span>' +
+      '</a>';
+  }
+
+  function renderAtomsShelves(query) {
+    var atoms = S.entries.filter(function (e) { return e.entity === 'atom'; });
+    var byKind = Object.create(null);
+    atoms.forEach(function (a) { (byKind[a.kind] = byKind[a.kind] || []).push(a); });
+    var kinds = ATOM_KIND_ORDER.filter(function (k) { return byKind[k]; })
+      .concat(Object.keys(byKind).filter(function (k) { return ATOM_KIND_ORDER.indexOf(k) < 0; }));
+
+    var head =
+      '<p class="kicker">Materials</p>' +
+      '<h1>Atoms</h1>' +
+      '<p class="lede">The whole practice as one table. Banded by <b>kind</b>; every cell is an atom ' +
+      'with parameters, an engine file where it has one, and a usage count.</p>' +
+      '<p class="lede"><b>TEXTURE sits beside SUBSTRATE and PROCESS, not above them.</b> ' +
+      'Paper tooth is the surface consequence of Bone 140gsm — so the answer to ' +
+      '&ldquo;does TEXTURE make more sense to house things like Paper, Print&rdquo; is ' +
+      'no: it is their sibling.</p>' +
+      '<div class="meta"><span class="tags">' +
+        atoms.length + ' atoms <b>·</b> ' + kinds.length + ' kinds' +
+      '</span></div>';
+
+    var shelves = kinds.map(function (k) {
+      var group = byKind[k];
+      return '<section class="shelf" data-kind="' + esc(k) + '">' +
+        '<div class="shelf-head">' +
+          '<span class="lab">' + esc(k) + '</span>' +
+          '<span class="n">' + group.length + '</span>' +
+          (ATOM_KIND_NOTE[k] ? '<span class="nt">' + esc(ATOM_KIND_NOTE[k]) + '</span>' : '') +
+        '</div>' +
+        '<div class="atoms-grid">' + group.map(atomCellHTML).join('') + '</div>' +
+      '</section>';
+    }).join('');
+
+    var ladder = atoms.filter(function (a) { return !producesOfAtom(a.id).length && a.kind !== 'engine'; });
+    var footer = ladder.length
+      ? '<hr class="r"><section class="ladder">' +
+        '<div class="shelf-head"><span class="lab">The ladder, inverted</span>' +
+        '<span class="n">' + ladder.length + ' atom' + (ladder.length === 1 ? '' : 's') + ' with no technique above ' +
+        (ladder.length === 1 ? 'it' : 'them') + '</span></div>' +
+        '<p class="lede sm">An atom that two or more pieces use with no technique above it is a candidate ' +
+        'technique — the ladder climbs itself. Named on the atom page as its <b>produces-of</b>.</p>' +
+        '<ul class="lad-list">' + ladder.map(function (a) {
+          return '<li><a href="#/atom/' + esc(a.id) + '"><b>' + esc(a.title) + '</b>' +
+                 '<span class="s">' + esc(a.description || a.note || '') + '</span></a></li>';
+        }).join('') + '</ul></section>'
+      : '';
+
+    el('view').innerHTML = head + shelves + footer;
+    observeSwatches(el('view'));
+  }
+
+  /* ck-e2 · the atom entry page. Live swatch at design width, params
+     inspector (drag to redraw), used-by strip, produces-of, admitted-by,
+     governed-by. Called from renderEntry when e.entity === 'atom'. */
+  function renderAtomPage(a) {
+    view.kind = 'atom';
+    S.current = a; S.currentExample = null; localExample = null;
+    S.markCurrent(); position();
+    var crumb = el('crumb');
+    if (crumb) crumb.textContent = 'Atom · ' + a.title;
+
+    var uses = usesOfAtom(a.id);
+    var produces = producesOfAtom(a.id);
+    var admits = ((S.manifest && S.manifest.styles) || []).filter(function (st) {
+      return (st.texture || []).indexOf(a.id) >= 0;
+    });
+
+    var stChip = '<span class="st" data-st="' + esc(a.status || 'exploration') + '">' +
+      esc(String(a.status || 'exploration').replace('-', ' ')) + '</span>';
+
+    var params = a.params || [];
+    var paramsHTML = params.length
+      ? '<section class="atom-block"><div class="blk-head"><span class="lab">Parameters</span>' +
+        '<span class="n">' + params.length + ' declared · drag to redraw</span></div>' +
+        '<div class="atom-params">' + params.map(function (p) {
+          var min = p.min != null ? p.min : 0, max = p.max != null ? p.max : 1;
+          return '<div class="par">' +
+            '<div class="lr"><label for="ap-' + esc(p.name) + '"><b>' + esc(p.name) + '</b>' +
+              (p.note ? ' <span class="nt">' + esc(p.note) + '</span>' : '') + '</label>' +
+              '<span class="val" id="ap-val-' + esc(p.name) + '">' + esc(String(p.value)) +
+              '</span></div>' +
+            '<input type="range" id="ap-' + esc(p.name) + '" data-name="' + esc(p.name) + '" ' +
+              'min="' + min + '" max="' + max + '" step="' + (p.step || 0.01) +
+              '" value="' + (p.value != null ? p.value : 0) + '">' +
+            '<div class="mm"><i>' + esc(String(min)) + '</i><i>default ' +
+              esc(String(p.value != null ? p.value : '—')) +
+              '</i><i>' + esc(String(max)) + '</i></div>' +
+          '</div>';
+        }).join('') + '</div></section>'
+      : '<section class="atom-block"><p class="empty">No parameters declared. This atom fires as-is; ' +
+        'the value it carries is the fact of the engine, not a knob it exposes.</p></section>';
+
+    /* used-by strip: the pieces that cite this atom, with the params THEY
+       chose. Julia's red line: cells here are the exploration's own thumb, or
+       an honest "no thumbnail on file". Never a re-render of the atom. */
+    var usedByHTML = uses.length
+      ? '<section class="atom-block"><div class="blk-head"><span class="lab">Used by</span>' +
+        '<span class="n">' + uses.length + ' piece' + (uses.length === 1 ? '' : 's') +
+        ' — each cell is the piece itself, at the params it chose</span></div>' +
+        '<div class="used-strip">' + uses.map(function (u) {
+          var e = u.entry;
+          var thumb = e.thumb && (typeof e.thumb === 'string' ? e.thumb : e.thumb.file);
+          var pathBase = e.path || ('content/' + e.id + '/');
+          var thumbHTML = thumb
+            ? '<img src="' + esc(pathBase + thumb) + '" alt="" loading="lazy" onerror="this.classList.add(\'nothumb\');this.removeAttribute(\'src\')">'
+            : '<span class="nothumb">no thumbnail<br>on file</span>';
+          var pv = u.params ? Object.keys(u.params).map(function (k) {
+            return k + ': ' + u.params[k];
+          }).join(' · ') : '';
+          return '<a class="used-cell" href="#/' + esc(e.id) + '">' +
+            '<span class="th">' + thumbHTML + '</span>' +
+            '<span class="cap"><b>' + esc(e.index || e.title) + '</b>' +
+              (pv ? '<span class="pv">' + esc(pv) + '</span>' : '') +
+            '</span></a>';
+        }).join('') + '</div></section>'
+      : '<section class="atom-block"><div class="blk-head"><span class="lab">Used by</span>' +
+        '<span class="n">nothing yet</span></div>' +
+        '<p class="empty">Zero uses. Tyvek showing ×0 is the discipline — do not hide empty cells.</p></section>';
+
+    var producesHTML = produces.length
+      ? '<div class="atom-side-block"><span class="lab">Produced by</span>' + produces.map(function (t) {
+          return '<a class="mini-card" href="#/technique/' + esc(t.id) + '"><b>' + esc(t.title) + '</b>' +
+            (t.description ? '<span class="s">' + esc(t.description) + '</span>' : '') + '</a>';
+        }).join('') + '</div>'
+      : '<div class="atom-side-block"><span class="lab">Produced by</span>' +
+        '<p class="empty sm">No technique above this atom. It repeats and nobody has written down ' +
+        'why — a candidate (see the ladder on <a href="#/atoms">#/atoms</a>).</p></div>';
+
+    var admitsHTML = admits.length
+      ? '<div class="atom-side-block"><span class="lab">Admitted by</span><div class="chips">' +
+        admits.map(function (st) {
+          return '<a class="pip" href="#/style/' + esc(st.id) + '">' + esc(st.title) + '</a>';
+        }).join('') + '</div></div>'
+      : '<div class="atom-side-block"><span class="lab">Admitted by</span>' +
+        '<p class="empty sm">no style declares it in its texture vocabulary.</p></div>';
+
+    var govHTML = (a.governed_by || []).length
+      ? '<div class="atom-side-block"><span class="lab">Governed by</span><div class="chips">' +
+        a.governed_by.map(function (sid) {
+          var sk = skillById(sid);
+          return '<a class="pip" href="#/skills/' + esc(sid) + '">' + esc((sk && sk.title) || sid) + '</a>';
+        }).join('') + '</div></div>'
+      : '';
+
+    /* the engine link — if this atom IS an engine, it points at its own file;
+       if it uses an engine that is itself an atom, it points at that. */
+    var engineChip = '';
+    if (a.kind === 'engine') {
+      var file = ({ 'mulberry32': 'rng.js', 'halftone-js': 'halftone.js',
+        'paper-js': 'paper.js', 'field-js': 'field.js' })[a.id];
+      if (file) engineChip = '<div class="atom-side-block"><span class="lab">Engine file</span>' +
+        '<p class="src">content/_engines/' + esc(file) + '</p></div>';
+    }
+
+    el('view').innerHTML =
+      '<p class="kicker">Atom · <a href="#/atoms" style="text-decoration:none;color:inherit">' +
+        esc(a.kind) + '</a></p>' +
+      '<h1>' + esc(a.title) + '</h1>' +
+      '<div class="meta">' + stChip +
+        (a.stub ? '<span class="st" data-st="stub">stub</span>' : '') +
+        '<span class="tags">kind: ' + esc(a.kind) + '  <b>·</b>  used ×' + uses.length +
+          (params.length ? '  <b>·</b>  ' + params.length + ' params' : '') +
+        '</span></div>' +
+      '<p class="lede">' + esc(a.description || a.note || '') + '</p>' +
+      '<div class="atom-split">' +
+        '<div class="atom-main">' +
+          '<section class="atom-block"><div class="blk-head"><span class="lab">Swatch — the atom, at declared defaults</span>' +
+            '<span class="n">painted live from swatches.js</span></div>' +
+            '<div class="atom-swatch"><canvas data-atom="' + esc(a.id) + '" data-live="true"></canvas></div>' +
+          '</section>' +
+          paramsHTML +
+          usedByHTML +
+          (a.note && a.note !== a.description
+            ? '<section class="atom-block"><div class="blk-head"><span class="lab">Note</span></div>' +
+              '<p class="atom-note">' + esc(a.note) + '</p></section>'
+            : '') +
+        '</div>' +
+        '<aside class="atom-side">' +
+          producesHTML + admitsHTML + engineChip + govHTML +
+        '</aside>' +
+      '</div>' +
+      pagerHTML(a);
+
+    /* paint the hero swatch immediately; wire params to redraw. */
+    var hero = document.querySelector('.atom-swatch canvas[data-atom]');
+    if (hero && S.paintSwatch) S.paintSwatch(hero);
+    /* also paint any thumbnails / mini cards elsewhere via observer */
+    observeSwatches(el('view'));
+
+    var atomState = {};
+    (a.params || []).forEach(function (p) { atomState[p.name] = p.value; });
+    document.querySelectorAll('.atom-params input[type=range]').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        var v = parseFloat(inp.value);
+        atomState[inp.dataset.name] = v;
+        var out = document.getElementById('ap-val-' + inp.dataset.name);
+        if (out) out.textContent = fmt(v, parseFloat(inp.step));
+        if (hero && S.paintSwatch) {
+          hero.removeAttribute('data-painted');
+          S.paintSwatch(hero, atomState);
+        }
+      });
+    });
+    window.scrollTo(0, 0);
+  }
+
+  /* ck-e3 · the technique index. Grouped by seven-layer position; every row
+     is prose + a contact strip of its instance thumbs; UNFILED count is at
+     the TOP of the page (D1 · julia-proxy's condition on the "techniques as
+     front door" decision). */
+  function renderTechniquesIndex() {
+    var techs = S.entries.filter(function (e) { return e.entity === 'technique'; });
+    var byLayer = Object.create(null);
+    var noLayer = [];
+    techs.forEach(function (t) {
+      var L = layerOf(t);
+      if (L) (byLayer[L] = byLayer[L] || []).push(t);
+      else noLayer.push(t);
+    });
+    var order = LAYERS.filter(function (L) { return byLayer[L]; });
+
+    var unsorted = S.entries.filter(function (e) { return e.status === 'unsorted'; }).length;
+
+    var head =
+      '<p class="kicker">Front door</p>' +
+      '<h1>Techniques</h1>' +
+      '<p class="lede">A technique is a <b>verb with a lesson</b>. Every row lists its instances — recognising ' +
+      'the work by looking at it is the whole point.</p>' +
+      '<p class="lede sm">' +
+      '<b>File by atom, read by technique</b> — and file before you know either. ' +
+      'Grouped by the seven-layer position each acts at (SOURCE, STRUCTURE, ' +
+      'MATERIAL RESPONSE, IMAGE FORMATION, SCREEN-SPACE, TEMPORAL, GRAPHIC COMPOSITION).' +
+      '</p>' +
+      '<div class="meta"><span class="tags">' + techs.length + ' techniques <b>·</b> ' +
+        S.entries.filter(function (e) { return !e.entity || e.entity === 'exploration'; }).length + ' instances <b>·</b> ' +
+        S.entries.filter(function (e) { return e.entity === 'atom'; }).length + ' atoms' +
+      '</span></div>';
+
+    /* Unfiled block at TOP — REVIEW-ARCHITECT §0's non-optional condition on
+       the "techniques as front door" recommendation. Prints 0 when nothing is
+       unsorted, on purpose: an empty count you can see is a to-do list. */
+    var unfiledBar =
+      '<div class="unfiled-bar"><a href="#/unfiled">' +
+      '<span class="lab">Unfiled</span> ' +
+      '<b>' + unsorted + '</b> imports awaiting a ruling — a number to drive down' +
+      '</a></div>';
+
+    var body = order.map(function (L) {
+      return techLayerBlock(L, byLayer[L]);
+    }).join('') + (noLayer.length ? techLayerBlock('NO LAYER ON FILE', noLayer) : '');
+
+    el('view').innerHTML = head + unfiledBar + body;
+    observeSwatches(el('view'));
+  }
+
+  function techLayerBlock(name, list) {
+    return '<section class="layer"><div class="layer-head">' +
+      '<span class="lab">' + esc(name) + '</span>' +
+      '<span class="n">' + list.length + '</span>' +
+    '</div>' + list.map(techRow).join('') + '</section>';
+  }
+
+  function techRow(t) {
+    var inst = instancesOfTechnique(t.id);
+    var stChip = '<span class="st" data-st="' + esc(t.status || 'canonical') + '">' +
+      esc(String(t.status || 'canonical').replace('-', ' ')) + '</span>' +
+      (t.stub ? '<span class="st" data-st="stub">stub</span>' : '');
+    var strip = inst.length
+      ? '<div class="inst-strip">' + inst.slice(0, 6).map(function (e) {
+          var thumb = e.thumb && (typeof e.thumb === 'string' ? e.thumb : e.thumb.file);
+          var pathBase = e.path || ('content/' + e.id + '/');
+          var img = thumb
+            ? '<img src="' + esc(pathBase + thumb) + '" alt="" loading="lazy" onerror="this.classList.add(\'nothumb\');this.removeAttribute(\'src\')">'
+            : '<span class="nothumb">no<br>thumb</span>';
+          return '<a class="inst-thumb" href="#/' + esc(e.id) + '" title="' + esc(e.title) + '">' +
+            img + '</a>';
+        }).join('') +
+        (inst.length > 6 ? '<span class="more">+' + (inst.length - 6) + '</span>' : '') +
+        '</div>'
+      : '<div class="inst-strip empty"><span class="none">no instances on file</span></div>';
+    return '<a class="tech-row" href="#/technique/' + esc(t.id) + '">' +
+      '<div class="tr-a"><b>' + esc(t.title) + '</b>' + stChip + '</div>' +
+      '<div class="tr-b">' + esc(t.description || t.note || '') + '</div>' +
+      '<div class="tr-c">' + strip +
+        '<span class="ct">' + inst.length + ' inst.</span></div>' +
+      '</a>';
+  }
+
+  /* ck-e3 · technique entry page. Called from renderEntry when
+     e.entity === 'technique'. THE FIVE TESTS block, instance table, atoms
+     used across instances, admitting styles, governed_by, ruling if present. */
+  function renderTechniquePage(t) {
+    view.kind = 'technique';
+    S.current = t; S.currentExample = null; localExample = null;
+    S.markCurrent(); position();
+    var crumb = el('crumb');
+    if (crumb) crumb.textContent = 'Technique · ' + t.title;
+
+    var inst = instancesOfTechnique(t.id);
+    var L = layerOf(t) || 'no layer on file';
+
+    /* atoms used across instances — the chip row Julia asked for */
+    var atomHits = Object.create(null);
+    inst.forEach(function (e) {
+      (e.uses || []).forEach(function (u) {
+        var id = typeof u === 'string' ? u : u && u.atom;
+        if (id) atomHits[id] = (atomHits[id] || 0) + 1;
+      });
+    });
+    var atomsChips = Object.keys(atomHits).map(function (aid) {
+      var a = S.byId && S.byId[aid];
+      return '<a class="pip" href="#/atom/' + esc(aid) + '">' +
+        esc((a && a.title) || aid) + ' <span class="faint">' + atomHits[aid] + '</span></a>';
+    });
+
+    /* styles reached by the instances */
+    var stHits = Object.create(null);
+    inst.forEach(function (e) { if (e.style) stHits[e.style] = (stHits[e.style] || 0) + 1; });
+    var stChips = Object.keys(stHits).map(function (sid) {
+      var st = styleById(sid);
+      return '<a class="pip" href="#/style/' + esc(sid) + '">' +
+        esc((st && st.title) || sid) + ' <span class="faint">' + stHits[sid] + '</span></a>';
+    });
+
+    var stChip = '<span class="st" data-st="' + esc(t.status || 'canonical') + '">' +
+      esc(String(t.status || 'canonical').replace('-', ' ')) + '</span>' +
+      (t.stub ? '<span class="st" data-st="stub">stub</span>' : '');
+
+    /* Five tests: pull from t.tests if present, else derive from a
+       CANONICAL instance's critique block. If neither, print an honest
+       "proposed by tool — awaiting Julia" note. */
+    var tests = t.tests;
+    var proposedTests = false;
+    if (!tests) {
+      var canonInst = inst.filter(function (e) { return e.status === 'canonical' && e.critique; })[0];
+      if (canonInst && canonInst.critique) {
+        var c = canonInst.critique;
+        tests = {
+          shared_cause: c.reads_as,
+          distinct_job: (c.operators || []).join(' · '),
+          order: c.pass_order,
+          removal_test: c.why_it_survives
+        };
+        proposedTests = true;
+      }
+    }
+    var testsHTML = tests
+      ? '<section class="atom-block"><div class="blk-head">' +
+          '<span class="lab">' + (proposedTests ? 'Five tests · proposed from ' + esc(canonInst.title) + ', awaiting Julia' : 'The five tests') + '</span>' +
+          '<span class="n">from composing-computational-material-systems</span>' +
+        '</div>' +
+        '<dl class="tests">' +
+          ['shared_cause','distinct_job','order','removal_test','overuse'].map(function (k) {
+            if (!tests[k]) return '';
+            return '<dt>' + esc(k.replace(/_/g, ' ')) + '</dt><dd>' + esc(tests[k]) + '</dd>';
+          }).join('') +
+        '</dl></section>'
+      : '<section class="atom-block"><div class="blk-head"><span class="lab">The five tests</span>' +
+        '<span class="n">not on file · awaiting Julia</span></div>' +
+        '<p class="empty">No tests declared on this technique yet. The tool proposes tests only when at ' +
+        'least one canonical instance carries a critique block; this one has none.</p></section>';
+
+    var instTable = inst.length
+      ? '<section class="atom-block"><div class="blk-head"><span class="lab">Instances</span>' +
+        '<span class="n">' + inst.length + '</span></div>' +
+        '<div class="inst-table">' +
+          '<div class="ir head"><span class="a">entry</span><span class="b">reads as</span>' +
+            '<span class="c">lane · style · status</span></div>' +
+          inst.map(instRow).join('') +
+        '</div></section>'
+      : '<section class="atom-block"><div class="blk-head"><span class="lab">Instances</span>' +
+        '<span class="n">0</span></div>' +
+        '<p class="empty">Nothing instances this technique yet.</p></section>';
+
+    var atomsBlock = atomsChips.length
+      ? '<section class="atom-block"><div class="blk-head"><span class="lab">Atoms across instances</span>' +
+        '<span class="n">' + atomsChips.length + '</span></div>' +
+        '<div class="chips">' + atomsChips.join('') + '</div></section>'
+      : '';
+
+    var stylesBlock = stChips.length
+      ? '<section class="atom-block"><div class="blk-head"><span class="lab">Also appears in</span>' +
+        '<span class="n">' + stChips.length + ' style' + (stChips.length === 1 ? '' : 's') + '</span></div>' +
+        '<div class="chips">' + stChips.join('') + '</div></section>'
+      : '';
+
+    var govBlock = (t.governed_by || []).length
+      ? '<section class="atom-block"><div class="blk-head"><span class="lab">Governed by</span></div>' +
+        '<div class="chips">' + t.governed_by.map(function (sid) {
+          var sk = skillById(sid);
+          return '<a class="pip" href="#/skills/' + esc(sid) + '">' + esc((sk && sk.title) || sid) + '</a>';
+        }).join('') + '</div></section>'
+      : '';
+
+    var producesBlock = (t.produces || []).length
+      ? '<section class="atom-block"><div class="blk-head"><span class="lab">Produces</span>' +
+        '<span class="n">the atom the lesson reifies into</span></div>' +
+        '<div class="atoms-grid">' + t.produces.map(function (aid) {
+          var a = S.byId && S.byId[aid];
+          return a ? atomCellHTML(a) : '';
+        }).join('') + '</div></section>'
+      : '';
+
+    el('view').innerHTML =
+      '<p class="kicker">Technique · <span style="text-transform:uppercase">' + esc(L) + '</span></p>' +
+      '<h1>' + esc(t.title) + '</h1>' +
+      '<div class="meta">' + stChip + '<span class="tags">' + inst.length + ' inst. <b>·</b> layer: ' +
+        esc(L) + (t.lane ? ' <b>·</b> lane: ' + esc(t.lane) : '') +
+      '</span></div>' +
+      '<p class="lede">' + esc(t.description || t.note || '') + '</p>' +
+      testsHTML +
+      producesBlock +
+      instTable +
+      atomsBlock +
+      stylesBlock +
+      govBlock +
+      rulingHTML(t) +
+      pagerHTML(t);
+
+    observeSwatches(el('view'));
+    window.scrollTo(0, 0);
+  }
+
+  function instRow(e) {
+    var thumb = e.thumb && (typeof e.thumb === 'string' ? e.thumb : e.thumb.file);
+    var pathBase = e.path || ('content/' + e.id + '/');
+    var img = thumb
+      ? '<img src="' + esc(pathBase + thumb) + '" alt="" loading="lazy" onerror="this.classList.add(\'nothumb\');this.removeAttribute(\'src\')">'
+      : '<span class="nothumb">no thumb</span>';
+    var reads = (e.critique && e.critique.reads_as) || '';
+    var st = styleById(e.style || '');
+    return '<a class="ir" href="#/' + esc(e.id) + '">' +
+      '<span class="th">' + img + '</span>' +
+      '<span class="a"><b>' + esc(e.index || e.id) + '</b> ' + esc(e.title) + '</span>' +
+      '<span class="b">' + esc(reads) + '</span>' +
+      '<span class="c">' + esc(e.lane || '—') + ' · ' + esc((st && st.title) || e.style || '—') +
+        ' · ' + esc(e.status) + '</span>' +
+      '</a>';
+  }
+
+  /* ck-e4 · the styles index. Cards, not a list; each carries its palette
+     swatch, type roles, texture-vocabulary chips, engines list, and member
+     count. */
+  function renderStylesIndex() {
+    var sts = (S.manifest && S.manifest.styles) || [];
+    var head =
+      '<p class="kicker">Houses</p>' +
+      '<h1>Styles</h1>' +
+      '<p class="lede">Six named systems. A style is <b>bounded and prescriptive</b> — it names what you may ' +
+      'use, so a violation is checkable rather than an opinion.</p>' +
+      '<div class="meta"><span class="tags">' + sts.length + ' styles</span></div>';
+    var body = sts.length
+      ? '<div class="style-grid">' + sts.map(styleCard).join('') + '</div>'
+      : '<p class="empty">No styles declared.</p>';
+    el('view').innerHTML = head + body;
+    observeSwatches(el('view'));
+  }
+
+  function styleCard(st) {
+    var mem = S.entries.filter(function (e) { return e.style === st.id; });
+    var voc = (st.texture || []).slice(0, 8);
+    var types = st.type ? Object.keys(st.type).map(function (k) {
+      return '<span><i>' + esc(k) + '</i>' + esc(st.type[k]) + '</span>';
+    }).join('') : '';
+    return '<a class="style-card" href="#/style/' + esc(st.id) + '">' +
+      '<div class="sc-hd"><b>' + esc(st.title) + '</b>' +
+        '<span class="ct">' + mem.length + ' entr' + (mem.length === 1 ? 'y' : 'ies') + '</span></div>' +
+      (st.summary ? '<p class="sc-sum">' + esc(st.summary) + '</p>' : '') +
+      '<div class="sc-pal">' + (st.palette || []).map(function (c) {
+        return '<i style="background:' + esc(c) + '" title="' + esc(c) + '"></i>';
+      }).join('') + '</div>' +
+      (types ? '<div class="sc-type">' + types + '</div>' : '') +
+      (voc.length ? '<div class="sc-vocab">' + voc.map(function (v) {
+        return '<span class="pip">' + esc(v) + '</span>';
+      }).join('') + (st.texture && st.texture.length > 8
+        ? '<span class="pip more">+' + (st.texture.length - 8) + '</span>'
+        : '') + '</div>' : '<p class="sc-none">no texture — declared, not missing</p>') +
+      '<div class="sc-eng">' + ((st.engines || []).length
+        ? (st.engines.length + ' engine' + (st.engines.length === 1 ? '' : 's'))
+        : 'no engine — no lens allocates a canvas') + '</div>' +
+    '</a>';
+  }
+
+  /* ck-e0 · the encyclopedia's new routes, now with bespoke renderers. */
   function renderRoute(name, route, query) {
     S.unmountAdapter();
     S.unobservePreviews();
+    if (swatchIO) { swatchIO.disconnect(); swatchIO = null; }
     view.kind = 'route'; view.styleId = null; view.route = name;
     S.current = null; S.currentExample = null; localExample = null;
     S.markCurrent(); position();
@@ -814,9 +1454,6 @@
       couplings:    'Couplings'
     };
     var TAGLINES = {
-      techniques:   'A verb with a lesson. Every technique lists its instances.',
-      atoms:        'A noun with parameters. Substrate, process, texture, colour, type, engine, field, mark, voice, space, bus.',
-      styles:       'Six bounded houses. Palette, three type roles, texture vocabulary, engines, rules.',
       explorations: 'Dated artefacts with provenance, status, faults and a technique stack.',
       sound:        'A lane of the same practice. Six pieces doing compound causality before anyone asked.',
       symptoms:     'Entries that overuse an atom. A visible gap, not a shame list.',
@@ -828,16 +1465,15 @@
     var crumb = el('crumb');
     if (crumb) crumb.textContent = TITLES[name] || name;
 
-    /* Styles and skills are declared in the manifest, not the entries[]. Their
-       lists come from a different place. */
+    /* Bespoke renderers for ck-e2/e3/e4. Others fall through to the minimal
+       filtered-sheet or route-list from ck-e0. */
+    if (name === 'atoms')      return renderAtomsShelves(query);
+    if (name === 'techniques') return renderTechniquesIndex();
+    if (name === 'styles')     return renderStylesIndex();
+
+    /* fallthrough — skills route-list, sheet-per-facet, empty-on-purpose */
     var body;
-    if (route.kind === 'styles') {
-      var sts = S.manifest.styles || [];
-      body = sts.length ? '<ul class="route-list">' + sts.map(function (s) {
-        return '<li><a href="#/style/' + esc(s.id) + '"><b>' + esc(s.title) + '</b>' +
-          (s.summary ? '<span class="s">' + esc(s.summary) + '</span>' : '') + '</a></li>';
-      }).join('') + '</ul>' : '<p class="empty">No styles declared.</p>';
-    } else if (route.kind === 'skills') {
+    if (route.kind === 'skills') {
       var sk = S.manifest.skills || [];
       body = sk.length ? '<ul class="route-list">' + sk.map(function (s) {
         var role = s.role ? '<span class="s">' + esc(s.role) + (s.rung ? ' · rung ' + s.rung : '') + '</span>' : '';
@@ -849,7 +1485,7 @@
       body = list.length
         ? '<p class="meta"><span class="tags">' + counts + '</span></p>' +
           '<div class="sheet"><div class="grid">' + list.map(cardHTML).join('') + '</div></div>'
-        : '<p class="empty">Nothing filed here yet. This page is empty on purpose — see BUILD-NOTES-ENCYC.md; the fold lands at ck-e1 and later checkpoints add the entities.</p>';
+        : '<p class="empty">Nothing filed here yet. This page is empty on purpose — see BUILD-NOTES-ENCYC.md; later checkpoints file the entities.</p>';
     }
 
     el('view').innerHTML =
@@ -871,13 +1507,19 @@
   }
 
   /* A list view is a function of the filter, so it re-renders when the filter
-     changes — which is also what fills the sheet in as entry scripts land. */
+     changes — which is also what fills the sheet in as entry scripts land.
+     The atom and technique pages also derive their content (used-by, instance
+     list, atoms-across-instances) from every entry's `uses[]` / `instance_of[]`,
+     so they refresh here too — until the whole roster is loaded, an atom
+     page can read as "used ×0" for something that ships with nine uses. */
   function onFilter() {
     if (view.kind === 'sheet' && el('view')) renderSheet(view.styleId);
     if (view.kind === 'route' && el('view')) {
       var r = S.ENCYCLOPEDIA_ROUTES && S.ENCYCLOPEDIA_ROUTES[view.route];
       if (r) renderRoute(view.route, r, {});
     }
+    if (view.kind === 'atom' && S.current && el('view'))      renderAtomPage(S.current);
+    if (view.kind === 'technique' && S.current && el('view')) renderTechniquePage(S.current);
     if (S.current) position();
   }
 

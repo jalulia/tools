@@ -182,56 +182,197 @@ Shell.registerManifest({
        examples resolves at ck-e1. ck-e2 flesh out each into a swatch page.
        Each carries kind, section 'atoms', status 'exploration' (they are
        proposed atomisations of what the corpus keeps duplicating). ──── */
+    /* TEXTURE — the surface consequences. Julia's TEXTURE question is answered
+       by the SHELF ORDER on #/atoms: TEXTURE, SUBSTRATE, PROCESS sit as three
+       side-by-side shelves, so a reader learns that paper-tooth (texture) is a
+       sibling of bone-140gsm (substrate) and two-drum-riso (process), not their
+       parent — the cause-and-consequence-on-one-shelf error the domain model
+       refuses.                                                              */
     { id: 'paper-tooth', title: 'Paper tooth', order: 1010,
       lane: 'canvas2d', entity: 'atom', kind: 'texture',
-      section: 'atoms', status: 'exploration', stub: true,
+      section: 'atoms', status: 'exploration',
       governed_by: ['components-craft', 'composing-computational-material-systems'],
-      note: 'Mean-preserving tile-based tooth. Multiplied under the sheet — the tooth perturbs both ways rather than only darkening (Ki-Landscapes/index.html:116-131). See W1 for the instance at 180 px / soft-light / mean-preserving true.' },
-    { id: 'dot-screen-20', title: 'Rotated dot screen · 20°', order: 1020,
-      lane: 'canvas2d', entity: 'atom', kind: 'process',
-      section: 'atoms', status: 'exploration', stub: true,
+      description: 'Mean-preserving fibre pattern at ~30% depth. The consequence of a substrate, not the substrate itself.',
+      params: [
+        { name: 'depth', min: 0, max: 60, value: 22, step: 1, note: 'per-pixel amplitude ±' },
+        { name: 'seed',  min: 1, max: 9999, value: 4141, step: 1 },
+        { name: 'fibres',min: 0, max: 40, value: 16, step: 1, note: 'faint horizontal fibres' }
+      ],
+      note: 'Multiplied under the sheet — the tooth perturbs BOTH ways rather than only darkening (Ki-Landscapes/index.html:116-131). See W1 for the instance at 180 px / soft-light / mean-preserving true.' },
+    { id: 'dot-screen-20', title: 'Dot screen · 20°', order: 1020,
+      lane: 'canvas2d', entity: 'atom', kind: 'texture',
+      section: 'atoms', status: 'exploration',
       governed_by: ['components-craft'],
-      note: 'The riso/xerox halftone. Six copies in the corpus (research/05 §7). 20° rotation is the register-tolerant classic; other angles exist.' },
-    { id: 'mulberry32', title: 'mulberry32(seed)', order: 1030,
-      lane: 'canvas2d', entity: 'atom', kind: 'engine',
-      section: 'atoms', status: 'exploration', stub: true,
+      description: 'The register-tolerant halftone. 65 lpi at 20° — a reproduction, not a filter.',
+      params: [
+        { name: 'cell',  min: 3,  max: 14, value: 6,  step: 1, note: 'lattice pitch' },
+        { name: 'angle', min: 0,  max: 90, value: 20, step: 1, note: 'degrees' },
+        { name: 'gain',  min: 0.4,max: 1.2,value: 0.72, step: 0.02, note: 'dot radius multiplier' }
+      ],
+      note: 'The riso/xerox halftone. Six copies in the corpus (research/05 §7). 20° is the register-tolerant classic; other angles exist.' },
+    { id: 'bayer8', title: 'Bayer 8×8 threshold', order: 1030,
+      lane: 'canvas2d', entity: 'atom', kind: 'texture',
+      section: 'atoms', status: 'exploration',
       governed_by: ['composing-computational-material-systems'],
-      note: 'The seeded PRNG under every field in the corpus. Eleven copies (research/05 §7) — the strongest atom in the archive by duplication count.' },
-    { id: 'oklab-ramp', title: 'OKLab colour ramp', order: 1040,
-      lane: 'canvas2d', entity: 'atom', kind: 'colour',
-      section: 'atoms', status: 'exploration', stub: true,
+      description: 'The ordered dither matrix. Decides which of two quantized levels a pixel takes.',
+      params: [
+        { name: 'levels', min: 2, max: 8,  value: 2, step: 1, note: 'quantization steps' },
+        { name: 'scale',  min: 1, max: 8,  value: 3, step: 1, note: 'pixels per cell' }
+      ],
+      note: 'Two copies in the corpus. Chapter 20 (dithering) is the technique that uses it, W2 (depth-aware dither) is the exploration that pins it to depth.' },
+    { id: 'ink-chain', title: 'Ink chain (feDisplacementMap)', order: 1035,
+      lane: 'canvas2d', entity: 'atom', kind: 'texture',
+      section: 'atoms', status: 'exploration',
+      governed_by: ['components-craft', 'composing-computational-material-systems'],
+      description: 'feTurbulence + feDisplacementMap, opaque brush edge. Three tools from ONE parameterised generator.',
+      params: [
+        { name: 'freq',  min: 0.005,max: 0.08, value: 0.02, step: 0.001, note: 'turbulence base freq' },
+        { name: 'amp',   min: 1,    max: 24,   value: 8,    step: 1,     note: 'displacement scale' },
+        { name: 'seed',  min: 1,    max: 999,  value: 42,   step: 1 }
+      ],
+      note: 'Three copies in the corpus, differing only in freq and scale. The one thing this atom encodes: the edge stays opaque — a chain is a wobble on ink, not a fade in it.' },
+    { id: 'granulation', title: 'Granulation', order: 1040,
+      lane: 'canvas2d', entity: 'atom', kind: 'texture',
+      section: 'atoms', status: 'exploration',
       governed_by: ['composing-computational-material-systems'],
-      note: 'A ramp interpolated in OKLab, never sRGB. `colour` holds ramps only (never a lone hex, which has no parameters and no lesson). Two copies in the corpus.' },
-    { id: 'watercolour-wash', title: 'Watercolour wash', order: 1050,
+      description: 'Gradient-masked pigment settle. Multiplies against the wash; order is load-bearing.',
+      params: [
+        { name: 'density', min: 20, max: 400, value: 160, step: 10 },
+        { name: 'seed',    min: 1,  max: 999, value: 77,  step: 1 }
+      ],
+      note: 'Multiplies against the wash — swap the two and the band goes muddy (W1 pass_order).' },
+    { id: 'edge-bloom', title: 'Edge bloom', order: 1050,
+      lane: 'canvas2d', entity: 'atom', kind: 'texture',
+      section: 'atoms', status: 'exploration',
+      governed_by: ['composing-computational-material-systems'],
+      description: 'Stamped crest strip that carries the pooling INSIDE it — pooling belongs after, not before.',
+      params: [
+        { name: 'width', min: 4,  max: 40, value: 14, step: 1 },
+        { name: 'seed',  min: 1,  max: 999,value: 33, step: 1 }
+      ],
+      note: 'W1 pass 4 of 7.' },
+
+    /* SUBSTRATE — what you print ONTO. A substrate is a physical stock with a
+       colour, a tooth and a plate-mark, never a texture applied on top.      */
+    { id: 'bone-140gsm', title: 'Bone 140 gsm', order: 1200,
+      lane: 'canvas2d', entity: 'atom', kind: 'substrate',
+      section: 'atoms', status: 'exploration',
+      governed_by: ['composing-computational-material-systems', 'components-craft'],
+      description: 'Warm off-white uncoated sheet, 1 px plate mark, no shadow. The stock you print ONTO — not a texture.',
+      params: [
+        { name: 'warmth', min: 0, max: 30, value: 12, step: 1, note: 'yellow bias 0..30' },
+        { name: 'weight', min: 90, max: 300, value: 140, step: 10, note: 'gsm' }
+      ],
+      note: 'Warm off-white, plate mark 1 px, no drop shadow. A substrate carries its tooth as a consequence of its fibres — the tooth atom is a SIBLING, not a property.' },
+    { id: 'tyvek', title: 'Tyvek', order: 1210,
+      lane: 'canvas2d', entity: 'atom', kind: 'substrate',
+      section: 'atoms', status: 'exploration',
+      governed_by: ['composing-computational-material-systems'],
+      description: 'Spun-bonded polyethylene. Fibre-direction sheen banding; no absorption at all.',
+      params: [
+        { name: 'sheen', min: 0, max: 40, value: 18, step: 1 },
+        { name: 'seed',  min: 1, max: 999,value: 91, step: 1 }
+      ],
+      note: 'Reads as spun-bonded polyethylene rather than paper: fibre direction, no ink soak, no plate mark. A named material with specific physics — the opposite of "noise as texture".' },
+
+    /* PROCESS — the reproduction event. A process is an ACTION applied to a
+       field on a substrate; it is not the resulting texture.                */
+    { id: 'two-drum-riso', title: 'Two-drum offset', order: 1300,
       lane: 'canvas2d', entity: 'atom', kind: 'process',
-      section: 'atoms', status: 'exploration', stub: true,
+      section: 'atoms', status: 'exploration',
+      governed_by: ['components-craft', 'composing-computational-material-systems'],
+      description: 'Two-colour riso pass. Drum 01 prints, drum 02 misses register by ~2.4 mm.',
+      params: [
+        { name: 'offset-x', min: 0, max: 6, value: 2.4, step: 0.1, note: 'mm' },
+        { name: 'offset-y', min: -3,max: 3, value: 1.1, step: 0.1, note: 'mm' },
+        { name: 'twist',    min: -3,max: 3, value: 0.4, step: 0.1, note: 'degrees' }
+      ],
+      note: 'Misregistration is the consequence of a second drum — its own seed, its own offset, its own twist. Never a drawn stroke or a copied layer (riso-xerox style rule 2).' },
+    { id: 'xerox-degradation', title: 'Xerox degradation', order: 1310,
+      lane: 'canvas2d', entity: 'atom', kind: 'process',
+      section: 'atoms', status: 'exploration',
+      governed_by: ['components-craft'],
+      description: 'Photocopy generational loss. Toner starve, edge burn, feed jitter — coverage fails where there is enough ink to fail.',
+      params: [
+        { name: 'generations', min: 1, max: 8,  value: 3,  step: 1 },
+        { name: 'starve',      min: 0, max: 60, value: 24, step: 1 },
+        { name: 'jitter',      min: 0, max: 6,  value: 1.5,step: 0.1 }
+      ],
+      note: 'Coverage failure (pinholes, edge burn) belongs to the ink, so it happens where there is enough ink to fail. Small type does not starve.' },
+    { id: 'watercolour-wash', title: 'Watercolour wash', order: 1320,
+      lane: 'canvas2d', entity: 'atom', kind: 'process',
+      section: 'atoms', status: 'exploration',
       governed_by: ['composing-computational-material-systems'],
+      description: 'Soft-light composited fill inside a clip. W1 pass 1 of 7 — always the first pass.',
+      params: [
+        { name: 'wet',     min: 0.1, max: 1.0, value: 0.55, step: 0.05 },
+        { name: 'seed',    min: 1,   max: 999, value: 501,  step: 1 }
+      ],
       note: 'Soft-light composited fill inside a clip. W1 pass 1 of 7.' },
-    { id: 'granulation', title: 'Granulation', order: 1060,
-      lane: 'canvas2d', entity: 'atom', kind: 'texture',
-      section: 'atoms', status: 'exploration', stub: true,
+
+    /* COLOUR — ramps only. A lone hex has no parameters and no lesson.     */
+    { id: 'oklab-ramp', title: 'OKLab colour ramp', order: 1400,
+      lane: 'canvas2d', entity: 'atom', kind: 'colour',
+      section: 'atoms', status: 'exploration',
       governed_by: ['composing-computational-material-systems'],
-      note: 'Gradient-masked pigment settle. Multiplies against the wash — swap the two and the band goes muddy (W1 pass_order).' },
-    { id: 'cut-paper-edge', title: 'Cut-paper edge', order: 1070,
+      description: 'A ramp interpolated in OKLab, never sRGB. Tuned for a downstream chain — she works in ramps, not hexes.',
+      params: [
+        { name: 'stops',     min: 3, max: 12, value: 7, step: 1, note: 'number of stops' },
+        { name: 'lightness', min: 0.2, max: 0.85, value: 0.55, step: 0.01, note: 'midpoint L*' }
+      ],
+      note: 'A ramp interpolated in OKLab. `colour` holds ramps only. Two copies in the corpus; MIR-21 tunes an ATMOSPHERIC set for the downstream chain.' },
+
+    /* MARK — hand-scale marks that go ON TOP of the plate.                  */
+    { id: 'cut-paper-edge', title: 'Cut-paper edge', order: 1500,
       lane: 'canvas2d', entity: 'atom', kind: 'mark',
-      section: 'atoms', status: 'exploration', stub: true,
+      section: 'atoms', status: 'exploration',
       governed_by: ['composing-computational-material-systems'],
-      note: 'Ridge stroke, one-pixel accented. W1 pass 3 of 7.' },
-    { id: 'edge-bloom', title: 'Edge bloom', order: 1080,
-      lane: 'canvas2d', entity: 'atom', kind: 'texture',
-      section: 'atoms', status: 'exploration', stub: true,
-      governed_by: ['composing-computational-material-systems'],
-      note: 'Stamped crest strip that carries the pooling inside it. W1 pass 4 of 7 — pooling belongs after, not before.' },
-    { id: 'bayer8', title: 'Bayer 8×8', order: 1090,
-      lane: 'canvas2d', entity: 'atom', kind: 'texture',
-      section: 'atoms', status: 'exploration', stub: true,
-      governed_by: ['composing-computational-material-systems'],
-      note: 'The threshold matrix. Two copies in the corpus. Chapter 20 (dithering) is the technique that uses it and W2 (depth-aware dither) is the exploration that pins it to depth.' },
-    { id: 'fbm-noise', title: 'fBm value noise', order: 1100,
+      description: 'Ridge stroke, one-pixel accented. W1 pass 3 of 7.',
+      params: [
+        { name: 'ridge', min: 0.5, max: 3, value: 1.2, step: 0.1, note: 'stroke px' },
+        { name: 'seed',  min: 1,   max: 999,value: 88, step: 1 }
+      ],
+      note: 'W1 pass 3 of 7 — the edge that separates a wash from what is beside it.' },
+
+    /* FIELD — the continuous input a technique consumes.                    */
+    { id: 'fbm-noise', title: 'fBm value noise', order: 1600,
       lane: 'canvas2d', entity: 'atom', kind: 'field',
-      section: 'atoms', status: 'exploration', stub: true,
+      section: 'atoms', status: 'exploration',
       governed_by: ['composing-computational-material-systems'],
+      description: 'Fractal-Brownian noise. Chapter 13 as a reusable field — four copies in the corpus.',
+      params: [
+        { name: 'octaves',    min: 1, max: 8, value: 5, step: 1 },
+        { name: 'lacunarity', min: 1.5, max: 3, value: 2, step: 0.1 },
+        { name: 'gain',       min: 0.2, max: 0.9, value: 0.5, step: 0.05 }
+      ],
       note: 'The output of chapter 13 as a reusable field. Four copies (research/05 §7).' },
+
+    /* ENGINE — the shared implementation, cited by every fragment that uses
+       it. Six on disk. Julia asked for these to be entries, not paths.      */
+    { id: 'mulberry32', title: 'mulberry32(seed)', order: 1700,
+      lane: 'canvas2d', entity: 'atom', kind: 'engine',
+      section: 'atoms', status: 'canonical',
+      governed_by: ['composing-computational-material-systems'],
+      description: 'Seeded PRNG. Fifteen copies in the monolith, one now — the strongest dedup case in the corpus.',
+      note: 'The seeded PRNG under every field in the corpus. Fifteen copies in the monolith under fifteen names; the audit at research/05 §7 caught eleven and two more hid inside object literals. content/_engines/rng.js.' },
+    { id: 'halftone-js', title: 'halftone.js', order: 1710,
+      lane: 'canvas2d', entity: 'atom', kind: 'engine',
+      section: 'atoms', status: 'canonical',
+      governed_by: ['components-craft'],
+      description: 'The dot screen, once. Six copies before it moved here — a halftone is a reproduction, not a texture.',
+      note: 'Six copies (anyHalftone, hvHalftone, graceHalftone, t1Halftone, PR.halftone, caHalftone) folded into one dotScreen() call. content/_engines/halftone.js.' },
+    { id: 'paper-js', title: 'paper.js', order: 1720,
+      lane: 'canvas2d', entity: 'atom', kind: 'engine',
+      section: 'atoms', status: 'canonical',
+      governed_by: ['components-craft', 'composing-computational-material-systems'],
+      description: 'Paper tooth + fibres + tile version. Two lenses painted it from scratch, three more inlined the loop.',
+      note: 'B4 stkPaint and B3 festaTooth folded here plus three inlined grain loops. paperTooth() into a full canvas or paperTile() into a data: URL. content/_engines/paper.js.' },
+    { id: 'field-js', title: 'field.js', order: 1730,
+      lane: 'canvas2d', entity: 'atom', kind: 'engine',
+      section: 'atoms', status: 'canonical',
+      governed_by: ['composing-computational-material-systems'],
+      description: 'The greyscale field a halftone reproduces. B1, C1, E5·ALT and D4 all had a byte-identical buildField.',
+      note: 'The stand-in for a photograph: 46 soft radial blobs plus 70 low-alpha streaks, contrast-stretched. Honest only as the thing that is about to be reproduced — as a material on its own it is CMP-03 (B+, promising exploration). content/_engines/field.js.' },
 
     /* ── Technique stubs (4) — the techniques the worked examples
        declare. Each carries the exploration\'s critique block as its lesson
@@ -240,8 +381,17 @@ Shell.registerManifest({
     { id: 'seven-pass-band-chain', title: 'Seven-pass band chain',
       order: 2010, lane: 'canvas2d', entity: 'technique',
       section: 'techniques', status: 'canonical', stub: true,
+      layer: 'IMAGE FORMATION',
+      description: 'Painterly compositing as an ordered chain. The order is the content.',
       produces: ['paper-tooth'],
       governed_by: ['composing-computational-material-systems'],
+      tests: {
+        shared_cause: 'One landscape state (band index, coverage, humidity) drives every pass — colour, tooth, bloom and pooling all read from the same field.',
+        distinct_job: 'Each pass has one job: wash (colour), granulation (settle), cut-paper edge (separation), bloom (crest), print (halftone), tooth (substrate), grain (film). Two doing the same job = one is decoration.',
+        order: 'Wash → granulation → edge → bloom → print → tooth → grain. Swap wash and granulation and the band goes muddy; put grain before print and the film sits UNDER the ink instead of over it.',
+        removal_test: 'Remove the tooth pass: the plate reads as a screen render, not a print. Remove the bloom: the crest goes flat and the whole plate reads as gradient.',
+        overuse: 'Adding an eighth pass to "add depth" is the vibe stack — the answer is inside the existing chain (raise the bloom width), not beside it.'
+      },
       note: 'The technique W1 instantiates and KL1 used to. Order-dependent painterly compositing, per Ki-Landscapes/index.html:260-332.',
       ruling: {
         text: 'crisp edge (solid to 94%) — CANON, do not soften',
@@ -250,18 +400,45 @@ Shell.registerManifest({
     { id: 'depth-aware-dither', title: 'Depth-aware dither',
       order: 2020, lane: 'canvas2d', entity: 'technique',
       section: 'techniques', status: 'canonical', stub: true,
+      layer: 'IMAGE FORMATION',
+      description: 'One depth term, four consequences. Bayer-8 threshold biased by scene depth.',
       produces: ['bayer8'],
       governed_by: ['composing-computational-material-systems'],
-      note: 'One depth term, four consequences. W2 is the canonical instance; MIR-12 is its ancestor (the same shader with the depth term deleted).' },
+      tests: {
+        shared_cause: 'Depth (a single per-pixel scalar) drives BOTH the dither threshold bias AND the two-level quantization step.',
+        distinct_job: 'The Bayer matrix decides which of two levels a pixel takes; the depth bias decides which two.',
+        order: 'Quantize AFTER the depth bias, or the dither picks between the wrong pair of levels.',
+        removal_test: 'MIR-12 is this shader with the depth term deleted — a Bayer plate that never separates foreground from background. Kept as the ancestor.',
+        overuse: 'A second dither pass over the result is dither without quantization behind it — noise, not a decision.'
+      },
+      note: 'One depth term, four consequences. W2 is the canonical instance; MIR-12 is its ancestor.' },
     { id: 'hillshade-and-flow', title: 'Hillshade and flow — one field, two jobs',
       order: 2030, lane: 'canvas2d', entity: 'technique',
       section: 'techniques', status: 'canonical', stub: true,
+      layer: 'MATERIAL RESPONSE',
+      description: 'One heightfield read twice: for shading AND for flow direction. Two consequences, one field.',
       governed_by: ['composing-computational-material-systems'],
+      tests: {
+        shared_cause: 'A single heightfield sample per pixel drives both the shade (dot with light direction) and the flow (gradient direction).',
+        distinct_job: 'Shade paints the surface as illuminated; flow decides where a particle would run. Different jobs, one input.',
+        order: 'Sample once, derive both. Sampling twice at different resolutions is the same field made two things that never agree.',
+        removal_test: 'Turn the shading term to zero: the flow lines still read as valid on the map. Turn the flow off: the plate is a normal hillshade.',
+        overuse: 'Adding a third read (curvature) that is not consumed by anything downstream is the field being asked to prove it can do more.'
+      },
       note: 'W3 is the canonical instance. One heightfield read for shade AND for flow direction, per MM-04 + MM-05.' },
     { id: 'unlinked-shader', title: 'A shader that does not link',
       order: 2040, lane: 'canvas2d', entity: 'technique',
       section: 'techniques', status: 'known-failure', stub: true,
+      layer: 'SOURCE',
+      description: 'Invisible in the source, total in the output. One missing word.',
       governed_by: ['composing-computational-material-systems'],
+      tests: {
+        shared_cause: 'A missing precision qualifier — a single omitted keyword.',
+        distinct_job: 'The failure is the lesson: the QA harness asserts THIS shader fails in exactly this way. That is what makes it teaching material.',
+        order: 'The linker runs after the compiler. A compile-clean shader can still not link, which is what makes this class of failure look like nothing.',
+        removal_test: 'Add the qualifier back: the shader links and paints. The one thing that had to be there was one word.',
+        overuse: 'None. A failure is not overused, it is duplicated in a corpus that does not know it is filed here.'
+      },
       note: 'W4 is the failure. Included because the failure is the lesson — a graded failure from a real repo, not a strawman.' },
 
     /* ── The 22 chapters, promoted to TECHNIQUES ─────────────────────── */

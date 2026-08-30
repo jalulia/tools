@@ -462,6 +462,27 @@
         "entity": { "$ref": "#/$defs/entity", "description": "What KIND of thing this record is. Defaults to `exploration` when omitted, which is what every currently-shipped lens or chapter is at ck-e0. A `technique` supplies a lesson and lists its instances; an `atom` carries `kind`, `params[]`, an engine file and a rendered swatch; a `style` is declared in the manifest's styles[] block (not here) and this value is used only for the six style landing entries; a `coupling` is an exploration with a `driver` + `consequences[]`." },
         "kind": { "$ref": "#/$defs/atom_kind", "description": "Required when entity=atom. The eleven-kind list from DOMAIN-MODEL §1.2." },
 
+        "layer": {
+          "enum": ["SOURCE", "STRUCTURE", "MATERIAL RESPONSE", "IMAGE FORMATION", "SCREEN-SPACE", "TEMPORAL", "GRAPHIC COMPOSITION"],
+          "description": "Which of the seven layers a technique acts at (from the composing-computational-material-systems skill). Read by the technique index at ck-e3 to group techniques into shelves. Optional on non-techniques; on a technique with no layer declared the index files it under UNFILED at the top of the page."
+        },
+        "description": {
+          "type": "string",
+          "description": "One sentence. Printed under the name on an atom card and under a technique row. Distinct from `note` — `note` is longer, in prose; `description` is a card caption."
+        },
+        "tests": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "The five tests block on a technique page (from composing-computational-material-systems). Each field is one sentence; a technique with none of these gets a 'no tests on file — proposed by tool, awaiting Julia' block instead of five empty rows.",
+          "properties": {
+            "shared_cause": { "type": "string" },
+            "distinct_job": { "type": "string" },
+            "order": { "type": "string" },
+            "removal_test": { "type": "string" },
+            "overuse": { "type": "string" }
+          }
+        },
+
         "uses": {
           "type": "array",
           "description": "The atoms this entity is made of. Each item is an atom id, optionally with the parameters this instance chose — `{atom: 'paper-tooth', params: {tile: 180, blend: 'soft-light'}}`. build-site.mjs fails the deploy on an unresolvable atom id. This is the ladder: an exploration --uses--> atom <--produces-- technique is one join.",
