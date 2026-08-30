@@ -190,14 +190,20 @@ body[data-index="closed"] .rail { display: none; }
 /* ================================================================= COLUMN */
 .col { min-width: 0; padding: var(--s7) var(--gutter) var(--s9);
        container-type: inline-size; container-name: col; }
-.colw { max-width: var(--col-max); margin: 0 auto; }
+.colw { max-width: var(--col-max); margin: 0 auto; min-width: 0; }
+/* ck-e9 · long uninterrupted strings the ck-e7 import prints in an entry's
+   prose (source file:line, math expressions like flow(x,y)=sin(x*.009)+…)
+   otherwise force a phone into horizontal scroll. Applied to the entry
+   pane; per-element opt-outs (pre, code with a scroll container) still win. */
+.colw p, .colw li, .colw h1, .colw h2, .colw h3, .colw h4 { overflow-wrap: anywhere; word-break: break-word; }
 
 .kicker { font-family: var(--f-mach); font-size: var(--t-label); letter-spacing: var(--tr-label);
           text-transform: uppercase; color: var(--ink-3); margin: 0; }
 h1 { font-size: var(--t-display); line-height: var(--t-display-lh); letter-spacing: var(--tr-display);
      font-weight: 600; margin: 10px 0 var(--s4); }
 .meta { display: flex; align-items: center; gap: var(--s4); flex-wrap: wrap;
-        padding-bottom: var(--s6); }
+        padding-bottom: var(--s6); min-width: 0; }
+.meta > * { min-width: 0; overflow-wrap: anywhere; }
 .meta .right { margin-left: auto; }
 .tags { font-family: var(--f-mach); font-size: var(--t-label); letter-spacing: var(--tr-label);
         text-transform: uppercase; color: var(--ink-3); }
@@ -292,14 +298,18 @@ body[data-apparatus="open"] .draw .opt { display: none; }
 .read h2::before { content: ""; position: absolute; top: -18px; left: 0; width: 26px; height: 1px;
                    background: var(--ink); }
 .read em { font-style: italic; }
-.read code, .cells code, .rungs code, .stage-note code {
+.read code, .cells code, .rungs code, .stage-note code,
+#view code, .colw code {
   font-family: var(--f-mach); font-size: .82em; letter-spacing: 0;
   background: var(--rule-3); padding: 1px 4px; color: var(--ink-2);
   /* Found by the real chapters: an exercise like "try smoothstep(0.0, 1.0,
      st.x)" wraps mid-call, and by default the tint box is sliced — the first
      fragment loses its right padding and the second its left, so one call
      reads as two tokens. `clone` gives each fragment the whole box. */
-  -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  /* ck-e9 · long file:line source cites the ck-e7 import prints inside
+     <code> — otherwise a 90-char path forces a phone into horizontal scroll. */
+  overflow-wrap: anywhere; word-break: break-word; }
 .read a { color: inherit; text-decoration: underline; text-underline-offset: 3px;
           text-decoration-color: var(--ink-4); }
 .read a:hover { text-decoration-color: var(--ink); }
@@ -550,7 +560,13 @@ body[data-apparatus="open"] .col { padding-right: calc(var(--app-w) + var(--gutt
 .card .cap { display: block; padding: 10px var(--s3) var(--s3); }
 .card .cap .n { font-family: var(--f-mach); font-size: var(--t-index); color: var(--ink-3); }
 .card .cap .t { display: block; font-size: var(--t-prose-sm); padding: 2px 0 3px; }
-.card .cap .r { font-family: var(--f-mach); font-size: 10px; color: var(--ink-3); }
+.card .cap .r { font-family: var(--f-mach); font-size: 10px; color: var(--ink-3);
+                overflow-wrap: anywhere; word-break: break-word; }
+.card .cap .t { overflow-wrap: anywhere; }
+/* ck-e9 · make sure a card never propagates a min-content that exceeds its
+   grid track — long file:line source paths, "PROPOSED BY ..." dashed chips,
+   and the tag row can otherwise force horizontal overflow on the phone. */
+.card { min-width: 0; overflow-wrap: anywhere; }
 /* ∅ — no decomposition on file. Not one of the four status marks: status and
    documentation are different variables and a mark may only mean one thing. */
 .nd { font-style: normal; color: var(--ink-3); padding-right: 5px; }
@@ -809,9 +825,12 @@ a.pip:hover { border-color: var(--ink-4); color: var(--ink); }
 .ladder { margin-top: var(--s6); }
 .lad-list { list-style: none; margin: 0; padding: 0; }
 .lad-list li { border-bottom: 1px solid var(--rule); }
-.lad-list a { display: grid; grid-template-columns: 220px minmax(0,1fr);
+.lad-list a { display: grid; grid-template-columns: minmax(120px,220px) minmax(0,1fr);
               gap: var(--s4); padding: var(--s3) 0;
               text-decoration: none; color: inherit; font-size: var(--t-prose-sm); }
+@media (max-width: 640px) {
+  .lad-list a { grid-template-columns: 1fr; gap: 2px; }
+}
 .lad-list a b { color: var(--ink); font-weight: 600; }
 .lad-list a .s { color: var(--ink-3); }
 .lad-list a:hover b { text-decoration: underline; text-underline-offset: 3px;
@@ -881,7 +900,7 @@ a.pip:hover { border-color: var(--ink-4); color: var(--ink); }
 .used-cell .th img.nothumb, .used-cell .th .nothumb { position: absolute; inset: 0;
                      display: grid; place-items: center;
                      font-family: var(--f-mach); font-size: 10px; letter-spacing: var(--tr-label);
-                     text-transform: uppercase; color: var(--ink-3); text-align: center; line-height: 1.4; }
+                     text-transform: uppercase; color: var(--ink-2); text-align: center; line-height: 1.4; }
 .used-cell .cap { display: block; padding: 6px 8px 8px; }
 .used-cell .cap b { display: block; font-weight: 600; font-size: var(--t-prose-sm); color: var(--ink); }
 .used-cell .cap .pv { display: block; font-family: var(--f-mach); font-size: 10px;
@@ -1025,9 +1044,16 @@ table.cons th { font-family: var(--f-mach); font-size: var(--t-label);
                 border-bottom: 1px solid var(--rule-2); padding: 0 10px 5px 0; }
 table.cons td { border-bottom: 1px solid var(--rule-3); padding: 6px 10px 6px 0;
                 vertical-align: top; color: var(--ink-2); line-height: 1.45; }
-table.cons td:first-child { color: var(--ink); white-space: nowrap; font-weight: 600; }
+table.cons td:first-child { color: var(--ink); font-weight: 600;
+                            overflow-wrap: anywhere; word-break: break-word; }
 table.cons td.c { font-family: var(--f-mach); font-size: var(--t-mach);
-                  letter-spacing: 0.02em; color: var(--ink-3); white-space: nowrap; }
+                  letter-spacing: 0.02em; color: var(--ink-3);
+                  overflow-wrap: anywhere; word-break: break-word; }
+/* ck-e9 · a coupling entry lists source file:line pairs that are wider than
+   a phone. Allow the table to become a horizontal-scroll region within its
+   own container rather than pushing the page. */
+.blk.coupling { overflow-x: auto; }
+table.cons { min-width: 0; }
 .coup-mute { margin: var(--s3) 0 0; padding: 10px 12px; border-left: 2px solid var(--ink);
              background: var(--bench-3); font-size: var(--t-prose-sm);
              color: var(--ink-2); line-height: 1.55; max-width: 66ch; }
@@ -1097,12 +1123,12 @@ table.cons td.c { font-family: var(--f-mach); font-size: var(--t-mach);
 .skill-card .s { font-family: var(--f-mach); font-size: 10px;
                  letter-spacing: var(--tr-label); text-transform: uppercase;
                  color: var(--ink-3); white-space: nowrap; }
-.skill-card .stub-lab { color: var(--ink-3); }
+.skill-card .stub-lab { color: var(--ink-2); }
 .skill-card .skill-desc { color: var(--ink-2); font-size: var(--t-prose-sm);
                           line-height: 1.45; }
 .skill-card .skill-count { margin-top: auto; font-family: var(--f-mach);
                            font-size: 11px; letter-spacing: 0.02em; color: var(--ink-2); }
-.skill-card .skill-count.empty { color: var(--ink-3); }
+.skill-card .skill-count.empty { color: var(--ink-2); }
 .skill-card.stub { border-style: dashed; background: var(--bench); }
 
 /* Per-skill page. Reuses .atom-block idiom (rows of head + body). */

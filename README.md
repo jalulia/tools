@@ -9,19 +9,17 @@ Personal monorepo for small browser-based tools. Everything here opens by double
 - [signature-builder](./signature-builder) — node-wired email signature builder for Impossible Outcomes; edit, preview, copy into Gmail
 - [ki-landscapes](./ki-landscapes) — Ki · Landscape Atelier: a field guide to the generative landscape system
 
-### learn — two tools on one shell
+### encyclopedia — one archive
 
-- [book-of-shaders](./book-of-shaders) — *The Book of Shaders* adapted onto the shared `learn/` shell: the
-  book's chapters as a live GLSL bench, plus **Fractals**, **Image operations**, **Kernel convolutions**,
-  **Filters**, **Dithering and quantization** and **Domain warping** written here where the book leaves stubs
-  or nothing at all, and four **worked examples** that carry the critique they had to survive. Every shader
-  in it is written here; the book is credited for the argument, never for code.
-- [components](./components) — the lens library: each lens a complete standalone plate with its reference
-  decomposition, PASS 0 and faults on the page beside it, in six styles. Every texture is computed; nothing
-  is a stock filter.
+- [encyclopedia](./encyclopedia) — one archive of the practice. **File by atom, read by technique.** Techniques (the spine, the front door at `#/techniques`), Atoms (the material shelves at `#/atoms`, banded by *kind* — substrate, process, texture, colour, engine, field, mark, voice, space, bus), Styles (the six declarations from the lens library at `#/styles`), the Sound lane (audio-adapter-backed entries at `#/sound`), Symptoms (anti-patterns and their known failures at `#/symptoms`), the Unfiled queue (`#/unfiled` — imports awaiting a ruling), and the Skills index (`#/skills` — 22 skills across two shelves, only competency rungs get pages). 168 entries in one manifest; the Book of Shaders and the Components lens library folded in as sources at ck-e1. Old routes `tools/book-of-shaders` and `tools/components` redirect to their encyclopedia entries via the shell-level `redirects` map and a soft-redirect page at the folder root.
 - [learn/](./learn) — the shared shell itself. Not a tool: `tool.json` marks it `hidden`, so it never
-  appears on the landing page. It holds the tokens, the stylesheet, the router, the three stage adapters,
-  the fragment contract and the manifest schema. Open `learn/index.html` for the colophon.
+  appears on the landing page. It holds the tokens, the stylesheet, the router, the four stage adapters
+  (glsl, canvas2d, fragment, audio), the fragment contract and the manifest schema. Open `learn/index.html`
+  for the colophon.
+- [book-of-shaders](./book-of-shaders) — `hidden: true` in `tool.json` after ck-e1; the redirect script
+  resolves every old chapter URL to its encyclopedia technique page.
+- [components](./components) — `hidden: true` after ck-e1; the redirect script maps every old lens URL to
+  its encyclopedia entry.
 
 ## Conventions
 
@@ -58,24 +56,19 @@ learn/
   manifest.schema.json                      additionalProperties:false, everywhere
 ```
 
-**Adding a chapter** (`book-of-shaders`):
+**Adding a piece** (`encyclopedia`):
 
 ```
-cp -r content/_template content/22-my-chapter
-$EDITOR content/22-my-chapter/entry.js      # id, index, order, section, title, text, examples[]
-# add '22-my-chapter' to entries[] in manifest.js
-node scripts/build-site.mjs                 # the guard verifies it before it can deploy
+cp -r content/_template content/<id>                       # or _template-lens for a fragment-adapter piece
+$EDITOR content/<id>/entry.js                              # id, entity, section, uses[], instance_of[], governed_by[]
+# add '<id>' to entries[] in encyclopedia/manifest.js
+node scripts/build-site.mjs                                # verifyManifests fails the deploy on any drift
+PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node scripts/index-tools.mjs --tool encyclopedia --shots
 ```
 
-**Adding a lens** (`components`):
-
-```
-cp -r content/_template-lens content/e7-new-thing
-$EDITOR content/e7-new-thing/fragment.html  # link ONE content/_styles/<style>.css
-$EDITOR content/e7-new-thing/entry.js       # id, section, style, frame.designWidth, thumb.crop
-# add 'e7-new-thing' to entries[] in manifest.js
-PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node scripts/index-tools.mjs --tool components --shots
-```
+`entity` chooses the page template: `technique`, `atom`, `exploration`, or `coupling` (an exploration
+with `driver` + `consequences[]`). `uses[]` cites atoms; `instance_of[]` cites a technique; `governed_by[]`
+cites skills (all resolve at deploy time). See `encyclopedia/CHECKPOINT-E*.md` for the ck-by-ck decisions.
 
 **Adding a style**: add an entry to `manifest.styles[]` — `id`, `summary`, `palette`, `type` (display /
 text / mono / script), `texture` vocabulary, `engines` (in dependency order, derived from what the fragments
@@ -133,14 +126,22 @@ every one to the upstream file's actual terms. That is a lawyer's call, not a re
 
 ## QA
 
-The acceptance matrix, the static checks, the citation audit and the accessibility pass live in
-`/home/claude/team/qa/`. See `team/qa/RESULTS.md` for the current table and `team/qa/PR-BODY.md` for the
-branch description.
+The acceptance matrix, static checks and axe pass live vendored in `scripts/qa/`. `scripts/qa/matrix.mjs`
+now covers the encyclopedia's every route (~205 hashes: `#/techniques`, `#/atoms`, `#/styles`, `#/sound`,
+`#/symptoms`, `#/unfiled`, `#/skills`, plus every `#/technique/<id>`, `#/atom/<id>`, `#/style/<id>`,
+`#/skill/<id>`, `#/entry/<id>` and `#/coupling/<id>`) across the four `index × apparatus` states at 390
+and 1440. Nineteen criteria — PLAN §7's fourteen plus ck-e9's five (governed_by resolves; uses[] resolves
+to an atom; instance_of[] resolves to a technique; every coupling has driver + consequences[]; proposed
+rulings render as PROPOSED; unsorted entries carry their proposed_grade; the audio adapter builds its
+graph without a user gesture; the 74 unsorted show a thumb where one was declared; `#/symptoms` reaches
+every anti-pattern in ≤2 clicks).
 
 ```
-cd /home/claude/tools && (python3 -m http.server 8123 >/dev/null 2>&1 &)
-PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node /home/claude/team/qa/matrix.mjs   # all 14 criteria
-node /home/claude/team/qa/static-checks.mjs                                      # the source rules
-node /home/claude/team/qa/cite-audit.mjs                                         # every file:line citation
-PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node /home/claude/team/qa/axe.mjs      # axe-core, local copy only
+cd tools && (python3 -m http.server 8123 >/dev/null 2>&1 &)
+PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node scripts/qa/matrix.mjs           # every criterion, both protocols
+PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node scripts/qa/matrix.mjs --quick   # 390 + 1440, http only (~5 min)
+node scripts/qa/static-checks.mjs                                              # the source rules
+PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node scripts/qa/axe.mjs              # axe-core, local copy only
 ```
+
+Results land at `scripts/qa/out/RESULTS.md` and `results.json`.
