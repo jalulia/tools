@@ -474,6 +474,225 @@
   }
 
   /* ==========================================================================
+     AUDIO ATOMS · signal-flow swatches. A filter or an envelope has no
+     paintable "look" — what you paint is the GRAPH. Every renderer here
+     draws a small block diagram with node labels and a per-parameter
+     read-out (Hz, ms, dBFS). No hue; the same neutral ramp the visual
+     swatches use.
+     ========================================================================== */
+
+  /* small helpers for the diagrams */
+  function boxNode(x, cx, cy, w, h, label, sub) {
+    x.save();
+    x.strokeStyle = '#0b0b0c'; x.lineWidth = 1;
+    x.fillStyle = '#ffffff';
+    x.beginPath(); x.rect(cx - w / 2, cy - h / 2, w, h); x.fill(); x.stroke();
+    x.fillStyle = '#0b0b0c';
+    x.font = '600 11px "Commit Mono", ui-monospace, monospace';
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(label, cx, cy - (sub ? 6 : 0));
+    if (sub) {
+      x.fillStyle = '#74747a';
+      x.font = '9px "Commit Mono", ui-monospace, monospace';
+      x.fillText(sub, cx, cy + 8);
+    }
+    x.restore();
+  }
+  function arrow(x, x0, y0, x1, y1) {
+    x.save();
+    x.strokeStyle = '#0b0b0c'; x.lineWidth = 1;
+    x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1, y1); x.stroke();
+    var ang = Math.atan2(y1 - y0, x1 - x0);
+    x.beginPath();
+    x.moveTo(x1, y1);
+    x.lineTo(x1 - 5 * Math.cos(ang - 0.5), y1 - 5 * Math.sin(ang - 0.5));
+    x.lineTo(x1 - 5 * Math.cos(ang + 0.5), y1 - 5 * Math.sin(ang + 0.5));
+    x.closePath(); x.fillStyle = '#0b0b0c'; x.fill();
+    x.restore();
+  }
+  function fbLoop(x, x0, y0, x1, y1, ymid) {
+    /* feedback arrow that loops up and back */
+    x.save();
+    x.strokeStyle = '#0b0b0c'; x.lineWidth = 1;
+    x.beginPath();
+    x.moveTo(x1, y1); x.lineTo(x1, ymid);
+    x.lineTo(x0, ymid); x.lineTo(x0, y0);
+    x.stroke();
+    var ang = Math.atan2(y0 - ymid, 0);
+    x.beginPath();
+    x.moveTo(x0, y0);
+    x.lineTo(x0 - 5, y0 + 5);
+    x.lineTo(x0 + 5, y0 + 5);
+    x.closePath(); x.fillStyle = '#0b0b0c'; x.fill();
+    x.restore();
+  }
+  function label(x, cx, cy, text) {
+    x.save();
+    x.fillStyle = '#74747a';
+    x.font = '9px "Commit Mono", ui-monospace, monospace';
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(text, cx, cy);
+    x.restore();
+  }
+
+  /* freeverb-comb: [in]→[delay dt]→[LP damping,Q=0.5]→[gain fb]→loop back */
+  function freeverbComb(cv, p) {
+    var g = fit(cv), x = g.x, w = g.w, h = g.h;
+    paperGround(x, w, h);
+    var y = h * 0.58;
+    boxNode(x, 26,        y, 32, 22, 'in');
+    boxNode(x, w * 0.32,  y, 62, 30, 'delay', (p.delay * 1000).toFixed(0) + ' ms');
+    boxNode(x, w * 0.56,  y, 68, 30, 'LP',    (p.damping | 0) + ' Hz');
+    boxNode(x, w * 0.80,  y, 46, 30, '×fb',   p.feedback.toFixed(2));
+    arrow(x, 42,             y, w * 0.32 - 31, y);
+    arrow(x, w * 0.32 + 31,  y, w * 0.56 - 34, y);
+    arrow(x, w * 0.56 + 34,  y, w * 0.80 - 23, y);
+    arrow(x, w * 0.80 + 23,  y, w - 12, y);
+    fbLoop(x, w * 0.32 - 31, y - 15, w * 0.80 + 23, y + 15, h * 0.16);
+    label(x, w / 2, 20, 'FEEDBACK LOOP');
+    label(x, w * 0.56, y + 26, 'in-loop damping — Q=0.5, not 1');
+  }
+
+  /* allpass-diffuser: schematic of feed-fwd -0.5 + feed-back +0.5 */
+  function allpassDiffuser(cv, p) {
+    var g = fit(cv), x = g.x, w = g.w, h = g.h;
+    paperGround(x, w, h);
+    var y = h * 0.55;
+    boxNode(x, 28,       y, 32, 22, 'in');
+    boxNode(x, w * 0.36, y, 62, 30, 'delay', (p.delay * 1000).toFixed(1) + ' ms');
+    boxNode(x, w * 0.64, y, 46, 30, 'Σ', '');
+    boxNode(x, w * 0.86, y, 32, 22, 'out');
+    arrow(x, 44,             y, w * 0.36 - 31, y);
+    arrow(x, w * 0.36 + 31,  y, w * 0.64 - 23, y);
+    arrow(x, w * 0.64 + 23,  y, w * 0.86 - 16, y);
+    /* feed-forward -0.5 */
+    x.strokeStyle = '#0b0b0c'; x.lineWidth = 1;
+    x.beginPath();
+    x.moveTo(w * 0.36 - 31, y - 11);
+    x.lineTo(w * 0.36 - 31, y - 22);
+    x.lineTo(w * 0.64,      y - 22);
+    x.lineTo(w * 0.64,      y - 15);
+    x.stroke();
+    label(x, (w * 0.36 + w * 0.64) / 2, y - 30, '−' + p.feedback.toFixed(2) + ' (feed-forward)');
+    /* feed-back +0.5 */
+    x.beginPath();
+    x.moveTo(w * 0.64, y + 15);
+    x.lineTo(w * 0.64, y + 26);
+    x.lineTo(w * 0.36, y + 26);
+    x.lineTo(w * 0.36, y + 11);
+    x.stroke();
+    label(x, (w * 0.36 + w * 0.64) / 2, y + 34, '+' + p.feedback.toFixed(2) + ' (feedback)');
+  }
+
+  /* master-limiter: input → trim → compressor → limiter → out */
+  function masterLimiter(cv, p) {
+    var g = fit(cv), x = g.x, w = g.w, h = g.h;
+    paperGround(x, w, h);
+    var y = h * 0.55;
+    boxNode(x, 24,       y, 28, 20, 'in');
+    boxNode(x, w * 0.24, y, 46, 26, 'trim', p.trim.toFixed(2));
+    boxNode(x, w * 0.48, y, 60, 32, 'comp', p['comp-thresh'] + ' dB');
+    boxNode(x, w * 0.74, y, 60, 32, 'lim',  p['lim-thresh'] + ' dB');
+    boxNode(x, w * 0.92, y, 26, 20, 'out');
+    arrow(x, 38,             y, w * 0.24 - 23, y);
+    arrow(x, w * 0.24 + 23,  y, w * 0.48 - 30, y);
+    arrow(x, w * 0.48 + 30,  y, w * 0.74 - 30, y);
+    arrow(x, w * 0.74 + 30,  y, w * 0.92 - 13, y);
+    label(x, w * 0.48, y + 25, 'broadband glue');
+    label(x, w * 0.74, y + 25, 'hard peak-catch');
+  }
+
+  /* sidechain-duck: heavy voice → duck all ambient/room via cancel+setTarget */
+  function sidechainDuck(cv, p) {
+    var g = fit(cv), x = g.x, w = g.w, h = g.h;
+    paperGround(x, w, h);
+    boxNode(x, w * 0.18, h * 0.36, 78, 28, 'heavy', 'voice');
+    boxNode(x, w * 0.18, h * 0.68, 78, 28, 'ambient', 'bus');
+    boxNode(x, w * 0.62, h * 0.52, 64, 30, '×gain', p.depth.toFixed(2));
+    boxNode(x, w * 0.88, h * 0.52, 28, 22, 'out');
+    arrow(x, w * 0.18 + 39, h * 0.36, w * 0.62,        h * 0.52 - 6);
+    arrow(x, w * 0.18 + 39, h * 0.68, w * 0.62,        h * 0.52 + 6);
+    arrow(x, w * 0.62 + 32, h * 0.52, w * 0.88 - 14,   h * 0.52);
+    /* sidechain arrow — the heavy voice modulates the gain */
+    x.save();
+    x.strokeStyle = '#0b0b0c'; x.lineWidth = 1; x.setLineDash([3, 3]);
+    x.beginPath();
+    x.moveTo(w * 0.18, h * 0.36 - 14);
+    x.bezierCurveTo(w * 0.32, h * 0.16, w * 0.55, h * 0.20, w * 0.62, h * 0.52 - 15);
+    x.stroke();
+    x.restore();
+    label(x, w * 0.42, h * 0.10, 'SIDECHAIN · duck ' + (p.depth * 100 | 0) + '% · ' +
+      (p.attack * 1000).toFixed(0) + '/' + (p.release * 1000).toFixed(0) + ' ms');
+  }
+
+  /* banded-burst: noise → bandpass(freq,Q) → env(attack, dur) — with a mini
+     envelope sketch on the right so the shape is visible */
+  function bandedBurst(cv, p) {
+    var g = fit(cv), x = g.x, w = g.w, h = g.h;
+    paperGround(x, w, h);
+    var y = h * 0.42;
+    boxNode(x, 30,       y, 44, 22, 'noise');
+    boxNode(x, w * 0.32, y, 68, 30, 'BP', p.freq + ' Hz · Q' + p.Q);
+    boxNode(x, w * 0.58, y, 60, 30, 'env', (p.duration * 1000).toFixed(0) + ' ms');
+    arrow(x, 52,             y, w * 0.32 - 34, y);
+    arrow(x, w * 0.32 + 34,  y, w * 0.58 - 30, y);
+    arrow(x, w * 0.58 + 30,  y, w - 20, y);
+    /* envelope sketch */
+    x.save();
+    var ex0 = w * 0.10, ey0 = h * 0.86, ew = w * 0.80, eh = h * 0.30;
+    x.strokeStyle = 'rgba(11,11,12,.15)'; x.lineWidth = 1;
+    x.beginPath(); x.moveTo(ex0, ey0); x.lineTo(ex0 + ew, ey0); x.stroke();
+    x.strokeStyle = '#0b0b0c'; x.lineWidth = 1.5;
+    x.beginPath();
+    var pts = 60;
+    for (var i = 0; i <= pts; i++) {
+      var t = i / pts;                        /* 0..1 across the sketch */
+      var v;
+      if (t < 0.04) v = t / 0.04;             /* 4% attack ramp */
+      else v = Math.exp(-(t - 0.04) * 6);     /* exp decay */
+      var xx = ex0 + t * ew;
+      var yy = ey0 - v * eh;
+      if (i === 0) x.moveTo(xx, yy); else x.lineTo(xx, yy);
+    }
+    x.stroke();
+    x.restore();
+    label(x, w / 2, h - 6, 'attack 2 ms · exp decay · setValueAtTime(0) trailing');
+  }
+
+  /* buzz-envelope: noise → BP → gain × LFO — the mini LFO waveform on the right */
+  function buzzEnvelope(cv, p) {
+    var g = fit(cv), x = g.x, w = g.w, h = g.h;
+    paperGround(x, w, h);
+    var y = h * 0.38;
+    boxNode(x, 28,       y, 44, 22, 'noise');
+    boxNode(x, w * 0.30, y, 68, 30, 'BP', p.centre + ' Hz · Q' + p.Q);
+    boxNode(x, w * 0.58, y, 46, 30, '×gain', '');
+    boxNode(x, w * 0.82, y, 32, 22, 'out');
+    arrow(x, 50,             y, w * 0.30 - 34, y);
+    arrow(x, w * 0.30 + 34,  y, w * 0.58 - 23, y);
+    arrow(x, w * 0.58 + 23,  y, w * 0.82 - 16, y);
+    /* LFO into the gain (from below) */
+    boxNode(x, w * 0.58, h * 0.75, 62, 26, 'LFO', p.rate.toFixed(1) + ' Hz');
+    arrow(x, w * 0.58, h * 0.75 - 13, w * 0.58, y + 15);
+    /* LFO waveform sketch */
+    x.save();
+    var wx0 = w * 0.06, wy0 = h * 0.75, ww = w * 0.36, wh = h * 0.24;
+    x.strokeStyle = 'rgba(11,11,12,.15)'; x.lineWidth = 1;
+    x.beginPath(); x.moveTo(wx0, wy0); x.lineTo(wx0 + ww, wy0); x.stroke();
+    x.strokeStyle = '#0b0b0c'; x.lineWidth = 1.3;
+    x.beginPath();
+    for (var i = 0; i <= 80; i++) {
+      var t = i / 80;
+      var v = Math.sin(t * Math.PI * 2 * 2) * 0.5;   /* two cycles across the sketch */
+      var xx = wx0 + t * ww;
+      var yy = wy0 - v * wh;
+      if (i === 0) x.moveTo(xx, yy); else x.lineTo(xx, yy);
+    }
+    x.stroke();
+    x.restore();
+  }
+
+  /* ==========================================================================
      Registry
      ========================================================================== */
 
@@ -502,7 +721,16 @@
     'mulberry32':        engineCard('rng.js',      'mulberry32(seed)'),
     'halftone-js':       engineCard('halftone.js', 'dotScreen(ctx,W,H,samp,opt)'),
     'paper-js':          engineCard('paper.js',    'paperTooth() · paperTile()'),
-    'field-js':          engineCard('field.js',    'buildField(W,H,rnd,bias,c)')
+    'field-js':          engineCard('field.js',    'buildField(W,H,rnd,bias,c)'),
+
+    /* ck-e5 · audio atoms — signal-flow diagrams. Voice/space/bus atoms
+       have no paintable "look"; what you paint is the graph. */
+    'freeverb-comb':     freeverbComb,
+    'allpass-diffuser':  allpassDiffuser,
+    'master-limiter':    masterLimiter,
+    'sidechain-duck':    sidechainDuck,
+    'banded-burst':      bandedBurst,
+    'buzz-envelope':     buzzEnvelope
   };
 
   /* Paint one canvas from its data-atom id, respecting the atom's declared

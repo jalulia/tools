@@ -202,18 +202,24 @@
     var aspect = (e.frame && e.frame.aspect) || (S.manifest.stage && S.manifest.stage.aspect) || '3/2';
     var lane = e.lane || (S.manifest.stage && S.manifest.stage.adapter);
     var catalogueStage = (lane === 'fragment');
+    /* ck-e5 · an audio stage collapses to its panes' height. Otherwise the
+       stage's default 3/2 aspect ratio leaves a black wash below a 264 px
+       tall wave + spectrum pair. `data-fit="audio"` re-uses the same CSS
+       rule that clears aspect-ratio for fragment stages, so no second rule. */
+    var audioStage = (lane === 'audio');
 
     var body = '' +
       '<article style="--stage-aspect:' + esc(aspect.replace('/', ' / ')) + '">' +
         head(e) +
         '<div class="mat"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i>' +
-          '<div class="stage" id="stage"' + (catalogueStage ? ' data-fit="lens"' : '') + '></div>' +
+          '<div class="stage" id="stage"' +
+            (catalogueStage ? ' data-fit="lens"' : audioStage ? ' data-fit="audio"' : '') + '></div>' +
         '</div>' +
         '<div class="draw" id="bar"></div>' +
         '<nav class="strip" id="strip" aria-label="Examples"></nav>' +
         '<div class="read" id="read">' + (proseOf(e) || '') + '</div>' +
         (mode === 'course' ? courseBlocks(e) : '') +
-        studyHTML(e) + passHTML(e) + critiqueHTML(e) + rulingHTML(e) +
+        studyHTML(e) + passHTML(e) + couplingHTML(e) + critiqueHTML(e) + rulingHTML(e) +
         relatedHTML(e) +
         pagerHTML(e) +
       '</article>';
@@ -527,18 +533,43 @@
       '</section>';
   }
 
+  /* ck-e5 · a coupling is not a third page-kind — it is an ordinary entry
+     with a `driver`, a `consequences[]` table, and a mute test. Rendered
+     between PASS 0 and CRITIQUE so the coupling reads as its own section.
+     `headroom` (audio entries) folds in beneath the coupling table so the
+     level decision sits next to the mechanism that produces it. Field
+     labels change per lane (reads_as → "listens as", pass_order → "signal
+     path") — one line here, zero in the schema. */
+  function couplingHTML(e) {
+    if (!e.driver && !(e.consequences && e.consequences.length)) return '';
+    var rows = (e.consequences || []).map(function (r) {
+      return '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1] || '') +
+             '</td><td class="c">' + esc(r[2] || '') + '</td></tr>';
+    }).join('');
+    return '<section class="blk coupling"><div class="blk-head">' +
+      '<span class="lab">Coupling — one driver, ' + (e.consequences || []).length + ' consequences</span>' +
+      '<span class="n">one listen, one look, one mute test</span></div>' +
+      (e.driver ? '<p class="coup-driver"><b>driver</b> — ' + esc(e.driver) + '</p>' : '') +
+      (rows ? '<table class="cons"><thead><tr><th>consequence</th><th>mapping</th><th>source</th></tr></thead><tbody>' +
+              rows + '</tbody></table>' : '') +
+      (e.mute_test ? '<p class="coup-mute"><b>Mute test.</b> ' + esc(e.mute_test) + '</p>' : '') +
+      '</section>';
+  }
+
   function critiqueHTML(e) {
     var c = e.critique;
     if (!c) return '';
-    // Five cells in an auto-fit grid left the fifth alone on a row with three
-    // empty columns beside it. The removal test is the conclusion of the
-    // block, not a fifth peer of it, so it takes the row.
+    /* ck-e5 · the FIELD NAMES are the shared schema's (reads_as, pass_order)
+       so a sound entry and a visual entry are the same record. Only the
+       LABELS change per lane — one line here, zero in the schema. */
+    var audio = e.lane === 'audio';
     var rows = [
-      ['Reads as', c.reads_as, ''],
-      ['Coupling', c.coupling, ''],
-      ['Pass order', c.pass_order, ''],
-      ['Operators', (c.operators || []).join(' · '), ''],
-      ['Why it survives', c.why_it_survives, ' wide']
+      [audio ? 'Listens as' : 'Reads as',       c.reads_as, ''],
+      ['Coupling',                              c.coupling, ''],
+      [audio ? 'Signal path' : 'Pass order',    c.pass_order, ''],
+      ['Operators',                             (c.operators || []).join(' · '), ''],
+      ['Why it survives',                       c.why_it_survives, ' wide'],
+      [audio ? 'Headroom' : 'Headroom',         e.headroom, ' wide']
     ].filter(function (r) { return r[1]; });
     if (!rows.length) return '';
     return '<section class="blk"><div class="blk-head"><span class="lab">Critique</span>' +

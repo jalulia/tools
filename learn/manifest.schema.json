@@ -133,8 +133,8 @@
     },
 
     "status": {
-      "enum": ["canonical", "exploration", "historical", "known-failure", "unsorted"],
-      "description": "Editorial standing, not build state. PLAN §2.7 adds known-failure: the tools ship graded failures from Julia's own repos as teaching material, and filing one as `exploration` would be a lie. ck-e0 adds `unsorted` for the 74-row inventory import that lands without a ruling — visible in `#/unfiled`, counted at the front door. `stub` is a separate boolean flag rendered as a mark, so the chip row stays one line, and `technical_reference` is a tag."
+      "enum": ["canonical", "exploration", "historical", "known-failure", "unsorted", "proposed"],
+      "description": "Editorial standing, not build state. PLAN §2.7 adds known-failure: the tools ship graded failures from Julia's own repos as teaching material, and filing one as `exploration` would be a lie. ck-e0 adds `unsorted` for the 74-row inventory import that lands without a ruling — visible in `#/unfiled`, counted at the front door. ck-e6 adds `proposed` for entries the candidate-technique detector writes into the manifest: a lane the tool can populate on its own, distinct from `unsorted` (which is a researcher's row) and from a `ruling.by: 'proposed'` (which is text). The shell renders proposed entries with a dashed border and a `proposed by tool` label so nobody mistakes them for Julia's rulings. `stub` is a separate boolean flag rendered as a mark, so the chip row stays one line, and `technical_reference` is a tag."
     },
 
     "entity": {
@@ -540,6 +540,24 @@
         "headroom": {
           "type": "string",
           "description": "Audio entries only. Where the level decision lives in the graph, measured at the master output. Added at ck-e0 as the sixth test (REVIEW-SOUND §2.3)."
+        },
+        "duration": {
+          "type": "number",
+          "description": "Audio entries only. Seconds of audio the offline render should produce for the still frame and WAV export. adapters/audio.js reads it."
+        },
+        "tail": {
+          "type": "number",
+          "description": "Audio entries only. Extra seconds appended after `duration` so a reverb tail rings out before the offline buffer ends."
+        },
+        "readout": {
+          "type": "array",
+          "items": { "enum": ["wave", "spectrum", "landscape", "coupling-schematic"] },
+          "description": "Audio entries only. Which of the adapter's readout panes to mount. Defaults to ['wave','spectrum']."
+        },
+        "build": {},
+        "proposed_grade": {
+          "type": "string",
+          "description": "ck-e7 · the researcher's proposed grade from example-inventory.csv, imported as a proposal — NEVER a ruling. Rendered as `PROPOSED BY RESEARCHER — awaiting julia` per DECISION-FRAMING D5. The row's status stays `unsorted` until Julia rules."
         }
       }
     }

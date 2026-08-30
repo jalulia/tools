@@ -173,7 +173,7 @@ Shell.registerManifest({
     { id: 'dataviz', title: 'Data visualization', role: 'produces', rung: 1 },
     { id: 'artifact-diagramming', title: 'Artifact diagramming', role: 'produces', rung: 1 },
     { id: 'brand-world', title: 'Brand world', role: 'governs', rung: 2 },
-    { id: 'composing-computational-sound-systems', title: 'Composing computational sound systems', role: 'critiques', rung: 2, note: 'proposed — REVIEW-SOUND §1: 45 of 47 inventory rows have no skill, the rung is unbuilt' },
+    { id: 'composing-computational-sound-systems', title: 'Composing computational sound systems', role: 'critiques', rung: 2, note: 'proposed rung — parallels composing-computational-material-systems for audio: one source, several consequences, one listen, the mute test. REVIEW-SOUND §1: 34 of 47 inventory rows have no governing skill, the rung is unbuilt.' },
     { id: 'proof-cleanup-upscale', title: 'Proof cleanup & upscale', role: 'produces', rung: 1 }
   ],
 
@@ -374,6 +374,76 @@ Shell.registerManifest({
       description: 'The greyscale field a halftone reproduces. B1, C1, E5·ALT and D4 all had a byte-identical buildField.',
       note: 'The stand-in for a photograph: 46 soft radial blobs plus 70 low-alpha streaks, contrast-stretched. Honest only as the thing that is about to be reproduced — as a material on its own it is CMP-03 (B+, promising exploration). content/_engines/field.js.' },
 
+    /* ── Audio atoms (6) — kinds voice/space/bus. Sound side of the same
+       shelf. Their swatches are ASCII/canvas signal-flow diagrams, not
+       colour, because a filter or an envelope has no paintable "look" —
+       what you paint is the graph. ────────────────────────────────────── */
+    { id: 'freeverb-comb', title: 'Freeverb comb filter', order: 1800,
+      lane: 'audio', entity: 'atom', kind: 'space',
+      section: 'atoms', status: 'canonical',
+      governed_by: ['composing-computational-sound-systems'],
+      description: 'A delay in a feedback loop, damped by a lowpass inside the loop. Six copies for parallel comb bank.',
+      params: [
+        { name: 'delay',    min: 0.020, max: 0.060, value: 0.037, step: 0.001, note: 'seconds' },
+        { name: 'feedback', min: 0.50,  max: 0.86,  value: 0.84,  step: 0.01,  note: 'gain around the loop; cap 0.86 (see P1 fault)' },
+        { name: 'damping',  min: 800,   max: 12000, value: 4500,  step: 100,   note: 'in-loop lowpass Hz' }
+      ],
+      note: 'One delay line + a gain node + a lowpass IN the feedback path. Eight of these summed at 1/8 is the Freeverb comb bank. reliquary-synth/src/audio/CathedralReverb.ts:58-84.' },
+    { id: 'allpass-diffuser', title: 'Allpass diffuser', order: 1810,
+      lane: 'audio', entity: 'atom', kind: 'space',
+      section: 'atoms', status: 'canonical',
+      governed_by: ['composing-computational-sound-systems'],
+      description: 'Feed-forward + feed-back at −0.5 / +0.5 around one delay. Smears echo density without shifting spectrum.',
+      params: [
+        { name: 'delay',    min: 0.003, max: 0.020, value: 0.011, step: 0.001, note: 'seconds' },
+        { name: 'feedback', min: 0.30,  max: 0.70,  value: 0.50,  step: 0.01 }
+      ],
+      note: 'Four in series after the comb bank; the point is to break up individual echoes without recolouring the room. reliquary-synth/src/audio/CathedralReverb.ts:86-111.' },
+    { id: 'master-limiter', title: 'Master compressor + limiter', order: 1820,
+      lane: 'audio', entity: 'atom', kind: 'bus',
+      section: 'atoms', status: 'canonical',
+      governed_by: ['composing-computational-sound-systems'],
+      description: 'Two DynamicsCompressorNodes as two different devices, by parameters alone.',
+      params: [
+        { name: 'comp-thresh', min: -36, max: -6, value: -24, step: 1, note: 'compressor threshold dBFS' },
+        { name: 'lim-thresh',  min: -12, max: 0,  value: -3,  step: 1, note: 'limiter threshold dBFS' },
+        { name: 'trim',        min: 0.5, max: 1,  value: 0.8, step: 0.05, note: 'input trim' }
+      ],
+      note: 'Broadband glue → hard peak-catcher → destination. The smallest complete master chain in the corpus. reliquary-synth/src/audio/MasterChain.ts:1-33.' },
+    { id: 'sidechain-duck', title: 'Sidechain duck', order: 1830,
+      lane: 'audio', entity: 'atom', kind: 'bus',
+      section: 'atoms', status: 'canonical',
+      governed_by: ['composing-computational-sound-systems'],
+      description: 'Heavy voices duck the room and the ambience. cancelScheduledValues + setTargetAtTime for click-free release.',
+      params: [
+        { name: 'depth', min: 0.1, max: 1.0, value: 0.3,   step: 0.05, note: 'gain at fully ducked' },
+        { name: 'attack',min: 0.001,max: 0.03,value: 0.005,step: 0.001, note: 'seconds; tau' },
+        { name: 'release',min:0.05, max: 0.5, value: 0.15, step: 0.01, note: 'seconds; tau' }
+      ],
+      note: 'The click-free ducking pattern is `cancelScheduledValues` before `setTargetAtTime`, not before `setValueAtTime` — the release is a curve, not a jump. holy-ops-v2/index.html:2318-2345.' },
+    { id: 'banded-burst', title: 'Banded noise burst', order: 1840,
+      lane: 'audio', entity: 'atom', kind: 'voice',
+      section: 'atoms', status: 'canonical',
+      governed_by: ['composing-computational-sound-systems'],
+      description: 'The corpus\'s whole percussion section: noise → bandpass → AR envelope. One atom carries every foley hit.',
+      params: [
+        { name: 'freq',   min: 60,   max: 5000, value: 1400,  step: 10 },
+        { name: 'Q',      min: 0.5,  max: 12,   value: 2.2,   step: 0.1 },
+        { name: 'duration',min: 0.01,max: 0.3,  value: 0.035, step: 0.005, note: 'seconds' }
+      ],
+      note: 'src.buffer=whiteNoise → bandpass(freq,Q) → gain envelope (0→peak in 2ms, exp decay). The trailing setValueAtTime(0) at t+dur+0.001 is the fix for exp-never-reaches-zero click, present in her code. pussyphus/.../crowd.js:132-142 + foley.js:39-55.' },
+    { id: 'buzz-envelope', title: 'Buzz envelope', order: 1850,
+      lane: 'audio', entity: 'atom', kind: 'voice',
+      section: 'atoms', status: 'exploration',
+      governed_by: ['composing-computational-sound-systems'],
+      description: 'Filtered noise + slow envelope. One primitive carries a whole class of insect/electrical drones.',
+      params: [
+        { name: 'centre', min: 200, max: 4000, value: 800, step: 10, note: 'bandpass centre Hz' },
+        { name: 'Q',      min: 1,   max: 20,   value: 8,   step: 0.5, note: 'sharpness' },
+        { name: 'rate',   min: 0.1, max: 8,    value: 2.5, step: 0.1, note: 'amplitude LFO Hz' }
+      ],
+      note: 'Sound INVENTORY §5 addendum: buzz-envelope is one atom that carries a whole percussion section — reliquary-synth/src/audio/BuzzGenerator.ts.' },
+
     /* ── Technique stubs (4) — the techniques the worked examples
        declare. Each carries the exploration\'s critique block as its lesson
        at ck-e3; at ck-e1 they are stubs whose canonical instance page IS the
@@ -500,6 +570,17 @@ Shell.registerManifest({
     'e5-case-card-alts',
     't5-brutalist-grid',
     'd5-story-triptych',
-    'e6-device-mockups'
+    'e6-device-mockups',
+
+    /* ── ck-e5 · sound lane entries (4 explorations + 1 coupling) ─────────
+       Every audio entry declares `lane: 'audio'` and `section: 'sound'` so
+       #/sound (lane==='audio' || section==='sound') lists them. Their build
+       functions live in content/<id>/entry.js and are consumed by
+       adapters/audio.js. See CHECKPOINT-E5.md. */
+    'cathedral-reverb',
+    'ki-soundscape-bands',
+    'shepard-risset',
+    'buzz-generator',
+    'crowd-and-dither-shared-cause'
   ]
 });
