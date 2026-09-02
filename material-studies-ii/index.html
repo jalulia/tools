@@ -1,0 +1,214 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Material Studies II</title>
+<style>
+:root{--bg:#0e0f10;--ink:#e9e6df;--mute:#8d8a82;--rule:#26282b;--mono:"DM Mono",ui-monospace,Menlo,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--mono);-webkit-font-smoothing:antialiased}
+.mast{max-width:1180px;margin:0 auto;padding:64px 28px 28px;border-bottom:1px solid var(--rule)}
+.mast h1{font:500 15px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;margin:0 0 14px;color:var(--mute)}
+.mast .big{font:700 clamp(30px,5vw,54px)/1.04 "Bodoni Moda",Georgia,serif;letter-spacing:-.01em;margin:0 0 22px;color:#f1eee6}
+.mast .big em{font-style:italic;font-weight:600;color:#e8a13a}
+.mast p{max-width:74ch;color:var(--mute);margin:0 0 10px}
+.study{max-width:1180px;margin:0 auto;padding:40px 28px}
+.study .head{display:flex;justify-content:space-between;align-items:baseline;gap:20px;margin-bottom:18px;flex-wrap:wrap}
+.study .head h2{font:500 13px/1.3 var(--mono);letter-spacing:.14em;text-transform:uppercase;margin:0;color:#f1eee6}
+.study .head h2 b{color:#5b5e63;font-weight:500;margin-right:10px}
+.study .head .tag{font-size:12px;color:var(--mute);letter-spacing:.06em}
+.stage{background:#141517;border:1px solid var(--rule);border-radius:4px;padding:clamp(14px,3vw,40px);display:flex;justify-content:center;align-items:flex-start;flex-wrap:wrap;gap:24px}
+.plate{position:relative;overflow:hidden;flex:none}
+.plate canvas,.plate svg,.plate .lyr{position:absolute;left:0;top:0}
+.plate svg{overflow:visible}
+.tiles{display:grid;gap:18px;width:100%}
+.tile{background:#141517;border:1px solid var(--rule);border-radius:4px;padding:16px 16px 12px}
+.tile .cap{font-size:12px;color:var(--mute);margin-top:12px;line-height:1.5}
+.tile .cap b{color:var(--ink);font-weight:500}
+.cap.wide{font-size:12.5px;color:var(--mute);margin:16px 0 0;line-height:1.6;max-width:92ch}
+.cap.wide b{color:var(--ink);font-weight:500}
+details.code{margin-top:12px;font-size:12px;color:var(--mute)}
+details.code summary{cursor:pointer;letter-spacing:.1em;text-transform:uppercase;font-size:10.5px}
+details.code pre{overflow:auto;max-height:320px;background:#0b0c0d;border:1px solid var(--rule);border-radius:4px;padding:12px;color:#b9c2b2;font-size:11px;line-height:1.45}
+</style></head>
+<body>
+<header class="mast">
+  <h1>Material Studies II · component snippet gallery</h1>
+  <div class="big">Flat-ink bouquet systems: <em>spot colour. coverage grain. hand keyline.</em></div>
+  <p>Every plate is generated in the browser from code — SVG geometry for the drawing, canvas for paper and grain, SVG filters for ink physics. Nothing is a bitmap. One printing process runs under every plate: each colour is its own run through a coverage filter, one keyline pass gets a hand-waver and a misregistration shift, and the sheet finishes with grain veil + paper tooth. Change one seed and the whole sheet re-prints differently.</p>
+  <p>Framework lifted from the <b>keyline &amp; ink</b> gallery. This first plate isolates one variable — the ink grammar — on a single bouquet bloom.</p>
+</header>
+<main id="studies"></main>
+<svg id="defs" width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="D"></defs></svg>
+<script>
+const NS="http://www.w3.org/2000/svg";
+function el(t,a={},p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+function h(t,a={},p){const e=document.createElement(t);for(const k in a){if(k==="html")e.innerHTML=a[k];else if(k==="text")e.textContent=a[k];else e.setAttribute(k,a[k])}if(p)p.appendChild(e);return e}
+function RNG(seed){let s=(seed*2654435761)>>>0||7;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296}}
+function vnoise2(rng){const g={};const hh=(x,y)=>{const k=x+"_"+y;if(!(k in g))g[k]=rng();return g[k]};
+  return (x,y)=>{const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf);
+    return hh(xi,yi)*(1-u)*(1-v)+hh(xi+1,yi)*u*(1-v)+hh(xi,yi+1)*(1-u)*v+hh(xi+1,yi+1)*u*v}}
+function fbm2(n,oct){return (x,y)=>{let v=0,a=.5,f=1;for(let o=0;o<oct;o++){v+=a*n(x*f,y*f);a*=.5;f*=2}return v}}
+const f1=v=>Math.round(v*100)/100;
+function curve(pts,closed=false,t=1){const n=pts.length;if(n<2)return"";let d=`M${f1(pts[0][0])} ${f1(pts[0][1])}`;
+  const P=i=>pts[closed?((i%n)+n)%n:Math.max(0,Math.min(n-1,i))];
+  const m=closed?n:n-1;
+  for(let i=0;i<m;i++){const p0=P(i-1),p1=P(i),p2=P(i+1),p3=P(i+2);
+    const c1x=p1[0]+(p2[0]-p0[0])/6*t,c1y=p1[1]+(p2[1]-p0[1])/6*t,c2x=p2[0]-(p3[0]-p1[0])/6*t,c2y=p2[1]-(p3[1]-p1[1])/6*t;
+    d+=`C${f1(c1x)} ${f1(c1y)} ${f1(c2x)} ${f1(c2y)} ${f1(p2[0])} ${f1(p2[1])}`}
+  return closed?d+"Z":d}
+function taper(pts,wfn){const L=[],R=[];for(let i=0;i<pts.length;i++){const a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)];
+  let dx=b[0]-a[0],dy=b[1]-a[1];const len=Math.hypot(dx,dy)||1;dx/=len;dy/=len;const w=wfn(i/(pts.length-1))/2;
+  L.push([pts[i][0]-dy*w,pts[i][1]+dx*w]);R.push([pts[i][0]+dy*w,pts[i][1]-dx*w])}
+  return curve(L.concat(R.reverse()),true)}
+function qpts(x0,y0,cx,cy,x1,y1,n=12){const o=[];for(let i=0;i<=n;i++){const t=i/n,a=(1-t)*(1-t),b=2*(1-t)*t,c=t*t;o.push([a*x0+b*cx+c*x1,a*y0+b*cy+c*y1])}return o}
+const lerp=(a,b,t)=>a+(b-a)*t;
+/* paper + veils */
+function toothTile(rng,size=180,base=236,fibers=54){const c=document.createElement("canvas");c.width=c.height=size;const x=c.getContext("2d");
+  const id=x.createImageData(size,size),d=id.data;for(let i=0;i<d.length;i+=4){const v=base+rng()*(255-base);d[i]=d[i+1]=d[i+2]=v;d[i+3]=255}
+  x.putImageData(id,0,0);x.strokeStyle="rgba(120,110,95,.10)";x.lineWidth=.6;
+  for(let i=0;i<fibers;i++){const y=rng()*size,x0=rng()*size,l=10+rng()*50;x.beginPath();x.moveTo(x0,y);x.lineTo(x0+l,y+(rng()-.5)*3);x.stroke()}
+  return c}
+function tooth(plate,W,H,seed=1,op=.5){const t=toothTile(RNG(seed));const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  x.fillStyle=x.createPattern(t,"repeat");x.fillRect(0,0,W,H);c.style.cssText=`width:${W}px;height:${H}px;mix-blend-mode:multiply;opacity:${op};pointer-events:none;z-index:9`;plate.appendChild(c);return c}
+function grainVeil(plate,W,H,strength=18,seed=3,tint=[20,20,20]){const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d"),rng=RNG(seed);
+  const id=x.createImageData(W,H),d=id.data;for(let i=0;i<d.length;i+=4){const r=rng();d[i]=tint[0];d[i+1]=tint[1];d[i+2]=tint[2];d[i+3]=r<.55?0:strength*(0.4+rng()*0.6)}
+  x.putImageData(id,0,0);c.style.cssText=`width:${W}px;height:${H}px;pointer-events:none;z-index:8;mix-blend-mode:multiply`;plate.appendChild(c);return c}
+function dustVeil(plate,W,H,strength=40,seed=5,density=.06){const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d"),rng=RNG(seed);
+  const id=x.createImageData(W,H),d=id.data;for(let i=0;i<d.length;i+=4){if(rng()<density){d[i]=d[i+1]=d[i+2]=255;d[i+3]=strength*(0.3+rng()*.7)}}
+  x.putImageData(id,0,0);c.style.cssText=`width:${W}px;height:${H}px;pointer-events:none;z-index:8;mix-blend-mode:screen`;plate.appendChild(c);return c}
+/* SVG defs: ink filters, riso plates, screens */
+const D=document.getElementById("D");
+function inkFilter(id,fine,freq,holes,holeFreq,seed){const f=el("filter",{id,x:"-15%",y:"-15%",width:"130%",height:"130%",filterUnits:"objectBoundingBox",colorInterpolationFilters:"sRGB"},D);
+  el("feTurbulence",{type:"fractalNoise",baseFrequency:freq,numOctaves:2,seed,result:"j"},f);
+  el("feDisplacementMap",{in:"SourceGraphic",in2:"j",scale:fine,xChannelSelector:"R",yChannelSelector:"G",result:"ink"},f);
+  if(holes){el("feTurbulence",{type:"fractalNoise",baseFrequency:holeFreq,numOctaves:2,seed:seed+40,result:"hn"},f);
+    el("feColorMatrix",{in:"hn",type:"matrix",values:`0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 ${holes} ${-holes*0.74}`,result:"hm"},f);
+    el("feComposite",{in:"ink",in2:"hm",operator:"out"},f)}}
+inkFilter("brushInk",3.2,"0.05 0.06",7,"0.32 0.28",2);
+inkFilter("stampInk",2.2,"0.12 0.12",11,"0.5 0.45",9);
+inkFilter("markerInk",1.4,"0.08 0.09",0,"0",4);
+inkFilter("keyInk",1.0,"0.06 0.07",0,"0",6);
+inkFilter("keyInkSoft",0.6,"0.04 0.05",0,"0",8);
+function risoPlate(id,seed,grainAmt=1.35,shift=1.2){const f=el("filter",{id,x:"-10%",y:"-10%",width:"120%",height:"120%",colorInterpolationFilters:"sRGB"},D);
+  el("feTurbulence",{type:"fractalNoise",baseFrequency:"0.9",numOctaves:2,seed,result:"n"},f);
+  el("feColorMatrix",{in:"n",type:"matrix",values:`0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 ${grainAmt} ${1-grainAmt*0.55}`,result:"m"},f);
+  el("feTurbulence",{type:"fractalNoise",baseFrequency:"0.05 0.06",numOctaves:2,seed:seed+3,result:"j"},f);
+  el("feDisplacementMap",{in:"SourceGraphic",in2:"j",scale:shift,result:"s"},f);
+  el("feComposite",{in:"s",in2:"m",operator:"in"},f)}
+risoPlate("risoA",21);risoPlate("risoB",33,1.5,1.6);risoPlate("risoC",47,1.2,1);risoPlate("risoD",58,1.4,1.4);
+function dotScreen(id,color,pitch,r,angle=45){const p=el("pattern",{id,width:pitch,height:pitch,patternUnits:"userSpaceOnUse",patternTransform:`rotate(${angle})`},D);
+  el("circle",{cx:pitch/2,cy:pitch/2,r,fill:color},p);return p}
+function lineScreen(id,color,pitch,w,angle=45){const p=el("pattern",{id,width:pitch,height:pitch,patternUnits:"userSpaceOnUse",patternTransform:`rotate(${angle})`},D);
+  el("rect",{x:0,y:0,width:pitch,height:w,fill:color},p);return p}
+function crossHatch(id,color,pitch,w){const p=el("pattern",{id,width:pitch,height:pitch,patternUnits:"userSpaceOnUse",patternTransform:"rotate(35)"},D);
+  el("rect",{x:0,y:0,width:pitch,height:w,fill:color},p);el("rect",{x:0,y:0,width:w,height:pitch,fill:color},p);return p}
+const SCREENS={};
+function screen(color,pitch=6,r=1.7,angle=45){const id="ds"+color.replace("#","")+pitch+"_"+String(r).replace(".","")+"_"+angle;if(!SCREENS[id]){dotScreen(id,color,pitch,r,angle);SCREENS[id]=1}return `url(#${id})`}
+function lines(color,pitch=6,w=1.6,angle=45){const id="ls"+color.replace("#","")+pitch+"_"+String(w).replace(".","")+"_"+angle;if(!SCREENS[id]){lineScreen(id,color,pitch,w,angle);SCREENS[id]=1}return `url(#${id})`}
+function hatch(color,pitch=7,w=1.5){const id="xh"+color.replace("#","")+pitch;if(!SCREENS[id]){crossHatch(id,color,pitch,w);SCREENS[id]=1}return `url(#${id})`}
+/* scaffolding */
+const BUILDERS=[],INDEX=[];
+const studies=document.getElementById("studies");
+function study(id,num,title,tag){const s=h("section",{class:"study",id},studies);
+  const hd=h("div",{class:"head"},s);h("h2",{html:`<b>${num}</b>${title}`},hd);if(tag)h("div",{class:"tag",text:tag},hd);
+  const stage=h("div",{class:"stage"},s);
+  if(!INDEX.find(x=>x.id===id))INDEX.push({id,num,title});
+  return {s,stage}}
+function plate(parent,W,H,bg){const p=h("div",{class:"plate",style:`width:${W}px;height:${H}px;background:${bg||"transparent"}`},parent);return p}
+function svgLayer(p,W,H,vb){const s=el("svg",{width:W,height:H,viewBox:vb||`0 0 ${W} ${H}`},p);return s}
+function caption(parent,html){return h("p",{class:"cap wide",html},parent)}
+function source(parent,fn,label="source"){const d=h("details",{class:"code"},parent);const sm=h("summary",{},d);h("span",{text:label+" · builder function"},sm);
+  const b=h("button",{text:"copy"},sm);const pre=h("pre",{},d);const code=fn.toString();pre.textContent=code;
+  b.addEventListener("click",e=>{e.preventDefault();navigator.clipboard&&navigator.clipboard.writeText(code);b.textContent="copied";setTimeout(()=>b.textContent="copy",1200)});return d}
+function stageWidth(){return Math.min(1180-56,innerWidth-56)-2*Math.min(40,Math.max(14,innerWidth*.03))}
+function tiles(stage,cols){const grid=h("div",{class:"tiles",style:`grid-template-columns:repeat(${cols},1fr)`},stage);
+  const tw=Math.floor((stageWidth()-18*(cols-1))/cols)-34;
+  return {grid,tw,tile:(cap)=>{const t=h("div",{class:"tile"},grid);const wrap=h("div",{style:"display:flex;justify-content:center"},t);const c=h("p",{class:"cap",html:cap},t);return {t,wrap,cap:c}}}}
+function cols(){return innerWidth<640?1:innerWidth<980?2:4}
+/* InkPlate */
+function InkPlate(svg,o={}){
+  const P={svg,fills:{},order:[],inkW:o.inkW||3,inkColor:o.inkColor||"#152229",filters:o.filters||["risoA","risoB","risoC","risoD"],
+    root:el("g",{},svg)};
+  P.fillRoot=el("g",{},P.root);
+  P.ink=el("g",{fill:"none",stroke:P.inkColor,"stroke-width":P.inkW,"stroke-linejoin":"round","stroke-linecap":"round",
+    filter:`url(#${o.inkFilter||"keyInk"})`,transform:`translate(${o.shift?o.shift[0]:1.1} ${o.shift?o.shift[1]:0.7})`},P.root);
+  P.top=el("g",{},P.root);
+  P.last=null;
+  P.group=color=>{if(P.last&&P.last.c===color)return P.last.g;if(!(color in P.fills)){P.fills[color]=P.filters[P.order.length%P.filters.length];P.order.push(color)}
+    const g=el("g",{fill:color,filter:`url(#${P.fills[color]})`},P.fillRoot);P.last={c:color,g};return g};
+  P.localAll=!!o.localAll;P.shift=o.shift||[1.1,.7];
+  P.add=(d,color,op={})=>{if(op.local||(P.localAll&&!op.global)){
+      const g=P.group(color||P.last?.c||"none");
+      if(color)el("path",Object.assign({d,transform:`translate(${-P.shift[0]} ${-P.shift[1]})`},op.fillAttrs||{}),g);
+      if(op.ink!==false)el("path",Object.assign({d,fill:"none",stroke:P.inkColor,"stroke-width":op.w||P.inkW,"stroke-linejoin":"round","stroke-linecap":"round",filter:"url(#keyInk)"},op.inkAttrs||{}),g);return}
+    if(color)el("path",Object.assign({d},op.fillAttrs||{}),P.group(color));
+    if(op.ink!==false){el("path",Object.assign({d,"stroke-width":op.w||P.inkW},op.inkAttrs||{}),P.ink)}};
+  P.inkOnly=(d,w,attrs)=>{if(P.localAll&&P.last)return el("path",Object.assign({d,fill:"none",stroke:P.inkColor,"stroke-width":w||P.inkW,"stroke-linejoin":"round","stroke-linecap":"round",filter:"url(#keyInk)"},attrs||{}),P.last.g);
+    return el("path",Object.assign({d,"stroke-width":w||P.inkW},attrs||{}),P.ink)};
+  P.fillOnly=(d,color,attrs)=>el("path",Object.assign({d},attrs||{}),P.group(color));
+  return P}
+/* botanical vocabulary */
+function veins(P,cx,cy,pts,count,color,w0,w1,bend=.15,rng){const step=Math.floor(pts.length/count);
+  for(let i=0;i<pts.length;i+=step){const [ex,ey]=pts[i];const mx=(cx+ex)/2,my=(cy+ey)/2;const dx=ex-cx,dy=ey-cy;
+    const b=(rng?rng()-.5:0)*bend*2+bend*.3;const c=[mx-dy*b,my+dx*b];
+    P.fillOnly(taper(qpts(cx,cy,c[0],c[1],ex*.97+cx*.03,ey*.97+cy*.03,10),t=>lerp(w0,w1,t)),color,{filter:"none"})}}
+function stem(P,x0,y0,cx,cy,x1,y1,w0,w1,color,inkW){const pts=qpts(x0,y0,cx,cy,x1,y1,16);
+  P.add(taper(pts,t=>lerp(w0,w1,t)),color,{w:inkW})}
+function mum(P,x,y,R,color,dark,rng,o={}){const rings=o.rings||3,inkW=o.w||P.inkW;
+  for(let k=rings-1;k>=0;k--){const n=(o.n||15)-k*3,L=R*(1-k*.27),w=L*.19;
+    for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2+(k*.35)+(rng()-.5)*.12,ll=L*(.9+rng()*.2);
+      const c=Math.cos(a),sn=Math.sin(a);const T=(px,py)=>[x+px*c-py*sn,y+px*sn+py*c];
+      const p0=T(0,0),p1=T(-w,ll*.35),p2=T(-w*.95,ll*.78),p3=T(-w*.15,ll),p4=T(w*.55,ll*.9),p5=T(w*1.05,ll*.5);
+      const d=`M${p0}C${p1} ${p2} ${p3}C${p4} ${p5} ${p0}Z`.replace(/,/g," ");
+      P.add(d,color,{w:inkW*.85,local:true});
+      if(o.shade&&o.shade(a))P.fillOnly(d,o.shade(a));
+      if(dark&&k===0){const q0=T(0,ll*.2),q1=T(-w*.35,ll*.6),q2=T(-w*.1,ll*.86);P.fillOnly(taper([q0,q1,q2],t=>lerp(inkW*.9,.3,t)),dark)}}}
+  const r=R*.2;P.add(`M${x-r} ${y}a${r} ${r} 0 1 0 ${r*2} 0a${r} ${r} 0 1 0 ${-r*2} 0Z`,dark||color);
+  for(let i=0;i<10;i++){const a=rng()*7,rr=rng()*r*.7,dx=Math.cos(a)*rr,dy=Math.sin(a)*rr;P.fillOnly(`M${x+dx-1.6} ${y+dy}a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0-3.2 0Z`,o.dots||color)}}
+function serratedLeaf(x0,y0,L,Wd,ang,teeth,rng,bendAmt=.18){const c=Math.cos(ang),s=Math.sin(ang);const T=(px,py)=>[x0+px*c-py*s,y0+px*s+py*c];
+  const A=[],B=[];const n=teeth*2;for(let i=0;i<=n;i++){const t=i/n;const w=Math.sin(t*Math.PI)*Wd*(1-t*.25);const tooth=(i%2?0.72:1)*(1-Math.pow(t,3));
+    const bend=Math.sin(t*Math.PI)*L*bendAmt;A.push(T(t*L,-w*tooth+bend));B.push(T(t*L,w*tooth+bend))}
+  const spine=[];for(let i=0;i<=8;i++){const t=i/8;spine.push(T(t*L,Math.sin(t*Math.PI)*L*bendAmt))}
+  return {outline:A.concat(B.reverse()),spine,T}}
+
+/* ============================================================
+   STUDY 01 — four grammars for one bloom (bouquet palette)
+   ============================================================ */
+BUILDERS.push(function study01(){
+  const {s,stage}=study("s01","01","Experiment · linework — four grammars for one bloom","stroke ↔ ribbon ↔ hatch ↔ starve");
+  const cc=Math.min(4,cols()==1?1:cols()==2?2:4);const T=tiles(stage,cc);const tw=T.tw,B=300,W=Math.min(B,tw),u=W/B;
+  const variants=[
+    {name:"a · vector keyline",note:"uniform 3-unit stroke, no filter, no offset — the control. Reads as digital clip-art. Everything after is about leaving it.",inkFilter:null,shift:[0,0],mode:"key"},
+    {name:"b · hand keyline + misregistration",note:"same paths; keyInk hand-waver and the ink pass shifted 1.3 × 0.9 off the fills. Each fill speckles through its own coverage plate. Now the eye reads 'printed'.",inkFilter:"keyInk",shift:[1.3,.9],mode:"key"},
+    {name:"c · brush ribbon (pressure line)",note:"outlines become tapered ribbons widened by a sine pressure; brushInk starves the edges for dry-brush gaps. Carved-block / woodcut feel.",inkFilter:"brushInk",shift:[.8,.6],mode:"ribbon"},
+    {name:"d · etched hatch + stipple",note:"thin 1.6 keyline; cross-hatch fill clipped to the shade side (35°) and stipple dots down the shadow. Texture lives in the hatch, not the line.",inkFilter:"keyInkSoft",shift:[.6,.4],mode:"hatch"}];
+  variants.forEach((v,vi)=>{const {wrap}=T.tile(`<b>${v.name}</b> — ${v.note}`);const p=plate(wrap,W,W,"#f6efe0");
+    const svg=svgLayer(p,W,W,`0 0 ${B} ${B}`);const rng=RNG(200+vi);
+    const C={paper:"#f6efe0",orange:"#de5e32",green:"#5f6f45",ink:"#1a140f",dark:"#a83c1c",gold:"#e6b325",blue:"#4e6fa6"};
+    el("rect",{width:B,height:B,fill:C.paper},svg);
+    const P=InkPlate(svg,{inkW:v.mode==="hatch"?1.6:3,inkColor:C.ink,inkFilter:v.inkFilter||"none",shift:v.shift,filters:v.mode==="key"&&vi===0?["none"]:["risoA","risoB","risoC","risoD"]});
+    if(!v.inkFilter)P.ink.removeAttribute("filter");
+    // leaf pair
+    [[-1,.9],[1,-.5]].forEach(([sg,ang])=>{const lf=serratedLeaf(150,196,118,26,Math.PI/2+ang*sg*.9,9,rng,.16);
+      if(v.mode==="ribbon"){P.fillOnly(curve(lf.outline,true),C.green);P.fillOnly(taper(lf.outline.concat([lf.outline[0]]),t=>2.6+2*Math.abs(Math.sin(t*9))),C.ink);
+        P.fillOnly(taper(lf.spine,t=>lerp(4.5,1.2,t)),C.ink)}
+      else{P.add(curve(lf.outline,true),C.green,{w:P.inkW,local:true});P.inkOnly(curve(lf.spine),P.inkW*.8);
+        if(v.mode==="hatch"){P.fillOnly(curve(lf.outline.slice(0,Math.floor(lf.outline.length/2)).concat(lf.spine.slice().reverse()),true),hatch(C.ink,6,1.3))}}
+      for(let i=1;i<6;i++){const t=i/6;const a=lf.spine[Math.floor(t*8)];const b=lf.T(t*118,-16*(1-t*.3)+Math.sin(t*Math.PI)*118*.16);P.inkOnly(`M${a[0]} ${a[1]}L${b[0]} ${b[1]}`,P.inkW*.55)}});
+    // stem
+    P.add(taper(qpts(150,196,146,240,152,300,10),t=>lerp(7,9,t)),C.green,{w:P.inkW*.9,local:true});
+    // flower (orange scallop mum, bouquet palette)
+    if(v.mode==="ribbon"){const rng2=RNG(555);mum(P,150,150,92,C.orange,C.dark,rng2,{n:14,w:P.inkW});
+      [...P.ink.querySelectorAll("path")].forEach(pa=>{pa.setAttribute("stroke-width",(+pa.getAttribute("stroke-width"))*1.15)});
+      P.ink.setAttribute("stroke-linecap","butt");
+    } else mum(P,150,150,92,C.orange,v.mode==="hatch"?null:C.dark,rng,{n:14,w:P.inkW,dots:C.gold,shade:v.mode==="hatch"?(a=>(a>.2&&a<2.2)?hatch(C.ink,5,1):null):null});
+    if(v.mode==="hatch"){for(let i=0;i<140;i++){const a=Math.PI*(.05+rng()*.55),r=60+rng()*38;const x=150+Math.cos(a)*r,y=150+Math.sin(a)*r;P.fillOnly(`M${x} ${y}a1.1 1.1 0 1 0 .1 0Z`,C.ink)}}
+    grainVeil(p,W,W,vi?12:0,3+vi);tooth(p,W,W,4,.25);
+  });
+  caption(s,`<b>Reading the four:</b> (a) is the default SVG export — clean, characterless. (b) separates the ink run from the fill runs physically; the eye reads 'printed'. (c) trades stroke for ribbon so the line gains pressure and the brush filter eats its edges — the carved-block grammar. (d) draws thin and shades by pattern; texture lives in the hatch and stipple, not the line. All four share one Catmull-Rom outline generator and one coverage-plate stack; only the ink grammar changes. Palette is the bouquet reference (orange scallop bloom, olive leaf, gold heart) rather than the lotus red.`);
+  source(s,study01);
+});
+
+function buildAll(){studies.innerHTML="";INDEX.length=0;BUILDERS.forEach(f=>{try{f()}catch(e){console.error(f.name,e)}});}
+let lastW=innerWidth;buildAll();
+let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(Math.abs(innerWidth-lastW)>70){lastW=innerWidth;buildAll()}},300)});
+</script>
+</body></html>

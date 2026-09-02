@@ -129,10 +129,14 @@ function renderIndex(tools) {
   for (const arr of groups.values()) {
     arr.sort((a, b) => (b.lastTouched || '').localeCompare(a.lastTouched || ''));
   }
-  // Ungrouped pinned first; named sections ordered by their most recent tool.
+  // Ungrouped pinned first; 'gallery' pinned last; the rest ordered by their
+  // most recent tool. Gallery is a standing showcase, not a working tool, so it
+  // sits at the bottom of the page regardless of how recently a piece landed.
   const keys = [...groups.keys()].sort((a, b) => {
     if (a === '') return -1;
     if (b === '') return 1;
+    if (a === 'gallery') return 1;
+    if (b === 'gallery') return -1;
     return (groups.get(b)[0]?.lastTouched || '').localeCompare(groups.get(a)[0]?.lastTouched || '');
   });
 
