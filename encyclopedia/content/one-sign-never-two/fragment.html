@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>One sign, never two</title>
+<style>
+@font-face{font-family:"Archivo";src:url("../_styles/fonts/Archivo.woff2") format("woff2");font-weight:100 900;font-stretch:62% 125%;font-style:normal;font-display:swap;}
+@font-face{font-family:"Fraunces";src:url("../_styles/fonts/Fraunces.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap;}
+:root{
+  color-scheme:light;
+  --paper:#ffffff; --paper-2:#fafafa; --bench:#f1f1f2;
+  --stage:#0e0e10; --stage-ink-2:#8a857a;
+  --ink:#0b0b0d; --ink-2:#4c4c52; --ink-3:#8a8a90; --ink-4:#c6c6ca;
+  --rule:#ececee; --rule-2:#dedee1;
+  --accent:#1f3fd6; --amber:#e0a63a;
+  --maxw:1100px;
+  --f-sans:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-num:"Fraunces",Georgia,serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--paper);}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:clamp(14px,3vw,26px);}
+.mat{position:relative;background:var(--bench);border:1px solid var(--rule-2);border-radius:8px;padding:clamp(16px,2.6vw,26px);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/></svg>");}
+.mat::before,.mat::after{content:"";position:absolute;width:11px;height:11px;border:1.5px solid var(--ink-4);opacity:.7;}
+.mat::before{left:7px;top:7px;border-right:none;border-bottom:none;}
+.mat::after{right:7px;bottom:7px;border-left:none;border-top:none;}
+.stage{position:relative;aspect-ratio:1100/900;width:100%;border-radius:4px;overflow:hidden;background:var(--stage);touch-action:none;}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+.slab{position:absolute;font-size:10px;font-weight:500;letter-spacing:.11em;text-transform:uppercase;color:var(--stage-ink-2);pointer-events:none;}
+.slab.tl{left:15px;top:13px;} .slab.tr{right:15px;top:13px;text-align:right;} .slab.bl{left:15px;bottom:13px;color:#5c584f;}
+.matcap{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-top:13px;font-size:11px;color:var(--ink-3);}
+.matcap b{color:var(--ink-2);font-weight:500;}
+.appa{margin-top:30px;display:grid;grid-template-columns:1.05fr 1fr;gap:36px;}
+@media(max-width:720px){.appa{grid-template-columns:1fr;gap:0;}}
+.appa .panel{padding:0;} .appa .panel + .panel{border-left:1px solid var(--rule);padding-left:36px;}
+@media(max-width:720px){.appa .panel + .panel{border-left:none;padding-left:0;border-top:1px solid var(--rule);margin-top:26px;padding-top:26px;}}
+.plab{font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin:0 0 16px;}
+.seg{display:inline-flex;border:1px solid var(--rule-2);border-radius:6px;overflow:hidden;width:100%;}
+.seg button{flex:1;font-family:var(--f-sans);font-size:12px;font-weight:500;background:var(--paper);color:var(--ink-2);border:none;border-right:1px solid var(--rule-2);padding:9px 6px;cursor:pointer;transition:.14s;}
+.seg button:last-child{border-right:none;}
+.seg button.on{background:var(--ink);color:var(--paper);}
+.seg button.on.warn{background:var(--amber);color:#231a05;}
+.hint{font-size:12.5px;color:var(--ink-2);margin-top:16px;line-height:1.55;}
+.hint b{font-weight:600;color:var(--ink);}
+.read .top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;}
+.read .klass{font-size:19px;font-weight:600;letter-spacing:-.01em;} .read .klass.warn{color:var(--amber);}
+.read .sgn{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);}
+.vrow{display:flex;align-items:baseline;justify-content:space-between;padding:11px 0;border-top:1px solid var(--rule);gap:16px;}
+.vrow:first-of-type{border-top:none;}
+.vrow .lab{font-size:12px;color:var(--ink-2);}
+.vrow .val{font-family:var(--f-num);font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1;text-align:right;}
+.vrow .val.warn{color:var(--amber);}
+.vrow .val.big{font-size:26px;}
+.note{margin-top:18px;padding-top:16px;border-top:1px solid var(--rule);font-size:12.5px;color:var(--ink-3);line-height:1.55;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mat">
+    <div class="stage" id="stage" role="img" aria-label="Gravitational field lines">
+      <canvas id="cv"></canvas>
+      <span class="slab tl">gravitational field · one plane</span>
+      <span class="slab tr" id="modeLab">two masses</span>
+      <span class="slab bl" id="hintLab">everything falls inward</span>
+    </div>
+    <div class="matcap">
+      <span>Fig. — field lines and falling test bodies; a negative mass pushes instead of pulls</span>
+      <span><b id="stat">attractive only</b></span>
+    </div>
+  </div>
+
+  <div class="appa">
+    <div class="panel">
+      <p class="plab">Configuration</p>
+      <div class="seg" id="seg">
+        <button data-m="two" class="on">Two masses</button>
+        <button data-m="anti" class="warn">Mass + antimass</button>
+      </div>
+      <p class="hint" id="explain"><b>Gravity only comes in one sign.</b> Every mass pulls, so all the field lines run inward and every test body falls toward the mass. There is no second sign to make a line point the other way.</p>
+    </div>
+    <div class="panel read">
+      <div class="top"><span class="klass" id="klass">Observed</span><span class="sgn" id="law">one sign of mass</span></div>
+      <div class="vrow"><span class="lab">Second body</span><span class="val big" id="sign">+m</span></div>
+      <div class="vrow"><span class="lab">Its field</span><span class="val" id="ffield">pulls in</span></div>
+      <div class="vrow"><span class="lab">Repulsion</span><span class="val" id="rep">none</span></div>
+      <p class="note" id="note">No negative mass has ever been found. A +/− pair does something strange on paper: the negative mass is drawn toward the positive, the positive is pushed from the negative, so the pair accelerates off together — a runaway that never settles.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var stage=document.getElementById('stage'),cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var TAU=Math.PI*2;
+var COL={line:'#7f93a6',push:'#e0a63a',pos:'#4f6fd0',neg:'#e0a63a',grid:'#242428',ink:'#8a857a',pull:'#3fa896',part:'#cfcabf'};
+var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var mode='two', t=0;
+
+function masses(m){
+  if(m==='two') return [{x:-0.5,y:0,m:1},{x:0.5,y:0,m:1}];
+  return [{x:-0.5,y:0,m:1},{x:0.5,y:0,m:-1}];
+}
+// gravitational acceleration: points toward +m, away from -m
+function grav(x,y,ms){var gx=0,gy=0;for(var i=0;i<ms.length;i++){var s=ms[i],dx=s.x-x,dy=s.y-y,r2=dx*dx+dy*dy+2e-3,r=Math.sqrt(r2),inv=s.m/(r2*r);gx+=dx*inv;gy+=dy*inv;}return[gx,gy];}
+
+var lines=[];
+function computeLines(){
+  var ms=masses(mode),pos=ms.filter(function(s){return s.m>0;}),neg=ms.filter(function(s){return s.m<0;}),out=[];
+  // inflow lines seeded on an outer ring — follow g into the positive masses
+  for(var k=0;k<46;k++){
+    var a=k/46*TAU, px=1.28*Math.cos(a), py=1.28*Math.sin(a), pts=[[px,py]];
+    for(var i=0;i<760;i++){
+      var g=grav(px,py,ms),mm=Math.hypot(g[0],g[1]); if(mm<1e-6)break;
+      px+=g[0]/mm*0.011; py+=g[1]/mm*0.011; pts.push([px,py]);
+      if(Math.abs(px)>1.5||Math.abs(py)>1.5)break;
+      var hit=false; for(var pI=0;pI<pos.length;pI++){ if(Math.hypot(px-pos[pI].x,py-pos[pI].y)<0.07){hit=true;break;} } if(hit)break;
+    }
+    out.push({pts:pts,push:false});
+  }
+  // diverging lines around each negative mass — g points AWAY, so it repels
+  neg.forEach(function(s){
+    for(var k2=0;k2<16;k2++){
+      var a2=k2/16*TAU, px2=s.x+0.09*Math.cos(a2), py2=s.y+0.09*Math.sin(a2), pts2=[[px2,py2]];
+      for(var i2=0;i2<520;i2++){
+        var g2=grav(px2,py2,ms),m2=Math.hypot(g2[0],g2[1]); if(m2<1e-6)break;
+        px2+=g2[0]/m2*0.011; py2+=g2[1]/m2*0.011; pts2.push([px2,py2]);
+        if(Math.abs(px2)>1.5||Math.abs(py2)>1.5)break;
+        var hit2=false; for(var pJ=0;pJ<pos.length;pJ++){ if(Math.hypot(px2-pos[pJ].x,py2-pos[pJ].y)<0.07){hit2=true;break;} } if(hit2)break;
+      }
+      out.push({pts:pts2,push:true});
+    }
+  });
+  lines=out;
+}
+
+// falling test bodies
+var parts=[];
+function seedParts(){parts=[];for(var i=0;i<7;i++){var a=Math.random()*TAU,r=1.0+Math.random()*0.25;parts.push({x:r*Math.cos(a),y:r*Math.sin(a),vx:0,vy:0,tr:[]});}}
+function stepParts(){var ms=masses(mode);for(var i=0;i<parts.length;i++){var p=parts[i];
+  var g=grav(p.x,p.y,ms);p.vx+=g[0]*0.006;p.vy+=g[1]*0.006;
+  var sp=Math.hypot(p.vx,p.vy),cap=2.2;if(sp>cap){p.vx*=cap/sp;p.vy*=cap/sp;}
+  p.x+=p.vx*0.02;p.y+=p.vy*0.02;p.tr.push([p.x,p.y]);if(p.tr.length>14)p.tr.shift();
+  var dead=Math.abs(p.x)>1.5||Math.abs(p.y)>1.5;
+  for(var j=0;j<ms.length;j++){if(ms[j].m>0&&Math.hypot(p.x-ms[j].x,p.y-ms[j].y)<0.08)dead=true;}
+  if(dead){var a=Math.random()*TAU,r=1.05+Math.random()*0.2;p.x=r*Math.cos(a);p.y=r*Math.sin(a);p.vx=0;p.vy=0;p.tr=[];}
+}}
+
+var W=0,H=0,cx=0,cy=0,sc=0;
+function resize(){var r=stage.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
+  W=Math.round(r.width*dpr);H=Math.round(r.height*dpr);cv.width=W;cv.height=H;cv.style.width=r.width+'px';cv.style.height=r.height+'px';
+  cx=W/2;cy=H/2;sc=Math.min(W,H)*0.5/1.35;}
+window.addEventListener('resize',resize);
+function X(wx){return cx+wx*sc;} function Y(wy){return cy-wy*sc;}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);t+=1;
+  var ms=masses(mode);
+  for(var i=0;i<lines.length;i++){
+    var L=lines[i],p=L.pts; if(p.length<2)continue;
+    ctx.strokeStyle=L.push?COL.push:COL.pull;ctx.globalAlpha=L.push?.75:.5;ctx.lineWidth=L.push?1.5:1.2;
+    ctx.beginPath();ctx.moveTo(X(p[0][0]),Y(p[0][1]));
+    for(var j=1;j<p.length;j++)ctx.lineTo(X(p[j][0]),Y(p[j][1]));
+    ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+  // test bodies
+  if(!reduced)stepParts();
+  for(var q=0;q<parts.length;q++){var pt=parts[q];
+    if(pt.tr.length>1){ctx.strokeStyle=COL.part;ctx.globalAlpha=.35;ctx.lineWidth=1.2;ctx.beginPath();
+      ctx.moveTo(X(pt.tr[0][0]),Y(pt.tr[0][1]));for(var r=1;r<pt.tr.length;r++)ctx.lineTo(X(pt.tr[r][0]),Y(pt.tr[r][1]));ctx.stroke();}
+    ctx.globalAlpha=.95;ctx.fillStyle=COL.part;ctx.beginPath();ctx.arc(X(pt.x),Y(pt.y),2.4,0,TAU);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+  // masses
+  ctx.font='600 '+(13*(window.devicePixelRatio>1?2:1))+'px Archivo,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  for(var s=0;s<ms.length;s++){var M=ms[s],pos=M.m>0;
+    ctx.fillStyle=pos?COL.pos:COL.neg;ctx.globalAlpha=1;
+    ctx.beginPath();ctx.arc(X(M.x),Y(M.y),pos?11:10,0,TAU);ctx.fill();
+    ctx.fillStyle=pos?'#fff':'#231a05';ctx.fillText(pos?'+':'−',X(M.x),Y(M.y)+1);
+  }
+  if(!reduced)requestAnimationFrame(draw);
+}
+
+var elMode=document.getElementById('modeLab'),elHint=document.getElementById('hintLab'),elStat=document.getElementById('stat'),
+    elKlass=document.getElementById('klass'),elLaw=document.getElementById('law'),elSign=document.getElementById('sign'),
+    elFfield=document.getElementById('ffield'),elRep=document.getElementById('rep'),elExplain=document.getElementById('explain'),elNote=document.getElementById('note');
+var TXT={
+  two:{lab:'two masses',hint:'everything falls inward',stat:'attractive only',klass:'Observed',warn:false,law:'one sign of mass',
+    sign:'+m',ffield:'pulls in',rep:'none',repWarn:false,
+    explain:'<b>Gravity only comes in one sign.</b> Every mass pulls, so all the field lines run inward and every test body falls toward the mass. There is no second sign to make a line point the other way.',
+    note:'All ordinary matter has positive mass, and it only ever attracts. There is no gravitational dipole, and no way to shield gravity — one sign, everywhere.'},
+  anti:{lab:'mass + antimass — speculative',hint:'the negative mass pushes',stat:'repulsion present',klass:'Speculative',warn:true,law:'a second, negative sign',
+    sign:'−m',ffield:'pushes away',rep:'present',repWarn:true,
+    explain:'<b>Flip one mass negative.</b> Its field reverses — the lines point outward and the test bodies are pushed away. This is the second sign gravity is not known to have: negative mass, a gravitational repeller.',
+    note:'No negative mass has been found. A +/− pair runs away on paper: the negative mass chases the positive, the positive flees the negative, and the pair accelerates off together forever.'}
+};
+function setMode(m){
+  mode=m;computeLines();seedParts();var d=TXT[m];
+  elMode.textContent=d.lab;elHint.textContent=d.hint;elStat.textContent=d.stat;
+  elKlass.textContent=d.klass;elKlass.classList.toggle('warn',d.warn);
+  elLaw.textContent=d.law;elSign.textContent=d.sign;elSign.classList.toggle('warn',d.warn);
+  elFfield.textContent=d.ffield;elFfield.classList.toggle('warn',d.warn);
+  elRep.textContent=d.rep;elRep.classList.toggle('warn',d.repWarn);
+  elExplain.innerHTML=d.explain;elNote.textContent=d.note;
+  document.querySelectorAll('#seg button').forEach(function(b){b.classList.toggle('on',b.dataset.m===m);});
+}
+document.getElementById('seg').addEventListener('click',function(e){var b=e.target.closest('button');if(b)setMode(b.dataset.m);});
+resize();setMode('two');draw();
+})();
+</script>
+</body>
+</html>

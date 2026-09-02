@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Three rays, not two</title>
+<style>
+/* Self-hosted faces from the shared encyclopedia font store. No network request. */
+@font-face{font-family:"Archivo";src:url("../_styles/fonts/Archivo.woff2") format("woff2");font-weight:100 900;font-stretch:62% 125%;font-style:normal;font-display:swap;}
+@font-face{font-family:"Fraunces";src:url("../_styles/fonts/Fraunces.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap;}
+@font-face{font-family:"JetBrains Mono";src:url("../_styles/fonts/JetBrainsMono.woff2") format("woff2");font-weight:100 800;font-style:normal;font-display:swap;}
+
+:root{
+  color-scheme:light;
+  --paper:#ffffff; --paper-2:#fafafa; --bench:#f1f1f2;
+  --stage:#0e0e10; --stage-ink-2:#8a857a;
+  --ink:#0b0b0d; --ink-2:#4c4c52; --ink-3:#8a8a90; --ink-4:#c6c6ca;
+  --rule:#ececee; --rule-2:#dedee1;
+  --accent:#1f3fd6;
+  --c-o:#7f93a6; --c-ep:#3fa896; --c-em:#e0a63a;   /* ordinary / e+ / e- */
+  --maxw:1100px;
+  --f-sans:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-num:"Fraunces",Georgia,serif;                 /* numbers + math variables only */
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--paper);}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-sans);font-size:16px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:clamp(14px,3vw,26px);}
+
+.mat{position:relative;background:var(--bench);border:1px solid var(--rule-2);border-radius:8px;padding:clamp(16px,2.6vw,26px);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/></svg>");}
+.mat::before,.mat::after{content:"";position:absolute;width:11px;height:11px;border:1.5px solid var(--ink-4);opacity:.7;}
+.mat::before{left:7px;top:7px;border-right:none;border-bottom:none;}
+.mat::after{right:7px;bottom:7px;border-left:none;border-top:none;}
+.stage{position:relative;aspect-ratio:1100/900;width:100%;border-radius:4px;overflow:hidden;background:var(--stage);cursor:ew-resize;touch-action:none;}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+.slab{position:absolute;font-size:10px;font-weight:500;letter-spacing:.11em;text-transform:uppercase;color:var(--stage-ink-2);pointer-events:none;}
+.slab.tl{left:15px;top:13px;} .slab.tr{right:15px;top:13px;text-align:right;font-variant-numeric:tabular-nums;} .slab.bl{left:15px;bottom:13px;color:#5c584f;}
+.matcap{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-top:13px;font-size:11px;color:var(--ink-3);}
+.matcap b{color:var(--ink-2);font-weight:500;}
+
+.appa{margin-top:30px;display:grid;grid-template-columns:1.05fr 1fr;gap:36px;}
+@media(max-width:720px){.appa{grid-template-columns:1fr;gap:0;}}
+.appa .panel{padding:0;} .appa .panel + .panel{border-left:1px solid var(--rule);padding-left:36px;}
+@media(max-width:720px){.appa .panel + .panel{border-left:none;padding-left:0;border-top:1px solid var(--rule);margin-top:26px;padding-top:26px;}}
+.plab{font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin:0 0 18px;}
+.knob{margin-bottom:18px;} .knob:last-child{margin-bottom:0;}
+.knob label{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;font-weight:500;color:var(--ink-2);margin-bottom:9px;}
+.knob label .nm em{font-family:var(--f-num);font-style:italic;}
+.knob label .v{color:var(--ink);font-family:var(--f-num);font-size:15px;font-variant-numeric:tabular-nums;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:var(--rule-2);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--accent);border:3px solid var(--paper);box-shadow:0 0 0 1px var(--rule-2);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;background:var(--accent);border:3px solid var(--paper);cursor:pointer;}
+.tgs{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;padding-top:18px;border-top:1px solid var(--rule);}
+.tg{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);cursor:pointer;user-select:none;}
+.tg input{accent-color:var(--accent);width:14px;height:14px;cursor:pointer;}
+.hint{font-size:12px;color:var(--ink-3);margin-top:16px;line-height:1.5;}
+.read .top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;}
+.read .klass{font-size:19px;font-weight:600;letter-spacing:-.01em;} .read .klass em{font-style:normal;}
+.read .klass.tri{color:var(--accent);}
+.read .sgn{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);}
+.vrow{display:flex;align-items:baseline;justify-content:space-between;padding:11px 0;border-top:1px solid var(--rule);}
+.vrow:first-of-type{border-top:none;}
+.vrow .lab{font-size:12px;color:var(--ink-2);display:flex;align-items:center;gap:9px;}
+.vrow .lab .sw{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.vrow .val{font-family:var(--f-num);font-size:22px;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1;}
+.vrow .val.back{color:var(--accent);}
+.mini{display:flex;gap:18px;margin-top:16px;padding-top:16px;border-top:1px solid var(--rule);}
+.mini .cell{flex:1;} .mini .k{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);}
+.mini .v{font-family:var(--f-num);font-size:22px;color:var(--ink);font-variant-numeric:tabular-nums;margin-top:3px;}
+.mini .v .u{font-family:var(--f-sans);font-size:11px;color:var(--ink-3);}
+.dispwrap{margin-top:18px;padding-top:16px;border-top:1px solid var(--rule);}
+.dispwrap .k{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:9px;}
+#disp{width:100%;height:130px;display:block;background:var(--stage);border-radius:5px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="plate">
+    <div class="mat">
+      <div class="stage" id="stage" role="img" aria-label="Live phase-velocity surface with three branches">
+        <canvas id="polar"></canvas>
+        <span class="slab tl">phase-velocity surface · propagation plane</span>
+        <span class="slab tr" id="thLab">θ 00.0°</span>
+        <span class="slab bl">drag ↔ to steer θ</span>
+      </div>
+      <div class="matcap">
+        <span>Fig. — three phase velocities vs. propagation angle; amber v<sub>e−</sub> inverts at the cone edge</span>
+        <span><b id="stat">three rays</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="appa">
+    <div class="panel">
+      <p class="plab">Parameters</p>
+      <div class="knob">
+        <label><span class="nm"><em>θ</em> — propagation angle</span><span class="v" id="lth">20.0°</span></label>
+        <input type="range" id="sth" min="0" max="45" step="0.1" value="20">
+      </div>
+      <div class="knob">
+        <label><span class="nm"><em>σ</em> — magnetoelectric coupling</span><span class="v" id="lsig">−0.489</span></label>
+        <input type="range" id="ssig" min="-0.80" max="0" step="0.001" value="-0.4894">
+      </div>
+      <div class="knob">
+        <label><span class="nm"><em>ε∥</em> — parallel permittivity</span><span class="v" id="leps">−5.417</span></label>
+        <input type="range" id="seps" min="-9" max="-1.6" step="0.001" value="-5.4166">
+      </div>
+      <div class="tgs">
+        <label class="tg"><input type="checkbox" id="tSweep" checked> SWEEP θ</label>
+      </div>
+      <p class="hint">Turn σ toward 0 and the third ray retracts — the magnetoelectric term is what lifts v<sub>e−</sub> forward.</p>
+    </div>
+    <div class="panel read">
+      <div class="top"><span class="klass tri"><em id="klass">Three rays</em></span><span class="sgn" id="fwd">3 forward rays</span></div>
+      <div class="vrow"><span class="lab"><span class="sw" style="background:var(--c-o)"></span>v<sub>o</sub> — ordinary</span><span class="val" id="vo">0.820</span></div>
+      <div class="vrow"><span class="lab"><span class="sw" style="background:var(--c-ep)"></span>v<sub>e+</sub> — extraordinary</span><span class="val" id="vep">0.782</span></div>
+      <div class="vrow"><span class="lab"><span class="sw" style="background:var(--c-em)"></span>v<sub>e−</sub> — extraordinary</span><span class="val" id="vem">0.104</span></div>
+      <div class="mini">
+        <div class="cell"><div class="k">Cone edge θ<sub>max</sub></div><div class="v" id="thmax">27.65<span class="u">°</span></div></div>
+        <div class="cell"><div class="k">Validation θ = 11.25°</div><div class="v" id="valid">✓ 0.82·0.76·0.20</div></div>
+      </div>
+      <div class="dispwrap"><div class="k">Dispersion v(θ) — 0° to 45°</div><canvas id="disp"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var stage=document.getElementById('stage'),cv=document.getElementById('polar'),ctx=cv.getContext('2d');
+var dcv=document.getElementById('disp'),dctx=dcv.getContext('2d');
+var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var COL={o:'#7f93a6',ep:'#3fa896',em:'#e0a63a',grid:'#26262b',tick:'#34343a',ink:'#8a857a',ray:'#5f5b52',wedge:'rgba(224,166,58,0.09)',zero:'#4a4a50'};
+
+var mu=1, eperp=1.4872;
+var st={theta:20, sig:-0.4894, epar:-5.4166, sweep:!reduced, dir:1, drag:false};
+
+function vels(thDeg, epar, sig){
+  var th=thDeg*Math.PI/180, qx=Math.sin(th), qz=Math.cos(th);
+  var vo=1/Math.sqrt(mu*eperp);
+  var inner=(epar/eperp)*qx*qx + qz*qz;
+  var disc=sig*sig*qz*qz + (1/(mu*epar))*inner;
+  var root=disc>=0?Math.sqrt(disc):NaN, off=-sig*qz;
+  return {vo:vo, vep:off+root, vem:off-root, disc:disc};
+}
+function thetaMax(epar){ return Math.atan(Math.sqrt(-eperp/epar))*180/Math.PI; }
+
+var W=0,H=0,cx=0,cy=0,S=0;
+function resize(){
+  var r=stage.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
+  W=Math.round(r.width*dpr);H=Math.round(r.height*dpr);cv.width=W;cv.height=H;
+  cv.style.width=r.width+'px';cv.style.height=r.height+'px';
+  cx=W/2;cy=H*0.50;S=Math.min(W,H)*0.34;
+  var dr=dcv.getBoundingClientRect();dcv.width=Math.round(dr.width*dpr);dcv.height=Math.round(dr.height*dpr);
+}
+window.addEventListener('resize',resize);
+function P(v,thDeg){var a=thDeg*Math.PI/180;return [cx+S*v*Math.sin(a), cy - S*v*Math.cos(a)];}
+
+function drawPolar(){
+  ctx.clearRect(0,0,W,H);
+  var tmax=thetaMax(st.epar);
+  ctx.fillStyle=COL.wedge;ctx.beginPath();ctx.moveTo(cx,cy);
+  for(var w=-tmax;w<=tmax;w+=1){var p=P(1.08,w);ctx.lineTo(p[0],p[1]);}
+  ctx.closePath();ctx.fill();
+  ctx.lineWidth=1;ctx.font='500 '+(11*(window.devicePixelRatio>1?2:1))+'px Archivo,system-ui,sans-serif';
+  ctx.textAlign='left';ctx.textBaseline='middle';
+  [0.2,0.4,0.6,0.8,1.0].forEach(function(rv){
+    ctx.strokeStyle=COL.grid;ctx.beginPath();ctx.arc(cx,cy,S*rv,0,7);ctx.stroke();
+    var lp=P(rv,48);ctx.fillStyle=COL.ink;ctx.globalAlpha=.5;ctx.textAlign='left';ctx.fillText(rv.toFixed(1), lp[0]+3, lp[1]);ctx.globalAlpha=1;
+  });
+  ctx.strokeStyle=COL.tick;
+  for(var a=0;a<360;a+=15){var p0=P(0.03,a),p1=P((a%45===0)?1.06:1.02,a);
+    ctx.globalAlpha=(a%45===0)?.5:.28;ctx.beginPath();ctx.moveTo(p0[0],p0[1]);ctx.lineTo(p1[0],p1[1]);ctx.stroke();}
+  ctx.globalAlpha=1;
+  ctx.strokeStyle=COL.em;ctx.globalAlpha=.55;ctx.setLineDash([4,4]);ctx.lineWidth=1;
+  [tmax,-tmax].forEach(function(t){var p=P(1.06,t);ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(p[0],p[1]);ctx.stroke();});
+  ctx.setLineDash([]);ctx.globalAlpha=1;
+  var pe=P(1.12,tmax);ctx.fillStyle=COL.em;ctx.globalAlpha=.9;ctx.textAlign='center';
+  ctx.fillText(tmax.toFixed(2)+'°', pe[0]+14, pe[1]);ctx.globalAlpha=1;
+  function curve(which,color,wid,alpha,lo,hi){
+    ctx.strokeStyle=color;ctx.lineWidth=wid;ctx.globalAlpha=alpha;ctx.beginPath();var started=false;
+    for(var d=lo;d<=hi;d+=0.5){var vv=vels(d,st.epar,st.sig)[which];
+      if(isNaN(vv)){started=false;continue;}
+      var p=P(vv,d); if(!started){ctx.moveTo(p[0],p[1]);started=true;}else ctx.lineTo(p[0],p[1]);}
+    ctx.stroke();ctx.globalAlpha=1;
+  }
+  ctx.strokeStyle=COL.o;ctx.globalAlpha=.55;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(cx,cy,S*(1/Math.sqrt(mu*eperp)),0,7);ctx.stroke();ctx.globalAlpha=1;
+  curve('vep',COL.ep,2,.85,-72,72);
+  curve('vem',COL.em,1.3,.38,-72,72);
+  curve('vem',COL.em,2.2,.95,-tmax,tmax);
+  ctx.fillStyle=COL.ink;ctx.globalAlpha=.7;ctx.textAlign='center';ctx.textBaseline='bottom';
+  ctx.fillText('OPTIC AXIS  θ=0', cx, cy - S*1.14);ctx.globalAlpha=1;ctx.textBaseline='middle';
+  var V=vels(st.theta,st.epar,st.sig);
+  ctx.strokeStyle=COL.ray;ctx.lineWidth=1;ctx.globalAlpha=.85;
+  var pr=P(1.06,st.theta);ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(pr[0],pr[1]);ctx.stroke();ctx.globalAlpha=1;
+  function needle(v,color,r,glow){
+    var p=P(v,st.theta);
+    if(glow){ctx.save();ctx.shadowColor=color;ctx.shadowBlur=10;}
+    ctx.strokeStyle=color;ctx.lineWidth=glow?2.4:1.6;ctx.globalAlpha=.95;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(p[0],p[1]);ctx.stroke();
+    ctx.fillStyle=color;ctx.beginPath();ctx.arc(p[0],p[1],r,0,7);ctx.fill();
+    if(glow)ctx.restore();ctx.globalAlpha=1;
+  }
+  needle(V.vo,COL.o,3,false);
+  needle(V.vep,COL.ep,3.4,false);
+  needle(V.vem,COL.em,4,true);
+  ctx.fillStyle='#cfcabf';ctx.globalAlpha=.8;ctx.beginPath();ctx.arc(cx,cy,2,0,7);ctx.fill();ctx.globalAlpha=1;
+}
+
+function drawDisp(){
+  var w=dcv.width,h=dcv.height;dctx.clearRect(0,0,w,h);
+  var x0=6,x1=w-6, y0=8,y1=h-8, thMaxDeg=45, vLo=-0.5, vHi=1.0;
+  function X(d){return x0+(d/thMaxDeg)*(x1-x0);}
+  function Y(v){return y1-((v-vLo)/(vHi-vLo))*(y1-y0);}
+  dctx.strokeStyle=COL.zero;dctx.lineWidth=1;dctx.beginPath();dctx.moveTo(x0,Y(0));dctx.lineTo(x1,Y(0));dctx.stroke();
+  var tmax=thetaMax(st.epar);
+  dctx.strokeStyle=COL.em;dctx.globalAlpha=.5;dctx.setLineDash([3,3]);dctx.beginPath();dctx.moveTo(X(tmax),y0);dctx.lineTo(X(tmax),y1);dctx.stroke();dctx.setLineDash([]);dctx.globalAlpha=1;
+  function branch(which,color,wid){
+    dctx.strokeStyle=color;dctx.lineWidth=wid;dctx.beginPath();var s=false;
+    for(var d=0;d<=thMaxDeg;d+=0.3){var vv=vels(d,st.epar,st.sig)[which];if(isNaN(vv)){s=false;continue;}
+      var xx=X(d),yy=Y(vv);if(!s){dctx.moveTo(xx,yy);s=true;}else dctx.lineTo(xx,yy);}
+    dctx.stroke();
+  }
+  branch('vo',COL.o,1.6);branch('vep',COL.ep,1.8);branch('vem',COL.em,2);
+  dctx.strokeStyle='#6f6b61';dctx.globalAlpha=.8;dctx.beginPath();dctx.moveTo(X(st.theta),y0);dctx.lineTo(X(st.theta),y1);dctx.stroke();dctx.globalAlpha=1;
+}
+
+var elTh=document.getElementById('thLab'),elStat=document.getElementById('stat'),elKlass=document.getElementById('klass'),
+    elFwd=document.getElementById('fwd'),elVo=document.getElementById('vo'),elVep=document.getElementById('vep'),elVem=document.getElementById('vem'),
+    elThmax=document.getElementById('thmax'),elLth=document.getElementById('lth'),elLsig=document.getElementById('lsig'),elLeps=document.getElementById('leps'),
+    sth=document.getElementById('sth'),ssig=document.getElementById('ssig'),seps=document.getElementById('seps');
+function fnum(x){return (x>=0?' ':'−')+Math.abs(x).toFixed(3);}
+function readout(){
+  var V=vels(st.theta,st.epar,st.sig),tmax=thetaMax(st.epar);
+  var fwd=[V.vo,V.vep,V.vem].filter(function(v){return v==v&&v>1e-6;}).length;
+  var three=(st.theta<tmax && fwd===3);
+  elTh.textContent='θ '+('0'+st.theta.toFixed(1)).slice(-4)+'°';
+  elStat.textContent=three?'three rays':'two rays';
+  elKlass.textContent=three?'Three rays':'Two rays';
+  document.querySelector('.read .klass').classList.toggle('tri',three);
+  elFwd.textContent=fwd+' forward ray'+(fwd>1?'s':'');
+  elVo.textContent=V.vo.toFixed(3);
+  elVep.textContent=(V.vep>=0?'':'−')+Math.abs(V.vep).toFixed(3);elVep.classList.toggle('back',V.vep<0);
+  elVem.textContent=(V.vem>=0?'':'−')+Math.abs(V.vem).toFixed(3);elVem.classList.toggle('back',V.vem<0);
+  elThmax.innerHTML=tmax.toFixed(2)+'<span class="u">°</span>';
+}
+function sync(){sth.value=st.theta;ssig.value=st.sig;seps.value=st.epar;
+  elLth.textContent=st.theta.toFixed(1)+'°';elLsig.textContent=fnum(st.sig);elLeps.textContent=fnum(st.epar);}
+sth.addEventListener('input',function(){st.theta=parseFloat(sth.value);st.sweep=false;document.getElementById('tSweep').checked=false;elLth.textContent=st.theta.toFixed(1)+'°';});
+ssig.addEventListener('input',function(){st.sig=parseFloat(ssig.value);elLsig.textContent=fnum(st.sig);});
+seps.addEventListener('input',function(){st.epar=parseFloat(seps.value);elLeps.textContent=fnum(st.epar);});
+var tSweep=document.getElementById('tSweep');if(reduced){tSweep.checked=false;st.sweep=false;st.theta=32;}
+tSweep.addEventListener('change',function(e){st.sweep=e.target.checked;});
+
+function setThFromX(clientX){var r=stage.getBoundingClientRect();var f=(clientX-r.left)/r.width;st.theta=Math.max(0,Math.min(45,f*45));st.sweep=false;tSweep.checked=false;elLth.textContent=st.theta.toFixed(1)+'°';sync();}
+stage.addEventListener('mousedown',function(e){st.drag=true;setThFromX(e.clientX);});
+window.addEventListener('mousemove',function(e){if(st.drag)setThFromX(e.clientX);});
+window.addEventListener('mouseup',function(){st.drag=false;});
+stage.addEventListener('touchstart',function(e){st.drag=true;setThFromX(e.touches[0].clientX);},{passive:true});
+stage.addEventListener('touchmove',function(e){if(st.drag){setThFromX(e.touches[0].clientX);e.preventDefault();}},{passive:false});
+stage.addEventListener('touchend',function(){st.drag=false;});
+
+function frame(){
+  if(st.sweep&&!reduced){st.theta+=st.dir*0.14;if(st.theta>=45){st.theta=45;st.dir=-1;}if(st.theta<=0){st.theta=0;st.dir=1;}elLth.textContent=st.theta.toFixed(1)+'°';sth.value=st.theta;}
+  drawPolar();drawDisp();readout();requestAnimationFrame(frame);
+}
+resize();sync();frame();
+})();
+</script>
+</body>
+</html>

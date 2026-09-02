@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Two poles, never one</title>
+<style>
+@font-face{font-family:"Archivo";src:url("../_styles/fonts/Archivo.woff2") format("woff2");font-weight:100 900;font-stretch:62% 125%;font-style:normal;font-display:swap;}
+@font-face{font-family:"Fraunces";src:url("../_styles/fonts/Fraunces.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap;}
+:root{
+  color-scheme:light;
+  --paper:#ffffff; --paper-2:#fafafa; --bench:#f1f1f2;
+  --stage:#0e0e10; --stage-ink-2:#8a857a;
+  --ink:#0b0b0d; --ink-2:#4c4c52; --ink-3:#8a8a90; --ink-4:#c6c6ca;
+  --rule:#ececee; --rule-2:#dedee1;
+  --accent:#1f3fd6; --amber:#e0a63a;
+  --maxw:1100px;
+  --f-sans:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-num:"Fraunces",Georgia,serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--paper);}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:clamp(14px,3vw,26px);}
+.mat{position:relative;background:var(--bench);border:1px solid var(--rule-2);border-radius:8px;padding:clamp(16px,2.6vw,26px);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/></svg>");}
+.mat::before,.mat::after{content:"";position:absolute;width:11px;height:11px;border:1.5px solid var(--ink-4);opacity:.7;}
+.mat::before{left:7px;top:7px;border-right:none;border-bottom:none;}
+.mat::after{right:7px;bottom:7px;border-left:none;border-top:none;}
+.stage{position:relative;aspect-ratio:1100/900;width:100%;border-radius:4px;overflow:hidden;background:var(--stage);touch-action:none;}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+.slab{position:absolute;font-size:10px;font-weight:500;letter-spacing:.11em;text-transform:uppercase;color:var(--stage-ink-2);pointer-events:none;}
+.slab.tl{left:15px;top:13px;} .slab.tr{right:15px;top:13px;text-align:right;} .slab.bl{left:15px;bottom:13px;color:#5c584f;}
+.matcap{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-top:13px;font-size:11px;color:var(--ink-3);}
+.matcap b{color:var(--ink-2);font-weight:500;}
+.appa{margin-top:30px;display:grid;grid-template-columns:1.05fr 1fr;gap:36px;}
+@media(max-width:720px){.appa{grid-template-columns:1fr;gap:0;}}
+.appa .panel{padding:0;} .appa .panel + .panel{border-left:1px solid var(--rule);padding-left:36px;}
+@media(max-width:720px){.appa .panel + .panel{border-left:none;padding-left:0;border-top:1px solid var(--rule);margin-top:26px;padding-top:26px;}}
+.plab{font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin:0 0 16px;}
+.seg{display:inline-flex;border:1px solid var(--rule-2);border-radius:6px;overflow:hidden;width:100%;}
+.seg button{flex:1;font-family:var(--f-sans);font-size:12px;font-weight:500;background:var(--paper);color:var(--ink-2);border:none;border-right:1px solid var(--rule-2);padding:9px 6px;cursor:pointer;transition:.14s;}
+.seg button:last-child{border-right:none;}
+.seg button.on{background:var(--ink);color:var(--paper);}
+.seg button.on.warn{background:var(--amber);color:#231a05;}
+.hint{font-size:12.5px;color:var(--ink-2);margin-top:16px;line-height:1.55;}
+.hint b{font-weight:600;color:var(--ink);}
+.read .top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;}
+.read .klass{font-size:19px;font-weight:600;letter-spacing:-.01em;} .read .klass.warn{color:var(--amber);}
+.read .sgn{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);}
+.vrow{display:flex;align-items:baseline;justify-content:space-between;padding:11px 0;border-top:1px solid var(--rule);gap:16px;}
+.vrow:first-of-type{border-top:none;}
+.vrow .lab{font-size:12px;color:var(--ink-2);}
+.vrow .val{font-family:var(--f-num);font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1;text-align:right;}
+.vrow .val.warn{color:var(--amber);}
+.vrow .val.big{font-size:26px;}
+.note{margin-top:18px;padding-top:16px;border-top:1px solid var(--rule);font-size:12.5px;color:var(--ink-3);line-height:1.55;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mat">
+    <div class="stage" id="stage" role="img" aria-label="Magnetic field lines">
+      <canvas id="cv"></canvas>
+      <span class="slab tl">magnetic field · one plane</span>
+      <span class="slab tr" id="modeLab">dipole</span>
+      <span class="slab bl" id="hintLab">field lines close on themselves</span>
+    </div>
+    <div class="matcap">
+      <span>Fig. — field lines seeded at each north pole; a lone pole has no return path</span>
+      <span><b id="stat">∇·B = 0</b></span>
+    </div>
+  </div>
+
+  <div class="appa">
+    <div class="panel">
+      <p class="plab">Configuration</p>
+      <div class="seg" id="seg">
+        <button data-m="dipole" class="on">Dipole</button>
+        <button data-m="split">Cut it</button>
+        <button data-m="mono" class="warn">Lone pole</button>
+      </div>
+      <p class="hint" id="explain"><b>A magnet has two poles.</b> The field lines leave the north pole and curve back into the south — every line closes. There is no end where they simply stop.</p>
+    </div>
+    <div class="panel read">
+      <div class="top"><span class="klass" id="klass">Allowed</span><span class="sgn" id="law">Gauss's law holds</span></div>
+      <div class="vrow"><span class="lab">Divergence ∇·B</span><span class="val big" id="div">0</span></div>
+      <div class="vrow"><span class="lab">Net flux through the loop</span><span class="val" id="flux">0</span></div>
+      <div class="vrow"><span class="lab">Isolated poles</span><span class="val" id="iso">0</span></div>
+      <p class="note" id="note">Cut a magnet and you get two magnets, each with its own north and south. Cut those and you get four. You never reach a single pole — that's ∇·B = 0, and it has no known exception.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var stage=document.getElementById('stage'),cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+var TAU=Math.PI*2;
+var COL={line:'#7f93a6',esc:'#e0a63a',pos:'#4f6fd0',neg:'#9a9aa2',grid:'#242428',ink:'#8a857a',loop:'#3fa896'};
+var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var mode='dipole', t=0;
+
+function sources(m){
+  if(m==='dipole') return [{x:0,y:0.42,q:1},{x:0,y:-0.42,q:-1}];
+  if(m==='split')  return [{x:-0.55,y:0.34,q:1},{x:-0.55,y:-0.34,q:-1},{x:0.55,y:0.34,q:1},{x:0.55,y:-0.34,q:-1}];
+  return [{x:0,y:0,q:1}]; // lone pole
+}
+function field(x,y,src){var fx=0,fy=0;for(var i=0;i<src.length;i++){var s=src[i],dx=x-s.x,dy=y-s.y,r2=dx*dx+dy*dy+1e-4,r=Math.sqrt(r2),inv=s.q/(r2*r);fx+=dx*inv;fy+=dy*inv;}return[fx,fy];}
+
+var lines=[];
+function computeLines(){
+  var src=sources(mode),neg=src.filter(function(s){return s.q<0;}),lines2=[];
+  src.filter(function(s){return s.q>0;}).forEach(function(s){
+    for(var k=0;k<18;k++){
+      var a=k/18*TAU, px=s.x+0.05*Math.cos(a), py=s.y+0.05*Math.sin(a), pts=[[px,py]], escaped=true;
+      for(var i=0;i<820;i++){
+        var f=field(px,py,src),m=Math.hypot(f[0],f[1]); if(m<1e-7)break;
+        px+=f[0]/m*0.012; py+=f[1]/m*0.012; pts.push([px,py]);
+        if(Math.abs(px)>1.5||Math.abs(py)>1.5){escaped=true;break;}
+        var hit=false; for(var n=0;n<neg.length;n++){ if(Math.hypot(px-neg[n].x,py-neg[n].y)<0.06){hit=true;break;} }
+        if(hit){escaped=false;break;}
+      }
+      lines2.push({pts:pts,escaped:escaped});
+    }
+  });
+  lines=lines2;
+}
+
+var W=0,H=0,cx=0,cy=0,sc=0;
+function resize(){var r=stage.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);
+  W=Math.round(r.width*dpr);H=Math.round(r.height*dpr);cv.width=W;cv.height=H;cv.style.width=r.width+'px';cv.style.height=r.height+'px';
+  cx=W/2;cy=H/2;sc=Math.min(W,H)*0.5/1.35;}
+window.addEventListener('resize',resize);
+function X(wx){return cx+wx*sc;} function Y(wy){return cy-wy*sc;}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);t+=1;
+  var src=sources(mode);
+  // faint enclosing loop (Gaussian surface)
+  ctx.strokeStyle=COL.grid;ctx.lineWidth=1;ctx.setLineDash([4,5]);ctx.globalAlpha=.6;
+  ctx.beginPath();ctx.arc(cx,cy,sc*1.02,0,TAU);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
+  // field lines
+  for(var i=0;i<lines.length;i++){
+    var L=lines[i],p=L.pts; if(p.length<2)continue;
+    var isMono=(mode==='mono');
+    ctx.strokeStyle=isMono?COL.esc:COL.loop;ctx.globalAlpha=isMono?.8:.6;ctx.lineWidth=isMono?1.5:1.3;
+    ctx.beginPath();ctx.moveTo(X(p[0][0]),Y(p[0][1]));
+    for(var j=1;j<p.length;j++)ctx.lineTo(X(p[j][0]),Y(p[j][1]));
+    ctx.stroke();
+    // travelling arrowhead
+    var idx=Math.floor((t*1.4+i*23)%p.length); if(idx>2&&idx<p.length-1){
+      var a0=p[idx-1],a1=p[idx],ang=Math.atan2(-(a1[1]-a0[1]),(a1[0]-a0[0]));
+      var ax=X(a1[0]),ay=Y(a1[1]);ctx.fillStyle=isMono?COL.esc:COL.loop;ctx.globalAlpha=.9;
+      ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax-6*Math.cos(ang-0.4),ay+6*Math.sin(ang-0.4));ctx.lineTo(ax-6*Math.cos(ang+0.4),ay+6*Math.sin(ang+0.4));ctx.closePath();ctx.fill();
+    }
+  }
+  ctx.globalAlpha=1;
+  // poles
+  ctx.font='600 '+(12*(window.devicePixelRatio>1?2:1))+'px Archivo,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  for(var s=0;s<src.length;s++){var q=src[s];
+    ctx.fillStyle=q.q>0?COL.pos:COL.neg;ctx.globalAlpha=1;
+    ctx.beginPath();ctx.arc(X(q.x),Y(q.y),8,0,TAU);ctx.fill();
+    ctx.fillStyle='#0e0e10';ctx.fillText(q.q>0?'N':'S',X(q.x),Y(q.y)+0.5);
+  }
+  if(!reduced)requestAnimationFrame(draw);
+}
+
+var elMode=document.getElementById('modeLab'),elHint=document.getElementById('hintLab'),elStat=document.getElementById('stat'),
+    elKlass=document.getElementById('klass'),elLaw=document.getElementById('law'),elDiv=document.getElementById('div'),
+    elFlux=document.getElementById('flux'),elIso=document.getElementById('iso'),elExplain=document.getElementById('explain'),elNote=document.getElementById('note');
+var TXT={
+  dipole:{lab:'dipole',hint:'field lines close on themselves',stat:'∇·B = 0',klass:'Allowed',warn:false,law:"Gauss's law holds",div:'0',flux:'0',iso:'0',
+    explain:'<b>A magnet has two poles.</b> The lines leave the north pole and curve back into the south — every one closes. There is no end where they simply stop.',
+    note:'Cut a magnet and you get two magnets, each with its own north and south. You never reach a single pole — that is ∇·B = 0, with no known exception.'},
+  split:{lab:'cut in two',hint:'still two poles apiece',stat:'∇·B = 0',klass:'Allowed',warn:false,law:"Gauss's law holds",div:'0',flux:'0',iso:'0',
+    explain:'<b>Cut the magnet.</b> You do not get a north and a south in separate hands — you get two whole magnets, each with its own pair. Cut again and it doubles. The single pole never appears.',
+    note:'Halving forever never isolates a pole. That is what ∇·B = 0 means, drawn out: the north and south are not parts you can separate.'},
+  mono:{lab:'lone pole — forbidden',hint:'lines escape and never return',stat:'∇·B ≠ 0',klass:'Forbidden',warn:true,law:'Gauss’s law broken by hand',div:'≠ 0',flux:'4πq',iso:'1',
+    explain:'<b>The lone pole.</b> Drop a single north with no south and the lines pour out and never come back — a source with nothing to sink into. Real magnetism forbids this: it is the one term the field cannot hold.',
+    note:'A magnetic monopole would make ∇·B ≠ 0 and would quantize electric charge (Dirac). None has ever been found — this is the object drawn anyway.'}
+};
+function setMode(m){
+  mode=m;computeLines();var d=TXT[m];
+  elMode.textContent=d.lab;elHint.textContent=d.hint;elStat.textContent=d.stat;
+  elKlass.textContent=d.klass;elKlass.classList.toggle('warn',d.warn);
+  elLaw.textContent=d.law;elDiv.textContent=d.div;elDiv.classList.toggle('warn',d.warn);
+  elFlux.textContent=d.flux;elFlux.classList.toggle('warn',d.warn);elIso.textContent=d.iso;elIso.classList.toggle('warn',d.warn);
+  elExplain.innerHTML=d.explain;elNote.textContent=d.note;
+  document.querySelectorAll('#seg button').forEach(function(b){b.classList.toggle('on',b.dataset.m===m);});
+}
+document.getElementById('seg').addEventListener('click',function(e){var b=e.target.closest('button');if(b)setMode(b.dataset.m);});
+resize();setMode('dipole');draw();
+})();
+</script>
+</body>
+</html>

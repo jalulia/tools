@@ -64,6 +64,8 @@ Shell.registerManifest({
     { id: 'motion-kinetic',     title: 'Motion & kinetic',   order: 23 },
     { id: 'layout-systems',     title: 'Layout systems',     order: 24 },
     { id: 'in-situ',            title: 'In situ',            order: 25 },
+    { id: 'excluded-terms',     title: 'Excluded terms',     order: 16,
+      note: 'Effects a field is assumed to forbid. Each entry builds the excluded term by hand and grades it: allowed after all, genuinely forbidden, or merely speculative.' },
     { id: 'unfiled',            title: 'Unfiled',            order: 99 }
   ],
 
@@ -694,6 +696,11 @@ Shell.registerManifest({
     'mir-20',
     'mir-21',
     'mir-22',
+
+    // EXCLUDED TERMS · effects a field is assumed to forbid (X-series)
+    'three-rays-not-two',
+    'two-poles-never-one',
+    'one-sign-never-two',
 
     // CANDIDATE TECHNIQUES · appended by index-tools.mjs --write
     { id: 'master-limiter-driver', title: 'Master compressor + limiter as driver',
