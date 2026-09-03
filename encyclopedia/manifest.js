@@ -147,7 +147,7 @@ Shell.registerManifest({
         "Signatures are fineliner and never starve — a pen is not a press.",
         "No raster on a drawing sheet. If it needs grain to look finished it is not finished."
       ],
-      entries: ["c5-spec-sheet", "crx01-instrument-typology", "birefringent-ray-bench"] },
+      entries: ["c5-spec-sheet", "crx01-instrument-typology", "birefringent-ray-bench", "fidelity-lotus-tinytv"] },
     { id: "atmospheric", title: "Atmospheric field",
       summary: "Colour fields painted small and upscaled, where the upscale is the blur and the grain is the emulsion. The picture and the type share one film.",
       palette: ["#e7e3d9", "#1a1815", "#2b57d6", "#dcd9d1", "#0a0a0a"],
@@ -596,6 +596,7 @@ Shell.registerManifest({
     'b5-brand-guide-grid',
     'crx01-instrument-typology',
     'birefringent-ray-bench',
+    'fidelity-lotus-tinytv',
     'c3-kinetic-type',
     'c4-ribbon-type',
     'e2-modular-grid',
