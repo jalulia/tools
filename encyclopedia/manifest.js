@@ -147,7 +147,7 @@ Shell.registerManifest({
         "Signatures are fineliner and never starve — a pen is not a press.",
         "No raster on a drawing sheet. If it needs grain to look finished it is not finished."
       ],
-      entries: ["c5-spec-sheet", "crx01-instrument-typology"] },
+      entries: ["c5-spec-sheet", "crx01-instrument-typology", "birefringent-ray-bench"] },
     { id: "atmospheric", title: "Atmospheric field",
       summary: "Colour fields painted small and upscaled, where the upscale is the blur and the grain is the emulsion. The picture and the type share one film.",
       palette: ["#e7e3d9", "#1a1815", "#2b57d6", "#dcd9d1", "#0a0a0a"],
@@ -487,7 +487,7 @@ Shell.registerManifest({
       section: 'techniques', status: 'canonical', stub: true,
       layer: 'IMAGE FORMATION',
       description: 'Painterly compositing as an ordered chain. The order is the content.',
-      produces: ['paper-tooth'],
+      produces: ['watercolour-wash', 'granulation', 'cut-paper-edge', 'edge-bloom', 'paper-tooth'],
       governed_by: ['composing-computational-material-systems'],
       tests: {
         shared_cause: 'One landscape state (band index, coverage, humidity) drives every pass — colour, tooth, bloom and pooling all read from the same field.',
@@ -595,6 +595,7 @@ Shell.registerManifest({
     'c2-style-guide',
     'b5-brand-guide-grid',
     'crx01-instrument-typology',
+    'birefringent-ray-bench',
     'c3-kinetic-type',
     'c4-ribbon-type',
     'e2-modular-grid',
@@ -708,36 +709,65 @@ Shell.registerManifest({
       lane: 'audio',
       description: 'PROPOSED BY TOOL — master-limiter is used by 5 explorations (cathedral-reverb, ki-soundscape-bands, shepard-risset, buzz-generator) with no technique above it. The audio-lane lesson would be about how master-limiter decides X across those instances. Julia rules by editing this stub.',
       produces: ['master-limiter'],
+      governed_by: ['composing-computational-sound-systems'],
       stub: true },
     { id: 'oklab-ramp-driver', title: 'OKLab colour ramp as driver',
       entity: 'technique', section: 'techniques', status: 'proposed',
       lane: 'canvas2d',
       description: 'PROPOSED BY TOOL — oklab-ramp is used by 4 explorations (w1-seven-pass-band-chain, pm07-molten, e4-masonry-cards, e5-case-card) with no technique above it. The visual-lane lesson would be about how oklab-ramp decides X across those instances. Julia rules by editing this stub.',
       produces: ['oklab-ramp'],
+      governed_by: ['composing-computational-material-systems'],
       stub: true },
     { id: 'mulberry32-driver', title: 'mulberry32(seed) as driver',
       entity: 'technique', section: 'techniques', status: 'proposed',
       lane: 'canvas2d',
       description: 'PROPOSED BY TOOL — mulberry32 is used by 4 explorations (w1-seven-pass-band-chain, b1-photocopy-collage, b2-riso-brush, d4-riso-print-set) with no technique above it. The visual-lane lesson would be about how mulberry32 decides X across those instances. Julia rules by editing this stub.',
       produces: ['mulberry32'],
+      governed_by: ['composing-computational-material-systems'],
       stub: true },
     { id: 'dot-screen-20-driver', title: 'Dot screen · 20° as driver',
       entity: 'technique', section: 'techniques', status: 'proposed',
       lane: 'canvas2d',
       description: 'PROPOSED BY TOOL — dot-screen-20 is used by 4 explorations (b1-photocopy-collage, c1-heavy-ink, d4-riso-print-set, d6-social-tiles) with no technique above it. The visual-lane lesson would be about how dot-screen-20 decides X across those instances. Julia rules by editing this stub.',
       produces: ['dot-screen-20'],
+      governed_by: ['components-craft'],
       stub: true },
     { id: 'fbm-noise-driver', title: 'fBm value noise as driver',
       entity: 'technique', section: 'techniques', status: 'proposed',
       lane: 'canvas2d',
       description: 'PROPOSED BY TOOL — fbm-noise is used by 3 explorations (w2-depth-aware-dither, w3-hillshade-and-flow, e4-masonry-cards) with no technique above it. The visual-lane lesson would be about how fbm-noise decides X across those instances. Julia rules by editing this stub.',
       produces: ['fbm-noise'],
+      governed_by: ['composing-computational-material-systems'],
       stub: true },
     { id: 'banded-burst-driver', title: 'Banded noise burst as driver',
       entity: 'technique', section: 'techniques', status: 'proposed',
       lane: 'audio',
       description: 'PROPOSED BY TOOL — banded-burst is used by 3 explorations (cathedral-reverb, buzz-generator, crowd-and-dither-shared-cause) with no technique above it. The audio-lane lesson would be about how banded-burst decides X across those instances. Julia rules by editing this stub.',
       produces: ['banded-burst'],
+      governed_by: ['composing-computational-sound-systems'],
       stub: true },
+
+    /* ── Gardener · optics territory. A refracting interface bends a parallel
+       sheet of light; brightness on the floor is 1/|det J| of the ray map, so
+       rays pile onto the fold set (the caustic web) and starve in the voids.
+       This closes the edge-bloom orphan — the atom is the bright refracted edge
+       the caustic emits. Specimen staged at claude/proposals/caustic-refraction-web.
+       (fbm-noise coupling noted in the proposal; `couples` is not yet a manifest
+       key.) status: proposed — Julia rules by editing this stub. ──────────── */
+    { id: 'caustic-refraction-web', title: 'Caustic refraction web',
+      order: 2035, lane: 'canvas2d', entity: 'technique',
+      section: 'techniques', status: 'proposed', stub: true,
+      layer: 'MATERIAL RESPONSE',
+      description: 'A wavy interface refracts a sheet of light; where the ray map folds, light piles into the bright caustic web. One height field, all the folds and voids.',
+      governed_by: ['composing-computational-material-systems'],
+      produces: ['edge-bloom'],
+      tests: {
+        shared_cause: 'A single seeded height field h(x,y) drives the whole ray map P = (x,y) + κ·∇h; the fold caustics and the divergence voids are both consequences of that one field.',
+        distinct_job: 'The folds emit the bright edge (edge-bloom); the voids read as the dark ground. Different consequences, one map.',
+        order: 'Refract first (accumulate the ray map), then read intensity as 1/|det J|. Painting bright lines directly, without the map, is decoration with no cause.',
+        removal_test: 'Set κ to zero: the map is the identity and the plate is a flat grey — no folds, no web. The caustic exists only because the interface bends the rays.',
+        overuse: 'Cranking κ past fold-over stacks so many sheets that the web closes into cells and the singularity is lost in ink — the field asked to prove it can do more.'
+      },
+      note: 'Optics territory. The physical cause upstream of edge-bloom: a caustic is a refracted brightness edge. Specimen: claude/proposals/caustic-refraction-web.html (built + rendered, forced-light, tokens-only, survives Mono).' },
 ]
 });

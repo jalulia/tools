@@ -1,0 +1,268 @@
+<!doctype html>
+<!--
+  A5 · birefringent-ray-bench  ·  style:technical-document (WILDCARD)
+  Encyclopedia specimen — proposed. Governed by composing-computational-material-systems
+  (candidate: composing-optical-systems). Drop-in for jalulia/tools/encyclopedia.
+
+  PASS 0 · DECOMPOSITION
+    substrate ............ screen-native technical plate (NO print process, NO grain — doc 05 §5)
+    reproduction ......... none. crisp hairline vector, drafting language, chrome-native.
+    type system .......... Fraunces (display) / Archivo (label) / JetBrains Mono (spec) + fallbacks
+    hardware ............. none (screen piece)
+    layout skeleton ...... masthead caption · optical-axis figure (source→P→calcite→A→image) · dimension band · colophon
+    the reflexive idea ... the plate draws the CONDITIONS under which Plate 01's colour exists.
+                           "the image is in the crossing, not the crystal" — an apparatus for seeing seeing.
+    accent rule .......... one accent = interactive only (the ray you select). Mono → accent collapses to ink;
+                           drawing still fully reads as line art. No information dies in B&W.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>A5 · Birefringent ray-bench</title>
+<!-- Exactly one style file: it owns the technical-doc token vocabulary and the
+     self-hosted Fraunces / Archivo / JetBrains Mono faces. -->
+<link rel="stylesheet" href="../_styles/technical-doc.css">
+<style>
+  /* This lens owns its LAYOUT css; colour + type come from technical-doc.css tokens.
+     Drawing ink = --c-ink; construction = --c-line-2 / --c-ink-3; one accent = --c-accent. */
+  :root{ --stroke-w:1.4; }
+  html,body{ background:#fff; }
+  body{ width:1100px; margin:0 auto; color:var(--c-ink); font-family:var(--f-ui); -webkit-font-smoothing:antialiased; }
+
+  #a5-rb{ max-width:1040px; margin:0 auto; padding:34px 30px 40px; background:var(--c-surface); }
+  #a5-rb *{ box-sizing:border-box; }
+
+  /* masthead / plate caption — the "01 · WEB · BROWSER" language */
+  #a5-rb .plate-cap{ display:flex; align-items:baseline; gap:14px; border-bottom:var(--stroke-w) solid var(--c-ink); padding-bottom:10px; }
+  #a5-rb .plate-id{ font-family:var(--f-mono); font-size:12px; letter-spacing:.16em; color:var(--c-ink); text-transform:uppercase; white-space:nowrap; }
+  #a5-rb .plate-ttl{ font-family:var(--f-serif); font-weight:600; font-size:26px; line-height:1; letter-spacing:-.01em; }
+  #a5-rb .plate-badge{ margin-left:auto; font-family:var(--f-mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--c-ink-2); border:1px solid var(--c-line-2); border-radius:2px; padding:3px 7px; white-space:nowrap; }
+  #a5-rb .plate-sub{ font-family:var(--f-ui); font-size:13px; color:var(--c-ink-2); margin:9px 0 4px; max-width:74ch; line-height:1.45; }
+
+  /* control row — the accent lives ONLY here + in the highlighted ray */
+  #a5-rb .ctl{ display:flex; align-items:center; gap:8px; margin:16px 0 6px; }
+  #a5-rb .ctl-lab{ font-family:var(--f-mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--c-ink-3); margin-right:2px; }
+  #a5-rb .seg{ font-family:var(--f-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--c-ink-2);
+    background:var(--c-surface); border:1px solid var(--c-line-2); border-radius:2px; padding:5px 11px; cursor:pointer; }
+  #a5-rb .seg[aria-pressed="true"]{ color:var(--c-page); background:var(--c-accent); border-color:var(--c-accent); }
+
+  #a5-rb figure{ margin:6px 0 0; border:var(--stroke-w) solid var(--c-ink); background:var(--c-surface); }
+  #a5-rb svg{ display:block; width:100%; height:auto; }
+
+  /* SVG semantic classes → tokens */
+  .axis      { stroke:var(--c-line-2); stroke-width:1; stroke-dasharray:2 5; }
+  .constr    { stroke:var(--c-line-2); stroke-width:1; }
+  .constr-d  { stroke:var(--c-line-2); stroke-width:1; stroke-dasharray:3 3; }
+  .glass     { fill:none; stroke:var(--c-ink); stroke-width:1.4; }
+  .glass-fill{ fill:var(--c-sunken); stroke:var(--c-ink); stroke-width:1.4; }
+  .hatch     { stroke:var(--c-ink); stroke-width:.9; }
+  .ray       { fill:none; stroke:var(--c-ink); stroke-width:1.5; }
+  .ray-e     { fill:none; stroke:var(--c-ink); stroke-width:1.5; stroke-dasharray:7 4; }
+  .ray-hi    { stroke:var(--c-accent); stroke-width:2.6; }        /* interactive highlight */
+  .lead      { stroke:var(--c-ink-3); stroke-width:.9; }
+  .dim       { stroke:var(--c-ink-2); stroke-width:1; }
+  .arrowfill { fill:var(--c-ink-2); }
+  .pol-e     { fill:none; stroke:var(--c-ink); stroke-width:1.3; }  /* E-field state glyphs */
+  .pol-dot   { fill:var(--c-ink); }
+  .t-lab     { font-family:var(--f-ui); font-size:12.5px; fill:var(--c-ink); }
+  .t-lab-2   { font-family:var(--f-ui); font-size:11px; fill:var(--c-ink-2); }
+  .t-mono    { font-family:var(--f-mono); font-size:10.5px; letter-spacing:.06em; fill:var(--c-ink-2); }
+  .t-mono-k  { font-family:var(--f-mono); font-size:11px; letter-spacing:.08em; fill:var(--c-ink); }
+  .t-serif-i { font-family:var(--f-serif); font-style:italic; font-size:15px; fill:var(--c-ink); }
+
+  #a5-rb .colophon{ display:flex; gap:16px; margin-top:22px; padding-top:12px; border-top:1px solid var(--c-line-2); }
+  #a5-rb .col-mark{ font-family:var(--f-serif); font-style:italic; font-size:15px; color:var(--c-ink); white-space:nowrap; }
+  #a5-rb .col-txt{ font-family:var(--f-ui); font-size:12.5px; color:var(--c-ink-2); line-height:1.5; max-width:70ch; }
+  #a5-rb .meta-row{ display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:14px; font-family:var(--f-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--c-ink-3); }
+  #a5-rb .meta-row b{ color:var(--c-ink-2); font-weight:500; }
+</style>
+</head>
+<body>
+<section id="a5-rb">
+  <div class="plate-cap">
+    <span class="plate-id">A5 · OPTICS</span>
+    <span class="plate-ttl">Birefringent Ray-Bench</span>
+    <span class="plate-badge">status: proposed</span>
+  </div>
+  <p class="plate-sub">An apparatus for seeing seeing. A uniaxial crystal splits one polarized ray into an
+    <em>ordinary</em> and an <em>extraordinary</em> ray; crossed polarizers recombine their components. The plate
+    draws the conditions under which Plate&nbsp;01’s interference colour exists at all.</p>
+
+  <div class="ctl" role="group" aria-label="Highlight ray path">
+    <span class="ctl-lab">trace</span>
+    <button class="seg" data-ray="o" aria-pressed="false">ordinary&nbsp;·&nbsp;o</button>
+    <button class="seg" data-ray="e" aria-pressed="false">extraordinary&nbsp;·&nbsp;e</button>
+    <button class="seg" data-ray="both" aria-pressed="true">both</button>
+  </div>
+
+  <figure>
+    <svg viewBox="0 210 1040 322" role="img" aria-label="Optical bench: source, polarizer, calcite crystal splitting ordinary and extraordinary rays, crossed analyzer, image plane">
+      <!-- optical axis (construction) -->
+      <line class="axis" x1="30" y1="300" x2="1010" y2="300"/>
+
+      <!-- ============ SOURCE ============ -->
+      <g>
+        <circle class="glass" cx="72" cy="300" r="15"/>
+        <!-- radiating unpolarized ticks -->
+        <g class="hatch">
+          <line x1="72" y1="277" x2="72" y2="270"/><line x1="72" y1="330" x2="72" y2="323"/>
+          <line x1="49" y1="300" x2="42" y2="300"/>
+          <line x1="56" y1="284" x2="51" y2="279"/><line x1="88" y1="284" x2="93" y2="279"/>
+          <line x1="56" y1="316" x2="51" y2="321"/><line x1="88" y1="316" x2="93" y2="321"/>
+        </g>
+        <text class="t-mono" x="72" y="248" text-anchor="middle">SOURCE</text>
+        <text class="t-mono" x="72" y="262" text-anchor="middle" style="fill:var(--c-ink-3)">unpolarized</text>
+      </g>
+
+      <!-- source → polarizer -->
+      <line class="ray" x1="88" y1="300" x2="210" y2="300"/>
+
+      <!-- ============ POLARIZER P (axis vertical, 0°) ============ -->
+      <g>
+        <rect class="glass-fill" x="210" y="238" width="13" height="124" rx="1.5"/>
+        <g class="hatch"><!-- vertical transmission axis -->
+          <line x1="216.5" y1="246" x2="216.5" y2="354"/>
+        </g>
+        <text class="t-mono-k" x="216" y="228" text-anchor="middle">P</text>
+        <text class="t-mono" x="216" y="382" text-anchor="middle">POLARIZER</text>
+        <text class="t-mono" x="216" y="395" text-anchor="middle" style="fill:var(--c-ink-3)">axis ‖ 0°</text>
+        <!-- E-state after P: vertical double arrow -->
+        <g transform="translate(283,300)">
+          <line class="pol-e" x1="0" y1="-16" x2="0" y2="16"/>
+          <path class="pol-e" d="M -4 -12 L 0 -17 L 4 -12"/><path class="pol-e" d="M -4 12 L 0 17 L 4 12"/>
+          <text class="t-mono" x="0" y="34" text-anchor="middle" style="fill:var(--c-ink-3)">E</text>
+        </g>
+      </g>
+
+      <!-- polarizer → crystal (single polarized ray) -->
+      <line class="ray" x1="223" y1="300" x2="372" y2="300"/>
+
+      <!-- ============ CALCITE (uniaxial −) ============ -->
+      <g>
+        <!-- sheared rhomb -->
+        <path class="glass-fill" d="M 372 246 L 560 246 L 528 356 L 340 356 Z"/>
+        <!-- optic axis c (dashed, oblique) -->
+        <line class="constr-d" x1="392" y1="345" x2="512" y2="258"/>
+        <text class="t-serif-i" x="516" y="256">c</text>
+        <text class="t-mono-k" x="450" y="234" text-anchor="middle">CALCITE</text>
+        <text class="t-mono" x="450" y="376" text-anchor="middle" style="fill:var(--c-ink-3)">uniaxial (−) · optic axis c</text>
+      </g>
+
+      <!-- ordinary ray: straight through, n_o = 1.658 -->
+      <path class="ray o-ray" d="M 372 300 L 528 300 L 720 300"/>
+      <!-- extraordinary ray: walk-off inside, exits parallel & displaced (Δ exaggerated) -->
+      <path class="ray-e e-ray" d="M 372 300 L 528 268 L 720 268"/>
+
+      <!-- polarization-state glyphs on the two rays (between crystal & analyzer) -->
+      <!-- o-ray: E ⟂ optic-axis plane → dot-in-circle (out of page) -->
+      <g transform="translate(628,300)">
+        <circle class="pol-e" cx="0" cy="0" r="9"/><circle class="pol-dot" cx="0" cy="0" r="2.1"/>
+        <text class="t-mono" x="0" y="26" text-anchor="middle">o · nₒ 1.658</text>
+      </g>
+      <!-- e-ray: E in principal plane → double arrow (slanted) -->
+      <g transform="translate(628,268)">
+        <line class="pol-e" x1="-11" y1="6" x2="11" y2="-6"/>
+        <path class="pol-e" d="M 6 -9 L 12 -7 L 9 -1"/><path class="pol-e" d="M -6 9 L -12 7 L -9 1"/>
+        <text class="t-mono" x="0" y="-16" text-anchor="middle">e · nₑ 1.486</text>
+      </g>
+      <!-- walk-off angle marker at crystal exit -->
+      <path class="constr" d="M 562 300 A 30 30 0 0 0 560 290" fill="none"/>
+      <text class="t-mono" x="566" y="284" text-anchor="middle" style="fill:var(--c-ink-3)">ρ ≈ 6.2°</text>
+
+      <!-- ============ ANALYZER A (crossed, 90°) ============ -->
+      <g>
+        <rect class="glass-fill" x="720" y="238" width="13" height="124" rx="1.5"/>
+        <g class="hatch"><!-- horizontal transmission axis (crossed to P) -->
+          <line x1="724" y1="284" x2="729" y2="284"/><line x1="722" y1="300" x2="731" y2="300"/><line x1="724" y1="316" x2="729" y2="316"/>
+        </g>
+        <text class="t-mono-k" x="726" y="228" text-anchor="middle">A</text>
+        <text class="t-mono" x="726" y="382" text-anchor="middle">ANALYZER</text>
+        <text class="t-mono" x="726" y="395" text-anchor="middle" style="fill:var(--c-ink-3)">axis ⟂ P · 90°</text>
+      </g>
+
+      <!-- analyzer → image plane: recombined components interfere -->
+      <line class="ray" x1="733" y1="284" x2="898" y2="284"/>
+
+      <!-- ============ IMAGE PLANE ============ -->
+      <g>
+        <line class="glass" x1="900" y1="240" x2="900" y2="360"/>
+        <g class="constr"><line x1="900" y1="240" x2="912" y2="228"/><line x1="900" y1="300" x2="912" y2="288"/><line x1="900" y1="360" x2="912" y2="348"/></g>
+        <text class="t-mono" x="900" y="382" text-anchor="middle">IMAGE PLANE</text>
+        <text class="t-mono-k" x="900" y="220" text-anchor="middle">Γ = d·Δn</text>
+      </g>
+
+      <!-- ============ DIMENSION BAND — crystal thickness d ============ -->
+      <g>
+        <line class="constr-d" x1="372" y1="356" x2="372" y2="430"/>
+        <line class="constr-d" x1="528" y1="356" x2="528" y2="430"/>
+        <line class="dim" x1="372" y1="422" x2="528" y2="422"/>
+        <path class="arrowfill" d="M 372 422 l 9 -3.4 v 6.8 z"/>
+        <path class="arrowfill" d="M 528 422 l -9 -3.4 v 6.8 z"/>
+        <text class="t-serif-i" x="450" y="416" text-anchor="middle">d</text>
+        <text class="t-mono" x="450" y="444" text-anchor="middle" style="fill:var(--c-ink-3)">retardation Γ = d (nₑ − nₒ)</text>
+      </g>
+
+      <!-- ============ DIMENSION — lateral displacement Δ (exaggerated) ============ -->
+      <g>
+        <line class="constr-d" x1="700" y1="300" x2="762" y2="300"/>
+        <line class="constr-d" x1="700" y1="268" x2="762" y2="268"/>
+        <line class="dim" x1="752" y1="300" x2="752" y2="268"/>
+        <path class="arrowfill" d="M 752 300 l -3.4 -9 h 6.8 z"/>
+        <path class="arrowfill" d="M 752 268 l -3.4 9 h 6.8 z"/>
+        <text class="t-serif-i" x="770" y="288">Δ</text>
+        <text class="t-mono" x="806" y="256" style="fill:var(--c-ink-3)">Δ exaggerated</text>
+      </g>
+
+      <!-- stage labels along the bottom rule -->
+      <line class="constr" x1="30" y1="486" x2="1010" y2="486"/>
+      <g class="t-mono" style="fill:var(--c-ink-3)" text-anchor="middle">
+        <text x="72"  y="506">I · EMIT</text>
+        <text x="216" y="506">II · POLARIZE</text>
+        <text x="450" y="506">III · SPLIT</text>
+        <text x="726" y="506">IV · CROSS</text>
+        <text x="900" y="506">V · IMAGE</text>
+      </g>
+    </svg>
+  </figure>
+
+  <div class="colophon">
+    <span class="col-mark">Seeing seeing —</span>
+    <span class="col-txt">every other specimen imposes a reproduction process that makes matter <em>appear</em> a way.
+      Here the framing is the specimen: the interference colour of Plate&nbsp;01 exists <em>only</em> between crossed
+      polarizers. The image is in the crossing, not the crystal. This bench is the archive turned reflexive —
+      drawn in the neutral hairline language so the apparatus never becomes the ornament.</span>
+  </div>
+
+  <div class="meta-row">
+    <span><b>entity</b> style:technical-document</span>
+    <span><b>couples</b> crossed-polariser-interference · michel-levy-ramp</span>
+    <span><b>governed_by</b> composing-computational-material-systems</span>
+    <span><b>lane</b> canon-drafting</span>
+    <span><b>status</b> proposed</span>
+  </div>
+</section>
+
+<script>
+  (function(){
+    var root = document.getElementById('a5-rb');
+    var segs = root.querySelectorAll('.seg');
+    var oRay = root.querySelector('.o-ray');
+    var eRay = root.querySelector('.e-ray');
+    function set(which){
+      segs.forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.ray===which ? 'true':'false'); });
+      oRay.classList.toggle('ray-hi', which==='o' || which==='both');
+      eRay.classList.toggle('ray-hi', which==='e' || which==='both');
+      // "both" shows structure without the accent screaming — accent only on single-trace
+      if(which==='both'){ oRay.classList.remove('ray-hi'); eRay.classList.remove('ray-hi'); }
+    }
+    segs.forEach(function(b){ b.addEventListener('click', function(){ set(b.dataset.ray); }); });
+    set('both'); // resting state = neutral full drawing
+  })();
+</script>
+<!-- the only contract a fragment must honour: reports height, announces ready,
+     forwards keys, answers pause/resume. Always the last script. -->
+<script src="../../../learn/fragment-boot.js"></script>
+</body>
+</html>
