@@ -22,6 +22,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const SITE_DIR = join(ROOT, '_site');
 const TEMPLATE = join(__dirname, 'index-template.html');
+const GRABBER = readFileSync(join(__dirname, 'grabber.js'), 'utf8');
 
 // Tools live directly at the repo root as subfolders (e.g. meshviz/, halftone/).
 // We skip well-known non-tool dirs.
@@ -128,7 +129,8 @@ function injectNav(name, meta) {
     galleryLink +
     '<span style="padding:8px 11px;color:#8a8a8a;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + title + '</span>' +
     '</nav>' +
-    "\n<script>(function(){var n=document.getElementById('tools-nav');if(!n)return;n.onmouseenter=function(){n.style.opacity=1};n.onmouseleave=function(){n.style.opacity=.72};})();</script>";
+    "\n<script>(function(){var n=document.getElementById('tools-nav');if(!n)return;n.onmouseenter=function(){n.style.opacity=1};n.onmouseleave=function(){n.style.opacity=.72};})();</script>" +
+    '\n<script>' + GRABBER + '</script>';
   let html = readFileSync(file, 'utf8');
   html = /<\/body>/i.test(html) ? html.replace(/<\/body>/i, nav + '\n</body>') : html + nav;
   writeFileSync(file, html);
