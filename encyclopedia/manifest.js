@@ -769,5 +769,26 @@ Shell.registerManifest({
         overuse: 'Cranking κ past fold-over stacks so many sheets that the web closes into cells and the singularity is lost in ink — the field asked to prove it can do more.'
       },
       note: 'Optics territory. The physical cause upstream of edge-bloom: a caustic is a refracted brightness edge. Specimen: claude/proposals/caustic-refraction-web.html (built + rendered, forced-light, tokens-only, survives Mono).' },
+
+    /* ── Gardener · Material Studies II, housed in the canonical plate frame (run 4).
+       Keyline run separated from per-colour coverage runs; only the ink grammar varies. The
+       keyline pass IS the ink-chain atom (feTurbulence -> feDisplacementMap), so this produces
+       it and closes that orphan. fragment.html = Julia's engine, verbatim. ── */
+    { id: 'keyline-coverage-chain', title: 'Keyline & coverage chain',
+      order: 2040, lane: 'canvas2d', entity: 'technique',
+      section: 'techniques', status: 'proposed', fragment: 'fragment.html', thumb: 'thumb.png',
+      layer: 'IMAGE FORMATION',
+      description: 'Separate the ink run from the per-colour fill runs, then vary only the ink grammar. One keyline (hand-wavered, misregistered), each colour its own coverage plate, grain + tooth to finish.',
+      governed_by: ['components-craft', 'composing-computational-material-systems'],
+      produces: ['ink-chain'],
+      tests: {
+        shared_cause: 'One seed drives the whole sheet: keyline hand-waver, every coverage plate, grain and tooth all read from it.',
+        distinct_job: 'The ink run carries the drawing (one keyline); coverage runs carry colour (one plate per ink); grain and tooth carry the substrate.',
+        order: 'Fills first through their coverage plates, then the ONE keyline shifted off them, then grain, then tooth.',
+        removal_test: 'Remove the misregistration + hand-waver and the plate collapses to grammar (a), clean vector clip-art.',
+        overuse: 'Stacking two ink grammars on one plate is the vibe stack; the four are alternatives, not layers.'
+      },
+      note: 'Material Studies II. Produces ink-chain. fragment.html houses the engine in the canonical plate frame.' },
+
 ]
 });
