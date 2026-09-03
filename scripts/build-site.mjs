@@ -110,6 +110,30 @@ function copyStaticTool(name) {
   });
 }
 
+// Inject a minimal fixed nav chip into a deployed tool's index.html, so every
+// page can get back to the index / gallery and shows where it is — without
+// editing any tool's source. Self-contained inline styles; forced-light.
+function injectNav(name, meta) {
+  const file = join(SITE_DIR, name, 'index.html');
+  if (!existsSync(file)) return;
+  const title = escapeHtml(meta.title || name);
+  const onGallery = name === 'gallery';
+  const galleryLink = onGallery ? '' :
+    '<a href="../gallery/" style="padding:8px 11px;color:#111;text-decoration:none;border-right:1px solid #ececec" title="Gallery">gallery</a>';
+  const nav =
+    '\n<nav id="tools-nav" aria-label="tools navigation" style="position:fixed;left:16px;bottom:16px;z-index:2147483000;display:flex;align-items:stretch;' +
+    "font:500 12px/1.2 -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;" +
+    'background:#fff;color:#111;border:1px solid #d7d7d7;box-shadow:0 2px 10px rgba(0,0,0,.10);border-radius:2px;overflow:hidden;opacity:.72;transition:opacity .15s ease">' +
+    '<a href="../" style="padding:8px 11px;color:#111;text-decoration:none;border-right:1px solid #ececec" title="All tools">◂ tools</a>' +
+    galleryLink +
+    '<span style="padding:8px 11px;color:#8a8a8a;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + title + '</span>' +
+    '</nav>' +
+    "\n<script>(function(){var n=document.getElementById('tools-nav');if(!n)return;n.onmouseenter=function(){n.style.opacity=1};n.onmouseleave=function(){n.style.opacity=.72};})();</script>";
+  let html = readFileSync(file, 'utf8');
+  html = /<\/body>/i.test(html) ? html.replace(/<\/body>/i, nav + '\n</body>') : html + nav;
+  writeFileSync(file, html);
+}
+
 const DL_ICON =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
   '<path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 20h16"/></svg>';
@@ -220,6 +244,8 @@ function main() {
   }
 
   renderIndex(tools);
+  // Minimal cross-site nav on every tool page (not the landing).
+  for (const t of tools) injectNav(t.name, t.meta);
   // Prevent Jekyll processing.
   writeFileSync(join(SITE_DIR, '.nojekyll'), '');
   console.log(`\n✔ site assembled at ${SITE_DIR}`);
