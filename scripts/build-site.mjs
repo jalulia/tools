@@ -111,26 +111,69 @@ function copyStaticTool(name) {
   });
 }
 
-// Inject a minimal fixed nav chip into a deployed tool's index.html, so every
-// page can get back to the index / gallery and shows where it is — without
-// editing any tool's source. Self-contained inline styles; forced-light.
-function injectNav(name, meta) {
+// Inject a global site nav onto every deployed tool page: an always-visible bar
+// (all-tools / gallery / current page) plus an "index" menu that jumps straight
+// to any tool, grouped by section. Self-contained inline styles + script;
+// forced-light. Not applied to the landing page itself.
+function injectNav(name, meta, allTools) {
   const file = join(SITE_DIR, name, 'index.html');
   if (!existsSync(file)) return;
-  const title = escapeHtml(meta.title || name);
+  const curLabel = escapeHtml(meta.title || name);
   const onGallery = name === 'gallery';
-  const galleryLink = onGallery ? '' :
-    '<a href="../gallery/" style="padding:8px 11px;color:#111;text-decoration:none;border-right:1px solid #ececec" title="Gallery">gallery</a>';
-  const nav =
-    '\n<nav id="tools-nav" aria-label="tools navigation" style="position:fixed;left:16px;bottom:16px;z-index:2147483000;display:flex;align-items:stretch;' +
-    "font:500 12px/1.2 -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;" +
-    'background:#fff;color:#111;border:1px solid #d7d7d7;box-shadow:0 2px 10px rgba(0,0,0,.10);border-radius:2px;overflow:hidden;opacity:.72;transition:opacity .15s ease">' +
-    '<a href="../" style="padding:8px 11px;color:#111;text-decoration:none;border-right:1px solid #ececec" title="All tools">◂ tools</a>' +
-    galleryLink +
-    '<span style="padding:8px 11px;color:#8a8a8a;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + title + '</span>' +
-    '</nav>' +
-    "\n<script>(function(){var n=document.getElementById('tools-nav');if(!n)return;n.onmouseenter=function(){n.style.opacity=1};n.onmouseleave=function(){n.style.opacity=.72};})();</script>" +
-    '\n<script>' + GRABBER + '</script>';
+
+  // Jump menu = every visible tool, grouped by section (same order as the index).
+  const SEC_ORDER = ['', 'design systems', 'gallery', 'learn'];
+  const vis = (allTools || []).filter((t) => !t.meta.hidden);
+  const groups = new Map();
+  for (const t of vis) {
+    const k = (t.meta.section || '').trim();
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(t);
+  }
+  const keys = [...groups.keys()].sort((a, b) => {
+    const ia = SEC_ORDER.indexOf(a), ib = SEC_ORDER.indexOf(b);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+  });
+  let items = '';
+  for (const k of keys) {
+    if (k) items += `<div class="tn-sec">${escapeHtml(k)}</div>`;
+    for (const t of groups.get(k)) {
+      const cur = t.name === name ? ' aria-current="page"' : '';
+      items += `<a href="../${encodeURIComponent(t.name)}/"${cur}>${escapeHtml(t.meta.title || t.name)}</a>`;
+    }
+  }
+
+  const galleryChip = onGallery ? '' : '<a class="tn-lnk" href="../gallery/">gallery</a>';
+  const nav = `
+<nav id="tn" aria-label="Site navigation">
+  <a class="tn-lnk tn-home" href="../" title="All tools">◂ tools</a>
+  ${galleryChip}
+  <button id="tn-btn" type="button" aria-expanded="false" aria-controls="tn-menu">index ▾</button>
+  <span class="tn-cur" title="${curLabel}">${curLabel}</span>
+</nav>
+<div id="tn-menu" hidden role="menu" aria-label="Jump to tool">
+  <div class="tn-mhdr">Jump to</div>
+  ${items}
+  <div class="tn-div"></div>
+  <a class="tn-all" href="../">All tools ▸</a>
+</div>
+<style>
+#tn{position:fixed;left:16px;bottom:16px;z-index:2147483000;display:flex;align-items:stretch;font:600 12px/1.2 -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:#fff;color:#111;border:1px solid #cfcfcf;box-shadow:0 3px 14px rgba(0,0,0,.14);border-radius:3px;overflow:hidden}
+#tn a,#tn button{padding:9px 12px;color:#111;text-decoration:none;background:none;border:0;border-right:1px solid #ededed;font:inherit;cursor:pointer;letter-spacing:.02em}
+#tn button:hover,#tn a:hover{background:#f4f4f2}
+#tn .tn-cur{padding:9px 12px;color:#8a8a8a;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-right:0}
+#tn-menu{position:fixed;left:16px;bottom:58px;z-index:2147483000;min-width:250px;max-width:300px;background:#fff;color:#111;border:1px solid #cfcfcf;box-shadow:0 8px 30px rgba(0,0,0,.20);border-radius:4px;padding:6px;font:500 13px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif}
+#tn-menu .tn-mhdr,#tn-menu .tn-sec{font:700 9.5px/1 'Space Mono',ui-monospace,monospace;letter-spacing:.16em;color:#9a9a9a;text-transform:uppercase;padding:9px 10px 5px}
+#tn-menu .tn-sec{padding-top:11px}
+#tn-menu a{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;color:#141414;text-decoration:none;border-radius:3px}
+#tn-menu a:hover{background:#f2f2f0}
+#tn-menu a[aria-current="page"]{background:#111;color:#fff}
+#tn-menu .tn-div{height:1px;background:#ececec;margin:8px 6px}
+#tn-menu .tn-all{color:#666;font-size:12px}
+@media (max-width:520px){#tn .tn-cur{display:none}}
+</style>
+<script>(function(){var b=document.getElementById('tn-btn'),m=document.getElementById('tn-menu');if(!b||!m)return;function set(o){m.hidden=!o;b.setAttribute('aria-expanded',o?'true':'false');}b.addEventListener('click',function(e){e.stopPropagation();set(m.hidden);});document.addEventListener('click',function(e){if(!m.hidden&&!m.contains(e.target)&&e.target!==b)set(false);});document.addEventListener('keydown',function(e){if(e.key==='Escape')set(false);});})();</script>
+<script>${GRABBER}</script>`;
   let html = readFileSync(file, 'utf8');
   html = /<\/body>/i.test(html) ? html.replace(/<\/body>/i, nav + '\n</body>') : html + nav;
   writeFileSync(file, html);
@@ -246,8 +289,8 @@ function main() {
   }
 
   renderIndex(tools);
-  // Minimal cross-site nav on every tool page (not the landing).
-  for (const t of tools) injectNav(t.name, t.meta);
+  // Global cross-site nav on every tool page (not the landing).
+  for (const t of tools) injectNav(t.name, t.meta, tools);
   // Prevent Jekyll processing.
   writeFileSync(join(SITE_DIR, '.nojekyll'), '');
   console.log(`\n✔ site assembled at ${SITE_DIR}`);
