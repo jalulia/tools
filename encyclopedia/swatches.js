@@ -64,6 +64,31 @@
     x.fillStyle = '#f1f1f1'; x.fillRect(0, 0, w, h);
   }
 
+  function hexToRgb(hex) {
+    var n = parseInt(hex.replace('#', ''), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+
+  /* A material swatch is not a colour swatch: it has to show the paper under
+     the pigment, or it reads as a UI placeholder rather than a sample. This
+     fills a region with per-pixel jitter around a base colour — the same
+     move `paperTooth` makes for the substrate atom — so every "flat" fill in
+     a material swatch below actually has tooth in it. */
+  function textureFill(x, w, h, rgb, seed, amp, rx, ry, rw, rh) {
+    rx = rx || 0; ry = ry || 0; rw = rw == null ? w : rw; rh = rh == null ? h : rh;
+    amp = amp == null ? 10 : amp;
+    var rnd = mulberry(seed || 4141);
+    var img = x.getImageData(rx, ry, rw, rh), d = img.data;
+    for (var i = 0; i < d.length; i += 4) {
+      var n = (rnd() - .5) * amp;
+      d[i]     = Math.max(0, Math.min(255, rgb[0] + n));
+      d[i + 1] = Math.max(0, Math.min(255, rgb[1] + n));
+      d[i + 2] = Math.max(0, Math.min(255, rgb[2] + n));
+      d[i + 3] = 255;
+    }
+    x.putImageData(img, rx, ry);
+  }
+
   /* ==========================================================================
      TEXTURE
      ========================================================================== */
@@ -177,10 +202,15 @@
 
   function granulation(cv, p) {
     var g = fit(cv), x = g.x, w = g.w, h = g.h;
-    /* wash first */
+    /* paper first — the settle below needs a toothed ground to settle into,
+       not a flat gradient, or it reads as pepper sprinkled on a UI chip */
+    textureFill(x, w, h, [223, 214, 190], (p && p.seed || 77) + 900, 7);
+    /* wash over the tooth, soft-lit so the tooth survives underneath it */
+    x.globalCompositeOperation = 'soft-light';
     var wash = x.createLinearGradient(0, 0, w, h);
     wash.addColorStop(0, '#e5d9bf'); wash.addColorStop(1, '#c6a679');
     x.fillStyle = wash; x.fillRect(0, 0, w, h);
+    x.globalCompositeOperation = 'source-over';
     /* pigment settle: multiplicative pepper */
     var rnd = mulberry((p && p.seed) || 77);
     var density = (p && p.density) || 160;
@@ -197,12 +227,13 @@
 
   function edgeBloom(cv, p) {
     var g = fit(cv), x = g.x, w = g.w, h = g.h;
-    x.fillStyle = '#efe7d5'; x.fillRect(0, 0, w, h);
+    var seed = (p && p.seed) || 33;
+    textureFill(x, w, h, [239, 231, 213], seed + 900, 9);
     var width = (p && p.width) || 14;
-    var rnd = mulberry((p && p.seed) || 33);
+    var rnd = mulberry(seed);
     /* a wash */
     var mid = h * 0.55;
-    x.fillStyle = '#c7bfa2'; x.fillRect(0, 0, w, mid);
+    textureFill(x, w, Math.ceil(mid), [199, 191, 162], seed + 901, 11);
     /* crest at the edge */
     for (var k = 0; k < width * 4; k++) {
       var t = k / (width * 4);
@@ -328,7 +359,7 @@
 
   function watercolourWash(cv, p) {
     var g = fit(cv), x = g.x, w = g.w, h = g.h;
-    x.fillStyle = '#efece5'; x.fillRect(0, 0, w, h);
+    textureFill(x, w, h, [239, 236, 229], ((p && p.seed) || 501) + 900, 6);
     var wet = (p && p.wet) != null ? p.wet : 0.55;
     var rnd = mulberry((p && p.seed) || 501);
     /* soft blob composited soft-light. Order matters — this is W1 pass 1. */
@@ -378,11 +409,13 @@
 
   function cutPaperEdge(cv, p) {
     var g = fit(cv), x = g.x, w = g.w, h = g.h;
-    x.fillStyle = '#efece5'; x.fillRect(0, 0, w, h);
-    /* two flat colour bands with a hand-scale ridge between them */
-    x.fillStyle = '#c9c1a4'; x.fillRect(0, 0, w, h * 0.5);
-    x.fillStyle = '#8a6d4a'; x.fillRect(0, h * 0.5, w, h * 0.5);
-    var rnd = mulberry((p && p.seed) || 88);
+    var seed = (p && p.seed) || 88;
+    /* two toothed papers, not two flat colour bands — cut paper is still
+       paper, and a solid rect reads as a UI chip rather than a material */
+    var halfH = Math.ceil(h * 0.5);
+    textureFill(x, w, halfH, [201, 193, 164], seed + 900, 13, 0, 0, w, halfH);
+    textureFill(x, w, h - halfH, [138, 109, 74], seed + 901, 15, 0, halfH, w, h - halfH);
+    var rnd = mulberry(seed);
     var ridge = (p && p.ridge) || 1.2;
     x.strokeStyle = '#141210'; x.lineWidth = ridge; x.lineCap = 'round';
     x.beginPath();

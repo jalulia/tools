@@ -121,10 +121,18 @@ ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
 // field demo makes (its 'sun' toggle, default on): a wide, faint radial glow
 // laid down before any band, so the furthest hazed ridges sit inside real
 // backlight instead of a flat gradient.
-const sun = ctx.createRadialGradient(W * 0.78, H * 0.16, 0, W * 0.78, H * 0.16, H * 0.65);
-sun.addColorStop(0, 'rgba(255,246,214,0.5)');
+const sunX = W * 0.78, sunY = H * 0.16, sunR = H * 0.075;
+const sun = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, sunR);
+sun.addColorStop(0, 'rgba(255,250,230,0.95)');
+sun.addColorStop(0.94, 'rgba(255,248,222,0.88)');   // solid to 94% — CANON, do not soften
 sun.addColorStop(1, 'rgba(255,246,214,0)');
 ctx.fillStyle = sun; ctx.fillRect(0, 0, W, H);
+// a much fainter, wider backlight glow — real light around a crisp disc,
+// not a substitute for one
+const glow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, H * 0.55);
+glow.addColorStop(0, 'rgba(255,246,214,0.16)');
+glow.addColorStop(1, 'rgba(255,246,214,0)');
+ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
 
 const PTS = 220;
 
