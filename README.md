@@ -11,7 +11,7 @@ Personal monorepo for small browser-based tools. Everything here opens by double
 
 ### encyclopedia — one archive
 
-- [encyclopedia](./encyclopedia) — one archive of the practice. **File by atom, read by technique.** Techniques (the spine, the front door at `#/techniques`), Atoms (the material shelves at `#/atoms`, banded by *kind* — substrate, process, texture, colour, engine, field, mark, voice, space, bus), Styles (the six declarations from the lens library at `#/styles`), the Sound lane (audio-adapter-backed entries at `#/sound`), Symptoms (anti-patterns and their known failures at `#/symptoms`), the Unfiled queue (`#/unfiled` — imports awaiting a ruling), and the Skills index (`#/skills` — 22 skills across two shelves, only competency rungs get pages). 168 entries in one manifest; the Book of Shaders and the Components lens library folded in as sources at ck-e1. Old routes `tools/book-of-shaders` and `tools/components` redirect to their encyclopedia entries via the shell-level `redirects` map and a soft-redirect page at the folder root.
+- [encyclopedia](./encyclopedia) — one archive of the practice. **File by atom, read by technique.** Techniques (the spine, the front door at `#/techniques`), Atoms (the material shelves at `#/atoms`, banded by *kind* — substrate, process, texture, colour, engine, field, mark, voice, space, bus), Styles (the six declarations from the lens library at `#/styles`), the Sound lane (audio-adapter-backed entries at `#/sound`), Symptoms (anti-patterns and their known failures at `#/symptoms`), the Unfiled queue (`#/unfiled` — imports awaiting a ruling), and the Skills index (`#/skills` — 22 skills across two shelves, only competency rungs get pages). 176 entries in one manifest; the Book of Shaders and the Components lens library folded in as sources at ck-e1. Old routes `tools/book-of-shaders` and `tools/components` redirect to their encyclopedia entries via the shell-level `redirects` map and a soft-redirect page at the folder root.
 - [learn/](./learn) — the shared shell itself. Not a tool: `tool.json` marks it `hidden`, so it never
   appears on the landing page. It holds the tokens, the stylesheet, the router, the four stage adapters
   (glsl, canvas2d, fragment, audio), the fragment contract and the manifest schema. Open `learn/index.html`
@@ -127,14 +127,18 @@ every one to the upstream file's actual terms. That is a lawyer's call, not a re
 ## QA
 
 The acceptance matrix, static checks and axe pass live vendored in `scripts/qa/`. `scripts/qa/matrix.mjs`
-now covers the encyclopedia's every route (~205 hashes: `#/techniques`, `#/atoms`, `#/styles`, `#/sound`,
+now covers the encyclopedia's full manifest-derived route set (`#/techniques`, `#/atoms`, `#/styles`, `#/sound`,
 `#/symptoms`, `#/unfiled`, `#/skills`, plus every `#/technique/<id>`, `#/atom/<id>`, `#/style/<id>`,
 `#/skill/<id>`, `#/entry/<id>` and `#/coupling/<id>`) across the four `index × apparatus` states at 390
-and 1440. Nineteen criteria — PLAN §7's fourteen plus ck-e9's five (governed_by resolves; uses[] resolves
+and 1440. Nineteen criteria — the still-applicable PLAN §7 checks plus ck-e9's nine (governed_by resolves; uses[] resolves
 to an atom; instance_of[] resolves to a technique; every coupling has driver + consequences[]; proposed
 rulings render as PROPOSED; unsorted entries carry their proposed_grade; the audio adapter builds its
 graph without a user gesture; the 74 unsorted show a thumb where one was declared; `#/symptoms` reaches
 every anti-pattern in ≤2 clicks).
+
+The static pass scans the Encyclopedia alongside its shared shell and predecessor sources. The axe pass
+covers ten representative shell states plus every manifest-routable standalone fragment; fragment frames
+are opened directly because their opaque origins correctly prevent the host from inspecting them.
 
 ```
 cd tools && (python3 -m http.server 8123 >/dev/null 2>&1 &)

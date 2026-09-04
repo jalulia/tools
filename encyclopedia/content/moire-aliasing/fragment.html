@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Moiré · sampling made visible</title>
+<link rel="stylesheet" href="../_styles/riso-xerox.css">
+<style>
+  html,body{ width:1100px; min-height:760px; margin:0; background:#fff; }
+  body{ font-family:var(--f-ui); color:var(--c-ink); }
+  *{ box-sizing:border-box; }
+  main{ width:1100px; min-height:760px; padding:32px 38px 28px; background:#f7f3e9; }
+  .runhead{ display:flex; justify-content:space-between; padding-bottom:11px; border-bottom:2px solid var(--c-ink); font:650 10px/1.2 var(--f-mono); letter-spacing:.12em; text-transform:uppercase; }
+  header{ display:grid; grid-template-columns:1fr 410px; gap:46px; padding:22px 0 20px; }
+  h1{ margin:0; max-width:570px; font:400 49px/.9 var(--f-display); letter-spacing:.005em; text-transform:uppercase; }
+  .lede{ align-self:end; margin:0; color:var(--c-ink-2); font-size:14px; line-height:1.48; }
+  .formula{ display:block; margin-top:8px; color:var(--c-ink); font:600 11px/1.35 var(--f-mono); }
+  .plates{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  figure{ margin:0; }
+  .well{ position:relative; border:1px solid #2d2926; background:#fffdf5; overflow:hidden; }
+  canvas{ display:block; width:100%; height:224px; }
+  .angle{ position:absolute; top:8px; left:8px; padding:4px 6px; background:#f7f3e9e8; border:1px solid #2d2926; font:700 10px/1 var(--f-mono); letter-spacing:.05em; }
+  figcaption{ min-height:91px; padding:11px 2px 0; color:var(--c-ink-2); font-size:12px; line-height:1.4; }
+  figcaption b{ display:block; margin-bottom:4px; color:var(--c-ink); font:700 10px/1.3 var(--f-mono); letter-spacing:.09em; text-transform:uppercase; }
+  .control{ display:grid; grid-template-columns:170px 1fr 250px; gap:18px; align-items:center; margin-top:22px; padding:14px 16px; background:#fffdf5; border:1px solid #2d2926; }
+  .control label,.readout{ font:700 10px/1.3 var(--f-mono); letter-spacing:.08em; text-transform:uppercase; }
+  input[type=range]{ width:100%; accent-color:var(--c-red); }
+  .readout{ text-align:right; color:#a92a24; }
+  footer{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:22px; margin-top:20px; padding-top:16px; border-top:1px solid #2d2926; color:var(--c-ink-2); font-size:11.5px; line-height:1.45; }
+  footer b{ display:block; margin-bottom:4px; color:var(--c-ink); font:700 10px/1.3 var(--f-mono); letter-spacing:.08em; text-transform:uppercase; }
+</style>
+</head>
+<body>
+<main>
+  <div class="runhead"><span>Technique · image formation</span><span>two rulings · one emergent beat</span></div>
+  <header>
+    <h1>Moiré is the sampling made visible</h1>
+    <p class="lede">Each plate contains only a periodic ruling. Cyan stays fixed; red turns. Their overprint produces a slower density envelope that exists in neither source.<span class="formula">beat pitch P = p / (2 sin(θ/2))</span></p>
+  </header>
+
+  <section class="plates" aria-label="Moiré angle comparison">
+    <figure><div class="well"><canvas id="control" width="245" height="224"></canvas><span class="angle">0°</span></div><figcaption><b>01 · coincident</b>Both rulings occupy the same pixels. The beat pitch is infinite; no travelling band appears.</figcaption></figure>
+    <figure><div class="well"><canvas id="live" width="245" height="224"></canvas><span class="angle" id="liveAngle">3.2°</span></div><figcaption><b>02 · broad beat</b>A small turn creates an envelope much larger than the 12 px carrier pitch.</figcaption></figure>
+    <figure><div class="well"><canvas id="tight" width="245" height="224"></canvas><span class="angle">8°</span></div><figcaption><b>03 · carrier returns</b>At a wider angle the beat collapses toward the original ruling and reads as cross-hatch.</figcaption></figure>
+    <figure><div class="well"><canvas id="dots" width="245" height="224"></canvas><span class="angle">20° / 23°</span></div><figcaption><b>04 · dot screens</b>The same mechanism in the archive’s dot-screen grammar: two near-angle lattices produce a third scale.</figcaption></figure>
+  </section>
+
+  <div class="control">
+    <label for="theta">Middle plate · θ</label>
+    <input id="theta" type="range" min="0" max="12" step="0.1" value="3.2">
+    <output id="readout" class="readout" for="theta">3.2° · beat 215 px</output>
+  </div>
+
+  <footer>
+    <div><b>Shared cause</b>Both colour plates use the same pitch. Angle is the only changed variable.</div>
+    <div><b>Removal test</b>Set θ to zero. If bands remain, they were painted rather than generated.</div>
+    <div><b>Overuse</b>Past a few degrees the beat stops separating from the carrier; “moiré” becomes general texture.</div>
+  </footer>
+</main>
+
+<script>
+(function(){
+  'use strict';
+  var W=245,H=224,PITCH=12,WIDTH=3.1,DEG=Math.PI/180;
+  function mod(n,m){ return ((n%m)+m)%m; }
+  function lineAt(x,y,angle){
+    var a=angle*DEG,s=x*Math.cos(a)+y*Math.sin(a);
+    return mod(s,PITCH)<WIDTH ? .82 : 0;
+  }
+  function dotAt(x,y,angle){
+    var a=angle*DEG,ca=Math.cos(a),sa=Math.sin(a);
+    var rx=x*ca+y*sa,ry=-x*sa+y*ca;
+    var dx=mod(rx+PITCH/2,PITCH)-PITCH/2,dy=mod(ry+PITCH/2,PITCH)-PITCH/2;
+    return dx*dx+dy*dy<10.5 ? .88 : 0;
+  }
+  function ink(img,n,a,b){
+    var union=1-(1-a)*(1-b),q=n*4;
+    img[q]=248-135*a-18*b-55*union;
+    img[q+1]=244-52*a-155*b-42*union;
+    img[q+2]=230-35*a-118*b-58*union;
+    img[q+3]=255;
+  }
+  function renderLines(canvas,theta){
+    var ctx=canvas.getContext('2d'),img=ctx.createImageData(W,H),n=0;
+    for(var y=0;y<H;y++) for(var x=0;x<W;x++,n++) ink(img.data,n,lineAt(x,y,0),lineAt(x,y,theta));
+    ctx.putImageData(img,0,0);
+  }
+  function renderDots(canvas,a0,a1){
+    var ctx=canvas.getContext('2d'),img=ctx.createImageData(W,H),n=0;
+    for(var y=0;y<H;y++) for(var x=0;x<W;x++,n++) ink(img.data,n,dotAt(x,y,a0),dotAt(x,y,a1));
+    ctx.putImageData(img,0,0);
+  }
+  var slider=document.getElementById('theta'),out=document.getElementById('readout'),stamp=document.getElementById('liveAngle');
+  renderLines(document.getElementById('control'),0);
+  renderLines(document.getElementById('tight'),8);
+  renderDots(document.getElementById('dots'),20,23);
+  function drawLive(){
+    var a=+slider.value,beat=a===0?Infinity:PITCH/(2*Math.sin(a*DEG/2));
+    renderLines(document.getElementById('live'),a);
+    stamp.textContent=a.toFixed(1)+'°';
+    out.value=a.toFixed(1)+'° · beat '+(isFinite(beat)?Math.round(beat)+' px':'∞'); out.textContent=out.value;
+  }
+  slider.addEventListener('input',drawLive); drawLive();
+}());
+</script>
+<script src="../../../learn/fragment-boot.js"></script>
+</body>
+</html>

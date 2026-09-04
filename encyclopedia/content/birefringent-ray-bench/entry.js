@@ -23,7 +23,8 @@ Shell.registerEntry({
           'proposed Optics territory (see the optics convening). A uniaxial crystal ' +
           'splits one polarised ray into an ordinary and an extraordinary ray; crossed ' +
           'polarizers recombine their components. Drawn in the technical-doc language — ' +
-          'no raster, no grain, one accent that means interactive.'
+          'no raster or grain. A persistent chromatic key distinguishes the two phase paths; ' +
+          'selection changes weight and opacity rather than inventing a second colour system.'
   },
 
   frame: { designWidth: 1100, aspect: '1100/705', previewHeight: 705 },
@@ -41,8 +42,10 @@ Shell.registerEntry({
     lens in the archive imposes a reproduction — a field is screened, a drum misses
     register — and makes matter <em>appear</em> a way. Here the framing <em>is</em> the
     specimen: the interference colour of the crossed-polariser plate exists only between
-    crossed polarizers. The image is in the crossing, not the crystal. Trace one ray or
-    both; the accent is the only non-drafting mark, and it means "the path you selected".</p>`,
+    crossed polarizers. The image is in the crossing, not the crystal. Cyan and magenta
+    encode the ordinary and extraordinary phase paths diagrammatically — they are not
+    coloured beams inside the crystal. Trace one ray or both; selection changes weight
+    while the recombined spectrum remains tied to the image plane.</p>`,
 
   ruling: {
     text: 'Drawn, not reproduced. No raster on an optical-bench sheet; the apparatus is the subject, never the ornament.',

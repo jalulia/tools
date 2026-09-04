@@ -17,6 +17,7 @@
    diverging, which is the thing filing them as one record fixes. */
 Shell.registerEntry({
   entity: 'coupling',
+  instance_of: ['master-limiter-driver', 'banded-burst-driver'],
   id: 'crowd-and-dither-shared-cause',
   index: 'C-FLOW',
   order: 3050,

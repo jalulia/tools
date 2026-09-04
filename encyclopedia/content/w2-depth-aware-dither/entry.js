@@ -18,7 +18,7 @@ Shell.registerEntry({
   /* ck-e1 · encyclopedia fields (entity model). Injected verbatim; the
      block below is the entry's original body. */
   entity: "exploration",
-  instance_of: ["depth-aware-dither"],
+  instance_of: ["depth-aware-dither", "fbm-noise-driver"],
   uses: ["bayer8","fbm-noise"],
   governed_by: ["composing-computational-material-systems"],
   id: 'w2-depth-aware-dither',

@@ -8,6 +8,7 @@ Shell.registerEntry({
   /* ck-e1 · encyclopedia fields (entity model). Injected verbatim; the
      block below is the entry's original body. */
   entity: "exploration",
+  instance_of: ["oklab-ramp-driver"],
   uses: ["paper-tooth","oklab-ramp"],
   governed_by: ["components-craft"],
   id: 'pm07-molten',

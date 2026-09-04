@@ -9,6 +9,7 @@
    fields — a coupling is not a third page-kind (REVIEW-SOUND §2.2). */
 Shell.registerEntry({
   entity: 'exploration',
+  instance_of: ['master-limiter-driver'],
   id: 'ki-soundscape-bands',
   index: 'A3',
   order: 3020,

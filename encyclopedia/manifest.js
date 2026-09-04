@@ -478,13 +478,12 @@ Shell.registerManifest({
       ],
       note: 'Sound INVENTORY §5 addendum: buzz-envelope is one atom that carries a whole percussion section — reliquary-synth/src/audio/BuzzGenerator.ts.' },
 
-    /* ── Technique stubs (4) — the techniques the worked examples
-       declare. Each carries the exploration\'s critique block as its lesson
-       at ck-e3; at ck-e1 they are stubs whose canonical instance page IS the
-       worked example. ────────────────────────────────────────────────── */
+    /* ── Techniques proved by worked instances (4). Each carries the
+       exploration's critique block as its lesson; the compact technique page
+       mounts that canonical instance as its executable evidence. ───────── */
     { id: 'seven-pass-band-chain', title: 'Seven-pass band chain',
       order: 2010, lane: 'canvas2d', entity: 'technique',
-      section: 'techniques', status: 'canonical', stub: true,
+      section: 'techniques', status: 'canonical',
       layer: 'IMAGE FORMATION',
       description: 'Painterly compositing as an ordered chain. The order is the content.',
       produces: ['watercolour-wash', 'granulation', 'cut-paper-edge', 'edge-bloom', 'paper-tooth'],
@@ -496,6 +495,13 @@ Shell.registerManifest({
         removal_test: 'Remove the tooth pass: the plate reads as a screen render, not a print. Remove the bloom: the crest goes flat and the whole plate reads as gradient.',
         overuse: 'Adding an eighth pass to "add depth" is the vibe stack — the answer is inside the existing chain (raise the bloom width), not beside it.'
       },
+      critique: {
+        reads_as: 'A watercolour landscape in depth bands, printed on a sheet with a tooth — one painting seen at one distance, not a stack of texture layers.',
+        coupling: 'Band state drives wash, granulation, pooling and grain; the band midpoint tints its edge, bloom, pooling and catch-light; edge reach controls the soft and hard readings together.',
+        pass_order: 'Wash → granulation → edge → bloom → catch-light → pooling → grain. Pigment, separation, light, accumulation and substrate become different pictures when reordered.',
+        operators: ['band gradient', 'wash', 'granulation', 'cut-paper edge', 'edge bloom', 'catch-light', 'pooling', 'paper grain'],
+        why_it_survives: 'The reduced three-pass instance proves the removals: it remains a valid picture, but can no longer be pale and textured at once or articulate the horizon as seven separate material events.'
+      },
       note: 'The technique W1 instantiates and KL1 used to. Order-dependent painterly compositing, per Ki-Landscapes/index.html:260-332.',
       ruling: {
         text: 'crisp edge (solid to 94%) — CANON, do not soften',
@@ -503,7 +509,7 @@ Shell.registerManifest({
         source: 'Ki-Landscapes/index.html:252' } },
     { id: 'depth-aware-dither', title: 'Depth-aware dither',
       order: 2020, lane: 'canvas2d', entity: 'technique',
-      section: 'techniques', status: 'canonical', stub: true,
+      section: 'techniques', status: 'canonical',
       layer: 'IMAGE FORMATION',
       description: 'One depth term, four consequences. Bayer-8 threshold biased by scene depth.',
       produces: ['bayer8'],
@@ -515,10 +521,17 @@ Shell.registerManifest({
         removal_test: 'MIR-12 is this shader with the depth term deleted — a Bayer plate that never separates foreground from background. Kept as the ancestor.',
         overuse: 'A second dither pass over the result is dither without quantization behind it — noise, not a decision.'
       },
+      critique: {
+        reads_as: 'One room seen through one screen: a clear near figure and a field that becomes grainier, coarser and foggier with distance.',
+        coupling: 'Linear depth drives dither strength, level count, scanline visibility and aerial fog. The ordered threshold is not a texture laid over the room; it is one reading of the room’s depth.',
+        pass_order: 'Scene and depth → flow tint → bloom → ordered offset → quantization → scanline → vignette. Bloom and threshold must precede the floor or they spread banding and cease to select levels.',
+        operators: ['procedural scene + depth', 'aerial fog', 'bloom', 'Bayer offset', 'quantizer', 'scanline', 'vignette'],
+        why_it_survives: 'The ancestor with the depth term removed is already on the page: the treatment becomes uniform, the foreground no longer separates, and the filter loses its relation to the room.'
+      },
       note: 'One depth term, four consequences. W2 is the canonical instance; MIR-12 is its ancestor.' },
     { id: 'hillshade-and-flow', title: 'Hillshade and flow — one field, two jobs',
       order: 2030, lane: 'canvas2d', entity: 'technique',
-      section: 'techniques', status: 'canonical', stub: true,
+      section: 'techniques', status: 'canonical',
       layer: 'MATERIAL RESPONSE',
       description: 'One heightfield read twice: for shading AND for flow direction. Two consequences, one field.',
       governed_by: ['composing-computational-material-systems'],
@@ -529,10 +542,17 @@ Shell.registerManifest({
         removal_test: 'Turn the shading term to zero: the flow lines still read as valid on the map. Turn the flow off: the plate is a normal hillshade.',
         overuse: 'Adding a third read (curvature) that is not consumed by anything downstream is the field being asked to prove it can do more.'
       },
+      critique: {
+        reads_as: 'A surveyed terrain: a lit ground with the shape of its contours drawn on it — one place described two ways.',
+        coupling: 'One height field and one finite-difference gradient feed both consequences. Hillshade reads gradient against light; flow reads the same gradient’s direction.',
+        pass_order: 'Shade, then strokes. The tonal ground establishes relief; the higher-frequency marks articulate its level sets without being covered by the fill.',
+        operators: ['scalar height field', 'finite-difference gradient', 'hillshade', 'flow strokes'],
+        why_it_survives: 'Remove shade and height/light disappear; remove strokes and the saddles and level-set structure disappear. Each consequence names information the other cannot supply.'
+      },
       note: 'W3 is the canonical instance. One heightfield read for shade AND for flow direction, per MM-04 + MM-05.' },
     { id: 'unlinked-shader', title: 'A shader that does not link',
       order: 2040, lane: 'canvas2d', entity: 'technique',
-      section: 'techniques', status: 'known-failure', stub: true,
+      section: 'techniques', status: 'known-failure',
       layer: 'SOURCE',
       description: 'Invisible in the source, total in the output. One missing word.',
       governed_by: ['composing-computational-material-systems'],
@@ -706,58 +726,95 @@ Shell.registerManifest({
 
     // CANDIDATE TECHNIQUES · appended by index-tools.mjs --write
     { id: 'master-limiter-driver', title: 'Master compressor + limiter as driver',
-      entity: 'technique', section: 'techniques', status: 'proposed',
-      lane: 'audio',
-      description: 'PROPOSED BY TOOL — master-limiter is used by 5 explorations (cathedral-reverb, ki-soundscape-bands, shepard-risset, buzz-generator) with no technique above it. The audio-lane lesson would be about how master-limiter decides X across those instances. Julia rules by editing this stub.',
+      order: 1680, entity: 'technique', section: 'techniques', status: 'proposed',
+      lane: 'audio', layer: 'STRUCTURE',
+      description: 'Five different sound systems meet the same ceiling. The compressor shapes density; the limiter catches the peaks the composition is allowed to make.',
       produces: ['master-limiter'],
       governed_by: ['composing-computational-sound-systems'],
-      stub: true },
+      tests: {
+        shared_cause: 'Every source reaches one master chain, so threshold, ratio, attack and release determine the audible relation between impacts, layers and tails.',
+        distinct_job: 'The compressor is broadband glue; the limiter is a fast peak catcher. Two DynamicsCompressorNodes, two jobs, separated by their settings.',
+        order: 'Input trim → compressor → limiter → analyser. Metering before the limiter would report peaks the listener never receives.',
+        removal_test: 'Bypass the limiter and stacked transients overshoot; bypass the compressor and the ceiling survives but the shared density between sources disappears.',
+        overuse: 'A low threshold and fast release on both stages makes the whole mix pump. If every event announces the bus, the bus has become the instrument.'
+      } },
     { id: 'oklab-ramp-driver', title: 'OKLab colour ramp as driver',
-      entity: 'technique', section: 'techniques', status: 'proposed',
-      lane: 'canvas2d',
-      description: 'PROPOSED BY TOOL — oklab-ramp is used by 4 explorations (w1-seven-pass-band-chain, pm07-molten, e4-masonry-cards, e5-case-card) with no technique above it. The visual-lane lesson would be about how oklab-ramp decides X across those instances. Julia rules by editing this stub.',
+      order: 1690, entity: 'technique', section: 'techniques', status: 'proposed',
+      lane: 'canvas2d', layer: 'GRAPHIC COMPOSITION',
+      description: 'Interpolate colour as perceived lightness plus opponent axes, so a field can cross hue without acquiring a false dark seam or a chalky midpoint.',
       produces: ['oklab-ramp'],
       governed_by: ['composing-computational-material-systems'],
-      stub: true },
+      tests: {
+        shared_cause: 'One pair of endpoints and one scalar t drive L, a and b together; every consumer reads the same perceptual path.',
+        distinct_job: 'Lightness carries value structure while the a/b axes carry hue and chroma. Interpolation keeps those jobs legible instead of mixing them in gamma-encoded RGB.',
+        order: 'Convert endpoints to OKLab → interpolate L/a/b → convert once to display RGB → clamp at the output boundary.',
+        removal_test: 'Replace the ramp with a direct RGB lerp and the midpoint changes weight: dark seams or greyed colour appear where the field itself is smooth.',
+        overuse: 'Independent ramps for every layer destroy the shared value structure. One field needs one colour grammar, with local deviations justified by a different job.'
+      } },
     { id: 'mulberry32-driver', title: 'mulberry32(seed) as driver',
-      entity: 'technique', section: 'techniques', status: 'proposed',
-      lane: 'canvas2d',
-      description: 'PROPOSED BY TOOL — mulberry32 is used by 4 explorations (w1-seven-pass-band-chain, b1-photocopy-collage, b2-riso-brush, d4-riso-print-set) with no technique above it. The visual-lane lesson would be about how mulberry32 decides X across those instances. Julia rules by editing this stub.',
+      order: 1700, entity: 'technique', section: 'techniques', status: 'proposed',
+      lane: 'canvas2d', layer: 'SOURCE',
+      description: 'Treat the seed as the plate identity. One repeatable sequence drives every stochastic decision, so a changed parameter produces a changed picture—not an untraceable new draw.',
       produces: ['mulberry32'],
       governed_by: ['composing-computational-material-systems'],
-      stub: true },
+      tests: {
+        shared_cause: 'One printed seed initializes the plate and feeds grain, placement, coverage failure and registration offsets through named streams.',
+        distinct_job: 'The generator supplies a deterministic sequence; each consumer decides what a sample means. Randomness is a source, not a visual layer.',
+        order: 'Create or derive each stream once → generate structure → reproduce it. Reseeding inside a loop repeats values instead of producing variation.',
+        removal_test: 'Replace mulberry32 with Math.random and two renders with identical settings no longer agree; the plate loses both identity and debuggability.',
+        overuse: 'Sharing the same sample between unrelated properties creates visible correlation. Derive stable sub-seeds for independent jobs instead of consuming one stream opportunistically.'
+      } },
     { id: 'dot-screen-20-driver', title: 'Dot screen · 20° as driver',
-      entity: 'technique', section: 'techniques', status: 'proposed',
-      lane: 'canvas2d',
-      description: 'PROPOSED BY TOOL — dot-screen-20 is used by 4 explorations (b1-photocopy-collage, c1-heavy-ink, d4-riso-print-set, d6-social-tiles) with no technique above it. The visual-lane lesson would be about how dot-screen-20 decides X across those instances. Julia rules by editing this stub.',
+      order: 1710, entity: 'technique', section: 'techniques', status: 'proposed',
+      lane: 'canvas2d', layer: 'IMAGE FORMATION',
+      description: 'Map image tone to dot area on one lattice turned 20°. Pitch decides detail, angle decides direction, and radius alone carries coverage.',
       produces: ['dot-screen-20'],
       governed_by: ['components-craft'],
-      stub: true },
+      tests: {
+        shared_cause: 'One luminance or ink-coverage field drives the radius of every dot on a single 20° lattice.',
+        distinct_job: 'Pitch sets the reproduction resolution, angle sets the screen direction, and dot radius encodes tone. Moving one must not impersonate another.',
+        order: 'Read coverage → rotate into screen space → locate the lattice cell → compare distance to the tone-driven radius.',
+        removal_test: 'Replace the dots with a solid alpha fill and the image keeps its silhouette but loses the declared reproduction process.',
+        overuse: 'A second near-angle screen creates moiré. That interference is useful only when it is the subject, not a side effect of adding texture.'
+      } },
     { id: 'fbm-noise-driver', title: 'fBm value noise as driver',
-      entity: 'technique', section: 'techniques', status: 'proposed',
-      lane: 'canvas2d',
-      description: 'PROPOSED BY TOOL — fbm-noise is used by 3 explorations (w2-depth-aware-dither, w3-hillshade-and-flow, e4-masonry-cards) with no technique above it. The visual-lane lesson would be about how fbm-noise decides X across those instances. Julia rules by editing this stub.',
+      order: 1720, entity: 'technique', section: 'techniques', status: 'proposed',
+      lane: 'canvas2d', layer: 'SOURCE',
+      description: 'Build one continuous field from weighted octaves, then let depth, shade, flow or atmosphere read that same terrain at different points in the chain.',
       produces: ['fbm-noise'],
       governed_by: ['composing-computational-material-systems'],
-      stub: true },
+      tests: {
+        shared_cause: 'One seeded value field, sampled at several frequencies, supplies every downstream reading of the terrain.',
+        distinct_job: 'Octaves add scale to the field; consumers assign jobs such as height, direction or opacity. The noise does not decide the picture by itself.',
+        order: 'Hash lattice values → interpolate each octave → weight and sum → normalize once → derive all downstream consequences.',
+        removal_test: 'Give each effect an independent noise call and the image becomes a stack of unrelated textures: shade, flow and depth stop describing the same surface.',
+        overuse: 'Octaves smaller than a pixel add aliasing and cost, not detail. Stop when the next frequency cannot survive the output resolution.'
+      } },
     { id: 'banded-burst-driver', title: 'Banded noise burst as driver',
-      entity: 'technique', section: 'techniques', status: 'proposed',
-      lane: 'audio',
-      description: 'PROPOSED BY TOOL — banded-burst is used by 3 explorations (cathedral-reverb, buzz-generator, crowd-and-dither-shared-cause) with no technique above it. The audio-lane lesson would be about how banded-burst decides X across those instances. Julia rules by editing this stub.',
+      order: 1730, entity: 'technique', section: 'techniques', status: 'proposed',
+      lane: 'audio', layer: 'SOURCE',
+      description: 'Filter one noise buffer into a spectral body and strike it with one gain envelope. Frequency says what hit; attack and decay say how it happened.',
       produces: ['banded-burst'],
       governed_by: ['composing-computational-sound-systems'],
-      stub: true },
+      tests: {
+        shared_cause: 'One noise source feeds both the audible band and the event envelope, so spectrum and duration belong to the same strike.',
+        distinct_job: 'The band-pass supplies material identity; the gain envelope supplies onset and decay. Neither can substitute for the other.',
+        order: 'Noise buffer → band-pass → gain envelope → destination bus; schedule the envelope before starting the source.',
+        removal_test: 'Remove the filter and the event becomes broadband hiss; remove the envelope and it becomes a sustained band. Either deletion destroys the event.',
+        overuse: 'Layering several bursts for one cue smears the transient and hides the band choice. Change Q or decay before adding another source.'
+      } },
 
     /* ── Gardener · optics territory. A refracting interface bends a parallel
        sheet of light; brightness on the floor is 1/|det J| of the ray map, so
        rays pile onto the fold set (the caustic web) and starve in the voids.
        This closes the edge-bloom orphan — the atom is the bright refracted edge
-       the caustic emits. Specimen staged at claude/proposals/caustic-refraction-web.
-       (fbm-noise coupling noted in the proposal; `couples` is not yet a manifest
-       key.) status: proposed — Julia rules by editing this stub. ──────────── */
+       the caustic emits. (fbm-noise coupling is noted here; `couples` is not yet a manifest
+       key.) status: proposed — coded evidence is present; Julia still rules on canon. ── */
     { id: 'caustic-refraction-web', title: 'Caustic refraction web',
-      order: 2035, lane: 'canvas2d', entity: 'technique',
-      section: 'techniques', status: 'proposed', stub: true,
+      order: 2035, lane: 'fragment', entity: 'technique',
+      section: 'techniques', status: 'proposed',
+      fragment: 'fragment.html', thumb: 'thumb.png',
+      frame: { designWidth: 1100, aspect: '1100/760', previewHeight: 760 },
       layer: 'MATERIAL RESPONSE',
       description: 'A wavy interface refracts a sheet of light; where the ray map folds, light piles into the bright caustic web. One height field, all the folds and voids.',
       governed_by: ['composing-computational-material-systems'],
@@ -769,14 +826,14 @@ Shell.registerManifest({
         removal_test: 'Set κ to zero: the map is the identity and the plate is a flat grey — no folds, no web. The caustic exists only because the interface bends the rays.',
         overuse: 'Cranking κ past fold-over stacks so many sheets that the web closes into cells and the singularity is lost in ink — the field asked to prove it can do more.'
       },
-      note: 'Optics territory. The physical cause upstream of edge-bloom: a caustic is a refracted brightness edge. Specimen: claude/proposals/caustic-refraction-web.html (built + rendered, forced-light, tokens-only, survives Mono).' },
+      note: 'Optics territory. The physical cause upstream of edge-bloom: a caustic is a refracted brightness edge. The working plate is content/caustic-refraction-web/fragment.html.' },
 
     /* ── Gardener · Material Studies II, housed in the canonical plate frame (run 4).
        Keyline run separated from per-colour coverage runs; only the ink grammar varies. The
        keyline pass IS the ink-chain atom (feTurbulence -> feDisplacementMap), so this produces
        it and closes that orphan. fragment.html = Julia's engine, verbatim. ── */
     { id: 'keyline-coverage-chain', title: 'Keyline & coverage chain',
-      order: 2040, lane: 'canvas2d', entity: 'technique',
+      order: 2040, lane: 'fragment', entity: 'technique',
       section: 'techniques', status: 'proposed', fragment: 'fragment.html', thumb: 'thumb.png',
       layer: 'IMAGE FORMATION',
       description: 'Separate the ink run from the per-colour fill runs, then vary only the ink grammar. One keyline (hand-wavered, misregistered), each colour its own coverage plate, grain + tooth to finish.',
@@ -787,7 +844,7 @@ Shell.registerManifest({
         distinct_job: 'The ink run carries the drawing (one keyline); coverage runs carry colour (one plate per ink); grain and tooth carry the substrate.',
         order: 'Fills first through their coverage plates, then the ONE keyline shifted off them, then grain, then tooth.',
         removal_test: 'Remove the misregistration + hand-waver and the plate collapses to grammar (a), clean vector clip-art.',
-        overuse: 'Stacking two ink grammars on one plate is the vibe stack; the four are alternatives, not layers.'
+        overuse: 'Stacking two ink grammars on one plate is the vibe stack; the six are alternatives, not layers.'
       },
       note: 'Material Studies II. Produces ink-chain. fragment.html houses the engine in the canonical plate frame.' },
 
@@ -803,10 +860,12 @@ Shell.registerManifest({
        bayer8): those are periodic rulings this technique beats against a second.
        Atom-free (introduces no swatch); `couples` is not a manifest key, so the
        dot-screen-20 / bayer8 relation is stated in the note, not declared.
-       status: proposed — Julia rules by editing this stub. ──────────────────── */
+       status: proposed — coded evidence is present; Julia still rules on canon. ─ */
     { id: 'moire-aliasing', title: 'Moiré · sampling made visible',
-      order: 2040, lane: 'canvas2d', entity: 'technique',
-      section: 'techniques', status: 'proposed', stub: true,
+      order: 2045, lane: 'fragment', entity: 'technique',
+      section: 'techniques', status: 'proposed',
+      fragment: 'fragment.html', thumb: 'thumb.png',
+      frame: { designWidth: 1100, aspect: '1100/760', previewHeight: 760 },
       layer: 'IMAGE FORMATION',
       description: 'Overprint a fine ruling with a copy of itself turned a few degrees, and a slow light-and-dark banding appears at a pitch neither ruling contains. One periodic field sampling another — the act of sampling, drawn.',
       governed_by: ['composing-computational-material-systems'],
@@ -817,6 +876,6 @@ Shell.registerManifest({
         removal_test: 'Set theta to 0: the two rulings coincide, the beat pitch P = p / 2 sin(theta/2) runs to infinity, and the banding is gone — the surest sign it was never in either grating alone.',
         overuse: 'Turn theta past a few degrees and the beat pitch collapses toward the carrier: the broad envelope dissolves into a rotated cross-hatch texture and the moiré reading is lost.'
       },
-      note: 'Image-processing / reflexive thread. Samples the archive\'s own screens — dot-screen-20 and bayer8 are periodic rulings this technique beats against a second ruling. Atom-free (no new swatch). `couples` is not a manifest key, so that relation is prose. Specimen: claude/proposals/moire-aliasing.html (built + rendered true-type, forced-light, tokens-only, one accent = interactive, survives Mono).' },
+      note: 'Image-processing / reflexive thread. Samples the archive\'s own screens — dot-screen-20 and bayer8 are periodic rulings this technique beats against a second ruling. Atom-free (no new swatch). The working plate is content/moire-aliasing/fragment.html.' },
 ]
 });

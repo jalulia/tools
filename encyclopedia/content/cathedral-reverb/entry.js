@@ -11,6 +11,7 @@
    which is what makes the offline loop reproduce it exactly. */
 Shell.registerEntry({
   entity: 'exploration',
+  instance_of: ['master-limiter-driver', 'banded-burst-driver'],
   id: 'cathedral-reverb',
   index: 'P1',
   order: 3010,

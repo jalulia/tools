@@ -23,7 +23,7 @@
    Assertions
      PLAN §7 criteria 1..14 that still hold post-encyclopedia (adapted where
      the tool now differs — no BoS entry compile, no components sheet cap)
-     plus the ck-e9 criteria 15..21 the task adds:
+     plus the ck-e9 criteria 15..23 the task adds:
 
        15 · every entry with governed_by[] resolves against manifest.skills
        16 · every uses[] resolves to an atom in this manifest

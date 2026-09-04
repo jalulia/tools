@@ -18,7 +18,7 @@ Shell.registerEntry({
   /* ck-e1 · encyclopedia fields (entity model). Injected verbatim; the
      block below is the entry's original body. */
   entity: "exploration",
-  instance_of: ["seven-pass-band-chain"],
+  instance_of: ["seven-pass-band-chain", "oklab-ramp-driver", "mulberry32-driver"],
   uses: ["paper-tooth","oklab-ramp","watercolour-wash","granulation","cut-paper-edge","edge-bloom","mulberry32"],
   governed_by: ["composing-computational-material-systems"],
   id: 'w1-seven-pass-band-chain',

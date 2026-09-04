@@ -7,6 +7,7 @@ Shell.registerEntry({
   /* ck-e1 · encyclopedia fields (entity model). Injected verbatim; the
      block below is the entry's original body. */
   entity: "exploration",
+  instance_of: ["dot-screen-20-driver"],
   uses: ["paper-tooth","dot-screen-20"],
   governed_by: ["components-craft"],
   "id": "d6-social-tiles",

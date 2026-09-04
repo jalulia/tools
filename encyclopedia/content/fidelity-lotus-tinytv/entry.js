@@ -30,7 +30,8 @@ Shell.registerEntry({
     change only the subject — organic then mechanical. The lotus is built the woodblock way (every
     petal on its own curved spine, the vein fan following the petal's twist; depth by four tints held
     at the threshold of visibility, and by rank — nothing shaded). The TinyTV is drawn to workshop
-    standard (third-angle projection, dimension chains, a title block). Same hand, opposite worlds.</p>
+    standard (shared projection axes, dimension chains, REF marks and sections). Both spend detail
+    the same way: base plates prove silhouette and assembly; magnified plates prove local construction.</p>
     <p>It sits beside CRX-01 and the ray-benches as the line dialect's reference: no raster, no grain,
     the drafting language carrying the whole picture.</p>`,
   ruling: {

@@ -7,6 +7,7 @@ Shell.registerEntry({
   /* ck-e1 · encyclopedia fields (entity model). Injected verbatim; the
      block below is the entry's original body. */
   entity: "exploration",
+  instance_of: ["mulberry32-driver"],
   uses: ["paper-tooth","mulberry32"],
   governed_by: ["components-craft"],
   "id": "b2-riso-brush",

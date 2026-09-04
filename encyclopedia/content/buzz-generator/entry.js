@@ -5,6 +5,7 @@
    the piece-scale design (when to fire, how many at once) is still open. */
 Shell.registerEntry({
   entity: 'exploration',
+  instance_of: ['master-limiter-driver', 'banded-burst-driver'],
   id: 'buzz-generator',
   index: 'S-BUZZ',
   order: 3040,

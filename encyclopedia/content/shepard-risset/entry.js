@@ -4,6 +4,7 @@
    entry the sound section should open with. */
 Shell.registerEntry({
   entity: 'exploration',
+  instance_of: ['master-limiter-driver'],
   id: 'shepard-risset',
   index: 'S8',
   order: 3030,

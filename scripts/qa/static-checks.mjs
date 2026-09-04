@@ -15,7 +15,8 @@ import { join, relative, basename, dirname } from 'node:path';
 
 const argv = process.argv.slice(2);
 const ROOT = argv.includes('--root') ? argv[argv.indexOf('--root') + 1] : __ROOT;
-const SHIPPED = ['learn', 'book-of-shaders', 'components'];
+const SHIPPED = ['learn', 'encyclopedia', 'book-of-shaders', 'components'];
+const REVIEW_TOOLBOX = join(ROOT, 'learn', 'garden-toolbox.js');
 const fails = [];
 const notes = [];
 let checked = 0;
@@ -53,7 +54,23 @@ for (const f of code) {
                   .replace(/<!--[\s\S]*?-->/g, '')
                   .replace(/<code\b[^>]*>[\s\S]*?<\/code>/gi, '')
                   .replace(/<pre\b[^>]*>[\s\S]*?<\/pre>/gi, '');
-  for (const b of BANNED) { checked++; if (b.re.test(live)) fail(b.rule, f, (live.match(b.re) || [''])[0].trim().slice(0, 80)); }
+  for (const b of BANNED) {
+    checked++;
+    /* The review toolbox's product is GitHub-backed editorial sync. It is the
+       single named network exception; fragments and the archive shell remain
+       transport-free and are still checked by the general rule. */
+    if (f === REVIEW_TOOLBOX && b.rule === 'no fetch(') continue;
+    if (b.re.test(live)) fail(b.rule, f, (live.match(b.re) || [''])[0].trim().slice(0, 80));
+  }
+}
+
+/* Keep the exception narrower than “this file may fetch anything”. */
+if (existsSync(REVIEW_TOOLBOX)) {
+  const toolbox = readFileSync(REVIEW_TOOLBOX, 'utf8');
+  checked += 3;
+  if (!/var REPO = 'jalulia\/tools'/.test(toolbox)) fail('review toolbox repo is fixed', REVIEW_TOOLBOX, 'REPO');
+  if (!/BRANCH = 'main'/.test(toolbox)) fail('review toolbox branch is fixed', REVIEW_TOOLBOX, 'BRANCH');
+  if (!/PATH = 'garden\/garden\.json'/.test(toolbox)) fail('review toolbox path is fixed', REVIEW_TOOLBOX, 'PATH');
 }
 
 /* ---- 2. build-site.mjs's basename filter -------------------------------- */

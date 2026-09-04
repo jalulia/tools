@@ -5,14 +5,9 @@
    the deliverable). It is injected here from a LOCAL copy — `npm i axe-core` in
    team/qa — via page.addScriptTag, which touches nothing the tools ship.
 
-   Six representative routes:
-     1  book-of-shaders  #/00-introduction     course entry, glsl stage
-     2  book-of-shaders  #/10-random           course entry with three plots
-     3  book-of-shaders  #/index               course contact sheet
-     4  components       #/index               catalogue contact sheet, iframes
-     5  components       #/b1-photocopy-collage catalogue entry, one iframe
-     6  components       #/style/riso-xerox    a style page
-   plus the apparatus open on (1) and the ? dialog open on (4), because both are
+   Representative Encyclopedia routes cover the technique spine, atom shelf,
+   sound lane, compact and chapter techniques, fragment entries and styles.
+   The apparatus and ? dialog are included because both are
    states no static crawl reaches.
 
    Run: PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node scripts/qa/out/axe.mjs
@@ -34,16 +29,20 @@ if (!AXE_PATH || !existsSync(AXE_PATH)) {
   process.exit(0);
 }
 
-const PORT = 8123;
+const argv = process.argv.slice(2);
+const PORT = +(argv.includes('--port') ? argv[argv.indexOf('--port') + 1] : 8123);
+const ENC = `http://127.0.0.1:${PORT}/encyclopedia/index.html`;
 const ROUTES = [
-  { id: 'bos-entry',        url: `http://127.0.0.1:${PORT}/book-of-shaders/index.html#/00-introduction` },
-  { id: 'bos-entry-plots',  url: `http://127.0.0.1:${PORT}/book-of-shaders/index.html#/10-random` },
-  { id: 'bos-sheet',        url: `http://127.0.0.1:${PORT}/book-of-shaders/index.html#/index` },
-  { id: 'comp-sheet',       url: `http://127.0.0.1:${PORT}/components/index.html#/index` },
-  { id: 'comp-entry',       url: `http://127.0.0.1:${PORT}/components/index.html#/b1-photocopy-collage` },
-  { id: 'comp-style',       url: `http://127.0.0.1:${PORT}/components/index.html#/style/riso-xerox` },
-  { id: 'bos-entry+apparatus', url: `http://127.0.0.1:${PORT}/book-of-shaders/index.html#/00-introduction`, after: 'apparatus' },
-  { id: 'comp-sheet+help',  url: `http://127.0.0.1:${PORT}/components/index.html#/index`, after: 'help' }
+  { id: 'technique-spine',     url: `${ENC}#/techniques` },
+  { id: 'atom-shelf',          url: `${ENC}#/atoms` },
+  { id: 'sound-lane',          url: `${ENC}#/sound` },
+  { id: 'chapter-technique',   url: `${ENC}#/10-random` },
+  { id: 'compact-technique',   url: `${ENC}#/technique/mulberry32-driver` },
+  { id: 'fragment-technique',  url: `${ENC}#/technique/caustic-refraction-web` },
+  { id: 'fragment-entry',      url: `${ENC}#/birefringent-ray-bench` },
+  { id: 'style',               url: `${ENC}#/style/riso-xerox` },
+  { id: 'entry+apparatus',     url: `${ENC}#/10-random`, after: 'apparatus' },
+  { id: 'techniques+help',     url: `${ENC}#/techniques`, after: 'help' }
 ];
 
 const browser = await chromium.launch();
@@ -79,15 +78,20 @@ for (const r of ROUTES) {
   await ctx.close();
 }
 
-// EVERY fragment, audited as its own document. Six would have been the brief;
-// the sweep is cheap and it found two lenses the six-lens sample missed.
+// Every Encyclopedia fragment, audited as its own document. Opaque-origin
+// iframes cannot be inspected from the shell, so this direct sweep is required.
 const { loadManifest } = await import('../lib/manifests.mjs');
-const FRAGS = loadManifest(__j(__ROOT,'components/manifest.js')).entries.map((e) => e.id);
+const ENC_MANIFEST = loadManifest(__j(__ROOT,'encyclopedia/manifest.js'));
+const DEFAULT_LANE = ENC_MANIFEST.manifest.stage?.adapter;
+const FRAGS = ENC_MANIFEST.entries
+  .filter((e) => e.fragment || (e.lane || DEFAULT_LANE) === 'fragment')
+  .map((e) => ({ id: e.id, file: e.fragment || 'fragment.html' }));
 out.fragments = {};
-for (const id of FRAGS) {
+for (const frag of FRAGS) {
+  const id = frag.id;
   const ctx = await browser.newContext({ viewport: { width: 1100, height: 900 } });
   const page = await ctx.newPage();
-  await page.goto(`http://127.0.0.1:${PORT}/components/content/${id}/fragment.html`, { waitUntil: 'load' });
+  await page.goto(`http://127.0.0.1:${PORT}/encyclopedia/content/${id}/${frag.file}`, { waitUntil: 'load' });
   await page.waitForTimeout(1200);
   await page.addScriptTag({ path: AXE_PATH });
   const res = await page.evaluate(async () => await window.axe.run(document, {

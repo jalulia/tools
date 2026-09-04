@@ -12,8 +12,8 @@
     layout skeleton ...... masthead caption · optical-axis figure (source→P→calcite→A→image) · dimension band · colophon
     the reflexive idea ... the plate draws the CONDITIONS under which Plate 01's colour exists.
                            "the image is in the crossing, not the crystal" — an apparatus for seeing seeing.
-    accent rule .......... one accent = interactive only (the ray you select). Mono → accent collapses to ink;
-                           drawing still fully reads as line art. No information dies in B&W.
+    chromatic key ........ cyan = ordinary path, magenta = extraordinary path, spectrum = recombination.
+                           Hue encodes phase path rather than literal beam colour; dash + displacement preserve it in B&W.
 -->
 <html lang="en">
 <head>
@@ -27,7 +27,7 @@
 <style>
   /* This lens owns its LAYOUT css; colour + type come from technical-doc.css tokens.
      Drawing ink = --c-ink; construction = --c-line-2 / --c-ink-3; one accent = --c-accent. */
-  :root{ --stroke-w:1.4; }
+  :root{ --stroke-w:1.4; --ray-o:#087f97; --ray-e:#be3d72; --ray-mix:#d39316; }
   html,body{ background:#fff; }
   body{ width:1100px; margin:0 auto; color:var(--c-ink); font-family:var(--f-ui); -webkit-font-smoothing:antialiased; }
 
@@ -41,12 +41,15 @@
   #a5-rb .plate-badge{ margin-left:auto; font-family:var(--f-mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--c-ink-2); border:1px solid var(--c-line-2); border-radius:2px; padding:3px 7px; white-space:nowrap; }
   #a5-rb .plate-sub{ font-family:var(--f-ui); font-size:13px; color:var(--c-ink-2); margin:9px 0 4px; max-width:74ch; line-height:1.45; }
 
-  /* control row — the accent lives ONLY here + in the highlighted ray */
+  /* control row — hue names the phase path; selection changes weight */
   #a5-rb .ctl{ display:flex; align-items:center; gap:8px; margin:16px 0 6px; }
-  #a5-rb .ctl-lab{ font-family:var(--f-mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--c-ink-3); margin-right:2px; }
+  #a5-rb .ctl-lab{ font-family:var(--f-mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--c-ink-2); margin-right:2px; }
   #a5-rb .seg{ font-family:var(--f-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--c-ink-2);
     background:var(--c-surface); border:1px solid var(--c-line-2); border-radius:2px; padding:5px 11px; cursor:pointer; }
-  #a5-rb .seg[aria-pressed="true"]{ color:var(--c-page); background:var(--c-accent); border-color:var(--c-accent); }
+  #a5-rb .seg[aria-pressed="true"]{ color:var(--c-page); border-color:transparent; }
+  #a5-rb .seg[data-ray="o"][aria-pressed="true"]{ background:var(--ray-o); }
+  #a5-rb .seg[data-ray="e"][aria-pressed="true"]{ background:var(--ray-e); }
+  #a5-rb .seg[data-ray="both"][aria-pressed="true"]{ background:linear-gradient(90deg,var(--ray-o),var(--ray-e)); }
 
   #a5-rb figure{ margin:6px 0 0; border:var(--stroke-w) solid var(--c-ink); background:var(--c-surface); }
   #a5-rb svg{ display:block; width:100%; height:auto; }
@@ -58,9 +61,12 @@
   .glass     { fill:none; stroke:var(--c-ink); stroke-width:1.4; }
   .glass-fill{ fill:var(--c-sunken); stroke:var(--c-ink); stroke-width:1.4; }
   .hatch     { stroke:var(--c-ink); stroke-width:.9; }
-  .ray       { fill:none; stroke:var(--c-ink); stroke-width:1.5; }
-  .ray-e     { fill:none; stroke:var(--c-ink); stroke-width:1.5; stroke-dasharray:7 4; }
-  .ray-hi    { stroke:var(--c-accent); stroke-width:2.6; }        /* interactive highlight */
+  .ray       { fill:none; stroke:var(--c-ink); stroke-width:1.5; transition:opacity .16s,stroke-width .16s; }
+  .o-ray     { stroke:var(--ray-o); stroke-width:2.2; }
+  .ray-e     { fill:none; stroke:var(--ray-e); stroke-width:2.2; stroke-dasharray:7 4; transition:opacity .16s,stroke-width .16s; }
+  .ray-out   { stroke:url(#recombined-spectrum); stroke-width:3; }
+  .ray-hi    { stroke-width:3.4; }
+  .ray-dim   { opacity:.14; }
   .lead      { stroke:var(--c-ink-3); stroke-width:.9; }
   .dim       { stroke:var(--c-ink-2); stroke-width:1; }
   .arrowfill { fill:var(--c-ink-2); }
@@ -72,10 +78,19 @@
   .t-mono-k  { font-family:var(--f-mono); font-size:11px; letter-spacing:.08em; fill:var(--c-ink); }
   .t-serif-i { font-family:var(--f-serif); font-style:italic; font-size:15px; fill:var(--c-ink); }
 
+  .ray-o-text{ fill:var(--ray-o); font-weight:650; }
+  .ray-e-text{ fill:var(--ray-e); font-weight:650; }
+  #a5-rb .phase-key{ display:grid; grid-template-columns:1fr 1fr 1.45fr; gap:0; border-top:1px solid var(--c-line-2); background:var(--c-surface-2); }
+  #a5-rb .phase-key span{ min-height:48px; padding:10px 13px; color:var(--c-ink-2); font:500 10.5px/1.35 var(--f-mono); }
+  #a5-rb .phase-key span+span{ border-left:1px solid var(--c-line-2); }
+  #a5-rb .phase-key i{ display:inline-block; width:18px; height:3px; margin:0 7px 3px 0; background:var(--ray-o); }
+  #a5-rb .phase-key .e i{ background:var(--ray-e); }
+  #a5-rb .phase-key .mix i{ background:linear-gradient(90deg,var(--ray-o),var(--ray-e),var(--ray-mix)); }
+
   #a5-rb .colophon{ display:flex; gap:16px; margin-top:22px; padding-top:12px; border-top:1px solid var(--c-line-2); }
   #a5-rb .col-mark{ font-family:var(--f-serif); font-style:italic; font-size:15px; color:var(--c-ink); white-space:nowrap; }
   #a5-rb .col-txt{ font-family:var(--f-ui); font-size:12.5px; color:var(--c-ink-2); line-height:1.5; max-width:70ch; }
-  #a5-rb .meta-row{ display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:14px; font-family:var(--f-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--c-ink-3); }
+  #a5-rb .meta-row{ display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:14px; font-family:var(--f-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--c-ink-2); }
   #a5-rb .meta-row b{ color:var(--c-ink-2); font-weight:500; }
 </style>
 </head>
@@ -99,6 +114,14 @@
 
   <figure>
     <svg viewBox="0 210 1040 322" role="img" aria-label="Optical bench: source, polarizer, calcite crystal splitting ordinary and extraordinary rays, crossed analyzer, image plane">
+      <defs>
+        <linearGradient id="recombined-spectrum" x1="733" y1="284" x2="898" y2="284" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#087f97"/><stop offset=".46" stop-color="#7e4a9b"/><stop offset=".76" stop-color="#be3d72"/><stop offset="1" stop-color="#d39316"/>
+        </linearGradient>
+        <linearGradient id="image-spectrum" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#087f97"/><stop offset=".32" stop-color="#7760ad"/><stop offset=".62" stop-color="#be3d72"/><stop offset="1" stop-color="#e0a52c"/>
+        </linearGradient>
+      </defs>
       <!-- optical axis (construction) -->
       <line class="axis" x1="30" y1="300" x2="1010" y2="300"/>
 
@@ -159,13 +182,13 @@
       <!-- o-ray: E ⟂ optic-axis plane → dot-in-circle (out of page) -->
       <g transform="translate(628,300)">
         <circle class="pol-e" cx="0" cy="0" r="9"/><circle class="pol-dot" cx="0" cy="0" r="2.1"/>
-        <text class="t-mono" x="0" y="26" text-anchor="middle">o · nₒ 1.658</text>
+        <text class="t-mono ray-o-text" x="0" y="26" text-anchor="middle">o · nₒ 1.658</text>
       </g>
       <!-- e-ray: E in principal plane → double arrow (slanted) -->
       <g transform="translate(628,268)">
         <line class="pol-e" x1="-11" y1="6" x2="11" y2="-6"/>
         <path class="pol-e" d="M 6 -9 L 12 -7 L 9 -1"/><path class="pol-e" d="M -6 9 L -12 7 L -9 1"/>
-        <text class="t-mono" x="0" y="-16" text-anchor="middle">e · nₑ 1.486</text>
+        <text class="t-mono ray-e-text" x="0" y="-16" text-anchor="middle">e · nₑ 1.486</text>
       </g>
       <!-- walk-off angle marker at crystal exit -->
       <path class="constr" d="M 562 300 A 30 30 0 0 0 560 290" fill="none"/>
@@ -183,10 +206,11 @@
       </g>
 
       <!-- analyzer → image plane: recombined components interfere -->
-      <line class="ray" x1="733" y1="284" x2="898" y2="284"/>
+      <line class="ray ray-out" x1="733" y1="284" x2="898" y2="284"/>
 
       <!-- ============ IMAGE PLANE ============ -->
       <g>
+        <rect x="896" y="240" width="9" height="120" fill="url(#image-spectrum)" opacity=".9"/>
         <line class="glass" x1="900" y1="240" x2="900" y2="360"/>
         <g class="constr"><line x1="900" y1="240" x2="912" y2="228"/><line x1="900" y1="300" x2="912" y2="288"/><line x1="900" y1="360" x2="912" y2="348"/></g>
         <text class="t-mono" x="900" y="382" text-anchor="middle">IMAGE PLANE</text>
@@ -225,6 +249,11 @@
         <text x="900" y="506">V · IMAGE</text>
       </g>
     </svg>
+    <figcaption class="phase-key">
+      <span><i></i>ordinary path · nₒ 1.658</span>
+      <span class="e"><i></i>extraordinary path · nₑ 1.486</span>
+      <span class="mix"><i></i>diagrammatic hue encodes phase path and recombination — not coloured beams inside the crystal</span>
+    </figcaption>
   </figure>
 
   <div class="colophon">
@@ -254,11 +283,13 @@
       segs.forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.ray===which ? 'true':'false'); });
       oRay.classList.toggle('ray-hi', which==='o' || which==='both');
       eRay.classList.toggle('ray-hi', which==='e' || which==='both');
-      // "both" shows structure without the accent screaming — accent only on single-trace
+      oRay.classList.toggle('ray-dim', which==='e');
+      eRay.classList.toggle('ray-dim', which==='o');
+      // The resting comparison keeps both paths equal; a single trace dims its sibling.
       if(which==='both'){ oRay.classList.remove('ray-hi'); eRay.classList.remove('ray-hi'); }
     }
     segs.forEach(function(b){ b.addEventListener('click', function(){ set(b.dataset.ray); }); });
-    set('both'); // resting state = neutral full drawing
+    set('both');
   })();
 </script>
 <!-- the only contract a fragment must honour: reports height, announces ready,

@@ -14,7 +14,7 @@ Shell.registerEntry({
   /* ck-e1 · encyclopedia fields (entity model). Injected verbatim; the
      block below is the entry's original body. */
   entity: "exploration",
-  instance_of: ["hillshade-and-flow"],
+  instance_of: ["hillshade-and-flow", "fbm-noise-driver"],
   uses: ["fbm-noise"],
   governed_by: ["composing-computational-material-systems"],
   id: 'w3-hillshade-and-flow',

@@ -7,6 +7,7 @@ Shell.registerEntry({
   /* ck-e1 · encyclopedia fields (entity model). Injected verbatim; the
      block below is the entry's original body. */
   entity: "exploration",
+  instance_of: ["oklab-ramp-driver", "fbm-noise-driver"],
   uses: ["paper-tooth","oklab-ramp","fbm-noise"],
   governed_by: ["components-craft"],
   "id": "e4-masonry-cards",

@@ -1,6 +1,6 @@
 <!doctype html>
 <!-- keyline-coverage-chain · Material Studies II housed in the canonical plate frame.
-     The <main>/<svg#defs>/<script> below are Julia's Material Studies engine, VERBATIM. -->
+     The original four-way engine is extended here with contour and construction grammars. -->
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
@@ -49,6 +49,8 @@
   #kcc .cap.wide{ font:400 12.5px/1.6 var(--sans); color:var(--ink-2); border-top:1px solid var(--rule); margin:16px 0 0; padding:16px 24px 0; }
   #kcc details.code{ margin:14px 24px 0; font:400 12px/1.5 var(--mono); color:var(--ink-3); }
   #kcc details.code pre{ background:#f2f2f3; border:1px solid var(--rule); color:var(--ink-2); }
+  #kcc details.code .copy{ float:right; margin:8px 0; font:500 10px/1.4 var(--mono); text-transform:uppercase; background:var(--paper); border:1px solid var(--rule-strong); color:var(--ink); }
+  #kcc details.code:not([open]) .copy{ display:none; }
   #kcc .foot-note{ margin-top:56px; padding-top:20px; border-top:1px solid var(--gold); display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
 </style></head>
 <body>
@@ -56,12 +58,12 @@
   <div class="runhead"><span class="mono-micro">ENCYCLOPEDIA // KEYLINE-COVERAGE-CHAIN // PROPOSED</span><span class="mono-micro">MATERIAL &middot; INK</span></div>
   <header class="masthead">
     <span class="mono-micro">TECHNIQUE &middot; IMAGE FORMATION</span>
-    <h1>Keyline &amp; coverage chain: <em>four grammars, one bloom.</em></h1>
+    <h1>Keyline &amp; coverage chain: <em>six grammars, one bloom.</em></h1>
     <p class="standfirst">Separate the ink run from the per-colour coverage runs, then vary only the ink grammar. One keyline pass takes a hand-waver and a misregistration shift &mdash; the <b>ink-chain</b> atom (feTurbulence &rarr; feDisplacementMap) &mdash; each colour speckles through its own coverage plate, and the sheet finishes with grain veil and paper tooth. Every plate is generated from code; nothing is a bitmap.</p>
-    <dl class="meta"><div><dt>Entity</dt><dd>TECHNIQUE</dd></div><div><dt>Produces</dt><dd>INK-CHAIN</dd></div><div><dt>Mode</dt><dd>SVG &middot; COVERAGE &middot; GRAIN</dd></div><div><dt>Plates</dt><dd>A &ndash; D</dd></div></dl>
+    <dl class="meta"><div><dt>Entity</dt><dd>TECHNIQUE</dd></div><div><dt>Produces</dt><dd>INK-CHAIN</dd></div><div><dt>Mode</dt><dd>SVG &middot; COVERAGE &middot; GRAIN</dd></div><div><dt>Plates</dt><dd>A &ndash; F</dd></div></dl>
   </header>
-  <div class="sect"><div class="sect-head"><h2>Four grammars for one bloom</h2></div>
-    <p class="sect-sub">One Catmull-Rom outline generator and one coverage-plate stack; only the ink grammar changes across the four. This sheet is the Material Studies engine, verbatim, housed in the archive plate frame.</p></div>
+  <div class="sect"><div class="sect-head"><h2>Six grammars for one bloom</h2></div>
+    <p class="sect-sub">One Catmull-Rom outline generator and one coverage-plate stack; only the line system changes. The set now spans reproduction, pressure, tonal hatching, cartographic echo and construction drawing rather than treating “line” as one variable-width family.</p></div>
 <main id="studies"></main>
 <svg id="defs" width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="D"></defs></svg>
 <script>
@@ -142,8 +144,8 @@ function study(id,num,title,tag){const s=h("section",{class:"study",id},studies)
 function plate(parent,W,H,bg){const p=h("div",{class:"plate",style:`width:${W}px;height:${H}px;background:${bg||"transparent"}`},parent);return p}
 function svgLayer(p,W,H,vb){const s=el("svg",{width:W,height:H,viewBox:vb||`0 0 ${W} ${H}`},p);return s}
 function caption(parent,html){return h("p",{class:"cap wide",html},parent)}
-function source(parent,fn,label="source"){const d=h("details",{class:"code"},parent);const sm=h("summary",{},d);h("span",{text:label+" · builder function"},sm);
-  const b=h("button",{text:"copy"},sm);const pre=h("pre",{},d);const code=fn.toString();pre.textContent=code;
+function source(parent,fn,label="source"){const d=h("details",{class:"code"},parent);h("summary",{text:label+" · builder function"},d);
+  const b=h("button",{class:"copy",type:"button",text:"copy"},d);const pre=h("pre",{},d);const code=fn.toString();pre.textContent=code;
   b.addEventListener("click",e=>{e.preventDefault();navigator.clipboard&&navigator.clipboard.writeText(code);b.textContent="copied";setTimeout(()=>b.textContent="copy",1200)});return d}
 function stageWidth(){return Math.min(1180-56,innerWidth-56)-2*Math.min(40,Math.max(14,innerWidth*.03))}
 function tiles(stage,cols){const grid=h("div",{class:"tiles",style:`grid-template-columns:repeat(${cols},1fr)`},stage);
@@ -197,21 +199,24 @@ function serratedLeaf(x0,y0,L,Wd,ang,teeth,rng,bendAmt=.18){const c=Math.cos(ang
   return {outline:A.concat(B.reverse()),spine,T}}
 
 /* ============================================================
-   STUDY 01 — four grammars for one bloom (bouquet palette)
+   STUDY 01 — six grammars for one bloom (bouquet palette)
    ============================================================ */
 BUILDERS.push(function study01(){
-  const {s,stage}=study("s01","01","Experiment · linework — four grammars for one bloom","stroke ↔ ribbon ↔ hatch ↔ starve");
+  const {s,stage}=study("s01","01","Experiment · linework — six grammars for one bloom","keyline ↔ ribbon ↔ hatch ↔ contour ↔ construction");
   const cc=Math.min(4,cols()==1?1:cols()==2?2:4);const T=tiles(stage,cc);const tw=T.tw,B=300,W=Math.min(B,tw),u=W/B;
   const variants=[
     {name:"a · vector keyline",note:"uniform 3-unit stroke, no filter, no offset — the control. Reads as digital clip-art. Everything after is about leaving it.",inkFilter:null,shift:[0,0],mode:"key"},
     {name:"b · hand keyline + misregistration",note:"same paths; keyInk hand-waver and the ink pass shifted 1.3 × 0.9 off the fills. Each fill speckles through its own coverage plate. Now the eye reads 'printed'.",inkFilter:"keyInk",shift:[1.3,.9],mode:"key"},
     {name:"c · brush ribbon (pressure line)",note:"outlines become tapered ribbons widened by a sine pressure; brushInk starves the edges for dry-brush gaps. Carved-block / woodcut feel.",inkFilter:"brushInk",shift:[.8,.6],mode:"ribbon"},
-    {name:"d · etched hatch + stipple",note:"thin 1.6 keyline; cross-hatch fill clipped to the shade side (35°) and stipple dots down the shadow. Texture lives in the hatch, not the line.",inkFilter:"keyInkSoft",shift:[.6,.4],mode:"hatch"}];
+    {name:"d · etched hatch + stipple",note:"thin 1.6 keyline; cross-hatch fill clipped to the shade side (35°) and stipple dots down the shadow. Texture lives in the hatch, not the line.",inkFilter:"keyInkSoft",shift:[.6,.4],mode:"hatch"},
+    {name:"e · contour echo",note:"three exact offsets make the outline behave like a topographic interval. Repetition carries depth; no shade field is added.",inkFilter:null,shift:[0,0],mode:"contour"},
+    {name:"f · construction hairline",note:"0.75-unit finished paths sit inside axes, radii and envelope circles. Line distinguishes measured evidence from final form.",inkFilter:null,shift:[0,0],mode:"draft"}];
   variants.forEach((v,vi)=>{const {wrap}=T.tile(`<b>${v.name}</b> — ${v.note}`);const p=plate(wrap,W,W,"#f6efe0");
     const svg=svgLayer(p,W,W,`0 0 ${B} ${B}`);const rng=RNG(200+vi);
     const C={paper:"#f6efe0",orange:"#de5e32",green:"#5f6f45",ink:"#1a140f",dark:"#a83c1c",gold:"#e6b325",blue:"#4e6fa6"};
     el("rect",{width:B,height:B,fill:C.paper},svg);
-    const P=InkPlate(svg,{inkW:v.mode==="hatch"?1.6:3,inkColor:C.ink,inkFilter:v.inkFilter||"none",shift:v.shift,filters:v.mode==="key"&&vi===0?["none"]:["risoA","risoB","risoC","risoD"]});
+    const lineW=v.mode==="hatch"?1.6:v.mode==="contour"?1.05:v.mode==="draft"?.75:3;
+    const P=InkPlate(svg,{inkW:lineW,inkColor:C.ink,inkFilter:v.inkFilter||"none",shift:v.shift,filters:(v.mode==="key"&&vi===0)||v.mode==="contour"||v.mode==="draft"?["none"]:["risoA","risoB","risoC","risoD"]});
     if(!v.inkFilter)P.ink.removeAttribute("filter");
     // leaf pair
     [[-1,.9],[1,-.5]].forEach(([sg,ang])=>{const lf=serratedLeaf(150,196,118,26,Math.PI/2+ang*sg*.9,9,rng,.16);
@@ -228,9 +233,24 @@ BUILDERS.push(function study01(){
       P.ink.setAttribute("stroke-linecap","butt");
     } else mum(P,150,150,92,C.orange,v.mode==="hatch"?null:C.dark,rng,{n:14,w:P.inkW,dots:C.gold,shade:v.mode==="hatch"?(a=>(a>.2&&a<2.2)?hatch(C.ink,5,1):null):null});
     if(v.mode==="hatch"){for(let i=0;i<140;i++){const a=Math.PI*(.05+rng()*.55),r=60+rng()*38;const x=150+Math.cos(a)*r,y=150+Math.sin(a)*r;P.fillOnly(`M${x} ${y}a1.1 1.1 0 1 0 .1 0Z`,C.ink)}}
+    if(v.mode==="contour"){
+      P.fillRoot.setAttribute("opacity",".34");
+      [...P.fillRoot.children].forEach(g=>g.removeAttribute("filter"));
+      const sourceLines=[...P.root.querySelectorAll("path[stroke]")];
+      [.93,1.035,1.07].forEach((scale,i)=>{const echo=el("g",{fill:"none",stroke:C.ink,"stroke-width":.72,opacity:String(.64-i*.13),transform:`translate(150 150) scale(${scale}) translate(-150 -150)`},P.top);
+        sourceLines.forEach(path=>{const copy=path.cloneNode(false);copy.removeAttribute("filter");copy.setAttribute("fill","none");copy.setAttribute("stroke",C.ink);copy.setAttribute("stroke-width",".72");echo.appendChild(copy)})});
+    }
+    if(v.mode==="draft"){
+      P.fillRoot.setAttribute("opacity",".13");
+      [...P.fillRoot.children].forEach(g=>g.removeAttribute("filter"));
+      const A={fill:"none",stroke:C.blue,"stroke-width":.62,"stroke-dasharray":"3 3","opacity":.72};
+      el("line",{x1:42,y1:150,x2:258,y2:150,...A},P.top);el("line",{x1:150,y1:42,x2:150,y2:298,...A},P.top);
+      el("circle",{cx:150,cy:150,r:92,...A},P.top);el("circle",{cx:150,cy:150,r:18,...A},P.top);
+      [[58,150],[242,150],[150,58],[150,242]].forEach(([x,y])=>el("circle",{cx:x,cy:y,r:2.1,fill:C.blue,opacity:.8},P.top));
+    }
     grainVeil(p,W,W,vi?12:0,3+vi);tooth(p,W,W,4,.25);
   });
-  caption(s,`<b>Reading the four:</b> (a) is the default SVG export — clean, characterless. (b) separates the ink run from the fill runs physically; the eye reads 'printed'. (c) trades stroke for ribbon so the line gains pressure and the brush filter eats its edges — the carved-block grammar. (d) draws thin and shades by pattern; texture lives in the hatch and stipple, not the line. All four share one Catmull-Rom outline generator and one coverage-plate stack; only the ink grammar changes. Palette is the bouquet reference (orange scallop bloom, olive leaf, gold heart) rather than the lotus red.`);
+  caption(s,`<b>Reading the six:</b> (a) is the clean export control. (b) makes line a displaced ink run. (c) makes width carry pressure. (d) separates edge from tonal hatch and stipple. (e) uses repeated intervals to state relief. (f) separates construction evidence from the finished hairline. The same geometry and coverage stack survive all six; what changes is the job the line is allowed to do.`);
   source(s,study01);
 });
 

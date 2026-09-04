@@ -184,7 +184,7 @@
     var isChapterTechnique = e.entity === 'technique' &&
       ((e.stages || []).length || (e.gallery || []).length ||
        (e.exercises || []).length || (e.params || []).length);
-    if (e.entity === 'technique' && !isChapterTechnique) return renderTechniquePage(e);
+    if (e.entity === 'technique' && !isChapterTechnique) return renderTechniquePage(e, exampleId, query);
     view.kind = 'entry';
     S.current = e;
     localExample = null;
@@ -1209,7 +1209,7 @@
     var unsorted = S.entries.filter(function (e) { return e.status === 'unsorted'; }).length;
 
     var head =
-      '<p class="kicker">Front door</p>' +
+      '<p class="kicker">Index</p>' +
       '<h1>Techniques</h1>' +
       '<p class="lede">A technique is a <b>verb with a lesson</b>. Every row lists its instances — recognising ' +
       'the work by looking at it is the whole point.</p>' +
@@ -1270,7 +1270,7 @@
         var img = thumb
           ? '<img src="' + esc(pathBase + thumb) + '" alt="" loading="lazy" onerror="this.classList.add(\'nothumb\');this.removeAttribute(\'src\')">'
           : '<span class="nothumb">no<br>thumb</span>';
-        return '<a class="inst-thumb" href="#/' + esc(e.id) + '" title="' + esc(e.title) + '">' +
+        return '<a class="inst-thumb" href="#/' + esc(e.id) + '" title="' + esc(e.title) + '" aria-label="Open instance: ' + esc(e.title) + '">' +
           img + '</a>';
       }).join('') + (inst.length > 6 ? '<span class="more">+' + (inst.length - 6) + '</span>' : '');
       countLbl = inst.length + ' inst.';
@@ -1302,26 +1302,61 @@
       }
     }
 
-    return '<a class="tech-row" href="#/technique/' + esc(t.id) + '">' +
-      '<div class="tr-a"><b>' + esc(t.title) + '</b>' + stChip + '</div>' +
+    return '<div class="tech-row">' +
+      '<div class="tr-a"><a class="tech-link" href="#/technique/' + esc(t.id) + '"><b>' + esc(t.title) + '</b></a>' + stChip + '</div>' +
       '<div class="tr-b">' + esc(t.description || t.note || '') + '</div>' +
       '<div class="tr-c"><div class="inst-strip' + (inst.length ? '' : ' self') + '">' +
         stripHTML + '</div>' +
         '<span class="ct">' + countLbl + '</span></div>' +
-      '</a>';
+      '</div>';
   }
 
   /* ck-e3 · technique entry page. Called from renderEntry when
      e.entity === 'technique'. THE FIVE TESTS block, instance table, atoms
      used across instances, admitting styles, governed_by, ruling if present. */
-  function renderTechniquePage(t) {
+  function renderTechniquePage(t, exampleId, query) {
+    S.unmountAdapter();
     view.kind = 'technique';
-    S.current = t; S.currentExample = null; localExample = null;
+    S.current = t; localExample = null;
+    paramState = {};
+
+    /* A compact technique is still allowed to carry a working plate. Earlier
+       versions routed every compact technique straight to this anatomy page
+       and silently discarded `fragment` / `examples`, which made authored
+       evidence (notably keyline-coverage-chain) look like an empty proposal. */
+    var inst = instancesOfTechnique(t.id);
+    var demoEntry = t;
+    var borrowed = false;
+    var examples = t.examples || [];
+    var demo = examples.filter(function (x) { return x.id === exampleId; })[0] || examples[0] || null;
+    if (!demo && t.fragment) {
+      demo = { id: 'working-plate', title: 'Working plate', lane: 'fragment', fragment: t.fragment };
+    }
+    if (!demo) {
+      var defaultLane = S.manifest.stage && S.manifest.stage.adapter;
+      var runnable = inst.filter(function (e) {
+        var lane = e.lane || defaultLane;
+        return (e.examples || []).length || e.fragment || lane === 'fragment' || lane === 'audio';
+      });
+      var source = runnable.filter(function (e) { return e.status === 'canonical'; })[0] || runnable[0];
+      if (source) {
+        borrowed = true;
+        demoEntry = source;
+        examples = source.examples || [];
+        demo = examples.filter(function (x) { return x.id === exampleId; })[0] || examples[0] || null;
+        var sourceLane = source.lane || defaultLane;
+        if (!demo && (source.fragment || sourceLane === 'fragment')) {
+          demo = { id: 'worked-instance', title: source.title, lane: 'fragment', fragment: source.fragment || 'fragment.html' };
+        } else if (!demo && sourceLane === 'audio') {
+          demo = { id: 'worked-instance', title: source.title, lane: 'audio' };
+        }
+      }
+    }
+    S.currentExample = demo;
     S.markCurrent(); position();
     var crumb = el('crumb');
     if (crumb) crumb.textContent = 'Technique · ' + t.title;
 
-    var inst = instancesOfTechnique(t.id);
     var L = layerOf(t) || 'no layer on file';
 
     /* atoms used across instances — the chip row Julia asked for */
@@ -1350,6 +1385,18 @@
     var stChip = '<span class="st" data-st="' + esc(t.status || 'canonical') + '">' +
       esc(String(t.status || 'canonical').replace('-', ' ')) + '</span>' +
       (t.stub ? '<span class="st" data-st="stub">stub</span>' : '');
+
+    var aspect = (demoEntry.frame && demoEntry.frame.aspect) || (S.manifest.stage && S.manifest.stage.aspect) || '3/2';
+    var demoLane = (demo && demo.lane) || demoEntry.lane || (S.manifest.stage && S.manifest.stage.adapter);
+    var demoHTML = demo
+      ? (borrowed ? '<p class="stage-note"><b>Worked instance · </b><a href="#/' + esc(demoEntry.id) + '">' + esc(demoEntry.title) + '</a></p>' : '') +
+        '<div class="mat"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i>' +
+          '<div class="stage" id="stage"' +
+            (demoLane === 'fragment' ? ' data-fit="lens"' : demoLane === 'audio' ? ' data-fit="audio"' : '') +
+          '></div></div>' +
+        '<div class="draw" id="bar"></div>' +
+        '<nav class="strip" id="strip" aria-label="Examples"></nav>'
+      : '';
 
     /* Five tests: pull from t.tests if present, else derive from a
        CANONICAL instance's critique block. If neither, print an honest
@@ -1426,13 +1473,14 @@
         }).join('') + '</div></section>'
       : '';
 
-    el('view').innerHTML =
+    el('view').innerHTML = '<article style="--stage-aspect:' + esc(aspect.replace('/', ' / ')) + '">' +
       '<p class="kicker">Technique · <span style="text-transform:uppercase">' + esc(L) + '</span></p>' +
       '<h1>' + esc(t.title) + '</h1>' +
       '<div class="meta">' + stChip + '<span class="tags">' + inst.length + ' inst. <b>·</b> layer: ' +
         esc(L) + (t.lane ? ' <b>·</b> lane: ' + esc(t.lane) : '') +
       '</span></div>' +
       '<p class="lede">' + esc(t.description || t.note || '') + '</p>' +
+      demoHTML +
       testsHTML +
       producesBlock +
       instTable +
@@ -1440,7 +1488,17 @@
       stylesBlock +
       govBlock +
       rulingHTML(t) +
-      pagerHTML(t);
+      pagerHTML(t) +
+      '</article>';
+
+    if (demo) {
+      renderStrip(demoEntry, demo);
+      S.mountAdapter({
+        stage: el('stage'), bar: el('bar'), entry: demoEntry, example: demo,
+        query: query || {}, params: paramValues(demoEntry, demo)
+      });
+      fillPane(activeTab());
+    }
 
     observeSwatches(el('view'));
     window.scrollTo(0, 0);
