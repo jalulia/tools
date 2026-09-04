@@ -791,5 +791,32 @@ Shell.registerManifest({
       },
       note: 'Material Studies II. Produces ink-chain. fragment.html houses the engine in the canonical plate frame.' },
 
+    /* ── Gardener · image-processing / reflexive thread. Two identical line
+       gratings of pitch p; the second is a copy of the first turned by a small
+       angle theta. Overprint them and ink density is the union
+           D(x,y) = 1 - (1 - oA) * (1 - oB).
+       Where the rulings coincide the gaps stay open (light); a quarter-beat away
+       they interleave and fill to solid (dark). That travelling envelope is the
+       moiré, at beat pitch P = p / (2 sin(theta/2)) — a frequency NEITHER grating
+       contains. Set theta = 0 and the beat pitch runs to infinity: one ruling, no
+       moiré. The reflexive sibling of the archive's own screens (dot-screen-20,
+       bayer8): those are periodic rulings this technique beats against a second.
+       Atom-free (introduces no swatch); `couples` is not a manifest key, so the
+       dot-screen-20 / bayer8 relation is stated in the note, not declared.
+       status: proposed — Julia rules by editing this stub. ──────────────────── */
+    { id: 'moire-aliasing', title: 'Moiré · sampling made visible',
+      order: 2040, lane: 'canvas2d', entity: 'technique',
+      section: 'techniques', status: 'proposed', stub: true,
+      layer: 'IMAGE FORMATION',
+      description: 'Overprint a fine ruling with a copy of itself turned a few degrees, and a slow light-and-dark banding appears at a pitch neither ruling contains. One periodic field sampling another — the act of sampling, drawn.',
+      governed_by: ['composing-computational-material-systems'],
+      tests: {
+        shared_cause: 'One ruling pitch p and one angle theta drive everything: grating A at 0 deg and grating B — the same grating — at theta. The bands are the beat of those two, not an overlay painted on top.',
+        distinct_job: 'Coincidence bands read light (open gaps); interleave bands read dark (filled gaps). The same two rulings, opposite consequence a quarter-beat apart.',
+        order: 'Rule both gratings first, then read their overprint union D = 1 - (1 - oA)(1 - oB). Painting the bands directly, without the two rulings underneath, is decoration with no cause.',
+        removal_test: 'Set theta to 0: the two rulings coincide, the beat pitch P = p / 2 sin(theta/2) runs to infinity, and the banding is gone — the surest sign it was never in either grating alone.',
+        overuse: 'Turn theta past a few degrees and the beat pitch collapses toward the carrier: the broad envelope dissolves into a rotated cross-hatch texture and the moiré reading is lost.'
+      },
+      note: 'Image-processing / reflexive thread. Samples the archive\'s own screens — dot-screen-20 and bayer8 are periodic rulings this technique beats against a second ruling. Atom-free (no new swatch). `couples` is not a manifest key, so that relation is prose. Specimen: claude/proposals/moire-aliasing.html (built + rendered true-type, forced-light, tokens-only, one accent = interactive, survives Mono).' },
 ]
 });
