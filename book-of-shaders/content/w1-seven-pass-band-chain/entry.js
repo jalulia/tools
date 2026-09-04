@@ -193,10 +193,18 @@ function oklabToRgb(lab) {
 }
 const PAL = [[206, 198, 176], [166, 164, 146], [116, 122, 112], [70, 82, 82], [30, 38, 48]];
 const PAL_LAB = PAL.map(rgbToOklab);
-function bandColour(t) {                       // OKLab lerp along the ramp
+// Aerial haze, also in OKLab: the furthest band (t=0) should almost merge
+// into the sky rather than stop at a fixed pale colour — this is the same
+// depth-haze move ki-landscapes/index.html's "Assembling a field" module
+// makes (hz = haze*(1-t)^2, lerp toward the sky's own OKLab), which is the
+// compact demo of what the full Ki visualizer does at scale.
+const SKY_LAB = rgbToOklab([238, 228, 206]);    // horizon sky colour
+function bandColour(t) {                       // OKLab lerp along the ramp, then hazed toward sky
   const u = lib.clamp(t, 0, 1) * (PAL_LAB.length - 1);
   const i = Math.min(PAL_LAB.length - 2, Math.floor(u)), f = u - i;
-  const lab = [0, 1, 2].map(k => lib.lerp(PAL_LAB[i][k], PAL_LAB[i + 1][k], f));
+  let lab = [0, 1, 2].map(k => lib.lerp(PAL_LAB[i][k], PAL_LAB[i + 1][k], f));
+  const hz = 0.55 * (1 - t) * (1 - t);
+  lab = [0, 1, 2].map(k => lib.lerp(lab[k], SKY_LAB[k], hz));
   return oklabToRgb(lab);
 }
 const rgb = c => 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
@@ -208,6 +216,15 @@ const sky = ctx.createLinearGradient(0, 0, 0, H * 0.7);
 sky.addColorStop(0, 'rgb(226,222,206)');
 sky.addColorStop(1, 'rgb(238,228,206)');
 ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+
+// Soft sun, low and warm — the other move ki-landscapes/index.html's compact
+// field demo makes (its 'sun' toggle, default on): a wide, faint radial glow
+// laid down before any band, so the furthest hazed ridges sit inside real
+// backlight instead of a flat gradient.
+const sun = ctx.createRadialGradient(W * 0.78, H * 0.16, 0, W * 0.78, H * 0.16, H * 0.65);
+sun.addColorStop(0, 'rgba(255,246,214,0.5)');
+sun.addColorStop(1, 'rgba(255,246,214,0)');
+ctx.fillStyle = sun; ctx.fillRect(0, 0, W, H);
 
 const PTS = 220;
 
@@ -421,6 +438,15 @@ const sky = ctx.createLinearGradient(0, 0, 0, H * 0.7);
 sky.addColorStop(0, 'rgb(226,222,206)');
 sky.addColorStop(1, 'rgb(238,228,206)');
 ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+
+// Soft sun, low and warm — the other move ki-landscapes/index.html's compact
+// field demo makes (its 'sun' toggle, default on): a wide, faint radial glow
+// laid down before any band, so the furthest hazed ridges sit inside real
+// backlight instead of a flat gradient.
+const sun = ctx.createRadialGradient(W * 0.78, H * 0.16, 0, W * 0.78, H * 0.16, H * 0.65);
+sun.addColorStop(0, 'rgba(255,246,214,0.5)');
+sun.addColorStop(1, 'rgba(255,246,214,0)');
+ctx.fillStyle = sun; ctx.fillRect(0, 0, W, H);
 
 const PTS = 220;
 
