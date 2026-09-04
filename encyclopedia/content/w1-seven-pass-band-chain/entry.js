@@ -34,7 +34,7 @@ Shell.registerEntry({
     title: 'KLS-01 — Ki-Landscapes/index.html:260–332',
     author: 'Julia Compton',
     date: '2026',
-    note: 'Ported to this stage and reduced to one still frame. The pass list, the per-band coupling and the drift are the original’s; the colour is interpolated in sRGB here where the original uses OKLab, which is a real loss and is listed under faults.'
+    note: 'Ported to this stage and reduced to one still frame. The pass list, the per-band coupling, the drift and the OKLab ramp are the original’s.'
   },
   thumb: 'thumb.png',
 
@@ -172,11 +172,38 @@ const PAD = lib._klsPad, PX = PAD.getContext('2d');
 // Far to near. t = 0 is the FURTHEST band, so the ramp starts pale and warm —
 // aerial perspective, which is why the catch-light below has to lift by a
 // fraction of the remaining headroom rather than by a fixed amount.
+// OKLab, not sRGB: a straight channel lerp goes grey through the middle of a
+// ramp like this one (the fault the port used to carry — see critique). OKLab
+// is the space the original (Ki-Landscapes) actually blends in; the five
+// anchors and the picture they make are unchanged, only where they are mixed.
+function s2lin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+function lin2s(c) { c = lib.clamp(c, 0, 1); return Math.round((c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055) * 255); }
+function rgbToOklab(c) {
+  const r = s2lin(c[0]), g = s2lin(c[1]), b = s2lin(c[2]);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+          1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+          0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s];
+}
+function oklabToRgb(lab) {
+  const l = Math.pow(lab[0] + 0.3963377774 * lab[1] + 0.2158037573 * lab[2], 3);
+  const m = Math.pow(lab[0] - 0.1055613458 * lab[1] - 0.0638541728 * lab[2], 3);
+  const s = Math.pow(lab[0] - 0.0894841775 * lab[1] - 1.2914855480 * lab[2], 3);
+  return [
+    lin2s(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+    lin2s(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+    lin2s(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s)
+  ];
+}
 const PAL = [[206, 198, 176], [166, 164, 146], [116, 122, 112], [70, 82, 82], [30, 38, 48]];
-function bandColour(t) {                       // sRGB lerp along the ramp
-  const u = lib.clamp(t, 0, 1) * (PAL.length - 1);
-  const i = Math.min(PAL.length - 2, Math.floor(u)), f = u - i;
-  return [0, 1, 2].map(k => Math.round(lib.lerp(PAL[i][k], PAL[i + 1][k], f)));
+const PAL_LAB = PAL.map(rgbToOklab);
+function bandColour(t) {                       // OKLab lerp along the ramp
+  const u = lib.clamp(t, 0, 1) * (PAL_LAB.length - 1);
+  const i = Math.min(PAL_LAB.length - 2, Math.floor(u)), f = u - i;
+  const lab = [0, 1, 2].map(k => lib.lerp(PAL_LAB[i][k], PAL_LAB[i + 1][k], f));
+  return oklabToRgb(lab);
 }
 const rgb = c => 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
 const shade = (c, k) => c.map(v => Math.round(lib.clamp(v * k, 0, 255)));
@@ -495,7 +522,6 @@ ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
     operators: ['band gradient', 'wash (soft-light)', 'granulation (multiply, masked)', 'cut-paper edge', 'edge bloom', 'crest catch-light', 'edge pooling', 'paper grain (soft-light)'],
     why_it_survives: 'Removal is on the page: the second example is the same chain with the wash, the granulation, the bloom and the pooling deleted. What collapses is specific — a band can no longer be pale and textured at the same time, because those were the passes carrying pigment density independently of tone — and what survives is also specific, which is why the reduction is a good picture rather than a broken one. The catch-light is the pass whose removal is hardest to argue with: without it the horizon has no rim and the bands stop stacking.',
     faults: [
-      'Colour is interpolated in sRGB. The original works in OKLab, and the difference shows in the middle of the ramp where the sRGB lerp goes grey through the transition. This is the single largest loss in the port and it is a loss of about twelve lines.',
       'Two of the seven passes route through a full-size scratch canvas. At 1440 with DPR 2 that is two 2880 x 1320 buffers per band; it paints once, which is the only reason it is acceptable.',
       'The ridge is a 1-D fbm rather than the original’s hashed-lattice landform placement (KLS-03), so the bands have texture but no features — no peaks that are peaks. The composition is therefore weaker than the source at exactly the level the source is best at.',
       'The vignette is outside the band loop and is therefore the one pinned, global thing in the piece. It is a frame and not a treatment, which is the argument for it; it is also the pass that would be cut first.'

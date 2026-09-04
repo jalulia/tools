@@ -22,11 +22,38 @@ const JOURNEY = lib.clamp(p.journey == null ? 0.28 : p.journey, 0, 1);
 // Far to near. t = 0 is the FURTHEST band, so the ramp starts pale and warm —
 // aerial perspective, which is why the catch-light below has to lift by a
 // fraction of the remaining headroom rather than by a fixed amount.
+// OKLab, not sRGB: a straight channel lerp goes grey through the middle of a
+// ramp like this one (the fault the port used to carry — see critique). OKLab
+// is the space the original (Ki-Landscapes) actually blends in; the five
+// anchors and the picture they make are unchanged, only where they are mixed.
+function s2lin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+function lin2s(c) { c = lib.clamp(c, 0, 1); return Math.round((c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055) * 255); }
+function rgbToOklab(c) {
+  const r = s2lin(c[0]), g = s2lin(c[1]), b = s2lin(c[2]);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+          1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+          0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s];
+}
+function oklabToRgb(lab) {
+  const l = Math.pow(lab[0] + 0.3963377774 * lab[1] + 0.2158037573 * lab[2], 3);
+  const m = Math.pow(lab[0] - 0.1055613458 * lab[1] - 0.0638541728 * lab[2], 3);
+  const s = Math.pow(lab[0] - 0.0894841775 * lab[1] - 1.2914855480 * lab[2], 3);
+  return [
+    lin2s(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+    lin2s(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+    lin2s(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s)
+  ];
+}
 const PAL = [[206, 198, 176], [166, 164, 146], [116, 122, 112], [70, 82, 82], [30, 38, 48]];
-function bandColour(t) {
-  const u = lib.clamp(t, 0, 1) * (PAL.length - 1);
-  const i = Math.min(PAL.length - 2, Math.floor(u)), f = u - i;
-  return [0, 1, 2].map(k => Math.round(lib.lerp(PAL[i][k], PAL[i + 1][k], f)));
+const PAL_LAB = PAL.map(rgbToOklab);
+function bandColour(t) {                       // OKLab lerp along the ramp
+  const u = lib.clamp(t, 0, 1) * (PAL_LAB.length - 1);
+  const i = Math.min(PAL_LAB.length - 2, Math.floor(u)), f = u - i;
+  const lab = [0, 1, 2].map(k => lib.lerp(PAL_LAB[i][k], PAL_LAB[i + 1][k], f));
+  return oklabToRgb(lab);
 }
 const rgb   = c => 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
 const shade = (c, k) => c.map(v => Math.round(lib.clamp(v * k, 0, 255)));
