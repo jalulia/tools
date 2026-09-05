@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Register</title>
+<link rel="icon" href="data:,">
+<style>
+:root{
+  --ink:#15140F; --ink-2:#55544f; --ink-3:#8a8984; --line:#d9d8d3; --line-2:#ecebe6;
+  --paper:#ffffff; --sunk:#f6f5f2; --acc:#1E5EE0; --warn:#dc1e1e; --ok:#00963c;
+  --ui:'Archivo',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
+  --num:ui-monospace,'SF Mono',Menlo,Monaco,monospace;
+  --rail:248px; --insp:284px; --top:44px; --stat:26px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--paper);color:var(--ink);
+  font:12px/1.45 var(--ui);-webkit-font-smoothing:antialiased;color-scheme:light only;}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;padding:0;cursor:pointer;color:inherit}
+:focus-visible{outline:1px solid var(--acc);outline-offset:1px}
+.mono{font-family:var(--num);font-variant-numeric:tabular-nums}
+
+/* ---------- frame ---------- */
+#app{display:grid;height:100%;
+  grid-template-columns:var(--rail) 1fr var(--insp);
+  grid-template-rows:var(--top) 1fr var(--stat);
+  grid-template-areas:"top top top" "rail stage insp" "stat stat stat";}
+#top{grid-area:top;display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px solid var(--line);min-width:0}
+#rail{grid-area:rail;border-right:1px solid var(--line);overflow:auto;display:flex;flex-direction:column}
+#stage{grid-area:stage;position:relative;overflow:hidden;background:var(--sunk);min-width:0}
+#insp{grid-area:insp;border-left:1px solid var(--line);overflow:auto}
+#stat{grid-area:stat;border-top:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 12px;
+  font-family:var(--num);font-size:10.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+
+/* ---------- top bar ---------- */
+.brand{font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:11px}
+.brand span{color:var(--ink-3);font-weight:400}
+#title{border:0;border-bottom:1px solid transparent;padding:3px 4px;min-width:80px;max-width:260px;background:none}
+#title:hover{border-bottom-color:var(--line)}
+#title:focus{border-bottom-color:var(--acc);outline:none}
+.docid{font-family:var(--num);font-size:10.5px;color:var(--ink-3)}
+.spacer{flex:1 1 auto;min-width:8px}
+.btn{border:1px solid var(--line);border-radius:2px;padding:4px 9px;font-size:11px;white-space:nowrap;background:var(--paper)}
+.btn:hover{border-color:var(--ink-3)}
+.btn[disabled]{opacity:.4;cursor:default}
+.btn.pri{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.pri:hover{background:#000}
+.btn.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.save{font-family:var(--num);font-size:10.5px;color:var(--ink-3);min-width:64px}
+.save.dirty{color:var(--warn)}
+
+/* ---------- popovers ---------- */
+.pop{position:absolute;top:var(--top);z-index:40;background:var(--paper);border:1px solid var(--ink);
+  box-shadow:0 8px 28px rgba(0,0,0,.13);min-width:260px;max-width:min(560px,92vw);max-height:76vh;overflow:auto}
+.pop[hidden]{display:none}
+.pop h4{margin:0;padding:8px 12px;border-bottom:1px solid var(--line-2);font-size:10.5px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:500;position:sticky;top:0;background:var(--paper)}
+.pop .row{display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--line-2);cursor:pointer}
+.pop .row:hover{background:var(--sunk)}
+.pop .row b{font-weight:500}
+.pop .row .sub{color:var(--ink-3);font-family:var(--num);font-size:10.5px;margin-left:auto}
+.pop .pad{padding:10px 12px}
+
+/* ---------- left rail ---------- */
+.sec{border-bottom:1px solid var(--line)}
+.sec>h3{margin:0;padding:8px 12px 6px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:500;display:flex;align-items:center;gap:6px}
+.sec>h3 .n{margin-left:auto;font-family:var(--num);letter-spacing:0}
+.lay{display:flex;align-items:center;gap:7px;padding:5px 12px;cursor:pointer;border-left:2px solid transparent}
+.lay:hover{background:var(--sunk)}
+.lay.on{background:var(--sunk);border-left-color:var(--ink)}
+.lay .sw{width:8px;height:8px;flex:none;outline:.5px solid rgba(0,0,0,.25)}
+.lay .nm{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lay .ct{font-family:var(--num);font-size:10.5px;color:var(--ink-3)}
+.lay .ic{opacity:.35;width:15px;text-align:center;font-size:10px;line-height:1}
+.lay .ic.act{opacity:1}
+.lay:hover .ic{opacity:.75}
+.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-2);border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}
+.tools button{background:var(--paper);padding:9px 0;text-align:center;font-size:10.5px;line-height:1.25}
+.tools button span{display:block;font-family:var(--num);font-size:9px;color:var(--ink-3)}
+.tools button.on{background:var(--ink);color:var(--paper)}
+.tools button.on span{color:rgba(255,255,255,.6)}
+
+/* ---------- fields ---------- */
+.fld{display:flex;align-items:center;gap:8px;padding:4px 12px}
+.fld label{flex:0 0 84px;color:var(--ink-3);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fld input[type=text],.fld input[type=number],.fld select,.fld textarea{
+  flex:1 1 auto;min-width:0;border:1px solid var(--line);border-radius:2px;padding:3px 5px;
+  font-family:var(--num);font-size:11px;background:var(--paper)}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--acc)}
+.fld input[type=checkbox]{margin:0}
+.fld .unit{color:var(--ink-3);font-family:var(--num);font-size:10px}
+.hint{padding:2px 12px 8px;color:var(--ink-3);font-size:10.5px;line-height:1.4}
+
+/* ---------- points table ---------- */
+table.pts{width:100%;border-collapse:collapse;font-family:var(--num);font-size:10.5px}
+table.pts th{text-align:left;color:var(--ink-3);font-weight:400;padding:3px 6px;border-bottom:1px solid var(--line-2)}
+table.pts td{padding:0;border-bottom:1px solid var(--line-2)}
+table.pts td input{width:100%;border:0;padding:3px 6px;background:none;font-family:var(--num);font-size:10.5px}
+table.pts td input:focus{outline:1px solid var(--acc);outline-offset:-1px}
+table.pts tr.on td{background:#eef3ff}
+table.pts td.x{width:22px;text-align:center;color:var(--ink-3);cursor:pointer}
+table.pts td.x:hover{color:var(--warn)}
+table.pts td.i{width:26px;padding:3px 6px;color:var(--ink-3)}
+
+/* ---------- review ---------- */
+.rev{border-bottom:1px solid var(--line-2);padding:7px 12px;display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.rev:hover{background:var(--sunk)}
+.rev.off{opacity:.42}
+.rev .k{font-family:var(--num);font-size:10px;padding:1px 4px;border:1px solid var(--line);border-radius:2px;flex:none}
+.rev .k.add{border-color:var(--ok);color:var(--ok)}
+.rev .k.del{border-color:var(--warn);color:var(--warn)}
+.rev .k.chg{border-color:var(--acc);color:var(--acc)}
+.rev .d{flex:1 1 auto;min-width:0}
+.rev .d small{display:block;color:var(--ink-3);font-family:var(--num);font-size:10px}
+.banner{padding:9px 12px;background:#eef3ff;border-bottom:1px solid var(--line);font-size:11px;line-height:1.5}
+.banner.warn{background:#fff2f2}
+.banner b{font-weight:600}
+
+/* ---------- toast ---------- */
+#toast{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:60;
+  background:var(--ink);color:var(--paper);padding:7px 13px;border-radius:2px;font-size:11px;
+  font-family:var(--num);opacity:0;transition:opacity .18s;pointer-events:none;max-width:70%}
+#toast.on{opacity:1}
+
+/* ---------- gate ---------- */
+#gate{position:fixed;inset:0;z-index:90;background:var(--paper);display:flex;align-items:center;justify-content:center}
+#gate[hidden]{display:none}
+#gate .card{width:min(420px,90vw)}
+#gate h1{font-size:13px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 6px}
+#gate p{color:var(--ink-2);margin:0 0 14px;line-height:1.55}
+#gate input{width:100%;border:1px solid var(--line);border-radius:2px;padding:7px 8px;font-family:var(--num);font-size:12px}
+#gate .err{color:var(--warn);min-height:16px;font-size:11px;margin-top:6px}
+
+/* the site nav chip is injected into every deployed tool page, fixed bottom-left —
+   lift it clear of the status bar and leave the rail room underneath it */
+body #tn{bottom:34px!important;left:8px!important}
+body #tn-menu{bottom:78px!important;left:8px!important}
+#rail{padding-bottom:56px}
+
+@media (max-width:1180px){ :root{--rail:200px;--insp:236px} }
+@media (max-width:900px){
+  #app{grid-template-columns:1fr;grid-template-rows:var(--top) 40vh 1fr var(--stat);
+       grid-template-areas:"top" "stage" "rail" "stat"}
+  #insp{display:none}
+}
+</style>
+</head>
+<body>
+
+<div id="gate" hidden>
+  <div class="card">
+    <h1>Register</h1>
+    <p>This workspace is gated by a key. Paste it once and it stays in this browser.</p>
+    <input id="gatekey" type="password" placeholder="rk_…" autocomplete="off" spellcheck="false">
+    <div class="err" id="gateerr"></div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="btn pri" id="gateok">Unlock</button>
+      <button class="btn" id="gatelocal">Work locally</button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <header id="top">
+    <div class="brand">Register <span>· points on a plate</span></div>
+    <input id="title" value="Untitled" spellcheck="false" aria-label="Document title">
+    <span class="docid" id="docid">—</span>
+    <span class="save" id="savestate">local</span>
+    <span class="spacer"></span>
+    <button class="btn" id="b-docs">Documents ▾</button>
+    <button class="btn" id="b-image">Source ▾</button>
+    <button class="btn" id="b-preview">Preview</button>
+    <button class="btn" id="b-export">Export ▾</button>
+    <button class="btn pri" id="b-ask">Send to Claude</button>
+  </header>
+
+  <aside id="rail">
+    <div class="tools" id="tools"></div>
+    <div class="sec" id="sec-layers"><h3>Layers <span class="n" id="laycount"></span></h3><div id="layers"></div></div>
+    <div class="sec" id="sec-params"><h3>Preset</h3><div id="params"></div></div>
+    <div class="sec" id="sec-view"><h3>View</h3><div id="viewopts"></div></div>
+  </aside>
+
+  <main id="stage">
+    <canvas id="cv"></canvas>
+    <div id="toast"></div>
+  </main>
+
+  <aside id="insp"><div id="inspbody"></div></aside>
+
+  <footer id="stat">
+    <span id="s-uv">u — v —</span>
+    <span id="s-px">— px</span>
+    <span id="s-zoom">100%</span>
+    <span id="s-sel">—</span>
+    <span id="s-pipe"></span>
+    <span class="spacer" style="flex:1"></span>
+    <span id="s-hint">v select · p pen · r rect · c circle · l ellipse · t point · m mirror · d plate only · ' grid · space pan · 0 fit</span>
+  </footer>
+</div>
+
+<div class="pop" id="pop" hidden></div>
+
+<script src="plates.js"></script>
+<script type="module" src="ui.js"></script>
+</body>
+</html>
