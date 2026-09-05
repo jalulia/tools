@@ -294,12 +294,31 @@ export class View {
     c.strokeStyle = '#d9d8d3'; c.lineWidth = 1;
     c.strokeRect(Math.round(ix) + .5, Math.round(iy) + .5, Math.round(iw), Math.round(ih));
 
+    if (!S.img) this.drawEmpty();
     if (S.doc.editor.grid && S.showGrid) this.drawGrid();
     if (S.showGeom !== false) this.drawGeom();
     if (S.doc.editor.mirror != null) this.drawMirror();
     this.drawDraft();
     this.drawRulers();
     if (this.loupe && this.cursor && S.img && sc < 6) this.drawLoupe();
+  }
+
+  /* nothing loaded yet — say the one thing to do rather than showing an empty grey box */
+  drawEmpty() {
+    const c = this.ctx, w = this.cw, h = this.ch;
+    const bw = Math.min(420, w - 80), bh = Math.min(190, h - 80);
+    const bx = (w - bw) / 2, by = (h - bh) / 2;
+    c.save();
+    c.strokeStyle = '#c9c8c2'; c.lineWidth = 1.5; c.setLineDash([7, 5]);
+    c.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw), Math.round(bh));
+    c.setLineDash([]);
+    c.textAlign = 'center';
+    c.fillStyle = '#15140F'; c.font = '600 14px -apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif';
+    c.fillText('Drop an image here', bx + bw / 2, by + bh / 2 - 8);
+    c.fillStyle = '#8a8984'; c.font = '11.5px -apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif';
+    c.fillText('or use Image ▾ up top · press ? for how this works', bx + bw / 2, by + bh / 2 + 14);
+    c.textAlign = 'left';
+    c.restore();
   }
 
   drawGrid() {

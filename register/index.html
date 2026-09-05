@@ -66,9 +66,13 @@ button{background:none;border:0;padding:0;cursor:pointer;color:inherit}
 
 /* ---------- left rail ---------- */
 .sec{border-bottom:1px solid var(--line)}
-.sec>h3{margin:0;padding:8px 12px 6px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+.sec>h3{margin:0;padding:8px 12px 6px;cursor:default;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
   color:var(--ink-3);font-weight:500;display:flex;align-items:center;gap:6px}
 .sec>h3 .n{margin-left:auto;font-family:var(--num);letter-spacing:0}
+.sec>h3.fold{cursor:pointer}
+.sec>h3.fold::after{content:'−';margin-left:auto;font-family:var(--num);font-size:11px;color:var(--ink-3)}
+.sec.shut>h3.fold::after{content:'+'}
+.sec.shut>div{display:none}
 .lay{display:flex;align-items:center;gap:7px;padding:5px 12px;cursor:pointer;border-left:2px solid transparent}
 .lay:hover{background:var(--sunk)}
 .lay.on{background:var(--sunk);border-left-color:var(--ink)}
@@ -126,6 +130,52 @@ table.pts td.i{width:26px;padding:3px 6px;color:var(--ink-3)}
   font-family:var(--num);opacity:0;transition:opacity .18s;pointer-events:none;max-width:70%}
 #toast.on{opacity:1}
 
+/* ---------- help sheet ---------- */
+#help{position:fixed;inset:0;z-index:80;background:rgba(21,20,15,.34);display:flex;align-items:center;justify-content:center;padding:24px}
+#help[hidden]{display:none}
+#help .sheet{background:var(--paper);border:1px solid var(--ink);width:min(720px,100%);max-height:88vh;overflow:auto;
+  box-shadow:0 18px 60px rgba(0,0,0,.22)}
+#help .hd{display:flex;align-items:baseline;gap:10px;padding:16px 22px 12px;border-bottom:1px solid var(--line)}
+#help .hd h2{margin:0;font-size:13px;letter-spacing:.16em;text-transform:uppercase}
+#help .hd span{color:var(--ink-3);font-size:11.5px}
+#help .hd button{margin-left:auto;color:var(--ink-3);font-size:18px;line-height:1;padding:0 2px}
+#help .bd{padding:6px 22px 22px}
+#help h3{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin:20px 0 8px;font-weight:500}
+#help ol{margin:0;padding:0;list-style:none;counter-reset:s}
+#help ol li{counter-increment:s;position:relative;padding:11px 0 11px 34px;border-bottom:1px solid var(--line-2);line-height:1.6}
+#help ol li::before{content:counter(s);position:absolute;left:0;top:11px;width:20px;height:20px;border:1px solid var(--ink);
+  border-radius:50%;text-align:center;font-family:var(--num);font-size:10.5px;line-height:19px}
+#help ol li b{font-weight:600}
+#help ol li em{font-style:normal;font-family:var(--num);font-size:11px;background:var(--sunk);border:1px solid var(--line-2);
+  border-radius:2px;padding:1px 5px}
+#help .map{display:grid;grid-template-columns:1fr 1.6fr 1fr;gap:6px;margin:8px 0 4px;font-size:10.5px;text-align:center}
+#help .map div{border:1px solid var(--line);padding:14px 6px;color:var(--ink-3);line-height:1.5}
+#help .map div b:first-child{display:block;color:var(--ink);font-weight:600;font-size:11px;margin-bottom:3px}
+#help .map div kbd{font-family:var(--num);font-size:10px;background:var(--sunk);border:1px solid var(--line-2);border-radius:2px;padding:0 4px}
+#help .keys{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px 18px;font-size:11.5px}
+#help .keys div{display:flex;gap:8px;padding:3px 0;border-bottom:1px solid var(--line-2)}
+#help .keys kbd{font-family:var(--num);font-size:10.5px;background:var(--sunk);border:1px solid var(--line-2);
+  border-radius:2px;padding:1px 5px;min-width:22px;text-align:center;flex:none}
+#help .keys span{color:var(--ink-2)}
+#help p{line-height:1.6;color:var(--ink-2);margin:6px 0}
+#help .lay-key{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;font-size:11.5px;align-items:baseline}
+#help .lay-key i{width:8px;height:8px;display:inline-block;outline:.5px solid rgba(0,0,0,.25)}
+#help .lay-key span{color:var(--ink-2)}
+#help .lay-key b{font-weight:600;color:var(--ink)}
+
+/* ---------- first-run strip ---------- */
+#firstrun{position:absolute;left:0;right:0;top:0;z-index:6;background:var(--ink);color:var(--paper);
+  padding:8px 14px;font-size:11.5px;display:flex;align-items:center;gap:12px}
+#firstrun[hidden]{display:none}
+#firstrun b{font-weight:600}
+#firstrun button{color:var(--paper);text-decoration:underline;font-size:11.5px}
+#firstrun .x{margin-left:auto;text-decoration:none;opacity:.6;font-size:15px;line-height:1}
+
+/* ---------- drop target ---------- */
+#stage.dropping::after{content:'Drop the image';position:absolute;inset:14px;z-index:7;
+  border:2px dashed var(--acc);background:rgba(30,94,224,.06);color:var(--acc);
+  display:flex;align-items:center;justify-content:center;font-size:13px;letter-spacing:.06em;pointer-events:none}
+
 /* ---------- gate ---------- */
 #gate{position:fixed;inset:0;z-index:90;background:var(--paper);display:flex;align-items:center;justify-content:center}
 #gate[hidden]{display:none}
@@ -171,21 +221,25 @@ body #tn-menu{bottom:78px!important;left:8px!important}
     <span class="docid" id="docid">—</span>
     <span class="save" id="savestate">local</span>
     <span class="spacer"></span>
-    <button class="btn" id="b-docs">Documents ▾</button>
-    <button class="btn" id="b-image">Source ▾</button>
+    <button class="btn" id="b-docs">Open ▾</button>
+    <button class="btn" id="b-image">Image ▾</button>
     <button class="btn" id="b-preview">Preview</button>
     <button class="btn" id="b-export">Export ▾</button>
-    <button class="btn pri" id="b-ask">Send to Claude</button>
+    <button class="btn pri" id="b-ask">Ask Claude</button>
+    <button class="btn" id="b-help" title="How this works" aria-label="Help">?</button>
   </header>
 
   <aside id="rail">
     <div class="tools" id="tools"></div>
     <div class="sec" id="sec-layers"><h3>Layers <span class="n" id="laycount"></span></h3><div id="layers"></div></div>
-    <div class="sec" id="sec-params"><h3>Preset</h3><div id="params"></div></div>
-    <div class="sec" id="sec-view"><h3>View</h3><div id="viewopts"></div></div>
+    <div class="sec shut" id="sec-params"><h3 class="fold">Preset</h3><div id="params"></div></div>
+    <div class="sec shut" id="sec-view"><h3 class="fold">View</h3><div id="viewopts"></div></div>
   </aside>
 
   <main id="stage">
+    <div id="firstrun" hidden><b>New here?</b> <button id="fr-open">Read the one-minute version</button>
+      <span style="opacity:.65">— or drop an image onto the canvas to start.</span>
+      <button class="x" id="fr-x" aria-label="Dismiss">×</button></div>
     <canvas id="cv"></canvas>
     <div id="toast"></div>
   </main>
@@ -204,6 +258,87 @@ body #tn-menu{bottom:78px!important;left:8px!important}
 </div>
 
 <div class="pop" id="pop" hidden></div>
+
+<div id="help" hidden>
+  <div class="sheet">
+    <div class="hd"><h2>Register</h2><span>points on a plate</span><button id="help-x" aria-label="Close">×</button></div>
+    <div class="bd">
+      <p>You put a picture on the screen and mark exact places on it. The marks are stored as
+      fractions of the picture — 0 to 1 across, 0 to 1 down — so they survive any size or crop.
+      Then you hand the whole thing to Claude, and review what comes back.</p>
+
+      <h3>Do this</h3>
+      <ol>
+        <li><b>Get a picture in.</b> Drag an image file onto the middle of the screen. (Or <em>Image ▾</em> → choose a file.)</li>
+        <li><b>Pick what you are marking.</b> The list on the left is the layers. Click one — say <em>structure</em> —
+          and everything you draw goes there.</li>
+        <li><b>Draw.</b> Click a tool at the top left. <em>Pen</em> clicks out a line, one point per click;
+          press <em>Enter</em> to finish it, <em>Esc</em> to throw it away. <em>Rect</em>, <em>Circle</em> and
+          <em>Ellipse</em> are drag-to-draw. <em>Point</em> drops a single numbered point.</li>
+        <li><b>Fix it.</b> Switch to <em>Select</em>. Every white square is a handle — drag it. Arrow keys nudge it
+          one pixel of the original image at a time. The panel on the right lists the exact numbers; type into them.</li>
+        <li><b>Hand it over.</b> <em>Ask Claude</em> → say what you want → it copies one line. Paste that line into a
+          Claude chat. When Claude answers, open the document again and you get a list of every single change,
+          each one saying how far it moved. Click any of them to drop it. <em>Keep</em> saves what is left.</li>
+      </ol>
+
+      <h3>What is where</h3>
+      <div class="map">
+        <div><b>Left</b>Tools, then the layers, then the preset settings and view options</div>
+        <div><b>Middle</b>The picture and your marks. Scroll to pan, ⌘-scroll to zoom, <kbd>0</kbd> to fit</div>
+        <div><b>Right</b>Whatever is selected, and its numbers — type exact values here</div>
+      </div>
+      <p style="font-size:11.5px">The strip along the bottom always shows where the cursor is, in both fractions and
+      original pixels. The little square that follows your cursor is a ×6 magnifier — that is how you land on a
+      one-pixel edge.</p>
+
+      <h3>The layers</h3>
+      <div class="lay-key">
+        <i style="background:#15140F"></i><span><b>structure</b> — lines you draw by hand from the picture. The drawing.</span>
+        <i style="background:#1E5EE0"></i><span><b>trackers</b> — the ten numbered points the reading fixes.</span>
+        <i style="background:#00963c"></i><span><b>mask keep</b> — only what is inside this gets read at all.</span>
+        <i style="background:#dc1e1e"></i><span><b>mask drop</b> — cut this out (a watermark, a corner).</span>
+        <i style="background:#969696"></i><span><b>noHatch</b> — no shading in here.</span>
+        <i style="background:#d28200"></i><span><b>forceBand</b> — shade this region at a set weight regardless.</span>
+        <i style="background:#7800c8"></i><span><b>darkKey</b> — where the drawing's own ink is traced into line.</span>
+        <i style="background:#9a9a9a"></i><span><b>hatch plate</b> — a region shaded at a fixed angle.</span>
+      </div>
+      <p style="font-size:11.5px">Only <b>structure</b> and <b>trackers</b> matter for most jobs. The rest are settings
+      for the Mode Mode plate, and you can ignore them until you need them.</p>
+
+      <h3>Preview</h3>
+      <p style="font-size:11.5px"><em>Preview</em> runs the real Mode Mode pipeline on your picture and draws the actual
+      plates over it — the same code the site uses, not an imitation. The picture fades so you can see them.
+      Press it again to hide them. <b>d</b> hides your marks so you can judge the plate alone.</p>
+
+      <h3>Keys</h3>
+      <div class="keys">
+        <div><kbd>v</kbd><span>select</span></div>
+        <div><kbd>p</kbd><span>pen</span></div>
+        <div><kbd>r</kbd><span>rectangle</span></div>
+        <div><kbd>c</kbd><span>circle</span></div>
+        <div><kbd>l</kbd><span>ellipse</span></div>
+        <div><kbd>t</kbd><span>numbered point</span></div>
+        <div><kbd>↑↓←→</kbd><span>nudge one source pixel</span></div>
+        <div><kbd>⇧↑</kbd><span>nudge five</span></div>
+        <div><kbd>⌥drag</kbd><span>move the whole shape</span></div>
+        <div><kbd>⌘Z</kbd><span>undo</span></div>
+        <div><kbd>⌫</kbd><span>delete what is selected</span></div>
+        <div><kbd>Tab</kbd><span>next layer</span></div>
+        <div><kbd>[ ]</kbd><span>previous / next shape</span></div>
+        <div><kbd>m</kbd><span>mirror it across the axis</span></div>
+        <div><kbd>0</kbd><span>fit the picture</span></div>
+        <div><kbd>1</kbd><span>actual size</span></div>
+        <div><kbd>space+drag</kbd><span>pan</span></div>
+        <div><kbd>i</kbd><span>hide the picture</span></div>
+        <div><kbd>d</kbd><span>hide your marks</span></div>
+        <div><kbd>'</kbd><span>grid</span></div>
+        <div><kbd>⌘S</kbd><span>save now</span></div>
+        <div><kbd>?</kbd><span>this sheet</span></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script src="plates.js"></script>
 <script type="module" src="ui.js"></script>

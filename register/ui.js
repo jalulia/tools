@@ -177,6 +177,22 @@ const TOOLS = [
   { k: 'r', label: 'Rect', hint: 'r' }, { k: 'c', label: 'Circle', hint: 'c' },
   { k: 'l', label: 'Ellipse', hint: 'l' }, { k: 't', label: 'Point', hint: 't' },
 ];
+const TOOL_HINT = {
+  v: 'Select · drag a white handle to move it · ⌥drag moves the whole shape · click a line to add a point · arrows nudge one source pixel',
+  p: 'Pen · click to lay down points · Enter finishes the line · ⇧Enter closes it into a shape · Esc throws it away',
+  r: 'Rectangle · press and drag',
+  c: 'Circle · press at the centre and drag out',
+  l: 'Ellipse · press at the centre and drag out',
+  t: 'Point · click to drop the next numbered point',
+};
+function renderHint() {
+  const e = document.getElementById('s-hint');
+  if (!e) return;
+  if (!S.img) { e.textContent = 'Drop an image onto the canvas to start · ? for how this works'; return; }
+  if (S.draft) { e.textContent = 'Enter finishes · ⇧Enter closes the shape · Esc cancels'; return; }
+  e.textContent = TOOL_HINT[S.tool] || '';
+}
+
 function renderTools() {
   const box = $('#tools'); box.innerHTML = '';
   for (const t of TOOLS) {
@@ -198,7 +214,7 @@ function setTool(k) {
     const g = C.profileOf(S.doc).layers.find(l => l.geom !== 'point');
     if (g) { S.layer = g.id; toast('switched to ' + g.label); }
   }
-  renderTools(); renderLayers(); view.draw();
+  renderTools(); renderLayers(); renderHint(); view.draw();
 }
 
 function renderLayers() {
@@ -461,6 +477,7 @@ function renderInspector() {
 /* ---------------------------------------------------------------- status */
 
 function renderStat() {
+  renderHint();
   const L = C.layerSpec(S.doc, S.layer);
   $('#s-zoom').textContent = Math.round(view.scale * 100) + '%';
   $('#s-sel').textContent = S.sel ? `${L ? L.label : ''} #${S.sel.pi}${S.sel.vi != null ? ' · pt ' + (S.sel.vi + 1) : ''}` : '—';
@@ -489,6 +506,32 @@ async function runPreview() {
   } catch (e) { toast(e.message); }
   btn.textContent = 'Preview'; btn.disabled = false;
   btn.classList.toggle('on', S.showPlates);
+}
+
+/* dropping a file on the canvas is the first thing anyone tries, so make it the way in */
+function wireDrop() {
+  const stage = $('#stage');
+  const stop = e => { e.preventDefault(); e.stopPropagation(); };
+  ['dragenter', 'dragover'].forEach(n => stage.addEventListener(n, e => { stop(e); stage.classList.add('dropping'); }));
+  ['dragleave', 'dragend'].forEach(n => stage.addEventListener(n, e => { stop(e); stage.classList.remove('dropping'); }));
+  stage.addEventListener('drop', async e => {
+    stop(e); stage.classList.remove('dropping');
+    const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { toast('that is not an image'); return; }
+    toast(S.cloud ? 'uploading…' : 'loading…');
+    try {
+      const url = S.cloud ? await S3.uploadImage(file)
+        : await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(file); });
+      if (!S.doc.title || S.doc.title === 'Untitled') {
+        S.doc.title = file.name.replace(/\.[^.]+$/, '');
+        S.doc.slug = S.doc.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'specimen';
+        $('#title').value = S.doc.title;
+      }
+      await setImage(url);
+      dismissFirstRun();
+    } catch (err) { toast(err.message); }
+  });
 }
 
 /* the plates read only against a faded source, so the toggle carries the source with it */
@@ -695,6 +738,18 @@ function renderReview(box) {
   box.appendChild(list);
 }
 
+/* ------------------------------------------------------------------ help */
+
+const SEEN = 'register.seen';
+function openHelp() { $('#help').hidden = false; }
+function closeHelp() { $('#help').hidden = true; try { localStorage.setItem(SEEN, '1'); } catch (e) {} }
+function dismissFirstRun() { $('#firstrun').hidden = true; try { localStorage.setItem(SEEN, '1'); } catch (e) {} }
+function maybeFirstRun() {
+  let seen = false; try { seen = !!localStorage.getItem(SEEN); } catch (e) {}
+  if (seen) return;
+  $('#firstrun').hidden = false;
+}
+
 /* -------------------------------------------------------------- keyboard */
 
 function keys(e) {
@@ -706,6 +761,8 @@ function keys(e) {
   const meta = e.metaKey || e.ctrlKey;
   if (meta && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
   if (meta && e.key.toLowerCase() === 's') { e.preventDefault(); save(true); return; }
+  if (e.key === '?' || (e.key === '/' && e.shiftKey)) { $('#help').hidden ? openHelp() : closeHelp(); return; }
+  if (e.key === 'Escape' && !$('#help').hidden) { closeHelp(); return; }
   if (e.key === ' ') { view.space = true; view.cv.style.cursor = 'grab'; e.preventDefault(); return; }
   if (e.key === 'Escape') { if (S.draft) view.cancelDraft(); else { S.sel = null; renderInspector(); view.draw(); } return; }
   if (e.key === 'Enter') { if (S.draft) view.finishDraft(e.shiftKey); return; }
@@ -772,6 +829,13 @@ async function boot() {
   $('#b-export').onclick = e => popExport(e.currentTarget);
   $('#b-ask').onclick = e => popAsk(e.currentTarget);
   $('#b-preview').onclick = () => { if (S.plates) setPlates(!S.showPlates); else runPreview(); };
+  $('#b-help').onclick = () => ($('#help').hidden ? openHelp() : closeHelp());
+  $('#help-x').onclick = closeHelp;
+  $('#help').onclick = e => { if (e.target === $('#help')) closeHelp(); };
+  $('#fr-open').onclick = () => { dismissFirstRun(); openHelp(); };
+  $('#fr-x').onclick = dismissFirstRun;
+  document.querySelectorAll('.sec > h3.fold').forEach(x => x.onclick = () => x.parentElement.classList.toggle('shut'));
+  wireDrop();
   addEventListener('keydown', keys);
   addEventListener('keyup', e => { if (e.key === ' ') { view.space = false; view.cv.style.cursor = ''; } });
   addEventListener('beforeunload', e => { if (S.dirty) { e.preventDefault(); e.returnValue = ''; } });
@@ -782,6 +846,8 @@ async function boot() {
   const id = new URLSearchParams(location.search).get('d');
   if (id) await loadDoc(id);
   else { await afterLoad(); }
+  renderHint();
+  maybeFirstRun();
   window.__register = { S, view, C, S3, PV, save, runPreview, openReview, reload: afterLoad, renderReviewNow: renderInspector };
 }
 boot();
