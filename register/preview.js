@@ -56,20 +56,40 @@ export async function analyse(img, P) {
   });
 }
 
-/** drive FigRaster.plates() to completion in slices so the tool stays responsive */
+/** drive FigRaster.plates() to completion in slices so the tool stays responsive.
+ *  requestAnimationFrame never fires in a hidden tab, which used to leave a preview
+ *  stuck on "reading…" the moment you switched away, so the scheduler falls back to a
+ *  MessageChannel macrotask — throttled far less than setTimeout when the page is hidden. */
+function slices() {
+  const mc = typeof MessageChannel !== 'undefined' ? new MessageChannel() : null;
+  let queued = null;
+  if (mc) mc.port1.onmessage = () => { const f = queued; queued = null; if (f) f(); };
+  return fn => {
+    if (typeof document !== 'undefined' && !document.hidden && typeof requestAnimationFrame === 'function') return requestAnimationFrame(fn);
+    if (mc) { queued = fn; mc.port2.postMessage(0); return; }
+    setTimeout(fn, 0);
+  };
+}
+
 export async function raster(data, P, core, W, H, dpr = 2) {
   const R = window.FigRaster;
   if (!R) throw new Error('plates.js did not load');
   const gen = R.plates(data, P, core, { x: 0, y: 0, w: W, h: H }, dpr);
-  return new Promise(resolve => {
+  const next = slices();
+  return new Promise((resolve, reject) => {
+    const started = performance.now();
     const step = () => {
-      const t0 = performance.now();
-      for (;;) {
-        const n = gen.next();
-        if (n.done) { resolve(n.value); return; }
-        if (performance.now() - t0 > 10) break;
-      }
-      requestAnimationFrame(step);
+      try {
+        const t0 = performance.now();
+        for (;;) {
+          const n = gen.next();
+          if (n.done) { resolve(n.value); return; }
+          // past 20 s something is wrong; finish in one go rather than never finishing
+          if (performance.now() - started > 20000) continue;
+          if (performance.now() - t0 > 10) break;
+        }
+      } catch (e) { reject(e); return; }
+      next(step);
     };
     step();
   });
