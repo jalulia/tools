@@ -57,15 +57,15 @@ export async function analyse(img, P) {
 }
 
 /** drive FigRaster.plates() to completion in slices so the tool stays responsive.
- *  requestAnimationFrame never fires in a hidden tab, which used to leave a preview
- *  stuck on "reading…" the moment you switched away, so the scheduler falls back to a
- *  MessageChannel macrotask — throttled far less than setTimeout when the page is hidden. */
+ *  Deliberately NOT requestAnimationFrame: it stops firing the moment the tab is hidden,
+ *  which left a preview stuck on "reading…" if you switched away mid-raster — and checking
+ *  document.hidden at schedule time doesn't help, because the tab can be hidden after the
+ *  frame is requested. A MessageChannel macrotask still yields to paint and always fires. */
 function slices() {
   const mc = typeof MessageChannel !== 'undefined' ? new MessageChannel() : null;
   let queued = null;
   if (mc) mc.port1.onmessage = () => { const f = queued; queued = null; if (f) f(); };
   return fn => {
-    if (typeof document !== 'undefined' && !document.hidden && typeof requestAnimationFrame === 'function') return requestAnimationFrame(fn);
     if (mc) { queued = fn; mc.port2.postMessage(0); return; }
     setTimeout(fn, 0);
   };
