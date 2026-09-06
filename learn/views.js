@@ -1046,6 +1046,34 @@
   /* ck-e2 · the atom entry page. Live swatch at design width, params
      inspector (drag to redraw), used-by strip, produces-of, admitted-by,
      governed-by. Called from renderEntry when e.entity === 'atom'. */
+  /* ck-e13 · fine-grained crossover block. Reads Shell.crossover (built by
+     scripts/build-crossover.mjs) and renders a small section listing every
+     entry that names this id in its spec. Distinct from the coarse
+     instance_of/uses aggregations rendered elsewhere on the same page. */
+  function crossoverBlockHTML(kind, id, opts) {
+    var cx = S.crossover && S.crossover[kind === 'atom' ? 'atoms' : 'techniques'];
+    if (!cx || !cx[id]) return '';
+    var appears = kind === 'atom' ? (cx[id].used_by || []) : (cx[id].appears_in || []);
+    if (!appears.length) return '';
+    var seenExisting = opts && opts.excludeEntryIds ? new Set(opts.excludeEntryIds) : new Set();
+    var rows = appears.filter(function (a) { return !seenExisting.has(a.entry_id); });
+    if (!rows.length) return '';
+    var head = kind === 'atom'
+      ? 'Cited in spec (' + rows.length + ')'
+      : 'Also appears in spec of (' + rows.length + ')';
+    var subhead = kind === 'atom'
+      ? 'entries whose spec.techniques[].atoms[] name this atom'
+      : 'entries whose spec.techniques[] use this id';
+    return '<section class="atom-block"><div class="blk-head"><span class="lab">' + esc(head) + '</span>' +
+      '<span class="n">' + esc(subhead) + '</span></div>' +
+      '<div class="chips" style="margin:8px 0 4px">' + rows.map(function (row) {
+        var target = S.byId && S.byId[row.entry_id];
+        var label = target && target.title ? target.title : row.entry_id;
+        var suffix = kind === 'atom' && row.technique_id ? ' · ' + row.technique_id : '';
+        return '<a class="pip" href="#/entry/' + esc(row.entry_id) + '">' + esc(label + suffix) + '</a>';
+      }).join('') + '</div></section>';
+  }
+
   function renderAtomPage(a) {
     view.kind = 'atom';
     S.current = a; S.currentExample = null; localExample = null;
@@ -1164,6 +1192,7 @@
           '</section>' +
           paramsHTML +
           usedByHTML +
+          crossoverBlockHTML('atom', a.id, { excludeEntryIds: uses.map(function (u) { return u.entry.id; }) }) +
           (a.note && a.note !== a.description
             ? '<section class="atom-block"><div class="blk-head"><span class="lab">Note</span></div>' +
               '<p class="atom-note">' + esc(a.note) + '</p></section>'
@@ -1491,6 +1520,7 @@
       testsHTML +
       producesBlock +
       instTable +
+      crossoverBlockHTML('technique', t.id, { excludeEntryIds: inst.map(function (e) { return e.id; }) }) +
       atomsBlock +
       stylesBlock +
       govBlock +

@@ -308,11 +308,13 @@
   /* ---------- related ----------------------------------------------------- */
   function buildRelatedHTML(e) {
     var seen = {};
+    seen[e.id] = true; // never link an entry to itself
     var rows = [];
     var titleFor = function (id) {
       var target = (S.entries || []).filter(function (x) { return x.id === id; })[0];
       return target ? (target.title || id) : id;
     };
+    /* 1. Authored related[] wins first. */
     (e.related || []).forEach(function (r) {
       var eid = r.entry;
       if (!eid || seen[eid]) return;
@@ -322,6 +324,8 @@
         via: r.relation || 'related', kind: 'rel'
       });
     });
+    /* 2. Inline entry.crossover.also_uses (authoring shortcut before ck-e13
+       existed — birefringent-ray-bench uses this pattern). */
     var cross = e.crossover || {};
     (cross.also_uses || []).forEach(function (x) {
       (x.in || []).forEach(function (eid) {
@@ -333,6 +337,23 @@
         });
       });
     });
+    /* 3. ck-e13 · Shell.crossover.techniques — for every technique in this
+       entry's spec, list any other entry that also names it. This is the
+       derived crossover Julia asked for in plan §6c. */
+    if (S.crossover && S.crossover.techniques && e.spec && e.spec.techniques) {
+      e.spec.techniques.forEach(function (t) {
+        var idx = S.crossover.techniques[t.id];
+        if (!idx || !idx.appears_in) return;
+        idx.appears_in.forEach(function (a) {
+          if (!a.entry_id || seen[a.entry_id]) return;
+          seen[a.entry_id] = true;
+          rows.push({
+            entry: a.entry_id, title: titleFor(a.entry_id),
+            via: 'shares ' + t.id, kind: 'tech'
+          });
+        });
+      });
+    }
     if (!rows.length) return '';
     var limit = 5;
     var shown = rows.slice(0, limit);

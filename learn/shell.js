@@ -92,6 +92,16 @@
     schedule();
   };
 
+  /* ck-e13 · derived-index registration. The two scripts under
+     encyclopedia/content/_index/ call this to hand the shell fine-grained
+     crossover data built by scripts/build-crossover.mjs. Consumers read
+     Shell.crossover.techniques and Shell.crossover.atoms. */
+  S.crossover = S.crossover || {};
+  S.registerCrossover = function (name, data) {
+    if (!name || !data) return;
+    S.crossover[name] = data;
+  };
+
   /* ==========================================================================
      2. Boot
      ========================================================================== */
