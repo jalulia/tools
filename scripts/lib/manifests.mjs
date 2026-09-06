@@ -310,6 +310,23 @@ function verifyOne({ manifest, dir, entries, missingScripts }, schema, say, load
         say(`entry "${e.id}": instance_of "${tid}" — no technique with that id in this manifest`);
       }
     }
+    // ck-e10 · coverage rule (plan §5). An entry that ships `points[]` is claiming
+    // its plate is repeatable: every spec.techniques[].id must be cited by at
+    // least one point, and every points[].t must resolve to a real technique id.
+    // An entry without points[] opts out — legal for atoms, styles, historical
+    // notes and every unmigrated entry.
+    if (Array.isArray(e.points) && e.points.length > 0) {
+      const techIds  = new Set(((e.spec && e.spec.techniques) || []).map((t) => t.id));
+      const pointIds = new Set(e.points.map((p) => p.t).filter(Boolean));
+      const uncovered = [...techIds].filter((id) => !pointIds.has(id));
+      const orphan    = [...pointIds].filter((id) => !techIds.has(id));
+      for (const id of uncovered) {
+        say(`entry "${e.id}": coverage — technique "${id}" is declared in spec.techniques[] but no point cites it`);
+      }
+      for (const id of orphan) {
+        say(`entry "${e.id}": coverage — point cites technique "${id}" but no such id in spec.techniques[]`);
+      }
+    }
   }
 
   /* 7d. shipped code must not fetch / use CDN / read contentDocument /

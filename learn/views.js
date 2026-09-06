@@ -185,6 +185,13 @@
       ((e.stages || []).length || (e.gallery || []).length ||
        (e.exercises || []).length || (e.params || []).length);
     if (e.entity === 'technique' && !isChapterTechnique) return renderTechniquePage(e, exampleId, query);
+    /* ck-e10 · an entry that ships a spec block renders as a plate. E10 is the
+       one-entry crossover: only birefringent-ray-bench qualifies. E11 flips
+       every entry to the plate view and retires the fall-through below. */
+    if (e.spec && S.views && S.views.renderPlate) {
+      view.kind = 'entry';
+      return S.views.renderPlate(e, exampleId, query);
+    }
     view.kind = 'entry';
     S.current = e;
     localExample = null;
