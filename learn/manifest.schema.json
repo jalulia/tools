@@ -559,6 +559,121 @@
         "proposed_grade": {
           "type": "string",
           "description": "ck-e7 · the researcher's proposed grade from example-inventory.csv, imported as a proposal — NEVER a ruling. Rendered as `PROPOSED BY RESEARCHER — awaiting julia` per DECISION-FRAMING D5. The row's status stays `unsorted` until Julia rules."
+        },
+
+        "body": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "ck-e10 · the plate view's notes column as an array of HTML paragraph strings. Replaces `text` at E10; both are read at render time so un-migrated entries continue to work through the fallback until E14 retrofits every entry to `body[]`."
+        },
+        "plate": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "ck-e10 · plate framing metadata + the plate's picture. All framing fields have defaults (see plan §4b): series = section.title, sheet = order, of = total entries, fig = order/10.",
+          "properties": {
+            "fig":     { "type": "string", "description": "FIG. n label, e.g. \"2.5\"." },
+            "series":  { "type": "string", "description": "Series line, e.g. \"EXPLORATIONS · OPTICS\". Informational; not shown by default." },
+            "sheet":   { "type": "integer", "description": "This entry's sheet number within its series." },
+            "of":      { "type": "integer", "description": "Total sheets in the series." },
+            "viewBox": { "type": "string", "description": "SVG viewBox for the plate's drawing, e.g. \"0 205 1040 315\". Must match the units in spec.units." },
+            "svg":     { "type": "string", "description": "The plate's inline SVG body — everything inside <svg>...</svg> except the wrapper. The view injects this into a <svg> element with the viewBox above and reads points[].u/v against that viewBox. There is no fetch, so the picture lives in the entry.js the same way `text` does." }
+          }
+        },
+        "method": {
+          "type": ["string", "null"],
+          "description": "ck-e10 · hand-authored technique-chain string. null (or omitted) means auto-compose from spec.techniques[].name joined with ' · '."
+        },
+        "spec": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "ck-e10 · LLM-readable specification of the plate — techniques with params + implementation. What makes the archive a web: `spec.techniques[].id` is the join key across entries.",
+          "required": ["id", "techniques"],
+          "properties": {
+            "id":         { "$ref": "#/$defs/slug", "description": "Usually equal to the entry's id." },
+            "palette":    { "type": "object", "additionalProperties": true, "description": "Named colours the plate uses. Keys are palette-role names; values are hex strings or arrays of hex strings for gradients." },
+            "ground":     { "type": "object", "additionalProperties": true, "description": "Substrate the plate sits on — colour, tooth, area ref." },
+            "units":      { "type": "string", "description": "The unit system this plate's numbers are in — e.g. \"design units, 1000 = plate width\" or \"SVG viewBox units, 0 205 1040 315\"." },
+            "techniques": {
+              "type": "array",
+              "minItems": 0,
+              "description": "The plate's techniques in pass order. Each block is a repeatability contract — someone else can regenerate the picture from these params + implementation strings.",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "name"],
+                "properties": {
+                  "id":             { "$ref": "#/$defs/slug", "description": "Unique within this entry. Joins across entries via spec.crossover.also_uses and the derived techniques.json index." },
+                  "short":          { "type": "string", "description": "3-4 letter discipline tag: GRND, FORM, MARK, TONE, KEY, TEX, FILL, COL, TYPE, FLD, BUS." },
+                  "name":           { "type": "string", "description": "Human-readable." },
+                  "layer":          { "type": "string", "description": "Which of the composition layers this acts at (SOURCE, STRUCTURE, MATERIAL RESPONSE, IMAGE FORMATION, SCREEN-SPACE, GRAPHIC COMPOSITION, OUTPUT). Free-form string so mechanism entries can use OUTPUT etc.; the visual archive's fixed set lives at #/$defs/entry.properties.layer." },
+                  "pass":           { "type": "integer", "minimum": 1, "description": "1-indexed order within pass_order." },
+                  "params":         { "type": "object", "additionalProperties": true, "description": "The numbers a rebuilder needs. Free-form object; the plate's authored notation." },
+                  "implementation": { "type": "string", "description": "One-sentence algorithm description." },
+                  "atoms":          { "type": "array", "items": { "type": "string" }, "description": "Atom names this technique block draws on. Feeds atoms.json at E13. Authored, not derived." },
+                  "produces":       { "type": "array", "items": { "type": "string" }, "description": "Plain-English effect strings this technique produces on the plate. Optional." }
+                }
+              }
+            },
+            "pass_order": { "type": "array", "items": { "type": "string" }, "description": "Prose ordering of the passes. Reads top-down alongside spec.techniques[].pass." },
+            "notes":      { "type": "array", "items": { "type": "string" }, "description": "Free-form authoring notes for the spec. Rendered inside the JSON in the spec panel." }
+          }
+        },
+        "points": {
+          "type": "array",
+          "description": "ck-e10 · the scan mechanic. Opt-in per entry; when present, the coverage rule (§5) applies at manifest-verify time. Each point cites a technique via its `t` field.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["u", "v", "t"],
+            "properties": {
+              "u":     { "type": "number", "minimum": 0, "maximum": 1, "description": "Horizontal position on the plate, 0-1." },
+              "v":     { "type": "number", "minimum": 0, "maximum": 1, "description": "Vertical position on the plate, 0-1." },
+              "d":     { "type": "string", "description": "Discipline short label (matches spec.techniques[].short)." },
+              "label": { "type": "string", "description": "One-line human-readable description of what this point points at." },
+              "t":     { "$ref": "#/$defs/slug", "description": "The spec.techniques[].id this point cites. Coverage rule: every technique id must be cited by at least one point; every t must resolve to a real technique id." },
+              "dir":   { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": -1, "maximum": 1 }, "description": "Leader direction, [dx, dy] in {-1, 0, 1}. -1 goes left/up; +1 goes right/down." }
+            }
+          }
+        },
+        "compare": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "ck-e10 · fidelity readout. Opt-in per entry; requires `points[]` because a readout without pointed evidence is a claim without a citation.",
+          "properties": {
+            "reference": { "type": ["string", "null"], "description": "Path to the reference image the plate is measured against. null means \"no reference on file\" and the readout renders as `no reference on file`. On the public build, this is stripped for entries whose reference is third-party art (see technique-studies/PROCESS.md §5.4)." },
+            "readout":   { "type": "object", "additionalProperties": { "type": "boolean" }, "description": "Which fidelity axes to render — palette, tone, edge, grain, chroma. Booleans; true = show." }
+          }
+        },
+        "crossover": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "ck-e10 · plate-visible crossover facts. At E13 these are re-derived from techniques.json + atoms.json; authored inline in the entry is legal for E10 while the build script does not yet exist.",
+          "properties": {
+            "also_uses":   {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "in"],
+                "properties": {
+                  "id": { "$ref": "#/$defs/slug", "description": "A technique id from this entry's spec.techniques[]." },
+                  "in": { "type": "array", "items": { "$ref": "#/$defs/slug" }, "description": "Other entries that use the same technique id." }
+                }
+              }
+            },
+            "shares_atom": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["atom", "count"],
+                "properties": {
+                  "atom":  { "type": "string", "description": "Atom name." },
+                  "count": { "type": "integer", "minimum": 1, "description": "How many other entries share this atom." }
+                }
+              }
+            }
+          }
         }
       }
     }

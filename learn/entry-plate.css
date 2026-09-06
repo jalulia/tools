@@ -1,0 +1,406 @@
+/* ============================================================================
+   learn/entry-plate.css — the plate view (ck-e10).
+   Sidecar to shell.css so the plate's specimen-scope styles do not thicken
+   the shell. Loaded by encyclopedia/index.html after shell.css.
+
+   Every rule in this file is scoped under .plate-view or .plate-*. The
+   plate obeys the shell's token vocabulary (paper, bench, ink, rule) and
+   its no-hue rule: locked chips and selected points read as INK INVERSION,
+   the coverage-fail badge reads as the FAULTS hatch — never a hue.
+   ============================================================================ */
+
+/* Root ---------------------------------------------------------------------
+   The plate sits inside #view, which the shell scrolls beneath its masthead.
+   The plate uses the full column width the shell hands it and lays out its
+   own two-column grid.                                                       */
+.plate-view {
+  display: grid;
+  grid-template-columns: minmax(320px, 440px) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  min-height: calc(100vh - var(--mast-h) - 40px);
+  margin: 0;
+}
+
+/* Plate top row ------------------------------------------------------------
+   Julia rulings 1-3: breadcrumb + coverage badge + pager, one row. Spans
+   both grid columns so the plate's identity is one line above the notes
+   + figure split.                                                            */
+.plate-nav {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  column-gap: var(--s5);
+  padding: 12px var(--s5);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--f-mach);
+  font-size: var(--t-label);
+  letter-spacing: var(--tr-label);
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.plate-nav .crumb { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.plate-nav .crumb a { color: var(--ink-3); text-decoration: none; }
+.plate-nav .crumb a:hover { color: var(--ink); }
+.plate-nav .crumb .sep { color: var(--ink-4); padding: 0 6px; }
+.plate-nav .crumb b {
+  color: var(--ink); font-weight: 500;
+  font-family: var(--f-text); font-size: 14px;
+  letter-spacing: 0; text-transform: none;
+}
+
+/* Coverage badge — no hue. Green (canonical square) for OK; hatch for FAIL. */
+.plate-cov {
+  display: inline-flex; align-items: center; gap: 7px;
+  color: var(--ink-2); white-space: nowrap;
+  font-family: var(--f-mach); font-size: var(--t-label);
+  letter-spacing: var(--tr-label); text-transform: uppercase;
+}
+.plate-cov::before {
+  content: ""; width: var(--mark-size); height: var(--mark-size);
+  flex: none; background: currentColor;
+}
+.plate-cov[data-state="fail"] { color: var(--ink); }
+.plate-cov[data-state="fail"]::before {
+  background: none;
+  width: 9px; height: 11px;
+  background-image: var(--hatch-ink); background-size: auto;
+}
+
+/* Pager */
+.plate-pager { display: inline-flex; gap: 2px; align-items: center; }
+.plate-pager a, .plate-pager span {
+  all: unset; cursor: pointer;
+  padding: 4px 10px; border: 1px solid var(--rule);
+  color: var(--ink-3);
+  font-family: var(--f-mach); font-size: var(--t-label);
+  letter-spacing: var(--tr-label); text-transform: uppercase;
+}
+.plate-pager span { cursor: default; color: var(--ink-4); }
+.plate-pager a:hover { color: var(--ink); border-color: var(--ink-4); }
+
+/* Notes column -------------------------------------------------------------
+   Left column. Body prose, then meta (Source only), then technique chips,
+   then optional crossover block.                                             */
+.plate-notes {
+  border-right: 1px solid var(--rule);
+  padding: var(--s6) var(--s6) var(--s5);
+  display: flex; flex-direction: column; gap: var(--s4);
+  min-width: 0; min-height: 0;
+  overflow-y: auto; overflow-x: hidden;
+}
+.plate-notes .plate-body { max-width: 44ch; color: var(--ink); margin: 0; }
+.plate-notes .plate-body p { margin: 0 0 var(--s2); font-size: var(--t-prose-sm); line-height: 1.55; }
+.plate-notes .plate-body p:last-child { margin: 0; }
+
+.plate-meta {
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule);
+  display: grid; grid-template-columns: 1fr; gap: var(--s3);
+}
+.plate-meta h2 {
+  margin: 0 0 6px; font-family: var(--f-mach); font-weight: 400;
+  font-size: var(--t-label); letter-spacing: var(--tr-label);
+  text-transform: uppercase; color: var(--ink-3);
+}
+.plate-meta .plate-source {
+  font-family: var(--f-mach); font-size: 11px; color: var(--ink-3);
+  letter-spacing: var(--tr-mach); margin-top: 2px; line-height: 1.5;
+}
+
+/* Technique chips — hover previews highlight; click locks (ink inversion). */
+.plate-tags { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 6px; }
+.plate-tags button {
+  all: unset; cursor: pointer;
+  font-family: var(--f-mach); font-size: 9.5px;
+  letter-spacing: var(--tr-mach); text-transform: lowercase;
+  color: var(--ink); border: 1px solid var(--rule);
+  padding: 2px 6px;
+  transition: color var(--m-state) var(--ease),
+              background var(--m-state) var(--ease),
+              border-color var(--m-state) var(--ease);
+}
+.plate-tags button:hover, .plate-tags button:focus-visible { border-color: var(--ink); outline: none; }
+.plate-tags button[aria-pressed="true"] {
+  color: var(--paper); background: var(--ink); border-color: var(--ink);
+}
+
+/* Crossover block */
+.plate-crossover {
+  margin-top: var(--s3); padding-top: var(--s3);
+  border-top: 1px dashed var(--rule);
+  font-family: var(--f-mach); font-size: 10px;
+  letter-spacing: var(--tr-mach); line-height: 1.55; color: var(--ink-3);
+}
+.plate-crossover b {
+  display: block; font-weight: 500;
+  letter-spacing: var(--tr-label); text-transform: uppercase;
+  font-size: 9.5px; color: var(--ink-3); margin-bottom: 4px;
+}
+.plate-crossover .row { margin-bottom: 2px; }
+.plate-crossover .row em { font-style: normal; color: var(--ink-3); }
+.plate-crossover .row span { color: var(--ink); }
+
+/* Figure column ------------------------------------------------------------
+   Right column. SVG canvas fills; log rail rides top-right; RELATED block
+   bottom-right. Point markers + read head are drawn into the SVG by JS.     */
+.plate-figure { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+.plate-figure .plate-cvwrap {
+  position: absolute; inset: 0;
+  padding: 48px 320px 220px 48px;
+}
+.plate-figure svg {
+  display: block; width: 100%; height: 100%;
+}
+
+/* SVG semantic classes — the plate's own drawing language. Kept ink-only;
+   highlight state uses stroke-weight + opacity, never hue.                  */
+.plate-figure .axis      { stroke: var(--ink-4); stroke-width: 1; stroke-dasharray: 2 5; fill: none; }
+.plate-figure .constr    { stroke: var(--ink-4); stroke-width: 1; fill: none; }
+.plate-figure .constr-d  { stroke: var(--ink-4); stroke-width: 1; stroke-dasharray: 3 3; fill: none; }
+.plate-figure .glass     { fill: none; stroke: var(--ink); stroke-width: 1.4; }
+.plate-figure .glass-fill{ fill: var(--bench-2); stroke: var(--ink); stroke-width: 1.4; }
+.plate-figure .hatch     { stroke: var(--ink); stroke-width: 0.9; fill: none; }
+.plate-figure .ray-inline{ fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.plate-figure .ray-o     { fill: none; stroke: var(--ink);   stroke-width: 2.2; }
+.plate-figure .ray-e     { fill: none; stroke: var(--ink);   stroke-width: 2.2; stroke-dasharray: 7 4; }
+.plate-figure .ray-out   { fill: none; stroke: var(--ink);   stroke-width: 3; }
+.plate-figure .dim       { stroke: var(--ink-2); stroke-width: 1; fill: none; }
+.plate-figure .arrowfill { fill: var(--ink-2); }
+.plate-figure .pol-e     { fill: none; stroke: var(--ink); stroke-width: 1.3; }
+.plate-figure .pol-dot   { fill: var(--ink); }
+.plate-figure .stage     { fill: var(--ink-3); }
+.plate-figure .stage-rule{ stroke: var(--ink-4); }
+.plate-figure .t-mono    { font-family: var(--f-mach); font-size: 10.5px; letter-spacing: .06em; fill: var(--ink-3); }
+.plate-figure .t-mono-k  { font-family: var(--f-mach); font-size: 11px;   letter-spacing: .08em; fill: var(--ink); }
+.plate-figure .t-serif-i { font-family: var(--f-text); font-style: italic; font-weight: 500; font-size: 15px; fill: var(--ink); }
+.plate-figure .ray-o-txt { fill: var(--ink); font-weight: 600; }
+.plate-figure .ray-e-txt { fill: var(--ink); font-weight: 600; }
+
+/* Highlight state — the technique lock or hover thickens the cited elements
+   and fades everything else. No hue, per Julia's ruling; the eye follows
+   weight and opacity. Each SVG that opts into highlighting adds an `.hi-<tid>`
+   class on the root <svg>; the entry's own CSS list in fragment.html or
+   inside plate.svg is what says which elements each technique owns.        */
+.plate-figure svg[class*="hi-"] .axis,
+.plate-figure svg[class*="hi-"] .constr,
+.plate-figure svg[class*="hi-"] .constr-d,
+.plate-figure svg[class*="hi-"] .glass,
+.plate-figure svg[class*="hi-"] .glass-fill,
+.plate-figure svg[class*="hi-"] .hatch,
+.plate-figure svg[class*="hi-"] .ray-inline,
+.plate-figure svg[class*="hi-"] .ray-o,
+.plate-figure svg[class*="hi-"] .ray-e,
+.plate-figure svg[class*="hi-"] .ray-out,
+.plate-figure svg[class*="hi-"] .dim,
+.plate-figure svg[class*="hi-"] .pol-e,
+.plate-figure svg[class*="hi-"] .pol-dot,
+.plate-figure svg[class*="hi-"] .stage,
+.plate-figure svg[class*="hi-"] .stage-rule,
+.plate-figure svg[class*="hi-"] text { opacity: 0.28; transition: opacity var(--m-state) var(--ease); }
+
+/* Per-technique promote rules — each rule wakes the cited elements back to
+   full opacity and thickens them. Add a rule per technique id used by any
+   entry in the archive. */
+.plate-figure svg.hi-hairline-construction .axis,
+.plate-figure svg.hi-hairline-construction .constr,
+.plate-figure svg.hi-hairline-construction .constr-d { opacity: 1; stroke: var(--ink); stroke-width: 1.4; }
+.plate-figure svg.hi-glass-body .glass,
+.plate-figure svg.hi-glass-body .glass-fill,
+.plate-figure svg.hi-glass-body .hatch { opacity: 1; stroke-width: 1.8; }
+.plate-figure svg.hi-phase-key-ray .ray-o,
+.plate-figure svg.hi-phase-key-ray .ray-e,
+.plate-figure svg.hi-phase-key-ray .ray-out { opacity: 1; stroke-width: 3.4; }
+.plate-figure svg.hi-walk-off-geometry .walk-marker,
+.plate-figure svg.hi-walk-off-geometry .ray-e { opacity: 1; stroke: var(--ink); stroke-width: 3; }
+.plate-figure svg.hi-dimension-band .dim-group *,
+.plate-figure svg.hi-dimension-band .dim-group text { opacity: 1; stroke: var(--ink); }
+.plate-figure svg.hi-dimension-band .dim-group .arrowfill { fill: var(--ink); }
+.plate-figure svg.hi-polarization-state-glyph .pol-e { opacity: 1; stroke: var(--ink); stroke-width: 2; }
+.plate-figure svg.hi-polarization-state-glyph .pol-dot { opacity: 1; fill: var(--ink); }
+.plate-figure svg.hi-stage-rule-legend .stage-rule,
+.plate-figure svg.hi-stage-rule-legend .stage { opacity: 1; stroke: var(--ink); fill: var(--ink); }
+
+/* Read-head sweep + point markers */
+.plate-figure .rh { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 1 3; opacity: 0.55; }
+.plate-figure .pt-lead { stroke: var(--ink-4); stroke-width: 0.9; }
+.plate-figure .pt-box { fill: var(--paper); stroke: var(--ink); stroke-width: 1; }
+.plate-figure .pt-dot { fill: var(--ink); }
+.plate-figure .pt-lbl { font-family: var(--f-mach); font-size: 8.5px; fill: var(--ink); letter-spacing: .08em; }
+/* Selected point — ink inversion */
+.plate-figure .pt-on .pt-box { fill: var(--ink); }
+.plate-figure .pt-on .pt-dot { fill: var(--paper); }
+.plate-figure .pt-on .pt-lbl { fill: var(--ink); font-weight: 600; }
+/* Not yet swept in */
+.plate-figure .pt-blank .pt-box,
+.plate-figure .pt-blank .pt-dot,
+.plate-figure .pt-blank .pt-lbl,
+.plate-figure .pt-blank .pt-lead { opacity: 0; }
+
+/* Log rail — top-right of the figure --------------------------------------- */
+.plate-log {
+  position: absolute; right: 20px; top: 24px; width: 268px;
+  font-family: var(--f-mach); font-size: 10px;
+  letter-spacing: var(--tr-mach); text-transform: uppercase;
+  color: var(--ink); line-height: 18px;
+  font-variant-numeric: tabular-nums; z-index: 3;
+}
+.plate-log .log-ctl { display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; }
+.plate-log .log-ctl button {
+  all: unset; cursor: pointer;
+  font-family: var(--f-mach); font-size: 9.5px;
+  letter-spacing: var(--tr-label); text-transform: uppercase;
+  color: var(--ink-3); border: 1px solid var(--rule);
+  padding: 5px 8px; line-height: 1;
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--paper);
+}
+.plate-log .log-ctl button:hover,
+.plate-log .log-ctl button:focus-visible {
+  color: var(--ink); border-color: var(--ink); outline: none;
+}
+.plate-log .log-ctl button[aria-pressed="true"] {
+  color: var(--paper); background: var(--ink); border-color: var(--ink);
+}
+.plate-log .log-ctl button .dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--ink-4); display: inline-block;
+}
+.plate-log .log-ctl button[aria-pressed="true"] .dot { background: var(--paper); }
+.plate-log .log-body { transition: opacity var(--m-state) var(--ease); }
+.plate-log[data-scan="off"] .log-body { display: none; }
+
+.plate-log .lh {
+  display: flex; justify-content: space-between; align-items: baseline;
+  color: var(--ink-3); letter-spacing: var(--tr-label); margin-bottom: 6px;
+}
+.plate-log .rows .r {
+  display: grid; grid-template-columns: 22px 40px 40px 36px 1fr;
+  gap: 0 8px; white-space: nowrap; cursor: pointer; outline: none;
+  margin: 0 -6px; padding: 0 6px;
+  transition: background var(--m-state) var(--ease);
+}
+.plate-log .rows .r span { overflow: hidden; text-overflow: ellipsis; }
+.plate-log .rows .r span:nth-child(n+2) { color: var(--ink-3); }
+.plate-log .rows .r[aria-selected="true"] { background: var(--bench); }
+.plate-log .rows .r[aria-selected="true"] span:nth-child(5) {
+  color: var(--ink); font-weight: 500;
+  text-transform: none; letter-spacing: var(--tr-mach);
+}
+.plate-log .rows .r.blank span { color: var(--ink-4); }
+.plate-log .read-tail {
+  margin-top: 10px; padding-top: 8px;
+  border-top: 1px solid var(--rule);
+  text-transform: none; letter-spacing: 0;
+  font-family: var(--f-text); font-size: 11.5px;
+  line-height: 1.45; color: var(--ink); min-height: 34px;
+}
+.plate-log .read-tail b {
+  display: block; font-family: var(--f-mach); font-weight: 400;
+  letter-spacing: var(--tr-label); text-transform: uppercase;
+  font-size: 9.5px; color: var(--ink-3); margin-bottom: 3px;
+}
+
+/* RELATED block — bottom-right, replaces the old title block ---------------- */
+.plate-related {
+  position: absolute; right: 0; bottom: 0;
+  width: min(420px, calc(100% - 40px));
+  border-left: 1px solid var(--rule);
+  border-top: 1px solid var(--rule);
+  background: var(--paper);
+  font-family: var(--f-mach); color: var(--ink-3); z-index: 4;
+}
+.plate-related .th {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 9px 14px; border-bottom: 1px solid var(--rule);
+  font-size: 9.5px; letter-spacing: var(--tr-label); text-transform: uppercase;
+}
+.plate-related .th b { color: var(--ink); font-weight: 500; letter-spacing: var(--tr-label); }
+.plate-related .th .count { color: var(--ink-4); }
+.plate-related .rel a {
+  display: grid; grid-template-columns: 1fr auto;
+  align-items: baseline; column-gap: 14px;
+  padding: 7px 14px; border-bottom: 1px solid var(--rule-3);
+  font-size: 11px; text-decoration: none; color: inherit;
+}
+.plate-related .rel a:last-child { border-bottom: 0; }
+.plate-related .rel a:hover { background: var(--bench); }
+.plate-related .rel a .name {
+  color: var(--ink); font-family: var(--f-text); font-size: 12.5px;
+  letter-spacing: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.plate-related .rel a .via {
+  font-family: var(--f-mach); font-size: 9.5px;
+  letter-spacing: var(--tr-label); text-transform: uppercase;
+  color: var(--ink-3); white-space: nowrap;
+}
+.plate-related .rel a .via.tech { color: var(--ink-2); }
+.plate-related .rel a .via.rel  { color: var(--ink); }
+
+/* Spec panel ---------------------------------------------------------------
+   Slides in from right; sits below the shell masthead and the plate nav
+   (mast-h + plate-nav-h ≈ 52 + 44 = 96). The panel doesn't cover the mast
+   or the plate breadcrumb.                                                   */
+.plate-spec {
+  position: fixed;
+  top: calc(var(--mast-h) + 44px);
+  right: 0; bottom: 0;
+  width: min(560px, 60vw);
+  background: var(--paper);
+  border-left: 1px solid var(--rule-2);
+  border-top: 1px solid var(--rule-2);
+  box-shadow: var(--lift);
+  z-index: 50;
+  display: flex; flex-direction: column;
+  transform: translateX(102%);
+  transition: transform var(--m-structure) var(--ease);
+}
+.plate-spec[aria-hidden="false"] { transform: none; }
+.plate-spec .sh {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 18px; border-bottom: 1px solid var(--rule);
+  font-family: var(--f-mach); font-size: 10px;
+  letter-spacing: var(--tr-label); text-transform: uppercase;
+  color: var(--ink-3);
+}
+.plate-spec .sh span b { font-weight: 400; color: var(--ink); }
+.plate-spec .sh button {
+  all: unset; cursor: pointer;
+  color: var(--ink-3); letter-spacing: var(--tr-label);
+  text-transform: uppercase; font-size: 10px; padding: 4px 0 4px 14px;
+}
+.plate-spec .sh button:hover { color: var(--ink); }
+.plate-spec pre {
+  margin: 0; padding: 18px; overflow: auto;
+  font-family: var(--f-mach); font-size: 11px; line-height: 1.55;
+  color: var(--ink); flex: 1; white-space: pre; tab-size: 2;
+}
+.plate-spec pre .k { color: var(--ink-3); }
+.plate-spec pre .s { color: var(--ink); }
+.plate-spec pre .n { color: var(--ink-2); }
+/* Highlighted spec rows — subtle bench background, no hue */
+.plate-spec pre .hl { background: var(--bench); display: block; }
+
+/* Narrow viewport --------------------------------------------------------- */
+@media (max-width: 960px) {
+  .plate-view {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    min-height: 0;
+  }
+  .plate-notes {
+    border-right: 0; border-bottom: 1px solid var(--rule);
+    overflow: visible;
+  }
+  .plate-figure { min-height: 70vh; }
+  .plate-figure .plate-cvwrap { padding: 24px; position: relative; height: 70vh; }
+  .plate-log { position: static; width: auto; padding: 8px 16px; }
+  .plate-related { position: static; width: 100%; border-left: 0; }
+  .plate-spec {
+    top: 0; width: 100vw;
+  }
+}
