@@ -128,6 +128,30 @@
   color: var(--paper); background: var(--ink); border-color: var(--ink);
 }
 
+/* Compare block — fidelity readout inside the notes column, shown on
+   entries that ship a compare{} block. Kept ink-only per the chrome rule. */
+.plate-compare {
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.plate-compare h2 {
+  margin: 0 0 4px; font-family: var(--f-mach); font-weight: 400;
+  font-size: var(--t-label); letter-spacing: var(--tr-label);
+  text-transform: uppercase; color: var(--ink-3);
+}
+.plate-compare-rows { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; }
+.plate-compare-rows .row {
+  display: contents; font-family: var(--f-mach); font-size: 10.5px;
+}
+.plate-compare-rows .row .ax { color: var(--ink); text-transform: lowercase; letter-spacing: 0; }
+.plate-compare-rows .row .ok { color: var(--ink-3); letter-spacing: var(--tr-mach); }
+.plate-compare-ref {
+  font-family: var(--f-mach); font-size: 9.5px;
+  color: var(--ink-4); letter-spacing: var(--tr-mach);
+  margin-top: 6px;
+}
+
 /* Crossover block */
 .plate-crossover {
   margin-top: var(--s3); padding-top: var(--s3);
@@ -151,10 +175,38 @@
 .plate-figure .plate-cvwrap {
   position: absolute; inset: 0;
   padding: 48px 320px 220px 48px;
+  display: flex; align-items: center; justify-content: center;
 }
-.plate-figure svg {
+/* SVG-only plate (no canvas) fills the wrap as before — the viewBox already
+   describes the drawing's aspect, so the SVG's own preserveAspectRatio
+   centres the picture inside. */
+.plate-figure > .plate-cvwrap > svg:only-child {
   display: block; width: 100%; height: 100%;
 }
+/* Canvas + SVG plate — the canvas carries the picture, the SVG overlays
+   the point markers. Both share a common aspect box centred in the wrap
+   so u/v coordinates land on the same visual position on both. The
+   aspect-ratio comes from the entry's plate.designWidth/designHeight,
+   set on the wrap via a CSS var at mount time. */
+.plate-figure .plate-cvwrap[data-canvas="true"] {
+  /* --plate-aspect set inline from plate.designWidth / plate.designHeight. */
+}
+.plate-figure canvas,
+.plate-figure canvas + svg {
+  display: block;
+  width: auto; height: auto;
+  max-width: 100%; max-height: 100%;
+  aspect-ratio: var(--plate-aspect, 1 / 1);
+}
+.plate-figure canvas + svg {
+  position: absolute;
+  /* Overlay sits over the canvas by using the wrap's flex centering; both
+     have the same aspect box + max-width/max-height so they resolve to the
+     same rendered rectangle. */
+  pointer-events: none;
+  background: transparent;
+}
+.plate-figure canvas + svg .pt { pointer-events: auto; }
 
 /* SVG semantic classes — the plate's own drawing language. Kept ink-only;
    highlight state uses stroke-weight + opacity, never hue.                  */

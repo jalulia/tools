@@ -66,6 +66,8 @@ Shell.registerManifest({
     { id: 'in-situ',            title: 'In situ',            order: 25 },
     { id: 'excluded-terms',     title: 'Excluded terms',     order: 16,
       note: 'Effects a field is assumed to forbid. Each entry builds the excluded term by hand and grades it: allowed after all, genuinely forbidden, or merely speculative.' },
+    { id: 'studies',            title: 'Studies',            order: 26,
+      note: 'ck-e12 · reference studies read as plates. Each entry is a canvas2d rebuild of one reference image, with the technique blocks a rebuilder would use to make it themselves.' },
     { id: 'unfiled',            title: 'Unfiled',            order: 99 }
   ],
 
@@ -160,7 +162,32 @@ Shell.registerManifest({
         "The film layer sits ABOVE the type, so the words are in the picture rather than on it."
       ],
       /* KL1 folded into W1 — one record, not two. */
-      entries: ["e4-masonry-cards", "e5-case-card", "w1-seven-pass-band-chain"] }
+      entries: ["e4-masonry-cards", "e5-case-card", "w1-seven-pass-band-chain"] },
+    /* ck-e12 · Reference-study style. Every ST plate rebuilds a public-domain
+       reference from scratch in canvas2d, with technique blocks provable from
+       points on the plate. The palette is per-plate (not a shared house look);
+       what these entries share is the READ mechanic, not the pigment. */
+    { id: "technique-study", title: "Technique study",
+      summary: "A rebuild of a public reference, drawn from scratch in code so every mark on the plate maps to a technique block. The palette and grammar belong to the reference; the shared thing is the reading protocol.",
+      palette: ["#000000", "#ffffff", "#7e7d75", "#e6e6d2"],
+      type: { display: "Fraunces", text: "Fraunces", mono: "JetBrains Mono" },
+      texture: ["canvas-grain", "keyline", "handstroke", "dry-brush", "radial-striation"],
+      engines: [],
+      rules: [
+        "Rebuild the reference from code; every visible mark is authored, not stamped.",
+        "Every declared technique is provable from a point on the plate — coverage rule.",
+        "compare{} on only where the reference is public-domain or Julia's own instrument."
+      ],
+      entries: [
+        "st-01-pencil-keyline-botanical",
+        "st-02-stipple-ray-bloom",
+        "st-03-thermal-chips",
+        "st-04-chromolitho-calendar",
+        "st-05-isometric-stipple-facade",
+        "st-06-massive-source-instrument",
+        "st-07-massive-drawn-geometry",
+        "st-08-two-ink-saint"
+      ] }
   ],
 
   /* ck-e8 · Skills grouped into two shelves at #/skills:
@@ -877,5 +904,20 @@ Shell.registerManifest({
         overuse: 'Turn theta past a few degrees and the beat pitch collapses toward the carrier: the broad envelope dissolves into a rotated cross-hatch texture and the moiré reading is lost.'
       },
       note: 'Image-processing / reflexive thread. Samples the archive\'s own screens — dot-screen-20 and bayer8 are periodic rulings this technique beats against a second ruling. Atom-free (no new swatch). The working plate is content/moire-aliasing/fragment.html.' },
+
+    /* ── ck-e12 · Studies (8) — reference studies imported from
+       technique-studies/ as first-class encyclopedia entries. Each
+       registers itself from content/<slug>/entry.js. section: 'studies';
+       lane: 'canvas2d'; entity: 'exploration'; status: 'canonical'.
+       Compare block on for ST-04, ST-06, ST-07 (public-domain / own
+       instrument); off for the other five per PROCESS §5.4.        ── */
+    'st-01-pencil-keyline-botanical',
+    'st-02-stipple-ray-bloom',
+    'st-03-thermal-chips',
+    'st-04-chromolitho-calendar',
+    'st-05-isometric-stipple-facade',
+    'st-06-massive-source-instrument',
+    'st-07-massive-drawn-geometry',
+    'st-08-two-ink-saint'
 ]
 });

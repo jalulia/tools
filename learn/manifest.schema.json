@@ -575,8 +575,11 @@
             "series":  { "type": "string", "description": "Series line, e.g. \"EXPLORATIONS · OPTICS\". Informational; not shown by default." },
             "sheet":   { "type": "integer", "description": "This entry's sheet number within its series." },
             "of":      { "type": "integer", "description": "Total sheets in the series." },
-            "viewBox": { "type": "string", "description": "SVG viewBox for the plate's drawing, e.g. \"0 205 1040 315\". Must match the units in spec.units." },
-            "svg":     { "type": "string", "description": "The plate's inline SVG body — everything inside <svg>...</svg> except the wrapper. The view injects this into a <svg> element with the viewBox above and reads points[].u/v against that viewBox. There is no fetch, so the picture lives in the entry.js the same way `text` does." }
+            "viewBox":     { "type": "string", "description": "SVG viewBox for the plate's drawing, e.g. \"0 205 1040 315\". Must match the units in spec.units. Required when `svg` is used; optional when `render` is used (an overlay viewBox is derived from designWidth/designHeight)." },
+            "svg":         { "type": "string", "description": "The plate's inline SVG body — everything inside <svg>...</svg> except the wrapper. The view injects this into a <svg> element with the viewBox above and reads points[].u/v against that viewBox. There is no fetch, so the picture lives in the entry.js the same way `text` does." },
+            "designWidth": { "type": "integer", "description": "Design width in pixels for a canvas-rendered plate. The view sizes the <canvas> to this width × height, applies devicePixelRatio, and calls render(canvas, w, h, dpr)." },
+            "designHeight":{ "type": "integer", "description": "Design height in pixels for a canvas-rendered plate." },
+            "render":      { "description": "Canvas render function: fn(canvas, w, h, dpr). The view creates a <canvas> sized to designWidth × designHeight × dpr and calls render on it. Points are overlaid via a sibling SVG at the same size. Legal type is `function`; the schema records it as `true` because JSON schema has no function type." }
           }
         },
         "method": {
@@ -585,11 +588,12 @@
         },
         "spec": {
           "type": "object",
-          "additionalProperties": false,
-          "description": "ck-e10 · LLM-readable specification of the plate — techniques with params + implementation. What makes the archive a web: `spec.techniques[].id` is the join key across entries.",
+          "additionalProperties": true,
+          "description": "ck-e10 · LLM-readable specification of the plate — techniques with params + implementation. What makes the archive a web: `spec.techniques[].id` is the join key across entries. Free-form authoring keys (palette-role sub-tables, geometry hints, per-plate notes tables) are permitted so the spec block can carry whatever authoring notation the plate needs.",
           "required": ["id", "techniques"],
           "properties": {
             "id":         { "$ref": "#/$defs/slug", "description": "Usually equal to the entry's id." },
+            "reference":  { "type": "object", "additionalProperties": true, "description": "ck-e12 · reference-image metadata for a study-plate (file name, px, measurement resolution, grammar note). Optional; the shipping compare{} block carries the reference path for entries that opt in." },
             "palette":    { "type": "object", "additionalProperties": true, "description": "Named colours the plate uses. Keys are palette-role names; values are hex strings or arrays of hex strings for gradients." },
             "ground":     { "type": "object", "additionalProperties": true, "description": "Substrate the plate sits on — colour, tooth, area ref." },
             "units":      { "type": "string", "description": "The unit system this plate's numbers are in — e.g. \"design units, 1000 = plate width\" or \"SVG viewBox units, 0 205 1040 315\"." },
@@ -605,8 +609,8 @@
                   "id":             { "$ref": "#/$defs/slug", "description": "Unique within this entry. Joins across entries via spec.crossover.also_uses and the derived techniques.json index." },
                   "short":          { "type": "string", "description": "3-4 letter discipline tag: GRND, FORM, MARK, TONE, KEY, TEX, FILL, COL, TYPE, FLD, BUS." },
                   "name":           { "type": "string", "description": "Human-readable." },
-                  "layer":          { "type": "string", "description": "Which of the composition layers this acts at (SOURCE, STRUCTURE, MATERIAL RESPONSE, IMAGE FORMATION, SCREEN-SPACE, GRAPHIC COMPOSITION, OUTPUT). Free-form string so mechanism entries can use OUTPUT etc.; the visual archive's fixed set lives at #/$defs/entry.properties.layer." },
-                  "pass":           { "type": "integer", "minimum": 1, "description": "1-indexed order within pass_order." },
+                  "layer":          { "type": ["string", "integer"], "description": "Which composition layer this technique acts at. String form (SOURCE, STRUCTURE, MATERIAL RESPONSE, IMAGE FORMATION, SCREEN-SPACE, GRAPHIC COMPOSITION, OUTPUT) for entries using the visual archive's fixed layer stack. Integer form for entries — like the ST reference studies — where layer is a pass ordinal inside a single canvas plate. Free-form on both sides so mechanism entries can use OUTPUT etc.; the visual archive's fixed set lives at #/$defs/entry.properties.layer." },
+                  "pass":           { "type": "integer", "minimum": 0, "description": "Order within pass_order. Usually 1-indexed; 0 is legal for a pre-plate pass (ground / sheet) that runs before pass 1." },
                   "params":         { "type": "object", "additionalProperties": true, "description": "The numbers a rebuilder needs. Free-form object; the plate's authored notation." },
                   "implementation": { "type": "string", "description": "One-sentence algorithm description." },
                   "atoms":          { "type": "array", "items": { "type": "string" }, "description": "Atom names this technique block draws on. Feeds atoms.json at E13. Authored, not derived." },

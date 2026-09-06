@@ -125,13 +125,49 @@
       (next ? '<a href="#/entry/' + esc(next.id) + '" title="' + esc(next.title) + '">' + esc(next.index || S.pad(next.order)) + ' →</a>'
             : '<span>— →</span>');
 
-    /* SVG — the plate's picture lives on plate.svg. */
-    var svg = (e.plate && e.plate.svg) || '';
-    var viewBox = (e.plate && e.plate.viewBox) || '0 0 1000 1000';
-    var svgHTML =
+    /* Picture — two paths:
+         plate.svg    → inline SVG (E10 pattern; birefringent-ray-bench)
+         plate.render → canvas2d, sized to plate.designWidth × designHeight,
+                        overlaid with an SVG at the same viewBox for points.
+       The point interaction code below reads the plate-svg viewBox and
+       positions markers into it; that stays SVG regardless of the picture. */
+    var svgBody = (e.plate && e.plate.svg) || '';
+    var hasCanvas = e.plate && typeof e.plate.render === 'function';
+    var viewBox;
+    if (hasCanvas) {
+      var dw = (e.plate.designWidth) || 1000;
+      var dh = (e.plate.designHeight) || 1000;
+      viewBox = '0 0 ' + dw + ' ' + dh;
+    } else {
+      viewBox = (e.plate && e.plate.viewBox) || '0 0 1000 1000';
+    }
+    var pictureHTML =
+      (hasCanvas ? '<canvas id="plate-canvas" aria-label="' + esc(e.title) + '"></canvas>' : '') +
       '<svg id="plate-svg" viewBox="' + esc(viewBox) + '" role="img" ' +
-      'aria-label="' + esc(e.title) + '">' + svg +
+      'aria-label="' + esc(e.title) + '">' + svgBody +
       '<g id="plate-points"></g><g id="plate-readhead"></g></svg>';
+
+    /* Compare block — fidelity readout inside the notes column when
+       entry.compare.readout is present. The public build strips
+       compare.reference for entries whose reference is third-party. */
+    var compareHTML = '';
+    if (e.compare && e.compare.readout) {
+      var axes = ['palette', 'tone', 'edge', 'grain', 'chroma'];
+      var rows = axes.filter(function (a) { return e.compare.readout[a]; });
+      var refNote = e.compare.reference
+        ? '<div class="plate-compare-ref">reference · ' + esc(String(e.compare.reference).split('/').pop()) + '</div>'
+        : '<div class="plate-compare-ref">reference · not shipped (public build)</div>';
+      compareHTML =
+        '<div class="plate-compare">' +
+          '<h2>Fidelity</h2>' +
+          '<div class="plate-compare-rows">' +
+            rows.map(function (a) {
+              return '<div class="row"><span class="ax">' + esc(a) + '</span><span class="ok">on file</span></div>';
+            }).join('') +
+          '</div>' +
+          refNote +
+        '</div>';
+    }
 
     /* Log rows */
     var rowsHTML = points.map(function (p, i) {
@@ -160,10 +196,16 @@
             (chipsHTML ? '<div><h2>Techniques read</h2>' +
                          '<div class="plate-tags" id="plate-tags">' + chipsHTML + '</div>' +
                          crossoverHTML + '</div>' : '') +
+            compareHTML +
           '</div>' +
         '</section>' +
         '<section class="plate-figure">' +
-          '<div class="plate-cvwrap">' + svgHTML + '</div>' +
+          '<div class="plate-cvwrap"' +
+            (hasCanvas
+              ? ' data-canvas="true" style="--plate-aspect:' +
+                ((e.plate.designWidth || 1000) + ' / ' + (e.plate.designHeight || 1000)) + '"'
+              : '') +
+          '>' + pictureHTML + '</div>' +
           '<div class="plate-log" id="plate-log" data-scan="on">' +
             '<div class="log-ctl">' +
               '<button type="button" id="plate-read" aria-pressed="true" title="scan on/off (r)"><span class="dot"></span>Read</button>' +
@@ -200,9 +242,41 @@
     var pos = el('pos');
     if (pos) pos.textContent = (idx + 1) + ' / ' + S.entries.length;
 
+    /* Mount the canvas render, if any. Do this before wirePlate so the
+       picture is on-screen while interactions wire up. */
+    if (hasCanvas) mountCanvas(e);
+
     wirePlate(e, techniques, points);
     S.markCurrent && S.markCurrent();
     window.scrollTo(0, 0);
+  }
+
+  /* Canvas mounter — sizes the <canvas> to designWidth × designHeight × dpr
+     and calls plate.render(canvas, w, h, dpr). The render function is
+     canvas2d convention: sets its own transform, draws into the 2d context.
+     Called once at mount; re-render on window resize is out of scope for E12
+     (the design fits at 1440+ widths and the layout has fixed padding). */
+  function mountCanvas(e) {
+    var canvas = document.getElementById('plate-canvas');
+    if (!canvas) return;
+    var w = e.plate.designWidth || 1000;
+    var h = e.plate.designHeight || 1000;
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width  = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width  = '100%';
+    canvas.style.height = '100%';
+    /* Defer to next frame so the layout has settled — some ST renders
+       measure the canvas's computed size. */
+    requestAnimationFrame(function () {
+      try {
+        e.plate.render(canvas, w, h, dpr);
+      } catch (err) {
+        /* Render errors shouldn't take down the whole page; the coverage
+           badge + notes still tell the reader what the plate claims. */
+        if (window.console) console.error('plate.render failed for ' + e.id + ':', err);
+      }
+    });
   }
 
   /* ---------- coverage ---------------------------------------------------- */
