@@ -1063,6 +1063,8 @@
     if (pos) { pos.classList.remove('has-pager'); }
 
     var list = S.entries.filter(function (e) { return e.section === section.id; });
+    /* Also find inline entries whose section resolves at manifest-time; the
+       filter above only catches script-loaded entries once they've registered. */
     /* Defer re-render if entries haven't loaded yet — the filter needs each
        entry's runtime `section` field, which the slug-loaded entry.js sets
        via registerEntry after the manifest resolves. */
@@ -1077,12 +1079,14 @@
     var rows = list.map(function (e) {
       var thumb = e.thumb && (typeof e.thumb === 'string' ? e.thumb : e.thumb.file);
       var pathBase = e.path || ('content/' + e.id + '/');
+      /* Use .prev (the shell's canonical card thumb slot with aspect-ratio 232/196)
+         so the ST plates' 1200 px sources don't render at full pixel size. */
       var thumbHTML = thumb
         ? '<img src="' + esc(pathBase + thumb) + '" alt="" loading="lazy" onerror="this.classList.add(\'nothumb\');this.removeAttribute(\'src\')">'
-        : '<span class="nothumb">no thumb<br>on file</span>';
+        : '<span class="queued">no thumbnail on file</span>';
       return '<a class="card" href="#/entry/' + esc(e.id) + '">' +
-        '<span class="th">' + thumbHTML + '</span>' +
-        '<span class="cap"><b>' + esc(e.index || e.title) + '</b>' +
+        '<span class="prev">' + thumbHTML + '</span>' +
+        '<span class="cap"><span class="n">' + esc(e.index || S.pad(e.order)) + '</span>' +
           '<span class="t">' + esc(e.title) + '</span>' +
           '<span class="st" data-st="' + esc(e.status || 'exploration') + '">' + esc(String(e.status || 'exploration').replace('-', ' ')) + '</span>' +
         '</span></a>';
@@ -1093,7 +1097,8 @@
       '<h1>' + esc(section.title) + '</h1>' +
       '<div class="meta"><span class="tags">' + list.length + ' entr' + (list.length === 1 ? 'y' : 'ies') + '</span></div>' +
       (section.note ? '<p class="lede" style="color:var(--ink-2)">' + esc(section.note) + '</p>' : '') +
-      '<div class="sheet" style="margin-top:24px">' + (rows || '<p class="empty">Nothing here yet.</p>') + '</div>';
+      '<div class="sheet" style="margin-top:24px;padding:24px"><div class="grid">' + rows + '</div>' +
+      (rows ? '' : '<p class="empty">Nothing here yet.</p>') + '</div>';
     S.markCurrent && S.markCurrent();
     window.scrollTo(0, 0);
   }
