@@ -288,11 +288,14 @@
   function position() {
     var pos = el('pos');
     if (!pos) return;
+    /* Nav review §5d · a plate view has taken over #pos with its own pager
+       (mountMastPlate marks it with .has-pager). Don't overwrite. */
+    if (pos.classList.contains('has-pager')) return;
     if (S.current) {
       var i = S.entries.indexOf(S.current) + 1;
       pos.textContent = i + ' / ' + S.entries.length;
     } else {
-      var noun = S.manifest.mode === 'catalogue' ? 'lenses' : 'chapters';
+      var noun = S.manifest.mode === 'catalogue' ? 'entries' : 'chapters';
       pos.textContent = S.entries.length + ' ' + noun;
     }
   }
@@ -656,7 +659,7 @@
     var list = S.filtered.filter(function (e) { return !styleId || e.style === styleId; });
     var st = styleId ? S.styleById(styleId) : null;
     if (crumb) crumb.textContent = st ? ('Style · ' + st.title) : ('Contact sheet · ' + S.entries.length +
-      (S.manifest.mode === 'catalogue' ? ' lenses' : ' chapters'));
+      (S.manifest.mode === 'catalogue' ? ' entries' : ' chapters'));
 
     var order = (S.manifest.sections || []).map(function (s) { return s.id; });
     var groups = {};
@@ -665,7 +668,7 @@
 
     var studied = S.entries.filter(hasStudy).length;
     var unstudied = S.entries.filter(noStudy).length;
-    var noun = S.manifest.mode === 'catalogue' ? 'lenses' : 'chapters';
+    var noun = S.manifest.mode === 'catalogue' ? 'entries' : 'chapters';
 
     var head = st ? styleDeclaration(st) :
       '<p class="kicker">' + esc(S.manifest.title) + (S.manifest.subtitle ? ' · ' + esc(S.manifest.subtitle) : '') + '</p>' +
@@ -805,7 +808,7 @@
 
     var mine = S.entries.filter(function (e) { return e.style === st.id; });
     var cat = S.manifest.mode === 'catalogue';
-    var noun = mine.length === 1 ? (cat ? 'lens' : 'entry') : (cat ? 'lenses' : 'entries');
+    var noun = mine.length === 1 ? (cat ? 'entry' : 'entry') : (cat ? 'entries' : 'entries');
     var studied = mine.filter(hasStudy).length;
     var unstudied = mine.filter(noStudy).length;
 
@@ -1046,6 +1049,162 @@
   /* ck-e2 · the atom entry page. Live swatch at design width, params
      inspector (drag to redraw), used-by strip, produces-of, admitted-by,
      governed-by. Called from renderEntry when e.entity === 'atom'. */
+  /* Nav review §5f · #/section/<id> — contact sheet filtered by section.
+     Reuses the atom-block/contact-sheet vocabulary from renderSheet so it
+     inherits every future improvement. */
+  function renderSection(section, query) {
+    view.kind = 'section'; view.styleId = null;
+    S.current = null; S.currentExample = null;
+    S.unmountAdapter && S.unmountAdapter();
+    if (S.views && S.views.unmountMastPlate) S.views.unmountMastPlate();
+    var crumb = el('crumb');
+    if (crumb) crumb.textContent = 'Section · ' + section.title;
+    var pos = el('pos');
+    if (pos) { pos.classList.remove('has-pager'); }
+
+    var list = S.entries.filter(function (e) { return e.section === section.id; });
+    /* Defer re-render if entries haven't loaded yet — the filter needs each
+       entry's runtime `section` field, which the slug-loaded entry.js sets
+       via registerEntry after the manifest resolves. */
+    var stillPending = S.entries.some(function (e) { return e.section === undefined && !e.__loaded; });
+    if (stillPending) {
+      setTimeout(function () {
+        if (view.kind === 'section' && window.location.hash.indexOf('#/section/' + section.id) === 0) {
+          renderSection(section, query);
+        }
+      }, 150);
+    }
+    var rows = list.map(function (e) {
+      var thumb = e.thumb && (typeof e.thumb === 'string' ? e.thumb : e.thumb.file);
+      var pathBase = e.path || ('content/' + e.id + '/');
+      var thumbHTML = thumb
+        ? '<img src="' + esc(pathBase + thumb) + '" alt="" loading="lazy" onerror="this.classList.add(\'nothumb\');this.removeAttribute(\'src\')">'
+        : '<span class="nothumb">no thumb<br>on file</span>';
+      return '<a class="card" href="#/entry/' + esc(e.id) + '">' +
+        '<span class="th">' + thumbHTML + '</span>' +
+        '<span class="cap"><b>' + esc(e.index || e.title) + '</b>' +
+          '<span class="t">' + esc(e.title) + '</span>' +
+          '<span class="st" data-st="' + esc(e.status || 'exploration') + '">' + esc(String(e.status || 'exploration').replace('-', ' ')) + '</span>' +
+        '</span></a>';
+    }).join('');
+
+    el('view').innerHTML =
+      '<p class="kicker">Section</p>' +
+      '<h1>' + esc(section.title) + '</h1>' +
+      '<div class="meta"><span class="tags">' + list.length + ' entr' + (list.length === 1 ? 'y' : 'ies') + '</span></div>' +
+      (section.note ? '<p class="lede" style="color:var(--ink-2)">' + esc(section.note) + '</p>' : '') +
+      '<div class="sheet" style="margin-top:24px">' + (rows || '<p class="empty">Nothing here yet.</p>') + '</div>';
+    S.markCurrent && S.markCurrent();
+    window.scrollTo(0, 0);
+  }
+
+  /* Nav review §5e · aggregation page for a technique/atom id that lives ONLY
+     in spec.techniques[] and has no top-level manifest entry. Shell.js routes
+     #/technique/<id> or #/atom/<id> here when the id resolves in
+     Shell.crossover but not in the manifest. Renders name + layer + list of
+     appearing entries + one representative point (Julia's ruling §7.4). */
+  function renderCrossoverAggregation(kind, id, cxData, query) {
+    view.kind = 'aggregation';
+    S.current = null; S.currentExample = null;
+    S.unmountAdapter && S.unmountAdapter();
+    if (S.views && S.views.unmountMastPlate) S.views.unmountMastPlate();
+    var crumb = el('crumb');
+    if (crumb) crumb.textContent = (kind === 'atom' ? 'Atom · ' : 'Technique · ') + id;
+    var pos = el('pos');
+    if (pos) { pos.classList.remove('has-pager'); pos.textContent = ''; }
+    S.markCurrent && S.markCurrent();
+
+    var appearances = kind === 'atom' ? (cxData.used_by || []) : (cxData.appears_in || []);
+    var name  = kind === 'atom' ? id : (cxData.name || id);
+    var layer = cxData.layer || '';
+
+    /* Pick a representative point: the first entry whose entry.js has loaded
+       and whose spec.techniques[] carries this id and has an authored point
+       citing that technique. */
+    var repPoint = null, repEntry = null, repTech = null;
+    for (var i = 0; i < appearances.length; i++) {
+      var a = appearances[i];
+      var candidate = S.byId && S.byId[a.entry_id];
+      if (!candidate || !candidate.__loaded || !candidate.spec) continue;
+      var techId = kind === 'atom' ? a.technique_id : id;
+      var techBlock = (candidate.spec.techniques || []).filter(function (t) { return t.id === techId; })[0];
+      if (!techBlock) continue;
+      var pts = (candidate.points || []).filter(function (p) { return p.t === techId && (p.u !== 0.5 || p.v !== 0.5); });
+      if (pts.length) {
+        repPoint = pts[0]; repEntry = candidate; repTech = techBlock;
+        break;
+      }
+      /* Even without a rep point, keep the first hit as the fallback so the
+         page can still render an "example implementation" block. */
+      if (!repEntry) { repEntry = candidate; repTech = techBlock; }
+    }
+
+    var repHTML = '';
+    if (repPoint) {
+      var pathBase = repEntry.path || ('content/' + repEntry.id + '/');
+      var thumb = repEntry.thumb && (typeof repEntry.thumb === 'string' ? repEntry.thumb : repEntry.thumb.file);
+      var thumbHTML = thumb
+        ? '<img src="' + esc(pathBase + thumb) + '" alt="" loading="lazy" onerror="this.classList.add(\'nothumb\');this.removeAttribute(\'src\')" style="max-width:180px;border:1px solid var(--rule)">'
+        : '<span class="nothumb">no thumb</span>';
+      repHTML =
+        '<section class="atom-block"><div class="blk-head"><span class="lab">Representative point</span>' +
+        '<span class="n">from <a href="#/entry/' + esc(repEntry.id) + '">' + esc(repEntry.title) + '</a></span></div>' +
+        '<div style="display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;padding:8px 0">' +
+          '<a href="#/entry/' + esc(repEntry.id) + '">' + thumbHTML + '</a>' +
+          '<div>' +
+            '<p style="font-family:var(--f-mach);font-size:11px;color:var(--ink-3);margin:0 0 4px;letter-spacing:.04em">' +
+              esc(repPoint.d || '') + ' · u ' + repPoint.u.toFixed(3) + ' · v ' + repPoint.v.toFixed(3) +
+            '</p>' +
+            '<p style="margin:0 0 8px">' + esc(repPoint.label || '') + '</p>' +
+            (repTech.implementation ? '<p style="margin:0;color:var(--ink-2);font-size:14px"><b>implementation:</b> ' + esc(repTech.implementation) + '</p>' : '') +
+          '</div>' +
+        '</div></section>';
+    }
+
+    var appearsHTML = '<section class="atom-block"><div class="blk-head"><span class="lab">Appears in</span>' +
+      '<span class="n">' + appearances.length + ' spec block' + (appearances.length === 1 ? '' : 's') +
+      (kind === 'atom' ? ' across techniques' : '') + '</span></div>' +
+      '<div class="chips" style="margin:8px 0">' + appearances.map(function (a) {
+        var target = S.byId && S.byId[a.entry_id];
+        var title = target && target.title ? target.title : a.entry_id;
+        var extra = kind === 'atom' && a.technique_id ? ' · ' + a.technique_id : '';
+        return '<a class="pip" href="#/entry/' + esc(a.entry_id) + '">' + esc(title + extra) + '</a>';
+      }).join('') + '</div></section>';
+
+    var noteHTML = '<p class="lede" style="color:var(--ink-2)">' +
+      esc(kind === 'atom'
+        ? 'An atom name referenced across ' + appearances.length + ' technique block' + (appearances.length === 1 ? '' : 's') + '. No standalone atom page on file — this record is what the crossover index knows about it.'
+        : 'A technique id referenced across ' + appearances.length + ' entry spec' + (appearances.length === 1 ? '' : 's') + '. No standalone technique page on file — this record is what the crossover index knows about it.') +
+      '</p>';
+
+    el('view').innerHTML =
+      '<p class="kicker">' + (kind === 'atom' ? 'Atom' : 'Technique') + ' · aggregation</p>' +
+      '<h1>' + esc(name) + '</h1>' +
+      '<div class="meta"><span class="tags">from spec.crossover' + (layer ? '  <b>·</b>  layer: ' + esc(layer) : '') + '</span></div>' +
+      noteHTML +
+      repHTML +
+      appearsHTML;
+    window.scrollTo(0, 0);
+
+    /* If we couldn't paint a rep point because appearing entries hadn't
+       finished loading, retry once after the entry scripts settle. This is
+       a common race on the aggregation route since it depends on the SPEC
+       of entries other than the one the URL names. */
+    if (!repPoint) {
+      var stillPending = appearances.some(function (a) {
+        var c = S.byId && S.byId[a.entry_id];
+        return !c || !c.__loaded;
+      });
+      if (stillPending) {
+        setTimeout(function () {
+          if (view.kind === 'aggregation' && window.location.hash.indexOf('#/' + (kind === 'atom' ? 'atom' : 'technique') + '/' + id) === 0) {
+            renderCrossoverAggregation(kind, id, cxData, query);
+          }
+        }, 150);
+      }
+    }
+  }
+
   /* ck-e13 · fine-grained crossover block. Reads Shell.crossover (built by
      scripts/build-crossover.mjs) and renders a small section listing every
      entry that names this id in its spec. Distinct from the coarse
@@ -2098,6 +2257,8 @@
     renderStyle: renderStyle,
     renderRoute: renderRoute,
     renderSkill: renderSkill,
+    renderSection: renderSection,
+    renderCrossoverAggregation: renderCrossoverAggregation,
     renderLoading: renderLoading,
     renderMissing: renderMissing,
     selectTab: selectTab,

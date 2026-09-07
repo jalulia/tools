@@ -12,11 +12,12 @@
 /* Root ---------------------------------------------------------------------
    The plate sits inside #view, which the shell scrolls beneath its masthead.
    The plate uses the full column width the shell hands it and lays out its
-   own two-column grid.                                                       */
+   own two-column grid. Identity (crumb + coverage + pager) lives in the
+   shell masthead now (§5d), so the plate is two regions, not three.        */
 .plate-view {
   display: grid;
   grid-template-columns: minmax(320px, 440px) minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: 0;
   border: 1px solid var(--rule);
   background: var(--paper);
@@ -24,63 +25,40 @@
   margin: 0;
 }
 
-/* Plate top row ------------------------------------------------------------
-   Julia rulings 1-3: breadcrumb + coverage badge + pager, one row. Spans
-   both grid columns so the plate's identity is one line above the notes
-   + figure split.                                                            */
-.plate-nav {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: center;
-  column-gap: var(--s5);
-  padding: 12px var(--s5);
-  border-bottom: 1px solid var(--rule);
-  font-family: var(--f-mach);
-  font-size: var(--t-label);
-  letter-spacing: var(--tr-label);
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-.plate-nav .crumb { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.plate-nav .crumb a { color: var(--ink-3); text-decoration: none; }
-.plate-nav .crumb a:hover { color: var(--ink); }
-.plate-nav .crumb .sep { color: var(--ink-4); padding: 0 6px; }
-.plate-nav .crumb b {
-  color: var(--ink); font-weight: 500;
-  font-family: var(--f-text); font-size: 14px;
-  letter-spacing: 0; text-transform: none;
-}
-
-/* Coverage badge — no hue. Green (canonical square) for OK; hatch for FAIL. */
-.plate-cov {
+/* Masthead plate slots (§5d) — coverage badge left of the pager, pager in
+   the position slot. Painted from learn/views/entry-plate.js mountMastPlate
+   when a plate mounts; hidden on non-plate views. */
+.mast-cov {
   display: inline-flex; align-items: center; gap: 7px;
   color: var(--ink-2); white-space: nowrap;
   font-family: var(--f-mach); font-size: var(--t-label);
   letter-spacing: var(--tr-label); text-transform: uppercase;
+  padding: 0 var(--s3);
 }
-.plate-cov::before {
+.mast-cov.ok::before {
   content: ""; width: var(--mark-size); height: var(--mark-size);
   flex: none; background: currentColor;
 }
-.plate-cov[data-state="fail"] { color: var(--ink); }
-.plate-cov[data-state="fail"]::before {
-  background: none;
-  width: 9px; height: 11px;
+.mast-cov.fail { color: var(--ink); }
+.mast-cov.fail::before {
+  content: ""; width: 9px; height: 11px; flex: none;
   background-image: var(--hatch-ink); background-size: auto;
 }
 
-/* Pager */
-.plate-pager { display: inline-flex; gap: 2px; align-items: center; }
-.plate-pager a, .plate-pager span {
-  all: unset; cursor: pointer;
-  padding: 4px 10px; border: 1px solid var(--rule);
-  color: var(--ink-3);
+/* Pager takes over the .pos slot when a plate mounts. */
+.pos.has-pager {
+  display: inline-flex; gap: 4px; align-items: center;
   font-family: var(--f-mach); font-size: var(--t-label);
   letter-spacing: var(--tr-label); text-transform: uppercase;
 }
-.plate-pager span { cursor: default; color: var(--ink-4); }
-.plate-pager a:hover { color: var(--ink); border-color: var(--ink-4); }
+.pos .mast-pager {
+  color: var(--ink); text-decoration: none;
+  padding: 2px 6px; border: 1px solid var(--rule);
+}
+.pos .mast-pager:hover { border-color: var(--ink); }
+.pos .mast-pager-off { color: var(--ink-4); border-color: transparent; padding: 2px 6px; }
+.pos .mast-pager-sep { color: var(--ink-4); }
+.pos .mast-pager-idx { color: var(--ink-3); }
 
 /* Notes column -------------------------------------------------------------
    Left column. Body prose, then meta (Source only), then technique chips,

@@ -59,10 +59,7 @@ Shell.registerManifest({
   mode: 'course',
   stage: { adapter: 'glsl', runtime: '../learn/adapters/glsl.js', aspect: '3/2' },
 
-  siblings: [
-    { id: 'book-of-shaders', title: 'Shaders',    href: '../book-of-shaders/' },
-    { id: 'components',      title: 'Components', href: '../components/' }
-  ],
+  /* siblings[] retired — nav review §5a. */
 
   vocabulary: {
     status: {

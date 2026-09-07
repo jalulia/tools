@@ -21,10 +21,7 @@ Shell.registerManifest({
   subtitle: 'the lens library',
   mode: 'catalogue',
   stage: { adapter: 'fragment', aspect: '1100/900', isolation: 'iframe' },
-  siblings: [
-    { id: 'book-of-shaders', title: 'Shaders',    href: '../book-of-shaders/' },
-    { id: 'components',      title: 'Components', href: './' }
-  ],
+  /* siblings[] retired — nav review §5a. */
   vocabulary: {
     status: {
       canonical: 'Work that is presented as correct and finished.',

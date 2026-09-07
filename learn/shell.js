@@ -233,11 +233,11 @@
   S.parseHash = parseHash;
 
   S.landing = function () {
-    /* ck-e0: the encyclopedia's front door is the technique index. Every
-       other tool keeps its old landing rule (course = first entry, catalogue
-       = contact sheet). The check is on manifest.id rather than mode so a
-       catalogue tool that is not the encyclopedia is unaffected. */
-    if (S.manifest && S.manifest.id === 'encyclopedia') return '#/techniques';
+    /* Nav review §5c · Julia: "just be normal. what makes the most sense to
+       land on." — the encyclopedia lands on the contact sheet, same as any
+       other catalogue tool. No invented doorway page, no bespoke encyclopedia
+       route. A reader who opens the archive sees the archive at rest, in a
+       grid, filterable via the rail. */
     if (S.manifest && S.manifest.mode === 'catalogue') return '#/index';
     return S.entries.length ? '#/' + S.entries[0].id : '#/index';
   };
@@ -297,6 +297,19 @@
       if (!st) return replaceWith(S.landing());
       return S.views && S.views.renderStyle(st, r.query);
     }
+    /* Nav review §5f · #/section/<id> renders a filtered contact sheet by
+       section. Julia's ruling: this route must resolve to something instead
+       of falling through to the landing. */
+    if (p[0] === 'section' && p[1]) {
+      var section = ((S.manifest && S.manifest.sections) || [])
+        .filter(function (s) { return s.id === p[1]; })[0];
+      if (!section) return replaceWith(S.landing());
+      if (S.views && S.views.renderSection) return S.views.renderSection(section, r.query);
+      /* Fallback: contact sheet with a section filter query param, if the
+         views layer doesn't have renderSection. */
+      var q = {}; for (var k in r.query) q[k] = r.query[k]; q.section = section.id;
+      return S.views && S.views.renderSheet(null, q);
+    }
 
     /* ck-e0 encyclopedia routes. Each renders through views if the view
        exists; otherwise fall through to the entry-lookup, which handles
@@ -325,6 +338,15 @@
        chosen by its `entity` field at render time. */
     if (p[0] === 'technique' || p[0] === 'atom' || p[0] === 'entry' || p[0] === 'coupling') {
       var eByPrefix = S.routes.get(p[1]);
+      /* Nav review §5e · when the id doesn't resolve to a manifest entry but
+         DOES exist in Shell.crossover (a spec-only id — like #/technique/keyline
+         where keyline appears only in ST-01/ST-03/ST-04's spec blocks), render
+         a small aggregation page instead of falling through to the landing. */
+      if (!eByPrefix && S.crossover && S.views && S.views.renderCrossoverAggregation) {
+        var cxKey  = (p[0] === 'atom') ? 'atoms' : 'techniques';
+        var cxData = S.crossover[cxKey] && S.crossover[cxKey][p[1]];
+        if (cxData) return S.views.renderCrossoverAggregation(p[0], p[1], cxData, r.query);
+      }
       if (!eByPrefix) return replaceWith(S.landing());
       if (!eByPrefix.__loaded && S.pending[eByPrefix.id]) {
         S.wantRoute = location.hash;
@@ -379,7 +401,7 @@
     var find = document.getElementById('find');
     if (find) {
       find.placeholder = S.manifest.mode === 'catalogue'
-        ? 'Search lenses, tags, references…'
+        ? 'Search entries, tags, references…'
         : 'Search chapters, tags, sources…';
       find.addEventListener('input', function () {
         S.q = find.value.trim();
@@ -449,7 +471,7 @@
     renderSpine();
     var count = document.getElementById('count');
     if (count) {
-      var noun = S.manifest.mode === 'catalogue' ? 'lenses' : 'chapters';
+      var noun = S.manifest.mode === 'catalogue' ? 'entries' : 'chapters';
       // Every count on the page derives from entries. Nothing is typed by hand;
       // that is what verifyManifests() enforces at deploy time.
       var extra = (S.manifest.styles || []).length

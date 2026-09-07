@@ -180,15 +180,11 @@
       '</div>';
     }).join('');
 
-    /* Assemble */
+    /* Assemble. Nav review §5d: no in-plate breadcrumb + coverage + pager;
+       those live in the shell masthead now (painted below via mountMastPlate). */
     var view = el('view');
     view.innerHTML =
       '<div class="plate-view">' +
-        '<div class="plate-nav">' +
-          '<span class="crumb">' + crumbHTML + '</span>' +
-          covHTML +
-          '<span class="plate-pager">' + pagerHTML + '</span>' +
-        '</div>' +
         '<section class="plate-notes">' +
           (bodyHTML ? '<div class="plate-body">' + bodyHTML + '</div>' : '') +
           '<div class="plate-meta">' +
@@ -234,13 +230,10 @@
         '<pre id="plate-specpre"></pre>' +
       '</aside>';
 
-    /* Also mirror the crumb into the shell masthead so the .mast row does
-       not disagree with the plate nav. The masthead is the fixed identity
-       row; the plate nav is the specimen's identity row; they should match. */
-    var crumb = el('crumb');
-    if (crumb) crumb.textContent = sectionTitle + ' · ' + e.title;
-    var pos = el('pos');
-    if (pos) pos.textContent = (idx + 1) + ' / ' + S.entries.length;
+    /* Nav review §5d · paint plate identity into the shell masthead. The
+       masthead is the one identity row; the plate view no longer duplicates
+       it below. */
+    mountMastPlate(e, cov, techniques.length, idx, prev, next, sectionTitle);
 
     /* Mount the canvas render, if any. Do this before wirePlate so the
        picture is on-screen while interactions wire up. */
@@ -608,8 +601,68 @@
     document.addEventListener('keydown', keyHandler);
   }
 
+  /* ---------- masthead plate slots (§5d) --------------------------------- */
+  /* Paint coverage + pager into the shell masthead while a plate is mounted.
+     buildRelatedHTML's crumb stays owned by the shell (it already sets it
+     in the non-plate renderer). This function only touches #mast-cov and
+     #pos, and installs a route-listener that clears both when the reader
+     navigates to a non-plate route. */
+  function mountMastPlate(e, cov, nTechniques, idx, prev, next, sectionTitle) {
+    var crumb = el('crumb');
+    if (crumb) crumb.textContent = sectionTitle + ' · ' + e.title;
+
+    var covEl = el('mast-cov');
+    if (covEl) {
+      covEl.hidden = false;
+      if (cov.state === 'ok') {
+        covEl.className = 'mast-cov ok';
+        covEl.textContent = 'Coverage · ' + nTechniques + '/' + nTechniques;
+      } else if (cov.state === 'fail') {
+        covEl.className = 'mast-cov fail';
+        var bits = [];
+        if (cov.uncovered.length) bits.push('uncovered ' + cov.uncovered.join(', '));
+        if (cov.orphan.length)    bits.push('orphan ' + cov.orphan.join(', '));
+        covEl.textContent = 'Failed · ' + bits.join(' · ');
+      } else {
+        covEl.hidden = true;
+      }
+    }
+
+    var pos = el('pos');
+    if (pos) {
+      var pagerHTML =
+        (prev ? '<a class="mast-pager" href="#/entry/' + esc(prev.id) + '" title="' + esc(prev.title) + '">← ' + esc(prev.index || S.pad(prev.order)) + '</a>'
+              : '<span class="mast-pager mast-pager-off">← —</span>') +
+        '<span class="mast-pager-sep">·</span>' +
+        '<span class="mast-pager-idx">' + (idx + 1) + ' / ' + S.entries.length + '</span>' +
+        '<span class="mast-pager-sep">·</span>' +
+        (next ? '<a class="mast-pager" href="#/entry/' + esc(next.id) + '" title="' + esc(next.title) + '">' + esc(next.index || S.pad(next.order)) + ' →</a>'
+              : '<span class="mast-pager mast-pager-off">— →</span>');
+      pos.innerHTML = pagerHTML;
+      pos.classList.add('has-pager');
+    }
+
+    /* Install a one-time hash listener that unmounts the plate slots when
+       the reader leaves. Guarded so we only add one. */
+    if (!S.__plateMastHandler) {
+      S.__plateMastHandler = function () {
+        var hash = window.location.hash || '';
+        if (hash.indexOf('#/entry/') !== 0) unmountMastPlate();
+      };
+      window.addEventListener('hashchange', S.__plateMastHandler);
+    }
+  }
+
+  function unmountMastPlate() {
+    var covEl = el('mast-cov');
+    if (covEl) { covEl.hidden = true; covEl.textContent = ''; covEl.className = 'mast-cov'; }
+    var pos = el('pos');
+    if (pos) { pos.classList.remove('has-pager'); /* text will be reset by the incoming view */ }
+  }
+
   /* Register with the shell. views.js reads Shell.views.renderPlate when the
      entry ships a spec. */
   S.views = S.views || {};
   S.views.renderPlate = renderPlate;
+  S.views.unmountMastPlate = unmountMastPlate;
 })();

@@ -26,11 +26,9 @@ Shell.registerManifest({
   mode: 'catalogue',
   stage: { adapter: 'fragment', aspect: '1100/900', isolation: 'iframe' },
 
-  siblings: [
-    { id: 'encyclopedia',    title: 'Encyclopedia', href: './' },
-    { id: 'book-of-shaders', title: 'Shaders',      href: '../book-of-shaders/' },
-    { id: 'components',      title: 'Components',   href: '../components/' }
-  ],
+  /* ck-e13+ · sibling switcher retired. Shaders and Components are redirect
+     stubs (quarantined to _archive/ separately); listing them as peers in
+     the mast lied about what a click did. Nav review §5a. */
 
   vocabulary: {
     status: {

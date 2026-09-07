@@ -26,7 +26,7 @@ const GRABBER = readFileSync(join(__dirname, 'grabber.js'), 'utf8');
 
 // Tools live directly at the repo root as subfolders (e.g. meshviz/, halftone/).
 // We skip well-known non-tool dirs.
-const SKIP_DIRS = new Set(['.git', '.github', 'node_modules', 'scripts', '_site', 'dist', '.vite']);
+const SKIP_DIRS = new Set(['.git', '.github', 'node_modules', 'scripts', '_site', 'dist', '.vite', '_archive', 'claude']);
 
 function sh(cmd, opts = {}) {
   return execSync(cmd, { stdio: 'inherit', ...opts });
@@ -290,7 +290,11 @@ function main() {
 
   renderIndex(tools);
   // Global cross-site nav on every tool page (not the landing).
-  for (const t of tools) injectNav(t.name, t.meta, tools);
+  /* Nav review §5g · retired the injected foot-pill. The mast tool-switch
+     was also lying (nav review §5a). Anyone landing on a tool page reaches
+     the tools index via the browser Back button or by editing the URL to
+     "/", which is where every tool card is listed in one clean place. */
+  // for (const t of tools) injectNav(t.name, t.meta, tools);
   // Prevent Jekyll processing.
   writeFileSync(join(SITE_DIR, '.nojekyll'), '');
   console.log(`\n✔ site assembled at ${SITE_DIR}`);
