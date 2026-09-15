@@ -1,0 +1,159 @@
+{
+  "id": "ts-05-line-screen-type",
+  "code": "TS-05",
+  "title": "Vertical line-screen type",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "As reference",
+      "swatches": [
+        "#514D4A",
+        "#E5E1DB"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "Ember",
+      "swatches": [
+        "#F4551E",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "rev",
+      "label": "Reverse",
+      "swatches": [
+        "#FFFFFF",
+        "#101014"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      1448,
+      936
+    ],
+    "grammar": "one-ink print: heavy slab type, tight leading, screened as vertical bars at a fixed pitch; bars merge where lines of type overlap; small caps captions in the corners, spaced word row at the foot"
+  },
+  "units": "design units, 1000 = sheet width (sheet is 1000 × 646)",
+  "palette": {
+    "paper": "#E5E1DB",
+    "ink": "#514D4A",
+    "ink_deep": "#3E3A38",
+    "caption": "#4A4643"
+  },
+  "techniques": [
+    {
+      "id": "line-screen",
+      "short": "LINE",
+      "name": "Vertical line screen",
+      "layer": 1,
+      "pass": 2,
+      "atoms": [
+        "grating",
+        "mask",
+        "clip"
+      ],
+      "params": {
+        "pitch_u": 6.9,
+        "bar_min": "0.58 pitch (mask 0.10)",
+        "bar_full": "0.66 pitch (mask ≥ 0.35)",
+        "end_cells": "bar ends snap to 0.5-pitch cells down the page",
+        "bar_merge": "1.15 pitch (mask ≥ 1.6, two lines overlapping)",
+        "threshold": 0.1,
+        "gap_min_px": 1,
+        "mask": "sum of four text lines, Archivo 900 condensed, blurred 1.2 px"
+      },
+      "implementation": "For every screen column x_k = k·pitch, walk down the page one device pixel at a time, read the summed letter mask at (x_k + phase, y), map it to a bar width and fill each continuous run as one polygon with a left and a right edge per y."
+    },
+    {
+      "id": "phase-field",
+      "short": "PHSE",
+      "name": "Phase field",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "perlin",
+        "offset",
+        "quantise"
+      ],
+      "params": {
+        "period_u": 260,
+        "octaves": 2,
+        "shift_u": 2.4,
+        "quantise": "+0.5 pitch where fbm > 0.35",
+        "seed": 505
+      },
+      "implementation": "phase(x,y) = 2.4·fbm(x/260, y/260) plus half a pitch in regions where the field is high; the bar center is x_k + phase, so bars in neighbouring regions step against each other."
+    },
+    {
+      "id": "ink-bleed",
+      "short": "BLED",
+      "name": "Ink bleed",
+      "layer": 2,
+      "pass": 3,
+      "atoms": [
+        "blur",
+        "gain",
+        "darken"
+      ],
+      "params": {
+        "blur_px": 0.7,
+        "gain": 1.15,
+        "interior_darken": "ink → ink_deep (#3E3A38) where mask > 0.9, ramp from 0.6",
+        "threshold_soft": "0.26 → 0.60"
+      },
+      "implementation": "The bar layer is blurred 0.8 px, its alpha is pushed through a soft threshold so the edge swells outward, and the ink color shifts toward ink_deep inside the letters."
+    },
+    {
+      "id": "paper-tooth",
+      "short": "TOOTH",
+      "name": "Paper tooth",
+      "layer": 3,
+      "pass": 4,
+      "atoms": [
+        "grain",
+        "mottle"
+      ],
+      "params": {
+        "grain": "mono, amp 0.04, pitch 1 px, seed 505",
+        "mottle": "perlin period 60 u, ± 3.5 % (ref) · ± 2 % (ember) · ± 5 % (reverse)",
+        "measured_paper_std": "4.4 / 255"
+      },
+      "implementation": "Luminance is multiplied by 1 + mottle before the bars land and by ART.grain after, so ink and paper share one tooth."
+    },
+    {
+      "id": "caption-label",
+      "short": "CAPT",
+      "name": "Caption blocks",
+      "layer": 2,
+      "pass": 3,
+      "atoms": [
+        "type",
+        "justify"
+      ],
+      "params": {
+        "corner_blocks": "Archivo 800 condensed caps, 18 u, line 20 u, at (83,55) and (698,55)",
+        "credit": "Archivo 800 caps 18 u at (680,483)",
+        "word_row": "JetBrains Mono 700 14 u, seven words justified from 83 u to 922 u at 598 u"
+      },
+      "implementation": "Plain fills in the caption color; the word row divides the leftover width equally between the words."
+    }
+  ],
+  "pass_order": [
+    "paper · flat fill + mottle",
+    "mask · four text lines summed into a luminance layer, blurred 1.2 px",
+    "phase · perlin offset per (column, y)",
+    "bars · one polygon per continuous run per column",
+    "bleed · 0.7 px blur, soft threshold, interior darkening",
+    "captions · corner blocks, credit, word row",
+    "tooth · mono grain 0.04"
+  ],
+  "notes": [
+    "Measured on ref.png: pitch 10 px at 1448 px (6.9 u); bar runs 6–7 px inside letters (0.68 pitch), 11 px+ where lines merge; paper (229,226,220) covers 80 %; ink (65,62,59) 15 %; paper std 4.4 / 255.",
+    "The reference type is a slab serif; no serif is inlined, so the rebuild sets Archivo 900 at condensed width (font-stretch 75 %), which keeps the stroke weight and the tight leading but not the slabs.",
+    "Words are invented. Seed 505."
+  ]
+}

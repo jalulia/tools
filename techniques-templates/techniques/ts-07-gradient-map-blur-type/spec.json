@@ -1,0 +1,230 @@
+{
+  "id": "ts-07-gradient-map-blur-type",
+  "code": "TS-07",
+  "title": "Gradient-mapped blur type",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "As reference",
+      "swatches": [
+        "#000000",
+        "#EB3E25",
+        "#EDA1E3",
+        "#DAD9D9"
+      ]
+    },
+    {
+      "id": "ember",
+      "label": "Ember",
+      "swatches": [
+        "#101014",
+        "#F4551E",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "blue",
+      "label": "Blue",
+      "swatches": [
+        "#101014",
+        "#2F5AE6",
+        "#FFFFFF"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      1000,
+      1296
+    ],
+    "grammar": "one luminance mask (hard blobs, heavy stacked type in difference), gaussian blur, gradient map through black → deep red → red → pink → light gray; no grain"
+  },
+  "units": "design units, 1000 = plate width",
+  "palette": {
+    "black": "#000000",
+    "deep_red": "#460A05",
+    "red": "#EB3E25",
+    "pink": "#EDA1E3",
+    "light": "#DAD9D9"
+  },
+  "techniques": [
+    {
+      "id": "blob-field",
+      "short": "BLOB",
+      "name": "Metaball blob field",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "metaball",
+        "threshold",
+        "radial"
+      ],
+      "params": {
+        "count": 10,
+        "radius_u": [
+          105,
+          230
+        ],
+        "field": "Σ (r_i / |p − c_i|_e)⁴, |·|_e an elliptic distance (ratio 1.3–1.6, seeded angle)",
+        "threshold": 1,
+        "centres_u": [
+          [
+            30,
+            240
+          ],
+          [
+            450,
+            20
+          ],
+          [
+            930,
+            230
+          ],
+          [
+            10,
+            560
+          ],
+          [
+            320,
+            640
+          ],
+          [
+            960,
+            870
+          ],
+          [
+            30,
+            1160
+          ],
+          [
+            470,
+            890
+          ],
+          [
+            730,
+            1280
+          ],
+          [
+            650,
+            420
+          ]
+        ],
+        "eval_scale": "1/2 (render) · 1/4 (motion)"
+      },
+      "implementation": "Sum of inverse-fourth elliptic fields from 10 seeded centres; pixels above 1.0 are white, the rest black, so nearby blobs merge into one shape with a hard edge."
+    },
+    {
+      "id": "display-stack",
+      "short": "TYPE",
+      "name": "Stacked display words",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "lettering",
+        "stack",
+        "difference"
+      ],
+      "params": {
+        "font": "Archivo 900, font-stretch semi-condensed (wdth 87.5)",
+        "lines": 6,
+        "size_u": 225,
+        "pitch_u": 205,
+        "cap_height_u": 155,
+        "align": "center",
+        "composite": "difference"
+      },
+      "implementation": "Six words centred at 225 u (the six-letter word spans 0.92 W), drawn white with globalCompositeOperation difference so each letter inverts the blob field under it."
+    },
+    {
+      "id": "blur-field",
+      "short": "BLUR",
+      "name": "Whole-mask gaussian blur",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "blur",
+        "gaussian",
+        "falloff"
+      ],
+      "params": {
+        "sigma_u": 16,
+        "sigma_px_ref": "≈20 at 1000 px",
+        "edge": "mask padded 40 u so the frame edge does not darken"
+      },
+      "implementation": "One CSS blur over the full mask after the type is composited, so type edges and blob edges get the same falloff."
+    },
+    {
+      "id": "gradient-map",
+      "short": "MAP",
+      "name": "Five-stop gradient map",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "lut",
+        "luminance",
+        "ramp"
+      ],
+      "params": {
+        "stops": [
+          [
+            0,
+            "#000000"
+          ],
+          [
+            0.09,
+            "#460A05"
+          ],
+          [
+            0.3,
+            "#EB3E25"
+          ],
+          [
+            0.7,
+            "#EDA1E3"
+          ],
+          [
+            0.92,
+            "#DAD9D9"
+          ]
+        ],
+        "read": "luminance 0.2126 R + 0.7152 G + 0.0722 B"
+      },
+      "implementation": "256-entry LUT from the stops; every pixel of the blurred mask is replaced by LUT[luminance], which turns the blur falloff into the red-and-pink halo."
+    },
+    {
+      "id": "breath-motion",
+      "short": "BRTH",
+      "name": "Breathing blur",
+      "layer": 4,
+      "pass": 4,
+      "atoms": [
+        "loop",
+        "sine",
+        "drift"
+      ],
+      "params": {
+        "period_s": 8,
+        "sigma_u": "4 + 24·(0.5 + 0.5·sin(2πt/8))",
+        "blob_drift_u": "±40 on perlin(t/6 + i)",
+        "words": "static",
+        "work_width_px": 512,
+        "cache": "text mask per size"
+      },
+      "implementation": "Each frame recomputes the blobs at quarter scale, composites the cached text mask, blurs at the current σ and gradient-maps on a 512 px work canvas that is drawn up to plate size."
+    }
+  ],
+  "pass_order": [
+    "mask · black ground, metaballs thresholded at 1.0",
+    "type · six words in difference over the mask",
+    "blur · gaussian σ 16 u (4–28 u in motion), padded canvas",
+    "map · LUT[luminance] per pixel",
+    "frame · crop the padding"
+  ],
+  "notes": [
+    "Measured on ref.png: ramp bins by luminance → (70,12,5) at 0.06, (232,71,45) at 0.38, (234,168,229) at 0.69, (218,217,219) at 0.82 of output luminance; flat regions have std 0 (no grain).",
+    "Edge width light → black: 16 px in the sharpest frame (ref-c, 1120 px), 26 px (ref-b), 80 px (ref.png) — the blur breathes over the 8 s loop.",
+    "Word block in ref.png: line pitch ≈ 203 u, cap height ≈ 155 u, DARK width / cap = 4.0 (Archivo 900 semi-condensed: 4.04), six-letter word ≈ 0.90 W. Seed 7."
+  ]
+}

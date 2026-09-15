@@ -1,0 +1,180 @@
+{
+  "id": "ts-12-perforated-stamp",
+  "code": "TS-12",
+  "title": "Perforated stamp with halftone title",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "As reference",
+      "swatches": [
+        "#E8241B",
+        "#2A2418",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "Ember",
+      "swatches": [
+        "#F4551E",
+        "#101014",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "blue",
+      "label": "Blue",
+      "swatches": [
+        "#2F5AE6",
+        "#101014",
+        "#FFFFFF"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      736,
+      920
+    ],
+    "grammar": "one red stamp on black; scalloped perforation all round; rotated serif display title filled with a coarse halftone texture, overhanging the top; white script credit right of center; paper tooth on the red"
+  },
+  "units": "design units, 1000 = sheet width",
+  "palette": {
+    "ground": "#000000",
+    "stamp": "#E8241B",
+    "halftone_dark": "#1C1812",
+    "halftone_light": "#A08A4A",
+    "credit": "#FFFFFF"
+  },
+  "techniques": [
+    {
+      "id": "perforation",
+      "short": "PERF",
+      "name": "Scalloped perforation",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "clip",
+        "bite",
+        "pitch"
+      ],
+      "params": {
+        "stamp_u": [
+          158,
+          125,
+          683,
+          993
+        ],
+        "pitch_u": 62,
+        "bite_radius_u": 19,
+        "bites": "12 across × 17 down, one centred on each corner",
+        "ref_px": {
+          "pitch": 45.6,
+          "radius": 14
+        }
+      },
+      "implementation": "The stamp is painted as a rectangle on its own layer, then a circle at every pitch step along all four edges is punched out with destination-out; the punched layer is the clip for everything on the stamp."
+    },
+    {
+      "id": "halftone-fill",
+      "short": "HALF",
+      "name": "Halftone texture fill",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "screen",
+        "dot",
+        "fbm"
+      ],
+      "params": {
+        "screen_angle_deg": 45,
+        "pitch_u": 7,
+        "texture": "perlin fbm, 4 octaves, scale 70 u",
+        "dot_radius": "0.5·pitch·(0.22 + 0.9·t), t = clamp(0.5 + 3·fbm)",
+        "color": "lut dark→mid→light by lightness",
+        "ref_px": {
+          "pitch": "≈4.5"
+        }
+      },
+      "implementation": "Inside the letter mask a dark base is laid first; then a 45° dot lattice is walked and each dot is drawn with radius and color taken from the texture value at its center, so light patches of the texture become large tan dots."
+    },
+    {
+      "id": "rotated-display",
+      "short": "ROTD",
+      "name": "Rotated display title",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "type",
+        "rotate",
+        "overhang"
+      ],
+      "params": {
+        "font": "Archivo 900, wdth 62.5 (extra-condensed; substitute for the reference condensed serif)",
+        "angle_deg": -90,
+        "cap_height_u": "≈ 215 (size fitted so the run is 1003 u)",
+        "baseline_x_u": 400,
+        "start_y_u": 1088,
+        "overhang": "run ends 40 u above the stamp top"
+      },
+      "implementation": "The title is drawn once into a mask canvas rotated −90° about its start point; the halftone is composited through it with destination-in, then the result is drawn on the stamp layer under the perforation clip."
+    },
+    {
+      "id": "script-credit",
+      "short": "SCRP",
+      "name": "Script credit",
+      "layer": 4,
+      "pass": 4,
+      "atoms": [
+        "type",
+        "skew"
+      ],
+      "params": {
+        "font": "Inter 500 (no script face inlined), skew −12°",
+        "size_u": 30,
+        "lines": 2,
+        "centre_u": [
+          620,
+          560
+        ],
+        "line_gap_u": 34,
+        "color": "#FFFFFF"
+      },
+      "implementation": "Two invented lines centred on a point right of the middle, skewed −12° to stand in for the italic script; drawn after the grain so the white stays clean."
+    },
+    {
+      "id": "paper-tooth",
+      "short": "TOOTH",
+      "name": "Paper tooth and mottle",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "grain",
+        "mottle"
+      ],
+      "params": {
+        "grain": "mono, amp 0.05, pitch 1 device px, seed 12",
+        "mottle": "fbm 3 octaves, scale 260 u, ±0.04 multiply",
+        "ref_px": {
+          "red_std": "≈9/255 in R"
+        }
+      },
+      "implementation": "Before the perforation punch the stamp layer is multiplied by a low-frequency fbm and then by ART.grain, so both tooth and mottle follow the stamp and stop at the bites."
+    }
+  ],
+  "pass_order": [
+    "ground · flat black",
+    "shadow · blurred stamp rectangle, offset 6 u, alpha 0.55",
+    "stamp · red rectangle + mottle + grain on a layer",
+    "title · Archivo 900 mask, halftone through the mask, drawn on the stamp layer",
+    "perforation · destination-out circles at pitch along every edge",
+    "credit · white Inter 500 skewed −12°"
+  ],
+  "notes": [
+    "Measured on ref.png: stamp 116–619 × 92–823 px; bite pitch 45.6 px (62 u), bite width 28 px so radius 14 px (19 u), 11 bites across and 16 down between corner bites; red (235,43,43) mean in flat areas, R std 9; halftone dot pitch ≈ 4.5 px, dark texture (81,61,47) mean with tan speckle.",
+    "The reference title is a bold serif and the credit a script; neither is inlined, so the title is Archivo 900 at wdth 62.5 (the reference serif is condensed) and the credit is Inter 500 with a −12° skew. Words are invented.",
+    "Seed 12."
+  ]
+}

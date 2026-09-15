@@ -1,0 +1,168 @@
+{
+  "id": "ts-01-moire-ring-screens",
+  "code": "TS-01",
+  "title": "Moiré from two ring screens",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "Red / blue",
+      "swatches": [
+        "#E0402D",
+        "#5287BB",
+        "#F0EBE7"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "Ember / sky",
+      "swatches": [
+        "#F4551E",
+        "#2F5AE6",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "ink",
+      "label": "Ink / gray",
+      "swatches": [
+        "#101014",
+        "#B4B2AC",
+        "#FFFFFF"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      735,
+      956
+    ],
+    "grammar": "two-ink stochastic print: blue dot lattice from two ring gratings, red radial core, cream margin; grain is the screening itself"
+  },
+  "units": "design units, 1000 = sheet width",
+  "palette": {
+    "paper": "#F0EBE7",
+    "field_tint": "#E6D6D8",
+    "blue": "#3670B8",
+    "red": "#F2381C",
+    "overprint_core": "#F58A80",
+    "overprint_far": "#8A4A78"
+  },
+  "techniques": [
+    {
+      "id": "ring-screen",
+      "short": "SCRN",
+      "name": "Concentric ring grating",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "grating",
+        "radial"
+      ],
+      "params": {
+        "A": {
+          "center_u": [
+            440,
+            640
+          ],
+          "pitch_u": 68
+        },
+        "B": {
+          "center_u": [
+            1420,
+            -260
+          ],
+          "pitch_u": 60
+        },
+        "profile": "0.5 + 0.5·cos(2π·d/pitch)",
+        "floor": 0.42
+      },
+      "implementation": "g(p) = 0.5+0.5·cos(2π·|p−c|/pitch) for each grating; the floor keeps a base blue coverage so the field never drops to paper."
+    },
+    {
+      "id": "moire-product",
+      "short": "MOIR",
+      "name": "Grating product (moiré)",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "moire",
+        "interference"
+      ],
+      "params": {
+        "blue_coverage": "floor + (1−floor)·smoothstep(0.10, 0.75, (gA·gB)^1.4)",
+        "beat_pitch_u": "1/(1/60−1/68) ≈ 510"
+      },
+      "implementation": "Multiplying the two gratings gives a dot lattice where both are high and long beat fringes where their phases drift; nothing is drawn as a dot — the lattice is the product."
+    },
+    {
+      "id": "radial-heat",
+      "short": "HEAT",
+      "name": "Radial red core",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "radial",
+        "falloff"
+      ],
+      "params": {
+        "center_u": [
+          440,
+          640
+        ],
+        "sigma_u": 330,
+        "red_coverage": "min(1, 1.35·exp(−d²/σ²))",
+        "cutoff": 0.02
+      },
+      "implementation": "Red coverage is a clipped gaussian of distance from the core; inside it the blue lattice overprints as a lighter pink, which is how the rings read through the red."
+    },
+    {
+      "id": "stochastic-grain",
+      "short": "GRAIN",
+      "name": "Stochastic two-ink screen",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "dither",
+        "grain",
+        "overprint"
+      ],
+      "params": {
+        "threshold": "uniform random per pixel per ink (seed 101)",
+        "overprint": "where both inks land: #F58A80 pink in the field, #7A3A6A plum on lattice dots (product > 0.7) inside the core",
+        "soften_px": 0.6,
+        "cell_px": 1
+      },
+      "implementation": "For each device pixel: blue if r1 < blue_coverage, red if r2 < red_coverage; both → overprint; neither → paper tint. A 0.6 px blur softens the pixel edges the way the reference’s scan does."
+    },
+    {
+      "id": "paper-margin",
+      "short": "EDGE",
+      "name": "Cream margin",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "margin",
+        "stock"
+      ],
+      "params": {
+        "width_u": 34,
+        "color": "#F0EBE7",
+        "rule": "none"
+      },
+      "implementation": "Flat cream fill; the print sits inset by 34 u on every side."
+    }
+  ],
+  "pass_order": [
+    "margin · cream sheet",
+    "gratings · A and B evaluated per pixel",
+    "coverage · blue = product, red = radial × A",
+    "screen · random threshold per ink, overprint where both",
+    "soften · 0.6 px blur"
+  ],
+  "notes": [
+    "Measured on ref.png: ring pitch ≈ 50 px at 735 px (68 u); grain std ≈ 20/255 in flat regions; hot red (241,57,29) 3.6 % of pixels; saturated blue (72,130,183) 11.5 %.",
+    "Seed 101."
+  ]
+}

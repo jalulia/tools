@@ -1,0 +1,192 @@
+{
+  "id": "ts-10-thermal-blob-field",
+  "code": "TS-10",
+  "title": "Thermal blob field",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "Lava",
+      "swatches": [
+        "#F0ECE3",
+        "#F7AB17",
+        "#160F14"
+      ]
+    },
+    {
+      "id": "teal",
+      "label": "Teal",
+      "swatches": [
+        "#F0ECE3",
+        "#1F7A8C",
+        "#F3C623"
+      ]
+    },
+    {
+      "id": "pink",
+      "label": "Pink",
+      "swatches": [
+        "#F0ECE3",
+        "#FF5FA8",
+        "#F0451E"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "Ø",
+      "swatches": [
+        "#F4551E",
+        "#2F5AE6",
+        "#FFFFFF"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      1200,
+      800
+    ],
+    "grammar": "one blurred luminance field of large blobs, gradient-mapped through paper → blue → navy → plum → red → orange → yellow; mono grain; two hairline rules; a mono caption and a two-line label"
+  },
+  "units": "design units, 1000 = sheet width",
+  "palette": {
+    "paper": "#F0ECE3",
+    "blue": "#5CA6DB",
+    "navy": "#160F14",
+    "plum": "#452333",
+    "red": "#AF4E43",
+    "orange": "#EE613F",
+    "yellow": "#F2B815",
+    "ink": "#1A1618"
+  },
+  "techniques": [
+    {
+      "id": "blob-field",
+      "short": "BLOB",
+      "name": "Blurred blob field",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "blob",
+        "fourier-radius",
+        "gaussian-blur"
+      ],
+      "params": {
+        "blobs": 4,
+        "radius": "r(θ) = R·(1 + Σ a_k·cos(k·θ + φ_k)), k = 2..4, a ≤ 0.22",
+        "R_u": [
+          250,
+          280,
+          200,
+          150
+        ],
+        "blur_sigma_u": 46,
+        "field_res": "1/3 device px",
+        "fill": "radial white → 0.78 gray at the shape edge, union by lighten"
+      },
+      "implementation": "Four Fourier-radius blobs are filled with a radial white-to-gray gradient on a black canvas (union by lighten) at one-third resolution, blurred with σ = 46 u and read back as a 0..1 luminance field."
+    },
+    {
+      "id": "gradient-map",
+      "short": "RAMP",
+      "name": "Gradient map",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "lut",
+        "gradient-map"
+      ],
+      "params": {
+        "lut": "256 entries",
+        "stops_ref": "0.28 paper · 0.37 blue · 0.41 (53,80,126) · 0.44–0.48 navy · 0.53 plum · 0.64 red · 0.70 orange · 0.82 (245,140,30) · 1.0 yellow",
+        "measured_edge_px": "paper→blue 12 · blue→navy 12 · navy 20 · plum→red 25 · red→orange 15 (at 1200 px)"
+      },
+      "implementation": "Every pixel of the field is replaced by LUT[field]; the ramp is the only place color enters, so all four colourways share one field."
+    },
+    {
+      "id": "rim-stop",
+      "short": "RIM",
+      "name": "Dark rim stop",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "lut-stop",
+        "edge-band"
+      ],
+      "params": {
+        "position": 0.44,
+        "color": "#160F14",
+        "width_field": "0.41 → 0.53",
+        "band_px_ref": "≈ 20 at 1200 px",
+        "halo": "blue 0.335–0.41 outside the stop"
+      },
+      "implementation": "The darkest stop sits just under the mid-point of the blurred edge, where the profile is steepest, so it occupies few pixels and reads as a drawn outline; the blue halo is the ramp segment just outside it."
+    },
+    {
+      "id": "paper-tooth",
+      "short": "TOOTH",
+      "name": "Paper tooth",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "grain",
+        "mottle"
+      ],
+      "params": {
+        "grain_amp": 0.03,
+        "pitch_px": 1,
+        "mono": true,
+        "mottle": "perlin fbm, 3 octaves, cell 90 u, amp 0.012",
+        "measured": "high-pass std 3.4/255 on paper, 5.5/255 in the core"
+      },
+      "implementation": "Multiplicative mono grain per device pixel, then a low-frequency perlin mottle, both on the whole sheet including the blobs."
+    },
+    {
+      "id": "rule-ledger",
+      "short": "RULE",
+      "name": "Rules, caption and label",
+      "layer": 4,
+      "pass": 4,
+      "atoms": [
+        "hairline",
+        "caption",
+        "label"
+      ],
+      "params": {
+        "rules": {
+          "y_v": [
+            0.475,
+            0.925
+          ],
+          "inset_u": 12,
+          "weight_u": 1,
+          "color": "#1A1618"
+        },
+        "caption": {
+          "font": "JetBrains Mono 14 u",
+          "align": "right, under rule 1",
+          "x_u": 988
+        },
+        "label": {
+          "font": "Inter 13 u / Inter 600 18 u",
+          "lines": 2,
+          "x_u": 12,
+          "under": "rule 2"
+        }
+      },
+      "implementation": "Two 1 u ink rules across the sheet; the caption is set right-aligned 12 u under the first rule, the two-line studio label under the second."
+    }
+  ],
+  "pass_order": [
+    "field · four blobs white on black at 1/3 res, blur σ 46 u",
+    "upscale · field to device res",
+    "map · LUT[field] per pixel (rim stop 0.44)",
+    "tooth · mono grain 0.03, perlin mottle 0.012",
+    "ledger · two rules, caption, two-line label"
+  ],
+  "notes": [
+    "Measured on ref.png: paper (240,236,233) std 3.3; one edge at y = 300 runs (92,166,219) → (22,15,20) → (69,35,51) → (175,78,67) → (238,97,63) over 70 px; core (244,137,20); rules at y = 380 and 740 of 800, x 14 → 1185.",
+    "Seed 1010. Motion: blob centres drift on perlin over a 12 s loop; field recomputed at half resolution per frame."
+  ]
+}

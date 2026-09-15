@@ -1,0 +1,217 @@
+{
+  "id": "ts-04-stacked-card-scroll",
+  "code": "TS-04",
+  "title": "Stacked card scroll",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "As reference",
+      "swatches": [
+        "#C9382E",
+        "#DBDBFB",
+        "#B8B5B7"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "Ember / white",
+      "swatches": [
+        "#F4551E",
+        "#FFFFFF",
+        "#101014"
+      ]
+    },
+    {
+      "id": "paper",
+      "label": "Paper",
+      "swatches": [
+        "#101014",
+        "#F6F5F2",
+        "#E7E4DD"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      670,
+      1666
+    ],
+    "grammar": "black page ground; full-width rounded cards, each a flat color, pinned with position: sticky and stacking as the page scrolls; card 1 red with an inset lavender panel and a red display headline, card 2 gray with a 2 × 3 specimen grid, card 3 gray with a blurred plate"
+  },
+  "units": "design units, 1000 = page width (670 px); canvas height 2487 u",
+  "palette": {
+    "ground": "#050505",
+    "card_1": "#CF3020",
+    "panel": "#DADBFC",
+    "card_2": "#D9D9D9",
+    "tile_light": "#FFFFFF",
+    "tile_dark": "#0A0A0A",
+    "plate": "#B8B5B7"
+  },
+  "techniques": [
+    {
+      "id": "sticky-stack",
+      "short": "STCK",
+      "name": "Sticky card stack",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "sticky",
+        "stack",
+        "clip"
+      ],
+      "params": {
+        "top_offset_u": 19,
+        "gap_u": 34,
+        "card_1_visible_u": 650,
+        "card_2_u": 1198,
+        "card_3_u": 440,
+        "card_4_visible_u": 70,
+        "scale_under": 0.95,
+        "css": "position: sticky; top: 1.9vw; height: calc(100vh − 1.9vw − 3.4vw); margin: 0 2.4vw 3.4vw"
+      },
+      "implementation": "Every card is sticky at the same top offset, each a direct child of the scrolling body; the incoming card covers the pinned one, which is clipped at the seam and scaled to 0.95 as it goes under; cards are siblings of one scroll container, not wrapped in sections, so each stays pinned until the end of the page."
+    },
+    {
+      "id": "card-ground",
+      "short": "GRND",
+      "name": "Flat card ground",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "flat-fill",
+        "color-per-card"
+      ],
+      "params": {
+        "colors": [
+          "#CF3020",
+          "#D9D9D9",
+          "#B8B5B7",
+          "#FFFFFF"
+        ],
+        "shadow": "none",
+        "border": "none"
+      },
+      "implementation": "Each card is one flat fill; nothing separates cards but the ground showing through the gap and the corner radius."
+    },
+    {
+      "id": "rounded-frame",
+      "short": "FRME",
+      "name": "Rounded frame",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "rounded-rect",
+        "inset",
+        "clip"
+      ],
+      "params": {
+        "radius_u": 36,
+        "side_margin_u": 24,
+        "panel_inset_u": 66,
+        "panel_radius_u": 0
+      },
+      "implementation": "rrect(24, y, 952, h, 36) filled then used as a clip for everything on the card; the inset panel is a plain rectangle that the clip cuts."
+    },
+    {
+      "id": "specimen-grid",
+      "short": "SPEC",
+      "name": "Specimen grid",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "grid",
+        "type-specimen",
+        "lettering"
+      ],
+      "params": {
+        "columns": 2,
+        "rows": 3,
+        "tile_u": [
+          425,
+          242
+        ],
+        "gutter_u": [
+          28,
+          39
+        ],
+        "grid_top_u": 188,
+        "inset_u": 43,
+        "headline": {
+          "font": "Archivo 800",
+          "size_u": 58,
+          "line_u": 54
+        },
+        "caption": {
+          "font": "Inter 400",
+          "size_u": 10,
+          "line_u": 11.5
+        },
+        "mono": {
+          "font": "JetBrains Mono 400",
+          "size_u": 11
+        }
+      },
+      "implementation": "Six tiles, alternately light and dark, each showing one type size: a wide word, a two-line condensed heading, a staggered mono list, a display numeral with mono alphabet rows, cropped display letters, a color-bar table."
+    },
+    {
+      "id": "soft-blur-plate",
+      "short": "BLUR",
+      "name": "Soft blur plate",
+      "layer": 2,
+      "pass": 3,
+      "atoms": [
+        "radial-gradient",
+        "blur",
+        "grain"
+      ],
+      "params": {
+        "base": "#B8B5B7",
+        "blobs": [
+          {
+            "c": [
+              700,
+              300
+            ],
+            "r": 110,
+            "tone": "+white"
+          },
+          {
+            "c": [
+              720,
+              120
+            ],
+            "r": 40,
+            "tone": "+white"
+          },
+          {
+            "c": [
+              380,
+              330
+            ],
+            "r": 260,
+            "tone": "−0.25"
+          }
+        ],
+        "blur_u": 14,
+        "grain_amp": 0.04,
+        "grain_seed": 404
+      },
+      "implementation": "Radial gradients on a flat gray, blurred with a 2-D gaussian, then multiplied by mono grain so the gradient does not band."
+    }
+  ],
+  "pass_order": [
+    "ground · flat black",
+    "cards · rrect fill + clip, bottom to top so the upper card is covered",
+    "card 1 · panel, captions, headline in Archivo 800",
+    "card 2 · six specimen tiles",
+    "card 3 · plate: gradients → blur → grain",
+    "card 4 · white peek with a mono metadata row"
+  ],
+  "notes": [
+    "Measured on ref.png: side margin 16 px (24 u), corner radius 24 px (36 u), gap between cards 23–28 px (34–42 u), panel inset 44 px (66 u), headline cap height 28 px on a 36 px line (58 u / 54 u), caption line 7.5 px (11.5 u). Plate gray 184 with σ 9.",
+    "Seed 404."
+  ]
+}

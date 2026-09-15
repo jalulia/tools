@@ -1,0 +1,368 @@
+{
+  "id": "ts-13-glyph-field-animation",
+  "code": "TS-13",
+  "title": "ASCII glyph-field animations",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "As reference",
+      "swatches": [
+        "#09090B",
+        "#F6F1E4",
+        "#10B981",
+        "#2B8EF5"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "Ø",
+      "swatches": [
+        "#101014",
+        "#F4551E",
+        "#2F5AE6",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "paper",
+      "label": "On paper",
+      "swatches": [
+        "#FFFFFF",
+        "#101014",
+        "#10B981",
+        "#2B8EF5"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      1000,
+      1250
+    ],
+    "grammar": "monospace glyphs placed with fillText as particles; depth by alpha and size only; semantic labels with glow; CSS radial mask; sine-driven grid, ring and row; rAF loop, DPR cap 2, reduced-motion still frame"
+  },
+  "units": "design units, 1000 = plate width; the reference canvases use CSS px at a 1000 px layout, so 1 u = 1 px there",
+  "palette": {
+    "ink": "#09090B",
+    "paper": "#FFFFFF",
+    "paper_2": "#FAFAFA",
+    "bone": "#F6F1E4",
+    "glyph": "#FFFFFF",
+    "laminar": "#10B981",
+    "ice": "#2B8EF5",
+    "on_ink": {
+      "ice": "#7CC4FF",
+      "laminar": "#4FE3C1",
+      "heat": "#FF8A4C",
+      "void": "#FF6A8A",
+      "signal": "#FFD166",
+      "balanced": "#A8F080"
+    }
+  },
+  "techniques": [
+    {
+      "id": "glyph-helix",
+      "short": "HELX",
+      "name": "Projected glyph helix",
+      "layer": 0,
+      "pass": 1,
+      "atoms": [
+        "particle",
+        "helix",
+        "perspective",
+        "depth-sort"
+      ],
+      "params": {
+        "count": 150,
+        "turns": 7,
+        "radius_u": "min(0.18 W, 0.24 H, 240)",
+        "height_u": "min(0.78 H, 820)",
+        "pinhole_u": 800,
+        "strands": "2 · phase π by parity",
+        "rise": "t_i = i/150 + 0.018 · t (mod 1)",
+        "spin": "θ = 7π · t_i + 0.22 · t",
+        "project": "sc = P / (P − z); sx = cx + x · sc; sy = cy + y · sc",
+        "order": "sort by depth d = (z + R) / 2R, far first"
+      },
+      "implementation": "150 particles climb a helix (0.018 of the height per second) while the helix turns (0.22 rad/s); each is projected through a pinhole at 800 u and drawn as text, far to near."
+    },
+    {
+      "id": "depth-alpha",
+      "short": "DPTH",
+      "name": "Depth as alpha and size",
+      "layer": 0,
+      "pass": 1,
+      "atoms": [
+        "alpha-ramp",
+        "scale",
+        "depth"
+      ],
+      "params": {
+        "alpha": "0.04 + d^1.5 · 0.85",
+        "size_px": "round(10.5 · sc)",
+        "size_range": "≈ 9 – 13 px",
+        "font": "JetBrains Mono 400",
+        "no_color_depth": "glyphs stay white; only alpha and size carry depth"
+      },
+      "implementation": "Nothing is shaded: depth is the alpha ramp and the projected font size, so far glyphs are ghosts and near glyphs are ink."
+    },
+    {
+      "id": "semantic-label",
+      "short": "LABL",
+      "name": "Palette label with glow",
+      "layer": 0,
+      "pass": 1,
+      "atoms": [
+        "label",
+        "glow",
+        "palette"
+      ],
+      "params": {
+        "every": 18,
+        "offset": 7,
+        "weight": 500,
+        "sequence": [
+          "ICE",
+          "LAMINAR",
+          "HEAT",
+          "VOID",
+          "SIGNAL",
+          "BALANCED",
+          "Ø",
+          "PAPER"
+        ],
+        "colors": [
+          "#7CC4FF",
+          "#4FE3C1",
+          "#FF8A4C",
+          "#FF6A8A",
+          "#FFD166",
+          "#A8F080",
+          "#FF6A8A",
+          "#7CC4FF"
+        ],
+        "glow": "shadowColor = label color, shadowBlur = 6 · d",
+        "count_per_150": 8
+      },
+      "implementation": "Every glyph with i mod 18 = 7 is replaced by the next palette name, set in its lifted on-ink color at weight 500 with a depth-scaled glow; the animation names its own system."
+    },
+    {
+      "id": "glyph-vocab",
+      "short": "VOCB",
+      "name": "Indexed glyph vocabulary",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "glyph-set",
+        "index",
+        "typeset"
+      ],
+      "params": {
+        "helix": [
+          "·",
+          "∙",
+          "•",
+          "▪",
+          "│",
+          "─",
+          "ø",
+          "×",
+          "→",
+          "▸",
+          "001",
+          "010",
+          "042",
+          "077",
+          "126",
+          "154",
+          "218",
+          "258",
+          "369",
+          "396",
+          "410",
+          "523",
+          "808"
+        ],
+        "wave": "· ∙ ─ - ━ (ramp by sin)",
+        "orbit": "· with ø every 6th, Ø at center",
+        "pulse": [
+          "·",
+          "∙",
+          "•",
+          "∙",
+          "·"
+        ],
+        "read": "glyph = vocab[i mod n]"
+      },
+      "implementation": "Each animation reads its marks from a short ordered list by index, so the field is typeset from a vocabulary rather than drawn from shapes; the helix list mixes 10 marks with 13 three-digit numbers."
+    },
+    {
+      "id": "center-mask",
+      "short": "MASK",
+      "name": "Radial center mask",
+      "layer": 1,
+      "pass": 2,
+      "atoms": [
+        "mask",
+        "radial-gradient",
+        "ellipse"
+      ],
+      "params": {
+        "css": "mask-image: radial-gradient(ellipse 44% 40% at 50% 52%, transparent 0%, transparent 40%, #000 80%)",
+        "rx_u": 440,
+        "ry_u": 248,
+        "center_u": [
+          500,
+          322
+        ],
+        "clear_to": 0.4,
+        "opaque_from": 0.8,
+        "canvas_opacity": 0.95,
+        "title_shadow": "0 0 80px rgba(0,0,0,.7), 0 0 160px rgba(0,0,0,.5)"
+      },
+      "implementation": "The helix canvas is masked by an elliptical radial gradient so glyphs fade out toward the middle; the title sits in the hole with a wide dark text-shadow that deepens it."
+    },
+    {
+      "id": "pointer-parallax",
+      "short": "PRLX",
+      "name": "Eased pointer parallax",
+      "layer": 0,
+      "pass": 1,
+      "atoms": [
+        "pointer",
+        "ease",
+        "parallax"
+      ],
+      "params": {
+        "input": "mx = clientX / innerWidth − 0.5; my = clientY / innerHeight − 0.5",
+        "ease": "tx += (mx − tx) · 0.04 per frame",
+        "offset_u": {
+          "x": "tx · 18",
+          "y": "ty · 14"
+        },
+        "applied": "to every glyph before projection"
+      },
+      "implementation": "The pointer shifts the whole helix by at most 18 u × 14 u, eased at 4 % per frame, so the field drifts after the cursor rather than following it."
+    },
+    {
+      "id": "wave-grid",
+      "short": "WAVE",
+      "name": "Sine-phased glyph grid",
+      "layer": 2,
+      "pass": 3,
+      "atoms": [
+        "grid",
+        "sine",
+        "glyph-ramp",
+        "falloff"
+      ],
+      "params": {
+        "cols": 70,
+        "rows": 8,
+        "canvas_u": [
+          500,
+          150
+        ],
+        "font": "JetBrains Mono 400 12 px",
+        "phase": "φ = 4π · c/70 + 0.8 · t + 0.15 · r",
+        "glyph": "ramp[floor((sin φ · 0.5 + 0.5) · 4)]",
+        "centerline": "row 4 − 1.4 · sin φ",
+        "alpha": "(1 − |r − 4 + 1.4 sin φ| / 2.2) · 0.55, skipped below 0.05",
+        "color": "#10B981"
+      },
+      "implementation": "A 70 × 8 grid where one sine phase picks both the glyph (from a five-step ramp) and the alpha (by distance to a sine centerline), so a two-wavelength band of laminar glyphs rolls across the frame."
+    },
+    {
+      "id": "pulse-row",
+      "short": "PULS",
+      "name": "Half-wave pulse row",
+      "layer": 2,
+      "pass": 3,
+      "atoms": [
+        "row",
+        "sine",
+        "half-wave"
+      ],
+      "params": {
+        "count": 18,
+        "canvas_u": [
+          250,
+          30
+        ],
+        "font": "JetBrains Mono 400 11 px",
+        "wave": "w = sin(1.6 · t − 0.12 · i)",
+        "drawn": "only w > 0",
+        "alpha": "w · 0.5",
+        "x": "14 + i · (W − 28) / 18",
+        "head": "▸ at x 4, alpha .5",
+        "color": "#2B8EF5"
+      },
+      "implementation": "Eighteen glyphs along a line lit by the positive half of one travelling sine, so a soft blue pulse runs left to right behind a fixed ▸ head; it lives inline under a dialogue turn."
+    },
+    {
+      "id": "orbit-ring",
+      "short": "ORBT",
+      "name": "Breathing glyph orbit",
+      "layer": 2,
+      "pass": 3,
+      "atoms": [
+        "ring",
+        "ellipse",
+        "breath",
+        "sine"
+      ],
+      "params": {
+        "count": 52,
+        "radius_u": "min(0.3 W, 0.42 H)",
+        "ratio": 0.4,
+        "spin": "a = 2π · i/52 + 0.3 · t",
+        "breath": "r = R · (1 + 0.1 · sin(0.6 · t + 0.3 · i))",
+        "alpha": "0.1 + 0.6 · (sin a + 1) / 2",
+        "glyph": "ø every 6th, else ·",
+        "center": "Ø at alpha .55",
+        "canvas_opacity": 0.3,
+        "font": "JetBrains Mono 400 11 px",
+        "color": "#F6F1E4"
+      },
+      "implementation": "52 glyphs on a flattened ellipse, each with its own breathing radius and an alpha that peaks at the bottom of the orbit; the canvas is held at 30 % under a pull quote."
+    },
+    {
+      "id": "still-frame-runtime",
+      "short": "LOOP",
+      "name": "Frame runtime",
+      "layer": 3,
+      "pass": 4,
+      "atoms": [
+        "raf-loop",
+        "dpr",
+        "reduced-motion",
+        "clear"
+      ],
+      "params": {
+        "dpr": "min(devicePixelRatio, 2)",
+        "resize": "canvas.width = clientWidth · dpr; setTransform(dpr)",
+        "loop": "requestAnimationFrame, t = (now − t0) / 1000",
+        "clear": "clearRect every frame, no trails",
+        "reduced_motion": "draw once at t = now, no loop",
+        "text": "textAlign center, textBaseline middle",
+        "aria": "canvas aria-hidden"
+      },
+      "implementation": "One setupCanvas and one loop helper serve all four canvases; under prefers-reduced-motion the loop degenerates to a single still frame, so the page keeps its picture without motion."
+    }
+  ],
+  "pass_order": [
+    "vocabulary · the glyph lists and label sequence",
+    "helix · project 150 glyphs, sort far to near, draw with depth alpha and glow",
+    "mask · elliptical radial mask over the helix canvas, title in the hole",
+    "grid · wave, pulse and orbit each from one sine",
+    "runtime · rAF loop, DPR cap, reduced-motion still frame"
+  ],
+  "notes": [
+    "Measured in the source: helix R = 148.8 u and H = 483.6 u at a 1000 × 620 hero; font 10.5 px scaled by 800/(800 − z) gives 9–13 px; 8 of 150 glyphs are labels.",
+    "Wave: the band spans two wavelengths across 70 columns; the ramp has five glyphs so sin φ is quantised to five weights.",
+    "Orbit: R = 130.2 u at 1000 × 310; the ellipse is 260 × 104 u; at canvas opacity .3 the brightest glyph reads at alpha .21.",
+    "The reference title is Instrument Serif; this rebuild sets it in Archivo (condensed) since no serif is inlined. Frame time t = 5.9 s so the pulse is fully lit."
+  ]
+}

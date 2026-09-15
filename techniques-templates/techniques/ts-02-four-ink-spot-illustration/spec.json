@@ -1,0 +1,230 @@
+{
+  "id": "ts-02-four-ink-spot-illustration",
+  "code": "TS-02",
+  "title": "Four-ink spot illustration",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "As reference",
+      "swatches": [
+        "#DF6152",
+        "#EDDC4D",
+        "#6599C8",
+        "#F7EDE3"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "Ember / blue",
+      "swatches": [
+        "#F4551E",
+        "#2F5AE6",
+        "#101014",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "two",
+      "label": "Blue / ink",
+      "swatches": [
+        "#2F5AE6",
+        "#101014",
+        "#FFFFFF"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      1006,
+      1390
+    ],
+    "grammar": "letterpress spot-illustration sheet: black keyline, three flat color plates slipped down-right, hatch and dot-tint shading, captions, cream stock"
+  },
+  "units": "design units, 1000 = sheet width",
+  "palette": {
+    "paper": "#F7EDE3",
+    "red": "#DF6152",
+    "yellow": "#EDDC4D",
+    "blue": "#6599C8",
+    "green_overprint": "yellow × blue 85 %",
+    "pink_tint": "red 42 %",
+    "keyline": "#1C1A18"
+  },
+  "techniques": [
+    {
+      "id": "spot-fill",
+      "short": "SPOT",
+      "name": "Flat spot fill",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "flat-fill",
+        "plate",
+        "knockout"
+      ],
+      "params": {
+        "plates": [
+          "red",
+          "yellow",
+          "blue"
+        ],
+        "blend": "multiply on paper",
+        "knockout": "each fill clears the same shape on every other plate unless overprinting",
+        "green": "yellow + blue 85 % overprint"
+      },
+      "implementation": "Every closed shape is filled flat on one plate canvas and cleared from the others (destination-out), so plates only overlap where an overprint is intended."
+    },
+    {
+      "id": "black-keyline",
+      "short": "KEY",
+      "name": "Black keyline",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "outline",
+        "stroke",
+        "waver"
+      ],
+      "params": {
+        "width_u": 2.2,
+        "second_pass_u": 1.4,
+        "jitter_u": 0.6,
+        "join": "round",
+        "color": "#1C1A18"
+      },
+      "implementation": "Each shape is stroked twice on the black plate: 2.2 u on the path, then 1.4 u on the path shifted by a seeded 0.6 u jitter, which thickens the line unevenly."
+    },
+    {
+      "id": "hatch-shade",
+      "short": "HTCH",
+      "name": "Broken hatch shading",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "hatch",
+        "dash",
+        "clip"
+      ],
+      "params": {
+        "angle_deg": 45,
+        "pitch_u": 6,
+        "width_u": 1.3,
+        "dash_u": [
+          12,
+          4
+        ],
+        "dash_offset": "seeded per line"
+      },
+      "implementation": "The shadow side of a shape is clipped and crossed by 45° lines at a 6 u pitch with a 12/4 dash whose phase changes per line; drawn on the black plate so it never slips."
+    },
+    {
+      "id": "misregister",
+      "short": "SLIP",
+      "name": "Plate misregister",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "offset",
+        "register",
+        "trap"
+      ],
+      "params": {
+        "red_u": [
+          2,
+          2
+        ],
+        "yellow_u": [
+          1,
+          2.6
+        ],
+        "blue_u": [
+          2.4,
+          1.4
+        ],
+        "black_u": [
+          0,
+          0
+        ]
+      },
+      "implementation": "Each color plate is composited with its own down-right offset before the black plate lands in register, so fills open a paper sliver on the top-left of the line and spill past it bottom-right."
+    },
+    {
+      "id": "dot-tint",
+      "short": "TINT",
+      "name": "Dot-tint screen",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "halftone",
+        "screen",
+        "dot"
+      ],
+      "params": {
+        "pitch_u": 5,
+        "grid": "square, half-cell stagger per row",
+        "coverage": {
+          "pink": 0.42,
+          "sky": 0.4,
+          "straw": 0.45,
+          "green_blue": 0.85
+        },
+        "radius": "pitch·√(coverage/π)"
+      },
+      "implementation": "A mid-tone is the plate ink drawn as a regular dot grid clipped to the shape; the dot radius is set from the requested coverage."
+    },
+    {
+      "id": "aged-stock",
+      "short": "PAPR",
+      "name": "Aged cream stock",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "paper",
+        "mottle",
+        "grain",
+        "scan-blur"
+      ],
+      "params": {
+        "paper": "#F7EDE3",
+        "mottle": "perlin fbm 3 oct, cell 120 u, ±3 % multiply",
+        "grain": "mono, 1 device px, amp 0.035",
+        "blur_px": 0.35
+      },
+      "implementation": "Cream flat, then a low-frequency perlin multiply, a 0.35 px blur for the scan, then mono grain over everything including the inks."
+    },
+    {
+      "id": "caption-label",
+      "short": "CAPT",
+      "name": "Caption label",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "lettering",
+        "mono",
+        "caps"
+      ],
+      "params": {
+        "font": "JetBrains Mono 700",
+        "size_u": 21,
+        "tracking_u": 1.5,
+        "case": "upper",
+        "title_u": 26,
+        "folio_u": 24
+      },
+      "implementation": "One caption centred under each object on the black plate; a sheet title at the top and a folio at the foot."
+    }
+  ],
+  "pass_order": [
+    "stock · cream flat",
+    "color plates · flat fills, tints, knockouts per shape",
+    "composite · yellow, red, blue plates multiplied at their offsets",
+    "black plate · keylines, hatch, captions in register",
+    "age · mottle multiply, 0.35 px blur, mono grain"
+  ],
+  "notes": [
+    "Measured on ref.png: keyline dark runs 1–3 px at 1006 px (2.2 u); tint dot pitch 4–5 px; fill slip ≈ 2 px down-right; paper (247,237,227) σ 4.5, 72 % of pixels.",
+    "Seed 202."
+  ]
+}

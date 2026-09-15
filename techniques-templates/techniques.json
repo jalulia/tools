@@ -1,0 +1,1829 @@
+{
+  "generated": "2026-09-15",
+  "note": "file by atom, read by technique — every entry in Techniques & Templates, keyed by technique id",
+  "techniques": {
+    "ring-screen": {
+      "name": "Concentric ring grating",
+      "used_in": [
+        {
+          "entry": "ts-01-moire-ring-screens",
+          "code": "TS-01",
+          "params": {
+            "A": {
+              "center_u": [
+                440,
+                640
+              ],
+              "pitch_u": 68
+            },
+            "B": {
+              "center_u": [
+                1420,
+                -260
+              ],
+              "pitch_u": 60
+            },
+            "profile": "0.5 + 0.5·cos(2π·d/pitch)",
+            "floor": 0.42
+          },
+          "implementation": "g(p) = 0.5+0.5·cos(2π·|p−c|/pitch) for each grating; the floor keeps a base blue coverage so the field never drops to paper."
+        }
+      ]
+    },
+    "moire-product": {
+      "name": "Grating product (moiré)",
+      "used_in": [
+        {
+          "entry": "ts-01-moire-ring-screens",
+          "code": "TS-01",
+          "params": {
+            "blue_coverage": "floor + (1−floor)·smoothstep(0.10, 0.75, (gA·gB)^1.4)",
+            "beat_pitch_u": "1/(1/60−1/68) ≈ 510"
+          },
+          "implementation": "Multiplying the two gratings gives a dot lattice where both are high and long beat fringes where their phases drift; nothing is drawn as a dot — the lattice is the product."
+        }
+      ]
+    },
+    "radial-heat": {
+      "name": "Radial red core",
+      "used_in": [
+        {
+          "entry": "ts-01-moire-ring-screens",
+          "code": "TS-01",
+          "params": {
+            "center_u": [
+              440,
+              640
+            ],
+            "sigma_u": 330,
+            "red_coverage": "min(1, 1.35·exp(−d²/σ²))",
+            "cutoff": 0.02
+          },
+          "implementation": "Red coverage is a clipped gaussian of distance from the core; inside it the blue lattice overprints as a lighter pink, which is how the rings read through the red."
+        }
+      ]
+    },
+    "stochastic-grain": {
+      "name": "Stochastic two-ink screen",
+      "used_in": [
+        {
+          "entry": "ts-01-moire-ring-screens",
+          "code": "TS-01",
+          "params": {
+            "threshold": "uniform random per pixel per ink (seed 101)",
+            "overprint": "where both inks land: #F58A80 pink in the field, #7A3A6A plum on lattice dots (product > 0.7) inside the core",
+            "soften_px": 0.6,
+            "cell_px": 1
+          },
+          "implementation": "For each device pixel: blue if r1 < blue_coverage, red if r2 < red_coverage; both → overprint; neither → paper tint. A 0.6 px blur softens the pixel edges the way the reference’s scan does."
+        }
+      ]
+    },
+    "paper-margin": {
+      "name": "Cream margin",
+      "used_in": [
+        {
+          "entry": "ts-01-moire-ring-screens",
+          "code": "TS-01",
+          "params": {
+            "width_u": 34,
+            "color": "#F0EBE7",
+            "rule": "none"
+          },
+          "implementation": "Flat cream fill; the print sits inset by 34 u on every side."
+        }
+      ]
+    },
+    "spot-fill": {
+      "name": "Flat spot fill",
+      "used_in": [
+        {
+          "entry": "ts-02-four-ink-spot-illustration",
+          "code": "TS-02",
+          "params": {
+            "plates": [
+              "red",
+              "yellow",
+              "blue"
+            ],
+            "blend": "multiply on paper",
+            "knockout": "each fill clears the same shape on every other plate unless overprinting",
+            "green": "yellow + blue 85 % overprint"
+          },
+          "implementation": "Every closed shape is filled flat on one plate canvas and cleared from the others (destination-out), so plates only overlap where an overprint is intended."
+        }
+      ]
+    },
+    "black-keyline": {
+      "name": "Black keyline",
+      "used_in": [
+        {
+          "entry": "ts-02-four-ink-spot-illustration",
+          "code": "TS-02",
+          "params": {
+            "width_u": 2.2,
+            "second_pass_u": 1.4,
+            "jitter_u": 0.6,
+            "join": "round",
+            "color": "#1C1A18"
+          },
+          "implementation": "Each shape is stroked twice on the black plate: 2.2 u on the path, then 1.4 u on the path shifted by a seeded 0.6 u jitter, which thickens the line unevenly."
+        }
+      ]
+    },
+    "hatch-shade": {
+      "name": "Broken hatch shading",
+      "used_in": [
+        {
+          "entry": "ts-02-four-ink-spot-illustration",
+          "code": "TS-02",
+          "params": {
+            "angle_deg": 45,
+            "pitch_u": 6,
+            "width_u": 1.3,
+            "dash_u": [
+              12,
+              4
+            ],
+            "dash_offset": "seeded per line"
+          },
+          "implementation": "The shadow side of a shape is clipped and crossed by 45° lines at a 6 u pitch with a 12/4 dash whose phase changes per line; drawn on the black plate so it never slips."
+        }
+      ]
+    },
+    "misregister": {
+      "name": "Plate misregister",
+      "used_in": [
+        {
+          "entry": "ts-02-four-ink-spot-illustration",
+          "code": "TS-02",
+          "params": {
+            "red_u": [
+              2,
+              2
+            ],
+            "yellow_u": [
+              1,
+              2.6
+            ],
+            "blue_u": [
+              2.4,
+              1.4
+            ],
+            "black_u": [
+              0,
+              0
+            ]
+          },
+          "implementation": "Each color plate is composited with its own down-right offset before the black plate lands in register, so fills open a paper sliver on the top-left of the line and spill past it bottom-right."
+        },
+        {
+          "entry": "ts-06-riso-plate-separation",
+          "code": "TS-06",
+          "params": {
+            "yellow_u": [
+              -3,
+              2
+            ],
+            "blue_u": [
+              1,
+              -2
+            ],
+            "pink_u": [
+              4,
+              3
+            ],
+            "measured_px": "pink +3,+2 · yellow −2,+1 relative to blue"
+          },
+          "implementation": "Each plate canvas is drawn translated by its own vector; the keyline sits on all three plates, so the offsets show as coloured fringes on every edge and the overprint of all three is the near-black line."
+        }
+      ]
+    },
+    "dot-tint": {
+      "name": "Dot-tint screen",
+      "used_in": [
+        {
+          "entry": "ts-02-four-ink-spot-illustration",
+          "code": "TS-02",
+          "params": {
+            "pitch_u": 5,
+            "grid": "square, half-cell stagger per row",
+            "coverage": {
+              "pink": 0.42,
+              "sky": 0.4,
+              "straw": 0.45,
+              "green_blue": 0.85
+            },
+            "radius": "pitch·√(coverage/π)"
+          },
+          "implementation": "A mid-tone is the plate ink drawn as a regular dot grid clipped to the shape; the dot radius is set from the requested coverage."
+        }
+      ]
+    },
+    "aged-stock": {
+      "name": "Aged cream stock",
+      "used_in": [
+        {
+          "entry": "ts-02-four-ink-spot-illustration",
+          "code": "TS-02",
+          "params": {
+            "paper": "#F7EDE3",
+            "mottle": "perlin fbm 3 oct, cell 120 u, ±3 % multiply",
+            "grain": "mono, 1 device px, amp 0.035",
+            "blur_px": 0.35
+          },
+          "implementation": "Cream flat, then a low-frequency perlin multiply, a 0.35 px blur for the scan, then mono grain over everything including the inks."
+        }
+      ]
+    },
+    "caption-label": {
+      "name": "Caption label",
+      "used_in": [
+        {
+          "entry": "ts-02-four-ink-spot-illustration",
+          "code": "TS-02",
+          "params": {
+            "font": "JetBrains Mono 700",
+            "size_u": 21,
+            "tracking_u": 1.5,
+            "case": "upper",
+            "title_u": 26,
+            "folio_u": 24
+          },
+          "implementation": "One caption centred under each object on the black plate; a sheet title at the top and a folio at the foot."
+        },
+        {
+          "entry": "ts-05-line-screen-type",
+          "code": "TS-05",
+          "params": {
+            "corner_blocks": "Archivo 800 condensed caps, 18 u, line 20 u, at (83,55) and (698,55)",
+            "credit": "Archivo 800 caps 18 u at (680,483)",
+            "word_row": "JetBrains Mono 700 14 u, seven words justified from 83 u to 922 u at 598 u"
+          },
+          "implementation": "Plain fills in the caption color; the word row divides the leftover width equally between the words."
+        },
+        {
+          "entry": "ts-09-grain-gradient-layers",
+          "code": "TS-09",
+          "params": {
+            "font": "Inter 400",
+            "size_u": 22,
+            "inset_u": 14,
+            "positions": [
+              "panel 1 bottom-left, baseline 523 u",
+              "panel 2 bottom-right, baseline 610 u",
+              "panel 3 top-right, baseline 172 u"
+            ],
+            "color": "white or pale tint at 0.55–0.72 alpha"
+          },
+          "implementation": "Three short captions in Inter at 22 u, set flat under the grain so the grain sits on the type too."
+        }
+      ]
+    },
+    "spectral-lut": {
+      "name": "Spectral look-up table",
+      "used_in": [
+        {
+          "entry": "ts-03-iridescent-chrome",
+          "code": "TS-03",
+          "params": {
+            "stops": 10,
+            "order": "navy 0 · blue 0.10 · cyan 0.22 · white 0.34 · yellow 0.44 · orange 0.54 · pink 0.64 · magenta 0.76 · blue 0.88 · navy 1",
+            "measured_ref": "(56,110,178) (110,199,209) (242,241,242) (235,233,94) (214,153,172) (170,108,160)"
+          },
+          "implementation": "ART.lut(stops) gives 256 colors; the shading pass indexes it with the environment coordinate t, so color is a function of normal direction only."
+        }
+      ]
+    },
+    "normal-shading": {
+      "name": "Normal-buffer shading of a swept slab",
+      "used_in": [
+        {
+          "entry": "ts-03-iridescent-chrome",
+          "code": "TS-03",
+          "params": {
+            "section": "rounded rectangle 300 × 160 u, fillet 30 u, 56 points",
+            "sweep": "L path (−200,1040) → (330,470) → (1200,780), bend radius 230 u, 260 steps",
+            "twist_rad": "−0.22 + 0.55·s",
+            "tilt_rad": "0.5 about the screen x axis through y = 740 u",
+            "env": "t = clamp(0.5 + 0.40·r.y + 0.16·r.x), r = reflect(view, n)",
+            "wobble": "n += 0.20–0.22·sin/cos fields of period 260–420 u plus 0.06–0.08 at 90–120 u, then normalise"
+          },
+          "implementation": "Vertices P = C(s) + a·e1 + b·e2 with the section basis rotated by the twist; normals from the cross product of finite differences; triangles rasterized with edge functions into normal + depth buffers; per pixel the reflected ray of the orthographic view picks LUT[t]."
+        }
+      ]
+    },
+    "edge-highlight": {
+      "name": "Edge band and specular lobe",
+      "used_in": [
+        {
+          "entry": "ts-03-iridescent-chrome",
+          "code": "TS-03",
+          "params": {
+            "band_center_nz": 0.34,
+            "band_width": 0.06,
+            "band_colour": "#F0DC6A",
+            "band_mix": 1,
+            "light": "(−0.35,−0.60,0.72)",
+            "spec_power": 60,
+            "spec_mix": 0.85
+          },
+          "implementation": "band = exp(−((|n.z|−0.34)/0.06)²) mixes the edge color in; spec = (n·h)^60 mixes white in; both read from the same normal buffer as the LUT."
+        }
+      ]
+    },
+    "film-grain": {
+      "name": "Per-channel film grain",
+      "used_in": [
+        {
+          "entry": "ts-03-iridescent-chrome",
+          "code": "TS-03",
+          "params": {
+            "multiplicative": "ART.grain amp 0.10, pitch 1 px, mono:false, seed 303",
+            "additive": "σ 14/255 per channel on the ground, hashed per pixel, seed 304",
+            "soften_px": 0.7
+          },
+          "implementation": "ART.grain multiplies RGB by 1 + 0.10·n per channel (visible on the chrome and the type); a second pass adds signed noise of 14/255 so the black ground carries grain too, as film does."
+        },
+        {
+          "entry": "ts-09-grain-gradient-layers",
+          "code": "TS-09",
+          "params": {
+            "additive": "uniform ±21·(1 − 0.6·L)/255 per pixel, mono, lag-1 correlation 0.25",
+            "multiplicative": "ART.grain mono:false amp 0.05 (color speckle)",
+            "pitch_px": 1,
+            "seed": 909,
+            "measured_std": {
+              "black": 15.8,
+              "blue": 10.5,
+              "orange": 6,
+              "pink": 6.5,
+              "R·G correlation": 0.98
+            }
+          },
+          "implementation": "One pass over the whole canvas after every panel is drawn: a mono additive noise scaled down with luminance (it reads in the black, thins in the pink), plus a small per-channel multiplicative term for the color speckle."
+        }
+      ]
+    },
+    "channel-split-type": {
+      "name": "RGB channel-split lettering",
+      "used_in": [
+        {
+          "entry": "ts-03-iridescent-chrome",
+          "code": "TS-03",
+          "params": {
+            "offsets_u": {
+              "R": [
+                -2.5,
+                0
+              ],
+              "G": [
+                0,
+                0
+              ],
+              "B": [
+                2.5,
+                0
+              ]
+            },
+            "small_offsets_u": {
+              "R": [
+                -4,
+                0
+              ],
+              "G": [
+                0,
+                0.8
+              ],
+              "B": [
+                4,
+                0
+              ]
+            },
+            "blend": "lighter on a transparent layer",
+            "type_colour": "#F3F3F3 (the three channels sum to white)"
+          },
+          "implementation": "Each word is filled three times in #FF0000, #00FF00, #0000FF with globalCompositeOperation lighter on a transparent layer, offset per channel; where all three overlap the sum is white, at the edges one or two channels show; the layer is drawn under the chrome."
+        }
+      ]
+    },
+    "display-headline": {
+      "name": "Condensed display headline",
+      "used_in": [
+        {
+          "entry": "ts-03-iridescent-chrome",
+          "code": "TS-03",
+          "params": {
+            "font": "Archivo 900, font-stretch 62 %",
+            "cap_u": 142,
+            "line_pitch_u": 175,
+            "left_u": 38,
+            "top_u": 28,
+            "figure": "right-aligned on line 2, 962 u",
+            "small": "Archivo 700, 30 u, 2 columns × 3 rows at x 660 / 840, baselines 372 / 402 / 432"
+          },
+          "implementation": "line 1 is sized to 924 u (font-stretch is set after ctx.font, which resets it); the figure sits on line 2 flush right; the slab is drawn after the type so it covers the bottom of the headline as the reference slab does."
+        }
+      ]
+    },
+    "sticky-stack": {
+      "name": "Sticky card stack",
+      "used_in": [
+        {
+          "entry": "ts-04-stacked-card-scroll",
+          "code": "TS-04",
+          "params": {
+            "top_offset_u": 19,
+            "gap_u": 34,
+            "card_1_visible_u": 650,
+            "card_2_u": 1198,
+            "card_3_u": 440,
+            "card_4_visible_u": 70,
+            "scale_under": 0.95,
+            "css": "position: sticky; top: 1.9vw; height: calc(100vh − 1.9vw − 3.4vw); margin: 0 2.4vw 3.4vw"
+          },
+          "implementation": "Every card is sticky at the same top offset, each a direct child of the scrolling body; the incoming card covers the pinned one, which is clipped at the seam and scaled to 0.95 as it goes under; cards are siblings of one scroll container, not wrapped in sections, so each stays pinned until the end of the page."
+        }
+      ]
+    },
+    "card-ground": {
+      "name": "Flat card ground",
+      "used_in": [
+        {
+          "entry": "ts-04-stacked-card-scroll",
+          "code": "TS-04",
+          "params": {
+            "colors": [
+              "#CF3020",
+              "#D9D9D9",
+              "#B8B5B7",
+              "#FFFFFF"
+            ],
+            "shadow": "none",
+            "border": "none"
+          },
+          "implementation": "Each card is one flat fill; nothing separates cards but the ground showing through the gap and the corner radius."
+        },
+        {
+          "entry": "ts-08-flat-color-card-set",
+          "code": "TS-08",
+          "params": {
+            "ground": "#000000",
+            "columns": 3,
+            "rows": 2,
+            "card_u": [
+              269,
+              537
+            ],
+            "gutter_u": [
+              27,
+              26
+            ],
+            "margin_u": {
+              "left": 71,
+              "top": 110,
+              "right": 68,
+              "bottom": 51
+            },
+            "middle_column_offset_u": -57
+          },
+          "implementation": "Fill the sheet, then place six cards on a 3 × 2 grid; the middle column is translated up by 57 u so its cards straddle the row gap."
+        }
+      ]
+    },
+    "rounded-frame": {
+      "name": "Rounded frame",
+      "used_in": [
+        {
+          "entry": "ts-04-stacked-card-scroll",
+          "code": "TS-04",
+          "params": {
+            "radius_u": 36,
+            "side_margin_u": 24,
+            "panel_inset_u": 66,
+            "panel_radius_u": 0
+          },
+          "implementation": "rrect(24, y, 952, h, 36) filled then used as a clip for everything on the card; the inset panel is a plain rectangle that the clip cuts."
+        },
+        {
+          "entry": "ts-08-flat-color-card-set",
+          "code": "TS-08",
+          "params": {
+            "radius_u": 15,
+            "border": "none on a contrasting ground; 1 u hairline when card ≈ ground",
+            "fill": "one flat color per card",
+            "clip": "all card content is clipped to the rounded path"
+          },
+          "implementation": "Each card is one rounded-rect path: fill flat, then clip so type can run to the edge and be cut by the corner."
+        }
+      ]
+    },
+    "specimen-grid": {
+      "name": "Specimen grid",
+      "used_in": [
+        {
+          "entry": "ts-04-stacked-card-scroll",
+          "code": "TS-04",
+          "params": {
+            "columns": 2,
+            "rows": 3,
+            "tile_u": [
+              425,
+              242
+            ],
+            "gutter_u": [
+              28,
+              39
+            ],
+            "grid_top_u": 188,
+            "inset_u": 43,
+            "headline": {
+              "font": "Archivo 800",
+              "size_u": 58,
+              "line_u": 54
+            },
+            "caption": {
+              "font": "Inter 400",
+              "size_u": 10,
+              "line_u": 11.5
+            },
+            "mono": {
+              "font": "JetBrains Mono 400",
+              "size_u": 11
+            }
+          },
+          "implementation": "Six tiles, alternately light and dark, each showing one type size: a wide word, a two-line condensed heading, a staggered mono list, a display numeral with mono alphabet rows, cropped display letters, a color-bar table."
+        }
+      ]
+    },
+    "soft-blur-plate": {
+      "name": "Soft blur plate",
+      "used_in": [
+        {
+          "entry": "ts-04-stacked-card-scroll",
+          "code": "TS-04",
+          "params": {
+            "base": "#B8B5B7",
+            "blobs": [
+              {
+                "c": [
+                  700,
+                  300
+                ],
+                "r": 110,
+                "tone": "+white"
+              },
+              {
+                "c": [
+                  720,
+                  120
+                ],
+                "r": 40,
+                "tone": "+white"
+              },
+              {
+                "c": [
+                  380,
+                  330
+                ],
+                "r": 260,
+                "tone": "−0.25"
+              }
+            ],
+            "blur_u": 14,
+            "grain_amp": 0.04,
+            "grain_seed": 404
+          },
+          "implementation": "Radial gradients on a flat gray, blurred with a 2-D gaussian, then multiplied by mono grain so the gradient does not band."
+        }
+      ]
+    },
+    "line-screen": {
+      "name": "Vertical line screen",
+      "used_in": [
+        {
+          "entry": "ts-05-line-screen-type",
+          "code": "TS-05",
+          "params": {
+            "pitch_u": 6.9,
+            "bar_min": "0.58 pitch (mask 0.10)",
+            "bar_full": "0.66 pitch (mask ≥ 0.35)",
+            "end_cells": "bar ends snap to 0.5-pitch cells down the page",
+            "bar_merge": "1.15 pitch (mask ≥ 1.6, two lines overlapping)",
+            "threshold": 0.1,
+            "gap_min_px": 1,
+            "mask": "sum of four text lines, Archivo 900 condensed, blurred 1.2 px"
+          },
+          "implementation": "For every screen column x_k = k·pitch, walk down the page one device pixel at a time, read the summed letter mask at (x_k + phase, y), map it to a bar width and fill each continuous run as one polygon with a left and a right edge per y."
+        }
+      ]
+    },
+    "phase-field": {
+      "name": "Phase field",
+      "used_in": [
+        {
+          "entry": "ts-05-line-screen-type",
+          "code": "TS-05",
+          "params": {
+            "period_u": 260,
+            "octaves": 2,
+            "shift_u": 2.4,
+            "quantise": "+0.5 pitch where fbm > 0.35",
+            "seed": 505
+          },
+          "implementation": "phase(x,y) = 2.4·fbm(x/260, y/260) plus half a pitch in regions where the field is high; the bar center is x_k + phase, so bars in neighbouring regions step against each other."
+        }
+      ]
+    },
+    "ink-bleed": {
+      "name": "Ink bleed",
+      "used_in": [
+        {
+          "entry": "ts-05-line-screen-type",
+          "code": "TS-05",
+          "params": {
+            "blur_px": 0.7,
+            "gain": 1.15,
+            "interior_darken": "ink → ink_deep (#3E3A38) where mask > 0.9, ramp from 0.6",
+            "threshold_soft": "0.26 → 0.60"
+          },
+          "implementation": "The bar layer is blurred 0.8 px, its alpha is pushed through a soft threshold so the edge swells outward, and the ink color shifts toward ink_deep inside the letters."
+        }
+      ]
+    },
+    "paper-tooth": {
+      "name": "Paper tooth",
+      "used_in": [
+        {
+          "entry": "ts-05-line-screen-type",
+          "code": "TS-05",
+          "params": {
+            "grain": "mono, amp 0.04, pitch 1 px, seed 505",
+            "mottle": "perlin period 60 u, ± 3.5 % (ref) · ± 2 % (ember) · ± 5 % (reverse)",
+            "measured_paper_std": "4.4 / 255"
+          },
+          "implementation": "Luminance is multiplied by 1 + mottle before the bars land and by ART.grain after, so ink and paper share one tooth."
+        },
+        {
+          "entry": "ts-10-thermal-blob-field",
+          "code": "TS-10",
+          "params": {
+            "grain_amp": 0.03,
+            "pitch_px": 1,
+            "mono": true,
+            "mottle": "perlin fbm, 3 octaves, cell 90 u, amp 0.012",
+            "measured": "high-pass std 3.4/255 on paper, 5.5/255 in the core"
+          },
+          "implementation": "Multiplicative mono grain per device pixel, then a low-frequency perlin mottle, both on the whole sheet including the blobs."
+        },
+        {
+          "entry": "ts-12-perforated-stamp",
+          "code": "TS-12",
+          "params": {
+            "grain": "mono, amp 0.05, pitch 1 device px, seed 12",
+            "mottle": "fbm 3 octaves, scale 260 u, ±0.04 multiply",
+            "ref_px": {
+              "red_std": "≈9/255 in R"
+            }
+          },
+          "implementation": "Before the perforation punch the stamp layer is multiplied by a low-frequency fbm and then by ART.grain, so both tooth and mottle follow the stamp and stop at the bites."
+        }
+      ]
+    },
+    "iso-extrude": {
+      "name": "Isometric extrusion by outline drop",
+      "used_in": [
+        {
+          "entry": "ts-06-riso-plate-separation",
+          "code": "TS-06",
+          "params": {
+            "axes": "x → (cos30, sin30), y → (−cos30, sin30), z → (0, −1)",
+            "letters": {
+              "font": "Archivo 900",
+              "size_u": 235,
+              "depth_u": 85
+            },
+            "slabs": {
+              "depth_u": [
+                40,
+                30,
+                24
+              ]
+            },
+            "bars": {
+              "depth_u": 52
+            },
+            "probe_px": "(±2,+1)"
+          },
+          "implementation": "Each object is a top-face mask drawn in the plane transform; a column scan drops every boundary pixel whose +x or +y probe is empty by the depth, labelling right or left face, top always winning; later objects overwrite earlier ones."
+        }
+      ]
+    },
+    "plate-separation": {
+      "name": "Three-plate coverage split",
+      "used_in": [
+        {
+          "entry": "ts-06-riso-plate-separation",
+          "code": "TS-06",
+          "params": {
+            "yellow": "top faces + corner wash + marker strokes",
+            "blue": "right faces + keylines",
+            "pink": "left faces + keylines + marble",
+            "keyline": "on all three plates",
+            "keyline_u": 3.6,
+            "composite": "multiply",
+            "max_coverage": 1
+          },
+          "implementation": "Face labels become three coverage rasters; each raster is coloured mix(white, ink, coverage) on its own canvas and multiplied onto the stock in plate order."
+        }
+      ]
+    },
+    "ink-grain": {
+      "name": "Per-plate ink grain",
+      "used_in": [
+        {
+          "entry": "ts-06-riso-plate-separation",
+          "code": "TS-06",
+          "params": {
+            "amp": [
+              0.1,
+              0.12,
+              0.11
+            ],
+            "seeds": [
+              601,
+              602,
+              603
+            ],
+            "pitch_px": 1,
+            "stochastic_thin": "coverage × (1 − 0.4·rand)",
+            "edge_thin": "coverage × (0.72 + 0.28·blur(coverage, 4 u))",
+            "mottle": "0.86 + 0.14·perlin(p / 60 u)"
+          },
+          "implementation": "Before colouring, coverage is multiplied by a blurred copy of itself so fills thin toward their edges, and by a slow perlin mottle; after colouring ART.grain runs mono on the plate and paper pixels are reset to white."
+        }
+      ]
+    },
+    "marbled-fill": {
+      "name": "Marbled fill from fbm bands",
+      "used_in": [
+        {
+          "entry": "ts-06-riso-plate-separation",
+          "code": "TS-06",
+          "params": {
+            "scale_u": 30,
+            "octaves": 4,
+            "gain": 0.6,
+            "band_core": "|n| < 0.055 → coverage 0",
+            "band_rim": "|n| < 0.10 → coverage 0.5",
+            "elsewhere": 1
+          },
+          "implementation": "Inside the top faces the pink plate is full except where an fbm field crosses zero: the core of the band is paper, the rim half-coverage, which reads as swirls."
+        }
+      ]
+    },
+    "grid-stock": {
+      "name": "Isometric grid stock",
+      "used_in": [
+        {
+          "entry": "ts-06-riso-plate-separation",
+          "code": "TS-06",
+          "params": {
+            "stock": "#EEEEEC",
+            "vertical_pitch_u": 31.5,
+            "diagonals": "±30° through the same lattice, 18.2 u apart along a vertical",
+            "alpha": 0.16,
+            "width_u": 1
+          },
+          "implementation": "Flat gray fill, then verticals and both diagonal families stroked in the grid ink at 16 % before any plate lands."
+        }
+      ]
+    },
+    "blob-field": {
+      "name": "Metaball blob field",
+      "used_in": [
+        {
+          "entry": "ts-07-gradient-map-blur-type",
+          "code": "TS-07",
+          "params": {
+            "count": 10,
+            "radius_u": [
+              105,
+              230
+            ],
+            "field": "Σ (r_i / |p − c_i|_e)⁴, |·|_e an elliptic distance (ratio 1.3–1.6, seeded angle)",
+            "threshold": 1,
+            "centres_u": [
+              [
+                30,
+                240
+              ],
+              [
+                450,
+                20
+              ],
+              [
+                930,
+                230
+              ],
+              [
+                10,
+                560
+              ],
+              [
+                320,
+                640
+              ],
+              [
+                960,
+                870
+              ],
+              [
+                30,
+                1160
+              ],
+              [
+                470,
+                890
+              ],
+              [
+                730,
+                1280
+              ],
+              [
+                650,
+                420
+              ]
+            ],
+            "eval_scale": "1/2 (render) · 1/4 (motion)"
+          },
+          "implementation": "Sum of inverse-fourth elliptic fields from 10 seeded centres; pixels above 1.0 are white, the rest black, so nearby blobs merge into one shape with a hard edge."
+        },
+        {
+          "entry": "ts-10-thermal-blob-field",
+          "code": "TS-10",
+          "params": {
+            "blobs": 4,
+            "radius": "r(θ) = R·(1 + Σ a_k·cos(k·θ + φ_k)), k = 2..4, a ≤ 0.22",
+            "R_u": [
+              250,
+              280,
+              200,
+              150
+            ],
+            "blur_sigma_u": 46,
+            "field_res": "1/3 device px",
+            "fill": "radial white → 0.78 gray at the shape edge, union by lighten"
+          },
+          "implementation": "Four Fourier-radius blobs are filled with a radial white-to-gray gradient on a black canvas (union by lighten) at one-third resolution, blurred with σ = 46 u and read back as a 0..1 luminance field."
+        }
+      ]
+    },
+    "display-stack": {
+      "name": "Stacked display words",
+      "used_in": [
+        {
+          "entry": "ts-07-gradient-map-blur-type",
+          "code": "TS-07",
+          "params": {
+            "font": "Archivo 900, font-stretch semi-condensed (wdth 87.5)",
+            "lines": 6,
+            "size_u": 225,
+            "pitch_u": 205,
+            "cap_height_u": 155,
+            "align": "center",
+            "composite": "difference"
+          },
+          "implementation": "Six words centred at 225 u (the six-letter word spans 0.92 W), drawn white with globalCompositeOperation difference so each letter inverts the blob field under it."
+        }
+      ]
+    },
+    "blur-field": {
+      "name": "Whole-mask gaussian blur",
+      "used_in": [
+        {
+          "entry": "ts-07-gradient-map-blur-type",
+          "code": "TS-07",
+          "params": {
+            "sigma_u": 16,
+            "sigma_px_ref": "≈20 at 1000 px",
+            "edge": "mask padded 40 u so the frame edge does not darken"
+          },
+          "implementation": "One CSS blur over the full mask after the type is composited, so type edges and blob edges get the same falloff."
+        }
+      ]
+    },
+    "gradient-map": {
+      "name": "Five-stop gradient map",
+      "used_in": [
+        {
+          "entry": "ts-07-gradient-map-blur-type",
+          "code": "TS-07",
+          "params": {
+            "stops": [
+              [
+                0,
+                "#000000"
+              ],
+              [
+                0.09,
+                "#460A05"
+              ],
+              [
+                0.3,
+                "#EB3E25"
+              ],
+              [
+                0.7,
+                "#EDA1E3"
+              ],
+              [
+                0.92,
+                "#DAD9D9"
+              ]
+            ],
+            "read": "luminance 0.2126 R + 0.7152 G + 0.0722 B"
+          },
+          "implementation": "256-entry LUT from the stops; every pixel of the blurred mask is replaced by LUT[luminance], which turns the blur falloff into the red-and-pink halo."
+        },
+        {
+          "entry": "ts-10-thermal-blob-field",
+          "code": "TS-10",
+          "params": {
+            "lut": "256 entries",
+            "stops_ref": "0.28 paper · 0.37 blue · 0.41 (53,80,126) · 0.44–0.48 navy · 0.53 plum · 0.64 red · 0.70 orange · 0.82 (245,140,30) · 1.0 yellow",
+            "measured_edge_px": "paper→blue 12 · blue→navy 12 · navy 20 · plum→red 25 · red→orange 15 (at 1200 px)"
+          },
+          "implementation": "Every pixel of the field is replaced by LUT[field]; the ramp is the only place color enters, so all four colourways share one field."
+        }
+      ]
+    },
+    "breath-motion": {
+      "name": "Breathing blur",
+      "used_in": [
+        {
+          "entry": "ts-07-gradient-map-blur-type",
+          "code": "TS-07",
+          "params": {
+            "period_s": 8,
+            "sigma_u": "4 + 24·(0.5 + 0.5·sin(2πt/8))",
+            "blob_drift_u": "±40 on perlin(t/6 + i)",
+            "words": "static",
+            "work_width_px": 512,
+            "cache": "text mask per size"
+          },
+          "implementation": "Each frame recomputes the blobs at quarter scale, composites the cached text mask, blurs at the current σ and gradient-maps on a 512 px work canvas that is drawn up to plate size."
+        }
+      ]
+    },
+    "condensed-display": {
+      "name": "Condensed display at two scales",
+      "used_in": [
+        {
+          "entry": "ts-08-flat-color-card-set",
+          "code": "TS-08",
+          "params": {
+            "font": "Archivo",
+            "width_pct": 62,
+            "weight": [
+              800,
+              900
+            ],
+            "paragraph": {
+              "size_u": 29,
+              "leading_u": 33,
+              "tracking_em": -0.01,
+              "lines": 11
+            },
+            "fitted": {
+              "size_u": [
+                95,
+                166
+              ],
+              "fit_width_u": "card width − 10 to 16",
+              "pitch_over_size": [
+                0.7,
+                0.8
+              ],
+              "tracking_em": -0.03,
+              "fit": "each word scaled to the card width minus 2 × 14 u"
+            },
+            "secondary": {
+              "size_u": [
+                26,
+                58
+              ]
+            }
+          },
+          "implementation": "Two set sizes: a wrapped all-caps paragraph, and single words each fitted to the inner width and stacked with leading below 0.8 so caps of adjacent lines touch."
+        }
+      ]
+    },
+    "edge-metadata": {
+      "name": "Edge metadata",
+      "used_in": [
+        {
+          "entry": "ts-08-flat-color-card-set",
+          "code": "TS-08",
+          "params": {
+            "font": "JetBrains Mono",
+            "size_u": [
+              8,
+              9
+            ],
+            "line_u": 11,
+            "inset_u": {
+              "x": 14,
+              "y": 14
+            },
+            "columns": [
+              2,
+              3
+            ],
+            "secondary_font": "Inter 8 u for gray labels",
+            "barcode": {
+              "bars": 34,
+              "width_u": [
+                1,
+                3
+              ],
+              "height_u": 14,
+              "seed": 808
+            }
+          },
+          "implementation": "Tiny mono rows pinned to the top and bottom edges in two or three columns; a barcode strip is a seeded run of bars with a mono number under it."
+        },
+        {
+          "entry": "ts-11-worn-black-box",
+          "code": "TS-11",
+          "params": {
+            "headline": "Archivo 700, 32 u, 4 lines, pitch 37 u, at (340, 322)",
+            "flap_line": "Archivo 700, 6 u caps, centred",
+            "back_title": "Archivo 700, 10 u",
+            "body": "Inter 400, 4.6 u, 15 lines, width 92 u",
+            "meta_rows": "JetBrains Mono 3.6 u, two rows with boxed keys",
+            "spine": "Archivo 700, 8 u, rotated −90° on both spines",
+            "marks": "4-point star, globe, QR block, star box"
+          },
+          "implementation": "All lettering is live type in the three inlined fonts with invented plain words; spine text is drawn on a rotated context."
+        }
+      ]
+    },
+    "gradient-plate": {
+      "name": "Gradient plate with line illustration",
+      "used_in": [
+        {
+          "entry": "ts-08-flat-color-card-set",
+          "code": "TS-08",
+          "params": {
+            "stops": [
+              "#4A1210 at 0",
+              "#F26A2A at 1"
+            ],
+            "angle_deg": 100,
+            "arcs": {
+              "count": 5,
+              "center_u": [
+                0.78,
+                0.3
+              ],
+              "radius_step_u": 38,
+              "stroke_u": 3,
+              "alpha": 0.85
+            },
+            "disc_u": 22
+          },
+          "implementation": "Where the reference carries a photograph the card fills with a two-stop linear gradient, then five concentric arcs and a disc are stroked in one tint over it; display type sits on top as on the other cards."
+        }
+      ]
+    },
+    "rule-ledger": {
+      "name": "Rule ledger",
+      "used_in": [
+        {
+          "entry": "ts-08-flat-color-card-set",
+          "code": "TS-08",
+          "params": {
+            "rows": 4,
+            "row_pitch_u": 82,
+            "title": "Archivo 800 wdth 62, 12 u",
+            "body": "JetBrains Mono 9 u on 15 u",
+            "rule": "dotted, 1 u, dot pitch 3 u",
+            "ticket": {
+              "height_u": 17,
+              "rule_u": 0.8,
+              "cells": 5
+            },
+            "stamp": {
+              "ellipse_u": [
+                150,
+                40
+              ],
+              "rule_u": 1.2
+            }
+          },
+          "implementation": "A vertical list of event rows: bold title, two or three mono lines, a dotted rule between rows; the ticket row is a boxed strip of five cells with hairline rules and a lozenge stamp under it."
+        },
+        {
+          "entry": "ts-10-thermal-blob-field",
+          "code": "TS-10",
+          "params": {
+            "rules": {
+              "y_v": [
+                0.475,
+                0.925
+              ],
+              "inset_u": 12,
+              "weight_u": 1,
+              "color": "#1A1618"
+            },
+            "caption": {
+              "font": "JetBrains Mono 14 u",
+              "align": "right, under rule 1",
+              "x_u": 988
+            },
+            "label": {
+              "font": "Inter 13 u / Inter 600 18 u",
+              "lines": 2,
+              "x_u": 12,
+              "under": "rule 2"
+            }
+          },
+          "implementation": "Two 1 u ink rules across the sheet; the caption is set right-aligned 12 u under the first rule, the two-line studio label under the second."
+        }
+      ]
+    },
+    "two-stop-gradient": {
+      "name": "Two-stop linear gradient",
+      "used_in": [
+        {
+          "entry": "ts-09-grain-gradient-layers",
+          "code": "TS-09",
+          "params": {
+            "A": {
+              "axis": "vertical",
+              "stops": [
+                [
+                  0,
+                  "#FA8F17"
+                ],
+                [
+                  1,
+                  "#F5701F"
+                ]
+              ]
+            },
+            "B": {
+              "axis": "vertical",
+              "stops": [
+                [
+                  0,
+                  "#23B5F2"
+                ],
+                [
+                  0.6,
+                  "#137AD7"
+                ]
+              ]
+            },
+            "C": {
+              "axis_deg": 66,
+              "length_u": 743,
+              "stops": [
+                [
+                  0.15,
+                  "#080909"
+                ],
+                [
+                  0.34,
+                  "#7D1315"
+                ],
+                [
+                  0.45,
+                  "#D72532"
+                ],
+                [
+                  0.56,
+                  "#F05277"
+                ],
+                [
+                  0.67,
+                  "#F39FB6"
+                ],
+                [
+                  1,
+                  "#DEC2D1"
+                ]
+              ]
+            }
+          },
+          "implementation": "Each panel starts as a canvas linear gradient; C runs from the panel top-left along 66° from horizontal, with knee stops so black holds to 0.15 and pink holds from 0.67."
+        }
+      ]
+    },
+    "soft-mask": {
+      "name": "Blurred shape mask",
+      "used_in": [
+        {
+          "entry": "ts-09-grain-gradient-layers",
+          "code": "TS-09",
+          "params": {
+            "shape": "closed spline through 13 measured contour points, off-panel to the left and below",
+            "edge_sigma_u": 33,
+            "halo_sigma_u": 110,
+            "halo_colour": "#D71E3D",
+            "halo_strength": "four source-over passes of the wide blur: 1 − (1 − h)⁴",
+            "mask_colour": "#080808"
+          },
+          "implementation": "The shape is drawn twice on padded offscreens: once in crimson and blurred wide (σ 110 u), drawn four times to tint the field; once in black and blurred σ 33 u, drawn over. The wide blur is the halo that reddens the gradient near the black."
+        }
+      ]
+    },
+    "ripple-band": {
+      "name": "Concentric ripple band",
+      "used_in": [
+        {
+          "entry": "ts-09-grain-gradient-layers",
+          "code": "TS-09",
+          "params": {
+            "arc": "y = q + (x − cx(q))² / 2R, R 750 u, cx(q) = 217 − 0.8·max(0, q − 233) u (panel-local)",
+            "pitch_u": 32,
+            "phase_zero_u": 262,
+            "dark_profile": "sstep(t0, t0+0.3, 0.5+0.5·cos 2π(q−q0)/pitch), t0 = 0.72 − 0.5·e",
+            "envelope": "e = 0.15 + 0.85·sstep(0, 250, q)^1.2 above q 250; 1 for q 250–433; falls to 0.1 over 433–467",
+            "right_cut": "e fades where x > 333 − 2·max(0, q − 296), over 150 u",
+            "light_stripes": "(0.7·e in the band, 0.15 above)·(1−s)^2.5 toward #78BCEC",
+            "blur_u": 3.3,
+            "dark": "#090B43",
+            "light": "#78BCEC"
+          },
+          "implementation": "Per pixel: solve q, the peak height of the arc through the pixel (three fixed-point steps, since the peak x depends on q); darkness = envelope(q) × a thresholded cosine of q whose threshold rises as the envelope falls, so the stripes thin to points where the window cuts off on the right; light stripes sit at the opposite phase. The layer is blurred 3.3 u."
+        }
+      ]
+    },
+    "rim-stop": {
+      "name": "Dark rim stop",
+      "used_in": [
+        {
+          "entry": "ts-10-thermal-blob-field",
+          "code": "TS-10",
+          "params": {
+            "position": 0.44,
+            "color": "#160F14",
+            "width_field": "0.41 → 0.53",
+            "band_px_ref": "≈ 20 at 1200 px",
+            "halo": "blue 0.335–0.41 outside the stop"
+          },
+          "implementation": "The darkest stop sits just under the mid-point of the blurred edge, where the profile is steepest, so it occupies few pixels and reads as a drawn outline; the blue halo is the ramp segment just outside it."
+        }
+      ]
+    },
+    "board-panel": {
+      "name": "Board panel",
+      "used_in": [
+        {
+          "entry": "ts-11-worn-black-box",
+          "code": "TS-11",
+          "params": {
+            "front": {
+              "spine_u": [
+                222,
+                278
+              ],
+              "face_u": [
+                278,
+                494
+              ],
+              "body_v": [
+                180,
+                579
+              ],
+              "flap_v": [
+                125,
+                180
+              ],
+              "tuck": {
+                "x": [
+                  287,
+                  486
+                ],
+                "y": [
+                  84,
+                  125
+                ],
+                "r": 20
+              },
+              "tab": {
+                "x": [
+                  234,
+                  278
+                ],
+                "y": [
+                  136,
+                  180
+                ]
+              }
+            },
+            "back": {
+              "spine_u": [
+                507,
+                563
+              ],
+              "face_u": [
+                563,
+                778
+              ],
+              "body_v": [
+                180,
+                581
+              ],
+              "flap": {
+                "x": [
+                  508,
+                  768
+                ],
+                "y": [
+                  125,
+                  180
+                ]
+              },
+              "tab": {
+                "x": [
+                  729,
+                  778
+                ],
+                "y": [
+                  136,
+                  180
+                ]
+              },
+              "tuck": {
+                "x": [
+                  517,
+                  713
+                ],
+                "y": [
+                  87,
+                  125
+                ],
+                "r": 20
+              }
+            },
+            "board": "#151819",
+            "mottle": "fbm 3 oct, cell 70 u, ±3 %",
+            "shade": "+3 % toward scuff color from v 280 to 580",
+            "speckle": "0.0006 per pixel, t 0.3–0.6"
+          },
+          "implementation": "Each panel is a union of rectangles (spine, face, flap, tab, rounded tuck) tested per pixel; the fill is the board color mixed 3 % toward the scuff color by a perlin mottle and a vertical shade, plus sparse one-pixel dots."
+        }
+      ]
+    },
+    "edge-scuff": {
+      "name": "Edge scuff",
+      "used_in": [
+        {
+          "entry": "ts-11-worn-black-box",
+          "code": "TS-11",
+          "params": {
+            "edge": "1.1·exp(−d/2.5 u) + 0.1·exp(−d/10 u)",
+            "haze": "continuous tint 0.14·exp(−d/3 u) + 0.12·exp(−dc/14 u) + 0.06·exp(−df/2.5 u) under the dots",
+            "corner": "0.6·exp(−dc/16 u)",
+            "fold": "0.5·exp(−df/1.6 u) + 0.08·exp(−df/8 u)",
+            "gate": "0.15 + 0.85·smoothstep(0.3, 0.8, 0.5+0.5·fbm(p/18 u))",
+            "clump": "2.2·smoothstep(0.3, 0.72, 0.5+0.5·fbm(x/2.4 u, y/1.6 u))",
+            "dust": "0.006·exp(−d/10 u), speckle 0.0003",
+            "value": "t = 0.2 + 0.75·r^1.6 toward scuff color",
+            "seed": 1101
+          },
+          "implementation": "A chamfer distance transform gives d to the silhouette; dc is the distance to the nearest convex corner or fold junction and df to the spine crease or flap fold. A pixel turns lighter where a uniform random is below the summed density times the patch gate, so the wear reads as clustered abrasion rather than a line."
+        }
+      ]
+    },
+    "crease-line": {
+      "name": "Crease line",
+      "used_in": [
+        {
+          "entry": "ts-11-worn-black-box",
+          "code": "TS-11",
+          "params": {
+            "count_per_panel": 3,
+            "width_u": 0.9,
+            "alpha": 0.11,
+            "blur_px": 1.5,
+            "path": "quadratic, 2 control points, length 120–220 u"
+          },
+          "implementation": "Faint diagonal strokes in the scuff color on a separate layer, blurred 1.5 px, then composited so the edges are soft."
+        }
+      ]
+    },
+    "sticker-layer": {
+      "name": "Sticker layer",
+      "used_in": [
+        {
+          "entry": "ts-11-worn-black-box",
+          "code": "TS-11",
+          "params": {
+            "price": {
+              "size_u": [
+                55,
+                37
+              ],
+              "rotate_deg": -6,
+              "corner_u": 3,
+              "tear": "jittered polygon, 2 u amplitude on the bottom and right edges",
+              "shadow": "rgba(0,0,0,0.5) offset 2 u blur 3 u"
+            },
+            "foil": {
+              "r_u": 18,
+              "wedges": 36,
+              "highlight": "radial white 0.55 at 35 % offset",
+              "ring": "dashed 0.8 u"
+            },
+            "label": {
+              "size_u": [
+                54,
+                62
+              ],
+              "rotate_deg": 3,
+              "band": "sticker color 12 u"
+            },
+            "flap_label": {
+              "size_u": [
+                86,
+                34
+              ],
+              "color": "#E8E6DE 0.9"
+            }
+          },
+          "implementation": "Each sticker is a filled path drawn over the worn board with its own drop shadow; the foil is 36 hue wedges on arcs under a radial highlight."
+        }
+      ]
+    },
+    "barcode-block": {
+      "name": "Barcode block",
+      "used_in": [
+        {
+          "entry": "ts-11-worn-black-box",
+          "code": "TS-11",
+          "params": {
+            "box_u": [
+              88,
+              39
+            ],
+            "bars": 46,
+            "bar_w_u": "0.7–2.4 random (seed 1103)",
+            "gap_u": "0.6–1.6",
+            "digits": "JetBrains Mono 3.2 u under the bars",
+            "mini": {
+              "bars": 24,
+              "box_u": [
+                31,
+                16
+              ]
+            }
+          },
+          "implementation": "A white box, then random-width dark bars from a seeded sequence; the digit row is mono type below the bars."
+        }
+      ]
+    },
+    "perforation": {
+      "name": "Scalloped perforation",
+      "used_in": [
+        {
+          "entry": "ts-12-perforated-stamp",
+          "code": "TS-12",
+          "params": {
+            "stamp_u": [
+              158,
+              125,
+              683,
+              993
+            ],
+            "pitch_u": 62,
+            "bite_radius_u": 19,
+            "bites": "12 across × 17 down, one centred on each corner",
+            "ref_px": {
+              "pitch": 45.6,
+              "radius": 14
+            }
+          },
+          "implementation": "The stamp is painted as a rectangle on its own layer, then a circle at every pitch step along all four edges is punched out with destination-out; the punched layer is the clip for everything on the stamp."
+        }
+      ]
+    },
+    "halftone-fill": {
+      "name": "Halftone texture fill",
+      "used_in": [
+        {
+          "entry": "ts-12-perforated-stamp",
+          "code": "TS-12",
+          "params": {
+            "screen_angle_deg": 45,
+            "pitch_u": 7,
+            "texture": "perlin fbm, 4 octaves, scale 70 u",
+            "dot_radius": "0.5·pitch·(0.22 + 0.9·t), t = clamp(0.5 + 3·fbm)",
+            "color": "lut dark→mid→light by lightness",
+            "ref_px": {
+              "pitch": "≈4.5"
+            }
+          },
+          "implementation": "Inside the letter mask a dark base is laid first; then a 45° dot lattice is walked and each dot is drawn with radius and color taken from the texture value at its center, so light patches of the texture become large tan dots."
+        }
+      ]
+    },
+    "rotated-display": {
+      "name": "Rotated display title",
+      "used_in": [
+        {
+          "entry": "ts-12-perforated-stamp",
+          "code": "TS-12",
+          "params": {
+            "font": "Archivo 900, wdth 62.5 (extra-condensed; substitute for the reference condensed serif)",
+            "angle_deg": -90,
+            "cap_height_u": "≈ 215 (size fitted so the run is 1003 u)",
+            "baseline_x_u": 400,
+            "start_y_u": 1088,
+            "overhang": "run ends 40 u above the stamp top"
+          },
+          "implementation": "The title is drawn once into a mask canvas rotated −90° about its start point; the halftone is composited through it with destination-in, then the result is drawn on the stamp layer under the perforation clip."
+        }
+      ]
+    },
+    "script-credit": {
+      "name": "Script credit",
+      "used_in": [
+        {
+          "entry": "ts-12-perforated-stamp",
+          "code": "TS-12",
+          "params": {
+            "font": "Inter 500 (no script face inlined), skew −12°",
+            "size_u": 30,
+            "lines": 2,
+            "centre_u": [
+              620,
+              560
+            ],
+            "line_gap_u": 34,
+            "color": "#FFFFFF"
+          },
+          "implementation": "Two invented lines centred on a point right of the middle, skewed −12° to stand in for the italic script; drawn after the grain so the white stays clean."
+        }
+      ]
+    },
+    "glyph-helix": {
+      "name": "Projected glyph helix",
+      "used_in": [
+        {
+          "entry": "ts-13-glyph-field-animation",
+          "code": "TS-13",
+          "params": {
+            "count": 150,
+            "turns": 7,
+            "radius_u": "min(0.18 W, 0.24 H, 240)",
+            "height_u": "min(0.78 H, 820)",
+            "pinhole_u": 800,
+            "strands": "2 · phase π by parity",
+            "rise": "t_i = i/150 + 0.018 · t (mod 1)",
+            "spin": "θ = 7π · t_i + 0.22 · t",
+            "project": "sc = P / (P − z); sx = cx + x · sc; sy = cy + y · sc",
+            "order": "sort by depth d = (z + R) / 2R, far first"
+          },
+          "implementation": "150 particles climb a helix (0.018 of the height per second) while the helix turns (0.22 rad/s); each is projected through a pinhole at 800 u and drawn as text, far to near."
+        }
+      ]
+    },
+    "depth-alpha": {
+      "name": "Depth as alpha and size",
+      "used_in": [
+        {
+          "entry": "ts-13-glyph-field-animation",
+          "code": "TS-13",
+          "params": {
+            "alpha": "0.04 + d^1.5 · 0.85",
+            "size_px": "round(10.5 · sc)",
+            "size_range": "≈ 9 – 13 px",
+            "font": "JetBrains Mono 400",
+            "no_color_depth": "glyphs stay white; only alpha and size carry depth"
+          },
+          "implementation": "Nothing is shaded: depth is the alpha ramp and the projected font size, so far glyphs are ghosts and near glyphs are ink."
+        }
+      ]
+    },
+    "semantic-label": {
+      "name": "Palette label with glow",
+      "used_in": [
+        {
+          "entry": "ts-13-glyph-field-animation",
+          "code": "TS-13",
+          "params": {
+            "every": 18,
+            "offset": 7,
+            "weight": 500,
+            "sequence": [
+              "ICE",
+              "LAMINAR",
+              "HEAT",
+              "VOID",
+              "SIGNAL",
+              "BALANCED",
+              "Ø",
+              "PAPER"
+            ],
+            "colors": [
+              "#7CC4FF",
+              "#4FE3C1",
+              "#FF8A4C",
+              "#FF6A8A",
+              "#FFD166",
+              "#A8F080",
+              "#FF6A8A",
+              "#7CC4FF"
+            ],
+            "glow": "shadowColor = label color, shadowBlur = 6 · d",
+            "count_per_150": 8
+          },
+          "implementation": "Every glyph with i mod 18 = 7 is replaced by the next palette name, set in its lifted on-ink color at weight 500 with a depth-scaled glow; the animation names its own system."
+        }
+      ]
+    },
+    "glyph-vocab": {
+      "name": "Indexed glyph vocabulary",
+      "used_in": [
+        {
+          "entry": "ts-13-glyph-field-animation",
+          "code": "TS-13",
+          "params": {
+            "helix": [
+              "·",
+              "∙",
+              "•",
+              "▪",
+              "│",
+              "─",
+              "ø",
+              "×",
+              "→",
+              "▸",
+              "001",
+              "010",
+              "042",
+              "077",
+              "126",
+              "154",
+              "218",
+              "258",
+              "369",
+              "396",
+              "410",
+              "523",
+              "808"
+            ],
+            "wave": "· ∙ ─ - ━ (ramp by sin)",
+            "orbit": "· with ø every 6th, Ø at center",
+            "pulse": [
+              "·",
+              "∙",
+              "•",
+              "∙",
+              "·"
+            ],
+            "read": "glyph = vocab[i mod n]"
+          },
+          "implementation": "Each animation reads its marks from a short ordered list by index, so the field is typeset from a vocabulary rather than drawn from shapes; the helix list mixes 10 marks with 13 three-digit numbers."
+        }
+      ]
+    },
+    "center-mask": {
+      "name": "Radial center mask",
+      "used_in": [
+        {
+          "entry": "ts-13-glyph-field-animation",
+          "code": "TS-13",
+          "params": {
+            "css": "mask-image: radial-gradient(ellipse 44% 40% at 50% 52%, transparent 0%, transparent 40%, #000 80%)",
+            "rx_u": 440,
+            "ry_u": 248,
+            "center_u": [
+              500,
+              322
+            ],
+            "clear_to": 0.4,
+            "opaque_from": 0.8,
+            "canvas_opacity": 0.95,
+            "title_shadow": "0 0 80px rgba(0,0,0,.7), 0 0 160px rgba(0,0,0,.5)"
+          },
+          "implementation": "The helix canvas is masked by an elliptical radial gradient so glyphs fade out toward the middle; the title sits in the hole with a wide dark text-shadow that deepens it."
+        }
+      ]
+    },
+    "pointer-parallax": {
+      "name": "Eased pointer parallax",
+      "used_in": [
+        {
+          "entry": "ts-13-glyph-field-animation",
+          "code": "TS-13",
+          "params": {
+            "input": "mx = clientX / innerWidth − 0.5; my = clientY / innerHeight − 0.5",
+            "ease": "tx += (mx − tx) · 0.04 per frame",
+            "offset_u": {
+              "x": "tx · 18",
+              "y": "ty · 14"
+            },
+            "applied": "to every glyph before projection"
+          },
+          "implementation": "The pointer shifts the whole helix by at most 18 u × 14 u, eased at 4 % per frame, so the field drifts after the cursor rather than following it."
+        }
+      ]
+    },
+    "wave-grid": {
+      "name": "Sine-phased glyph grid",
+      "used_in": [
+        {
+          "entry": "ts-13-glyph-field-animation",
+          "code": "TS-13",
+          "params": {
+            "cols": 70,
+            "rows": 8,
+            "canvas_u": [
+              500,
+              150
+            ],
+            "font": "JetBrains Mono 400 12 px",
+            "phase": "φ = 4π · c/70 + 0.8 · t + 0.15 · r",
+            "glyph": "ramp[floor((sin φ · 0.5 + 0.5) · 4)]",
+            "centerline": "row 4 − 1.4 · sin φ",
+            "alpha": "(1 − |r − 4 + 1.4 sin φ| / 2.2) · 0.55, skipped below 0.05",
+            "color": "#10B981"
+          },
+          "implementation": "A 70 × 8 grid where one sine phase picks both the glyph (from a five-step ramp) and the alpha (by distance to a sine centerline), so a two-wavelength band of laminar glyphs rolls across the frame."
+        }
+      ]
+    },
+    "pulse-row": {
+      "name": "Half-wave pulse row",
+      "used_in": [
+        {
+          "entry": "ts-13-glyph-field-animation",
+          "code": "TS-13",
+          "params": {
+            "count": 18,
+            "canvas_u": [
+              250,
+              30
+            ],
+            "font": "JetBrains Mono 400 11 px",
+            "wave": "w = sin(1.6 · t − 0.12 · i)",
+            "drawn": "only w > 0",
+            "alpha": "w · 0.5",
+            "x": "14 + i · (W − 28) / 18",
+            "head": "▸ at x 4, alpha .5",
+            "color": "#2B8EF5"
+          },
+          "implementation": "Eighteen glyphs along a line lit by the positive half of one travelling sine, so a soft blue pulse runs left to right behind a fixed ▸ head; it lives inline under a dialogue turn."
+        }
+      ]
+    },
+    "orbit-ring": {
+      "name": "Breathing glyph orbit",
+      "used_in": [
+        {
+          "entry": "ts-13-glyph-field-animation",
+          "code": "TS-13",
+          "params": {
+            "count": 52,
+            "radius_u": "min(0.3 W, 0.42 H)",
+            "ratio": 0.4,
+            "spin": "a = 2π · i/52 + 0.3 · t",
+            "breath": "r = R · (1 + 0.1 · sin(0.6 · t + 0.3 · i))",
+            "alpha": "0.1 + 0.6 · (sin a + 1) / 2",
+            "glyph": "ø every 6th, else ·",
+            "center": "Ø at alpha .55",
+            "canvas_opacity": 0.3,
+            "font": "JetBrains Mono 400 11 px",
+            "color": "#F6F1E4"
+          },
+          "implementation": "52 glyphs on a flattened ellipse, each with its own breathing radius and an alpha that peaks at the bottom of the orbit; the canvas is held at 30 % under a pull quote."
+        }
+      ]
+    },
+    "still-frame-runtime": {
+      "name": "Frame runtime",
+      "used_in": [
+        {
+          "entry": "ts-13-glyph-field-animation",
+          "code": "TS-13",
+          "params": {
+            "dpr": "min(devicePixelRatio, 2)",
+            "resize": "canvas.width = clientWidth · dpr; setTransform(dpr)",
+            "loop": "requestAnimationFrame, t = (now − t0) / 1000",
+            "clear": "clearRect every frame, no trails",
+            "reduced_motion": "draw once at t = now, no loop",
+            "text": "textAlign center, textBaseline middle",
+            "aria": "canvas aria-hidden"
+          },
+          "implementation": "One setupCanvas and one loop helper serve all four canvases; under prefers-reduced-motion the loop degenerates to a single still frame, so the page keeps its picture without motion."
+        }
+      ]
+    }
+  }
+}

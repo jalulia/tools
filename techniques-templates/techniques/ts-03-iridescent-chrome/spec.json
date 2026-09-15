@@ -1,0 +1,219 @@
+{
+  "id": "ts-03-iridescent-chrome",
+  "code": "TS-03",
+  "title": "Iridescent chrome on black",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "As reference",
+      "swatches": [
+        "#0D0E0E",
+        "#386EB2",
+        "#6EC7D1",
+        "#E3D672"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "Ember spectrum",
+      "swatches": [
+        "#101014",
+        "#F4551E",
+        "#2F5AE6",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "gray",
+      "label": "Chrome gray",
+      "swatches": [
+        "#0D0E0E",
+        "#EAECEC",
+        "#8A8A8A"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      1644,
+      1568
+    ],
+    "grammar": "black ground; one bent chrome slab shaded by a spectral gradient across its normals, thin yellow edge lines on every fillet; heavy film grain over everything; white condensed display headline; small words with split color channels"
+  },
+  "units": "design units, 1000 = plate width (plate 1000 × 954)",
+  "palette": {
+    "ground": "#0D0E0E",
+    "blue": "#386EB2",
+    "cyan": "#6EC7D1",
+    "white": "#F2F4F0",
+    "yellow": "#E3D672",
+    "pink": "#D68FA8",
+    "magenta": "#9C64A4",
+    "navy": "#182A57",
+    "type": "#F3F3F3"
+  },
+  "techniques": [
+    {
+      "id": "spectral-lut",
+      "short": "LUT",
+      "name": "Spectral look-up table",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "lut",
+        "gradient",
+        "spectrum"
+      ],
+      "params": {
+        "stops": 10,
+        "order": "navy 0 · blue 0.10 · cyan 0.22 · white 0.34 · yellow 0.44 · orange 0.54 · pink 0.64 · magenta 0.76 · blue 0.88 · navy 1",
+        "measured_ref": "(56,110,178) (110,199,209) (242,241,242) (235,233,94) (214,153,172) (170,108,160)"
+      },
+      "implementation": "ART.lut(stops) gives 256 colors; the shading pass indexes it with the environment coordinate t, so color is a function of normal direction only."
+    },
+    {
+      "id": "normal-shading",
+      "short": "NRML",
+      "name": "Normal-buffer shading of a swept slab",
+      "layer": 2,
+      "pass": 1,
+      "atoms": [
+        "mesh",
+        "normal",
+        "zbuffer",
+        "sweep",
+        "twist"
+      ],
+      "params": {
+        "section": "rounded rectangle 300 × 160 u, fillet 30 u, 56 points",
+        "sweep": "L path (−200,1040) → (330,470) → (1200,780), bend radius 230 u, 260 steps",
+        "twist_rad": "−0.22 + 0.55·s",
+        "tilt_rad": "0.5 about the screen x axis through y = 740 u",
+        "env": "t = clamp(0.5 + 0.40·r.y + 0.16·r.x), r = reflect(view, n)",
+        "wobble": "n += 0.20–0.22·sin/cos fields of period 260–420 u plus 0.06–0.08 at 90–120 u, then normalise"
+      },
+      "implementation": "Vertices P = C(s) + a·e1 + b·e2 with the section basis rotated by the twist; normals from the cross product of finite differences; triangles rasterized with edge functions into normal + depth buffers; per pixel the reflected ray of the orthographic view picks LUT[t]."
+    },
+    {
+      "id": "edge-highlight",
+      "short": "EDGE",
+      "name": "Edge band and specular lobe",
+      "layer": 2,
+      "pass": 3,
+      "atoms": [
+        "rim",
+        "specular",
+        "band"
+      ],
+      "params": {
+        "band_center_nz": 0.34,
+        "band_width": 0.06,
+        "band_colour": "#F0DC6A",
+        "band_mix": 1,
+        "light": "(−0.35,−0.60,0.72)",
+        "spec_power": 60,
+        "spec_mix": 0.85
+      },
+      "implementation": "band = exp(−((|n.z|−0.34)/0.06)²) mixes the edge color in; spec = (n·h)^60 mixes white in; both read from the same normal buffer as the LUT."
+    },
+    {
+      "id": "film-grain",
+      "short": "GRN",
+      "name": "Per-channel film grain",
+      "layer": 4,
+      "pass": 5,
+      "atoms": [
+        "grain",
+        "noise",
+        "film"
+      ],
+      "params": {
+        "multiplicative": "ART.grain amp 0.10, pitch 1 px, mono:false, seed 303",
+        "additive": "σ 14/255 per channel on the ground, hashed per pixel, seed 304",
+        "soften_px": 0.7
+      },
+      "implementation": "ART.grain multiplies RGB by 1 + 0.10·n per channel (visible on the chrome and the type); a second pass adds signed noise of 14/255 so the black ground carries grain too, as film does."
+    },
+    {
+      "id": "channel-split-type",
+      "short": "SPLT",
+      "name": "RGB channel-split lettering",
+      "layer": 3,
+      "pass": 4,
+      "atoms": [
+        "type",
+        "channel",
+        "offset",
+        "additive"
+      ],
+      "params": {
+        "offsets_u": {
+          "R": [
+            -2.5,
+            0
+          ],
+          "G": [
+            0,
+            0
+          ],
+          "B": [
+            2.5,
+            0
+          ]
+        },
+        "small_offsets_u": {
+          "R": [
+            -4,
+            0
+          ],
+          "G": [
+            0,
+            0.8
+          ],
+          "B": [
+            4,
+            0
+          ]
+        },
+        "blend": "lighter on a transparent layer",
+        "type_colour": "#F3F3F3 (the three channels sum to white)"
+      },
+      "implementation": "Each word is filled three times in #FF0000, #00FF00, #0000FF with globalCompositeOperation lighter on a transparent layer, offset per channel; where all three overlap the sum is white, at the edges one or two channels show; the layer is drawn under the chrome."
+    },
+    {
+      "id": "display-headline",
+      "short": "TYPE",
+      "name": "Condensed display headline",
+      "layer": 3,
+      "pass": 4,
+      "atoms": [
+        "type",
+        "headline",
+        "condensed"
+      ],
+      "params": {
+        "font": "Archivo 900, font-stretch 62 %",
+        "cap_u": 142,
+        "line_pitch_u": 175,
+        "left_u": 38,
+        "top_u": 28,
+        "figure": "right-aligned on line 2, 962 u",
+        "small": "Archivo 700, 30 u, 2 columns × 3 rows at x 660 / 840, baselines 372 / 402 / 432"
+      },
+      "implementation": "line 1 is sized to 924 u (font-stretch is set after ctx.font, which resets it); the figure sits on line 2 flush right; the slab is drawn after the type so it covers the bottom of the headline as the reference slab does."
+    }
+  ],
+  "pass_order": [
+    "ground · flat fill",
+    "headline + small words · channel split on a transparent layer, source-over",
+    "slab · rasterize section sweep into normal + depth buffers",
+    "shade · LUT[t(reflect)] + edge band + specular, soften 0.7 px, source-over",
+    "grain · multiplicative per channel, then additive on the ground"
+  ],
+  "notes": [
+    "Measured on ref.png: ground (13,13,13) σ 14–16 per channel; headline white 243 σ 3; cap height 233 px = 142 u; line pitch 288 px = 175 u; small-word fringe 3–5 px at 1644 px.",
+    "Seeds 303 (grain), 304 (ground noise). Orthographic view, no perspective."
+  ]
+}

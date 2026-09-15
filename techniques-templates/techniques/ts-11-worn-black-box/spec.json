@@ -1,0 +1,314 @@
+{
+  "id": "ts-11-worn-black-box",
+  "code": "TS-11",
+  "title": "Worn black box",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "#F2F0EA",
+      "swatches": [
+        "#111111",
+        "#D9D0B8",
+        "#F08A1C"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "#FFFFFF",
+      "swatches": [
+        "#101014",
+        "#FFFFFF",
+        "#F4551E"
+      ]
+    },
+    {
+      "id": "paper",
+      "label": "#101014",
+      "swatches": [
+        "#F6F5F2",
+        "#101014",
+        "#2F5AE6"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      1200,
+      800
+    ],
+    "grammar": "two board panels on black: flat near-black board, white abrasion at every edge, fold and corner, sparse speckle, cream top flap with label, orange torn price sticker, holographic round sticker, white barcode block, small mono metadata, white sans headline"
+  },
+  "units": "design units, 1000 = sheet width (1 u = 1.2 ref px)",
+  "palette": {
+    "ground": "#000000",
+    "board": "#151819",
+    "scuff": "#FFFFFF",
+    "flap": "#D9D0B8",
+    "sticker": "#F08A1C",
+    "label": "#F2F0EA",
+    "ink": "#FFFFFF"
+  },
+  "techniques": [
+    {
+      "id": "board-panel",
+      "short": "BORD",
+      "name": "Board panel",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "flat",
+        "mottle",
+        "speckle",
+        "silhouette"
+      ],
+      "params": {
+        "front": {
+          "spine_u": [
+            222,
+            278
+          ],
+          "face_u": [
+            278,
+            494
+          ],
+          "body_v": [
+            180,
+            579
+          ],
+          "flap_v": [
+            125,
+            180
+          ],
+          "tuck": {
+            "x": [
+              287,
+              486
+            ],
+            "y": [
+              84,
+              125
+            ],
+            "r": 20
+          },
+          "tab": {
+            "x": [
+              234,
+              278
+            ],
+            "y": [
+              136,
+              180
+            ]
+          }
+        },
+        "back": {
+          "spine_u": [
+            507,
+            563
+          ],
+          "face_u": [
+            563,
+            778
+          ],
+          "body_v": [
+            180,
+            581
+          ],
+          "flap": {
+            "x": [
+              508,
+              768
+            ],
+            "y": [
+              125,
+              180
+            ]
+          },
+          "tab": {
+            "x": [
+              729,
+              778
+            ],
+            "y": [
+              136,
+              180
+            ]
+          },
+          "tuck": {
+            "x": [
+              517,
+              713
+            ],
+            "y": [
+              87,
+              125
+            ],
+            "r": 20
+          }
+        },
+        "board": "#151819",
+        "mottle": "fbm 3 oct, cell 70 u, ±3 %",
+        "shade": "+3 % toward scuff color from v 280 to 580",
+        "speckle": "0.0006 per pixel, t 0.3–0.6"
+      },
+      "implementation": "Each panel is a union of rectangles (spine, face, flap, tab, rounded tuck) tested per pixel; the fill is the board color mixed 3 % toward the scuff color by a perlin mottle and a vertical shade, plus sparse one-pixel dots."
+    },
+    {
+      "id": "edge-scuff",
+      "short": "SCUF",
+      "name": "Edge scuff",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "distance-field",
+        "threshold",
+        "noise"
+      ],
+      "params": {
+        "edge": "1.1·exp(−d/2.5 u) + 0.1·exp(−d/10 u)",
+        "haze": "continuous tint 0.14·exp(−d/3 u) + 0.12·exp(−dc/14 u) + 0.06·exp(−df/2.5 u) under the dots",
+        "corner": "0.6·exp(−dc/16 u)",
+        "fold": "0.5·exp(−df/1.6 u) + 0.08·exp(−df/8 u)",
+        "gate": "0.15 + 0.85·smoothstep(0.3, 0.8, 0.5+0.5·fbm(p/18 u))",
+        "clump": "2.2·smoothstep(0.3, 0.72, 0.5+0.5·fbm(x/2.4 u, y/1.6 u))",
+        "dust": "0.006·exp(−d/10 u), speckle 0.0003",
+        "value": "t = 0.2 + 0.75·r^1.6 toward scuff color",
+        "seed": 1101
+      },
+      "implementation": "A chamfer distance transform gives d to the silhouette; dc is the distance to the nearest convex corner or fold junction and df to the spine crease or flap fold. A pixel turns lighter where a uniform random is below the summed density times the patch gate, so the wear reads as clustered abrasion rather than a line."
+    },
+    {
+      "id": "crease-line",
+      "short": "CRSE",
+      "name": "Crease line",
+      "layer": 1,
+      "pass": 2,
+      "atoms": [
+        "stroke",
+        "blur"
+      ],
+      "params": {
+        "count_per_panel": 3,
+        "width_u": 0.9,
+        "alpha": 0.11,
+        "blur_px": 1.5,
+        "path": "quadratic, 2 control points, length 120–220 u"
+      },
+      "implementation": "Faint diagonal strokes in the scuff color on a separate layer, blurred 1.5 px, then composited so the edges are soft."
+    },
+    {
+      "id": "sticker-layer",
+      "short": "STCK",
+      "name": "Sticker layer",
+      "layer": 2,
+      "pass": 3,
+      "atoms": [
+        "polygon",
+        "shadow",
+        "arc-gradient"
+      ],
+      "params": {
+        "price": {
+          "size_u": [
+            55,
+            37
+          ],
+          "rotate_deg": -6,
+          "corner_u": 3,
+          "tear": "jittered polygon, 2 u amplitude on the bottom and right edges",
+          "shadow": "rgba(0,0,0,0.5) offset 2 u blur 3 u"
+        },
+        "foil": {
+          "r_u": 18,
+          "wedges": 36,
+          "highlight": "radial white 0.55 at 35 % offset",
+          "ring": "dashed 0.8 u"
+        },
+        "label": {
+          "size_u": [
+            54,
+            62
+          ],
+          "rotate_deg": 3,
+          "band": "sticker color 12 u"
+        },
+        "flap_label": {
+          "size_u": [
+            86,
+            34
+          ],
+          "color": "#E8E6DE 0.9"
+        }
+      },
+      "implementation": "Each sticker is a filled path drawn over the worn board with its own drop shadow; the foil is 36 hue wedges on arcs under a radial highlight."
+    },
+    {
+      "id": "barcode-block",
+      "short": "BARC",
+      "name": "Barcode block",
+      "layer": 2,
+      "pass": 3,
+      "atoms": [
+        "bars",
+        "box",
+        "mono"
+      ],
+      "params": {
+        "box_u": [
+          88,
+          39
+        ],
+        "bars": 46,
+        "bar_w_u": "0.7–2.4 random (seed 1103)",
+        "gap_u": "0.6–1.6",
+        "digits": "JetBrains Mono 3.2 u under the bars",
+        "mini": {
+          "bars": 24,
+          "box_u": [
+            31,
+            16
+          ]
+        }
+      },
+      "implementation": "A white box, then random-width dark bars from a seeded sequence; the digit row is mono type below the bars."
+    },
+    {
+      "id": "edge-metadata",
+      "short": "META",
+      "name": "Edge metadata",
+      "layer": 2,
+      "pass": 3,
+      "atoms": [
+        "type",
+        "rotate",
+        "mono"
+      ],
+      "params": {
+        "headline": "Archivo 700, 32 u, 4 lines, pitch 37 u, at (340, 322)",
+        "flap_line": "Archivo 700, 6 u caps, centred",
+        "back_title": "Archivo 700, 10 u",
+        "body": "Inter 400, 4.6 u, 15 lines, width 92 u",
+        "meta_rows": "JetBrains Mono 3.6 u, two rows with boxed keys",
+        "spine": "Archivo 700, 8 u, rotated −90° on both spines",
+        "marks": "4-point star, globe, QR block, star box"
+      },
+      "implementation": "All lettering is live type in the three inlined fonts with invented plain words; spine text is drawn on a rotated context."
+    }
+  ],
+  "pass_order": [
+    "ground · flat fill",
+    "board · region test, mottle, shade, speckle per pixel",
+    "scuff · distance transform, corner and fold distances, threshold per pixel",
+    "crease · blurred strokes",
+    "print · flap label, headline, spine type, body text, meta rows",
+    "stickers · price, foil, label, with shadows",
+    "barcode · box, bars, digits, icon row",
+    "grain · mono, amp 0.05"
+  ],
+  "notes": [
+    "Measured on ref.png: board (21,24,25); scuff pixels mean lum 119; edge scuff density 0.3–0.6 in the first 2 px, 0 by 8 px; bottom corners 20–25 % light pixels in a 20 px square; interior speckle 0.06 % of pixels; orange sticker (243,153,63), 65 × 45 px; foil sticker r ≈ 23 px; barcode box 105 × 46 px; headline cap 28 px, pitch 44 px.",
+    "Seeds 1101 (scuff), 1102 (mottle), 1103 (bars), 1104 (crease)."
+  ]
+}

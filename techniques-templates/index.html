@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="only light">
+<link rel="icon" href="data:,">
+<title>Techniques &amp; Templates · ø co.</title>
+<link rel="stylesheet" href="_shared/fonts.css">
+<link rel="stylesheet" href="_shared/shell.css">
+</head>
+<body class="index-page" data-root="./">
+<nav class="nav" id="nav" aria-label="Site navigation"></nav>
+<main class="ix" id="ix"></main>
+<script src="_shared/entries.js"></script>
+<script>
+(function(){
+"use strict";
+const TT=window.TT;
+const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const nav=document.getElementById('nav'), ix=document.getElementById('ix');
+const count=s=>TT.entries.filter(e=>e.section===s).length;
+nav.innerHTML=`<a class="brand" href="index.html">${TT.mark}<span class="wm">IMP<i>Ø</i>SSIBLE</span></a><span class="crumb"><b>Techniques &amp; Templates</b></span><span class="pager"><span><span class="n">${TT.entries.length}</span>&nbsp;entries</span><a href="techniques.json" title="every technique, keyed by id">techniques.json</a></span>`;
+const allTech=[...new Set(TT.entries.flatMap(e=>e.techniques||[]))].sort();
+let sec=(location.hash||'#techniques').slice(1); if(!TT.sections.some(s=>s.id===sec))sec='techniques';
+let filter=null, filtersOpen=false;
+function render(){
+  const S=TT.sections.find(s=>s.id===sec);
+  const tabs=TT.sections.map(s=>`<a href="#${s.id}" class="${s.id===sec?'on':''}">${esc(s.title)} <i>${count(s.id)}</i></a>`).join('');
+  const chips=allTech.map(t=>`<span class="${t===filter?'on':''}" data-t="${t}">${t}</span>`).join('');
+  const es=TT.entries.filter(e=>e.section===sec);
+  const cards=es.map(e=>{
+    const hide=filter&&!(e.techniques||[]).includes(filter);
+    const sw=(e.variants||[])[0]||[];
+    const badges=[(e.variants||[]).length>1?e.variants.length+' variants':'', e.motion?'motion':'', e.live?'live':''].filter(Boolean).join(' · ');
+    const tks=(e.techniques||[]).map(esc).join(' · ');
+    return `<a class="card ${hide?'hide':''}" href="${e.path}index.html"><div class="pv"><img src="${e.path}thumb.png" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><div class="sw">${sw.map(c=>`<i style="background:${c}"></i>`).join('')}</div></div><div class="tx"><div class="code"><span>${esc(e.code)}</span>${badges?`<span>${esc(badges)}</span>`:''}</div><div class="ttl">${esc(e.title)}</div><div class="sub">${esc(e.sub)}</div>${tks?`<div class="tks">${tks}</div>`:''}</div></a>`;
+  }).join('');
+  const stub = sec==='templates'&&!es.length ? `<div class="card stub"><div class="code"><span>T-00</span></div><div class="ttl">First template lands here</div><div class="sub">A brief, a sheet, a deck — composed layouts on this shell. Add a folder under templates/, register it in the manifest, build.</div></div>` : '';
+  const filters = sec==='techniques' ? `<div class="filters ${filtersOpen||filter?'open':''}"><button type="button" class="ftog" aria-expanded="${filtersOpen||filter?'true':'false'}">Filter by technique <i>${filter?filter:allTech.length}</i></button><div class="chips">${chips}${filter?`<span class="clr" data-t="__clr">clear</span>`:''}</div></div>` : '';
+  ix.innerHTML=`<div class="hd"><h1>${esc(TT.title)}</h1><p>${esc(S.blurb)}</p></div><div class="tabs">${tabs}</div>${filters}<section><h2><span>${esc(S.title)}</span><span>${es.length} ${es.length===1?'entry':'entries'}</span></h2><div class="grid">${cards}${stub}</div>${filter&&!es.some(e=>(e.techniques||[]).includes(filter))?'<div class="empty">nothing filed under '+esc(filter)+'</div>':''}</section>`;
+  const tog=ix.querySelector('.ftog'); if(tog)tog.onclick=()=>{ filtersOpen=!filtersOpen; render(); };
+  ix.querySelectorAll('.chips span[data-t]').forEach(c=>c.onclick=ev=>{ ev.preventDefault(); filter=(c.dataset.t==='__clr'||filter===c.dataset.t)?null:c.dataset.t; render(); });
+}
+addEventListener('hashchange',()=>{ sec=location.hash.slice(1)||'techniques'; if(!TT.sections.some(s=>s.id===sec))sec='techniques'; filter=null; filtersOpen=false; render(); });
+render();
+})();
+</script>
+</body>
+</html>

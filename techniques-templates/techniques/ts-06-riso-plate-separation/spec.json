@@ -1,0 +1,230 @@
+{
+  "id": "ts-06-riso-plate-separation",
+  "code": "TS-06",
+  "title": "Riso three-plate separation",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "All plates",
+      "swatches": [
+        "#E9E566",
+        "#614C90",
+        "#D859A3"
+      ]
+    },
+    {
+      "id": "y",
+      "label": "Yellow only",
+      "swatches": [
+        "#E9E566"
+      ]
+    },
+    {
+      "id": "b",
+      "label": "Blue only",
+      "swatches": [
+        "#614C90"
+      ]
+    },
+    {
+      "id": "p",
+      "label": "Pink only",
+      "swatches": [
+        "#D859A3"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "Ember / blue / ink",
+      "swatches": [
+        "#F4551E",
+        "#2F5AE6",
+        "#101014"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      1080,
+      1080
+    ],
+    "grammar": "three-plate risograph of an isometric drawing on grid stock: yellow, blue, fluorescent pink; plates mis-registered by a few px; each plate grained; marbled top faces; keyline near-black where plates overprint"
+  },
+  "units": "design units, 1000 = sheet width",
+  "palette": {
+    "stock": "#EEEEEC",
+    "grid_ink": "#5A5880",
+    "yellow": "#E9E566",
+    "blue": "#614C90",
+    "pink": "#D859A3",
+    "blue_over_pink": "#52205C",
+    "all_three": "#3A2018"
+  },
+  "techniques": [
+    {
+      "id": "iso-extrude",
+      "short": "EXTR",
+      "name": "Isometric extrusion by outline drop",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "isometric",
+        "extrude",
+        "painter-order"
+      ],
+      "params": {
+        "axes": "x → (cos30, sin30), y → (−cos30, sin30), z → (0, −1)",
+        "letters": {
+          "font": "Archivo 900",
+          "size_u": 235,
+          "depth_u": 85
+        },
+        "slabs": {
+          "depth_u": [
+            40,
+            30,
+            24
+          ]
+        },
+        "bars": {
+          "depth_u": 52
+        },
+        "probe_px": "(±2,+1)"
+      },
+      "implementation": "Each object is a top-face mask drawn in the plane transform; a column scan drops every boundary pixel whose +x or +y probe is empty by the depth, labelling right or left face, top always winning; later objects overwrite earlier ones."
+    },
+    {
+      "id": "plate-separation",
+      "short": "PLTE",
+      "name": "Three-plate coverage split",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "separation",
+        "multiply",
+        "coverage"
+      ],
+      "params": {
+        "yellow": "top faces + corner wash + marker strokes",
+        "blue": "right faces + keylines",
+        "pink": "left faces + keylines + marble",
+        "keyline": "on all three plates",
+        "keyline_u": 3.6,
+        "composite": "multiply",
+        "max_coverage": 1
+      },
+      "implementation": "Face labels become three coverage rasters; each raster is coloured mix(white, ink, coverage) on its own canvas and multiplied onto the stock in plate order."
+    },
+    {
+      "id": "misregister",
+      "short": "MREG",
+      "name": "Per-plate register error",
+      "layer": 2,
+      "pass": 3,
+      "atoms": [
+        "translate",
+        "offset"
+      ],
+      "params": {
+        "yellow_u": [
+          -3,
+          2
+        ],
+        "blue_u": [
+          1,
+          -2
+        ],
+        "pink_u": [
+          4,
+          3
+        ],
+        "measured_px": "pink +3,+2 · yellow −2,+1 relative to blue"
+      },
+      "implementation": "Each plate canvas is drawn translated by its own vector; the keyline sits on all three plates, so the offsets show as coloured fringes on every edge and the overprint of all three is the near-black line."
+    },
+    {
+      "id": "ink-grain",
+      "short": "GRN",
+      "name": "Per-plate ink grain",
+      "layer": 3,
+      "pass": 2,
+      "atoms": [
+        "grain",
+        "mottle",
+        "edge-thinning"
+      ],
+      "params": {
+        "amp": [
+          0.1,
+          0.12,
+          0.11
+        ],
+        "seeds": [
+          601,
+          602,
+          603
+        ],
+        "pitch_px": 1,
+        "stochastic_thin": "coverage × (1 − 0.4·rand)",
+        "edge_thin": "coverage × (0.72 + 0.28·blur(coverage, 4 u))",
+        "mottle": "0.86 + 0.14·perlin(p / 60 u)"
+      },
+      "implementation": "Before colouring, coverage is multiplied by a blurred copy of itself so fills thin toward their edges, and by a slow perlin mottle; after colouring ART.grain runs mono on the plate and paper pixels are reset to white."
+    },
+    {
+      "id": "marbled-fill",
+      "short": "MARB",
+      "name": "Marbled fill from fbm bands",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "fbm",
+        "threshold",
+        "band"
+      ],
+      "params": {
+        "scale_u": 30,
+        "octaves": 4,
+        "gain": 0.6,
+        "band_core": "|n| < 0.055 → coverage 0",
+        "band_rim": "|n| < 0.10 → coverage 0.5",
+        "elsewhere": 1
+      },
+      "implementation": "Inside the top faces the pink plate is full except where an fbm field crosses zero: the core of the band is paper, the rim half-coverage, which reads as swirls."
+    },
+    {
+      "id": "grid-stock",
+      "short": "STCK",
+      "name": "Isometric grid stock",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "stock",
+        "grid",
+        "isometric"
+      ],
+      "params": {
+        "stock": "#EEEEEC",
+        "vertical_pitch_u": 31.5,
+        "diagonals": "±30° through the same lattice, 18.2 u apart along a vertical",
+        "alpha": 0.16,
+        "width_u": 1
+      },
+      "implementation": "Flat gray fill, then verticals and both diagonal families stroked in the grid ink at 16 % before any plate lands."
+    }
+  ],
+  "pass_order": [
+    "stock · gray fill + iso grid",
+    "labels · top / right / left per object, back to front",
+    "coverage · three rasters from labels, marble cut into pink, wash and strokes into yellow",
+    "grain · edge thinning, mottle, mono noise per plate",
+    "plates · multiply in order yellow, blue, pink, each translated by its register error"
+  ],
+  "notes": [
+    "Measured on ref.png: vertical grid pitch 34 px (31.5 u); diagonal spacing along a vertical 19.6 px; grid pixels 14 % darker than stock; stock (234,234,237) std 12 / 255; yellow (233,230,102); pink face (215,144,189) std 45; blue over pink (98,44,117); keyline (60,30,20).",
+    "Pink lands 3 px right and 2 px down of blue; yellow 2 px left and 1 px down; the rebuild gives blue its own +1,−2 u so all three plates move in the motion version.",
+    "Words are invented. Seeds 601–603, marble 610, mottle 611."
+  ]
+}
