@@ -129,14 +129,18 @@
         "oscillation"
       ],
       "params": {
-        "sheet": "δ = (d0 + A · sign(c)|c|^shape) · (1 + pin/r), c = cos(k · θw + flow · t)",
+        "sheet": "δ = (d0 + A · sign(c)|c|^shape) · (1 + pin/r), c = cos(k · θw + ph + flow · t); shape for the peaks (blue), shapeN for the dips (pale) — the pale lanes are the narrow ones",
         "ref": {
-          "d0": 470,
-          "A": 190,
+          "d0": 520,
+          "A": 200,
           "shape": 2,
-          "k": 5,
+          "shapeN": 3.5,
+          "k": 7,
+          "ph": 1,
+          "rad": -80,
           "pin": 0
         },
+        "radial": "+ rad · r — orange near the focus, red far out",
         "load": "δ = K · |σ1 − σ2| from Σ Flamant point loads (σr = −2F cos(θ−α)/(π r^decay)) + a uniform stress",
         "uniaxial": "δ = d0 + c · r²",
         "biaxial": "δ = d0 + c · |p − A| · |p − B| (Cassini ovals)",
@@ -157,15 +161,16 @@
         "warp"
       ],
       "params": {
+        "domain_warp": "(x, y) += wa · noise2((x, y) · wf), 2-octave value noise, wa .1 W, wf 1.2; the same hash in JS and GLSL",
         "sheet": "ψ = θw + twist · r + spiral · ln r",
         "load": "ψ = ½ · atan2(2τ, σx − σy) (principal direction)",
         "uniaxial": "ψ = θ",
         "biaxial": "ψ = ½(θA + θB)",
         "ribbon": "ψ = tangent",
         "ring": "ψ = θ + 90°",
-        "warp": "θw = θ + .5 · (sin(3θ + 1.1)/3 + sin(5θ + 2.7)/5)"
+        "warp": "θw = θ + 1.0 · (sin(3θ + 1.0)/3 + sin(5θ + 3.5)/5)"
       },
-      "implementation": "ψ decides where the isoclinics fall; warping θ before use makes lanes of unequal width without breaking the physics."
+      "implementation": "ψ decides where the isoclinics fall. The domain warp bends the sheet — the plates are not flat starbursts — and warping θ makes lanes of unequal width; neither breaks the physics because δ and ψ are still evaluated from one coordinate."
     },
     {
       "id": "isoclinic",
@@ -179,12 +184,13 @@
         "wedge"
       ],
       "params": {
-        "term": "sin²(m · (ψ − β + skew · sin(ψ − β)))^sharp",
+        "term": "sin²(m · (ψ − β + skew · sin(ψ − β)))^sharp, sharp for the β arm and sharp2 for the β + 180° arm",
         "ref": {
           "m": 1,
-          "beta": -95,
-          "skew": 0.15,
-          "sharp": 1.2
+          "beta": -90,
+          "skew": 0.1,
+          "sharp": 4,
+          "sharp2": 1.2
         },
         "circular": "circ mixes toward 1 (a circular polariscope removes isoclinics)",
         "note": "m = 2 is the physical crossed-polar cross (four arms); the plates read as two arms, m = 1, one polarizer effective"
@@ -204,7 +210,7 @@
       ],
       "params": {
         "pinch": "smoothstep(0, core, r), core .02",
-        "vignette": "1 − .2 r²",
+        "vignette": "1 − .4 r²",
         "lobe_gain": ".8 + .2 · sin(2.3θ + .6)",
         "floor": [
           14,
@@ -227,8 +233,9 @@
         "shoulder"
       ],
       "params": {
-        "hue_grade": "after gamma, hues pulled .75 of the way toward 12° (warm) or 196° (cool), whichever is nearer; saturation × 1.4 first",
-        "blue_roll": "saturation × (1 − .85 · ((δ − 480)/200)²) for δ > 480",
+        "hue_grade": "after gamma, hues pulled .75 of the way toward 6° (warm) or 196° (cool), whichever is nearer; saturation × 1.4 first",
+        "bloom": "highlights (brightness .8, contrast 2.5 → a threshold near L .4) blurred at σ .05 W and added at .4 — the glow along the hot edges",
+        "blue_roll": "saturation × (1 − .85 · ((δ − 480)/150)²) for δ > 480",
         "shoulder": "x/(1 + .25x), then highlights above L .6 desaturate .85 toward a pink-white",
         "measured": "plates carry no yellow, no green, no magenta — the grade explains the absence; band means: (235,182,147) (232,143,94) (225,95,57) (185,53,40) red side, (165,196,199) (120,154,165) (79,105,116) blue side, white (222,190,184)"
       },
@@ -245,7 +252,7 @@
         "gaussian"
       ],
       "params": {
-        "sigma": "0.012 · W",
+        "sigma": "0.004 · W",
         "measured": "p99 horizontal gradient 12/255 per px at 1600 px"
       },
       "implementation": "One gaussian over the finished color image; blurring after the chart is what mixes neighboring lanes into the grey-mauve transitions."
@@ -290,14 +297,16 @@
   ],
   "pass_order": [
     "chart · integrate the spectrum once → color(δ)",
+    "warp · (x,y) += wa · noise2",
     "field · δ(x,y) and ψ(x,y) for the family",
-    "isoclinic · sin²(m(ψ − β))",
+    "isoclinic · sin²(m(ψ − β))^sharp",
     "envelope · pinch × vignette × lobe gain, mix from the floor",
-    "defocus · gaussian σ .012 W",
+    "defocus · gaussian σ .004 W",
+    "bloom · thresholded highlights, σ .05 W, add .4",
     "grain · mono ×(1 + .02 n)"
   ],
   "notes": [
-    "The chart parameters were fitted against band means measured over all 21 plates; the field parameters against plate 09 (focus (0.47, 0.345 W), two isoclinic arms at −80° and ≈ 100°).",
+    "The chart parameters were tuned by eye against the 21 plates; the field parameters against plate 09 (focus (0.47, 0.345 W), a wide isoclinic arm straight up and a narrower one straight down).",
     "Motion is CPU on a 400 px work canvas in the plate; engine.html is the GPU version.",
     "engine.html carries a first-pass preset for every plate (by eye) — refine with the sliders, Copy JSON."
   ]

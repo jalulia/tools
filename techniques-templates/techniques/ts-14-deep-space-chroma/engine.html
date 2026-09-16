@@ -54,7 +54,7 @@ window.CHROMA=(function(){
   const M=[[3.2406,-1.5372,-0.4986],[-0.9689,1.8758,0.0415],[0.0557,-0.2040,1.0570]];
   /* Michel-Lévy chart for a crossed polariscope: color(δ) for δ = 0 … N−1 nm.
      opts: T (K), wb (0..1 partial von Kries to D65), exposure, sat, blueRoll (desaturate δ>480), grade (hue compression 0..1 toward warm/cool anchors, applied in display space), gdip (green dip of the source), leak (unpolarized leak through the analyser: imperfect extinction lifts the dark bands to crimson), warm/cool (anchor hues, deg) */
-  C.chart=function(o){ o=Object.assign({T:3000,wb:0.6,exposure:0.8,sat:1.4,blueRoll:0.85,grade:0.75,gdip:0.1,leak:0.06,warm:12,cool:196,N:1600},o||{});
+  C.chart=function(o){ o=Object.assign({T:3000,wb:0.6,exposure:0.8,sat:1.4,blueRoll:0.85,grade:0.75,gdip:0.1,leak:0.06,warm:6,cool:196,N:1600},o||{});
     const lam=[]; for(let l=380;l<=720;l+=4)lam.push(l); const S=[],CM=[]; let smax=0;
     for(const l of lam){ let s=planck(l,o.T); s*=1-o.gdip*Math.exp(-((l-548)/48)*((l-548)/48)); S.push(s); if(s>smax)smax=s; CM.push(cmf(l)); }
     for(let i=0;i<S.length;i++)S[i]/=smax;
@@ -64,7 +64,7 @@ window.CHROMA=(function(){
     for(let d=0;d<o.N;d++){ let X=0,Y=0,Z=0; for(let i=0;i<lam.length;i++){ const s=Math.sin(Math.PI*d/lam[i]); const tr=(s*s*(1-o.leak)+o.leak)*S[i]; X+=tr*CM[i][0]; Y+=tr*CM[i][1]; Z+=tr*CM[i][2]; }
       const k=2.0*o.exposure/white[1]; X*=scale[0]*k; Y*=scale[1]*k; Z*=scale[2]*k;
       let r=Math.max(0,M[0][0]*X+M[0][1]*Y+M[0][2]*Z), gg=Math.max(0,M[1][0]*X+M[1][1]*Y+M[1][2]*Z), b=Math.max(0,M[2][0]*X+M[2][1]*Y+M[2][2]*Z);
-      let L=0.2126*r+0.7152*gg+0.0722*b; const roll=Math.min(1,Math.max(0,(d-480)/200)); const sat=o.sat*(1-o.blueRoll*roll*roll);
+      let L=0.2126*r+0.7152*gg+0.0722*b; const roll=Math.min(1,Math.max(0,(d-480)/150)); const sat=o.sat*(1-o.blueRoll*roll*roll);
       r=L+(r-L)*sat; gg=L+(gg-L)*sat; b=L+(b-L)*sat; r=Math.max(0,r); gg=Math.max(0,gg); b=Math.max(0,b);
       r=r/(1+r*0.25); gg=gg/(1+gg*0.25); b=b/(1+b*0.25);
       L=0.2126*r+0.7152*gg+0.0722*b; let t=Math.min(1,Math.max(0,(L-0.6)/0.45)); t=t*t*(3-2*t)*0.85;
@@ -78,25 +78,30 @@ window.CHROMA=(function(){
       out[d*3]=r; out[d*3+1]=gg; out[d*3+2]=b; }
     return out; };
   /* field: δ (nm), ψ (rad), env (0..1) at normalized x,y (width = 1), time t */
+  /* 2-octave value noise in [-1,1] — the same hash as the shader, so the warp matches */
+  const hsh=(i,j)=>{ const v=Math.sin(i*127.1+j*311.7)*43758.5453; return v-Math.floor(v); };
+  const vn=(x,y)=>{ const i=Math.floor(x), j=Math.floor(y); let fx=x-i, fy=y-j; fx=fx*fx*(3-2*fx); fy=fy*fy*(3-2*fy); const a=hsh(i,j),b=hsh(i+1,j),c=hsh(i,j+1),d=hsh(i+1,j+1); return ((a+(b-a)*fx)*(1-fy)+(c+(d-c)*fx)*fy)*2-1; };
+  C.noise=(x,y)=>vn(x,y)+0.5*vn(x*2.1+5.2,y*2.1+1.7);
   C.field=function(P,x,y,t){
     let delta=0, psi=0, env=1; const cx=P.cx||0.5, cy=P.cy||0.35;
+    if(P.wa){ /* domain warp: the sheet is not flat — lanes bend and thicken */ const f=P.wf||2.2, dr=(P.wdrift||0)*t; x+=P.wa*C.noise(x*f+7.3+dr,y*f+1.1); y+=P.wa*C.noise(x*f+3.7,y*f+9.2+dr); }
     if(P.type==='ribbon'){ const ph=TAU*(P.freq*x+P.ph+0.01*t); const yc=cy+P.amp*Math.sin(ph)+(P.tilt||0)*(x-0.5); const dy=P.amp*TAU*P.freq*Math.cos(ph)+(P.tilt||0); const d=(y-yc)/Math.sqrt(1+dy*dy);
       delta=P.d0+P.A*Math.tanh(d/P.period)+40*Math.sin((P.flow||0)*t); psi=Math.atan(dy); env=Math.exp(-(d/P.width)*(d/P.width)*2)*(1-(P.vig||0)*((x-0.5)*(x-0.5)+(y-0.35)*(y-0.35))); }
     else if(P.type==='ring'){ const dx=x-cx, dy=y-cy, r=Math.hypot(dx,dy), th=Math.atan2(dy,dx); const d=r-P.R; delta=P.d0+P.A*Math.tanh(d/P.period)+40*Math.sin((P.flow||0)*t); psi=th+Math.PI/2;
       env=Math.exp(-(d/P.width)*(d/P.width)*2); const s=Math.min(1,Math.max(0,(r-P.R0)/0.03)); env*=s*s*(3-2*s); env*=1-(P.vig||0)*r*r; }
     else if(P.type==='load'){ let sx=P.sx||0, sy=P.sy||0, txy=P.txy||0; for(const L of P.loads){ const dx=x-L[0], dy=y-L[1]; const r=Math.hypot(dx,dy)+0.004; const th=Math.atan2(dy,dx); const a=L[2]*Math.PI/180; const sr=-2*L[3]*Math.cos(th-a)/(Math.PI*Math.pow(r,P.decay||1));
         const c=Math.cos(th), s=Math.sin(th); sx+=sr*c*c; sy+=sr*s*s; txy+=sr*s*c; }
-      const ds=Math.sqrt((sx-sy)*(sx-sy)+4*txy*txy); delta=(P.K||1)*ds; psi=0.5*Math.atan2(2*txy,sx-sy); const dx=x-cx, dy=y-cy, r=Math.hypot(dx,dy); const s=Math.min(1,Math.max(0,r/(P.core||0.02))); env=s*s*(3-2*s)*(1-(P.vig||0)*r*r); }
+      const ds=Math.sqrt((sx-sy)*(sx-sy)+4*txy*txy); delta=(P.dmin||0)+(P.K||1)*ds; psi=0.5*Math.atan2(2*txy,sx-sy); const dx=x-cx, dy=y-cy, r=Math.hypot(dx,dy); const s=Math.min(1,Math.max(0,r/(P.core||0.02))); env=s*s*(3-2*s)*(1-(P.vig||0)*r*r); }
     else if(P.type==='uniaxial'){ const dx=x-cx, dy=y-cy, r=Math.hypot(dx,dy); delta=P.d0+P.c*r*r; psi=Math.atan2(dy,dx); env=1-(P.vig||0)*r*r; }
     else if(P.type==='biaxial'){ const ax=cx-P.sep/2, bx=cx+P.sep/2; const dax=x-ax, day=y-cy, dbx=x-bx, dby=y-cy; const ra=Math.hypot(dax,day), rb=Math.hypot(dbx,dby); delta=P.d0+P.c*ra*rb; psi=0.5*(Math.atan2(day,dax)+Math.atan2(dby,dbx)); const r=Math.hypot(x-cx,y-cy); env=1-(P.vig||0)*r*r; }
     else { /* sheet: oriented lobes around a focus */ const dx=x-cx, dy=y-cy, r=Math.hypot(dx,dy); const th=Math.atan2(dy,dx)+(P.rot||0)*t; const w=th+P.warp*(Math.sin(3*th+P.s1+0.05*t)/3+Math.sin(5*th+P.s2)/5);
-      let osc=Math.cos(P.k*w+(P.flow||0)*t); osc=Math.sign(osc)*Math.pow(Math.abs(osc),P.shape||1); const d0=P.d0+(P.breath||0)*Math.sin(0.4*t);
-      delta=(d0+P.A*osc)*(1+(P.pin||0)/(r+0.01)); psi=th+(P.twist||0)*r+(P.spiral||0)*Math.log(r+0.002); const s=Math.min(1,Math.max(0,r/(P.core||0.02))); env=s*s*(3-2*s)*(1-(P.vig||0)*r*r);
+      let osc=Math.cos(P.k*w+(P.ph||0)+(P.flow||0)*t); osc=Math.sign(osc)*Math.pow(Math.abs(osc),osc<0?(P.shapeN!==undefined?P.shapeN:(P.shape||1)):(P.shape||1)); /* shapeN sharpens the dips: the pale lanes are narrower than the red ones */ const d0=P.d0+(P.breath||0)*Math.sin(0.4*t);
+      delta=(d0+P.A*osc+(P.rad||0)*r)*(1+(P.pin||0)/(r+0.01)); psi=th+(P.twist||0)*r+(P.spiral||0)*Math.log(r+0.002); const s=Math.min(1,Math.max(0,r/(P.core||0.02))); env=s*s*(3-2*s)*(1-(P.vig||0)*r*r);
       if(P.lobe)env*=P.lobe[0]+P.lobe[1]*(0.5+0.5*Math.sin(th*P.lobe[2]+P.lobe[3]));
       for(const o of (P.occ||[])){ let d=th-o[0]*Math.PI/180; d=Math.abs(Math.atan2(Math.sin(d),Math.cos(d))); const hw=o[1]*Math.PI/180, fe=(o[2]!==undefined?o[2]:o[1]*0.4)*Math.PI/180; let q=(d-(hw-fe))/(2*fe); q=q<0?0:q>1?1:q; env*=q*q*(3-2*q); } }
     return [Math.min(1599,Math.max(0,delta)),psi,Math.max(0,Math.min(1,env*(P.gain||1)))]; };
   /* isoclinic term of a plane polariscope: sin²(m(ψ−β)) with a skew, sharpness, and a mix toward a circular polariscope */
-  C.iso=function(P,psi,t){ const beta=(P.beta+(P.spin||0)*t)*Math.PI/180; const pp=psi-beta+(P.skew||0)*Math.sin(psi-beta); let s=Math.sin((P.m||2)*pp); s=Math.pow(s*s,P.sharp||1); return (P.circ||0)+(1-(P.circ||0))*s; };
+  C.iso=function(P,psi,t){ const beta=(P.beta+(P.spin||0)*t)*Math.PI/180; const pp=psi-beta+(P.skew||0)*Math.sin(psi-beta); let s=Math.sin((P.m||2)*pp); const near=Math.cos(pp)>0; /* nearer the β arm or the β+180 arm — each arm has its own width */ s=Math.pow(s*s,near?(P.sharp||1):(P.sharp2!==undefined?P.sharp2:(P.sharp||1))); return (P.circ||0)+(1-(P.circ||0))*s; };
   return C;
 })();
 
@@ -105,15 +110,15 @@ window.CHROMA=(function(){
 const $=id=>document.getElementById(id);
 const q=new URLSearchParams(location.search); const EMBED=q.get('embed')==='1'; if(EMBED)document.body.classList.add('embed');
 const FLOOR=[14,13,12];
-const SHEET=(o)=>Object.assign({type:'sheet',cx:0.5,cy:0.35,k:5,warp:0.5,s1:1.1,s2:2.7,d0:470,A:190,shape:2,pin:0,twist:0,spiral:0,beta:-80,m:1,skew:0.3,sharp:1.3,circ:0,core:0.02,vig:0.2,lobe:[0.8,0.2,2.3,0.6],spin:2,breath:40,flow:0.15,rot:0.01,occ:[]},o);
-const LOAD=(o)=>Object.assign({type:'load',cx:0.5,cy:0.35,loads:[[0.5,0.35,-90,60]],sx:50,sy:-25,txy:15,K:6,decay:0.4,beta:-90,m:2,sharp:1,circ:0.15,core:0.02,vig:0.5,spin:3},o);
+const SHEET=(o)=>Object.assign({type:'sheet',cx:0.5,cy:0.35,k:7,warp:1.0,s1:1.0,s2:3.5,ph:1.0,d0:520,A:200,shape:2,shapeN:3.5,rad:-80,pin:0,twist:0,spiral:0,beta:-90,m:1,skew:0.1,sharp:4,sharp2:1.2,circ:0,core:0.02,vig:0.4,lobe:[0.8,0.2,2.3,0.6],wa:0.1,wf:1.2,wdrift:0.02,spin:2,breath:40,flow:0.15,rot:0.01,blur:0.004,bloom:0.4,occ:[]},o);
+const LOAD=(o)=>Object.assign({type:'load',cx:0.5,cy:0.35,loads:[[0.5,0.35,-90,15]],sx:30,sy:-15,txy:10,K:3,dmin:420,decay:0.4,beta:-90,m:2,sharp:1,circ:0.15,core:0.02,vig:0.5,spin:3},o);
 const RB=(o)=>Object.assign({type:'ribbon',cy:0.36,amp:0.13,freq:0.9,ph:0.15,period:0.12,width:0.2,tilt:0,d0:480,A:330,beta:-70,m:1,sharp:0.8,circ:0.5,vig:0.2,flow:0.3},o);
 const RG=(o)=>Object.assign({type:'ring',cx:0.72,cy:0.36,R:0.16,R0:0.06,period:0.08,width:0.16,d0:480,A:330,beta:-45,m:2,sharp:0.7,circ:0.6,vig:0.3,flow:0.3},o);
 const UNI=(o)=>Object.assign({type:'uniaxial',cx:0.5,cy:0.35,d0:480,c:600,beta:-45,m:2,sharp:1,circ:0,vig:1.5,spin:4},o);
 const BI=(o)=>Object.assign({type:'biaxial',cx:0.5,cy:0.35,sep:0.3,d0:460,c:1200,beta:-45,m:2,sharp:1,circ:0,vig:1.5,spin:4},o);
 const PRESETS=[
   ['ref','Study · sheet (plate 09)',SHEET({cx:0.47,cy:0.345})],
-  ['load','Study · point loads',LOAD({cx:0.47,cy:0.345,loads:[[0.47,0.345,-95,60],[0.15,0.62,-20,45],[0.88,0.10,160,40]],beta:-95})],
+  ['load','Study · point loads',LOAD({cx:0.47,cy:0.345,loads:[[0.47,0.345,-95,15],[0.15,0.62,-20,12],[0.88,0.10,160,10]],beta:-95,K:3,dmin:420,sx:30,sy:-15,txy:10,wa:0.06,wf:1.5})],
   ['uniaxial','Study · uniaxial conoscope',UNI({})],
   ['biaxial','Study · biaxial conoscope',BI({})],
   ['ribbon','Study · ribbon',RB({tilt:-0.15})],
@@ -140,15 +145,16 @@ const PRESETS=[
   ['p20','Plate 20 · six-fold (biaxial)',BI({cx:0.5,cy:0.36,sep:0.2,c:1500,beta:-90,sharp:1.3,vig:1.6})],
   ['p21','Plate 21 · black hole ring',RG({cx:0.75,cy:0.36,R:0.14,R0:0.08,period:0.10,width:0.15})]
 ];
-const SL={sheet:['k','warp','d0','A','shape','pin','twist','spiral','beta','m','skew','sharp','circ','core','vig','spin','breath','flow'],load:['K','decay','sx','sy','txy','beta','m','sharp','circ','core','vig','spin'],uniaxial:['d0','c','beta','m','sharp','circ','vig','spin'],biaxial:['sep','d0','c','beta','m','sharp','circ','vig','spin'],ribbon:['amp','freq','period','width','tilt','d0','A','beta','m','sharp','circ','vig','flow'],ring:['R','R0','period','width','d0','A','beta','m','sharp','circ','vig','flow']};
-const RANGE={k:[1,12,1],warp:[0,1,0.01],d0:[0,1200,10],A:[0,600,10],shape:[0.3,4,0.05],pin:[0,0.2,0.005],twist:[-4,4,0.05],spiral:[0,2.5,0.05],beta:[-180,180,1],m:[1,2,1],skew:[0,0.5,0.01],sharp:[0.2,4,0.05],circ:[0,1,0.01],core:[0,0.15,0.005],vig:[0,2,0.01],spin:[0,20,0.5],breath:[0,200,5],flow:[0,1,0.01],K:[1,30,0.5],decay:[0.2,2,0.05],sx:[-400,400,5],sy:[-400,400,5],txy:[-400,400,5],c:[0,6000,50],sep:[0,0.8,0.01],amp:[0,0.3,0.005],freq:[0.2,1.5,0.01],period:[0.04,0.3,0.005],width:[0.04,0.4,0.005],tilt:[-2,2,0.05],R:[0.04,0.3,0.005],R0:[0,0.2,0.005],blur:[0,0.03,0.001],grain:[0,0.06,0.002]};
-let P=JSON.parse(JSON.stringify(PRESETS[0][2])); let blur=0.012, grain=0.02, playing=true, t0=performance.now(), tAcc=0;
+const SL={sheet:['wa','wf','k','ph','warp','rad','shapeN','d0','A','shape','pin','twist','spiral','beta','m','skew','sharp','sharp2','circ','core','vig','spin','breath','flow'],load:['wa','wf','dmin','K','decay','sx','sy','txy','beta','m','sharp','circ','core','vig','spin'],uniaxial:['d0','c','beta','m','sharp','circ','vig','spin'],biaxial:['sep','d0','c','beta','m','sharp','circ','vig','spin'],ribbon:['amp','freq','period','width','tilt','d0','A','beta','m','sharp','circ','vig','flow'],ring:['R','R0','period','width','d0','A','beta','m','sharp','circ','vig','flow']};
+const RANGE={k:[1,12,1],warp:[0,1,0.01],d0:[0,1200,10],A:[0,600,10],shape:[0.3,4,0.05],shapeN:[0.3,6,0.05],pin:[0,0.2,0.005],twist:[-4,4,0.05],spiral:[0,2.5,0.05],beta:[-180,180,1],m:[1,2,1],skew:[0,0.5,0.01],sharp:[0.2,6,0.05],sharp2:[0.2,6,0.05],circ:[0,1,0.01],core:[0,0.15,0.005],vig:[0,2,0.01],spin:[0,20,0.5],breath:[0,200,5],flow:[0,1,0.01],K:[1,30,0.5],decay:[0.2,2,0.05],sx:[-400,400,5],sy:[-400,400,5],txy:[-400,400,5],c:[0,6000,50],sep:[0,0.8,0.01],amp:[0,0.3,0.005],freq:[0.2,1.5,0.01],period:[0.04,0.3,0.005],width:[0.04,0.4,0.005],tilt:[-2,2,0.05],R:[0.04,0.3,0.005],R0:[0,0.2,0.005],blur:[0,0.03,0.001],bloom:[0,1,0.01],grain:[0,0.06,0.002],wa:[0,0.3,0.005],wf:[0.5,6,0.1],wdrift:[0,0.5,0.01],dmin:[0,800,10],rad:[-600,600,10],ph:[0,6.28,0.01]};
+let P=JSON.parse(JSON.stringify(PRESETS[0][2])); let blur=0.004, grain=0.02, bloom=0.5, playing=true, t0=performance.now(), tAcc=0;
 
 /* ---------- WebGL ---------- */
 const gl=document.createElement('canvas').getContext('webgl',{preserveDrawingBuffer:true,antialias:false});
 const VS='attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
 const FS=`precision highp float;
 uniform vec2 u_res;uniform float u_t;uniform int u_type;uniform vec2 u_c;
+uniform float u_wa,u_wf,u_wdrift,u_dmin,u_rad,u_sharp2,u_shapeN;
 uniform float u_k,u_warp,u_s1,u_s2,u_d0,u_A,u_shape,u_pin,u_twist,u_spiral,u_beta,u_m,u_skew,u_sharp,u_circ,u_core,u_vig,u_spin,u_breath,u_flow,u_rot,u_gain;
 uniform vec4 u_lobe;uniform vec3 u_occ[4];uniform int u_nocc;
 uniform vec4 u_loads[6];uniform int u_nl;uniform float u_K,u_decay,u_sx,u_sy,u_txy;
@@ -157,21 +163,25 @@ uniform vec3 u_floor;uniform sampler2D u_chart;
 const float PI=3.14159265359;const float TAU=6.28318530718;
 float tanh_(float x){ float e=exp(2.*clamp(x,-20.,20.)); return (e-1.)/(e+1.); }
 float sstep(float e,float x){float s=clamp(x/max(e,1e-4),0.,1.);return s*s*(3.-2.*s);}
+float hsh(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f); float a=hsh(i),b=hsh(i+vec2(1.,0.)),c=hsh(i+vec2(0.,1.)),d=hsh(i+vec2(1.,1.)); return mix(mix(a,b,f.x),mix(c,d,f.x),f.y)*2.-1.; }
+float noise2(vec2 p){ return vn(p)+0.5*vn(p*2.1+vec2(5.2,1.7)); }
 void main(){
   vec2 uv=vec2(gl_FragCoord.x,u_res.y-gl_FragCoord.y)/u_res.x; float x=uv.x,y=uv.y; float delta=0.,psi=0.,env=1.; float t=u_t;
+  if(u_wa>0.){ float dr=u_wdrift*t; float nx=noise2(vec2(x*u_wf+7.3+dr,y*u_wf+1.1)); float ny=noise2(vec2(x*u_wf+3.7,y*u_wf+9.2+dr)); x+=u_wa*nx; y+=u_wa*ny; }
   if(u_type==1){ float ph=TAU*(u_freq*x+u_ph+0.01*t); float yc=u_c.y+u_amp*sin(ph)+u_tilt*(x-.5); float dy=u_amp*TAU*u_freq*cos(ph)+u_tilt; float d=(y-yc)/sqrt(1.+dy*dy);
     delta=u_d0+u_A*tanh_(d/u_period)+40.*sin(u_flow*t); psi=atan(dy); env=exp(-(d/u_width)*(d/u_width)*2.)*(1.-u_vig*((x-.5)*(x-.5)+(y-.35)*(y-.35))); }
   else if(u_type==2){ vec2 dv=vec2(x,y)-u_c; float r=length(dv); float th=atan(dv.y,dv.x); float d=r-u_R; delta=u_d0+u_A*tanh_(d/u_period)+40.*sin(u_flow*t); psi=th+PI/2.;
     env=exp(-(d/u_width)*(d/u_width)*2.)*sstep(.03,r-u_R0)*(1.-u_vig*r*r); }
   else if(u_type==3){ float sx=u_sx,sy=u_sy,txy=u_txy; for(int i=0;i<6;i++){ if(i>=u_nl)break; vec2 dv=vec2(x,y)-u_loads[i].xy; float r=length(dv)+.004; float th=atan(dv.y,dv.x); float a=u_loads[i].z; float sr=-2.*u_loads[i].w*cos(th-a)/(PI*pow(r,u_decay)); float c=cos(th),s=sin(th); sx+=sr*c*c; sy+=sr*s*s; txy+=sr*s*c; }
-    delta=u_K*sqrt((sx-sy)*(sx-sy)+4.*txy*txy); psi=.5*atan(2.*txy,sx-sy); float r=length(vec2(x,y)-u_c); env=sstep(u_core,r)*(1.-u_vig*r*r); }
+    delta=u_dmin+u_K*sqrt((sx-sy)*(sx-sy)+4.*txy*txy); psi=.5*atan(2.*txy,sx-sy); float r=length(vec2(x,y)-u_c); env=sstep(u_core,r)*(1.-u_vig*r*r); }
   else if(u_type==4){ vec2 dv=vec2(x,y)-u_c; float r=length(dv); delta=u_d0+u_cc*r*r; psi=atan(dv.y,dv.x); env=1.-u_vig*r*r; }
   else if(u_type==5){ vec2 A=vec2(u_c.x-u_sep/2.,u_c.y), B=vec2(u_c.x+u_sep/2.,u_c.y); vec2 da=vec2(x,y)-A, db=vec2(x,y)-B; delta=u_d0+u_cc*length(da)*length(db); psi=.5*(atan(da.y,da.x)+atan(db.y,db.x)); float r=length(vec2(x,y)-u_c); env=1.-u_vig*r*r; }
   else { vec2 dv=vec2(x,y)-u_c; float r=length(dv); float th=atan(dv.y,dv.x)+u_rot*t; float w=th+u_warp*(sin(3.*th+u_s1+0.05*t)/3.+sin(5.*th+u_s2)/5.);
-    float osc=cos(u_k*w+u_flow*t); osc=sign(osc)*pow(abs(osc),u_shape); float d0=u_d0+u_breath*sin(.4*t); delta=(d0+u_A*osc)*(1.+u_pin/(r+.01)); psi=th+u_twist*r+u_spiral*log(r+.002);
+    float osc=cos(u_k*w+u_ph+u_flow*t); osc=sign(osc)*pow(abs(osc),osc<0.?u_shapeN:u_shape); float d0=u_d0+u_breath*sin(.4*t); delta=(d0+u_A*osc+u_rad*r)*(1.+u_pin/(r+.01)); psi=th+u_twist*r+u_spiral*log(r+.002);
     env=sstep(u_core,r)*(1.-u_vig*r*r); env*=u_lobe.x+u_lobe.y*(.5+.5*sin(th*u_lobe.z+u_lobe.w));
     for(int i=0;i<4;i++){ if(i>=u_nocc)break; float d=th-u_occ[i].x; d=abs(atan(sin(d),cos(d))); float qq=clamp((d-(u_occ[i].y-u_occ[i].z))/(2.*u_occ[i].z),0.,1.); env*=qq*qq*(3.-2.*qq); } }
-  float beta=(u_beta+u_spin*t)*PI/180.; float pp=psi-beta+u_skew*sin(psi-beta); float s=sin(u_m*pp); float iso=u_circ+(1.-u_circ)*pow(s*s,u_sharp);
+  float beta=(u_beta+u_spin*t)*PI/180.; float pp=psi-beta+u_skew*sin(psi-beta); float s=sin(u_m*pp); float iso=u_circ+(1.-u_circ)*pow(s*s,cos(pp)>0.?u_sharp:u_sharp2);
   env=clamp(env*u_gain,0.,1.)*iso; delta=clamp(delta,0.,1599.); vec3 col=texture2D(u_chart,vec2((delta+.5)/1600.,.5)).rgb; gl_FragColor=vec4(mix(u_floor,col,env),1.);
 }`;
 function sh(t,s){const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(o));return o;}
@@ -186,7 +196,7 @@ const TYPES={sheet:0,ribbon:1,ring:2,load:3,uniaxial:4,biaxial:5};
 function drawField(w,h,t){ gl.canvas.width=w; gl.canvas.height=h; gl.viewport(0,0,w,h);
   gl.uniform2f(U('u_res'),w,h); gl.uniform1f(U('u_t'),t); gl.uniform1i(U('u_type'),TYPES[P.type]||0); gl.uniform2f(U('u_c'),P.cx||0.5,P.cy||0.35);
   const f=(n,v)=>gl.uniform1f(U(n),v||0);
-  f('u_k',P.k); f('u_warp',P.warp); f('u_s1',P.s1); f('u_s2',P.s2); f('u_d0',P.d0); f('u_A',P.A); f('u_shape',P.shape||1); f('u_pin',P.pin); f('u_twist',P.twist); f('u_spiral',P.spiral); f('u_beta',P.beta); f('u_m',P.m||2); f('u_skew',P.skew); f('u_sharp',P.sharp||1); f('u_circ',P.circ); f('u_core',P.core||0.02); f('u_vig',P.vig); f('u_spin',P.spin); f('u_breath',P.breath); f('u_flow',P.flow); f('u_rot',P.rot); f('u_gain',P.gain||1);
+  f('u_wa',P.wa||0); f('u_wf',P.wf||2.2); f('u_wdrift',P.wdrift||0); f('u_dmin',P.dmin||0); f('u_rad',P.rad||0); f('u_sharp2',P.sharp2!==undefined?P.sharp2:(P.sharp||1)); f('u_shapeN',P.shapeN!==undefined?P.shapeN:(P.shape||1)); f('u_k',P.k); f('u_warp',P.warp); f('u_s1',P.s1); f('u_s2',P.s2); f('u_d0',P.d0); f('u_A',P.A); f('u_shape',P.shape||1); f('u_pin',P.pin); f('u_twist',P.twist); f('u_spiral',P.spiral); f('u_beta',P.beta); f('u_m',P.m||2); f('u_skew',P.skew); f('u_sharp',P.sharp||1); f('u_circ',P.circ); f('u_core',P.core||0.02); f('u_vig',P.vig); f('u_spin',P.spin); f('u_breath',P.breath); f('u_flow',P.flow); f('u_rot',P.rot); f('u_gain',P.gain||1);
   const lb=P.lobe||[1,0,1,0]; gl.uniform4f(U('u_lobe'),lb[0],lb[1],lb[2],lb[3]);
   const occ=new Float32Array(12); const oc=(P.occ||[]).slice(0,4); oc.forEach((o,i)=>{occ[i*3]=o[0]*Math.PI/180;occ[i*3+1]=o[1]*Math.PI/180;occ[i*3+2]=(o[2]!==undefined?o[2]:o[1]*0.4)*Math.PI/180;}); gl.uniform3fv(U('u_occ'),occ); gl.uniform1i(U('u_nocc'),oc.length);
   const ld=new Float32Array(24); const ls=(P.loads||[]).slice(0,6); ls.forEach((l,i)=>{ld[i*4]=l[0];ld[i*4+1]=l[1];ld[i*4+2]=l[2]*Math.PI/180;ld[i*4+3]=l[3];}); gl.uniform4fv(U('u_loads'),ld); gl.uniform1i(U('u_nl'),ls.length);
@@ -202,22 +212,23 @@ function fit(){ const r=$('stage').getBoundingClientRect(); const asp=0.7; let w
 function compose(t,targetCtx,TW,TH,scale,gAmp){ const fw=Math.max(64,Math.round(TW*scale)), fh=Math.max(45,Math.round(TH*scale)); drawField(fw,fh,t);
   targetCtx.setTransform(1,0,0,1,0,0); targetCtx.globalCompositeOperation='source-over'; targetCtx.globalAlpha=1; targetCtx.imageSmoothingEnabled=true; targetCtx.imageSmoothingQuality='high';
   const pd=Math.ceil(blur*TW*2.5); targetCtx.filter=`blur(${(blur*TW).toFixed(1)}px)`; targetCtx.drawImage(gl.canvas,-pd,-pd,TW+2*pd,TH+2*pd); targetCtx.filter='none';
+  if(bloom>0){ targetCtx.save(); targetCtx.globalCompositeOperation='lighter'; targetCtx.globalAlpha=bloom; targetCtx.filter=`blur(${(0.05*TW).toFixed(1)}px) brightness(0.8) contrast(2.5)`; targetCtx.drawImage(gl.canvas,-pd,-pd,TW+2*pd,TH+2*pd); targetCtx.restore(); targetCtx.filter='none'; }
   if(gAmp>0){ const pat=targetCtx.createPattern(grainTile,'repeat'); targetCtx.save(); targetCtx.translate(((t*37)|0)%256,((t*53)|0)%256); targetCtx.globalCompositeOperation='overlay'; targetCtx.globalAlpha=Math.min(1,gAmp*10); targetCtx.fillStyle=pat; targetCtx.fillRect(-256,-256,TW+512,TH+512); targetCtx.restore(); targetCtx.globalCompositeOperation='source-over'; targetCtx.globalAlpha=1; } }
 let frames=0,fpsT=performance.now();
 function loop(now){ if(playing)tAcc+=(now-t0)/1000; t0=now; compose(tAcc,ctx,W,H,0.3,grain); frames++; if(now-fpsT>1000){ $('stat').textContent=`${frames} fps · ${W}×${H} · field ${Math.round(W*0.3)} px`; frames=0; fpsT=now; } requestAnimationFrame(loop); }
 
 /* ---------- UI ---------- */
 const sel=$('preset'); PRESETS.forEach(p=>{ const o=document.createElement('option'); o.value=p[0]; o.textContent=p[1]; sel.appendChild(o); });
-function buildSliders(){ const s=$('sliders'); s.innerHTML=''; const show=(SL[P.type]||SL.sheet).concat(['blur','grain']);
-  for(const k of show){ const d=RANGE[k]; if(!d)continue; const lab=document.createElement('label'); const val=k==='blur'?blur:k==='grain'?grain:(P[k]??0); lab.innerHTML=`${k} <input type="range" min="${d[0]}" max="${d[1]}" step="${d[2]}" value="${val}"><span class="v">${(+val).toFixed(d[2]>=1?0:3)}</span>`; const inp=lab.querySelector('input'); inp.oninput=()=>{ const v=+inp.value; if(k==='blur')blur=v; else if(k==='grain')grain=v; else P[k]=v; lab.querySelector('.v').textContent=v.toFixed(d[2]>=1?0:3); }; s.appendChild(lab); } }
-function load(id){ const p=PRESETS.find(z=>z[0]===id)||PRESETS[0]; P=JSON.parse(JSON.stringify(p[2])); $('type').value=P.type; sel.value=p[0]; blur=0.012; grain=0.02; buildSliders(); }
+function buildSliders(){ const s=$('sliders'); s.innerHTML=''; const show=(SL[P.type]||SL.sheet).concat(['blur','bloom','grain']);
+  for(const k of show){ const d=RANGE[k]; if(!d)continue; const lab=document.createElement('label'); const val=k==='blur'?blur:k==='grain'?grain:k==='bloom'?bloom:(P[k]??0); lab.innerHTML=`${k} <input type="range" min="${d[0]}" max="${d[1]}" step="${d[2]}" value="${val}"><span class="v">${(+val).toFixed(d[2]>=1?0:3)}</span>`; const inp=lab.querySelector('input'); inp.oninput=()=>{ const v=+inp.value; if(k==='blur')blur=v; else if(k==='grain')grain=v; else if(k==='bloom')bloom=v; else P[k]=v; lab.querySelector('.v').textContent=v.toFixed(d[2]>=1?0:3); }; s.appendChild(lab); } }
+function load(id){ const p=PRESETS.find(z=>z[0]===id)||PRESETS[0]; P=JSON.parse(JSON.stringify(p[2])); $('type').value=P.type; sel.value=p[0]; blur=(P.blur!==undefined?P.blur:0.004); grain=0.02; bloom=(P.bloom!==undefined?P.bloom:0.35); buildSliders(); }
 sel.onchange=()=>load(sel.value);
 $('type').onchange=()=>{ const t=$('type').value; const base={sheet:SHEET,load:LOAD,uniaxial:UNI,biaxial:BI,ribbon:RB,ring:RG}[t]({}); P=Object.assign(base,{cx:P.cx??0.5,cy:P.cy??0.35}); if(t==='load')P.loads=[[P.cx,P.cy,-90,1]]; buildSliders(); };
 $('play').onclick=()=>{ playing=!playing; $('play').textContent=playing?'Pause':'Play'; };
 function rnd(){ const r=(a,b)=>a+Math.random()*(b-a); P=SHEET({cx:r(.1,.9),cy:r(.08,.62),k:Math.round(r(3,8)),warp:r(.2,.7),twist:Math.random()<.4?r(-3,3):0,spiral:Math.random()<.2?r(.8,2):0,beta:Math.round(r(-180,180)),m:Math.random()<.5?1:2,skew:r(0,.3),d0:r(380,560),A:r(120,260),shape:r(1,3),core:r(.015,.06),vig:r(.15,.5),s1:r(0,6.3),s2:r(0,6.3),lobe:[0.7,0.3,r(1,3),r(0,6.3)]}); $('type').value='sheet'; buildSliders(); }
 $('rnd').onclick=rnd;
 $('exp').onclick=()=>{ const c=document.createElement('canvas'); const EW=2000, EH=1400; c.width=EW; c.height=EH; compose(tAcc,c.getContext('2d'),EW,EH,0.5,grain); const a=document.createElement('a'); a.download=`deep-space-chroma-${sel.value}-${Math.round(tAcc*10)}.png`; a.href=c.toDataURL('image/png'); a.click(); };
-$('copy').onclick=()=>{ const j=JSON.stringify(Object.assign({},P,{blur,grain}),null,1); (navigator.clipboard?navigator.clipboard.writeText(j):Promise.reject()).catch(()=>prompt('preset',j)); };
+$('copy').onclick=()=>{ const j=JSON.stringify(Object.assign({},P,{blur,grain,bloom}),null,1); (navigator.clipboard?navigator.clipboard.writeText(j):Promise.reject()).catch(()=>prompt('preset',j)); };
 let drag=false; out.addEventListener('pointerdown',e=>{drag=true;setFocus(e);}); addEventListener('pointermove',e=>{ if(drag)setFocus(e); }); addEventListener('pointerup',()=>drag=false);
 function setFocus(e){ const r=out.getBoundingClientRect(); const x=(e.clientX-r.left)/r.width, y=(e.clientY-r.top)/r.width; if(P.type==='ribbon'){ P.cy=y; } else { P.cx=x; P.cy=y; if(P.loads)P.loads.forEach(l=>{l[0]=x;l[1]=y;}); } }
 addEventListener('keydown',e=>{ if(e.key===' '){ e.preventDefault(); $('play').click(); } else if(e.key.toLowerCase()==='e')$('exp').click(); else if(e.key.toLowerCase()==='r')rnd(); });
