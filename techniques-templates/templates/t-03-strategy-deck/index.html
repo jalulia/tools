@@ -1,1013 +1,292 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="color-scheme" content="only light">
-  <meta name="description" content="T-03 · Strategy deck template — 29 layouts on a fixed 1600 × 900 stage. Worked example: Field Kit.">
-  <link rel="icon" href="data:,">
-  <title>T-03 — Strategy deck · Techniques &amp; Templates · ø co.</title>
-  <link rel="stylesheet" href="../../_shared/fonts.css">
-  <style>
-    @font-face{font-family:"Poppins";src:url("assets/fonts/poppins-300.woff2") format("woff2");font-weight:300;font-style:normal;font-display:swap}
-    @font-face{font-family:"Poppins";src:url("assets/fonts/poppins-500.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap}
-    @font-face{font-family:"Poppins";src:url("assets/fonts/poppins-900.woff2") format("woff2");font-weight:900;font-style:normal;font-display:swap}
-        
-    :root{
-      --font-display:"Poppins","Helvetica Neue",Arial,sans-serif;
-      --font-voice:"Poppins","Helvetica Neue",Arial,sans-serif;
-      --font-body:"Inter","Helvetica Neue",Arial,sans-serif;
-      --font-label:"Inter","Helvetica Neue",Arial,sans-serif;
-      --display-weight:900;
-      --display-track:-.04em;
-      --voice-weight:300;
-      --label-weight:700;
-      --label-track:.17em;
-      --void:#000;
-      --signal:#fff;
-      --navy:#0f1e3b;
-      --blue:#076fe0;
-      --blue-soft:#4b7bac;
-      --blue-pale:#abc0cf;
-      --coral:#fe5b19;
-      --terracotta:#e3905f;
-      --green:#a5fe4e;
-      --panel:#0c0d10;
-      --panel-2:#131519;
-      --dim:rgba(255,255,255,.64);
-      --dim-2:rgba(255,255,255,.42);
-      --hair:rgba(255,255,255,.20);
-      --ink-hair:rgba(0,0,0,.18);
-    }
-    *{box-sizing:border-box}
-    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--void);color:var(--signal)}
-    body{font-family:var(--font-body);-webkit-font-smoothing:antialiased}
-    h1,h2,h3,p,figure{margin:0}
-    img{display:block}
-    #viewport{position:fixed;inset:0;overflow:hidden;background:var(--void)}
-    #stage{--bleed-x:0px;--bleed-y:0px;position:absolute;left:0;top:0;width:1600px;height:900px;transform-origin:top left;background:var(--void)}
-    .slide{position:absolute;inset:0;display:none;overflow:hidden;padding:calc(58px + var(--bleed-y)) calc(64px + var(--bleed-x)) calc(54px + var(--bleed-y));background:var(--void);color:var(--signal);isolation:isolate}
-    .slide.active{display:block}
-    .slide.light{background:var(--signal);color:var(--void)}
-    .slide.navy{background:var(--navy)}
-    .slide.blue{background:var(--blue)}
-    .slide.coral{background:var(--coral);color:var(--void)}
-    .slide.green{background:var(--green);color:var(--void)}
-    .notes{display:none}
-
-    :is(.foundation,.research-split,.halves,.product-split,.story-split,.aisle-split,.brand-split,.pair-split,.means-split,.house,.proof-split){position:absolute;inset:0;width:auto;height:auto;margin:0}
-
-    .anim{opacity:0;transform:translateY(16px)}
-    .slide.active .anim{animation:settle .68s cubic-bezier(.16,1,.3,1) forwards}
-    .slide.active .a2{animation-delay:.08s}
-    .slide.active .a3{animation-delay:.16s}
-    @keyframes settle{to{opacity:1;transform:none}}
-    @media (prefers-reduced-motion:reduce){.anim{opacity:1;transform:none}.slide.active .anim{animation:none}}
-
-    .label{font:var(--label-weight) 14px/1.2 var(--font-label);letter-spacing:var(--label-track);text-transform:uppercase;color:var(--coral)}
-    .label.white{color:var(--signal)}
-    .label.green{color:var(--green)}
-    .label.blue{color:var(--blue)}
-    .meta{font:700 12px/1.35 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--dim-2)}
-    .light .meta{color:rgba(0,0,0,.48)}
-    h1,.display{font-family:var(--font-display);font-weight:var(--display-weight);letter-spacing:var(--display-track);line-height:.96;text-transform:uppercase}
-    h2{font:var(--display-weight) 76px/.96 var(--font-display);letter-spacing:var(--display-track);text-transform:uppercase}
-    h2.small{font-size:64px}
-    h2.xsmall{font-size:54px}
-    .voice{font:var(--voice-weight) 42px/1.3 var(--font-voice);letter-spacing:0}
-    .body{font-size:27px;line-height:1.38;max-width:1020px}
-    .body.small{font-size:23px;line-height:1.38}
-    .body p+p{margin-top:18px}
-    .body strong{font-weight:700}
-    .rule{height:1px;background:var(--hair);margin:26px 0}
-    .light .rule{background:var(--ink-hair)}
-    .landing{font:500 31px/1.24 "Poppins","Helvetica Neue",Arial,sans-serif;letter-spacing:-.02em}
-    .accent{color:var(--coral)}
-    .resolve{color:var(--green)}
-    .electric{color:var(--blue)}
-    .vcenter{height:100%;display:flex;flex-direction:column;justify-content:center}
-    .content{position:relative;z-index:3}
-
-    .field-art{position:absolute;inset:-2%;z-index:0}
-    .field-art img{width:100%;height:100%;object-fit:cover;transform:scale(1.03)}
-    .field-veil{position:absolute;inset:0;z-index:1;background:rgba(0,0,0,.42)}
-    .field-veil.deep{background:rgba(0,0,0,.58)}
-    .field-veil.lighten{background:rgba(0,0,0,.28)}
-
-    .cover{padding:calc(58px + var(--bleed-y)) calc(70px + var(--bleed-x)) calc(62px + var(--bleed-y))}
-    .cover .mark{position:absolute;right:calc(54px + var(--bleed-x));top:calc(44px + var(--bleed-y));width:78px;height:78px;object-fit:contain;z-index:4}
-    .cover-copy{position:relative;z-index:3;width:1320px;height:100%;display:flex;flex-direction:column;justify-content:center}
-    .cover h1{font-size:132px;max-width:1250px}
-    .cover h1 span{color:var(--coral)}
-    .cover-meta{display:grid;grid-template-columns:1fr auto;gap:40px;align-items:end;border-top:1px solid rgba(255,255,255,.42);padding-top:20px;margin-top:38px}
-    .cover-meta .title{font-size:25px;line-height:1.25}
-    .cover-meta .date{text-align:right;font:700 13px/1.55 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.16em;text-transform:uppercase}
-
-    .section-turn{padding:calc(66px + var(--bleed-y)) calc(70px + var(--bleed-x));background:var(--void)}
-    .section-turn .field-art,.section-turn .field-veil{display:block}
-    .section-turn .field-veil{background:rgba(0,0,0,.58)}
-    .section-turn .section-copy{position:absolute;left:calc(70px + var(--bleed-x));right:calc(70px + var(--bleed-x));top:auto;bottom:calc(118px + var(--bleed-y));z-index:3;display:flex;flex-direction:column;justify-content:flex-start}
-    .section-turn .section-code{position:static;margin-bottom:24px;color:var(--coral)}
-    .section-turn h1{font-size:143px;max-width:1400px;line-height:.92;color:var(--signal);-webkit-text-stroke:0;letter-spacing:-.04em;text-wrap:balance}
-
-    .foundation{display:grid;grid-template-columns:54% 46%;height:100%}
-    .foundation-copy{padding:calc(72px + var(--bleed-y)) 66px calc(68px + var(--bleed-y)) calc(64px + var(--bleed-x));display:flex;flex-direction:column;justify-content:center}
-    .foundation-copy h2{font-size:72px;margin-top:25px}
-    .foundation-copy .body{margin-top:28px;max-width:730px}
-    .ledger{background:var(--panel);padding:calc(68px + var(--bleed-y)) calc(64px + var(--bleed-x)) calc(68px + var(--bleed-y)) 64px;display:flex;flex-direction:column;justify-content:center}
-    .ledger-row{display:grid;grid-template-columns:170px 1fr;gap:24px;align-items:baseline;border-top:1px solid var(--hair);padding:22px 0}
-    .ledger-row b{font:900 68px/.9 "Poppins","Helvetica Neue",Arial,sans-serif;color:var(--coral);letter-spacing:-.04em}
-    .ledger-row span{font-size:22px;line-height:1.25;color:var(--dim)}
-
-    .research-split{display:grid;grid-template-columns:58% 42%;height:100%;background:var(--void)}
-    .research-split figure{overflow:hidden;position:relative}
-    .research-split figure::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.10)}
-    .research-split figure img{width:100%;height:100%;object-fit:cover;object-position:center 46%}
-    .research-split .copy{padding:calc(70px + var(--bleed-y)) calc(64px + var(--bleed-x)) calc(64px + var(--bleed-y)) 58px;display:flex;flex-direction:column;justify-content:center}
-    .research-split h2{font-size:70px;margin-top:24px}
-    .research-split .voice{font-size:30px;line-height:1.3;margin-top:30px;color:var(--dim)}
-
-    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:58px}
-    .stat{border-top:1px solid var(--hair);padding-top:18px}
-    .stat b{display:block;font:900 92px/.88 "Poppins","Helvetica Neue",Arial,sans-serif;letter-spacing:-.05em;color:var(--green)}
-    .stat p{font-size:20px;line-height:1.28;color:var(--dim);margin-top:15px;max-width:270px}
-    .stat-landing{position:absolute;left:calc(64px + var(--bleed-x));right:calc(64px + var(--bleed-x));bottom:calc(63px + var(--bleed-y));border-top:1px solid var(--hair);padding-top:18px;font:500 29px/1.2 "Poppins","Helvetica Neue",Arial,sans-serif}
-
-    .tradeoff{display:grid;grid-template-columns:1fr 84px 1fr;gap:18px;margin-top:46px;align-items:stretch}
-    .trade-panel{border-top:1px solid var(--hair);padding:22px 26px 24px;background:var(--panel)}
-    .trade-panel.risk{background:var(--coral);color:var(--void)}
-    .trade-panel h3{min-height:34px;font:700 13px/1.2 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.17em;text-transform:uppercase}
-    .trade-panel p{min-height:84px;font:500 39px/1.08 "Poppins","Helvetica Neue",Arial,sans-serif;letter-spacing:-.025em;margin-top:26px}
-    .trade-panel .list{font-size:22px;line-height:1.5;margin-top:22px}
-    .vs{display:flex;align-items:center;justify-content:center;font:900 34px/1 "Poppins","Helvetica Neue",Arial,sans-serif;color:var(--green)}
-
-    .halves{display:grid;grid-template-columns:1fr 1fr;height:100%}
-    .half{padding:calc(72px + var(--bleed-y)) 64px;display:flex;flex-direction:column;justify-content:center;background:var(--coral);color:var(--void)}
-    .half:first-child{padding-left:calc(64px + var(--bleed-x))}
-    .half:last-child{padding-right:calc(64px + var(--bleed-x))}
-    .half:last-child{background:var(--signal)}
-    .half .big{min-height:320px;font:900 88px/.9 "Poppins","Helvetica Neue",Arial,sans-serif;letter-spacing:-.045em;text-transform:uppercase;margin-top:24px}
-    .half p{min-height:102px;font-size:25px;line-height:1.34;max-width:610px;margin-top:30px}
-    .half .ingredients{font:700 13px/1.55 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;margin-top:26px}
-
-    .audience-layout{display:grid;grid-template-columns:41fr 59fr;height:100%;gap:42px}
-    .audience-layout h2{font-size:68px;margin-top:24px}
-    .audience-layout .body{margin-top:24px}
-    .moments{display:grid;grid-template-rows:repeat(3,1fr);border-top:1px solid var(--hair);align-self:center}
-    .moment{display:grid;grid-template-columns:190px 1fr;gap:24px;padding:25px 0;border-bottom:1px solid var(--hair);align-items:baseline}
-    .moment b{font:900 29px/1 "Poppins","Helvetica Neue",Arial,sans-serif;text-transform:uppercase}
-    .moment p{font-size:23px;line-height:1.3;color:var(--dim)}
-    .foot-line{position:absolute;left:calc(64px + var(--bleed-x));right:calc(64px + var(--bleed-x));bottom:calc(63px + var(--bleed-y));border-top:1px solid var(--hair);padding-top:17px;font:500 27px/1.2 "Poppins","Helvetica Neue",Arial,sans-serif}
-
-    .order{margin-top:52px;border-top:1px solid var(--hair)}
-    .order-row{display:grid;grid-template-columns:175px 1fr;gap:34px;align-items:center;padding:22px 0;border-bottom:1px solid var(--hair)}
-    .order-row b{font:700 14px/1 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.16em;text-transform:uppercase}
-    .order-row span{font:900 53px/.95 "Poppins","Helvetica Neue",Arial,sans-serif;letter-spacing:-.04em;text-transform:uppercase}
-    .order-row.retail span{color:var(--coral)}
-
-    .product-split{display:grid;grid-template-columns:53% 47%;height:100%}
-    .product-split .copy{padding:calc(72px + var(--bleed-y)) 62px calc(64px + var(--bleed-y)) calc(64px + var(--bleed-x));display:flex;flex-direction:column;justify-content:center}
-    .product-split .copy h2{font-size:70px;margin-top:24px}
-    .product-split .copy .body{margin-top:26px}
-    .product-split figure{overflow:hidden}
-    .product-split figure img{width:100%;height:100%;object-fit:cover}
-
-    .goal{display:grid;grid-template-columns:1fr 500px;gap:58px;height:100%;align-items:center}
-    .goal h2{font-size:84px;margin-top:24px}
-    .goal .body{margin-top:28px;max-width:830px}
-    .goal-number{font:900 235px/.75 "Poppins","Helvetica Neue",Arial,sans-serif;letter-spacing:-.07em;color:var(--green);text-align:center}
-    .goal-number span{display:block;font:700 13px/1.35 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:28px}
-
-    .story-split{display:grid;grid-template-columns:57% 43%;height:100%}
-    .story-split figure{overflow:hidden;position:relative}
-    .story-split figure img{width:100%;height:100%;object-fit:cover;object-position:25% 50%}
-    .story-split .copy{padding:calc(70px + var(--bleed-y)) calc(64px + var(--bleed-x)) calc(64px + var(--bleed-y)) 56px;display:flex;flex-direction:column;justify-content:center;background:var(--void)}
-    .story-split .copy h2{font-size:64px;margin-top:23px}
-    .story-split .copy .body{margin-top:26px}
-    .story-split .copy .landing{margin-top:28px;color:var(--green)}
-
-    .term-pair{height:100%;display:grid;grid-template-columns:1fr 1fr;gap:58px;align-items:stretch}
-    .term-pair .term{border-top:1px solid var(--hair);padding-top:22px}
-    .term-pair .term b{display:block;min-height:140px;font:900 77px/.91 "Poppins","Helvetica Neue",Arial,sans-serif;letter-spacing:-.045em;text-transform:uppercase}
-    .term-pair .term:first-child b{color:var(--coral)}
-    .term-pair .term:last-child b{color:var(--blue-pale)}
-    .term-pair .term p{font-size:25px;line-height:1.35;color:var(--dim);margin-top:24px}
-    .term-pair .landing{grid-column:1/-1;border-top:1px solid var(--hair);padding-top:19px}
-
-    .pack-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:30px}
-    .pack-card{height:448px;border:1px solid var(--hair);background:var(--panel);display:flex;flex-direction:column}
-    .pack-card figure{height:388px;overflow:hidden;background:#f4f0e8}
-    .pack-card img{width:100%;height:100%;object-fit:contain}
-    .pack-card .pack-name{height:60px;display:flex;align-items:center;padding:0 15px;font:700 12px/1.2 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.13em;text-transform:uppercase}
-    .pack-takeaway{margin-top:19px;display:grid;grid-template-columns:240px 1fr;gap:28px;align-items:baseline}
-    .pack-takeaway .meta{color:var(--coral)}
-    .pack-takeaway p{font:300 28px/1.25 "Poppins","Helvetica Neue",Arial,sans-serif;color:var(--dim)}
-
-    .jobs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--ink-hair);border-bottom:1px solid var(--ink-hair);margin-top:48px}
-    .job{min-height:335px;padding:27px 28px;border-right:1px solid var(--ink-hair)}
-    .job:last-child{border-right:0}
-    .job .n{font:700 12px/1 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.15em;color:rgba(0,0,0,.42)}
-    .job b{display:block;font:900 48px/.93 "Poppins","Helvetica Neue",Arial,sans-serif;letter-spacing:-.04em;text-transform:uppercase;margin-top:66px}
-    .job p{font-size:22px;line-height:1.32;margin-top:18px}
-    .job:nth-child(1) b{color:var(--coral)}
-    .job:nth-child(3) b{color:var(--blue)}
-    .job:nth-child(4){background:var(--green)}
-
-    .challenger-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:30px}
-    .challenger{height:400px;border:1px solid var(--hair);background:var(--panel);display:flex;flex-direction:column}
-    .challenger figure{height:340px;overflow:hidden;background:#f4f0e8}
-    .challenger img{width:100%;height:100%;object-fit:cover}
-    .challenger .name{height:60px;display:flex;align-items:center;padding:0 14px;font:700 12px/1.2 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase}
-    .challenger-takeaway{margin-top:21px;font:300 29px/1.24 "Poppins","Helvetica Neue",Arial,sans-serif;color:var(--dim);max-width:1320px}
-
-    .research-plate{padding:calc(34px + var(--bleed-y)) calc(46px + var(--bleed-x)) calc(32px + var(--bleed-y));background:var(--panel)}
-    .plate-head{height:37px;display:flex;justify-content:space-between;align-items:flex-start}
-    .plate-head .meta:last-child{text-align:right}
-    .research-plate figure{height:787px;border:1px solid var(--hair);overflow:hidden;background:#f4f0e8}
-    .research-plate figure img{width:100%;height:100%;object-fit:contain}
-
-    .aisle-split{display:grid;grid-template-columns:62% 38%;height:100%}
-    .aisle-split figure{overflow:hidden}
-    .aisle-split figure img{width:100%;height:100%;object-fit:cover;object-position:center 42%}
-    .aisle-split .copy{padding:calc(66px + var(--bleed-y)) calc(57px + var(--bleed-x)) calc(60px + var(--bleed-y)) 57px;display:flex;flex-direction:column;justify-content:center;background:var(--void)}
-    .aisle-split .copy h2{font-size:62px;margin-top:24px}
-    .aisle-split .copy .body{font-size:24px;margin-top:25px}
-    .aisle-split .copy .landing{font-size:27px;color:var(--green);margin-top:27px}
-
-    .necessary{height:100%;display:flex;flex-direction:column;justify-content:center}
-    .necessary .display{font-size:132px;max-width:1390px}
-    .necessary .display span{display:block;color:var(--green)}
-    .necessary .voice{max-width:1120px;margin-top:34px;color:var(--dim)}
-
-    .brand-split{display:grid;grid-template-columns:43% 57%;height:100%}
-    .brand-split .copy{padding:calc(68px + var(--bleed-y)) 58px calc(62px + var(--bleed-y)) calc(64px + var(--bleed-x));display:flex;flex-direction:column;justify-content:center}
-    .brand-split h2{font-size:66px;margin-top:23px}
-    .brand-split .body{font-size:24px;margin-top:25px}
-    .brand-split figure{overflow:hidden}
-    .brand-split figure img{width:100%;height:100%;object-fit:cover}
-    .brand-split .caption{position:absolute;right:24px;bottom:58px;background:rgba(0,0,0,.78);padding:10px 13px;font:700 10px/1.2 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase}
-
-    .fano-slide{background:var(--void);color:var(--signal)}
-    .plane-layout{display:grid;gap:36px;height:calc(100% - 30px);align-items:center}
-    .plane-layout.plane-left{grid-template-columns:58fr 42fr}
-    .plane-layout.plane-right{grid-template-columns:42fr 58fr}
-    .plane-copy h2{font-size:64px;margin-top:23px}
-    .plane-copy .body{font-size:24px;margin-top:25px;max-width:600px;color:var(--dim)}
-    .fano{position:relative;width:660px;height:600px;margin:auto;--plane:var(--coral)}
-    .fano.alt{--plane:var(--blue)}
-    .fano svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:2}
-    .fano .plane-fill{fill:var(--plane)}
-    .fano .circuit{fill:none;stroke:rgba(255,255,255,.48);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-    .fano .node{stroke:var(--signal);stroke-width:4;vector-effect:non-scaling-stroke}
-    .fano .node.vertex{fill:var(--blue-pale)}
-    .fano .node.mid{fill:var(--navy)}
-    .fano .node.core{fill:var(--green);stroke:var(--void);stroke-width:4}
-    .fano-point{position:absolute;z-index:1;width:190px;min-height:40px;display:flex;flex-direction:column;justify-content:center;font:700 16px/1.08 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--signal);padding:0}
-    .fano-point::after{content:"";position:absolute;background:var(--signal)}
-    .fano-point b{display:block;color:var(--plane);font-size:10px;letter-spacing:.16em;margin-bottom:3px}
-    .fano-point.core{z-index:3;width:230px;min-height:52px;background:var(--void);border-left:4px solid var(--green);color:var(--signal);font-size:13px;text-align:left;padding:9px 12px}
-    .fano-point.core::after{background:var(--green)}
-    .p1{left:50%;top:0;width:320px;transform:translateX(-50%);text-align:center;align-items:center}
-    .p1::after{width:3px;height:24px;left:calc(50% - 1.5px);top:100%}
-    .p2{left:-115px;top:518px;width:160px;transform:translateY(-50%);text-align:right;align-items:flex-end}
-    .p2::after{width:12px;height:3px;left:100%;top:calc(50% - 1.5px)}
-    .p3{left:615px;top:518px;width:160px;transform:translateY(-50%);text-align:left;align-items:flex-start}
-    .p3::after{width:12px;height:3px;right:100%;top:calc(50% - 1.5px)}
-    .p4{left:-18px;top:293px;width:190px;transform:translateY(-50%);text-align:right;align-items:flex-end}
-    .p4::after{width:32px;height:3px;left:100%;top:calc(50% - 1.5px)}
-    .p5{left:488px;top:293px;width:190px;transform:translateY(-50%);text-align:left;align-items:flex-start}
-    .p5::after{width:28px;height:3px;right:100%;top:calc(50% - 1.5px)}
-    .p6{left:50%;top:548px;width:210px;transform:translateX(-50%);text-align:center;align-items:center}
-    .p6::after{width:3px;height:30px;left:calc(50% - 1.5px);bottom:100%}
-    .p7{left:50%;top:399px;transform:translateX(-50%);text-align:center;align-items:center}
-    .p7::after{width:3px;height:12px;left:calc(50% - 1.5px);bottom:100%}
-
-    .binding{height:100%;position:relative;display:flex;flex-direction:column;justify-content:center}
-    .binding-head{position:absolute;left:0;right:0;top:8px;display:flex;justify-content:space-between;align-items:flex-start;z-index:3}
-    .binding-side{width:410px}
-    .binding-side:last-child{text-align:right}
-    .binding-side b{display:block;font:900 43px/.95 "Poppins","Helvetica Neue",Arial,sans-serif;letter-spacing:-.035em;text-transform:uppercase}
-    .binding-side:first-child b{color:var(--coral)}
-    .binding-side:last-child b{color:var(--blue)}
-    .binding-side span{display:block;margin-top:9px;font:700 15px/1.2 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
-    .bound-fanos{width:100%;height:650px;display:block;overflow:visible}
-    .bound-fanos .plane-fill.a{fill:var(--coral)}
-    .bound-fanos .plane-fill.b{fill:var(--blue)}
-    .bound-fanos .circuit{fill:none;stroke:rgba(255,255,255,.46);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-    .bound-fanos .mini-plane.a{color:var(--coral)}
-    .bound-fanos .mini-plane.b{color:var(--blue-pale)}
-    .bound-fanos .node{stroke:var(--signal);stroke-width:4;vector-effect:non-scaling-stroke}
-    .bound-fanos .node.vertex{fill:var(--blue-pale)}
-    .bound-fanos .node.mid{fill:var(--navy)}
-    .bound-fanos .node.core{fill:var(--green);stroke:var(--void);stroke-width:4}
-    .bound-fanos .center-bridge{stroke:var(--green);stroke-width:8;stroke-linecap:round;vector-effect:non-scaling-stroke}
-    .bridge-label{position:absolute;left:50%;top:54.04%;transform:translate(-50%,-50%);background:var(--void);padding:9px 18px;font:700 16px/1 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--green);z-index:3;white-space:nowrap}
-
-    .paradox{display:flex;align-items:center;height:100%}
-    .paradox h1{font-size:124px;max-width:1390px}
-    .paradox .voice{font-size:34px;max-width:1030px;margin-top:30px;color:rgba(255,255,255,.78)}
-
-    .pair-split{display:grid;grid-template-columns:57% 43%;height:100%}
-    .image-pair{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--void)}
-    .image-pair figure{overflow:hidden}
-    .image-pair img{width:100%;height:100%;object-fit:cover}
-    .pair-copy{padding:calc(61px + var(--bleed-y)) calc(58px + var(--bleed-x)) calc(56px + var(--bleed-y)) 58px;background:var(--signal);color:var(--void);display:flex;flex-direction:column;justify-content:center}
-    .pair-copy h2{font-size:58px;margin-top:22px}
-    .pair-copy .body{font-size:22px;margin-top:22px}
-    .standard-grid{display:grid;grid-template-columns:1fr 1fr;margin-top:24px;border-top:1px solid var(--ink-hair)}
-    .standard-grid div{padding:12px 8px 12px 0;border-bottom:1px solid var(--ink-hair);font:700 12px/1.25 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.10em;text-transform:uppercase}
-    .standard-grid div:nth-child(even){padding-left:12px;border-left:1px solid var(--ink-hair)}
-    .pair-copy .landing{font-size:25px;margin-top:22px;color:var(--coral)}
-
-    .means-split{display:grid;grid-template-columns:41% 59%;height:100%}
-    .means-split .copy{padding:calc(68px + var(--bleed-y)) 56px calc(62px + var(--bleed-y)) calc(64px + var(--bleed-x));display:flex;flex-direction:column;justify-content:center}
-    .means-split h2{font-size:91px;margin-top:24px}
-    .means-split .body{font-size:24px;margin-top:26px}
-    .means-split .landing{font-size:27px;color:var(--green);margin-top:27px}
-    .means-split figure{overflow:hidden}
-    .means-split figure img{width:100%;height:100%;object-fit:cover}
-
-    .house{display:grid;grid-template-columns:1fr 1fr;height:100%}
-    .house-half{padding:calc(71px + var(--bleed-y)) 62px calc(62px + var(--bleed-y)) 64px;display:flex;flex-direction:column;justify-content:center;background:var(--navy)}
-    .house-half:first-child{padding-left:calc(64px + var(--bleed-x))}
-    .house-half:last-child{padding-right:calc(62px + var(--bleed-x))}
-    .house-half:last-child{background:var(--green);color:var(--void)}
-    .house-half h2{min-height:185px;font-size:64px;margin-top:23px}
-    .house-half p{min-height:98px;font-size:24px;line-height:1.35;margin-top:25px;max-width:625px}
-    .house-flow{border-top:1px solid currentColor;margin-top:30px}
-    .house-flow div{padding:12px 0;border-bottom:1px solid currentColor;font:700 13px/1.2 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.13em;text-transform:uppercase}
-
-    .tracks{margin-top:46px;border-top:1px solid var(--hair)}
-    .track{display:grid;grid-template-columns:180px repeat(5,1fr);border-bottom:1px solid var(--hair)}
-    .track>div{padding:22px 18px;border-right:1px solid var(--hair)}
-    .track>div:last-child{border-right:0}
-    .track .track-name{font:900 25px/.95 "Poppins","Helvetica Neue",Arial,sans-serif;letter-spacing:-.03em;text-transform:uppercase;color:var(--coral)}
-    .track:last-child .track-name{color:var(--blue-pale)}
-    .track b{display:block;font:700 12px/1.15 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase}
-    .track span{display:block;font-size:17px;line-height:1.26;color:var(--dim);margin-top:9px}
-    .track-landing{margin-top:25px;font:500 30px/1.2 "Poppins","Helvetica Neue",Arial,sans-serif;color:var(--green)}
-
-    .memory-hero{padding:0}
-    .memory-hero figure{position:absolute;inset:0}
-    .memory-hero figure img{width:100%;height:100%;object-fit:cover}
-    .memory-hero .scrim{position:absolute;inset:0;background:rgba(0,0,0,.34)}
-    .memory-card{position:absolute;left:calc(64px + var(--bleed-x));top:calc(74px + var(--bleed-y));bottom:calc(74px + var(--bleed-y));width:700px;background:rgba(0,0,0,.86);padding:56px 52px;display:flex;flex-direction:column;justify-content:center}
-    .memory-card h2{font-size:71px;margin-top:23px}
-    .memory-card .body{font-size:24px;margin-top:25px;color:var(--dim)}
-    .menu-strip{position:absolute;left:calc(804px + var(--bleed-x));right:calc(46px + var(--bleed-x));bottom:calc(53px + var(--bleed-y));display:grid;grid-template-columns:1fr 1fr;background:rgba(0,0,0,.86)}
-    .menu-strip div{padding:14px 17px;border-right:1px solid var(--hair);border-top:1px solid var(--hair);font:700 12px/1.2 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.10em;text-transform:uppercase}
-
-    .proof-split{display:grid;grid-template-columns:52% 48%;height:100%}
-    .proof-split figure{overflow:hidden}
-    .proof-split figure img{width:100%;height:100%;object-fit:cover}
-    .proof-copy{padding:calc(62px + var(--bleed-y)) calc(64px + var(--bleed-x)) calc(58px + var(--bleed-y)) 64px;background:var(--void);display:flex;flex-direction:column;justify-content:center}
-    .proof-copy h2{font-size:58px;margin-top:22px}
-    .facts{margin-top:25px;border-top:1px solid var(--hair)}
-    .fact{display:grid;grid-template-columns:125px 1fr;gap:20px;padding:12px 0;border-bottom:1px solid var(--hair);align-items:baseline}
-    .fact b{font:700 11px/1.2 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.15em;text-transform:uppercase;color:var(--coral)}
-    .fact span{font-size:20px;line-height:1.28;color:var(--dim)}
-    .proof-copy .landing{font-size:25px;margin-top:24px;color:var(--green)}
-
-    .line-statement{height:100%;display:flex;flex-direction:column;justify-content:center}
-    .line-statement h1{font-size:130px;max-width:1380px}
-    .line-statement h1 span{display:block;color:var(--green)}
-    .line-statement .voice{font-size:32px;max-width:1120px;margin-top:30px;color:var(--dim)}
-
-    .strategy-reveal{height:100%;display:flex;flex-direction:column;justify-content:center}
-    .strategy-reveal h1{font-size:151px;max-width:1400px}
-    .strategy-reveal h1.strategy-phrase{font-size:118px;line-height:.9;max-width:1450px}
-    .strategy-reveal h1 span{display:block;color:var(--coral)}
-    .strategy-reveal .meta{margin-top:30px;color:rgba(255,255,255,.64)}
-
-    .words{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--ink-hair);margin-top:42px}
-    .word{min-height:270px;padding:25px 28px;border-right:1px solid var(--ink-hair)}
-    .word:last-child{border-right:0}
-    .word b{display:block;min-height:92px;font:900 48px/.95 "Poppins","Helvetica Neue",Arial,sans-serif;letter-spacing:-.04em;text-transform:uppercase}
-    .word:nth-child(1) b{color:var(--coral)}
-    .word:nth-child(2) b{color:var(--blue)}
-    .word:nth-child(3) b{color:#4b7b20}
-    .word p{font-size:22px;line-height:1.34;margin-top:20px}
-    .standard-quote{position:absolute;left:calc(64px + var(--bleed-x));right:calc(64px + var(--bleed-x));bottom:calc(58px + var(--bleed-y));background:var(--void);color:var(--signal);padding:18px 23px;font:300 25px/1.25 "Poppins","Helvetica Neue",Arial,sans-serif}
-
-    .legs{display:grid;grid-template-columns:48fr 52fr;height:100%;gap:42px}
-    .legs h2{font-size:59px;margin-top:22px}
-    .distance-board{margin-top:28px;border-top:1px solid var(--hair)}
-    .distance-row{display:grid;grid-template-columns:130px 1fr;gap:18px;padding:13px 0;border-bottom:1px solid var(--hair)}
-    .distance-row b{font:700 11px/1.2 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--coral)}
-    .distance-row span{font-size:20px;line-height:1.28;color:var(--dim)}
-    .channel-board{border-top:1px solid var(--hair);align-self:center}
-    .channel{display:grid;grid-template-columns:160px 1fr;gap:22px;padding:19px 0;border-bottom:1px solid var(--hair)}
-    .channel b{font:900 23px/.95 "Poppins","Helvetica Neue",Arial,sans-serif;text-transform:uppercase;color:var(--blue-pale)}
-    .channel p{font-size:21px;line-height:1.28;color:var(--dim)}
-
-    .engines{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:37px}
-    .engine{min-height:310px;padding:26px 27px;border:1px solid var(--hair);background:var(--panel)}
-    .engine .code{font:700 11px/1 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.14em;color:var(--coral)}
-    .engine b{display:block;min-height:76px;font:900 40px/.95 "Poppins","Helvetica Neue",Arial,sans-serif;letter-spacing:-.035em;text-transform:uppercase;margin-top:50px}
-    .engine p{font-size:21px;line-height:1.32;color:var(--dim);margin-top:18px}
-    .voice-examples{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
-    .voice-example{padding:17px 18px;border-top:1px solid var(--hair);font:300 22px/1.25 "Poppins","Helvetica Neue",Arial,sans-serif;color:var(--green)}
-
-    .recap{display:grid;grid-template-columns:240px 1fr;margin-top:37px;border-top:1px solid var(--ink-hair)}
-    .recap .key,.recap .value{padding:15px 18px;border-bottom:1px solid var(--ink-hair)}
-    .recap .key{font:700 12px/1.2 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.15em;text-transform:uppercase;color:rgba(0,0,0,.54)}
-    .recap .value{font:500 27px/1.16 "Poppins","Helvetica Neue",Arial,sans-serif;letter-spacing:-.02em}
-    .recap .key.final{background:var(--green);font-weight:700}
-    .recap .value.final{background:var(--green);font-weight:900}
-
-    .seal{height:100%;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:3}
-    .seal h1{font-size:134px;max-width:1360px}
-    .seal h1 span{display:block;color:var(--green)}
-    .seal-mark{position:absolute;right:calc(55px + var(--bleed-x));top:calc(48px + var(--bleed-y));width:70px;height:70px;object-fit:contain;z-index:4}
-
-
-    /* ══ TEMPLATE ADDITIONS ══ */
-    figure.slot{position:relative;overflow:hidden;background:var(--panel)}
-    figure.slot canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-    figure.slot .slot-tag{position:absolute;left:14px;bottom:12px;z-index:2;padding:7px 10px;border:1px dashed rgba(255,255,255,.55);font:700 10px/1.2 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.82);background:rgba(0,0,0,.35)}
-    figure.slot[data-tone="light"] .slot-tag{border-color:rgba(0,0,0,.45);color:rgba(0,0,0,.72);background:rgba(255,255,255,.6)}
-    .key-intro{margin-top:18px;font:300 26px/1.3 "Poppins","Helvetica Neue",Arial,sans-serif;color:var(--dim);max-width:1180px}
-    .key-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0 40px;margin-top:30px;border-top:1px solid var(--hair)}
-    .key-grid div{display:grid;grid-template-columns:40px 1fr auto;gap:14px;padding:9px 0;border-bottom:1px solid var(--hair);font:700 12px/1.3 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase}
-    .key-grid div i{font-style:normal;color:var(--coral)} .key-grid div em{font-style:normal;color:var(--dim-2)}
-    .key-foot{position:absolute;left:calc(64px + var(--bleed-x));right:calc(64px + var(--bleed-x));bottom:calc(58px + var(--bleed-y));font:700 12px/1.5 "Inter","Helvetica Neue",Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--dim-2)}
-    .key-foot b{color:var(--green)}
-    /* ══ SITE NAV (Techniques & Templates shell, inlined; the deck keeps its own stage) ══ */
-    .nav{--tt-ink:#101014;--tt-grey:#6F6E6A;--tt-grey-2:#B4B2AC;--tt-hair:#E7E4DD;--tt-sunken:#F6F5F2;--tt-accent:#F4551E;--tt-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;--tt-disp:'Archivo','Helvetica Neue',Arial,sans-serif;
-      position:fixed;top:18px;left:18px;right:18px;height:44px;border:1px solid var(--tt-hair);background:#fff;display:grid;grid-template-columns:auto 1fr auto;align-items:stretch;z-index:200;
-      font-family:var(--tt-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--tt-grey)}
-    .nav>*{display:flex;align-items:center;min-width:0}
-    .nav a{text-decoration:none}
-    .nav .brand{padding:0 16px;border-right:1px solid var(--tt-hair);gap:10px;color:var(--tt-ink);white-space:nowrap}
-    .nav .brand .o{width:18px;height:18px;flex:none}
-    .nav .brand .wm{font-family:var(--tt-disp);font-weight:700;font-size:12.5px;letter-spacing:.14em}
-    .nav .brand .wm i{font-style:normal;color:var(--tt-accent)}
-    .nav .crumb{padding:0 16px;gap:0;white-space:nowrap;overflow:hidden}
-    .nav .crumb a{color:var(--tt-grey)} .nav .crumb a:hover{color:var(--tt-ink)}
-    .nav .crumb .sep{color:var(--tt-grey-2);padding:0 9px}
-    .nav .crumb b{color:var(--tt-ink);font-weight:500;overflow:hidden;text-overflow:ellipsis}
-    .nav .crumb .code{color:var(--tt-accent);margin-left:10px}
-    .nav .pager{border-left:1px solid var(--tt-hair)}
-    .nav .pager a,.nav .pager span{display:flex;align-items:center;height:100%;padding:0 14px;border-right:1px solid var(--tt-hair);color:var(--tt-grey);white-space:nowrap}
-    .nav .pager a:last-child,.nav .pager span:last-child{border-right:0}
-    .nav .pager a:hover{color:var(--tt-ink);background:var(--tt-sunken)}
-    .nav .pager .keys{color:var(--tt-grey-2)}
-    body{--tt-nav-space:74px}
-    #viewport{top:var(--tt-nav-space)}
-    @media (max-width:960px){.nav{position:fixed;top:12px;left:12px;right:12px}.nav .crumb{display:none}.nav .brand .wm{display:none}.nav .pager .keys{display:none}body{--tt-nav-space:68px}}
-    #chrome{position:absolute;right:calc(28px + var(--bleed-x));bottom:calc(22px + var(--bleed-y));z-index:100;pointer-events:none;font:var(--label-weight) 13px/1 var(--font-label);letter-spacing:.13em;text-transform:uppercase;color:#fff;mix-blend-mode:difference}
-    #counter{position:relative}
-    #help{display:none}
-    #notesPanel{display:none;position:fixed;left:24px;right:24px;bottom:36px;z-index:120;max-height:38vh;overflow:auto;padding:20px 24px;background:rgba(0,0,0,.94);border:1px solid var(--hair);color:var(--signal);white-space:pre-wrap;font-size:16px;line-height:1.45}
-    body.notes-open #notesPanel{display:block}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="only light">
+<link rel="icon" href="data:,">
+<title>T-03 — Strategy deck · Techniques &amp; Templates · ø co.</title>
+<link rel="stylesheet" href="../../_shared/fonts.css">
+<link rel="stylesheet" href="../../_shared/shell.css">
+<style>
+@font-face{font-family:"Poppins";src:url("assets/fonts/poppins-300.woff2") format("woff2");font-weight:300}
+@font-face{font-family:"Poppins";src:url("assets/fonts/poppins-500.woff2") format("woff2");font-weight:500}
+@font-face{font-family:"Poppins";src:url("assets/fonts/poppins-900.woff2") format("woff2");font-weight:900}
+body.doc-page{overflow:auto;background:var(--ground);}
+.doc{max-width:1180px;margin:0 auto;padding:calc(var(--gutter) + var(--nav-h) + 44px) var(--gutter) 84px;}
+.doc .use{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--grey-2);margin:0 0 24px;}
+.doc .use a{color:var(--grey);}
+.doc .mh{border-top:2px solid var(--ink);padding-top:20px;}
+.doc .mh .rh{font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);margin:0 0 16px;}
+.doc h1{font-family:var(--disp);font-weight:800;font-size:clamp(44px,8vw,96px);letter-spacing:-.035em;line-height:.9;margin:0;}
+.doc .premise{font-family:var(--disp);font-weight:500;font-size:clamp(19px,2.5vw,27px);line-height:1.18;letter-spacing:-.015em;margin:16px 0 0;max-width:34ch;color:var(--ink);}
+.doc .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair);margin:28px 0 0;}
+.doc .meta div{background:#fff;padding:12px 16px;}
+.doc .meta h4{margin:0 0 5px;font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--grey);font-weight:400;}
+.doc .meta p{margin:0;font-family:var(--disp);font-weight:600;font-size:14.5px;letter-spacing:-.01em;}
+.doc .meta p a{color:var(--blue);text-decoration:none;border-bottom:1px solid var(--blue);}
+.doc .hero{margin:28px 0 0;border:1px solid var(--hair);background:#000;aspect-ratio:16/9;overflow:hidden;position:relative}
+.doc .hero iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.doc .hero .open{position:absolute;right:12px;top:12px;font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.3);padding:8px 11px;text-decoration:none}
+.doc .s{display:grid;grid-template-columns:var(--notes-w) 1fr;gap:32px;padding:26px 0;border-top:1px solid var(--hair);}
+.doc .s .lab{display:flex;gap:13px;align-items:baseline;height:max-content;}
+.doc .s .lab b{font-family:var(--disp);font-weight:800;font-size:23px;letter-spacing:-.02em;color:var(--ink);line-height:1;}
+.doc .s .lab span{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--grey);}
+.doc .s .bd{font-size:14px;line-height:1.62;color:var(--ink);min-width:0}
+.doc .s .bd p{margin:0 0 10px;max-width:58ch} .doc .s .bd p:last-child{margin:0;}
+.doc .bd ul{margin:0;padding:0;list-style:none;max-width:58ch}
+.doc .bd ul li{position:relative;padding-left:18px;margin:0 0 8px;}
+.doc .bd ul li::before{content:'';position:absolute;left:0;top:8px;width:6px;height:6px;background:var(--accent);}
+.stage{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hair);border:1px solid var(--hair);margin-top:12px}
+.stage>div{background:#fff;padding:14px 16px;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;line-height:1.7;color:var(--ink);min-width:0;overflow-wrap:anywhere}
+.stage b{display:block;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--grey);font-weight:400;margin-bottom:6px}
+.stagefig{grid-column:1/-1;padding:0!important;background:#000!important;position:relative;aspect-ratio:16/9}
+.stagefig i{position:absolute;inset:58px 64px 54px;border:1px dashed rgba(255,255,255,.55)}
+.stagefig em{position:absolute;font-family:var(--mono);font-style:normal;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#fff}
+.swg{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair);margin-top:12px}
+.sw{background:#fff;padding:12px 14px;min-width:0;display:grid;grid-template-columns:34px minmax(0,1fr);gap:4px 12px;align-items:center}
+.sw i{display:block;width:34px;height:34px;grid-row:1/4}
+.sw b{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:500}
+.sw span{font-family:var(--mono);font-size:9.5px;color:var(--grey)}
+.sw em{font-style:normal;font-size:11.5px;line-height:1.4;color:var(--grey)}
+.grounds{display:flex;gap:1px;margin-top:12px;border:1px solid var(--hair);background:var(--hair)}
+.grounds div{flex:1;padding:10px;font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;min-height:64px;display:flex;align-items:flex-end}
+.tr{display:grid;grid-template-columns:90px minmax(0,1fr);gap:6px 18px;padding:14px 0;border-bottom:1px solid var(--hair);align-items:baseline}
+.tr .tk{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--grey);grid-row:1/3}
+.tr .ts{color:var(--ink);overflow-wrap:anywhere}
+.tr .tm{font-family:var(--mono);font-size:9.5px;color:var(--grey);letter-spacing:.04em}
+.type-on-ink{background:#000;padding:16px 20px;margin-top:12px} .type-on-ink .tr{border-bottom-color:rgba(255,255,255,.2)} .type-on-ink .ts{color:#fff}
+.lays{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair);margin-top:12px}
+.lay{background:#fff;padding:14px;text-decoration:none;color:var(--ink);display:flex;flex-direction:column;gap:9px}
+.lay:hover{background:var(--sunken)}
+.lay .fr{aspect-ratio:16/9;background:#000;overflow:hidden;border:1px solid var(--hair)}
+.lay .fr img{width:100%;height:100%;object-fit:cover;display:block}
+.lay .cap{display:flex;gap:10px;align-items:baseline;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase}
+.lay .cap .num{color:var(--accent)} .lay .cap .nm{color:var(--ink);font-weight:500} .lay .cap .gr{color:var(--grey-2);margin-left:auto}
+.lay p{margin:0;font-size:11.5px;line-height:1.5;color:var(--grey)}
+.famrow{display:grid;grid-template-columns:130px minmax(0,1fr);gap:18px;padding:9px 0;border-bottom:1px solid var(--hair);font-size:12.5px;line-height:1.5}
+.famrow b{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:500;color:var(--accent)}
+.famrow span{color:var(--ink)}
+pre.code{margin:12px 0 0;padding:14px 16px;background:var(--ink);color:#F6F5F2;font-family:var(--mono);font-size:11px;line-height:1.6;overflow:auto;white-space:pre-wrap}
+.doc .end{margin-top:44px;padding-top:16px;border-top:2px solid var(--ink);display:flex;justify-content:space-between;gap:16px;font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--grey);}
+.doc .end b{color:var(--ink);font-weight:500;} .doc .end a{color:var(--grey)}
+@media (max-width:900px){ .doc .s{grid-template-columns:1fr;gap:12px;} .doc .meta{grid-template-columns:repeat(2,1fr);} .lays,.swg{grid-template-columns:1fr 1fr} .stage{grid-template-columns:1fr} }
+@media (max-width:600px){ .nav .pager a.opt{display:none} .nav .brand .wm{display:none} }
+@media (max-width:560px){ .lays,.swg{grid-template-columns:1fr} .tr{grid-template-columns:1fr} .tr .tk{grid-row:auto} .famrow{grid-template-columns:1fr} .doc .meta{grid-template-columns:1fr} .type-on-ink .ts{font-size:28px!important} }
+</style>
 </head>
-<body data-root="../../">
-  <nav class="nav" id="nav" aria-label="Site navigation"></nav>
-  <div id="viewport">
-    <main id="stage" aria-label="Strategy deck template · Field Kit worked example">
+<body class="doc-page" data-root="../../">
+<nav class="nav" id="nav" aria-label="Site navigation"></nav>
+<main class="doc">
+  <p class="use">Template · the deck system, laid out · <a href="deck.html">open the worked example</a> · <a href="template.json">template.json</a></p>
 
-      <section class="slide cover field-slide active" data-id="cover" data-layout="cover" data-section="Opening">
-        <div class="field-art"><img src="assets/io-field-warm-cool.jpg" alt=""></div>
-        <div class="field-veil"></div>
-        <img class="mark" src="assets/impossible-mark-white.png" alt="The Impøssible Outcomes Co.">
-        <div class="cover-copy anim">
-          <h1>Read the <span>logic first.</span></h1>
-          <div class="cover-meta">
-            <div class="title">Field Kit · Phase 1 Strategy &amp; Positioning</div>
-            <div class="date">September 2026<br>THE IMPØSSIBLE OUTCOMES CO.</div>
-          </div>
-        </div>
-        <aside class="notes">Cover. One h1 at 132 px, three to four words, the last one or two in coral. Title line under the rule, date and studio at right. The field art is the ø co. warm/cool plate; the veil is 42 % black.</aside>
-      </section>
-      <section class="slide" data-id="layout-key" data-layout="layout-key" data-section="Template">
-        <div class="label anim">/ Template · layout key</div>
-        <h2 class="xsmall anim a2" style="margin-top:18px">Twenty-nine layouts. Replace the copy, keep the frame.</h2>
-        <div class="key-intro anim a2">Every slide in this deck is one layout used once. Duplicate the slide you need, change the words, drop a photo into any dashed slot. Presenter notes on each slide (press N) say what the layout is for and what its limits are. The machine-readable spec is <a href="template.json" style="color:var(--green)">template.json</a>.</div>
-        <div class="key-grid anim a3" id="keygrid"></div>
-        <div class="key-foot anim a3"><b>Keys</b> &nbsp;← → slides &nbsp;·&nbsp; N usage notes &nbsp;·&nbsp; F fullscreen &nbsp;·&nbsp; #slide-id deep links</div>
-        <aside class="notes">Layout key. Generated from the slide list at load; delete this slide in a real deck. Keeps the deck honest about what it contains.</aside>
-      </section>
-      <section class="slide section-turn field-slide" data-id="section-01" data-layout="section-turn" data-section="01 / Where We Are">
-        <div class="field-art"><img src="assets/io-field-warm-cool.jpg" alt=""></div>
-        <div class="field-veil deep"></div>
-        <div class="section-copy anim">
-          <div class="section-code label">Section 01</div>
-          <h1>Where we are</h1>
-        </div>
-        <aside class="notes">Section turn. Code in coral, one h1 at 143 px, bottom-left. Two to four words. The deep veil (58 %) keeps the type legible on any part of the field.</aside>
-      </section>
-      <section class="slide" data-id="foundations" data-layout="copy-ledger" data-section="01 / Where We Are">
-        <div class="foundation">
-          <div class="foundation-copy anim">
-            <div class="label">Foundations</div>
-            <h2>The evidence is already in the building.</h2>
-            <div class="body"><p>Fifty interviews on file, three years of dashboards and a strategy deck nobody rereads. Every team we meet has the material. What it lacks is an instrument that turns material into a reading.</p><p>The work now is to make those truths cohere into one idea a team can hold in an afternoon.</p></div>
-          </div>
-          <div class="ledger anim a2">
-            <div class="ledger-row"><b>50</b><span>interviews already on file</span></div>
-            <div class="ledger-row"><b>03</b><span>years of operating data nobody has read end to end</span></div>
-            <div class="ledger-row"><b>02</b><span>complete systems to reconcile: the company and its customer</span></div>
-            <div class="ledger-row"><b>01</b><span>organizing idea still required</span></div>
-          </div>
-        </div>
-        <aside class="notes">Copy + ledger, 54/46. Left: label, h2 at 72 px, two short paragraphs. Right: three to five rows, two-digit number in coral at 68 px, one line each. Numbers should be real counts, not decoration.</aside>
-      </section>
-      <section class="slide" data-id="research" data-layout="image-split" data-section="01 / Where We Are">
-        <div class="research-split">
-          <figure class="slot anim" data-slot="Photo · field research" data-seed="11" data-tone="dark"><canvas></canvas><span class="slot-tag">Photo · field research</span></figure>
-          <div class="copy anim a2">
-            <div class="label">/ What the research tells us</div>
-            <h2>The decision is already being made without us.</h2>
-            <div class="voice">Teams do not lack insight. They lack evidence they can hold at the moment the decision lands.</div>
-          </div>
-        </div>
-        <aside class="notes">Image split, 58/42, photo left. Label, h2 at 70 px, one voice line (Poppins 300, 30 px). Photo is object-fit cover with a 10 % black wash; put the subject in the center 60 %. Variants of this family: product-split 53/47 (copy left, light), story-split 57/43 (adds a green landing line), aisle-split 62/38, means-split 41/59 (h2 at 91 px).</aside>
-      </section>
-      <section class="slide" data-id="stats" data-layout="stat-row" data-section="01 / Where We Are">
-        <div class="label anim">/ The customer is already in the room</div>
-        <h2 class="small anim a2" style="margin-top:22px;max-width:1180px">Diagnosis is routine—not the emergency option.</h2>
-        <div class="stats anim a2">
-          <div class="stat"><b>84%</b><p>Ran a strategy review in the last twelve months.</p></div>
-          <div class="stat"><b>40%</b><p>Changed direction mid-quarter at least once.</p></div>
-          <div class="stat"><b>71%</b><p>Say the deck arrived after the decision.</p></div>
-          <div class="stat"><b>3×</b><p>As many decks produced as decisions taken.</p></div>
-        </div>
-        <div class="stat-landing anim a3">Field Kit's job is not demand creation. It is evidence creation.</div>
-        <aside class="notes">Stat row. Four stats on hairlines, number in green at 92 px, one sentence each (≤ 270 px wide). Landing line pinned to the bottom rule. Use three or four stats; two reads thin, five overflows.</aside>
-      </section>
-      <section class="slide" data-id="tradeoff" data-layout="tradeoff" data-section="01 / Where We Are">
-        <div class="label anim">/ Category problem</div>
-        <h2 class="small anim a2" style="margin-top:22px">Strategy has a speed problem, not a rigor problem.</h2>
-        <div class="tradeoff anim a2">
-          <div class="trade-panel">
-            <h3>What teams need</h3>
-            <p>A reading that lands the same week as the question.</p>
-            <div class="list">Fast · Legible · Held by the team · Worth the fee · Rigorous enough</div>
-          </div>
-          <div class="vs">VS.</div>
-          <div class="trade-panel risk">
-            <h3>What they expect to give up</h3>
-            <p>The qualities that make a reading trustworthy.</p>
-            <div class="list">Depth · Evidence · Independence · Nuance · Follow-through</div>
-          </div>
-        </div>
-        <div class="landing anim a3" style="margin-top:26px;color:var(--green)">Field Kit starts by refusing the trade-off.</div>
-        <aside class="notes">Trade-off. Two panels on hairlines with a green VS between; the right panel is the risk and fills coral. Each panel: a mono heading, one Poppins 500 line at 39 px, a dotted list. Green landing line closes.</aside>
-      </section>
-      <section class="slide light" data-id="halves" data-layout="halves" data-section="01 / Where We Are">
-        <div class="halves">
-          <div class="half anim">
-            <div class="label" style="color:#000">Trial</div>
-            <div class="big">The instrument earns the first afternoon.</div>
-            <p>In the room, the kit has to make the method legible, the value obvious and the reading credible in minutes.</p>
-            <div class="ingredients">Clarity · Speed · Price · Value · Curiosity · A reason to book</div>
-          </div>
-          <div class="half anim a2">
-            <div class="label">Repeat</div>
-            <div class="big">The reading earns the second.</div>
-            <p>A week later, whether the reading still explains what happened decides whether one afternoon becomes a practice.</p>
-            <div class="ingredients">Accuracy · Specificity · Independence · Follow-through · The reading matching the room</div>
-          </div>
-        </div>
-        <aside class="notes">Two halves, coral | white. Each half: label, big statement at 88 px (min-height 320 so the pair aligns), one paragraph, a dotted ingredients line. Keep the two statements the same length. The house layout (slide 21) is the same frame in navy | green.</aside>
-      </section>
-      <section class="slide navy" data-id="audience" data-layout="copy-moments" data-section="01 / Where We Are">
-        <div class="audience-layout">
-          <div class="anim">
-            <div class="label">/ Audience</div>
-            <h2>The audience is one recurring moment.</h2>
-            <div class="body"><p>They have more questions than quarters. Speed feels normal. Guesswork does not.</p></div>
-          </div>
-          <div class="moments anim a2">
-            <div class="moment"><b>I need the call made.</b><p>The quarter took the energy. The decision still has to feel decided.</p></div>
-            <div class="moment"><b>I choose not to guess.</b><p>Speed is a preference, not a confession. Standards remain.</p></div>
-            <div class="moment"><b>I do not have a quarter.</b><p>Time matters because the window is real—not because the question got easier.</p></div>
-          </div>
-        </div>
-        <div class="foot-line anim a3"><span class="accent">For technical founders:</span> the method decides eligibility. The reading creates desire. The follow-through earns repeat.</div>
-        <aside class="notes">Copy + moments on navy, 41/59. Three moments (a quoted line in Poppins 900 at 29 px, one sentence). The foot line is optional: an accent lead-in and one sentence pinned to the bottom rule.</aside>
-      </section>
-      <section class="slide" data-id="order" data-layout="order-rows" data-section="01 / Where We Are">
-        <div class="label anim">/ The room changes the order</div>
-        <h2 class="small anim a2" style="margin-top:22px;max-width:1260px">The same truth has to be told in a different sequence.</h2>
-        <div class="order anim a2">
-          <div class="order-row"><b>Workshop</b><span>Method → Story → Reading</span></div>
-          <div class="order-row retail"><b>Boardroom</b><span>Reading → Value → Proof</span></div>
-        </div>
-        <div class="voice anim a3" style="margin-top:31px;max-width:1160px;color:var(--dim)">Curiosity opens the door. Clear value keeps it open. Proof earns belief.</div>
-        <aside class="notes">Order rows. Two or three rows: a mono key, then a sequence in Poppins 900 at 53 px with arrows. The row that matters carries class retail (coral). One voice line closes.</aside>
-      </section>
-      <section class="slide" data-id="goal" data-layout="big-number" data-section="02 / What We Are Doing">
-        <div class="goal">
-          <div class="anim">
-            <div class="label">/ The goal</div>
-            <h2>Land more. Move into the boardroom. Keep the teams we earned. Find many more.</h2>
-            <div class="body"><p>We need one idea strong enough to make the kit, the reading and the follow-up compound instead of behaving like separate expenses.</p></div>
-          </div>
-          <div class="goal-number anim a2">20×<span>The effect required from the idea—not the money available to buy attention.</span></div>
-        </div>
-        <aside class="notes">Big number. Copy left (h2 at 84 px, one paragraph), one number in green at 235 px right with a mono caption. The number is the whole slide: two or three characters, no decimals.</aside>
-      </section>
-      <section class="slide" data-id="story" data-layout="image-split-landing" data-section="02 / What We Are Doing">
-        <div class="story-split">
-          <figure class="slot anim" data-slot="Diagram · trajectory" data-seed="5" data-tone="dark"><canvas></canvas><span class="slot-tag">Diagram · trajectory</span></figure>
-          <div class="copy anim a2">
-            <div class="label">/ The moon</div>
-            <h2>We do not have the fuel for a straight-line return.</h2>
-            <div class="body"><p>We need something large enough to bend the path—an existing force that gives more momentum than burning budget alone can create.</p></div>
-            <div class="landing">Our moon is a paradox already built into how teams decide.</div>
-          </div>
-        </div>
-        <aside class="notes">Image split with a landing, 57/43. Same as the image split plus a green landing line under the body. Use it when the slide has to hand off to the next idea.</aside>
-      </section>
-      <section class="slide navy" data-id="terms" data-layout="term-pair" data-section="02 / What We Are Doing">
-        <div class="label anim">/ Our moon</div>
-        <div class="term-pair anim a2">
-          <div class="term"><b>Specific evidence.</b><p>Named sources, dated numbers, a method the team can repeat and a reading that still knows what it measured.</p></div>
-          <div class="term"><b>Ordinary speed.</b><p>One afternoon, one room, one page and the actual Tuesday on which the decision has to happen.</p></div>
-          <div class="landing">The reading must be particular without becoming precious—and fast without becoming generic.</div>
-        </div>
-        <aside class="notes">Term pair on navy. Two terms on hairlines: first in coral, second in pale blue, Poppins 900 at 77 px (min-height 140 so they align), one paragraph each. The landing spans both columns.</aside>
-      </section>
-      <section class="slide section-turn field-slide" data-id="section-02" data-layout="section-turn" data-section="03 / The Category">
-        <div class="field-art"><img src="assets/io-field-warm-cool.jpg" alt=""></div>
-        <div class="field-veil deep"></div>
-        <div class="section-copy anim">
-          <div class="section-code label">Section 02</div>
-          <h1>The category</h1>
-        </div>
-        <aside class="notes">Section turn, second use. Every section opens with one.</aside>
-      </section>
-      <section class="slide" data-id="card-grid-6" data-layout="card-grid" data-section="03 / The Category">
-        <div class="label anim">/ Dominant visual grammar</div>
-        <h2 class="xsmall anim a2" style="margin-top:18px">Strategy decks already share a visual operating procedure.</h2>
-        <div class="pack-grid anim a2">
-          <div class="pack-card"><figure class="slot anim" data-slot="Artifact · 01" data-seed="20" data-tone="light"><canvas></canvas><span class="slot-tag">Artifact · 01</span></figure><div class="pack-name">Big Four</div></div><div class="pack-card"><figure class="slot anim" data-slot="Artifact · 02" data-seed="21" data-tone="light"><canvas></canvas><span class="slot-tag">Artifact · 02</span></figure><div class="pack-name">Boutique</div></div><div class="pack-card"><figure class="slot anim" data-slot="Artifact · 03" data-seed="22" data-tone="light"><canvas></canvas><span class="slot-tag">Artifact · 03</span></figure><div class="pack-name">In-house</div></div><div class="pack-card"><figure class="slot anim" data-slot="Artifact · 04" data-seed="23" data-tone="light"><canvas></canvas><span class="slot-tag">Artifact · 04</span></figure><div class="pack-name">Agency</div></div><div class="pack-card"><figure class="slot anim" data-slot="Artifact · 05" data-seed="24" data-tone="light"><canvas></canvas><span class="slot-tag">Artifact · 05</span></figure><div class="pack-name">Analyst</div></div><div class="pack-card"><figure class="slot anim" data-slot="Artifact · 06" data-seed="25" data-tone="light"><canvas></canvas><span class="slot-tag">Artifact · 06</span></figure><div class="pack-name">Founder deck</div></div>
-        </div>
-        <div class="pack-takeaway anim a3"><div class="meta">The common code</div><p>Big number up top. A framework block. A literal recommendation. A constellation of logos. Almost no evidence of a decision beyond the slide.</p></div>
-        <aside class="notes">Card grid ×6. Six cards at 448 px, image at 388 px on a paper ground (object-fit contain), a mono name strip. Takeaway below: mono key + one Poppins 300 line. The challenger variant is five cards at 400 px with object-fit cover.</aside>
-      </section>
-      <section class="slide light" data-id="jobs" data-layout="column-grid" data-section="03 / The Category">
-        <div class="label anim">/ The sector standard operating procedure</div>
-        <h2 class="small anim a2" style="margin-top:20px">Every deck is already trying to do four jobs.</h2>
-        <div class="jobs anim a2">
-          <div class="job"><div class="n">01</div><b>Question</b><p>Tell me exactly what I am deciding.</p></div>
-          <div class="job"><div class="n">02</div><b>Desire</b><p>Make the answer look worth choosing at a glance.</p></div>
-          <div class="job"><div class="n">03</div><b>Proof</b><p>Give me one useful reason to believe it.</p></div>
-          <div class="job"><div class="n">04</div><b>Permission</b><p>Make scope, price and next step unmistakable.</p></div>
-        </div>
-        <aside class="notes">Column grid ×4 on white. Four columns on hairlines: number, one word in Poppins 900 at 48 px (first coral, third blue), one sentence. The last column fills green. The words layout (slide 24) is the three-column version.</aside>
-      </section>
-      <section class="slide research-plate" data-id="plate" data-layout="research-plate" data-section="03 / The Category">
-        <div class="plate-head anim"><div class="meta">/ Field observation 01 — Team room research</div><div class="meta">Whiteboard visibility / actual meeting conditions</div></div>
-        <figure class="slot anim a2" data-slot="Plate · field observation" data-seed="31" data-tone="dark"><canvas></canvas><span class="slot-tag">Plate · field observation</span></figure>
-        <aside class="notes">Research plate. One image in a hairline frame at 787 px on the panel ground, two mono captions above. For evidence that should be seen whole: a photo, a screenshot, a source slide.</aside>
-      </section>
-      <section class="slide" data-id="statement" data-layout="statement" data-section="03 / The Category">
-        <div class="necessary anim">
-          <div class="label">/ What the category cannot give us</div>
-          <div class="display">Table stakes are <span>necessary. Not sufficient.</span></div>
-          <div class="voice">If every consultancy can frame the question, show the number, badge the method and promise speed, category competence cannot be the organizing idea. We have to move from the deck problem to the human paradox inside it.</div>
-        </div>
-        <aside class="notes">Statement. Display at 132 px with the turn in green on its own line, then a voice paragraph at 42 px. The line-statement variant (h1 at 130 px) and the paradox variant (on the field, h1 at 124 px) are the same move with a different ground.</aside>
-      </section>
-      <section class="slide section-turn field-slide" data-id="section-03" data-layout="section-turn" data-section="04 / The Paradox">
-        <div class="field-art"><img src="assets/io-field-warm-cool.jpg" alt=""></div>
-        <div class="field-veil deep"></div>
-        <div class="section-copy anim">
-          <div class="section-code label">Section 03</div>
-          <h1>The paradox</h1>
-        </div>
-        <aside class="notes">Section turn, third use.</aside>
-      </section>
-      <section class="slide fano-slide" data-id="plane" data-layout="plane" data-section="04 / The Paradox">
-        <div class="label anim">/ Plane 01 — The instrument</div>
-        <div class="plane-layout plane-left">
-          <div class="fano anim a2" aria-label="Instrument plane">
-            <svg viewBox="0 0 660 600" aria-hidden="true">
-              <polygon class="plane-fill" points="330,68 70,518 590,518"/>
-              <path class="circuit" d="M330 68 L70 518 L590 518 Z"/>
-              <line class="circuit" x1="330" y1="68" x2="330" y2="518"/>
-              <line class="circuit" x1="70" y1="518" x2="460" y2="293"/>
-              <line class="circuit" x1="590" y1="518" x2="200" y2="293"/>
-              <circle class="circuit" cx="330" cy="368" r="150"/>
-              <circle class="node vertex" cx="330" cy="68" r="11"/><circle class="node vertex" cx="70" cy="518" r="11"/><circle class="node vertex" cx="590" cy="518" r="11"/>
-              <circle class="node mid" cx="200" cy="293" r="11"/><circle class="node mid" cx="460" cy="293" r="11"/><circle class="node mid" cx="330" cy="518" r="11"/>
-              <circle class="node core" cx="330" cy="368" r="17"/>
-            </svg>
-            <div class="fano-point p1"><b>Who</b>Teams with more questions than quarters</div>
-            <div class="fano-point p2"><b>How</b>Measured, not asserted</div>
-            <div class="fano-point p3"><b>Where</b>Room to reading</div>
-            <div class="fano-point p4"><b>Standard</b>Every number cited</div>
-            <div class="fano-point p5"><b>Tool</b>One afternoon</div>
-            <div class="fano-point p6"><b>Outcome</b>A held decision</div>
-            <div class="fano-point p7 core"><b>Why</b>The reading arrives as itself</div>
-          </div>
-          <div class="plane-copy anim a2">
-            <h2>Field Kit knows how to protect a reading through speed.</h2>
-            <div class="body"><p>Method, sampling, synthesis and the read-out form one chain of custody. Every handoff answers to the decision.</p></div>
-          </div>
-        </div>
-        <aside class="notes">Plane diagram. A Fano plane at 660 × 600: three vertices, three mids, one core, seven labeled points (p1–p7, positions fixed in CSS). Plane fill is the accent (coral; class alt makes it blue and flips the copy to the left with plane-right). Point labels: one mono word in the plane color, then ≤ 6 words.</aside>
-      </section>
-      <section class="slide" data-id="binding" data-layout="binding" data-section="04 / The Paradox">
-        <div class="binding anim">
-          <div class="binding-head">
-            <div class="binding-side"><b>Instrument</b><span>Speed protects the reading</span></div>
-            <div class="binding-side"><b>Team</b><span>Speed threatens the reading</span></div>
-          </div>
-          <svg class="bound-fanos" viewBox="0 0 1472 650" role="img" aria-label="Two planes joined by one center-to-center bridge">
-            <g class="mini-plane a" transform="translate(45 55) scale(.82)">
-              <polygon class="plane-fill a" points="330,68 70,518 590,518"/>
-              <path class="circuit" d="M330 68 L70 518 L590 518 Z"/><line class="circuit" x1="330" y1="68" x2="330" y2="518"/><line class="circuit" x1="70" y1="518" x2="460" y2="293"/><line class="circuit" x1="590" y1="518" x2="200" y2="293"/><circle class="circuit" cx="330" cy="368" r="150"/>
-              <circle class="node vertex" cx="330" cy="68" r="11"/><circle class="node vertex" cx="70" cy="518" r="11"/><circle class="node vertex" cx="590" cy="518" r="11"/><circle class="node mid" cx="200" cy="293" r="11"/><circle class="node mid" cx="460" cy="293" r="11"/><circle class="node mid" cx="330" cy="518" r="11"/><circle class="node core" cx="330" cy="368" r="17"/>
-            </g>
-            <g class="mini-plane b" transform="translate(887 55) scale(.82)">
-              <polygon class="plane-fill b" points="330,68 70,518 590,518"/>
-              <path class="circuit" d="M330 68 L70 518 L590 518 Z"/><line class="circuit" x1="330" y1="68" x2="330" y2="518"/><line class="circuit" x1="70" y1="518" x2="460" y2="293"/><line class="circuit" x1="590" y1="518" x2="200" y2="293"/><circle class="circuit" cx="330" cy="368" r="150"/>
-              <circle class="node vertex" cx="330" cy="68" r="11"/><circle class="node vertex" cx="70" cy="518" r="11"/><circle class="node vertex" cx="590" cy="518" r="11"/><circle class="node mid" cx="200" cy="293" r="11"/><circle class="node mid" cx="460" cy="293" r="11"/><circle class="node mid" cx="330" cy="518" r="11"/><circle class="node core" cx="330" cy="368" r="17"/>
-            </g>
-            <line class="center-bridge" x1="315.6" y1="356.8" x2="1157.6" y2="356.8"/>
-            <circle class="node core" cx="315.6" cy="356.8" r="14"/>
-            <circle class="node core" cx="1157.6" cy="356.8" r="14"/>
-          </svg>
-          <div class="bridge-label">One change. Opposite expectations.</div>
-        </div>
-        <aside class="notes">Binding. Two planes (a coral, b blue) at .82 scale joined core-to-core by a green bridge, a label on the bridge, and a heading pair at the top corners (word in the plane color + a mono line). Use after two plane slides.</aside>
-      </section>
-      <section class="slide" data-id="proof" data-layout="image-split-facts" data-section="05 / The Shot">
-        <div class="proof-split">
-          <figure class="slot anim" data-slot="Photo · proof case" data-seed="41" data-tone="dark"><canvas></canvas><span class="slot-tag">Photo · proof case</span></figure>
-          <div class="proof-copy anim a2">
-            <div class="label">/ One proof case</div>
-            <h2>A whole improbable thing that is accurate to itself.</h2>
-            <div class="facts">
-              <div class="fact"><b>Team</b><span>A 60-person hardware company, mid-pivot.</span></div>
-              <div class="fact"><b>Question</b><span>Which of two roadmaps to fund.</span></div>
-              <div class="fact"><b>Method</b><span>Nineteen interviews, one dashboard, one afternoon.</span></div>
-              <div class="fact"><b>Standard</b><span>Every number cited to a source.</span></div>
-              <div class="fact"><b>Home</b><span>A decision the same day, held six weeks later.</span></div>
-            </div>
-            <div class="landing">These facts do not fight one another. Together, they make the reading.</div>
-          </div>
-        </div>
-        <aside class="notes">Image split with facts, 52/48. Photo left; right: label, h2 at 58 px, four to six fact rows (mono key in coral, one line), green landing. The pair-split variant puts two photos side by side at 57 % on white.</aside>
-      </section>
-      <section class="slide" data-id="house" data-layout="halves-flow" data-section="05 / The Shot">
-        <div class="house">
-          <div class="house-half anim">
-            <div class="label white">/ Back of house</div>
-            <h2>Method is the kitchen no one sees.</h2>
-            <p>Sampling, instruments, synthesis and drafting protect the reading before it reaches the room.</p>
-            <div class="house-flow"><div>Sample</div><div>Measure</div><div>Synthesize</div><div>Draft</div></div>
-          </div>
-          <div class="house-half anim a2">
-            <div class="label" style="color:#000">/ Front of house</div>
-            <h2>The room is where the team meets the reading.</h2>
-            <p>Read-out, questions, the page they keep and what they do Monday are part of the work—not somebody else's problem.</p>
-            <div class="house-flow"><div>Arrive</div><div>Read</div><div>Decide</div><div>Keep</div></div>
-          </div>
-        </div>
-        <aside class="notes">Halves with a flow, navy | green. Each half: label, h2 at 64 px (min-height 185), one paragraph, a four-step flow on hairlines. Keep the two flows the same length.</aside>
-      </section>
-      <section class="slide navy" data-id="tracks" data-layout="tracks" data-section="05 / The Shot">
-        <div class="label anim">/ The hinge</div>
-        <h2 class="small anim a2" style="margin-top:21px">The reading takes the same journey twice.</h2>
-        <div class="body anim a2" style="margin-top:20px"><p>One journey is cultural. The other is operational. Both ask whether an idea can pass through speed without losing the thing that makes it true.</p></div>
-        <div class="tracks anim a2">
-          <div class="track">
-            <div class="track-name">Cultural</div>
-            <div><b>Origin</b><span>A question begins with a person.</span></div>
-            <div><b>Crossing</b><span>It moves across teams.</span></div>
-            <div><b>Memory</b><span>What mattered stays.</span></div>
-            <div><b>Adaptation</b><span>A new room changes the words.</span></div>
-            <div><b>Home</b><span>Eventually it belongs to everyone.</span></div>
-          </div>
-          <div class="track">
-            <div class="track-name">Operational</div>
-            <div><b>Method</b><span>The reading starts with rigor.</span></div>
-            <div><b>Compress</b><span>Protect what the room needs.</span></div>
-            <div><b>Move</b><span>Hold the evidence intact.</span></div>
-            <div><b>Land</b><span>Finish the reading on purpose.</span></div>
-            <div><b>Keep</b><span>The decision arrives as itself.</span></div>
-          </div>
-        </div>
-        <div class="track-landing anim a3">Speed without erasure.</div>
-        <aside class="notes">Tracks. Two rows × five steps on hairlines: a track name (coral, then pale blue) and five mono-keyed cells. The point is the parallel: step n on both tracks should rhyme. Green landing closes.</aside>
-      </section>
-      <section class="slide memory-hero" data-id="memory" data-layout="image-card" data-section="06 / The Pattern">
-        <figure class="slot anim" data-slot="Photo · spread" data-seed="51" data-tone="dark"><canvas></canvas><span class="slot-tag">Photo · spread</span></figure>
-        <div class="scrim"></div>
-        <div class="memory-card anim">
-          <div class="label">/ The pattern</div>
-          <h2>We don't make forecasts. We make readings.</h2>
-          <div class="body"><p>A reading is not a prediction. It is an encounter: people bring distinct questions, methods and standards into the same room, then decide something together without pretending those differences disappeared.</p><p>At its best, a good afternoon is a whole set of differences stabilized, however implausibly, into one decision.</p></div>
-        </div>
-        <div class="menu-strip anim a2">
-          <div>Roadmap read</div><div>Pricing read</div>
-          <div>Positioning read</div><div>Hiring read</div>
-        </div>
-        <aside class="notes">Image + card. Full-bleed photo with a 34 % scrim, a 700 px card at 86 % black (label, h2 at 71 px, two paragraphs), and a 2 × 2 mono strip bottom-right. Photo should carry detail on the right two-thirds.</aside>
-      </section>
-      <section class="slide section-turn field-slide" data-id="section-04" data-layout="section-turn" data-section="07 / The Reveal">
-        <div class="field-art"><img src="assets/io-field-warm-cool.jpg" alt=""></div>
-        <div class="field-veil deep"></div>
-        <div class="section-copy anim">
-          <div class="section-code label">Section 04</div>
-          <h1>The reveal</h1>
-        </div>
-        <aside class="notes">Section turn before the reveal.</aside>
-      </section>
-      <section class="slide field-slide" data-id="reveal" data-layout="reveal" data-section="07 / The Reveal">
-        <div class="field-art"><img src="assets/io-field-warm-cool.jpg" alt=""></div>
-        <div class="field-veil deep"></div>
-        <div class="strategy-reveal content anim">
-          <div class="label white">/ The strategy</div>
-          <h1 class="strategy-phrase">Stop asserting.<span>Start reading<br>as measured.</span></h1>
-          <div class="meta">One operating instruction for method, read-out and communication.</div>
-        </div>
-        <aside class="notes">Reveal. On the field: white label, the strategy line at 118 px with the second clause in coral on its own line, one mono line under it. This is the slide the deck exists for; nothing else on it.</aside>
-      </section>
-      <section class="slide light" data-id="words" data-layout="column-grid-3" data-section="08 / Give It Legs">
-        <div class="label anim">/ What the strategy commands</div>
-        <h2 class="xsmall anim a2" style="margin-top:18px">Every word is an instruction—not decoration.</h2>
-        <div class="words anim a2">
-          <div class="word"><b>Stop asserting.</b><p>Drop the framework theater. Name the source, the sample, the method and the actual job without apology.</p></div>
-          <div class="word"><b>Start reading.</b><p>Begin with the decision and design every handoff so the evidence survives contact with the room.</p></div>
-          <div class="word"><b>As measured.</b><p>Let every number keep its source, date and error while becoming fully usable in the room.</p></div>
-        </div>
-        <div class="standard-quote anim a3">The Field Kit Standard: It is not a reading until the question is specific enough to decide, the evidence is cited enough to check, and every meaningful claim can stand up to scrutiny.</div>
-        <aside class="notes">Column grid ×3 on white with a standard. Three words in Poppins 900 at 48 px (coral, blue, green), one paragraph each, and a black quote bar pinned to the bottom rule for the standard the deck commits to.</aside>
-      </section>
-      <section class="slide navy" data-id="legs" data-layout="board-pair" data-section="08 / Give It Legs">
-        <div class="legs">
-          <div class="anim">
-            <div class="label">/ Read-out</div>
-            <h2>The evidence contains the position. The page makes it visible.</h2>
-            <div class="distance-board">
-              <div class="distance-row"><b>Six feet</b><span><strong>Question + desire.</strong> Stop the eye with the question, the number and a recognizable method.</span></div>
-              <div class="distance-row"><b>At the table</b><span><strong>Proof + permission.</strong> Make sources, scope, price and next step instantly legible.</span></div>
-              <div class="distance-row"><b>In hand</b><span><strong>Method + memory.</strong> Reward attention with sampling, choices and the confidence to repeat it.</span></div>
-            </div>
-          </div>
-          <div class="channel-board anim a2">
-            <div class="channel"><b>Boardroom</b><p>Lead with the reading, the value and one fast proof.</p></div>
-            <div class="channel"><b>Workshop</b><p>Lead with the question, then unfold the deeper how.</p></div>
-            <div class="channel"><b>Founder</b><p>Lead with rigor and real-life utility.</p></div>
-            <div class="channel"><b>Buyer</b><p>Lead with evidence-first standards, relevance, repeat and incrementality.</p></div>
-          </div>
-        </div>
-        <aside class="notes">Board pair on navy, 48/52. Left: h2 at 59 px and a distance board (mono key in coral, a bold lead-in, one sentence). Right: a channel board (name in pale blue Poppins 900, one sentence). Three rows left, four right.</aside>
-      </section>
-      <section class="slide" data-id="engines" data-layout="card-row" data-section="08 / Give It Legs">
-        <div class="label anim">/ Marketing</div>
-        <h2 class="xsmall anim a2" style="margin-top:18px">Once the practice stops asserting, communication starts sounding like itself.</h2>
-        <div class="engines anim a2">
-          <div class="engine"><div class="code">01 / Provenance engine</div><b>Show Your Sources</b><p>Tell how a reading kept its sources while becoming usable in an afternoon.</p></div>
-          <div class="engine"><div class="code">02 / Utility engine</div><b>Instrument of the Month</b><p>Celebrate the sampler, the dashboard and the useful systems that make a decision work.</p></div>
-          <div class="engine"><div class="code">03 / Cultural engine</div><b>Strategy, Measured</b><p>Poke the polished consulting myth in the ribs with readings that tell the truth better.</p></div>
-        </div>
-        <div class="voice-examples anim a3">
-          <div class="voice-example">"Judge us after the read-out."</div>
-          <div class="voice-example">"The sample is part of the method."</div>
-          <div class="voice-example">"A reading that still knows what it measured."</div>
-        </div>
-        <aside class="notes">Card row ×3 with voice examples. Three panel cards (mono code in coral, name in Poppins 900 at 40 px, one sentence) and three green voice lines on hairlines beneath. Names should sound like campaigns, not categories.</aside>
-      </section>
-      <section class="slide light" data-id="recap" data-layout="recap" data-section="09 / Take It Home">
-        <div class="label anim">/ Take it home</div>
-        <h2 class="xsmall anim a2" style="margin-top:18px">One strategy, repeated by every decision the practice makes.</h2>
-        <div class="recap anim a2">
-          <div class="key">Why</div><div class="value">Make the decision look like the evidence.</div>
-          <div class="key">Who</div><div class="value">Teams with more questions than quarters—especially technical founders who deserve rigor and speed.</div>
-          <div class="key">How</div><div class="value">Design every handoff from the decision backward so the reading arrives as itself.</div>
-          <div class="key">Where</div><div class="value">From the first interview to the held decision.</div>
-          <div class="key final">Strategy</div><div class="value final">Stop asserting. Start reading as measured.</div>
-        </div>
-        <aside class="notes">Recap table on white. Key/value rows on hairlines (mono key, Poppins 500 value at 27 px); the last row is the strategy and fills green. Four to six rows.</aside>
-      </section>
-      <section class="slide field-slide" data-id="seal" data-layout="seal" data-section="09 / Take It Home">
-        <div class="field-art"><img src="assets/io-field-warm-cool.jpg" alt=""></div>
-        <div class="field-veil deep"></div>
-        <img class="seal-mark" src="assets/impossible-mark-white.png" alt="">
-        <div class="seal content anim">
-          <div class="label white">/ Out in the world</div>
-          <h1>We make<span>decisions hold.</span></h1>
-        </div>
-        <aside class="notes">Seal. The outward line at 134 px, second clause in green, the ø mark top-right. The last slide; no notes, no logos beyond the mark.</aside>
-      </section>
+  <header class="mh">
+    <p class="rh">Strategy deck · IMPØSSIBLE</p>
+    <h1>Strategy deck</h1>
+    <p class="premise">A 1600 × 900 stage, one type system, one palette with fixed roles, and 29 layouts — every slide a strategy deck needs, used once each.</p>
+    <div class="meta">
+      <div><h4>Stage</h4><p>1600 × 900 · scale to fit</p></div>
+      <div><h4>Layouts</h4><p>29 · 32 slides in the example</p></div>
+      <div><h4>Worked example</h4><p><a href="deck.html">Field Kit · Phase 1</a></p></div>
+      <div><h4>Spec</h4><p><a href="template.json">template.json</a></p></div>
+    </div>
+    <div class="hero"><iframe src="deck.html?embed=1" title="worked example deck" loading="lazy"></iframe><a class="open" href="deck.html">Open deck ↗</a></div>
+  </header>
 
-      <div id="chrome" aria-hidden="true">
-        <div id="counter">01 / 32</div>
-        <div id="help">← → navigate · N notes · F fullscreen</div>
-      </div>
-    </main>
-  </div>
+  <section class="s"><div class="lab"><b>01</b><span>Stage</span></div><div class="bd">
+    <p>Everything is composed on a fixed 1600 × 900 stage and scaled to the viewport; when the viewport is wider or taller than 16 : 9 the stage bleeds (<code>--bleed-x</code>, <code>--bleed-y</code>) so full-bleed grounds still fill the screen. Slides pad 58 / 64 / 54 px; covers and section turns pad 70 px on the sides.</p>
+    <div class="stage">
+      <div class="stagefig"><i></i><em style="left:12px;top:12px">1600 × 900</em><em style="left:70px;top:64px">58 · 64 · 54 padding</em><em style="right:12px;bottom:12px">bleed fills the rest</em></div>
+      <div><b>Fit</b>scale(min(vw/1600, vh/900)) with --bleed-x/--bleed-y so full-bleed grounds fill the viewport</div>
+      <div><b>Runtime</b>#slide-id or #n deep links; replaceState on navigate<br>swipe ≥ 55px<br>print each slide at 1600 × 900 (the source deck was exported to a 41-page PDF this way)</div>
+    </div>
+  </div></section>
 
-  <div id="notesPanel" role="status" aria-live="polite"></div>
-  <script>
-    (function(){
-      var slides=[].slice.call(document.querySelectorAll(".slide"));
-      var stage=document.getElementById("stage");
-      var counter=document.getElementById("counter");
-      var notesPanel=document.getElementById("notesPanel");
-      slides.forEach(function(slide,i){slide.dataset.no=String(i+1).padStart(2,"0")});
-      function indexForHash(){
-        var raw=decodeURIComponent(location.hash.slice(1));
-        if(/^\d+$/.test(raw)) return Math.max(0,Math.min(slides.length-1,Number(raw)-1));
-        var found=slides.findIndex(function(slide){return slide.dataset.id===raw});
-        return found<0?0:found;
-      }
-      var index=indexForHash();
-      var touchStart=null;
-      function fit(){
-        var vp=document.getElementById("viewport");var vw=vp.clientWidth,vh=vp.clientHeight;
-        var scale=Math.min(vw/1600,vh/900);
-        var stageWidth=vw/scale;
-        var stageHeight=vh/scale;
-        var bleedX=Math.max(0,(stageWidth-1600)/2);
-        var bleedY=Math.max(0,(stageHeight-900)/2);
-        stage.style.width=stageWidth+"px";
-        stage.style.height=stageHeight+"px";
-        stage.style.setProperty("--bleed-x",bleedX+"px");
-        stage.style.setProperty("--bleed-y",bleedY+"px");
-        stage.style.transform="scale("+scale+")";
-        stage.style.left="0";
-        stage.style.top="0";
-      }
-      function show(next,updateHash){
-        if(updateHash===undefined) updateHash=true;
-        index=Math.max(0,Math.min(slides.length-1,next));
-        slides.forEach(function(slide,i){slide.classList.toggle("active",i===index)});
-        counter.textContent=String(index+1).padStart(2,"0")+" / "+String(slides.length).padStart(2,"0");
-        var notes=slides[index].querySelector(".notes");
-        notesPanel.textContent=(notes?notes.textContent:"No usage note on this slide.")+"\n\nLayout · "+(slides[index].dataset.layout||"—")+"  ·  Slide id · "+(slides[index].dataset.id||"");
-        document.title="T-03 — Strategy deck · "+String(index+1).padStart(2,"0")+" / "+String(slides.length).padStart(2,"0")+" · Techniques & Templates";
-        if(updateHash) history.replaceState(null,"","#"+(slides[index].dataset.id||index+1));
-      }
-      document.addEventListener("keydown",function(event){
-        if(["ArrowRight","ArrowDown","PageDown"," ","Enter"].indexOf(event.key)>=0){event.preventDefault();show(index+1)}
-        else if(["ArrowLeft","ArrowUp","PageUp","Backspace"].indexOf(event.key)>=0){event.preventDefault();show(index-1)}
-        else if(event.key==="Home")show(0);
-        else if(event.key==="End")show(slides.length-1);
-        else if(event.key.toLowerCase()==="n")document.body.classList.toggle("notes-open");
-        else if(event.key.toLowerCase()==="f"){
-          if(document.fullscreenElement) document.exitFullscreen();
-          else document.documentElement.requestFullscreen();
-        }
-        else if(event.key==="Escape"){document.body.classList.remove("notes-open");fit()}
-      });
-      slides.forEach(function(slide){
-        slide.addEventListener("click",function(event){
-          if(event.target.closest("a,button"))return;
-          show(index+1);
-        });
-      });
-      addEventListener("touchstart",function(event){touchStart=event.changedTouches[0].clientX},{passive:true});
-      addEventListener("touchend",function(event){
-        if(touchStart===null)return;
-        var delta=event.changedTouches[0].clientX-touchStart;
-        if(Math.abs(delta)>55)show(index+(delta<0?1:-1));
-        touchStart=null;
-      },{passive:true});
-      addEventListener("resize",fit);
-      document.addEventListener("fullscreenchange",function(){requestAnimationFrame(fit)});
-      addEventListener("hashchange",function(){show(indexForHash(),false)});
-      fit();
-      show(index,false);
-    })();
-  
-    /* image slots · seeded generated plates so the template ships no photography */
-    (function(){
-      var P={dark:['#0c0d10','#131519','#0f1e3b','#076fe0','#fe5b19','#4b7bac'],light:['#f4f0e8','#e9e3d6','#abc0cf','#e3905f','#4b7bac','#0f1e3b']};
-      function rng(seed){var s=seed|0;return function(){s=s+0x6D2B79F5|0;var t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-      function paint(fig){
-        var cv=fig.querySelector('canvas'); if(!cv)return; var w=fig.clientWidth||400,h=fig.clientHeight||300; if(w<4||h<4)return;
-        var dpr=Math.min(devicePixelRatio||1,2); cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); var x=cv.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0);
-        var tone=fig.dataset.tone==='light'?'light':'dark', C=P[tone], r=rng(+(fig.dataset.seed||1)*7919);
-        x.fillStyle=C[0]; x.fillRect(0,0,w,h);
-        for(var i=0;i<4;i++){ var cx=w*(0.15+0.7*r()), cy=h*(0.15+0.7*r()), rr=Math.max(w,h)*(0.35+0.45*r()); var g=x.createRadialGradient(cx,cy,0,cx,cy,rr); var c=C[2+((r()*4)|0)]; g.addColorStop(0,c); g.addColorStop(1,'rgba(0,0,0,0)'); x.globalAlpha=tone==='light'?0.35:0.55; x.fillStyle=g; x.fillRect(0,0,w,h); }
-        x.globalAlpha=1; var id=x.getImageData(0,0,cv.width,cv.height), d=id.data, g2=rng(+(fig.dataset.seed||1)*104729);
-        for(var k=0;k<d.length;k+=4){ var n=(g2()-0.5)*(tone==='light'?14:22); d[k]+=n; d[k+1]+=n; d[k+2]+=n; }
-        x.putImageData(id,0,0);
-        x.strokeStyle=tone==='light'?'rgba(0,0,0,.18)':'rgba(255,255,255,.18)'; x.setLineDash([6,6]); x.lineWidth=1; x.strokeRect(10.5,10.5,w-21,h-21);
-        x.beginPath(); x.moveTo(10.5,10.5); x.lineTo(w-10.5,h-10.5); x.moveTo(w-10.5,10.5); x.lineTo(10.5,h-10.5); x.globalAlpha=.35; x.stroke(); x.globalAlpha=1;
-      }
-      var figs=[].slice.call(document.querySelectorAll('figure.slot'));
-      function all(){ figs.forEach(paint); }
-      all(); addEventListener('resize',all);
-      var mo=new MutationObserver(function(m){ for(var i=0;i<m.length;i++){ if(m[i].target.classList&&m[i].target.classList.contains('active')) m[i].target.querySelectorAll('figure.slot').forEach(paint); } });
-      document.querySelectorAll('.slide').forEach(function(s){ mo.observe(s,{attributes:true,attributeFilter:['class']}); });
-    })();
-    /* layout key · generated from the slide list */
-    (function(){ var g=document.getElementById('keygrid'); if(!g)return; var ss=[].slice.call(document.querySelectorAll('.slide')); var seen={}; var out=[];
-      ss.forEach(function(s,i){ var l=s.dataset.layout; if(!l||l==='layout-key'||seen[l])return; seen[l]=1; out.push('<div><i>'+String(i+1).padStart(2,'0')+'</i><span>'+l.replace(/-/g,' ')+'</span><em>#'+s.dataset.id+'</em></div>'); });
-      g.innerHTML=out.join(''); })();
-  </script>
-  <script src="../../_shared/entries.js"></script>
-  <script>
-    document.getElementById('nav').innerHTML=`<a class="brand" href="../../index.html">${window.TT.mark}<span class="wm">IMP<i>Ø</i>SSIBLE</span></a><span class="crumb"><a href="../../index.html#templates">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#templates">Templates</a><span class="sep">/</span><b>Strategy deck</b><span class="code">T-03</span></span><span class="pager"><a href="../t-02-editorial-spec-ascii/index.html" title="Editorial spec w/ ASCII animations">← T-02</a><span class="keys">← → slides · N usage notes · F fullscreen</span><a href="template.json" title="machine-readable template spec">spec ⇥</a><a href="../../index.html#templates">index</a></span>`;
-  </script>
+  <section class="s"><div class="lab"><b>02</b><span>Color</span></div><div class="bd">
+    <p>Void is the default ground; light, navy, coral and green are grounds a whole slide can take. Coral labels and turns, green resolves, blue is the second plane. Nothing is decorated — each color has a job.</p>
+    <div class="swg"><div class="sw"><i style="background:#000000"></i><b>void</b><span>#000000</span><em>default ground</em></div><div class="sw"><i style="background:#FFFFFF"></i><b>signal</b><span>#FFFFFF</span><em>light ground (class light)</em></div><div class="sw"><i style="background:#0F1E3B"></i><b>navy</b><span>#0F1E3B</span><em>a ground for pairs and tables</em></div><div class="sw"><i style="background:#076FE0"></i><b>blue</b><span>#076FE0</span><em>second plane, second column word, electric accent</em></div><div class="sw"><i style="background:#4B7BAC"></i><b>blue soft</b><span>#4B7BAC</span><em></em></div><div class="sw"><i style="background:#ABC0CF"></i><b>blue pale</b><span>#ABC0CF</span><em>second term, channel names, second track</em></div><div class="sw"><i style="background:#FE5B19"></i><b>coral</b><span>#FE5B19</span><em>label, the word that turns, the risk panel, first column word</em></div><div class="sw"><i style="background:#E3905F"></i><b>terracotta</b><span>#E3905F</span><em></em></div><div class="sw"><i style="background:#A5FE4E"></i><b>green</b><span>#A5FE4E</span><em>the resolve: landing lines, big numbers, the final row, core node, bridge</em></div><div class="sw"><i style="background:#0C0D10"></i><b>panel</b><span>#0C0D10</span><em></em></div><div class="sw"><i style="background:#131519"></i><b>panel 2</b><span>#131519</span><em></em></div><div class="sw"><i style="background:rgba(255,255,255,.64);border:1px solid #ddd"></i><b>dim</b><span>rgba(255,255,255,.64)</span></div><div class="sw"><i style="background:rgba(255,255,255,.42);border:1px solid #ddd"></i><b>dim 2</b><span>rgba(255,255,255,.42)</span></div><div class="sw"><i style="background:rgba(255,255,255,.20);border:1px solid #ddd"></i><b>hair</b><span>rgba(255,255,255,.20)</span></div><div class="sw"><i style="background:rgba(0,0,0,.18);border:1px solid #ddd"></i><b>ink hair</b><span>rgba(0,0,0,.18)</span></div></div>
+    <div class="grounds"><div style="background:#000;color:#fff">void</div><div style="background:#fff;color:#000;border:1px solid var(--hair)">light</div><div style="background:#0F1E3B;color:#fff">navy</div><div style="background:#FE5B19;color:#000">coral</div><div style="background:#A5FE4E;color:#000">green</div><div style="background:url(assets/io-field-warm-cool.jpg) center/cover;color:#fff">field · veil .42 / .58</div></div>
+  </div></section>
+
+  <section class="s"><div class="lab"><b>03</b><span>Type</span></div><div class="bd">
+    <p>Poppins 900 carries every display line, uppercase, tracked −.04em at .96 leading. Poppins 300 is the voice, 500 the landing. Inter carries body, labels and meta (the source deck used Proxima Nova; Inter substitutes so the template ships with open fonts).</p>
+    <div class="type-on-ink"><div class="tr"><div class="tk">display</div><div class="ts" style="font-family:Poppins,'Helvetica Neue',Arial,sans-serif;font-weight:900;font-size:64px;line-height:1.05;letter-spacing:-.04em;text-transform:uppercase">Display — Poppins 900</div><div class="tm">tracking -.04em, leading 0.96, case upper · {&quot;cover_h1&quot;: 132, &quot;section_h1&quot;: 143, &quot;reveal_h1&quot;: 118, &quot;statement&quot;: 132, &quot;h2&quot;: 76, &quot;h2_small&quot;: 64, &quot;h2_xsmall&quot;: 54, &quot;big_number&quot;: 235, &quot;stat&quot;: 92, &quot;ledger&quot;: 68}</div></div><div class="tr"><div class="tk">voice</div><div class="ts" style="font-family:Poppins,'Helvetica Neue',Arial,sans-serif;font-weight:300;font-size:42px;line-height:1.05;letter-spacing:0;text-transform:none">Voice — Poppins 300</div><div class="tm">size_px 42, leading 1.3</div></div><div class="tr"><div class="tk">landing</div><div class="ts" style="font-family:Poppins,'Helvetica Neue',Arial,sans-serif;font-weight:500;font-size:31px;line-height:1.05;letter-spacing:-.02em;text-transform:none">Landing — Poppins 500</div><div class="tm">size_px 31, tracking -.02em</div></div><div class="tr"><div class="tk">body</div><div class="ts" style="font-family:Inter,'Helvetica Neue',Arial,sans-serif;font-weight:400;font-size:27px;line-height:1.05;letter-spacing:0;text-transform:none">Body — Inter 400</div><div class="tm">size_px 27, small_px 23, leading 1.38, measure_px 1020</div></div><div class="tr"><div class="tk">label</div><div class="ts" style="font-family:Inter,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:14px;line-height:1.05;letter-spacing:.17em;text-transform:uppercase">Label — Inter 700</div><div class="tm">size_px 14, tracking .17em, case upper, color coral</div></div><div class="tr"><div class="tk">meta</div><div class="ts" style="font-family:Inter,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:12px;line-height:1.05;letter-spacing:.14em;text-transform:uppercase">Meta — Inter 700</div><div class="tm">size_px 12, tracking .14em, case upper, color dim_2</div></div></div>
+    <pre class="code">{&quot;cover_h1&quot;: 132, &quot;section_h1&quot;: 143, &quot;reveal_h1&quot;: 118, &quot;statement&quot;: 132, &quot;h2&quot;: 76, &quot;h2_small&quot;: 64, &quot;h2_xsmall&quot;: 54, &quot;big_number&quot;: 235, &quot;stat&quot;: 92, &quot;ledger&quot;: 68}</pre>
+  </div></section>
+
+  <section class="s"><div class="lab"><b>04</b><span>Layouts</span></div><div class="bd">
+    <p>Each card is one layout, shown as it appears in the worked example, with its usage note. Click any card to open that slide in the deck; duplicate the slide, replace the copy, keep the frame.</p>
+    <div class="lays">
+    <a class="lay" href="deck.html#cover" id="cover">
+      <div class="fr"><img src="layouts/01.jpg" alt="cover" ></div>
+      <div class="cap"><span class="num">01</span><span class="nm">cover</span><span class="gr">void</span></div>
+      <p>Cover. One h1 at 132 px, three to four words, the last one or two in coral. Title line under the rule, date and studio at right. The field art is the ø co. warm/cool plate; the veil is 42 % black.</p>
+    </a>
+    <a class="lay" href="deck.html#layout-key" id="layout-key">
+      <div class="fr"><img src="layouts/02.jpg" alt="layout-key" ></div>
+      <div class="cap"><span class="num">02</span><span class="nm">layout key</span><span class="gr">void</span></div>
+      <p>Layout key. Generated from the slide list at load; delete this slide in a real deck. Keeps the deck honest about what it contains.</p>
+    </a>
+    <a class="lay" href="deck.html#section-01" id="section-turn">
+      <div class="fr"><img src="layouts/03.jpg" alt="section-turn" ></div>
+      <div class="cap"><span class="num">03</span><span class="nm">section turn</span><span class="gr">void</span></div>
+      <p>Section turn. Code in coral, one h1 at 143 px, bottom-left. Two to four words. The deep veil (58 %) keeps the type legible on any part of the field.</p>
+    </a>
+    <a class="lay" href="deck.html#foundations" id="copy-ledger">
+      <div class="fr"><img src="layouts/04.jpg" alt="copy-ledger" ></div>
+      <div class="cap"><span class="num">04</span><span class="nm">copy ledger</span><span class="gr">void</span></div>
+      <p>Copy + ledger, 54/46. Left: label, h2 at 72 px, two short paragraphs. Right: three to five rows, two-digit number in coral at 68 px, one line each. Numbers should be real counts, not decoration.</p>
+    </a>
+    <a class="lay" href="deck.html#research" id="image-split">
+      <div class="fr"><img src="layouts/05.jpg" alt="image-split" ></div>
+      <div class="cap"><span class="num">05</span><span class="nm">image split</span><span class="gr">void</span></div>
+      <p>Image split, 58/42, photo left. Label, h2 at 70 px, one voice line (Poppins 300, 30 px). Photo is object-fit cover with a 10 % black wash; put the subject in the center 60 %. Variants of this family: product-split 53/47 (copy left, light), story-split 57/43 (adds a green landing line), aisle-split 62/38, means-split 41/59 (h2 at 91 px).</p>
+    </a>
+    <a class="lay" href="deck.html#stats" id="stat-row">
+      <div class="fr"><img src="layouts/06.jpg" alt="stat-row" ></div>
+      <div class="cap"><span class="num">06</span><span class="nm">stat row</span><span class="gr">void</span></div>
+      <p>Stat row. Four stats on hairlines, number in green at 92 px, one sentence each (≤ 270 px wide). Landing line pinned to the bottom rule. Use three or four stats; two reads thin, five overflows.</p>
+    </a>
+    <a class="lay" href="deck.html#tradeoff" id="tradeoff">
+      <div class="fr"><img src="layouts/07.jpg" alt="tradeoff" ></div>
+      <div class="cap"><span class="num">07</span><span class="nm">tradeoff</span><span class="gr">void</span></div>
+      <p>Trade-off. Two panels on hairlines with a green VS between; the right panel is the risk and fills coral. Each panel: a mono heading, one Poppins 500 line at 39 px, a dotted list. Green landing line closes.</p>
+    </a>
+    <a class="lay" href="deck.html#halves" id="halves">
+      <div class="fr"><img src="layouts/08.jpg" alt="halves" ></div>
+      <div class="cap"><span class="num">08</span><span class="nm">halves</span><span class="gr">light</span></div>
+      <p>Two halves, coral | white. Each half: label, big statement at 88 px (min-height 320 so the pair aligns), one paragraph, a dotted ingredients line. Keep the two statements the same length. The house layout (slide 21) is the same frame in navy | green.</p>
+    </a>
+    <a class="lay" href="deck.html#audience" id="copy-moments">
+      <div class="fr"><img src="layouts/09.jpg" alt="copy-moments" ></div>
+      <div class="cap"><span class="num">09</span><span class="nm">copy moments</span><span class="gr">navy</span></div>
+      <p>Copy + moments on navy, 41/59. Three moments (a quoted line in Poppins 900 at 29 px, one sentence). The foot line is optional: an accent lead-in and one sentence pinned to the bottom rule.</p>
+    </a>
+    <a class="lay" href="deck.html#order" id="order-rows">
+      <div class="fr"><img src="layouts/10.jpg" alt="order-rows" ></div>
+      <div class="cap"><span class="num">10</span><span class="nm">order rows</span><span class="gr">void</span></div>
+      <p>Order rows. Two or three rows: a mono key, then a sequence in Poppins 900 at 53 px with arrows. The row that matters carries class retail (coral). One voice line closes.</p>
+    </a>
+    <a class="lay" href="deck.html#goal" id="big-number">
+      <div class="fr"><img src="layouts/11.jpg" alt="big-number" ></div>
+      <div class="cap"><span class="num">11</span><span class="nm">big number</span><span class="gr">void</span></div>
+      <p>Big number. Copy left (h2 at 84 px, one paragraph), one number in green at 235 px right with a mono caption. The number is the whole slide: two or three characters, no decimals.</p>
+    </a>
+    <a class="lay" href="deck.html#story" id="image-split-landing">
+      <div class="fr"><img src="layouts/12.jpg" alt="image-split-landing" ></div>
+      <div class="cap"><span class="num">12</span><span class="nm">image split landing</span><span class="gr">void</span></div>
+      <p>Image split with a landing, 57/43. Same as the image split plus a green landing line under the body. Use it when the slide has to hand off to the next idea.</p>
+    </a>
+    <a class="lay" href="deck.html#terms" id="term-pair">
+      <div class="fr"><img src="layouts/13.jpg" alt="term-pair" ></div>
+      <div class="cap"><span class="num">13</span><span class="nm">term pair</span><span class="gr">navy</span></div>
+      <p>Term pair on navy. Two terms on hairlines: first in coral, second in pale blue, Poppins 900 at 77 px (min-height 140 so they align), one paragraph each. The landing spans both columns.</p>
+    </a>
+    <a class="lay" href="deck.html#card-grid-6" id="card-grid">
+      <div class="fr"><img src="layouts/15.jpg" alt="card-grid" ></div>
+      <div class="cap"><span class="num">15</span><span class="nm">card grid</span><span class="gr">void</span></div>
+      <p>Card grid ×6. Six cards at 448 px, image at 388 px on a paper ground (object-fit contain), a mono name strip. Takeaway below: mono key + one Poppins 300 line. The challenger variant is five cards at 400 px with object-fit cover.</p>
+    </a>
+    <a class="lay" href="deck.html#jobs" id="column-grid">
+      <div class="fr"><img src="layouts/16.jpg" alt="column-grid" ></div>
+      <div class="cap"><span class="num">16</span><span class="nm">column grid</span><span class="gr">light</span></div>
+      <p>Column grid ×4 on white. Four columns on hairlines: number, one word in Poppins 900 at 48 px (first coral, third blue), one sentence. The last column fills green. The words layout (slide 24) is the three-column version.</p>
+    </a>
+    <a class="lay" href="deck.html#plate" id="research-plate">
+      <div class="fr"><img src="layouts/17.jpg" alt="research-plate" ></div>
+      <div class="cap"><span class="num">17</span><span class="nm">research plate</span><span class="gr">void</span></div>
+      <p>Research plate. One image in a hairline frame at 787 px on the panel ground, two mono captions above. For evidence that should be seen whole: a photo, a screenshot, a source slide.</p>
+    </a>
+    <a class="lay" href="deck.html#statement" id="statement">
+      <div class="fr"><img src="layouts/18.jpg" alt="statement" ></div>
+      <div class="cap"><span class="num">18</span><span class="nm">statement</span><span class="gr">void</span></div>
+      <p>Statement. Display at 132 px with the turn in green on its own line, then a voice paragraph at 42 px. The line-statement variant (h1 at 130 px) and the paradox variant (on the field, h1 at 124 px) are the same move with a different ground.</p>
+    </a>
+    <a class="lay" href="deck.html#plane" id="plane">
+      <div class="fr"><img src="layouts/20.jpg" alt="plane" ></div>
+      <div class="cap"><span class="num">20</span><span class="nm">plane</span><span class="gr">void</span></div>
+      <p>Plane diagram. A Fano plane at 660 × 600: three vertices, three mids, one core, seven labeled points (p1–p7, positions fixed in CSS). Plane fill is the accent (coral; class alt makes it blue and flips the copy to the left with plane-right). Point labels: one mono word in the plane color, then ≤ 6 words.</p>
+    </a>
+    <a class="lay" href="deck.html#binding" id="binding">
+      <div class="fr"><img src="layouts/21.jpg" alt="binding" ></div>
+      <div class="cap"><span class="num">21</span><span class="nm">binding</span><span class="gr">void</span></div>
+      <p>Binding. Two planes (a coral, b blue) at .82 scale joined core-to-core by a green bridge, a label on the bridge, and a heading pair at the top corners (word in the plane color + a mono line). Use after two plane slides.</p>
+    </a>
+    <a class="lay" href="deck.html#proof" id="image-split-facts">
+      <div class="fr"><img src="layouts/22.jpg" alt="image-split-facts" ></div>
+      <div class="cap"><span class="num">22</span><span class="nm">image split facts</span><span class="gr">void</span></div>
+      <p>Image split with facts, 52/48. Photo left; right: label, h2 at 58 px, four to six fact rows (mono key in coral, one line), green landing. The pair-split variant puts two photos side by side at 57 % on white.</p>
+    </a>
+    <a class="lay" href="deck.html#house" id="halves-flow">
+      <div class="fr"><img src="layouts/23.jpg" alt="halves-flow" ></div>
+      <div class="cap"><span class="num">23</span><span class="nm">halves flow</span><span class="gr">void</span></div>
+      <p>Halves with a flow, navy | green. Each half: label, h2 at 64 px (min-height 185), one paragraph, a four-step flow on hairlines. Keep the two flows the same length.</p>
+    </a>
+    <a class="lay" href="deck.html#tracks" id="tracks">
+      <div class="fr"><img src="layouts/24.jpg" alt="tracks" ></div>
+      <div class="cap"><span class="num">24</span><span class="nm">tracks</span><span class="gr">navy</span></div>
+      <p>Tracks. Two rows × five steps on hairlines: a track name (coral, then pale blue) and five mono-keyed cells. The point is the parallel: step n on both tracks should rhyme. Green landing closes.</p>
+    </a>
+    <a class="lay" href="deck.html#memory" id="image-card">
+      <div class="fr"><img src="layouts/25.jpg" alt="image-card" ></div>
+      <div class="cap"><span class="num">25</span><span class="nm">image card</span><span class="gr">void</span></div>
+      <p>Image + card. Full-bleed photo with a 34 % scrim, a 700 px card at 86 % black (label, h2 at 71 px, two paragraphs), and a 2 × 2 mono strip bottom-right. Photo should carry detail on the right two-thirds.</p>
+    </a>
+    <a class="lay" href="deck.html#reveal" id="reveal">
+      <div class="fr"><img src="layouts/27.jpg" alt="reveal" ></div>
+      <div class="cap"><span class="num">27</span><span class="nm">reveal</span><span class="gr">void</span></div>
+      <p>Reveal. On the field: white label, the strategy line at 118 px with the second clause in coral on its own line, one mono line under it. This is the slide the deck exists for; nothing else on it.</p>
+    </a>
+    <a class="lay" href="deck.html#words" id="column-grid-3">
+      <div class="fr"><img src="layouts/28.jpg" alt="column-grid-3" ></div>
+      <div class="cap"><span class="num">28</span><span class="nm">column grid 3</span><span class="gr">light</span></div>
+      <p>Column grid ×3 on white with a standard. Three words in Poppins 900 at 48 px (coral, blue, green), one paragraph each, and a black quote bar pinned to the bottom rule for the standard the deck commits to.</p>
+    </a>
+    <a class="lay" href="deck.html#legs" id="board-pair">
+      <div class="fr"><img src="layouts/29.jpg" alt="board-pair" ></div>
+      <div class="cap"><span class="num">29</span><span class="nm">board pair</span><span class="gr">navy</span></div>
+      <p>Board pair on navy, 48/52. Left: h2 at 59 px and a distance board (mono key in coral, a bold lead-in, one sentence). Right: a channel board (name in pale blue Poppins 900, one sentence). Three rows left, four right.</p>
+    </a>
+    <a class="lay" href="deck.html#engines" id="card-row">
+      <div class="fr"><img src="layouts/30.jpg" alt="card-row" ></div>
+      <div class="cap"><span class="num">30</span><span class="nm">card row</span><span class="gr">void</span></div>
+      <p>Card row ×3 with voice examples. Three panel cards (mono code in coral, name in Poppins 900 at 40 px, one sentence) and three green voice lines on hairlines beneath. Names should sound like campaigns, not categories.</p>
+    </a>
+    <a class="lay" href="deck.html#recap" id="recap">
+      <div class="fr"><img src="layouts/31.jpg" alt="recap" ></div>
+      <div class="cap"><span class="num">31</span><span class="nm">recap</span><span class="gr">light</span></div>
+      <p>Recap table on white. Key/value rows on hairlines (mono key, Poppins 500 value at 27 px); the last row is the strategy and fills green. Four to six rows.</p>
+    </a>
+    <a class="lay" href="deck.html#seal" id="seal">
+      <div class="fr"><img src="layouts/32.jpg" alt="seal" ></div>
+      <div class="cap"><span class="num">32</span><span class="nm">seal</span><span class="gr">void</span></div>
+      <p>Seal. The outward line at 134 px, second clause in green, the ø mark top-right. The last slide; no notes, no logos beyond the mark.</p>
+    </a>
+    </div>
+    <p style="margin-top:18px"><strong>Families.</strong> Several layouts are one frame with a different ratio or ground:</p>
+    <div class="famrow"><b>image split</b><span>research-split 58/42 photo left · product-split 53/47 copy left (light) · story-split 57/43 + landing · aisle-split 62/38 · means-split 41/59 copy left, h2 91px · proof-split 52/48 + facts · pair-split 57/43 two photos (light) · brand-split 43/57 copy left + caption</span></div><div class="famrow"><b>halves</b><span>halves coral | white (big statement + ingredients) · house navy | green (h2 + flow)</span></div><div class="famrow"><b>column grid</b><span>jobs ×4 (light, last column green) · words ×3 (light) + standard quote · engines ×3 (panel cards) + voice examples</span></div><div class="famrow"><b>card grid</b><span>pack-grid ×6, 448px, contain on paper · challenger ×5, 400px, cover</span></div><div class="famrow"><b>statement</b><span>necessary (void, display + voice) · line-statement (navy, h1 130px) · paradox (field, h1 124px) · reveal (field, 118px strategy phrase) · seal (field, 134px + mark)</span></div>
+  </div></section>
+
+  <section class="s"><div class="lab"><b>05</b><span>Image slots</span></div><div class="bd">
+    <p>The template ships no photography. Every image position is a slot that draws a seeded field in the palette with a dashed frame and a label, so the layout is judged on the layout. Replace the figure with an image and the layout CSS sizes and crops it.</p>
+    <pre class="code">&lt;figure class=&quot;slot&quot; data-slot=&quot;Photo · name&quot; data-seed=&quot;n&quot; data-tone=&quot;dark|light&quot;&gt;&lt;canvas&gt;&lt;/canvas&gt;&lt;span class=&quot;slot-tag&quot;&gt;Photo · name&lt;/span&gt;&lt;/figure&gt;
+→ &lt;figure&gt;&lt;img src=&quot;…&quot; alt=&quot;…&quot;&gt;&lt;/figure&gt; — the layout CSS already sizes and crops it</pre>
+  </div></section>
+
+  <section class="s"><div class="lab"><b>06</b><span>Motion · keys</span></div><div class="bd">
+    <p>anim: opacity 0 → 1, translateY 16px → 0, .68s cubic-bezier(.16,1,.3,1); a2 and a3 stagger by .08 s and .16 s. Reduced motion shows everything at once.</p>
+    <div class="famrow"><b>ArrowRight/Down/PageDown/Space/Enter</b><span>next</span></div><div class="famrow"><b>ArrowLeft/Up/PageUp/Backspace</b><span>prev</span></div><div class="famrow"><b>Home/End</b><span>first/last</span></div><div class="famrow"><b>N</b><span>usage notes panel</span></div><div class="famrow"><b>F</b><span>fullscreen</span></div><div class="famrow"><b>Escape</b><span>close notes, refit</span></div>
+  </div></section>
+
+  <section class="s"><div class="lab"><b>07</b><span>Copy rules</span></div><div class="bd">
+    <ul><li>label: &quot;/ &quot; + a noun phrase, ≤ 6 words</li><li>h2: one sentence, ≤ 12 words, a period</li><li>voice: one sentence at 42px, ≤ 24 words</li><li>landing: one line, green, the close</li><li>lists: dotted &quot; · &quot; runs inside one line, or rows on hairlines</li><li>numbers: two digits, real counts</li><li>one slide, one move</li></ul>
+  </div></section>
+
+  <div class="end"><span><b>T-03</b> · Strategy deck · template</span><span><a href="deck.html">deck.html</a> · <a href="template.json">template.json</a> · ø co. · 2026</span></div>
+</main>
+<script src="../../_shared/entries.js"></script>
+<script>
+document.getElementById('nav').innerHTML=`<a class="brand" href="../../index.html">${window.TT.mark}<span class="wm">IMP<i>Ø</i>SSIBLE</span></a><span class="crumb"><a href="../../index.html#templates">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#templates">Templates</a><span class="sep">/</span><b>Strategy deck</b><span class="code">T-03</span></span><span class="pager"><a href="../t-02-editorial-spec-ascii/index.html" title="Editorial spec w/ ASCII animations">← T-02</a><a class="opt" href="deck.html">deck ↗</a><a class="opt" href="template.json">spec ⇥</a><a href="../../index.html#templates">index</a></span>`;
+</script>
 </body>
 </html>
