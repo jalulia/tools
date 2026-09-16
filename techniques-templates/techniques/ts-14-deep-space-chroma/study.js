@@ -1,115 +1,144 @@
+
+/* ═══ CHROMA core · photoelastic polariscope model · shared by study.js (CPU) and engine.html (GLSL) ═══ */
+window.CHROMA=(function(){
+  const C={}; const TAU=Math.PI*2;
+  /* CIE 1931 2° CMF, Wyman–Sloan–Shirley multi-lobe fit */
+  const g=(l,mu,s1,s2)=>{ const s=l<mu?s1:s2; const t=(l-mu)/s; return Math.exp(-0.5*t*t); };
+  const cmf=l=>[1.056*g(l,599.8,37.9,31.0)+0.362*g(l,442.0,16.0,26.7)-0.065*g(l,501.1,20.4,26.2), 0.821*g(l,568.8,46.9,40.5)+0.286*g(l,530.9,16.3,31.1), 1.217*g(l,437.0,11.8,36.0)+0.681*g(l,459.0,26.0,13.8)];
+  const planck=(l,T)=>Math.pow(l*1e-9,-5)/(Math.exp(14387770/(l*T))-1);
+  const M=[[3.2406,-1.5372,-0.4986],[-0.9689,1.8758,0.0415],[0.0557,-0.2040,1.0570]];
+  /* Michel-Lévy chart for a crossed polariscope: color(δ) for δ = 0 … N−1 nm.
+     opts: T (K), wb (0..1 partial von Kries to D65), exposure, sat, blueRoll (desaturate δ>480), grade (hue compression 0..1 toward warm/cool anchors, applied in display space), gdip (green dip of the source), leak (unpolarized leak through the analyser: imperfect extinction lifts the dark bands to crimson), warm/cool (anchor hues, deg) */
+  C.chart=function(o){ o=Object.assign({T:3000,wb:0.6,exposure:0.8,sat:1.4,blueRoll:0.85,grade:0.75,gdip:0.1,leak:0.06,warm:12,cool:196,N:1600},o||{});
+    const lam=[]; for(let l=380;l<=720;l+=4)lam.push(l); const S=[],CM=[]; let smax=0;
+    for(const l of lam){ let s=planck(l,o.T); s*=1-o.gdip*Math.exp(-((l-548)/48)*((l-548)/48)); S.push(s); if(s>smax)smax=s; CM.push(cmf(l)); }
+    for(let i=0;i<S.length;i++)S[i]/=smax;
+    const white=[0,0,0]; for(let i=0;i<lam.length;i++){ white[0]+=S[i]*CM[i][0]; white[1]+=S[i]*CM[i][1]; white[2]+=S[i]*CM[i][2]; }
+    const target=[0.9505,1.0,1.089]; const scale=[0,1,2].map(k=>Math.pow(target[k]/(white[k]/white[1]),o.wb));
+    const out=new Float32Array(o.N*3); const A1=(o.warm!==undefined?o.warm:18),A2=(o.cool!==undefined?o.cool:196);
+    for(let d=0;d<o.N;d++){ let X=0,Y=0,Z=0; for(let i=0;i<lam.length;i++){ const s=Math.sin(Math.PI*d/lam[i]); const tr=(s*s*(1-o.leak)+o.leak)*S[i]; X+=tr*CM[i][0]; Y+=tr*CM[i][1]; Z+=tr*CM[i][2]; }
+      const k=2.0*o.exposure/white[1]; X*=scale[0]*k; Y*=scale[1]*k; Z*=scale[2]*k;
+      let r=Math.max(0,M[0][0]*X+M[0][1]*Y+M[0][2]*Z), gg=Math.max(0,M[1][0]*X+M[1][1]*Y+M[1][2]*Z), b=Math.max(0,M[2][0]*X+M[2][1]*Y+M[2][2]*Z);
+      let L=0.2126*r+0.7152*gg+0.0722*b; const roll=Math.min(1,Math.max(0,(d-480)/200)); const sat=o.sat*(1-o.blueRoll*roll*roll);
+      r=L+(r-L)*sat; gg=L+(gg-L)*sat; b=L+(b-L)*sat; r=Math.max(0,r); gg=Math.max(0,gg); b=Math.max(0,b);
+      r=r/(1+r*0.25); gg=gg/(1+gg*0.25); b=b/(1+b*0.25);
+      L=0.2126*r+0.7152*gg+0.0722*b; let t=Math.min(1,Math.max(0,(L-0.6)/0.45)); t=t*t*(3-2*t)*0.85;
+      r=r*(1-t)+L*1.02*t; gg=gg*(1-t)+L*0.97*t; b=b*(1-t)+L*0.96*t;
+      r=Math.pow(Math.min(1,r),1/2.2); gg=Math.pow(Math.min(1,gg),1/2.2); b=Math.pow(Math.min(1,b),1/2.2);
+      /* hue grade in display space (perceptual): compress hues toward the warm and cool anchors */
+      if(o.grade>0){ const mx=Math.max(r,gg,b), mn=Math.min(r,gg,b), dl=Math.max(mx-mn,1e-9); let h=(mx===r?((gg-b)/dl+6)%6:mx===gg?(b-r)/dl+2:(r-gg)/dl+4)*60;
+        const d1=((h-A1+540)%360)-180, d2=((h-A2+540)%360)-180; const h2=(((Math.abs(d1)<=Math.abs(d2)?A1+d1*(1-o.grade):A2+d2*(1-o.grade))%360)+360)%360;
+        const sv=mx>0?dl/mx:0, v=mx, c=v*sv, x=c*(1-Math.abs((h2/60)%2-1)), m=v-c; const hh=Math.floor(h2/60)%6;
+        const R=[c,x,0,0,x,c][hh], G=[x,c,c,x,0,0][hh], B=[0,0,x,c,c,x][hh]; r=R+m; gg=G+m; b=B+m; }
+      out[d*3]=r; out[d*3+1]=gg; out[d*3+2]=b; }
+    return out; };
+  /* field: δ (nm), ψ (rad), env (0..1) at normalized x,y (width = 1), time t */
+  C.field=function(P,x,y,t){
+    let delta=0, psi=0, env=1; const cx=P.cx||0.5, cy=P.cy||0.35;
+    if(P.type==='ribbon'){ const ph=TAU*(P.freq*x+P.ph+0.01*t); const yc=cy+P.amp*Math.sin(ph)+(P.tilt||0)*(x-0.5); const dy=P.amp*TAU*P.freq*Math.cos(ph)+(P.tilt||0); const d=(y-yc)/Math.sqrt(1+dy*dy);
+      delta=P.d0+P.A*Math.tanh(d/P.period)+40*Math.sin((P.flow||0)*t); psi=Math.atan(dy); env=Math.exp(-(d/P.width)*(d/P.width)*2)*(1-(P.vig||0)*((x-0.5)*(x-0.5)+(y-0.35)*(y-0.35))); }
+    else if(P.type==='ring'){ const dx=x-cx, dy=y-cy, r=Math.hypot(dx,dy), th=Math.atan2(dy,dx); const d=r-P.R; delta=P.d0+P.A*Math.tanh(d/P.period)+40*Math.sin((P.flow||0)*t); psi=th+Math.PI/2;
+      env=Math.exp(-(d/P.width)*(d/P.width)*2); const s=Math.min(1,Math.max(0,(r-P.R0)/0.03)); env*=s*s*(3-2*s); env*=1-(P.vig||0)*r*r; }
+    else if(P.type==='load'){ let sx=P.sx||0, sy=P.sy||0, txy=P.txy||0; for(const L of P.loads){ const dx=x-L[0], dy=y-L[1]; const r=Math.hypot(dx,dy)+0.004; const th=Math.atan2(dy,dx); const a=L[2]*Math.PI/180; const sr=-2*L[3]*Math.cos(th-a)/(Math.PI*Math.pow(r,P.decay||1));
+        const c=Math.cos(th), s=Math.sin(th); sx+=sr*c*c; sy+=sr*s*s; txy+=sr*s*c; }
+      const ds=Math.sqrt((sx-sy)*(sx-sy)+4*txy*txy); delta=(P.K||1)*ds; psi=0.5*Math.atan2(2*txy,sx-sy); const dx=x-cx, dy=y-cy, r=Math.hypot(dx,dy); const s=Math.min(1,Math.max(0,r/(P.core||0.02))); env=s*s*(3-2*s)*(1-(P.vig||0)*r*r); }
+    else if(P.type==='uniaxial'){ const dx=x-cx, dy=y-cy, r=Math.hypot(dx,dy); delta=P.d0+P.c*r*r; psi=Math.atan2(dy,dx); env=1-(P.vig||0)*r*r; }
+    else if(P.type==='biaxial'){ const ax=cx-P.sep/2, bx=cx+P.sep/2; const dax=x-ax, day=y-cy, dbx=x-bx, dby=y-cy; const ra=Math.hypot(dax,day), rb=Math.hypot(dbx,dby); delta=P.d0+P.c*ra*rb; psi=0.5*(Math.atan2(day,dax)+Math.atan2(dby,dbx)); const r=Math.hypot(x-cx,y-cy); env=1-(P.vig||0)*r*r; }
+    else { /* sheet: oriented lobes around a focus */ const dx=x-cx, dy=y-cy, r=Math.hypot(dx,dy); const th=Math.atan2(dy,dx)+(P.rot||0)*t; const w=th+P.warp*(Math.sin(3*th+P.s1+0.05*t)/3+Math.sin(5*th+P.s2)/5);
+      let osc=Math.cos(P.k*w+(P.flow||0)*t); osc=Math.sign(osc)*Math.pow(Math.abs(osc),P.shape||1); const d0=P.d0+(P.breath||0)*Math.sin(0.4*t);
+      delta=(d0+P.A*osc)*(1+(P.pin||0)/(r+0.01)); psi=th+(P.twist||0)*r+(P.spiral||0)*Math.log(r+0.002); const s=Math.min(1,Math.max(0,r/(P.core||0.02))); env=s*s*(3-2*s)*(1-(P.vig||0)*r*r);
+      if(P.lobe)env*=P.lobe[0]+P.lobe[1]*(0.5+0.5*Math.sin(th*P.lobe[2]+P.lobe[3]));
+      for(const o of (P.occ||[])){ let d=th-o[0]*Math.PI/180; d=Math.abs(Math.atan2(Math.sin(d),Math.cos(d))); const hw=o[1]*Math.PI/180, fe=(o[2]!==undefined?o[2]:o[1]*0.4)*Math.PI/180; let q=(d-(hw-fe))/(2*fe); q=q<0?0:q>1?1:q; env*=q*q*(3-2*q); } }
+    return [Math.min(1599,Math.max(0,delta)),psi,Math.max(0,Math.min(1,env*(P.gain||1)))]; };
+  /* isoclinic term of a plane polariscope: sin²(m(ψ−β)) with a skew, sharpness, and a mix toward a circular polariscope */
+  C.iso=function(P,psi,t){ const beta=(P.beta+(P.spin||0)*t)*Math.PI/180; const pp=psi-beta+(P.skew||0)*Math.sin(psi-beta); let s=Math.sin((P.m||2)*pp); s=Math.pow(s*s,P.sharp||1); return (P.circ||0)+(1-(P.circ||0))*s; };
+  return C;
+})();
 window.STUDY={
   id:'ts-14-deep-space-chroma', code:'TS-14', fig:'1.14',
-  title:'Deep Space Chroma · dispersion fields',
+  title:'Deep Space Chroma · birefringence',
   kicker:'Technique · TS-14',
-  lede:'One cyclic dispersion ramp, read along a phase field, envelope, soft focus, grain.',
+  lede:'A stressed birefringent sheet between polarizers, integrated over the spectrum.',
   body:[
-    'Twenty-one key visuals, one optical system. Every picture is light split into a repeating fringe: black, crimson, orange, warm white, ice blue, steel, black. That fringe is a single 256-entry cyclic LUT, measured from the plates. What changes between pictures is only the phase field the LUT is read along: the angle around a focus gives a burst, angle plus radius a vortex, angle plus log-radius a spiral, distance to a curve a ribbon, distance to a circle a ring.',
-    'A luminance envelope decides where the fringe is allowed to exist: a pinch at the focus, black sector wedges, a vignette, a near-black floor at (14, 13, 12). Then the whole image is defocused with a gaussian of 1.2 % of the width and covered with fine mono grain at 2 %. In motion the phase slides along the field, so the light crawls through the lobes while the structure holds.'
+    'Twenty-one key visuals, one instrument: a polariscope. A birefringent material splits light into two rays with a retardation δ between them; between crossed polarizers each wavelength is transmitted as sin²(πδ/λ), so integrating a tungsten source through the CIE color-matching functions gives the Michel-Lévy sequence — black, grey, warm white, amber, orange, red, mauve, blue, cyan — as a function of δ alone. Where the material’s slow axis lines up with a polarizer the light is cut regardless of δ: those are the isoclinics, the black wedges through every focus.',
+    'What varies between plates is only the retardation field and the axis field: an oriented sheet whose δ oscillates around a focus, point loads (Flamant), a uniaxial conoscopic figure (δ ∝ r², a Maltese cross), a biaxial one (δ ∝ |p−A|·|p−B|, hyperbolic isogyres), a ribbon, a ring. The plate look is the camera on top of the physics: partial white balance, a green dip, a teal-and-orange hue compression, a film shoulder that blows the cores to pink-white, a 1.2 % defocus and mono grain. Rotating the polarizer sweeps the isoclinics; breathing δ moves the fringes.'
   ],
   source:'Reference 14 · Deep Space Chroma 09 (ø co. key visual set, 21 plates, 5000 × 3500 each), 1000 × 700',
   spot:[232,143,94], ref:{w:1000,h:700},
-  variantLabel:'Structure',
+  variantLabel:'Field',
   variants:[
-    { id:'ref',    label:'Burst · as reference', sw:['#1D1C1A','#B9351F','#E88F5E','#DCC2B8','#A5C4C7'], spot:[232,143,94],
-      P:{ type:'burst', cx:0.47, cy:0.345, k:9, warp:0.55, twist:0, spiral:0, flow:0.06, occ:[[-95,25,10],[77,14,8]], core:0.02, vig:0.2, gain:1.0, s1:1.1, s2:2.7, lobe:[0.7,0.3,2.3,0.6] } },
-    { id:'vortex', label:'Vortex',               sw:['#1D1C1A','#B9351F','#E88F5E','#DCC2B8','#A5C4C7'], spot:[232,143,94],
-      P:{ type:'burst', cx:0.44, cy:0.42, k:9, warp:0.4, twist:2.6, spiral:0, flow:0.06, occ:[[-60,12,6],[150,14,7]], core:0.02, vig:0.45, gain:1.0, s1:0.4, s2:3.9, lobe:[0.7,0.3,1.7,1.2] } },
-    { id:'spiral', label:'Spiral',               sw:['#1D1C1A','#B9351F','#E88F5E','#DCC2B8','#A5C4C7'], spot:[232,143,94],
-      P:{ type:'burst', cx:0.34, cy:0.3, k:3, warp:0.2, twist:0, spiral:1.6, flow:0.05, occ:[], core:0.02, vig:0.9, gain:1.0, s1:2.2, s2:0.8, lobe:[0.8,0.2,2,0] } },
-    { id:'ribbon', label:'Ribbon',               sw:['#1D1C1A','#B9351F','#E88F5E','#DCC2B8','#A5C4C7'], spot:[232,143,94],
-      P:{ type:'ribbon', cy:0.36, amp:0.13, freq:0.9, ph:0.15, period:0.19, width:0.17, flow:0.05, tilt:-0.15, vig:0.2, gain:1.0 } },
-    { id:'ring',   label:'Ring',                 sw:['#1D1C1A','#B9351F','#E88F5E','#DCC2B8','#A5C4C7'], spot:[232,143,94],
-      P:{ type:'ring', cx:0.72, cy:0.36, R:0.13, R0:0.07, period:0.11, width:0.14, flow:0.05, vig:0.3, gain:1.0 } },
-    { id:'io',     label:'Ø · ember / blue',     sw:['#101014','#F4551E','#FFFFFF','#2F5AE6'], spot:[244,85,30],
-      P:{ type:'burst', cx:0.47, cy:0.345, k:9, warp:0.55, twist:0, spiral:0, flow:0.06, occ:[[-95,25,10],[77,14,8]], core:0.02, vig:0.2, gain:1.0, s1:1.1, s2:2.7, lobe:[0.7,0.3,2.3,0.6] },
-      lut:[[0,'#101014'],[0.12,'#5A1A0C'],[0.24,'#C23E17'],[0.36,'#F4551E'],[0.46,'#F79A6B'],[0.54,'#FFFFFF'],[0.62,'#B9C8F5'],[0.72,'#5B7FF0'],[0.84,'#2F5AE6'],[0.92,'#1A2A6E'],[1,'#101014']], floor:[16,16,20] }
+    { id:'ref',      label:'Sheet · as reference', sw:['#0E0D0C','#C24A28','#F0A060','#F2DCD0','#8FB6BF'], spot:[232,143,94],
+      P:{ type:'sheet', cx:0.47, cy:0.345, k:5, warp:0.5, s1:1.1, s2:2.7, d0:470, A:190, shape:2, pin:0, twist:0, spiral:0, beta:-80, m:1, skew:0.3, sharp:1.3, circ:0, core:0.02, vig:0.2, lobe:[0.8,0.2,2.3,0.6], spin:2, breath:40, flow:0.15, rot:0.01 } },
+    { id:'load',     label:'Point loads · Flamant', sw:['#0E0D0C','#C24A28','#F0A060','#F2DCD0','#8FB6BF'], spot:[232,143,94],
+      P:{ type:'load', cx:0.47, cy:0.345, loads:[[0.47,0.345,-95,60],[0.15,0.62,-20,45],[0.88,0.10,160,40]], sx:50, sy:-25, txy:15, K:6, decay:0.4, beta:-95, m:2, sharp:1.0, circ:0.15, core:0.02, vig:0.5, spin:3, breath:0 } },
+    { id:'uniaxial', label:'Uniaxial conoscope', sw:['#0E0D0C','#C24A28','#F0A060','#F2DCD0','#8FB6BF'], spot:[232,143,94],
+      P:{ type:'uniaxial', cx:0.5, cy:0.35, d0:480, c:600, beta:-45, m:2, sharp:1.0, circ:0, vig:1.5, spin:4 } },
+    { id:'biaxial',  label:'Biaxial conoscope', sw:['#0E0D0C','#C24A28','#F0A060','#F2DCD0','#8FB6BF'], spot:[232,143,94],
+      P:{ type:'biaxial', cx:0.5, cy:0.35, sep:0.3, d0:460, c:1200, beta:-45, m:2, sharp:1.0, circ:0, vig:1.5, spin:4 } },
+    { id:'ribbon',   label:'Ribbon', sw:['#0E0D0C','#C24A28','#F0A060','#F2DCD0','#8FB6BF'], spot:[232,143,94],
+      P:{ type:'ribbon', cy:0.36, amp:0.13, freq:0.9, ph:0.15, period:0.12, width:0.2, tilt:-0.15, d0:480, A:330, beta:-70, m:1, sharp:0.8, circ:0.5, vig:0.2, flow:0.3 } },
+    { id:'ring',     label:'Ring', sw:['#0E0D0C','#C24A28','#F0A060','#F2DCD0','#8FB6BF'], spot:[232,143,94],
+      P:{ type:'ring', cx:0.72, cy:0.36, R:0.16, R0:0.06, period:0.08, width:0.16, d0:480, A:330, beta:-45, m:2, sharp:0.7, circ:0.6, vig:0.3, flow:0.3 } }
   ],
   points:[
-    {u:0.62,v:0.20,d:'LUT', label:'One cycle of the ramp · black → crimson → orange → white → ice → steel → black',t:'dispersion-lut',dir:[1,-1]},
-    {u:0.80,v:0.40,d:'FAM', label:'Structure · burst; vortex, spiral, ribbon and ring are the other families (V)',t:'structure-family',dir:[1,1]},
-    {u:0.30,v:0.62,d:'PHSE',label:'Angular phase · a = 9 · θ / 2π; lobes are the LUT repeating around the focus',t:'angular-phase',dir:[-1,1]},
-    {u:0.22,v:0.42,d:'WARP',label:'Lobe warp · θ + .55 · (sin 3θ · ⅓ + sin 5θ · ⅕): unequal lane widths',t:'lobe-warp',dir:[-1,-1]},
-    {u:0.47,v:0.345,d:'PNCH',label:'Pinch · envelope → 0 inside r < .03 W; the focus is a dark point',t:'pinch-core',dir:[1,-1]},
-    {u:0.46,v:0.08,d:'OCCL',label:'Sector occluder · wedge at −95°, half-width 25°, feather 10°; a second at 77°, 14° / 8°',t:'sector-occluder',dir:[1,1]},
-    {u:0.90,v:0.62,d:'FLOW',label:'Flow · the phase slides .06 cycles/s along every lobe; the fan turns .015 rad/s (M)',t:'chroma-flow',dir:[-1,-1]},
-    {u:0.10,v:0.85,d:'BLUR',label:'Soft focus · gaussian σ = 1.2 % of width after the LUT, so lanes bleed into each other',t:'soft-focus',dir:[1,-1]},
-    {u:0.70,v:0.90,d:'GRN', label:'Grain · mono, amplitude 2 %, 1 px cells; channels correlate .95 in the source',t:'film-grain',dir:[-1,-1]},
-    {u:0.55,v:0.55,d:'FLOR',label:'Floor · black is (14,13,12), never 0; the vignette darkens with r²',t:'lifted-black',dir:[1,1]}
+    {u:0.62,v:0.20,d:'CHRT',label:'Michel-Lévy chart · color(δ) = ∫ S(λ) sin²(πδ/λ) x̄ȳz̄(λ) dλ, tungsten 3000 K',t:'michel-levy-chart',dir:[1,-1]},
+    {u:0.80,v:0.40,d:'RETD',label:'Retardation · δ = 470 + 190·osc(5θ) nm; red is δ ≈ 430–560, pink-white ≈ 300, steel blue ≈ 640',t:'retardation-field',dir:[1,1]},
+    {u:0.46,v:0.08,d:'ISOC',label:'Isoclinic · slow axis ∥ polarizer at β = −80°: sin²(ψ − β) → 0, the black wedge',t:'isoclinic',dir:[1,1]},
+    {u:0.50,v:0.92,d:'ISOC',label:'Second arm · β + 180°, skewed by .3·sin(ψ − β) so the arms are not collinear',t:'isoclinic',dir:[-1,-1]},
+    {u:0.22,v:0.42,d:'WARP',label:'Lobe warp · θ + .5·(sin 3θ/3 + sin 5θ/5) before the oscillation: unequal lanes',t:'axis-field',dir:[-1,-1]},
+    {u:0.47,v:0.345,d:'PNCH',label:'Pinch · envelope → 0 inside r < .02 W; the load point is opaque',t:'envelope',dir:[1,-1]},
+    {u:0.30,v:0.62,d:'GRDE',label:'Grade · hues compressed .75 toward 12° and 196° in display space; blue end desaturated .85; cores blown to pink-white',t:'plate-look',dir:[-1,1]},
+    {u:0.10,v:0.85,d:'BLUR',label:'Defocus · gaussian σ = 1.2 % of width after the chart, so lanes bleed',t:'soft-focus',dir:[1,-1]},
+    {u:0.70,v:0.90,d:'GRN', label:'Grain · mono, 2 %, 1 px cells; channels correlate .95 in the source',t:'film-grain',dir:[-1,-1]},
+    {u:0.90,v:0.62,d:'MOTN',label:'Motion · polarizer spins 2°/s (wedges sweep), δ0 breathes ±40 nm, lanes flow .15 rad/s (M)',t:'polariscope-motion',dir:[-1,-1]}
   ],
   spec:{
-    reference:{ file:'ref.png', px:[1000,700], grammar:'a cyclic dispersion fringe (black → crimson → orange → warm white → ice blue → steel → black) read along a phase field around a focus; sector occluders; heavy gaussian defocus; fine mono grain; lifted warm black', set:'21 plates, 5000 × 3500, ø co. “Deep Space Chroma” key visuals' },
-    units:'normalized by width: x ∈ [0,1], y ∈ [0, H/W]; angles in degrees, screen space (y down)',
-    palette:{ floor:'#0E0D0C', deep:'#3A1512', crimson:'#7A2219', red:'#BE3A1E', orange:'#E8582C', amber:'#F08A4A', peach:'#F2B78E', white:'#F4E2D6', pale_ice:'#D8DEDC', ice:'#9DBDC4', steel:'#6C8B98', deep_steel:'#445C68', dusk:'#2C3A44' },
+    reference:{ file:'ref.png', px:[1000,700], grammar:'photoelastic fringes: a retardation field seen through a plane polariscope with a warm source; isoclinic wedges through the focus; soft focus; mono grain', set:'21 plates, 5000 × 3500, ø co. “Deep Space Chroma” key visuals' },
+    units:'normalized by width: x ∈ [0,1], y ∈ [0, H/W]; δ in nm; angles in degrees, screen space (y down)',
+    physics:{ transmission:'I(λ) = S(λ) · sin²(2(ψ − β)) · sin²(π δ / λ) for a crossed plane polariscope; the first sin² is the isoclinic term (achromatic), the second the isochromatic term (chromatic)', stress_optic:'δ = C · t · (σ1 − σ2) — retardation is proportional to the principal stress difference', color:'XYZ = ∫ I(λ) [x̄ ȳ z̄](λ) dλ over 380–720 nm at 4 nm; XYZ → linear sRGB', chart:'the Michel-Lévy chart is color(δ) for δ = 0…1600 nm; it is computed at load, not hand-drawn' },
+    palette:{ derived:'from the chart — nothing is hand-picked', floor:'#0E0D0C', anchors:{ warm:'18°', cool:'196°' } },
     techniques:[
-      { id:'dispersion-lut', short:'LUT', name:'Cyclic dispersion ramp', layer:0, pass:1, atoms:['lut','cyclic','fringe','dispersion'],
-        params:{ stops:[[0,'#3A1512'],[0.10,'#7A2219'],[0.21,'#BE3A1E'],[0.32,'#E8582C'],[0.42,'#F08A4A'],[0.49,'#F2B78E'],[0.535,'#F4E2D6'],[0.575,'#D8DEDC'],[0.62,'#9DBDC4'],[0.70,'#6C8B98'],[0.78,'#445C68'],[0.86,'#2C3A44'],[0.93,'#2A1E1C'],[1,'#3A1512']], cycle:'no floor inside the cycle — the dark part is deep crimson/dusk; true black comes only from the envelope (wedges, pinch, vignette)', measured:'band means per luminance class across all 21 plates: red side (235,182,147) (232,143,94) (225,95,57) (185,53,40) (104,30,24) (61,19,14); blue side (165,196,199) (120,154,165) (79,105,116) (49,68,78); white (204,198,190), brightest (222,190,184)', share:'hue 0–30° ≈ 70 % of chromatic pixels, 180–210° ≈ 6 %, 345–360° ≈ 6 %' },
-        implementation:'A 256-entry LUT built from the stops; phase = frac(a) indexes it, so a full lobe is one cycle: dark lane, red flank, white core, blue flank, dark lane. The red side spans .46 of the cycle and the blue side .30, which is why orange dominates.' },
-      { id:'angular-phase', short:'PHSE', name:'Phase field · angle around a focus', layer:0, pass:0, atoms:['field','polar','phase'],
-        params:{ burst:'a = k · θ / 2π + flow · t', vortex:'+ twist · r', spiral:'+ spiral · ln(r + .002)', ribbon:'a = d / period, d = signed distance to y = cy + amp · sin(2π(freq · x + ph))', ring:'a = (r − R) / period', k_ref:9, focus_ref:[0.47,0.345] },
-        implementation:'The only thing that differs between the 21 plates is this scalar field; the LUT and envelope are shared. Each structure family is one expression for a.' },
-      { id:'lobe-warp', short:'WARP', name:'Unequal lobes', layer:0, pass:0, atoms:['warp','harmonic','irregular'],
-        params:{ theta_warped:'θ + warp · (sin(3θ + s1) / 3 + sin(5θ + s2) / 5)', warp_ref:0.55, seeds:[1.1,2.7] },
-        implementation:'Two low harmonics of the angle stretch some lobes and compress others before the phase is taken, so no two lanes have the same width — the reference’s hand-made look without breaking the cycle count.' },
-      { id:'pinch-core', short:'PNCH', name:'Pinch at the focus', layer:1, pass:2, atoms:['envelope','smoothstep','focus'],
-        params:{ env:'smoothstep(0, core, r)', core_ref:0.03, note:'plates 04, 09, 14, 16, 18, 19, 20 all pinch to a dark point' },
-        implementation:'The envelope falls to the floor inside a small radius, so every lobe converges on a black point rather than a bright one.' },
-      { id:'sector-occluder', short:'OCCL', name:'Sector occluders', layer:1, pass:2, atoms:['mask','wedge','gaussian'],
-        params:{ wedge:'env *= smoothstep(hw − f, hw + f, |Δθ|) per occluder', ref:[['−95°','half-width 25°','feather 10°'],['77°','half-width 14°','feather 8°']], lobe_gain:'env *= .7 + .3 · (.5 + .5 sin(2.3 θ + .6))', other_plates:'08 = a cross of two wedges; 16 = a rectangle at the focus' },
-        implementation:'Black wedges are multiplied into the envelope as gaussians of angular distance; they make the dark sectors that give the bursts their asymmetry.' },
-      { id:'soft-focus', short:'BLUR', name:'Post-LUT gaussian defocus', layer:2, pass:3, atoms:['blur','gaussian','defocus'],
-        params:{ sigma:'0.012 · W', measured:'p99 horizontal gradient 12/255 per px at 1600 px; no edge sharper than ≈ 1 % of width', order:'after the LUT, so colors mix in RGB and produce the grey-mauve between orange and blue' },
-        implementation:'One blur over the finished color image. Blurring after the LUT (not the phase) is what makes neighboring lanes bleed into muddy transitions instead of clean fringes.' },
-      { id:'film-grain', short:'GRN', name:'Mono grain', layer:3, pass:4, atoms:['grain','noise','multiply'],
-        params:{ amp:0.02, pitch_px:'1 at 1600 px (≈ 1.5 at plate)', mono:true, measured:'black-region std 5.3/255; high-pass std 3.9/255; R/G/B high-pass correlation .96 / .95' },
-        implementation:'Multiplicative hashed noise, identical across channels, so the grain reads as film rather than color noise.' },
-      { id:'lifted-black', short:'FLOR', name:'Lifted floor + vignette', layer:1, pass:2, atoms:['floor','vignette','lift'],
-        params:{ floor:[14,13,12], vignette:'env *= 1 − vig · r²', vig_ref:0.2, measured:'reference L p10 = .048 (≈ 12/255); a mid-dark region reads (29,28,26)' },
-        implementation:'Every pixel is mix(floor, LUT(phase), env): nothing reaches 0, and the far field sinks toward the floor with the square of the distance from the focus.' },
-      { id:'chroma-flow', short:'FLOW', name:'Phase flow (motion)', layer:4, pass:5, atoms:['loop','drift','phase'],
-        params:{ flow:'a += 0.06 · t (cycles per second)', rotate:'θ += 0.015 · t', warp_drift:'s1 += 0.05 · t', work_width_px:400, then:'blur + grain per frame' },
-        implementation:'Sliding the phase moves the fringe through the lobes — the light crawls along each ray — while a slow rotation and warp drift keep the structure alive without changing it.' },
-      { id:'structure-family', short:'FAM', name:'Structure families', layer:0, pass:0, atoms:['burst','vortex','spiral','ribbon','ring'],
-        params:{ burst:'03, 08, 09, 11, 12, 13, 14, 16, 18, 19', vortex:'04, 20', petal:'05 (burst, k = 4, radial term)', spiral:'07', ribbon:'01, 02, 06, 10, 15, 17', ring:'21', presets:'engine.html carries a first-pass preset for all 21' },
-        implementation:'Each plate is a preset: one family, a focus or a curve, k, warp, twist, occluders. The engine reproduces any of them from ≈ 12 numbers.' }
+      { id:'michel-levy-chart', short:'CHRT', name:'Spectral Michel-Lévy chart', layer:0, pass:1, atoms:['spectrum','planck','cmf','lut'],
+        params:{ source:'Planck 3000 K, green dip .1 at 548 ± 48 nm', integration:'380–720 nm, 4 nm steps, Wyman–Sloan–Shirley CMF fit', white_balance:'von Kries toward D65, strength .6', exposure:0.8, N:1600 },
+        implementation:'For every δ from 0 to 1599 nm the transmitted spectrum sin²(πδ/λ)·S(λ) is integrated against the color-matching functions; the 1600 colors are the LUT the field is shaded with. Order 1 (0–560 nm) is where the plates live: black → grey → warm white → amber → orange → red; the mauve and blue of 560–700 are the cool lanes.' },
+      { id:'retardation-field', short:'RETD', name:'Retardation field', layer:0, pass:0, atoms:['field','retardation','oscillation'],
+        params:{ sheet:'δ = (d0 + A · sign(c)|c|^shape) · (1 + pin/r), c = cos(k · θw + flow · t)', ref:{ d0:470, A:190, shape:2, k:5, pin:0 }, load:'δ = K · |σ1 − σ2| from Σ Flamant point loads (σr = −2F cos(θ−α)/(π r^decay)) + a uniform stress', uniaxial:'δ = d0 + c · r²', biaxial:'δ = d0 + c · |p − A| · |p − B| (Cassini ovals)', ribbon:'δ = d0 + A · tanh(d / period) — a ramp across the ribbon: white, orange, red, blue in order', ring:'δ = d0 + A · tanh((r − R) / period)' },
+        implementation:'Each family is one expression for δ. The sheet keeps δ in the orange-red most of the time (shape 2.4 dwells near d0) and dips to white or peaks to blue briefly; the load family is real plane-stress mechanics; the conoscopes are the textbook interference figures.' },
+      { id:'axis-field', short:'WARP', name:'Slow-axis field ψ', layer:0, pass:0, atoms:['direction','principal-axis','warp'],
+        params:{ sheet:'ψ = θw + twist · r + spiral · ln r', load:'ψ = ½ · atan2(2τ, σx − σy) (principal direction)', uniaxial:'ψ = θ', biaxial:'ψ = ½(θA + θB)', ribbon:'ψ = tangent', ring:'ψ = θ + 90°', warp:'θw = θ + .5 · (sin(3θ + 1.1)/3 + sin(5θ + 2.7)/5)' },
+        implementation:'ψ decides where the isoclinics fall; warping θ before use makes lanes of unequal width without breaking the physics.' },
+      { id:'isoclinic', short:'ISOC', name:'Isoclinics', layer:1, pass:2, atoms:['polarizer','extinction','wedge'],
+        params:{ term:'sin²(m · (ψ − β + skew · sin(ψ − β)))^sharp', ref:{ m:1, beta:-95, skew:0.15, sharp:1.2 }, circular:'circ mixes toward 1 (a circular polariscope removes isoclinics)', note:'m = 2 is the physical crossed-polar cross (four arms); the plates read as two arms, m = 1, one polarizer effective' },
+        implementation:'Multiplies the whole image; the black wedges are not masks but extinction where the material axis is parallel to the polarizer. Spinning β sweeps them around the focus.' },
+      { id:'envelope', short:'PNCH', name:'Envelope', layer:1, pass:2, atoms:['envelope','vignette','floor'],
+        params:{ pinch:'smoothstep(0, core, r), core .02', vignette:'1 − .2 r²', lobe_gain:'.8 + .2 · sin(2.3θ + .6)', floor:[14,13,12], occluders:'optional manual wedges (plate 16’s rectangle)' },
+        implementation:'mix(floor, chart(δ) · iso, env): the load point is opaque, the far field sinks, nothing reaches 0.' },
+      { id:'plate-look', short:'GRDE', name:'Plate look (camera + grade)', layer:2, pass:3, atoms:['white-balance','hue-compression','shoulder'],
+        params:{ hue_grade:'after gamma, hues pulled .75 of the way toward 12° (warm) or 196° (cool), whichever is nearer; saturation × 1.4 first', blue_roll:'saturation × (1 − .85 · ((δ − 480)/200)²) for δ > 480', shoulder:'x/(1 + .25x), then highlights above L .6 desaturate .85 toward a pink-white', measured:'plates carry no yellow, no green, no magenta — the grade explains the absence; band means: (235,182,147) (232,143,94) (225,95,57) (185,53,40) red side, (165,196,199) (120,154,165) (79,105,116) blue side, white (222,190,184)' },
+        implementation:'Applied to the chart once (1600 entries), so per-pixel cost is a lookup; this is the step that turns a textbook chart into the plate palette.' },
+      { id:'soft-focus', short:'BLUR', name:'Post defocus', layer:3, pass:4, atoms:['blur','gaussian'],
+        params:{ sigma:'0.012 · W', measured:'p99 horizontal gradient 12/255 per px at 1600 px' },
+        implementation:'One gaussian over the finished color image; blurring after the chart is what mixes neighboring lanes into the grey-mauve transitions.' },
+      { id:'film-grain', short:'GRN', name:'Mono grain', layer:4, pass:5, atoms:['grain','noise'],
+        params:{ amp:0.02, pitch_px:'1 at 1600 px', mono:true, measured:'black-region std 5.3/255; R/G/B high-pass correlation .96 / .95' },
+        implementation:'Multiplicative hashed noise, identical across channels.' },
+      { id:'polariscope-motion', short:'MOTN', name:'Polariscope motion', layer:5, pass:6, atoms:['rotation','breath','flow'],
+        params:{ spin:'β += 2°/s (isoclinics sweep)', breath:'d0 += 40 · sin(.4 t) nm (fringes move)', flow:'lobe phase += .15 t', rot:'θ += .01 t' },
+        implementation:'Every motion is a physical control of the instrument: rotate the polarizer, load the sheet, turn the sheet.' }
     ],
-    pass_order:['field · phase a(x,y) for the structure family','envelope · pinch × wedges × vignette','lut · mix(floor, LUT[frac a], env)','blur · gaussian σ .012 W','grain · mono ×(1 + .02 n)'],
-    notes:['LUT stops were fitted to per-luminance band means over all 21 plates; the white core is set to the brightest measured (222,190,184) rather than the mean.','Reference 09: focus at (0.47, 0.345 W), ≈ 9 lobes, two black wedges (up, σ 14°; down-right, σ 9°), blue lanes dominant on the left.','Fidelity is measured on the still at t = 0; the motion version is the same field with the phase sliding.','engine.html in this folder is the production system: the same math as a WebGL fragment shader, 21 presets, drag-to-focus, export.']
+    pass_order:['chart · integrate the spectrum once → color(δ)','field · δ(x,y) and ψ(x,y) for the family','isoclinic · sin²(m(ψ − β))','envelope · pinch × vignette × lobe gain, mix from the floor','defocus · gaussian σ .012 W','grain · mono ×(1 + .02 n)'],
+    notes:['The chart parameters were fitted against band means measured over all 21 plates; the field parameters against plate 09 (focus (0.47, 0.345 W), two isoclinic arms at −80° and ≈ 100°).','Motion is CPU on a 400 px work canvas in the plate; engine.html is the GPU version.','engine.html carries a first-pass preset for every plate (by eye) — refine with the sliders, Copy JSON.']
   },
 
-  /* ---------- engine (CPU) ---------- */
-  _stops:[[0,'#3A1512'],[0.10,'#7A2219'],[0.21,'#BE3A1E'],[0.32,'#E8582C'],[0.42,'#F08A4A'],[0.49,'#F2B78E'],[0.535,'#F4E2D6'],[0.575,'#D8DEDC'],[0.62,'#9DBDC4'],[0.70,'#6C8B98'],[0.78,'#445C68'],[0.86,'#2C3A44'],[0.93,'#2A1E1C'],[1,'#3A1512']],
-  _lut(V){ const A=window.ART; this._luts=this._luts||{}; const k=V.id; if(!this._luts[k]){ const L=A.lut(V.lut||this._stops); const f=new Float32Array(256*3); for(let i=0;i<256;i++){ f[i*3]=L[i][0]; f[i*3+1]=L[i][1]; f[i*3+2]=L[i][2]; } this._luts[k]=f; } return this._luts[k]; },
-  _field(P,x,y,t){ // returns [phase a, envelope]
-    const TAU=Math.PI*2; let a=0, env=1;
-    if(P.type==='ribbon'){
-      const xr=x, yc=P.cy+P.amp*Math.sin(TAU*(P.freq*xr+P.ph+0.01*t))+P.tilt*(x-0.5); const dy=P.amp*TAU*P.freq*Math.cos(TAU*(P.freq*xr+P.ph+0.01*t))+P.tilt; const d=(y-yc)/Math.sqrt(1+dy*dy);
-      a=d/P.period+P.flow*t; env=Math.exp(-(d/P.width)*(d/P.width)*2); env*=1-P.vig*((x-0.5)*(x-0.5)+(y-0.35)*(y-0.35));
-    } else if(P.type==='ring'){
-      const dx=x-P.cx, dy=y-P.cy, r=Math.hypot(dx,dy), d=r-P.R; a=d/P.period+P.flow*t+0.06*Math.sin(Math.atan2(dy,dx)*2+t*0.2);
-      env=Math.exp(-(d/P.width)*(d/P.width)*2); const s=Math.min(1,Math.max(0,(r-P.R0)/0.03)); env*=s*s*(3-2*s); env*=1-P.vig*r*r;
-    } else {
-      const dx=x-P.cx, dy=y-P.cy, r=Math.hypot(dx,dy); let th=Math.atan2(dy,dx)+0.015*t;
-      const w=th+P.warp*(Math.sin(3*th+P.s1+0.05*t)/3+Math.sin(5*th+P.s2)/5);
-      a=P.k*w/TAU+P.twist*r+P.spiral*Math.log(r+0.002)+P.flow*t;
-      const s=Math.min(1,Math.max(0,r/P.core)); env=s*s*(3-2*s); env*=1-P.vig*r*r;
-      if(P.lobe){ env*=P.lobe[0]+P.lobe[1]*(0.5+0.5*Math.sin(th*P.lobe[2]+P.lobe[3])); }
-      for(const o of P.occ){ let d=th-o[0]*Math.PI/180; d=Math.abs(Math.atan2(Math.sin(d),Math.cos(d))); const hw=o[1]*Math.PI/180, fe=(o[2]!==undefined?o[2]:o[1]*0.4)*Math.PI/180; let q=(d-(hw-fe))/(2*fe); q=q<0?0:q>1?1:q; env*=q*q*(3-2*q); }
-    }
-    return [a,Math.max(0,Math.min(1,env*(P.gain||1)))];
-  },
-  _paint(work,V,t,pad){ pad=pad||0; const L=this._lut(V); const P=V.P; const fl=V.floor||[14,13,12]; const w=work.width,h=work.height; const we=w-2*pad; const x2=work.getContext('2d',{willReadFrequently:true}); const id=x2.createImageData(w,h); const d=id.data;
-    for(let j=0;j<h;j++){ const y=(j+0.5-pad)/we; for(let i=0;i<w;i++){ const x=(i+0.5-pad)/we; const fe=this._field(P,x,y,t); const ph=fe[0]-Math.floor(fe[0]); const e=fe[1]; const k=((ph*255)|0)*3; const o=(j*w+i)*4;
-        d[o]=fl[0]+(L[k]-fl[0])*e; d[o+1]=fl[1]+(L[k+1]-fl[1])*e; d[o+2]=fl[2]+(L[k+2]-fl[2])*e; d[o+3]=255; } }
+  _chart(){ if(!this._L)this._L=window.CHROMA.chart(); return this._L; },
+  _paint(work,V,t,pad){ pad=pad||0; const L=this._chart(); const P=V.P; const fl=V.floor||[14,13,12]; const C=window.CHROMA; const w=work.width,h=work.height; const we=w-2*pad; const x2=work.getContext('2d',{willReadFrequently:true}); const id=x2.createImageData(w,h); const d=id.data;
+    for(let j=0;j<h;j++){ const y=(j+0.5-pad)/we; for(let i=0;i<w;i++){ const x=(i+0.5-pad)/we; const f=C.field(P,x,y,t); const e=f[2]*C.iso(P,f[1],t); const k=(f[0]|0)*3; const o=(j*w+i)*4;
+        d[o]=fl[0]+(L[k]*255-fl[0])*e; d[o+1]=fl[1]+(L[k+1]*255-fl[1])*e; d[o+2]=fl[2]+(L[k+2]*255-fl[2])*e; d[o+3]=255; } }
     x2.putImageData(id,0,0); },
-  /* full frame into ctx (device px canvas W×H): field at `scale` of W, blur, grain */
   _frame(ctx,W,H,V,t,scale,grainSeed){ const A=window.ART; const ww=Math.max(32,Math.round(W*scale)), hh=Math.max(32,Math.round(H*scale)); const pw=Math.ceil(0.03*ww); const work=A.off(ww+2*pw,hh+2*pw); this._paint(work,V,t,pw); const PW=pw/scale;
     ctx.setTransform(1,0,0,1,0,0); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high'; ctx.filter=`blur(${(0.012*W).toFixed(1)}px)`; ctx.drawImage(work,-PW,-PW,W+2*PW,H+2*PW); ctx.filter='none';
     A.grain(ctx,{amp:0.02,pitch:Math.max(1,Math.round(W/1000)),seed:grainSeed||14,mono:true}); },
-
   render(canvas,w,h,dpr,V,done){ const x=canvas.getContext('2d',{willReadFrequently:true}); this._frame(x,canvas.width,canvas.height,V,0,1,14); done&&done(); return false; },
-
   motion(canvas,w,h,dpr,V,t,ctx){ const W=canvas.width,H=canvas.height; this._frame(ctx,W,H,V,t,Math.min(1,400/W),14+((t*8)|0)); },
-
-  live(V){ return `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#1d1c1a;overflow:hidden}iframe{border:0;width:100%;height:100%;display:block}</style></head><body><iframe src="engine.html?preset=${encodeURIComponent(V.id)}&embed=1" title="Deep Space Chroma engine"></iframe></body></html>`; }
+  live(V){ return `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#0e0d0c;overflow:hidden}iframe{border:0;width:100%;height:100%;display:block}</style></head><body><iframe src="engine.html?preset=${encodeURIComponent(V.id)}&embed=1" title="Deep Space Chroma engine"></iframe></body></html>`; }
 };
