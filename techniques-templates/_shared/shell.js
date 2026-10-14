@@ -6,7 +6,7 @@
 (function(){
 "use strict";
 const S=window.STUDY; if(!S){document.body.textContent='no STUDY';return;}
-const TT=window.TT||{entries:[],sections:[]};
+const TT=window.TT||{entries:[],sections:[]}; const VOC=window.TT_VOCAB||{names:{},atoms:{},byAtom:{},byTechnique:{}};
 const ROOT=document.body.dataset.root||'../../';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -17,6 +17,7 @@ const mobile=()=>innerWidth<=960;
 const me=TT.entries.find(e=>e.id===S.id)||{id:S.id,section:'techniques',code:S.code,title:S.title,techniques:[]};
 const section=TT.sections.find(s=>s.id===me.section)||{id:me.section,title:me.section};
 const sib=TT.entries.filter(e=>e.section===me.section); const idx=sib.findIndex(e=>e.id===S.id);
+const variantsOf=S=>(S.variants||[]).map(v=>({id:v.id,label:v.label,swatches:v.sw}));
 
 /* ---------- nav ---------- */
 (function(){ const n=$('nav'); if(!n)return; const prev=sib[idx-1], next=sib[idx+1];
@@ -27,16 +28,20 @@ const sib=TT.entries.filter(e=>e.section===me.section); const idx=sib.findIndex(
 /* ---------- notes column ---------- */
 (function(){ const el=$('copy'); const T=S.spec.techniques||[];
   const chips=T.map(t=>`<span data-t="${esc(t.id)}" title="${esc(t.name)}">${esc(t.id)}</span>`).join('');
+  const atoms=[...new Set(T.flatMap(t=>t.atoms||[]))].map(a=>`<a href="${ROOT}index.html#techniques?a=${encodeURIComponent(a)}" title="${(VOC.byAtom[a]||[]).length} ${(VOC.byAtom[a]||[]).length===1?'entry':'entries'}">${esc(a)}</a>`).join('');
   const steps=(S.spec.pass_order||[]).map(s=>`<li><div><b>${esc(s.split(' · ')[0])}</b>${s.includes(' · ')?' · '+esc(s.split(' · ').slice(1).join(' · ')):''}</div></li>`).join('');
   el.innerHTML=`<p class="kicker">${esc(S.kicker||section.title+' · '+S.code)}</p><h1 class="lede">${esc(S.lede||S.title)}</h1><div class="body">${(S.body||[]).map(p=>`<p>${esc(p)}</p>`).join('')}</div>
   ${steps?`<div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps">${steps}</ol></div>`:''}
   <div class="meta"><div class="full"><h2>Techniques read · click to highlight</h2><div class="tags" id="chips">${chips}</div></div>
+  ${atoms?`<div class="full"><h2>Atoms · click to find every use</h2><div class="tags atoms">${atoms}</div></div>`:''}
   <div><h2>Reference</h2><div class="ro">${esc(S.source)}</div></div><div><h2>Study</h2><div class="nm">${esc(S.title)}</div><div class="ro">${esc(S.code)} · ${esc(section.title)} · ${idx+1} / ${sib.length}</div></div></div>
   <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read${S.motion?' · <b>M</b> motion':''}${S.live?' · <b>L</b> live':''}</span><span>ø co. · 2026</span></div>`; })();
 
 /* ---------- spec panel ---------- */
 const specEl=$('spec'), specPre=$('specpre');
-const specJSON=JSON.stringify(S.spec,null,2);
+/* the panel and Copy carry the same object build.mjs writes to spec.json: identity + variants + the spec */
+const specFull=Object.assign({ id:S.id, code:S.code, title:S.title, section:me.section, variants:variantsOf(S) },S.spec);
+const specJSON=JSON.stringify(specFull,null,2);
 function hlJSON(s){ return esc(s).replace(/("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)|\b(true|false|null)\b/g,(m,str,col,num,lit)=>{ if(str)return col?`<span class="k">${str}</span>${col}`:`<span class="s">${str}</span>`; if(num)return `<span class="n">${num}</span>`; return `<span class="n">${lit}</span>`; }); }
 specPre.innerHTML=hlJSON(specJSON); $('specid').textContent=S.id;
 function openSpec(o){ specEl.classList.toggle('open',o); specEl.setAttribute('aria-hidden',o?'false':'true'); $('bSpec').classList.toggle('on',o); }
@@ -62,11 +67,12 @@ function layout(){ const r=wrap.getBoundingClientRect(); DPR=Math.min(2,devicePi
   let bw=W-left-right, bh=H-top-bottom; let fw=bw, fh=fw*ar; if(fh>bh){ fh=bh; fw=fh/ar; }
   fig={x:Math.round(left+(bw-fw)/2),y:Math.round(top+(bh-fh)/2),w:Math.round(fw),h:Math.round(fh)};
   ensureArt(); placePoints(); placeLive(); }
-function ensureArt(){ const k=fig.w+'x'+fig.h+'@'+DPR+'#'+variant().id; if(k===artKey&&art)return; artKey=k; if(artCache[k]){ art=artCache[k]; artDone=true; dirty=true; computeFidelity(); return; } renderArt(k); }
+let overrides={}; /* spec v2 param rail: { 'technique-id': { 'path': value } } */
+function ensureArt(){ const k=fig.w+'x'+fig.h+'@'+DPR+'#'+variant().id+'#'+JSON.stringify(overrides); if(k===artKey&&art)return; artKey=k; if(artCache[k]){ art=artCache[k]; artDone=true; dirty=true; computeFidelity(); return; } renderArt(k); }
 function renderArt(key){ const c=document.createElement('canvas'); c.width=Math.round(fig.w*DPR); c.height=Math.round(fig.h*DPR); const x=c.getContext('2d'); x.setTransform(DPR,0,0,DPR,0,0); x.fillStyle='#fff'; x.fillRect(0,0,fig.w,fig.h); artDone=false; art=null; dirty=true;
   const t0=performance.now();
   const finish=()=>{ if(key!==artKey)return; artCache[key]=c; art=c; artDone=true; dirty=true; console.info(`[${S.id}] ${variant().id} rendered in ${Math.round(performance.now()-t0)} ms`); computeFidelity(); };
-  try{ const r=S.render(c,fig.w,fig.h,DPR,variant(),finish); if(r!==false&&S.render.length<6)finish(); }catch(e){ console.error(e); finish(); } }
+  try{ const r=S.render(c,fig.w,fig.h,DPR,variant(),finish,overrides); if(r!==false&&S.render.length<6)finish(); }catch(e){ console.error(e); finish(); } }
 
 /* ---------- points ---------- */
 const P=(S.points||[]).slice(0,10).map((p,i)=>({num:10+i*2,u:p.u,v:p.v,d:p.d||'—',label:p.label||'',t:p.t||null,dir:p.dir||null,lock:-1,x:0,y:0}));
@@ -84,13 +90,24 @@ rows.forEach((r,i)=>rowText(r,P[i],null,false));
 let hover=null, selected=null, dirty=true;
 function setHover(t){ hover=t; rows.forEach((r,i)=>r.classList.toggle('on',P[i]===(hover||selected))); showRead(hover||selected); dirty=true; }
 function select(t){ selected=(selected===t)?null:t; rows.forEach((r,i)=>r.classList.toggle('on',P[i]===(hover||selected))); showRead(selected||hover); if(selected&&selected.t)hlTech(selected.t); dirty=true; }
-function showRead(t){ if(!t){ readTxt.textContent='Hover or select a point.'; readCode.textContent=''; return; } const tech=(S.spec.techniques||[]).find(q=>q.id===t.t); readTxt.textContent=`${t.num} · ${t.d} — ${t.label}`; readCode.textContent=tech&&tech.params?Object.entries(tech.params).slice(0,6).map(([k,v])=>`${k}: ${typeof v==='object'?JSON.stringify(v):v}`).join('\n'):''; }
+function showRead(t){ if(!t){ readTxt.textContent='Hover or select a point.'; readCode.textContent=''; return; } const tech=(S.spec.techniques||[]).find(q=>q.id===t.t); readTxt.textContent=`${t.num} · ${t.d} — ${t.label}`; const show=v=>window.ART.isLeaf(v)?`${v.value}${v.unit?' '+v.unit:''}${v.range?' · '+v.range[0]+'–'+v.range[1]:''}`:(typeof v==='object'?JSON.stringify(v):v); readCode.textContent=tech&&tech.params?Object.entries(tech.params).slice(0,6).map(([k,v])=>`${k}: ${show(v)}`).join('\n'):''; }
 
 /* variant tabs */
 (function(){ const el=$('vtabs'); if(variants.length<2){ el.hidden=true; return; }
   el.innerHTML=`<span class="vh">${esc(S.variantLabel||'Color')} · V</span>`+variants.map((v,i)=>`<button type="button" data-i="${i}" class="${i===0?'on':''}">${(v.sw||[]).slice(0,3).map(c=>`<i class="sw" style="background:${c}"></i>`).join('')}${esc(v.label)}</button>`).join('');
   el.querySelectorAll('button').forEach(b=>b.onclick=()=>setVariant(+b.dataset.i)); })();
 function setVariant(i){ vi=(i+variants.length)%variants.length; document.querySelectorAll('#vtabs button').forEach((b,k)=>b.classList.toggle('on',k===vi)); if(motionOn)return; ensureArt(); dirty=true; }
+
+/* ---------- param rail (spec v2) ---------- */
+(function(){ const leaves=window.ART.paramLeaves?window.ART.paramLeaves(S.spec):[]; const host=$('prail'); if(!host||!leaves.length){ if(host)host.hidden=true; return; } host.hidden=false;
+  const fmt=v=>Number.isInteger(v)?String(v):(Math.abs(v)<10?v.toFixed(2):v.toFixed(1));
+  const step=l=>l.step||((l.range[1]-l.range[0])>=40?1:(l.range[1]-l.range[0])/200);
+  host.innerHTML=`<div class="ph"><button type="button" class="ptog" aria-expanded="false">Params <i>${leaves.length}</i></button><button type="button" id="preset">Reset</button></div>`+leaves.map((l,i)=>`<label class="pr" data-i="${i}" title="${esc(l.note||l.tech)}"><span class="k"><b>${esc(l.short)}</b> ${esc(l.path)}</span><input type="range" min="${l.range[0]}" max="${l.range[1]}" step="${step(l)}" value="${l.value}"><span class="v">${fmt(l.value)}${l.unit?' '+esc(l.unit):''}</span></label>`).join('');
+  let rto=null; const apply=(l,v,now)=>{ if(v===l.value){ if(overrides[l.tech]){ delete overrides[l.tech][l.path]; if(!Object.keys(overrides[l.tech]).length)delete overrides[l.tech]; } } else (overrides[l.tech]??={})[l.path]=v; host.classList.toggle('dirty',Object.keys(overrides).length>0); clearTimeout(rto); rto=setTimeout(()=>{ if(!motionOn)ensureArt(); dirty=true; },now?0:140); };
+  host.querySelectorAll('.pr').forEach(el=>{ const l=leaves[+el.dataset.i], inp=el.querySelector('input'), out=el.querySelector('.v'); inp.oninput=()=>{ const v=+inp.value; out.textContent=fmt(v)+(l.unit?' '+l.unit:''); el.classList.toggle('on',v!==l.value); apply(l,v,false); }; inp.onchange=()=>apply(l,+inp.value,true); inp.ondblclick=()=>{ inp.value=l.value; inp.oninput(); }; });
+  const tog=host.querySelector('.ptog'); tog.onclick=()=>{ const o=!host.classList.contains('open'); host.classList.toggle('open',o); tog.setAttribute('aria-expanded',o?'true':'false'); setTimeout(()=>{ layout(); dirty=true; },0); };
+  $('preset').onclick=()=>{ overrides={}; host.querySelectorAll('.pr').forEach(el=>{ const l=leaves[+el.dataset.i]; el.querySelector('input').value=l.value; el.querySelector('.v').textContent=fmt(l.value)+(l.unit?' '+l.unit:''); el.classList.remove('on'); }); host.classList.remove('dirty'); ensureArt(); dirty=true; };
+  window.__study_params={leaves,set:(tech,path,v)=>{ const i=leaves.findIndex(x=>x.tech===tech&&x.path===path); if(i<0)return; const inp=host.querySelector(`.pr[data-i="${i}"] input`); inp.value=v; inp.oninput(); apply(leaves[i],+inp.value,true); },open:o=>{ if(o!==host.classList.contains('open'))host.querySelector('.ptog').click(); },overrides:()=>overrides}; })();
 
 /* ---------- reference / compare ---------- */
 const refImg=new Image(); let refReady=false; const hasRef=!!(window.__REF&&window.__REF.data);
@@ -117,9 +134,9 @@ function computeFidelity(){ if(!art||!refReady)return; try{ const A=stats(refImg
   fidEl.innerHTML=`<div class="fh">Fidelity · ref ↔ rebuild${esc(vlab)}</div><div class="fr"><span>Palette · Lab 8³ ∩</span><span>${pc(pal)}</span></div><div class="fr"><span>Tone · L histogram ∩</span><span>${pc(tone)}</span></div><div class="fr"><span>Edge density</span><span>${pc(edge)}</span></div><div class="fr"><span>Grain · HF energy</span><span>${pc(grain)}</span></div><div class="fr"><span>Chroma · mean</span><span>${pc(chroma)}</span></div><div class="bar"><i style="width:${(sum*100).toFixed(1)}%"></i></div><div class="fr sum"><span>Optical match</span><span>${pc(sum)}</span></div>`; }catch(e){ console.info('fidelity',e); } }
 
 /* ---------- related ---------- */
-(function(){ const mine=new Set(me.techniques||[]); const scored=TT.entries.filter(e=>e.id!==S.id).map(e=>{ const shared=(e.techniques||[]).filter(t=>mine.has(t)); const rel=(me.related||[]).includes(e.id); return {e,shared,rel,score:(rel?10:0)+shared.length}; }).filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,4);
+(function(){ const mine=new Set(me.techniques||[]); const myAtoms=new Set(VOC.atoms[S.id]||(S.spec.techniques||[]).flatMap(t=>t.atoms||[])); const scored=TT.entries.filter(e=>e.id!==S.id).map(e=>{ const shared=(e.techniques||[]).filter(t=>mine.has(t)); const atomsShared=(VOC.atoms[e.id]||[]).filter(a=>myAtoms.has(a)); const rel=(me.related||[]).includes(e.id); return {e,shared,atomsShared,rel,score:(rel?10:0)+shared.length*2+atomsShared.length}; }).filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,4);
   if(!scored.length){ relEl.innerHTML=`<div class="th"><span>Related</span><b>—</b></div>`; return; }
-  relEl.innerHTML=`<div class="th"><span>Related</span><b>${scored.length}</b></div>`+scored.map(({e,shared,rel})=>`<a class="r" href="${ROOT}${e.path}index.html"><img src="${ROOT}${e.path}thumb.png" alt=""><span class="name">${esc(e.title)}</span><span class="via ${rel?'':'tech'}">${rel?'related':esc(shared[0])}</span></a>`).join(''); })();
+  relEl.innerHTML=`<div class="th"><span>Related</span><b>${scored.length}</b></div>`+scored.map(({e,shared,atomsShared,rel})=>`<a class="r" href="${ROOT}${e.path}index.html"><img src="${ROOT}${e.path}thumb.png" alt=""><span class="name">${esc(e.title)}</span><span class="via ${rel?'':'tech'}">${rel?'related':esc(shared[0]||atomsShared[0]||'')}</span></a>`).join(''); })();
 
 /* ---------- live DOM demo (optional) ---------- */
 let liveOn=false;
