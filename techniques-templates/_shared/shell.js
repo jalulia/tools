@@ -28,12 +28,11 @@ const variantsOf=S=>(S.variants||[]).map(v=>({id:v.id,label:v.label,swatches:v.s
 /* ---------- notes column ---------- */
 (function(){ const el=$('copy'); const T=S.spec.techniques||[];
   const chips=T.map(t=>`<span data-t="${esc(t.id)}" title="${esc(t.name)}">${esc(t.id)}</span>`).join('');
-  const atoms=[...new Set(T.flatMap(t=>t.atoms||[]))].map(a=>`<a href="${ROOT}index.html#techniques?a=${encodeURIComponent(a)}" title="${(VOC.byAtom[a]||[]).length} ${(VOC.byAtom[a]||[]).length===1?'entry':'entries'}">${esc(a)}</a>`).join('');
+  const vrows=T.map(t=>`<div class="vr"><span data-t="${esc(t.id)}" title="${esc(t.name)}"><b>${esc(t.short)}</b>${esc(t.id)}</span><span class="at">${(t.atoms||[]).map(a=>`<a href="${ROOT}index.html#techniques?a=${encodeURIComponent(a)}" title="${(VOC.byAtom[a]||[]).length} ${(VOC.byAtom[a]||[]).length===1?'entry':'entries'}">${esc(a)}</a>`).join('<i>·</i>')}</span></div>`).join('');
   const steps=(S.spec.pass_order||[]).map(s=>`<li><div><b>${esc(s.split(' · ')[0])}</b>${s.includes(' · ')?' · '+esc(s.split(' · ').slice(1).join(' · ')):''}</div></li>`).join('');
   el.innerHTML=`<p class="kicker">${esc(S.kicker||section.title+' · '+S.code)}</p><h1 class="lede">${esc(S.lede||S.title)}</h1><div class="body">${(S.body||[]).map(p=>`<p>${esc(p)}</p>`).join('')}</div>
   ${steps?`<div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps">${steps}</ol></div>`:''}
-  <div class="meta"><div class="full"><h2>Techniques read · click to highlight</h2><div class="tags" id="chips">${chips}</div></div>
-  ${atoms?`<div class="full"><h2>Atoms · click to find every use</h2><div class="tags atoms">${atoms}</div></div>`:''}
+  <div class="meta"><div class="full"><h2>Vocabulary · a technique highlights its reads · an atom finds every use</h2><div class="vocab" id="chips">${vrows}</div></div>
   <div><h2>Reference</h2><div class="ro">${esc(S.source)}</div></div><div><h2>Study</h2><div class="nm">${esc(S.title)}</div><div class="ro">${esc(S.code)} · ${esc(section.title)} · ${idx+1} / ${sib.length}</div></div></div>
   <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read${S.motion?' · <b>M</b> motion':''}${S.live?' · <b>L</b> live':''}</span><span>ø co. · 2026</span></div>`; })();
 
@@ -46,7 +45,7 @@ function hlJSON(s){ return esc(s).replace(/("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d+(?:\
 specPre.innerHTML=hlJSON(specJSON); $('specid').textContent=S.id;
 function openSpec(o){ specEl.classList.toggle('open',o); specEl.setAttribute('aria-hidden',o?'false':'true'); $('bSpec').classList.toggle('on',o); }
 function hlTech(id){ const lines=specJSON.split('\n'); let out=[],on=false,depth=0; for(const ln of lines){ if(!on&&ln.includes(`"id": "${id}"`)){ on=true; depth=ln.search(/\S/); } if(on){ out.push(`<span class="hl">${hlJSON(ln)}</span>`); if(ln.search(/\S/)<=depth&&/^\s*\},?$/.test(ln))on=false; } else out.push(hlJSON(ln)); } specPre.innerHTML=out.join('\n'); const h=specPre.querySelector('.hl'); if(h&&specEl.classList.contains('open'))h.scrollIntoView({block:'center'}); }
-document.querySelectorAll('#chips span').forEach(c=>{ c.onclick=()=>{ const id=c.dataset.t; const on=c.classList.contains('on'); document.querySelectorAll('#chips span').forEach(x=>x.classList.remove('on')); if(on){ techFocus=null; } else { c.classList.add('on'); techFocus=id; hlTech(id); } dirty=true; }; });
+document.querySelectorAll('#chips span[data-t]').forEach(c=>{ c.onclick=()=>{ const id=c.dataset.t; const on=c.classList.contains('on'); document.querySelectorAll('#chips span[data-t]').forEach(x=>x.classList.remove('on')); if(on){ techFocus=null; } else { c.classList.add('on'); techFocus=id; hlTech(id); } dirty=true; }; });
 let techFocus=null;
 
 /* ---------- canvas + layout ---------- */
