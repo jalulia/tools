@@ -4,17 +4,187 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="only light">
+<meta name="description" content="TS-05 · Vertical line-screen type — Heavy type cut into vertical bars; bar width follows a phase field.">
 <link rel="icon" href="data:,">
 <title>TS-05 — Vertical line-screen type · Techniques &amp; Templates · ø co.</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
 <link rel="stylesheet" href="../../_shared/shell.css">
+<link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
-<nav class="nav" id="nav" aria-label="Site navigation"></nav>
+<!-- <a class="brand" href="../../index.html" title="Index"><svg class="o" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-554.33,-11.46)" fill="currentColor" fill-rule="evenodd"><path d="M682.33,35.81c-57.24,0-103.65,46.4-103.65,103.65s46.4,103.65,103.65,103.65,103.65-46.4,103.65-103.65-46.4-103.65-103.65-103.65ZM682.33,187.75c-26.67,0-48.29-21.62-48.29-48.29s21.62-48.29,48.29-48.29,48.29,21.62,48.29,48.29-21.62,48.29-48.29,48.29Z"/><rect x="666.18" y="-5.46" width="32.29" height="289.83" transform="translate(298.46 -441.63) rotate(45)"/></g></svg><span class="wm">IMP<i>Ø</i>SSIBLE</span></a>
+  <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Vertical line-screen type</b><span class="code">TS-05</span></span>
+  <span class="pager"><a href="../../techniques/ts-04-stacked-card-scroll/index.html" title="Stacked card scroll">← TS-04</a><a href="../../index.html#techniques"><span class="n">5</span>&nbsp;/ 14</a><a href="../../techniques/ts-06-riso-plate-separation/index.html" title="Riso three-plate separation">TS-06 →</a></span> <p class="kicker">Technique · TS-05</p><h1 class="lede">Heavy type cut into vertical bars; bar width follows a phase field.</h1><div class="body"><p>One ink on warm paper. Four lines of display type are set with leading shorter than the ascender, so each line overlaps the one above. The type is not printed as type — it prints through a vertical line screen at fixed pitch, and a bar exists only where the letter mask is on. Where two lines overlap the mask doubles and the bars swell to solid.</p><p>A low phase field shifts each bar a few units sideways and steps some regions by half a pitch, so bars break against each other at letter edges. A 0.7 px bleed rounds the bar ends, interiors print a shade darker, and the sheet carries tooth and a faint mottle.</p></div>
+  <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>paper</b> · flat fill + mottle</div></li><li><div><b>mask</b> · four text lines summed into a luminance layer, blurred 1.2 px</div></li><li><div><b>phase</b> · perlin offset per (column, y)</div></li><li><div><b>bars</b> · one polygon per continuous run per column</div></li><li><div><b>bleed</b> · 0.7 px blur, soft threshold, interior darkening</div></li><li><div><b>captions</b> · corner blocks, credit, word row</div></li><li><div><b>tooth</b> · mono grain 0.04</div></li></ol></div>
+  <div class="meta"><div class="full"><h2>Techniques read · click to highlight</h2><div class="tags" id="chips"><span data-t="line-screen" title="Vertical line screen">line-screen</span><span data-t="phase-field" title="Phase field">phase-field</span><span data-t="ink-bleed" title="Ink bleed">ink-bleed</span><span data-t="paper-tooth" title="Paper tooth">paper-tooth</span><span data-t="caption-label" title="Caption blocks">caption-label</span></div></div>
+  <div><h2>Reference</h2><div class="ro">Reference 05 · line-screened slab-serif type on gray stock, 1448 × 936</div></div><div><h2>Study</h2><div class="nm">Vertical line-screen type</div><div class="ro">TS-05 · Techniques · 5 / 14</div></div></div>
+  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>line-screen</b> · Vertical line screen — For every screen column x_k = k·pitch, walk down the page one device pixel at a time, read the summed letter mask at (x_k + phase, y), map it to a bar width and fill each continuous run as one polygon with a left and a right edge per y.</div></li><li><div><b>phase-field</b> · Phase field — phase(x,y) = 2.4·fbm(x/260, y/260) plus half a pitch in regions where the field is high; the bar center is x_k + phase, so bars in neighbouring regions step against each other.</div></li><li><div><b>ink-bleed</b> · Ink bleed — The bar layer is blurred 0.8 px, its alpha is pushed through a soft threshold so the edge swells outward, and the ink color shifts toward ink_deep inside the letters.</div></li><li><div><b>paper-tooth</b> · Paper tooth — Luminance is multiplied by 1 + mottle before the bars land and by ART.grain after, so ink and paper share one tooth.</div></li><li><div><b>caption-label</b> · Caption blocks — Plain fills in the caption color; the word row divides the leftover width equally between the words.</div></li></ol></div>
+  <div class="meta static" style="display:block"><h2>11 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>LINE</b> · Line screen · pitch 6.9 u, bar 0.66 pitch inside a letter <span class="ro">u 0.50 · v 0.24 · line-screen</span></div></li><li><div><b>LINE</b> · Bar ends · the mask clips each bar; no bar on bare paper <span class="ro">u 0.20 · v 0.44 · line-screen</span></div></li><li><div><b>MERG</b> · Overlap · two lines of type, density 2, bars merge to solid <span class="ro">u 0.69 · v 0.47 · line-screen</span></div></li><li><div><b>PHSE</b> · Phase field · perlin, period 260 u, shift ± 2.4 u <span class="ro">u 0.36 · v 0.36 · phase-field</span></div></li><li><div><b>PHSE</b> · Half-pitch step · field quantised where |n| &gt; 0.35 <span class="ro">u 0.76 · v 0.66 · phase-field</span></div></li><li><div><b>BLED</b> · Ink bleed · 0.7 px blur, gain 1.15, corners soften <span class="ro">u 0.30 · v 0.72 · ink-bleed</span></div></li><li><div><b>BLED</b> · Interior darkening · ink → ink_deep where mask density &gt; 0.9 <span class="ro">u 0.62 · v 0.80 · ink-bleed</span></div></li><li><div><b>TOOTH</b> · Paper tooth · mono grain amp 0.04 on 1 px cells <span class="ro">u 0.90 · v 0.12 · paper-tooth</span></div></li><li><div><b>TOOTH</b> · Mottle · perlin at 60 u, ± 3.5 % luminance <span class="ro">u 0.08 · v 0.60 · paper-tooth</span></div></li><li><div><b>CAPT</b> · Caption block · Archivo 800 caps, 18 u, four lines <span class="ro">u 0.16 · v 0.15 · caption-label</span></div></li><li><div><b>CAPT</b> · Word row · JetBrains Mono 14 u, justified across 840 u <span class="ro">u 0.50 · v 0.93 · caption-label</span></div></li></ol></div>
+  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read</span><span>ø co. · 2026</span></div> {
+  &quot;id&quot;: &quot;ts-05-line-screen-type&quot;,
+  &quot;code&quot;: &quot;TS-05&quot;,
+  &quot;title&quot;: &quot;Vertical line-screen type&quot;,
+  &quot;section&quot;: &quot;techniques&quot;,
+  &quot;variants&quot;: [
+    {
+      &quot;id&quot;: &quot;ref&quot;,
+      &quot;label&quot;: &quot;As reference&quot;,
+      &quot;swatches&quot;: [
+        &quot;#514D4A&quot;,
+        &quot;#E5E1DB&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;io&quot;,
+      &quot;label&quot;: &quot;Ember&quot;,
+      &quot;swatches&quot;: [
+        &quot;#F4551E&quot;,
+        &quot;#FFFFFF&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;rev&quot;,
+      &quot;label&quot;: &quot;Reverse&quot;,
+      &quot;swatches&quot;: [
+        &quot;#FFFFFF&quot;,
+        &quot;#101014&quot;
+      ]
+    }
+  ],
+  &quot;reference&quot;: {
+    &quot;file&quot;: &quot;ref.png&quot;,
+    &quot;px&quot;: [
+      1448,
+      936
+    ],
+    &quot;grammar&quot;: &quot;one-ink print: heavy slab type, tight leading, screened as vertical bars at a fixed pitch; bars merge where lines of type overlap; small caps captions in the corners, spaced word row at the foot&quot;
+  },
+  &quot;units&quot;: &quot;design units, 1000 = sheet width (sheet is 1000 × 646)&quot;,
+  &quot;palette&quot;: {
+    &quot;paper&quot;: &quot;#E5E1DB&quot;,
+    &quot;ink&quot;: &quot;#514D4A&quot;,
+    &quot;ink_deep&quot;: &quot;#3E3A38&quot;,
+    &quot;caption&quot;: &quot;#4A4643&quot;
+  },
+  &quot;techniques&quot;: [
+    {
+      &quot;id&quot;: &quot;line-screen&quot;,
+      &quot;short&quot;: &quot;LINE&quot;,
+      &quot;name&quot;: &quot;Vertical line screen&quot;,
+      &quot;layer&quot;: 1,
+      &quot;pass&quot;: 2,
+      &quot;atoms&quot;: [
+        &quot;grating&quot;,
+        &quot;mask&quot;,
+        &quot;clip&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;pitch_u&quot;: 6.9,
+        &quot;bar_min&quot;: &quot;0.58 pitch (mask 0.10)&quot;,
+        &quot;bar_full&quot;: &quot;0.66 pitch (mask ≥ 0.35)&quot;,
+        &quot;end_cells&quot;: &quot;bar ends snap to 0.5-pitch cells down the page&quot;,
+        &quot;bar_merge&quot;: &quot;1.15 pitch (mask ≥ 1.6, two lines overlapping)&quot;,
+        &quot;threshold&quot;: 0.1,
+        &quot;gap_min_px&quot;: 1,
+        &quot;mask&quot;: &quot;sum of four text lines, Archivo 900 condensed, blurred 1.2 px&quot;
+      },
+      &quot;implementation&quot;: &quot;For every screen column x_k = k·pitch, walk down the page one device pixel at a time, read the summed letter mask at (x_k + phase, y), map it to a bar width and fill each continuous run as one polygon with a left and a right edge per y.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;phase-field&quot;,
+      &quot;short&quot;: &quot;PHSE&quot;,
+      &quot;name&quot;: &quot;Phase field&quot;,
+      &quot;layer&quot;: 1,
+      &quot;pass&quot;: 1,
+      &quot;atoms&quot;: [
+        &quot;perlin&quot;,
+        &quot;offset&quot;,
+        &quot;quantise&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;period_u&quot;: 260,
+        &quot;octaves&quot;: 2,
+        &quot;shift_u&quot;: 2.4,
+        &quot;quantise&quot;: &quot;+0.5 pitch where fbm &gt; 0.35&quot;,
+        &quot;seed&quot;: 505
+      },
+      &quot;implementation&quot;: &quot;phase(x,y) = 2.4·fbm(x/260, y/260) plus half a pitch in regions where the field is high; the bar center is x_k + phase, so bars in neighbouring regions step against each other.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;ink-bleed&quot;,
+      &quot;short&quot;: &quot;BLED&quot;,
+      &quot;name&quot;: &quot;Ink bleed&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 3,
+      &quot;atoms&quot;: [
+        &quot;blur&quot;,
+        &quot;gain&quot;,
+        &quot;darken&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;blur_px&quot;: 0.7,
+        &quot;gain&quot;: 1.15,
+        &quot;interior_darken&quot;: &quot;ink → ink_deep (#3E3A38) where mask &gt; 0.9, ramp from 0.6&quot;,
+        &quot;threshold_soft&quot;: &quot;0.26 → 0.60&quot;
+      },
+      &quot;implementation&quot;: &quot;The bar layer is blurred 0.8 px, its alpha is pushed through a soft threshold so the edge swells outward, and the ink color shifts toward ink_deep inside the letters.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;paper-tooth&quot;,
+      &quot;short&quot;: &quot;TOOTH&quot;,
+      &quot;name&quot;: &quot;Paper tooth&quot;,
+      &quot;layer&quot;: 3,
+      &quot;pass&quot;: 4,
+      &quot;atoms&quot;: [
+        &quot;grain&quot;,
+        &quot;mottle&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;grain&quot;: &quot;mono, amp 0.04, pitch 1 px, seed 505&quot;,
+        &quot;mottle&quot;: &quot;perlin period 60 u, ± 3.5 % (ref) · ± 2 % (ember) · ± 5 % (reverse)&quot;,
+        &quot;measured_paper_std&quot;: &quot;4.4 / 255&quot;
+      },
+      &quot;implementation&quot;: &quot;Luminance is multiplied by 1 + mottle before the bars land and by ART.grain after, so ink and paper share one tooth.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;caption-label&quot;,
+      &quot;short&quot;: &quot;CAPT&quot;,
+      &quot;name&quot;: &quot;Caption blocks&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 3,
+      &quot;atoms&quot;: [
+        &quot;type&quot;,
+        &quot;justify&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;corner_blocks&quot;: &quot;Archivo 800 condensed caps, 18 u, line 20 u, at (83,55) and (698,55)&quot;,
+        &quot;credit&quot;: &quot;Archivo 800 caps 18 u at (680,483)&quot;,
+        &quot;word_row&quot;: &quot;JetBrains Mono 700 14 u, seven words justified from 83 u to 922 u at 598 u&quot;
+      },
+      &quot;implementation&quot;: &quot;Plain fills in the caption color; the word row divides the leftover width equally between the words.&quot;
+    }
+  ],
+  &quot;pass_order&quot;: [
+    &quot;paper · flat fill + mottle&quot;,
+    &quot;mask · four text lines summed into a luminance layer, blurred 1.2 px&quot;,
+    &quot;phase · perlin offset per (column, y)&quot;,
+    &quot;bars · one polygon per continuous run per column&quot;,
+    &quot;bleed · 0.7 px blur, soft threshold, interior darkening&quot;,
+    &quot;captions · corner blocks, credit, word row&quot;,
+    &quot;tooth · mono grain 0.04&quot;
+  ],
+  &quot;notes&quot;: [
+    &quot;Measured on ref.png: pitch 10 px at 1448 px (6.9 u); bar runs 6–7 px inside letters (0.68 pitch), 11 px+ where lines merge; paper (229,226,220) covers 80 %; ink (65,62,59) 15 %; paper std 4.4 / 255.&quot;,
+    &quot;The reference type is a slab serif; no serif is inlined, so the rebuild sets Archivo 900 at condensed width (font-stretch 75 %), which keeps the stroke weight and the tight leading but not the slabs.&quot;,
+    &quot;Words are invented. Seed 505.&quot;
+  ]
+} are BAKED here by `node _build/build.mjs` from study.js — a static read for readers that
+     cannot run scripts. shell.js redraws all of it on load. Edit study.js or _build/, never the generated index.html. -->
+<nav class="nav" id="nav" aria-label="Site navigation">{{NAV}}</nav>
 <main class="plate">
-  <section class="notes" id="copy"></section>
+  <section class="notes" id="copy">{{NOTES}}</section>
   <section class="figure" id="stage">
-    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"></canvas></div>
+    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"><img src="thumb.png" alt="TS-05 rebuild, still frame" loading="lazy"></canvas></div>
     <div class="live" id="live"></div>
     <div class="log" id="log">
       <div class="ctl">
@@ -38,7 +208,7 @@
 </main>
 <aside class="spec" id="spec" aria-hidden="true">
   <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
-  <pre id="specpre"></pre>
+  <pre id="specpre">{{SPEC}}</pre>
 </aside>
 <script src="../../_shared/entries.js"></script>
 <script src="../../_shared/art.js"></script>

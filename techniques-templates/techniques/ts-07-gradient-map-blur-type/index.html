@@ -4,17 +4,258 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="only light">
+<meta name="description" content="TS-07 · Gradient-mapped blur type — Type and blobs in one mask, blurred, mapped through a four-stop ramp.">
 <link rel="icon" href="data:,">
 <title>TS-07 — Gradient-mapped blur type · Techniques &amp; Templates · ø co.</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
 <link rel="stylesheet" href="../../_shared/shell.css">
+<link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
-<nav class="nav" id="nav" aria-label="Site navigation"></nav>
+<!-- <a class="brand" href="../../index.html" title="Index"><svg class="o" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-554.33,-11.46)" fill="currentColor" fill-rule="evenodd"><path d="M682.33,35.81c-57.24,0-103.65,46.4-103.65,103.65s46.4,103.65,103.65,103.65,103.65-46.4,103.65-103.65-46.4-103.65-103.65-103.65ZM682.33,187.75c-26.67,0-48.29-21.62-48.29-48.29s21.62-48.29,48.29-48.29,48.29,21.62,48.29,48.29-21.62,48.29-48.29,48.29Z"/><rect x="666.18" y="-5.46" width="32.29" height="289.83" transform="translate(298.46 -441.63) rotate(45)"/></g></svg><span class="wm">IMP<i>Ø</i>SSIBLE</span></a>
+  <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Gradient-mapped blur type</b><span class="code">TS-07</span></span>
+  <span class="pager"><a href="../../techniques/ts-06-riso-plate-separation/index.html" title="Riso three-plate separation">← TS-06</a><a href="../../index.html#techniques"><span class="n">7</span>&nbsp;/ 14</a><a href="../../techniques/ts-08-flat-color-card-set/index.html" title="Flat-color card set">TS-08 →</a></span> <p class="kicker">Technique · TS-07</p><h1 class="lede">Type and blobs in one mask, blurred, mapped through a four-stop ramp.</h1><div class="body"><p>One luminance mask. Hard-edged blobs sit on black; six heavy words draw over them with a difference composite, so a letter is white on a black field and black on a white field. The whole mask blurs, then every pixel is replaced by a ramp read at its luminance — black, deep red, red, pink, light gray.</p><p>The edge halo is that ramp read down the blur falloff; stops at 0, 0.09, 0.30, 0.70 and 0.92 make the pink band wide and the drop to black short. In motion the blur breathes between 4 and 28 u over 8 s and the blobs drift — the words hold still.</p></div>
+  <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>mask</b> · black ground, metaballs thresholded at 1.0</div></li><li><div><b>type</b> · six words in difference over the mask</div></li><li><div><b>blur</b> · gaussian σ 16 u (4–28 u in motion), padded canvas</div></li><li><div><b>map</b> · LUT[luminance] per pixel</div></li><li><div><b>frame</b> · crop the padding</div></li></ol></div>
+  <div class="meta"><div class="full"><h2>Techniques read · click to highlight</h2><div class="tags" id="chips"><span data-t="blob-field" title="Metaball blob field">blob-field</span><span data-t="display-stack" title="Stacked display words">display-stack</span><span data-t="blur-field" title="Whole-mask gaussian blur">blur-field</span><span data-t="gradient-map" title="Five-stop gradient map">gradient-map</span><span data-t="breath-motion" title="Breathing blur">breath-motion</span></div></div>
+  <div><h2>Reference</h2><div class="ro">Reference 07 · frame from an 8 s motion piece, gradient-mapped blurred type, 1000 × 1296</div></div><div><h2>Study</h2><div class="nm">Gradient-mapped blur type</div><div class="ro">TS-07 · Techniques · 7 / 14</div></div></div>
+  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>blob-field</b> · Metaball blob field — Sum of inverse-fourth elliptic fields from 10 seeded centres; pixels above 1.0 are white, the rest black, so nearby blobs merge into one shape with a hard edge.</div></li><li><div><b>display-stack</b> · Stacked display words — Six words centred at 225 u (the six-letter word spans 0.92 W), drawn white with globalCompositeOperation difference so each letter inverts the blob field under it.</div></li><li><div><b>blur-field</b> · Whole-mask gaussian blur — One CSS blur over the full mask after the type is composited, so type edges and blob edges get the same falloff.</div></li><li><div><b>gradient-map</b> · Five-stop gradient map — 256-entry LUT from the stops; every pixel of the blurred mask is replaced by LUT[luminance], which turns the blur falloff into the red-and-pink halo.</div></li><li><div><b>breath-motion</b> · Breathing blur — Each frame recomputes the blobs at quarter scale, composites the cached text mask, blurs at the current σ and gradient-maps on a 512 px work canvas that is drawn up to plate size.</div></li></ol></div>
+  <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>BLOB</b> · Blob 1 · metaball, radius 210 u, ratio 1.35, cut by the frame edge <span class="ro">u 0.08 · v 0.20 · blob-field</span></div></li><li><div><b>BLOB</b> · Blob 6 · field threshold 1.0 gives a hard edge before the blur <span class="ro">u 0.92 · v 0.66 · blob-field</span></div></li><li><div><b>BLOB</b> · Blobs 5 + 10 · two fields sum and merge into one shape <span class="ro">u 0.34 · v 0.48 · blob-field</span></div></li><li><div><b>TYPE</b> · Line 1 · Archivo 900 semi-condensed, 225 u, cap 155 u <span class="ro">u 0.50 · v 0.12 · display-stack</span></div></li><li><div><b>TYPE</b> · Line 4 · pitch 205 u, six lines, difference composite over the blobs <span class="ro">u 0.50 · v 0.60 · display-stack</span></div></li><li><div><b>TYPE</b> · Line 6 · black letter over a white blob, white letter over black ground <span class="ro">u 0.20 · v 0.92 · display-stack</span></div></li><li><div><b>BLUR</b> · Blur · gaussian, σ 16 u on the whole mask; the halo width is 2σ <span class="ro">u 0.66 · v 0.36 · blur-field</span></div></li><li><div><b>MAP</b> · Ramp on the falloff · light → pink → red → deep red → black <span class="ro">u 0.14 · v 0.74 · gradient-map</span></div></li><li><div><b>MAP</b> · Flat white region → light gray stop at 0.92 <span class="ro">u 0.84 · v 0.06 · gradient-map</span></div></li><li><div><b>BRTH</b> · Breath · σ = 4 + 24·(0.5+0.5·sin 2πt/8) u; blobs drift ±40 u on perlin(t) <span class="ro">u 0.50 · v 0.80 · breath-motion</span></div></li></ol></div>
+  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read · <b>M</b> motion</span><span>ø co. · 2026</span></div> {
+  &quot;id&quot;: &quot;ts-07-gradient-map-blur-type&quot;,
+  &quot;code&quot;: &quot;TS-07&quot;,
+  &quot;title&quot;: &quot;Gradient-mapped blur type&quot;,
+  &quot;section&quot;: &quot;techniques&quot;,
+  &quot;variants&quot;: [
+    {
+      &quot;id&quot;: &quot;ref&quot;,
+      &quot;label&quot;: &quot;As reference&quot;,
+      &quot;swatches&quot;: [
+        &quot;#000000&quot;,
+        &quot;#EB3E25&quot;,
+        &quot;#EDA1E3&quot;,
+        &quot;#DAD9D9&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;ember&quot;,
+      &quot;label&quot;: &quot;Ember&quot;,
+      &quot;swatches&quot;: [
+        &quot;#101014&quot;,
+        &quot;#F4551E&quot;,
+        &quot;#FFFFFF&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;blue&quot;,
+      &quot;label&quot;: &quot;Blue&quot;,
+      &quot;swatches&quot;: [
+        &quot;#101014&quot;,
+        &quot;#2F5AE6&quot;,
+        &quot;#FFFFFF&quot;
+      ]
+    }
+  ],
+  &quot;reference&quot;: {
+    &quot;file&quot;: &quot;ref.png&quot;,
+    &quot;px&quot;: [
+      1000,
+      1296
+    ],
+    &quot;grammar&quot;: &quot;one luminance mask (hard blobs, heavy stacked type in difference), gaussian blur, gradient map through black → deep red → red → pink → light gray; no grain&quot;
+  },
+  &quot;units&quot;: &quot;design units, 1000 = plate width&quot;,
+  &quot;palette&quot;: {
+    &quot;black&quot;: &quot;#000000&quot;,
+    &quot;deep_red&quot;: &quot;#460A05&quot;,
+    &quot;red&quot;: &quot;#EB3E25&quot;,
+    &quot;pink&quot;: &quot;#EDA1E3&quot;,
+    &quot;light&quot;: &quot;#DAD9D9&quot;
+  },
+  &quot;techniques&quot;: [
+    {
+      &quot;id&quot;: &quot;blob-field&quot;,
+      &quot;short&quot;: &quot;BLOB&quot;,
+      &quot;name&quot;: &quot;Metaball blob field&quot;,
+      &quot;layer&quot;: 0,
+      &quot;pass&quot;: 0,
+      &quot;atoms&quot;: [
+        &quot;metaball&quot;,
+        &quot;threshold&quot;,
+        &quot;radial&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;count&quot;: 10,
+        &quot;radius_u&quot;: [
+          105,
+          230
+        ],
+        &quot;field&quot;: &quot;Σ (r_i / |p − c_i|_e)⁴, |·|_e an elliptic distance (ratio 1.3–1.6, seeded angle)&quot;,
+        &quot;threshold&quot;: 1,
+        &quot;centres_u&quot;: [
+          [
+            30,
+            240
+          ],
+          [
+            450,
+            20
+          ],
+          [
+            930,
+            230
+          ],
+          [
+            10,
+            560
+          ],
+          [
+            320,
+            640
+          ],
+          [
+            960,
+            870
+          ],
+          [
+            30,
+            1160
+          ],
+          [
+            470,
+            890
+          ],
+          [
+            730,
+            1280
+          ],
+          [
+            650,
+            420
+          ]
+        ],
+        &quot;eval_scale&quot;: &quot;1/2 (render) · 1/4 (motion)&quot;
+      },
+      &quot;implementation&quot;: &quot;Sum of inverse-fourth elliptic fields from 10 seeded centres; pixels above 1.0 are white, the rest black, so nearby blobs merge into one shape with a hard edge.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;display-stack&quot;,
+      &quot;short&quot;: &quot;TYPE&quot;,
+      &quot;name&quot;: &quot;Stacked display words&quot;,
+      &quot;layer&quot;: 1,
+      &quot;pass&quot;: 1,
+      &quot;atoms&quot;: [
+        &quot;lettering&quot;,
+        &quot;stack&quot;,
+        &quot;difference&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;font&quot;: &quot;Archivo 900, font-stretch semi-condensed (wdth 87.5)&quot;,
+        &quot;lines&quot;: 6,
+        &quot;size_u&quot;: 225,
+        &quot;pitch_u&quot;: 205,
+        &quot;cap_height_u&quot;: 155,
+        &quot;align&quot;: &quot;center&quot;,
+        &quot;composite&quot;: &quot;difference&quot;
+      },
+      &quot;implementation&quot;: &quot;Six words centred at 225 u (the six-letter word spans 0.92 W), drawn white with globalCompositeOperation difference so each letter inverts the blob field under it.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;blur-field&quot;,
+      &quot;short&quot;: &quot;BLUR&quot;,
+      &quot;name&quot;: &quot;Whole-mask gaussian blur&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 2,
+      &quot;atoms&quot;: [
+        &quot;blur&quot;,
+        &quot;gaussian&quot;,
+        &quot;falloff&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;sigma_u&quot;: 16,
+        &quot;sigma_px_ref&quot;: &quot;≈20 at 1000 px&quot;,
+        &quot;edge&quot;: &quot;mask padded 40 u so the frame edge does not darken&quot;
+      },
+      &quot;implementation&quot;: &quot;One CSS blur over the full mask after the type is composited, so type edges and blob edges get the same falloff.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;gradient-map&quot;,
+      &quot;short&quot;: &quot;MAP&quot;,
+      &quot;name&quot;: &quot;Five-stop gradient map&quot;,
+      &quot;layer&quot;: 3,
+      &quot;pass&quot;: 3,
+      &quot;atoms&quot;: [
+        &quot;lut&quot;,
+        &quot;luminance&quot;,
+        &quot;ramp&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;stops&quot;: [
+          [
+            0,
+            &quot;#000000&quot;
+          ],
+          [
+            0.09,
+            &quot;#460A05&quot;
+          ],
+          [
+            0.3,
+            &quot;#EB3E25&quot;
+          ],
+          [
+            0.7,
+            &quot;#EDA1E3&quot;
+          ],
+          [
+            0.92,
+            &quot;#DAD9D9&quot;
+          ]
+        ],
+        &quot;read&quot;: &quot;luminance 0.2126 R + 0.7152 G + 0.0722 B&quot;
+      },
+      &quot;implementation&quot;: &quot;256-entry LUT from the stops; every pixel of the blurred mask is replaced by LUT[luminance], which turns the blur falloff into the red-and-pink halo.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;breath-motion&quot;,
+      &quot;short&quot;: &quot;BRTH&quot;,
+      &quot;name&quot;: &quot;Breathing blur&quot;,
+      &quot;layer&quot;: 4,
+      &quot;pass&quot;: 4,
+      &quot;atoms&quot;: [
+        &quot;loop&quot;,
+        &quot;sine&quot;,
+        &quot;drift&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;period_s&quot;: 8,
+        &quot;sigma_u&quot;: &quot;4 + 24·(0.5 + 0.5·sin(2πt/8))&quot;,
+        &quot;blob_drift_u&quot;: &quot;±40 on perlin(t/6 + i)&quot;,
+        &quot;words&quot;: &quot;static&quot;,
+        &quot;work_width_px&quot;: 512,
+        &quot;cache&quot;: &quot;text mask per size&quot;
+      },
+      &quot;implementation&quot;: &quot;Each frame recomputes the blobs at quarter scale, composites the cached text mask, blurs at the current σ and gradient-maps on a 512 px work canvas that is drawn up to plate size.&quot;
+    }
+  ],
+  &quot;pass_order&quot;: [
+    &quot;mask · black ground, metaballs thresholded at 1.0&quot;,
+    &quot;type · six words in difference over the mask&quot;,
+    &quot;blur · gaussian σ 16 u (4–28 u in motion), padded canvas&quot;,
+    &quot;map · LUT[luminance] per pixel&quot;,
+    &quot;frame · crop the padding&quot;
+  ],
+  &quot;notes&quot;: [
+    &quot;Measured on ref.png: ramp bins by luminance → (70,12,5) at 0.06, (232,71,45) at 0.38, (234,168,229) at 0.69, (218,217,219) at 0.82 of output luminance; flat regions have std 0 (no grain).&quot;,
+    &quot;Edge width light → black: 16 px in the sharpest frame (ref-c, 1120 px), 26 px (ref-b), 80 px (ref.png) — the blur breathes over the 8 s loop.&quot;,
+    &quot;Word block in ref.png: line pitch ≈ 203 u, cap height ≈ 155 u, DARK width / cap = 4.0 (Archivo 900 semi-condensed: 4.04), six-letter word ≈ 0.90 W. Seed 7.&quot;
+  ]
+} are BAKED here by `node _build/build.mjs` from study.js — a static read for readers that
+     cannot run scripts. shell.js redraws all of it on load. Edit study.js or _build/, never the generated index.html. -->
+<nav class="nav" id="nav" aria-label="Site navigation">{{NAV}}</nav>
 <main class="plate">
-  <section class="notes" id="copy"></section>
+  <section class="notes" id="copy">{{NOTES}}</section>
   <section class="figure" id="stage">
-    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"></canvas></div>
+    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"><img src="thumb.png" alt="TS-07 rebuild, still frame" loading="lazy"></canvas></div>
     <div class="live" id="live"></div>
     <div class="log" id="log">
       <div class="ctl">
@@ -38,7 +279,7 @@
 </main>
 <aside class="spec" id="spec" aria-hidden="true">
   <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
-  <pre id="specpre"></pre>
+  <pre id="specpre">{{SPEC}}</pre>
 </aside>
 <script src="../../_shared/entries.js"></script>
 <script src="../../_shared/art.js"></script>

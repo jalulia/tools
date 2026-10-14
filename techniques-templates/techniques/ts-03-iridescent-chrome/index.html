@@ -4,17 +4,247 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="only light">
+<meta name="description" content="TS-03 · Iridescent chrome on black — A bent slab, normals mapped through a spectral LUT, film grain, split type.">
 <link rel="icon" href="data:,">
 <title>TS-03 — Iridescent chrome on black · Techniques &amp; Templates · ø co.</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
 <link rel="stylesheet" href="../../_shared/shell.css">
+<link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
-<nav class="nav" id="nav" aria-label="Site navigation"></nav>
+<!-- <a class="brand" href="../../index.html" title="Index"><svg class="o" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-554.33,-11.46)" fill="currentColor" fill-rule="evenodd"><path d="M682.33,35.81c-57.24,0-103.65,46.4-103.65,103.65s46.4,103.65,103.65,103.65,103.65-46.4,103.65-103.65-46.4-103.65-103.65-103.65ZM682.33,187.75c-26.67,0-48.29-21.62-48.29-48.29s21.62-48.29,48.29-48.29,48.29,21.62,48.29,48.29-21.62,48.29-48.29,48.29Z"/><rect x="666.18" y="-5.46" width="32.29" height="289.83" transform="translate(298.46 -441.63) rotate(45)"/></g></svg><span class="wm">IMP<i>Ø</i>SSIBLE</span></a>
+  <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Iridescent chrome on black</b><span class="code">TS-03</span></span>
+  <span class="pager"><a href="../../techniques/ts-02-four-ink-spot-illustration/index.html" title="Four-ink spot illustration">← TS-02</a><a href="../../index.html#techniques"><span class="n">3</span>&nbsp;/ 14</a><a href="../../techniques/ts-04-stacked-card-scroll/index.html" title="Stacked card scroll">TS-04 →</a></span> <p class="kicker">Technique · TS-03</p><h1 class="lede">A bent slab, normals mapped through a spectral LUT, film grain, split type.</h1><div class="body"><p>Normal shading. A 300 × 160 u slab with 30 u fillets is swept along an L, twisted 31° and tilted 29° to camera, then rasterized to a per-pixel normal buffer. Each pixel reflects a 1-D environment: the vertical component of the reflected ray indexes a spectral LUT, so the fillets sweep the whole table in a few pixels and each flat face holds one band. Grazing normals take the edge color; a specular lobe adds white.</p><p>Film grain sits over it — multiplicative on the chrome, additive on the black so the ground is never clean. The headline is Archivo 900 at width 62, each word drawn three times in red, green and blue with a lighter blend, offset 2.5 u: overlaps sum to white, edges fringe.</p></div>
+  <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>ground</b> · flat fill</div></li><li><div><b>headline + small words</b> · channel split on a transparent layer, source-over</div></li><li><div><b>slab</b> · rasterize section sweep into normal + depth buffers</div></li><li><div><b>shade</b> · LUT[t(reflect)] + edge band + specular, soften 0.7 px, source-over</div></li><li><div><b>grain</b> · multiplicative per channel, then additive on the ground</div></li></ol></div>
+  <div class="meta"><div class="full"><h2>Techniques read · click to highlight</h2><div class="tags" id="chips"><span data-t="spectral-lut" title="Spectral look-up table">spectral-lut</span><span data-t="normal-shading" title="Normal-buffer shading of a swept slab">normal-shading</span><span data-t="edge-highlight" title="Edge band and specular lobe">edge-highlight</span><span data-t="film-grain" title="Per-channel film grain">film-grain</span><span data-t="channel-split-type" title="RGB channel-split lettering">channel-split-type</span><span data-t="display-headline" title="Condensed display headline">display-headline</span></div></div>
+  <div><h2>Reference</h2><div class="ro">Reference 03 · chrome slab poster, black ground, 1644 × 1568</div></div><div><h2>Study</h2><div class="nm">Iridescent chrome on black</div><div class="ro">TS-03 · Techniques · 3 / 14</div></div></div>
+  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>spectral-lut</b> · Spectral look-up table — ART.lut(stops) gives 256 colors; the shading pass indexes it with the environment coordinate t, so color is a function of normal direction only.</div></li><li><div><b>normal-shading</b> · Normal-buffer shading of a swept slab — Vertices P = C(s) + a·e1 + b·e2 with the section basis rotated by the twist; normals from the cross product of finite differences; triangles rasterized with edge functions into normal + depth buffers; per pixel the reflected ray of the orthographic view picks LUT[t].</div></li><li><div><b>edge-highlight</b> · Edge band and specular lobe — band = exp(−((|n.z|−0.34)/0.06)²) mixes the edge color in; spec = (n·h)^60 mixes white in; both read from the same normal buffer as the LUT.</div></li><li><div><b>film-grain</b> · Per-channel film grain — ART.grain multiplies RGB by 1 + 0.10·n per channel (visible on the chrome and the type); a second pass adds signed noise of 14/255 so the black ground carries grain too, as film does.</div></li><li><div><b>channel-split-type</b> · RGB channel-split lettering — Each word is filled three times in #FF0000, #00FF00, #0000FF with globalCompositeOperation lighter on a transparent layer, offset per channel; where all three overlap the sum is white, at the edges one or two channels show; the layer is drawn under the chrome.</div></li><li><div><b>display-headline</b> · Condensed display headline — line 1 is sized to 924 u (font-stretch is set after ctx.font, which resets it); the figure sits on line 2 flush right; the slab is drawn after the type so it covers the bottom of the headline as the reference slab does.</div></li></ol></div>
+  <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>LUT</b> · Spectral LUT · 10 stops, navy → blue → cyan → white → yellow → pink → magenta → navy <span class="ro">u 0.30 · v 0.62 · spectral-lut</span></div></li><li><div><b>NRML</b> · Inner wall · section 300 × 160 u, fillet 30 u; this face is the slab’s thickness <span class="ro">u 0.62 · v 0.80 · normal-shading</span></div></li><li><div><b>NRML</b> · Top face · t = 0.5 + 0.40·r.y + 0.16·r.x picks the band; tilt 29° puts it in the cyan half <span class="ro">u 0.46 · v 0.55 · normal-shading</span></div></li><li><div><b>EDGE</b> · Edge band · |n.z| = 0.34 ± 0.06 painted yellow along every fillet <span class="ro">u 0.20 · v 0.86 · edge-highlight</span></div></li><li><div><b>EDGE</b> · Specular lobe · (n·h)^60, light from upper left, peaks at the outer bend <span class="ro">u 0.34 · v 0.57 · edge-highlight</span></div></li><li><div><b>GRN</b> · Ground grain · additive, σ 14/255, per channel <span class="ro">u 0.60 · v 0.30 · film-grain</span></div></li><li><div><b>GRN</b> · Chrome grain · multiplicative, amp 0.10, mono:false <span class="ro">u 0.74 · v 0.52 · film-grain</span></div></li><li><div><b>TYPE</b> · Headline · Archivo 900, wdth 62, cap 142 u, line pitch 175 u <span class="ro">u 0.08 · v 0.12 · display-headline</span></div></li><li><div><b>SPLT</b> · Channel split · R −2.5 u, G 0, B +2.5 u, blend lighter → white where all three overlap <span class="ro">u 0.32 · v 0.30 · channel-split-type</span></div></li><li><div><b>SPLT</b> · Small words · same split at 4 u, so the fringe is wider than the stem <span class="ro">u 0.80 · v 0.41 · channel-split-type</span></div></li></ol></div>
+  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read</span><span>ø co. · 2026</span></div> {
+  &quot;id&quot;: &quot;ts-03-iridescent-chrome&quot;,
+  &quot;code&quot;: &quot;TS-03&quot;,
+  &quot;title&quot;: &quot;Iridescent chrome on black&quot;,
+  &quot;section&quot;: &quot;techniques&quot;,
+  &quot;variants&quot;: [
+    {
+      &quot;id&quot;: &quot;ref&quot;,
+      &quot;label&quot;: &quot;As reference&quot;,
+      &quot;swatches&quot;: [
+        &quot;#0D0E0E&quot;,
+        &quot;#386EB2&quot;,
+        &quot;#6EC7D1&quot;,
+        &quot;#E3D672&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;io&quot;,
+      &quot;label&quot;: &quot;Ember spectrum&quot;,
+      &quot;swatches&quot;: [
+        &quot;#101014&quot;,
+        &quot;#F4551E&quot;,
+        &quot;#2F5AE6&quot;,
+        &quot;#FFFFFF&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;gray&quot;,
+      &quot;label&quot;: &quot;Chrome gray&quot;,
+      &quot;swatches&quot;: [
+        &quot;#0D0E0E&quot;,
+        &quot;#EAECEC&quot;,
+        &quot;#8A8A8A&quot;
+      ]
+    }
+  ],
+  &quot;reference&quot;: {
+    &quot;file&quot;: &quot;ref.png&quot;,
+    &quot;px&quot;: [
+      1644,
+      1568
+    ],
+    &quot;grammar&quot;: &quot;black ground; one bent chrome slab shaded by a spectral gradient across its normals, thin yellow edge lines on every fillet; heavy film grain over everything; white condensed display headline; small words with split color channels&quot;
+  },
+  &quot;units&quot;: &quot;design units, 1000 = plate width (plate 1000 × 954)&quot;,
+  &quot;palette&quot;: {
+    &quot;ground&quot;: &quot;#0D0E0E&quot;,
+    &quot;blue&quot;: &quot;#386EB2&quot;,
+    &quot;cyan&quot;: &quot;#6EC7D1&quot;,
+    &quot;white&quot;: &quot;#F2F4F0&quot;,
+    &quot;yellow&quot;: &quot;#E3D672&quot;,
+    &quot;pink&quot;: &quot;#D68FA8&quot;,
+    &quot;magenta&quot;: &quot;#9C64A4&quot;,
+    &quot;navy&quot;: &quot;#182A57&quot;,
+    &quot;type&quot;: &quot;#F3F3F3&quot;
+  },
+  &quot;techniques&quot;: [
+    {
+      &quot;id&quot;: &quot;spectral-lut&quot;,
+      &quot;short&quot;: &quot;LUT&quot;,
+      &quot;name&quot;: &quot;Spectral look-up table&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 2,
+      &quot;atoms&quot;: [
+        &quot;lut&quot;,
+        &quot;gradient&quot;,
+        &quot;spectrum&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;stops&quot;: 10,
+        &quot;order&quot;: &quot;navy 0 · blue 0.10 · cyan 0.22 · white 0.34 · yellow 0.44 · orange 0.54 · pink 0.64 · magenta 0.76 · blue 0.88 · navy 1&quot;,
+        &quot;measured_ref&quot;: &quot;(56,110,178) (110,199,209) (242,241,242) (235,233,94) (214,153,172) (170,108,160)&quot;
+      },
+      &quot;implementation&quot;: &quot;ART.lut(stops) gives 256 colors; the shading pass indexes it with the environment coordinate t, so color is a function of normal direction only.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;normal-shading&quot;,
+      &quot;short&quot;: &quot;NRML&quot;,
+      &quot;name&quot;: &quot;Normal-buffer shading of a swept slab&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 1,
+      &quot;atoms&quot;: [
+        &quot;mesh&quot;,
+        &quot;normal&quot;,
+        &quot;zbuffer&quot;,
+        &quot;sweep&quot;,
+        &quot;twist&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;section&quot;: &quot;rounded rectangle 300 × 160 u, fillet 30 u, 56 points&quot;,
+        &quot;sweep&quot;: &quot;L path (−200,1040) → (330,470) → (1200,780), bend radius 230 u, 260 steps&quot;,
+        &quot;twist_rad&quot;: &quot;−0.22 + 0.55·s&quot;,
+        &quot;tilt_rad&quot;: &quot;0.5 about the screen x axis through y = 740 u&quot;,
+        &quot;env&quot;: &quot;t = clamp(0.5 + 0.40·r.y + 0.16·r.x), r = reflect(view, n)&quot;,
+        &quot;wobble&quot;: &quot;n += 0.20–0.22·sin/cos fields of period 260–420 u plus 0.06–0.08 at 90–120 u, then normalise&quot;
+      },
+      &quot;implementation&quot;: &quot;Vertices P = C(s) + a·e1 + b·e2 with the section basis rotated by the twist; normals from the cross product of finite differences; triangles rasterized with edge functions into normal + depth buffers; per pixel the reflected ray of the orthographic view picks LUT[t].&quot;
+    },
+    {
+      &quot;id&quot;: &quot;edge-highlight&quot;,
+      &quot;short&quot;: &quot;EDGE&quot;,
+      &quot;name&quot;: &quot;Edge band and specular lobe&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 3,
+      &quot;atoms&quot;: [
+        &quot;rim&quot;,
+        &quot;specular&quot;,
+        &quot;band&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;band_center_nz&quot;: 0.34,
+        &quot;band_width&quot;: 0.06,
+        &quot;band_colour&quot;: &quot;#F0DC6A&quot;,
+        &quot;band_mix&quot;: 1,
+        &quot;light&quot;: &quot;(−0.35,−0.60,0.72)&quot;,
+        &quot;spec_power&quot;: 60,
+        &quot;spec_mix&quot;: 0.85
+      },
+      &quot;implementation&quot;: &quot;band = exp(−((|n.z|−0.34)/0.06)²) mixes the edge color in; spec = (n·h)^60 mixes white in; both read from the same normal buffer as the LUT.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;film-grain&quot;,
+      &quot;short&quot;: &quot;GRN&quot;,
+      &quot;name&quot;: &quot;Per-channel film grain&quot;,
+      &quot;layer&quot;: 4,
+      &quot;pass&quot;: 5,
+      &quot;atoms&quot;: [
+        &quot;grain&quot;,
+        &quot;noise&quot;,
+        &quot;film&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;multiplicative&quot;: &quot;ART.grain amp 0.10, pitch 1 px, mono:false, seed 303&quot;,
+        &quot;additive&quot;: &quot;σ 14/255 per channel on the ground, hashed per pixel, seed 304&quot;,
+        &quot;soften_px&quot;: 0.7
+      },
+      &quot;implementation&quot;: &quot;ART.grain multiplies RGB by 1 + 0.10·n per channel (visible on the chrome and the type); a second pass adds signed noise of 14/255 so the black ground carries grain too, as film does.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;channel-split-type&quot;,
+      &quot;short&quot;: &quot;SPLT&quot;,
+      &quot;name&quot;: &quot;RGB channel-split lettering&quot;,
+      &quot;layer&quot;: 3,
+      &quot;pass&quot;: 4,
+      &quot;atoms&quot;: [
+        &quot;type&quot;,
+        &quot;channel&quot;,
+        &quot;offset&quot;,
+        &quot;additive&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;offsets_u&quot;: {
+          &quot;R&quot;: [
+            -2.5,
+            0
+          ],
+          &quot;G&quot;: [
+            0,
+            0
+          ],
+          &quot;B&quot;: [
+            2.5,
+            0
+          ]
+        },
+        &quot;small_offsets_u&quot;: {
+          &quot;R&quot;: [
+            -4,
+            0
+          ],
+          &quot;G&quot;: [
+            0,
+            0.8
+          ],
+          &quot;B&quot;: [
+            4,
+            0
+          ]
+        },
+        &quot;blend&quot;: &quot;lighter on a transparent layer&quot;,
+        &quot;type_colour&quot;: &quot;#F3F3F3 (the three channels sum to white)&quot;
+      },
+      &quot;implementation&quot;: &quot;Each word is filled three times in #FF0000, #00FF00, #0000FF with globalCompositeOperation lighter on a transparent layer, offset per channel; where all three overlap the sum is white, at the edges one or two channels show; the layer is drawn under the chrome.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;display-headline&quot;,
+      &quot;short&quot;: &quot;TYPE&quot;,
+      &quot;name&quot;: &quot;Condensed display headline&quot;,
+      &quot;layer&quot;: 3,
+      &quot;pass&quot;: 4,
+      &quot;atoms&quot;: [
+        &quot;type&quot;,
+        &quot;headline&quot;,
+        &quot;condensed&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;font&quot;: &quot;Archivo 900, font-stretch 62 %&quot;,
+        &quot;cap_u&quot;: 142,
+        &quot;line_pitch_u&quot;: 175,
+        &quot;left_u&quot;: 38,
+        &quot;top_u&quot;: 28,
+        &quot;figure&quot;: &quot;right-aligned on line 2, 962 u&quot;,
+        &quot;small&quot;: &quot;Archivo 700, 30 u, 2 columns × 3 rows at x 660 / 840, baselines 372 / 402 / 432&quot;
+      },
+      &quot;implementation&quot;: &quot;line 1 is sized to 924 u (font-stretch is set after ctx.font, which resets it); the figure sits on line 2 flush right; the slab is drawn after the type so it covers the bottom of the headline as the reference slab does.&quot;
+    }
+  ],
+  &quot;pass_order&quot;: [
+    &quot;ground · flat fill&quot;,
+    &quot;headline + small words · channel split on a transparent layer, source-over&quot;,
+    &quot;slab · rasterize section sweep into normal + depth buffers&quot;,
+    &quot;shade · LUT[t(reflect)] + edge band + specular, soften 0.7 px, source-over&quot;,
+    &quot;grain · multiplicative per channel, then additive on the ground&quot;
+  ],
+  &quot;notes&quot;: [
+    &quot;Measured on ref.png: ground (13,13,13) σ 14–16 per channel; headline white 243 σ 3; cap height 233 px = 142 u; line pitch 288 px = 175 u; small-word fringe 3–5 px at 1644 px.&quot;,
+    &quot;Seeds 303 (grain), 304 (ground noise). Orthographic view, no perspective.&quot;
+  ]
+} are BAKED here by `node _build/build.mjs` from study.js — a static read for readers that
+     cannot run scripts. shell.js redraws all of it on load. Edit study.js or _build/, never the generated index.html. -->
+<nav class="nav" id="nav" aria-label="Site navigation">{{NAV}}</nav>
 <main class="plate">
-  <section class="notes" id="copy"></section>
+  <section class="notes" id="copy">{{NOTES}}</section>
   <section class="figure" id="stage">
-    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"></canvas></div>
+    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"><img src="thumb.png" alt="TS-03 rebuild, still frame" loading="lazy"></canvas></div>
     <div class="live" id="live"></div>
     <div class="log" id="log">
       <div class="ctl">
@@ -38,7 +268,7 @@
 </main>
 <aside class="spec" id="spec" aria-hidden="true">
   <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
-  <pre id="specpre"></pre>
+  <pre id="specpre">{{SPEC}}</pre>
 </aside>
 <script src="../../_shared/entries.js"></script>
 <script src="../../_shared/art.js"></script>

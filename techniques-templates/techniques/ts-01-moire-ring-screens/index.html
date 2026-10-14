@@ -4,17 +4,196 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="only light">
+<meta name="description" content="TS-01 · Moiré from two ring screens — Two ring gratings multiplied, screened as two inks, one hot core.">
 <link rel="icon" href="data:,">
 <title>TS-01 — Moiré from two ring screens · Techniques &amp; Templates · ø co.</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
 <link rel="stylesheet" href="../../_shared/shell.css">
+<link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
-<nav class="nav" id="nav" aria-label="Site navigation"></nav>
+<!-- <a class="brand" href="../../index.html" title="Index"><svg class="o" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-554.33,-11.46)" fill="currentColor" fill-rule="evenodd"><path d="M682.33,35.81c-57.24,0-103.65,46.4-103.65,103.65s46.4,103.65,103.65,103.65,103.65-46.4,103.65-103.65-46.4-103.65-103.65-103.65ZM682.33,187.75c-26.67,0-48.29-21.62-48.29-48.29s21.62-48.29,48.29-48.29,48.29,21.62,48.29,48.29-21.62,48.29-48.29,48.29Z"/><rect x="666.18" y="-5.46" width="32.29" height="289.83" transform="translate(298.46 -441.63) rotate(45)"/></g></svg><span class="wm">IMP<i>Ø</i>SSIBLE</span></a>
+  <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Moiré from two ring screens</b><span class="code">TS-01</span></span>
+  <span class="pager"><a class="off">←</a><a href="../../index.html#techniques"><span class="n">1</span>&nbsp;/ 14</a><a href="../../techniques/ts-02-four-ink-spot-illustration/index.html" title="Four-ink spot illustration">TS-02 →</a></span> <p class="kicker">Technique · TS-01</p><h1 class="lede">Two ring gratings multiplied, screened as two inks, one hot core.</h1><div class="body"><p>Two ink plates. Blue is the product of two concentric-ring gratings — centers apart, pitches 68 and 60 u. Where the rings cross they make a dot lattice; the 8 u pitch difference beats into the long fringes. Red is a radial falloff from the core, shaped by grating A so the rings carry through it.</p><p>Each ink is thresholded per pixel against white noise: every mid-tone is a mix of paper, blue, red and overprint. That mix is the grain, not a layer on top. A 34 u cream margin frames the sheet.</p></div>
+  <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>margin</b> · cream sheet</div></li><li><div><b>gratings</b> · A and B evaluated per pixel</div></li><li><div><b>coverage</b> · blue = product, red = radial × A</div></li><li><div><b>screen</b> · random threshold per ink, overprint where both</div></li><li><div><b>soften</b> · 0.6 px blur</div></li></ol></div>
+  <div class="meta"><div class="full"><h2>Techniques read · click to highlight</h2><div class="tags" id="chips"><span data-t="ring-screen" title="Concentric ring grating">ring-screen</span><span data-t="moire-product" title="Grating product (moiré)">moire-product</span><span data-t="radial-heat" title="Radial red core">radial-heat</span><span data-t="stochastic-grain" title="Stochastic two-ink screen">stochastic-grain</span><span data-t="paper-margin" title="Cream margin">paper-margin</span></div></div>
+  <div><h2>Reference</h2><div class="ro">Reference 01 · red-and-blue moiré print, 735 × 956</div></div><div><h2>Study</h2><div class="nm">Moiré from two ring screens</div><div class="ro">TS-01 · Techniques · 1 / 14</div></div></div>
+  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>ring-screen</b> · Concentric ring grating — g(p) = 0.5+0.5·cos(2π·|p−c|/pitch) for each grating; the floor keeps a base blue coverage so the field never drops to paper.</div></li><li><div><b>moire-product</b> · Grating product (moiré) — Multiplying the two gratings gives a dot lattice where both are high and long beat fringes where their phases drift; nothing is drawn as a dot — the lattice is the product.</div></li><li><div><b>radial-heat</b> · Radial red core — Red coverage is a clipped gaussian of distance from the core; inside it the blue lattice overprints as a lighter pink, which is how the rings read through the red.</div></li><li><div><b>stochastic-grain</b> · Stochastic two-ink screen — For each device pixel: blue if r1 &lt; blue_coverage, red if r2 &lt; red_coverage; both → overprint; neither → paper tint. A 0.6 px blur softens the pixel edges the way the reference’s scan does.</div></li><li><div><b>paper-margin</b> · Cream margin — Flat cream fill; the print sits inset by 34 u on every side.</div></li></ol></div>
+  <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>HEAT</b> · Red core · clipped gaussian, σ 0.33 W, off-center left <span class="ro">u 0.44 · v 0.49 · radial-heat</span></div></li><li><div><b>SCRN</b> · Ring grating A · center at the core, pitch 68 u <span class="ro">u 0.30 · v 0.36 · ring-screen</span></div></li><li><div><b>SCRN</b> · Ring grating B · center off-sheet top-right, pitch 60 u <span class="ro">u 0.74 · v 0.22 · ring-screen</span></div></li><li><div><b>MOIR</b> · Dot lattice · product of the two gratings <span class="ro">u 0.62 · v 0.62 · moire-product</span></div></li><li><div><b>MOIR</b> · Beat fringe · pitch difference 8 u makes the long curves <span class="ro">u 0.20 · v 0.72 · moire-product</span></div></li><li><div><b>GRAIN</b> · Stochastic screen · random threshold per ink per pixel <span class="ro">u 0.14 · v 0.20 · stochastic-grain</span></div></li><li><div><b>GRAIN</b> · Overprint pixels · both inks on → plum far out, pink in the core <span class="ro">u 0.86 · v 0.86 · stochastic-grain</span></div></li><li><div><b>EDGE</b> · Cream margin · 34 u, no rule <span class="ro">u 0.50 · v 0.08 · paper-margin</span></div></li><li><div><b>HEAT</b> · Heat tail · red coverage falls below 0.1 here <span class="ro">u 0.40 · v 0.94 · radial-heat</span></div></li><li><div><b>SCRN</b> · Ring A at the rim · coverage floor 0.42 keeps the field blue <span class="ro">u 0.88 · v 0.45 · ring-screen</span></div></li></ol></div>
+  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read</span><span>ø co. · 2026</span></div> {
+  &quot;id&quot;: &quot;ts-01-moire-ring-screens&quot;,
+  &quot;code&quot;: &quot;TS-01&quot;,
+  &quot;title&quot;: &quot;Moiré from two ring screens&quot;,
+  &quot;section&quot;: &quot;techniques&quot;,
+  &quot;variants&quot;: [
+    {
+      &quot;id&quot;: &quot;ref&quot;,
+      &quot;label&quot;: &quot;Red / blue&quot;,
+      &quot;swatches&quot;: [
+        &quot;#E0402D&quot;,
+        &quot;#5287BB&quot;,
+        &quot;#F0EBE7&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;io&quot;,
+      &quot;label&quot;: &quot;Ember / sky&quot;,
+      &quot;swatches&quot;: [
+        &quot;#F4551E&quot;,
+        &quot;#2F5AE6&quot;,
+        &quot;#FFFFFF&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;ink&quot;,
+      &quot;label&quot;: &quot;Ink / gray&quot;,
+      &quot;swatches&quot;: [
+        &quot;#101014&quot;,
+        &quot;#B4B2AC&quot;,
+        &quot;#FFFFFF&quot;
+      ]
+    }
+  ],
+  &quot;reference&quot;: {
+    &quot;file&quot;: &quot;ref.png&quot;,
+    &quot;px&quot;: [
+      735,
+      956
+    ],
+    &quot;grammar&quot;: &quot;two-ink stochastic print: blue dot lattice from two ring gratings, red radial core, cream margin; grain is the screening itself&quot;
+  },
+  &quot;units&quot;: &quot;design units, 1000 = sheet width&quot;,
+  &quot;palette&quot;: {
+    &quot;paper&quot;: &quot;#F0EBE7&quot;,
+    &quot;field_tint&quot;: &quot;#E6D6D8&quot;,
+    &quot;blue&quot;: &quot;#3670B8&quot;,
+    &quot;red&quot;: &quot;#F2381C&quot;,
+    &quot;overprint_core&quot;: &quot;#F58A80&quot;,
+    &quot;overprint_far&quot;: &quot;#8A4A78&quot;
+  },
+  &quot;techniques&quot;: [
+    {
+      &quot;id&quot;: &quot;ring-screen&quot;,
+      &quot;short&quot;: &quot;SCRN&quot;,
+      &quot;name&quot;: &quot;Concentric ring grating&quot;,
+      &quot;layer&quot;: 1,
+      &quot;pass&quot;: 1,
+      &quot;atoms&quot;: [
+        &quot;grating&quot;,
+        &quot;radial&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;A&quot;: {
+          &quot;center_u&quot;: [
+            440,
+            640
+          ],
+          &quot;pitch_u&quot;: 68
+        },
+        &quot;B&quot;: {
+          &quot;center_u&quot;: [
+            1420,
+            -260
+          ],
+          &quot;pitch_u&quot;: 60
+        },
+        &quot;profile&quot;: &quot;0.5 + 0.5·cos(2π·d/pitch)&quot;,
+        &quot;floor&quot;: 0.42
+      },
+      &quot;implementation&quot;: &quot;g(p) = 0.5+0.5·cos(2π·|p−c|/pitch) for each grating; the floor keeps a base blue coverage so the field never drops to paper.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;moire-product&quot;,
+      &quot;short&quot;: &quot;MOIR&quot;,
+      &quot;name&quot;: &quot;Grating product (moiré)&quot;,
+      &quot;layer&quot;: 1,
+      &quot;pass&quot;: 1,
+      &quot;atoms&quot;: [
+        &quot;moire&quot;,
+        &quot;interference&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;blue_coverage&quot;: &quot;floor + (1−floor)·smoothstep(0.10, 0.75, (gA·gB)^1.4)&quot;,
+        &quot;beat_pitch_u&quot;: &quot;1/(1/60−1/68) ≈ 510&quot;
+      },
+      &quot;implementation&quot;: &quot;Multiplying the two gratings gives a dot lattice where both are high and long beat fringes where their phases drift; nothing is drawn as a dot — the lattice is the product.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;radial-heat&quot;,
+      &quot;short&quot;: &quot;HEAT&quot;,
+      &quot;name&quot;: &quot;Radial red core&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 2,
+      &quot;atoms&quot;: [
+        &quot;radial&quot;,
+        &quot;falloff&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;center_u&quot;: [
+          440,
+          640
+        ],
+        &quot;sigma_u&quot;: 330,
+        &quot;red_coverage&quot;: &quot;min(1, 1.35·exp(−d²/σ²))&quot;,
+        &quot;cutoff&quot;: 0.02
+      },
+      &quot;implementation&quot;: &quot;Red coverage is a clipped gaussian of distance from the core; inside it the blue lattice overprints as a lighter pink, which is how the rings read through the red.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;stochastic-grain&quot;,
+      &quot;short&quot;: &quot;GRAIN&quot;,
+      &quot;name&quot;: &quot;Stochastic two-ink screen&quot;,
+      &quot;layer&quot;: 3,
+      &quot;pass&quot;: 3,
+      &quot;atoms&quot;: [
+        &quot;dither&quot;,
+        &quot;grain&quot;,
+        &quot;overprint&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;threshold&quot;: &quot;uniform random per pixel per ink (seed 101)&quot;,
+        &quot;overprint&quot;: &quot;where both inks land: #F58A80 pink in the field, #7A3A6A plum on lattice dots (product &gt; 0.7) inside the core&quot;,
+        &quot;soften_px&quot;: 0.6,
+        &quot;cell_px&quot;: 1
+      },
+      &quot;implementation&quot;: &quot;For each device pixel: blue if r1 &lt; blue_coverage, red if r2 &lt; red_coverage; both → overprint; neither → paper tint. A 0.6 px blur softens the pixel edges the way the reference’s scan does.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;paper-margin&quot;,
+      &quot;short&quot;: &quot;EDGE&quot;,
+      &quot;name&quot;: &quot;Cream margin&quot;,
+      &quot;layer&quot;: 0,
+      &quot;pass&quot;: 0,
+      &quot;atoms&quot;: [
+        &quot;margin&quot;,
+        &quot;stock&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;width_u&quot;: 34,
+        &quot;color&quot;: &quot;#F0EBE7&quot;,
+        &quot;rule&quot;: &quot;none&quot;
+      },
+      &quot;implementation&quot;: &quot;Flat cream fill; the print sits inset by 34 u on every side.&quot;
+    }
+  ],
+  &quot;pass_order&quot;: [
+    &quot;margin · cream sheet&quot;,
+    &quot;gratings · A and B evaluated per pixel&quot;,
+    &quot;coverage · blue = product, red = radial × A&quot;,
+    &quot;screen · random threshold per ink, overprint where both&quot;,
+    &quot;soften · 0.6 px blur&quot;
+  ],
+  &quot;notes&quot;: [
+    &quot;Measured on ref.png: ring pitch ≈ 50 px at 735 px (68 u); grain std ≈ 20/255 in flat regions; hot red (241,57,29) 3.6 % of pixels; saturated blue (72,130,183) 11.5 %.&quot;,
+    &quot;Seed 101.&quot;
+  ]
+} are BAKED here by `node _build/build.mjs` from study.js — a static read for readers that
+     cannot run scripts. shell.js redraws all of it on load. Edit study.js or _build/, never the generated index.html. -->
+<nav class="nav" id="nav" aria-label="Site navigation">{{NAV}}</nav>
 <main class="plate">
-  <section class="notes" id="copy"></section>
+  <section class="notes" id="copy">{{NOTES}}</section>
   <section class="figure" id="stage">
-    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"></canvas></div>
+    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"><img src="thumb.png" alt="TS-01 rebuild, still frame" loading="lazy"></canvas></div>
     <div class="live" id="live"></div>
     <div class="log" id="log">
       <div class="ctl">
@@ -38,7 +217,7 @@
 </main>
 <aside class="spec" id="spec" aria-hidden="true">
   <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
-  <pre id="specpre"></pre>
+  <pre id="specpre">{{SPEC}}</pre>
 </aside>
 <script src="../../_shared/entries.js"></script>
 <script src="../../_shared/art.js"></script>

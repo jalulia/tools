@@ -4,17 +4,258 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="only light">
+<meta name="description" content="TS-06 · Riso three-plate separation — One isometric drawing split into three ink plates, each off by a few px.">
 <link rel="icon" href="data:,">
 <title>TS-06 — Riso three-plate separation · Techniques &amp; Templates · ø co.</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
 <link rel="stylesheet" href="../../_shared/shell.css">
+<link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
-<nav class="nav" id="nav" aria-label="Site navigation"></nav>
+<!-- <a class="brand" href="../../index.html" title="Index"><svg class="o" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-554.33,-11.46)" fill="currentColor" fill-rule="evenodd"><path d="M682.33,35.81c-57.24,0-103.65,46.4-103.65,103.65s46.4,103.65,103.65,103.65,103.65-46.4,103.65-103.65-46.4-103.65-103.65-103.65ZM682.33,187.75c-26.67,0-48.29-21.62-48.29-48.29s21.62-48.29,48.29-48.29,48.29,21.62,48.29,48.29-21.62,48.29-48.29,48.29Z"/><rect x="666.18" y="-5.46" width="32.29" height="289.83" transform="translate(298.46 -441.63) rotate(45)"/></g></svg><span class="wm">IMP<i>Ø</i>SSIBLE</span></a>
+  <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Riso three-plate separation</b><span class="code">TS-06</span></span>
+  <span class="pager"><a href="../../techniques/ts-05-line-screen-type/index.html" title="Vertical line-screen type">← TS-05</a><a href="../../index.html#techniques"><span class="n">6</span>&nbsp;/ 14</a><a href="../../techniques/ts-07-gradient-map-blur-type/index.html" title="Gradient-mapped blur type">TS-07 →</a></span> <p class="kicker">Technique · TS-06</p><h1 class="lede">One isometric drawing split into three ink plates, each off by a few px.</h1><div class="body"><p>An extruded isometric object — a top face and two sides — printed as three plates. Yellow takes the tops and a corner wash; blue the right faces; pink the left faces and a marbled fill in the tops; the keyline rides all three. The inks multiply: three on the keyline read near-black, pink over yellow reads orange.</p><p>Each plate lands on its own register error and grains on its own — mono noise at its own seed, coverage thinning toward every fill edge, a slow mottle. The stock is light gray with a printed isometric grid.</p></div>
+  <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>stock</b> · gray fill + iso grid</div></li><li><div><b>labels</b> · top / right / left per object, back to front</div></li><li><div><b>coverage</b> · three rasters from labels, marble cut into pink, wash and strokes into yellow</div></li><li><div><b>grain</b> · edge thinning, mottle, mono noise per plate</div></li><li><div><b>plates</b> · multiply in order yellow, blue, pink, each translated by its register error</div></li></ol></div>
+  <div class="meta"><div class="full"><h2>Techniques read · click to highlight</h2><div class="tags" id="chips"><span data-t="iso-extrude" title="Isometric extrusion by outline drop">iso-extrude</span><span data-t="plate-separation" title="Three-plate coverage split">plate-separation</span><span data-t="misregister" title="Per-plate register error">misregister</span><span data-t="ink-grain" title="Per-plate ink grain">ink-grain</span><span data-t="marbled-fill" title="Marbled fill from fbm bands">marbled-fill</span><span data-t="grid-stock" title="Isometric grid stock">grid-stock</span></div></div>
+  <div><h2>Reference</h2><div class="ro">Reference 06 · risograph print, three plates on grid stock, 1080 × 1080</div></div><div><h2>Study</h2><div class="nm">Riso three-plate separation</div><div class="ro">TS-06 · Techniques · 6 / 14</div></div></div>
+  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>iso-extrude</b> · Isometric extrusion by outline drop — Each object is a top-face mask drawn in the plane transform; a column scan drops every boundary pixel whose +x or +y probe is empty by the depth, labelling right or left face, top always winning; later objects overwrite earlier ones.</div></li><li><div><b>plate-separation</b> · Three-plate coverage split — Face labels become three coverage rasters; each raster is coloured mix(white, ink, coverage) on its own canvas and multiplied onto the stock in plate order.</div></li><li><div><b>misregister</b> · Per-plate register error — Each plate canvas is drawn translated by its own vector; the keyline sits on all three plates, so the offsets show as coloured fringes on every edge and the overprint of all three is the near-black line.</div></li><li><div><b>ink-grain</b> · Per-plate ink grain — Before colouring, coverage is multiplied by a blurred copy of itself so fills thin toward their edges, and by a slow perlin mottle; after colouring ART.grain runs mono on the plate and paper pixels are reset to white.</div></li><li><div><b>marbled-fill</b> · Marbled fill from fbm bands — Inside the top faces the pink plate is full except where an fbm field crosses zero: the core of the band is paper, the rim half-coverage, which reads as swirls.</div></li><li><div><b>grid-stock</b> · Isometric grid stock — Flat gray fill, then verticals and both diagonal families stroked in the grid ink at 16 % before any plate lands.</div></li></ol></div>
+  <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>PLTE</b> · Top face · yellow plate, pink marble plate over it <span class="ro">u 0.15 · v 0.35 · plate-separation</span></div></li><li><div><b>PLTE</b> · Right face · blue plate only <span class="ro">u 0.35 · v 0.56 · plate-separation</span></div></li><li><div><b>PLTE</b> · Left face · pink plate only <span class="ro">u 0.07 · v 0.44 · plate-separation</span></div></li><li><div><b>MREG</b> · Register error · pink +4,+3 u, yellow −3,+2 u, blue +1,−2 u <span class="ro">u 0.61 · v 0.56 · misregister</span></div></li><li><div><b>MREG</b> · Outline fringe · blue and pink keylines land 6 u apart <span class="ro">u 0.79 · v 0.30 · misregister</span></div></li><li><div><b>MARB</b> · Marble · fbm zero-crossing band, two coverage levels <span class="ro">u 0.31 · v 0.43 · marbled-fill</span></div></li><li><div><b>EXTR</b> · Slab stack · three extrusions, depth 40 / 30 / 24 u <span class="ro">u 0.63 · v 0.15 · iso-extrude</span></div></li><li><div><b>EXTR</b> · Extrusion · top outline dropped 85 u down the z axis <span class="ro">u 0.49 · v 0.64 · iso-extrude</span></div></li><li><div><b>GRN</b> · Ink grain · mono noise amp 0.10, coverage thins at fill edges <span class="ro">u 0.20 · v 0.86 · ink-grain</span></div></li><li><div><b>STCK</b> · Grid stock · 31.5 u verticals, ±30° diagonals, 16 % ink <span class="ro">u 0.90 · v 0.74 · grid-stock</span></div></li></ol></div>
+  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read · <b>M</b> motion</span><span>ø co. · 2026</span></div> {
+  &quot;id&quot;: &quot;ts-06-riso-plate-separation&quot;,
+  &quot;code&quot;: &quot;TS-06&quot;,
+  &quot;title&quot;: &quot;Riso three-plate separation&quot;,
+  &quot;section&quot;: &quot;techniques&quot;,
+  &quot;variants&quot;: [
+    {
+      &quot;id&quot;: &quot;ref&quot;,
+      &quot;label&quot;: &quot;All plates&quot;,
+      &quot;swatches&quot;: [
+        &quot;#E9E566&quot;,
+        &quot;#614C90&quot;,
+        &quot;#D859A3&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;y&quot;,
+      &quot;label&quot;: &quot;Yellow only&quot;,
+      &quot;swatches&quot;: [
+        &quot;#E9E566&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;b&quot;,
+      &quot;label&quot;: &quot;Blue only&quot;,
+      &quot;swatches&quot;: [
+        &quot;#614C90&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;p&quot;,
+      &quot;label&quot;: &quot;Pink only&quot;,
+      &quot;swatches&quot;: [
+        &quot;#D859A3&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;io&quot;,
+      &quot;label&quot;: &quot;Ember / blue / ink&quot;,
+      &quot;swatches&quot;: [
+        &quot;#F4551E&quot;,
+        &quot;#2F5AE6&quot;,
+        &quot;#101014&quot;
+      ]
+    }
+  ],
+  &quot;reference&quot;: {
+    &quot;file&quot;: &quot;ref.png&quot;,
+    &quot;px&quot;: [
+      1080,
+      1080
+    ],
+    &quot;grammar&quot;: &quot;three-plate risograph of an isometric drawing on grid stock: yellow, blue, fluorescent pink; plates mis-registered by a few px; each plate grained; marbled top faces; keyline near-black where plates overprint&quot;
+  },
+  &quot;units&quot;: &quot;design units, 1000 = sheet width&quot;,
+  &quot;palette&quot;: {
+    &quot;stock&quot;: &quot;#EEEEEC&quot;,
+    &quot;grid_ink&quot;: &quot;#5A5880&quot;,
+    &quot;yellow&quot;: &quot;#E9E566&quot;,
+    &quot;blue&quot;: &quot;#614C90&quot;,
+    &quot;pink&quot;: &quot;#D859A3&quot;,
+    &quot;blue_over_pink&quot;: &quot;#52205C&quot;,
+    &quot;all_three&quot;: &quot;#3A2018&quot;
+  },
+  &quot;techniques&quot;: [
+    {
+      &quot;id&quot;: &quot;iso-extrude&quot;,
+      &quot;short&quot;: &quot;EXTR&quot;,
+      &quot;name&quot;: &quot;Isometric extrusion by outline drop&quot;,
+      &quot;layer&quot;: 1,
+      &quot;pass&quot;: 1,
+      &quot;atoms&quot;: [
+        &quot;isometric&quot;,
+        &quot;extrude&quot;,
+        &quot;painter-order&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;axes&quot;: &quot;x → (cos30, sin30), y → (−cos30, sin30), z → (0, −1)&quot;,
+        &quot;letters&quot;: {
+          &quot;font&quot;: &quot;Archivo 900&quot;,
+          &quot;size_u&quot;: 235,
+          &quot;depth_u&quot;: 85
+        },
+        &quot;slabs&quot;: {
+          &quot;depth_u&quot;: [
+            40,
+            30,
+            24
+          ]
+        },
+        &quot;bars&quot;: {
+          &quot;depth_u&quot;: 52
+        },
+        &quot;probe_px&quot;: &quot;(±2,+1)&quot;
+      },
+      &quot;implementation&quot;: &quot;Each object is a top-face mask drawn in the plane transform; a column scan drops every boundary pixel whose +x or +y probe is empty by the depth, labelling right or left face, top always winning; later objects overwrite earlier ones.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;plate-separation&quot;,
+      &quot;short&quot;: &quot;PLTE&quot;,
+      &quot;name&quot;: &quot;Three-plate coverage split&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 2,
+      &quot;atoms&quot;: [
+        &quot;separation&quot;,
+        &quot;multiply&quot;,
+        &quot;coverage&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;yellow&quot;: &quot;top faces + corner wash + marker strokes&quot;,
+        &quot;blue&quot;: &quot;right faces + keylines&quot;,
+        &quot;pink&quot;: &quot;left faces + keylines + marble&quot;,
+        &quot;keyline&quot;: &quot;on all three plates&quot;,
+        &quot;keyline_u&quot;: 3.6,
+        &quot;composite&quot;: &quot;multiply&quot;,
+        &quot;max_coverage&quot;: 1
+      },
+      &quot;implementation&quot;: &quot;Face labels become three coverage rasters; each raster is coloured mix(white, ink, coverage) on its own canvas and multiplied onto the stock in plate order.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;misregister&quot;,
+      &quot;short&quot;: &quot;MREG&quot;,
+      &quot;name&quot;: &quot;Per-plate register error&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 3,
+      &quot;atoms&quot;: [
+        &quot;translate&quot;,
+        &quot;offset&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;yellow_u&quot;: [
+          -3,
+          2
+        ],
+        &quot;blue_u&quot;: [
+          1,
+          -2
+        ],
+        &quot;pink_u&quot;: [
+          4,
+          3
+        ],
+        &quot;measured_px&quot;: &quot;pink +3,+2 · yellow −2,+1 relative to blue&quot;
+      },
+      &quot;implementation&quot;: &quot;Each plate canvas is drawn translated by its own vector; the keyline sits on all three plates, so the offsets show as coloured fringes on every edge and the overprint of all three is the near-black line.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;ink-grain&quot;,
+      &quot;short&quot;: &quot;GRN&quot;,
+      &quot;name&quot;: &quot;Per-plate ink grain&quot;,
+      &quot;layer&quot;: 3,
+      &quot;pass&quot;: 2,
+      &quot;atoms&quot;: [
+        &quot;grain&quot;,
+        &quot;mottle&quot;,
+        &quot;edge-thinning&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;amp&quot;: [
+          0.1,
+          0.12,
+          0.11
+        ],
+        &quot;seeds&quot;: [
+          601,
+          602,
+          603
+        ],
+        &quot;pitch_px&quot;: 1,
+        &quot;stochastic_thin&quot;: &quot;coverage × (1 − 0.4·rand)&quot;,
+        &quot;edge_thin&quot;: &quot;coverage × (0.72 + 0.28·blur(coverage, 4 u))&quot;,
+        &quot;mottle&quot;: &quot;0.86 + 0.14·perlin(p / 60 u)&quot;
+      },
+      &quot;implementation&quot;: &quot;Before colouring, coverage is multiplied by a blurred copy of itself so fills thin toward their edges, and by a slow perlin mottle; after colouring ART.grain runs mono on the plate and paper pixels are reset to white.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;marbled-fill&quot;,
+      &quot;short&quot;: &quot;MARB&quot;,
+      &quot;name&quot;: &quot;Marbled fill from fbm bands&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 2,
+      &quot;atoms&quot;: [
+        &quot;fbm&quot;,
+        &quot;threshold&quot;,
+        &quot;band&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;scale_u&quot;: 30,
+        &quot;octaves&quot;: 4,
+        &quot;gain&quot;: 0.6,
+        &quot;band_core&quot;: &quot;|n| &lt; 0.055 → coverage 0&quot;,
+        &quot;band_rim&quot;: &quot;|n| &lt; 0.10 → coverage 0.5&quot;,
+        &quot;elsewhere&quot;: 1
+      },
+      &quot;implementation&quot;: &quot;Inside the top faces the pink plate is full except where an fbm field crosses zero: the core of the band is paper, the rim half-coverage, which reads as swirls.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;grid-stock&quot;,
+      &quot;short&quot;: &quot;STCK&quot;,
+      &quot;name&quot;: &quot;Isometric grid stock&quot;,
+      &quot;layer&quot;: 0,
+      &quot;pass&quot;: 0,
+      &quot;atoms&quot;: [
+        &quot;stock&quot;,
+        &quot;grid&quot;,
+        &quot;isometric&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;stock&quot;: &quot;#EEEEEC&quot;,
+        &quot;vertical_pitch_u&quot;: 31.5,
+        &quot;diagonals&quot;: &quot;±30° through the same lattice, 18.2 u apart along a vertical&quot;,
+        &quot;alpha&quot;: 0.16,
+        &quot;width_u&quot;: 1
+      },
+      &quot;implementation&quot;: &quot;Flat gray fill, then verticals and both diagonal families stroked in the grid ink at 16 % before any plate lands.&quot;
+    }
+  ],
+  &quot;pass_order&quot;: [
+    &quot;stock · gray fill + iso grid&quot;,
+    &quot;labels · top / right / left per object, back to front&quot;,
+    &quot;coverage · three rasters from labels, marble cut into pink, wash and strokes into yellow&quot;,
+    &quot;grain · edge thinning, mottle, mono noise per plate&quot;,
+    &quot;plates · multiply in order yellow, blue, pink, each translated by its register error&quot;
+  ],
+  &quot;notes&quot;: [
+    &quot;Measured on ref.png: vertical grid pitch 34 px (31.5 u); diagonal spacing along a vertical 19.6 px; grid pixels 14 % darker than stock; stock (234,234,237) std 12 / 255; yellow (233,230,102); pink face (215,144,189) std 45; blue over pink (98,44,117); keyline (60,30,20).&quot;,
+    &quot;Pink lands 3 px right and 2 px down of blue; yellow 2 px left and 1 px down; the rebuild gives blue its own +1,−2 u so all three plates move in the motion version.&quot;,
+    &quot;Words are invented. Seeds 601–603, marble 610, mottle 611.&quot;
+  ]
+} are BAKED here by `node _build/build.mjs` from study.js — a static read for readers that
+     cannot run scripts. shell.js redraws all of it on load. Edit study.js or _build/, never the generated index.html. -->
+<nav class="nav" id="nav" aria-label="Site navigation">{{NAV}}</nav>
 <main class="plate">
-  <section class="notes" id="copy"></section>
+  <section class="notes" id="copy">{{NOTES}}</section>
   <section class="figure" id="stage">
-    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"></canvas></div>
+    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"><img src="thumb.png" alt="TS-06 rebuild, still frame" loading="lazy"></canvas></div>
     <div class="live" id="live"></div>
     <div class="log" id="log">
       <div class="ctl">
@@ -38,7 +279,7 @@
 </main>
 <aside class="spec" id="spec" aria-hidden="true">
   <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
-  <pre id="specpre"></pre>
+  <pre id="specpre">{{SPEC}}</pre>
 </aside>
 <script src="../../_shared/entries.js"></script>
 <script src="../../_shared/art.js"></script>

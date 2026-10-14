@@ -4,17 +4,396 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="only light">
+<meta name="description" content="TS-13 · ASCII glyph-field animations — Type glyphs as particles: a helix, a wave, an orbit and a pulse, drawn with fillText.">
 <link rel="icon" href="data:,">
 <title>TS-13 — ASCII glyph-field animations · Techniques &amp; Templates · ø co.</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
 <link rel="stylesheet" href="../../_shared/shell.css">
+<link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
-<nav class="nav" id="nav" aria-label="Site navigation"></nav>
+<!-- <a class="brand" href="../../index.html" title="Index"><svg class="o" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-554.33,-11.46)" fill="currentColor" fill-rule="evenodd"><path d="M682.33,35.81c-57.24,0-103.65,46.4-103.65,103.65s46.4,103.65,103.65,103.65,103.65-46.4,103.65-103.65-46.4-103.65-103.65-103.65ZM682.33,187.75c-26.67,0-48.29-21.62-48.29-48.29s21.62-48.29,48.29-48.29,48.29,21.62,48.29,48.29-21.62,48.29-48.29,48.29Z"/><rect x="666.18" y="-5.46" width="32.29" height="289.83" transform="translate(298.46 -441.63) rotate(45)"/></g></svg><span class="wm">IMP<i>Ø</i>SSIBLE</span></a>
+  <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>ASCII glyph-field animations</b><span class="code">TS-13</span></span>
+  <span class="pager"><a href="../../techniques/ts-12-perforated-stamp/index.html" title="Perforated stamp">← TS-12</a><a href="../../index.html#techniques"><span class="n">13</span>&nbsp;/ 14</a><a href="../../techniques/ts-14-deep-space-chroma/index.html" title="Deep Space Chroma · birefringence">TS-14 →</a></span> <p class="kicker">Technique · TS-13</p><h1 class="lede">Type glyphs as particles: a helix, a wave, an orbit and a pulse, drawn with fillText.</h1><div class="body"><p>Four canvases, one method. Every mark is a monospace glyph placed with fillText — no sprites, no shapes. A glyph vocabulary of dots, rules, arrows and three-digit numbers is read by index, so the field looks typeset rather than drawn. Depth is alpha and size only: the helix projects 150 glyphs through a pinhole at 800 u and sorts them far-to-near, so near glyphs sit on top at 0.89 alpha and far ones fade to 0.04. Every 18th glyph is a palette label in its own color with a soft glow, so the animation names the system it decorates.</p><p>The field cedes the middle: a CSS radial mask (ellipse 44 % × 40 %) clears the helix behind the title. The wave is a 70 × 8 cell grid whose glyph is chosen by a sine phase and whose alpha falls off from a sine centerline. The orbit is 52 glyphs on a 0.4-ratio ellipse whose radius breathes ±10 %. The pulse is 18 glyphs lit by the positive half of one travelling sine. Each frame clears and redraws; reduced-motion draws the frame once and stops.</p></div>
+  <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>vocabulary</b> · the glyph lists and label sequence</div></li><li><div><b>helix</b> · project 150 glyphs, sort far to near, draw with depth alpha and glow</div></li><li><div><b>mask</b> · elliptical radial mask over the helix canvas, title in the hole</div></li><li><div><b>grid</b> · wave, pulse and orbit each from one sine</div></li><li><div><b>runtime</b> · rAF loop, DPR cap, reduced-motion still frame</div></li></ol></div>
+  <div class="meta"><div class="full"><h2>Techniques read · click to highlight</h2><div class="tags" id="chips"><span data-t="glyph-helix" title="Projected glyph helix">glyph-helix</span><span data-t="depth-alpha" title="Depth as alpha and size">depth-alpha</span><span data-t="semantic-label" title="Palette label with glow">semantic-label</span><span data-t="glyph-vocab" title="Indexed glyph vocabulary">glyph-vocab</span><span data-t="center-mask" title="Radial center mask">center-mask</span><span data-t="pointer-parallax" title="Eased pointer parallax">pointer-parallax</span><span data-t="wave-grid" title="Sine-phased glyph grid">wave-grid</span><span data-t="pulse-row" title="Half-wave pulse row">pulse-row</span><span data-t="orbit-ring" title="Breathing glyph orbit">orbit-ring</span><span data-t="still-frame-runtime" title="Frame runtime">still-frame-runtime</span></div></div>
+  <div><h2>Reference</h2><div class="ro">Reference 13 · four canvases from the Ink and Signal component library (hero helix, wave figure, inline pulse, orbit atmosphere), composited at t = 5.9 s, 1000 × 1250</div></div><div><h2>Study</h2><div class="nm">ASCII glyph-field animations</div><div class="ro">TS-13 · Techniques · 13 / 14</div></div></div>
+  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>glyph-helix</b> · Projected glyph helix — 150 particles climb a helix (0.018 of the height per second) while the helix turns (0.22 rad/s); each is projected through a pinhole at 800 u and drawn as text, far to near.</div></li><li><div><b>depth-alpha</b> · Depth as alpha and size — Nothing is shaded: depth is the alpha ramp and the projected font size, so far glyphs are ghosts and near glyphs are ink.</div></li><li><div><b>semantic-label</b> · Palette label with glow — Every glyph with i mod 18 = 7 is replaced by the next palette name, set in its lifted on-ink color at weight 500 with a depth-scaled glow; the animation names its own system.</div></li><li><div><b>glyph-vocab</b> · Indexed glyph vocabulary — Each animation reads its marks from a short ordered list by index, so the field is typeset from a vocabulary rather than drawn from shapes; the helix list mixes 10 marks with 13 three-digit numbers.</div></li><li><div><b>center-mask</b> · Radial center mask — The helix canvas is masked by an elliptical radial gradient so glyphs fade out toward the middle; the title sits in the hole with a wide dark text-shadow that deepens it.</div></li><li><div><b>pointer-parallax</b> · Eased pointer parallax — The pointer shifts the whole helix by at most 18 u × 14 u, eased at 4 % per frame, so the field drifts after the cursor rather than following it.</div></li><li><div><b>wave-grid</b> · Sine-phased glyph grid — A 70 × 8 grid where one sine phase picks both the glyph (from a five-step ramp) and the alpha (by distance to a sine centerline), so a two-wavelength band of laminar glyphs rolls across the frame.</div></li><li><div><b>pulse-row</b> · Half-wave pulse row — Eighteen glyphs along a line lit by the positive half of one travelling sine, so a soft blue pulse runs left to right behind a fixed ▸ head; it lives inline under a dialogue turn.</div></li><li><div><b>orbit-ring</b> · Breathing glyph orbit — 52 glyphs on a flattened ellipse, each with its own breathing radius and an alpha that peaks at the bottom of the orbit; the canvas is held at 30 % under a pull quote.</div></li><li><div><b>still-frame-runtime</b> · Frame runtime — One setupCanvas and one loop helper serve all four canvases; under prefers-reduced-motion the loop degenerates to a single still frame, so the page keeps its picture without motion.</div></li></ol></div>
+  <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>HELX</b> · Helix · 150 glyphs, 7 turns over 484 u, two strands π apart, pinhole at 800 u <span class="ro">u 0.50 · v 0.06 · glyph-helix</span></div></li><li><div><b>DPTH</b> · Near glyph · alpha .04 + d^1.5 · .85, size 10.5 · 800/(800 − z) <span class="ro">u 0.66 · v 0.14 · depth-alpha</span></div></li><li><div><b>LABL</b> · Palette label · every 18th glyph, weight 500, glow shadowBlur 6·d in its own color <span class="ro">u 0.65 · v 0.09 · semantic-label</span></div></li><li><div><b>VOCB</b> · Vocabulary · 23 entries read by index: dots, rules, ø, ×, →, ▸, three-digit numbers <span class="ro">u 0.40 · v 0.12 · glyph-vocab</span></div></li><li><div><b>MASK</b> · Center mask · radial ellipse 44 % × 40 % at 50 % 52 %, clear to 0.4, opaque from 0.8 <span class="ro">u 0.30 · v 0.36 · center-mask</span></div></li><li><div><b>PRLX</b> · Pointer parallax · x ±18 u, y ±14 u, eased at 0.04 per frame <span class="ro">u 0.86 · v 0.34 · pointer-parallax</span></div></li><li><div><b>WAVE</b> · Wave grid · 70 × 8 cells, glyph = ramp[sin φ], alpha = 1 − |row − 4 + 1.4 sin φ| / 2.2 <span class="ro">u 0.50 · v 0.59 · wave-grid</span></div></li><li><div><b>PULS</b> · Pulse · 18 glyphs, sin(1.6 t − 0.12 i), only the positive half drawn, alpha ≤ .5 <span class="ro">u 0.26 · v 0.74 · pulse-row</span></div></li><li><div><b>ORBT</b> · Orbit · 52 glyphs on an ellipse, ratio 0.4, radius ±10 %, every 6th is ø, canvas at .3 <span class="ro">u 0.63 · v 0.90 · orbit-ring</span></div></li><li><div><b>LOOP</b> · Runtime · DPR capped at 2, clearRect every frame, reduced-motion draws one frame <span class="ro">u 0.10 · v 0.96 · still-frame-runtime</span></div></li></ol></div>
+  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read · <b>M</b> motion · <b>L</b> live</span><span>ø co. · 2026</span></div> {
+  &quot;id&quot;: &quot;ts-13-glyph-field-animation&quot;,
+  &quot;code&quot;: &quot;TS-13&quot;,
+  &quot;title&quot;: &quot;ASCII glyph-field animations&quot;,
+  &quot;section&quot;: &quot;techniques&quot;,
+  &quot;variants&quot;: [
+    {
+      &quot;id&quot;: &quot;ref&quot;,
+      &quot;label&quot;: &quot;As reference&quot;,
+      &quot;swatches&quot;: [
+        &quot;#09090B&quot;,
+        &quot;#F6F1E4&quot;,
+        &quot;#10B981&quot;,
+        &quot;#2B8EF5&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;io&quot;,
+      &quot;label&quot;: &quot;Ø&quot;,
+      &quot;swatches&quot;: [
+        &quot;#101014&quot;,
+        &quot;#F4551E&quot;,
+        &quot;#2F5AE6&quot;,
+        &quot;#FFFFFF&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;paper&quot;,
+      &quot;label&quot;: &quot;On paper&quot;,
+      &quot;swatches&quot;: [
+        &quot;#FFFFFF&quot;,
+        &quot;#101014&quot;,
+        &quot;#10B981&quot;,
+        &quot;#2B8EF5&quot;
+      ]
+    }
+  ],
+  &quot;reference&quot;: {
+    &quot;file&quot;: &quot;ref.png&quot;,
+    &quot;px&quot;: [
+      1000,
+      1250
+    ],
+    &quot;grammar&quot;: &quot;monospace glyphs placed with fillText as particles; depth by alpha and size only; semantic labels with glow; CSS radial mask; sine-driven grid, ring and row; rAF loop, DPR cap 2, reduced-motion still frame&quot;
+  },
+  &quot;units&quot;: &quot;design units, 1000 = plate width; the reference canvases use CSS px at a 1000 px layout, so 1 u = 1 px there&quot;,
+  &quot;palette&quot;: {
+    &quot;ink&quot;: &quot;#09090B&quot;,
+    &quot;paper&quot;: &quot;#FFFFFF&quot;,
+    &quot;paper_2&quot;: &quot;#FAFAFA&quot;,
+    &quot;bone&quot;: &quot;#F6F1E4&quot;,
+    &quot;glyph&quot;: &quot;#FFFFFF&quot;,
+    &quot;laminar&quot;: &quot;#10B981&quot;,
+    &quot;ice&quot;: &quot;#2B8EF5&quot;,
+    &quot;on_ink&quot;: {
+      &quot;ice&quot;: &quot;#7CC4FF&quot;,
+      &quot;laminar&quot;: &quot;#4FE3C1&quot;,
+      &quot;heat&quot;: &quot;#FF8A4C&quot;,
+      &quot;void&quot;: &quot;#FF6A8A&quot;,
+      &quot;signal&quot;: &quot;#FFD166&quot;,
+      &quot;balanced&quot;: &quot;#A8F080&quot;
+    }
+  },
+  &quot;techniques&quot;: [
+    {
+      &quot;id&quot;: &quot;glyph-helix&quot;,
+      &quot;short&quot;: &quot;HELX&quot;,
+      &quot;name&quot;: &quot;Projected glyph helix&quot;,
+      &quot;layer&quot;: 0,
+      &quot;pass&quot;: 1,
+      &quot;atoms&quot;: [
+        &quot;particle&quot;,
+        &quot;helix&quot;,
+        &quot;perspective&quot;,
+        &quot;depth-sort&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;count&quot;: 150,
+        &quot;turns&quot;: 7,
+        &quot;radius_u&quot;: &quot;min(0.18 W, 0.24 H, 240)&quot;,
+        &quot;height_u&quot;: &quot;min(0.78 H, 820)&quot;,
+        &quot;pinhole_u&quot;: 800,
+        &quot;strands&quot;: &quot;2 · phase π by parity&quot;,
+        &quot;rise&quot;: &quot;t_i = i/150 + 0.018 · t (mod 1)&quot;,
+        &quot;spin&quot;: &quot;θ = 7π · t_i + 0.22 · t&quot;,
+        &quot;project&quot;: &quot;sc = P / (P − z); sx = cx + x · sc; sy = cy + y · sc&quot;,
+        &quot;order&quot;: &quot;sort by depth d = (z + R) / 2R, far first&quot;
+      },
+      &quot;implementation&quot;: &quot;150 particles climb a helix (0.018 of the height per second) while the helix turns (0.22 rad/s); each is projected through a pinhole at 800 u and drawn as text, far to near.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;depth-alpha&quot;,
+      &quot;short&quot;: &quot;DPTH&quot;,
+      &quot;name&quot;: &quot;Depth as alpha and size&quot;,
+      &quot;layer&quot;: 0,
+      &quot;pass&quot;: 1,
+      &quot;atoms&quot;: [
+        &quot;alpha-ramp&quot;,
+        &quot;scale&quot;,
+        &quot;depth&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;alpha&quot;: &quot;0.04 + d^1.5 · 0.85&quot;,
+        &quot;size_px&quot;: &quot;round(10.5 · sc)&quot;,
+        &quot;size_range&quot;: &quot;≈ 9 – 13 px&quot;,
+        &quot;font&quot;: &quot;JetBrains Mono 400&quot;,
+        &quot;no_color_depth&quot;: &quot;glyphs stay white; only alpha and size carry depth&quot;
+      },
+      &quot;implementation&quot;: &quot;Nothing is shaded: depth is the alpha ramp and the projected font size, so far glyphs are ghosts and near glyphs are ink.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;semantic-label&quot;,
+      &quot;short&quot;: &quot;LABL&quot;,
+      &quot;name&quot;: &quot;Palette label with glow&quot;,
+      &quot;layer&quot;: 0,
+      &quot;pass&quot;: 1,
+      &quot;atoms&quot;: [
+        &quot;label&quot;,
+        &quot;glow&quot;,
+        &quot;palette&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;every&quot;: 18,
+        &quot;offset&quot;: 7,
+        &quot;weight&quot;: 500,
+        &quot;sequence&quot;: [
+          &quot;ICE&quot;,
+          &quot;LAMINAR&quot;,
+          &quot;HEAT&quot;,
+          &quot;VOID&quot;,
+          &quot;SIGNAL&quot;,
+          &quot;BALANCED&quot;,
+          &quot;Ø&quot;,
+          &quot;PAPER&quot;
+        ],
+        &quot;colors&quot;: [
+          &quot;#7CC4FF&quot;,
+          &quot;#4FE3C1&quot;,
+          &quot;#FF8A4C&quot;,
+          &quot;#FF6A8A&quot;,
+          &quot;#FFD166&quot;,
+          &quot;#A8F080&quot;,
+          &quot;#FF6A8A&quot;,
+          &quot;#7CC4FF&quot;
+        ],
+        &quot;glow&quot;: &quot;shadowColor = label color, shadowBlur = 6 · d&quot;,
+        &quot;count_per_150&quot;: 8
+      },
+      &quot;implementation&quot;: &quot;Every glyph with i mod 18 = 7 is replaced by the next palette name, set in its lifted on-ink color at weight 500 with a depth-scaled glow; the animation names its own system.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;glyph-vocab&quot;,
+      &quot;short&quot;: &quot;VOCB&quot;,
+      &quot;name&quot;: &quot;Indexed glyph vocabulary&quot;,
+      &quot;layer&quot;: 0,
+      &quot;pass&quot;: 0,
+      &quot;atoms&quot;: [
+        &quot;glyph-set&quot;,
+        &quot;index&quot;,
+        &quot;typeset&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;helix&quot;: [
+          &quot;·&quot;,
+          &quot;∙&quot;,
+          &quot;•&quot;,
+          &quot;▪&quot;,
+          &quot;│&quot;,
+          &quot;─&quot;,
+          &quot;ø&quot;,
+          &quot;×&quot;,
+          &quot;→&quot;,
+          &quot;▸&quot;,
+          &quot;001&quot;,
+          &quot;010&quot;,
+          &quot;042&quot;,
+          &quot;077&quot;,
+          &quot;126&quot;,
+          &quot;154&quot;,
+          &quot;218&quot;,
+          &quot;258&quot;,
+          &quot;369&quot;,
+          &quot;396&quot;,
+          &quot;410&quot;,
+          &quot;523&quot;,
+          &quot;808&quot;
+        ],
+        &quot;wave&quot;: &quot;· ∙ ─ - ━ (ramp by sin)&quot;,
+        &quot;orbit&quot;: &quot;· with ø every 6th, Ø at center&quot;,
+        &quot;pulse&quot;: [
+          &quot;·&quot;,
+          &quot;∙&quot;,
+          &quot;•&quot;,
+          &quot;∙&quot;,
+          &quot;·&quot;
+        ],
+        &quot;read&quot;: &quot;glyph = vocab[i mod n]&quot;
+      },
+      &quot;implementation&quot;: &quot;Each animation reads its marks from a short ordered list by index, so the field is typeset from a vocabulary rather than drawn from shapes; the helix list mixes 10 marks with 13 three-digit numbers.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;center-mask&quot;,
+      &quot;short&quot;: &quot;MASK&quot;,
+      &quot;name&quot;: &quot;Radial center mask&quot;,
+      &quot;layer&quot;: 1,
+      &quot;pass&quot;: 2,
+      &quot;atoms&quot;: [
+        &quot;mask&quot;,
+        &quot;radial-gradient&quot;,
+        &quot;ellipse&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;css&quot;: &quot;mask-image: radial-gradient(ellipse 44% 40% at 50% 52%, transparent 0%, transparent 40%, #000 80%)&quot;,
+        &quot;rx_u&quot;: 440,
+        &quot;ry_u&quot;: 248,
+        &quot;center_u&quot;: [
+          500,
+          322
+        ],
+        &quot;clear_to&quot;: 0.4,
+        &quot;opaque_from&quot;: 0.8,
+        &quot;canvas_opacity&quot;: 0.95,
+        &quot;title_shadow&quot;: &quot;0 0 80px rgba(0,0,0,.7), 0 0 160px rgba(0,0,0,.5)&quot;
+      },
+      &quot;implementation&quot;: &quot;The helix canvas is masked by an elliptical radial gradient so glyphs fade out toward the middle; the title sits in the hole with a wide dark text-shadow that deepens it.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;pointer-parallax&quot;,
+      &quot;short&quot;: &quot;PRLX&quot;,
+      &quot;name&quot;: &quot;Eased pointer parallax&quot;,
+      &quot;layer&quot;: 0,
+      &quot;pass&quot;: 1,
+      &quot;atoms&quot;: [
+        &quot;pointer&quot;,
+        &quot;ease&quot;,
+        &quot;parallax&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;input&quot;: &quot;mx = clientX / innerWidth − 0.5; my = clientY / innerHeight − 0.5&quot;,
+        &quot;ease&quot;: &quot;tx += (mx − tx) · 0.04 per frame&quot;,
+        &quot;offset_u&quot;: {
+          &quot;x&quot;: &quot;tx · 18&quot;,
+          &quot;y&quot;: &quot;ty · 14&quot;
+        },
+        &quot;applied&quot;: &quot;to every glyph before projection&quot;
+      },
+      &quot;implementation&quot;: &quot;The pointer shifts the whole helix by at most 18 u × 14 u, eased at 4 % per frame, so the field drifts after the cursor rather than following it.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;wave-grid&quot;,
+      &quot;short&quot;: &quot;WAVE&quot;,
+      &quot;name&quot;: &quot;Sine-phased glyph grid&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 3,
+      &quot;atoms&quot;: [
+        &quot;grid&quot;,
+        &quot;sine&quot;,
+        &quot;glyph-ramp&quot;,
+        &quot;falloff&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;cols&quot;: 70,
+        &quot;rows&quot;: 8,
+        &quot;canvas_u&quot;: [
+          500,
+          150
+        ],
+        &quot;font&quot;: &quot;JetBrains Mono 400 12 px&quot;,
+        &quot;phase&quot;: &quot;φ = 4π · c/70 + 0.8 · t + 0.15 · r&quot;,
+        &quot;glyph&quot;: &quot;ramp[floor((sin φ · 0.5 + 0.5) · 4)]&quot;,
+        &quot;centerline&quot;: &quot;row 4 − 1.4 · sin φ&quot;,
+        &quot;alpha&quot;: &quot;(1 − |r − 4 + 1.4 sin φ| / 2.2) · 0.55, skipped below 0.05&quot;,
+        &quot;color&quot;: &quot;#10B981&quot;
+      },
+      &quot;implementation&quot;: &quot;A 70 × 8 grid where one sine phase picks both the glyph (from a five-step ramp) and the alpha (by distance to a sine centerline), so a two-wavelength band of laminar glyphs rolls across the frame.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;pulse-row&quot;,
+      &quot;short&quot;: &quot;PULS&quot;,
+      &quot;name&quot;: &quot;Half-wave pulse row&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 3,
+      &quot;atoms&quot;: [
+        &quot;row&quot;,
+        &quot;sine&quot;,
+        &quot;half-wave&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;count&quot;: 18,
+        &quot;canvas_u&quot;: [
+          250,
+          30
+        ],
+        &quot;font&quot;: &quot;JetBrains Mono 400 11 px&quot;,
+        &quot;wave&quot;: &quot;w = sin(1.6 · t − 0.12 · i)&quot;,
+        &quot;drawn&quot;: &quot;only w &gt; 0&quot;,
+        &quot;alpha&quot;: &quot;w · 0.5&quot;,
+        &quot;x&quot;: &quot;14 + i · (W − 28) / 18&quot;,
+        &quot;head&quot;: &quot;▸ at x 4, alpha .5&quot;,
+        &quot;color&quot;: &quot;#2B8EF5&quot;
+      },
+      &quot;implementation&quot;: &quot;Eighteen glyphs along a line lit by the positive half of one travelling sine, so a soft blue pulse runs left to right behind a fixed ▸ head; it lives inline under a dialogue turn.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;orbit-ring&quot;,
+      &quot;short&quot;: &quot;ORBT&quot;,
+      &quot;name&quot;: &quot;Breathing glyph orbit&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 3,
+      &quot;atoms&quot;: [
+        &quot;ring&quot;,
+        &quot;ellipse&quot;,
+        &quot;breath&quot;,
+        &quot;sine&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;count&quot;: 52,
+        &quot;radius_u&quot;: &quot;min(0.3 W, 0.42 H)&quot;,
+        &quot;ratio&quot;: 0.4,
+        &quot;spin&quot;: &quot;a = 2π · i/52 + 0.3 · t&quot;,
+        &quot;breath&quot;: &quot;r = R · (1 + 0.1 · sin(0.6 · t + 0.3 · i))&quot;,
+        &quot;alpha&quot;: &quot;0.1 + 0.6 · (sin a + 1) / 2&quot;,
+        &quot;glyph&quot;: &quot;ø every 6th, else ·&quot;,
+        &quot;center&quot;: &quot;Ø at alpha .55&quot;,
+        &quot;canvas_opacity&quot;: 0.3,
+        &quot;font&quot;: &quot;JetBrains Mono 400 11 px&quot;,
+        &quot;color&quot;: &quot;#F6F1E4&quot;
+      },
+      &quot;implementation&quot;: &quot;52 glyphs on a flattened ellipse, each with its own breathing radius and an alpha that peaks at the bottom of the orbit; the canvas is held at 30 % under a pull quote.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;still-frame-runtime&quot;,
+      &quot;short&quot;: &quot;LOOP&quot;,
+      &quot;name&quot;: &quot;Frame runtime&quot;,
+      &quot;layer&quot;: 3,
+      &quot;pass&quot;: 4,
+      &quot;atoms&quot;: [
+        &quot;raf-loop&quot;,
+        &quot;dpr&quot;,
+        &quot;reduced-motion&quot;,
+        &quot;clear&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;dpr&quot;: &quot;min(devicePixelRatio, 2)&quot;,
+        &quot;resize&quot;: &quot;canvas.width = clientWidth · dpr; setTransform(dpr)&quot;,
+        &quot;loop&quot;: &quot;requestAnimationFrame, t = (now − t0) / 1000&quot;,
+        &quot;clear&quot;: &quot;clearRect every frame, no trails&quot;,
+        &quot;reduced_motion&quot;: &quot;draw once at t = now, no loop&quot;,
+        &quot;text&quot;: &quot;textAlign center, textBaseline middle&quot;,
+        &quot;aria&quot;: &quot;canvas aria-hidden&quot;
+      },
+      &quot;implementation&quot;: &quot;One setupCanvas and one loop helper serve all four canvases; under prefers-reduced-motion the loop degenerates to a single still frame, so the page keeps its picture without motion.&quot;
+    }
+  ],
+  &quot;pass_order&quot;: [
+    &quot;vocabulary · the glyph lists and label sequence&quot;,
+    &quot;helix · project 150 glyphs, sort far to near, draw with depth alpha and glow&quot;,
+    &quot;mask · elliptical radial mask over the helix canvas, title in the hole&quot;,
+    &quot;grid · wave, pulse and orbit each from one sine&quot;,
+    &quot;runtime · rAF loop, DPR cap, reduced-motion still frame&quot;
+  ],
+  &quot;notes&quot;: [
+    &quot;Measured in the source: helix R = 148.8 u and H = 483.6 u at a 1000 × 620 hero; font 10.5 px scaled by 800/(800 − z) gives 9–13 px; 8 of 150 glyphs are labels.&quot;,
+    &quot;Wave: the band spans two wavelengths across 70 columns; the ramp has five glyphs so sin φ is quantised to five weights.&quot;,
+    &quot;Orbit: R = 130.2 u at 1000 × 310; the ellipse is 260 × 104 u; at canvas opacity .3 the brightest glyph reads at alpha .21.&quot;,
+    &quot;The reference title is Instrument Serif; this rebuild sets it in Archivo (condensed) since no serif is inlined. Frame time t = 5.9 s so the pulse is fully lit.&quot;
+  ]
+} are BAKED here by `node _build/build.mjs` from study.js — a static read for readers that
+     cannot run scripts. shell.js redraws all of it on load. Edit study.js or _build/, never the generated index.html. -->
+<nav class="nav" id="nav" aria-label="Site navigation">{{NAV}}</nav>
 <main class="plate">
-  <section class="notes" id="copy"></section>
+  <section class="notes" id="copy">{{NOTES}}</section>
   <section class="figure" id="stage">
-    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"></canvas></div>
+    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"><img src="thumb.png" alt="TS-13 rebuild, still frame" loading="lazy"></canvas></div>
     <div class="live" id="live"></div>
     <div class="log" id="log">
       <div class="ctl">
@@ -38,7 +417,7 @@
 </main>
 <aside class="spec" id="spec" aria-hidden="true">
   <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
-  <pre id="specpre"></pre>
+  <pre id="specpre">{{SPEC}}</pre>
 </aside>
 <script src="../../_shared/entries.js"></script>
 <script src="../../_shared/art.js"></script>

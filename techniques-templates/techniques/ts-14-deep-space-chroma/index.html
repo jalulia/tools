@@ -4,17 +4,341 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="only light">
+<meta name="description" content="TS-14 · Deep Space Chroma · birefringence — A stressed birefringent sheet between polarizers, integrated over the spectrum.">
 <link rel="icon" href="data:,">
 <title>TS-14 — Deep Space Chroma · birefringence · Techniques &amp; Templates · ø co.</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
 <link rel="stylesheet" href="../../_shared/shell.css">
+<link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
-<nav class="nav" id="nav" aria-label="Site navigation"></nav>
+<!-- <a class="brand" href="../../index.html" title="Index"><svg class="o" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-554.33,-11.46)" fill="currentColor" fill-rule="evenodd"><path d="M682.33,35.81c-57.24,0-103.65,46.4-103.65,103.65s46.4,103.65,103.65,103.65,103.65-46.4,103.65-103.65-46.4-103.65-103.65-103.65ZM682.33,187.75c-26.67,0-48.29-21.62-48.29-48.29s21.62-48.29,48.29-48.29,48.29,21.62,48.29,48.29-21.62,48.29-48.29,48.29Z"/><rect x="666.18" y="-5.46" width="32.29" height="289.83" transform="translate(298.46 -441.63) rotate(45)"/></g></svg><span class="wm">IMP<i>Ø</i>SSIBLE</span></a>
+  <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Deep Space Chroma · birefringence</b><span class="code">TS-14</span></span>
+  <span class="pager"><a href="../../techniques/ts-13-glyph-field-animation/index.html" title="ASCII glyph-field animations">← TS-13</a><a href="../../index.html#techniques"><span class="n">14</span>&nbsp;/ 14</a><a class="off">→</a></span> <p class="kicker">Technique · TS-14</p><h1 class="lede">A stressed birefringent sheet between polarizers, integrated over the spectrum.</h1><div class="body"><p>Twenty-one key visuals, one instrument: a polariscope. A birefringent material splits light into two rays with a retardation δ between them; between crossed polarizers each wavelength is transmitted as sin²(πδ/λ), so integrating a tungsten source through the CIE color-matching functions gives the Michel-Lévy sequence — black, grey, warm white, amber, orange, red, mauve, blue, cyan — as a function of δ alone. Where the material’s slow axis lines up with a polarizer the light is cut regardless of δ: those are the isoclinics, the black wedges through every focus.</p><p>What varies between plates is only the retardation field and the axis field: an oriented sheet whose δ oscillates around a focus, point loads (Flamant), a uniaxial conoscopic figure (δ ∝ r², a Maltese cross), a biaxial one (δ ∝ |p−A|·|p−B|, hyperbolic isogyres), a ribbon, a ring. The plate look is the camera on top of the physics: partial white balance, a green dip, a teal-and-orange hue compression, a film shoulder that blows the cores to pink-white, a 1.2 % defocus and mono grain. Rotating the polarizer sweeps the isoclinics; breathing δ moves the fringes.</p></div>
+  <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>chart</b> · integrate the spectrum once → color(δ)</div></li><li><div><b>warp</b> · (x,y) += wa · noise2</div></li><li><div><b>field</b> · δ(x,y) and ψ(x,y) for the family</div></li><li><div><b>isoclinic</b> · sin²(m(ψ − β))^sharp</div></li><li><div><b>envelope</b> · pinch × vignette × lobe gain, mix from the floor</div></li><li><div><b>defocus</b> · gaussian σ .004 W</div></li><li><div><b>bloom</b> · thresholded highlights, σ .05 W, add .4</div></li><li><div><b>grain</b> · mono ×(1 + .02 n)</div></li></ol></div>
+  <div class="meta"><div class="full"><h2>Techniques read · click to highlight</h2><div class="tags" id="chips"><span data-t="michel-levy-chart" title="Spectral Michel-Lévy chart">michel-levy-chart</span><span data-t="retardation-field" title="Retardation field">retardation-field</span><span data-t="axis-field" title="Slow-axis field ψ">axis-field</span><span data-t="isoclinic" title="Isoclinics">isoclinic</span><span data-t="envelope" title="Envelope">envelope</span><span data-t="plate-look" title="Plate look (camera + grade)">plate-look</span><span data-t="soft-focus" title="Post defocus">soft-focus</span><span data-t="film-grain" title="Mono grain">film-grain</span><span data-t="polariscope-motion" title="Polariscope motion">polariscope-motion</span></div></div>
+  <div><h2>Reference</h2><div class="ro">Reference 14 · Deep Space Chroma 09 (ø co. key visual set, 21 plates, 5000 × 3500 each), 1000 × 700</div></div><div><h2>Study</h2><div class="nm">Deep Space Chroma · birefringence</div><div class="ro">TS-14 · Techniques · 14 / 14</div></div></div>
+  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>michel-levy-chart</b> · Spectral Michel-Lévy chart — For every δ from 0 to 1599 nm the transmitted spectrum sin²(πδ/λ)·S(λ) is integrated against the color-matching functions; the 1600 colors are the LUT the field is shaded with. Order 1 (0–560 nm) is where the plates live: black → grey → warm white → amber → orange → red; the mauve and blue of 560–700 are the cool lanes.</div></li><li><div><b>retardation-field</b> · Retardation field — Each family is one expression for δ. The sheet keeps δ in the orange-red most of the time (shape 2.4 dwells near d0) and dips to white or peaks to blue briefly; the load family is real plane-stress mechanics; the conoscopes are the textbook interference figures.</div></li><li><div><b>axis-field</b> · Slow-axis field ψ — ψ decides where the isoclinics fall. The domain warp bends the sheet — the plates are not flat starbursts — and warping θ makes lanes of unequal width; neither breaks the physics because δ and ψ are still evaluated from one coordinate.</div></li><li><div><b>isoclinic</b> · Isoclinics — Multiplies the whole image; the black wedges are not masks but extinction where the material axis is parallel to the polarizer. Spinning β sweeps them around the focus.</div></li><li><div><b>envelope</b> · Envelope — mix(floor, chart(δ) · iso, env): the load point is opaque, the far field sinks, nothing reaches 0.</div></li><li><div><b>plate-look</b> · Plate look (camera + grade) — Applied to the chart once (1600 entries), so per-pixel cost is a lookup; this is the step that turns a textbook chart into the plate palette.</div></li><li><div><b>soft-focus</b> · Post defocus — One gaussian over the finished color image; blurring after the chart is what mixes neighboring lanes into the grey-mauve transitions.</div></li><li><div><b>film-grain</b> · Mono grain — Multiplicative hashed noise, identical across channels.</div></li><li><div><b>polariscope-motion</b> · Polariscope motion — Every motion is a physical control of the instrument: rotate the polarizer, load the sheet, turn the sheet.</div></li></ol></div>
+  <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>CHRT</b> · Michel-Lévy chart · color(δ) = ∫ S(λ) sin²(πδ/λ) x̄ȳz̄(λ) dλ, tungsten 3000 K <span class="ro">u 0.62 · v 0.20 · michel-levy-chart</span></div></li><li><div><b>RETD</b> · Retardation · δ = 520 + 200·osc(7θ) − 80r nm; red is δ ≈ 430–560, pink-white ≈ 320, steel blue ≈ 640 <span class="ro">u 0.80 · v 0.40 · retardation-field</span></div></li><li><div><b>ISOC</b> · Isoclinic · slow axis ∥ polarizer at β = −90°: sin²(ψ − β)^4 → 0, the wide black wedge <span class="ro">u 0.46 · v 0.08 · isoclinic</span></div></li><li><div><b>ISOC</b> · Second arm · β + 180°, its own width (^1.2) and a .1·sin(ψ − β) skew: the arms are not mirror images <span class="ro">u 0.50 · v 0.92 · isoclinic</span></div></li><li><div><b>WARP</b> · Warp · the sheet is domain-warped by value noise (.1 W at 1.2 cycles) and θ by 1.0·(sin 3θ/3 + sin 5θ/5): lanes bend and thicken <span class="ro">u 0.22 · v 0.42 · axis-field</span></div></li><li><div><b>PNCH</b> · Pinch · envelope → 0 inside r &lt; .02 W; the load point is opaque <span class="ro">u 0.47 · v 0.34 · envelope</span></div></li><li><div><b>GRDE</b> · Grade · hues compressed .75 toward 6° and 196° in display space; blue end desaturated .85; highlight bloom .4 at σ 5 % W <span class="ro">u 0.30 · v 0.62 · plate-look</span></div></li><li><div><b>BLUR</b> · Defocus · gaussian σ = .4 % of width after the chart, so lanes bleed <span class="ro">u 0.10 · v 0.85 · soft-focus</span></div></li><li><div><b>GRN</b> · Grain · mono, 2 %, 1 px cells; channels correlate .95 in the source <span class="ro">u 0.70 · v 0.90 · film-grain</span></div></li><li><div><b>MOTN</b> · Motion · polarizer spins 2°/s (wedges sweep), δ0 breathes ±40 nm, lanes flow .15 rad/s (M) <span class="ro">u 0.90 · v 0.62 · polariscope-motion</span></div></li></ol></div>
+  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read · <b>M</b> motion · <b>L</b> live</span><span>ø co. · 2026</span></div> {
+  &quot;id&quot;: &quot;ts-14-deep-space-chroma&quot;,
+  &quot;code&quot;: &quot;TS-14&quot;,
+  &quot;title&quot;: &quot;Deep Space Chroma · birefringence&quot;,
+  &quot;section&quot;: &quot;techniques&quot;,
+  &quot;variants&quot;: [
+    {
+      &quot;id&quot;: &quot;ref&quot;,
+      &quot;label&quot;: &quot;Sheet · as reference&quot;,
+      &quot;swatches&quot;: [
+        &quot;#0E0D0C&quot;,
+        &quot;#C24A28&quot;,
+        &quot;#F0A060&quot;,
+        &quot;#F2DCD0&quot;,
+        &quot;#8FB6BF&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;load&quot;,
+      &quot;label&quot;: &quot;Point loads · Flamant&quot;,
+      &quot;swatches&quot;: [
+        &quot;#0E0D0C&quot;,
+        &quot;#C24A28&quot;,
+        &quot;#F0A060&quot;,
+        &quot;#F2DCD0&quot;,
+        &quot;#8FB6BF&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;uniaxial&quot;,
+      &quot;label&quot;: &quot;Uniaxial conoscope&quot;,
+      &quot;swatches&quot;: [
+        &quot;#0E0D0C&quot;,
+        &quot;#C24A28&quot;,
+        &quot;#F0A060&quot;,
+        &quot;#F2DCD0&quot;,
+        &quot;#8FB6BF&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;biaxial&quot;,
+      &quot;label&quot;: &quot;Biaxial conoscope&quot;,
+      &quot;swatches&quot;: [
+        &quot;#0E0D0C&quot;,
+        &quot;#C24A28&quot;,
+        &quot;#F0A060&quot;,
+        &quot;#F2DCD0&quot;,
+        &quot;#8FB6BF&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;ribbon&quot;,
+      &quot;label&quot;: &quot;Ribbon&quot;,
+      &quot;swatches&quot;: [
+        &quot;#0E0D0C&quot;,
+        &quot;#C24A28&quot;,
+        &quot;#F0A060&quot;,
+        &quot;#F2DCD0&quot;,
+        &quot;#8FB6BF&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;ring&quot;,
+      &quot;label&quot;: &quot;Ring&quot;,
+      &quot;swatches&quot;: [
+        &quot;#0E0D0C&quot;,
+        &quot;#C24A28&quot;,
+        &quot;#F0A060&quot;,
+        &quot;#F2DCD0&quot;,
+        &quot;#8FB6BF&quot;
+      ]
+    }
+  ],
+  &quot;reference&quot;: {
+    &quot;file&quot;: &quot;ref.png&quot;,
+    &quot;px&quot;: [
+      1000,
+      700
+    ],
+    &quot;grammar&quot;: &quot;photoelastic fringes: a retardation field seen through a plane polariscope with a warm source; isoclinic wedges through the focus; soft focus; mono grain&quot;,
+    &quot;set&quot;: &quot;21 plates, 5000 × 3500, ø co. “Deep Space Chroma” key visuals&quot;
+  },
+  &quot;units&quot;: &quot;normalized by width: x ∈ [0,1], y ∈ [0, H/W]; δ in nm; angles in degrees, screen space (y down)&quot;,
+  &quot;physics&quot;: {
+    &quot;transmission&quot;: &quot;I(λ) = S(λ) · sin²(2(ψ − β)) · sin²(π δ / λ) for a crossed plane polariscope; the first sin² is the isoclinic term (achromatic), the second the isochromatic term (chromatic)&quot;,
+    &quot;stress_optic&quot;: &quot;δ = C · t · (σ1 − σ2) — retardation is proportional to the principal stress difference&quot;,
+    &quot;color&quot;: &quot;XYZ = ∫ I(λ) [x̄ ȳ z̄](λ) dλ over 380–720 nm at 4 nm; XYZ → linear sRGB&quot;,
+    &quot;chart&quot;: &quot;the Michel-Lévy chart is color(δ) for δ = 0…1600 nm; it is computed at load, not hand-drawn&quot;
+  },
+  &quot;palette&quot;: {
+    &quot;derived&quot;: &quot;from the chart — nothing is hand-picked&quot;,
+    &quot;floor&quot;: &quot;#0E0D0C&quot;,
+    &quot;anchors&quot;: {
+      &quot;warm&quot;: &quot;18°&quot;,
+      &quot;cool&quot;: &quot;196°&quot;
+    }
+  },
+  &quot;techniques&quot;: [
+    {
+      &quot;id&quot;: &quot;michel-levy-chart&quot;,
+      &quot;short&quot;: &quot;CHRT&quot;,
+      &quot;name&quot;: &quot;Spectral Michel-Lévy chart&quot;,
+      &quot;layer&quot;: 0,
+      &quot;pass&quot;: 1,
+      &quot;atoms&quot;: [
+        &quot;spectrum&quot;,
+        &quot;planck&quot;,
+        &quot;cmf&quot;,
+        &quot;lut&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;source&quot;: &quot;Planck 3000 K, green dip .1 at 548 ± 48 nm&quot;,
+        &quot;integration&quot;: &quot;380–720 nm, 4 nm steps, Wyman–Sloan–Shirley CMF fit&quot;,
+        &quot;white_balance&quot;: &quot;von Kries toward D65, strength .6&quot;,
+        &quot;exposure&quot;: 0.8,
+        &quot;N&quot;: 1600
+      },
+      &quot;implementation&quot;: &quot;For every δ from 0 to 1599 nm the transmitted spectrum sin²(πδ/λ)·S(λ) is integrated against the color-matching functions; the 1600 colors are the LUT the field is shaded with. Order 1 (0–560 nm) is where the plates live: black → grey → warm white → amber → orange → red; the mauve and blue of 560–700 are the cool lanes.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;retardation-field&quot;,
+      &quot;short&quot;: &quot;RETD&quot;,
+      &quot;name&quot;: &quot;Retardation field&quot;,
+      &quot;layer&quot;: 0,
+      &quot;pass&quot;: 0,
+      &quot;atoms&quot;: [
+        &quot;field&quot;,
+        &quot;retardation&quot;,
+        &quot;oscillation&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;sheet&quot;: &quot;δ = (d0 + A · sign(c)|c|^shape) · (1 + pin/r), c = cos(k · θw + ph + flow · t); shape for the peaks (blue), shapeN for the dips (pale) — the pale lanes are the narrow ones&quot;,
+        &quot;ref&quot;: {
+          &quot;d0&quot;: 520,
+          &quot;A&quot;: 200,
+          &quot;shape&quot;: 2,
+          &quot;shapeN&quot;: 3.5,
+          &quot;k&quot;: 7,
+          &quot;ph&quot;: 1,
+          &quot;rad&quot;: -80,
+          &quot;pin&quot;: 0
+        },
+        &quot;radial&quot;: &quot;+ rad · r — orange near the focus, red far out&quot;,
+        &quot;load&quot;: &quot;δ = K · |σ1 − σ2| from Σ Flamant point loads (σr = −2F cos(θ−α)/(π r^decay)) + a uniform stress&quot;,
+        &quot;uniaxial&quot;: &quot;δ = d0 + c · r²&quot;,
+        &quot;biaxial&quot;: &quot;δ = d0 + c · |p − A| · |p − B| (Cassini ovals)&quot;,
+        &quot;ribbon&quot;: &quot;δ = d0 + A · tanh(d / period) — a ramp across the ribbon: white, orange, red, blue in order&quot;,
+        &quot;ring&quot;: &quot;δ = d0 + A · tanh((r − R) / period)&quot;
+      },
+      &quot;implementation&quot;: &quot;Each family is one expression for δ. The sheet keeps δ in the orange-red most of the time (shape 2.4 dwells near d0) and dips to white or peaks to blue briefly; the load family is real plane-stress mechanics; the conoscopes are the textbook interference figures.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;axis-field&quot;,
+      &quot;short&quot;: &quot;WARP&quot;,
+      &quot;name&quot;: &quot;Slow-axis field ψ&quot;,
+      &quot;layer&quot;: 0,
+      &quot;pass&quot;: 0,
+      &quot;atoms&quot;: [
+        &quot;direction&quot;,
+        &quot;principal-axis&quot;,
+        &quot;warp&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;domain_warp&quot;: &quot;(x, y) += wa · noise2((x, y) · wf), 2-octave value noise, wa .1 W, wf 1.2; the same hash in JS and GLSL&quot;,
+        &quot;sheet&quot;: &quot;ψ = θw + twist · r + spiral · ln r&quot;,
+        &quot;load&quot;: &quot;ψ = ½ · atan2(2τ, σx − σy) (principal direction)&quot;,
+        &quot;uniaxial&quot;: &quot;ψ = θ&quot;,
+        &quot;biaxial&quot;: &quot;ψ = ½(θA + θB)&quot;,
+        &quot;ribbon&quot;: &quot;ψ = tangent&quot;,
+        &quot;ring&quot;: &quot;ψ = θ + 90°&quot;,
+        &quot;warp&quot;: &quot;θw = θ + 1.0 · (sin(3θ + 1.0)/3 + sin(5θ + 3.5)/5)&quot;
+      },
+      &quot;implementation&quot;: &quot;ψ decides where the isoclinics fall. The domain warp bends the sheet — the plates are not flat starbursts — and warping θ makes lanes of unequal width; neither breaks the physics because δ and ψ are still evaluated from one coordinate.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;isoclinic&quot;,
+      &quot;short&quot;: &quot;ISOC&quot;,
+      &quot;name&quot;: &quot;Isoclinics&quot;,
+      &quot;layer&quot;: 1,
+      &quot;pass&quot;: 2,
+      &quot;atoms&quot;: [
+        &quot;polarizer&quot;,
+        &quot;extinction&quot;,
+        &quot;wedge&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;term&quot;: &quot;sin²(m · (ψ − β + skew · sin(ψ − β)))^sharp, sharp for the β arm and sharp2 for the β + 180° arm&quot;,
+        &quot;ref&quot;: {
+          &quot;m&quot;: 1,
+          &quot;beta&quot;: -90,
+          &quot;skew&quot;: 0.1,
+          &quot;sharp&quot;: 4,
+          &quot;sharp2&quot;: 1.2
+        },
+        &quot;circular&quot;: &quot;circ mixes toward 1 (a circular polariscope removes isoclinics)&quot;,
+        &quot;note&quot;: &quot;m = 2 is the physical crossed-polar cross (four arms); the plates read as two arms, m = 1, one polarizer effective&quot;
+      },
+      &quot;implementation&quot;: &quot;Multiplies the whole image; the black wedges are not masks but extinction where the material axis is parallel to the polarizer. Spinning β sweeps them around the focus.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;envelope&quot;,
+      &quot;short&quot;: &quot;PNCH&quot;,
+      &quot;name&quot;: &quot;Envelope&quot;,
+      &quot;layer&quot;: 1,
+      &quot;pass&quot;: 2,
+      &quot;atoms&quot;: [
+        &quot;envelope&quot;,
+        &quot;vignette&quot;,
+        &quot;floor&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;pinch&quot;: &quot;smoothstep(0, core, r), core .02&quot;,
+        &quot;vignette&quot;: &quot;1 − .4 r²&quot;,
+        &quot;lobe_gain&quot;: &quot;.8 + .2 · sin(2.3θ + .6)&quot;,
+        &quot;floor&quot;: [
+          14,
+          13,
+          12
+        ],
+        &quot;occluders&quot;: &quot;optional manual wedges (plate 16’s rectangle)&quot;
+      },
+      &quot;implementation&quot;: &quot;mix(floor, chart(δ) · iso, env): the load point is opaque, the far field sinks, nothing reaches 0.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;plate-look&quot;,
+      &quot;short&quot;: &quot;GRDE&quot;,
+      &quot;name&quot;: &quot;Plate look (camera + grade)&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 3,
+      &quot;atoms&quot;: [
+        &quot;white-balance&quot;,
+        &quot;hue-compression&quot;,
+        &quot;shoulder&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;hue_grade&quot;: &quot;after gamma, hues pulled .75 of the way toward 6° (warm) or 196° (cool), whichever is nearer; saturation × 1.4 first&quot;,
+        &quot;bloom&quot;: &quot;highlights (brightness .8, contrast 2.5 → a threshold near L .4) blurred at σ .05 W and added at .4 — the glow along the hot edges&quot;,
+        &quot;blue_roll&quot;: &quot;saturation × (1 − .85 · ((δ − 480)/150)²) for δ &gt; 480&quot;,
+        &quot;shoulder&quot;: &quot;x/(1 + .25x), then highlights above L .6 desaturate .85 toward a pink-white&quot;,
+        &quot;measured&quot;: &quot;plates carry no yellow, no green, no magenta — the grade explains the absence; band means: (235,182,147) (232,143,94) (225,95,57) (185,53,40) red side, (165,196,199) (120,154,165) (79,105,116) blue side, white (222,190,184)&quot;
+      },
+      &quot;implementation&quot;: &quot;Applied to the chart once (1600 entries), so per-pixel cost is a lookup; this is the step that turns a textbook chart into the plate palette.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;soft-focus&quot;,
+      &quot;short&quot;: &quot;BLUR&quot;,
+      &quot;name&quot;: &quot;Post defocus&quot;,
+      &quot;layer&quot;: 3,
+      &quot;pass&quot;: 4,
+      &quot;atoms&quot;: [
+        &quot;blur&quot;,
+        &quot;gaussian&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;sigma&quot;: &quot;0.004 · W&quot;,
+        &quot;measured&quot;: &quot;p99 horizontal gradient 12/255 per px at 1600 px&quot;
+      },
+      &quot;implementation&quot;: &quot;One gaussian over the finished color image; blurring after the chart is what mixes neighboring lanes into the grey-mauve transitions.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;film-grain&quot;,
+      &quot;short&quot;: &quot;GRN&quot;,
+      &quot;name&quot;: &quot;Mono grain&quot;,
+      &quot;layer&quot;: 4,
+      &quot;pass&quot;: 5,
+      &quot;atoms&quot;: [
+        &quot;grain&quot;,
+        &quot;noise&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;amp&quot;: 0.02,
+        &quot;pitch_px&quot;: &quot;1 at 1600 px&quot;,
+        &quot;mono&quot;: true,
+        &quot;measured&quot;: &quot;black-region std 5.3/255; R/G/B high-pass correlation .96 / .95&quot;
+      },
+      &quot;implementation&quot;: &quot;Multiplicative hashed noise, identical across channels.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;polariscope-motion&quot;,
+      &quot;short&quot;: &quot;MOTN&quot;,
+      &quot;name&quot;: &quot;Polariscope motion&quot;,
+      &quot;layer&quot;: 5,
+      &quot;pass&quot;: 6,
+      &quot;atoms&quot;: [
+        &quot;rotation&quot;,
+        &quot;breath&quot;,
+        &quot;flow&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;spin&quot;: &quot;β += 2°/s (isoclinics sweep)&quot;,
+        &quot;breath&quot;: &quot;d0 += 40 · sin(.4 t) nm (fringes move)&quot;,
+        &quot;flow&quot;: &quot;lobe phase += .15 t&quot;,
+        &quot;rot&quot;: &quot;θ += .01 t&quot;
+      },
+      &quot;implementation&quot;: &quot;Every motion is a physical control of the instrument: rotate the polarizer, load the sheet, turn the sheet.&quot;
+    }
+  ],
+  &quot;pass_order&quot;: [
+    &quot;chart · integrate the spectrum once → color(δ)&quot;,
+    &quot;warp · (x,y) += wa · noise2&quot;,
+    &quot;field · δ(x,y) and ψ(x,y) for the family&quot;,
+    &quot;isoclinic · sin²(m(ψ − β))^sharp&quot;,
+    &quot;envelope · pinch × vignette × lobe gain, mix from the floor&quot;,
+    &quot;defocus · gaussian σ .004 W&quot;,
+    &quot;bloom · thresholded highlights, σ .05 W, add .4&quot;,
+    &quot;grain · mono ×(1 + .02 n)&quot;
+  ],
+  &quot;notes&quot;: [
+    &quot;The chart parameters were tuned by eye against the 21 plates; the field parameters against plate 09 (focus (0.47, 0.345 W), a wide isoclinic arm straight up and a narrower one straight down).&quot;,
+    &quot;Motion is CPU on a 400 px work canvas in the plate; engine.html is the GPU version.&quot;,
+    &quot;engine.html carries a first-pass preset for every plate (by eye) — refine with the sliders, Copy JSON.&quot;
+  ]
+} are BAKED here by `node _build/build.mjs` from study.js — a static read for readers that
+     cannot run scripts. shell.js redraws all of it on load. Edit study.js or _build/, never the generated index.html. -->
+<nav class="nav" id="nav" aria-label="Site navigation">{{NAV}}</nav>
 <main class="plate">
-  <section class="notes" id="copy"></section>
+  <section class="notes" id="copy">{{NOTES}}</section>
   <section class="figure" id="stage">
-    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"></canvas></div>
+    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"><img src="thumb.png" alt="TS-14 rebuild, still frame" loading="lazy"></canvas></div>
     <div class="live" id="live"></div>
     <div class="log" id="log">
       <div class="ctl">
@@ -38,7 +362,7 @@
 </main>
 <aside class="spec" id="spec" aria-hidden="true">
   <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
-  <pre id="specpre"></pre>
+  <pre id="specpre">{{SPEC}}</pre>
 </aside>
 <script src="../../_shared/entries.js"></script>
 <script src="../../_shared/art.js"></script>

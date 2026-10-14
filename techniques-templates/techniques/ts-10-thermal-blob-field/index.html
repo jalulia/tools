@@ -4,17 +4,220 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="only light">
+<meta name="description" content="TS-10 · Thermal blob field — Blurred blobs mapped through a ramp with one dark stop at the rim.">
 <link rel="icon" href="data:,">
 <title>TS-10 — Thermal blob field · Techniques &amp; Templates · ø co.</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
 <link rel="stylesheet" href="../../_shared/shell.css">
+<link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
-<nav class="nav" id="nav" aria-label="Site navigation"></nav>
+<!-- <a class="brand" href="../../index.html" title="Index"><svg class="o" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-554.33,-11.46)" fill="currentColor" fill-rule="evenodd"><path d="M682.33,35.81c-57.24,0-103.65,46.4-103.65,103.65s46.4,103.65,103.65,103.65,103.65-46.4,103.65-103.65-46.4-103.65-103.65-103.65ZM682.33,187.75c-26.67,0-48.29-21.62-48.29-48.29s21.62-48.29,48.29-48.29,48.29,21.62,48.29,48.29-21.62,48.29-48.29,48.29Z"/><rect x="666.18" y="-5.46" width="32.29" height="289.83" transform="translate(298.46 -441.63) rotate(45)"/></g></svg><span class="wm">IMP<i>Ø</i>SSIBLE</span></a>
+  <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Thermal blob field</b><span class="code">TS-10</span></span>
+  <span class="pager"><a href="../../techniques/ts-09-grain-gradient-layers/index.html" title="Grain gradient layers">← TS-09</a><a href="../../index.html#techniques"><span class="n">10</span>&nbsp;/ 14</a><a href="../../techniques/ts-11-worn-black-box/index.html" title="Worn black box">TS-11 →</a></span> <p class="kicker">Technique · TS-10</p><h1 class="lede">Blurred blobs mapped through a ramp with one dark stop at the rim.</h1><div class="body"><p>One luminance field through one color ramp. Four blob shapes fill white on black and blur wide, so every edge becomes a smooth S. The ramp reads that profile: paper low, a light blue as it rises, a dark navy stop just under mid, then plum, red, orange, and yellow only where the field saturates deep inside a blob.</p><p>Because the navy stop sits on the steepest part of the profile it renders as a thin band — the rim looks drawn but is only mapped. Over the sheet: mono grain and a faint mottle, two hairline rules, a mono caption and a two-line label.</p></div>
+  <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>field</b> · four blobs white on black at 1/3 res, blur σ 46 u</div></li><li><div><b>upscale</b> · field to device res</div></li><li><div><b>map</b> · LUT[field] per pixel (rim stop 0.44)</div></li><li><div><b>tooth</b> · mono grain 0.03, perlin mottle 0.012</div></li><li><div><b>ledger</b> · two rules, caption, two-line label</div></li></ol></div>
+  <div class="meta"><div class="full"><h2>Techniques read · click to highlight</h2><div class="tags" id="chips"><span data-t="blob-field" title="Blurred blob field">blob-field</span><span data-t="gradient-map" title="Gradient map">gradient-map</span><span data-t="rim-stop" title="Dark rim stop">rim-stop</span><span data-t="paper-tooth" title="Paper tooth">paper-tooth</span><span data-t="rule-ledger" title="Rules, caption and label">rule-ledger</span></div></div>
+  <div><h2>Reference</h2><div class="ro">Reference 10 · blurred blob background with a dark rim, 1200 × 800</div></div><div><h2>Study</h2><div class="nm">Thermal blob field</div><div class="ro">TS-10 · Techniques · 10 / 14</div></div></div>
+  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>blob-field</b> · Blurred blob field — Four Fourier-radius blobs are filled with a radial white-to-gray gradient on a black canvas (union by lighten) at one-third resolution, blurred with σ = 46 u and read back as a 0..1 luminance field.</div></li><li><div><b>gradient-map</b> · Gradient map — Every pixel of the field is replaced by LUT[field]; the ramp is the only place color enters, so all four colourways share one field.</div></li><li><div><b>rim-stop</b> · Dark rim stop — The darkest stop sits just under the mid-point of the blurred edge, where the profile is steepest, so it occupies few pixels and reads as a drawn outline; the blue halo is the ramp segment just outside it.</div></li><li><div><b>paper-tooth</b> · Paper tooth — Multiplicative mono grain per device pixel, then a low-frequency perlin mottle, both on the whole sheet including the blobs.</div></li><li><div><b>rule-ledger</b> · Rules, caption and label — Two 1 u ink rules across the sheet; the caption is set right-aligned 12 u under the first rule, the two-line studio label under the second.</div></li></ol></div>
+  <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>BLOB</b> · Blob 2 · Fourier-radius shape, R 280 u, four harmonics <span class="ro">u 0.22 · v 0.75 · blob-field</span></div></li><li><div><b>BLOB</b> · Blob 1 · center off-sheet above, only its lower edge shows <span class="ro">u 0.33 · v 0.06 · blob-field</span></div></li><li><div><b>BLOB</b> · Blob 3 · merges with blob 2, union before the blur <span class="ro">u 0.72 · v 0.96 · blob-field</span></div></li><li><div><b>RIM</b> · Rim · navy stop at field 0.44, band about 16 u wide <span class="ro">u 0.39 · v 0.55 · rim-stop</span></div></li><li><div><b>RIM</b> · Blue halo · outside the rim, field 0.335–0.41 <span class="ro">u 0.40 · v 0.37 · rim-stop</span></div></li><li><div><b>RAMP</b> · Core · field ≥ 0.9 maps to yellow <span class="ro">u 0.30 · v 0.85 · gradient-map</span></div></li><li><div><b>RAMP</b> · Inside the rim · plum → red → orange over field 0.53–0.70 <span class="ro">u 0.36 · v 0.62 · gradient-map</span></div></li><li><div><b>TOOTH</b> · Paper · mono grain amp 0.03 plus mottle amp 0.012 <span class="ro">u 0.70 · v 0.28 · paper-tooth</span></div></li><li><div><b>RULE</b> · Rule 1 · 1 u ink, v 0.475, full width less 12 u <span class="ro">u 0.55 · v 0.47 · rule-ledger</span></div></li><li><div><b>RULE</b> · Rule 2 and label · caption right-set under rule 1, studio label under rule 2 <span class="ro">u 0.10 · v 0.93 · rule-ledger</span></div></li></ol></div>
+  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read · <b>M</b> motion</span><span>ø co. · 2026</span></div> {
+  &quot;id&quot;: &quot;ts-10-thermal-blob-field&quot;,
+  &quot;code&quot;: &quot;TS-10&quot;,
+  &quot;title&quot;: &quot;Thermal blob field&quot;,
+  &quot;section&quot;: &quot;techniques&quot;,
+  &quot;variants&quot;: [
+    {
+      &quot;id&quot;: &quot;ref&quot;,
+      &quot;label&quot;: &quot;Lava&quot;,
+      &quot;swatches&quot;: [
+        &quot;#F0ECE3&quot;,
+        &quot;#F7AB17&quot;,
+        &quot;#160F14&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;teal&quot;,
+      &quot;label&quot;: &quot;Teal&quot;,
+      &quot;swatches&quot;: [
+        &quot;#F0ECE3&quot;,
+        &quot;#1F7A8C&quot;,
+        &quot;#F3C623&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;pink&quot;,
+      &quot;label&quot;: &quot;Pink&quot;,
+      &quot;swatches&quot;: [
+        &quot;#F0ECE3&quot;,
+        &quot;#FF5FA8&quot;,
+        &quot;#F0451E&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;io&quot;,
+      &quot;label&quot;: &quot;Ø&quot;,
+      &quot;swatches&quot;: [
+        &quot;#F4551E&quot;,
+        &quot;#2F5AE6&quot;,
+        &quot;#FFFFFF&quot;
+      ]
+    }
+  ],
+  &quot;reference&quot;: {
+    &quot;file&quot;: &quot;ref.png&quot;,
+    &quot;px&quot;: [
+      1200,
+      800
+    ],
+    &quot;grammar&quot;: &quot;one blurred luminance field of large blobs, gradient-mapped through paper → blue → navy → plum → red → orange → yellow; mono grain; two hairline rules; a mono caption and a two-line label&quot;
+  },
+  &quot;units&quot;: &quot;design units, 1000 = sheet width&quot;,
+  &quot;palette&quot;: {
+    &quot;paper&quot;: &quot;#F0ECE3&quot;,
+    &quot;blue&quot;: &quot;#5CA6DB&quot;,
+    &quot;navy&quot;: &quot;#160F14&quot;,
+    &quot;plum&quot;: &quot;#452333&quot;,
+    &quot;red&quot;: &quot;#AF4E43&quot;,
+    &quot;orange&quot;: &quot;#EE613F&quot;,
+    &quot;yellow&quot;: &quot;#F2B815&quot;,
+    &quot;ink&quot;: &quot;#1A1618&quot;
+  },
+  &quot;techniques&quot;: [
+    {
+      &quot;id&quot;: &quot;blob-field&quot;,
+      &quot;short&quot;: &quot;BLOB&quot;,
+      &quot;name&quot;: &quot;Blurred blob field&quot;,
+      &quot;layer&quot;: 1,
+      &quot;pass&quot;: 1,
+      &quot;atoms&quot;: [
+        &quot;blob&quot;,
+        &quot;fourier-radius&quot;,
+        &quot;gaussian-blur&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;blobs&quot;: 4,
+        &quot;radius&quot;: &quot;r(θ) = R·(1 + Σ a_k·cos(k·θ + φ_k)), k = 2..4, a ≤ 0.22&quot;,
+        &quot;R_u&quot;: [
+          250,
+          280,
+          200,
+          150
+        ],
+        &quot;blur_sigma_u&quot;: 46,
+        &quot;field_res&quot;: &quot;1/3 device px&quot;,
+        &quot;fill&quot;: &quot;radial white → 0.78 gray at the shape edge, union by lighten&quot;
+      },
+      &quot;implementation&quot;: &quot;Four Fourier-radius blobs are filled with a radial white-to-gray gradient on a black canvas (union by lighten) at one-third resolution, blurred with σ = 46 u and read back as a 0..1 luminance field.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;gradient-map&quot;,
+      &quot;short&quot;: &quot;RAMP&quot;,
+      &quot;name&quot;: &quot;Gradient map&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 2,
+      &quot;atoms&quot;: [
+        &quot;lut&quot;,
+        &quot;gradient-map&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;lut&quot;: &quot;256 entries&quot;,
+        &quot;stops_ref&quot;: &quot;0.28 paper · 0.37 blue · 0.41 (53,80,126) · 0.44–0.48 navy · 0.53 plum · 0.64 red · 0.70 orange · 0.82 (245,140,30) · 1.0 yellow&quot;,
+        &quot;measured_edge_px&quot;: &quot;paper→blue 12 · blue→navy 12 · navy 20 · plum→red 25 · red→orange 15 (at 1200 px)&quot;
+      },
+      &quot;implementation&quot;: &quot;Every pixel of the field is replaced by LUT[field]; the ramp is the only place color enters, so all four colourways share one field.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;rim-stop&quot;,
+      &quot;short&quot;: &quot;RIM&quot;,
+      &quot;name&quot;: &quot;Dark rim stop&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 2,
+      &quot;atoms&quot;: [
+        &quot;lut-stop&quot;,
+        &quot;edge-band&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;position&quot;: 0.44,
+        &quot;color&quot;: &quot;#160F14&quot;,
+        &quot;width_field&quot;: &quot;0.41 → 0.53&quot;,
+        &quot;band_px_ref&quot;: &quot;≈ 20 at 1200 px&quot;,
+        &quot;halo&quot;: &quot;blue 0.335–0.41 outside the stop&quot;
+      },
+      &quot;implementation&quot;: &quot;The darkest stop sits just under the mid-point of the blurred edge, where the profile is steepest, so it occupies few pixels and reads as a drawn outline; the blue halo is the ramp segment just outside it.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;paper-tooth&quot;,
+      &quot;short&quot;: &quot;TOOTH&quot;,
+      &quot;name&quot;: &quot;Paper tooth&quot;,
+      &quot;layer&quot;: 3,
+      &quot;pass&quot;: 3,
+      &quot;atoms&quot;: [
+        &quot;grain&quot;,
+        &quot;mottle&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;grain_amp&quot;: 0.03,
+        &quot;pitch_px&quot;: 1,
+        &quot;mono&quot;: true,
+        &quot;mottle&quot;: &quot;perlin fbm, 3 octaves, cell 90 u, amp 0.012&quot;,
+        &quot;measured&quot;: &quot;high-pass std 3.4/255 on paper, 5.5/255 in the core&quot;
+      },
+      &quot;implementation&quot;: &quot;Multiplicative mono grain per device pixel, then a low-frequency perlin mottle, both on the whole sheet including the blobs.&quot;
+    },
+    {
+      &quot;id&quot;: &quot;rule-ledger&quot;,
+      &quot;short&quot;: &quot;RULE&quot;,
+      &quot;name&quot;: &quot;Rules, caption and label&quot;,
+      &quot;layer&quot;: 4,
+      &quot;pass&quot;: 4,
+      &quot;atoms&quot;: [
+        &quot;hairline&quot;,
+        &quot;caption&quot;,
+        &quot;label&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;rules&quot;: {
+          &quot;y_v&quot;: [
+            0.475,
+            0.925
+          ],
+          &quot;inset_u&quot;: 12,
+          &quot;weight_u&quot;: 1,
+          &quot;color&quot;: &quot;#1A1618&quot;
+        },
+        &quot;caption&quot;: {
+          &quot;font&quot;: &quot;JetBrains Mono 14 u&quot;,
+          &quot;align&quot;: &quot;right, under rule 1&quot;,
+          &quot;x_u&quot;: 988
+        },
+        &quot;label&quot;: {
+          &quot;font&quot;: &quot;Inter 13 u / Inter 600 18 u&quot;,
+          &quot;lines&quot;: 2,
+          &quot;x_u&quot;: 12,
+          &quot;under&quot;: &quot;rule 2&quot;
+        }
+      },
+      &quot;implementation&quot;: &quot;Two 1 u ink rules across the sheet; the caption is set right-aligned 12 u under the first rule, the two-line studio label under the second.&quot;
+    }
+  ],
+  &quot;pass_order&quot;: [
+    &quot;field · four blobs white on black at 1/3 res, blur σ 46 u&quot;,
+    &quot;upscale · field to device res&quot;,
+    &quot;map · LUT[field] per pixel (rim stop 0.44)&quot;,
+    &quot;tooth · mono grain 0.03, perlin mottle 0.012&quot;,
+    &quot;ledger · two rules, caption, two-line label&quot;
+  ],
+  &quot;notes&quot;: [
+    &quot;Measured on ref.png: paper (240,236,233) std 3.3; one edge at y = 300 runs (92,166,219) → (22,15,20) → (69,35,51) → (175,78,67) → (238,97,63) over 70 px; core (244,137,20); rules at y = 380 and 740 of 800, x 14 → 1185.&quot;,
+    &quot;Seed 1010. Motion: blob centres drift on perlin over a 12 s loop; field recomputed at half resolution per frame.&quot;
+  ]
+} are BAKED here by `node _build/build.mjs` from study.js — a static read for readers that
+     cannot run scripts. shell.js redraws all of it on load. Edit study.js or _build/, never the generated index.html. -->
+<nav class="nav" id="nav" aria-label="Site navigation">{{NAV}}</nav>
 <main class="plate">
-  <section class="notes" id="copy"></section>
+  <section class="notes" id="copy">{{NOTES}}</section>
   <section class="figure" id="stage">
-    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"></canvas></div>
+    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"><img src="thumb.png" alt="TS-10 rebuild, still frame" loading="lazy"></canvas></div>
     <div class="live" id="live"></div>
     <div class="log" id="log">
       <div class="ctl">
@@ -38,7 +241,7 @@
 </main>
 <aside class="spec" id="spec" aria-hidden="true">
   <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
-  <pre id="specpre"></pre>
+  <pre id="specpre">{{SPEC}}</pre>
 </aside>
 <script src="../../_shared/entries.js"></script>
 <script src="../../_shared/art.js"></script>
