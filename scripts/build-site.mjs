@@ -116,6 +116,7 @@ function copyStaticTool(name) {
 // to any tool, grouped by section. Self-contained inline styles + script;
 // forced-light. Not applied to the landing page itself.
 function injectNav(name, meta, allTools) {
+  if (meta.standalone) return; // Preserve standalone pages without cross-site navigation.
   const file = join(SITE_DIR, name, 'index.html');
   if (!existsSync(file)) return;
   const curLabel = escapeHtml(meta.title || name);
