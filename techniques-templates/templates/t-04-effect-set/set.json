@@ -1,0 +1,2050 @@
+{
+ "template": "T-04",
+ "set": "Set 01",
+ "title": "Effect set · Four surfaces",
+ "premise": "Four textures, each a counted mark. None of them a gradient. Rebuilt on white with the dials that change how the marks are made — count, dropoff, color rule, edge — never the zoom of a tile.",
+ "source": "Mindgut · Technique & Front-End Study V01 §08 (texture recipes) · ø co. · 2026-10-23",
+ "ground": "#FFFFFF",
+ "color": {
+  "space": "OKLab / OKLCH (Ottosson 2020; CSS Color 4)",
+  "gamut": "sRGB; out-of-gamut inks have chroma reduced at constant L and h (binary search, 24 steps)",
+  "mix": {
+   "oklab": "straight line in OKLab",
+   "oklch": "L, C linear; hue on the short arc; achromatic end takes the other hue",
+   "linear": "linear-light RGB",
+   "srgb": "gamma-encoded RGB (comparison only)"
+  },
+  "overprint": {
+   "multiply": "transparent inks; product in linear light",
+   "mix": "opaque; blended by the mix space",
+   "darken": "OKLab: lower L, top ink a/b"
+  }
+ },
+ "units": "CSS px for every length; rendered at device px (dpr ≤ 2). Density params change mark count per px², never a tile scale.",
+ "shared": {
+  "blueNoise": "64 × 64 void-and-cluster rank tile, σ 1.9, toroidal, seed 1993",
+  "mask": "signed distance to rect | ellipse | band | blob, displaced by fbm (wander, scale, octaves), feather as tone or blue-noise speckle, bite = clumped dropouts rising toward the edge; cached by params",
+  "eases": {
+   "linear": "linear",
+   "smooth": "smoothstep",
+   "smoother": "smootherstep",
+   "in": "power in · tⁿ (k)",
+   "out": "power out (k)",
+   "inout": "power in-out (k)",
+   "expo": "exponential (k)",
+   "sigmoid": "sigmoid (k)"
+  }
+ },
+ "effects": [
+  {
+   "id": "fx-01-stipple",
+   "code": "FX-01",
+   "name": "Stipple ramp",
+   "sub": "Tone made of whole dots. Value sets how many sites print (FM) or how big each dot is (AM); a blue-noise rank decides which sites, so sparse areas thin evenly.",
+   "recipe": [
+    "Lay a site lattice at the pitch (CSS px). Jitter each site inside its cell.",
+    "Read the value field at the site: linear ramp, radial, or noise — eased from → to by the dropoff curve.",
+    "Screen: FM keeps a site when its rank < value; AM keeps every site and sets radius ∝ √value. The FM↔AM dial interpolates.",
+    "Rank comes from a 64 × 64 void-and-cluster tile (blue), a hash (white), or Bayer 8 × 8 (ordered).",
+    "Rasterize each kept dot analytically (7 vertex radii, AA by distance) into a coverage layer, then mix ink into the ground per pixel in the chosen color space. Ink B overprints by the overprint rule.",
+    "The mask is sampled at the site, not the pixel: dots are whole or absent, never sliced by the edge."
+   ],
+   "limits": [
+    {
+     "param": "pitch",
+     "range": "< 2 px",
+     "what": "sites merge into flat tone at 1× — the stipple stops reading as marks"
+    },
+    {
+     "param": "dot radius",
+     "range": "> ½ pitch",
+     "what": "dots overlap into a solid; FM loses its range"
+    },
+    {
+     "param": "selection",
+     "range": "white",
+     "what": "clumps and voids at low density — the original jittered-hash look"
+    },
+    {
+     "param": "screen",
+     "range": "AM at pitch < 4 px",
+     "what": "radius steps quantize to the pixel grid; banding"
+    }
+   ],
+   "params": [
+    {
+     "key": "pitch",
+     "label": "Pitch",
+     "group": "density",
+     "type": "range",
+     "default": 2.7,
+     "min": 1.2,
+     "max": 16,
+     "step": 0.1,
+     "unit": "px",
+     "limits": [
+      {
+       "lo": 1.2,
+       "hi": 2,
+       "why": "sites merge into tone at 1×"
+      }
+     ],
+     "note": "distance between dot sites — sets the COUNT of dots, not their size"
+    },
+    {
+     "key": "dotR",
+     "label": "Dot radius",
+     "group": "density",
+     "type": "range",
+     "default": 1,
+     "min": 0.2,
+     "max": 4,
+     "step": 0.02,
+     "unit": "px",
+     "limits": [
+      {
+       "lo": 2.4,
+       "hi": 4,
+       "why": "past ~½ pitch dots fuse"
+      }
+     ],
+     "note": "radius of a full-value dot, independent of pitch"
+    },
+    {
+     "key": "screen",
+     "label": "Screen · FM ↔ AM",
+     "group": "density",
+     "type": "range",
+     "default": 0,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "0 = value changes how many dots print; 1 = value changes how big they are"
+    },
+    {
+     "key": "order",
+     "label": "Selection",
+     "group": "density",
+     "type": "select",
+     "default": "blue",
+     "options": [
+      "blue",
+      "white",
+      "ordered"
+     ],
+     "note": "which sites survive at a given density — blue: even thinning (void-and-cluster rank); white: hash, clumps; ordered: 8×8 Bayer, reads as a screen"
+    },
+    {
+     "key": "jitter",
+     "label": "Jitter",
+     "group": "density",
+     "type": "range",
+     "default": 0.85,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "limits": [
+      {
+       "lo": 0,
+       "hi": 0.2,
+       "why": "lattice shows through as a grid"
+      }
+     ],
+     "note": "site offset inside its cell (0 = lattice)"
+    },
+    {
+     "key": "sizeVar",
+     "label": "Size variance",
+     "group": "density",
+     "type": "range",
+     "default": 0.35,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "per-dot radius spread — pen pressure"
+    },
+    {
+     "key": "irregular",
+     "label": "Irregularity",
+     "group": "density",
+     "type": "range",
+     "default": 0.35,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "vertex wobble of each 7-gon — nib, not disc"
+    },
+    {
+     "key": "source",
+     "label": "Value field",
+     "group": "dropoff",
+     "type": "select",
+     "default": "linear",
+     "options": [
+      "linear",
+      "radial",
+      "noise"
+     ],
+     "note": "what drives value across the plate"
+    },
+    {
+     "key": "angle",
+     "label": "Ramp angle",
+     "group": "dropoff",
+     "type": "range",
+     "default": 0,
+     "min": 0,
+     "max": 360,
+     "step": 1,
+     "unit": "°",
+     "when": {
+      "source": [
+       "linear"
+      ]
+     },
+     "note": "direction of the linear ramp"
+    },
+    {
+     "key": "ease",
+     "label": "Dropoff curve",
+     "group": "dropoff",
+     "type": "ease",
+     "default": [
+      "in",
+      1.6
+     ],
+     "curves": [
+      "linear",
+      "smooth",
+      "smoother",
+      "in",
+      "out",
+      "inout",
+      "expo",
+      "sigmoid"
+     ],
+     "note": "how value travels from → to across the field"
+    },
+    {
+     "key": "from",
+     "label": "From",
+     "group": "dropoff",
+     "type": "range",
+     "default": 0,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "value at the start of the field"
+    },
+    {
+     "key": "to",
+     "label": "To",
+     "group": "dropoff",
+     "type": "range",
+     "default": 1,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "value at the end of the field"
+    },
+    {
+     "key": "fScale",
+     "label": "Field scale",
+     "group": "dropoff",
+     "type": "range",
+     "default": 140,
+     "min": 20,
+     "max": 500,
+     "step": 1,
+     "unit": "px",
+     "when": {
+      "source": [
+       "noise"
+      ]
+     },
+     "note": "noise field wavelength"
+    },
+    {
+     "key": "aL",
+     "label": "Ink A · L",
+     "group": "color",
+     "type": "range",
+     "default": 0.2,
+     "min": 0,
+     "max": 1,
+     "step": 0.005,
+     "ink": "a",
+     "note": "OKLCH lightness (0 black … 1 white)"
+    },
+    {
+     "key": "aC",
+     "label": "Ink A · C",
+     "group": "color",
+     "type": "range",
+     "default": 0.008,
+     "min": 0,
+     "max": 0.37,
+     "step": 0.002,
+     "ink": "a",
+     "limits": [
+      {
+       "lo": 0.26,
+       "hi": 0.37,
+       "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+      }
+     ],
+     "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+    },
+    {
+     "key": "ah",
+     "label": "Ink A · h",
+     "group": "color",
+     "type": "range",
+     "default": 285,
+     "min": 0,
+     "max": 360,
+     "step": 0.5,
+     "unit": "°",
+     "ink": "a",
+     "note": "OKLCH hue angle"
+    },
+    {
+     "key": "duo",
+     "label": "Ink B",
+     "group": "color",
+     "type": "select",
+     "default": "off",
+     "options": [
+      "off",
+      "on"
+     ],
+     "note": "a second stipple ramp running the opposite way, overprinted"
+    },
+    {
+     "key": "bL",
+     "label": "Ink B · L",
+     "group": "color",
+     "type": "range",
+     "default": 0.62,
+     "min": 0,
+     "max": 1,
+     "step": 0.005,
+     "ink": "b",
+     "when": {
+      "duo": [
+       "on"
+      ]
+     },
+     "note": "OKLCH lightness (0 black … 1 white)"
+    },
+    {
+     "key": "bC",
+     "label": "Ink B · C",
+     "group": "color",
+     "type": "range",
+     "default": 0.2,
+     "min": 0,
+     "max": 0.37,
+     "step": 0.002,
+     "ink": "b",
+     "when": {
+      "duo": [
+       "on"
+      ]
+     },
+     "limits": [
+      {
+       "lo": 0.26,
+       "hi": 0.37,
+       "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+      }
+     ],
+     "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+    },
+    {
+     "key": "bh",
+     "label": "Ink B · h",
+     "group": "color",
+     "type": "range",
+     "default": 36,
+     "min": 0,
+     "max": 360,
+     "step": 0.5,
+     "unit": "°",
+     "ink": "b",
+     "when": {
+      "duo": [
+       "on"
+      ]
+     },
+     "note": "OKLCH hue angle"
+    },
+    {
+     "key": "density",
+     "label": "Ink density",
+     "group": "mixing",
+     "type": "range",
+     "default": 1,
+     "min": 0.2,
+     "max": 1,
+     "step": 0.01,
+     "note": "film strength of each dot; below 1 the mix space becomes visible inside the dot"
+    },
+    {
+     "key": "mix",
+     "label": "Mix space",
+     "group": "mixing",
+     "type": "select",
+     "default": "oklab",
+     "options": [
+      "oklab",
+      "oklch",
+      "linear",
+      "srgb"
+     ],
+     "note": "how partial coverage (edges, AA, thin ink) blends ink into what is under it"
+    },
+    {
+     "key": "over",
+     "label": "Overprint",
+     "group": "mixing",
+     "type": "select",
+     "default": "multiply",
+     "options": [
+      "multiply",
+      "mix",
+      "darken"
+     ],
+     "when": {
+      "duo": [
+       "on"
+      ]
+     },
+     "note": "ink B over ink A — multiply: transparent inks; mix: opaque; darken: lower L wins"
+    },
+    {
+     "key": "mShape",
+     "label": "Shape",
+     "group": "mask",
+     "type": "select",
+     "default": "rect",
+     "options": [
+      "none",
+      "rect",
+      "ellipse",
+      "band",
+      "blob"
+     ],
+     "note": "the region the effect is allowed to occupy"
+    },
+    {
+     "key": "mInset",
+     "label": "Inset",
+     "group": "mask",
+     "type": "range",
+     "default": 16,
+     "min": 0,
+     "max": 120,
+     "step": 1,
+     "unit": "px",
+     "note": "distance from the plate edge to the mask edge"
+    },
+    {
+     "key": "mAmp",
+     "label": "Edge wander",
+     "group": "mask",
+     "type": "range",
+     "default": 5,
+     "min": 0,
+     "max": 40,
+     "step": 0.5,
+     "unit": "px",
+     "limits": [
+      {
+       "lo": 28,
+       "hi": 40,
+       "why": "above ~28 px the edge tears into islands"
+      }
+     ],
+     "note": "how far noise pushes the edge in and out"
+    },
+    {
+     "key": "mScale",
+     "label": "Wander scale",
+     "group": "mask",
+     "type": "range",
+     "default": 70,
+     "min": 4,
+     "max": 240,
+     "step": 1,
+     "unit": "px",
+     "note": "wavelength of the wander; small = ragged, large = drifting"
+    },
+    {
+     "key": "mRough",
+     "label": "Roughness",
+     "group": "mask",
+     "type": "range",
+     "default": 4,
+     "min": 1,
+     "max": 6,
+     "step": 1,
+     "unit": "oct",
+     "note": "octaves of edge noise — adds fine teeth without moving the large shape"
+    },
+    {
+     "key": "mFeather",
+     "label": "Feather",
+     "group": "mask",
+     "type": "range",
+     "default": 10,
+     "min": 0.5,
+     "max": 60,
+     "step": 0.5,
+     "unit": "px",
+     "note": "width over which coverage falls from 1 to 0"
+    },
+    {
+     "key": "mMode",
+     "label": "Feather as",
+     "group": "mask",
+     "type": "select",
+     "default": "speckle",
+     "options": [
+      "speckle",
+      "tone"
+     ],
+     "note": "speckle = binary marks thinning out; tone = partial coverage"
+    },
+    {
+     "key": "mBite",
+     "label": "Bite",
+     "group": "mask",
+     "type": "range",
+     "default": 0.2,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "clumped dropouts that grow more likely toward the edge"
+    },
+    {
+     "key": "seed",
+     "label": "Seed",
+     "group": "seed",
+     "type": "range",
+     "default": 5,
+     "min": 1,
+     "max": 999,
+     "step": 1,
+     "note": "every random draw in the effect hangs off this one number"
+    }
+   ]
+  },
+  {
+   "id": "fx-02-ink-edge",
+   "code": "FX-02",
+   "name": "Ink leaving paper",
+   "sub": "A solid that runs out. Coverage eases off across a warped edge; inside the transition it resolves to binary speckle (blue-noise threshold, optionally streaked along the stroke), with starved pinholes and film mottle in the body.",
+   "recipe": [
+    "Distance to the edge line along the stroke direction (CSS px), displaced by fbm warp.",
+    "Coverage = dropoff curve over the transition width.",
+    "Speckle: perturb coverage by a clump noise (clump size, stretched along the stroke by streak), then threshold it per device pixel against the blue-noise rank. Speckle 0 → continuous tone, 1 → pure binary.",
+    "Starve: clumped pinholes, likelier where coverage is thin. Mottle: low-frequency film thickness, taken off coverage.",
+    "Mask × coverage × ink density, mixed into the ground per pixel in the chosen color space."
+   ],
+   "limits": [
+    {
+     "param": "transition",
+     "range": "< 4 px",
+     "what": "reads as a hard vector edge — no speckle band to see"
+    },
+    {
+     "param": "clump size",
+     "range": "> 8 px",
+     "what": "clumps read as blotches, not ink"
+    },
+    {
+     "param": "speckle",
+     "range": "< .3",
+     "what": "the edge becomes a gradient — the \"AI gradient\" failure"
+    },
+    {
+     "param": "streak",
+     "range": "> 6",
+     "what": "marks read as scanlines unless the angle is off-axis"
+    }
+   ],
+   "params": [
+    {
+     "key": "grain",
+     "label": "Clump size",
+     "group": "density",
+     "type": "range",
+     "default": 2.2,
+     "min": 0.5,
+     "max": 12,
+     "step": 0.1,
+     "unit": "px",
+     "limits": [
+      {
+       "lo": 8,
+       "hi": 12,
+       "why": "clumps read as blotches"
+      }
+     ],
+     "note": "size of the clumps speckle gathers into; marks themselves are device pixels"
+    },
+    {
+     "key": "clump",
+     "label": "Clumping",
+     "group": "density",
+     "type": "range",
+     "default": 0.55,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "how strongly speckle gathers into clumps (0 = even blue-noise dither)"
+    },
+    {
+     "key": "speckle",
+     "label": "Speckle ↔ tone",
+     "group": "density",
+     "type": "range",
+     "default": 0.92,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "limits": [
+      {
+       "lo": 0,
+       "hi": 0.3,
+       "why": "becomes a gradient"
+      }
+     ],
+     "note": "how much of the transition resolves to binary marks vs partial tone"
+    },
+    {
+     "key": "streak",
+     "label": "Streak",
+     "group": "density",
+     "type": "range",
+     "default": 1.6,
+     "min": 1,
+     "max": 10,
+     "step": 0.1,
+     "limits": [
+      {
+       "lo": 6,
+       "hi": 10,
+       "why": "scanlines on-axis"
+      }
+     ],
+     "note": "clumps stretched along the stroke — dry roller, dragged brush"
+    },
+    {
+     "key": "order",
+     "label": "Selection",
+     "group": "density",
+     "type": "select",
+     "default": "blue",
+     "options": [
+      "blue",
+      "white",
+      "ordered"
+     ],
+     "note": "which sites survive at a given density — blue: even thinning (void-and-cluster rank); white: hash, clumps; ordered: 8×8 Bayer, reads as a screen"
+    },
+    {
+     "key": "starve",
+     "label": "Starve",
+     "group": "density",
+     "type": "range",
+     "default": 0.14,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "pinhole density in the body; likelier as ink thins"
+    },
+    {
+     "key": "pin",
+     "label": "Pinhole scale",
+     "group": "density",
+     "type": "range",
+     "default": 7,
+     "min": 2,
+     "max": 60,
+     "step": 0.5,
+     "unit": "px",
+     "note": "clump size of the pinholes"
+    },
+    {
+     "key": "mottle",
+     "label": "Mottle",
+     "group": "density",
+     "type": "range",
+     "default": 0.03,
+     "min": 0,
+     "max": 0.4,
+     "step": 0.005,
+     "note": "film-thickness variation inside the solid"
+    },
+    {
+     "key": "angle",
+     "label": "Stroke angle",
+     "group": "dropoff",
+     "type": "range",
+     "default": 0,
+     "min": 0,
+     "max": 360,
+     "step": 1,
+     "unit": "°",
+     "note": "direction the ink travels (it runs out along this vector)"
+    },
+    {
+     "key": "edge",
+     "label": "Edge position",
+     "group": "dropoff",
+     "type": "range",
+     "default": 0.56,
+     "min": 0,
+     "max": 1,
+     "step": 0.005,
+     "note": "where the transition is centered across the plate"
+    },
+    {
+     "key": "width",
+     "label": "Transition",
+     "group": "dropoff",
+     "type": "range",
+     "default": 150,
+     "min": 1,
+     "max": 420,
+     "step": 1,
+     "unit": "px",
+     "limits": [
+      {
+       "lo": 1,
+       "hi": 4,
+       "why": "hard vector edge"
+      }
+     ],
+     "note": "width of the run-out band"
+    },
+    {
+     "key": "ease",
+     "label": "Dropoff curve",
+     "group": "dropoff",
+     "type": "ease",
+     "default": [
+      "smooth",
+      2
+     ],
+     "curves": [
+      "linear",
+      "smooth",
+      "smoother",
+      "in",
+      "out",
+      "inout",
+      "expo",
+      "sigmoid"
+     ],
+     "note": "coverage across the band — how fast the ink gives out"
+    },
+    {
+     "key": "wAmp",
+     "label": "Edge warp",
+     "group": "dropoff",
+     "type": "range",
+     "default": 16,
+     "min": 0,
+     "max": 90,
+     "step": 0.5,
+     "unit": "px",
+     "note": "how far the edge line wanders"
+    },
+    {
+     "key": "wScale",
+     "label": "Warp scale",
+     "group": "dropoff",
+     "type": "range",
+     "default": 84,
+     "min": 8,
+     "max": 400,
+     "step": 1,
+     "unit": "px",
+     "note": "wavelength of the wander"
+    },
+    {
+     "key": "wOct",
+     "label": "Warp octaves",
+     "group": "dropoff",
+     "type": "range",
+     "default": 3,
+     "min": 1,
+     "max": 5,
+     "step": 1,
+     "unit": "oct",
+     "note": "detail in the wander"
+    },
+    {
+     "key": "iL",
+     "label": "Ink · L",
+     "group": "color",
+     "type": "range",
+     "default": 0.4,
+     "min": 0,
+     "max": 1,
+     "step": 0.005,
+     "ink": "i",
+     "note": "OKLCH lightness (0 black … 1 white)"
+    },
+    {
+     "key": "iC",
+     "label": "Ink · C",
+     "group": "color",
+     "type": "range",
+     "default": 0.155,
+     "min": 0,
+     "max": 0.37,
+     "step": 0.002,
+     "ink": "i",
+     "limits": [
+      {
+       "lo": 0.26,
+       "hi": 0.37,
+       "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+      }
+     ],
+     "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+    },
+    {
+     "key": "ih",
+     "label": "Ink · h",
+     "group": "color",
+     "type": "range",
+     "default": 300,
+     "min": 0,
+     "max": 360,
+     "step": 0.5,
+     "unit": "°",
+     "ink": "i",
+     "note": "OKLCH hue angle"
+    },
+    {
+     "key": "density",
+     "label": "Ink density",
+     "group": "mixing",
+     "type": "range",
+     "default": 1,
+     "min": 0.2,
+     "max": 1,
+     "step": 0.01,
+     "note": "film strength of the solid"
+    },
+    {
+     "key": "mix",
+     "label": "Mix space",
+     "group": "mixing",
+     "type": "select",
+     "default": "oklab",
+     "options": [
+      "oklab",
+      "oklch",
+      "linear",
+      "srgb"
+     ],
+     "note": "how partial coverage (edges, AA, thin ink) blends ink into what is under it"
+    },
+    {
+     "key": "mShape",
+     "label": "Shape",
+     "group": "mask",
+     "type": "select",
+     "default": "rect",
+     "options": [
+      "none",
+      "rect",
+      "ellipse",
+      "band",
+      "blob"
+     ],
+     "note": "the region the effect is allowed to occupy"
+    },
+    {
+     "key": "mInset",
+     "label": "Inset",
+     "group": "mask",
+     "type": "range",
+     "default": 16,
+     "min": 0,
+     "max": 120,
+     "step": 1,
+     "unit": "px",
+     "note": "distance from the plate edge to the mask edge"
+    },
+    {
+     "key": "mAmp",
+     "label": "Edge wander",
+     "group": "mask",
+     "type": "range",
+     "default": 4,
+     "min": 0,
+     "max": 40,
+     "step": 0.5,
+     "unit": "px",
+     "limits": [
+      {
+       "lo": 28,
+       "hi": 40,
+       "why": "above ~28 px the edge tears into islands"
+      }
+     ],
+     "note": "how far noise pushes the edge in and out"
+    },
+    {
+     "key": "mScale",
+     "label": "Wander scale",
+     "group": "mask",
+     "type": "range",
+     "default": 60,
+     "min": 4,
+     "max": 240,
+     "step": 1,
+     "unit": "px",
+     "note": "wavelength of the wander; small = ragged, large = drifting"
+    },
+    {
+     "key": "mRough",
+     "label": "Roughness",
+     "group": "mask",
+     "type": "range",
+     "default": 4,
+     "min": 1,
+     "max": 6,
+     "step": 1,
+     "unit": "oct",
+     "note": "octaves of edge noise — adds fine teeth without moving the large shape"
+    },
+    {
+     "key": "mFeather",
+     "label": "Feather",
+     "group": "mask",
+     "type": "range",
+     "default": 6,
+     "min": 0.5,
+     "max": 60,
+     "step": 0.5,
+     "unit": "px",
+     "note": "width over which coverage falls from 1 to 0"
+    },
+    {
+     "key": "mMode",
+     "label": "Feather as",
+     "group": "mask",
+     "type": "select",
+     "default": "speckle",
+     "options": [
+      "speckle",
+      "tone"
+     ],
+     "note": "speckle = binary marks thinning out; tone = partial coverage"
+    },
+    {
+     "key": "mBite",
+     "label": "Bite",
+     "group": "mask",
+     "type": "range",
+     "default": 0.12,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "clumped dropouts that grow more likely toward the edge"
+    },
+    {
+     "key": "seed",
+     "label": "Seed",
+     "group": "seed",
+     "type": "range",
+     "default": 9,
+     "min": 1,
+     "max": 999,
+     "step": 1,
+     "note": "every random draw in the effect hangs off this one number"
+    }
+   ]
+  },
+  {
+   "id": "fx-03-paper-tooth",
+   "code": "FX-03",
+   "name": "Paper tooth",
+   "sub": "White stock that is not a screen. On white, tooth can only take light away, so it is built as depth: a height field shaded by flat value or a raking light, plus laid fibers and pits, all as an OKLab L offset with an optional tint in the pits.",
+   "recipe": [
+    "Height field = fbm at the tooth scale; octaves and persistence set the spectrum (how fast detail drops off).",
+    "Distribution curve reshapes height (more valleys, or more peaks). Rake mixes flat value with relief lit from the light angle (finite-difference gradient).",
+    "Fibers: curved strokes at a count per 100 × 100 px, laid near the grain angle with spread; pits: small dots. Both rasterized into separate coverage channels.",
+    "Depth = amplitude × shade (+ fibers, pits), optionally stronger toward the plate edges by the falloff curve.",
+    "Shade: L −= depth in OKLab (a/b pulled toward the tint by depth) — or multiply in linear / sRGB, for comparison."
+   ],
+   "limits": [
+    {
+     "param": "amplitude",
+     "range": "> .06 L",
+     "what": "reads as dirt, not stock"
+    },
+    {
+     "param": "tooth scale",
+     "range": "< 1 px",
+     "what": "collapses into per-pixel noise — digital grain, not paper"
+    },
+    {
+     "param": "fibers",
+     "range": "> 30 / 100 px²",
+     "what": "felt, not paper"
+    },
+    {
+     "param": "shade in sRGB",
+     "range": "—",
+     "what": "the same depth looks ~2× stronger than in linear; keep oklab for predictable steps"
+    }
+   ],
+   "params": [
+    {
+     "key": "scale",
+     "label": "Tooth scale",
+     "group": "density",
+     "type": "range",
+     "default": 2.6,
+     "min": 0.6,
+     "max": 24,
+     "step": 0.1,
+     "unit": "px",
+     "limits": [
+      {
+       "lo": 0.6,
+       "hi": 1,
+       "why": "per-pixel noise"
+      }
+     ],
+     "note": "feature size of the tooth (noise wavelength), not a tile zoom"
+    },
+    {
+     "key": "oct",
+     "label": "Octaves",
+     "group": "density",
+     "type": "range",
+     "default": 3,
+     "min": 1,
+     "max": 6,
+     "step": 1,
+     "unit": "oct",
+     "note": "layers of finer detail"
+    },
+    {
+     "key": "fibers",
+     "label": "Fibers",
+     "group": "density",
+     "type": "range",
+     "default": 9,
+     "min": 0,
+     "max": 40,
+     "step": 0.5,
+     "unit": "/100px²",
+     "limits": [
+      {
+       "lo": 30,
+       "hi": 40,
+       "why": "felt"
+      }
+     ],
+     "note": "laid fibers per 100 × 100 CSS px"
+    },
+    {
+     "key": "fLen",
+     "label": "Fiber length",
+     "group": "density",
+     "type": "range",
+     "default": 18,
+     "min": 2,
+     "max": 80,
+     "step": 0.5,
+     "unit": "px",
+     "note": "mean fiber length"
+    },
+    {
+     "key": "pits",
+     "label": "Pits",
+     "group": "density",
+     "type": "range",
+     "default": 3,
+     "min": 0,
+     "max": 40,
+     "step": 0.5,
+     "unit": "/100px²",
+     "note": "dark specks per 100 × 100 CSS px"
+    },
+    {
+     "key": "pers",
+     "label": "Persistence",
+     "group": "dropoff",
+     "type": "range",
+     "default": 0.48,
+     "min": 0.15,
+     "max": 0.85,
+     "step": 0.01,
+     "note": "amplitude kept per octave — the spectral dropoff of the tooth"
+    },
+    {
+     "key": "ease",
+     "label": "Distribution",
+     "group": "dropoff",
+     "type": "ease",
+     "default": [
+      "in",
+      1.4
+     ],
+     "curves": [
+      "linear",
+      "smooth",
+      "smoother",
+      "in",
+      "out",
+      "inout",
+      "expo",
+      "sigmoid"
+     ],
+     "note": "reshapes height: power in = sparse deep valleys; out = broad shallow tooth"
+    },
+    {
+     "key": "rake",
+     "label": "Rake",
+     "group": "dropoff",
+     "type": "range",
+     "default": 0.55,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "0 = flat value; 1 = relief under a raking light"
+    },
+    {
+     "key": "light",
+     "label": "Light angle",
+     "group": "dropoff",
+     "type": "range",
+     "default": 225,
+     "min": 0,
+     "max": 360,
+     "step": 1,
+     "unit": "°",
+     "note": "direction the raking light comes from"
+    },
+    {
+     "key": "fAngle",
+     "label": "Grain angle",
+     "group": "dropoff",
+     "type": "range",
+     "default": 12,
+     "min": 0,
+     "max": 180,
+     "step": 1,
+     "unit": "°",
+     "note": "machine direction of the fibers"
+    },
+    {
+     "key": "fSpread",
+     "label": "Grain spread",
+     "group": "dropoff",
+     "type": "range",
+     "default": 0.45,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "0 = all fibers on the grain; 1 = any direction"
+    },
+    {
+     "key": "falloff",
+     "label": "Edge falloff",
+     "group": "dropoff",
+     "type": "range",
+     "default": 0.25,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "how much the tooth concentrates toward the plate edges (handling, wear)"
+    },
+    {
+     "key": "fEase",
+     "label": "Falloff curve",
+     "group": "dropoff",
+     "type": "ease",
+     "default": [
+      "in",
+      2
+     ],
+     "curves": [
+      "linear",
+      "smooth",
+      "smoother",
+      "in",
+      "out",
+      "inout",
+      "expo",
+      "sigmoid"
+     ],
+     "note": "center → edge profile of the falloff"
+    },
+    {
+     "key": "amp",
+     "label": "Amplitude",
+     "group": "color",
+     "type": "range",
+     "default": 0.04,
+     "min": 0,
+     "max": 0.1,
+     "step": 0.001,
+     "unit": "ΔL",
+     "limits": [
+      {
+       "lo": 0.06,
+       "hi": 0.1,
+       "why": "reads as dirt"
+      }
+     ],
+     "note": "maximum OKLab L the tooth takes away"
+    },
+    {
+     "key": "fDark",
+     "label": "Fiber depth",
+     "group": "color",
+     "type": "range",
+     "default": 0.035,
+     "min": 0,
+     "max": 0.2,
+     "step": 0.002,
+     "unit": "ΔL",
+     "note": "L a fiber takes away"
+    },
+    {
+     "key": "pDark",
+     "label": "Pit depth",
+     "group": "color",
+     "type": "range",
+     "default": 0.12,
+     "min": 0,
+     "max": 0.4,
+     "step": 0.005,
+     "unit": "ΔL",
+     "note": "L a pit takes away"
+    },
+    {
+     "key": "tL",
+     "label": "Pit tint · L",
+     "group": "color",
+     "type": "range",
+     "default": 0.55,
+     "min": 0,
+     "max": 1,
+     "step": 0.005,
+     "ink": "t",
+     "note": "OKLCH lightness (0 black … 1 white)"
+    },
+    {
+     "key": "tC",
+     "label": "Pit tint · C",
+     "group": "color",
+     "type": "range",
+     "default": 0,
+     "min": 0,
+     "max": 0.37,
+     "step": 0.002,
+     "ink": "t",
+     "limits": [
+      {
+       "lo": 0.26,
+       "hi": 0.37,
+       "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+      }
+     ],
+     "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+    },
+    {
+     "key": "th",
+     "label": "Pit tint · h",
+     "group": "color",
+     "type": "range",
+     "default": 85,
+     "min": 0,
+     "max": 360,
+     "step": 0.5,
+     "unit": "°",
+     "ink": "t",
+     "note": "OKLCH hue angle"
+    },
+    {
+     "key": "space",
+     "label": "Shade in",
+     "group": "mixing",
+     "type": "select",
+     "default": "oklab",
+     "options": [
+      "oklab",
+      "linear",
+      "srgb"
+     ],
+     "note": "oklab: L offset, a/b → tint by depth; linear / srgb: multiply light, for comparison"
+    },
+    {
+     "key": "mShape",
+     "label": "Shape",
+     "group": "mask",
+     "type": "select",
+     "default": "none",
+     "options": [
+      "none",
+      "rect",
+      "ellipse",
+      "band",
+      "blob"
+     ],
+     "note": "the region the effect is allowed to occupy"
+    },
+    {
+     "key": "mInset",
+     "label": "Inset",
+     "group": "mask",
+     "type": "range",
+     "default": 16,
+     "min": 0,
+     "max": 120,
+     "step": 1,
+     "unit": "px",
+     "note": "distance from the plate edge to the mask edge"
+    },
+    {
+     "key": "mAmp",
+     "label": "Edge wander",
+     "group": "mask",
+     "type": "range",
+     "default": 4,
+     "min": 0,
+     "max": 40,
+     "step": 0.5,
+     "unit": "px",
+     "limits": [
+      {
+       "lo": 28,
+       "hi": 40,
+       "why": "above ~28 px the edge tears into islands"
+      }
+     ],
+     "note": "how far noise pushes the edge in and out"
+    },
+    {
+     "key": "mScale",
+     "label": "Wander scale",
+     "group": "mask",
+     "type": "range",
+     "default": 60,
+     "min": 4,
+     "max": 240,
+     "step": 1,
+     "unit": "px",
+     "note": "wavelength of the wander; small = ragged, large = drifting"
+    },
+    {
+     "key": "mRough",
+     "label": "Roughness",
+     "group": "mask",
+     "type": "range",
+     "default": 4,
+     "min": 1,
+     "max": 6,
+     "step": 1,
+     "unit": "oct",
+     "note": "octaves of edge noise — adds fine teeth without moving the large shape"
+    },
+    {
+     "key": "mFeather",
+     "label": "Feather",
+     "group": "mask",
+     "type": "range",
+     "default": 8,
+     "min": 0.5,
+     "max": 60,
+     "step": 0.5,
+     "unit": "px",
+     "note": "width over which coverage falls from 1 to 0"
+    },
+    {
+     "key": "mMode",
+     "label": "Feather as",
+     "group": "mask",
+     "type": "select",
+     "default": "tone",
+     "options": [
+      "speckle",
+      "tone"
+     ],
+     "note": "speckle = binary marks thinning out; tone = partial coverage"
+    },
+    {
+     "key": "mBite",
+     "label": "Bite",
+     "group": "mask",
+     "type": "range",
+     "default": 0,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "clumped dropouts that grow more likely toward the edge"
+    },
+    {
+     "key": "seed",
+     "label": "Seed",
+     "group": "seed",
+     "type": "range",
+     "default": 21,
+     "min": 1,
+     "max": 999,
+     "step": 1,
+     "note": "every random draw in the effect hangs off this one number"
+    }
+   ]
+  },
+  {
+   "id": "fx-04-weave",
+   "code": "FX-04",
+   "name": "Weave",
+   "sub": "Cloth, built as cloth: warp and weft threads with their own counts, a real interlacing pattern, slubbed thread width, cylindrical shading along every float, under-threads in shadow, whole accent threads and worn floats.",
+   "recipe": [
+    "Warp columns and weft rows at their own counts (threads per 100 CSS px); each thread gets a jittered center, a thickness, a dye-lot L offset, and accent membership.",
+    "Interlacing pattern decides which thread is on top at each crossing; a float is the run of crossings where it stays on top.",
+    "Thread half-width = fill × pitch / 2, modulated along its length by slub noise. AA coverage from distance to the centerline.",
+    "Shading in OKLab L: across the thread (cylinder) and along the float (dives under at both ends); the under-thread sits in shadow.",
+    "Wear thins and fades floats with a probability that rises along the wear direction by its curve; a worn float shows more of the thread beneath and the ground through the gap."
+   ],
+   "limits": [
+    {
+     "param": "count",
+     "range": "> 40 /100 px at 1×",
+     "what": "threads under 2.5 px alias against the display — moiré"
+    },
+    {
+     "param": "fill",
+     "range": "< .5",
+     "what": "reads as a grid of strokes, not cloth"
+    },
+    {
+     "param": "fill",
+     "range": "> .97",
+     "what": "gutters close; the weave flattens to a check"
+    },
+    {
+     "param": "accent rate",
+     "range": "> .15",
+     "what": "accents stop being accents — a plaid"
+    }
+   ],
+   "params": [
+    {
+     "key": "warp",
+     "label": "Warp count",
+     "group": "density",
+     "type": "range",
+     "default": 15,
+     "min": 3,
+     "max": 60,
+     "step": 0.5,
+     "unit": "/100px",
+     "limits": [
+      {
+       "lo": 40,
+       "hi": 60,
+       "why": "aliases at 1×"
+      }
+     ],
+     "note": "vertical threads per 100 CSS px"
+    },
+    {
+     "key": "weft",
+     "label": "Weft count",
+     "group": "density",
+     "type": "range",
+     "default": 15,
+     "min": 3,
+     "max": 60,
+     "step": 0.5,
+     "unit": "/100px",
+     "note": "horizontal threads per 100 CSS px — set apart from warp for an unbalanced cloth"
+    },
+    {
+     "key": "fill",
+     "label": "Fill",
+     "group": "density",
+     "type": "range",
+     "default": 0.88,
+     "min": 0.35,
+     "max": 1,
+     "step": 0.01,
+     "limits": [
+      {
+       "lo": 0.35,
+       "hi": 0.5,
+       "why": "a grid of strokes"
+      },
+      {
+       "lo": 0.97,
+       "hi": 1,
+       "why": "gutters close"
+      }
+     ],
+     "note": "thread width ÷ pitch — the gutters"
+    },
+    {
+     "key": "pattern",
+     "label": "Interlacing",
+     "group": "density",
+     "type": "select",
+     "default": "plain",
+     "options": [
+      "plain",
+      "twill 2/1",
+      "twill 2/2",
+      "basket",
+      "satin 5"
+     ],
+     "note": "over/under rule; twills and satin make floats longer than one crossing"
+    },
+    {
+     "key": "slub",
+     "label": "Slub",
+     "group": "density",
+     "type": "range",
+     "default": 0.35,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "thread width variation along its length"
+    },
+    {
+     "key": "slubScale",
+     "label": "Slub length",
+     "group": "density",
+     "type": "range",
+     "default": 16,
+     "min": 3,
+     "max": 90,
+     "step": 0.5,
+     "unit": "px",
+     "note": "distance between thick and thin"
+    },
+    {
+     "key": "irregular",
+     "label": "Irregularity",
+     "group": "density",
+     "type": "range",
+     "default": 0.3,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "thread spacing and thickness jitter"
+    },
+    {
+     "key": "round",
+     "label": "Roundness",
+     "group": "dropoff",
+     "type": "range",
+     "default": 0.5,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "depth of the cylinder + float shading"
+    },
+    {
+     "key": "under",
+     "label": "Under-shadow",
+     "group": "dropoff",
+     "type": "range",
+     "default": 0.3,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "how much darker a thread is where it passes beneath"
+    },
+    {
+     "key": "wear",
+     "label": "Wear",
+     "group": "dropoff",
+     "type": "range",
+     "default": 0.35,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "probability a float is worn (thinned and faded) at the worn end"
+    },
+    {
+     "key": "wEase",
+     "label": "Wear curve",
+     "group": "dropoff",
+     "type": "ease",
+     "default": [
+      "in",
+      2.2
+     ],
+     "curves": [
+      "linear",
+      "smooth",
+      "smoother",
+      "in",
+      "out",
+      "inout",
+      "expo",
+      "sigmoid"
+     ],
+     "note": "how wear grows along its direction"
+    },
+    {
+     "key": "wAngle",
+     "label": "Wear direction",
+     "group": "dropoff",
+     "type": "range",
+     "default": 90,
+     "min": 0,
+     "max": 360,
+     "step": 1,
+     "unit": "°",
+     "note": "wear increases toward this direction"
+    },
+    {
+     "key": "wL",
+     "label": "Warp · L",
+     "group": "color",
+     "type": "range",
+     "default": 0.36,
+     "min": 0,
+     "max": 1,
+     "step": 0.005,
+     "ink": "w",
+     "note": "OKLCH lightness (0 black … 1 white)"
+    },
+    {
+     "key": "wC",
+     "label": "Warp · C",
+     "group": "color",
+     "type": "range",
+     "default": 0.006,
+     "min": 0,
+     "max": 0.37,
+     "step": 0.002,
+     "ink": "w",
+     "limits": [
+      {
+       "lo": 0.26,
+       "hi": 0.37,
+       "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+      }
+     ],
+     "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+    },
+    {
+     "key": "wh",
+     "label": "Warp · h",
+     "group": "color",
+     "type": "range",
+     "default": 265,
+     "min": 0,
+     "max": 360,
+     "step": 0.5,
+     "unit": "°",
+     "ink": "w",
+     "note": "OKLCH hue angle"
+    },
+    {
+     "key": "fL",
+     "label": "Weft · L",
+     "group": "color",
+     "type": "range",
+     "default": 0.58,
+     "min": 0,
+     "max": 1,
+     "step": 0.005,
+     "ink": "f",
+     "note": "OKLCH lightness (0 black … 1 white)"
+    },
+    {
+     "key": "fC",
+     "label": "Weft · C",
+     "group": "color",
+     "type": "range",
+     "default": 0.014,
+     "min": 0,
+     "max": 0.37,
+     "step": 0.002,
+     "ink": "f",
+     "limits": [
+      {
+       "lo": 0.26,
+       "hi": 0.37,
+       "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+      }
+     ],
+     "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+    },
+    {
+     "key": "fh",
+     "label": "Weft · h",
+     "group": "color",
+     "type": "range",
+     "default": 82,
+     "min": 0,
+     "max": 360,
+     "step": 0.5,
+     "unit": "°",
+     "ink": "f",
+     "note": "OKLCH hue angle"
+    },
+    {
+     "key": "cL",
+     "label": "Accent · L",
+     "group": "color",
+     "type": "range",
+     "default": 0.5,
+     "min": 0,
+     "max": 1,
+     "step": 0.005,
+     "ink": "c",
+     "note": "OKLCH lightness (0 black … 1 white)"
+    },
+    {
+     "key": "cC",
+     "label": "Accent · C",
+     "group": "color",
+     "type": "range",
+     "default": 0.075,
+     "min": 0,
+     "max": 0.37,
+     "step": 0.002,
+     "ink": "c",
+     "limits": [
+      {
+       "lo": 0.26,
+       "hi": 0.37,
+       "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+      }
+     ],
+     "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+    },
+    {
+     "key": "ch",
+     "label": "Accent · h",
+     "group": "color",
+     "type": "range",
+     "default": 186,
+     "min": 0,
+     "max": 360,
+     "step": 0.5,
+     "unit": "°",
+     "ink": "c",
+     "note": "OKLCH hue angle"
+    },
+    {
+     "key": "accent",
+     "label": "Accent rate",
+     "group": "color",
+     "type": "range",
+     "default": 0.03,
+     "min": 0,
+     "max": 0.3,
+     "step": 0.005,
+     "limits": [
+      {
+       "lo": 0.15,
+       "hi": 0.3,
+       "why": "plaid"
+      }
+     ],
+     "note": "share of whole threads (warp and weft) dyed the accent"
+    },
+    {
+     "key": "dye",
+     "label": "Dye lot",
+     "group": "color",
+     "type": "range",
+     "default": 0.03,
+     "min": 0,
+     "max": 0.12,
+     "step": 0.002,
+     "unit": "ΔL",
+     "note": "per-thread lightness spread"
+    },
+    {
+     "key": "mix",
+     "label": "Mix space",
+     "group": "mixing",
+     "type": "select",
+     "default": "oklab",
+     "options": [
+      "oklab",
+      "oklch",
+      "linear",
+      "srgb"
+     ],
+     "note": "how partial coverage (edges, AA, thin ink) blends ink into what is under it"
+    },
+    {
+     "key": "mShape",
+     "label": "Shape",
+     "group": "mask",
+     "type": "select",
+     "default": "rect",
+     "options": [
+      "none",
+      "rect",
+      "ellipse",
+      "band",
+      "blob"
+     ],
+     "note": "the region the effect is allowed to occupy"
+    },
+    {
+     "key": "mInset",
+     "label": "Inset",
+     "group": "mask",
+     "type": "range",
+     "default": 16,
+     "min": 0,
+     "max": 120,
+     "step": 1,
+     "unit": "px",
+     "note": "distance from the plate edge to the mask edge"
+    },
+    {
+     "key": "mAmp",
+     "label": "Edge wander",
+     "group": "mask",
+     "type": "range",
+     "default": 3,
+     "min": 0,
+     "max": 40,
+     "step": 0.5,
+     "unit": "px",
+     "limits": [
+      {
+       "lo": 28,
+       "hi": 40,
+       "why": "above ~28 px the edge tears into islands"
+      }
+     ],
+     "note": "how far noise pushes the edge in and out"
+    },
+    {
+     "key": "mScale",
+     "label": "Wander scale",
+     "group": "mask",
+     "type": "range",
+     "default": 40,
+     "min": 4,
+     "max": 240,
+     "step": 1,
+     "unit": "px",
+     "note": "wavelength of the wander; small = ragged, large = drifting"
+    },
+    {
+     "key": "mRough",
+     "label": "Roughness",
+     "group": "mask",
+     "type": "range",
+     "default": 4,
+     "min": 1,
+     "max": 6,
+     "step": 1,
+     "unit": "oct",
+     "note": "octaves of edge noise — adds fine teeth without moving the large shape"
+    },
+    {
+     "key": "mFeather",
+     "label": "Feather",
+     "group": "mask",
+     "type": "range",
+     "default": 5,
+     "min": 0.5,
+     "max": 60,
+     "step": 0.5,
+     "unit": "px",
+     "note": "width over which coverage falls from 1 to 0"
+    },
+    {
+     "key": "mMode",
+     "label": "Feather as",
+     "group": "mask",
+     "type": "select",
+     "default": "speckle",
+     "options": [
+      "speckle",
+      "tone"
+     ],
+     "note": "speckle = binary marks thinning out; tone = partial coverage"
+    },
+    {
+     "key": "mBite",
+     "label": "Bite",
+     "group": "mask",
+     "type": "range",
+     "default": 0.1,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "clumped dropouts that grow more likely toward the edge"
+    },
+    {
+     "key": "seed",
+     "label": "Seed",
+     "group": "seed",
+     "type": "range",
+     "default": 33,
+     "min": 1,
+     "max": 999,
+     "step": 1,
+     "note": "every random draw in the effect hangs off this one number"
+    }
+   ]
+  }
+ ],
+ "usages": [
+  {
+   "id": "u-meter",
+   "code": "U-01",
+   "title": "Meter · counted marks",
+   "sub": "Three readings as stipple fields. Value is the share of the bar that prints; the bar's end runs out by the dropoff curve instead of a hard cap.",
+   "uses": [
+    "fx-01-stipple"
+   ],
+   "aspect": "16/9",
+   "overrides": {
+    "fx-01-stipple": {
+     "mShape": "none",
+     "source": "linear",
+     "duo": "off"
+    }
+   }
+  },
+  {
+   "id": "u-ticket",
+   "code": "U-02",
+   "title": "Ticket · ink over tooth",
+   "sub": "Paper tooth as the ground, then the ink edge printed over it in a band: the solid gives out into speckle before the stub line.",
+   "uses": [
+    "fx-03-paper-tooth",
+    "fx-02-ink-edge"
+   ],
+   "aspect": "16/9",
+   "overrides": {
+    "fx-03-paper-tooth": {
+     "mShape": "none"
+    },
+    "fx-02-ink-edge": {
+     "mShape": "band",
+     "mInset": 10,
+     "edge": 0.58,
+     "width": 110,
+     "angle": 0
+    }
+   }
+  },
+  {
+   "id": "u-swatch",
+   "code": "U-03",
+   "title": "Swatch · frayed patch",
+   "sub": "Weave inside a blob mask with a wide speckle feather and bite: the cut edge frays instead of ending on a vector line. Tooth underneath.",
+   "uses": [
+    "fx-03-paper-tooth",
+    "fx-04-weave"
+   ],
+   "aspect": "16/9",
+   "overrides": {
+    "fx-03-paper-tooth": {
+     "mShape": "none",
+     "amp": 0.025
+    },
+    "fx-04-weave": {
+     "mShape": "blob",
+     "mInset": 22,
+     "mAmp": 9,
+     "mScale": 46,
+     "mFeather": 4,
+     "mMode": "speckle",
+     "mBite": 0.15
+    }
+   }
+  },
+  {
+   "id": "u-headline",
+   "code": "U-04",
+   "title": "Headline · ink runs out of the word",
+   "sub": "Type rasterized as a clip; the ink edge crosses it, so the last letters print starved. Type is a mask, never a gradient fill.",
+   "uses": [
+    "fx-02-ink-edge"
+   ],
+   "aspect": "16/9",
+   "overrides": {
+    "fx-02-ink-edge": {
+     "mShape": "none",
+     "edge": 0.7,
+     "width": 220,
+     "angle": 0,
+     "starve": 0.22
+    }
+   }
+  },
+  {
+   "id": "u-overprint",
+   "code": "U-05",
+   "title": "Overprint · two inks, one rule",
+   "sub": "Two stipple ramps crossing on a radial field. Where they meet, the overprint rule and the mix space decide the third color — switch them on FX-01 and watch this card.",
+   "uses": [
+    "fx-01-stipple"
+   ],
+   "aspect": "16/9",
+   "overrides": {
+    "fx-01-stipple": {
+     "duo": "on",
+     "source": "linear",
+     "angle": 20,
+     "mShape": "ellipse",
+     "mInset": 14,
+     "mFeather": 16
+    }
+   }
+  },
+  {
+   "id": "u-slot",
+   "code": "U-06",
+   "title": "Image slot · placeholder",
+   "sub": "A generated slot for a layout: noise-driven stipple inside a rounded rect, so a template never ships a gray box. Replace with a real image.",
+   "uses": [
+    "fx-01-stipple",
+    "fx-03-paper-tooth"
+   ],
+   "aspect": "16/9",
+   "overrides": {
+    "fx-03-paper-tooth": {
+     "mShape": "none",
+     "amp": 0.02,
+     "fibers": 3
+    },
+    "fx-01-stipple": {
+     "source": "noise",
+     "fScale": 90,
+     "from": 0.04,
+     "to": 0.7,
+     "mShape": "rect",
+     "mInset": 12,
+     "mAmp": 1.5,
+     "mFeather": 3,
+     "mMode": "tone",
+     "mBite": 0
+    }
+   }
+  }
+ ]
+}

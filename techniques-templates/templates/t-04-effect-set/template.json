@@ -1,0 +1,39 @@
+{
+ "id": "t-04-effect-set",
+ "code": "T-04",
+ "name": "Effect set",
+ "purpose": "House a family of single effects on one sheet: an overview rack, one technique block per effect (plate, dials, recipe, limits, live params), and a gallery of usages that run the same functions with the live dials.",
+ "files": {
+  "fx.js": "shared core",
+  "set.js": "the set (replace)",
+  "sheet.js": "generic runtime",
+  "sheet.css": "styles on the T&T shell tokens",
+  "build-sheet.mjs": "bakes index.html (static read), set.json, template.json",
+  "index.html": "build output"
+ },
+ "layout": [
+  "nav (shell)",
+  "head: set code, title, premise, meta cells (ground, color math, units, params, source)",
+  "sticky bar: view composite|coverage|mask · loupe 4× · jump links · copy set params · reset all · status",
+  "rack: one 4:3 cell per effect with mark count",
+  "per effect: header (code, name, sub, reset · new seed · copy params · copy call) → plate (sticky, 4:3, device px, stats: px · marks · ms · mode) + dial column grouped density · dropoff · color · mixing · mask · seed → recipe · limits · live params",
+  "usages: 3-up cards, 16:9 canvas + labels, caption, effect chips, overrides; toggle follow the dials | defaults only",
+  "contract: files + set.js shape"
+ ],
+ "dials": {
+  "range": "hairline track; limit zones hatched with the reason as title; default tick; double-click label resets",
+  "select": "segmented buttons",
+  "ease": "curve select + k + live graph",
+  "ink": "swatch + oklch() + hex + \"chroma reduced\" flag; L/C/h tracks painted with the sweep",
+  "mixing": "four-row strip: ground → ink in oklab · oklch · linear · srgb, current highlighted",
+  "when": "params that do not apply are dimmed, not hidden"
+ },
+ "rendering": {
+  "draft": "½-res while dragging",
+  "full": "device px on release",
+  "queue": "one job per frame, drafts first",
+  "lazy": "IntersectionObserver, 400 px margin",
+  "state": "one params object per effect, saved per viewer in localStorage (try/catch)"
+ },
+ "contract": "window.FXSET = {\n  code:'T-04', title, short, set, premise, source,\n  effects:[{\n    id, code, name, sub,\n    recipe:[ 'step', … ],                 // numbered on the sheet\n    limits:[ [param, range, 'what happens'], … ],\n    params:[ { key, label, group, type, value, … } ],\n      // group: density | dropoff | color | mixing | mask | seed\n      // type:  range {min,max,step,unit,limits:[[lo,hi,why]]}\n      //        select {options} · ease (value ['smooth',k])\n      // ink:   FX.INK_PARAMS(prefix,label,L,C,h) → 3 OKLCH sliders\n      // when:  { key:[values] } dims a param that does not apply\n    run(o, W, H, dpr, x) {                // W,H device px; lengths in o are CSS px\n      // x = { base, clip, field } from usages\n      return { lin, cov, mask, marks, markUnit };\n    }\n  }],\n  usages:[{ id, title, sub, uses:[effect ids], aspect,\n            overrides:{ [effectId]:{…} }, labels:[[a,b]],\n            run(ctx, W, H, dpr, P) { return effect.run(P(id), W, H, dpr, x); } }]\n};"
+}
