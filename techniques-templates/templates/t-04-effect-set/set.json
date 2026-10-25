@@ -64,21 +64,81 @@
    "code": "FX-01",
    "name": "Stipple ramp",
    "role": "mark · pen",
-   "sub": "Tone made of whole pen dots pressed into the stock. Value sets how many sites print (FM) or how big each dot is (AM); a blue-noise rank picks the sites; each dot's rim loses pressure, so the stock's tooth decides how ragged it prints.",
+   "sub": "Tone made of whole pen dots. Value sets how many sites print (FM) or how big each dot is (AM); a blue-noise rank picks the sites. Each dot is crisp geometry whose edge the stock's tooth nudges — never softened.",
+   "presets": [
+    {
+     "name": "fine pen",
+     "params": {}
+    },
+    {
+     "name": "technical .1",
+     "params": {
+      "pitch": 1.2,
+      "dotR": 0.36,
+      "jitter": 0.95,
+      "sizeVar": 0.1,
+      "irregular": 0.08,
+      "rag": 0.03
+     }
+    },
+    {
+     "name": "source · coarse",
+     "params": {
+      "pitch": 2.7,
+      "dotR": 0.95,
+      "sizeVar": 0.35,
+      "irregular": 0.3,
+      "rag": 0.2,
+      "ease": [
+       "in",
+       1.5
+      ]
+     }
+    },
+    {
+     "name": "AM screen",
+     "params": {
+      "screen": 1,
+      "order": "ordered",
+      "pitch": 2.4,
+      "dotR": 1.1,
+      "jitter": 0,
+      "sizeVar": 0,
+      "irregular": 0.05
+     }
+    },
+    {
+     "name": "radial burst",
+     "params": {
+      "source": "radial",
+      "ease": [
+       "out",
+       2
+      ],
+      "from": 0,
+      "to": 0.9
+     }
+    }
+   ],
    "printsOn": "fx-03-paper-tooth",
    "recipe": [
     "Site lattice at the pitch (CSS px), jittered. Value field (linear · radial · noise) eased from → to.",
     "Screen: FM keeps a site when its blue-noise rank < value; AM keeps every site with radius ∝ √value; the dial interpolates. The mask is sampled at the site — dots are whole or absent.",
-    "Each dot is a pressure footprint: 7 vertex radii (irregular nib), peak = pen pressure, falling to 0 across the nib-softness rim.",
-    "Ink chain: pressure against the stock height → acceptance (peaks first), starved valleys, wick along fibers, film thickness τ.",
+    "Each dot is geometry: a signed distance to an irregular nib outline (7 vertex radii), so its edge is always 1 device px of anti-aliasing — never a blur.",
+    "The stock edits the edge: the distance is displaced by the stock height (edge rag), valleys inside the dot can starve, fibers wick a short way out. Film τ = thickness × pressure.",
     "Color: Beer–Lambert film in linear light (or a coverage mix). Ink B overprints by the same film product.",
     "Light last: × the stock's shading under the sheet light."
    ],
    "limits": [
     {
      "param": "pitch",
-     "range": "< 2 px",
+     "range": "< 1.2 px",
      "what": "sites merge into flat tone at 1× — the stipple stops reading as marks"
+    },
+    {
+     "param": "dot radius",
+     "range": "< .3 px",
+     "what": "below ~½ device px at 1× a dot is a gray pixel, not a mark"
     },
     {
      "param": "dot radius",
@@ -86,9 +146,9 @@
      "what": "dots fuse into a solid; FM loses its range"
     },
     {
-     "param": "pen pressure",
-     "range": "< .55",
-     "what": "dots print as broken rings — the stock shows through every one"
+     "param": "edge rag",
+     "range": "> .9 px",
+     "what": "dots read as fuzz, not ink"
     },
     {
      "param": "selection",
@@ -102,15 +162,15 @@
      "label": "Pitch",
      "group": "density",
      "type": "range",
-     "default": 2.7,
-     "min": 1.2,
+     "default": 1.55,
+     "min": 0.8,
      "max": 16,
-     "step": 0.1,
+     "step": 0.05,
      "unit": "px",
      "limits": [
       {
-       "lo": 1.2,
-       "hi": 2,
+       "lo": 0.8,
+       "hi": 1.2,
        "why": "sites merge into tone at 1×"
       }
      ],
@@ -121,10 +181,10 @@
      "label": "Dot radius",
      "group": "density",
      "type": "range",
-     "default": 0.95,
+     "default": 0.48,
      "min": 0.2,
      "max": 4,
-     "step": 0.02,
+     "step": 0.01,
      "unit": "px",
      "limits": [
       {
@@ -182,7 +242,7 @@
      "label": "Size variance",
      "group": "density",
      "type": "range",
-     "default": 0.35,
+     "default": 0.22,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -193,7 +253,7 @@
      "label": "Nib irregularity",
      "group": "density",
      "type": "range",
-     "default": 0.3,
+     "default": 0.16,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -204,30 +264,18 @@
      "label": "Pen pressure",
      "group": "density",
      "type": "range",
-     "default": 0.9,
+     "default": 1,
      "min": 0.3,
      "max": 1,
      "step": 0.01,
      "limits": [
       {
        "lo": 0.3,
-       "hi": 0.55,
-       "why": "broken rings"
+       "hi": 0.5,
+       "why": "dots print pale and pitted"
       }
      ],
-     "note": "peak pressure at the dot center"
-    },
-    {
-     "key": "nib",
-     "label": "Nib softness",
-     "group": "density",
-     "type": "range",
-     "default": 0.5,
-     "min": 0.3,
-     "max": 2,
-     "step": 0.05,
-     "unit": "px",
-     "note": "width of the rim where pressure falls off — the band the stock gets to edit"
+     "note": "film per dot and how many valleys it skips (with Starve)"
     },
     {
      "key": "source",
@@ -266,7 +314,7 @@
      "type": "ease",
      "default": [
       "in",
-      1.5
+      1.25
      ],
      "curves": [
       "linear",
@@ -285,7 +333,7 @@
      "label": "From",
      "group": "dropoff",
      "type": "range",
-     "default": 0,
+     "default": 0.02,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -330,60 +378,44 @@
       "cloth",
       "smooth"
      ],
-     "note": "paper = FX-03 live, cloth = FX-04 live, smooth = no substrate (film-splitting noise only). Tune the stock and this plate redraws."
+     "note": "paper = FX-03 live, cloth = FX-04 live, smooth = no substrate. Tune the stock and this plate redraws."
     },
     {
-     "key": "bite",
-     "label": "Stock bite",
+     "key": "rag",
+     "label": "Edge rag",
      "group": "stock",
      "type": "range",
-     "default": 0.35,
+     "default": 0.07,
      "min": 0,
-     "max": 1,
+     "max": 1.5,
      "step": 0.01,
-     "when": {
-      "stock": [
-       "paper",
-       "cloth"
-      ]
-     },
-     "note": "how much the stock height (vs film-splitting noise) decides where ink lands"
-    },
-    {
-     "key": "breakup",
-     "label": "Break-up ↔ thin",
-     "group": "stock",
-     "type": "range",
-     "default": 0.9,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
+     "unit": "px",
      "limits": [
       {
-       "lo": 0,
-       "hi": 0.3,
-       "why": "reads as a gradient"
+       "lo": 0.9,
+       "hi": 1.5,
+       "why": "dots read as fuzz"
       }
      ],
-     "note": "1 = ink film breaks into marks on the peaks as pressure falls; 0 = the film stays whole and thins to tone"
+     "note": "how far the stock's tooth pushes each dot edge in and out — 0 = perfect discs"
     },
     {
      "key": "starve",
      "label": "Starve",
      "group": "stock",
      "type": "range",
-     "default": 0.01,
+     "default": 0,
      "min": 0,
      "max": 0.3,
      "step": 0.002,
-     "note": "the lowest share of the surface never takes ink — pinholes in the solid, placed by the paper's valleys and pits"
+     "note": "valleys inside a dot that the nib skips — single-pixel pinholes, more as pressure drops"
     },
     {
      "key": "wick",
      "label": "Wick",
      "group": "stock",
      "type": "range",
-     "default": 0.15,
+     "default": 0.08,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -393,7 +425,7 @@
        "cloth"
       ]
      },
-     "note": "ink carried along fibers into the run-out (hairline feathering)"
+     "note": "ink carried a short way out along fibers"
     },
     {
      "key": "mottle",
@@ -409,19 +441,7 @@
        "paper"
       ]
      },
-     "note": "paper formation (its low-frequency cloudiness) varying the film thickness"
-    },
-    {
-     "key": "split",
-     "label": "Film split",
-     "group": "stock",
-     "type": "range",
-     "default": 1.2,
-     "min": 0.5,
-     "max": 10,
-     "step": 0.1,
-     "unit": "px",
-     "note": "clump size of the film-splitting noise (the roller's own speckle)"
+     "note": "paper formation varying the film"
     },
     {
      "key": "aL",
@@ -543,7 +563,7 @@
      "label": "Film thickness",
      "group": "mixing",
      "type": "range",
-     "default": 1.15,
+     "default": 1.3,
      "min": 0.2,
      "max": 2,
      "step": 0.01,
@@ -694,6 +714,58 @@
    "name": "Ink leaving paper",
    "role": "mark · roller",
    "sub": "A solid that runs out. Roller pressure eases off across a warped edge; as it falls, only the peaks of the stock still touch the ink, so the run-out speckle is the paper's own tooth — with pinholes in its valleys and hairlines wicked along its fibers.",
+   "presets": [
+    {
+     "name": "roller",
+     "params": {}
+    },
+    {
+     "name": "dry brush",
+     "params": {
+      "streak": 7,
+      "width": 240,
+      "breakup": 1,
+      "split": 2.2,
+      "bite": 0.35,
+      "wAmp": 6,
+      "ease": [
+       "out",
+       1.6
+      ]
+     }
+    },
+    {
+     "name": "letterpress",
+     "params": {
+      "width": 3,
+      "pressure": 0.86,
+      "starve": 0.05,
+      "mottle": 0.4,
+      "wAmp": 1,
+      "density": 1.1
+     }
+    },
+    {
+     "name": "riso",
+     "params": {
+      "iL": 0.66,
+      "iC": 0.2,
+      "ih": 2,
+      "density": 0.85,
+      "mottle": 0.55,
+      "width": 60,
+      "split": 0.9
+     }
+    },
+    {
+     "name": "vertical",
+     "params": {
+      "angle": 90,
+      "edge": 0.5,
+      "width": 180
+     }
+    }
+   ],
    "printsOn": "fx-03-paper-tooth",
    "recipe": [
     "Pressure = dropoff curve of the signed distance to a warped edge line (stroke direction, transition width), × the mask.",
@@ -730,7 +802,7 @@
      "label": "Streak",
      "group": "density",
      "type": "range",
-     "default": 1.5,
+     "default": 1.25,
      "min": 1,
      "max": 10,
      "step": 0.1,
@@ -871,7 +943,7 @@
      "label": "Stock bite",
      "group": "stock",
      "type": "range",
-     "default": 0.6,
+     "default": 0.5,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -888,7 +960,7 @@
      "label": "Break-up ↔ thin",
      "group": "stock",
      "type": "range",
-     "default": 0.92,
+     "default": 0.94,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -917,7 +989,7 @@
      "label": "Wick",
      "group": "stock",
      "type": "range",
-     "default": 0.4,
+     "default": 0.35,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -950,7 +1022,7 @@
      "label": "Film split",
      "group": "stock",
      "type": "range",
-     "default": 1.3,
+     "default": 1.1,
      "min": 0.5,
      "max": 10,
      "step": 0.1,
@@ -1139,6 +1211,64 @@
    "name": "Paper tooth",
    "role": "stock · paper",
    "sub": "White stock that is not a screen. A height field — tooth, formation, laid fibers, pits — lit by the one sheet light. On white the relief can only take light away, so the paper reads through its shadows. FX-01 and FX-02 print into this exact field.",
+   "presets": [
+    {
+     "name": "bond",
+     "params": {}
+    },
+    {
+     "name": "vellum",
+     "params": {
+      "depth": 0.05,
+      "fibers": 0.75,
+      "pits": 0.25,
+      "form": 0.15,
+      "aniso": 3
+     }
+    },
+    {
+     "name": "cold press",
+     "params": {
+      "scale": 4,
+      "oct": 4,
+      "depth": 0.38,
+      "ease": [
+       "out",
+       1.4
+      ],
+      "aniso": 1.4,
+      "fibers": 2,
+      "diffuse": 0.55
+     }
+    },
+    {
+     "name": "newsprint",
+     "params": {
+      "paperL": 0.955,
+      "tL": 0.72,
+      "tC": 0.03,
+      "th": 85,
+      "tAmt": 0.8,
+      "fibers": 16,
+      "fDark": 0.05,
+      "fWidth": 0.5,
+      "pits": 6,
+      "pDark": 0.06,
+      "depth": 0.1
+     }
+    },
+    {
+     "name": "deckle sheet",
+     "params": {
+      "mShape": "rect",
+      "mInset": 20,
+      "mAmp": 4,
+      "mScale": 18,
+      "mRough": 6,
+      "lift": 1.4
+     }
+    }
+   ],
    "printsOn": null,
    "recipe": [
     "Height = fbm at the tooth scale (octaves, persistence = how fast detail drops off), reshaped by the distribution curve; blended with low-frequency formation.",
@@ -1150,12 +1280,17 @@
    "limits": [
     {
      "param": "relief",
-     "range": "> 1.4 px",
-     "what": "reads as stucco or dirt, not stock"
+     "range": "> .6 px",
+     "what": "reads as stucco — the stock-filter emboss look"
+    },
+    {
+     "param": "anisotropy",
+     "range": "< 1.3",
+     "what": "isotropic tooth reads as a 1999 paper filter"
     },
     {
      "param": "tooth scale",
-     "range": "< 1 px",
+     "range": "< .8 px",
      "what": "collapses into per-pixel noise — digital grain"
     },
     {
@@ -1175,15 +1310,15 @@
      "label": "Tooth scale",
      "group": "density",
      "type": "range",
-     "default": 1.7,
-     "min": 0.6,
+     "default": 1.1,
+     "min": 0.5,
      "max": 24,
-     "step": 0.1,
+     "step": 0.05,
      "unit": "px",
      "limits": [
       {
-       "lo": 0.6,
-       "hi": 1,
+       "lo": 0.5,
+       "hi": 0.8,
        "why": "per-pixel noise"
       }
      ],
@@ -1194,7 +1329,7 @@
      "label": "Octaves",
      "group": "density",
      "type": "range",
-     "default": 4,
+     "default": 3,
      "min": 1,
      "max": 6,
      "step": 1,
@@ -1206,10 +1341,10 @@
      "label": "Fibers",
      "group": "density",
      "type": "range",
-     "default": 7,
+     "default": 3,
      "min": 0,
      "max": 40,
-     "step": 0.5,
+     "step": 0.25,
      "unit": "/100px²",
      "limits": [
       {
@@ -1225,7 +1360,7 @@
      "label": "Fiber length",
      "group": "density",
      "type": "range",
-     "default": 16,
+     "default": 14,
      "min": 2,
      "max": 80,
      "step": 0.5,
@@ -1237,10 +1372,10 @@
      "label": "Fiber width",
      "group": "density",
      "type": "range",
-     "default": 0.7,
-     "min": 0.3,
+     "default": 0.4,
+     "min": 0.2,
      "max": 3,
-     "step": 0.05,
+     "step": 0.02,
      "unit": "px",
      "note": "mean fiber width"
     },
@@ -1249,10 +1384,10 @@
      "label": "Pits",
      "group": "density",
      "type": "range",
-     "default": 3,
+     "default": 1,
      "min": 0,
      "max": 40,
-     "step": 0.5,
+     "step": 0.25,
      "unit": "/100px²",
      "note": "depressions per 100 × 100 CSS px"
     },
@@ -1261,7 +1396,7 @@
      "label": "Persistence",
      "group": "dropoff",
      "type": "range",
-     "default": 0.5,
+     "default": 0.42,
      "min": 0.15,
      "max": 0.85,
      "step": 0.01,
@@ -1274,7 +1409,7 @@
      "type": "ease",
      "default": [
       "in",
-      1.3
+      2.4
      ],
      "curves": [
       "linear",
@@ -1286,7 +1421,25 @@
       "expo",
       "sigmoid"
      ],
-     "note": "reshapes height: power in = sparse deep valleys; out = broad shallow tooth"
+     "note": "reshapes height: power in = mostly flat with sparse valleys (smooth stock); out = broad tooth (cold press)"
+    },
+    {
+     "key": "aniso",
+     "label": "Anisotropy",
+     "group": "dropoff",
+     "type": "range",
+     "default": 2.2,
+     "min": 1,
+     "max": 6,
+     "step": 0.05,
+     "limits": [
+      {
+       "lo": 1,
+       "hi": 1.3,
+       "why": "reads as a stock emboss filter"
+      }
+     ],
+     "note": "tooth stretched along the grain angle — machine-made paper is never isotropic; 1 = the 1999 \"paper\" filter look"
     },
     {
      "key": "form",
@@ -1304,7 +1457,7 @@
      "label": "Formation scale",
      "group": "dropoff",
      "type": "range",
-     "default": 44,
+     "default": 60,
      "min": 10,
      "max": 200,
      "step": 1,
@@ -1316,19 +1469,19 @@
      "label": "Grain angle",
      "group": "dropoff",
      "type": "range",
-     "default": 8,
+     "default": 6,
      "min": 0,
      "max": 180,
      "step": 1,
      "unit": "°",
-     "note": "machine direction of the fibers"
+     "note": "machine direction of the fibers and the tooth"
     },
     {
      "key": "fSpread",
      "label": "Grain spread",
      "group": "dropoff",
      "type": "range",
-     "default": 0.5,
+     "default": 0.4,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -1339,26 +1492,26 @@
      "label": "Relief",
      "group": "relief",
      "type": "range",
-     "default": 0.4,
+     "default": 0.12,
      "min": 0,
-     "max": 2,
-     "step": 0.01,
+     "max": 1.6,
+     "step": 0.005,
      "unit": "px",
      "limits": [
       {
-       "lo": 1.4,
-       "hi": 2,
-       "why": "stucco"
+       "lo": 0.6,
+       "hi": 1.6,
+       "why": "stucco — the 1999 emboss look"
       }
      ],
-     "note": "height of the tooth in CSS px — how hard the light can rake it"
+     "note": "height of the tooth in CSS px — how hard the light can rake it. The slider is weighted to the subtle end."
     },
     {
      "key": "diffuse",
      "label": "Diffuse share",
      "group": "relief",
      "type": "range",
-     "default": 0.6,
+     "default": 0.45,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -1369,7 +1522,7 @@
      "label": "Fiber raise",
      "group": "relief",
      "type": "range",
-     "default": 0.8,
+     "default": 0.45,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -1380,7 +1533,7 @@
      "label": "Pit depth",
      "group": "relief",
      "type": "range",
-     "default": 0.45,
+     "default": 0.35,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -1402,10 +1555,10 @@
      "label": "Fiber tone",
      "group": "color",
      "type": "range",
-     "default": 0.035,
+     "default": 0.014,
      "min": 0,
      "max": 0.15,
-     "step": 0.002,
+     "step": 0.001,
      "unit": "ΔL",
      "note": "albedo darkening of fibers"
     },
@@ -1414,10 +1567,10 @@
      "label": "Pit tone",
      "group": "color",
      "type": "range",
-     "default": 0.035,
+     "default": 0.02,
      "min": 0,
      "max": 0.3,
-     "step": 0.005,
+     "step": 0.001,
      "unit": "ΔL",
      "note": "albedo darkening in pits"
     },
@@ -1470,7 +1623,7 @@
      "label": "Fill tint amount",
      "group": "color",
      "type": "range",
-     "default": 0.6,
+     "default": 0.5,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -1620,6 +1773,82 @@
    "name": "Weave",
    "role": "stock · cloth",
    "sub": "Cloth built as cloth: warp and weft at their own counts, a real interlacing, slubbed and hairy threads, every float a raised body lit by the sheet light and casting into the gaps. A cut edge frays thread by thread. FX-01 and FX-02 can print onto it.",
+   "presets": [
+    {
+     "name": "source · linen",
+     "params": {}
+    },
+    {
+     "name": "natural linen",
+     "params": {
+      "wL": 0.78,
+      "wC": 0.022,
+      "wh": 82,
+      "fL": 0.84,
+      "fC": 0.02,
+      "fh": 86,
+      "accent": 0.006,
+      "warp": 34,
+      "weft": 32
+     }
+    },
+    {
+     "name": "fine shirting",
+     "params": {
+      "warp": 60,
+      "weft": 56,
+      "fill": 0.94,
+      "slub": 0.12,
+      "hair": 0.12,
+      "depth": 0.9,
+      "wL": 0.9,
+      "wC": 0.01,
+      "wh": 250,
+      "fL": 0.95,
+      "fC": 0.004,
+      "fh": 250,
+      "accent": 0
+     }
+    },
+    {
+     "name": "denim 2/1",
+     "params": {
+      "pattern": "twill 2/1",
+      "warp": 48,
+      "weft": 40,
+      "fill": 0.97,
+      "wL": 0.36,
+      "wC": 0.075,
+      "wh": 262,
+      "fL": 0.8,
+      "fC": 0.015,
+      "fh": 85,
+      "accent": 0,
+      "dye": 0.04,
+      "slub": 0.55,
+      "hair": 0.4,
+      "depth": 1
+     }
+    },
+    {
+     "name": "canvas duck",
+     "params": {
+      "pattern": "basket",
+      "warp": 14,
+      "weft": 14,
+      "fill": 0.95,
+      "wL": 0.85,
+      "wC": 0.03,
+      "wh": 85,
+      "fL": 0.82,
+      "fC": 0.03,
+      "fh": 82,
+      "accent": 0,
+      "hair": 0.5,
+      "depth": 1.6
+     }
+    }
+   ],
    "printsOn": null,
    "recipe": [
     "Warp columns and weft rows at their own counts (threads / 100 CSS px); each thread: jittered center, thickness, dye-lot L, fray length, accent.",
@@ -1631,8 +1860,13 @@
    "limits": [
     {
      "param": "count",
-     "range": "> 40 /100 px at 1×",
-     "what": "threads under 2.5 px alias against the display — moiré"
+     "range": "> 50 /100 px at 1×",
+     "what": "threads under 2 CSS px alias against a 1× display — moiré (fine on 2×/3×)"
+    },
+    {
+     "param": "count",
+     "range": "< 18 /100 px",
+     "what": "threads over ~5 px read as a woven-texture graphic, not cloth"
     },
     {
      "param": "fill",
@@ -1656,16 +1890,16 @@
      "label": "Warp count",
      "group": "density",
      "type": "range",
-     "default": 15,
+     "default": 32,
      "min": 3,
-     "max": 60,
+     "max": 80,
      "step": 0.5,
      "unit": "/100px",
      "limits": [
       {
-       "lo": 40,
-       "hi": 60,
-       "why": "aliases at 1×"
+       "lo": 50,
+       "hi": 80,
+       "why": "threads under 2 px alias at 1× (fine at 2×+)"
       }
      ],
      "note": "vertical threads per 100 CSS px"
@@ -1675,9 +1909,9 @@
      "label": "Weft count",
      "group": "density",
      "type": "range",
-     "default": 15,
+     "default": 30,
      "min": 3,
-     "max": 60,
+     "max": 80,
      "step": 0.5,
      "unit": "/100px",
      "note": "horizontal threads per 100 CSS px — set apart from warp for an unbalanced cloth"
@@ -1736,7 +1970,7 @@
      "label": "Slub length",
      "group": "density",
      "type": "range",
-     "default": 16,
+     "default": 11,
      "min": 3,
      "max": 90,
      "step": 0.5,
@@ -1748,7 +1982,7 @@
      "label": "Hair",
      "group": "density",
      "type": "range",
-     "default": 0.45,
+     "default": 0.3,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -1770,7 +2004,7 @@
      "label": "Wear",
      "group": "dropoff",
      "type": "range",
-     "default": 0.25,
+     "default": 0.15,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -1814,7 +2048,7 @@
      "label": "Relief",
      "group": "relief",
      "type": "range",
-     "default": 1.6,
+     "default": 1.2,
      "min": 0,
      "max": 3,
      "step": 0.01,
@@ -1836,7 +2070,7 @@
      "label": "Cast shadow",
      "group": "relief",
      "type": "range",
-     "default": 0.75,
+     "default": 0.6,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -1991,7 +2225,7 @@
      "label": "Accent rate",
      "group": "color",
      "type": "range",
-     "default": 0.04,
+     "default": 0.035,
      "min": 0,
      "max": 0.3,
      "step": 0.005,
@@ -2103,7 +2337,7 @@
      "label": "Fray",
      "group": "mask",
      "type": "range",
-     "default": 9,
+     "default": 6,
      "min": 0,
      "max": 40,
      "step": 0.5,
@@ -2168,7 +2402,7 @@
    "id": "u-meter",
    "code": "U-01",
    "title": "Meter · counted marks",
-   "sub": "Three readings as stipple printed into paper. Value is the share of the bar that prints; the bar's end runs out by the dropoff curve, and the dots there print broken because pressure — not just count — falls.",
+   "sub": "Three readings as stipple printed into paper. Value is the share of the bar that prints; the bar's end runs out by the dropoff curve — dots thin out, they never fade.",
    "uses": [
     "fx-01-stipple",
     "fx-03-paper-tooth"
@@ -2225,8 +2459,8 @@
      "fh": 86,
      "aMode": "flecks",
      "accent": 0.006,
-     "warp": 17,
-     "weft": 16,
+     "warp": 34,
+     "weft": 32,
      "mShape": "blob",
      "lift": 1.2,
      "mInset": 26,
@@ -2276,7 +2510,8 @@
      "mInset": 14,
      "mFeather": 18,
      "stock": "paper",
-     "dotR": 1.1
+     "dotR": 0.5,
+     "pitch": 1.7
     }
    }
   },
@@ -2315,8 +2550,8 @@
      "fh": 86,
      "aMode": "flecks",
      "accent": 0,
-     "warp": 17,
-     "weft": 16,
+     "warp": 34,
+     "weft": 32,
      "mShape": "none",
      "lift": 0
     }

@@ -17,7 +17,16 @@ const DEF={}; SET.effects.forEach(e=>{ DEF[e.id]={}; e.params.forEach(p=>DEF[e.i
 const DEF_LIGHT={az:225,el:34};
 const KEY='tt-t04:'+SET.code+':'+SET.set+':v2';
 let S=clone(DEF), LIGHT=clone(DEF_LIGHT);
-try{ const j=JSON.parse(localStorage.getItem(KEY)||'null'); if(j){ for(const id in DEF) S[id]=Object.assign({},DEF[id],(j.S||{})[id]||{}); if(j.light) LIGHT=Object.assign({},DEF_LIGHT,j.light); } }catch(e){}
+const b64e=t=>btoa(unescape(encodeURIComponent(t))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''), b64d=t=>decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/'))));
+const applySnap=j=>{ for(const id in DEF) S[id]=Object.assign({},DEF[id],(j.S||{})[id]||{}); LIGHT=Object.assign({},DEF_LIGHT,j.light||{}); };
+let FROM_LINK=false;
+try{ const q=new URLSearchParams(location.search).get('s'); if(q){ applySnap(JSON.parse(b64d(q))); FROM_LINK=true; } }catch(e){ console.warn('bad share link',e); }
+if(!FROM_LINK) try{ const j=JSON.parse(localStorage.getItem(KEY)||'null'); if(j) applySnap(j); }catch(e){}
+const diffSnap=()=>{ const o={S:{},light:LIGHT}; for(const id in S){ const d={}; for(const k in S[id]) if(JSON.stringify(S[id][k])!==JSON.stringify(DEF[id][k])) d[k]=S[id][k]; if(Object.keys(d).length) o.S[id]=d; } return o; };
+/* history: one snapshot per committed change (release, preset, reset, light) */
+const HIST={list:[],i:-1}; const snap=()=>clone({S,light:LIGHT});
+const commit=()=>{ const sn=JSON.stringify(snap()); if(HIST.i>=0&&JSON.stringify(HIST.list[HIST.i])===sn) return; HIST.list=HIST.list.slice(0,HIST.i+1); HIST.list.push(JSON.parse(sn)); if(HIST.list.length>80) HIST.list.shift(); HIST.i=HIST.list.length-1; updHist(); };
+const updHist=()=>{ const u=document.getElementById('fs-undo'), r=document.getElementById('fs-redo'); if(u) u.disabled=HIST.i<=0; if(r) r.disabled=HIST.i>=HIST.list.length-1; };
 const UI={view:'image',loupe:false,follow:true,dragging:false};
 const COARSE=matchMedia('(pointer:coarse)').matches;
 const save=(()=>{ let t; return ()=>{ clearTimeout(t); t=setTimeout(()=>{ try{ localStorage.setItem(KEY,JSON.stringify({S,light:LIGHT})); }catch(e){} },300); }; })();
@@ -32,10 +41,10 @@ const pending=new Map();   // key → job (latest wins)
 let tokenN=0;
 const latest=new Map();    // key → newest token issued
 function request(key,draft){ const T=targets.get(key); if(!T) return; if(!T.visible&&!draft){ T.dirty=true; return; } T.dirty=false;
-  const job=T.build(draft?.5:1); job.key=key; job.token=++tokenN; job.prio=(draft?0:1)+(T.prio||0); latest.set(key,job.token); pending.set(key,job); T.frame&&T.frame.classList.add('busy'); pump(); }
+  const sc=draft?(T.ms<80?1:T.ms<240?.71:.5):1; const job=T.build(sc); job.key=key; job.token=++tokenN; job.prio=(draft?0:1)+(T.prio||0); latest.set(key,job.token); pending.set(key,job); T.frame&&T.frame.classList.add('busy'); pump(); }
 function pump(){ if(!pending.size){ if(!pool.some(w=>w.busy)) status('idle'); return; } status(UI.dragging?'draft':'rendering');
   if(useWorkers&&pool.length){ for(const w of pool){ if(w.busy) continue; const job=next(); if(!job) break; w.busy=job.key; const tr=Object.values(job.clips||{}).map(c=>c.buffer); w.postMessage(job,tr); } }
-  else if(!pump.t){ pump.t=setTimeout(()=>{ pump.t=0; const job=next(); if(job){ try{ const r=mainRender(job); done(null,{key:job.key,token:job.token,W:job.W,H:job.H,rgba:r.rgba,stats:r.stats}); }catch(err){ console.error(err); } } },0); } }
+  else if(!pump.t){ pump.t=setTimeout(()=>{ pump.t=0; const job=next(); if(job){ try{ const r=mainRender(job); done(null,{key:job.key,token:job.token,W:job.W,H:job.H,dpr:job.dpr,scale:job.scale,rgba:r.rgba,stats:r.stats}); }catch(err){ console.error(err); } } },0); } }
 function next(){ let best=null; for(const j of pending.values()){ if(pool.some(w=>w.busy===j.key)) continue; if(!best||j.prio<best.prio) best=j; } if(best) pending.delete(best.key); return best; }
 let mainR=null; function mainRender(job){ if(!mainR){ mainR=makeMainRenderer(); } return mainR(job); }
 function makeMainRenderer(){ const enc=FX.enc; return (j)=>{ FX.LIGHT=j.light; const t0=performance.now(); let R;
@@ -46,13 +55,19 @@ function makeMainRenderer(){ const enc=FX.enc; return (j)=>{ FX.LIGHT=j.light; c
   return {rgba:out,stats:{ms:performance.now()-t0,marks:R.marks,unit:R.markUnit||'',W,H}}; }; }
 function done(w,d){ if(w) w.busy=null; const T=targets.get(d.key);
   if(d.error){ console.error(d.error); if(w&&/importScripts|NetworkError|SecurityError/.test(d.error)){ useWorkers=false; } }
-  else if(T&&d.token>=(T.lastPainted||0)){ T.lastPainted=d.token; const c=T.canvas; if(c.width!==d.W||c.height!==d.H){ c.width=d.W; c.height=d.H; } c.getContext('2d').putImageData(new ImageData(d.rgba,d.W,d.H),0,0); T.onStats&&T.onStats(d.stats,d.token===latest.get(d.key)&&!UI.dragging); }
+  else if(T&&d.token>=(T.lastPainted||0)){ T.lastPainted=d.token; const c=T.canvas; if(c.width!==d.W||c.height!==d.H){ c.width=d.W; c.height=d.H; } c.getContext('2d').putImageData(new ImageData(d.rgba,d.W,d.H),0,0); place(c,d.W,d.H,d.dpr,d.scale); if(d.scale===1) T.ms=d.stats.ms; d.stats.dpr=d.dpr; T.onStats&&T.onStats(d.stats,d.scale===1); }
   if(T&&T.frame&&!pending.has(d.key)&&!pool.some(x=>x.busy===d.key)) T.frame.classList.remove('busy');
   pump(); }
-const dims=(canvas,scale)=>{ const r=canvas.getBoundingClientRect(), dpr=Math.min(2,devicePixelRatio||1)*scale; return {W:Math.max(2,Math.round(r.width*dpr)),H:Math.max(2,Math.round(r.height*dpr)),dpr}; };
-const fxJob=(id,canvas,view)=>scale=>{ const {W,H,dpr}=dims(canvas,scale); return {kind:'fx',id,W,H,dpr,S,light:LIGHT,view:view()}; };
+/* canvas size = the frame's inner box in device px (dpr up to 3, a pixel budget per canvas), floored, and shown at exactly
+   W/dpr CSS px with its origin snapped to a device pixel — so the browser never resamples a finished plate. */
+const BUDGET=2.8e6;
+const dims=(canvas,scale)=>{ const fr=canvas.parentElement, cw=fr.clientWidth, ch=fr.clientHeight; let dpr=Math.min(3,devicePixelRatio||1); if(cw*ch*dpr*dpr>BUDGET) dpr=Math.sqrt(BUDGET/(cw*ch)); dpr*=scale;
+  return {W:Math.max(2,Math.floor(cw*dpr)),H:Math.max(2,Math.floor(ch*dpr)),dpr,scale}; };
+const place=(c,W,H,dpr,scale)=>{ const real=devicePixelRatio||1, fr=c.parentElement, r=fr.getBoundingClientRect(), x0=r.left+fr.clientLeft, y0=r.top+fr.clientTop;
+  const fx=(x0*real)%1, fy=((y0+scrollY)*real)%1; c.style.width=(W/dpr)+'px'; c.style.height=(H/dpr)+'px'; c.style.left=(fx?(1-fx)/real:0)+'px'; c.style.top=(fy?(1-fy)/real:0)+'px'; c.style.imageRendering=scale<1?'pixelated':'auto'; };
+const fxJob=(id,canvas,view)=>scale=>{ const {W,H,dpr}=dims(canvas,scale); return {kind:'fx',id,W,H,dpr,scale,S,light:LIGHT,view:view()}; };
 const uJob=(u,canvas)=>scale=>{ const {W,H,dpr}=dims(canvas,scale); const clips={}; for(const k in (u.clips||{})){ const c=document.createElement('canvas'); c.width=W; c.height=H; const g=c.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0); g.fillStyle='#fff'; u.clips[k](g,W/dpr,H/dpr); const d=g.getImageData(0,0,W,H).data, f=new Float32Array(W*H); for(let i=0,j=3;i<f.length;i++,j+=4) f[i]=d[j]/255; clips[k]=f; }
-  const SS={}; for(const id in S) SS[id]=UI.follow?S[id]:DEF[id]; return {kind:'u',id:u.id,W,H,dpr,S:SS,light:LIGHT,view:'image',clips}; };
+  const SS={}; for(const id in S) SS[id]=UI.follow?S[id]:DEF[id]; return {kind:'u',id:u.id,W,H,dpr,scale,S:SS,light:LIGHT,view:'image',clips}; };
 
 /* coupling: which keys must redraw when effect `id` changes */
 const dependents=id=>{ const keys=new Set(['p:'+id,'r:'+id]); SET.effects.forEach(e=>{ if(e.stockOf&&e.stockOf(S[e.id])===id){ keys.add('p:'+e.id); keys.add('r:'+e.id); } });
@@ -77,18 +92,22 @@ function buildDials(e,host,onInput,onChange){ host.innerHTML=''; const o=()=>S[e
       const row=h('div',{class:'fs-row t-'+p.type,'data-k':p.key,title:p.note||''});
       const lab=h('label',{title:(p.note||'')+' · double-click to reset'},p.ink?p.label.split(' · ')[1]:p.label); lab.addEventListener('dblclick',()=>{ o()[p.key]=clone(DEF[e.id][p.key]); sync(); onChange(p); });
       row.append(lab);
-      if(p.type==='range'){ const tr=h('div',{class:'fs-track'}); const span=p.max-p.min;
-        (p.limits||[]).forEach(([a,b,why])=>tr.append(h('span',{class:'lim',style:`left:${(a-p.min)/span*100}%;width:${(b-a)/span*100}%`,title:why})));
-        tr.append(h('span',{class:'def',style:`left:${(DEF[e.id][p.key]-p.min)/span*100}%`,title:'default '+fmt(DEF[e.id][p.key],p)}));
-        const inp=h('input',{type:'range',min:p.min,max:p.max,step:p.step,value:o()[p.key],'aria-label':p.label});
-        const out=h('button',{type:'button',class:'val',title:'type a value'}); const setOut=()=>{ out.textContent=fmt(o()[p.key],p)+(p.unit?' '+p.unit:''); };
-        inp.addEventListener('input',()=>{ o()[p.key]=+inp.value; setOut(); syncInk(); onInput(p); });
+      if(p.type==='range'){ const tr=h('div',{class:'fs-track'}); const span=p.max-p.min, k=p.curve||1;
+        // curve k: slider position t ∈ [0,1] → value = min + span·t^k — resolution where the subtle values live
+        const toT=v=>Math.pow(FX.clamp((v-p.min)/span,0,1),1/k), toV=t=>{ const v=p.min+span*Math.pow(t,k), st=p.step||.001; return FX.clamp(+(Math.round(v/st)*st).toFixed(6),p.min,p.max); };
+        (p.limits||[]).forEach(([a,b,why])=>{ const ta=toT(a), tb=toT(b); tr.append(h('span',{class:'lim',style:`left:${ta*100}%;width:${(tb-ta)*100}%`,title:why})); });
+        tr.append(h('span',{class:'def',style:`left:${toT(DEF[e.id][p.key])*100}%`,title:'default '+fmt(DEF[e.id][p.key],p)}));
+        if(k!==1) tr.classList.add('curved');
+        const inp=h('input',{type:'range',min:0,max:1,step:.0005,value:toT(o()[p.key]),'aria-label':p.label,'aria-valuemin':p.min,'aria-valuemax':p.max});
+        const out=h('button',{type:'button',class:'val',title:'type a value'}); const setOut=()=>{ out.textContent=fmt(o()[p.key],p)+(p.unit?' '+p.unit:''); inp.setAttribute('aria-valuenow',o()[p.key]); };
+        inp.addEventListener('input',()=>{ const v=toV(+inp.value); if(v===o()[p.key]) return; o()[p.key]=v; setOut(); syncInk(); onInput(p); });
         inp.addEventListener('change',()=>onChange(p));
+        inp.addEventListener('keydown',ev=>{ if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(ev.key)) return; ev.preventDefault(); const st=(p.step||.01)*(ev.shiftKey?10:1)*(ev.key==='ArrowLeft'||ev.key==='ArrowDown'?-1:1); o()[p.key]=FX.clamp(+(o()[p.key]+st).toFixed(6),p.min,p.max); sync(); onInput(p); clearTimeout(inp._kt); inp._kt=setTimeout(()=>onChange(p),260); });
         out.addEventListener('click',()=>{ const n=h('input',{type:'number',class:'num',min:p.min,max:p.max,step:p.step,value:o()[p.key],'aria-label':p.label+' value'}); out.replaceWith(n); n.focus(); n.select();
           let fd=false; const fin=(ok)=>{ if(fd) return; fd=true; if(ok){ const v=FX.clamp(+n.value,p.min,p.max); if(!isNaN(v)){ o()[p.key]=v; } } n.replaceWith(out); sync(); if(ok) onChange(p); };
           n.addEventListener('keydown',ev=>{ if(ev.key==='Enter') fin(true); if(ev.key==='Escape') fin(false); }); n.addEventListener('blur',()=>fin(true),{once:true}); });
         tr.append(inp); row.append(tr,out);
-        row._sync=()=>{ inp.value=o()[p.key]; setOut(); if(p.ink){ tr.style.setProperty('--tbg',trackBG(o(),p)); tr.classList.add('grad'); } }; }
+        row._sync=()=>{ inp.value=toT(o()[p.key]); setOut(); if(p.ink){ tr.style.setProperty('--tbg',trackBG(o(),p)); tr.classList.add('grad'); } }; }
       else if(p.type==='select'){ const seg=h('div',{class:'fs-seg',role:'group','aria-label':p.label});
         p.options.forEach(v=>seg.append(h('button',{type:'button','data-v':v,onclick:()=>{ o()[p.key]=v; sync(); onInput(p); onChange(p); }},v))); row.append(seg);
         row._sync=()=>$$('button',seg).forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===o()[p.key]))); }
@@ -146,6 +165,12 @@ SET.effects.forEach(e=>{ const cv=h('canvas',{class:'fs-cv','aria-label':e.name+
   const bReset=h('button',{type:'button',onclick:()=>{ S[e.id]=clone(DEF[e.id]); dials._sync(); changed(); }},'reset');
   const bSeed=h('button',{type:'button',onclick:()=>{ S[e.id].seed=1+Math.floor(Math.random()*999); dials._sync(); changed(); }},'new seed');
   sec.append(h('header',{class:'fs-fxh'},h('div',{class:'id'},h('span',{class:'code'},e.code+' · '+(e.role||'')),h('h2',null,e.name),h('div',{class:'links'},onsite,feed)),h('p',{class:'sub'},e.sub),h('div',{class:'act'},bReset,bSeed)));
+  // presets: a named starting point = defaults + a few params; the active one is the one the plate currently equals
+  const presetVals=pp=>Object.assign(clone(DEF[e.id]),clone(pp),{seed:S[e.id].seed});
+  const pre=h('div',{class:'fs-presets',role:'group','aria-label':e.name+' presets'},h('span',null,'Presets'));
+  (e.presets||[]).forEach(([name,pp])=>pre.append(h('button',{type:'button','data-p':name,onclick:()=>{ S[e.id]=presetVals(pp); dials._sync(); changed(); }},name)));
+  const updPre=()=>{ const cur=JSON.stringify(Object.assign({},S[e.id],{seed:0})); $$('button',pre).forEach(b=>{ const pp=(e.presets||[]).find(x=>x[0]===b.dataset.p)[1]; b.setAttribute('aria-pressed',String(JSON.stringify(Object.assign(presetVals(pp),{seed:0}))===cur)); }); };
+  if((e.presets||[]).length) sec.append(pre);
   const panelFoot=h('div',{class:'fs-pfoot'});
   const bP=h('button',{type:'button'},'copy params'); bP.onclick=()=>copy(JSON.stringify(specObj(),null,2),bP);
   const bC=h('button',{type:'button'},'copy call'); bC.onclick=()=>copy(call(),bC); panelFoot.append(bP,bC);
@@ -159,10 +184,10 @@ SET.effects.forEach(e=>{ const cv=h('canvas',{class:'fs-cv','aria-label':e.name+
   side.append(h('div',{class:'fs-fxf'},fstrip,fpanes));
   live.append(sec);
   const updSpec=()=>{ spec.textContent=JSON.stringify(specObj(),null,2); };
-  register('p:'+e.id,cv,fr,fxJob(e.id,cv,()=>UI.view),(s,final)=>{ stat.innerHTML=`<span>${s.W} × ${s.H} px</span><span><b>${fmtN(s.marks)}</b> ${s.unit}</span><span>${s.ms.toFixed(0)} ms</span><span class="${final?'':'dr'}">${final?'device px · '+UI.view:'draft · ½ res'}</span>`; },1);
-  const changed=()=>{ updSpec(); updOn(); SET.effects.forEach(x=>blocks[x.id]&&blocks[x.id].updFeed()); save(); UI.dragging=false; refresh(dependents(e.id),false); };
-  buildDials(e,dials,()=>{ dials._sync(); updSpec(); UI.dragging=true; refresh(dependents(e.id).filter(k=>k.startsWith('p:')),true); },()=>{ dials._sync(); changed(); });
-  blocks[e.id]={dials,updSpec,updOn,updFeed,specObj}; updSpec(); updOn(); updFeed(); });
+  register('p:'+e.id,cv,fr,fxJob(e.id,cv,()=>UI.view),(s,final)=>{ stat.innerHTML=`<span>${s.W} × ${s.H} px</span><span><b>${fmtN(s.marks)}</b> ${s.unit}</span><span>${s.ms.toFixed(0)} ms</span><span>${(s.dpr||1).toFixed(s.dpr%1?2:0)}× px</span><span class="${final?'':'dr'}">${final?UI.view:'draft'}</span>`; },1);
+  const changed=()=>{ updSpec(); updOn(); updPre(); SET.effects.forEach(x=>blocks[x.id]&&blocks[x.id].updFeed()); save(); commit(); UI.dragging=false; refresh(dependents(e.id),false); };
+  buildDials(e,dials,()=>{ dials._sync(); updSpec(); updPre(); UI.dragging=true; refresh(dependents(e.id).filter(k=>k.startsWith('p:')),true); },()=>{ dials._sync(); changed(); });
+  blocks[e.id]={dials,updSpec,updOn,updFeed,updPre,specObj}; updSpec(); updOn(); updFeed(); updPre(); });
 
 // usage gallery
 const UG=h('section',{class:'fs-usages',id:'usages'});
@@ -181,7 +206,13 @@ const bar=$('#fs-bar');
 $$('[data-view]',bar).forEach(b=>b.addEventListener('click',()=>{ UI.view=b.dataset.view; $$('[data-view]',bar).forEach(x=>x.setAttribute('aria-pressed',String(x===b))); refresh(SET.effects.map(e=>'p:'+e.id),false); }));
 $('#fs-loupe').addEventListener('click',e=>{ UI.loupe=!UI.loupe; e.currentTarget.setAttribute('aria-pressed',String(UI.loupe)); if(!UI.loupe) loupe.style.display='none'; });
 $('#fs-copyset').addEventListener('click',e=>copy(JSON.stringify({set:SET.set,title:SET.title,light:LIGHT,effects:S},null,2),e.currentTarget));
-$('#fs-resetall').addEventListener('click',()=>{ S=clone(DEF); LIGHT=clone(DEF_LIGHT); save(); puck.sync(); $$('.fs-dials').forEach(d=>d._sync&&d._sync()); SET.effects.forEach(e=>{ blocks[e.id].updSpec(); blocks[e.id].updOn(); blocks[e.id].updFeed(); }); refresh(allKeys(),false); });
+const restoreAll=()=>{ save(); puck.sync(); $$('.fs-dials').forEach(d=>d._sync&&d._sync()); SET.effects.forEach(e=>{ blocks[e.id].updSpec(); blocks[e.id].updOn(); blocks[e.id].updFeed(); blocks[e.id].updPre(); }); UI.dragging=false; refresh(allKeys(),false); };
+const undo=()=>{ if(HIST.i<=0) return; HIST.i--; applySnap(clone(HIST.list[HIST.i])); restoreAll(); updHist(); status('undo'); };
+const redo=()=>{ if(HIST.i>=HIST.list.length-1) return; HIST.i++; applySnap(clone(HIST.list[HIST.i])); restoreAll(); updHist(); status('redo'); };
+$('#fs-undo').addEventListener('click',undo); $('#fs-redo').addEventListener('click',redo);
+document.addEventListener('keydown',ev=>{ const t=ev.target; if(t&&(t.type==='number'||t.tagName==='TEXTAREA'||t.isContentEditable)) return; if(!(ev.metaKey||ev.ctrlKey)) return; const k=ev.key.toLowerCase(); if(k==='z'&&!ev.shiftKey){ ev.preventDefault(); undo(); } else if((k==='z'&&ev.shiftKey)||k==='y'){ ev.preventDefault(); redo(); } });
+$('#fs-link').addEventListener('click',e=>{ const u=location.origin+location.pathname+'?s='+b64e(JSON.stringify(diffSnap())); try{ history.replaceState(null,'',u+location.hash); }catch(_){} copy(u,e.currentTarget); });
+$('#fs-resetall').addEventListener('click',()=>{ S=clone(DEF); LIGHT=clone(DEF_LIGHT); commit(); save(); puck.sync(); $$('.fs-dials').forEach(d=>d._sync&&d._sync()); SET.effects.forEach(e=>{ blocks[e.id].updSpec(); blocks[e.id].updOn(); blocks[e.id].updFeed(); blocks[e.id].updPre(); }); refresh(allKeys(),false); });
 // light puck: drag inside the disc — angle = where the light comes from, distance from center = how low it sits
 const puck=(()=>{ const host=$('#fs-light'); if(!host) return {sync(){}}; const disc=h('div',{class:'disc',role:'slider',tabindex:'0','aria-label':'Sheet light: azimuth and elevation','aria-valuetext':''},h('i',{class:'sun'})), out=h('span',{class:'v'}); host.append(h('span',null,'Light'),disc,out);
   const sync=()=>{ const r=(90-LIGHT.el)/80, a=LIGHT.az*Math.PI/180; const sun=$('.sun',disc); sun.style.left=(50+Math.cos(a)*r*42).toFixed(2)+'%'; sun.style.top=(50+Math.sin(a)*r*42).toFixed(2)+'%'; out.textContent=`${Math.round(LIGHT.az)}° · ${Math.round(LIGHT.el)}°`; disc.setAttribute('aria-valuetext',`from ${Math.round(LIGHT.az)} degrees, ${Math.round(LIGHT.el)} degrees up`); SET.effects.forEach(e=>blocks[e.id]&&blocks[e.id].updSpec()); };
@@ -189,9 +220,9 @@ const puck=(()=>{ const host=$('#fs-light'); if(!host) return {sync(){}}; const 
   let raf=0; const kick=(draft)=>{ cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>{ UI.dragging=draft; refresh(draft?allKeys().filter(k=>k.startsWith('p:')&&targets.get(k).visible):allKeys(),draft); }); };
   disc.addEventListener('pointerdown',ev=>{ disc.setPointerCapture(ev.pointerId); at(ev); kick(true); });
   disc.addEventListener('pointermove',ev=>{ if(!disc.hasPointerCapture(ev.pointerId)) return; at(ev); kick(true); });
-  disc.addEventListener('pointerup',ev=>{ disc.releasePointerCapture(ev.pointerId); save(); kick(false); });
-  disc.addEventListener('keydown',ev=>{ const st=ev.shiftKey?10:2; if(ev.key==='ArrowLeft') LIGHT.az=(LIGHT.az-st+360)%360; else if(ev.key==='ArrowRight') LIGHT.az=(LIGHT.az+st)%360; else if(ev.key==='ArrowUp') LIGHT.el=Math.min(88,LIGHT.el+st); else if(ev.key==='ArrowDown') LIGHT.el=Math.max(10,LIGHT.el-st); else return; ev.preventDefault(); sync(); save(); kick(false); });
-  disc.addEventListener('dblclick',()=>{ LIGHT=clone(DEF_LIGHT); sync(); save(); kick(false); });
+  disc.addEventListener('pointerup',ev=>{ disc.releasePointerCapture(ev.pointerId); save(); commit(); kick(false); });
+  disc.addEventListener('keydown',ev=>{ const st=ev.shiftKey?10:2; if(ev.key==='ArrowLeft') LIGHT.az=(LIGHT.az-st+360)%360; else if(ev.key==='ArrowRight') LIGHT.az=(LIGHT.az+st)%360; else if(ev.key==='ArrowUp') LIGHT.el=Math.min(88,LIGHT.el+st); else if(ev.key==='ArrowDown') LIGHT.el=Math.max(10,LIGHT.el-st); else return; ev.preventDefault(); sync(); save(); clearTimeout(disc._kt); disc._kt=setTimeout(commit,400); kick(false); });
+  disc.addEventListener('dblclick',()=>{ LIGHT=clone(DEF_LIGHT); sync(); save(); commit(); kick(false); });
   sync(); return {sync}; })();
 
 /* ══════════ loupe: 4× device pixels, nearest-neighbor, on any plate (fine pointers) ══════════ */
@@ -205,5 +236,6 @@ document.addEventListener('pointermove',ev=>{ if(!UI.loupe||ev.pointerType==='to
 /* ══════════ start ══════════ */
 let lastW=innerWidth; addEventListener('resize',()=>{ clearTimeout(window.__rt); window.__rt=setTimeout(()=>{ if(Math.abs(innerWidth-lastW)<40) return; lastW=innerWidth; targets.forEach(T=>{ T.dirty=true; }); targets.forEach((T,k)=>{ if(T.visible) request(k,false); }); },220); });
 (document.fonts&&document.fonts.load?Promise.all([document.fonts.load('800 40px Archivo'),document.fonts.load('500 12px "JetBrains Mono"')]).catch(()=>{}):Promise.resolve()).then(()=>{ READY=true; status('ready'); targets.forEach((T,k)=>{ if(T.visible) request(k,false); }); });
-window.__fxsheet={get S(){return S;},DEF,get light(){return LIGHT;},targets,idle:()=>!pending.size&&!pool.some(w=>w.busy)&&!pump.t,workers:()=>useWorkers&&pool.length};
+commit();
+window.__fxsheet={undo,redo,hist:()=>HIST.i,get S(){return S;},DEF,get light(){return LIGHT;},targets,idle:()=>!pending.size&&!pool.some(w=>w.busy)&&!pump.t,workers:()=>useWorkers&&pool.length};
 })();

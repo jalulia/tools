@@ -82,7 +82,8 @@ const html=`<!DOCTYPE html>
     <div class="g"><button type="button" id="fs-loupe" aria-pressed="false" title="4× device-pixel loupe on any plate">loupe 4×</button></div>
     <div class="g jump">${SET.effects.map(e=>`<a href="#${e.id}" class="code" style="padding:0 6px">${esc(e.code)}</a>`).join('')}<a href="#usages" class="code" style="padding:0 6px;color:var(--grey)">usages</a></div>
     <span class="sp"></span>
-    <div class="g"><button type="button" id="fs-copyset">copy set params</button><button type="button" id="fs-resetall">reset all</button></div>
+    <div class="g hist"><button type="button" id="fs-undo" title="Undo · ⌘Z / Ctrl+Z" aria-label="Undo" disabled>↶</button><button type="button" id="fs-redo" title="Redo · ⇧⌘Z / Ctrl+Y" aria-label="Redo" disabled>↷</button></div>
+    <div class="g"><button type="button" id="fs-link" title="Copy a link that opens the sheet with these exact settings">copy link</button><button type="button" id="fs-copyset">copy params</button><button type="button" id="fs-resetall">reset all</button></div>
     <span id="fs-status">loading</span>
   </div>
   <div id="fs-live"><div class="fs-static">
@@ -121,7 +122,7 @@ const setJson={ template:SET.code, set:SET.set, title:SET.title, premise:SET.pre
   color:{ space:'OKLab / OKLCH (Ottosson 2020; CSS Color 4)', gamut:'sRGB; out-of-gamut inks have chroma reduced at constant L and h (binary search, 24 steps)', mix:{oklab:'straight line in OKLab',oklch:'L, C linear; hue on the short arc; achromatic end takes the other hue',linear:'linear-light RGB',srgb:'gamma-encoded RGB (comparison only)'}, overprint:{multiply:'transparent inks; product in linear light',mix:'opaque; blended by the mix space',darken:'OKLab: lower L, top ink a/b'} },
   units:'CSS px for every length; rendered at device px (dpr ≤ 2). Density params change mark count per px², never a tile scale.',
   shared:{ blueNoise:'64 × 64 void-and-cluster rank tile, σ 1.9, toroidal, seed 1993', mask:'signed distance to rect | ellipse | band | blob, displaced by fbm (wander, scale, octaves), feather as tone or blue-noise speckle, bite = clumped dropouts rising toward the edge; cached by params', eases:Object.fromEntries(Object.entries(FX.EASES).map(([k,c])=>[k,c.label+(c.k?' (k)':'')])) },
-  effects:SET.effects.map(e=>({ id:e.id, code:e.code, name:e.name, role:e.role, sub:e.sub, printsOn:e.stockOf?e.stockOf(Object.fromEntries(e.params.map(p=>[p.key,p.value]))):null, recipe:e.recipe, limits:e.limits.map(([param,range,what])=>({param,range,what})), params:e.params.map(specParam) })),
+  effects:SET.effects.map(e=>({ id:e.id, code:e.code, name:e.name, role:e.role, sub:e.sub, presets:(e.presets||[]).map(([name,params])=>({name,params})), printsOn:e.stockOf?e.stockOf(Object.fromEntries(e.params.map(p=>[p.key,p.value]))):null, recipe:e.recipe, limits:e.limits.map(([param,range,what])=>({param,range,what})), params:e.params.map(specParam) })),
   usages:SET.usages.map((u,i)=>({ id:u.id, code:'U-0'+(i+1), title:u.title, sub:u.sub, uses:u.uses, aspect:u.aspect, overrides:u.overrides })) };
 fs.writeFileSync(path.join(here,'set.json'),JSON.stringify(setJson,null,1));
 const tpl={ id:'t-04-effect-set', code:'T-04', name:'Effect set', purpose:'House a family of single effects on one sheet: an overview rack, one technique block per effect (plate, dials, recipe, limits, live params), and a gallery of usages that run the same functions with the live dials.',

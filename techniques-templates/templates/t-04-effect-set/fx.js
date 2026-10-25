@@ -161,6 +161,14 @@ FX.DotRaster=(W,H)=>{ const cov=new Float32Array(W*H);
       if(rad){ let a=Math.atan2(dy,dx)/TAU*7; if(a<0)a+=7; const i=a|0, f=a-i; rr=r*(rad[i]+(rad[(i+1)%7]-rad[i])*f); }
       const c=(rr-d)/soft+.5; if(c>0){ const v=(c>1?1:c)*pk, j=y*W+x; if(v>cov[j]) cov[j]=v; } } } } }; };
 
+/* signed-distance dot raster (device px): sd = max over dots of (radius(θ) − distance), pr = that dot's pressure.
+   Coverage is decided later, after the stock has displaced the edge — so every mark keeps a 1-device-px AA edge. */
+FX.DotSD=(W,H)=>{ const sd=new Float32Array(W*H).fill(-9), pr=new Float32Array(W*H);
+  return { sd, pr, add(cx,cy,r,rad,pk,reach=3){ const R=r*1.6+reach, x0=Math.max(0,Math.floor(cx-R)), x1=Math.min(W-1,Math.ceil(cx+R)), y0=Math.max(0,Math.floor(cy-R)), y1=Math.min(H-1,Math.ceil(cy+R));
+    for(let y=y0;y<=y1;y++){ const dy=y+.5-cy; for(let x=x0;x<=x1;x++){ const dx=x+.5-cx, d=Math.sqrt(dx*dx+dy*dy); let rr=r;
+      if(rad){ let a=Math.atan2(dy,dx)/TAU*7; if(a<0)a+=7; const i=a|0, f=a-i; rr=r*(rad[i]+(rad[(i+1)%7]-rad[i])*f); }
+      const v=rr-d, j=y*W+x; if(v>sd[j]){ sd[j]=v; pr[j]=pk; } } } } }; };
+
 /* capsule raster: AA line segments (fibers, hairs), union by max, device px */
 FX.LineRaster=(W,H)=>{ const cov=new Float32Array(W*H);
   return { cov, add(x0,y0,x1,y1,w,pk=1){ const r=w/2, minx=Math.max(0,Math.floor(Math.min(x0,x1)-r-1)), maxx=Math.min(W-1,Math.ceil(Math.max(x0,x1)+r+1)), miny=Math.max(0,Math.floor(Math.min(y0,y1)-r-1)), maxy=Math.min(H-1,Math.ceil(Math.max(y0,y1)+r+1));
