@@ -1,0 +1,457 @@
+{
+ "id": "fx-10-embroidery",
+ "code": "FX-10",
+ "name": "Satin embroidery",
+ "role": "mark · thread",
+ "section": "new",
+ "set": "Set 01",
+ "sub": "A satin fill: long thread floats laid side by side across the die at one angle, each a slightly rounded body whose filaments gleam along their length, so the fill lights up or goes dark as the sheet light turns. Long floats split into staggered rows, ends land unevenly at the edge, needle holes dimple the cloth and the ground puckers where the stitches pull.",
+ "entry": {
+  "scripts": [
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/fx.js",
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/set.js"
+  ],
+  "globals": [
+   "FX",
+   "FXSET"
+  ],
+  "find": "FXSET.effects.find(e => e.id === 'fx-10-embroidery')",
+  "call": "fx.run(o, W, H, dpr, { S, clips })",
+  "standalone": "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/lift/fx-10-embroidery.html"
+ },
+ "signature": {
+  "in": {
+   "o": "params object — keys below; every length in CSS px",
+   "W": "device px width",
+   "H": "device px height",
+   "dpr": "device px per CSS px (density is physical: marks per CSS px²)",
+   "x": {
+    "S": "params of every effect keyed by id; the stock this prints on is read from S[printsOn]",
+    "clips": "Float32Array alpha per name (die), from FXSET.clips('fx-10-embroidery', W, H, dpr, o) on a thread with fonts",
+    "umask": "optional: clips.umask — a typed or image mask (mShape type | image)"
+   }
+  },
+  "out": {
+   "lin": "Float32Array W·H·3, linear-light sRGB (encode with FX.toRGBA(R,\"image\",W,H))",
+   "ink": "Float32Array W·H, absorbance / coverage (FX.toRGBA(R,\"ink\",…) = film positive)",
+   "stock": "Float32Array W·H, stock height (FX.toRGBA(R,\"stock\",…) = normalized height map)",
+   "mask": "Float32Array W·H",
+   "marks": "int — count of marks",
+   "markUnit": "string"
+  }
+ },
+ "light": {
+  "global": "FX.LIGHT",
+  "default": {
+   "az": 225,
+   "el": 34
+  },
+  "note": "az = direction the light comes FROM (screen degrees; 0 = right, 90 = below); el = elevation above the sheet"
+ },
+ "printsOn": "fx-04-weave",
+ "deterministic": "yes — every random draw is a hash of (position, seed); same inputs → same pixels in the same engine",
+ "params": [
+  {
+   "key": "shape",
+   "label": "Die",
+   "group": "density",
+   "type": "select",
+   "default": "crescent",
+   "options": [
+    "compass",
+    "sun",
+    "crescent",
+    "knot",
+    "monogram",
+    "word",
+    "seal"
+   ],
+   "note": "what the die (or type) is: an invented mark (compass, sun, crescent, knot, a monogram from the text), a word, or a ring seal"
+  },
+  {
+   "key": "text",
+   "label": "Text",
+   "group": "density",
+   "type": "text",
+   "default": "Wren",
+   "when": {
+    "shape": [
+     "word",
+     "seal",
+     "monogram"
+    ]
+   },
+   "note": "set in Archivo 800 for word, seal and monogram (its first letter)"
+  },
+  {
+   "key": "size",
+   "label": "Size",
+   "group": "density",
+   "type": "range",
+   "default": 0.74,
+   "min": 0.15,
+   "max": 1,
+   "step": 0.01,
+   "note": "die height as a share of the plate"
+  },
+  {
+   "key": "density",
+   "label": "Stitch density",
+   "group": "density",
+   "type": "range",
+   "default": 24,
+   "min": 8,
+   "max": 60,
+   "step": 0.5,
+   "unit": "/100px",
+   "limits": [
+    {
+     "lo": 45,
+     "hi": 60,
+     "why": "a smooth sheet at 1×"
+    },
+    {
+     "lo": 8,
+     "hi": 12,
+     "why": "gaps open"
+    }
+   ],
+   "note": "satin threads per 100 CSS px, across the stitch direction"
+  },
+  {
+   "key": "angle",
+   "label": "Stitch angle",
+   "group": "density",
+   "type": "range",
+   "default": -38,
+   "min": -90,
+   "max": 90,
+   "step": 1,
+   "unit": "°",
+   "note": "direction of the floats; threads gleam most when they run across the light"
+  },
+  {
+   "key": "maxFloat",
+   "label": "Max float",
+   "group": "density",
+   "type": "range",
+   "default": 72,
+   "min": 8,
+   "max": 400,
+   "step": 1,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 200,
+     "hi": 400,
+     "why": "snags"
+    }
+   ],
+   "note": "longest stitch before it splits into rows (split satin); the split points stagger like brickwork"
+  },
+  {
+   "key": "stagger",
+   "label": "End stagger",
+   "group": "density",
+   "type": "range",
+   "default": 0.45,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "how unevenly the stitch ends land along the die edge (alternating needle points + jitter)"
+  },
+  {
+   "key": "outline",
+   "label": "Outline",
+   "group": "density",
+   "type": "select",
+   "default": "none",
+   "options": [
+    "none",
+    "split",
+    "running",
+    "chain"
+   ],
+   "note": "split stitch (each stitch pierces the last), running stitch, or chain stitch along the die edge"
+  },
+  {
+   "key": "oLen",
+   "label": "Outline stitch",
+   "group": "density",
+   "type": "range",
+   "default": 4,
+   "min": 1.5,
+   "max": 14,
+   "step": 0.1,
+   "unit": "px",
+   "when": {
+    "outline": [
+     "split",
+     "running",
+     "chain"
+    ]
+   },
+   "note": "stitch (or chain link) length"
+  },
+  {
+   "key": "loft",
+   "label": "Thread loft",
+   "group": "relief",
+   "type": "range",
+   "default": 0.55,
+   "min": 0.2,
+   "max": 1.6,
+   "step": 0.01,
+   "note": "thread height ÷ thread radius: round (1) or flattened (.4)"
+  },
+  {
+   "key": "twist",
+   "label": "Thread twist",
+   "group": "relief",
+   "type": "range",
+   "default": 0.15,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "ply twist: helical ridges along each float and the angle of the filaments that carry the gleam (rayon low, cotton floss high)"
+  },
+  {
+   "key": "sheen",
+   "label": "Sheen",
+   "group": "relief",
+   "type": "range",
+   "default": 0.82,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "limits": [
+    {
+     "lo": 0.9,
+     "hi": 1,
+     "why": "plastic"
+    }
+   ],
+   "note": "anisotropic gleam along the thread: polyester / rayon ≈ .8, cotton ≈ .15"
+  },
+  {
+   "key": "pull",
+   "label": "Pull / pucker",
+   "group": "relief",
+   "type": "range",
+   "default": 0.35,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "limits": [
+    {
+     "lo": 0.7,
+     "hi": 1,
+     "why": "crumpled"
+    }
+   ],
+   "note": "how hard the stitches draw the ground: ridges along the pull at the stitch ends and a crease at the edge"
+  },
+  {
+   "key": "yL",
+   "label": "Thread · L",
+   "group": "color",
+   "type": "range",
+   "default": 0.68,
+   "min": 0,
+   "max": 1,
+   "step": 0.005,
+   "ink": "y",
+   "note": "OKLCH lightness (0 black … 1 white)"
+  },
+  {
+   "key": "yC",
+   "label": "Thread · C",
+   "group": "color",
+   "type": "range",
+   "default": 0.165,
+   "min": 0,
+   "max": 0.37,
+   "step": 0.002,
+   "ink": "y",
+   "limits": [
+    {
+     "lo": 0.26,
+     "hi": 0.37,
+     "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+    }
+   ],
+   "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+  },
+  {
+   "key": "yh",
+   "label": "Thread · h",
+   "group": "color",
+   "type": "range",
+   "default": 52,
+   "min": 0,
+   "max": 360,
+   "step": 0.5,
+   "unit": "°",
+   "ink": "y",
+   "note": "OKLCH hue angle"
+  },
+  {
+   "key": "stock",
+   "label": "Stitched into",
+   "group": "stock",
+   "type": "select",
+   "default": "cloth",
+   "options": [
+    "cloth",
+    "paper"
+   ],
+   "note": "cloth = FX-04 live; paper = FX-03 live (a stitched card)"
+  },
+  {
+   "key": "seed",
+   "label": "Seed",
+   "group": "seed",
+   "type": "range",
+   "default": 19,
+   "min": 1,
+   "max": 999,
+   "step": 1,
+   "note": "every random draw in the effect hangs off this one number"
+  }
+ ],
+ "defaults": {
+  "shape": "crescent",
+  "text": "Wren",
+  "size": 0.74,
+  "density": 24,
+  "angle": -38,
+  "maxFloat": 72,
+  "stagger": 0.45,
+  "outline": "none",
+  "oLen": 4,
+  "loft": 0.55,
+  "twist": 0.15,
+  "sheen": 0.82,
+  "pull": 0.35,
+  "yL": 0.68,
+  "yC": 0.165,
+  "yh": 52,
+  "stock": "cloth",
+  "seed": 19
+ },
+ "depsDefaults": {
+  "fx-04-weave": {
+   "warp": 32,
+   "weft": 30,
+   "fill": 0.92,
+   "pattern": "plain",
+   "slub": 0.35,
+   "slubScale": 11,
+   "hair": 0.3,
+   "irregular": 0.3,
+   "wear": 0.15,
+   "wEase": [
+    "in",
+    2.2
+   ],
+   "wAngle": 90,
+   "depth": 1.2,
+   "diffuse": 0.85,
+   "shadow": 0.6,
+   "wL": 0.3,
+   "wC": 0.004,
+   "wh": 265,
+   "fL": 0.53,
+   "fC": 0.016,
+   "fh": 84,
+   "cL": 0.5,
+   "cC": 0.075,
+   "ch": 186,
+   "aMode": "flecks",
+   "accent": 0.014,
+   "dye": 0.035,
+   "mShape": "rect",
+   "mText": "Counted",
+   "mInset": 22,
+   "mAmp": 3,
+   "mScale": 40,
+   "mRough": 4,
+   "mFeather": 1,
+   "fray": 6,
+   "lift": 0.8,
+   "mBite": 0,
+   "seed": 33
+  }
+ },
+ "presets": [
+  {
+   "name": "rayon gloss",
+   "params": {}
+  },
+  {
+   "name": "matte cotton floss",
+   "params": {
+    "sheen": 0.14,
+    "twist": 0.55,
+    "loft": 0.85,
+    "density": 19,
+    "yL": 0.7,
+    "yC": 0.11,
+    "yh": 72,
+    "maxFloat": 46
+   }
+  },
+  {
+   "name": "chain-stitch outline",
+   "params": {
+    "shape": "knot",
+    "size": 0.7,
+    "outline": "chain",
+    "oLen": 6.5,
+    "angle": -62,
+    "density": 26,
+    "yL": 0.6,
+    "yC": 0.1,
+    "yh": 182,
+    "maxFloat": 60
+   }
+  }
+ ],
+ "recipe": [
+  "Die → exact signed distance. Satin: centerlines across the die at the stitch angle, one per 100 / density px; each centerline is marched against the die to find where the needle goes in and out (concave dies give several floats per row).",
+  "Ends stagger (alternating needle points + jitter); floats longer than the max split into rows at brick-staggered points. Each float: a capsule whose cross-section is rounded (flatter when long), sinking into its needle hole at both ends, with an S-twist ridge along it.",
+  "Floats are z-buffered by height (neighbors overlap like real satin); an optional split, running or chain stitch is traced along the die edge (marching-squares contour, real arc length) and laid on top.",
+  "Cloth (FX-04 live): pucker ridges run along the pull direction at the stitch ends, decaying away from the edge; a crease dimples just outside the satin; needle holes darken it. Its own lighting is kept and multiplied by the pucker's Lambert.",
+  "Thread light: Lambert on the thread normals + an anisotropic gleam (Kajiya–Kay along the twisted filament direction × a lobe across the cylinder), from the sheet light; a height-field shadow and cavity occlusion from the stitched relief fall onto the cloth and between floats. Color: OKLCH."
+ ],
+ "limits": [
+  {
+   "param": "density",
+   "range": "> 45 /100 px",
+   "what": "threads under ~2 px: the fill reads as a smooth sheet at 1× (fine at 2×+)"
+  },
+  {
+   "param": "density",
+   "range": "< 12 /100 px",
+   "what": "gaps open between floats"
+  },
+  {
+   "param": "max float",
+   "range": "> 200 px",
+   "what": "floats too long to hold: they would snag; read as a ribbon"
+  },
+  {
+   "param": "sheen",
+   "range": "> .9 with low twist",
+   "what": "reads as plastic"
+  },
+  {
+   "param": "pull",
+   "range": "> .7",
+   "what": "the ground reads crumpled, not stitched"
+  }
+ ],
+ "testVector": {
+  "skipped": "needs main-thread text/path rasterization for its clips; render lift/fx-10-embroidery.html to compare by eye"
+ }
+}

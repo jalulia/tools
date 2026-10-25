@@ -1,0 +1,511 @@
+{
+ "id": "fx-09-spot-uv",
+ "code": "FX-09",
+ "name": "Spot UV varnish",
+ "role": "mark · clear film",
+ "section": "new",
+ "set": "Set 01",
+ "sub": "A clear gloss film printed only on the die, over matte board. Head-on it all but disappears; it shows as the sheet light's soft box mirrored in a surface flatter than the paper, a crisp sheen boundary at the film edge, and a faint wet darkening of the stock beneath. Drag the light and the reflection slides across the mark.",
+ "entry": {
+  "scripts": [
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/fx.js",
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/set.js"
+  ],
+  "globals": [
+   "FX",
+   "FXSET"
+  ],
+  "find": "FXSET.effects.find(e => e.id === 'fx-09-spot-uv')",
+  "call": "fx.run(o, W, H, dpr, { S, clips })",
+  "standalone": "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/lift/fx-09-spot-uv.html"
+ },
+ "signature": {
+  "in": {
+   "o": "params object — keys below; every length in CSS px",
+   "W": "device px width",
+   "H": "device px height",
+   "dpr": "device px per CSS px (density is physical: marks per CSS px²)",
+   "x": {
+    "S": "params of every effect keyed by id; the stock this prints on is read from S[printsOn]",
+    "clips": "Float32Array alpha per name (die), from FXSET.clips('fx-09-spot-uv', W, H, dpr, o) on a thread with fonts",
+    "umask": "optional: clips.umask — a typed or image mask (mShape type | image)"
+   }
+  },
+  "out": {
+   "lin": "Float32Array W·H·3, linear-light sRGB (encode with FX.toRGBA(R,\"image\",W,H))",
+   "ink": "Float32Array W·H, absorbance / coverage (FX.toRGBA(R,\"ink\",…) = film positive)",
+   "stock": "Float32Array W·H, stock height (FX.toRGBA(R,\"stock\",…) = normalized height map)",
+   "mask": "Float32Array W·H",
+   "marks": "int — count of marks",
+   "markUnit": "string"
+  }
+ },
+ "light": {
+  "global": "FX.LIGHT",
+  "default": {
+   "az": 225,
+   "el": 34
+  },
+  "note": "az = direction the light comes FROM (screen degrees; 0 = right, 90 = below); el = elevation above the sheet"
+ },
+ "printsOn": "fx-03-paper-tooth",
+ "deterministic": "yes — every random draw is a hash of (position, seed); same inputs → same pixels in the same engine",
+ "params": [
+  {
+   "key": "shape",
+   "label": "Die",
+   "group": "density",
+   "type": "select",
+   "default": "sun",
+   "options": [
+    "compass",
+    "sun",
+    "crescent",
+    "knot",
+    "monogram",
+    "word",
+    "seal"
+   ],
+   "note": "what the die (or type) is: an invented mark (compass, sun, crescent, knot, a monogram from the text), a word, or a ring seal"
+  },
+  {
+   "key": "text",
+   "label": "Text",
+   "group": "density",
+   "type": "text",
+   "default": "Four surfaces",
+   "when": {
+    "shape": [
+     "word",
+     "seal",
+     "monogram"
+    ]
+   },
+   "note": "set in Archivo 800 for word, seal and monogram (its first letter)"
+  },
+  {
+   "key": "size",
+   "label": "Size",
+   "group": "density",
+   "type": "range",
+   "default": 0.74,
+   "min": 0.15,
+   "max": 1,
+   "step": 0.01,
+   "note": "die height as a share of the plate"
+  },
+  {
+   "key": "pattern",
+   "label": "Coverage",
+   "group": "density",
+   "type": "select",
+   "default": "solid",
+   "options": [
+    "solid",
+    "lines",
+    "dots"
+   ],
+   "note": "a solid film, or a fine line / dot screen of varnish"
+  },
+  {
+   "key": "area",
+   "label": "Varnish on",
+   "group": "density",
+   "type": "select",
+   "default": "die",
+   "options": [
+    "die",
+    "reverse",
+    "die + field"
+   ],
+   "note": "die = the mark is varnished · reverse = the sheet is varnished and the mark stays matte · die + field = a solid mark inside a patterned field"
+  },
+  {
+   "key": "pitch",
+   "label": "Pattern pitch",
+   "group": "density",
+   "type": "range",
+   "default": 3,
+   "min": 1.2,
+   "max": 16,
+   "step": 0.05,
+   "unit": "px",
+   "when": {
+    "pattern": [
+     "lines",
+     "dots"
+    ]
+   },
+   "limits": [
+    {
+     "lo": 1.2,
+     "hi": 2.5,
+     "why": "a pixel checker at 1× (fine at 2×+)"
+    }
+   ]
+  },
+  {
+   "key": "pSize",
+   "label": "Line / dot share",
+   "group": "density",
+   "type": "range",
+   "default": 0.45,
+   "min": 0.15,
+   "max": 0.92,
+   "step": 0.01,
+   "when": {
+    "pattern": [
+     "lines",
+     "dots"
+    ]
+   },
+   "note": "line width or dot diameter ÷ pitch"
+  },
+  {
+   "key": "pAngle",
+   "label": "Pattern angle",
+   "group": "density",
+   "type": "range",
+   "default": 45,
+   "min": -90,
+   "max": 90,
+   "step": 1,
+   "unit": "°",
+   "when": {
+    "pattern": [
+     "lines",
+     "dots"
+    ]
+   }
+  },
+  {
+   "key": "gap",
+   "label": "Keep-out",
+   "group": "density",
+   "type": "range",
+   "default": 2.5,
+   "min": 0,
+   "max": 12,
+   "step": 0.1,
+   "unit": "px",
+   "when": {
+    "area": [
+     "reverse",
+     "die + field"
+    ]
+   },
+   "note": "matte ring between the mark and the varnished field"
+  },
+  {
+   "key": "build",
+   "label": "Film build",
+   "group": "relief",
+   "type": "range",
+   "default": 0.22,
+   "min": 0.02,
+   "max": 2.5,
+   "step": 0.01,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 2,
+     "hi": 2.5,
+     "why": "blister"
+    }
+   ],
+   "note": "film height in CSS px at the plate's macro scale (flat UV ≈ .1–.3, raised / tactile UV ≈ 1–2)"
+  },
+  {
+   "key": "round",
+   "label": "Edge rounding",
+   "group": "relief",
+   "type": "range",
+   "default": 1.6,
+   "min": 0.2,
+   "max": 8,
+   "step": 0.05,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 0.2,
+     "hi": 0.4,
+     "why": "aliases at 1×"
+    }
+   ],
+   "note": "width of the film's rounded shoulder, the meniscus that catches the light at the edge"
+  },
+  {
+   "key": "level",
+   "label": "Leveling",
+   "group": "relief",
+   "type": "range",
+   "default": 0.93,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "how far the film fills the tooth: 1 = a glass-flat top, 0 = the film follows the paper"
+  },
+  {
+   "key": "gloss",
+   "label": "Gloss",
+   "group": "relief",
+   "type": "range",
+   "default": 0.9,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "limits": [
+    {
+     "lo": 0,
+     "hi": 0.35,
+     "why": "satin varnish"
+    }
+   ],
+   "note": "surface smoothness: a sharp-edged soft-box reflection and a tight glint at 1, satin at .3"
+  },
+  {
+   "key": "mirror",
+   "label": "Reflection",
+   "group": "relief",
+   "type": "range",
+   "default": 1,
+   "min": 0,
+   "max": 2,
+   "step": 0.01,
+   "note": "brightness of the soft box (the sheet light) seen in the film"
+  },
+  {
+   "key": "box",
+   "label": "Soft-box size",
+   "group": "relief",
+   "type": "range",
+   "default": 0.42,
+   "min": 0.08,
+   "max": 1,
+   "step": 0.01,
+   "note": "half-height of the sheet light's soft box as seen from the sheet (tangent units); its reflection is a window of sheen"
+  },
+  {
+   "key": "cam",
+   "label": "Camera distance",
+   "group": "relief",
+   "type": "range",
+   "default": 1.1,
+   "min": 0.5,
+   "max": 6,
+   "step": 0.05,
+   "note": "viewer height in plate widths: closer = the reflection sweeps further across the sheet"
+  },
+  {
+   "key": "wet",
+   "label": "Wet tone",
+   "group": "color",
+   "type": "range",
+   "default": 0.45,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "darkening and deepening of the stock under the film (the varnish replaces the air in the tooth)"
+  },
+  {
+   "key": "bL",
+   "label": "Stock darkness · L",
+   "group": "color",
+   "type": "range",
+   "default": 0.22,
+   "min": 0,
+   "max": 1,
+   "step": 0.005,
+   "ink": "b",
+   "note": "OKLCH lightness of the board (FX-03 relief and fibers, this color)"
+  },
+  {
+   "key": "bC",
+   "label": "Board · C",
+   "group": "color",
+   "type": "range",
+   "default": 0.006,
+   "min": 0,
+   "max": 0.37,
+   "step": 0.002,
+   "ink": "b",
+   "limits": [
+    {
+     "lo": 0.26,
+     "hi": 0.37,
+     "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+    }
+   ],
+   "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+  },
+  {
+   "key": "bh",
+   "label": "Board · h",
+   "group": "color",
+   "type": "range",
+   "default": 265,
+   "min": 0,
+   "max": 360,
+   "step": 0.5,
+   "unit": "°",
+   "ink": "b",
+   "note": "OKLCH hue angle"
+  },
+  {
+   "key": "stock",
+   "label": "Prints on",
+   "group": "stock",
+   "type": "select",
+   "default": "paper",
+   "options": [
+    "paper",
+    "smooth"
+   ],
+   "note": "paper = FX-03 live (its tooth is what the film levels); smooth = a coated, toothless board"
+  }
+ ],
+ "defaults": {
+  "shape": "sun",
+  "text": "Four surfaces",
+  "size": 0.74,
+  "pattern": "solid",
+  "area": "die",
+  "pitch": 3,
+  "pSize": 0.45,
+  "pAngle": 45,
+  "gap": 2.5,
+  "build": 0.22,
+  "round": 1.6,
+  "level": 0.93,
+  "gloss": 0.9,
+  "mirror": 1,
+  "box": 0.42,
+  "cam": 1.1,
+  "wet": 0.45,
+  "bL": 0.22,
+  "bC": 0.006,
+  "bh": 265,
+  "stock": "paper"
+ },
+ "depsDefaults": {
+  "fx-03-paper-tooth": {
+   "scale": 1.1,
+   "oct": 3,
+   "fibers": 3,
+   "fLen": 14,
+   "fWidth": 0.4,
+   "pits": 1,
+   "pers": 0.42,
+   "ease": [
+    "in",
+    2.4
+   ],
+   "aniso": 1.6,
+   "form": 0.3,
+   "formScale": 60,
+   "fAngle": 6,
+   "fSpread": 0.4,
+   "depth": 0.12,
+   "diffuse": 0.45,
+   "fRaise": 0.45,
+   "pDepth": 0.35,
+   "paperL": 0.968,
+   "fDark": 0.014,
+   "pDark": 0.02,
+   "tL": 0.7,
+   "tC": 0,
+   "th": 250,
+   "tAmt": 0.5,
+   "mShape": "rect",
+   "mText": "Counted",
+   "mInset": 22,
+   "mAmp": 2.5,
+   "mScale": 28,
+   "mRough": 5,
+   "mFeather": 1.2,
+   "mMode": "speckle",
+   "lift": 1,
+   "mBite": 0,
+   "seed": 21
+  }
+ },
+ "presets": [
+  {
+   "name": "on black board",
+   "params": {}
+  },
+  {
+   "name": "tone-on-tone pattern",
+   "params": {
+    "shape": "monogram",
+    "text": "Marlow",
+    "size": 0.74,
+    "area": "die + field",
+    "pattern": "lines",
+    "pitch": 2.6,
+    "pSize": 0.4,
+    "pAngle": -45,
+    "gap": 3,
+    "bL": 0.38,
+    "bC": 0.03,
+    "bh": 170,
+    "wet": 0.6,
+    "build": 0.14,
+    "round": 0.8,
+    "box": 0.42
+   }
+  },
+  {
+   "name": "raised UV",
+   "params": {
+    "shape": "word",
+    "text": "Nightjar",
+    "size": 0.62,
+    "build": 1.4,
+    "round": 3.8,
+    "level": 1,
+    "gloss": 0.96,
+    "wet": 0.35,
+    "box": 0.5,
+    "cam": 0.85
+   }
+  }
+ ],
+ "recipe": [
+  "Die = an invented mark, a word or a ring seal (AA clip, main thread) → exact signed distance. Coverage pattern: solid, or an analytic line / dot screen intersected with the die (or with the sheet around it), so every line and dot keeps a 1-device-px edge.",
+  "Film profile from the signed distance: a rounded shoulder (1 − (1 − d / rounding)²) rising to the film build. The film levels the FX-03 tooth: its top = lerp(tooth, smoothed tooth, leveling × profile) + build × profile.",
+  "Stock: FX-03's relief and fibers under a board color (OKLCH; dark by default). Matte = Lambert from FX-03 × albedo + a weak, broad rough-dielectric sheen on the tooth facets.",
+  "Film: Fresnel (n = 1.5, F₀ = .04) from a perspective viewer above the plate; the mirror vector samples the studio (a rectangular soft box at the sheet light, a dim ceiling, a dark room); gloss sets the box edge softness and the glint exponent. Under the film the matte sheen is gone and the stock is darker and deeper in OKLab (wet tone).",
+  "One light: the box center, glint and FX-03 shading all follow FX.LIGHT."
+ ],
+ "limits": [
+  {
+   "param": "film build",
+   "range": "> 2 px",
+   "what": "a blister or a sticker, not a print finish"
+  },
+  {
+   "param": "edge rounding",
+   "range": "< .4 px",
+   "what": "the sheen boundary aliases on 1× screens"
+  },
+  {
+   "param": "pattern pitch",
+   "range": "< 2.5 px",
+   "what": "lines and dots fall to a pixel checker at 1× (fine at 2×+)"
+  },
+  {
+   "param": "gloss",
+   "range": "< .35",
+   "what": "reads as a matte or satin varnish: the mark stops revealing itself in the reflection"
+  },
+  {
+   "param": "light elevation",
+   "range": "> 75°",
+   "what": "the soft box moves behind the viewer: the film nearly vanishes (as real spot UV does under overhead light)"
+  }
+ ],
+ "testVector": {
+  "skipped": "needs main-thread text/path rasterization for its clips; render lift/fx-09-spot-uv.html to compare by eye"
+ }
+}

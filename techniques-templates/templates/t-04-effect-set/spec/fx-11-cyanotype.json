@@ -1,0 +1,555 @@
+{
+ "id": "fx-11-cyanotype",
+ "code": "FX-11",
+ "name": "Cyanotype",
+ "role": "mark · sun print",
+ "section": "new",
+ "set": "Set 01",
+ "sub": "A sun print. Sensitizer is brushed on in ragged strokes that pool where the brush lands and run dry where it lifts; a fern, grass or a die sits on top and the sun does the rest. Where light reached, Prussian blue; under the object, paper. Lifted parts throw soft, offset shadows away from the sheet light — pressed parts stay sharp.",
+ "entry": {
+  "scripts": [
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/fx.js",
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/set.js"
+  ],
+  "globals": [
+   "FX",
+   "FXSET"
+  ],
+  "find": "FXSET.effects.find(e => e.id === 'fx-11-cyanotype')",
+  "call": "fx.run(o, W, H, dpr, { S, clips })",
+  "standalone": "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/lift/fx-11-cyanotype.html"
+ },
+ "signature": {
+  "in": {
+   "o": "params object — keys below; every length in CSS px",
+   "W": "device px width",
+   "H": "device px height",
+   "dpr": "device px per CSS px (density is physical: marks per CSS px²)",
+   "x": {
+    "S": "params of every effect keyed by id; the stock this prints on is read from S[printsOn]",
+    "clips": "Float32Array alpha per name (obj), from FXSET.clips('fx-11-cyanotype', W, H, dpr, o) on a thread with fonts",
+    "umask": "optional: clips.umask — a typed or image mask (mShape type | image)"
+   }
+  },
+  "out": {
+   "lin": "Float32Array W·H·3, linear-light sRGB (encode with FX.toRGBA(R,\"image\",W,H))",
+   "ink": "Float32Array W·H, absorbance / coverage (FX.toRGBA(R,\"ink\",…) = film positive)",
+   "stock": "Float32Array W·H, stock height (FX.toRGBA(R,\"stock\",…) = normalized height map)",
+   "mask": "Float32Array W·H",
+   "marks": "int — count of marks",
+   "markUnit": "string"
+  }
+ },
+ "light": {
+  "global": "FX.LIGHT",
+  "default": {
+   "az": 225,
+   "el": 34
+  },
+  "note": "az = direction the light comes FROM (screen degrees; 0 = right, 90 = below); el = elevation above the sheet"
+ },
+ "printsOn": "fx-03-paper-tooth",
+ "deterministic": "yes — every random draw is a hash of (position, seed); same inputs → same pixels in the same engine",
+ "params": [
+  {
+   "key": "subject",
+   "label": "Subject",
+   "group": "density",
+   "type": "select",
+   "default": "fern",
+   "options": [
+    "fern",
+    "grass",
+    "die"
+   ],
+   "note": "what lies on the sheet: a procedural fern frond, grass with seed heads, or a die mark"
+  },
+  {
+   "key": "dieShape",
+   "label": "Die",
+   "group": "density",
+   "type": "select",
+   "default": "compass",
+   "options": [
+    "compass",
+    "sun",
+    "crescent",
+    "knot",
+    "monogram"
+   ],
+   "when": {
+    "subject": [
+     "die"
+    ]
+   },
+   "note": "an invented mark cut from card"
+  },
+  {
+   "key": "text",
+   "label": "Monogram",
+   "group": "density",
+   "type": "text",
+   "default": "Q",
+   "when": {
+    "subject": [
+     "die"
+    ],
+    "dieShape": [
+     "monogram"
+    ]
+   }
+  },
+  {
+   "key": "dieSize",
+   "label": "Die size",
+   "group": "density",
+   "type": "range",
+   "default": 0.72,
+   "min": 0.2,
+   "max": 1,
+   "step": 0.01,
+   "when": {
+    "subject": [
+     "die"
+    ]
+   }
+  },
+  {
+   "key": "strokes",
+   "label": "Brush strokes",
+   "group": "density",
+   "type": "range",
+   "default": 4,
+   "min": 2,
+   "max": 8,
+   "step": 1,
+   "limits": [
+    {
+     "lo": 7,
+     "hi": 8,
+     "why": "stripes"
+    }
+   ],
+   "note": "strokes laid top to bottom, alternating direction"
+  },
+  {
+   "key": "bAngle",
+   "label": "Brush angle",
+   "group": "density",
+   "type": "range",
+   "default": -3,
+   "min": -30,
+   "max": 30,
+   "step": 0.5,
+   "unit": "°"
+  },
+  {
+   "key": "rag",
+   "label": "Brush-edge raggedness",
+   "group": "density",
+   "type": "range",
+   "default": 0.45,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "limits": [
+    {
+     "lo": 0.8,
+     "hi": 1,
+     "why": "edges tear"
+    }
+   ],
+   "note": "how far bristles and drag push each stroke edge in and out"
+  },
+  {
+   "key": "uneven",
+   "label": "Coating unevenness",
+   "group": "density",
+   "type": "range",
+   "default": 0.45,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "streaks and drag in the sensitizer thickness"
+  },
+  {
+   "key": "dry",
+   "label": "Dry-brush tails",
+   "group": "density",
+   "type": "range",
+   "default": 0.6,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "how far the load runs out before the brush lifts — bristle streaks on the tooth peaks"
+  },
+  {
+   "key": "pool",
+   "label": "Pooling",
+   "group": "density",
+   "type": "range",
+   "default": 0.5,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "sensitizer beading where the brush lands and stops, and the drying rim along each edge"
+  },
+  {
+   "key": "expo",
+   "label": "Exposure",
+   "group": "dropoff",
+   "type": "range",
+   "default": 1,
+   "min": 0.2,
+   "max": 3,
+   "step": 0.01,
+   "limits": [
+    {
+     "lo": 2.5,
+     "hi": 3,
+     "why": "penumbra fills in"
+    },
+    {
+     "lo": 0.2,
+     "hi": 0.5,
+     "why": "pale, underexposed"
+    }
+   ],
+   "note": "sun dose; 1 = full development of an unshaded coat"
+  },
+  {
+   "key": "lift",
+   "label": "Object lift",
+   "group": "relief",
+   "type": "range",
+   "default": 5.5,
+   "min": 0,
+   "max": 24,
+   "step": 0.1,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 18,
+     "hi": 24,
+     "why": "the subject dissolves"
+    }
+   ],
+   "note": "height of the lifted parts above the sheet — sets the penumbra width and its offset away from the sheet light"
+  },
+  {
+   "key": "contact",
+   "label": "Contact",
+   "group": "relief",
+   "type": "range",
+   "default": 0.5,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "share of the subject pressed flat (sharp); the rest curls up (soft)"
+  },
+  {
+   "key": "scatter",
+   "label": "Sky scatter",
+   "group": "relief",
+   "type": "range",
+   "default": 0.32,
+   "min": 0.05,
+   "max": 1,
+   "step": 0.01,
+   "note": "penumbra per px of lift — skylight and haze around the sun"
+  },
+  {
+   "key": "trans",
+   "label": "Translucency",
+   "group": "relief",
+   "type": "range",
+   "default": 0.015,
+   "min": 0,
+   "max": 0.3,
+   "step": 0.005,
+   "when": {
+    "subject": [
+     "fern",
+     "grass"
+    ]
+   },
+   "note": "UV passing through leaf tissue (cut card: 0)"
+  },
+  {
+   "key": "bleed",
+   "label": "Wash bleed",
+   "group": "mixing",
+   "type": "range",
+   "default": 0.35,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "Prussian blue carried downhill into the whites during the wash, in streaks"
+  },
+  {
+   "key": "stock",
+   "label": "Prints on",
+   "group": "stock",
+   "type": "select",
+   "default": "paper",
+   "options": [
+    "paper",
+    "cloth",
+    "smooth"
+   ],
+   "note": "paper = FX-03 live (watercolor-like sheets suit it), cloth = FX-04 live (cyanotype on cotton)"
+  },
+  {
+   "key": "tone",
+   "label": "Tone",
+   "group": "color",
+   "type": "select",
+   "default": "classic",
+   "options": [
+    "fresh",
+    "classic",
+    "peroxide",
+    "tea",
+    "custom"
+   ],
+   "note": "fresh = before oxidation (greener); classic = air-oxidized Prussian blue; peroxide = hydrogen-peroxide bath (deeper, violet-blue); tea = tannin-toned neutral brown"
+  },
+  {
+   "key": "depth",
+   "label": "Blue depth",
+   "group": "color",
+   "type": "range",
+   "default": 1.45,
+   "min": 0.3,
+   "max": 2,
+   "step": 0.01,
+   "note": "film density of a fully exposed coat (Beer–Lambert: deeper and more saturated)"
+  },
+  {
+   "key": "cL",
+   "label": "Custom tone · L",
+   "group": "color",
+   "type": "range",
+   "default": 0.4,
+   "min": 0,
+   "max": 1,
+   "step": 0.005,
+   "ink": "c",
+   "when": {
+    "tone": [
+     "custom"
+    ]
+   },
+   "note": "OKLCH lightness (0 black … 1 white)"
+  },
+  {
+   "key": "cC",
+   "label": "Custom tone · C",
+   "group": "color",
+   "type": "range",
+   "default": 0.12,
+   "min": 0,
+   "max": 0.37,
+   "step": 0.002,
+   "ink": "c",
+   "when": {
+    "tone": [
+     "custom"
+    ]
+   },
+   "limits": [
+    {
+     "lo": 0.26,
+     "hi": 0.37,
+     "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+    }
+   ],
+   "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+  },
+  {
+   "key": "ch",
+   "label": "Custom tone · h",
+   "group": "color",
+   "type": "range",
+   "default": 256,
+   "min": 0,
+   "max": 360,
+   "step": 0.5,
+   "unit": "°",
+   "ink": "c",
+   "when": {
+    "tone": [
+     "custom"
+    ]
+   },
+   "note": "OKLCH hue angle"
+  },
+  {
+   "key": "seed",
+   "label": "Seed",
+   "group": "seed",
+   "type": "range",
+   "default": 19,
+   "min": 1,
+   "max": 999,
+   "step": 1,
+   "note": "every random draw in the effect hangs off this one number"
+  }
+ ],
+ "defaults": {
+  "subject": "fern",
+  "dieShape": "compass",
+  "text": "Q",
+  "dieSize": 0.72,
+  "strokes": 4,
+  "bAngle": -3,
+  "rag": 0.45,
+  "uneven": 0.45,
+  "dry": 0.6,
+  "pool": 0.5,
+  "expo": 1,
+  "lift": 5.5,
+  "contact": 0.5,
+  "scatter": 0.32,
+  "trans": 0.015,
+  "bleed": 0.35,
+  "stock": "paper",
+  "tone": "classic",
+  "depth": 1.45,
+  "cL": 0.4,
+  "cC": 0.12,
+  "ch": 256,
+  "seed": 19
+ },
+ "depsDefaults": {
+  "fx-03-paper-tooth": {
+   "scale": 1.1,
+   "oct": 3,
+   "fibers": 3,
+   "fLen": 14,
+   "fWidth": 0.4,
+   "pits": 1,
+   "pers": 0.42,
+   "ease": [
+    "in",
+    2.4
+   ],
+   "aniso": 1.6,
+   "form": 0.3,
+   "formScale": 60,
+   "fAngle": 6,
+   "fSpread": 0.4,
+   "depth": 0.12,
+   "diffuse": 0.45,
+   "fRaise": 0.45,
+   "pDepth": 0.35,
+   "paperL": 0.968,
+   "fDark": 0.014,
+   "pDark": 0.02,
+   "tL": 0.7,
+   "tC": 0,
+   "th": 250,
+   "tAmt": 0.5,
+   "mShape": "rect",
+   "mText": "Counted",
+   "mInset": 22,
+   "mAmp": 2.5,
+   "mScale": 28,
+   "mRough": 5,
+   "mFeather": 1.2,
+   "mMode": "speckle",
+   "lift": 1,
+   "mBite": 0,
+   "seed": 21
+  }
+ },
+ "presets": [
+  {
+   "name": "classic fern",
+   "params": {}
+  },
+  {
+   "name": "die print",
+   "params": {
+    "subject": "die",
+    "dieShape": "sun",
+    "lift": 2.5,
+    "contact": 0.62,
+    "trans": 0,
+    "expo": 1.15,
+    "strokes": 3,
+    "dry": 0.35
+   }
+  },
+  {
+   "name": "overexposed",
+   "params": {
+    "expo": 2.8,
+    "bleed": 0.7,
+    "lift": 10,
+    "contact": 0.42,
+    "trans": 0.06,
+    "depth": 1.55
+   }
+  },
+  {
+   "name": "peroxide grass",
+   "params": {
+    "subject": "grass",
+    "tone": "peroxide",
+    "lift": 4,
+    "contact": 0.6,
+    "strokes": 4,
+    "bAngle": -5,
+    "trans": 0.01
+   }
+  },
+  {
+   "name": "tea-toned",
+   "params": {
+    "tone": "tea",
+    "depth": 1.25,
+    "bleed": 0.25
+   }
+  }
+ ],
+ "recipe": [
+  "Coating = brush strokes in stroke space (along s, across t): a load that runs out along the stroke; edges displaced by per-side noise (raggedness); a set-down pool and a drying rim; bristle streaks × the stock height decide where a dry brush still deposits.",
+  "Thickness τ = load × unevenness (streaks + low-frequency drag) + pools; overlapping strokes add (a double coat prints deeper); paper valleys hold more sensitizer.",
+  "Objects (procedural fern frond, grass with spikelets, or a die) are an AA clip. Lift = a smooth field × the lift dial; contact sets how much lies flat.",
+  "Shadow: for each lift level z the clip is sampled toward the sheet light at z · cot(elevation) (smeared ±20 % along the light) and blurred by z × sky scatter; each pixel blends the two levels around its lift.",
+  "Exposure E = 1 − shadow × (1 − translucency); density = τ × (1 − e^(−k·exposure·E)) — overexposure fills the penumbra in.",
+  "Wash: unexposed coating rinses away; Prussian blue bleeds a little downhill into the whites, in streaks. Color = Beer–Lambert film of the tone (fresh, classic, peroxide-oxidized, tea-toned).",
+  "Light last: × the stock's shading under the sheet light."
+ ],
+ "limits": [
+  {
+   "param": "object lift",
+   "range": "> 18 px",
+   "what": "penumbra wider than the leaflets — the fern dissolves into a cloud"
+  },
+  {
+   "param": "exposure",
+   "range": "> 2.5",
+   "what": "penumbra fills in; fine pinnules and awns vanish"
+  },
+  {
+   "param": "exposure",
+   "range": "< .5",
+   "what": "pale, greenish print — read as underexposed"
+  },
+  {
+   "param": "raggedness",
+   "range": "> .8",
+   "what": "stroke edges tear into islands"
+  },
+  {
+   "param": "strokes",
+   "range": "> 6",
+   "what": "brush marks shrink into stripes"
+  }
+ ],
+ "testVector": {
+  "skipped": "needs main-thread text/path rasterization for its clips; render lift/fx-11-cyanotype.html to compare by eye"
+ }
+}

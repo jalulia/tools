@@ -1,0 +1,631 @@
+{
+ "id": "fx-12-laser",
+ "code": "FX-12",
+ "name": "Laser char",
+ "role": "mark · beam",
+ "section": "new",
+ "set": "Set 01",
+ "sub": "A CO₂ beam rasters a die into card, one scan line at a time. Each line is a gaussian burn: past a threshold the paper scorches tan → brown → black, sinks, and the tooth is burned smooth; heat browns the fibers around it. Vector cuts go through: a charred kerf opening onto the dark bed below.",
+ "entry": {
+  "scripts": [
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/fx.js",
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/set.js"
+  ],
+  "globals": [
+   "FX",
+   "FXSET"
+  ],
+  "find": "FXSET.effects.find(e => e.id === 'fx-12-laser')",
+  "call": "fx.run(o, W, H, dpr, { S, clips })",
+  "standalone": "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/lift/fx-12-laser.html"
+ },
+ "signature": {
+  "in": {
+   "o": "params object — keys below; every length in CSS px",
+   "W": "device px width",
+   "H": "device px height",
+   "dpr": "device px per CSS px (density is physical: marks per CSS px²)",
+   "x": {
+    "S": "params of every effect keyed by id; the stock this prints on is read from S[printsOn]",
+    "clips": "Float32Array alpha per name (die), from FXSET.clips('fx-12-laser', W, H, dpr, o) on a thread with fonts",
+    "umask": "optional: clips.umask — a typed or image mask (mShape type | image)"
+   }
+  },
+  "out": {
+   "lin": "Float32Array W·H·3, linear-light sRGB (encode with FX.toRGBA(R,\"image\",W,H))",
+   "ink": "Float32Array W·H, absorbance / coverage (FX.toRGBA(R,\"ink\",…) = film positive)",
+   "stock": "Float32Array W·H, stock height (FX.toRGBA(R,\"stock\",…) = normalized height map)",
+   "mask": "Float32Array W·H",
+   "marks": "int — count of marks",
+   "markUnit": "string"
+  }
+ },
+ "light": {
+  "global": "FX.LIGHT",
+  "default": {
+   "az": 225,
+   "el": 34
+  },
+  "note": "az = direction the light comes FROM (screen degrees; 0 = right, 90 = below); el = elevation above the sheet"
+ },
+ "printsOn": "fx-03-paper-tooth",
+ "deterministic": "yes — every random draw is a hash of (position, seed); same inputs → same pixels in the same engine",
+ "params": [
+  {
+   "key": "shape",
+   "label": "Die",
+   "group": "density",
+   "type": "select",
+   "default": "compass",
+   "options": [
+    "compass",
+    "sun",
+    "crescent",
+    "knot",
+    "monogram",
+    "word",
+    "seal"
+   ],
+   "note": "what the die (or type) is: an invented mark (compass, sun, crescent, knot, a monogram from the text), a word, or a ring seal"
+  },
+  {
+   "key": "text",
+   "label": "Text",
+   "group": "density",
+   "type": "text",
+   "default": "Ferro & Lume",
+   "when": {
+    "shape": [
+     "word",
+     "seal",
+     "monogram"
+    ]
+   },
+   "note": "set in Archivo 800 for word, seal and monogram (its first letter)"
+  },
+  {
+   "key": "size",
+   "label": "Size",
+   "group": "density",
+   "type": "range",
+   "default": 0.52,
+   "min": 0.15,
+   "max": 1,
+   "step": 0.01,
+   "note": "die height as a share of the plate"
+  },
+  {
+   "key": "power",
+   "label": "Power",
+   "group": "density",
+   "type": "range",
+   "default": 0.55,
+   "min": 0.05,
+   "max": 1,
+   "step": 0.01,
+   "note": "beam power in the raster; dose ∝ power ÷ speed ÷ pitch"
+  },
+  {
+   "key": "speed",
+   "label": "Speed",
+   "group": "density",
+   "type": "range",
+   "default": 1,
+   "min": 0.25,
+   "max": 3,
+   "step": 0.01,
+   "note": "head speed (relative); faster = less dose per line"
+  },
+  {
+   "key": "pitch",
+   "label": "Line pitch",
+   "group": "density",
+   "type": "range",
+   "default": 1.6,
+   "min": 1,
+   "max": 6,
+   "step": 0.05,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 1,
+     "hi": 1.2,
+     "why": "clamped to 2 device px at 1×"
+    }
+   ],
+   "note": "distance between scan lines; clamped to ≥ 2 device px"
+  },
+  {
+   "key": "scan",
+   "label": "Scan angle",
+   "group": "density",
+   "type": "range",
+   "default": 0,
+   "min": 0,
+   "max": 180,
+   "step": 1,
+   "unit": "°",
+   "note": "direction the head travels"
+  },
+  {
+   "key": "spot",
+   "label": "Spot",
+   "group": "density",
+   "type": "range",
+   "default": 0.42,
+   "min": 0.3,
+   "max": 2,
+   "step": 0.01,
+   "unit": "px",
+   "note": "beam radius σ in focus"
+  },
+  {
+   "key": "focus",
+   "label": "Defocus",
+   "group": "density",
+   "type": "range",
+   "default": 0,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "limits": [
+    {
+     "lo": 0.7,
+     "hi": 1,
+     "why": "a smudge"
+    }
+   ],
+   "note": "0 = in focus; out of focus the spot widens and its peak drops"
+  },
+  {
+   "key": "ramp",
+   "label": "Power ramp",
+   "group": "dropoff",
+   "type": "range",
+   "default": 0,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "power falls across the raster, to 15 % at 1"
+  },
+  {
+   "key": "rampAng",
+   "label": "Ramp angle",
+   "group": "dropoff",
+   "type": "range",
+   "default": 0,
+   "min": 0,
+   "max": 360,
+   "step": 1,
+   "unit": "°"
+  },
+  {
+   "key": "overburn",
+   "label": "Turnaround burn",
+   "group": "dropoff",
+   "type": "range",
+   "default": 0.18,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "extra dose where the head slows to reverse at each line end"
+  },
+  {
+   "key": "halo",
+   "label": "Heat halo",
+   "group": "relief",
+   "type": "range",
+   "default": 0.45,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "fibers browned around the burn"
+  },
+  {
+   "key": "haloR",
+   "label": "Halo reach",
+   "group": "relief",
+   "type": "range",
+   "default": 2,
+   "min": 0.5,
+   "max": 12,
+   "step": 0.1,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 9,
+     "hi": 12,
+     "why": "scorch accident"
+    }
+   ]
+  },
+  {
+   "key": "ablate",
+   "label": "Ablation",
+   "group": "relief",
+   "type": "range",
+   "default": 0.4,
+   "min": 0,
+   "max": 1.5,
+   "step": 0.01,
+   "unit": "px",
+   "note": "how far the surface sinks at full char"
+  },
+  {
+   "key": "diffuse",
+   "label": "Diffuse share",
+   "group": "relief",
+   "type": "range",
+   "default": 0.9,
+   "min": 0,
+   "max": 1,
+   "step": 0.01
+  },
+  {
+   "key": "cut",
+   "label": "Vector cut",
+   "group": "stock",
+   "type": "select",
+   "default": "off",
+   "options": [
+    "off",
+    "outline",
+    "tag"
+   ],
+   "note": "outline = the die cut out at an offset; tag = a rounded tag with a hole"
+  },
+  {
+   "key": "kerf",
+   "label": "Kerf",
+   "group": "stock",
+   "type": "range",
+   "default": 1.3,
+   "min": 0.4,
+   "max": 4,
+   "step": 0.05,
+   "unit": "px",
+   "when": {
+    "cut": [
+     "outline",
+     "tag"
+    ]
+   },
+   "limits": [
+    {
+     "lo": 3,
+     "hi": 4,
+     "why": "a slot"
+    }
+   ]
+  },
+  {
+   "key": "cutOff",
+   "label": "Cut offset",
+   "group": "stock",
+   "type": "range",
+   "default": 10,
+   "min": 2,
+   "max": 40,
+   "step": 0.5,
+   "unit": "px",
+   "when": {
+    "cut": [
+     "outline"
+    ]
+   },
+   "note": "distance from the die edge to the cut"
+  },
+  {
+   "key": "tabs",
+   "label": "Tabs",
+   "group": "stock",
+   "type": "range",
+   "default": 4,
+   "min": 0,
+   "max": 8,
+   "step": 1,
+   "when": {
+    "cut": [
+     "outline",
+     "tag"
+    ]
+   },
+   "note": "uncut bridges that hold the part"
+  },
+  {
+   "key": "tabW",
+   "label": "Tab width",
+   "group": "stock",
+   "type": "range",
+   "default": 4,
+   "min": 1,
+   "max": 14,
+   "step": 0.5,
+   "unit": "px",
+   "when": {
+    "cut": [
+     "outline",
+     "tag"
+    ]
+   }
+  },
+  {
+   "key": "thick",
+   "label": "Card thickness",
+   "group": "stock",
+   "type": "range",
+   "default": 1.4,
+   "min": 0.2,
+   "max": 4,
+   "step": 0.05,
+   "unit": "px",
+   "when": {
+    "cut": [
+     "outline",
+     "tag"
+    ]
+   },
+   "note": "sizes the card edge's shadow on the ground in the kerf"
+  },
+  {
+   "key": "stock",
+   "label": "Prints on",
+   "group": "stock",
+   "type": "select",
+   "default": "paper",
+   "options": [
+    "paper",
+    "cloth",
+    "smooth"
+   ]
+  },
+  {
+   "key": "gL",
+   "label": "Ground below · L",
+   "group": "color",
+   "type": "range",
+   "default": 0.17,
+   "min": 0,
+   "max": 1,
+   "step": 0.005,
+   "ink": "g",
+   "when": {
+    "cut": [
+     "outline",
+     "tag"
+    ]
+   },
+   "note": "OKLCH lightness (0 black … 1 white)"
+  },
+  {
+   "key": "gC",
+   "label": "Ground below · C",
+   "group": "color",
+   "type": "range",
+   "default": 0.006,
+   "min": 0,
+   "max": 0.37,
+   "step": 0.002,
+   "ink": "g",
+   "when": {
+    "cut": [
+     "outline",
+     "tag"
+    ]
+   },
+   "limits": [
+    {
+     "lo": 0.26,
+     "hi": 0.37,
+     "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+    }
+   ],
+   "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+  },
+  {
+   "key": "gh",
+   "label": "Ground below · h",
+   "group": "color",
+   "type": "range",
+   "default": 255,
+   "min": 0,
+   "max": 360,
+   "step": 0.5,
+   "unit": "°",
+   "ink": "g",
+   "when": {
+    "cut": [
+     "outline",
+     "tag"
+    ]
+   },
+   "note": "OKLCH hue angle"
+  },
+  {
+   "key": "seed",
+   "label": "Seed",
+   "group": "seed",
+   "type": "range",
+   "default": 12,
+   "min": 1,
+   "max": 999,
+   "step": 1,
+   "note": "every random draw in the effect hangs off this one number"
+  }
+ ],
+ "defaults": {
+  "shape": "compass",
+  "text": "Ferro & Lume",
+  "size": 0.52,
+  "power": 0.55,
+  "speed": 1,
+  "pitch": 1.6,
+  "scan": 0,
+  "spot": 0.42,
+  "focus": 0,
+  "ramp": 0,
+  "rampAng": 0,
+  "overburn": 0.18,
+  "halo": 0.45,
+  "haloR": 2,
+  "ablate": 0.4,
+  "diffuse": 0.9,
+  "cut": "off",
+  "kerf": 1.3,
+  "cutOff": 10,
+  "tabs": 4,
+  "tabW": 4,
+  "thick": 1.4,
+  "stock": "paper",
+  "gL": 0.17,
+  "gC": 0.006,
+  "gh": 255,
+  "seed": 12
+ },
+ "depsDefaults": {
+  "fx-03-paper-tooth": {
+   "scale": 1.1,
+   "oct": 3,
+   "fibers": 3,
+   "fLen": 14,
+   "fWidth": 0.4,
+   "pits": 1,
+   "pers": 0.42,
+   "ease": [
+    "in",
+    2.4
+   ],
+   "aniso": 1.6,
+   "form": 0.3,
+   "formScale": 60,
+   "fAngle": 6,
+   "fSpread": 0.4,
+   "depth": 0.12,
+   "diffuse": 0.45,
+   "fRaise": 0.45,
+   "pDepth": 0.35,
+   "paperL": 0.968,
+   "fDark": 0.014,
+   "pDark": 0.02,
+   "tL": 0.7,
+   "tC": 0,
+   "th": 250,
+   "tAmt": 0.5,
+   "mShape": "rect",
+   "mText": "Counted",
+   "mInset": 22,
+   "mAmp": 2.5,
+   "mScale": 28,
+   "mRough": 5,
+   "mFeather": 1.2,
+   "mMode": "speckle",
+   "lift": 1,
+   "mBite": 0,
+   "seed": 21
+  }
+ },
+ "presets": [
+  {
+   "name": "light etch",
+   "params": {
+    "power": 0.32,
+    "pitch": 2.6,
+    "spot": 0.55,
+    "halo": 0.15,
+    "ablate": 0.12,
+    "overburn": 0.1
+   }
+  },
+  {
+   "name": "deep raster",
+   "params": {
+    "power": 0.85,
+    "speed": 0.85,
+    "pitch": 1.5,
+    "spot": 0.5,
+    "halo": 0.6,
+    "haloR": 2.6,
+    "ablate": 1.1,
+    "overburn": 0.25
+   }
+  },
+  {
+   "name": "cut-through with tabs",
+   "params": {
+    "cut": "outline",
+    "tabs": 4,
+    "power": 0.6,
+    "pitch": 1.5,
+    "halo": 0.5
+   }
+  },
+  {
+   "name": "tag cut",
+   "params": {
+    "cut": "tag",
+    "tabs": 2,
+    "shape": "monogram",
+    "text": "Ferro",
+    "size": 0.5,
+    "power": 0.7,
+    "pitch": 1.4
+   }
+  },
+  {
+   "name": "power ramp",
+   "params": {
+    "ramp": 1,
+    "rampAng": 0,
+    "power": 1,
+    "pitch": 1.8,
+    "halo": 0.4
+   }
+  },
+  {
+   "name": "defocused",
+   "params": {
+    "focus": 0.55,
+    "power": 0.75,
+    "pitch": 1.6
+   }
+  }
+ ],
+ "recipe": [
+  "Scan lines at the pitch (≥ 2 device px), at the scan angle. Dose at a pixel = Σ over nearby lines of power ÷ speed × the beam's gaussian, integrated over the pixel (erf) — anti-aliased lines at any angle.",
+  "Firing gate = the die clip sampled at each line's centerline, softened by the spot along the scan; the head's turnaround adds dose just inside the edges it reverses at.",
+  "Defocus widens σ and lowers the peak (same energy, larger spot): paler, softer, lines merging. A power ramp can run across the raster.",
+  "Char = 1 − e^(−k·(dose − threshold)) → an OKLab ramp tan → brown → black, multiplied into the stock albedo (fibers char darker). Heat halo = the dose spread a few px, browning fibers first.",
+  "Relief: ablation sinks the surface with dose; the tooth is burned smooth; a fine char crust. Lit by the sheet light (grooves catch it on one wall).",
+  "Vector cut: a kerf along the die outline (offset) or a tag; tabs leave bridges. The kerf opens onto the ground below, shaded by the card edge toward the light; its walls are charred."
+ ],
+ "limits": [
+  {
+   "param": "line pitch",
+   "range": "< 2 device px",
+   "what": "clamped — finer lines alias into moiré on screen"
+  },
+  {
+   "param": "power ÷ speed",
+   "range": "> 1.4",
+   "what": "char goes black and ablates; line structure survives only in the relief"
+  },
+  {
+   "param": "defocus",
+   "range": "> .7",
+   "what": "reads as a smudge, not a laser"
+  },
+  {
+   "param": "halo reach",
+   "range": "> 9 px",
+   "what": "reads as a scorch accident rather than a mark"
+  },
+  {
+   "param": "kerf",
+   "range": "> 3 px",
+   "what": "a slot, not a laser cut"
+  }
+ ],
+ "testVector": {
+  "skipped": "needs main-thread text/path rasterization for its clips; render lift/fx-12-laser.html to compare by eye"
+ }
+}
