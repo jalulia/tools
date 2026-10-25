@@ -182,16 +182,19 @@ FX.LineRaster=(W,H)=>{ const cov=new Float32Array(W*H);
 FX.LIGHT={az:225,el:34};
 FX.lightVec=(L=FX.LIGHT)=>{ const a=L.az*Math.PI/180, e=L.el*Math.PI/180; return [Math.cos(a)*Math.cos(e),Math.sin(a)*Math.cos(e),Math.sin(e)]; };
 /* Lambert shading of a height field. h ∈ 0..1 scaled to `depth` CSS px. Returns factor, 1 = a flat surface. */
-FX.shade=(h,W,H,dpr,depth,L)=>{ const [lx,ly,lz]=FX.lightVec(L), out=new Float32Array(W*H), k=depth*dpr*.5;
+/* skylight under a raking sun: the room fills the shadow side, so walls facing away never go to black and the lit side
+   rolls off instead of blowing out. 0 at ≥ 32° (studio plates unchanged), rising to ~.28 as the light rakes to the sheet. */
+FX.sky=(L=FX.LIGHT)=>.28*Math.min(1,Math.max(0,(32-L.el)/22));
+FX.shade=(h,W,H,dpr,depth,L)=>{ const [lx,ly,lz]=FX.lightVec(L), out=new Float32Array(W*H), k=depth*dpr*.5, sky=FX.sky(L||FX.LIGHT);
   for(let y=0;y<H;y++){ const r=y*W, up=(y>0?y-1:y)*W, dn=(y<H-1?y+1:y)*W; for(let x=0;x<W;x++){ const sx=(h[r+(x<W-1?x+1:x)]-h[r+(x>0?x-1:x)])*k, sy=(h[dn+x]-h[up+x])*k;
-    const n=1/Math.sqrt(sx*sx+sy*sy+1), d=(-sx*lx-sy*ly+lz)*n; out[r+x]=(d>0?d:0)/lz; } }
+    const n=1/Math.sqrt(sx*sx+sy*sy+1), d=(-sx*lx-sy*ly+lz)*n, f=((d>0?d:0)+sky)/(lz+sky); out[r+x]=f>1.3?1.3+(f-1.3)/(1+(f-1.3)*.7):f; } }
   return out; };
 /* height-field cast shadow: march toward the light; a sample higher than the ray occludes. Returns lit factor 0..1. */
-FX.hshadow=(h,W,H,dpr,depth,L,reachPx,soft=.5)=>{ const [lx,ly,lz]=FX.lightVec(L), out=new Float32Array(W*H).fill(1); const pl=Math.hypot(lx,ly)||1, ux=lx/pl, uy=ly/pl, tanE=lz/pl;
+FX.hshadow=(h,W,H,dpr,depth,L,reachPx,soft=.5)=>{ const [lx,ly,lz]=FX.lightVec(L), out=new Float32Array(W*H).fill(1), sky=FX.sky(L||FX.LIGHT), amb=lz/(lz+sky); const pl=Math.hypot(lx,ly)||1, ux=lx/pl, uy=ly/pl, tanE=lz/pl;
   const steps=Math.max(2,Math.round(reachPx*dpr/1.5)), st=reachPx*dpr/steps, hd=depth*dpr;
   for(let y=0;y<H;y++) for(let x=0;x<W;x++){ const i=y*W+x, h0=h[i]*hd; let occ=0;
     for(let k=1;k<=steps;k++){ const X=(x+ux*st*k)|0, Y=(y+uy*st*k)|0; if(X<0||Y<0||X>=W||Y>=H) break; const need=h0+st*k*tanE, have=h[Y*W+X]*hd; if(have>need){ const o=(have-need)/(soft*hd+1e-3); if(o>occ) occ=o; } }
-    out[i]=1-(occ>1?1:occ); }
+    out[i]=1-(occ>1?1:occ)*amb; }
   return out; };
 /* normals of a height field given in CSS px (neighbors are 1 device px apart) */
 FX.normals=(hpx,W,H,dpr)=>{ const nx=new Float32Array(W*H), ny=new Float32Array(W*H), nz=new Float32Array(W*H), k=dpr*.5;

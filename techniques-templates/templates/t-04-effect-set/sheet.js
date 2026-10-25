@@ -45,11 +45,11 @@ function request(key,draft){ const T=targets.get(key); if(!T) return; if(!T.visi
   const sc=draft?(T.ms<80?1:T.ms<240?.71:.5):1; const job=T.build(sc); job.key=key; job.token=++tokenN; job.prio=(draft?0:1)+(T.prio||0); latest.set(key,job.token); pending.set(key,job); T.frame&&T.frame.classList.add('busy'); pump(); }
 function pump(){ if(!pending.size){ if(!pool.some(w=>w.busy)) status(''); return; } status(UI.dragging?'draft':'rendering');
   if(useWorkers&&pool.length){ for(const w of pool){ if(w.busy) continue; const job=next(); if(!job) break; w.busy=job.key; const tr=Object.values(job.clips||{}).map(c=>c.buffer); w.postMessage(job,tr); } }
-  else if(!pump.t){ pump.t=setTimeout(()=>{ pump.t=0; const job=next(); if(job){ try{ const r=mainRender(job); done(null,{key:job.key,token:job.token,W:job.W,H:job.H,dpr:job.dpr,scale:job.scale,rgba:r.rgba,stats:r.stats}); }catch(err){ console.error(err); } } },0); } }
+  else if(!pump.t){ pump.t=setTimeout(()=>{ pump.t=0; const job=next(); if(job){ try{ const r=mainRender(job); done(null,{key:job.key,token:job.token,W:job.W,H:job.H,dpr:job.pdpr||job.dpr,scale:job.scale,rgba:r.rgba,stats:r.stats}); }catch(err){ console.error(err); } } },0); } }
 function next(){ let best=null; for(const j of pending.values()){ if(pool.some(w=>w.busy===j.key)) continue; if(!best||j.prio<best.prio) best=j; } if(best) pending.delete(best.key); return best; }
 let mainR=null; function mainRender(job){ if(!mainR){ mainR=makeMainRenderer(); } return mainR(job); }
 function makeMainRenderer(){ return (j)=>{ FX.LIGHT=j.light; const t0=performance.now(); let R;
-  if(j.kind==='fx'){ R=EFX[j.id].run(j.S[j.id],j.W,j.H,j.dpr,{S:j.S,clips:j.clips||{},proof:!!j.proof}); } else { const u=SET.usages.find(u=>u.id===j.id); const SS={}; for(const id in j.S) SS[id]=Object.assign({},j.S[id],(u.overrides||{})[id]||{}); R=u.run(id=>SS[id],j.W,j.H,j.dpr,{S:SS,clips:j.clips||{}}); }
+  if(j.kind==='fx'){ R=EFX[j.id].run(j.S[j.id],j.W,j.H,j.dpr,{S:j.S,clips:j.clips||{},proof:!!j.proof}); } else { const u=SET.usages.find(u=>u.id===j.id); FX.LIGHT=SET.lightFor(u,FX.LIGHT); const SS={}; for(const id in j.S) SS[id]=Object.assign({},j.S[id],(u.overrides||{})[id]||{}); R=u.run(id=>SS[id],j.W,j.H,j.dpr,{S:SS,clips:j.clips||{}}); }
   if(j.outputs){ const outs={}; for(const v of j.outputs) outs[v]=FX.toRGBA(R,v,j.W,j.H); return {outs,stats:{ms:performance.now()-t0,marks:R.marks,unit:R.markUnit||''}}; }
   return {rgba:FX.toRGBA(R,j.view,j.W,j.H),stats:{ms:performance.now()-t0,marks:R.marks,unit:R.markUnit||'',W:j.W,H:j.H}}; }; }
 function done(w,d){ if(w) w.busy=null; const T=targets.get(d.key);
@@ -71,8 +71,8 @@ const makeClips=(defs,W,H,dpr,o)=>{ const clips={}; for(const k in (defs||{})){ 
 const fxClips=(id,W,H,dpr,o)=>SET.clips(id,W,H,dpr,o,UMASK[id],mkC);
 const isStock=e=>/^stock/.test(e.role||'');
 const fxJob=(id,canvas,view,opt={})=>scale=>{ const {W,H,dpr}=dims(canvas,scale); const o=opt.S?opt.S(id):S[id], SS=opt.S?Object.assign({},S,{[id]:o}):S; return {kind:'fx',id,W,H,dpr,scale,S:SS,light:LIGHT,view:view(),proof:opt.proof?opt.proof():false,clips:fxClips(id,W,H,dpr,o)}; };
-const uJob=(u,canvas)=>scale=>{ const {W,H,dpr}=dims(canvas,scale); const clips=makeClips(u.clips,W,H,dpr,null);
-  const SS={}; for(const id in S) SS[id]=UI.follow?S[id]:DEF[id]; return {kind:'u',id:u.id,W,H,dpr,scale,S:SS,light:LIGHT,view:'image',clips}; };
+const uJob=(u,canvas)=>scale=>{ const d0=dims(canvas,scale), W=d0.W, H=d0.H, dpr=d0.dpr*(u.zoom||1); const clips=makeClips(u.clips,W,H,dpr,null); // zoom: marks rendered larger at device px — a macro crop, never an upscale
+  const SS={}; for(const id in S) SS[id]=UI.follow?S[id]:DEF[id]; return {kind:'u',id:u.id,W,H,dpr,pdpr:d0.dpr,scale,S:SS,light:LIGHT,view:'image',clips}; };
 
 /* coupling: which keys must redraw when effect `id` changes */
 const dependents=id=>{ const keys=new Set(['p:'+id,'r:'+id,'o:'+id]); SET.effects.forEach(e=>{ if(e.stockOf&&e.stockOf(S[e.id])===id){ keys.add('p:'+e.id); keys.add('r:'+e.id); keys.add('o:'+e.id); } });
@@ -388,7 +388,7 @@ const JORD=k=>{ const i=JOBS.findIndex(j=>j[0]===k); return i<0?99:i; };
   const fr=h('div',{class:'fs-frame',style:`aspect-ratio:${u.aspect}`},c,lbl,h('span',{class:'fs-bar-busy','aria-hidden':'true'}));
   const ov=Object.entries(u.overrides||{}).map(([k,v])=>h('div',{class:'ovr'},h('a',{href:'#'+k},EFX[k].code),h('span',null,Object.entries(v).map(([a,b])=>`${a} ${typeof b==='object'?JSON.stringify(b):b}`).join(' · '))));
   const jl=(JOBS.find(j=>j[0]===u.job)||[])[1];
-  ugrid.append(h('article',{class:'fs-ucard'+(u.span===2?' wide':''),'data-job':u.job||''},fr,h('div',{class:'cap'},h('span',{class:'code'},'U-'+String(i+1).padStart(2,'0')+(jl?' · '+jl:'')),h('b',null,u.title),h('p',null,u.sub),h('div',{class:'chips'},u.uses.map(id=>h('a',{href:'#'+id},EFX[id].code+' '+EFX[id].name))),ov.length?h('details',null,h('summary',null,'overrides'),h('div',{class:'fs-ovs'},ov)):null)));
+  ugrid.append(h('article',{class:'fs-ucard'+(u.span===2?' wide':''),'data-job':u.job||'','data-u':u.id},fr,h('div',{class:'cap'},h('span',{class:'code'},'U-'+String(i+1).padStart(2,'0')+(jl?' · '+jl:'')+(u.zoom>1?' · '+u.zoom+'×':'')+(u.light?' · light '+u.light.el+'°':'')),h('b',null,u.title),h('p',null,u.sub),h('div',{class:'chips'},u.uses.map(id=>h('a',{href:'#'+id},EFX[id].code+' '+EFX[id].name))),ov.length?h('details',null,h('summary',null,'overrides'),h('div',{class:'fs-ovs'},ov)):null)));
   register('u:'+u.id,c,fr,uJob(u,c),null,2); });
 live.append(UG);
 
