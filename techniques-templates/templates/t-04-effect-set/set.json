@@ -207,6 +207,18 @@
      "note": "0 = value changes how many dots print; 1 = how big they are"
     },
     {
+     "key": "sAngle",
+     "label": "Screen angle",
+     "group": "density",
+     "type": "range",
+     "default": 0,
+     "min": 0,
+     "max": 90,
+     "step": 0.5,
+     "unit": "°",
+     "note": "rotates the dot lattice — 45° is the classic single-ink angle: the eye reads the rows least, and they never beat against the pixel grid"
+    },
+    {
      "key": "order",
      "label": "Selection",
      "group": "density",
@@ -1458,7 +1470,7 @@
      "label": "Anisotropy",
      "group": "dropoff",
      "type": "range",
-     "default": 2.2,
+     "default": 1.6,
      "min": 1,
      "max": 6,
      "step": 0.05,
@@ -1574,11 +1586,11 @@
      "label": "Paper L",
      "group": "color",
      "type": "range",
-     "default": 1,
+     "default": 0.968,
      "min": 0.85,
      "max": 1,
      "step": 0.001,
-     "note": "OKLab lightness of the stock — 1 = the white of the page"
+     "note": "OKLab lightness of the stock under the sheet light. Below 1 so lit walls, foil and sheen have headroom to brighten; 1 = the white of the page (highlights clip)"
     },
     {
      "key": "fDark",
@@ -2270,7 +2282,7 @@
      "label": "Accent rate",
      "group": "color",
      "type": "range",
-     "default": 0.035,
+     "default": 0.014,
      "min": 0,
      "max": 0.3,
      "step": 0.005,
@@ -2760,7 +2772,7 @@
      "label": "Stock bite",
      "group": "stock",
      "type": "range",
-     "default": 0.6,
+     "default": 0.5,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -2777,7 +2789,7 @@
      "label": "Break-up ↔ thin",
      "group": "stock",
      "type": "range",
-     "default": 0.9,
+     "default": 0.55,
      "min": 0,
      "max": 1,
      "step": 0.01,
@@ -2795,7 +2807,7 @@
      "label": "Starve",
      "group": "stock",
      "type": "range",
-     "default": 0.02,
+     "default": 0.01,
      "min": 0,
      "max": 0.3,
      "step": 0.002,
@@ -2822,7 +2834,7 @@
      "label": "Film split",
      "group": "stock",
      "type": "range",
-     "default": 0.7,
+     "default": 0.9,
      "min": 0.5,
      "max": 10,
      "step": 0.1,
@@ -3087,7 +3099,7 @@
    "printsOn": "fx-03-paper-tooth",
    "recipe": [
     "Die = the ø co. brandmark, a word, or a ring seal, rasterized as an AA clip on the main thread (fonts).",
-    "Plate profile = the clip blurred by the die softness; lip = a wider blur minus the plate (only outside the edge).",
+    "Plate profile from the signed distance to the die edge (exact distance transform): a crisp shoulder, a straight wall over the die softness, a flat floor; lip = a narrow ridge just outside the edge.",
     "Height (CSS px) = stock height × (1 − crush · plate) − depth · plate + lip — the tooth flattens on the floor.",
     "Light: Lambert from the combined height + a height-field shadow toward the sheet light (the wall on the light side falls in shadow).",
     "Optional ink on the floor (film), so blind → letterpress is one dial."
@@ -3383,7 +3395,7 @@
    ],
    "printsOn": "fx-03-paper-tooth",
    "recipe": [
-    "Text in JetBrains Mono, one strike per glyph on the main thread: pressure = ribbon life (exhausting along the page) × key variance; offset, rotation, an occasional dropped baseline; half-strikes fade top or bottom.",
+    "Text in Courier Prime (a typewriter slab; bold below 15 px, as a light strike loses thin strokes), one strike per glyph on the main thread: pressure = ribbon life (exhausting along the page) × key variance; offset, rotation, an occasional dropped baseline; half-strikes fade top or bottom.",
     "Ribbon: a plain weave at the ribbon count — ink transfers through thread crossings, less through the gaps.",
     "Ink chain: pressure × ribbon vs stock-height percentile; ink squash pools film at the glyph edge.",
     "Impression: the strike dents the stock (blurred glyph × pressure); light from the combined height.",
@@ -4155,9 +4167,10 @@
      "stock": "smooth",
      "crush": 0,
      "dent": 0,
-     "grain": 0.35,
+     "grain": 0.22,
      "starve": 0,
-     "flash": 0
+     "flash": 0,
+     "box": 5
     },
     "fx-06-deboss": {
      "depth": 0.25,
@@ -4176,7 +4189,7 @@
    "id": "u-halftone",
    "code": "U-04",
    "title": "Halftone mark · AM screen, ember",
-   "sub": "The mark as a coarse amplitude screen in one ink: every site prints, the dot grows with tone, dots fuse into solid inside the mark. Cropped hard by the frame — the screen is the image.",
+   "sub": "The mark as a coarse amplitude screen in one ink at 45°: every site prints, the dot grows with tone, dots fuse into solid inside the mark. Cropped hard by the frame — the screen is the image.",
    "uses": [
     "fx-01-stipple",
     "fx-03-paper-tooth"
@@ -4188,12 +4201,13 @@
      "mShape": "none",
      "duo": "off",
      "screen": 1,
+     "sAngle": 45,
      "order": "ordered",
      "jitter": 0,
      "sizeVar": 0,
-     "irregular": 0.05,
+     "irregular": 0.04,
      "pitch": 3.4,
-     "dotR": 2.15,
+     "dotR": 2.55,
      "rag": 0.05,
      "aL": 0.64,
      "aC": 0.2,
@@ -4218,15 +4232,15 @@
      "duo": "on",
      "stock": "paper",
      "mShape": "none",
-     "aL": 0.7,
+     "aL": 0.76,
      "aC": 0.21,
      "ah": 358,
-     "bL": 0.52,
+     "bL": 0.58,
      "bC": 0.17,
      "bh": 258,
      "pitch": 1.35,
      "dotR": 0.52,
-     "density": 1,
+     "density": 0.85,
      "sizeVar": 0.15
     },
     "fx-02-ink-edge": {
@@ -4240,10 +4254,10 @@
      "mottle": 0.4,
      "bite": 0.6,
      "stock": "paper",
-     "iL": 0.52,
+     "iL": 0.58,
      "iC": 0.17,
      "ih": 258,
-     "density": 1
+     "density": 0.75
     }
    }
   },
@@ -4277,7 +4291,7 @@
    "id": "u-typemacro",
    "code": "U-07",
    "title": "Typewriter · 6× macro",
-   "sub": "Six times closer. Every strike lands with its own pressure and angle, ink passes through the ribbon's weave, film pools at the glyph edge and the type bar dents the sheet — the struck letter as an object, cropped through.",
+   "sub": "Six times closer. Every strike lands with its own pressure and angle, ink passes through the ribbon's weave, film pools at the glyph edge and the type bar dents the sheet — the struck letter as an object: the salutation of the letter in U-01, cropped through.",
    "uses": [
     "fx-07-typewriter",
     "fx-03-paper-tooth"
@@ -4303,9 +4317,9 @@
     "fx-07-typewriter": {
      "stock": "paper",
      "impress": 0.45,
-     "ribbon": 0.34,
-     "rcount": 150,
-     "squash": 0.6,
+     "ribbon": 0.5,
+     "rcount": 130,
+     "squash": 0.65,
      "vari": 0.22,
      "half": 0.06,
      "exhaust": 0,
@@ -4394,14 +4408,14 @@
     "fx-03-paper-tooth": {
      "scale": 3,
      "oct": 4,
-     "depth": 0.22,
+     "depth": 0.11,
      "ease": [
       "out",
       1.4
      ],
      "aniso": 1.4,
      "fibers": 2,
-     "diffuse": 0.5,
+     "diffuse": 0.45,
      "mShape": "none"
     },
     "fx-05-graphite": {
@@ -4588,8 +4602,8 @@
   {
    "id": "u-tote",
    "code": "U-014",
-   "title": "Tote · screenprint on duck, too big to fit",
-   "sub": "Canvas duck, full bleed, a headline pulled through the screen at a size the bag cannot hold — the squeegee running dry toward the right, so the last letters print only on the tops of the threads.",
+   "title": "Tote · one pull of the mark on duck",
+   "sub": "Canvas duck, full bleed, the ø pulled once through the screen at a size the bag cannot hold, with a hand-cut caption under it. The squeegee runs dry toward the right, so the bar prints only on the tops of the threads.",
    "uses": [
     "fx-02-ink-edge",
     "fx-04-weave"
@@ -4622,10 +4636,10 @@
      "bite": 0.92,
      "starve": 0.02,
      "breakup": 0.95,
-     "iL": 0.2,
-     "iC": 0.006,
+     "iL": 0.27,
+     "iC": 0.012,
      "ih": 280,
-     "density": 1.4,
+     "density": 1.3,
      "wAmp": 10,
      "wScale": 70
     }

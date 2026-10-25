@@ -26,6 +26,29 @@ const vnoise=FX.vnoise=(x,y,s)=>{ const xi=Math.floor(x), yi=Math.floor(y), xf=x
 /* fbm with an explicit spectrum: persistence = amplitude dropoff per octave, lacunarity = frequency step */
 FX.fbm=(x,y,s,oct=3,pers=.5,lac=2)=>{ let v=0,amp=1,f=1,n=0; for(let i=0;i<oct;i++){ v+=amp*vnoise(x*f,y*f,s+i*17); n+=amp; f*=lac; amp*=pers; } return v/n; };
 
+/* gradient (Perlin) noise, 0..1 — no grid-aligned lumps, unlike value noise; used where a surface is LIT (paper tooth),
+   since lighting differentiates the field and value noise's flat cell centers read as worms and plateaus */
+const gnoise=FX.gnoise=(x,y,s)=>{ const xi=Math.floor(x), yi=Math.floor(y), xf=x-xi, yf=y-yi, u=xf*xf*xf*(xf*(xf*6-15)+10), v=yf*yf*yf*(yf*(yf*6-15)+10);
+  const g=(ix,iy,dx,dy)=>{ const a=hash(ix,iy,s)*TAU; return Math.cos(a)*dx+Math.sin(a)*dy; };
+  const n00=g(xi,yi,xf,yf), n10=g(xi+1,yi,xf-1,yf), n01=g(xi,yi+1,xf,yf-1), n11=g(xi+1,yi+1,xf-1,yf-1);
+  const nx0=n00+(n10-n00)*u, nx1=n01+(n11-n01)*u; return .5+(nx0+(nx1-nx0)*v)*.7071; };
+FX.gfbm=(x,y,s,oct=3,pers=.5,lac=2.03)=>{ let v=0,amp=1,f=1,n=0; for(let i=0;i<oct;i++){ const c=Math.cos(i*.9), sn=Math.sin(i*.9); v+=amp*gnoise((x*c-y*sn)*f,(x*sn+y*c)*f,s+i*17); n+=amp; f*=lac; amp*=pers; } return v/n; };
+/* fine film-splitting / grain noise sampled in CSS px (feature ≥ `cell` CSS px), so speckle keeps its physical size on any
+   screen and in macro usages instead of being one device pixel wide */
+FX.grain=(u,v,s,cell=.6,dpr=2)=>{ const c=Math.max(cell,1.3/dpr), c2=Math.max(c*.6,1.3/dpr); return .62*gnoise(u/c,v/c,s)+.38*gnoise(u/c2+31.7,v/c2-12.3,s+5); };
+
+/* signed distance to a coverage clip (device px, + inside), from an exact squared Euclidean distance transform
+   (Felzenszwalb & Huttenlocher 2012) on both sides of the .5 contour, refined by the AA coverage (sub-pixel edge). */
+FX.sdf=(clip,W,H)=>{ const INF=1e20, f=new Float64Array(Math.max(W,H)), d=new Float64Array(Math.max(W,H)), z=new Float64Array(Math.max(W,H)+1), v=new Int32Array(Math.max(W,H));
+  const dt1=(n)=>{ let k=0; v[0]=0; z[0]=-INF; z[1]=INF; for(let q=1;q<n;q++){ let s_; while(true){ const r=v[k]; s_=((f[q]+q*q)-(f[r]+r*r))/(2*q-2*r); if(s_<=z[k]&&k>0){ k--; continue; } if(s_<=z[k]){ k--; if(k<0){k=0; break;} continue; } break; } k++; v[k]=q; z[k]=s_; z[k+1]=INF; }
+    k=0; for(let q=0;q<n;q++){ while(z[k+1]<q) k++; const r=v[k]; d[q]=(q-r)*(q-r)+f[r]; } };
+  const edt=(inside)=>{ const g=new Float64Array(W*H); for(let i=0;i<W*H;i++) g[i]=(clip[i]>=.5)===inside?0:INF;
+    for(let x=0;x<W;x++){ for(let y=0;y<H;y++) f[y]=g[y*W+x]; dt1(H); for(let y=0;y<H;y++) g[y*W+x]=d[y]; }
+    for(let y=0;y<H;y++){ for(let x=0;x<W;x++) f[x]=g[y*W+x]; dt1(W); for(let x=0;x<W;x++) g[y*W+x]=d[x]; } return g; };
+  const din=edt(false), dout=edt(true), out=new Float32Array(W*H);
+  for(let i=0;i<W*H;i++){ const c=clip[i]; out[i]=c>0&&c<1?c-.5:c>=.5?Math.sqrt(din[i])-.5:.5-Math.sqrt(dout[i]); }
+  return out; };
+
 /* ── blue-noise rank tile (void-and-cluster, Ulichney 1993), 64 × 64, toroidal, built once at load ──
    rank[i] ∈ [0,1): thresholding the tile at t keeps a fraction t of cells, spread as evenly as possible.
    Used to choose WHICH sites survive at a given density, so sparse areas thin evenly instead of clumping. */
@@ -145,7 +168,7 @@ FX._mask=(o,W,H,dpr,seed)=>{ const M=new Float32Array(W*H); const sh=o.mShape||'
     d+=amp*(FX.fbm(u/sc,v/sc,s,oct,.55)*2-1)*1.6; D[y*W+x]=d;
     let m=clamp(d/fe,0,1);
     if(bite>0&&m>0){ const near=1-clamp(d/(fe*4+amp*2),0,1); const holes=FX.fbm(u/(sc*.22+2),v/(sc*.22+2),s+41,3); if(holes<bite*(.25+.75*near)*.62) m*=clamp((holes-bite*(.25+.75*near)*.62+.04)/.04,0,1); }
-    if(o.mMode==='speckle'&&m>0&&m<1) m=FX.blue.at(x,y)<m?1:0; else m=m*m*(3-2*m);
+    if(o.mMode==='speckle'&&m>0&&m<1){ const n=FX.grain(u,v,s+77,.7,dpr); m=clamp((m-n)*7+.5,0,1); } else m=m*m*(3-2*m); // speckle: binary marks in CSS px, AA-edged
     M[y*W+x]=m; } }
   return {m:M,d:D}; };
 

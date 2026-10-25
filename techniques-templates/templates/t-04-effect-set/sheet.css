@@ -33,11 +33,11 @@ body.fs-page{overflow:auto;background:#fff;font-stretch:100%;-webkit-tap-highlig
 .fs-sys ol li::before{content:counter(p);position:absolute;left:0;top:4px;font-family:var(--mono);font-size:9.5px;color:var(--accent);}
 
 /* bar */
-.fs-bar{position:sticky;top:calc(var(--gutter) + var(--nav-h) + 8px);z-index:50;margin:18px 0 0;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;background:rgba(255,255,255,.96);border:1px solid var(--hair);padding:6px 10px;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey);}
+.fs-bar{position:sticky;top:calc(var(--gutter) + var(--nav-h));box-shadow:0 -12px 0 0 #fff;z-index:50;margin:18px 0 0;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;background:#fff;border:1px solid var(--hair);padding:6px 10px;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey);}
 .fs-bar .g{display:flex;gap:4px;align-items:center;}
 .fs-bar .g>span{margin-right:6px;}
 .fs-bar .sp{flex:1;}
-.fs-bar #fs-status{color:var(--ink);min-width:9ch;text-align:right;}
+.fs-bar #fs-status{color:var(--ink);width:12ch;flex:none;text-align:right;white-space:nowrap;overflow:hidden;}
 .fs-light{display:flex;align-items:center;gap:8px;}
 .fs-light .disc{position:relative;width:34px;height:34px;border-radius:50%;border:1px solid var(--grey-2);background:radial-gradient(circle at 50% 50%,#fff 0 30%,var(--sunken) 31% 100%);cursor:crosshair;touch-action:none;flex:none;}
 .fs-light .disc::before,.fs-light .disc::after{content:'';position:absolute;background:var(--hair);}
@@ -53,6 +53,15 @@ body.fs-page{overflow:auto;background:#fff;font-stretch:100%;-webkit-tap-highlig
 .fs-bar-busy{position:absolute;left:0;top:0;height:2px;width:100%;pointer-events:none;opacity:0;transition:opacity .2s .15s;background:linear-gradient(90deg,transparent 0,var(--accent) 40%,transparent 80%);background-size:50% 100%;background-repeat:no-repeat;}
 .fs-frame.busy .fs-bar-busy{opacity:1;animation:fsbusy 1s linear infinite;}
 @keyframes fsbusy{from{background-position:-50% 0}to{background-position:150% 0}}
+/* busy = a 1 px solid accent hairline that steps across (no gradient smear) */
+.fs-bar-busy{height:1px;background:linear-gradient(var(--accent),var(--accent));background-size:22% 100%;background-repeat:no-repeat;}
+.fs-frame.busy .fs-bar-busy{animation:fsbusy 1.2s steps(10) infinite;}
+/* output dials match the hairline system */
+.fs-out input[type=range]{-webkit-appearance:none;appearance:none;height:18px;background:transparent;cursor:pointer;flex:1;min-width:0;}
+.fs-out input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--ink);}
+.fs-out input[type=range]::-moz-range-track{height:1px;background:var(--ink);}
+.fs-out input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:9px;height:9px;margin-top:-4px;background:#fff;border:1px solid var(--ink);border-radius:0;}
+.fs-out input[type=range]::-moz-range-thumb{width:9px;height:9px;background:#fff;border:1px solid var(--ink);border-radius:0;}
 
 /* rack */
 .fs-rack{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin:22px 0 0;}
@@ -211,7 +220,7 @@ html.js .fs-static{display:none;}
   .fs-bar{position:relative;top:0;gap:8px 10px;}
   .fs-bar .jump{display:none;}
   .fs-bar .sp{display:none;}
-  .fs-rack{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;margin:18px calc(var(--gutter)*-1) 0;padding:0 var(--gutter) 4px;scrollbar-width:none;}
+  .fs-rack{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;margin:18px calc(var(--gutter)*-1) 0;padding:0 var(--gutter) 4px;scrollbar-width:none;scroll-padding-inline:var(--gutter);}
   .fs-rack::-webkit-scrollbar{display:none;}
   .fs-cell{flex:0 0 72%;scroll-snap-align:start;}
   .fs-fx{margin-top:48px;scroll-margin-top:8px;}
@@ -280,7 +289,7 @@ html.coarse .fs-row.t-text .txt{height:36px;font-size:14px;}
 @media (max-width:760px){ .fs-rackh{flex-wrap:wrap;margin-bottom:-4px;} .fs-rackh .bl{flex-basis:100%;} .fs-secth{margin-top:72px;} }
 
 /* ══════════ v4 · the bench: plate tools, light on the plate, output, lift ══════════ */
-.fs-how{border:1px solid var(--hair);padding:14px 16px;align-self:end;}
+.fs-how{border:0;border-top:1px solid var(--ink);padding:10px 0 0;align-self:end;}
 .fs-how ol{margin:8px 0 0;padding:0;list-style:none;counter-reset:h;}
 .fs-how li{counter-increment:h;position:relative;padding:4px 0 4px 24px;font-size:12.5px;line-height:1.5;border-bottom:1px dotted var(--hair);}
 .fs-how li:last-child{border-bottom:0;}
@@ -305,7 +314,7 @@ html.coarse .fs-row.t-text .txt{height:36px;font-size:14px;}
 
 /* light handle on every plate */
 .fs-puckhost{position:absolute;right:8px;top:8px;z-index:6;}
-.fs-puck{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.92);border:1px solid var(--hair);padding:4px 7px 4px 4px;font-family:var(--mono);font-size:9.5px;color:var(--ink);font-variant-numeric:tabular-nums;opacity:.75;transition:opacity .15s;}
+.fs-puck{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--hair);padding:4px 7px 4px 4px;font-family:var(--mono);font-size:9.5px;color:var(--ink);font-variant-numeric:tabular-nums;opacity:.75;transition:opacity .15s;}
 .fs-frame:hover .fs-puck,.fs-puck.on,.fs-puck:focus-within{opacity:1;}
 .fs-puck .disc{position:relative;width:34px;height:34px;border-radius:50%;border:1px solid var(--grey-2);background:radial-gradient(circle,#fff 0 28%,var(--sunken) 29% 100%);cursor:crosshair;touch-action:none;flex:none;}
 .fs-puck .disc::before,.fs-puck .disc::after{content:'';position:absolute;background:var(--hair);}
@@ -350,7 +359,8 @@ html.coarse .fs-puck .disc{width:46px;height:46px;}
 .fs-cmm{display:flex;gap:6px;align-items:center;padding:0 12px 10px;font-family:var(--mono);font-size:10px;color:var(--grey);}
 .fs-cmm[hidden]{display:none;}
 .fs-cmm input{width:66px;font-family:var(--mono);font-size:10.5px;height:26px;border:1px solid var(--hair);padding:0 6px;border-radius:0;}
-.fs-oprev{margin:0 12px 8px;max-height:260px;aspect-ratio:16/9;}
+.fs-oprev{margin:0 auto 4px;max-height:260px;max-width:calc(100% - 24px);aspect-ratio:16/9;}
+.fs-onote{margin:0 12px 10px;font-size:11px;line-height:1.45;color:var(--grey);}
 .fs-osum{padding:0 12px 10px;font-family:var(--mono);font-size:10px;line-height:1.6;color:var(--grey);}
 .fs-osum b{color:var(--ink);font-weight:500;} .fs-osum em{color:var(--accent);font-style:normal;}
 .fs .fs-out .go{background:var(--ink);color:#fff;border-color:var(--ink);height:32px;padding:0 14px;}
@@ -414,9 +424,16 @@ html.coarse .fs .fs-jobs button{height:34px;}
 @media (max-width:1100px){ .fs-ucard.wide{grid-column:span 2;} }
 @media (max-width:760px){ .fs-ucard.wide{grid-column:auto;} .fs-jobs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-left:calc(var(--gutter)*-1);margin-right:calc(var(--gutter)*-1);padding:0 var(--gutter);} .fs-jobs::-webkit-scrollbar{display:none;} .fs .fs-jobs button{flex:none;} }
 
-/* masonry by columns: cards keep their own aspect (labels are tall, decks are wide) and pack without holes */
-.fs-ugrid{display:block;columns:3;column-gap:18px;}
-.fs-ucard{break-inside:avoid;margin:0 0 30px;display:block;}
-.fs-ucard.wide{grid-column:auto;}
-@media (max-width:1100px){ .fs-ugrid{columns:2;} }
-@media (max-width:760px){ .fs-ugrid{columns:1;} }
+/* masonry that reads in ROWS: a 3-column grid on 6 px rows; each card spans the rows its height needs (set by sheet.js),
+   wide cards take two columns, dense packing fills holes — so job order reads left to right and nothing is left empty */
+.fs-ugrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:6px;column-gap:18px;row-gap:0;grid-auto-flow:row dense;align-items:start;}
+.fs-ucard{margin:0;display:block;padding-bottom:30px;}
+.fs-ucard.wide{grid-column:span 2;}
+@media (max-width:1100px){ .fs-ugrid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+@media (max-width:760px){ .fs-ugrid{grid-template-columns:minmax(0,1fr);} .fs-ucard.wide{grid-column:auto;} }
+
+/* phones: folded gallery + clamped captions */
+.fs-ucard.fold{display:none;}
+.fs-umore{display:block;width:100%;height:40px;margin:4px 0 0;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;background:#fff;border:1px solid var(--ink);color:var(--ink);cursor:pointer;}
+.fs-ptools-ph{margin:8px 0 0;}
+@media (max-width:760px){ .fs-ucard .cap p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer;} .fs-ucard .cap p.open{display:block;} }

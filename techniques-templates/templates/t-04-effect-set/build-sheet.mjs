@@ -58,6 +58,7 @@ const html=`<!DOCTYPE html>
 <meta name="description" content="${esc(`${SET.code} Effect set template: ${SET.effects.length} single effects (${SET.effects.map(e=>e.name).join(', ')}) on white, each with density, dropoff, OKLCH color, mixing-rule and randomized-mask dials, limits and a live JSON spec, plus ${SET.usages.length} usages that follow the dials.`)}">
 <link rel="alternate" type="application/json" href="set.json">
 <link rel="stylesheet" href="../../_shared/fonts.css">
+<link rel="stylesheet" href="type.css${V}">
 <link rel="stylesheet" href="../../_shared/shell.css${V}">
 <link rel="stylesheet" href="sheet.css${V}">
 </head>
@@ -66,7 +67,7 @@ const html=`<!DOCTYPE html>
 <nav class="nav" id="nav" aria-label="Site navigation"><a class="brand" href="../../index.html">${TT.mark}<span class="wm">IMP<i>Ø</i>SSIBLE</span></a><span class="crumb"><a href="../../index.html#templates">Techniques &amp; Templates</a><span class="sep">/</span><b>${esc(SET.title)}</b><span class="code">${esc(SET.code)}</span></span><span class="pager"><span>${esc(SET.code)} · template</span><a href="../../index.html#templates">index</a></span></nav>
 <main class="fs">
   <header class="fs-hd">
-    <div><span class="code">${esc(SET.code)} · Effect set · ${esc(SET.set)} · ${SET.effects.length} effects · ${SET.usages.length} usages</span><h1>${esc(SET.short)}</h1><p class="premise">${esc(SET.premise)}</p></div>
+    <div><span class="code">${esc(SET.code)} · Effect set · ${SET.effects.length} effects · <a href="#usages">${SET.usages.length} usages ↓</a></span><h1>${esc(SET.short)}</h1><p class="premise">${esc(SET.premise)}</p></div>
     <div class="fs-how"><span class="code">How to use the sheet</span><ol>
       <li><b>Tune</b> a plate — dials are grouped by what they change; a dot marks what you moved. Drag the light on any plate.</li>
       <li><b>Explore</b> — <i>wedge</i> lays out a grid across two dials, <i>pin · split</i> compares against a frozen state, <i>distance</i> shows how the marks read from across a table.</li>
@@ -156,6 +157,7 @@ for(const e of SET.effects){ const o=DEF[e.id], dep=e.stockOf?e.stockOf(o):null,
   fs.writeFileSync(path.join(here,'lift',e.id+'.html'),`<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(e.code)} ${esc(e.name)} · standalone · T-04</title>
 <link rel="stylesheet" href="../../../_shared/fonts.css">
+<link rel="stylesheet" href="../type.css">
 <style>body{margin:0;background:#fff;font:12px/1.5 'JetBrains Mono',ui-monospace,monospace;color:#101014}main{max-width:860px;margin:0 auto;padding:28px 18px}canvas{display:block;width:100%;aspect-ratio:4/3;border:1px solid #E7E4DD}p{margin:10px 0}a{color:#2F5AE6}</style></head>
 <body><main><p><b>${esc(e.code)} ${esc(e.name)}</b> · standalone: fx.js + set.js, defaults, nothing else from the sheet · <a href="../index.html#${e.id}">back to the sheet</a> · <a href="../spec/${e.id}.json">spec</a></p>
 <canvas id="c"></canvas><p id="st"></p><p id="tv"></p></main>

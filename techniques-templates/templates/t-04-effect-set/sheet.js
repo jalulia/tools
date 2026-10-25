@@ -156,7 +156,7 @@ const depsOf=id=>{ const out=[id], e=EFX[id], sid=e.stockOf&&e.stockOf(S[id]); i
 const paramsWithDeps=id=>Object.fromEntries(depsOf(id).map(k=>[k,roundP(EFX[k],S[k])]));
 
 /* material system: one line, open for the causes and the pass order */
-if(SET.system){ const barEl=$('#fs-bar'); const sysD=h('details',{class:'fs-sysd'},h('summary',null,h('span',{class:'code'},'Material system'),h('span',{class:'sum'},SET.system.read)),h('section',{class:'fs-sys','aria-label':'Material system'},
+if(SET.system){ const barEl=$('#fs-bar'); const sysD=h('details',{class:'fs-sysd',open:innerWidth>760},h('summary',null,h('span',{class:'code'},'Material system'),h('span',{class:'sum'},SET.system.read)),h('section',{class:'fs-sys','aria-label':'Material system'},
   h('div',{class:'c'},h('span',{class:'code'},'Shared causes'),h('ul',null,SET.system.sharedCause.map(t=>h('li',null,t)))),
   h('div',{class:'c'},h('span',{class:'code'},'Pass order'),h('ol',null,SET.system.passOrder.map(t=>h('li',null,t)))))); barEl.parentNode.insertBefore(sysD,barEl.nextSibling); }
 
@@ -239,7 +239,8 @@ SET.effects.forEach(e=>{
   const wedgeCtl=h('div',{class:'fs-wctl',hidden:true});
   const tools=h('div',{class:'fs-ptools'},viewSeg,h('span',{class:'lbl'},'distance'),distSeg,h('span',{class:'sp'}),bProof,bWedge,bPin);
   if(bProof) bProof.onclick=()=>{ B.proof=!B.proof; bProof.setAttribute('aria-pressed',String(B.proof)); request('p:'+id,false); };
-  const stage=h('div',{class:'fs-stage'},fr,tools,wedgeCtl,stat);
+  // phones: only the plate and its stats stay pinned while you dial; view / distance / wedge tools scroll with the page
+  const PHONE=matchMedia('(max-width:760px)').matches, stage=PHONE?h('div',{class:'fs-stage'},fr,stat):h('div',{class:'fs-stage'},fr,tools,wedgeCtl,stat);
   makePuck(puckHost,true);
 
   // viewing distance: the eye integrates; we downsample with the browser's high-quality filter at true device px
@@ -295,7 +296,8 @@ SET.effects.forEach(e=>{
     h('div',{class:'orow'},h('label',null,'Mark scale'),scaleIn,scaleOut),
     h('div',{class:'orow files'},chk('image','image','the rendered plate, sRGB PNG'),chk('ink','ink plate','absorbance as a film positive — one grayscale plate per run, for riso / screen / a mask in Figma'),chk('stock','height map','the stock height as 8-bit grayscale — displacement in Blender, Cavalry, TouchDesigner'),chk('json','spec','JSON sidecar: params + deps + light + destination')),
     prevFr,sum,h('div',{class:'orow'},bGo,prog));
-  if(innerWidth>760) outD.open=true;
+  // Output stays closed: the plate and its dials lead; export is one click away (its summary shows the target)
+  if(prevFr.parentNode) prevFr.after(h('p',{class:'fs-onote'},'Preview = the whole composition stepped down to this box, so fine marks average into tone, as from across a room. The export carries every mark at full size.'));
   const updOut=()=>{ const d=DESTS.find(x=>x.id===O.dest), r=destDims(d,O); cmm.hidden=d.id!=='custom'; land.hidden=d.id==='custom'||(d.px&&d.px[0]===d.px[1]); land.textContent=O.land?'landscape':'portrait'; land.setAttribute('aria-pressed',String(O.land));
     scaleOut.textContent='× '+O.scale; const mp=r.W*r.H/1e6; sum.innerHTML=`<b>${r.W} × ${r.H} px</b> · ${mp.toFixed(1)} MP${r.mm?` · ${r.mm[0]} × ${r.mm[1]} mm @ ${r.dpi} dpi`:''}<br>${esc(r.note)} · composition at ${Math.round(r.cssW)} × ${Math.round(r.cssH)} CSS px${mp>16?'<br><em>large — may take a while; desktop recommended</em>':''}`;
     $('.sumv',outD).textContent=`${d.label.split(' · ')[0]} · ${r.W}×${r.H}`; prevFr.style.aspectRatio=`${r.W} / ${r.H}`; bGo.disabled=mp>48; request('o:'+id,false); };
@@ -327,6 +329,7 @@ SET.effects.forEach(e=>{
   const snippet=()=>{ const P=paramsWithDeps(id), needsClip=!!e.clips||['type'].includes(S[id].mShape);
     return `<!-- ${e.code} ${e.name} · ${SET.set} · lifted ${new Date().toISOString().slice(0,10)} -->
 ${needsClip?`<link rel="stylesheet" href="${new URL('../../_shared/fonts.css',BASE).href}">  <!-- Archivo / JetBrains Mono for dies and type -->
+<link rel="stylesheet" href="${new URL('type.css',BASE).href}">  <!-- Courier Prime for typewriter strikes (OFL) -->
 `:''}<canvas id="${id}" style="width:800px;height:600px;display:block"></canvas>
 <script src="${BASE}fx.js"></script>
 <script src="${BASE}set.js"></script>
@@ -354,7 +357,7 @@ ${needsClip?`<link rel="stylesheet" href="${new URL('../../_shared/fonts.css',BA
 
   // mask upload (Edge tab), session only
   const side=h('div',{class:'fs-side'},h('div',{class:'fs-panel'},dials),outD,h('div',{class:'fs-fxf'},fstrip,fpanes));
-  sec.append(h('div',{class:'fs-fxb'},stage,side));
+  sec.append(h('div',{class:'fs-fxb'},stage,...(PHONE?[h('div',{class:'fs-ptools-ph'},tools,wedgeCtl)]:[]),side));
   live.append(sec);
   const updSpec=()=>{ spec.textContent=JSON.stringify(specObj(),null,2); if(!$('.fs-fpane[data-k=lift]',fpanes).hidden) liftCode.textContent=snippet(); };
   register('p:'+id,cv,fr,fxJob(id,cv,()=>B.view,{proof:()=>B.proof}),(s,final)=>{ stat.innerHTML=`<span>${s.W} × ${s.H} px</span><span><b>${fmtN(s.marks)}</b> ${s.unit}</span><span>${s.ms.toFixed(0)} ms</span><span>${(s.dpr||1).toFixed(s.dpr%1?2:0)}× px</span>${final?'':'<span class="dr">draft</span>'}`; if(final) paintDist(); },1);
@@ -378,7 +381,7 @@ UG.append(h('header',{class:'fs-uh'},h('div',null,h('span',{class:'code'},'Usage
 // filter by job: what the card is for, not which effect it uses
 const JOBS=SET.jobs||[]; const jcount=k=>SET.usages.filter(u=>u.job===k).length;
 const jbar=h('div',{class:'fs-jobs',role:'group','aria-label':'Filter usages by job'},h('span',null,'Job'));
-const setJob=k=>{ $$('button',jbar).forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.j===k))); $$('.fs-ucard',ugrid).forEach(c=>c.hidden=k!=='all'&&c.dataset.job!==k); };
+const setJob=k=>{ $$('button',jbar).forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.j===k))); $$('.fs-ucard',ugrid).forEach(c=>c.hidden=k!=='all'&&c.dataset.job!==k); requestAnimationFrame(fitU); };
 jbar.append(h('button',{type:'button','data-j':'all','aria-pressed':'true',onclick:()=>setJob('all')},'all ',h('i',null,String(SET.usages.length))));
 JOBS.forEach(([k,l])=>{ if(jcount(k)) jbar.append(h('button',{type:'button','data-j':k,'aria-pressed':'false',onclick:()=>setJob(k)},l+' ',h('i',null,String(jcount(k))))); });
 if(JOBS.length) UG.append(jbar);
@@ -391,6 +394,12 @@ const JORD=k=>{ const i=JOBS.findIndex(j=>j[0]===k); return i<0?99:i; };
   ugrid.append(h('article',{class:'fs-ucard'+(u.span===2?' wide':''),'data-job':u.job||'','data-u':u.id},fr,h('div',{class:'cap'},h('span',{class:'code'},'U-'+String(i+1).padStart(2,'0')+(jl?' · '+jl:'')+(u.zoom>1?' · '+u.zoom+'×':'')+(u.light?' · light '+u.light.el+'°':'')),h('b',null,u.title),h('p',null,u.sub),h('div',{class:'chips'},u.uses.map(id=>h('a',{href:'#'+id},EFX[id].code+' '+EFX[id].name))),ov.length?h('details',null,h('summary',null,'overrides'),h('div',{class:'fs-ovs'},ov)):null)));
   register('u:'+u.id,c,fr,uJob(u,c),null,2); });
 live.append(UG);
+/* row-reading masonry: each card spans as many 6 px grid rows as its own height (aspect + caption) needs */
+/* phones: the first 8 cards, then one button; captions clamp to two lines, tap to read */
+if(matchMedia('(max-width:760px)').matches){ const cards=$$('.fs-ucard',ugrid); if(cards.length>8){ cards.slice(8).forEach(c=>c.classList.add('fold')); const more=h('button',{class:'fs-umore',type:'button'},'Show all '+cards.length+' usages'); more.onclick=()=>{ cards.forEach(c=>c.classList.remove('fold')); more.remove(); }; UG.append(more); jbar.addEventListener('click',()=>{ cards.forEach(c=>c.classList.remove('fold')); more.remove(); }); }
+  $$('.fs-ucard .cap p',ugrid).forEach(p=>p.addEventListener('click',()=>p.classList.toggle('open'))); }
+function fitU(){ if(getComputedStyle(ugrid).display!=='grid') return; $$('.fs-ucard',ugrid).forEach(c=>{ if(c.hidden) return; const n=Math.ceil(c.getBoundingClientRect().height/6); if(c._rows!==n){ c._rows=n; c.style.gridRowEnd='span '+n; } }); };
+if(typeof ResizeObserver!=='undefined'){ const ro=new ResizeObserver(()=>requestAnimationFrame(fitU)); $$('.fs-ucard',ugrid).forEach(c=>ro.observe(c)); } fitU();
 
 /* ══════════ bar: history · link · params · reset · loupe ══════════ */
 const bar=$('#fs-bar');
@@ -416,7 +425,7 @@ document.addEventListener('pointermove',ev=>{ if(!UI.loupe||ev.pointerType==='to
 let lastW=innerWidth; addEventListener('resize',()=>{ clearTimeout(window.__rt); window.__rt=setTimeout(()=>{ if(Math.abs(innerWidth-lastW)<40) return; lastW=innerWidth; targets.forEach(T=>{ T.dirty=true; }); targets.forEach((T,k)=>{ if(T.visible) request(k,false); }); SET.effects.forEach(e=>{ const b=blocks[e.id]; if(b.B.pin) b.B.pin.el.remove(), b.B.pin=null; }); },220); });
 // watchdog: a visible canvas that never painted (a dropped job) gets requested again
 setInterval(()=>{ if(!READY) return; targets.forEach((T,k)=>{ if(T.visible&&!T.lastPainted&&!pending.has(k)&&!pool.some(w=>w.busy===k)) request(k,false); }); },1500);
-(document.fonts&&document.fonts.load?Promise.all([document.fonts.load('800 40px Archivo'),document.fonts.load('500 12px "JetBrains Mono"')]).catch(()=>{}):Promise.resolve()).then(()=>{ READY=true; status(''); targets.forEach((T,k)=>{ if(T.visible) request(k,false); }); });
+(document.fonts&&document.fonts.load?Promise.all([document.fonts.load('800 40px Archivo'),document.fonts.load('500 12px "JetBrains Mono"'),document.fonts.load('400 12px "Courier Prime"'),document.fonts.load('700 12px "Courier Prime"')]).catch(()=>{}):Promise.resolve()).then(()=>{ READY=true; status(''); targets.forEach((T,k)=>{ if(T.visible) request(k,false); }); });
 commit();
 window.__fxsheet={undo,redo,hist:()=>HIST.i,get S(){return S;},DEF,get light(){return LIGHT;},targets,blocks,idle:()=>!pending.size&&!pool.some(w=>w.busy)&&!pump.t,workers:()=>useWorkers&&pool.length};
 })();
