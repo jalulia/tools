@@ -231,12 +231,15 @@ FX.blur=(src,W,H,r)=>{ r=Math.max(0,Math.round(r)); if(!r) return Float32Array.f
   const pass=(s,d,horiz)=>{ const n=horiz?W:H, m=horiz?H:W, inv=1/(2*r+1); for(let j=0;j<m;j++){ let acc=0; const at=i=>{ i=i<0?0:i>=n?n-1:i; return horiz?s[j*W+i]:s[i*W+j]; };
     for(let i=-r;i<=r;i++) acc+=at(i); for(let i=0;i<n;i++){ if(horiz) d[j*W+i]=acc*inv; else d[i*W+j]=acc*inv; acc+=at(i+r+1)-at(i-r); } } };
   for(let k=0;k<3;k++){ pass(a,b,true); pass(b,a,false); } return a; };
-/* object on the page: contact + short ambient shadow from the object's alpha, offset away from the light, tinted.
-   light-stage values (hardware-and-shadows): contact ≈ .30 at ~1–2 px, ambient ≈ .18 at ~4–9 px. Returns darkening 0..1. */
-FX.castShadow=(alpha,W,H,dpr,L,lift=1)=>{ const [lx,ly,lz]=FX.lightVec(L), pl=Math.hypot(lx,ly)||1, cot=pl/lz;
+/* object on the page — no drop shadow. A sheet lying flat on a surface only occludes a hairline at its edge: a crisp
+   contact line on the side away from the light (offset by the sheet's thickness at the light's slope) plus a very tight
+   ambient occlusion right at the edge. Only something truly LIFTED (lift ≳ 1.5, a peeled flap) throws a real cast
+   shadow, and its penumbra stays proportional to the height, so it stays sharp near the object. Returns darkening 0..1. */
+FX.castShadow=(alpha,W,H,dpr,L,lift=1)=>{ const [lx,ly,lz]=FX.lightVec(L), pl=Math.hypot(lx,ly)||1, cot=Math.min(4,pl/lz);
   const off=(px)=>{ const o=new Float32Array(W*H), ox=Math.round(-lx/pl*px*cot*dpr), oy=Math.round(-ly/pl*px*cot*dpr); for(let y=0;y<H;y++){ const sy=y-oy; if(sy<0||sy>=H) continue; for(let x=0;x<W;x++){ const sx=x-ox; if(sx>=0&&sx<W) o[y*W+x]=alpha[sy*W+sx]; } } return o; };
-  const c=FX.blur(off(.8*lift),W,H,1.2*dpr*lift), a=FX.blur(off(3.2*lift),W,H,4.5*dpr*lift), out=new Float32Array(W*H);
-  for(let i=0;i<out.length;i++){ const v=.3*c[i]+.2*a[i]; out[i]=v*(1-alpha[i]); } return out; };
+  const t=Math.min(lift,1), c=FX.blur(off(.28*t+.1),W,H,Math.max(1,Math.round(.35*dpr))), a=FX.blur(alpha,W,H,Math.max(1,Math.round(.9*dpr)));
+  const up=lift>1.5?Math.min(1,(lift-1.5)/1.5):0, sh=up>0?FX.blur(off(lift*.9),W,H,Math.max(1,Math.round(lift*.3*dpr))):null, out=new Float32Array(W*H);
+  for(let i=0;i<out.length;i++){ const v=.2*c[i]+.045*a[i]+(sh?.14*up*sh[i]:0); out[i]=v*(1-alpha[i]); } return out; };
 /* film LUT: per-channel transmittance ink^τ for τ ∈ [0,2], 1025 steps */
 FX.filmLUT=(ink)=>{ const N=1024, T=new Float32Array((N+1)*3), l=ink.lin.map(v=>Math.log(v<1e-4?1e-4:v)); for(let i=0;i<=N;i++){ const t=i/N*2; T[i*3]=Math.exp(l[0]*t); T[i*3+1]=Math.exp(l[1]*t); T[i*3+2]=Math.exp(l[2]*t); } return T; };
 

@@ -362,8 +362,8 @@ const weave={ presets:[['source · linen',{}],['gray linen',{wL:.7,wC:.006,wh:25
 
 /* ══════════ SURPRISE MARKS · four marks that only make sense on a material system ══════════ */
 const SHAPE_PARAMS=(d={})=>[
-  {key:'shape',label:'Die',group:'density',type:'select',options:['ø mark','word','seal'],value:d.shape||'ø mark',note:'what the die (or type) is: the ø co. brandmark, a word, or a ring seal'},
-  {key:'text',label:'Text',group:'density',type:'text',value:d.text||'Four surfaces',maxlength:40,note:'set in Archivo 800 for word and seal',when:{shape:['word','seal']}},
+  {key:'shape',label:'Die',group:'density',type:'select',options:['compass','sun','crescent','knot','monogram','word','seal'],value:d.shape||'compass',note:'what the die (or type) is: an invented mark (compass, sun, crescent, knot, a monogram from the text), a word, or a ring seal'},
+  {key:'text',label:'Text',group:'density',type:'text',value:d.text||'Four surfaces',maxlength:40,note:'set in Archivo 800 for word, seal and monogram (its first letter)',when:{shape:['word','seal','monogram']}},
   {key:'size',label:'Size',group:'density',type:'range',min:.15,max:1,step:.01,value:d.size??.62,note:'die height as a share of the plate'}];
 const drawShape=(g,w,h,o)=>{ const S_=Math.min(w,h)*o.size, cx=w/2, cy=h/2; g.save();
   if(o.shape==='word'){ let fs=S_*.42; const f=x=>`800 ${x}px Archivo, "Helvetica Neue", Arial, sans-serif`; g.font=f(fs); const tw=g.measureText(o.text||' ').width; fs*=Math.min(1,(w*.84)/Math.max(1,tw)); g.font=f(fs); const t2=g.measureText(o.text||' ').width; g.textBaseline='alphabetic'; g.fillText(o.text||'',cx-t2/2,cy+fs*.36); }
@@ -374,11 +374,16 @@ const drawShape=(g,w,h,o)=>{ const S_=Math.min(w,h)*o.size, cx=w/2, cy=h/2; g.sa
       [...str].forEach((ch,k)=>{ const da=ws[k]/rr, ac=a+dir*(ws[k]-trk)/2/rr; g.save(); g.translate(cx+Math.cos(ac)*rr,cy+Math.sin(ac)*rr); g.rotate(ac+dir*PI/2); g.fillText(ch,-(ws[k]-trk)/2,0); g.restore(); a+=dir*da; }); };
     if(parts[0]) arc(parts[0],-PI/2,1); if(parts.length>1) arc(parts.slice(1).join(' · '),PI/2,-1);
     [-1,1].forEach(sd=>{ g.beginPath(); g.arc(cx+sd*rr,cy,fs*.11,0,TAU); g.fill(); }); // two dots part the phrases
-    g.beginPath(); g.arc(cx,cy,R0*.6,0,TAU); g.clip(); g.translate(cx,cy); const k=R0*.56/103.65; g.scale(k,k); g.translate(-682.33,-139.46); MARKP(g); } // the bar is cut at the inner ring, never into the text
-  else { g.translate(cx,cy); const k=S_*.5/103.65; g.scale(k,k); g.translate(-682.33,-139.46); MARKP(g); }
+    g.translate(cx,cy); g.scale(R0*.5,R0*.5); MARKS.compass(g); } // the inner mark sits well inside the ring, never into the text
+  else { g.translate(cx,cy); g.scale(S_*.5,S_*.5); (MARKS[o.shape]||MARKS.compass)(g,o); }
   g.restore(); };
-/* the ø co. brandmark (TT.mark geometry): thick ring + 45° bar */
-const MARKP=(g)=>{ g.beginPath(); g.arc(682.33,139.46,103.65,0,TAU); g.arc(682.33,139.46,48.29,0,TAU,true); g.fill('evenodd'); g.save(); g.translate(682.33,139.46); g.rotate(PI/4); g.fillRect(-16.145,-144.915,32.29,289.83); g.restore(); };
+/* invented marks for dies and usages (no real brand): each fills the unit circle around (0,0) */
+const MARKS={
+  compass:(g)=>{ g.beginPath(); for(let k=0;k<16;k++){ const a=-PI/2+k*PI/8, r=k%2?.34:(k%4?.74:1); k?g.lineTo(Math.cos(a)*r,Math.sin(a)*r):g.moveTo(Math.cos(a)*r,Math.sin(a)*r); } g.closePath(); g.moveTo(.13,0); g.arc(0,0,.13,0,TAU,true); g.fill('evenodd'); },
+  sun:(g)=>{ g.beginPath(); g.arc(0,0,.44,0,TAU); g.fill(); for(let k=0;k<18;k++){ const a=k*TAU/18, w=.07; g.beginPath(); g.moveTo(Math.cos(a-w)*.55,Math.sin(a-w)*.55); g.lineTo(Math.cos(a)*1,Math.sin(a)*1); g.lineTo(Math.cos(a+w)*.55,Math.sin(a+w)*.55); g.closePath(); g.fill(); } },
+  crescent:(g)=>{ g.beginPath(); g.arc(0,0,1,0,TAU); g.arc(.36,-.18,.8,0,TAU,true); g.fill('evenodd'); },
+  knot:(g)=>{ for(const x of [-.36,.36]){ g.beginPath(); g.arc(x,0,.62,0,TAU); g.arc(x,0,.42,0,TAU,true); g.fill('evenodd'); } },
+  monogram:(g,o={})=>{ g.beginPath(); g.arc(0,0,1,0,TAU); g.arc(0,0,.9,0,TAU,true); g.fill('evenodd'); const ch=String(o.text||'A').trim().charAt(0).toUpperCase()||'A', k=Math.hypot(g.getTransform().a,g.getTransform().b)||1; g.save(); g.scale(1/k,1/k); g.font=`800 ${1.2*k}px Archivo, "Helvetica Neue", Arial, sans-serif`; g.textBaseline='alphabetic'; const tw=g.measureText(ch).width; g.fillText(ch,-tw/2,.43*k); g.restore(); } };
 const stockH=(st,S)=>st&&st.kind==='paper'?(S&&S[TOOTH]?S[TOOTH].depth:.12):st&&st.kind==='cloth'?(S&&S[WEAVE]?S[WEAVE].depth*100/Math.max(S[WEAVE].warp,S[WEAVE].weft)*.3:.5):0;
 /* an earlier layer's light (x.lf) carries its own relief: keep it, relative to the bare stock, under this layer's relief */
 const carryLF=(lf,prev,st)=>{ if(!lf||!prev) return lf; const base=st&&st.lf; for(let k=0;k<lf.length;k++) lf[k]*=base?prev[k]/Math.max(.05,base[k]):prev[k]; return lf; };
@@ -441,9 +446,9 @@ const graphite={ id:'fx-05-graphite', code:'FX-05', name:'Graphite', role:'mark 
 /* FX-06 · Blind deboss — no ink at all: a die pressed into the stock; the sheet light draws it */
 const deboss={ id:'fx-06-deboss', code:'FX-06', name:'Blind deboss', role:'mark · die', section:'surprise', stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
   clips:{ die:(g,w,h,o)=>drawShape(g,w,h,o) },
-  presets:[['blind ø',{}],['seal',{shape:'seal',text:'Impøssible Outcomes',size:.8,depth:.7}],['letterpress word',{shape:'word',text:'Counted',ink:1,depth:.55,size:.5}],['emboss',{depth:-.6,lip:0}]],
+  presets:[['blind compass',{}],['seal',{shape:'seal',text:'Oriel & Vane · Printers',size:.8,depth:.7}],['letterpress word',{shape:'word',text:'Counted',ink:1,depth:.55,size:.5}],['emboss',{depth:-.6,lip:0}]],
   sub:'A mark with no ink. A die presses into the stock: the floor crushes the tooth flat, the walls take the light or the shadow, a lip rises at the edge. Move the light and the mark appears, flips, or disappears. Ink it to get letterpress.',
-  recipe:['Die = the ø co. brandmark, a word, or a ring seal, rasterized as an AA clip on the main thread (fonts).','Plate profile from the signed distance to the die edge (exact distance transform): a crisp shoulder, a straight wall over the die softness, a flat floor; lip = a narrow ridge just outside the edge.','Height (CSS px) = stock height × (1 − crush · plate) − depth · plate + lip — the tooth flattens on the floor.','Light: Lambert from the combined height + a height-field shadow toward the sheet light (the wall on the light side falls in shadow).','Optional ink on the floor (film), so blind → letterpress is one dial.'],
+  recipe:['Die = an invented mark (compass, sun, crescent, knot, monogram), a word, or a ring seal, rasterized as an AA clip on the main thread (fonts).','Plate profile from the signed distance to the die edge (exact distance transform): a crisp shoulder, a straight wall over the die softness, a flat floor; lip = a narrow ridge just outside the edge.','Height (CSS px) = stock height × (1 − crush · plate) − depth · plate + lip — the tooth flattens on the floor.','Light: Lambert from the combined height + a height-field shadow toward the sheet light (the wall on the light side falls in shadow).','Optional ink on the floor (film), so blind → letterpress is one dial.'],
   limits:[['depth','> 2 px','reads as a carved gouge, not a deboss'],['die softness','< .3 px','walls alias; > 3 px the edge goes mushy'],['light elevation','> 70°','a blind deboss vanishes under overhead light — by design']],
   params:[...SHAPE_PARAMS({}),
     {key:'depth',label:'Depth',group:'relief',type:'range',min:-2.5,max:2.5,step:.01,unit:'px',value:1.2,note:'press depth; negative = emboss (raised)',limits:[[2,2.5,'gouge']]},
@@ -574,7 +579,7 @@ const LINEN={wL:.7,wC:.006,wh:250,fL:.77,fC:.005,fh:250,aMode:'flecks',accent:.0
 /* ── composition kit for usages ── */
 const sub=(g,x0,y0,w,h,fn)=>{ g.save(); g.translate(x0,y0); fn(g,w,h); g.restore(); };
 const strikes=(g,w,h,o)=>typewriter.clips.strikes(g,w,h,Object.assign(defaultsOf(typewriter),o));
-const dieOf=(g,w,h,o)=>drawShape(g,w,h,Object.assign({shape:'ø mark',text:'',size:.9},o));
+const dieOf=(g,w,h,o)=>drawShape(g,w,h,Object.assign({shape:'compass',text:'',size:.9},o));
 const typeAt=(g,text,x0,y0,size,{font='Archivo',weight=800,align='left',track=0,maxW=0}={})=>{ let fs=size; const f=()=>`${weight} ${fs}px ${font==='mono'?'"JetBrains Mono", ui-monospace, monospace':'Archivo, "Helvetica Neue", Arial, sans-serif'}`; g.font=f(); if(maxW){ const tw=g.measureText(text).width; if(tw>maxW){ fs*=maxW/tw; g.font=f(); } } if('letterSpacing' in g) g.letterSpacing=track+'px'; const tw=g.measureText(text).width; g.textBaseline='alphabetic'; g.fillText(text,align==='center'?x0-tw/2:align==='right'?x0-tw:x0,y0); if('letterSpacing' in g) g.letterSpacing='0px'; return fs; };
 /* run steps in print order: each prints into the albedo and light the previous one left. Lin-only layers (foil, graphite sheen) are flagged top and composited last. */
 function chain(steps,W,H,dpr,x){ let alb=null, lf=null, R=null; const tops=[];
