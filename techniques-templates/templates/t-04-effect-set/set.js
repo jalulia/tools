@@ -320,7 +320,7 @@ const tooth={ presets:[['bond',{}],['vellum',{depth:.05,fibers:.75,pits:.25,form
     return {alb:st.alb,lf:st.lf,lin,ink,stock:st.h,mask:M,marks:st.marks,markUnit:'fibers + pits'}; } };
 
 /* ══════════ FX-04 · Weave — the cloth stock: threads as relief, cast shadows, frayed cut ══════════ */
-const weave={ presets:[['source · linen',{}],['natural linen',{wL:.78,wC:.022,wh:82,fL:.84,fC:.02,fh:86,accent:.006,warp:34,weft:32}],['fine shirting',{warp:60,weft:56,fill:.94,slub:.12,hair:.12,depth:.9,wL:.9,wC:.01,wh:250,fL:.95,fC:.004,fh:250,accent:0}],['denim 2/1',{pattern:'twill 2/1',warp:48,weft:40,fill:.97,wL:.36,wC:.075,wh:262,fL:.8,fC:.015,fh:85,accent:0,dye:.04,slub:.55,hair:.4,depth:1}],['canvas duck',{pattern:'basket',warp:14,weft:14,fill:.95,wL:.85,wC:.03,wh:85,fL:.82,fC:.03,fh:82,accent:0,hair:.5,depth:1.6}]], id:WEAVE, code:'FX-04', name:'Weave', role:'stock · cloth',
+const weave={ presets:[['source · linen',{}],['gray linen',{wL:.7,wC:.006,wh:250,fL:.77,fC:.005,fh:250,accent:.006,warp:34,weft:32}],['fine shirting',{warp:60,weft:56,fill:.94,slub:.12,hair:.12,depth:.9,wL:.9,wC:.01,wh:250,fL:.95,fC:.004,fh:250,accent:0}],['denim 2/1',{pattern:'twill 2/1',warp:48,weft:40,fill:.97,wL:.36,wC:.075,wh:262,fL:.8,fC:.015,fh:85,accent:0,dye:.04,slub:.55,hair:.4,depth:1}],['canvas duck',{pattern:'basket',warp:14,weft:14,fill:.95,wL:.85,wC:.03,wh:85,fL:.82,fC:.03,fh:82,accent:0,hair:.5,depth:1.6}]], id:WEAVE, code:'FX-04', name:'Weave', role:'stock · cloth',
   sub:'Cloth built as cloth: warp and weft at their own counts, a real interlacing, slubbed and hairy threads, every float a raised body lit by the sheet light and casting into the gaps. A cut edge frays thread by thread. FX-01 and FX-02 can print onto it.',
   recipe:[
     'Warp columns and weft rows at their own counts (threads / 100 CSS px); each thread: jittered center, thickness, dye-lot L, fray length, accent.',
@@ -569,7 +569,7 @@ const foil={ id:'fx-08-foil', code:'FX-08', name:'Hot foil', role:'mark · foil'
 
 /* ══════════ usages · compositions; each reads the live dials merged with its overrides ══════════ */
 const onPage=(R,alpha,W,H,dpr,lift)=>{ const cs=FX.castShadow(alpha,W,H,dpr,FX.LIGHT,lift), lin=R.lin; for(let i=0,k=0;i<W*H;i++,k+=3){ const a=alpha[i], pg=1-cs[i]; lin[k]=lin[k]*a+pg*(1-a); lin[k+1]=lin[k+1]*a+pg*(1-a); lin[k+2]=lin[k+2]*a+pg*(1-a); } R.mask=alpha; return R; };
-const LINEN={wL:.78,wC:.022,wh:82,fL:.84,fC:.02,fh:86,aMode:'flecks',accent:.006,warp:34,weft:32,mShape:'none',lift:0};
+const LINEN={wL:.7,wC:.006,wh:250,fL:.77,fC:.005,fh:250,aMode:'flecks',accent:.006,warp:34,weft:32,mShape:'none',lift:0};
 
 /* ── composition kit for usages ── */
 const sub=(g,x0,y0,w,h,fn)=>{ g.save(); g.translate(x0,y0); fn(g,w,h); g.restore(); };
@@ -584,8 +584,8 @@ function chain(steps,W,H,dpr,x){ let alb=null, lf=null, R=null; const tops=[];
   return Object.assign({},R,{lin,alb,lf,ink:R.ink}); }
 const INK={ black:{iL:.2,iC:.006,ih:280}, red:{iL:.52,iC:.17,ih:27}, blue:{iL:.45,iC:.16,ih:262}, ember:{iL:.64,iC:.2,ih:40} };
 const COLD={scale:4,oct:4,depth:.38,ease:['out',1.4],aniso:1.4,fibers:2,diffuse:.55,mShape:'none'};
-const NEWS={paperL:.955,tL:.72,tC:.03,th:85,tAmt:.8,fibers:16,fDark:.05,fWidth:.5,pits:6,pDark:.06,depth:.1,mShape:'none'};
-const DUCK={pattern:'basket',warp:40,weft:40,fill:.95,wL:.83,wC:.03,wh:84,fL:.8,fC:.032,fh:80,accent:0,hair:.5,depth:1.4,mShape:'none',lift:0};
+const NEWS={paperL:.955,tL:.72,tC:.004,th:250,tAmt:.8,fibers:16,fDark:.05,fWidth:.5,pits:6,pDark:.06,depth:.1,mShape:'none'};
+const DUCK={pattern:'basket',warp:40,weft:40,fill:.95,wL:.92,wC:.003,wh:250,fL:.88,fC:.003,fh:250,accent:0,hair:.5,depth:1.4,mShape:'none',lift:0};
 const SHIRT={warp:60,weft:56,fill:.94,slub:.12,hair:.12,depth:.9,wL:.9,wC:.01,wh:250,fL:.95,fC:.004,fh:250,accent:0,mShape:'none',lift:0};
 const DIEO={stock:'paper'}, TW={stock:'paper',impress:.35};
 /* ── object kit: geometry, sampling, objects on objects ── */
@@ -768,18 +768,18 @@ const usages=[
       const cd=chain([{fx:deboss,o:Object.assign({},D,{depth:.5,soft:.45,lip:.06,ink:1,iL:.19,iC:.006,ih:280}),x:{S:Sv(2),clips:{die:C.cdName}}},{fx:typewriter,o:Object.assign({},T,{impress:.22,exhaust:0}),x:{S:Sv(2),clips:{strikes:C.cdLine}}},{fx:foil,o:Fo,x:{S:Sv(2),clips:{die:C.cdFoil}},top:true}],W,H,dpr,{S:Sv(2)});
       const c2=tooth.run(Object.assign({},Sv(3)[TOOTH],{mShape:'none'}),W,H,dpr,{S:Sv(3)}).lin;
       return a_stackOn(desk,[{lin:lh.lin,alpha:C.lhA,lift:.7},{lin:ev.lin,alpha:C.evA,lift:1.1},{lin:ev.lin,alpha:C.evBot,lift:.22},{lin:ev.lin,alpha:C.evTop,lift:.28},{lin:c2,alpha:C.c2A,lift:1},{lin:cd.lin,alpha:C.cdA,lift:.9}],W,H,dpr); } },
-  { id:'u-emboss', job:'brand', title:'Raking light · raised ø, pressed name', sub:'Oxblood cotton board under a low sun at 8°. A giant ø is embossed blind and cropped by the frame; the name is pressed small in a deeper red ink. The window draws the light: the sun patch ends at the head\'s shadow and a mullion crosses it. In the sun the raised walls flare; in the shade the mark is gone.', uses:['fx-06-deboss','fx-03-paper-tooth'], aspect:'16/9', light:{az:196,el:8},
+  { id:'u-emboss', job:'brand', title:'Raking light · raised ø, pressed name', sub:'White cotton board under a low sun at 8°. A giant ø is embossed blind and cropped by the frame; the name is pressed small in black ink. The window draws the light: the sun patch ends at the head\'s shadow and a mullion crosses it. In the sun the raised walls flare; in the shade the mark is gone.', uses:['fx-06-deboss','fx-03-paper-tooth'], aspect:'16/9', light:{az:196,el:8},
     overrides:{'fx-03-paper-tooth':{depth:.045,scale:.9,aniso:2,fibers:2.5,fWidth:.25,fLen:9,pits:.5,form:.35,formScale:40,paperL:.93,mShape:'none'},'fx-06-deboss':{depth:-2.4,soft:2.4,lip:0,crush:.4,stock:'paper',shadow:.9,diffuse:.97,burnish:0}},
     clips:{ big:(g,w,h)=>a_mark(g,w*.79,h*.47,h*1.7),
       name:(g,w,h)=>{ const X=w*.055, s=h*.052; typeAt(g,'IMPØSSIBLE',X,h*.8,s,{weight:800,track:s*.16}); typeAt(g,'OUTCOMES',X,h*.8+s*1.25,s,{weight:800,track:s*.16}); typeAt(g,'NEW YORK',X,h*.8+s*2.55,s*.74,{font:'mono',weight:700,track:s*.22}); } },
-    run(P,W,H,dpr,x){ const D=P('fx-06-deboss'), st=paperLit(Object.assign({},x.S[TOOTH],{mShape:'none'}),W,H,dpr,FX.LIGHT), alb=a_dyed(st,a_lab(.52,.13,25));
-      const R=chain([{fx:deboss,o:D,x:{alb,clips:{die:x.clips.big}}},{fx:deboss,o:Object.assign({},D,{depth:.4,soft:.35,lip:.05,crush:.85,burnish:0,ink:.85,iL:.3,iC:.1,ih:20,mix:'film'}),x:{clips:{die:x.clips.name}}}],W,H,dpr,x);
+    run(P,W,H,dpr,x){ const D=P('fx-06-deboss'), st=paperLit(Object.assign({},x.S[TOOTH],{mShape:'none'}),W,H,dpr,FX.LIGHT), alb=a_dyed(st,a_lab(.95,0,0));
+      const R=chain([{fx:deboss,o:D,x:{alb,clips:{die:x.clips.big}}},{fx:deboss,o:Object.assign({},D,{depth:.4,soft:.35,lip:.05,crush:.85,burnish:0,ink:.85,iL:.22,iC:.004,ih:280,mix:'film'}),x:{clips:{die:x.clips.name}}}],W,H,dpr,x);
       // the window: the patch of sun ends at the head's shadow (an edge across the light) and one mullion crosses it (a stripe along the light)
       const [lx,ly]=FX.lightVec(), pl=Math.hypot(lx,ly)||1, ux=lx/pl, uy=ly/pl, w=W/dpr, h=H/dpr, lin=R.lin;
       for(let y=0;y<H;y++) for(let X=0;X<W;X++){ const u=X/dpr-w*.5, v=y/dpr-h*.5, al=-(u*ux+v*uy), ac=-u*uy+v*ux, pen=6+Math.max(0,al+w*.5)*.05;
         const sun=sstep(-pen,pen,w*.3-al)*(1-sstep(-pen,pen,h*.04-Math.abs(ac-h*.3))), i=y*W+X, k=i*3; for(let c=0;c<3;c++) lin[k+c]=R.alb[k+c]*lerp(.36*(1+(R.lf[k+c]-1)*.12),R.lf[k+c],sun); }
       a_falloff(lin,W,H,dpr,.3); return R; } },
-  { id:'u-stickers', job:'brand', title:'Sticker sheet · gold mirror vinyl, peeling', sub:'One big kiss-cut sticker in mirror-gold vinyl with the ø knocked out to white, its corner peeled back off a kraft liner. The fold shows the white adhesive side, and the bare liner keeps the faint score of the die. The window light becomes one hot patch on the gold and leaves the rest of the mirror dark. Three small matte stickers sit along the bottom for scale, with crop marks and a typed job line.', uses:['fx-08-foil','fx-06-deboss','fx-07-typewriter','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'4/5', light:{az:226,el:36},
+  { id:'u-stickers', job:'brand', title:'Sticker sheet · gold mirror vinyl, peeling', sub:'One big kiss-cut sticker in mirror-gold vinyl with the ø knocked out to white, its corner peeled back off a gray liner. The fold shows the white adhesive side, and the bare liner keeps the faint score of the die. The window light becomes one hot patch on the gold and leaves the rest of the mirror dark. Three small matte stickers sit along the bottom for scale, with crop marks and a typed job line.', uses:['fx-08-foil','fx-06-deboss','fx-07-typewriter','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'4/5', light:{az:226,el:36},
     overrides:{'fx-03-paper-tooth':{depth:.038,aniso:2.4,fibers:6,fLen:10,fWidth:.3,fDark:.03,pits:.6,form:.45,formScale:36,paperL:.95,mShape:'none'},'fx-08-foil':{stock:'smooth',crush:0,dent:0,grain:.025,starve:0,flash:0,box:10,cam:.5,shin:220,mirror:1.3,fL:.7,fC:.14,fh:77},'fx-06-deboss':{depth:.22,soft:.35,lip:0,stock:'paper',shadow:.6},'fx-07-typewriter':{stock:'paper',impress:.18,exhaust:0,vari:.15},'fx-02-ink-edge':Object.assign({},SOLID,{stock:'paper',iL:.2,iC:.006,ih:280,density:1.2})},
     clips:(()=>{ const G=a_stk, refl=(g,q)=>{ const k=q.P0[0]*q.n[0]+q.P0[1]*q.n[1]; g.transform(1-2*q.n[0]*q.n[0],-2*q.n[0]*q.n[1],-2*q.n[0]*q.n[1],1-2*q.n[1]*q.n[1],2*k*q.n[0],2*k*q.n[1]); };
       const cap=(g,q,keep)=>{ g.save(); g.beginPath(); g.arc(q.cx,q.cy,q.R,0,TAU); g.clip(); const L=q.R*3, t=[-q.n[1],q.n[0]], s=keep?-1:1, P=q.P0; poly(g,[[P[0]+t[0]*L,P[1]+t[1]*L],[P[0]+t[0]*L+s*q.n[0]*L,P[1]+t[1]*L+s*q.n[1]*L],[P[0]-t[0]*L+s*q.n[0]*L,P[1]-t[1]*L+s*q.n[1]*L],[P[0]-t[0]*L,P[1]-t[1]*L]]); g.restore(); };
@@ -794,9 +794,9 @@ const usages=[
       crops:(g,w,h)=>{ const m=w*.035, l=w*.05, t=.8; [[m,m,1,1],[w-m,m,-1,1],[m,h-m,1,-1],[w-m,h-m,-1,-1]].forEach(([x0,y0,sx,sy])=>{ g.fillRect(sx>0?x0:x0-l,y0-t/2,l,t); g.fillRect(x0-t/2,sy>0?y0:y0-l,t,l); });
         const rx=w*.5, ry=h*.955, rr=w*.016; g.strokeStyle='#fff'; g.lineWidth=t; g.beginPath(); g.arc(rx,ry,rr,0,TAU); g.stroke(); g.fillRect(rx-rr*1.7,ry-t/2,rr*3.4,t); g.fillRect(rx-t/2,ry-rr*1.7,t,rr*3.4); } }; })(),
     run(P,W,H,dpr,x){ const C=x.clips, w=W/dpr, h=H/dpr, q=a_stk(w,h), F=P('fx-08-foil');
-      const st=paperLit(Object.assign({},x.S[TOOTH],{mShape:'none'}),W,H,dpr,FX.LIGHT), kraft=a_dyed(st,a_lab(.74,.055,68));
+      const st=paperLit(Object.assign({},x.S[TOOTH],{mShape:'none'}),W,H,dpr,FX.LIGHT), kraft=a_dyed(st,a_lab(.9,.003,250));
       const liner=chain([{fx:deboss,o:P('fx-06-deboss'),x:{alb:kraft,clips:{die:C.score}}},{fx:inkEdge,o:P('fx-02-ink-edge'),x:{clip:C.crops}},{fx:typewriter,o:P('fx-07-typewriter'),x:{clips:{strikes:C.type}}}],W,H,dpr,x);
-      const vin=a_lab(.9,.01,85), valb=new Float32Array(W*H*3); for(let k=0;k<valb.length;k+=3){ valb[k]=vin[0]*.92; valb[k+1]=vin[1]*.92; valb[k+2]=vin[2]*.92; }
+      const vin=a_lab(.97,0,0), valb=new Float32Array(W*H*3); for(let k=0;k<valb.length;k+=3){ valb[k]=vin[0]*.92; valb[k+1]=vin[1]*.92; valb[k+2]=vin[2]*.92; }
       const gold=foil.run(F,W,H,dpr,{S:x.S,alb:valb,clips:{die:C.gold}}).lin;
       const dots=inkEdge.run(Object.assign({},P('fx-02-ink-edge'),{stock:'smooth',split:.7}),W,H,dpr,{S:x.S,alb:valb,clip:C.dotInk}).lin;
       // the adhesive side of the peeled flap: white vinyl back, rolling over at the fold (a bright crest, then the flat underside)
@@ -929,8 +929,8 @@ const usages=[
         R0.lin[k]+=(pap[k]-R0.lin[k])*t; R0.lin[k+1]+=(pap[k+1]-R0.lin[k+1])*t; R0.lin[k+2]+=(pap[k+2]-R0.lin[k+2])*t; }
       return R0; } },
   /* ═══ packaging ═══ */
-  { id:'u-bag', job:'packaging', title:'Coffee bag · label and roast stamp', sub:'Tight on an arch-cut label stuck to a kraft bag. The foil name is too big to fit, and the graphite cherries are close enough to show each hatch. The lot line is typed, and the roast date is rubber-stamped in violet, rocked light on one side.', uses:['fx-05-graphite','fx-08-foil','fx-07-typewriter','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'4/5', zoom:1.6, light:{az:214,el:24},
-    overrides:{'fx-03-paper-tooth':{scale:1.15,aniso:3.4,fSpread:.06,depth:.035,fibers:3,pits:.25,form:.25,paperL:.972,mShape:'none'},'fx-05-graphite':{stock:'paper',mShape:'none',spacing:1.45,lead:.48,len:40,layers:3,cross:64,sheen:.55,jit:.35,wobble:.1,bite:.22,breakup:.85,starve:0,mottle:0,split:.6},'fx-08-foil':{stock:'paper',crush:.92,starve:.006,box:1.4,cam:2.6,grain:.06,shin:140},'fx-07-typewriter':{stock:'paper',impress:.25,exhaust:0,vari:.18},'fx-02-ink-edge':Object.assign({},SOLID,{stock:'paper',iL:.3,iC:.05,ih:48,density:1.15})},
+  { id:'u-bag', job:'packaging', title:'Coffee bag · label and roast stamp', sub:'Tight on an arch-cut label stuck to a matte black bag. The foil name is too big to fit, and the graphite cherries are close enough to show each hatch. The lot line is typed, and the roast date is rubber-stamped in violet, rocked light on one side.', uses:['fx-05-graphite','fx-08-foil','fx-07-typewriter','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'4/5', zoom:1.6, light:{az:214,el:24},
+    overrides:{'fx-03-paper-tooth':{scale:1.15,aniso:3.4,fSpread:.06,depth:.035,fibers:3,pits:.25,form:.25,paperL:.972,mShape:'none'},'fx-05-graphite':{stock:'paper',mShape:'none',spacing:1.45,lead:.48,len:40,layers:3,cross:64,sheen:.55,jit:.35,wobble:.1,bite:.22,breakup:.85,starve:0,mottle:0,split:.6},'fx-08-foil':{stock:'paper',crush:.92,starve:.006,box:1.4,cam:2.6,grain:.06,shin:140},'fx-07-typewriter':{stock:'paper',impress:.25,exhaust:0,vari:.18},'fx-02-ink-edge':Object.assign({},SOLID,{stock:'paper',iL:.22,iC:.004,ih:280,density:1.15})},
     clips:(()=>{ const A=(w,h)=>({lw:w*1.02,lh:h*1.2,x0:w*.075,y0:-h*.18}), arch=(g,x0,y0,lw,lh)=>{ g.beginPath(); g.moveTo(x0,y0+lw/2); g.arc(x0+lw/2,y0+lw/2,lw/2,PI,0); g.lineTo(x0+lw,y0+lh); g.lineTo(x0,y0+lh); g.closePath(); };
       return {
       label:(g,w,h)=>{ const a=A(w,h); arch(g,a.x0,a.y0,a.lw,a.lh); g.fill(); },
@@ -949,8 +949,8 @@ const usages=[
       const R=chain([{fx:inkEdge,o:P('fx-02-ink-edge'),x:{clip:C.rule}},{fx:typewriter,o:P('fx-07-typewriter'),x:{clips:{strikes:C.text}}},{fx:inkEdge,o:stampO,x:{clip:C.stamp}},
         G_({angle:40,seed:61},{field:fruit}),G_({angle:c.la*180/PI+62,cross:40,layers:2,seed:62},{clip:C.leaf,field:leafV}),G_({angle:0,cross:90,layers:1,spacing:.42,lead:.38,len:300,jit:0,wobble:.03,pressure:.85,seed:63},{clip:C.stems,field:()=>.85}),
         {fx:foil,o:P('fx-08-foil'),x:{clips:{die:C.title}},top:true}],W,H,dpr,x);
-      // the bag: unbleached kraft (long fibers, heavy formation), the label lying on it
-      const bag=c_tint(tooth.run(Object.assign({},P(TOOTH),{scale:1.1,oct:4,aniso:1.7,fAngle:88,fSpread:.5,fibers:60,fLen:4.5,fWidth:.34,fDark:.11,fRaise:.6,form:1,formScale:12,depth:.09,paperL:.93,pits:6,pDark:.12,seed:47}),W,H,dpr,{}).lin,.6,.072,66,.8);
+      // the bag: matte black paper (long fibers, heavy formation), the label lying on it
+      const bag=c_tint(tooth.run(Object.assign({},P(TOOTH),{scale:1.1,oct:4,aniso:1.7,fAngle:88,fSpread:.5,fibers:60,fLen:4.5,fWidth:.34,fDark:.11,fRaise:.6,form:1,formScale:12,depth:.09,paperL:.93,pits:6,pDark:.12,seed:47}),W,H,dpr,{}).lin,.3,.004,250,.8);
       shadowOn(bag,C.label,null,W,H,dpr,.9); R.lin=c_over(bag,R.lin,C.label); R.mask=C.label; return R; } },
   { id:'u-bookmacro', job:'packaging', title:'Bookcloth · 5× at the hinge', sub:'Five times into the cover of a clothbound book. The gold foil bridges the green threads and drops out in the gaps between them. The blind hinge groove crushes the weave flat, and past it the spine turns away into shadow. Raked at 17°, so every thread casts.', uses:['fx-04-weave','fx-08-foil','fx-06-deboss'], aspect:'1/1', zoom:5, light:{az:200,el:17},
     overrides:{'fx-04-weave':Object.assign({},BOOK,{warp:210,weft:130,fill:1.1,irregular:.18,slub:.45,slubScale:5,hair:.3,dye:.015,depth:1.3,shadow:.65}),'fx-08-foil':{stock:'cloth',crush:.5,grain:.05,starve:0,flash:.25,mirror:1.15,cam:2,box:2},'fx-06-deboss':{stock:'cloth',depth:2.2,soft:1.2,crush:.9,lip:.12,diffuse:.92,shadow:.9}},
@@ -960,7 +960,7 @@ const usages=[
       const w=W/dpr, s0=w*.9; for(let y=0;y<H;y++) for(let X=0;X<W;X++){ const u=X/dpr; if(u<s0) continue; const t=(u-s0)/(w-s0), f=(1+.1*Math.exp(-Math.pow((t-.07)/.06,2)))*(1-.42*Math.pow(t,1.25)), k=(y*W+X)*3; R.lin[k]*=f; R.lin[k+1]*=f; R.lin[k+2]*=f; }
       return R; } },
   /* ═══ textile ═══ */
-  { id:'u-swatches', job:'textile', title:'Swatch card · five drafts, stapled', sub:'A manila mill card, hole punched and eyeleted in brass. Five pinked swatches stapled in a row, each typed underneath with its draft and thread count; one ticked in pencil. Same weave function, five cloths.', uses:['fx-04-weave','fx-03-paper-tooth','fx-07-typewriter','fx-02-ink-edge','fx-05-graphite'], aspect:'3/2', light:{az:225,el:26},
+  { id:'u-swatches', job:'textile', title:'Swatch card · five drafts, stapled', sub:'A white mill card, hole punched and eyeleted in brass. Five pinked swatches stapled in a row, each typed underneath with its draft and thread count; one ticked in pencil. Same weave function, five cloths.', uses:['fx-04-weave','fx-03-paper-tooth','fx-07-typewriter','fx-02-ink-edge','fx-05-graphite'], aspect:'3/2', light:{az:225,el:26},
     overrides:{'fx-03-paper-tooth':{scale:1.3,aniso:3,depth:.07,fibers:4,fLen:10,form:.35,formScale:40,paperL:.95,mShape:'none'},'fx-02-ink-edge':Object.assign({},SOLID,{stock:'paper',iL:.2,iC:.006,ih:280,density:1.25}),'fx-07-typewriter':{stock:'paper',impress:.3,exhaust:0,vari:.22},
       'fx-05-graphite':{stock:'paper',mShape:'none',angle:0,cross:90,layers:1,spacing:.42,lead:.38,len:300,jit:0,wobble:.03,pressure:1,sheen:.5,bite:.22,breakup:.85,starve:0,mottle:0,split:.6,seed:64}},
     clips:{
@@ -973,15 +973,15 @@ const usages=[
       ...Object.fromEntries([0,1,2,3,4].map(i=>['s'+i,(g,w,h)=>c_inCard(g,w,h,(g,cw,ch,k)=>{ const px=k.sx(i)+k.sw/2, py=k.sy+ch*.045; g.translate(px,py); g.rotate([.012,-.007,.004,-.013,.009][i]); g.translate(-px,-py); c_pinked(g,k.sx(i),k.sy,k.sw,k.sh); })])),
       staples:(g,w,h)=>c_inCard(g,w,h,(g,cw,ch,k)=>{ g.strokeStyle='#fff'; g.lineCap='round'; g.lineWidth=2.1; for(let i=0;i<5;i++){ const cx=k.sx(i)+k.sw*.5+(i%2?1.5:-1), y=k.sy+ch*.045+(i-2)*.3; g.beginPath(); g.moveTo(cx-k.sw*.24,y); g.lineTo(cx+k.sw*.24,y+(i%2?.5:-.4)); g.stroke(); } }),
       eyelet:(g,w,h)=>c_inCard(g,w,h,(g,cw,ch,k)=>{ g.beginPath(); g.arc(k.hx,k.hy,k.er,0,TAU); g.arc(k.hx,k.hy,k.hr*.92,0,TAU); g.fill('evenodd'); }) },
-    run(P,W,H,dpr,x){ const C=x.clips, base=P('fx-04-weave'), k=c_card(W/dpr,H/dpr), ie=P('fx-02-ink-edge'), drafts=[{pattern:'twill 2/1',warp:52,weft:44,fill:.97,wL:.36,wC:.075,wh:262,fL:.82,fC:.015,fh:85,accent:0,dye:.04,slub:.55,hair:.35,depth:1},Object.assign({},LINEN,{accent:0,slub:.5,dye:.03}),Object.assign({},SHIRT,{wL:.87,fL:.91,depth:1.15,fill:.99}),DUCK,Object.assign({},BOOK,{wL:.38,fL:.34})];
+    run(P,W,H,dpr,x){ const C=x.clips, base=P('fx-04-weave'), k=c_card(W/dpr,H/dpr), ie=P('fx-02-ink-edge'), drafts=[{pattern:'twill 2/1',warp:52,weft:44,fill:.97,wL:.36,wC:.075,wh:262,fL:.84,fC:.004,fh:250,accent:0,dye:.04,slub:.55,hair:.35,depth:1},Object.assign({},LINEN,{accent:0,slub:.5,dye:.03}),Object.assign({},SHIRT,{wL:.87,fL:.91,depth:1.15,fill:.99}),DUCK,Object.assign({},BOOK,{wL:.38,fL:.34})];
       const card=chain([{fx:inkEdge,o:ie,x:{clip:C.print}},{fx:inkEdge,o:Object.assign({},ie,INK.red,{density:1.05,seed:12}),x:{clip:C.red}},{fx:typewriter,o:P('fx-07-typewriter'),x:{clips:{strikes:C.labels}}},{fx:graphite,o:P('fx-05-graphite'),x:{clip:C.pencil,field:()=>.9},top:true}],W,H,dpr,x);
-      c_tint(card.lin,.91,.058,84);
+      c_tint(card.lin,.97,0,0);
       const layers=[{lin:card.lin,alpha:C.card,lift:1.4}].concat(drafts.map((d,i)=>({lin:weave.run(Object.assign({},base,d,{mShape:'none',lift:0,seed:33+i*17}),W,H,dpr,{S:x.S}).lin,alpha:C['s'+i],lift:.75})));
       layers.push({lin:c_metal(c_dome(C.staples,W,H,dpr,1.05),C.staples,W,H,dpr,FX.ink(.9,.008,250).lin,.55,40),alpha:C.staples,lift:.3});
       layers.push({lin:c_metal(c_dome(C.eyelet,W,H,dpr,(k.er-k.hr*.92)*.5),C.eyelet,W,H,dpr,FX.ink(.74,.09,82).lin,.86,50),alpha:C.eyelet,lift:.55});
       return stack(layers,W,H,dpr); } },
-  { id:'u-wovenmacro', job:'textile', title:'Woven label · 4× at the fold', sub:'Four times into a damask label sewn into a grey twill. The ø is woven, not printed: ivory weft floats long over black warp inside the figure. The top end is folded under and stitched through in ecru thread, and the side is heat-cut, its threads melted into a bead.', uses:['fx-04-weave'], aspect:'1/1', zoom:4, light:{az:200,el:24},
-    overrides:{'fx-04-weave':Object.assign({},WLABEL,{warp:150,weft:240,fill:1.12,depth:1,shadow:.6,wL:.2,fL:.92,fC:.018,fh:88,irregular:.1,slub:.12,slubScale:5,hair:.04})},
+  { id:'u-wovenmacro', job:'textile', title:'Woven label · 4× at the fold', sub:'Four times into a damask label sewn into a grey twill. The ø is woven, not printed: white weft floats long over black warp inside the figure. The top end is folded under and stitched through in gray thread, and the side is heat-cut, its threads melted into a bead.', uses:['fx-04-weave'], aspect:'1/1', zoom:4, light:{az:200,el:24},
+    overrides:{'fx-04-weave':Object.assign({},WLABEL,{warp:150,weft:240,fill:1.12,depth:1,shadow:.6,wL:.2,fL:.95,fC:.003,fh:250,irregular:.1,slub:.12,slubScale:5,hair:.04})},
     clips:{ jq:(g,w,h)=>sub(g,w*.36-w*.39,h*.73-w*.39,w*.78,w*.78,(g,a,b)=>dieOf(g,a,b,{size:1})), label:(g,w,h)=>g.fillRect(-4,h*.17,w*.8+4,h*.83+4) },
     run(P,W,H,dpr,x){ const w=W/dpr,h=H/dpr,C=x.clips,o=P('fx-04-weave'), x1=w*.8, y0=h*.17, sy=y0+5;
       const bg=weave.run(Object.assign({},o,{pattern:'twill 2/1',warp:130,weft:110,fill:1.08,slub:.3,slubScale:8,hair:.35,irregular:.2,depth:1.1,shadow:.6,wL:.55,wC:.008,wh:250,fL:.6,fC:.006,fh:80,accent:0,dye:.06,wear:0,seed:71}),W,H,dpr,{S:x.S}).lin;
@@ -995,7 +995,7 @@ const usages=[
         if(f!==1||ad){ const k=(y*W+X)*3; lab[k]=lab[k]*f+ad; lab[k+1]=lab[k+1]*f+ad*.97; lab[k+2]=lab[k+2]*f+ad*.92; } } }
       shadowOn(bg,C.label,null,W,H,dpr,1.15); c_over(bg,lab,C.label);
       const segs=[]; for(let s=1.6;s<x1-5;s+=5.6) segs.push([s,sy+(s%7)*.015,s+4.2,sy+.06]);
-      const T=c_thread(segs,W,H,dpr,FX.ink(.86,.032,82).lin,.8);
+      const T=c_thread(segs,W,H,dpr,FX.ink(.8,.004,250).lin,.8);
       for(let i=0,k=0;i<W*H;i++,k+=3){ const d=1-.65*T.hole[i]*(1-T.a[i]); bg[k]*=d; bg[k+1]*=d; bg[k+2]*=d; }
       shadowOn(bg,T.a,null,W,H,dpr,.35); c_over(bg,T.lin,T.a);
       return {lin:bg,ink:C.label,mask:C.label,stock:null,marks:segs.length,markUnit:'stitches'}; } },
@@ -1010,7 +1010,7 @@ const usages=[
       for(let y=0;y<H;y++){ const dv=y/dpr-top; if(dv<0||dv>4) continue; const f=(1+.14*Math.exp(-Math.pow((dv-2)/.8,2)))*(1-.5*sstep(1.4,0,dv)); for(let X=0;X<W;X++){ const k=(y*W+X)*3; lin[k]*=f; lin[k+1]*=f; lin[k+2]*=f; } }
       shadowOn(lin,C.hem,C.bag,W,H,dpr,.45);
       const segs=[]; for(const yy of [top+5.8,h*.103]) for(let s=-1;s<w;s+=8.4) segs.push([s,yy,s+5.6,yy+.08]);
-      const T=c_thread(segs,W,H,dpr,FX.ink(.52,.045,68).lin,1.05);
+      const T=c_thread(segs,W,H,dpr,FX.ink(.32,.004,250).lin,1.05);
       for(let i=0,k=0;i<W*H;i++,k+=3){ const d=1-.55*T.hole[i]*(1-T.a[i]); lin[k]*=d; lin[k+1]*=d; lin[k+2]*=d; }
       shadowOn(lin,T.a,null,W,H,dpr,.35); c_over(lin,T.lin,T.a);
       const out=FX.ground(W,H,FX.WHITE); shadowOn(out,C.bag,null,W,H,dpr,1.2); c_over(out,lin,C.bag);
