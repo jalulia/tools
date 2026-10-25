@@ -572,6 +572,169 @@ const foil={ id:'fx-08-foil', code:'FX-08', name:'Hot foil', role:'mark · foil'
       const k=i*3; for(let ch=0;ch<3;ch++){ const m=base[ch]*env+glint*(.3+.7*base[ch]); lin[k+ch]=lin[k+ch]*(1-c)+m*c; } }
     return {alb,lf:lfb,lin,ink:cov,stock:hpx,mask:clip,marks:n,markUnit:'foiled px'}; } };
 
+/* ── new marks · d ── */
+/* bilinear read of a device-px field at CSS px (u,v) */
+const d_at=(F,W,H,dpr,u,v)=>{ const X=clamp(u*dpr-.5,0,W-1.001), Y=clamp(v*dpr-.5,0,H-1.001), x0=X|0, y0=Y|0, fx=X-x0, fy=Y-y0, i=y0*W+x0; return (F[i]*(1-fx)+F[i+1]*fx)*(1-fy)+(F[i+W]*(1-fx)+F[i+W+1]*fx)*fy; };
+/* the studio the sheet light lives in, as seen in a gloss surface: a rectangular soft box centered at the light's azimuth,
+   ~55% of the way from the light's elevation to the zenith (the same box center FX-08 foil mirrors), a dim ceiling, a dark room.
+   soft = edge softness in tangent units (roughness); returns radiance relative to the diffuse white of the sheet. */
+const d_studio=(L,bx,by,soft,Lbox)=>{ const ec=(L.el+(90-L.el)*.55)*PI/180, ea=L.az*PI/180, c=[Math.cos(ea)*Math.cos(ec),Math.sin(ea)*Math.cos(ec),Math.sin(ec)], e1=[-Math.sin(ea),Math.cos(ea),0], e2=[c[1]*e1[2]-c[2]*e1[1],c[2]*e1[0]-c[0]*e1[2],c[0]*e1[1]-c[1]*e1[0]];
+  return (rx,ry,rz)=>{ const rl=rx*c[0]+ry*c[1]+rz*c[2]; let sb=0; if(rl>.05){ const X=(rx*e1[0]+ry*e1[1]+rz*e1[2])/rl, Y=(rx*e2[0]+ry*e2[1]+rz*e2[2])/rl; sb=sstep(bx+soft,bx-soft,Math.abs(X))*sstep(by+soft,by-soft,Math.abs(Y))*(1.2-.55*Math.min(1,(X*X)/(bx*bx)*.6+(Y*Y)/(by*by))); } /* a soft box is brightest at its center */ return sb*Lbox+.16*Math.pow(rz>0?rz:0,3)+.02+.09*Math.max(0,1-Math.abs(rz)*1.6); }; }; /* + the lit walls of the room, seen at grazing angles */
+
+/* FX-09 · Spot UV varnish — a clear gloss film on a die area of matte board: invisible head-on, it lives in the reflection */
+const spotUV={ id:'fx-09-spot-uv', code:'FX-09', name:'Spot UV varnish', role:'mark · clear film', section:'new', stockOf:o=>o.stock==='paper'?TOOTH:null,
+  clips:{ die:(g,w,h,o)=>drawShape(g,w,h,o) },
+  presets:[['on black board',{}],['tone-on-tone pattern',{shape:'monogram',text:'Marlow',size:.74,area:'die + field',pattern:'lines',pitch:2.6,pSize:.4,pAngle:-45,gap:3,bL:.38,bC:.03,bh:170,wet:.6,build:.14,round:.8,box:.42}],['raised UV',{shape:'word',text:'Nightjar',size:.62,build:1.4,round:3.8,level:1,gloss:.96,wet:.35,box:.5,cam:.85}]],
+  sub:'A clear gloss film printed only on the die, over matte board. Head-on it all but disappears; it shows as the sheet light\'s soft box mirrored in a surface flatter than the paper, a crisp sheen boundary at the film edge, and a faint wet darkening of the stock beneath. Drag the light and the reflection slides across the mark.',
+  recipe:[
+    'Die = an invented mark, a word or a ring seal (AA clip, main thread) → exact signed distance. Coverage pattern: solid, or an analytic line / dot screen intersected with the die (or with the sheet around it), so every line and dot keeps a 1-device-px edge.',
+    'Film profile from the signed distance: a rounded shoulder (1 − (1 − d / rounding)²) rising to the film build. The film levels the FX-03 tooth: its top = lerp(tooth, smoothed tooth, leveling × profile) + build × profile.',
+    'Stock: FX-03\'s relief and fibers under a board color (OKLCH; dark by default). Matte = Lambert from FX-03 × albedo + a weak, broad rough-dielectric sheen on the tooth facets.',
+    'Film: Fresnel (n = 1.5, F₀ = .04) from a perspective viewer above the plate; the mirror vector samples the studio (a rectangular soft box at the sheet light, a dim ceiling, a dark room); gloss sets the box edge softness and the glint exponent. Under the film the matte sheen is gone and the stock is darker and deeper in OKLab (wet tone).',
+    'One light: the box center, glint and FX-03 shading all follow FX.LIGHT.'],
+  limits:[['film build','> 2 px','a blister or a sticker, not a print finish'],['edge rounding','< .4 px','the sheen boundary aliases on 1× screens'],['pattern pitch','< 2.5 px','lines and dots fall to a pixel checker at 1× (fine at 2×+)'],['gloss','< .35','reads as a matte or satin varnish: the mark stops revealing itself in the reflection'],['light elevation','> 75°','the soft box moves behind the viewer: the film nearly vanishes (as real spot UV does under overhead light)']],
+  params:[...SHAPE_PARAMS({shape:'sun',size:.74}),
+    {key:'pattern',label:'Coverage',group:'density',type:'select',options:['solid','lines','dots'],value:'solid',note:'a solid film, or a fine line / dot screen of varnish'},
+    {key:'area',label:'Varnish on',group:'density',type:'select',options:['die','reverse','die + field'],value:'die',note:'die = the mark is varnished · reverse = the sheet is varnished and the mark stays matte · die + field = a solid mark inside a patterned field'},
+    {key:'pitch',label:'Pattern pitch',group:'density',type:'range',min:1.2,max:16,step:.05,unit:'px',value:3,curve:2,when:{pattern:['lines','dots']},limits:[[1.2,2.5,'a pixel checker at 1× (fine at 2×+)']]},
+    {key:'pSize',label:'Line / dot share',group:'density',type:'range',min:.15,max:.92,step:.01,value:.45,when:{pattern:['lines','dots']},note:'line width or dot diameter ÷ pitch'},
+    {key:'pAngle',label:'Pattern angle',group:'density',type:'range',min:-90,max:90,step:1,unit:'°',value:45,when:{pattern:['lines','dots']}},
+    {key:'gap',label:'Keep-out',group:'density',type:'range',min:0,max:12,step:.1,unit:'px',value:2.5,when:{area:['reverse','die + field']},note:'matte ring between the mark and the varnished field'},
+    {key:'build',label:'Film build',group:'relief',type:'range',min:.02,max:2.5,step:.01,unit:'px',value:.22,curve:2,note:'film height in CSS px at the plate\'s macro scale (flat UV ≈ .1–.3, raised / tactile UV ≈ 1–2)',limits:[[2,2.5,'blister']]},
+    {key:'round',label:'Edge rounding',group:'relief',type:'range',min:.2,max:8,step:.05,unit:'px',value:1.6,curve:2,note:'width of the film\'s rounded shoulder, the meniscus that catches the light at the edge',limits:[[.2,.4,'aliases at 1×']]},
+    {key:'level',label:'Leveling',group:'relief',type:'range',min:0,max:1,step:.01,value:.93,note:'how far the film fills the tooth: 1 = a glass-flat top, 0 = the film follows the paper'},
+    {key:'gloss',label:'Gloss',group:'relief',type:'range',min:0,max:1,step:.01,value:.9,note:'surface smoothness: a sharp-edged soft-box reflection and a tight glint at 1, satin at .3',limits:[[0,.35,'satin varnish']]},
+    {key:'mirror',label:'Reflection',group:'relief',type:'range',min:0,max:2,step:.01,value:1,note:'brightness of the soft box (the sheet light) seen in the film'},
+    {key:'box',label:'Soft-box size',group:'relief',type:'range',min:.08,max:1,step:.01,value:.42,note:'half-height of the sheet light\'s soft box as seen from the sheet (tangent units); its reflection is a window of sheen'},
+    {key:'cam',label:'Camera distance',group:'relief',type:'range',min:.5,max:6,step:.05,value:1.1,note:'viewer height in plate widths: closer = the reflection sweeps further across the sheet'},
+    {key:'wet',label:'Wet tone',group:'color',type:'range',min:0,max:1,step:.01,value:.45,note:'darkening and deepening of the stock under the film (the varnish replaces the air in the tooth)'},
+    ...FX.INK_PARAMS('b','Board',.22,.006,265).map(p=>p.key==='bL'?Object.assign(p,{label:'Stock darkness · L',note:'OKLCH lightness of the board (FX-03 relief and fibers, this color)'}):p),
+    {key:'stock',label:'Prints on',group:'stock',type:'select',options:['paper','smooth'],value:'paper',note:'paper = FX-03 live (its tooth is what the film levels); smooth = a coated, toothless board'}],
+  run(o,W,H,dpr,x={}){ const st=stockFor(o,x,W,H,dpr), clip=(x.clips&&x.clips.die)||new Float32Array(W*H), hs=stockH(st,x.S), w=W/dpr, h=H/dpr, NP=W*H;
+    const SD=FX.blur(FX.sdf(clip,W,H),W,H,Math.max(1,Math.round(.6*dpr))), pa=o.pAngle*PI/180, pc=Math.cos(pa), ps=Math.sin(pa), P=o.pitch, half=o.pSize*P*.5, pat=o.pattern, rd=Math.max(.2,o.round);
+    // varnish signed distance (CSS px, + inside): die ∩ pattern, or the sheet around the die, or die ∪ patterned field
+    const sh=st?st.h:null, smooth=sh?FX.blur(sh,W,H,Math.round(4*dpr)):null, sm=sh?meanH(sh):0, hm=new Float32Array(NP), hf=new Float32Array(NP), hpx=new Float32Array(NP), cov=new Float32Array(NP); let n=0;
+    for(let y=0;y<H;y++){ const v=(y+.5)/dpr; for(let X=0;X<W;X++){ const u=(X+.5)/dpr, i=y*W+X, dd=SD[i]/dpr; let dp=1e4;
+      if(pat!=='solid'){ const a=u*pc+v*ps, b=-u*ps+v*pc; if(pat==='lines'){ const f=b/P-Math.floor(b/P); dp=half-Math.abs(f-.5)*P; } else { const fa=a/P-Math.floor(a/P)-.5, fb=b/P-Math.floor(b/P)-.5; dp=half-Math.hypot(fa,fb)*P; } }
+      const d=o.area==='reverse'?Math.min(dp,-dd-o.gap):o.area==='die + field'?Math.max(dd,Math.min(dp,-dd-o.gap)):Math.min(dd,dp);
+      const c=clamp(d*dpr+.5,0,1), t=clamp(d/rd,0,1), pr=1-(1-t)*(1-t); cov[i]=c; if(c>.5) n++;
+      // two surfaces: the matte tooth, and the film's own top — a liquid that cured smooth (leveled toward a faint orange peel: 30% of the tooth's mid frequencies), so its edge highlight never picks up the tooth
+      const hb=sh?sh[i]*hs:0; hm[i]=hb; hf[i]=(sh?lerp(hb,(sm+(smooth[i]-sm)*.3)*hs,o.level):0)+o.build*pr; hpx[i]=hb+(hf[i]-hb)*c; } }
+    // albedo: the board color carrying FX-03's fiber / formation variation (or whatever was printed before, x.alb)
+    const brd=FX.inkOf(o,'b'); let alb;
+    if(x.alb) alb=Float32Array.from(x.alb); else { alb=new Float32Array(NP*3); let m=0, c_=0; if(st){ for(let i=0;i<NP;i+=7){ m+=st.alb[i*3]; c_++; } m/=c_; } for(let i=0,k=0;i<NP;i++,k+=3){ const r=st?st.alb[k]/m:1; alb[k]=brd.lin[0]*r; alb[k+1]=brd.lin[1]*r; alb[k+2]=brd.lin[2]*r; } }
+    const wetA=Float32Array.from(alb), lab=[0,0,0], o3=[0,0,0], wl=1-o.wet*.3, wc=1+o.wet*.45;
+    for(let i=0,k=0;i<NP;i++,k+=3){ const c=cov[i]; if(c<=0) continue; FX.lin2lab(alb[k],alb[k+1],alb[k+2],lab); FX.lab2lin(lab[0]*wl,lab[1]*wc,lab[2]*wc,o3); for(let q=0;q<3;q++) wetA[k+q]=alb[k+q]+(clamp(o3[q],0,1)-alb[k+q])*c; }
+    // light: perspective viewer above the plate center; Fresnel-weighted mirror of the studio + the sheet light's glint
+    const Nm=FX.normals(hm,W,H,dpr), Nf=FX.normals(hf,W,H,dpr), LL=FX.LIGHT, [lx,ly,lz]=FX.lightVec(), rough=1-o.gloss, env=d_studio(LL,o.box*1.35,o.box,.016+rough*rough*.5,9*o.mirror), shin=8+Math.pow(o.gloss,2)*140, gk=2.2*o.mirror*(.35+.65*o.gloss);
+    const lfb=x.lf||(st?st.lf:null), lin=new Float32Array(NP*3), F0=.04, w2=w/2, h2=h/2, camZ=o.cam*Math.max(w,h);
+    for(let y=0;y<H;y++){ const pv=(y+.5)/dpr-h2; for(let X=0;X<W;X++){ const i=y*W+X, k=i*3, c=cov[i]; let nx=Nm.nx[i], ny=Nm.ny[i], nz=Nm.nz[i];
+      let vx=-((X+.5)/dpr-w2), vy=-pv, vz=camZ; const vl=Math.hypot(vx,vy,vz); vx/=vl; vy/=vl; vz/=vl;
+      let hx=lx+vx, hy=ly+vy, hz=lz+vz; const hl=Math.hypot(hx,hy,hz); hx/=hl; hy/=hl; hz/=hl; const nh0=Math.max(0,nx*hx+ny*hy+nz*hz);
+      const ms=F0*(.16+.18*nh0*nh0); // matte: rough dielectric — a weak broad sheen on the tooth facets
+      for(let q=0;q<3;q++){ const lf=lfb?lfb[k+q]:1; lin[k+q]=alb[k+q]*lf+ms; }
+      if(c<=0) continue; nx=Nf.nx[i]; ny=Nf.ny[i]; nz=Nf.nz[i]; const nh=Math.max(0,nx*hx+ny*hy+nz*hz);
+      const nv=Math.max(0,nx*vx+ny*vy+nz*vz), F=F0+(1-F0)*Math.pow(1-nv,5), rx=2*nv*nx-vx, ry=2*nv*ny-vy, rz=2*nv*nz-vz;
+      const spec=F*(env(rx,ry,rz)+gk*Math.pow(nh,shin)), tr=(1-F)*(1-F), lv=o.level;
+      for(let q=0;q<3;q++){ const lf=lfb?lfb[k+q]:1, lff=1+(lf-1)*(1-.5*lv), film=wetA[k+q]*lff*tr+spec; lin[k+q]+=(film-lin[k+q])*c; } } }
+    const albOut=new Float32Array(NP*3); for(let k=0;k<albOut.length;k++) albOut[k]=wetA[k];
+    return {alb:albOut,lf:lfb,lin,ink:cov,stock:hpx,mask:cov,marks:Math.round(n/(dpr*dpr)),markUnit:'px² under film'}; } };
+
+/* FX-10 · Satin embroidery — thread floats laid across a die, stitched into the cloth, gleaming along their length */
+const embroidery={ id:'fx-10-embroidery', code:'FX-10', name:'Satin embroidery', role:'mark · thread', section:'new', stockOf:o=>o.stock==='cloth'?WEAVE:o.stock==='paper'?TOOTH:null,
+  clips:{ die:(g,w,h,o)=>drawShape(g,w,h,o) },
+  presets:[['rayon gloss',{}],['matte cotton floss',{sheen:.14,twist:.55,loft:.85,density:19,yL:.7,yC:.11,yh:72,maxFloat:46}],['chain-stitch outline',{shape:'knot',size:.7,outline:'chain',oLen:6.5,angle:-62,density:26,yL:.6,yC:.1,yh:182,maxFloat:60}]],
+  sub:'A satin fill: long thread floats laid side by side across the die at one angle, each a slightly rounded body whose filaments gleam along their length, so the fill lights up or goes dark as the sheet light turns. Long floats split into staggered rows, ends land unevenly at the edge, needle holes dimple the cloth and the ground puckers where the stitches pull.',
+  recipe:[
+    'Die → exact signed distance. Satin: centerlines across the die at the stitch angle, one per 100 / density px; each centerline is marched against the die to find where the needle goes in and out (concave dies give several floats per row).',
+    'Ends stagger (alternating needle points + jitter); floats longer than the max split into rows at brick-staggered points. Each float: a capsule whose cross-section is rounded (flatter when long), sinking into its needle hole at both ends, with an S-twist ridge along it.',
+    'Floats are z-buffered by height (neighbors overlap like real satin); an optional split, running or chain stitch is traced along the die edge (marching-squares contour, real arc length) and laid on top.',
+    'Cloth (FX-04 live): pucker ridges run along the pull direction at the stitch ends, decaying away from the edge; a crease dimples just outside the satin; needle holes darken it. Its own lighting is kept and multiplied by the pucker\'s Lambert.',
+    'Thread light: Lambert on the thread normals + an anisotropic gleam (Kajiya–Kay along the twisted filament direction × a lobe across the cylinder), from the sheet light; a height-field shadow and cavity occlusion from the stitched relief fall onto the cloth and between floats. Color: OKLCH.'],
+  limits:[['density','> 45 /100 px','threads under ~2 px: the fill reads as a smooth sheet at 1× (fine at 2×+)'],['density','< 12 /100 px','gaps open between floats'],['max float','> 200 px','floats too long to hold: they would snag; read as a ribbon'],['sheen','> .9 with low twist','reads as plastic'],['pull','> .7','the ground reads crumpled, not stitched']],
+  params:[...SHAPE_PARAMS({shape:'crescent',size:.74,text:'Wren'}),
+    {key:'density',label:'Stitch density',group:'density',type:'range',min:8,max:60,step:.5,unit:'/100px',value:24,note:'satin threads per 100 CSS px, across the stitch direction',limits:[[45,60,'a smooth sheet at 1×'],[8,12,'gaps open']]},
+    {key:'angle',label:'Stitch angle',group:'density',type:'range',min:-90,max:90,step:1,unit:'°',value:-38,note:'direction of the floats; threads gleam most when they run across the light'},
+    {key:'maxFloat',label:'Max float',group:'density',type:'range',min:8,max:400,step:1,unit:'px',value:72,curve:2,note:'longest stitch before it splits into rows (split satin); the split points stagger like brickwork',limits:[[200,400,'snags']]},
+    {key:'stagger',label:'End stagger',group:'density',type:'range',min:0,max:1,step:.01,value:.45,note:'how unevenly the stitch ends land along the die edge (alternating needle points + jitter)'},
+    {key:'outline',label:'Outline',group:'density',type:'select',options:['none','split','running','chain'],value:'none',note:'split stitch (each stitch pierces the last), running stitch, or chain stitch along the die edge'},
+    {key:'oLen',label:'Outline stitch',group:'density',type:'range',min:1.5,max:14,step:.1,unit:'px',value:4,when:{outline:['split','running','chain']},note:'stitch (or chain link) length'},
+    {key:'loft',label:'Thread loft',group:'relief',type:'range',min:.2,max:1.6,step:.01,value:.55,note:'thread height ÷ thread radius: round (1) or flattened (.4)'},
+    {key:'twist',label:'Thread twist',group:'relief',type:'range',min:0,max:1,step:.01,value:.15,note:'ply twist: helical ridges along each float and the angle of the filaments that carry the gleam (rayon low, cotton floss high)'},
+    {key:'sheen',label:'Sheen',group:'relief',type:'range',min:0,max:1,step:.01,value:.82,note:'anisotropic gleam along the thread: polyester / rayon ≈ .8, cotton ≈ .15',limits:[[.9,1,'plastic']]},
+    {key:'pull',label:'Pull / pucker',group:'relief',type:'range',min:0,max:1,step:.01,value:.35,note:'how hard the stitches draw the ground: ridges along the pull at the stitch ends and a crease at the edge',limits:[[.7,1,'crumpled']]},
+    ...FX.INK_PARAMS('y','Thread',.68,.165,52),
+    {key:'stock',label:'Stitched into',group:'stock',type:'select',options:['cloth','paper'],value:'cloth',note:'cloth = FX-04 live; paper = FX-03 live (a stitched card)'},
+    FX.SEED_PARAM(19)],
+  run(o,W,H,dpr,x={}){ const st=stockFor(o,x,W,H,dpr), clip=(x.clips&&x.clips.die)||new Float32Array(W*H), s=o.seed|0, w=W/dpr, h=H/dpr, NP=W*H, hs=stockH(st,x.S);
+    const SD=FX.sdf(clip,W,H), pitch=100/o.density, R0=pitch*.66, loft=o.loft, th=o.angle*PI/180, ca=Math.cos(th), sa=Math.sin(th), cx=w/2, cy=h/2, ext=Math.hypot(w,h)/2+pitch*3, NJ=Math.ceil(2*ext/pitch)+1;
+    const TB=new Float32Array(NJ), TR=new Float32Array(NJ), SEG=new Array(NJ), holes=[]; let nSt=0;
+    // 1 · satin rows: where each centerline enters and leaves the die → floats (split when too long)
+    for(let j=0;j<NJ;j++){ const bj=-ext+(j+.5)*pitch+(hash(j,1,s)-.5)*pitch*.14, R=R0*(1+(hash(j,2,s)-.5)*.12); TB[j]=bj; TR[j]=R; const ox=cx-bj*sa, oy=cy+bj*ca, out=[];
+      let prev=null, aIn=null; const stp=.5, iv=[];
+      for(let a=-ext;a<=ext;a+=stp){ const u=ox+a*ca, v=oy+a*sa, d=(u<1||v<1||u>w-1||v>h-1)?-1:d_at(SD,W,H,dpr,u,v); if(prev!==null){ if(prev<=0&&d>0) aIn=a-stp+stp*(-prev)/(d-prev); else if(prev>0&&d<=0&&aIn!==null){ iv.push([aIn,a-stp+stp*prev/(prev-d)]); aIn=null; } } prev=d; }
+      iv.forEach(([a0,a1],q)=>{ const jit=o.stagger*pitch*.55; a0+=jit*(((j&1)?.55:0)+hash(j,q*2+3,s)*.5-.15); a1-=jit*(((j&1)?0:.55)+hash(j,q*2+4,s)*.5-.15);
+        const L=a1-a0; if(L<pitch*.7) return; const nn=Math.max(1,Math.ceil(L/o.maxFloat)), cuts=[a0], ph=(hash(j,q+11,s)-.5)*.8;
+        for(let k=1;k<nn;k++) cuts.push(a0+L*(k+ph)/nn); cuts.push(a1);
+        for(let k=0;k<cuts.length-1;k++){ const s0=cuts[k]+(k?R*.04:0), s1=cuts[k+1]-(k<cuts.length-2?R*.04:0); out.push(s0,s1,k?1:0,k<cuts.length-2?1:0); nSt++;
+          holes.push([ox+(s0-R*.35)*ca,oy+(s0-R*.35)*sa,R*.62],[ox+(s1+R*.35)*ca,oy+(s1+R*.35)*sa,R*.62]); } });
+      SEG[j]=out; }
+    // 2 · thread raster, z-buffered by height (CSS px above the cloth): coverage, tangent, along-coordinate, thread id
+    const TH=new Float32Array(NP).fill(-1), A=new Float32Array(NP), TX=new Float32Array(NP), TY=new Float32Array(NP), TID=new Float32Array(NP), tw=o.twist, aa=1/dpr, fs=Math.max(1.2,2.4/dpr);
+    const put=(i,hT,cov,tx,ty,id)=>{ if(cov>A[i]) A[i]=cov; if(hT>TH[i]){ TH[i]=hT; TX[i]=tx; TY[i]=ty; TID[i]=id; } };
+    const body=(dp,e,R,t,sb,ph,flat,dm)=>{ const d=e>=0?dp:Math.hypot(e,dp); if(d>R+aa) return -1; const q=Math.min(1,d/R), p=Math.sqrt(Math.max(0,1-Math.pow(q,2+flat*3))), dive=sstep(-R*.3,R*1.3,e);
+      return loft*R*p*((dm+(1-dm)*dive)+tw*.17*Math.sin(TAU*(t/(R*3.1)+sb*.45)+ph))+loft*R*.14*p*(FX.gnoise(t/9,sb*R/fs,s+ph*13|0)-.5); }; // filament streaks: long along the thread, ≥ 1.2 CSS px across
+    for(let y=0;y<H;y++){ const v=(y+.5)/dpr; for(let X=0;X<W;X++){ const i=y*W+X; if(SD[i]<-(pitch*1.2+2)*dpr) continue; const u=(X+.5)/dpr, du=u-cx, dv=v-cy, a=du*ca+dv*sa, b=-du*sa+dv*ca, j0=Math.floor((b+ext)/pitch);
+      for(let j=j0-1;j<=j0+1;j++){ if(j<0||j>=NJ) continue; const sg=SEG[j]; if(!sg||!sg.length) continue; const R=TR[j], sbv=b-TB[j], dp=Math.abs(sbv); if(dp>R+aa) continue;
+        for(let q=0;q<sg.length;q+=4){ const a0=sg[q], a1=sg[q+1]; if(a<a0-R-aa||a>a1+R+aa) continue; const Ls=a1-a0, t=a-a0, e=Math.min(t,a1-a), flat=.2+sstep(o.maxFloat*.25,o.maxFloat*1.1,Ls)*.5, dm=(t<a1-a?sg[q+2]:sg[q+3])?.8:.25;
+          const hT=body(dp,e,R,t,sbv/R,hash(j,q,s)*TAU,flat,dm); if(hT<0) continue; const d=e>=0?dp:Math.hypot(e,dp); put(i,hT,clamp((R-d)*dpr+.5,0,1),ca,sa,j*64+(q>>2)); } } } }
+    // 3 · outline along the die edge: split / running / chain stitch, laid over the satin
+    let nO=0; if(o.outline!=='none'){ const lines=FX.contours(clip,W,H,.5), Ro=R0*(o.outline==='chain'?.7:.82), Lk=o.oLen, lift=loft*R0*.55;
+      const capsule=(x0,y0,x1,y1,R,lf,id)=>{ const dx=x1-x0, dy=y1-y0, L=Math.hypot(dx,dy)||1e-3, ux=dx/L, uy=dy/L, pad=R+2*aa, X0=Math.max(0,Math.floor((Math.min(x0,x1)-pad)*dpr)), X1=Math.min(W-1,Math.ceil((Math.max(x0,x1)+pad)*dpr)), Y0=Math.max(0,Math.floor((Math.min(y0,y1)-pad)*dpr)), Y1=Math.min(H-1,Math.ceil((Math.max(y0,y1)+pad)*dpr));
+        for(let Y=Y0;Y<=Y1;Y++) for(let X=X0;X<=X1;X++){ const u=(X+.5)/dpr-x0, v=(Y+.5)/dpr-y0, t=u*ux+v*uy, sp=-u*uy+v*ux, e=Math.min(t,L-t), hT=body(Math.abs(sp),e,R,t,sp/R,id*.7,0,.25); if(hT<0) continue; const d=e>=0?Math.abs(sp):Math.hypot(e,sp); put(Y*W+X,lf+hT,clamp((R-d)*dpr+.5,0,1),ux,uy,id); }
+        holes.push([x0-ux*R*.3,y0-uy*R*.3,R*.6],[x1+ux*R*.3,y1+uy*R*.3,R*.6]); };
+      const loop=(x0,y0,x1,y1,R,lf,id)=>{ const dx=x1-x0, dy=y1-y0, L=Math.hypot(dx,dy)||1e-3, ux=dx/L, uy=dy/L, ea=L*.62, eb=L*.3, mx=x0+ux*L*.5, my=y0+uy*L*.5, pad=ea+R+2*aa, X0=Math.max(0,Math.floor((mx-pad)*dpr)), X1=Math.min(W-1,Math.ceil((mx+pad)*dpr)), Y0=Math.max(0,Math.floor((my-pad)*dpr)), Y1=Math.min(H-1,Math.ceil((my+pad)*dpr));
+        for(let Y=Y0;Y<=Y1;Y++) for(let X=X0;X<=X1;X++){ const u=(X+.5)/dpr-mx, v=(Y+.5)/dpr-my, lx_=u*ux+v*uy, ly_=-u*uy+v*ux;
+          // teardrop link: the ellipse pinches toward its anchor (the back end), where both strands dive into one needle hole
+          const pin=.45+.55*sstep(-ea,ea*.35,lx_), bb=eb*pin, k=Math.hypot(lx_/ea,ly_/bb), gk=Math.hypot(lx_/(ea*ea),ly_/(bb*bb))/Math.max(k,1e-4), d=Math.abs(k-1)/Math.max(gk,1e-4); if(d>R+aa) continue;
+          const ph=Math.atan2(ly_/bb,lx_/ea), tlx=-ea*Math.sin(ph), tly=bb*Math.cos(ph), tl=Math.hypot(tlx,tly)||1, tx=(tlx*ux-tly*uy)/tl, ty=(tlx*uy+tly*ux)/tl;
+          const q=Math.min(1,d/R), p=Math.sqrt(Math.max(0,1-q*q)), dive=sstep(-ea*.98,-ea*.3,lx_), hT=lf+loft*R*p*(.25+.75*dive)*(1+tw*.15*Math.sin(TAU*ph*3+id));
+          put(Y*W+X,hT,clamp((R-d)*dpr+.5,0,1),tx,ty,id); }
+        holes.push([x0,y0,R*.75]); };
+      for(const ln of lines){ const pts=ln.map(([a,b])=>[a/dpr,b/dpr]), cum=[0]; for(let k=1;k<pts.length;k++) cum.push(cum[k-1]+Math.hypot(pts[k][0]-pts[k-1][0],pts[k][1]-pts[k-1][1])); const Lt=cum[cum.length-1]; if(Lt<Lk*3) continue;
+        let seg=0; const at=(sv)=>{ sv=Math.min(Lt,Math.max(0,sv)); while(seg>0&&cum[seg]>sv) seg--; while(seg<cum.length-2&&cum[seg+1]<sv) seg++; const t=(sv-cum[seg])/Math.max(1e-6,cum[seg+1]-cum[seg]); return [lerp(pts[seg][0],pts[seg+1][0],t),lerp(pts[seg][1],pts[seg+1][1],t)]; };
+        const nL=Math.max(3,Math.round(Lt/(o.outline==='split'?Lk*.62:o.outline==='running'?Lk*1.7:Lk))), step=Lt/nL;
+        for(let k=0;k<nL;k++){ const s0=k*step, s1=o.outline==='chain'?s0+step:s0+Lk; if(o.outline==='running'&&s1>Lt) break; const P0=at(s0), P1=at(s1>Lt?s1-Lt:s1); seg=0;
+          if(o.outline==='chain') loop(P0[0],P0[1],P1[0],P1[1],Ro,lift,4096+nO); else capsule(P0[0],P0[1],P1[0],P1[1],Ro,lift+(o.outline==='split'?(k%2)*.04:0),4096+nO); nO++; } } }
+    // 4 · needle holes (cloth dimples where the thread goes through)
+    const HOLE=new Float32Array(NP); for(const [hx,hy,hr] of holes){ const X0=Math.max(0,Math.floor((hx-hr)*dpr)), X1=Math.min(W-1,Math.ceil((hx+hr)*dpr)), Y0=Math.max(0,Math.floor((hy-hr)*dpr)), Y1=Math.min(H-1,Math.ceil((hy+hr)*dpr));
+      for(let Y=Y0;Y<=Y1;Y++) for(let X=X0;X<=X1;X++){ const d=Math.hypot((X+.5)/dpr-hx,(Y+.5)/dpr-hy)/hr; if(d<1){ const vv=1-d*d, i=Y*W+X; if(vv>HOLE[i]) HOLE[i]=vv; } } }
+    // 5 · pucker: ridges along the pull (stitch direction) where floats end at the edge, decaying away from it; a crease just outside
+    const PK=new Float32Array(NP), lam=pitch*2+14, dec=8+26*o.pull;
+    if(o.pull>0) for(let y=1;y<H-1;y++){ const v=(y+.5)/dpr; for(let X=1;X<W-1;X++){ const i=y*W+X, dOut=-SD[i]/dpr; if(dOut<=0||dOut>dec*5) continue; const u=(X+.5)/dpr, du=u-cx, dv=v-cy, a=du*ca+dv*sa, b=-du*sa+dv*ca;
+      let gx=SD[i+1]-SD[i-1], gy=SD[i+W]-SD[i-W]; const gl=Math.hypot(gx,gy)||1; gx/=gl; gy/=gl; const wN=Math.abs(gx*ca+gy*sa);
+      const ridge=Math.sin(TAU*(b/lam+.9*FX.gnoise(a/(lam*4),b/(lam*4),s+71))), lobe=sstep(.3,.7,FX.gnoise(a/(lam*3),b/(lam*1.3),s+73));
+      PK[i]=o.pull*(5*Math.exp(-dOut/dec)*sstep(0,3,dOut)*(.25+.75*wN)*ridge*lobe-.9*(dOut/1.6)*Math.exp(1-dOut/1.6)); } }
+    // 6 · one height field (CSS px): cloth relief + pucker − holes, threads on top → normals, cast shadow, cavity
+    const clothH=new Float32Array(NP), Ht=new Float32Array(NP), base=hs*.6; let mx=-1e9, mn=1e9;
+    for(let i=0;i<NP;i++){ const ch=(st?st.h[i]*hs:0)+PK[i]-HOLE[i]*R0*.45; clothH[i]=ch; const tH=TH[i]>=0?base+TH[i]:-1e9; const hv=Math.max(ch,tH); Ht[i]=hv; if(hv>mx) mx=hv; if(hv<mn) mn=hv; }
+    const span=Math.max(1e-3,mx-mn), hn=new Float32Array(NP); for(let i=0;i<NP;i++) hn[i]=(Ht[i]-mn)/span;
+    const occ=FX.hshadow(hn,W,H,dpr,span,FX.LIGHT,loft*R0*3+1,.3), cav=FX.blur(Ht,W,H,Math.max(1,Math.round(R0*.9*dpr))), N=FX.normals(Ht,W,H,dpr), shP=o.pull>0?FX.shade(PK,W,H,dpr,1,FX.LIGHT):null;
+    // 7 · color + light
+    const [lx,ly,lz]=FX.lightVec(), Hv=FX.halfVec(), sky=FX.sky(), yarn=FX.inkOf(o,'y'), pA=4+o.sheen*o.sheen*110, pC=2+o.sheen*6, Ks=.05+o.sheen*.8, fa=tw*.55, fc=Math.cos(fa), fsn=Math.sin(fa);
+    const calb=baseAlb(st,x,W,H), clf=x.lf||(st?st.lf:null), lin=new Float32Array(NP*3), alb=new Float32Array(NP*3), ck=.8/Math.max(.2,loft*R0);
+    for(let i=0,k=0;i<NP;i++,k+=3){ const a=A[i], cv=1-clamp((cav[i]-Ht[i])*ck,0,.6), oc=occ[i], hl=1-.5*HOLE[i];
+      for(let q=0;q<3;q++){ const f=(clf?clf[k+q]:1)*(shP?shP[i]:1); lin[k+q]=calb[k+q]*hl*f*oc*cv; alb[k+q]=calb[k+q]*hl; }
+      if(a<=0) continue;
+      const nx=N.nx[i], ny=N.ny[i], nz=N.nz[i], id=TID[i], jt=(hash(id|0,7,s)-.5)*.06, cj=Math.cos(jt), sj=Math.sin(jt), ax=TX[i]*cj-TY[i]*sj, ay=TX[i]*sj+TY[i]*cj;
+      // filament direction: the thread axis turned by the twist angle, made tangent to the surface
+      let fx=ax*fc-ay*fsn, fy=ax*fsn+ay*fc, fz=0; const fn=fx*nx+fy*ny; fx-=fn*nx; fy-=fn*ny; fz=-fn*nz; const fl=Math.hypot(fx,fy,fz)||1; fx/=fl; fy/=fl; fz/=fl;
+      const tH=fx*Hv[0]+fy*Hv[1]+fz*Hv[2], along=Math.pow(Math.max(0,1-tH*tH),pA*.5);
+      const hA=Hv[0]*ax+Hv[1]*ay, px=Hv[0]-hA*ax, py=Hv[1]-hA*ay, pz=Hv[2], pl=Math.hypot(px,py,pz)||1, across=Math.pow(Math.max(0,(nx*px+ny*py+nz*pz)/pl),pC);
+      const lamb=Math.max(0,nx*lx+ny*ly+nz*lz), dif=Math.min(1.35,(lamb+sky)/(lz+sky)), dl=1+(hash(id|0,9,s)-.5)*.1, sp=Ks*along*across*Math.sqrt(oc);
+      for(let q=0;q<3;q++){ const yc=yarn.lin[q]*dl, tl=yc*(.2+.8*dif)*oc*cv+sp*(.3+.7*yc); lin[k+q]+=(tl-lin[k+q])*a; alb[k+q]+=(yc-alb[k+q])*a; } }
+    return {alb,lf:clf,lin,ink:A,stock:Ht,mask:A,marks:nSt+nO,markUnit:'stitches'}; } };
+
 /* ══════════ usages · compositions; each reads the live dials merged with its overrides ══════════ */
 const onPage=(R,alpha,W,H,dpr,lift)=>{ const cs=FX.castShadow(alpha,W,H,dpr,FX.LIGHT,lift), lin=R.lin; for(let i=0,k=0;i<W*H;i++,k+=3){ const a=alpha[i], pg=1-cs[i]; lin[k]=lin[k]*a+pg*(1-a); lin[k+1]=lin[k+1]*a+pg*(1-a); lin[k+2]=lin[k+2]*a+pg*(1-a); } R.mask=alpha; return R; };
 const LINEN={wL:.7,wC:.006,wh:250,fL:.77,fC:.005,fh:250,aMode:'flecks',accent:.006,warp:34,weft:32,mShape:'none',lift:0};
@@ -1086,6 +1249,6 @@ G.FXSET={ code:'T-04', lightFor, clips:(id,W,H,dpr,o,img,mk)=>clipsFor(FXSET.eff
   system:{ read:'Ink on real stock under one raking light.', sharedCause:['stock height field → relief shading · ink acceptance · starved pinholes · wicking · ink mottle','sheet light → paper relief · thread modeling · thread cast shadows · object shadows on the page'], passOrder:['stock height (tooth · fibers · pits · formation | threads)','albedo (paper L, thread dyes in OKLab)','ink pressure (dot footprints | roller run-out) × mask','acceptance vs height → starve → wick → film thickness','color: Beer–Lambert film in linear light (or coverage mix)','light: × Lambert shade × height shadow (once, last)','page: object cast shadow, sRGB encode'] },
   source:'Mindgut · Technique & Front-End Study V01 §08 (texture recipes) · ø co. · 2026-10-23',
   jobs:[['brand','Stationery & brand'],['print','Print'],['packaging','Packaging'],['textile','Textile'],['screen','Screen & deck'],['data','Data']],
-  sections:[{id:'surfaces',title:'Four surfaces',blurb:'The source set: two stocks and two marks.'},{id:'surprise',title:'Surprise marks',blurb:'Marks that only make sense on a material system — one is pure light, one is metal, one is struck through cloth, one gleams.'}],
-  effects:[stipple,inkEdge,tooth,weave,graphite,deboss,typewriter,foil], usages };
+  sections:[{id:'surfaces',title:'Four surfaces',blurb:'The source set: two stocks and two marks.'},{id:'surprise',title:'Surprise marks',blurb:'Marks that only make sense on a material system — one is pure light, one is metal, one is struck through cloth, one gleams.'},{id:'new',title:'New marks',blurb:'Finishes and fibers past ink: each one exists only because the stock and the sheet light do.'}],
+  effects:[stipple,inkEdge,tooth,weave,graphite,deboss,typewriter,foil,spotUV,embroidery], usages };
 })(typeof window!=='undefined'?window:self);

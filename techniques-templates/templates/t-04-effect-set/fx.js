@@ -271,4 +271,22 @@ FX.INK_PARAMS=(p,label,L,C,h)=>[
 FX.MIX_PARAM=(v='film',opts=['film','oklab','oklch','linear','srgb'])=>({key:'mix',label:'Color rule',group:'mixing',type:'select',options:opts,value:v,note:'film = Beer–Lambert absorption in linear light (physical); oklab / oklch / linear / srgb = coverage mixes, for comparison'});
 FX.EASE_PARAM=(key,label,v,note)=>({key,label,group:'dropoff',type:'ease',value:v,note});
 FX.SEED_PARAM=(v)=>({key:'seed',label:'Seed',group:'seed',type:'range',min:1,max:999,step:1,value:v,note:'every random draw in the effect hangs off this one number'});
+
+/* ── d additions ── */
+/* iso-contours of a field sampled at device px (marching squares, saddles split by the cell mean), chained into
+   polylines: [[x,y],…] in device px (pixel centers at +.5); a closed contour repeats its first point at the end.
+   Used to lay stitches, rules or beads ALONG a die edge with real arc length (a raster SDF has none). */
+FX.contours=(f,W,H,lev=.5)=>{ const gw=W-1, gh=H-1, at=(i,j)=>f[j*W+i]-lev, pt=new Map(), adj=new Map();
+  const hid=(i,j)=>(j*W+i)*2, vid=(i,j)=>(j*W+i)*2+1;
+  const P=id=>{ if(pt.has(id)) return; const k=id>>1, i=k%W, j=(k/W)|0; if(id&1){ const a=at(i,j), b=at(i,j+1); pt.set(id,[i+.5,j+a/(a-b)+.5]); } else { const a=at(i,j), b=at(i+1,j); pt.set(id,[i+a/(a-b)+.5,j+.5]); } };
+  const link=(p,q)=>{ P(p); P(q); let A=adj.get(p); if(!A) adj.set(p,A=[]); A.push(q); let B=adj.get(q); if(!B) adj.set(q,B=[]); B.push(p); };
+  for(let j=0;j<gh;j++) for(let i=0;i<gw;i++){ const v0=at(i,j)>0, v1=at(i+1,j)>0, v2=at(i+1,j+1)>0, v3=at(i,j+1)>0; if(v0===v1&&v1===v2&&v2===v3) continue;
+    const T=hid(i,j), Rr=vid(i+1,j), B=hid(i,j+1), L=vid(i,j), e=[]; if(v0!==v1) e.push(T); if(v1!==v2) e.push(Rr); if(v3!==v2) e.push(B); if(v0!==v3) e.push(L);
+    if(e.length===2) link(e[0],e[1]);
+    else { const c=(at(i,j)+at(i+1,j)+at(i+1,j+1)+at(i,j+1))/4>0; if(c===v0){ link(T,Rr); link(B,L); } else { link(T,L); link(Rr,B); } } }
+  const seen=new Set(), out=[];
+  for(const p0 of adj.keys()){ if(seen.has(p0)) continue; const walk=(start,first)=>{ const path=[]; let prev=start, cur=first; while(cur!==undefined&&!seen.has(cur)){ seen.add(cur); path.push(pt.get(cur)); const nb=adj.get(cur)||[]; const nx=nb.find(q=>q!==prev&&!seen.has(q)); prev=cur; cur=nx; } return path; };
+    seen.add(p0); const nb=adj.get(p0)||[], fw=walk(p0,nb[0]), bw=nb[1]!==undefined?walk(p0,nb[1]):[];
+    const line=bw.reverse().concat([pt.get(p0)],fw); const closed=nb.length===2&&line.length>2&&Math.hypot(line[0][0]-line[line.length-1][0],line[0][1]-line[line.length-1][1])<1.5; if(closed) line.push(line[0]); out.push(line); }
+  return out; };
 })(typeof window!=='undefined'?window:self);
