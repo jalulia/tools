@@ -375,11 +375,20 @@ $$('.fs-stage').forEach(s=>ro.observe(s));
 const UG=h('section',{class:'fs-usages',id:'usages'});
 const fol=h('button',{type:'button','aria-pressed':'true',onclick:()=>{ UI.follow=!UI.follow; fol.setAttribute('aria-pressed',String(UI.follow)); fol.textContent=UI.follow?'following the dials':'defaults only'; refresh(allKeys().filter(k=>k.startsWith('u:')),false); }},'following the dials');
 UG.append(h('header',{class:'fs-uh'},h('div',null,h('span',{class:'code'},'Usages'),h('h2',null,'Where the set goes')),h('p',{class:'sub'},'Compositions that run the same functions with the live dials and the sheet light, merged with each card\'s overrides. Tune a plate — or the stock it prints on — and the cards that use it redraw.'),h('div',{class:'act'},fol)));
+// filter by job: what the card is for, not which effect it uses
+const JOBS=SET.jobs||[]; const jcount=k=>SET.usages.filter(u=>u.job===k).length;
+const jbar=h('div',{class:'fs-jobs',role:'group','aria-label':'Filter usages by job'},h('span',null,'Job'));
+const setJob=k=>{ $$('button',jbar).forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.j===k))); $$('.fs-ucard',ugrid).forEach(c=>c.hidden=k!=='all'&&c.dataset.job!==k); };
+jbar.append(h('button',{type:'button','data-j':'all','aria-pressed':'true',onclick:()=>setJob('all')},'all ',h('i',null,String(SET.usages.length))));
+JOBS.forEach(([k,l])=>{ if(jcount(k)) jbar.append(h('button',{type:'button','data-j':k,'aria-pressed':'false',onclick:()=>setJob(k)},l+' ',h('i',null,String(jcount(k))))); });
+if(JOBS.length) UG.append(jbar);
 const ugrid=h('div',{class:'fs-ugrid'}); UG.append(ugrid);
-SET.usages.forEach((u,i)=>{ const c=h('canvas',{class:'fs-cv','aria-label':u.title}); const lbl=h('div',{class:'fs-ulbl'+(u.rows?' rows':'')},(u.labels||[]).map(l=>h('span',null,h('b',null,l[0]),h('i',null,l[1]))));
+const JORD=k=>{ const i=JOBS.findIndex(j=>j[0]===k); return i<0?99:i; };
+[...SET.usages].map((u,i)=>[u,i]).sort((a,b)=>JORD(a[0].job)-JORD(b[0].job)||a[1]-b[1]).map(x=>x[0]).forEach((u,i)=>{ const c=h('canvas',{class:'fs-cv','aria-label':u.title}); const lbl=h('div',{class:'fs-ulbl'+(u.rows?' rows':'')},(u.labels||[]).map(l=>h('span',null,h('b',null,l[0]),h('i',null,l[1]))));
   const fr=h('div',{class:'fs-frame',style:`aspect-ratio:${u.aspect}`},c,lbl,h('span',{class:'fs-bar-busy','aria-hidden':'true'}));
   const ov=Object.entries(u.overrides||{}).map(([k,v])=>h('div',{class:'ovr'},h('a',{href:'#'+k},EFX[k].code),h('span',null,Object.entries(v).map(([a,b])=>`${a} ${typeof b==='object'?JSON.stringify(b):b}`).join(' · '))));
-  ugrid.append(h('article',{class:'fs-ucard'},fr,h('div',{class:'cap'},h('span',{class:'code'},'U-0'+(i+1)),h('b',null,u.title),h('p',null,u.sub),h('div',{class:'chips'},u.uses.map(id=>h('a',{href:'#'+id},EFX[id].code+' '+EFX[id].name))),ov.length?h('details',null,h('summary',null,'overrides'),h('div',{class:'fs-ovs'},ov)):null)));
+  const jl=(JOBS.find(j=>j[0]===u.job)||[])[1];
+  ugrid.append(h('article',{class:'fs-ucard'+(u.span===2?' wide':''),'data-job':u.job||''},fr,h('div',{class:'cap'},h('span',{class:'code'},'U-'+String(i+1).padStart(2,'0')+(jl?' · '+jl:'')),h('b',null,u.title),h('p',null,u.sub),h('div',{class:'chips'},u.uses.map(id=>h('a',{href:'#'+id},EFX[id].code+' '+EFX[id].name))),ov.length?h('details',null,h('summary',null,'overrides'),h('div',{class:'fs-ovs'},ov)):null)));
   register('u:'+u.id,c,fr,uJob(u,c),null,2); });
 live.append(UG);
 
