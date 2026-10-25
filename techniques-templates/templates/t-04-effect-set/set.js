@@ -1854,6 +1854,7 @@ G.FXSET={ code:'T-04', lightFor, clips:(id,W,H,dpr,o,img,mk)=>clipsFor(FXSET.eff
       'view-dependent light: soft-box reflection and glints, added last',
       'page: contact shading on the white ground, then sRGB encode'] },
   source:'Mindgut · Technique & Front-End Study V01 §08 (texture recipes) · 2026-10-23',
+  concept:{code:'Applied digital concept art · Mindgut', title:'Inside the product', blurb:'The same twelve material functions imagined inside Mindgut: its states, readings and moments drawn as counted marks on real stock. Concept art, not shipped UI: every value is a placeholder and says so.'},
   jobs:[['brand','Stationery & brand'],['print','Print'],['packaging','Packaging'],['textile','Textile'],['screen','Screen & deck'],['data','Data']],
   sections:[
     {id:'stocks', title:'Stocks', blurb:'Paper and cloth as lit height fields. Every other effect reads their height, color and light.'},

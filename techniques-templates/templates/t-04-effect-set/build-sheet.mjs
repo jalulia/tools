@@ -19,14 +19,16 @@ const nParams=SET.effects.reduce((n,e)=>n+e.params.length,0);
 const classOf=e=>e.kind+' · '+(e.mechanism||[]).join(' + ');
 // usages in the live sheet's order: by job (SET.jobs order), then as listed; numbered U-01 … in that order
 const JOBS=SET.jobs||[], JORD=k=>{ const i=JOBS.findIndex(j=>j[0]===k); return i<0?99:i; };
-const UORD=SET.usages.map((u,i)=>[u,i]).sort((a,b)=>JORD(a[0].job)-JORD(b[0].job)||a[1]-b[1]).map(x=>x[0]);
-const uCode=u=>'U-'+String(UORD.indexOf(u)+1).padStart(2,'0');
+const UORD=SET.usages.filter(u=>u.job!=='concept').map((u,i)=>[u,i]).sort((a,b)=>JORD(a[0].job)-JORD(b[0].job)||a[1]-b[1]).map(x=>x[0]);
+const CORD=SET.usages.filter(u=>u.job==='concept');
+const uCode=u=>u.job==='concept'?'C-'+String(CORD.indexOf(u)+1).padStart(2,'0'):'U-'+String(UORD.indexOf(u)+1).padStart(2,'0');
 const secHead=sc=>`<div class="fs-secth" id="sec-${sc.id}"><span class="code">Section · ${String(SET.sections.indexOf(sc)+1).padStart(2,'0')}</span><h2>${esc(sc.title)}</h2>${sc.blurb?`<p>${esc(sc.blurb)}</p>`:''}</div>`;
 
 const staticBlock=e=>`<section class="fs-fx" id="${e.id}"><header class="fs-fxh"><div class="id"><span class="code">${esc(e.code)} · ${esc(classOf(e))}</span><h2>${esc(e.name)}</h2></div><p class="sub">${esc(e.sub)}</p></header>
 <div class="fs-fxf"><div><h3>Recipe</h3><ol class="fs-rec">${e.recipe.map(r=>`<li>${esc(r)}</li>`).join('')}</ol></div><div><h3>Limits</h3><table class="fs-lim"><thead><tr><th>Param</th><th>Range</th><th>What happens</th></tr></thead><tbody>${e.limits.map(l=>`<tr><td>${esc(l[0])}</td><td class="m">${esc(l[1])}</td><td>${esc(l[2])}</td></tr>`).join('')}</tbody></table></div>
 <div><h3>Params · ${e.params.length}</h3><table class="fs-lim"><thead><tr><th>Group</th><th>Param</th><th>Default</th><th>Range</th></tr></thead><tbody>${e.params.map(p=>`<tr><td class="m">${esc(GROUPS[p.group]||p.group)}</td><td>${esc(p.label)}<br><span style="color:var(--grey)">${esc(p.note||'')}</span></td><td class="m">${esc(val(p))}</td><td class="m">${esc(rng(p))}</td></tr>`).join('')}</tbody></table></div></div></section>`;
 const staticUsages=`<section class="fs-usages" id="usages"><header class="fs-uh"><div><span class="code">Usages</span><h2>Where the set goes</h2></div></header><div class="fs-ugrid">${UORD.map(u=>`<article class="fs-ucard"><div class="cap"><span class="code">${uCode(u)}${(JOBS.find(j=>j[0]===u.job)||[])[1]?' · '+esc(JOBS.find(j=>j[0]===u.job)[1]):''}</span><b>${esc(u.title)}</b><p>${esc(u.sub)}</p><div class="chips">${u.uses.map(id=>`<a href="#${id}">${esc(SET.effects.find(e=>e.id===id).code)}</a>`).join('')}</div><pre class="fs-ov">${esc(JSON.stringify(u.overrides))}</pre></div></article>`).join('')}</div></section>`;
+const staticConcept=CORD.length?`<section class="fs-usages fs-concept" id="concept"><header class="fs-uh"><div><span class="code">${esc((SET.concept||{}).code||'Applied digital concept art')}</span><h2>${esc((SET.concept||{}).title||'Inside the product')}</h2></div></header><div class="fs-ugrid">${CORD.map(u=>`<article class="fs-ucard"><div class="cap"><span class="code">${uCode(u)}${(JOBS.find(j=>j[0]===u.job)||[])[1]?' · '+esc(JOBS.find(j=>j[0]===u.job)[1]):''}</span><b>${esc(u.title)}</b><p>${esc(u.sub)}</p><div class="chips">${u.uses.map(id=>`<a href="#${id}">${esc(SET.effects.find(e=>e.id===id).code)}</a>`).join('')}</div><pre class="fs-ov">${esc(JSON.stringify(u.overrides))}</pre></div></article>`).join('')}</div></section>`:'';
 
 const contractCode=`self.FXSET = {
   code:'T-04', title, short, set, premise, source,
@@ -84,7 +86,7 @@ const html=`<!DOCTYPE html>
 <nav class="nav" id="nav" aria-label="Site navigation"><a class="brand" href="../../index.html"><span class="wm">T&amp;T</span></a><span class="crumb"><a href="../../index.html#templates">Techniques &amp; Templates</a><span class="sep">/</span><b>${esc(SET.title)}</b><span class="code">${esc(SET.code)}</span></span><span class="pager"><span>${esc(SET.code)} · template</span><a href="../../index.html#templates">index</a></span></nav>
 <main class="fs">
   <header class="fs-hd">
-    <div><span class="code">${esc(SET.code)} · Effect set · ${SET.effects.length} effects · <a href="#usages">${SET.usages.length} usages ↓</a></span><h1>${esc(SET.short)}</h1><p class="premise">${esc(SET.premise)}</p></div>
+    <div><span class="code">${esc(SET.code)} · Effect set · ${SET.effects.length} effects · <a href="#usages">${UORD.length} usages ↓</a>${CORD.length?` · <a href="#concept">${CORD.length} concepts ↓</a>`:''}</span><h1>${esc(SET.short)}</h1><p class="premise">${esc(SET.premise)}</p></div>
     <div class="fs-how"><span class="code">How to use the sheet</span><ol>
       <li><b>Tune</b> a plate — dials are grouped by what they change; a dot marks what you moved. Drag the light on any plate.</li>
       <li><b>Explore</b> — <i>wedge</i> lays out a grid across two dials, <i>pin · split</i> compares against a frozen state, <i>distance</i> shows how the marks read from across a table.</li>
@@ -92,7 +94,7 @@ const html=`<!DOCTYPE html>
   </header>
   <div class="fs-bar" id="fs-bar" role="toolbar" aria-label="Sheet controls">
     <div class="g"><button type="button" id="fs-loupe" aria-pressed="false" title="4× device-pixel loupe on any plate">loupe 4×</button></div>
-    <div class="g jump">${(SET.sections||[]).map((sc,i)=>`<a href="#sec-${sc.id}" class="code" style="padding:0 6px">${esc(sc.title)}</a>`).join('')}<a href="#usages" class="code" style="padding:0 6px;color:var(--grey)">usages</a></div>
+    <div class="g jump">${(SET.sections||[]).map((sc,i)=>`<a href="#sec-${sc.id}" class="code" style="padding:0 6px">${esc(sc.title)}</a>`).join('')}<a href="#usages" class="code" style="padding:0 6px;color:var(--grey)">usages</a>${CORD.length?'<a href="#concept" class="code" style="padding:0 6px;color:var(--grey)">concept</a>':''}</div>
     <span class="sp"></span>
     <div class="g hist"><button type="button" id="fs-undo" title="Undo · ⌘Z / Ctrl+Z" aria-label="Undo" disabled>↶</button><button type="button" id="fs-redo" title="Redo · ⇧⌘Z / Ctrl+Y" aria-label="Redo" disabled>↷</button></div>
     <div class="g"><button type="button" id="fs-link" title="Copy a link that opens the sheet with these exact settings">copy link</button><button type="button" id="fs-copyset">copy params</button><button type="button" id="fs-resetall">reset all</button></div>
@@ -102,6 +104,7 @@ const html=`<!DOCTYPE html>
 <section class="fs-sys"><div class="c"><span class="code">Read</span><p class="read">${esc(SET.system.read)}</p></div><div class="c"><span class="code">Shared causes</span><ul>${SET.system.sharedCause.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div><div class="c"><span class="code">Pass order</span><ol>${SET.system.passOrder.map(t=>`<li>${esc(t)}</li>`).join('')}</ol></div></section>
 ${SET.effects.map((e,i)=>((SET.sections&&(!i||e.section!==SET.effects[i-1].section))?secHead(SET.sections.find(x=>x.id===e.section)||{id:e.section,title:e.section}):'')+staticBlock(e)).join('\n')}
 ${staticUsages}
+${staticConcept}
   </div></div>
   <details class="fs-contractd"><summary><span class="code">Template contract · spec</span><span class="sum">how the sheet is built, the files, and how to make another set</span></summary>
   <dl class="fs-meta">

@@ -399,27 +399,31 @@ const UG=h('section',{class:'fs-usages',id:'usages'});
 const fol=h('button',{type:'button','aria-pressed':'true',onclick:()=>{ UI.follow=!UI.follow; fol.setAttribute('aria-pressed',String(UI.follow)); fol.textContent=UI.follow?'following the dials':'defaults only'; refresh(allKeys().filter(k=>k.startsWith('u:')),false); }},'following the dials');
 UG.append(h('header',{class:'fs-uh'},h('div',null,h('span',{class:'code'},'Usages'),h('h2',null,'Where the set goes')),h('p',{class:'sub'},'Compositions that run the same functions with the live dials and the sheet light, merged with each card\'s overrides. Tune a plate — or the stock it prints on — and the cards that use it redraw.'),h('div',{class:'act'},fol)));
 // filter by job: what the card is for, not which effect it uses
-const JOBS=SET.jobs||[]; const jcount=k=>SET.usages.filter(u=>u.job===k).length;
+const JOBS=SET.jobs||[]; const CONCEPT='concept', MAINU=SET.usages.filter(u=>u.job!==CONCEPT), CONCU=SET.usages.filter(u=>u.job===CONCEPT); const jcount=k=>MAINU.filter(u=>u.job===k).length;
 const jbar=h('div',{class:'fs-jobs',role:'group','aria-label':'Filter usages by job'},h('span',null,'Job'));
 const setJob=k=>{ $$('button',jbar).forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.j===k))); $$('.fs-ucard',ugrid).forEach(c=>c.hidden=k!=='all'&&c.dataset.job!==k); requestAnimationFrame(fitU); };
-jbar.append(h('button',{type:'button','data-j':'all','aria-pressed':'true',onclick:()=>setJob('all')},'all ',h('i',null,String(SET.usages.length))));
+jbar.append(h('button',{type:'button','data-j':'all','aria-pressed':'true',onclick:()=>setJob('all')},'all ',h('i',null,String(MAINU.length))));
 JOBS.forEach(([k,l])=>{ if(jcount(k)) jbar.append(h('button',{type:'button','data-j':k,'aria-pressed':'false',onclick:()=>setJob(k)},l+' ',h('i',null,String(jcount(k))))); });
 if(JOBS.length) UG.append(jbar);
 const ugrid=h('div',{class:'fs-ugrid'}); UG.append(ugrid);
 const JORD=k=>{ const i=JOBS.findIndex(j=>j[0]===k); return i<0?99:i; };
-[...SET.usages].map((u,i)=>[u,i]).sort((a,b)=>JORD(a[0].job)-JORD(b[0].job)||a[1]-b[1]).map(x=>x[0]).forEach((u,i)=>{ const c=h('canvas',{class:'fs-cv','aria-label':u.title}); const lbl=h('div',{class:'fs-ulbl'+(u.rows?' rows':'')},(u.labels||[]).map(l=>h('span',null,h('b',null,l[0]),h('i',null,l[1]))));
+const card=(grid,pre)=>(u,i)=>{ const c=h('canvas',{class:'fs-cv','aria-label':u.title}); const lbl=h('div',{class:'fs-ulbl'+(u.rows?' rows':'')},(u.labels||[]).map(l=>h('span',null,h('b',null,l[0]),h('i',null,l[1]))));
   const fr=h('div',{class:'fs-frame',style:`aspect-ratio:${u.aspect}`},c,lbl,h('span',{class:'fs-bar-busy','aria-hidden':'true'}));
   const ov=Object.entries(u.overrides||{}).map(([k,v])=>h('div',{class:'ovr'},h('a',{href:'#'+k},EFX[k].code),h('span',null,Object.entries(v).map(([a,b])=>`${a} ${typeof b==='object'?JSON.stringify(b):b}`).join(' · '))));
   const jl=(JOBS.find(j=>j[0]===u.job)||[])[1];
-  ugrid.append(h('article',{class:'fs-ucard'+(u.span===3?' full':u.span===2?' wide':''),'data-job':u.job||'','data-u':u.id},fr,h('div',{class:'cap'},h('span',{class:'code'},'U-'+String(i+1).padStart(2,'0')+(jl?' · '+jl:'')+(u.zoom>1?' · '+u.zoom+'×':'')+(u.light?' · light '+u.light.el+'°':'')),h('b',null,u.title),h('p',null,u.sub),h('div',{class:'chips'},u.uses.map(id=>h('a',{href:'#'+id},EFX[id].code+' '+EFX[id].name))),ov.length?h('details',null,h('summary',null,'overrides'),h('div',{class:'fs-ovs'},ov)):null)));
-  register('u:'+u.id,c,fr,uJob(u,c),null,2); });
+  grid.append(h('article',{class:'fs-ucard'+(u.span===3?' full':u.span===2?' wide':''),'data-job':u.job||'','data-u':u.id},fr,h('div',{class:'cap'},h('span',{class:'code'},pre+String(i+1).padStart(2,'0')+(jl?' · '+jl:'')+(u.zoom>1?' · '+u.zoom+'×':'')+(u.light?' · light '+u.light.el+'°':'')),h('b',null,u.title),h('p',null,u.sub),h('div',{class:'chips'},u.uses.map(id=>h('a',{href:'#'+id},EFX[id].code+' '+EFX[id].name))),ov.length?h('details',null,h('summary',null,'overrides'),h('div',{class:'fs-ovs'},ov)):null)));
+  register('u:'+u.id,c,fr,uJob(u,c),null,2); };
+[...MAINU].map((u,i)=>[u,i]).sort((a,b)=>JORD(a[0].job)-JORD(b[0].job)||a[1]-b[1]).map(x=>x[0]).forEach(card(ugrid,'U-'));
 live.append(UG);
+/* ══════════ applied digital concept art · the same functions, imagined inside a product ══════════ */
+const CG=h('section',{class:'fs-usages fs-concept',id:'concept'}), cgrid=h('div',{class:'fs-ugrid'});
+if(CONCU.length){ const ci=SET.concept||{}; CG.append(h('header',{class:'fs-uh'},h('div',null,h('span',{class:'code'},ci.code||'Applied digital concept art'),h('h2',null,ci.title||'Inside the product')),h('p',{class:'sub'},ci.blurb||''))); CG.append(cgrid); CONCU.forEach(card(cgrid,'C-')); live.append(CG); }
 /* row-reading masonry: each card spans as many 6 px grid rows as its own height (aspect + caption) needs */
 /* phones: the first 8 cards, then one button; captions clamp to two lines, tap to read */
 if(matchMedia('(max-width:760px)').matches){ const cards=$$('.fs-ucard',ugrid); if(cards.length>8){ cards.slice(8).forEach(c=>c.classList.add('fold')); const more=h('button',{class:'fs-umore',type:'button'},'Show all '+cards.length+' usages'); more.onclick=()=>{ cards.forEach(c=>c.classList.remove('fold')); more.remove(); }; UG.append(more); jbar.addEventListener('click',()=>{ cards.forEach(c=>c.classList.remove('fold')); more.remove(); }); }
   $$('.fs-ucard .cap p',ugrid).forEach(p=>p.addEventListener('click',()=>p.classList.toggle('open'))); }
-function fitU(){ if(getComputedStyle(ugrid).display!=='grid') return; $$('.fs-ucard',ugrid).forEach(c=>{ if(c.hidden) return; const n=Math.ceil(c.getBoundingClientRect().height/6); if(c._rows!==n){ c._rows=n; c.style.gridRowEnd='span '+n; } }); };
-if(typeof ResizeObserver!=='undefined'){ const ro=new ResizeObserver(()=>requestAnimationFrame(fitU)); $$('.fs-ucard',ugrid).forEach(c=>ro.observe(c)); } fitU();
+function fitU(){ if(getComputedStyle(ugrid).display!=='grid') return; [...$$('.fs-ucard',ugrid),...$$('.fs-ucard',cgrid)].forEach(c=>{ if(c.hidden) return; const n=Math.ceil(c.getBoundingClientRect().height/6); if(c._rows!==n){ c._rows=n; c.style.gridRowEnd='span '+n; } }); };
+if(typeof ResizeObserver!=='undefined'){ const ro=new ResizeObserver(()=>requestAnimationFrame(fitU)); [...$$('.fs-ucard',ugrid),...$$('.fs-ucard',cgrid)].forEach(c=>ro.observe(c)); } fitU();
 
 /* ══════════ bar: history · link · params · reset · loupe ══════════ */
 const bar=$('#fs-bar');
