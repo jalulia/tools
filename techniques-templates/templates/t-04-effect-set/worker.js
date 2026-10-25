@@ -1,4 +1,4 @@
-/* T-04 · Effect set · render worker · ø co. Techniques & Templates
+/* T-04 · Effect set · render worker · Techniques & Templates
    Loads the same fx.js + set.js as the page and renders one job at a time off the main thread, so dials stay
    responsive on any device. Job in: { key, token, kind:'fx'|'u', id, W, H, dpr, S, light, view, clips, outputs? }.
    Out: { key, token, W, H, rgba (transferred), stats } — or, for an export (outputs = ['image','ink','stock']),

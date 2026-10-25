@@ -159,7 +159,7 @@ function buildDials(e,host,onInput,onChange){ host.innerHTML=''; const o=()=>S[e
   host._sync=sync; host._show=show; show(cur); sync(); return sync; }
 
 /* ══════════ page ══════════ */
-const nav=$('#nav'); if(nav&&window.TT) nav.innerHTML=`<a class="brand" href="../../index.html">${TT.mark}<span class="wm">IMP<i>Ø</i>SSIBLE</span></a><span class="crumb"><a href="../../index.html#templates">Techniques &amp; Templates</a><span class="sep">/</span><b>${esc(SET.title)}</b><span class="code">${esc(SET.code)}</span></span><span class="pager"><span>${esc(SET.code)} · template</span><a href="../../index.html#templates">index</a></span>`;
+const nav=$('#nav'); if(nav&&window.TT) nav.innerHTML=`<a class="brand" href="../../index.html"><span class="wm">T&amp;T</span></a><span class="crumb"><a href="../../index.html#templates">Techniques &amp; Templates</a><span class="sep">/</span><b>${esc(SET.title)}</b><span class="code">${esc(SET.code)}</span></span><span class="pager"><span>${esc(SET.code)} · template</span><a href="../../index.html#templates">index</a></span>`;
 document.documentElement.classList.add('js'); if(COARSE) document.documentElement.classList.add('coarse');
 const live=$('#fs-live'); live.innerHTML='';
 const fmtN=n=>n>=1e4?(n/1e3).toFixed(1)+'k':String(n);

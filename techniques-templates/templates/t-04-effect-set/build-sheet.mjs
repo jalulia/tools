@@ -71,7 +71,7 @@ const html=`<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="only light">
 <link rel="icon" href="data:,">
-<title>${esc(SET.code)} — Effect set · Techniques &amp; Templates · ø co.</title>
+<title>${esc(SET.code)} — Effect set · Techniques &amp; Templates</title>
 <meta name="description" content="${esc(`${SET.code} Effect set template: ${SET.effects.length} material effects on two stocks (${SET.effects.map(e=>e.name).join(', ')}), each with its own dials, limits, presets and a live JSON spec, plus ${SET.usages.length} usages that follow the dials.`)}">
 <link rel="alternate" type="application/json" href="set.json">
 <link rel="stylesheet" href="../../_shared/fonts.css">
@@ -81,7 +81,7 @@ const html=`<!DOCTYPE html>
 </head>
 <body class="fs-page">
 <!-- build output of build-sheet.mjs — edit set.js / sheet.js / sheet.css / build-sheet.mjs, then rebuild. -->
-<nav class="nav" id="nav" aria-label="Site navigation"><a class="brand" href="../../index.html">${TT.mark}<span class="wm">IMP<i>Ø</i>SSIBLE</span></a><span class="crumb"><a href="../../index.html#templates">Techniques &amp; Templates</a><span class="sep">/</span><b>${esc(SET.title)}</b><span class="code">${esc(SET.code)}</span></span><span class="pager"><span>${esc(SET.code)} · template</span><a href="../../index.html#templates">index</a></span></nav>
+<nav class="nav" id="nav" aria-label="Site navigation"><a class="brand" href="../../index.html"><span class="wm">T&amp;T</span></a><span class="crumb"><a href="../../index.html#templates">Techniques &amp; Templates</a><span class="sep">/</span><b>${esc(SET.title)}</b><span class="code">${esc(SET.code)}</span></span><span class="pager"><span>${esc(SET.code)} · template</span><a href="../../index.html#templates">index</a></span></nav>
 <main class="fs">
   <header class="fs-hd">
     <div><span class="code">${esc(SET.code)} · Effect set · ${SET.effects.length} effects · <a href="#usages">${SET.usages.length} usages ↓</a></span><h1>${esc(SET.short)}</h1><p class="premise">${esc(SET.premise)}</p></div>
@@ -126,7 +126,7 @@ ${staticUsages}
     </div>
     <div><pre class="fs-pre">${esc(contractCode)}</pre></div>
   </section></details>
-  <div class="fs-end"><span><b>${esc(SET.code)}</b> · Effect set · ${esc(SET.set)} ${esc(SET.short)}</span><span>Techniques &amp; Templates · ø co. · The Impøssible Outcomes Company</span></div>
+  <div class="fs-end"><span><b>${esc(SET.code)}</b> · Effect set · ${esc(SET.set)} ${esc(SET.short)}</span><span>Techniques &amp; Templates</span></div>
 </main>
 <script src="../../_shared/entries.js${V}"></script>
 <script src="fx.js${V}"></script>
