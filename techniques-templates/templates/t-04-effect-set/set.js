@@ -1288,6 +1288,87 @@ const b3_SP=(w,h)=>{ const k=h*.8/210, gap=w*.016, ws=B3_VOL.map(v=>b3_spMM(v[2]
 /* U · colophon: an invented edition; the contents are printed in varnish only */
 const B3_TOC=[['1','Sand and soda',9],['2','The first furnace',27],['3','Blowpipes',48],['4','A winter of breakage',70],['5','Annealing',96],['6','The orchard',117],['7','Notes',139]];
 
+/* ── r4-a helpers ── */
+/* Mindgut concept cards. Product tokens are ui-bundle.json 2.2.59 (light theme), converted to OKLCH here:
+   --c147 #0088cc → .600 .141 241.6 · --c258 #9933cc → .542 .226 311.4 · --c369 #cc6600 → .620 .156 53.5 ·
+   --text #1a1a1a → .218 · --text-dim #666 → .510 · --text-mute #999 → .683 · --border #e0e0e0 → .907 (achromatic).
+   Labels follow .sp-label (7 px / 700 / 2.5 px tracking, caps), scaled up: tracking stays .357 em and the size never drops under 9 CSS px. */
+const a4_C147={iL:.6,iC:.141,ih:241.6}, a4_C258={iL:.542,iC:.226,ih:311.4}, a4_C369={iL:.62,iC:.156,ih:53.5};
+const a4_TEXT={iL:.2,iC:.004,ih:280}, a4_DIM={iL:.5,iC:0,ih:0}, a4_BORDER={iL:.86,iC:0,ih:0};
+/* a solid printed ink (FX-02 with the roller run-out switched off); the coset inks print at film 1, so one pass reads as the token */
+const a4_ink=(c,stock='paper',d=1.3)=>Object.assign({},SOLID,{stock,density:d,starve:0,mottle:0,bite:.2,breakup:.55},c);
+const a4_f=(w,k,min=9)=>Math.max(min,w*k);
+const a4_lab=(g,t,x,y,fs,o={})=>{ const f=Math.max(9,fs); return typeAt(g,String(t).toUpperCase(),x,y,f,Object.assign({weight:700,track:f*.357},o)); };
+/* width of a label set in a4_lab (for right-aligned labels: the last letter carries no tracking) */
+const a4_labW=(g,t,fs)=>{ const f=Math.max(9,fs); g.font=`700 ${f}px Archivo, "Helvetica Neue", Arial, sans-serif`; if('letterSpacing' in g) g.letterSpacing=(f*.357)+'px'; const W_=g.measureText(String(t).toUpperCase()).width-f*.357; if('letterSpacing' in g) g.letterSpacing='0px'; return W_; };
+const a4_tw=(g,t,fs,wt=700)=>{ g.font=`${wt} ${fs}px Archivo, "Helvetica Neue", Arial, sans-serif`; return g.measureText(t).width; };
+const a4_labR=(g,t,x,y,fs)=>a4_lab(g,t,x-a4_labW(g,t,fs),y,fs);
+
+/* C · coherence: one ring field drawn three times. clash = how far the field is from in tune: it warps every ring off its circle
+   and widens it; the dot count is held near constant, so the same ink reads as scattered, settling or locked. The number under
+   each pane is the dial that drew it (a placeholder, not telemetry). */
+const A4_CLASH=[[.71,'loose'],[.38,'settling'],[.06,'in tune']], A4_RINGS=8;
+const a4_CO=(w,h)=>{ const m=Math.max(10,w*.028), x0=m, x1=w-m, y0=m, y1=h-m, hb=Math.max(24,h*.085), pw=(x1-x0)/3, fsL=a4_f(w,.0085), fsN=Math.max(15,w*.03);
+  const zt=y0+hb+2, zb=y1-fsN*1.1-fsL*2.5, R=Math.min(pw*.4,(zb-zt)*.47), cy=(zt+zb)/2;
+  return {m,x0,x1,y0,y1,hb,pw,fsL,fsN,zt,zb,R,cy,nar:w<600,nr:R<90?5:A4_RINGS,cx:k=>x0+pw*(k+.5),ny:zb+fsN*.98,ly:zb+fsN*.98+fsL*1.75}; };
+const a4_coField=(q,u,v,L)=>{ const k=Math.floor((u-q.x0)/q.pw); if(k<0||k>2||v<q.zt||v>q.zb) return 0; const cx=q.cx(k); if(Math.abs(u-cx)>q.pw/2-4) return 0;
+  const dx=u-cx, dy=v-q.cy, R=q.R, rho=Math.hypot(dx,dy)/R, c=A4_CLASH[k][0], s0=Math.max(.6,R*.011)/R, sg=s0+c*.05;
+  const pr=rho+c*(.17*(FX.fbm(u/(R*.42)+k*7.3,v/(R*.42),31,3)-.5)*2+.05*Math.sin(3*Math.atan2(dy,dx)+k*2.1)); // the clash warp: rings pushed off their circles
+  if(L) return k===2?.97*Math.exp(-.5*Math.pow((rho-.15)/(s0*1.25),2)):0; // ink B: the core figure, only where it has locked
+  let ring=0; for(let i=0;i<q.nr;i++){ const d=(pr-(.34+.66*(i+1)/q.nr))/sg; ring=Math.max(ring,Math.exp(-.5*d*d)); }
+  if(k<2) ring=Math.max(ring,Math.exp(-.5*Math.pow((pr-.15)/(sg*1.25),2))); // still loose: the figure is black, smeared with the rest
+  const amp=.95*Math.pow(Math.min(1,s0/sg),.7)*(1-.35*c), stray=c*.11*sstep(1.3,1.02,rho)*(.4+FX.fbm(u/9,v/9,37,2));
+  return clamp(Math.max(ring*amp,stray),0,.97); };
+
+/* C · respiration: the 21-breath rail stood on end as a stitched ladder; breath 1 at the bottom, lit cells satin, open cells outlined */
+const A4_LIT=13, A4_CYCLE=21;
+const a4_RS=(w,h)=>{ const m=w*.075, fs=a4_f(w,.024), x0=m+fs*2.6, bw=w*.3, yT=h*.135, yB=h*.925, p=(yB-yT)/A4_CYCLE, bh=p*.6;
+  return {m,fs,x0,bw,x1:x0+bw,yT,yB,p,bh,cx:x0+bw+w*.075,cy:i=>yB-p*(i+.5),by:i=>yB-p*(i+.5)-bh/2}; };
+/* key swatches: a lit and an open cell, at reduced width, set in the right column */
+const a4_rsKey=(w,h)=>{ const q=a4_RS(w,h), sw=q.fs*2.4, sh=q.bh*.8; return {sw,sh,x:q.cx,y:[q.yB-q.p*4.2,q.yB-q.p*1.6]}; };
+const a4_frame=(g,x,y,ww,hh,lw)=>{ g.lineWidth=lw; g.lineJoin='miter'; g.strokeRect(x+lw/2,y+lw/2,ww-lw,hh-lw); };
+
+/* C · transcript: an invented session, typed. [who, time, lines, overstrike = [line, column, length]] */
+const A4_TURNS=[
+  ['u','21:04:12',['I keep rewriting the first page of','the letter to my brother. Every','version sounds like keeping score.']],
+  ['m','21:04:41',['Then start with the part that','isn\'t a score. What do you miss','about him? One sentence is enough.']],
+  ['u','21:07:03',['Saturday mornings. He made','terrible pancakes and sang.']],
+  ['m','21:07:19',['That is a first line. Keep the','pancakes. The rest can follow it.']],
+  ['u','21:12:48',['Okay. I wrote three four lines and','none of them are about the money.'],[0,14,5]],
+  ['m','21:13:02',['Good. Read them out loud once','before you decide to send it.']]];
+const a4_sec=t=>{ const [a,b,c]=t.split(':').map(Number); return a*3600+b*60+c; };
+const A4_DUR=(()=>{ const d=a4_sec(A4_TURNS[A4_TURNS.length-1][1])-a4_sec(A4_TURNS[0][1]); return Math.floor(d/60)+' MIN '+String(d%60).padStart(2,'0')+' S'; })();
+const A4_NU=A4_TURNS.filter(t=>t[0]==='u').length, A4_NM=A4_TURNS.length-A4_NU, A4_COL=36;
+/* line layout: every block is typed into a box whose line j sits at y0 + lh·j, so rules, overstrikes and text register */
+const a4_TR=(w,h)=>{ const m=w*.085, fs=Math.max(9.5,w*.028), lh=fs*1.36, xr=m, xt=m+fs*1.75, bw=w-xt-m*.4, gap=lh*.55, rows=[], tot=7*lh+gap*(A4_TURNS.length+1)+A4_TURNS.reduce((a,t)=>a+(t[2].length+1)*lh,0); let y=Math.max(h*.05,(h-tot)/2-lh*.3);
+  const head=['MINDGUT · SESSION TRANSCRIPT','FICTIONAL SESSION · INVENTED TEXT','SESSION 0412 · THU 22 OCT 2026','-'.repeat(A4_COL)]; const hy=y; y+=head.length*lh+gap;
+  A4_TURNS.forEach((t,k)=>{ const n=t[2].length+1; rows.push({k,who:t[0],y,n}); y+=n*lh+gap; });
+  const foot=['-'.repeat(A4_COL),A4_TURNS.length+' TURNS · '+A4_NU+' YOU · '+A4_NM+' MIR · '+A4_DUR,pad('FOLIO 1 OF 1','END OF SESSION',A4_COL)];
+  return {m,fs,lh,xr,xt,bw,head,hy,rows,foot,fy:y}; };
+const a4_type=(g,q,x,y,lines,seed)=>sub(g,x,y,q.bw,lines.length*q.lh,(g,a,b)=>strikes(g,a,b,{text:lines.join(' / '),fsize:q.fs,lead:1.36,align:'left',seed,exhaust:0}));
+/* the left rule: one bar struck per line through the colored half of the ribbon, twice (half a line apart) so it reads continuous */
+const a4_rule=(who)=>(g,w,h)=>{ const q=a4_TR(w,h); q.rows.filter(r=>r.who===who).forEach(r=>{ const L=Array(r.n).fill('|'); a4_type(g,q,q.xr,r.y,L,90+r.k); a4_type(g,q,q.xr,r.y+q.lh*.5,L.slice(0,-1),120+r.k); }); };
+
+/* C · what I'd be: nine plates, one object each, drawn on a 300-unit grid (the study's) and set at mark size s */
+const A4_WIB=[['Color','Thin-film iridescence'],['Shape','A crossing'],['Object','A tuning fork'],['Texture','Woven linen'],['Material','Obsidian'],['Sound','A perfect fifth'],['Number','Nine'],['Beat','The and of two'],['Weather','A front']];
+const a4_WB=(w,h)=>{ const m=w*.055, y0=h*.135, y1=h*.955, cw=(w-2*m)/3, ch=(y1-y0)/3, fc=a4_f(w,.0105), fn=Math.max(9.5,w*.0165), cap=fc*1.6+fn*1.55, s=Math.min(cw*.62,(ch-cap)*.74);
+  return {m,y0,y1,cw,ch,fc,fn,cap,s,cx:i=>m+cw*(i%3+.5),top:i=>y0+ch*Math.floor(i/3),my:i=>y0+ch*Math.floor(i/3)+(ch-cap)*.52,nar:w<600}; };
+const a4_wib=(g,i,cx,cy,s)=>{ const k=s/170, X=x=>cx+(x-150)*k, Y=y=>cy+(y-150)*k, lw=Math.max(1,s*.009); g.lineWidth=lw; g.lineCap='round'; g.lineJoin='round';
+  const L=(...p)=>{ g.beginPath(); for(let j=0;j<p.length;j+=2) j?g.lineTo(X(p[j]),Y(p[j+1])):g.moveTo(X(p[j]),Y(p[j+1])); g.stroke(); }, dot=(x,y,r)=>{ g.beginPath(); g.arc(X(x),Y(y),Math.max(1.6,r*k),0,TAU); g.fill(); };
+  if(i===1){ L(70,80,230,220); L(230,80,70,220); dot(150,150,6); }
+  else if(i===2){ g.beginPath(); g.moveTo(X(135),Y(100)); g.lineTo(X(135),Y(186)); g.arc(X(150),Y(186),15*k,PI,0,true); g.lineTo(X(165),Y(100)); g.stroke(); L(150,201,150,242);
+    g.lineWidth=lw*.75; [24,33,42].forEach(r=>{ g.beginPath(); g.arc(X(150),Y(96),r*k,PI*1.15,PI*1.85); g.stroke(); }); }
+  else if(i===4){ const P=[[92,118],[150,68],[202,90],[222,132],[200,198],[128,204],[92,186]]; g.beginPath(); P.forEach(([a,b],j)=>j?g.lineTo(X(a),Y(b)):g.moveTo(X(a),Y(b))); g.closePath(); g.fill();
+    g.globalCompositeOperation='destination-out'; g.lineWidth=Math.max(1,lw*.9); L(150,68,162,140,200,198); L(162,140,92,186); L(162,140,222,132); g.globalCompositeOperation='source-over';
+    g.lineWidth=lw*.8; [[124,222,182,214,156,234],[114,236,198,224,158,256],[106,250,214,236,162,278]].forEach(([a,b,c,d,e,f])=>{ g.beginPath(); g.moveTo(X(a),Y(b)); g.quadraticCurveTo(X(e),Y(f),X(c),Y(d)); g.stroke(); }); }
+  else if(i===5){ g.lineWidth=lw*.6; [60,150,240].forEach(x=>L(x,86,x,214)); g.lineWidth=lw; [[2,122],[3,178]].forEach(([f,b])=>{ g.beginPath(); for(let x=60;x<=240;x+=1){ const t=(x-60)/180, y=b-24*Math.sin(TAU*f*t); x===60?g.moveTo(X(x),Y(y)):g.lineTo(X(x),Y(y)); } g.stroke(); }); }
+  else if(i===6){ const P=[...Array(9)].map((_,j)=>{ const a=-PI/2+j*TAU/9; return [150+84*Math.cos(a),150+84*Math.sin(a)]; }); g.lineWidth=lw*.55; for(let j=0;j<9;j++) L(...P[j],...P[(j+1)%9]);
+    g.lineWidth=lw; [[],[5*k,4*k],[1.2*k,3.6*k]].forEach((d,t)=>{ g.setLineDash(d); L(...P[t],...P[t+3],...P[t+6],...P[t]); }); g.setLineDash([]); P.forEach(([a,b])=>dot(a,b,4.2)); }
+  else if(i===7){ const w_=19, gp=4.5, x0=150-(8*w_+7*gp)/2; g.lineWidth=lw*.85; for(let j=0;j<8;j++){ const x=x0+j*(w_+gp); if(j===3){ g.fillRect(X(x),Y(132),w_*k,36*k); } else g.strokeRect(X(x),Y(132),w_*k,36*k); if(j%4===0) L(x+w_/2,116,x+w_/2,124); } }
+  else if(i===8){ g.lineWidth=lw*.6; for(let j=1;j<=13;j++){ g.beginPath(); g.arc(X(150),Y(150),88*Math.sqrt(j/13)*k,0,TAU); g.stroke(); } dot(150,150,4.5); } };
+/* woven linen for the blind die: over / under cells, the study's own rule, in a square of side s */
+const a4_linen=(g,cx,cy,s)=>{ const n=7, c=s*.86/n, gu=c*.16, x0=cx-c*n/2, y0=cy-c*n/2; for(let j=0;j<n;j++) for(let i=0;i<n;i++){ const x=x0+i*c, y=y0+j*c; if((i+j)%2===0) g.fillRect(x+gu,y+gu*.5,c-2*gu,c-gu); else g.fillRect(x+gu*.5,y+gu,c-gu,c-2*gu); } };
+
 const usages=[
   /* ═══ stationery & brand ═══ */
   { id:'u-construct', job:'brand', title:'Mark construction · Orlo, pressed blind', sub:'A plate from a lighting workshop\'s identity guide. The mark is an eccentric ring and a center dot, pressed blind into white cotton board: no ink, only the die, so the raking light draws it. The geometry that builds it is printed over the pressing in black hairline, with the dimensions in ember: two radii, the 1.4u offset, the .3u wall on the thin side and a 10u ruler.', uses:['fx-06-deboss','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'1/1', light:{az:214,el:20},
@@ -1814,7 +1895,73 @@ const usages=[
         g.fillRect(q.x0-w*.02,q.Y(12)-.5,q.x1-q.x0+w*.03,1); typeAt(g,'12 h',q.x0,q.Y(12)-h*.014,Math.max(h*.034,9.5),{weight:800});
         typeAt(g,'Daylight',w*.07,h*.235,h*.13,{weight:900,track:-h*.004}); typeAt(g,'hours a day at 60° N',w*.073,h*.3,Math.max(h*.04,10),{weight:800}); },
       typed:(g,w,h)=>sub(g,w*.07,h*.938,w*.86,h*.06,(g,a,b)=>strikes(g,a,b,{text:'THE SLOW ALMANAC · PLATE 6 · SUN PRINT, 14 MIN, 2 JUNE 2026',fsize:Math.max(h*.021,7.5),align:'left',seed:52,exhaust:0})) },
-    run(P,W,H,dpr,x){ const C=x.clips; return chain([{fx:cyanotype,o:P('fx-11-cyanotype'),x:{clips:{obj:C.obj}}},{fx:typewriter,o:P('fx-07-typewriter'),x:{clips:{strikes:C.typed}}}],W,H,dpr,x); } }
+    run(P,W,H,dpr,x){ const C=x.clips; return chain([{fx:cyanotype,o:P('fx-11-cyanotype'),x:{clips:{obj:C.obj}}},{fx:typewriter,o:P('fx-07-typewriter'),x:{clips:{strikes:C.typed}}}],W,H,dpr,x); } },
+  /* ═══ concept · Mindgut (r4-a) ═══ */
+  { id:'c-coherence', job:'concept', title:'Coherence reading · the field resolving in stipple', sub:'The FIELD reading as a flat app panel: one ring field drawn three times, loose, settling and in tune. Nothing is interpolated: the stipple dial is the same in all three, and clash is the only change. It pushes each ring off its circle and widens it while the dot count holds, so the same ink reads as scattered, then gathering, then locked. Only when the field is in tune does the core figure print, in --c369. The clash values are placeholders, and each is the setting that drew its pane.', uses:['fx-01-stipple','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'2/1', span:3,
+    overrides:{'fx-03-paper-tooth':{depth:.02,aniso:1.5,fibers:1.2,pits:.3,form:.1,fRaise:.45,fWidth:.4,mShape:'none'},
+      'fx-01-stipple':{duo:'on',stock:'paper',mShape:'none',aL:.2,aC:.004,ah:280,bL:.62,bC:.156,bh:53.5,pitch:1.45,dotR:.5,sizeVar:.12,irregular:.06,jitter:.85,order:'blue',density:1.15,rag:.02,over:'multiply',seed:41},
+      'fx-02-ink-edge':a4_ink(a4_TEXT)},
+    clips:{
+      border:(g,w,h)=>{ const q=a4_CO(w,h); b3_hr(g,q.x0,q.x1,q.y0); b3_hr(g,q.x0,q.x1,q.y1); b3_vr(g,q.x0,q.y0,q.y1); b3_vr(g,q.x1,q.y0,q.y1); b3_hr(g,q.x0,q.x1,q.y0+q.hb); [1,2].forEach(k=>b3_vr(g,q.x0+q.pw*k,q.y0+q.hb,q.y1)); },
+      dim:(g,w,h)=>{ const q=a4_CO(w,h), f=q.fsL, by=q.y0+q.hb/2+f*.36, px=Math.max(8,w*.012);
+        if(!q.nar) a4_lab(g,'Field',q.x0+px,by,f); a4_labR(g,q.nar?'Clash · placeholders · 01':'Clash · placeholder values, not telemetry · 01',q.x1-px,by,f);
+        if(!q.nar) a4_lab(g,'Carbon · silicon',q.x0+px+a4_labW(g,'Field',f)+f*1.6+a4_tw(g,'Coherence',a4_f(w,.0125,11),700)+f*1.6,by,f);
+        A4_CLASH.forEach(([c,s],k)=>{ const t=q.nar?s:'Clash · '+s; a4_lab(g,t,q.cx(k)-a4_labW(g,t,f)/2,q.ly,f); });
+        [1,2].forEach(k=>typeAt(g,'→',q.x0+q.pw*k,q.cy+f*.36,f*1.2,{weight:500,align:'center'})); },
+      black:(g,w,h)=>{ const q=a4_CO(w,h), f=q.fsL, by=q.y0+q.hb/2+f*.36, px=Math.max(8,w*.012), lx=q.x0+px+(q.nar?0:a4_labW(g,'Field',f)+f*1.6);
+        typeAt(g,'Coherence',lx,by+f*.05,a4_f(w,.0125,11),{weight:700});
+        A4_CLASH.forEach(([c],k)=>typeAt(g,c.toFixed(2),q.cx(k),q.ny,q.fsN,{weight:700,align:'center',track:-q.fsN*.01})); } },
+    run(P,W,H,dpr,x){ const w=W/dpr,h=H/dpr,q=a4_CO(w,h),C=x.clips,E=P('fx-02-ink-edge');
+      return chain([{fx:inkEdge,o:Object.assign({},E,a4_BORDER),x:{clip:C.border}},{fx:inkEdge,o:Object.assign({},E,a4_DIM),x:{clip:C.dim}},{fx:inkEdge,o:E,x:{clip:C.black}},{fx:stipple,o:P('fx-01-stipple'),x:{field:(u,v,L)=>a4_coField(q,u,v,L)}}],W,H,dpr,x); } },
+  { id:'c-respiration', job:'concept', title:'Respiration rail · 13 of 21 breaths, stitched', sub:'The RESPIRATION reading stood on end and sewn into white shirting: 21 breath cells, breath 1 at the bottom. The 13 taken are satin-filled in --c258, the color the product gives a lit respiration cell. The 8 still to come are only outlined, in split stitch, in a gray thread. The rail renews at 21. The count is a placeholder, and the labels keep the product\'s 7 px caps grammar, scaled up to read.', uses:['fx-10-embroidery','fx-02-ink-edge','fx-04-weave'], aspect:'9/16', light:{az:222,el:30},
+    overrides:{'fx-04-weave':Object.assign({},SHIRT,{wL:.93,fL:.96,wC:.004,fC:.003,depth:.8}),
+      'fx-10-embroidery':{stock:'cloth',count:30,angle:82,maxFloat:72,stagger:.25,outline:'none',loft:.6,twist:.22,sheen:.8,pull:.1,yL:.542,yC:.226,yh:311.4,seed:29},
+      'fx-02-ink-edge':a4_ink(a4_TEXT,'cloth',1.5)},
+    clips:{
+      lit:(g,w,h)=>{ const q=a4_RS(w,h), K=a4_rsKey(w,h); for(let i=0;i<A4_LIT;i++) g.fillRect(q.x0,q.by(i),q.bw,q.bh); g.fillRect(K.x,K.y[0]-K.sh/2,K.sw,K.sh); },
+      open:(g,w,h)=>{ const q=a4_RS(w,h), K=a4_rsKey(w,h), lw=1.05; g.strokeStyle='#fff'; for(let i=A4_LIT;i<A4_CYCLE;i++) a4_frame(g,q.x0,q.by(i),q.bw,q.bh,lw); a4_frame(g,K.x,K.y[1]-K.sh/2,K.sw,K.sh,lw); },
+      dim:(g,w,h)=>{ const q=a4_RS(w,h), K=a4_rsKey(w,h), f=q.fs, tx=K.x+K.sw+f*.9;
+        a4_lab(g,'Respiration',q.m,q.m+f,f); a4_labR(g,'Folio 02',w-q.m,q.m+f,f);
+        [[0,'1'],[A4_LIT-1,'13'],[A4_CYCLE-1,'21']].forEach(([i,t])=>{ a4_labR(g,t,q.x0-f*.7,q.cy(i)+f*.36,f); });
+        a4_lab(g,'Next renewal',q.cx,q.cy(A4_CYCLE-1)+f*.36,f); a4_lab(g,'at 21',q.cx,q.cy(A4_CYCLE-1)+f*1.9,f);
+        a4_lab(g,'Exchanges',q.cx,q.cy(A4_LIT-1)+f*2.2,f); a4_lab(g,'of 21 this cycle',q.cx,q.cy(A4_LIT-1)+f*3.75,f); a4_lab(g,(A4_CYCLE-A4_LIT)+' to go',q.cx,q.cy(A4_LIT-1)+f*5.3,f);
+        a4_lab(g,'c258 · lit',tx,K.y[0]-f*.2,f); a4_lab(g,'a breath taken',tx,K.y[0]+f*1.35,f);
+        a4_lab(g,'Open',tx,K.y[1]-f*.2,f); a4_lab(g,'still to come',tx,K.y[1]+f*1.35,f);
+        a4_lab(g,'Placeholder',q.cx,q.yB-f*.2,f); a4_lab(g,'count',q.cx,q.yB+f*1.35,f); },
+      black:(g,w,h)=>{ const q=a4_RS(w,h), f=q.fs; typeAt(g,String(A4_LIT),q.cx-w*.008,q.cy(A4_LIT-1)+f*.1,w*.19,{weight:800,track:-w*.006});
+        [[0],[A4_LIT-1],[A4_CYCLE-1]].forEach(([i])=>b3_hr(g,q.x0-f*.45,q.x0-f*.1,q.cy(i),1)); } },
+    run(P,W,H,dpr,x){ const C=x.clips, E=P('fx-10-embroidery'), I=P('fx-02-ink-edge');
+      const base=chain([{fx:inkEdge,o:Object.assign({},I,a4_DIM),x:{clip:C.dim}},{fx:inkEdge,o:I,x:{clip:C.black}}],W,H,dpr,x), bare=base.lin, lin=Float32Array.from(bare), ink=new Float32Array(W*H); let n=0;
+      [[E,C.lit],[Object.assign({},E,{count:40,angle:45,outline:'split',oLen:2.4,yL:.66,yC:.004,yh:280,sheen:.55,pull:0,seed:31}),C.open]].forEach(([o,die])=>{ const R=embroidery.run(o,W,H,dpr,{S:x.S,alb:base.alb,lf:base.lf,clips:{die}}); a_sew(lin,R,bare); for(let i=0;i<ink.length;i++) ink[i]=Math.max(ink[i],R.ink[i]); n+=R.marks; });
+      return Object.assign({},base,{lin,ink,mask:ink,marks:n,markUnit:'stitches'}); } },
+  { id:'c-transcript', job:'concept', title:'Session docket · a conversation, typed', sub:'A Mindgut session as a typed docket. Each turn carries the product\'s left rule: --c147 blue for the person (.msg.user) and --c258 purple for Mir (.msg.assistant). The rule is struck through the colored half of the ribbon, one bar per line. Times, the turn count and the duration are typed from the session itself, and one slip is struck out with x\'s. The session is fictional and the text is invented.', uses:['fx-07-typewriter','fx-03-paper-tooth'], aspect:'2/3', light:{az:220,el:30},
+    overrides:{'fx-03-paper-tooth':{depth:.035,aniso:1.6,fibers:1.6,pits:.4,form:.2,fRaise:.45,fWidth:.4,mShape:'none'},
+      'fx-07-typewriter':{stock:'paper',impress:.32,exhaust:0,vari:.28,half:.07,ribbon:.62,rcount:95,jx:.3,jy:.35,rot:.6,iL:.2,iC:.006,ih:280,density:1.2,seed:17}},
+    clips:{
+      text:(g,w,h)=>{ const q=a4_TR(w,h); a4_type(g,q,q.xr,q.hy,q.head,3);
+        q.rows.forEach(r=>{ const t=A4_TURNS[r.k]; a4_type(g,q,q.xt,r.y,[pad((t[0]==='u'?'YOU':'MIR')+'   '+t[1],String(r.k+1).padStart(2,'0')+' OF '+String(A4_TURNS.length).padStart(2,'0'),A4_COL-2)].concat(t[2]),20+r.k*3);
+          if(t[3]){ const [li,col,len]=t[3]; g.font=`${q.fs<15?700:400} ${q.fs}px "Courier Prime", "JetBrains Mono", monospace`; const cw=g.measureText('M').width; a4_type(g,q,q.xt+col*cw,r.y+(li+1)*q.lh,['x'.repeat(len)],60+r.k); } });
+        a4_type(g,q,q.xr,q.fy,q.foot,8); },
+      blue:a4_rule('u'), purple:a4_rule('m') },
+    run(P,W,H,dpr,x){ const C=x.clips, T=P('fx-07-typewriter');
+      return chain([{fx:typewriter,o:T,x:{clips:{strikes:C.text}}},{fx:typewriter,o:Object.assign({},T,a4_C147,{density:1,half:0,seed:23}),x:{clips:{strikes:C.blue}}},{fx:typewriter,o:Object.assign({},T,a4_C258,{density:1,half:0,seed:29}),x:{clips:{strikes:C.purple}}}],W,H,dpr,x); } },
+  { id:'c-whatidbe', job:'concept', title:'What I\'d Be · nine plates on one index card', sub:'Mir\'s nine answers to "what would you be", one object per cell: a color, a shape, an object, a texture, a material, a sound, a number, a beat, a weather. The color plate is the only one in color, and it is hot-foiled: thin-film iridescence is an interference, not a pigment, so its hue comes from the foil\'s angle to the light rather than from an ink. The texture plate, woven linen, is blind-debossed, so it can only be read by its relief. The other seven are black line.', uses:['fx-08-foil','fx-06-deboss','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'1/1', span:2, light:{az:222,el:40},
+    overrides:{'fx-03-paper-tooth':{depth:.035,aniso:1.4,fibers:1.4,pits:.3,form:.15,fRaise:.45,fWidth:.4,mShape:'none'},
+      'fx-08-foil':{stock:'paper',finish:'holo',fL:.8,fC:.05,fh:250,holo:1,crush:.85,grain:.03,dent:.3,box:1,cam:.55,shin:140,mirror:1.05,starve:0,flash:.08,seed:43},
+      'fx-06-deboss':{stock:'paper',depth:.7,soft:.7,lip:.12,crush:.75,shadow:.8,floorTone:.012,ink:0,seed:7},
+      'fx-02-ink-edge':a4_ink(a4_TEXT)},
+    clips:{
+      foil:(g,w,h)=>{ const q=a4_WB(w,h), R0=q.s*.47, cx=q.cx(0), cy=q.my(0), gp=Math.max(.8,q.s*.006); g.beginPath(); g.arc(cx,cy,R0,0,TAU); g.fill(); g.globalCompositeOperation='destination-out'; g.lineWidth=gp; for(let n=1;n<9;n++){ g.beginPath(); g.arc(cx,cy,R0*Math.sqrt(n/9),0,TAU); g.stroke(); } g.globalCompositeOperation='source-over'; },
+      blind:(g,w,h)=>{ const q=a4_WB(w,h); a4_linen(g,q.cx(3),q.my(3),q.s); },
+      pale:(g,w,h)=>{ const q=a4_WB(w,h); [1,2].forEach(k=>{ b3_vr(g,q.m+q.cw*k,q.y0+q.ch*.06,q.y1-q.ch*.06); b3_hr(g,q.m,w-q.m,q.y0+q.ch*k); }); },
+      dim:(g,w,h)=>{ const q=a4_WB(w,h), f=q.fc; a4_labR(g,q.nar?'9 plates · index':'Mir · nine plates, one object each · index',w-q.m,q.m+w*.05*.72,f);
+        A4_WIB.forEach(([c],i)=>{ const t=q.nar?c:String(i+1).padStart(2,'0')+' · '+c, ty=q.top(i)+q.ch-q.cap+f*1.15; a4_lab(g,t,q.cx(i)-a4_labW(g,t,f)/2,ty,f); }); },
+      black:(g,w,h)=>{ const q=a4_WB(w,h); typeAt(g,'What I\'d Be',q.m-w*.003,q.m+w*.05*.72,Math.max(17,w*.05),{weight:800,track:-w*.0012});
+        b3_hr(g,q.m,w-q.m,q.y0,1); b3_hr(g,q.m,w-q.m,q.y1,1); g.strokeStyle='#fff';
+        A4_WIB.forEach(([,n],i)=>{ typeAt(g,n,q.cx(i),q.top(i)+q.ch-q.cap+q.fc*1.6+q.fn*1.1,q.fn,{weight:700,align:'center',maxW:q.cw*.94}); if(i!==0&&i!==3) a4_wib(g,i,q.cx(i),q.my(i)-(i===4?q.s*.08:0),q.s); }); } },
+    run(P,W,H,dpr,x){ const w=W/dpr,h=H/dpr,q=a4_WB(w,h),C=x.clips,E=P('fx-02-ink-edge'),F=P('fx-08-foil');
+      return chain([{fx:deboss,o:P('fx-06-deboss'),x:{clips:{die:C.blind}}},{fx:inkEdge,o:Object.assign({},E,a4_BORDER),x:{clip:C.pale}},{fx:inkEdge,o:Object.assign({},E,a4_DIM),x:{clip:C.dim}},{fx:inkEdge,o:E,x:{clip:C.black}},
+        {fx:foil,o:Object.assign({},F,{camX:clamp(q.cx(0)/w,.1,.9),camY:clamp(q.my(0)/h,.1,.9)}),x:{clips:{die:C.foil}},top:true}],W,H,dpr,x); } }
 ];
 
 /* clips: anything an effect draws with fonts or paths (dies, typed strikes, a typed mask) is rasterized on the main thread
