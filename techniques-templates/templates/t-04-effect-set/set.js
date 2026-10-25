@@ -1984,7 +1984,7 @@ const usages=[
         const sx=cx-250*k, sy=cy+175*k*Math.sin(-250/310*PI/2)*-1; g.beginPath(); g.moveTo(sx,sy); g.lineTo(sx-S*.06,sy+S*.13); g.lineTo(sx-S*.13,sy+S*.13); g.stroke(); b4_mono(g,'STRAND 64',sx-S*.14,sy+S*.13+fs*.35,fs*.85,{align:'right',weight:700});
         // small sizes: a dimension over each, its optical strokes under it
         const sy2=q.by+(q.s1-q.s2)/2; c3_dim(g,q.x1,q.by,q.x1+q.s1,q.by,-fs*1.3,'180',fs*.85,lw*.8); { const ty=q.by-fs*1.3; c3_ln(g,q.x2,ty-fs*.5,q.x2,ty+fs*.5,n,lw); c3_ln(g,q.x2+q.s2,ty-fs*.5,q.x2+q.s2,ty+fs*.5,n,lw); c3_ln(g,q.x2,ty,q.x2+q.s2,ty,n,lw); b4_mono(g,'60',q.x2+q.s2+fs*.5,ty+fs*.35,fs*.85); }
-        const sm=w<420; b4_mono(g,sm?'S 84 · W 44':'STRAND 84 · WALL 44',q.x1,q.by+q.s1+fs*1.6,fs*.8); b4_mono(g,sm?'S 140 · W 80 · ×1.22':'STRAND 140 · WALL 80 · MARK ×1.22',q.x2,q.by+q.s1+fs*1.6,fs*.8);
+        const sm=w<420; b4_mono(g,sm?'S 84 · W 44':'S 84 · W 44',q.x1,q.by+q.s1+fs*1.6,fs*.8); b4_mono(g,sm?'S 140 · W 80 · ×1.22':'S 140 · W 80 · MARK ×1.22',q.x2,q.by+q.s1+fs*1.6,fs*.8);
         b4_mono(g,sm?'ONE SCALE · 1024 UNITS':'ALL SIZES AT ONE SCALE · UNITS OF THE 1024 MASTER',q.x1,q.by+q.s1+fs*3.1,fs*.8); },
       ink:(g,w,h)=>{ const q=b4_CR(w,h), fs=q.fs, m=q.m; const sm=w<420; b4_mono(g,sm?'MINDGUT · APP ICON':'MINDGUT · APP ICON · CONSTRUCTION',m,h*.05,fs*.9); b4_mono(g,sm?'BLIND · NO INK':'BLIND DEBOSS · NO INK',w-m,h*.05,fs*.9,{align:'right'}); c3_hl(g,m,w-m,h*.062,Math.max(2,Math.round(g.getTransform().a)));
         typeAt(g,'Crossing',m-w*.003,h*.125,b4_f(w*.085),{track:-w*.002});
