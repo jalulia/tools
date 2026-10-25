@@ -1332,16 +1332,33 @@ const b4_fig=(q,sd,fn)=>{ const n=72, th=sd*.62, a=q.R*.5, b=q.R*.2; for(let i=0
 /* C · crossing: the Mindgut crossing mark (two strands, one node, a hollow diamond at it) as an app-icon construction plate.
    Units of the 1024 master: corner radius 229 (22.4 %), strand 64, diamond 184 tall, its wall 32. Smaller sizes get optical strokes. */
 const b4_CR=(w,h)=>{ const m=w*.07, S=w*.56, X=w*.26, Y=h*.205, s1=S*180/1024, s2=S*60/1024, by=h*.752; return {m,S,X,Y,s1,s2,by,x1:X,x2:X+w*.3,fs:b4_f(w*.022)}; };
-const b4_mark=(g,x,y,S,opt)=>{ const o=Object.assign({sw:64,dw:32,gap:44},opt||{}), k=S/1024, cx=x+S/2, cy=y+S/2, dv=92*k, dh=74*k;
+const b4_mark=(g,x,y,S,opt)=>{ const o=Object.assign({sw:64,dw:32,gap:44,ds:1,ms:1},opt||{}), k=S/1024, cx=x+S/2, cy=y+S/2, dv=92*k*o.ds*o.ms, dh=74*k*o.ds*o.ms;
   // two strands: one wave of the helix, crossing once at the center
-  g.lineCap='round'; g.lineWidth=o.sw*k; for(const sd of [1,-1]){ g.beginPath(); for(let i=0;i<=48;i++){ const t=-1+2*i/48, X=cx+t*310*k, Y=cy-sd*175*k*(.55*t+.45*Math.sin(t*PI/2)); i?g.lineTo(X,Y):g.moveTo(X,Y); } g.stroke(); }
-  // clear the node, then lay the hollow diamond
-  g.save(); g.globalCompositeOperation='destination-out'; b4_dia(g,cx,cy,dh+o.gap*k,dv+o.gap*k*1.25); g.fill(); g.restore();
+  g.lineCap='round'; g.lineWidth=o.sw*k; for(const sd of [1,-1]){ g.beginPath(); for(let i=0;i<=48;i++){ const t=-1+2*i/48, X=cx+t*310*k*o.ms, Y=cy-sd*175*k*o.ms*(.55*t+.45*Math.sin(t*PI/2)); i?g.lineTo(X,Y):g.moveTo(X,Y); } g.stroke(); }
+  // clear the node (gap < 0: only the diamond's hollow, so the strands run into its wall), then lay the hollow diamond
+  g.save(); g.globalCompositeOperation='destination-out'; b4_dia(g,cx,cy,dh+o.gap*k,dv+o.gap*k*(o.gap<0?dv/dh:1.25)); g.fill(); g.restore();
   g.lineWidth=o.dw*k; g.lineJoin='miter'; b4_dia(g,cx,cy,dh,dv); g.stroke(); };
 const b4_tile=(g,x,y,S)=>{ rrect(g,x,y,S,S,S*.2237); g.fill(); };
 /* the die: the tile pressed, the mark left standing at the sheet's surface */
 const b4_cv=g=>{ const W=g.canvas.width, H=g.canvas.height, c=typeof OffscreenCanvas!=='undefined'?new OffscreenCanvas(W,H):Object.assign(document.createElement('canvas'),{width:W,height:H}), x=c.getContext('2d'); x.setTransform(g.getTransform()); x.fillStyle=x.strokeStyle='#fff'; return [c,x]; };
 const b4_icon=(g,x,y,S,opt)=>{ const [c,cx]=b4_cv(g); b4_mark(cx,x,y,S,opt); g.save(); b4_tile(g,x,y,S); g.setTransform(1,0,0,1,0,0); g.globalCompositeOperation='destination-out'; g.drawImage(c,0,0); g.restore(); };
+/* the helix plate drawn in two parts from one layout: 0 = the beam's job (strands at age power, this turn's diamonds, the burn legend),
+   1 = the printed chrome (every word and the header rule, solid black ink), so the data reads as burned and the frame as printed */
+const b4_hxDraw=(g,w,h,part)=>{ const q=b4_HX(w,h), m=q.m, B=part===0, fs=b4_f(w*.0085), hl=Math.max(1,w*.0008), D=q.A*.66, lw=Math.max(1.1,q.s*.15);
+  const T=(...a)=>{ if(!B) typeAt(g,...a); }, M=(...a)=>{ if(!B) b4_mono(g,...a); }; g.strokeStyle='#fff';
+  const dia=(x,y,dx,dy,ghost,lw_)=>{ if(!B) return; g.lineWidth=lw_; g.globalAlpha=ghost?.3:1; if(ghost) g.setLineDash([lw_*1.5,lw_*1.3]); b4_dia(g,x,y,dx,dy); g.stroke(); g.setLineDash([]); g.globalAlpha=1; };
+  if(B){ for(let j=0;j<B4_HN;j++){ const r=Math.floor(j/B4_HROW), n=j%B4_HROW, th=b4_th(j), X=q.X(n), Y=q.cy(r), sn=Math.sin(th), cs=Math.cos(th); g.globalAlpha=b4_pow(j);
+      for(const sd of [1,-1]){ const rr=q.rD*(1+.3*cs*sd); g.beginPath(); g.arc(X,Y-sd*q.A*sn,rr,0,TAU); g.fill(); } } g.globalAlpha=1; }
+  B4_CROSS.forEach(c=>{ if(c.now||c.arriving) dia(q.X(c.n),q.cy(c.row),D*.72,D,c.arriving,lw); });
+  const ca=B4_CROSS.find(c=>c.arriving);
+  if(!q.nar){ for(let r=0;r<3;r++) M(String(r*204+1).padStart(3,'0')+' – '+String(r*204+204),q.x0,q.cy(r)+q.A+q.rD+fs*1.5,fs*.92); M('ARRIVING',q.X(ca.n),q.cy(2)+D+fs*1.35,fs*.92,{align:'center'}); }
+  if(q.nar){ T('Helix',q.x0,h*.17,b4_f(w*.052),{track:-w*.001}); M('612 STRANDS · 4 CROSSINGS THIS TURN',q.x1,h*.15,fs,{align:'right'}); M('BURN DEPTH = RECENCY · PLACEHOLDERS',q.x1,h*.15+fs*1.45,fs,{align:'right'}); return; }
+  M('MINDGUT · HELIX · SESSION READING',m,h*.085,fs); M('CO₂ LASER · 300 G WHITE BOARD · VALUES ARE PLACEHOLDERS',q.x1,h*.085,fs,{align:'right'}); if(!B) c3_hl(g,m,q.x1,h*.105,Math.max(2,Math.round(g.getTransform().a)));
+  T('Helix',m-w*.002,h*.27,w*.05,{track:-w*.0012}); T('612',m-w*.003,h*.49,w*.085,{track:-w*.003}); T('strands · a strand is a dot',m,h*.545,b4_f(w*.0115),{weight:500}); T('4 crossings this turn',m,h*.635,b4_f(w*.0165),{weight:700});
+  const ly=h*.75, lx=m, st=w*.017; M('BURN DEPTH = RECENCY',lx,ly-fs*1.6,fs*.92);
+  if(B){ for(let k=0;k<7;k++){ g.globalAlpha=.2+.8*Math.pow(k/6,1.5); g.beginPath(); g.arc(lx+st*k+st*.3,ly,Math.max(1.6,w*.0028),0,TAU); g.fill(); } g.globalAlpha=1; }
+  M('OLDEST',lx,ly+fs*1.7,fs*.85); M('NEWEST',lx+st*6+st*.6,ly+fs*1.7,fs*.85,{align:'right'});
+  const dy=h*.875, dd=w*.0065, lw2=Math.max(1.1,w*.0009); dia(lx+dd,dy-fs*.35,dd*.72,dd,false,lw2); M('CROSSING, THIS TURN',lx+dd*3,dy,fs*.85); dia(lx+dd,dy+fs*1.6-fs*.35,dd*.72,dd,true,lw2); M('ARRIVING',lx+dd*3,dy+fs*1.6,fs*.85); };
 
 const usages=[
   /* ═══ stationery & brand ═══ */
@@ -1871,35 +1888,17 @@ const usages=[
       typed:(g,w,h)=>sub(g,w*.07,h*.938,w*.86,h*.06,(g,a,b)=>strikes(g,a,b,{text:'THE SLOW ALMANAC · PLATE 6 · SUN PRINT, 14 MIN, 2 JUNE 2026',fsize:Math.max(h*.021,7.5),align:'left',seed:52,exhaust:0})) },
     run(P,W,H,dpr,x){ const C=x.clips; return chain([{fx:cyanotype,o:P('fx-11-cyanotype'),x:{clips:{obj:C.obj}}},{fx:typewriter,o:P('fx-07-typewriter'),x:{clips:{strikes:C.typed}}}],W,H,dpr,x); } },
   /* ═══ r4-b · applied digital concept art ═══ */
-  { id:'c-helix', job:'concept', title:'Helix · 612 strands, burned by age', sub:'The HELIX reading laser-etched into white board. Each strand is one dot: 306 a side, wound as a double strand and wrapped into three rows like a line of text, oldest at the top left. The beam\'s power is the strand\'s age, so the oldest strands are a pale scorch and the newest are burned black and sunk. The four crossings made this turn are hollow diamonds; the next one, still arriving past the last dot, is a faint dashed pass. Placeholder values.', uses:['fx-12-laser','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'2/1', span:3, light:{az:222,el:36},
-    overrides:{'fx-03-paper-tooth':Object.assign({},c3_PAPER,{depth:.035,fibers:1.8}),'fx-12-laser':{stock:'paper',shape:'none',power:.9,speed:1,scan:0,focus:0,ramp:0,overburn:.1,halo:.35,haloR:1.4,ablate:.4,diffuse:.9,cut:'off',seed:61},'fx-02-ink-edge':Object.assign({},c3_K,{density:1})},
+  { id:'c-helix', job:'concept', title:'Helix · 612 strands, burned by age', sub:'The HELIX reading laser-etched into white board. Each strand is one dot: 306 a side, wound as a double strand and wrapped into three rows like a line of text, oldest at the top left. The beam\'s power is the strand\'s age, so the oldest strands are a pale scorch and the newest are burned black and sunk. The four crossings made this turn are hollow diamonds; the next one, still arriving past the last dot, is a faint dashed pass. Only the data is burned: every word and rule is printed in black ink. Placeholder values.', uses:['fx-12-laser','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'2/1', span:3, light:{az:222,el:36},
+    overrides:{'fx-03-paper-tooth':Object.assign({},c3_PAPER,{depth:.035,fibers:1.8}),'fx-12-laser':{stock:'paper',shape:'none',power:.9,speed:1,scan:0,focus:0,ramp:0,overburn:.1,halo:0,haloR:.6,ablate:.4,diffuse:.9,cut:'off',seed:61},'fx-02-ink-edge':c3_K},
     clips:{
-      burn:(g,w,h)=>{ const q=b4_HX(w,h), m=q.m;
-        for(let j=0;j<B4_HN;j++){ const r=Math.floor(j/B4_HROW), n=j%B4_HROW, th=b4_th(j), X=q.X(n), Y=q.cy(r), sn=Math.sin(th), cs=Math.cos(th); g.globalAlpha=b4_pow(j);
-          for(const sd of [1,-1]){ const rr=q.rD*(1+.3*cs*sd); g.beginPath(); g.arc(X,Y-sd*q.A*sn,rr,0,TAU); g.fill(); } }
-        const D=q.A*.66, lw=Math.max(1.1,q.s*.15); g.strokeStyle='#fff'; g.lineWidth=lw;
-        B4_CROSS.forEach(c=>{ if(!c.now&&!c.arriving) return; const X=q.X(c.n), Y=q.cy(c.row); g.globalAlpha=c.arriving?.3:1; if(c.arriving) g.setLineDash([lw*1.5,lw*1.3]); b4_dia(g,X,Y,D*.72,D); g.stroke(); g.setLineDash([]); });
-        g.globalAlpha=.82; const fs=b4_f(w*.0085), hl=Math.max(1,w*.0008);
-        if(!q.nar) for(let r=0;r<3;r++) b4_mono(g,String(r*204+1).padStart(3,'0')+' – '+String(r*204+204),q.x0,q.cy(r)+q.A+q.rD+fs*1.5,fs*.92);
-        const ca=B4_CROSS.find(c=>c.arriving); if(!q.nar) b4_mono(g,'ARRIVING',q.X(ca.n),q.cy(2)+D+fs*1.35,fs*.92,{align:'center'});
-        if(q.nar){ typeAt(g,'Helix',q.x0,h*.17,b4_f(w*.052),{track:-w*.001}); b4_mono(g,'612 STRANDS · 4 CROSSINGS THIS TURN',q.x1,h*.15,fs,{align:'right'}); b4_mono(g,'BURN DEPTH = RECENCY · PLACEHOLDERS',q.x1,h*.15+fs*1.45,fs,{align:'right'}); g.globalAlpha=1; return; }
-        b4_mono(g,'MINDGUT · HELIX · SESSION READING',m,h*.085,fs); b4_mono(g,'CO₂ LASER · 300 G WHITE BOARD · VALUES ARE PLACEHOLDERS',q.x1,h*.085,fs,{align:'right'}); g.fillRect(m,h*.105,q.x1-m,hl);
-        typeAt(g,'Helix',m-w*.002,h*.27,w*.05,{track:-w*.0012});
-        typeAt(g,'612',m-w*.003,h*.49,w*.085,{track:-w*.003}); typeAt(g,'strands · a strand is a dot',m,h*.545,b4_f(w*.0115),{weight:500});
-        typeAt(g,'4 crossings this turn',m,h*.635,b4_f(w*.0165),{weight:700});
-        // legend: the burn wedge (power = age) and the two diamonds
-        const ly=h*.75, lx=m, st=w*.017; b4_mono(g,'BURN DEPTH = RECENCY',lx,ly-fs*1.6,fs*.92);
-        for(let k=0;k<7;k++){ g.globalAlpha=.2+.8*Math.pow(k/6,1.5); g.beginPath(); g.arc(lx+st*k+st*.3,ly,Math.max(1.6,w*.0028),0,TAU); g.fill(); }
-        g.globalAlpha=.82; b4_mono(g,'OLDEST',lx,ly+fs*1.7,fs*.85); b4_mono(g,'NEWEST',lx+st*6+st*.6,ly+fs*1.7,fs*.85,{align:'right'});
-        const dy=h*.875, dd=w*.0065; g.lineWidth=Math.max(1.1,w*.0009); g.globalAlpha=1; b4_dia(g,lx+dd,dy-fs*.35,dd*.72,dd); g.stroke(); g.globalAlpha=.82; b4_mono(g,'CROSSING, THIS TURN',lx+dd*3,dy,fs*.85);
-        g.globalAlpha=.3; g.setLineDash([g.lineWidth*1.5,g.lineWidth*1.3]); b4_dia(g,lx+dd,dy+fs*1.6-fs*.35,dd*.72,dd); g.stroke(); g.setLineDash([]); g.globalAlpha=.82; b4_mono(g,'ARRIVING',lx+dd*3,dy+fs*1.6,fs*.85);
-        g.globalAlpha=1; },
+      // part 0 = what the beam burns (strands, diamonds, the burn legend); part 1 = the printed chrome (all type and the rule)
+      burn:(g,w,h)=>b4_hxDraw(g,w,h,0), type:(g,w,h)=>b4_hxDraw(g,w,h,1),
       // coset ticks at every row start: each row begins with the carbon strand on top and the silicon strand below (102 = three waves)
       c147:(g,w,h)=>{ const q=b4_HX(w,h), t=Math.max(3,q.s*.8); for(let r=0;r<3;r++) g.fillRect(q.X(0)-q.s*2.2-t,q.cy(r)-q.A-t/2,t,t); if(!q.nar){ const fs=b4_f(w*.0085); g.fillRect(q.m,h*.935-fs*.75,fs*.8,fs*.8); } },
       c258:(g,w,h)=>{ const q=b4_HX(w,h), t=Math.max(3,q.s*.8); for(let r=0;r<3;r++) g.fillRect(q.X(0)-q.s*2.2-t,q.cy(r)+q.A-t/2,t,t); if(!q.nar){ const fs=b4_f(w*.0085); g.fillRect(q.m+w*.085,h*.935-fs*.75,fs*.8,fs*.8); } },
       key:(g,w,h)=>{ const q=b4_HX(w,h); if(q.nar) return; const fs=b4_f(w*.0085); b4_mono(g,'CARBON · 147',q.m+fs*1.3,h*.935,fs*.85); b4_mono(g,'SILICON · 258',q.m+w*.085+fs*1.3,h*.935,fs*.85); } },
     run(P,W,H,dpr,x){ const w=W/dpr, C=x.clips, pitch=Math.max(.7,Math.min(1.5,w/950)), lo=Object.assign({},P('fx-12-laser'),{pitch,spot:Math.max(.3,pitch*.3)}); lo.power*=pitch/1.25; lo.haloR*=Math.min(1,w/1000); // dose ∝ power ÷ pitch: hold the tone when the raster gets finer on a phone
-      return chain([{fx:inkEdge,o:b4_ink(P,b4_T.c147),x:{clip:C.c147}},{fx:inkEdge,o:b4_ink(P,b4_T.c258),x:{clip:C.c258}},{fx:inkEdge,o:b4_ink(P,b4_T.text),x:{clip:C.key}},{fx:laser,o:lo,x:{clips:{die:C.burn}}}],W,H,dpr,x); } },
+      return chain([{fx:inkEdge,o:b4_ink(P,b4_T.c147),x:{clip:C.c147}},{fx:inkEdge,o:b4_ink(P,b4_T.c258),x:{clip:C.c258}},{fx:laser,o:lo,x:{clips:{die:C.burn}}},{fx:inkEdge,o:P('fx-02-ink-edge'),x:{clip:C.type}},{fx:inkEdge,o:P('fx-02-ink-edge'),x:{clip:C.key}}],W,H,dpr,x); } },
   { id:'c-twofields', job:'concept', title:'Two fields agree → color', sub:'A cyanotype contact print. Two ring gratings on film, one for carbon and one for silicon, were laid over the same sensitized sheet and exposed together: light reached the paper only where both films were clear, so Prussian blue is the agreement and nothing else. The two films are printed small on the left in their coset inks at the same scale; the beat and the blue share in the folio are computed from the two pitches, not quoted. Placeholder fields.', uses:['fx-11-cyanotype','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'3/2', span:2, light:{az:218,el:38},
     overrides:{'fx-03-paper-tooth':Object.assign({},COLD,{depth:.05,fibers:2.4,pits:.4,form:.25,fRaise:.45,fWidth:.4}),'fx-11-cyanotype':{stock:'paper',subject:'die',lift:0,contact:1,scatter:.1,trans:0,expo:1.35,strokes:3,bAngle:-1.5,rag:.3,uneven:.35,dry:0,pool:.25,bleed:.06,tone:'classic',depth:1.5,seed:33},'fx-02-ink-edge':Object.assign({},c3_K,{density:1.1})},
     clips:(()=>{ const ring=(q,c,p,inv)=>(u,v,d)=>{ const s=(u-q.X)/q.L, t=(v-q.Y)/q.L; const k=b4_clear(Math.hypot(s-c[0],t-c[1])*100,p,d*q.u); return inv?1-k:k; };
@@ -1964,15 +1963,15 @@ const usages=[
         const dw=w*.03, lw=Math.max(1.1,w*.0035); g.strokeStyle='#fff'; g.lineWidth=lw; for(let i=0;i<5;i++){ const x=q.m+dw+i*dw*2.6, y=hy+h*.024; if(i===4) g.setLineDash([lw*1.6,lw*1.3]); b4_dia(g,x,y,dw*.75,dw); g.stroke(); g.setLineDash([]); } } }; })(),
     run(P,W,H,dpr,x){ const C=x.clips, k=b4_ink(P,b4_T.text);
       return chain([{fx:inkEdge,o:b4_ink(P,b4_T.border),x:{clip:C.rule}},{fx:inkEdge,o:k,x:{clip:C.text}},{fx:inkEdge,o:b4_ink(P,b4_T.mute),x:{clip:C.mute}},{fx:inkEdge,o:b4_ink(P,b4_T.c147),x:{clip:C.c147}},{fx:inkEdge,o:b4_ink(P,b4_T.c258),x:{clip:C.c258}},{fx:spotUV,o:P('fx-09-spot-uv'),x:{clips:{die:C.uv}},top:true}],W,H,dpr,x); } },
-  { id:'c-crossing', job:'concept', title:'Crossing · the app icon, pressed blind', sub:'The Mindgut crossing mark (two strands, the one point they share, a hollow diamond at it) as an app-icon construction plate. The icon is a blind deboss in white board: the tile is pressed and the mark is left standing, so only the raking light draws it. The 180 and 60 px sizes are pressed beside it at the same scale, each from its own die with optically heavier strokes. The keyline grid, radii and dimensions are graphite over the pressing; the title and the strand key are printed.', uses:['fx-06-deboss','fx-05-graphite','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'4/5', light:{az:226,el:22},
-    overrides:{'fx-03-paper-tooth':Object.assign({},c3_PAPER,{depth:.03,fibers:1.4}),'fx-06-deboss':{stock:'paper',depth:1.3,soft:1.1,lip:.14,crush:.75,shadow:.8,diffuse:.96,floorTone:.012,ink:0},'fx-05-graphite':{stock:'paper',mShape:'none',lead:.45,pressure:.9,sheen:.45,shin:26,burnish:.3,bite:.14,breakup:.4,starve:0,mottle:0,split:.6,gL:.36,gC:.004,gh:260,seed:47},'fx-02-ink-edge':c3_K},
+  { id:'c-crossing', job:'concept', title:'Crossing · the app icon, pressed blind', sub:'The Mindgut crossing mark (two strands, the one point they share, a hollow diamond at it) as an app-icon construction plate. The icon is a blind deboss in white board: the tile is pressed and the mark is left standing, so only the raking light draws it. The 180 and 60 px sizes are pressed beside it at the same scale, each from its own die with optically heavier strokes. The keyline grid, radii and dimensions are graphite over the pressing; the title and the strand key are printed. The relief is shallow and the walls narrow: the impression is the stock\'s own color, read only by a thin lit edge and a thin shaded one.', uses:['fx-06-deboss','fx-05-graphite','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'4/5', light:{az:252,el:24},
+    overrides:{'fx-03-paper-tooth':Object.assign({},c3_PAPER,{depth:.03,fibers:1.4}),'fx-06-deboss':{stock:'paper',depth:.9,soft:.5,lip:.04,crush:.3,shadow:.4,diffuse:.9,floorTone:0,ink:0},'fx-05-graphite':{stock:'paper',mShape:'none',lead:.45,pressure:.9,sheen:.45,shin:26,burnish:.3,bite:.14,breakup:.4,starve:0,mottle:0,split:.6,gL:.36,gC:.004,gh:260,seed:47},'fx-02-ink-edge':c3_K},
     clips:{
-      die:(g,w,h)=>{ const q=b4_CR(w,h); b4_icon(g,q.X,q.Y,q.S); },
-      small:(g,w,h)=>{ const q=b4_CR(w,h); b4_icon(g,q.x1,q.by,q.s1,{sw:84,dw:44,gap:44}); b4_icon(g,q.x2,q.by+(q.s1-q.s2)/2,q.s2,{sw:120,dw:64,gap:40}); },
+      die:(g,w,h)=>{ const q=b4_CR(w,h); b4_icon(g,q.X,q.Y,q.S,{gap:-16}); },
+      small:(g,w,h)=>{ const q=b4_CR(w,h); b4_icon(g,q.x1,q.by,q.s1,{sw:84,dw:44,gap:-22}); b4_icon(g,q.x2,q.by+(q.s1-q.s2)/2,q.s2,{sw:140,dw:80,gap:-40,ds:1.5,ms:1.22}); },
       lines:(g,w,h)=>{ const q=b4_CR(w,h), S=q.S, k=S/1024, X=q.X, Y=q.Y, fs=q.fs, d=g.getTransform().a, n=Math.max(1,Math.round(d*.6)), lw=Math.max(1,w*.002); g.strokeStyle='#fff'; g.fillStyle='#fff';
         // keyline grid: 8 × 8 over the master, run past the tile by a module
         const e=S/16; for(let i=0;i<=8;i++){ c3_vl(g,X+S*i/8,Y-e,Y+S+e,n); c3_hl(g,X-e,X+S+e,Y+S*i/8,n); }
-        g.lineWidth=lw*.8; g.beginPath(); g.moveTo(X,Y); g.lineTo(X+S,Y+S); g.moveTo(X+S,Y); g.lineTo(X,Y+S); g.stroke();
+        g.lineWidth=lw*.8;
         g.beginPath(); g.arc(X+S/2,Y+S/2,S*.39,0,TAU); g.stroke(); g.beginPath(); g.arc(X+S/2,Y+S/2,S*.25,0,TAU); g.stroke();
         // the corner: radius 229 drawn from its center
         const r=S*.2237, ccx=X+S-r, ccy=Y+r; g.setLineDash([lw*3,lw*2]); g.beginPath(); g.arc(ccx,ccy,r,-PI/2,0); g.stroke(); g.setLineDash([]); g.beginPath(); g.moveTo(ccx,ccy); g.lineTo(ccx+r*Math.cos(-PI/4),ccy+r*Math.sin(-PI/4)); g.stroke(); g.fillRect(ccx-lw,ccy-lw,lw*2,lw*2);
@@ -1985,18 +1984,17 @@ const usages=[
         const sx=cx-250*k, sy=cy+175*k*Math.sin(-250/310*PI/2)*-1; g.beginPath(); g.moveTo(sx,sy); g.lineTo(sx-S*.06,sy+S*.13); g.lineTo(sx-S*.13,sy+S*.13); g.stroke(); b4_mono(g,'STRAND 64',sx-S*.14,sy+S*.13+fs*.35,fs*.85,{align:'right',weight:700});
         // small sizes: a dimension over each, its optical strokes under it
         const sy2=q.by+(q.s1-q.s2)/2; c3_dim(g,q.x1,q.by,q.x1+q.s1,q.by,-fs*1.3,'180',fs*.85,lw*.8); { const ty=q.by-fs*1.3; c3_ln(g,q.x2,ty-fs*.5,q.x2,ty+fs*.5,n,lw); c3_ln(g,q.x2+q.s2,ty-fs*.5,q.x2+q.s2,ty+fs*.5,n,lw); c3_ln(g,q.x2,ty,q.x2+q.s2,ty,n,lw); b4_mono(g,'60',q.x2+q.s2+fs*.5,ty+fs*.35,fs*.85); }
-        const sm=w<420; b4_mono(g,sm?'S 84 · W 44':'STRAND 84 · WALL 44',q.x1,q.by+q.s1+fs*1.6,fs*.8); b4_mono(g,sm?'S 120 · W 64':'STRAND 120 · WALL 64',q.x2,q.by+q.s1+fs*1.6,fs*.8);
+        const sm=w<420; b4_mono(g,sm?'S 84 · W 44':'STRAND 84 · WALL 44',q.x1,q.by+q.s1+fs*1.6,fs*.8); b4_mono(g,sm?'S 140 · W 80 · ×1.22':'STRAND 140 · WALL 80 · MARK ×1.22',q.x2,q.by+q.s1+fs*1.6,fs*.8);
         b4_mono(g,sm?'ONE SCALE · 1024 UNITS':'ALL SIZES AT ONE SCALE · UNITS OF THE 1024 MASTER',q.x1,q.by+q.s1+fs*3.1,fs*.8); },
-      ink:(g,w,h)=>{ const q=b4_CR(w,h), fs=q.fs, m=q.m; const sm=w<420; b4_mono(g,sm?'MINDGUT · APP ICON':'MINDGUT · APP ICON · CONSTRUCTION',m,h*.05,fs*.9); b4_mono(g,sm?'BLIND · NO INK':'BLIND DEBOSS · NO INK',w-m,h*.05,fs*.9,{align:'right'}); c3_hl(g,m,w-m,h*.062);
+      ink:(g,w,h)=>{ const q=b4_CR(w,h), fs=q.fs, m=q.m; const sm=w<420; b4_mono(g,sm?'MINDGUT · APP ICON':'MINDGUT · APP ICON · CONSTRUCTION',m,h*.05,fs*.9); b4_mono(g,sm?'BLIND · NO INK':'BLIND DEBOSS · NO INK',w-m,h*.05,fs*.9,{align:'right'}); c3_hl(g,m,w-m,h*.062,Math.max(2,Math.round(g.getTransform().a)));
         typeAt(g,'Crossing',m-w*.003,h*.125,b4_f(w*.085),{track:-w*.002});
-        const ky=h*.94; b4_mono(g,'A · CARBON',m+fs*1.4,ky,fs*.9); b4_mono(g,'B · SILICON',m+w*.25+fs*1.4,ky,fs*.9); b4_mono(g,'1 NODE · 1 DIAMOND',w-m,ky,fs*.9,{align:'right'}); c3_hl(g,m,w-m,ky-fs*1.6); },
-      c147:(g,w,h)=>{ const q=b4_CR(w,h), fs=q.fs, k=q.S/1024, cx=q.X+q.S/2, cy=q.Y+q.S/2; g.fillRect(q.m,h*.94-fs*.8,fs*.85,fs*.85); const ex=cx+310*k, ey=cy-175*k; g.fillRect(ex+q.S*.11,ey-fs*.42,fs*.85,fs*.85); },
-      c258:(g,w,h)=>{ const q=b4_CR(w,h), fs=q.fs, k=q.S/1024, cx=q.X+q.S/2, cy=q.Y+q.S/2; g.fillRect(q.m+w*.25,h*.94-fs*.8,fs*.85,fs*.85); const ex=cx+310*k, ey=cy+175*k; g.fillRect(ex+q.S*.11,ey-fs*.42,fs*.85,fs*.85); },
-      key:(g,w,h)=>{ const q=b4_CR(w,h), fs=q.fs, k=q.S/1024, cx=q.X+q.S/2, cy=q.Y+q.S/2; [['A',-1],['B',1]].forEach(([t,sd])=>{ const ex=cx+310*k, ey=cy+sd*175*k; b4_mono(g,t,ex+q.S*.11+fs*1.3,ey+fs*.38,fs*.9,{weight:700}); }); } },
+        const ky=h*.94; b4_mono(g,sm?'CARBON · RISING':'CARBON · RISING STRAND',m+fs*1.4,ky,fs*.9); b4_mono(g,sm?'SILICON · FALLING':'SILICON · FALLING STRAND',m+w*(sm?.36:.4)+fs*1.4,ky,fs*.9);  c3_hl(g,m,w-m,ky-fs*1.6,Math.max(2,Math.round(g.getTransform().a))); },
+      c147:(g,w,h)=>{ const q=b4_CR(w,h), fs=q.fs, k=q.S/1024, cx=q.X+q.S/2, cy=q.Y+q.S/2; g.fillRect(q.m,h*.94-fs*.8,fs*.85,fs*.85); },
+      c258:(g,w,h)=>{ const q=b4_CR(w,h), fs=q.fs, k=q.S/1024, cx=q.X+q.S/2, cy=q.Y+q.S/2; g.fillRect(q.m+w*(w<420?.36:.4),h*.94-fs*.8,fs*.85,fs*.85); } },
     run(P,W,H,dpr,x){ const C=x.clips, go=P('fx-05-graphite');
-      return chain([{fx:inkEdge,o:P('fx-02-ink-edge'),x:{clip:C.ink}},{fx:inkEdge,o:b4_ink(P,b4_T.c147,{density:1}),x:{clip:C.c147}},{fx:inkEdge,o:b4_ink(P,b4_T.c258,{density:1}),x:{clip:C.c258}},{fx:inkEdge,o:P('fx-02-ink-edge'),x:{clip:C.key}},
-        {fx:deboss,o:P('fx-06-deboss'),x:{clips:{die:C.die}}},{fx:deboss,o:Object.assign({},P('fx-06-deboss'),{depth:.7,soft:.45,lip:.08}),x:{clips:{die:C.small}}},
-        {fx:c3_pencil(C.lines),o:Object.assign({},go),top:true}],W,H,dpr,x); } }
+      return chain([{fx:inkEdge,o:P('fx-02-ink-edge'),x:{clip:C.ink}},{fx:inkEdge,o:b4_ink(P,b4_T.c147,{density:1}),x:{clip:C.c147}},{fx:inkEdge,o:b4_ink(P,b4_T.c258,{density:1}),x:{clip:C.c258}},
+        {fx:deboss,o:P('fx-06-deboss'),x:{clips:{die:C.die}}},{fx:deboss,o:Object.assign({},P('fx-06-deboss'),{depth:.6,soft:.3,lip:.02}),x:{clips:{die:C.small}}},
+        {fx:c3_pencil(C.lines),o:Object.assign({},go,{pressure:.75}),top:true}],W,H,dpr,x); } }
 ];
 
 /* clips: anything an effect draws with fonts or paths (dies, typed strikes, a typed mask) is rasterized on the main thread
