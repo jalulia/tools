@@ -1000,89 +1000,32 @@ const WLABEL={pattern:'satin 8',warp:78,weft:60,fill:.98,slub:.04,hair:.06,irreg
 
 /* ── polish-c helpers ── */
 /* a rounded cross-section (CSS px) from a coverage clip: wire, eyelet ring — radius R CSS px, read off the exact distance to the edge */
-const c_dome=(clip,W,H,dpr,R)=>{ const d=FX.sdf(clip,W,H), h=new Float32Array(W*H), Rp=R*dpr; for(let i=0;i<W*H;i++){ const t=clamp(d[i]/Rp,0,1); h[i]=R*Math.sqrt(Math.max(0,1-(1-t)*(1-t))); } return h; };
 /* polished metal: the sheet light's soft box seen in the mirror of each normal, a dim ceiling, a dark room, + a tight glint */
-const c_metal=(hpx,cov,W,H,dpr,base,box=.9,shin=70)=>{ const N=FX.normals(hpx,W,H,dpr), LL=FX.LIGHT, ec=(LL.el+(90-LL.el)*.45)*PI/180, ea=LL.az*PI/180, bx=Math.cos(ea)*Math.cos(ec), by=Math.sin(ea)*Math.cos(ec), bz=Math.sin(ec), [lx,ly,lz]=FX.lightVec(), hl=Math.hypot(lx,ly,lz+1), out=new Float32Array(W*H*3);
-  for(let i=0,k=0;i<W*H;i++,k+=3){ if(cov[i]<=0) continue; const nx=N.nx[i], ny=N.ny[i], nz=N.nz[i], rx=2*nz*nx, ry=2*nz*ny, rz=2*nz*nz-1, rl=rx*bx+ry*by+rz*bz;
-    const env=sstep(box,box+.08,rl)*1.3+.2*Math.pow(clamp(rz,0,1),4)+.035, gl=Math.pow(Math.max(0,(nx*lx+ny*ly+nz*(lz+1))/hl),shin)*.9;
-    for(let c=0;c<3;c++) out[k+c]=base[c]*env+gl*(.3+.7*base[c]); } return out; };
 /* sewing thread: capsules [x0,y0,x1,y1] (CSS px) of radius R, with an S-twist ridge, ends diving into the cloth; Lambert under the sheet light.
    Returns lin, alpha and the needle holes (where the thread goes through) for the cloth beneath. */
-const c_thread=(segs,W,H,dpr,col,R,tw=.2)=>{ const a=new Float32Array(W*H), hh=new Float32Array(W*H), hole=new Float32Array(W*H);
-  for(const [x0,y0,x1,y1] of segs){ const dx=x1-x0, dy=y1-y0, L=Math.hypot(dx,dy)||1e-3, ux=dx/L, uy=dy/L, pad=R*1.6+2/dpr;
-    const X0=Math.max(0,Math.floor((Math.min(x0,x1)-pad)*dpr)), X1=Math.min(W-1,Math.ceil((Math.max(x0,x1)+pad)*dpr)), Y0=Math.max(0,Math.floor((Math.min(y0,y1)-pad)*dpr)), Y1=Math.min(H-1,Math.ceil((Math.max(y0,y1)+pad)*dpr));
-    for(let Y=Y0;Y<=Y1;Y++) for(let X=X0;X<=X1;X++){ const u=(X+.5)/dpr-x0, v=(Y+.5)/dpr-y0, t=u*ux+v*uy, s=-u*uy+v*ux, i=Y*W+X;
-      for(const e of [0,L]){ const dh=Math.hypot(t-e,s)/(R*1.25); if(dh<1) hole[i]=Math.max(hole[i],1-dh*dh); }
-      const tc=clamp(t,0,L), d=Math.hypot(t-tc,s), cov=clamp((R-d)*dpr+.5,0,1); if(cov<=0) continue;
-      const pr=Math.sqrt(Math.max(0,1-(d/R)*(d/R))), dive=sstep(-R*.2,R*1.4,Math.min(t,L-t)), h=R*pr*(.25+.75*dive)*(1+tw*Math.sin(TAU*(t/(R*1.55)+s/(R*2.4))));
-      if(cov>a[i]){ a[i]=cov; hh[i]=h; } } }
-  const N=FX.normals(hh,W,H,dpr), [lx,ly,lz]=FX.lightVec(), lin=new Float32Array(W*H*3);
-  for(let i=0,k=0;i<W*H;i++,k+=3){ if(a[i]<=0) continue; const lam=Math.max(0,N.nx[i]*lx+N.ny[i]*ly+N.nz[i]*lz), f=Math.min(1.35,.28+.72*lam/Math.max(.3,lz)); lin[k]=col[0]*f; lin[k+1]=col[1]*f; lin[k+2]=col[2]*f; }
-  return {lin,a,hole}; };
 /* lay a layer over a base, in place (linear light) */
 const c_over=(out,lin,a)=>{ for(let i=0,k=0;i<a.length;i++,k+=3){ const m=a[i]; if(m<=0) continue; out[k]+=(lin[k]-out[k])*m; out[k+1]+=(lin[k+1]-out[k+1])*m; out[k+2]+=(lin[k+2]-out[k+2])*m; } return out; };
 /* stock color: multiply a lit gray sheet by a dye (OKLab) — the ink printed on it is multiplied too, as a film on colored stock is */
-const c_tint=(lin,L,C,h,ref=1)=>{ const t=FX.ink(L,C,h).lin; for(let k=0;k<lin.length;k+=3){ lin[k]*=t[0]/ref; lin[k+1]*=t[1]/ref; lin[k+2]*=t[2]/ref; } return lin; };
 /* swatch card geometry (card-local CSS px; the card is a rotated frame bleeding off the right and bottom of the plate) */
-const c_card=(w,h)=>{ const cw=w*1.06, ch=h*1.02; return {cx:w*.555, cy:h*.565, rot:-.016, cw, ch, hx:cw*.05, hy:ch*.115, hr:ch*.022, er:ch*.04,
-  sx:i=>cw*(.088+i*.168), sw:cw*.146, sy:ch*.305, sh:ch*.4, ly:ch*.735, lh:ch*.17}; };
-const C_DRAFTS=[['DENIM','3H TWILL','52 × 44'],['LINEN','PLAIN','34 × 32'],['SHIRTING','PLAIN','60 × 56'],['DUCK','BASKET','40 × 40'],['BOOKCLOTH','FILLED','72 × 64']];
-const c_pinked=(g,x0,y0,w,h,t=3.1,a=2.2)=>{ g.beginPath(); let x=x0, y=y0; g.moveTo(x,y); for(let i=0;x<x0+w;i++){ x=Math.min(x0+w,x+t); g.lineTo(x,y-(i%2?0:a)); } for(let i=0;y<y0+h;i++){ y=Math.min(y0+h,y+t); g.lineTo(x0+w+(i%2?0:a),y); } for(let i=0;x>x0;i++){ x=Math.max(x0,x-t); g.lineTo(x,y0+h+(i%2?0:a)); } for(let i=0;y>y0;i++){ y=Math.max(y0,y-t); g.lineTo(x0-(i%2?0:a),y); } g.closePath(); g.fill(); };
-const c_inCard=(g,w,h,fn)=>{ const k=c_card(w,h); inFrame(g,k.cx,k.cy,k.rot,k.cw,k.ch,(g,cw,ch)=>fn(g,cw,ch,k)); };
 /* tote: five pulled waves, one stroke each, phase walking down the stack (the Corran & Co mark) */
-const c_waves=(g,w,h)=>{ g.lineWidth=h*.044; g.lineCap='butt'; g.lineJoin='round'; for(let k=0;k<5;k++){ const y0=h*(.21+.105*k), A=h*.024, L=w*.46, ph=k*.9; g.beginPath(); for(let u=-w*.1;u<=w*1.1;u+=1.5){ const y=y0+A*Math.sin(TAU*u/L+ph); u===-w*.1?g.moveTo(u,y):g.lineTo(u,y); } g.stroke(); } };
 /* a moth in unit space (wing span 2, body on the y axis): fore and hind wings, two eye spots knocked out, a body and two antennae */
-const c_moth=(g,cx,cy,s)=>{ g.save(); g.translate(cx,cy); g.scale(s,s);
-  for(const sd of [-1,1]){ g.beginPath(); g.moveTo(sd*.05,-.16); g.bezierCurveTo(sd*.32,-.58,sd*.82,-.74,sd*1,-.6); g.bezierCurveTo(sd*.96,-.32,sd*.74,-.02,sd*.08,.02); g.closePath(); g.fill();
-    g.beginPath(); g.moveTo(sd*.06,.04); g.bezierCurveTo(sd*.5,.06,sd*.78,.26,sd*.7,.46); g.bezierCurveTo(sd*.6,.66,sd*.26,.62,sd*.05,.3); g.closePath(); g.fill(); }
-  g.beginPath(); g.ellipse(0,.08,.07,.4,0,0,TAU); g.fill(); g.beginPath(); g.ellipse(0,-.24,.06,.07,0,0,TAU); g.fill();
-  g.lineWidth=.022; g.lineCap='round'; for(const sd of [-1,1]){ g.beginPath(); g.moveTo(sd*.03,-.29); g.quadraticCurveTo(sd*.12,-.62,sd*.34,-.78); g.stroke(); }
-  g.globalCompositeOperation='destination-out'; for(const sd of [-1,1]){ g.beginPath(); g.arc(sd*.62,-.42,.1,0,TAU); g.fill(); g.beginPath(); g.arc(sd*.47,.33,.075,0,TAU); g.fill(); g.beginPath(); g.moveTo(sd*.12,-.12); g.lineTo(sd*.86,-.56); g.lineWidth=.018; g.stroke(); }
-  g.restore(); };
 /* box lid geometry (CSS px): the lid bleeds off top and left, its corner sits low right; the flame point the rings radiate from */
-const c_LID=(w,h)=>({x1:w*.865,y1:h*.835,r:w*.012,mx:w*.4,my:h*.4,ms:w*.43,fx:w*.98,fy:-h*.06,ty:h*.745});
 /* cap front: center seam, the brim junction (a smile seen head-on), the brim's stitch rows */
-const c_CAP=(w,h)=>({sx:w*.5,yb:h*.835,curve:u=>h*.085*Math.pow((u-w*.5)/(w*.5),2)});
 /* tea towel: top edge, hem depth, the hanging loop, the printed label */
 /* Lambert factor of a small relief (CSS px) under the sheet light, 1 = flat */
-const c_shadeH=(hpx,W,H,dpr)=>{ let mx=-1e9, mn=1e9; for(let i=0;i<hpx.length;i++){ if(hpx[i]>mx) mx=hpx[i]; if(hpx[i]<mn) mn=hpx[i]; } const sp=Math.max(1e-4,mx-mn), hn=new Float32Array(hpx.length); for(let i=0;i<hn.length;i++) hn[i]=(hpx[i]-mn)/sp; return FX.shade(hn,W,H,dpr,sp,FX.LIGHT); };
 /* machine stitches (CSS px segments) along a path p(t) → [x,y], t in [t0,t1] by arc length steps: stitch length sl, gap sg */
-const c_run=(p,t0,t1,sl,sg,dt=.25)=>{ const P_=[], cum=[0]; for(let t=t0;t<=t1+1e-9;t+=dt){ P_.push(p(t)); const n=P_.length; if(n>1) cum.push(cum[n-2]+Math.hypot(P_[n-1][0]-P_[n-2][0],P_[n-1][1]-P_[n-2][1])); } let j=0; const at=s_=>{ while(j<cum.length-2&&cum[j+1]<s_) j++; const f=(s_-cum[j])/Math.max(1e-6,cum[j+1]-cum[j]); return [lerp(P_[j][0],P_[j+1][0],f),lerp(P_[j][1],P_[j+1][1],f)]; }; const out=[], L=cum[cum.length-1]; for(let s_=0;s_+sl<=L;s_+=sl+sg){ const a=at(s_), b=at(s_+sl); out.push([a[0],a[1],b[0],b[1]]); } return out; };
 /* stitches into cloth: darken the needle holes, contact shadow, lay the thread (in place on lin) */
-const c_sew=(lin,segs,W,H,dpr,col,R,under)=>{ const T=c_thread(segs,W,H,dpr,col,R); for(let i=0,k=0;i<W*H;i++,k+=3){ const m=under?1-under[i]:1, d=1-.55*T.hole[i]*(1-T.a[i])*m; lin[k]*=d; lin[k+1]*=d; lin[k+2]*=d; } const a=under?Float32Array.from(T.a,(v,i)=>v*(1-under[i])):T.a; shadowOn(lin,a,null,W,H,dpr,.35); c_over(lin,T.lin,a); return a; };
-const c_TOW=(w,h)=>({y0:h*.11,hw:h*.034,lx:w*.13,lw:w*.075,lt:h*.025,bx:w*.56,by:h*.168,bw:w*.33,bh:h*.075});
 /* ── polish-b helpers ── */
 /* riso poster · the image area of each drum: the sheet is fed a hair crooked, and the pink drum's master sits off the blue one */
-const b_DRUM=(w,h,k)=>({x0:w*.05,y0:h*.038,x1:w*.95,y1:h*.9,cx:w*.5,cy:h*.47,rot:.0025,ox:0,oy:k?-h*.0055:0}); // the pink master lands early along the feed only: no sideways shift, no skew
-const b_inDrum=(g,w,h,k,fn,clip=true)=>{ const d=b_DRUM(w,h,k); g.save(); g.translate(d.cx+d.ox,d.cy+d.oy); g.rotate(d.rot); g.translate(-d.cx,-d.cy); if(clip){ g.beginPath(); g.rect(d.x0,d.y0,d.x1-d.x0,d.y1-d.y0); g.clip(); } fn(g,d); g.restore(); };
-const b_toDrum=(u,v,d)=>{ const x=u-d.cx-d.ox, y=v-d.cy-d.oy, c=Math.cos(-d.rot), s=Math.sin(-d.rot); return [d.cx+x*c-y*s,d.cy+x*s+y*c]; };
 /* the printer's furniture each drum carries: crop marks at the trim corners, register targets in the margins */
-const b_marks=(g,d,w,h)=>{ const lw=Math.max(.85,w*.0019), gap=w*.007, L=w*.032; g.strokeStyle='#fff'; g.lineWidth=lw;
-  [[d.x0,d.y0,-1,-1],[d.x1,d.y0,1,-1],[d.x0,d.y1,-1,1],[d.x1,d.y1,1,1]].forEach(([x,y,sx,sy])=>{ g.beginPath(); g.moveTo(x+sx*gap,y); g.lineTo(x+sx*(gap+L),y); g.moveTo(x,y+sy*gap); g.lineTo(x,y+sy*(gap+L)); g.stroke(); });
-  const tgt=(x,y)=>{ const r=w*.0095, a=w*.018; g.beginPath(); g.arc(x,y,r,0,TAU); g.stroke(); g.beginPath(); g.moveTo(x-a,y); g.lineTo(x+a,y); g.moveTo(x,y-a); g.lineTo(x,y+a); g.stroke(); g.beginPath(); g.arc(x,y,r*.42,0,TAU); g.fill(); };
-  tgt(d.x0*.5,d.cy); tgt(w-(w-d.x1)*.5,d.cy); tgt(d.cx,d.y0*.5); };
-
 /* FX-05's own chain driven by a drawn line instead of its hatch: the line's AA coverage is the edge, its spread is the pressure,
    the tooth decides where the lead touches, and the deposit gleams toward the light */
-const b_pencil=cov=>({run:(o,W,H,dpr,x)=>{ const st=stockFor(o,x,W,H,dpr), Pp=FX.blur(cov,W,H,Math.max(1,Math.round(o.lead*dpr*.8))); for(let i=0;i<W*H;i++) Pp[i]=Math.min(1,Pp[i]*1.8)*o.pressure;
-  const gi=FX.inkOf(o,'g'), alb=baseAlb(st,x,W,H), A=new Float32Array(W*H); inkChain(Pp,st,o,gi,alb,A,W,H,dpr,o.seed|0,'oklab',0,1,null,{cov,band:.16});
-  const hs=stockH(st,x.S), hpx=new Float32Array(W*H); for(let i=0;i<W*H;i++) hpx[i]=(st?st.h[i]*hs:0)+A[i]*o.burnish*FX.vnoise((i%W)/dpr*.9,((i/W)|0)/dpr*.12,(o.seed|0)+9);
-  const N=FX.normals(hpx,W,H,dpr), [hx,hy,hz]=FX.halfVec(), lz_=FX.lightVec()[2], lf=x.lf||(st?st.lf:null), lin=light(alb,lf,W,H);
-  for(let i=0,k=0;i<W*H;i++,k+=3){ const a=A[i]; if(a<=0) continue; const nh=Math.max(0,N.nx[i]*hx+N.ny[i]*hy+N.nz[i]*hz), sp=o.sheen*Math.min(1,a)*(.16*(1-lz_)+.9*Math.pow(nh,o.shin)); lin[k]+=sp; lin[k+1]+=sp; lin[k+2]+=sp*1.02; }
-  return {alb,lf,lin,ink:A,stock:hpx,mask:cov,marks:0,markUnit:'lines'}; }});
 /* ── polish-a helpers ── */
 /* objects stacked on a given ground (a desk cloth, a liner) instead of the white page */
-const a_stackOn=(ground,layers,W,H,dpr)=>{ const out=ground, ink=new Float32Array(W*H); for(const L of layers){ shadowOn(out,L.alpha,null,W,H,dpr,L.lift||1); for(let i=0,k=0;i<W*H;i++,k+=3){ const a=L.alpha[i]; if(a<=0) continue; out[k]+=(L.lin[k]-out[k])*a; out[k+1]+=(L.lin[k+1]-out[k+1])*a; out[k+2]+=(L.lin[k+2]-out[k+2])*a; ink[i]=Math.max(ink[i],a); } } return {lin:out,ink,mask:ink,stock:null,marks:layers.length,markUnit:'objects'}; };
 /* a dyed stock: the bare paper albedo × a linear-light dye (toned cotton, colored board) */
-const a_dyed=(st,rgb)=>{ const a=Float32Array.from(st.alb); for(let k=0;k<a.length;k+=3){ a[k]*=rgb[0]; a[k+1]*=rgb[1]; a[k+2]*=rgb[2]; } return a; };
-const a_lab=(L,C,hd)=>{ const o=[0,0,0]; FX.lab2lin(L,C*Math.cos(hd*PI/180),C*Math.sin(hd*PI/180),o); return o.map(v=>clamp(v,0,1)); };
 /* the sheet light falls off across the frame, away from the window it comes from (a real raking light is never even) */
-const a_falloff=(lin,W,H,dpr,amt,lo=0)=>{ const [lx,ly]=FX.lightVec(), pl=Math.hypot(lx,ly)||1, ux=lx/pl, uy=ly/pl, w=W/dpr, h=H/dpr, ext=Math.abs(w*ux)+Math.abs(h*uy);
-  for(let y=0;y<H;y++) for(let X=0;X<W;X++){ const t=clamp(((X/dpr-w/2)*ux+(y/dpr-h/2)*uy)/ext+.5,0,1), f=lerp(1-amt,1,Math.pow(t,1.3))*(1-lo)+lo, k=(y*W+X)*3; lin[k]*=f; lin[k+1]*=f; lin[k+2]*=f; } return lin; };
 /* a scalloped notary rosette */
-const a_rosette=(g,cx,cy,R,n=32,dep=.07)=>{ g.beginPath(); for(let i=0;i<=n*8;i++){ const a=i/(n*8)*TAU, r=R*(1-dep+dep*Math.abs(Math.cos(a*n/2))); i?g.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r):g.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r); } g.closePath(); };
 /* sticker sheet geometry: the hero disc, its fold line (normal n through P0), three small dots */
-const a_stk=(w,h)=>{ const R=w*.4, cx=w*.47, cy=h*.455, th=38*PI/180, n=[Math.cos(th),Math.sin(th)], d=R*.47; return {R,cx,cy,n,P0:[cx+n[0]*d,cy+n[1]*d],dots:[[w*.12,h*.885,w*.055],[w*.255,h*.885,w*.055],[w*.39,h*.885,w*.055]]}; };
 /* 24 h dial: 48 bins from the inner ring r0 to the outer r1, midnight at the top, clockwise */
 const a_dial=(w,h)=>{ const cx=w*.29, cy=h*.5, r1=h*.35, r0=h*.11, val=i=>clamp(.52-.34*Math.cos(TAU*(i-6)/48)+.09*Math.sin(i*.9+.4)+.05*Math.sin(i*2.3),.08,.97), V=[...Array(48)].map((_,i)=>val(i)), lo=V.indexOf(Math.min(...V)), hi=V.indexOf(Math.max(...V)), hm=i=>String(i>>1).padStart(2,'0')+(i&1?':30':':00');
   return {cx,cy,r0,r1,now:39,val,lo,hi,hm,fmt:i=>val(i).toFixed(2),ang:i=>i/48*TAU-PI/2}; };
@@ -1090,24 +1033,9 @@ const a_dial=(w,h)=>{ const cx=w*.29, cy=h*.5, r1=h*.35, r0=h*.11, val=i=>clamp(
 const a_fig=(w,h)=>{ const x0=w*.1, x1=w*.9, base=h*.86, top=h*.36, sg=(t,c,s_)=>Math.exp(-((t-c)/s_)*((t-c)/s_));
   const d=t=>{ const y25=205+165*sg(t,.56,.2)+16*Math.sin(t*TAU*6.5+.7)+9*Math.sin(t*TAU*17+.3); return [y25,y25+105*sstep(.355,.43,t)*sg(t,.6,.3)+11*Math.sin(t*TAU*9+2)*sstep(.355,.43,t)]; };
   return {x0,x1,base,top,d,t:X=>clamp((X-x0)/(x1-x0),0,1),Y:v=>base-(base-top)*v/600,xa:x0+(x1-x0)*.36}; };
-const a_mark=(g,cx,cy,d,shape='compass',text='')=>sub(g,cx-d/2,cy-d/2,d,d,(g,a,b)=>dieOf(g,a,b,{size:1,shape,text}));
 /* type set on an arc, upright: mid = center angle, dir 1 = over the top (clockwise), −1 = under the bottom */
-const a_ring=(g,cx,cy,r,str,fs,mid,dir,track=0,weight=800)=>{ g.font=`${weight} ${fs}px Archivo, "Helvetica Neue", Arial, sans-serif`; g.textBaseline='middle'; const cs=[...str], ws=cs.map(ch=>g.measureText(ch).width+track), tot=ws.reduce((a,b)=>a+b,0)-track; let a=mid-dir*tot/2/r;
-  cs.forEach((ch,k)=>{ const ac=a+dir*(ws[k]-track)/2/r; g.save(); g.translate(cx+Math.cos(ac)*r,cy+Math.sin(ac)*r); g.rotate(ac+dir*PI/2); g.fillText(ch,-(ws[k]-track)/2,0); g.restore(); a+=dir*ws[k]/r; }); };
 /* a bicycle chainring: n teeth, a bore, four bolt holes (evenodd) */
-const a_chainring=(g,cx,cy,R,n=30)=>{ g.beginPath(); const N=n*16; for(let i=0;i<=N;i++){ const a=i/N*TAU, f=(a/TAU*n)%1, r=R*(f<.32?1:f<.5?1-.13*sstep(.32,.5,f):f<.82?.87:.87+.13*sstep(.82,1,f)); i?g.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r):g.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r); } g.closePath();
-  g.moveTo(cx+R*.56,cy); g.arc(cx,cy,R*.56,0,TAU); for(let k=0;k<4;k++){ const a=k*PI/2+PI/4, x=cx+Math.cos(a)*R*.7, y=cy+Math.sin(a)*R*.7; g.moveTo(x+R*.055,y); g.arc(x,y,R*.055,0,TAU); } g.fill('evenodd'); };
 /* blood-orange cross-section for the halftone label: a tone image (0 paper … 1 solid), computed per screen site */
-const a_ORG=(w,h)=>({cx:w*.6,cy:h*.95,R:w*.62,n:11,rot:.06});
-const a_orange=(u,v,q,s=5)=>{ const dx=u-q.cx, dy=v-q.cy, rp=Math.hypot(dx,dy), r=rp/q.R; if(r>1.004) return 0; const edge=clamp((q.R-rp)/1.2+.5,0,1);
-  if(r>.905){ const pore=FX.gnoise(u/4.2,v/4.2,s+3), oil=sstep(.62,.8,FX.gnoise(u/7.5,v/7.5,s+4)); return edge*clamp(.8+.16*(pore-.5)*2-.42*oil,.05,.97); }
-  if(r>.855) return .07+.05*FX.gnoise(u/6,v/6,s+5);  // the pith: almost paper
-  const a=Math.atan2(dy,dx)+q.rot, seg=TAU/q.n, ai=((a%seg)+seg)%seg, k=Math.floor((a-ai)/seg+.5), wob=.012*Math.sin(r*9+k*1.7), mem=Math.min(ai,seg-ai)*rp+wob*q.R, mw=1.3+5.5*(1-r);
-  if(mem<mw||r>.835||r<.055) return .1+.04*FX.gnoise(u/5,v/5,s+6);  // membranes, the rim of each segment, the core
-  // juice vesicles: teardrops elongated along the radius, each its own tone; the flesh darkens toward the rind
-  const ra=r*q.R/17, ta=(a*r*q.R)/8.5, iv=Math.floor(ta+(Math.floor(ra)%2)*.5), fr=ta+(Math.floor(ra)%2)*.5-iv, fv=ra-Math.floor(ra), dv=Math.hypot((fr-.5)*1.9,(fv-.5)*1.05);
-  const body=1-sstep(.42,.56,dv), tone=.38+.32*hash(iv,Math.floor(ra),s)+.18*sstep(.25,.8,r);
-  return clamp(tone*(.55+.45*body)+.08*(FX.gnoise(u/30,v/30,s+7)-.5),.12,.94); };
 /* embroidery runs layered on one cloth: each run's light relative to the bare cloth (its pucker, holes and shadows)
    multiplies what is already sewn; inside its own threads it replaces it */
 const a_sew=(base,R,bare)=>{ const lin=R.lin, A=R.ink; for(let i=0,k=0;i<A.length;i++,k+=3){ const a=Math.min(1,A[i]);
@@ -1276,10 +1204,8 @@ const b3_lab=(g,t,x,y,fs,o={})=>{ const f=Math.max(9,fs); return typeAt(g,String
 const b3_snap=(g,v,lw,ax)=>{ const T=g.getTransform(), k=ax?T.d:T.a, o=ax?T.f:T.e, n=Math.max(1,Math.round(lw*k)), a=Math.round((v-lw/2)*k+o); return [(a-o)/k,n/k]; };
 const b3_hr=(g,x0,x1,y,lw=1)=>{ const [a,t]=b3_snap(g,y,Math.max(1,lw),1); g.fillRect(x0,a,x1-x0,t); };
 const b3_vr=(g,x,y0,y1,lw=1)=>{ const [a,t]=b3_snap(g,x,Math.max(1,lw),0); g.fillRect(a,y0,t,y1-y0); };
-const b3_rect=(g,x,y,w_,h_,lw=1)=>{ b3_hr(g,x-lw/2,x+w_+lw/2,y,lw); b3_hr(g,x-lw/2,x+w_+lw/2,y+h_,lw); b3_vr(g,x,y,y+h_,lw); b3_vr(g,x+w_,y,y+h_,lw); };
 /* one typed field, centered in a box (CSS px) */
 const b3_typed=(g,text,cx,cy,bw,bh,fs,seed,align)=>sub(g,cx-bw/2,cy-bh/2,bw,bh,(g,a,b)=>strikes(g,a,b,{text,fsize:fs,seed,exhaust:0,lead:1.25,align}));
-const b3_arrow=(g,x,y,dx,dy,L,W_)=>{ const l=Math.hypot(dx,dy)||1, ux=dx/l, uy=dy/l; g.beginPath(); g.moveTo(x,y); g.lineTo(x-ux*L-uy*W_,y-uy*L+ux*W_); g.lineTo(x-ux*L+uy*W_,y-uy*L-ux*W_); g.closePath(); g.fill(); };
 const b3_line=(g,pts,lw)=>{ g.lineWidth=lw; g.beginPath(); pts.forEach(([a,b],i)=>i?g.lineTo(a,b):g.moveTo(a,b)); g.stroke(); };
 
 /* U · timetable: a printed form (rules, stop names, the line number) filled in on a two-color ribbon each season.
