@@ -197,7 +197,7 @@ function makePuck(host,mini){ const disc=h('div',{class:'disc',role:'slider',tab
 
 /* ── racks, one per section ── */
 const SECTS=SET.sections||[{id:'all',title:SET.short}]; const secOf=e=>e.section||SECTS[0].id;
-const racks={}; SECTS.forEach((sc,i)=>{ const r=h('section',{class:'fs-rack','aria-label':sc.title}); racks[sc.id]=r; if(SECTS.length>1) live.append(h('div',{class:'fs-rackh',id:i?null:'sec-'+sc.id},h('span',{class:'code'},String(i+1).padStart(2,'0')),h('b',null,sc.title),h('span',{class:'bl'},sc.blurb||''))); live.append(r); });
+const racks={}; SECTS.forEach((sc,i)=>{ const r=h('section',{class:'fs-rack','aria-label':sc.title}); racks[sc.id]=r; if(SECTS.length>1) live.append(h('div',{class:'fs-rackh'},h('span',{class:'code'},String(i+1).padStart(2,'0')),h('b',null,sc.title),h('span',{class:'bl'},sc.blurb||''))); live.append(r); });
 SET.effects.forEach(e=>{ const rack=racks[secOf(e)]||racks[SECTS[0].id]; const c=h('canvas',{class:'fs-cv','aria-label':e.name}); const st=h('span',{class:'st'},'—'); const fr=h('div',{class:'fs-frame'},c);
   rack.append(h('a',{class:'fs-cell',href:'#'+e.id},fr,h('div',{class:'cap'},h('span',{class:'code'},e.code),h('b',null,e.name),h('span',{class:'role'},classOf(e)),st)));
   register('r:'+e.id,c,fr,fxJob(e.id,c,()=>'image',{proof:()=>isStock(e)}),(s)=>{ st.textContent=fmtN(s.marks)+' '+s.unit; },3); });
@@ -229,7 +229,7 @@ const VIEWS=[['image','image'],['separation','ink'],['stock','stock'],['mask','m
 const DISTS=[['1:1',1,'as rendered (≈ 45 cm)'],['60 cm',.75,'arm\'s length'],['1.5 m',.3,'across a table'],['4 m',.11,'across a room']];
 let lastSec=null;
 SET.effects.forEach(e=>{
-  if(SECTS.length>1&&secOf(e)!==lastSec){ lastSec=secOf(e); const sc=SECTS.find(x=>x.id===lastSec)||{title:lastSec}; if(SECTS.indexOf(sc)>0) live.append(h('div',{class:'fs-secth',id:'sec-'+lastSec},h('span',{class:'code'},'Section · '+String(SECTS.indexOf(sc)+1).padStart(2,'0')),h('h2',null,sc.title),sc.blurb?h('p',null,sc.blurb):null)); }
+  if(SECTS.length>1&&secOf(e)!==lastSec){ lastSec=secOf(e); const sc=SECTS.find(x=>x.id===lastSec)||{title:lastSec}; live.append(h('div',{class:'fs-secth',id:'sec-'+lastSec},h('span',{class:'code'},'Section · '+String(SECTS.indexOf(sc)+1).padStart(2,'0')),h('h2',null,sc.title),sc.blurb?h('p',null,sc.blurb):null)); }
   const B={view:'image',dist:1,proof:isStock(e),wedge:null,pin:null}; const id=e.id;
   const cv=h('canvas',{class:'fs-cv','aria-label':e.name+' plate'}), stat=h('div',{class:'fs-stat'}), dials=h('div',{class:'fs-dials'});
   const distC=h('canvas',{class:'fs-distc',hidden:true}), puckHost=h('div',{class:'fs-puckhost'});
