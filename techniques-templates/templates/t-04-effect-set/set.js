@@ -1358,16 +1358,23 @@ const a4_wib=(g,i,cx,cy,s)=>{ const k=s/170, X=x=>cx+(x-150)*k, Y=y=>cy+(y-150)*
   if(i===1){ L(70,80,230,220); L(230,80,70,220); dot(150,150,6); }
   else if(i===2){ g.beginPath(); g.moveTo(X(135),Y(100)); g.lineTo(X(135),Y(186)); g.arc(X(150),Y(186),15*k,PI,0,true); g.lineTo(X(165),Y(100)); g.stroke(); L(150,201,150,242);
     g.lineWidth=lw*.75; [24,33,42].forEach(r=>{ g.beginPath(); g.arc(X(150),Y(96),r*k,PI*1.15,PI*1.85); g.stroke(); }); }
-  else if(i===4){ const P=[[92,118],[150,68],[202,90],[222,132],[200,198],[128,204],[92,186]]; g.beginPath(); P.forEach(([a,b],j)=>j?g.lineTo(X(a),Y(b)):g.moveTo(X(a),Y(b))); g.closePath(); g.fill();
-    g.globalCompositeOperation='destination-out'; g.lineWidth=Math.max(1,lw*.9); L(150,68,162,140,200,198); L(162,140,92,186); L(162,140,222,132); g.globalCompositeOperation='source-over';
-    g.lineWidth=lw*.8; [[124,222,182,214,156,234],[114,236,198,224,158,256],[106,250,214,236,162,278]].forEach(([a,b,c,d,e,f])=>{ g.beginPath(); g.moveTo(X(a),Y(b)); g.quadraticCurveTo(X(e),Y(f),X(c),Y(d)); g.stroke(); }); }
+  else if(i===4){ const P=[[92,118],[150,68],[202,90],[222,132],[200,198],[128,204],[92,186]], path=Q=>{ g.beginPath(); Q.forEach(([a,b],j)=>j?g.lineTo(X(a),Y(b)):g.moveTo(X(a),Y(b))); g.closePath(); }; path(P); g.fill();
+    g.globalCompositeOperation='destination-out'; g.lineWidth=Math.max(1,lw*.9); L(150,68,162,140,200,198); L(162,140,92,186); L(162,140,222,132);
+    // conchoidal fracture: fine ripples spreading from the point of impact on the left edge, cut into the left facet only
+    g.save(); path([[92,118],[150,68],[162,140],[92,186]]); g.clip(); g.lineWidth=Math.max(.6,lw*.5); for(let r=9;r<96;r+=Math.max(6.5,2.1/k)){ g.beginPath(); g.arc(X(92),Y(152),r*k,-PI*.5,PI*.5); g.stroke(); } g.restore(); g.globalCompositeOperation='source-over'; }
   else if(i===5){ g.lineWidth=lw*.6; [60,150,240].forEach(x=>L(x,86,x,214)); g.lineWidth=lw; [[2,122],[3,178]].forEach(([f,b])=>{ g.beginPath(); for(let x=60;x<=240;x+=1){ const t=(x-60)/180, y=b-24*Math.sin(TAU*f*t); x===60?g.moveTo(X(x),Y(y)):g.lineTo(X(x),Y(y)); } g.stroke(); }); }
   else if(i===6){ const P=[...Array(9)].map((_,j)=>{ const a=-PI/2+j*TAU/9; return [150+84*Math.cos(a),150+84*Math.sin(a)]; }); g.lineWidth=lw*.55; for(let j=0;j<9;j++) L(...P[j],...P[(j+1)%9]);
     g.lineWidth=lw; [[],[5*k,4*k],[1.2*k,3.6*k]].forEach((d,t)=>{ g.setLineDash(d); L(...P[t],...P[t+3],...P[t+6],...P[t]); }); g.setLineDash([]); P.forEach(([a,b])=>dot(a,b,4.2)); }
   else if(i===7){ const w_=19, gp=4.5, x0=150-(8*w_+7*gp)/2; g.lineWidth=lw*.85; for(let j=0;j<8;j++){ const x=x0+j*(w_+gp); if(j===3){ g.fillRect(X(x),Y(132),w_*k,36*k); } else g.strokeRect(X(x),Y(132),w_*k,36*k); if(j%4===0) L(x+w_/2,116,x+w_/2,124); } }
-  else if(i===8){ g.lineWidth=lw*.6; for(let j=1;j<=13;j++){ g.beginPath(); g.arc(X(150),Y(150),88*Math.sqrt(j/13)*k,0,TAU); g.stroke(); } dot(150,150,4.5); } };
-/* woven linen for the blind die: over / under cells, the study's own rule, in a square of side s */
-const a4_linen=(g,cx,cy,s)=>{ const n=7, c=s*.86/n, gu=c*.16, x0=cx-c*n/2, y0=cy-c*n/2; for(let j=0;j<n;j++) for(let i=0;i<n;i++){ const x=x0+i*c, y=y0+j*c; if((i+j)%2===0) g.fillRect(x+gu,y+gu*.5,c-2*gu,c-gu); else g.fillRect(x+gu*.5,y+gu,c-gu,c-2*gu); } };
+  else if(i===8){ const A=[50,178], Cc=[150,104], B=[250,178], N=240, pts=[]; for(let j=0;j<=N;j++) pts.push(e_q(A,Cc,B,j/N)); const cum=[0]; for(let j=1;j<=N;j++) cum.push(cum[j-1]+Math.hypot(pts[j][0]-pts[j-1][0],pts[j][1]-pts[j-1][1]));
+    g.lineWidth=lw*1.2; g.beginPath(); pts.forEach(([a,b],j)=>j?g.lineTo(X(a),Y(b)):g.moveTo(X(a),Y(b))); g.stroke(); const Lt=cum[N], ns=7, sz=10;
+    for(let m=0;m<ns;m++){ const at=Lt*(m+.5)/ns; let j=1; while(j<N&&cum[j]<at) j++; const p=pts[j], d=e_qt(A,Cc,B,j/N), nx=d[1], ny=-d[0]; // normal on the convex (upper) side
+      g.beginPath(); if(m%2===0){ g.moveTo(X(p[0]-d[0]*sz),Y(p[1]-d[1]*sz)); g.lineTo(X(p[0]+nx*sz*1.25),Y(p[1]+ny*sz*1.25)); g.lineTo(X(p[0]+d[0]*sz),Y(p[1]+d[1]*sz)); g.closePath(); }
+      else { const a0=Math.atan2(d[1],d[0]); g.arc(X(p[0]),Y(p[1]),sz*.95*k,a0,a0+PI,true); g.closePath(); } g.fill(); } } };
+/* woven linen for the blind die: a plain weave. Warp floats (vertical) and weft floats (horizontal) alternate cell by cell, so each row
+   is offset by one from the last: over, under, over */
+const a4_linen=(g,cx,cy,s)=>{ const n=s>100?9:7, c=s*.9/n, x0=cx-c*n/2, y0=cy-c*n/2, tw=c*.5, fl=c*.86, cap=(x,y,ww,hh)=>{ rrect(g,x-ww/2,y-hh/2,ww,hh,Math.min(ww,hh)/2); g.fill(); };
+  for(let j=0;j<n;j++) for(let i=0;i<n;i++){ const x=x0+(i+.5)*c, y=y0+(j+.5)*c; if((i+j)%2===0) cap(x,y,tw,fl); else cap(x,y,fl,tw); } };
 
 const usages=[
   /* ═══ stationery & brand ═══ */
@@ -1914,12 +1921,12 @@ const usages=[
     run(P,W,H,dpr,x){ const w=W/dpr,h=H/dpr,q=a4_CO(w,h),C=x.clips,E=P('fx-02-ink-edge');
       return chain([{fx:inkEdge,o:Object.assign({},E,a4_BORDER),x:{clip:C.border}},{fx:inkEdge,o:Object.assign({},E,a4_DIM),x:{clip:C.dim}},{fx:inkEdge,o:E,x:{clip:C.black}},{fx:stipple,o:P('fx-01-stipple'),x:{field:(u,v,L)=>a4_coField(q,u,v,L)}}],W,H,dpr,x); } },
   { id:'c-respiration', job:'concept', title:'Respiration rail · 13 of 21 breaths, stitched', sub:'The RESPIRATION reading stood on end and sewn into white shirting: 21 breath cells, breath 1 at the bottom. The 13 taken are satin-filled in --c258, the color the product gives a lit respiration cell. The 8 still to come are only outlined, in split stitch, in a gray thread. The rail renews at 21. The count is a placeholder, and the labels keep the product\'s 7 px caps grammar, scaled up to read.', uses:['fx-10-embroidery','fx-02-ink-edge','fx-04-weave'], aspect:'9/16', light:{az:222,el:30},
-    overrides:{'fx-04-weave':Object.assign({},SHIRT,{wL:.93,fL:.96,wC:.004,fC:.003,depth:.8}),
-      'fx-10-embroidery':{stock:'cloth',count:30,angle:82,maxFloat:72,stagger:.25,outline:'none',loft:.6,twist:.22,sheen:.8,pull:.1,yL:.542,yC:.226,yh:311.4,seed:29},
+    overrides:{'fx-04-weave':Object.assign({},SHIRT,{warp:66,weft:62,fill:.96,slub:0,hair:.03,irregular:.02,dye:0,wear:0,depth:.35,shadow:.3,wL:.94,fL:.96,wC:.003,fC:.002}),
+      'fx-10-embroidery':{stock:'cloth',count:38,angle:82,maxFloat:72,stagger:.15,outline:'none',loft:.5,twist:.32,sheen:.36,pull:.06,yL:.542,yC:.226,yh:311.4,seed:29},
       'fx-02-ink-edge':a4_ink(a4_TEXT,'cloth',1.5)},
     clips:{
       lit:(g,w,h)=>{ const q=a4_RS(w,h), K=a4_rsKey(w,h); for(let i=0;i<A4_LIT;i++) g.fillRect(q.x0,q.by(i),q.bw,q.bh); g.fillRect(K.x,K.y[0]-K.sh/2,K.sw,K.sh); },
-      open:(g,w,h)=>{ const q=a4_RS(w,h), K=a4_rsKey(w,h), lw=1.05; g.strokeStyle='#fff'; for(let i=A4_LIT;i<A4_CYCLE;i++) a4_frame(g,q.x0,q.by(i),q.bw,q.bh,lw); a4_frame(g,K.x,K.y[1]-K.sh/2,K.sw,K.sh,lw); },
+      open:(g,w,h)=>{ const q=a4_RS(w,h), K=a4_rsKey(w,h), lw=.8; g.strokeStyle='#fff'; for(let i=A4_LIT;i<A4_CYCLE;i++) a4_frame(g,q.x0,q.by(i),q.bw,q.bh,lw); a4_frame(g,K.x,K.y[1]-K.sh/2,K.sw,K.sh,lw); },
       dim:(g,w,h)=>{ const q=a4_RS(w,h), K=a4_rsKey(w,h), f=q.fs, tx=K.x+K.sw+f*.9;
         a4_lab(g,'Respiration',q.m,q.m+f,f); a4_labR(g,'Folio 02',w-q.m,q.m+f,f);
         [[0,'1'],[A4_LIT-1,'13'],[A4_CYCLE-1,'21']].forEach(([i,t])=>{ a4_labR(g,t,q.x0-f*.7,q.cy(i)+f*.36,f); });
@@ -1932,7 +1939,7 @@ const usages=[
         [[0],[A4_LIT-1],[A4_CYCLE-1]].forEach(([i])=>b3_hr(g,q.x0-f*.45,q.x0-f*.1,q.cy(i),1)); } },
     run(P,W,H,dpr,x){ const C=x.clips, E=P('fx-10-embroidery'), I=P('fx-02-ink-edge');
       const base=chain([{fx:inkEdge,o:Object.assign({},I,a4_DIM),x:{clip:C.dim}},{fx:inkEdge,o:I,x:{clip:C.black}}],W,H,dpr,x), bare=base.lin, lin=Float32Array.from(bare), ink=new Float32Array(W*H); let n=0;
-      [[E,C.lit],[Object.assign({},E,{count:40,angle:45,outline:'split',oLen:2.4,yL:.66,yC:.004,yh:280,sheen:.55,pull:0,seed:31}),C.open]].forEach(([o,die])=>{ const R=embroidery.run(o,W,H,dpr,{S:x.S,alb:base.alb,lf:base.lf,clips:{die}}); a_sew(lin,R,bare); for(let i=0;i<ink.length;i++) ink[i]=Math.max(ink[i],R.ink[i]); n+=R.marks; });
+      [[E,C.lit],[Object.assign({},E,{count:50,angle:45,outline:'split',oLen:2.3,loft:.26,twist:.5,yL:.64,yC:.004,yh:280,sheen:.2,pull:0,seed:31}),C.open]].forEach(([o,die])=>{ const R=embroidery.run(o,W,H,dpr,{S:x.S,alb:base.alb,lf:base.lf,clips:{die}}); a_sew(lin,R,bare); for(let i=0;i<ink.length;i++) ink[i]=Math.max(ink[i],R.ink[i]); n+=R.marks; });
       return Object.assign({},base,{lin,ink,mask:ink,marks:n,markUnit:'stitches'}); } },
   { id:'c-transcript', job:'concept', title:'Session docket · a conversation, typed', sub:'A Mindgut session as a typed docket. Each turn carries the product\'s left rule: --c147 blue for the person (.msg.user) and --c258 purple for Mir (.msg.assistant). The rule is struck through the colored half of the ribbon, one bar per line. Times, the turn count and the duration are typed from the session itself, and one slip is struck out with x\'s. The session is fictional and the text is invented.', uses:['fx-07-typewriter','fx-03-paper-tooth'], aspect:'2/3', light:{az:220,el:30},
     overrides:{'fx-03-paper-tooth':{depth:.035,aniso:1.6,fibers:1.6,pits:.4,form:.2,fRaise:.45,fWidth:.4,mShape:'none'},
@@ -1958,7 +1965,7 @@ const usages=[
         A4_WIB.forEach(([c],i)=>{ const t=q.nar?c:String(i+1).padStart(2,'0')+' · '+c, ty=q.top(i)+q.ch-q.cap+f*1.15; a4_lab(g,t,q.cx(i)-a4_labW(g,t,f)/2,ty,f); }); },
       black:(g,w,h)=>{ const q=a4_WB(w,h); typeAt(g,'What I\'d Be',q.m-w*.003,q.m+w*.05*.72,Math.max(17,w*.05),{weight:800,track:-w*.0012});
         b3_hr(g,q.m,w-q.m,q.y0,1); b3_hr(g,q.m,w-q.m,q.y1,1); g.strokeStyle='#fff';
-        A4_WIB.forEach(([,n],i)=>{ typeAt(g,n,q.cx(i),q.top(i)+q.ch-q.cap+q.fc*1.6+q.fn*1.1,q.fn,{weight:700,align:'center',maxW:q.cw*.94}); if(i!==0&&i!==3) a4_wib(g,i,q.cx(i),q.my(i)-(i===4?q.s*.08:0),q.s); }); } },
+        A4_WIB.forEach(([,n],i)=>{ typeAt(g,n,q.cx(i),q.top(i)+q.ch-q.cap+q.fc*1.6+q.fn*1.1,q.fn,{weight:700,align:'center',maxW:q.cw*.94}); if(i!==0&&i!==3) a4_wib(g,i,q.cx(i),q.my(i)+(i===4?q.s*.06:i===8?q.s*.05:0),q.s); }); } },
     run(P,W,H,dpr,x){ const w=W/dpr,h=H/dpr,q=a4_WB(w,h),C=x.clips,E=P('fx-02-ink-edge'),F=P('fx-08-foil');
       return chain([{fx:deboss,o:P('fx-06-deboss'),x:{clips:{die:C.blind}}},{fx:inkEdge,o:Object.assign({},E,a4_BORDER),x:{clip:C.pale}},{fx:inkEdge,o:Object.assign({},E,a4_DIM),x:{clip:C.dim}},{fx:inkEdge,o:E,x:{clip:C.black}},
         {fx:foil,o:Object.assign({},F,{camX:clamp(q.cx(0)/w,.1,.9),camY:clamp(q.my(0)/h,.1,.9)}),x:{clips:{die:C.foil}},top:true}],W,H,dpr,x); } }
