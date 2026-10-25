@@ -1,0 +1,733 @@
+{
+ "id": "fx-05-graphite",
+ "code": "FX-05",
+ "name": "Graphite",
+ "role": "mark · pencil",
+ "section": "surprise",
+ "set": "Set 01",
+ "sub": "Pencil hatching laid in strokes with tapered pressure. Graphite only lands on the tooth peaks the lead touches — and graphite is a metal: burnished, it gleams. Drag the light and the dark strokes turn silver.",
+ "entry": {
+  "scripts": [
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/fx.js",
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/set.js"
+  ],
+  "globals": [
+   "FX",
+   "FXSET"
+  ],
+  "find": "FXSET.effects.find(e => e.id === 'fx-05-graphite')",
+  "call": "fx.run(o, W, H, dpr, { S })",
+  "standalone": "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/lift/fx-05-graphite.html"
+ },
+ "signature": {
+  "in": {
+   "o": "params object — keys below; every length in CSS px",
+   "W": "device px width",
+   "H": "device px height",
+   "dpr": "device px per CSS px (density is physical: marks per CSS px²)",
+   "x": {
+    "S": "params of every effect keyed by id; the stock this prints on is read from S[printsOn]",
+    "umask": "optional: clips.umask — a typed or image mask (mShape type | image)"
+   }
+  },
+  "out": {
+   "lin": "Float32Array W·H·3, linear-light sRGB (encode with FX.toRGBA(R,\"image\",W,H))",
+   "ink": "Float32Array W·H, absorbance / coverage (FX.toRGBA(R,\"ink\",…) = film positive)",
+   "stock": "Float32Array W·H, stock height (FX.toRGBA(R,\"stock\",…) = normalized height map)",
+   "mask": "Float32Array W·H",
+   "marks": "int — count of marks",
+   "markUnit": "string"
+  }
+ },
+ "light": {
+  "global": "FX.LIGHT",
+  "default": {
+   "az": 225,
+   "el": 34
+  },
+  "note": "az = direction the light comes FROM (screen degrees; 0 = right, 90 = below); el = elevation above the sheet"
+ },
+ "printsOn": "fx-03-paper-tooth",
+ "deterministic": "yes — every random draw is a hash of (position, seed); same inputs → same pixels in the same engine",
+ "params": [
+  {
+   "key": "angle",
+   "label": "Hatch angle",
+   "group": "density",
+   "type": "range",
+   "default": 38,
+   "min": -90,
+   "max": 90,
+   "step": 1,
+   "unit": "°",
+   "note": "direction of the first layer"
+  },
+  {
+   "key": "spacing",
+   "label": "Spacing",
+   "group": "density",
+   "type": "range",
+   "default": 1.9,
+   "min": 0.8,
+   "max": 10,
+   "step": 0.05,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 0.8,
+     "hi": 1.2,
+     "why": "merges to gray"
+    }
+   ],
+   "note": "distance between strokes"
+  },
+  {
+   "key": "layers",
+   "label": "Layers",
+   "group": "density",
+   "type": "range",
+   "default": 2,
+   "min": 1,
+   "max": 4,
+   "step": 1,
+   "note": "cross-hatch layers; layer k prints only where value > k / layers"
+  },
+  {
+   "key": "cross",
+   "label": "Cross angle",
+   "group": "density",
+   "type": "range",
+   "default": 78,
+   "min": 10,
+   "max": 90,
+   "step": 1,
+   "unit": "°",
+   "note": "offset between layers"
+  },
+  {
+   "key": "len",
+   "label": "Stroke length",
+   "group": "density",
+   "type": "range",
+   "default": 70,
+   "min": 6,
+   "max": 300,
+   "step": 1,
+   "unit": "px",
+   "note": "mean stroke length"
+  },
+  {
+   "key": "jit",
+   "label": "Jitter",
+   "group": "density",
+   "type": "range",
+   "default": 0.35,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "spacing and length irregularity"
+  },
+  {
+   "key": "wobble",
+   "label": "Wobble",
+   "group": "density",
+   "type": "range",
+   "default": 0.25,
+   "min": 0,
+   "max": 1.5,
+   "step": 0.01,
+   "unit": "px",
+   "note": "hand tremor across the stroke"
+  },
+  {
+   "key": "lead",
+   "label": "Lead width",
+   "group": "density",
+   "type": "range",
+   "default": 0.75,
+   "min": 0.3,
+   "max": 2.5,
+   "step": 0.01,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 1.6,
+     "hi": 2.5,
+     "why": "charcoal"
+    }
+   ]
+  },
+  {
+   "key": "pressure",
+   "label": "Pressure",
+   "group": "density",
+   "type": "range",
+   "default": 0.95,
+   "min": 0.3,
+   "max": 1,
+   "step": 0.01,
+   "note": "peak pressure in a stroke"
+  },
+  {
+   "key": "taper",
+   "label": "Taper",
+   "group": "density",
+   "type": "range",
+   "default": 0.6,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "pressure lift at both ends"
+  },
+  {
+   "key": "source",
+   "label": "Value field",
+   "group": "dropoff",
+   "type": "select",
+   "default": "linear",
+   "options": [
+    "linear",
+    "radial",
+    "noise"
+   ]
+  },
+  {
+   "key": "vAngle",
+   "label": "Ramp angle",
+   "group": "dropoff",
+   "type": "range",
+   "default": 0,
+   "min": 0,
+   "max": 360,
+   "step": 1,
+   "unit": "°",
+   "when": {
+    "source": [
+     "linear"
+    ]
+   }
+  },
+  {
+   "key": "ease",
+   "label": "Dropoff curve",
+   "group": "dropoff",
+   "type": "ease",
+   "default": [
+    "smooth",
+    2
+   ],
+   "curves": [
+    "linear",
+    "smooth",
+    "smoother",
+    "in",
+    "out",
+    "inout",
+    "expo",
+    "sigmoid"
+   ],
+   "note": "value from → to across the field"
+  },
+  {
+   "key": "from",
+   "label": "From",
+   "group": "dropoff",
+   "type": "range",
+   "default": 0,
+   "min": 0,
+   "max": 1,
+   "step": 0.01
+  },
+  {
+   "key": "to",
+   "label": "To",
+   "group": "dropoff",
+   "type": "range",
+   "default": 1,
+   "min": 0,
+   "max": 1,
+   "step": 0.01
+  },
+  {
+   "key": "fScale",
+   "label": "Field scale",
+   "group": "dropoff",
+   "type": "range",
+   "default": 160,
+   "min": 20,
+   "max": 500,
+   "step": 1,
+   "unit": "px",
+   "when": {
+    "source": [
+     "noise"
+    ]
+   }
+  },
+  {
+   "key": "stock",
+   "label": "Prints on",
+   "group": "stock",
+   "type": "select",
+   "default": "paper",
+   "options": [
+    "paper",
+    "cloth",
+    "smooth"
+   ],
+   "note": "paper = FX-03 live, cloth = FX-04 live, smooth = no substrate (film-splitting noise only). Tune the stock and this plate redraws."
+  },
+  {
+   "key": "bite",
+   "label": "Stock bite",
+   "group": "stock",
+   "type": "range",
+   "default": 0.6,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "when": {
+    "stock": [
+     "paper",
+     "cloth"
+    ]
+   },
+   "note": "how much the stock height (vs film-splitting noise) decides where ink lands"
+  },
+  {
+   "key": "breakup",
+   "label": "Break-up ↔ thin",
+   "group": "stock",
+   "type": "range",
+   "default": 0.9,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "limits": [
+    {
+     "lo": 0,
+     "hi": 0.3,
+     "why": "reads as a gradient"
+    }
+   ],
+   "note": "1 = ink film breaks into marks on the peaks as pressure falls; 0 = the film stays whole and thins to tone"
+  },
+  {
+   "key": "starve",
+   "label": "Starve",
+   "group": "stock",
+   "type": "range",
+   "default": 0.02,
+   "min": 0,
+   "max": 0.3,
+   "step": 0.002,
+   "note": "the lowest share of the surface never takes ink — pinholes in the solid, placed by the paper's valleys and pits"
+  },
+  {
+   "key": "mottle",
+   "label": "Mottle",
+   "group": "stock",
+   "type": "range",
+   "default": 0.1,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "when": {
+    "stock": [
+     "paper"
+    ]
+   },
+   "note": "paper formation (its low-frequency cloudiness) varying the film thickness"
+  },
+  {
+   "key": "split",
+   "label": "Film split",
+   "group": "stock",
+   "type": "range",
+   "default": 0.7,
+   "min": 0.5,
+   "max": 10,
+   "step": 0.1,
+   "unit": "px",
+   "note": "clump size of the film-splitting noise (the roller's own speckle)"
+  },
+  {
+   "key": "gL",
+   "label": "Graphite · L",
+   "group": "color",
+   "type": "range",
+   "default": 0.3,
+   "min": 0,
+   "max": 1,
+   "step": 0.005,
+   "ink": "g",
+   "note": "OKLCH lightness (0 black … 1 white)"
+  },
+  {
+   "key": "gC",
+   "label": "Graphite · C",
+   "group": "color",
+   "type": "range",
+   "default": 0.004,
+   "min": 0,
+   "max": 0.37,
+   "step": 0.002,
+   "ink": "g",
+   "limits": [
+    {
+     "lo": 0.26,
+     "hi": 0.37,
+     "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+    }
+   ],
+   "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+  },
+  {
+   "key": "gh",
+   "label": "Graphite · h",
+   "group": "color",
+   "type": "range",
+   "default": 260,
+   "min": 0,
+   "max": 360,
+   "step": 0.5,
+   "unit": "°",
+   "ink": "g",
+   "note": "OKLCH hue angle"
+  },
+  {
+   "key": "density",
+   "label": "Deposit",
+   "group": "mixing",
+   "type": "range",
+   "default": 1,
+   "min": 0.2,
+   "max": 1,
+   "step": 0.01,
+   "note": "how opaque a full-pressure pass is"
+  },
+  {
+   "key": "sheen",
+   "label": "Sheen",
+   "group": "relief",
+   "type": "range",
+   "default": 0.55,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "limits": [
+    {
+     "lo": 0.8,
+     "hi": 1,
+     "why": "wet ink"
+    }
+   ],
+   "note": "specular strength of burnished graphite"
+  },
+  {
+   "key": "shin",
+   "label": "Gloss",
+   "group": "relief",
+   "type": "range",
+   "default": 22,
+   "min": 2,
+   "max": 120,
+   "step": 1,
+   "note": "specular exponent — tight = burnished, broad = matte"
+  },
+  {
+   "key": "burnish",
+   "label": "Burnish texture",
+   "group": "relief",
+   "type": "range",
+   "default": 0.35,
+   "min": 0,
+   "max": 1.5,
+   "step": 0.01,
+   "unit": "px",
+   "note": "micro-relief of the graphite deposit along the stroke (what catches the glints)"
+  },
+  {
+   "key": "mShape",
+   "label": "Shape",
+   "group": "mask",
+   "type": "select",
+   "default": "rect",
+   "options": [
+    "none",
+    "rect",
+    "ellipse",
+    "band",
+    "blob",
+    "type",
+    "image"
+   ],
+   "note": "the region the effect may occupy — type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)"
+  },
+  {
+   "key": "mText",
+   "label": "Mask text",
+   "group": "mask",
+   "type": "text",
+   "default": "Counted",
+   "when": {
+    "mShape": [
+     "type"
+    ]
+   },
+   "note": "set in Archivo 800, fit to the plate"
+  },
+  {
+   "key": "mInset",
+   "label": "Inset",
+   "group": "mask",
+   "type": "range",
+   "default": 26,
+   "min": 0,
+   "max": 120,
+   "step": 1,
+   "unit": "px",
+   "note": "distance from the plate edge to the mask edge"
+  },
+  {
+   "key": "mAmp",
+   "label": "Edge wander",
+   "group": "mask",
+   "type": "range",
+   "default": 8,
+   "min": 0,
+   "max": 40,
+   "step": 0.5,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 28,
+     "hi": 40,
+     "why": "above ~28 px the edge tears into islands"
+    }
+   ],
+   "note": "how far noise pushes the edge in and out"
+  },
+  {
+   "key": "mScale",
+   "label": "Wander scale",
+   "group": "mask",
+   "type": "range",
+   "default": 60,
+   "min": 4,
+   "max": 240,
+   "step": 1,
+   "unit": "px",
+   "note": "wavelength of the wander; small = ragged, large = drifting"
+  },
+  {
+   "key": "mRough",
+   "label": "Roughness",
+   "group": "mask",
+   "type": "range",
+   "default": 4,
+   "min": 1,
+   "max": 6,
+   "step": 1,
+   "unit": "oct",
+   "note": "octaves of edge noise — adds fine teeth without moving the large shape"
+  },
+  {
+   "key": "mFeather",
+   "label": "Feather",
+   "group": "mask",
+   "type": "range",
+   "default": 14,
+   "min": 0.5,
+   "max": 60,
+   "step": 0.5,
+   "unit": "px",
+   "note": "width over which coverage falls from 1 to 0"
+  },
+  {
+   "key": "mBite",
+   "label": "Bite",
+   "group": "mask",
+   "type": "range",
+   "default": 0,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "clumped dropouts that grow more likely toward the edge"
+  },
+  {
+   "key": "seed",
+   "label": "Seed",
+   "group": "seed",
+   "type": "range",
+   "default": 41,
+   "min": 1,
+   "max": 999,
+   "step": 1,
+   "note": "every random draw in the effect hangs off this one number"
+  }
+ ],
+ "defaults": {
+  "angle": 38,
+  "spacing": 1.9,
+  "layers": 2,
+  "cross": 78,
+  "len": 70,
+  "jit": 0.35,
+  "wobble": 0.25,
+  "lead": 0.75,
+  "pressure": 0.95,
+  "taper": 0.6,
+  "source": "linear",
+  "vAngle": 0,
+  "ease": [
+   "smooth",
+   2
+  ],
+  "from": 0,
+  "to": 1,
+  "fScale": 160,
+  "stock": "paper",
+  "bite": 0.6,
+  "breakup": 0.9,
+  "starve": 0.02,
+  "mottle": 0.1,
+  "split": 0.7,
+  "gL": 0.3,
+  "gC": 0.004,
+  "gh": 260,
+  "density": 1,
+  "sheen": 0.55,
+  "shin": 22,
+  "burnish": 0.35,
+  "mShape": "rect",
+  "mText": "Counted",
+  "mInset": 26,
+  "mAmp": 8,
+  "mScale": 60,
+  "mRough": 4,
+  "mFeather": 14,
+  "mBite": 0,
+  "seed": 41
+ },
+ "depsDefaults": {
+  "fx-03-paper-tooth": {
+   "scale": 1.1,
+   "oct": 3,
+   "fibers": 3,
+   "fLen": 14,
+   "fWidth": 0.4,
+   "pits": 1,
+   "pers": 0.42,
+   "ease": [
+    "in",
+    2.4
+   ],
+   "aniso": 2.2,
+   "form": 0.3,
+   "formScale": 60,
+   "fAngle": 6,
+   "fSpread": 0.4,
+   "depth": 0.12,
+   "diffuse": 0.45,
+   "fRaise": 0.45,
+   "pDepth": 0.35,
+   "paperL": 1,
+   "fDark": 0.014,
+   "pDark": 0.02,
+   "tL": 0.7,
+   "tC": 0,
+   "th": 250,
+   "tAmt": 0.5,
+   "mShape": "rect",
+   "mText": "Counted",
+   "mInset": 22,
+   "mAmp": 2.5,
+   "mScale": 28,
+   "mRough": 5,
+   "mFeather": 1.2,
+   "mMode": "speckle",
+   "lift": 1,
+   "mBite": 0,
+   "seed": 21
+  }
+ },
+ "presets": [
+  {
+   "name": "HB hatch",
+   "params": {}
+  },
+  {
+   "name": "6B cross",
+   "params": {
+    "layers": 3,
+    "lead": 1.1,
+    "pressure": 1,
+    "gL": 0.3,
+    "sheen": 0.85,
+    "spacing": 2.2
+   }
+  },
+  {
+   "name": "2H technical",
+   "params": {
+    "lead": 0.45,
+    "spacing": 1.4,
+    "wobble": 0.05,
+    "gL": 0.5,
+    "sheen": 0.35,
+    "layers": 1,
+    "jit": 0.05
+   }
+  },
+  {
+   "name": "scribble",
+   "params": {
+    "layers": 2,
+    "cross": 63,
+    "len": 26,
+    "wobble": 0.8,
+    "spacing": 2.6,
+    "angle": -20
+   }
+  }
+ ],
+ "recipe": [
+  "Hatch strokes along an angle at a spacing; extra layers cross at an offset angle and only print where the value field asks for more tone.",
+  "Each stroke is a wobbling polyline with pressure tapering at both ends, rasterized as AA capsules (lead width).",
+  "Ink chain: pressure vs stock-height percentile — the lead touches peaks first; valleys stay white. Graphite is an opaque OKLab mix, not a film.",
+  "Sheen: normals from the stock relief plus the graphite deposit's own burnish texture; Blinn specular toward the sheet light, gated by how much graphite is there.",
+  "Light last: diffuse × stock shading, + specular."
+ ],
+ "limits": [
+  {
+   "param": "spacing",
+   "range": "< 1.2 px",
+   "what": "strokes merge into flat gray"
+  },
+  {
+   "param": "sheen",
+   "range": "> .8 at low light",
+   "what": "strokes read as wet ink, not graphite"
+  },
+  {
+   "param": "lead",
+   "range": "> 1.6 px",
+   "what": "reads as charcoal / marker"
+  }
+ ],
+ "testVector": {
+  "W": 256,
+  "H": 192,
+  "dpr": 1,
+  "light": {
+   "az": 225,
+   "el": 34
+  },
+  "params": "defaults",
+  "S": "defaults of every effect",
+  "output": "FX.toRGBA(R,'image',W,H)",
+  "sha256": "c7727f704fdec2b13d9ddbcd2d65a6e499d603175539bc88674366fcfbeff38a",
+  "engine": "V8 · Node 22.23.4"
+ }
+}

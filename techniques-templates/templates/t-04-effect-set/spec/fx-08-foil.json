@@ -1,0 +1,433 @@
+{
+ "id": "fx-08-foil",
+ "code": "FX-08",
+ "name": "Hot foil",
+ "role": "mark · foil",
+ "section": "surprise",
+ "set": "Set 01",
+ "sub": "A metallic film, not a color. It conforms to the tooth, skips the deepest valleys, and its brightness is the light: a broad studio reflection plus tight glints off every facet. Holographic foil shifts hue with each facet's angle.",
+ "entry": {
+  "scripts": [
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/fx.js",
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/set.js"
+  ],
+  "globals": [
+   "FX",
+   "FXSET"
+  ],
+  "find": "FXSET.effects.find(e => e.id === 'fx-08-foil')",
+  "call": "fx.run(o, W, H, dpr, { S, clips })",
+  "standalone": "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/lift/fx-08-foil.html"
+ },
+ "signature": {
+  "in": {
+   "o": "params object — keys below; every length in CSS px",
+   "W": "device px width",
+   "H": "device px height",
+   "dpr": "device px per CSS px (density is physical: marks per CSS px²)",
+   "x": {
+    "S": "params of every effect keyed by id; the stock this prints on is read from S[printsOn]",
+    "clips": "Float32Array alpha per name (die), from FXSET.clips('fx-08-foil', W, H, dpr, o) on a thread with fonts",
+    "umask": "optional: clips.umask — a typed or image mask (mShape type | image)"
+   }
+  },
+  "out": {
+   "lin": "Float32Array W·H·3, linear-light sRGB (encode with FX.toRGBA(R,\"image\",W,H))",
+   "ink": "Float32Array W·H, absorbance / coverage (FX.toRGBA(R,\"ink\",…) = film positive)",
+   "stock": "Float32Array W·H, stock height (FX.toRGBA(R,\"stock\",…) = normalized height map)",
+   "mask": "Float32Array W·H",
+   "marks": "int — count of marks",
+   "markUnit": "string"
+  }
+ },
+ "light": {
+  "global": "FX.LIGHT",
+  "default": {
+   "az": 225,
+   "el": 34
+  },
+  "note": "az = direction the light comes FROM (screen degrees; 0 = right, 90 = below); el = elevation above the sheet"
+ },
+ "printsOn": "fx-03-paper-tooth",
+ "deterministic": "yes — every random draw is a hash of (position, seed); same inputs → same pixels in the same engine",
+ "params": [
+  {
+   "key": "shape",
+   "label": "Die",
+   "group": "density",
+   "type": "select",
+   "default": "word",
+   "options": [
+    "ø mark",
+    "word",
+    "seal"
+   ],
+   "note": "what the die (or type) is: the ø co. brandmark, a word, or a ring seal"
+  },
+  {
+   "key": "text",
+   "label": "Text",
+   "group": "density",
+   "type": "text",
+   "default": "Four surfaces",
+   "when": {
+    "shape": [
+     "word",
+     "seal"
+    ]
+   },
+   "note": "set in Archivo 800 for word and seal"
+  },
+  {
+   "key": "size",
+   "label": "Size",
+   "group": "density",
+   "type": "range",
+   "default": 0.5,
+   "min": 0.15,
+   "max": 1,
+   "step": 0.01,
+   "note": "die height as a share of the plate"
+  },
+  {
+   "key": "finish",
+   "label": "Finish",
+   "group": "color",
+   "type": "select",
+   "default": "metal",
+   "options": [
+    "metal",
+    "holo"
+   ]
+  },
+  {
+   "key": "fL",
+   "label": "Foil · L",
+   "group": "color",
+   "type": "range",
+   "default": 0.8,
+   "min": 0,
+   "max": 1,
+   "step": 0.005,
+   "ink": "f",
+   "note": "OKLCH lightness (0 black … 1 white)"
+  },
+  {
+   "key": "fC",
+   "label": "Foil · C",
+   "group": "color",
+   "type": "range",
+   "default": 0.13,
+   "min": 0,
+   "max": 0.37,
+   "step": 0.002,
+   "ink": "f",
+   "limits": [
+    {
+     "lo": 0.26,
+     "hi": 0.37,
+     "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+    }
+   ],
+   "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+  },
+  {
+   "key": "fh",
+   "label": "Foil · h",
+   "group": "color",
+   "type": "range",
+   "default": 84,
+   "min": 0,
+   "max": 360,
+   "step": 0.5,
+   "unit": "°",
+   "ink": "f",
+   "note": "OKLCH hue angle"
+  },
+  {
+   "key": "holo",
+   "label": "Holo spread",
+   "group": "color",
+   "type": "range",
+   "default": 0.6,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "when": {
+    "finish": [
+     "holo"
+    ]
+   },
+   "note": "hue rotation per facet angle"
+  },
+  {
+   "key": "mirror",
+   "label": "Reflection",
+   "group": "relief",
+   "type": "range",
+   "default": 1,
+   "min": 0,
+   "max": 1.5,
+   "step": 0.01,
+   "note": "strength of the soft-box reflection"
+  },
+  {
+   "key": "box",
+   "label": "Soft-box size",
+   "group": "relief",
+   "type": "range",
+   "default": 3,
+   "min": 1,
+   "max": 60,
+   "step": 0.5,
+   "note": "small exponent = big soft box (broad sweep); large = small hard light"
+  },
+  {
+   "key": "cam",
+   "label": "Camera distance",
+   "group": "relief",
+   "type": "range",
+   "default": 1.2,
+   "min": 0.5,
+   "max": 6,
+   "step": 0.05,
+   "note": "viewer height in plate widths — closer = a stronger sweep of the reflection across the foil"
+  },
+  {
+   "key": "shin",
+   "label": "Gloss",
+   "group": "relief",
+   "type": "range",
+   "default": 90,
+   "min": 2,
+   "max": 400,
+   "step": 1,
+   "limits": [
+    {
+     "lo": 2,
+     "hi": 6,
+     "why": "metallic paint"
+    }
+   ],
+   "note": "glint tightness"
+  },
+  {
+   "key": "grain",
+   "label": "Foil grain",
+   "group": "relief",
+   "type": "range",
+   "default": 0.12,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 0.6,
+     "hi": 1,
+     "why": "chocolate wrapper"
+    }
+   ],
+   "note": "fine crumple of the film"
+  },
+  {
+   "key": "crush",
+   "label": "Crush",
+   "group": "relief",
+   "type": "range",
+   "default": 0.55,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "how much the heated die flattens the tooth under the foil"
+  },
+  {
+   "key": "dent",
+   "label": "Deboss",
+   "group": "relief",
+   "type": "range",
+   "default": 0.18,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "unit": "px"
+  },
+  {
+   "key": "stock",
+   "label": "Prints on",
+   "group": "stock",
+   "type": "select",
+   "default": "paper",
+   "options": [
+    "paper",
+    "cloth",
+    "smooth"
+   ]
+  },
+  {
+   "key": "starve",
+   "label": "Release",
+   "group": "stock",
+   "type": "range",
+   "default": 0.025,
+   "min": 0,
+   "max": 0.4,
+   "step": 0.002,
+   "note": "lowest share of the surface that the foil never touches (pinholes)"
+  },
+  {
+   "key": "flash",
+   "label": "Edge flash",
+   "group": "stock",
+   "type": "range",
+   "default": 0.2,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "foil breaking at the die edge"
+  },
+  {
+   "key": "seed",
+   "label": "Seed",
+   "group": "seed",
+   "type": "range",
+   "default": 11,
+   "min": 1,
+   "max": 999,
+   "step": 1,
+   "note": "every random draw in the effect hangs off this one number"
+  }
+ ],
+ "defaults": {
+  "shape": "word",
+  "text": "Four surfaces",
+  "size": 0.5,
+  "finish": "metal",
+  "fL": 0.8,
+  "fC": 0.13,
+  "fh": 84,
+  "holo": 0.6,
+  "mirror": 1,
+  "box": 3,
+  "cam": 1.2,
+  "shin": 90,
+  "grain": 0.12,
+  "crush": 0.55,
+  "dent": 0.18,
+  "stock": "paper",
+  "starve": 0.025,
+  "flash": 0.2,
+  "seed": 11
+ },
+ "depsDefaults": {
+  "fx-03-paper-tooth": {
+   "scale": 1.1,
+   "oct": 3,
+   "fibers": 3,
+   "fLen": 14,
+   "fWidth": 0.4,
+   "pits": 1,
+   "pers": 0.42,
+   "ease": [
+    "in",
+    2.4
+   ],
+   "aniso": 2.2,
+   "form": 0.3,
+   "formScale": 60,
+   "fAngle": 6,
+   "fSpread": 0.4,
+   "depth": 0.12,
+   "diffuse": 0.45,
+   "fRaise": 0.45,
+   "pDepth": 0.35,
+   "paperL": 1,
+   "fDark": 0.014,
+   "pDark": 0.02,
+   "tL": 0.7,
+   "tC": 0,
+   "th": 250,
+   "tAmt": 0.5,
+   "mShape": "rect",
+   "mText": "Counted",
+   "mInset": 22,
+   "mAmp": 2.5,
+   "mScale": 28,
+   "mRough": 5,
+   "mFeather": 1.2,
+   "mMode": "speckle",
+   "lift": 1,
+   "mBite": 0,
+   "seed": 21
+  }
+ },
+ "presets": [
+  {
+   "name": "gold",
+   "params": {}
+  },
+  {
+   "name": "silver",
+   "params": {
+    "fL": 0.82,
+    "fC": 0.006,
+    "fh": 250,
+    "warm": 0
+   }
+  },
+  {
+   "name": "copper",
+   "params": {
+    "fL": 0.66,
+    "fC": 0.12,
+    "fh": 48
+   }
+  },
+  {
+   "name": "holographic",
+   "params": {
+    "finish": "holo",
+    "fL": 0.8,
+    "fC": 0.05,
+    "fh": 250,
+    "holo": 1
+   }
+  },
+  {
+   "name": "matte black foil",
+   "params": {
+    "fL": 0.18,
+    "fC": 0.004,
+    "fh": 260,
+    "shin": 6,
+    "mirror": 0.25
+   }
+  }
+ ],
+ "recipe": [
+  "Die = the same shapes as FX-06; foil lands on the AA die × the stock: valleys below the starve height release no foil (pinholes), edge flash breaks the boundary at the film-split scale.",
+  "Height = stock relief × (1 − crush) + foil grain (fine crumple) − a slight deboss; normals from it.",
+  "Metal: a perspective viewer above the plate; the mirror vector per pixel samples a soft box at the sheet light (and a weak fill opposite), so the reflection sweeps across the foil; + tight Blinn glints; holo rotates the hue by facet orientation.",
+  "Off-foil paper keeps its own light."
+ ],
+ "limits": [
+  {
+   "param": "gloss",
+   "range": "< 6",
+   "what": "reads as metallic paint, not foil"
+  },
+  {
+   "param": "foil grain",
+   "range": "> .6 px",
+   "what": "crinkled, like a chocolate wrapper"
+  },
+  {
+   "param": "light elevation",
+   "range": "> 75°",
+   "what": "foil goes dark — metal reflects away from an overhead light"
+  }
+ ],
+ "testVector": {
+  "skipped": "needs main-thread text/path rasterization for its clips; render lift/fx-08-foil.html to compare by eye"
+ }
+}

@@ -1,0 +1,538 @@
+{
+ "id": "fx-07-typewriter",
+ "code": "FX-07",
+ "name": "Typewriter strike",
+ "role": "mark · type bar",
+ "section": "surprise",
+ "set": "Set 01",
+ "sub": "Each glyph is a separate strike: its own pressure, a slight offset and rotation, sometimes only half the face lands. Ink passes through a woven ribbon, so letters carry the ribbon's weave; the type bar also dents the paper — visible under a low light.",
+ "entry": {
+  "scripts": [
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/fx.js",
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/set.js"
+  ],
+  "globals": [
+   "FX",
+   "FXSET"
+  ],
+  "find": "FXSET.effects.find(e => e.id === 'fx-07-typewriter')",
+  "call": "fx.run(o, W, H, dpr, { S, clips })",
+  "standalone": "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/lift/fx-07-typewriter.html"
+ },
+ "signature": {
+  "in": {
+   "o": "params object — keys below; every length in CSS px",
+   "W": "device px width",
+   "H": "device px height",
+   "dpr": "device px per CSS px (density is physical: marks per CSS px²)",
+   "x": {
+    "S": "params of every effect keyed by id; the stock this prints on is read from S[printsOn]",
+    "clips": "Float32Array alpha per name (strikes), from FXSET.clips('fx-07-typewriter', W, H, dpr, o) on a thread with fonts",
+    "umask": "optional: clips.umask — a typed or image mask (mShape type | image)"
+   }
+  },
+  "out": {
+   "lin": "Float32Array W·H·3, linear-light sRGB (encode with FX.toRGBA(R,\"image\",W,H))",
+   "ink": "Float32Array W·H, absorbance / coverage (FX.toRGBA(R,\"ink\",…) = film positive)",
+   "stock": "Float32Array W·H, stock height (FX.toRGBA(R,\"stock\",…) = normalized height map)",
+   "mask": "Float32Array W·H",
+   "marks": "int — count of marks",
+   "markUnit": "string"
+  }
+ },
+ "light": {
+  "global": "FX.LIGHT",
+  "default": {
+   "az": 225,
+   "el": 34
+  },
+  "note": "az = direction the light comes FROM (screen degrees; 0 = right, 90 = below); el = elevation above the sheet"
+ },
+ "printsOn": "fx-03-paper-tooth",
+ "deterministic": "yes — every random draw is a hash of (position, seed); same inputs → same pixels in the same engine",
+ "params": [
+  {
+   "key": "text",
+   "label": "Text",
+   "group": "density",
+   "type": "text",
+   "default": "Four surfaces, one light. / Ink on real stock — counted, / never a gradient. Set 01.",
+   "note": "\"/\" starts a new line"
+  },
+  {
+   "key": "fsize",
+   "label": "Size",
+   "group": "density",
+   "type": "range",
+   "default": 24,
+   "min": 8,
+   "max": 48,
+   "step": 0.5,
+   "unit": "px"
+  },
+  {
+   "key": "lead",
+   "label": "Leading",
+   "group": "density",
+   "type": "range",
+   "default": 1.5,
+   "min": 1,
+   "max": 2.4,
+   "step": 0.01
+  },
+  {
+   "key": "vari",
+   "label": "Key variance",
+   "group": "density",
+   "type": "range",
+   "default": 0.3,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "how unevenly keys strike"
+  },
+  {
+   "key": "half",
+   "label": "Half strikes",
+   "group": "density",
+   "type": "range",
+   "default": 0.05,
+   "min": 0,
+   "max": 0.4,
+   "step": 0.005,
+   "note": "share of glyphs where only the top or bottom lands"
+  },
+  {
+   "key": "jx",
+   "label": "Jitter x",
+   "group": "density",
+   "type": "range",
+   "default": 0.35,
+   "min": 0,
+   "max": 2,
+   "step": 0.01,
+   "unit": "px"
+  },
+  {
+   "key": "jy",
+   "label": "Jitter y",
+   "group": "density",
+   "type": "range",
+   "default": 0.4,
+   "min": 0,
+   "max": 2,
+   "step": 0.01,
+   "unit": "px"
+  },
+  {
+   "key": "rot",
+   "label": "Rotation",
+   "group": "density",
+   "type": "range",
+   "default": 0.7,
+   "min": 0,
+   "max": 4,
+   "step": 0.05,
+   "unit": "°"
+  },
+  {
+   "key": "exhaust",
+   "label": "Ribbon wear",
+   "group": "dropoff",
+   "type": "range",
+   "default": 0.25,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "ink fading along the text"
+  },
+  {
+   "key": "ribbon",
+   "label": "Ribbon texture",
+   "group": "stock",
+   "type": "range",
+   "default": 0.5,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "how much the ribbon weave shows in the glyphs"
+  },
+  {
+   "key": "rcount",
+   "label": "Ribbon count",
+   "group": "stock",
+   "type": "range",
+   "default": 95,
+   "min": 20,
+   "max": 200,
+   "step": 1,
+   "unit": "/100px",
+   "limits": [
+    {
+     "lo": 20,
+     "hi": 30,
+     "why": "screen pattern"
+    }
+   ],
+   "note": "ribbon threads per 100 CSS px"
+  },
+  {
+   "key": "squash",
+   "label": "Ink squash",
+   "group": "stock",
+   "type": "range",
+   "default": 0.35,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "film pooling at the glyph edge"
+  },
+  {
+   "key": "impress",
+   "label": "Impression",
+   "group": "relief",
+   "type": "range",
+   "default": 0.3,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "unit": "px",
+   "note": "how deep each strike dents the stock"
+  },
+  {
+   "key": "diffuse",
+   "label": "Diffuse share",
+   "group": "relief",
+   "type": "range",
+   "default": 0.7,
+   "min": 0,
+   "max": 1,
+   "step": 0.01
+  },
+  {
+   "key": "stock",
+   "label": "Prints on",
+   "group": "stock",
+   "type": "select",
+   "default": "paper",
+   "options": [
+    "paper",
+    "cloth",
+    "smooth"
+   ],
+   "note": "paper = FX-03 live, cloth = FX-04 live, smooth = no substrate (film-splitting noise only). Tune the stock and this plate redraws."
+  },
+  {
+   "key": "bite",
+   "label": "Stock bite",
+   "group": "stock",
+   "type": "range",
+   "default": 0.55,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "when": {
+    "stock": [
+     "paper",
+     "cloth"
+    ]
+   },
+   "note": "how much the stock height (vs film-splitting noise) decides where ink lands"
+  },
+  {
+   "key": "breakup",
+   "label": "Break-up ↔ thin",
+   "group": "stock",
+   "type": "range",
+   "default": 0.85,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "limits": [
+    {
+     "lo": 0,
+     "hi": 0.3,
+     "why": "reads as a gradient"
+    }
+   ],
+   "note": "1 = ink film breaks into marks on the peaks as pressure falls; 0 = the film stays whole and thins to tone"
+  },
+  {
+   "key": "starve",
+   "label": "Starve",
+   "group": "stock",
+   "type": "range",
+   "default": 0.03,
+   "min": 0,
+   "max": 0.3,
+   "step": 0.002,
+   "note": "the lowest share of the surface never takes ink — pinholes in the solid, placed by the paper's valleys and pits"
+  },
+  {
+   "key": "wick",
+   "label": "Wick",
+   "group": "stock",
+   "type": "range",
+   "default": 0.12,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "when": {
+    "stock": [
+     "paper",
+     "cloth"
+    ]
+   },
+   "note": "ink carried along fibers into the run-out (hairline feathering)"
+  },
+  {
+   "key": "mottle",
+   "label": "Mottle",
+   "group": "stock",
+   "type": "range",
+   "default": 0.2,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "when": {
+    "stock": [
+     "paper"
+    ]
+   },
+   "note": "paper formation (its low-frequency cloudiness) varying the film thickness"
+  },
+  {
+   "key": "split",
+   "label": "Film split",
+   "group": "stock",
+   "type": "range",
+   "default": 0.8,
+   "min": 0.5,
+   "max": 10,
+   "step": 0.1,
+   "unit": "px",
+   "note": "clump size of the film-splitting noise (the roller's own speckle)"
+  },
+  {
+   "key": "iL",
+   "label": "Ink · L",
+   "group": "color",
+   "type": "range",
+   "default": 0.2,
+   "min": 0,
+   "max": 1,
+   "step": 0.005,
+   "ink": "i",
+   "note": "OKLCH lightness (0 black … 1 white)"
+  },
+  {
+   "key": "iC",
+   "label": "Ink · C",
+   "group": "color",
+   "type": "range",
+   "default": 0.006,
+   "min": 0,
+   "max": 0.37,
+   "step": 0.002,
+   "ink": "i",
+   "limits": [
+    {
+     "lo": 0.26,
+     "hi": 0.37,
+     "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+    }
+   ],
+   "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+  },
+  {
+   "key": "ih",
+   "label": "Ink · h",
+   "group": "color",
+   "type": "range",
+   "default": 280,
+   "min": 0,
+   "max": 360,
+   "step": 0.5,
+   "unit": "°",
+   "ink": "i",
+   "note": "OKLCH hue angle"
+  },
+  {
+   "key": "density",
+   "label": "Film thickness",
+   "group": "mixing",
+   "type": "range",
+   "default": 1.15,
+   "min": 0.2,
+   "max": 2,
+   "step": 0.01
+  },
+  {
+   "key": "mix",
+   "label": "Color rule",
+   "group": "mixing",
+   "type": "select",
+   "default": "film",
+   "options": [
+    "film",
+    "oklab",
+    "oklch",
+    "linear",
+    "srgb"
+   ],
+   "note": "film = Beer–Lambert absorption in linear light (physical); oklab / oklch / linear / srgb = coverage mixes, for comparison"
+  },
+  {
+   "key": "seed",
+   "label": "Seed",
+   "group": "seed",
+   "type": "range",
+   "default": 7,
+   "min": 1,
+   "max": 999,
+   "step": 1,
+   "note": "every random draw in the effect hangs off this one number"
+  }
+ ],
+ "defaults": {
+  "text": "Four surfaces, one light. / Ink on real stock — counted, / never a gradient. Set 01.",
+  "fsize": 24,
+  "lead": 1.5,
+  "vari": 0.3,
+  "half": 0.05,
+  "jx": 0.35,
+  "jy": 0.4,
+  "rot": 0.7,
+  "exhaust": 0.25,
+  "ribbon": 0.5,
+  "rcount": 95,
+  "squash": 0.35,
+  "impress": 0.3,
+  "diffuse": 0.7,
+  "stock": "paper",
+  "bite": 0.55,
+  "breakup": 0.85,
+  "starve": 0.03,
+  "wick": 0.12,
+  "mottle": 0.2,
+  "split": 0.8,
+  "iL": 0.2,
+  "iC": 0.006,
+  "ih": 280,
+  "density": 1.15,
+  "mix": "film",
+  "seed": 7
+ },
+ "depsDefaults": {
+  "fx-03-paper-tooth": {
+   "scale": 1.1,
+   "oct": 3,
+   "fibers": 3,
+   "fLen": 14,
+   "fWidth": 0.4,
+   "pits": 1,
+   "pers": 0.42,
+   "ease": [
+    "in",
+    2.4
+   ],
+   "aniso": 2.2,
+   "form": 0.3,
+   "formScale": 60,
+   "fAngle": 6,
+   "fSpread": 0.4,
+   "depth": 0.12,
+   "diffuse": 0.45,
+   "fRaise": 0.45,
+   "pDepth": 0.35,
+   "paperL": 1,
+   "fDark": 0.014,
+   "pDark": 0.02,
+   "tL": 0.7,
+   "tC": 0,
+   "th": 250,
+   "tAmt": 0.5,
+   "mShape": "rect",
+   "mText": "Counted",
+   "mInset": 22,
+   "mAmp": 2.5,
+   "mScale": 28,
+   "mRough": 5,
+   "mFeather": 1.2,
+   "mMode": "speckle",
+   "lift": 1,
+   "mBite": 0,
+   "seed": 21
+  }
+ },
+ "presets": [
+  {
+   "name": "office ribbon",
+   "params": {}
+  },
+  {
+   "name": "worn ribbon",
+   "params": {
+    "exhaust": 0.75,
+    "vari": 0.5,
+    "half": 0.12,
+    "ribbon": 0.9
+   }
+  },
+  {
+   "name": "carbon copy",
+   "params": {
+    "ribbon": 0.15,
+    "iL": 0.45,
+    "iC": 0.12,
+    "ih": 265,
+    "bite": 0.4,
+    "impress": 0.2,
+    "vari": 0.35
+   }
+  },
+  {
+   "name": "bichrome red",
+   "params": {
+    "iL": 0.5,
+    "iC": 0.19,
+    "ih": 28
+   }
+  },
+  {
+   "name": "on linen",
+   "params": {
+    "stock": "cloth",
+    "fsize": 20,
+    "impress": 0
+   }
+  }
+ ],
+ "recipe": [
+  "Text in JetBrains Mono, one strike per glyph on the main thread: pressure = ribbon life (exhausting along the page) × key variance; offset, rotation, an occasional dropped baseline; half-strikes fade top or bottom.",
+  "Ribbon: a plain weave at the ribbon count — ink transfers through thread crossings, less through the gaps.",
+  "Ink chain: pressure × ribbon vs stock-height percentile; ink squash pools film at the glyph edge.",
+  "Impression: the strike dents the stock (blurred glyph × pressure); light from the combined height.",
+  "Color: Beer–Lambert film."
+ ],
+ "limits": [
+  {
+   "param": "ribbon count",
+   "range": "< 30 /100 px",
+   "what": "weave reads as a screen pattern on the type"
+  },
+  {
+   "param": "jitter",
+   "range": "> 1.5 px",
+   "what": "reads as broken font rendering"
+  },
+  {
+   "param": "size",
+   "range": "< 9 px",
+   "what": "glyphs fall below the tooth scale and break up"
+  }
+ ],
+ "testVector": {
+  "skipped": "needs main-thread text/path rasterization for its clips; render lift/fx-07-typewriter.html to compare by eye"
+ }
+}

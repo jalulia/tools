@@ -13,7 +13,7 @@ const TT=(()=>{ const c={window:{}}; vm.runInNewContext(fs.readFileSync(path.joi
 const V='?v='+new Date().toISOString().slice(0,16).replace(/[-:T]/g,''); // GitHub Pages caches ~10 min; stamp per build
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const val=(p)=>p.type==='ease'?`${p.value[0]}${FX.EASES[p.value[0]].k?' k '+p.value[1]:''}`:String(p.value)+(p.unit?' '+p.unit:'');
-const rng=(p)=>p.type==='range'?`${p.min} – ${p.max}${p.unit?' '+p.unit:''}`:p.type==='select'?p.options.join(' · '):Object.keys(FX.EASES).join(' · ')+' · k .3 – 8';
+const rng=(p)=>p.type==='text'?'text':p.type==='range'?`${p.min} – ${p.max}${p.unit?' '+p.unit:''}`:p.type==='select'?p.options.join(' · '):Object.keys(FX.EASES).join(' · ')+' · k .3 – 8';
 const GROUPS={density:'Density',dropoff:'Dropoff',stock:'Stock',relief:'Relief',color:'Color · OKLCH',mixing:'Mixing',mask:'Edge',seed:'Seed'};
 const nParams=SET.effects.reduce((n,e)=>n+e.params.length,0);
 
@@ -65,22 +65,16 @@ const html=`<!DOCTYPE html>
 <!-- build output of build-sheet.mjs — edit set.js / sheet.js / sheet.css / build-sheet.mjs, then rebuild. -->
 <nav class="nav" id="nav" aria-label="Site navigation"><a class="brand" href="../../index.html">${TT.mark}<span class="wm">IMP<i>Ø</i>SSIBLE</span></a><span class="crumb"><a href="../../index.html#templates">Techniques &amp; Templates</a><span class="sep">/</span><b>${esc(SET.title)}</b><span class="code">${esc(SET.code)}</span></span><span class="pager"><span>${esc(SET.code)} · template</span><a href="../../index.html#templates">index</a></span></nav>
 <main class="fs">
-  <p class="use">Template · ${esc(SET.code)} Effect set · one plate per effect · dials edit one params object · plates, usages and spec all read it · replace set.js to make a new set</p>
   <header class="fs-hd">
-    <div><span class="code">${esc(SET.set)} · ${SET.effects.length} effects · ${SET.usages.length} usages</span><h1>${esc(SET.short)}</h1><p class="premise">${esc(SET.premise)}</p></div>
-    <dl class="fs-meta">
-      <div><dt>Ground</dt><dd><b>#FFFFFF</b> · every effect prints onto white; nothing assumes a tinted stock</dd></div>
-      <div><dt>Color math</dt><dd><b>Film · OKLCH</b> · inks set in OKLCH; Beer–Lambert film in linear light, or a chosen coverage mix</dd></div>
-      <div><dt>Units</dt><dd><b>CSS px</b> · rendered at device px (≤ 2×); density = count per px², never a tile zoom</dd></div>
-      <div><dt>Params</dt><dd><b>${nParams}</b> across ${SET.effects.length} effects · each with range, default, limits · <a href="set.json" style="color:var(--blue)">set.json</a></dd></div>
-      <div class="wide"><dt>Source</dt><dd>${esc(SET.source)}</dd></div>
-    </dl>
+    <div><span class="code">${esc(SET.code)} · Effect set · ${esc(SET.set)} · ${SET.effects.length} effects · ${SET.usages.length} usages</span><h1>${esc(SET.short)}</h1><p class="premise">${esc(SET.premise)}</p></div>
+    <div class="fs-how"><span class="code">How to use the sheet</span><ol>
+      <li><b>Tune</b> a plate — dials are grouped by what they change; a dot marks what you moved. Drag the light on any plate.</li>
+      <li><b>Explore</b> — <i>wedge</i> lays out a grid across two dials, <i>pin · split</i> compares against a frozen state, <i>distance</i> shows how the marks read from across a table.</li>
+      <li><b>Take it</b> — <i>Output</i> renders to a deck, a Figma frame or paper at true dpi, with ink plates and a height map; <i>Lift</i> gives a snippet that runs anywhere and a spec an agent can check.</li></ol></div>
   </header>
   <div class="fs-bar" id="fs-bar" role="toolbar" aria-label="Sheet controls">
-    <div class="g"><span>View</span><button type="button" data-view="image" aria-pressed="true" title="the rendered plate">image</button><button type="button" data-view="ink" aria-pressed="false" title="absorbance: where ink landed and how thick">ink</button><button type="button" data-view="stock" aria-pressed="false" title="the stock height field the ink printed into">stock</button><button type="button" data-view="mask" aria-pressed="false" title="the edge mask">mask</button></div>
-    <div class="g fs-light" id="fs-light" title="The sheet light — drag in the disc: angle = where it comes from, distance from center = how low it rakes. Double-click resets."></div>
     <div class="g"><button type="button" id="fs-loupe" aria-pressed="false" title="4× device-pixel loupe on any plate">loupe 4×</button></div>
-    <div class="g jump">${SET.effects.map(e=>`<a href="#${e.id}" class="code" style="padding:0 6px">${esc(e.code)}</a>`).join('')}<a href="#usages" class="code" style="padding:0 6px;color:var(--grey)">usages</a></div>
+    <div class="g jump">${(SET.sections||[]).map((sc,i)=>`<a href="#sec-${sc.id}" class="code" style="padding:0 6px">${esc(sc.title)}</a>`).join('')}<a href="#usages" class="code" style="padding:0 6px;color:var(--grey)">usages</a></div>
     <span class="sp"></span>
     <div class="g hist"><button type="button" id="fs-undo" title="Undo · ⌘Z / Ctrl+Z" aria-label="Undo" disabled>↶</button><button type="button" id="fs-redo" title="Redo · ⇧⌘Z / Ctrl+Y" aria-label="Redo" disabled>↷</button></div>
     <div class="g"><button type="button" id="fs-link" title="Copy a link that opens the sheet with these exact settings">copy link</button><button type="button" id="fs-copyset">copy params</button><button type="button" id="fs-resetall">reset all</button></div>
@@ -88,9 +82,17 @@ const html=`<!DOCTYPE html>
   </div>
   <div id="fs-live"><div class="fs-static">
 <section class="fs-sys"><div class="c"><span class="code">Read</span><p class="read">${esc(SET.system.read)}</p></div><div class="c"><span class="code">Shared causes</span><ul>${SET.system.sharedCause.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div><div class="c"><span class="code">Pass order</span><ol>${SET.system.passOrder.map(t=>`<li>${esc(t)}</li>`).join('')}</ol></div></section>
-${SET.effects.map(staticBlock).join('\n')}
+${SET.effects.map((e,i)=>((SET.sections&&i&&e.section!==SET.effects[i-1].section)?`<div class="fs-secth" id="sec-${e.section}"><h2>${esc((SET.sections.find(x=>x.id===e.section)||{}).title||'')}</h2></div>`:'')+staticBlock(e)).join('\n')}
 ${staticUsages}
   </div></div>
+  <details class="fs-contractd"><summary><span class="code">Template contract · spec</span><span class="sum">how the sheet is built, the files, and how to make another set</span></summary>
+  <dl class="fs-meta">
+      <div><dt>Ground</dt><dd><b>#FFFFFF</b> · every effect prints onto white; nothing assumes a tinted stock</dd></div>
+      <div><dt>Color math</dt><dd><b>Film · OKLCH</b> · inks set in OKLCH; Beer–Lambert film in linear light, or a chosen coverage mix</dd></div>
+      <div><dt>Units</dt><dd><b>CSS px</b> · rendered at device px (≤ 3× on screen, any for export); density = count per px², never a tile zoom; print: 1 CSS px = 0.2646 mm × mark scale</dd></div>
+      <div><dt>Params</dt><dd><b>${nParams}</b> across ${SET.effects.length} effects · ranges, defaults, limits · <a href="set.json" style="color:var(--blue)">set.json</a> · per effect: <a href="spec/index.json" style="color:var(--blue)">spec/index.json</a></dd></div>
+      <div class="wide"><dt>Source</dt><dd>${esc(SET.source)}</dd></div>
+  </dl>
   <section class="fs-contract" id="contract">
     <div><span class="code">Template contract</span><h2>Make another set</h2>
       <p>The sheet does not know what an effect draws. Copy this folder, replace <code>set.js</code> with your own effects and usages, run <code>node build-sheet.mjs</code> (bakes the static read, <code>set.json</code> and <code>template.json</code>), then register it in <code>_shared/entries.js</code> with <code>section:'templates'</code>.</p>
@@ -105,7 +107,7 @@ ${staticUsages}
       </tbody></table>
     </div>
     <div><pre class="fs-pre">${esc(contractCode)}</pre></div>
-  </section>
+  </section></details>
   <div class="fs-end"><span><b>${esc(SET.code)}</b> · Effect set · ${esc(SET.set)} ${esc(SET.short)}</span><span>Techniques &amp; Templates · ø co. · The Impøssible Outcomes Company</span></div>
 </main>
 <script src="../../_shared/entries.js${V}"></script>
@@ -132,4 +134,43 @@ const tpl={ id:'t-04-effect-set', code:'T-04', name:'Effect set', purpose:'House
   rendering:{ workers:'pool of up to 3 (hardwareConcurrency − 1) running worker.js; main-thread fallback on file://', draft:'½-res while dragging a dial or the light', full:'device px on release', scheduling:'latest job per canvas wins; drafts first, then plates, usages, rack', lazy:'IntersectionObserver (300 px margin); offscreen canvases go dirty and paint when they scroll in', coupling:'a change to effect X redraws X, every effect whose stockOf() is X, and every usage that uses either', state:'one params object per effect + the sheet light, saved per viewer in localStorage (try/catch)' },
   contract:contractCode };
 fs.writeFileSync(path.join(here,'template.json'),JSON.stringify(tpl,null,1));
+// ── spec v2: one file per effect an agent (or a person) can lift without reading the sheet; standalone lift pages that prove it runs ──
+const crypto=await import('node:crypto');
+const LIVE='https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/';
+fs.mkdirSync(path.join(here,'spec'),{recursive:true}); fs.mkdirSync(path.join(here,'lift'),{recursive:true});
+const DEF=Object.fromEntries(SET.effects.map(e=>[e.id,Object.fromEntries(e.params.map(p=>[p.key,JSON.parse(JSON.stringify(p.value))]))]));
+const index=[];
+for(const e of SET.effects){ const o=DEF[e.id], dep=e.stockOf?e.stockOf(o):null, clipNames=Object.keys(e.clips||{});
+  let tv=null; if(!clipNames.length){ FX.LIGHT={az:225,el:34}; const W=256,H=192, R=e.run(o,W,H,1,{S:DEF}), rgba=FX.toRGBA(R,'image',W,H); tv={W,H,dpr:1,light:{az:225,el:34},params:'defaults',S:'defaults of every effect',output:"FX.toRGBA(R,'image',W,H)",sha256:crypto.createHash('sha256').update(Buffer.from(rgba.buffer)).digest('hex'),engine:'V8 · Node '+process.versions.node}; }
+  const spec={ id:e.id, code:e.code, name:e.name, role:e.role, section:e.section||'surfaces', set:SET.set, sub:e.sub,
+    entry:{ scripts:[LIVE+'fx.js',LIVE+'set.js'], globals:['FX','FXSET'], find:`FXSET.effects.find(e => e.id === '${e.id}')`, call:`fx.run(o, W, H, dpr, { S${clipNames.length?', clips':''} })`, standalone:LIVE+'lift/'+e.id+'.html' },
+    signature:{ in:{ o:'params object — keys below; every length in CSS px', W:'device px width', H:'device px height', dpr:'device px per CSS px (density is physical: marks per CSS px²)', x:{ S:'params of every effect keyed by id; the stock this prints on is read from S[printsOn]', ...(clipNames.length?{clips:`Float32Array alpha per name (${clipNames.join(', ')}), from FXSET.clips('${e.id}', W, H, dpr, o) on a thread with fonts`}:{}), umask:'optional: clips.umask — a typed or image mask (mShape type | image)' } },
+      out:{ lin:'Float32Array W·H·3, linear-light sRGB (encode with FX.toRGBA(R,"image",W,H))', ink:'Float32Array W·H, absorbance / coverage (FX.toRGBA(R,"ink",…) = film positive)', stock:'Float32Array W·H, stock height (FX.toRGBA(R,"stock",…) = normalized height map)', mask:'Float32Array W·H', marks:'int — count of marks', markUnit:'string' } },
+    light:{ global:'FX.LIGHT', default:{az:225,el:34}, note:'az = direction the light comes FROM (screen degrees; 0 = right, 90 = below); el = elevation above the sheet' },
+    printsOn:dep, deterministic:'yes — every random draw is a hash of (position, seed); same inputs → same pixels in the same engine',
+    params:e.params.map(specParam), defaults:o, depsDefaults:dep?{[dep]:DEF[dep]}:{}, presets:(e.presets||[]).map(([name,params])=>({name,params})),
+    recipe:e.recipe, limits:e.limits.map(([param,range,what])=>({param,range,what})),
+    testVector:tv||{ skipped:'needs main-thread text/path rasterization for its clips; render lift/'+e.id+'.html to compare by eye' } };
+  fs.writeFileSync(path.join(here,'spec',e.id+'.json'),JSON.stringify(spec,null,1)); index.push({id:e.id,code:e.code,name:e.name,role:e.role,spec:'spec/'+e.id+'.json',lift:'lift/'+e.id+'.html',testVector:!!tv});
+  const tvJs=tv?`const want='${tv.sha256}'; FX.LIGHT={az:225,el:34}; const R2=fx.run(o,256,192,1,{S:D}); const buf=FX.toRGBA(R2,'image',256,192); crypto.subtle.digest('SHA-256',buf).then(d=>{ const got=[...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join(''); document.getElementById('tv').innerHTML=(got===want?'<b style="color:#1a7f37">test vector ✓</b> ':'<b style="color:#F4551E">test vector ✗</b> ')+'sha256 '+got.slice(0,16)+'… (256×192, defaults)'; });`:`document.getElementById('tv').textContent='test vector: skipped (clips need fonts)';`;
+  fs.writeFileSync(path.join(here,'lift',e.id+'.html'),`<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(e.code)} ${esc(e.name)} · standalone · T-04</title>
+<link rel="stylesheet" href="../../../_shared/fonts.css">
+<style>body{margin:0;background:#fff;font:12px/1.5 'JetBrains Mono',ui-monospace,monospace;color:#101014}main{max-width:860px;margin:0 auto;padding:28px 18px}canvas{display:block;width:100%;aspect-ratio:4/3;border:1px solid #E7E4DD}p{margin:10px 0}a{color:#2F5AE6}</style></head>
+<body><main><p><b>${esc(e.code)} ${esc(e.name)}</b> · standalone: fx.js + set.js, defaults, nothing else from the sheet · <a href="../index.html#${e.id}">back to the sheet</a> · <a href="../spec/${e.id}.json">spec</a></p>
+<canvas id="c"></canvas><p id="st"></p><p id="tv"></p></main>
+<script src="../fx.js"></script><script src="../set.js"></script>
+<script>
+const D=Object.fromEntries(FXSET.effects.map(e=>[e.id,Object.fromEntries(e.params.map(p=>[p.key,JSON.parse(JSON.stringify(p.value))]))]));
+const fx=FXSET.effects.find(e=>e.id==='${e.id}'), o=D['${e.id}'];
+(document.fonts?Promise.all([document.fonts.load('800 40px Archivo'),document.fonts.load('500 12px "JetBrains Mono"')]).catch(()=>{}):Promise.resolve()).then(()=>{
+  const c=document.getElementById('c'), r=c.getBoundingClientRect(), dpr=Math.min(3,devicePixelRatio||1), W=Math.floor(r.width*dpr), H=Math.floor(r.height*dpr); c.width=W; c.height=H;
+  const t0=performance.now(), clips=FXSET.clips('${e.id}',W,H,dpr,o); FX.LIGHT={az:225,el:34};
+  const R=fx.run(o,W,H,dpr,{S:D,clips}); c.getContext('2d').putImageData(new ImageData(FX.toRGBA(R,'image',W,H),W,H),0,0);
+  document.getElementById('st').textContent=W+' × '+H+' device px · '+R.marks+' '+(R.markUnit||'')+' · '+Math.round(performance.now()-t0)+' ms';
+  ${tvJs}
+});
+</script></body></html>
+`); }
+fs.writeFileSync(path.join(here,'spec','index.json'),JSON.stringify({set:SET.set,template:SET.code,effects:index},null,1));
 console.log('built',SET.code,SET.effects.length,'effects',nParams,'params',SET.usages.length,'usages');

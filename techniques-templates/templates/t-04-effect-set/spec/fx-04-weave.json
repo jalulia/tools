@@ -1,0 +1,745 @@
+{
+ "id": "fx-04-weave",
+ "code": "FX-04",
+ "name": "Weave",
+ "role": "stock · cloth",
+ "section": "surfaces",
+ "set": "Set 01",
+ "sub": "Cloth built as cloth: warp and weft at their own counts, a real interlacing, slubbed and hairy threads, every float a raised body lit by the sheet light and casting into the gaps. A cut edge frays thread by thread. FX-01 and FX-02 can print onto it.",
+ "entry": {
+  "scripts": [
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/fx.js",
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/set.js"
+  ],
+  "globals": [
+   "FX",
+   "FXSET"
+  ],
+  "find": "FXSET.effects.find(e => e.id === 'fx-04-weave')",
+  "call": "fx.run(o, W, H, dpr, { S })",
+  "standalone": "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/lift/fx-04-weave.html"
+ },
+ "signature": {
+  "in": {
+   "o": "params object — keys below; every length in CSS px",
+   "W": "device px width",
+   "H": "device px height",
+   "dpr": "device px per CSS px (density is physical: marks per CSS px²)",
+   "x": {
+    "S": "params of every effect keyed by id; the stock this prints on is read from S[printsOn]",
+    "umask": "optional: clips.umask — a typed or image mask (mShape type | image)"
+   }
+  },
+  "out": {
+   "lin": "Float32Array W·H·3, linear-light sRGB (encode with FX.toRGBA(R,\"image\",W,H))",
+   "ink": "Float32Array W·H, absorbance / coverage (FX.toRGBA(R,\"ink\",…) = film positive)",
+   "stock": "Float32Array W·H, stock height (FX.toRGBA(R,\"stock\",…) = normalized height map)",
+   "mask": "Float32Array W·H",
+   "marks": "int — count of marks",
+   "markUnit": "string"
+  }
+ },
+ "light": {
+  "global": "FX.LIGHT",
+  "default": {
+   "az": 225,
+   "el": 34
+  },
+  "note": "az = direction the light comes FROM (screen degrees; 0 = right, 90 = below); el = elevation above the sheet"
+ },
+ "printsOn": null,
+ "deterministic": "yes — every random draw is a hash of (position, seed); same inputs → same pixels in the same engine",
+ "params": [
+  {
+   "key": "warp",
+   "label": "Warp count",
+   "group": "density",
+   "type": "range",
+   "default": 32,
+   "min": 3,
+   "max": 80,
+   "step": 0.5,
+   "unit": "/100px",
+   "limits": [
+    {
+     "lo": 50,
+     "hi": 80,
+     "why": "threads under 2 px alias at 1× (fine at 2×+)"
+    }
+   ],
+   "note": "vertical threads per 100 CSS px"
+  },
+  {
+   "key": "weft",
+   "label": "Weft count",
+   "group": "density",
+   "type": "range",
+   "default": 30,
+   "min": 3,
+   "max": 80,
+   "step": 0.5,
+   "unit": "/100px",
+   "note": "horizontal threads per 100 CSS px — set apart from warp for an unbalanced cloth"
+  },
+  {
+   "key": "fill",
+   "label": "Fill",
+   "group": "density",
+   "type": "range",
+   "default": 0.92,
+   "min": 0.35,
+   "max": 1,
+   "step": 0.01,
+   "limits": [
+    {
+     "lo": 0.35,
+     "hi": 0.5,
+     "why": "a grid of strokes"
+    },
+    {
+     "lo": 0.97,
+     "hi": 1,
+     "why": "gutters close"
+    }
+   ],
+   "note": "thread width ÷ pitch — the gutters"
+  },
+  {
+   "key": "pattern",
+   "label": "Interlacing",
+   "group": "density",
+   "type": "select",
+   "default": "plain",
+   "options": [
+    "plain",
+    "twill 2/1",
+    "twill 2/2",
+    "basket",
+    "satin 5"
+   ],
+   "note": "over/under rule; twills and satin make floats longer than one crossing"
+  },
+  {
+   "key": "slub",
+   "label": "Slub",
+   "group": "density",
+   "type": "range",
+   "default": 0.35,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "thread width variation along its length"
+  },
+  {
+   "key": "slubScale",
+   "label": "Slub length",
+   "group": "density",
+   "type": "range",
+   "default": 11,
+   "min": 3,
+   "max": 90,
+   "step": 0.5,
+   "unit": "px",
+   "note": "distance between thick and thin"
+  },
+  {
+   "key": "hair",
+   "label": "Hair",
+   "group": "density",
+   "type": "range",
+   "default": 0.3,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "fine fiber texture along each thread (linen is hairy)"
+  },
+  {
+   "key": "irregular",
+   "label": "Irregularity",
+   "group": "density",
+   "type": "range",
+   "default": 0.3,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "thread spacing and thickness jitter"
+  },
+  {
+   "key": "wear",
+   "label": "Wear",
+   "group": "dropoff",
+   "type": "range",
+   "default": 0.15,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "probability a float is worn (thinned, flattened, faded) at the worn end"
+  },
+  {
+   "key": "wEase",
+   "label": "Wear curve",
+   "group": "dropoff",
+   "type": "ease",
+   "default": [
+    "in",
+    2.2
+   ],
+   "curves": [
+    "linear",
+    "smooth",
+    "smoother",
+    "in",
+    "out",
+    "inout",
+    "expo",
+    "sigmoid"
+   ],
+   "note": "how wear grows along its direction"
+  },
+  {
+   "key": "wAngle",
+   "label": "Wear direction",
+   "group": "dropoff",
+   "type": "range",
+   "default": 90,
+   "min": 0,
+   "max": 360,
+   "step": 1,
+   "unit": "°",
+   "note": "wear increases toward this direction"
+  },
+  {
+   "key": "depth",
+   "label": "Relief",
+   "group": "relief",
+   "type": "range",
+   "default": 1.2,
+   "min": 0,
+   "max": 3,
+   "step": 0.01,
+   "note": "thread relief relative to pitch — how much the light models each float"
+  },
+  {
+   "key": "diffuse",
+   "label": "Diffuse share",
+   "group": "relief",
+   "type": "range",
+   "default": 0.85,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "share of light from the sheet light vs flat ambient fill"
+  },
+  {
+   "key": "shadow",
+   "label": "Cast shadow",
+   "group": "relief",
+   "type": "range",
+   "default": 0.6,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "floats shading into gaps and onto under-threads, plus occlusion in the gaps"
+  },
+  {
+   "key": "wL",
+   "label": "Warp · L",
+   "group": "color",
+   "type": "range",
+   "default": 0.3,
+   "min": 0,
+   "max": 1,
+   "step": 0.005,
+   "ink": "w",
+   "note": "OKLCH lightness (0 black … 1 white)"
+  },
+  {
+   "key": "wC",
+   "label": "Warp · C",
+   "group": "color",
+   "type": "range",
+   "default": 0.004,
+   "min": 0,
+   "max": 0.37,
+   "step": 0.002,
+   "ink": "w",
+   "limits": [
+    {
+     "lo": 0.26,
+     "hi": 0.37,
+     "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+    }
+   ],
+   "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+  },
+  {
+   "key": "wh",
+   "label": "Warp · h",
+   "group": "color",
+   "type": "range",
+   "default": 265,
+   "min": 0,
+   "max": 360,
+   "step": 0.5,
+   "unit": "°",
+   "ink": "w",
+   "note": "OKLCH hue angle"
+  },
+  {
+   "key": "fL",
+   "label": "Weft · L",
+   "group": "color",
+   "type": "range",
+   "default": 0.53,
+   "min": 0,
+   "max": 1,
+   "step": 0.005,
+   "ink": "f",
+   "note": "OKLCH lightness (0 black … 1 white)"
+  },
+  {
+   "key": "fC",
+   "label": "Weft · C",
+   "group": "color",
+   "type": "range",
+   "default": 0.016,
+   "min": 0,
+   "max": 0.37,
+   "step": 0.002,
+   "ink": "f",
+   "limits": [
+    {
+     "lo": 0.26,
+     "hi": 0.37,
+     "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+    }
+   ],
+   "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+  },
+  {
+   "key": "fh",
+   "label": "Weft · h",
+   "group": "color",
+   "type": "range",
+   "default": 84,
+   "min": 0,
+   "max": 360,
+   "step": 0.5,
+   "unit": "°",
+   "ink": "f",
+   "note": "OKLCH hue angle"
+  },
+  {
+   "key": "cL",
+   "label": "Accent · L",
+   "group": "color",
+   "type": "range",
+   "default": 0.5,
+   "min": 0,
+   "max": 1,
+   "step": 0.005,
+   "ink": "c",
+   "note": "OKLCH lightness (0 black … 1 white)"
+  },
+  {
+   "key": "cC",
+   "label": "Accent · C",
+   "group": "color",
+   "type": "range",
+   "default": 0.075,
+   "min": 0,
+   "max": 0.37,
+   "step": 0.002,
+   "ink": "c",
+   "limits": [
+    {
+     "lo": 0.26,
+     "hi": 0.37,
+     "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+    }
+   ],
+   "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+  },
+  {
+   "key": "ch",
+   "label": "Accent · h",
+   "group": "color",
+   "type": "range",
+   "default": 186,
+   "min": 0,
+   "max": 360,
+   "step": 0.5,
+   "unit": "°",
+   "ink": "c",
+   "note": "OKLCH hue angle"
+  },
+  {
+   "key": "aMode",
+   "label": "Accent as",
+   "group": "color",
+   "type": "select",
+   "default": "flecks",
+   "options": [
+    "flecks",
+    "threads"
+   ],
+   "note": "flecks = single floats dyed (the source plate); threads = whole warp and weft threads"
+  },
+  {
+   "key": "accent",
+   "label": "Accent rate",
+   "group": "color",
+   "type": "range",
+   "default": 0.035,
+   "min": 0,
+   "max": 0.3,
+   "step": 0.005,
+   "limits": [
+    {
+     "lo": 0.15,
+     "hi": 0.3,
+     "why": "stops being an accent"
+    }
+   ],
+   "note": "share of floats (flecks) or threads dyed the accent"
+  },
+  {
+   "key": "dye",
+   "label": "Dye lot",
+   "group": "color",
+   "type": "range",
+   "default": 0.035,
+   "min": 0,
+   "max": 0.12,
+   "step": 0.002,
+   "unit": "ΔL",
+   "note": "per-thread lightness spread"
+  },
+  {
+   "key": "mShape",
+   "label": "Shape",
+   "group": "mask",
+   "type": "select",
+   "default": "rect",
+   "options": [
+    "none",
+    "rect",
+    "ellipse",
+    "band",
+    "blob",
+    "type",
+    "image"
+   ],
+   "note": "the region the effect may occupy — type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)"
+  },
+  {
+   "key": "mText",
+   "label": "Mask text",
+   "group": "mask",
+   "type": "text",
+   "default": "Counted",
+   "when": {
+    "mShape": [
+     "type"
+    ]
+   },
+   "note": "set in Archivo 800, fit to the plate"
+  },
+  {
+   "key": "mInset",
+   "label": "Inset",
+   "group": "mask",
+   "type": "range",
+   "default": 22,
+   "min": 0,
+   "max": 120,
+   "step": 1,
+   "unit": "px",
+   "note": "distance from the plate edge to the mask edge"
+  },
+  {
+   "key": "mAmp",
+   "label": "Edge wander",
+   "group": "mask",
+   "type": "range",
+   "default": 3,
+   "min": 0,
+   "max": 40,
+   "step": 0.5,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 28,
+     "hi": 40,
+     "why": "above ~28 px the edge tears into islands"
+    }
+   ],
+   "note": "how far noise pushes the edge in and out"
+  },
+  {
+   "key": "mScale",
+   "label": "Wander scale",
+   "group": "mask",
+   "type": "range",
+   "default": 40,
+   "min": 4,
+   "max": 240,
+   "step": 1,
+   "unit": "px",
+   "note": "wavelength of the wander; small = ragged, large = drifting"
+  },
+  {
+   "key": "mRough",
+   "label": "Roughness",
+   "group": "mask",
+   "type": "range",
+   "default": 4,
+   "min": 1,
+   "max": 6,
+   "step": 1,
+   "unit": "oct",
+   "note": "octaves of edge noise — adds fine teeth without moving the large shape"
+  },
+  {
+   "key": "mFeather",
+   "label": "Feather",
+   "group": "mask",
+   "type": "range",
+   "default": 1,
+   "min": 0.5,
+   "max": 60,
+   "step": 0.5,
+   "unit": "px",
+   "note": "width over which coverage falls from 1 to 0"
+  },
+  {
+   "key": "fray",
+   "label": "Fray",
+   "group": "mask",
+   "type": "range",
+   "default": 6,
+   "min": 0,
+   "max": 40,
+   "step": 0.5,
+   "unit": "px",
+   "when": {
+    "mShape": [
+     "rect",
+     "ellipse",
+     "band",
+     "blob"
+    ]
+   },
+   "note": "how far individual threads run past the cut"
+  },
+  {
+   "key": "lift",
+   "label": "Swatch lift",
+   "group": "mask",
+   "type": "range",
+   "default": 0.8,
+   "min": 0,
+   "max": 4,
+   "step": 0.05,
+   "unit": "px",
+   "when": {
+    "mShape": [
+     "rect",
+     "ellipse",
+     "band",
+     "blob"
+    ]
+   },
+   "note": "cloth thickness — sizes its shadow on the page"
+  },
+  {
+   "key": "mBite",
+   "label": "Bite",
+   "group": "mask",
+   "type": "range",
+   "default": 0,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "clumped dropouts that grow more likely toward the edge"
+  },
+  {
+   "key": "seed",
+   "label": "Seed",
+   "group": "seed",
+   "type": "range",
+   "default": 33,
+   "min": 1,
+   "max": 999,
+   "step": 1,
+   "note": "every random draw in the effect hangs off this one number"
+  }
+ ],
+ "defaults": {
+  "warp": 32,
+  "weft": 30,
+  "fill": 0.92,
+  "pattern": "plain",
+  "slub": 0.35,
+  "slubScale": 11,
+  "hair": 0.3,
+  "irregular": 0.3,
+  "wear": 0.15,
+  "wEase": [
+   "in",
+   2.2
+  ],
+  "wAngle": 90,
+  "depth": 1.2,
+  "diffuse": 0.85,
+  "shadow": 0.6,
+  "wL": 0.3,
+  "wC": 0.004,
+  "wh": 265,
+  "fL": 0.53,
+  "fC": 0.016,
+  "fh": 84,
+  "cL": 0.5,
+  "cC": 0.075,
+  "ch": 186,
+  "aMode": "flecks",
+  "accent": 0.035,
+  "dye": 0.035,
+  "mShape": "rect",
+  "mText": "Counted",
+  "mInset": 22,
+  "mAmp": 3,
+  "mScale": 40,
+  "mRough": 4,
+  "mFeather": 1,
+  "fray": 6,
+  "lift": 0.8,
+  "mBite": 0,
+  "seed": 33
+ },
+ "depsDefaults": {},
+ "presets": [
+  {
+   "name": "source · linen",
+   "params": {}
+  },
+  {
+   "name": "natural linen",
+   "params": {
+    "wL": 0.78,
+    "wC": 0.022,
+    "wh": 82,
+    "fL": 0.84,
+    "fC": 0.02,
+    "fh": 86,
+    "accent": 0.006,
+    "warp": 34,
+    "weft": 32
+   }
+  },
+  {
+   "name": "fine shirting",
+   "params": {
+    "warp": 60,
+    "weft": 56,
+    "fill": 0.94,
+    "slub": 0.12,
+    "hair": 0.12,
+    "depth": 0.9,
+    "wL": 0.9,
+    "wC": 0.01,
+    "wh": 250,
+    "fL": 0.95,
+    "fC": 0.004,
+    "fh": 250,
+    "accent": 0
+   }
+  },
+  {
+   "name": "denim 2/1",
+   "params": {
+    "pattern": "twill 2/1",
+    "warp": 48,
+    "weft": 40,
+    "fill": 0.97,
+    "wL": 0.36,
+    "wC": 0.075,
+    "wh": 262,
+    "fL": 0.8,
+    "fC": 0.015,
+    "fh": 85,
+    "accent": 0,
+    "dye": 0.04,
+    "slub": 0.55,
+    "hair": 0.4,
+    "depth": 1
+   }
+  },
+  {
+   "name": "canvas duck",
+   "params": {
+    "pattern": "basket",
+    "warp": 14,
+    "weft": 14,
+    "fill": 0.95,
+    "wL": 0.85,
+    "wC": 0.03,
+    "wh": 85,
+    "fL": 0.82,
+    "fC": 0.03,
+    "fh": 82,
+    "accent": 0,
+    "hair": 0.5,
+    "depth": 1.6
+   }
+  }
+ ],
+ "recipe": [
+  "Warp columns and weft rows at their own counts (threads / 100 CSS px); each thread: jittered center, thickness, dye-lot L, fray length, accent.",
+  "Interlacing decides the top thread per crossing; a float is the run where it stays on top. Height = cylinder across the thread × arch along the float; under-threads sit low; hair = fine noise along the thread.",
+  "Albedo in OKLab: under-thread, then top thread by AA coverage; accent as flecks (single floats, as in the source) or whole threads.",
+  "Light: Lambert from the height gradient + a height-field shadow march toward the sheet light, so floats shade into the gaps; ambient occlusion darkens the gaps.",
+  "Cut: the mask's signed distance plus each thread's own fray length — threads end raggedly, not on a line. The swatch casts onto the page."
+ ],
+ "limits": [
+  {
+   "param": "count",
+   "range": "> 50 /100 px at 1×",
+   "what": "threads under 2 CSS px alias against a 1× display — moiré (fine on 2×/3×)"
+  },
+  {
+   "param": "count",
+   "range": "< 18 /100 px",
+   "what": "threads over ~5 px read as a woven-texture graphic, not cloth"
+  },
+  {
+   "param": "fill",
+   "range": "< .5",
+   "what": "reads as a grid of strokes, not cloth"
+  },
+  {
+   "param": "fill",
+   "range": "> .97",
+   "what": "gutters close; the weave flattens to a check"
+  },
+  {
+   "param": "accent rate",
+   "range": "> .15",
+   "what": "accents stop being accents"
+  }
+ ],
+ "testVector": {
+  "W": 256,
+  "H": 192,
+  "dpr": 1,
+  "light": {
+   "az": 225,
+   "el": 34
+  },
+  "params": "defaults",
+  "S": "defaults of every effect",
+  "output": "FX.toRGBA(R,'image',W,H)",
+  "sha256": "fe592bd3ef3f85730d8e8d535e26c325d6bf998855efea64f4f682cc26a8d620",
+  "engine": "V8 · Node 22.23.4"
+ }
+}

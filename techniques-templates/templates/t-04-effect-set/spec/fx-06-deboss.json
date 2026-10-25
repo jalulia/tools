@@ -1,0 +1,395 @@
+{
+ "id": "fx-06-deboss",
+ "code": "FX-06",
+ "name": "Blind deboss",
+ "role": "mark · die",
+ "section": "surprise",
+ "set": "Set 01",
+ "sub": "A mark with no ink. A die presses into the stock: the floor crushes the tooth flat, the walls take the light or the shadow, a lip rises at the edge. Move the light and the mark appears, flips, or disappears. Ink it to get letterpress.",
+ "entry": {
+  "scripts": [
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/fx.js",
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/set.js"
+  ],
+  "globals": [
+   "FX",
+   "FXSET"
+  ],
+  "find": "FXSET.effects.find(e => e.id === 'fx-06-deboss')",
+  "call": "fx.run(o, W, H, dpr, { S, clips })",
+  "standalone": "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/lift/fx-06-deboss.html"
+ },
+ "signature": {
+  "in": {
+   "o": "params object — keys below; every length in CSS px",
+   "W": "device px width",
+   "H": "device px height",
+   "dpr": "device px per CSS px (density is physical: marks per CSS px²)",
+   "x": {
+    "S": "params of every effect keyed by id; the stock this prints on is read from S[printsOn]",
+    "clips": "Float32Array alpha per name (die), from FXSET.clips('fx-06-deboss', W, H, dpr, o) on a thread with fonts",
+    "umask": "optional: clips.umask — a typed or image mask (mShape type | image)"
+   }
+  },
+  "out": {
+   "lin": "Float32Array W·H·3, linear-light sRGB (encode with FX.toRGBA(R,\"image\",W,H))",
+   "ink": "Float32Array W·H, absorbance / coverage (FX.toRGBA(R,\"ink\",…) = film positive)",
+   "stock": "Float32Array W·H, stock height (FX.toRGBA(R,\"stock\",…) = normalized height map)",
+   "mask": "Float32Array W·H",
+   "marks": "int — count of marks",
+   "markUnit": "string"
+  }
+ },
+ "light": {
+  "global": "FX.LIGHT",
+  "default": {
+   "az": 225,
+   "el": 34
+  },
+  "note": "az = direction the light comes FROM (screen degrees; 0 = right, 90 = below); el = elevation above the sheet"
+ },
+ "printsOn": "fx-03-paper-tooth",
+ "deterministic": "yes — every random draw is a hash of (position, seed); same inputs → same pixels in the same engine",
+ "params": [
+  {
+   "key": "shape",
+   "label": "Die",
+   "group": "density",
+   "type": "select",
+   "default": "ø mark",
+   "options": [
+    "ø mark",
+    "word",
+    "seal"
+   ],
+   "note": "what the die (or type) is: the ø co. brandmark, a word, or a ring seal"
+  },
+  {
+   "key": "text",
+   "label": "Text",
+   "group": "density",
+   "type": "text",
+   "default": "Four surfaces",
+   "when": {
+    "shape": [
+     "word",
+     "seal"
+    ]
+   },
+   "note": "set in Archivo 800 for word and seal"
+  },
+  {
+   "key": "size",
+   "label": "Size",
+   "group": "density",
+   "type": "range",
+   "default": 0.62,
+   "min": 0.15,
+   "max": 1,
+   "step": 0.01,
+   "note": "die height as a share of the plate"
+  },
+  {
+   "key": "depth",
+   "label": "Depth",
+   "group": "relief",
+   "type": "range",
+   "default": 1.2,
+   "min": -2.5,
+   "max": 2.5,
+   "step": 0.01,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 2,
+     "hi": 2.5,
+     "why": "gouge"
+    }
+   ],
+   "note": "press depth; negative = emboss (raised)"
+  },
+  {
+   "key": "soft",
+   "label": "Die softness",
+   "group": "relief",
+   "type": "range",
+   "default": 3,
+   "min": 0.2,
+   "max": 8,
+   "step": 0.05,
+   "unit": "px",
+   "note": "wall width — how sharp the die edge is"
+  },
+  {
+   "key": "lip",
+   "label": "Lip",
+   "group": "relief",
+   "type": "range",
+   "default": 0.15,
+   "min": 0,
+   "max": 0.6,
+   "step": 0.01,
+   "unit": "px",
+   "note": "paper pushed up just outside the edge"
+  },
+  {
+   "key": "crush",
+   "label": "Crush",
+   "group": "relief",
+   "type": "range",
+   "default": 0.7,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "how flat the tooth is pressed on the floor"
+  },
+  {
+   "key": "diffuse",
+   "label": "Diffuse share",
+   "group": "relief",
+   "type": "range",
+   "default": 0.95,
+   "min": 0,
+   "max": 1,
+   "step": 0.01
+  },
+  {
+   "key": "shadow",
+   "label": "Wall shadow",
+   "group": "relief",
+   "type": "range",
+   "default": 0.7,
+   "min": 0,
+   "max": 1,
+   "step": 0.01
+  },
+  {
+   "key": "burnish",
+   "label": "Floor burnish",
+   "group": "relief",
+   "type": "range",
+   "default": 0.012,
+   "min": 0,
+   "max": 0.08,
+   "step": 0.001,
+   "unit": "ΔL",
+   "note": "pressed fibers read a touch darker on the floor"
+  },
+  {
+   "key": "stock",
+   "label": "Prints on",
+   "group": "stock",
+   "type": "select",
+   "default": "paper",
+   "options": [
+    "paper",
+    "cloth",
+    "smooth"
+   ]
+  },
+  {
+   "key": "ink",
+   "label": "Ink on floor",
+   "group": "color",
+   "type": "range",
+   "default": 0,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "0 = blind; 1 = full letterpress"
+  },
+  {
+   "key": "iL",
+   "label": "Ink · L",
+   "group": "color",
+   "type": "range",
+   "default": 0.32,
+   "min": 0,
+   "max": 1,
+   "step": 0.005,
+   "ink": "i",
+   "when": {},
+   "note": "OKLCH lightness (0 black … 1 white)"
+  },
+  {
+   "key": "iC",
+   "label": "Ink · C",
+   "group": "color",
+   "type": "range",
+   "default": 0.09,
+   "min": 0,
+   "max": 0.37,
+   "step": 0.002,
+   "ink": "i",
+   "when": {},
+   "limits": [
+    {
+     "lo": 0.26,
+     "hi": 0.37,
+     "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+    }
+   ],
+   "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+  },
+  {
+   "key": "ih",
+   "label": "Ink · h",
+   "group": "color",
+   "type": "range",
+   "default": 25,
+   "min": 0,
+   "max": 360,
+   "step": 0.5,
+   "unit": "°",
+   "ink": "i",
+   "when": {},
+   "note": "OKLCH hue angle"
+  },
+  {
+   "key": "mix",
+   "label": "Color rule",
+   "group": "mixing",
+   "type": "select",
+   "default": "film",
+   "options": [
+    "film",
+    "oklab",
+    "oklch",
+    "linear",
+    "srgb"
+   ],
+   "note": "film = Beer–Lambert absorption in linear light (physical); oklab / oklch / linear / srgb = coverage mixes, for comparison"
+  },
+  {
+   "key": "seed",
+   "label": "Seed",
+   "group": "seed",
+   "type": "range",
+   "default": 3,
+   "min": 1,
+   "max": 999,
+   "step": 1,
+   "note": "every random draw in the effect hangs off this one number"
+  }
+ ],
+ "defaults": {
+  "shape": "ø mark",
+  "text": "Four surfaces",
+  "size": 0.62,
+  "depth": 1.2,
+  "soft": 3,
+  "lip": 0.15,
+  "crush": 0.7,
+  "diffuse": 0.95,
+  "shadow": 0.7,
+  "burnish": 0.012,
+  "stock": "paper",
+  "ink": 0,
+  "iL": 0.32,
+  "iC": 0.09,
+  "ih": 25,
+  "mix": "film",
+  "seed": 3
+ },
+ "depsDefaults": {
+  "fx-03-paper-tooth": {
+   "scale": 1.1,
+   "oct": 3,
+   "fibers": 3,
+   "fLen": 14,
+   "fWidth": 0.4,
+   "pits": 1,
+   "pers": 0.42,
+   "ease": [
+    "in",
+    2.4
+   ],
+   "aniso": 2.2,
+   "form": 0.3,
+   "formScale": 60,
+   "fAngle": 6,
+   "fSpread": 0.4,
+   "depth": 0.12,
+   "diffuse": 0.45,
+   "fRaise": 0.45,
+   "pDepth": 0.35,
+   "paperL": 1,
+   "fDark": 0.014,
+   "pDark": 0.02,
+   "tL": 0.7,
+   "tC": 0,
+   "th": 250,
+   "tAmt": 0.5,
+   "mShape": "rect",
+   "mText": "Counted",
+   "mInset": 22,
+   "mAmp": 2.5,
+   "mScale": 28,
+   "mRough": 5,
+   "mFeather": 1.2,
+   "mMode": "speckle",
+   "lift": 1,
+   "mBite": 0,
+   "seed": 21
+  }
+ },
+ "presets": [
+  {
+   "name": "blind ø",
+   "params": {}
+  },
+  {
+   "name": "seal",
+   "params": {
+    "shape": "seal",
+    "text": "Impøssible Outcomes",
+    "size": 0.8,
+    "depth": 0.7
+   }
+  },
+  {
+   "name": "letterpress word",
+   "params": {
+    "shape": "word",
+    "text": "Counted",
+    "ink": 1,
+    "depth": 0.55,
+    "size": 0.5
+   }
+  },
+  {
+   "name": "emboss",
+   "params": {
+    "depth": -0.6,
+    "lip": 0
+   }
+  }
+ ],
+ "recipe": [
+  "Die = the ø co. brandmark, a word, or a ring seal, rasterized as an AA clip on the main thread (fonts).",
+  "Plate profile = the clip blurred by the die softness; lip = a wider blur minus the plate (only outside the edge).",
+  "Height (CSS px) = stock height × (1 − crush · plate) − depth · plate + lip — the tooth flattens on the floor.",
+  "Light: Lambert from the combined height + a height-field shadow toward the sheet light (the wall on the light side falls in shadow).",
+  "Optional ink on the floor (film), so blind → letterpress is one dial."
+ ],
+ "limits": [
+  {
+   "param": "depth",
+   "range": "> 2 px",
+   "what": "reads as a carved gouge, not a deboss"
+  },
+  {
+   "param": "die softness",
+   "range": "< .3 px",
+   "what": "walls alias; > 3 px the edge goes mushy"
+  },
+  {
+   "param": "light elevation",
+   "range": "> 70°",
+   "what": "a blind deboss vanishes under overhead light — by design"
+  }
+ ],
+ "testVector": {
+  "skipped": "needs main-thread text/path rasterization for its clips; render lift/fx-06-deboss.html to compare by eye"
+ }
+}

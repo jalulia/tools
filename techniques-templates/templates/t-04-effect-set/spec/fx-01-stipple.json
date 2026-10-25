@@ -1,0 +1,807 @@
+{
+ "id": "fx-01-stipple",
+ "code": "FX-01",
+ "name": "Stipple ramp",
+ "role": "mark · pen",
+ "section": "surfaces",
+ "set": "Set 01",
+ "sub": "Tone made of whole pen dots. Value sets how many sites print (FM) or how big each dot is (AM); a blue-noise rank picks the sites. Each dot is crisp geometry whose edge the stock's tooth nudges — never softened.",
+ "entry": {
+  "scripts": [
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/fx.js",
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/set.js"
+  ],
+  "globals": [
+   "FX",
+   "FXSET"
+  ],
+  "find": "FXSET.effects.find(e => e.id === 'fx-01-stipple')",
+  "call": "fx.run(o, W, H, dpr, { S })",
+  "standalone": "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/lift/fx-01-stipple.html"
+ },
+ "signature": {
+  "in": {
+   "o": "params object — keys below; every length in CSS px",
+   "W": "device px width",
+   "H": "device px height",
+   "dpr": "device px per CSS px (density is physical: marks per CSS px²)",
+   "x": {
+    "S": "params of every effect keyed by id; the stock this prints on is read from S[printsOn]",
+    "umask": "optional: clips.umask — a typed or image mask (mShape type | image)"
+   }
+  },
+  "out": {
+   "lin": "Float32Array W·H·3, linear-light sRGB (encode with FX.toRGBA(R,\"image\",W,H))",
+   "ink": "Float32Array W·H, absorbance / coverage (FX.toRGBA(R,\"ink\",…) = film positive)",
+   "stock": "Float32Array W·H, stock height (FX.toRGBA(R,\"stock\",…) = normalized height map)",
+   "mask": "Float32Array W·H",
+   "marks": "int — count of marks",
+   "markUnit": "string"
+  }
+ },
+ "light": {
+  "global": "FX.LIGHT",
+  "default": {
+   "az": 225,
+   "el": 34
+  },
+  "note": "az = direction the light comes FROM (screen degrees; 0 = right, 90 = below); el = elevation above the sheet"
+ },
+ "printsOn": "fx-03-paper-tooth",
+ "deterministic": "yes — every random draw is a hash of (position, seed); same inputs → same pixels in the same engine",
+ "params": [
+  {
+   "key": "pitch",
+   "label": "Pitch",
+   "group": "density",
+   "type": "range",
+   "default": 1.55,
+   "min": 0.8,
+   "max": 16,
+   "step": 0.05,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 0.8,
+     "hi": 1.2,
+     "why": "sites merge into tone at 1×"
+    }
+   ],
+   "note": "distance between dot sites — sets the COUNT of dots, not their size"
+  },
+  {
+   "key": "dotR",
+   "label": "Dot radius",
+   "group": "density",
+   "type": "range",
+   "default": 0.48,
+   "min": 0.2,
+   "max": 4,
+   "step": 0.01,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 2.4,
+     "hi": 4,
+     "why": "past ~½ pitch dots fuse"
+    }
+   ],
+   "note": "radius of a full-value dot, independent of pitch"
+  },
+  {
+   "key": "screen",
+   "label": "Screen · FM ↔ AM",
+   "group": "density",
+   "type": "range",
+   "default": 0,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "0 = value changes how many dots print; 1 = how big they are"
+  },
+  {
+   "key": "order",
+   "label": "Selection",
+   "group": "density",
+   "type": "select",
+   "default": "blue",
+   "options": [
+    "blue",
+    "white",
+    "ordered"
+   ],
+   "note": "which sites survive at a given density — blue: even thinning (void-and-cluster rank); white: hash, clumps; ordered: 8×8 Bayer, reads as a screen"
+  },
+  {
+   "key": "jitter",
+   "label": "Jitter",
+   "group": "density",
+   "type": "range",
+   "default": 0.85,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "limits": [
+    {
+     "lo": 0,
+     "hi": 0.2,
+     "why": "lattice shows through as a grid"
+    }
+   ],
+   "note": "site offset inside its cell (0 = lattice)"
+  },
+  {
+   "key": "sizeVar",
+   "label": "Size variance",
+   "group": "density",
+   "type": "range",
+   "default": 0.22,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "per-dot radius spread"
+  },
+  {
+   "key": "irregular",
+   "label": "Nib irregularity",
+   "group": "density",
+   "type": "range",
+   "default": 0.16,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "vertex wobble of each footprint — nib, not disc"
+  },
+  {
+   "key": "pressure",
+   "label": "Pen pressure",
+   "group": "density",
+   "type": "range",
+   "default": 1,
+   "min": 0.3,
+   "max": 1,
+   "step": 0.01,
+   "limits": [
+    {
+     "lo": 0.3,
+     "hi": 0.5,
+     "why": "dots print pale and pitted"
+    }
+   ],
+   "note": "film per dot and how many valleys it skips (with Starve)"
+  },
+  {
+   "key": "source",
+   "label": "Value field",
+   "group": "dropoff",
+   "type": "select",
+   "default": "linear",
+   "options": [
+    "linear",
+    "radial",
+    "noise"
+   ],
+   "note": "what drives value across the plate"
+  },
+  {
+   "key": "angle",
+   "label": "Ramp angle",
+   "group": "dropoff",
+   "type": "range",
+   "default": 0,
+   "min": 0,
+   "max": 360,
+   "step": 1,
+   "unit": "°",
+   "when": {
+    "source": [
+     "linear"
+    ]
+   },
+   "note": "direction of the linear ramp"
+  },
+  {
+   "key": "ease",
+   "label": "Dropoff curve",
+   "group": "dropoff",
+   "type": "ease",
+   "default": [
+    "in",
+    1.25
+   ],
+   "curves": [
+    "linear",
+    "smooth",
+    "smoother",
+    "in",
+    "out",
+    "inout",
+    "expo",
+    "sigmoid"
+   ],
+   "note": "how value travels from → to across the field"
+  },
+  {
+   "key": "from",
+   "label": "From",
+   "group": "dropoff",
+   "type": "range",
+   "default": 0.02,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "value at the start of the field"
+  },
+  {
+   "key": "to",
+   "label": "To",
+   "group": "dropoff",
+   "type": "range",
+   "default": 1,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "value at the end of the field"
+  },
+  {
+   "key": "fScale",
+   "label": "Field scale",
+   "group": "dropoff",
+   "type": "range",
+   "default": 140,
+   "min": 20,
+   "max": 500,
+   "step": 1,
+   "unit": "px",
+   "when": {
+    "source": [
+     "noise"
+    ]
+   },
+   "note": "noise field wavelength"
+  },
+  {
+   "key": "stock",
+   "label": "Prints on",
+   "group": "stock",
+   "type": "select",
+   "default": "paper",
+   "options": [
+    "paper",
+    "cloth",
+    "smooth"
+   ],
+   "note": "paper = FX-03 live, cloth = FX-04 live, smooth = no substrate. Tune the stock and this plate redraws."
+  },
+  {
+   "key": "rag",
+   "label": "Edge rag",
+   "group": "stock",
+   "type": "range",
+   "default": 0.07,
+   "min": 0,
+   "max": 1.5,
+   "step": 0.01,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 0.9,
+     "hi": 1.5,
+     "why": "dots read as fuzz"
+    }
+   ],
+   "note": "how far the stock's tooth pushes each dot edge in and out — 0 = perfect discs"
+  },
+  {
+   "key": "starve",
+   "label": "Starve",
+   "group": "stock",
+   "type": "range",
+   "default": 0,
+   "min": 0,
+   "max": 0.3,
+   "step": 0.002,
+   "note": "valleys inside a dot that the nib skips — single-pixel pinholes, more as pressure drops"
+  },
+  {
+   "key": "wick",
+   "label": "Wick",
+   "group": "stock",
+   "type": "range",
+   "default": 0.08,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "when": {
+    "stock": [
+     "paper",
+     "cloth"
+    ]
+   },
+   "note": "ink carried a short way out along fibers"
+  },
+  {
+   "key": "mottle",
+   "label": "Mottle",
+   "group": "stock",
+   "type": "range",
+   "default": 0.1,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "when": {
+    "stock": [
+     "paper"
+    ]
+   },
+   "note": "paper formation varying the film"
+  },
+  {
+   "key": "aL",
+   "label": "Ink A · L",
+   "group": "color",
+   "type": "range",
+   "default": 0.22,
+   "min": 0,
+   "max": 1,
+   "step": 0.005,
+   "ink": "a",
+   "note": "OKLCH lightness (0 black … 1 white)"
+  },
+  {
+   "key": "aC",
+   "label": "Ink A · C",
+   "group": "color",
+   "type": "range",
+   "default": 0.004,
+   "min": 0,
+   "max": 0.37,
+   "step": 0.002,
+   "ink": "a",
+   "limits": [
+    {
+     "lo": 0.26,
+     "hi": 0.37,
+     "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+    }
+   ],
+   "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+  },
+  {
+   "key": "ah",
+   "label": "Ink A · h",
+   "group": "color",
+   "type": "range",
+   "default": 285,
+   "min": 0,
+   "max": 360,
+   "step": 0.5,
+   "unit": "°",
+   "ink": "a",
+   "note": "OKLCH hue angle"
+  },
+  {
+   "key": "duo",
+   "label": "Ink B",
+   "group": "color",
+   "type": "select",
+   "default": "off",
+   "options": [
+    "off",
+    "on"
+   ],
+   "note": "a second stipple ramp running the opposite way, overprinted"
+  },
+  {
+   "key": "bL",
+   "label": "Ink B · L",
+   "group": "color",
+   "type": "range",
+   "default": 0.64,
+   "min": 0,
+   "max": 1,
+   "step": 0.005,
+   "ink": "b",
+   "when": {
+    "duo": [
+     "on"
+    ]
+   },
+   "note": "OKLCH lightness (0 black … 1 white)"
+  },
+  {
+   "key": "bC",
+   "label": "Ink B · C",
+   "group": "color",
+   "type": "range",
+   "default": 0.19,
+   "min": 0,
+   "max": 0.37,
+   "step": 0.002,
+   "ink": "b",
+   "when": {
+    "duo": [
+     "on"
+    ]
+   },
+   "limits": [
+    {
+     "lo": 0.26,
+     "hi": 0.37,
+     "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+    }
+   ],
+   "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+  },
+  {
+   "key": "bh",
+   "label": "Ink B · h",
+   "group": "color",
+   "type": "range",
+   "default": 36,
+   "min": 0,
+   "max": 360,
+   "step": 0.5,
+   "unit": "°",
+   "ink": "b",
+   "when": {
+    "duo": [
+     "on"
+    ]
+   },
+   "note": "OKLCH hue angle"
+  },
+  {
+   "key": "density",
+   "label": "Film thickness",
+   "group": "mixing",
+   "type": "range",
+   "default": 1.3,
+   "min": 0.2,
+   "max": 2,
+   "step": 0.01,
+   "note": "ink film at full pressure; with the film rule, thicker = deeper and more saturated (Beer–Lambert)"
+  },
+  {
+   "key": "mix",
+   "label": "Color rule",
+   "group": "mixing",
+   "type": "select",
+   "default": "film",
+   "options": [
+    "film",
+    "oklab",
+    "oklch",
+    "linear",
+    "srgb"
+   ],
+   "note": "film = Beer–Lambert absorption in linear light (physical); oklab / oklch / linear / srgb = coverage mixes, for comparison"
+  },
+  {
+   "key": "over",
+   "label": "Overprint",
+   "group": "mixing",
+   "type": "select",
+   "default": "multiply",
+   "options": [
+    "multiply",
+    "mix",
+    "darken"
+   ],
+   "when": {
+    "duo": [
+     "on"
+    ]
+   },
+   "note": "ink B over ink A when the rule is a coverage mix (film always multiplies)"
+  },
+  {
+   "key": "mShape",
+   "label": "Shape",
+   "group": "mask",
+   "type": "select",
+   "default": "rect",
+   "options": [
+    "none",
+    "rect",
+    "ellipse",
+    "band",
+    "blob",
+    "type",
+    "image"
+   ],
+   "note": "the region the effect may occupy — type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)"
+  },
+  {
+   "key": "mText",
+   "label": "Mask text",
+   "group": "mask",
+   "type": "text",
+   "default": "Counted",
+   "when": {
+    "mShape": [
+     "type"
+    ]
+   },
+   "note": "set in Archivo 800, fit to the plate"
+  },
+  {
+   "key": "mInset",
+   "label": "Inset",
+   "group": "mask",
+   "type": "range",
+   "default": 14,
+   "min": 0,
+   "max": 120,
+   "step": 1,
+   "unit": "px",
+   "note": "distance from the plate edge to the mask edge"
+  },
+  {
+   "key": "mAmp",
+   "label": "Edge wander",
+   "group": "mask",
+   "type": "range",
+   "default": 4,
+   "min": 0,
+   "max": 40,
+   "step": 0.5,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 28,
+     "hi": 40,
+     "why": "above ~28 px the edge tears into islands"
+    }
+   ],
+   "note": "how far noise pushes the edge in and out"
+  },
+  {
+   "key": "mScale",
+   "label": "Wander scale",
+   "group": "mask",
+   "type": "range",
+   "default": 70,
+   "min": 4,
+   "max": 240,
+   "step": 1,
+   "unit": "px",
+   "note": "wavelength of the wander; small = ragged, large = drifting"
+  },
+  {
+   "key": "mRough",
+   "label": "Roughness",
+   "group": "mask",
+   "type": "range",
+   "default": 4,
+   "min": 1,
+   "max": 6,
+   "step": 1,
+   "unit": "oct",
+   "note": "octaves of edge noise — adds fine teeth without moving the large shape"
+  },
+  {
+   "key": "mFeather",
+   "label": "Feather",
+   "group": "mask",
+   "type": "range",
+   "default": 10,
+   "min": 0.5,
+   "max": 60,
+   "step": 0.5,
+   "unit": "px",
+   "note": "width over which coverage falls from 1 to 0"
+  },
+  {
+   "key": "mBite",
+   "label": "Bite",
+   "group": "mask",
+   "type": "range",
+   "default": 0.15,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "clumped dropouts that grow more likely toward the edge"
+  },
+  {
+   "key": "seed",
+   "label": "Seed",
+   "group": "seed",
+   "type": "range",
+   "default": 5,
+   "min": 1,
+   "max": 999,
+   "step": 1,
+   "note": "every random draw in the effect hangs off this one number"
+  }
+ ],
+ "defaults": {
+  "pitch": 1.55,
+  "dotR": 0.48,
+  "screen": 0,
+  "order": "blue",
+  "jitter": 0.85,
+  "sizeVar": 0.22,
+  "irregular": 0.16,
+  "pressure": 1,
+  "source": "linear",
+  "angle": 0,
+  "ease": [
+   "in",
+   1.25
+  ],
+  "from": 0.02,
+  "to": 1,
+  "fScale": 140,
+  "stock": "paper",
+  "rag": 0.07,
+  "starve": 0,
+  "wick": 0.08,
+  "mottle": 0.1,
+  "aL": 0.22,
+  "aC": 0.004,
+  "ah": 285,
+  "duo": "off",
+  "bL": 0.64,
+  "bC": 0.19,
+  "bh": 36,
+  "density": 1.3,
+  "mix": "film",
+  "over": "multiply",
+  "mShape": "rect",
+  "mText": "Counted",
+  "mInset": 14,
+  "mAmp": 4,
+  "mScale": 70,
+  "mRough": 4,
+  "mFeather": 10,
+  "mBite": 0.15,
+  "seed": 5
+ },
+ "depsDefaults": {
+  "fx-03-paper-tooth": {
+   "scale": 1.1,
+   "oct": 3,
+   "fibers": 3,
+   "fLen": 14,
+   "fWidth": 0.4,
+   "pits": 1,
+   "pers": 0.42,
+   "ease": [
+    "in",
+    2.4
+   ],
+   "aniso": 2.2,
+   "form": 0.3,
+   "formScale": 60,
+   "fAngle": 6,
+   "fSpread": 0.4,
+   "depth": 0.12,
+   "diffuse": 0.45,
+   "fRaise": 0.45,
+   "pDepth": 0.35,
+   "paperL": 1,
+   "fDark": 0.014,
+   "pDark": 0.02,
+   "tL": 0.7,
+   "tC": 0,
+   "th": 250,
+   "tAmt": 0.5,
+   "mShape": "rect",
+   "mText": "Counted",
+   "mInset": 22,
+   "mAmp": 2.5,
+   "mScale": 28,
+   "mRough": 5,
+   "mFeather": 1.2,
+   "mMode": "speckle",
+   "lift": 1,
+   "mBite": 0,
+   "seed": 21
+  }
+ },
+ "presets": [
+  {
+   "name": "fine pen",
+   "params": {}
+  },
+  {
+   "name": "technical .1",
+   "params": {
+    "pitch": 1.2,
+    "dotR": 0.36,
+    "jitter": 0.95,
+    "sizeVar": 0.1,
+    "irregular": 0.08,
+    "rag": 0.03
+   }
+  },
+  {
+   "name": "source · coarse",
+   "params": {
+    "pitch": 2.7,
+    "dotR": 0.95,
+    "sizeVar": 0.35,
+    "irregular": 0.3,
+    "rag": 0.2,
+    "ease": [
+     "in",
+     1.5
+    ]
+   }
+  },
+  {
+   "name": "AM screen",
+   "params": {
+    "screen": 1,
+    "order": "ordered",
+    "pitch": 2.4,
+    "dotR": 1.1,
+    "jitter": 0,
+    "sizeVar": 0,
+    "irregular": 0.05
+   }
+  },
+  {
+   "name": "radial burst",
+   "params": {
+    "source": "radial",
+    "ease": [
+     "out",
+     2
+    ],
+    "from": 0,
+    "to": 0.9
+   }
+  }
+ ],
+ "recipe": [
+  "Site lattice at the pitch (CSS px), jittered. Value field (linear · radial · noise) eased from → to.",
+  "Screen: FM keeps a site when its blue-noise rank < value; AM keeps every site with radius ∝ √value; the dial interpolates. The mask is sampled at the site — dots are whole or absent.",
+  "Each dot is geometry: a signed distance to an irregular nib outline (7 vertex radii), so its edge is always 1 device px of anti-aliasing — never a blur.",
+  "The stock edits the edge: the distance is displaced by the stock height (edge rag), valleys inside the dot can starve, fibers wick a short way out. Film τ = thickness × pressure.",
+  "Color: Beer–Lambert film in linear light (or a coverage mix). Ink B overprints by the same film product.",
+  "Light last: × the stock's shading under the sheet light."
+ ],
+ "limits": [
+  {
+   "param": "pitch",
+   "range": "< 1.2 px",
+   "what": "sites merge into flat tone at 1× — the stipple stops reading as marks"
+  },
+  {
+   "param": "dot radius",
+   "range": "< .3 px",
+   "what": "below ~½ device px at 1× a dot is a gray pixel, not a mark"
+  },
+  {
+   "param": "dot radius",
+   "range": "> ½ pitch",
+   "what": "dots fuse into a solid; FM loses its range"
+  },
+  {
+   "param": "edge rag",
+   "range": "> .9 px",
+   "what": "dots read as fuzz, not ink"
+  },
+  {
+   "param": "selection",
+   "range": "white",
+   "what": "clumps and voids at low density"
+  }
+ ],
+ "testVector": {
+  "W": 256,
+  "H": 192,
+  "dpr": 1,
+  "light": {
+   "az": 225,
+   "el": 34
+  },
+  "params": "defaults",
+  "S": "defaults of every effect",
+  "output": "FX.toRGBA(R,'image',W,H)",
+  "sha256": "f7dfa6ae21a1187b42175b33d35ce3154d50ed7798e724a664949e63ba5178c1",
+  "engine": "V8 · Node 22.23.4"
+ }
+}

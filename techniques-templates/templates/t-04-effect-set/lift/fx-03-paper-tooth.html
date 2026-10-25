@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FX-03 Paper tooth · standalone · T-04</title>
+<link rel="stylesheet" href="../../../_shared/fonts.css">
+<style>body{margin:0;background:#fff;font:12px/1.5 'JetBrains Mono',ui-monospace,monospace;color:#101014}main{max-width:860px;margin:0 auto;padding:28px 18px}canvas{display:block;width:100%;aspect-ratio:4/3;border:1px solid #E7E4DD}p{margin:10px 0}a{color:#2F5AE6}</style></head>
+<body><main><p><b>FX-03 Paper tooth</b> · standalone: fx.js + set.js, defaults, nothing else from the sheet · <a href="../index.html#fx-03-paper-tooth">back to the sheet</a> · <a href="../spec/fx-03-paper-tooth.json">spec</a></p>
+<canvas id="c"></canvas><p id="st"></p><p id="tv"></p></main>
+<script src="../fx.js"></script><script src="../set.js"></script>
+<script>
+const D=Object.fromEntries(FXSET.effects.map(e=>[e.id,Object.fromEntries(e.params.map(p=>[p.key,JSON.parse(JSON.stringify(p.value))]))]));
+const fx=FXSET.effects.find(e=>e.id==='fx-03-paper-tooth'), o=D['fx-03-paper-tooth'];
+(document.fonts?Promise.all([document.fonts.load('800 40px Archivo'),document.fonts.load('500 12px "JetBrains Mono"')]).catch(()=>{}):Promise.resolve()).then(()=>{
+  const c=document.getElementById('c'), r=c.getBoundingClientRect(), dpr=Math.min(3,devicePixelRatio||1), W=Math.floor(r.width*dpr), H=Math.floor(r.height*dpr); c.width=W; c.height=H;
+  const t0=performance.now(), clips=FXSET.clips('fx-03-paper-tooth',W,H,dpr,o); FX.LIGHT={az:225,el:34};
+  const R=fx.run(o,W,H,dpr,{S:D,clips}); c.getContext('2d').putImageData(new ImageData(FX.toRGBA(R,'image',W,H),W,H),0,0);
+  document.getElementById('st').textContent=W+' × '+H+' device px · '+R.marks+' '+(R.markUnit||'')+' · '+Math.round(performance.now()-t0)+' ms';
+  const want='400fc394fe165d17ac89f65f2641fb461a8bb293879b20f1d61e5775a07302ac'; FX.LIGHT={az:225,el:34}; const R2=fx.run(o,256,192,1,{S:D}); const buf=FX.toRGBA(R2,'image',256,192); crypto.subtle.digest('SHA-256',buf).then(d=>{ const got=[...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join(''); document.getElementById('tv').innerHTML=(got===want?'<b style="color:#1a7f37">test vector ✓</b> ':'<b style="color:#F4551E">test vector ✗</b> ')+'sha256 '+got.slice(0,16)+'… (256×192, defaults)'; });
+});
+</script></body></html>

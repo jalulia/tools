@@ -1,0 +1,647 @@
+{
+ "id": "fx-02-ink-edge",
+ "code": "FX-02",
+ "name": "Ink leaving paper",
+ "role": "mark · roller",
+ "section": "surfaces",
+ "set": "Set 01",
+ "sub": "A solid that runs out. Roller pressure eases off across a warped edge; as it falls, only the peaks of the stock still touch the ink, so the run-out speckle is the paper's own tooth — with pinholes in its valleys and hairlines wicked along its fibers.",
+ "entry": {
+  "scripts": [
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/fx.js",
+   "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/set.js"
+  ],
+  "globals": [
+   "FX",
+   "FXSET"
+  ],
+  "find": "FXSET.effects.find(e => e.id === 'fx-02-ink-edge')",
+  "call": "fx.run(o, W, H, dpr, { S })",
+  "standalone": "https://jalulia.github.io/tools/techniques-templates/templates/t-04-effect-set/lift/fx-02-ink-edge.html"
+ },
+ "signature": {
+  "in": {
+   "o": "params object — keys below; every length in CSS px",
+   "W": "device px width",
+   "H": "device px height",
+   "dpr": "device px per CSS px (density is physical: marks per CSS px²)",
+   "x": {
+    "S": "params of every effect keyed by id; the stock this prints on is read from S[printsOn]",
+    "umask": "optional: clips.umask — a typed or image mask (mShape type | image)"
+   }
+  },
+  "out": {
+   "lin": "Float32Array W·H·3, linear-light sRGB (encode with FX.toRGBA(R,\"image\",W,H))",
+   "ink": "Float32Array W·H, absorbance / coverage (FX.toRGBA(R,\"ink\",…) = film positive)",
+   "stock": "Float32Array W·H, stock height (FX.toRGBA(R,\"stock\",…) = normalized height map)",
+   "mask": "Float32Array W·H",
+   "marks": "int — count of marks",
+   "markUnit": "string"
+  }
+ },
+ "light": {
+  "global": "FX.LIGHT",
+  "default": {
+   "az": 225,
+   "el": 34
+  },
+  "note": "az = direction the light comes FROM (screen degrees; 0 = right, 90 = below); el = elevation above the sheet"
+ },
+ "printsOn": "fx-03-paper-tooth",
+ "deterministic": "yes — every random draw is a hash of (position, seed); same inputs → same pixels in the same engine",
+ "params": [
+  {
+   "key": "streak",
+   "label": "Streak",
+   "group": "density",
+   "type": "range",
+   "default": 1.25,
+   "min": 1,
+   "max": 10,
+   "step": 0.1,
+   "limits": [
+    {
+     "lo": 6,
+     "hi": 10,
+     "why": "scanlines on-axis"
+    }
+   ],
+   "note": "film-split clumps stretched along the stroke — dry roller, dragged brush"
+  },
+  {
+   "key": "pressure",
+   "label": "Roller pressure",
+   "group": "density",
+   "type": "range",
+   "default": 1,
+   "min": 0.4,
+   "max": 1,
+   "step": 0.01,
+   "note": "pressure in the solid; below 1 the body starts to open up"
+  },
+  {
+   "key": "angle",
+   "label": "Stroke angle",
+   "group": "dropoff",
+   "type": "range",
+   "default": 0,
+   "min": 0,
+   "max": 360,
+   "step": 1,
+   "unit": "°",
+   "note": "direction the roller travels (it runs out along this vector)"
+  },
+  {
+   "key": "edge",
+   "label": "Edge position",
+   "group": "dropoff",
+   "type": "range",
+   "default": 0.58,
+   "min": 0,
+   "max": 1,
+   "step": 0.005,
+   "note": "where the run-out is centered across the plate"
+  },
+  {
+   "key": "width",
+   "label": "Transition",
+   "group": "dropoff",
+   "type": "range",
+   "default": 130,
+   "min": 1,
+   "max": 420,
+   "step": 1,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 1,
+     "hi": 4,
+     "why": "hard vector edge"
+    }
+   ],
+   "note": "width of the run-out band"
+  },
+  {
+   "key": "ease",
+   "label": "Dropoff curve",
+   "group": "dropoff",
+   "type": "ease",
+   "default": [
+    "smooth",
+    2
+   ],
+   "curves": [
+    "linear",
+    "smooth",
+    "smoother",
+    "in",
+    "out",
+    "inout",
+    "expo",
+    "sigmoid"
+   ],
+   "note": "pressure across the band — how fast the ink gives out"
+  },
+  {
+   "key": "wAmp",
+   "label": "Edge warp",
+   "group": "dropoff",
+   "type": "range",
+   "default": 18,
+   "min": 0,
+   "max": 90,
+   "step": 0.5,
+   "unit": "px",
+   "note": "how far the edge line wanders"
+  },
+  {
+   "key": "wScale",
+   "label": "Warp scale",
+   "group": "dropoff",
+   "type": "range",
+   "default": 90,
+   "min": 8,
+   "max": 400,
+   "step": 1,
+   "unit": "px",
+   "note": "wavelength of the wander"
+  },
+  {
+   "key": "wOct",
+   "label": "Warp octaves",
+   "group": "dropoff",
+   "type": "range",
+   "default": 3,
+   "min": 1,
+   "max": 5,
+   "step": 1,
+   "unit": "oct",
+   "note": "detail in the wander"
+  },
+  {
+   "key": "stock",
+   "label": "Prints on",
+   "group": "stock",
+   "type": "select",
+   "default": "paper",
+   "options": [
+    "paper",
+    "cloth",
+    "smooth"
+   ],
+   "note": "paper = FX-03 live, cloth = FX-04 live, smooth = no substrate (film-splitting noise only). Tune the stock and this plate redraws."
+  },
+  {
+   "key": "bite",
+   "label": "Stock bite",
+   "group": "stock",
+   "type": "range",
+   "default": 0.5,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "when": {
+    "stock": [
+     "paper",
+     "cloth"
+    ]
+   },
+   "note": "how much the stock height (vs film-splitting noise) decides where ink lands"
+  },
+  {
+   "key": "breakup",
+   "label": "Break-up ↔ thin",
+   "group": "stock",
+   "type": "range",
+   "default": 0.94,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "limits": [
+    {
+     "lo": 0,
+     "hi": 0.3,
+     "why": "reads as a gradient"
+    }
+   ],
+   "note": "1 = ink film breaks into marks on the peaks as pressure falls; 0 = the film stays whole and thins to tone"
+  },
+  {
+   "key": "starve",
+   "label": "Starve",
+   "group": "stock",
+   "type": "range",
+   "default": 0.018,
+   "min": 0,
+   "max": 0.3,
+   "step": 0.002,
+   "note": "the lowest share of the surface never takes ink — pinholes in the solid, placed by the paper's valleys and pits"
+  },
+  {
+   "key": "wick",
+   "label": "Wick",
+   "group": "stock",
+   "type": "range",
+   "default": 0.35,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "when": {
+    "stock": [
+     "paper",
+     "cloth"
+    ]
+   },
+   "note": "ink carried along fibers into the run-out (hairline feathering)"
+  },
+  {
+   "key": "mottle",
+   "label": "Mottle",
+   "group": "stock",
+   "type": "range",
+   "default": 0.15,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "when": {
+    "stock": [
+     "paper"
+    ]
+   },
+   "note": "paper formation (its low-frequency cloudiness) varying the film thickness"
+  },
+  {
+   "key": "split",
+   "label": "Film split",
+   "group": "stock",
+   "type": "range",
+   "default": 1.1,
+   "min": 0.5,
+   "max": 10,
+   "step": 0.1,
+   "unit": "px",
+   "note": "clump size of the film-splitting noise (the roller's own speckle)"
+  },
+  {
+   "key": "iL",
+   "label": "Ink · L",
+   "group": "color",
+   "type": "range",
+   "default": 0.4,
+   "min": 0,
+   "max": 1,
+   "step": 0.005,
+   "ink": "i",
+   "note": "OKLCH lightness (0 black … 1 white)"
+  },
+  {
+   "key": "iC",
+   "label": "Ink · C",
+   "group": "color",
+   "type": "range",
+   "default": 0.155,
+   "min": 0,
+   "max": 0.37,
+   "step": 0.002,
+   "ink": "i",
+   "limits": [
+    {
+     "lo": 0.26,
+     "hi": 0.37,
+     "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+    }
+   ],
+   "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+  },
+  {
+   "key": "ih",
+   "label": "Ink · h",
+   "group": "color",
+   "type": "range",
+   "default": 300,
+   "min": 0,
+   "max": 360,
+   "step": 0.5,
+   "unit": "°",
+   "ink": "i",
+   "note": "OKLCH hue angle"
+  },
+  {
+   "key": "density",
+   "label": "Film thickness",
+   "group": "mixing",
+   "type": "range",
+   "default": 1.2,
+   "min": 0.2,
+   "max": 2,
+   "step": 0.01,
+   "note": "ink film at full pressure (Beer–Lambert: thicker = deeper, more saturated)"
+  },
+  {
+   "key": "mix",
+   "label": "Color rule",
+   "group": "mixing",
+   "type": "select",
+   "default": "film",
+   "options": [
+    "film",
+    "oklab",
+    "oklch",
+    "linear",
+    "srgb"
+   ],
+   "note": "film = Beer–Lambert absorption in linear light (physical); oklab / oklch / linear / srgb = coverage mixes, for comparison"
+  },
+  {
+   "key": "mShape",
+   "label": "Shape",
+   "group": "mask",
+   "type": "select",
+   "default": "rect",
+   "options": [
+    "none",
+    "rect",
+    "ellipse",
+    "band",
+    "blob",
+    "type",
+    "image"
+   ],
+   "note": "the region the effect may occupy — type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)"
+  },
+  {
+   "key": "mText",
+   "label": "Mask text",
+   "group": "mask",
+   "type": "text",
+   "default": "Counted",
+   "when": {
+    "mShape": [
+     "type"
+    ]
+   },
+   "note": "set in Archivo 800, fit to the plate"
+  },
+  {
+   "key": "mInset",
+   "label": "Inset",
+   "group": "mask",
+   "type": "range",
+   "default": 14,
+   "min": 0,
+   "max": 120,
+   "step": 1,
+   "unit": "px",
+   "note": "distance from the plate edge to the mask edge"
+  },
+  {
+   "key": "mAmp",
+   "label": "Edge wander",
+   "group": "mask",
+   "type": "range",
+   "default": 5,
+   "min": 0,
+   "max": 40,
+   "step": 0.5,
+   "unit": "px",
+   "limits": [
+    {
+     "lo": 28,
+     "hi": 40,
+     "why": "above ~28 px the edge tears into islands"
+    }
+   ],
+   "note": "how far noise pushes the edge in and out"
+  },
+  {
+   "key": "mScale",
+   "label": "Wander scale",
+   "group": "mask",
+   "type": "range",
+   "default": 60,
+   "min": 4,
+   "max": 240,
+   "step": 1,
+   "unit": "px",
+   "note": "wavelength of the wander; small = ragged, large = drifting"
+  },
+  {
+   "key": "mRough",
+   "label": "Roughness",
+   "group": "mask",
+   "type": "range",
+   "default": 4,
+   "min": 1,
+   "max": 6,
+   "step": 1,
+   "unit": "oct",
+   "note": "octaves of edge noise — adds fine teeth without moving the large shape"
+  },
+  {
+   "key": "mFeather",
+   "label": "Feather",
+   "group": "mask",
+   "type": "range",
+   "default": 14,
+   "min": 0.5,
+   "max": 60,
+   "step": 0.5,
+   "unit": "px",
+   "note": "width over which coverage falls from 1 to 0"
+  },
+  {
+   "key": "mBite",
+   "label": "Bite",
+   "group": "mask",
+   "type": "range",
+   "default": 0.2,
+   "min": 0,
+   "max": 1,
+   "step": 0.01,
+   "note": "clumped dropouts that grow more likely toward the edge"
+  },
+  {
+   "key": "seed",
+   "label": "Seed",
+   "group": "seed",
+   "type": "range",
+   "default": 9,
+   "min": 1,
+   "max": 999,
+   "step": 1,
+   "note": "every random draw in the effect hangs off this one number"
+  }
+ ],
+ "defaults": {
+  "streak": 1.25,
+  "pressure": 1,
+  "angle": 0,
+  "edge": 0.58,
+  "width": 130,
+  "ease": [
+   "smooth",
+   2
+  ],
+  "wAmp": 18,
+  "wScale": 90,
+  "wOct": 3,
+  "stock": "paper",
+  "bite": 0.5,
+  "breakup": 0.94,
+  "starve": 0.018,
+  "wick": 0.35,
+  "mottle": 0.15,
+  "split": 1.1,
+  "iL": 0.4,
+  "iC": 0.155,
+  "ih": 300,
+  "density": 1.2,
+  "mix": "film",
+  "mShape": "rect",
+  "mText": "Counted",
+  "mInset": 14,
+  "mAmp": 5,
+  "mScale": 60,
+  "mRough": 4,
+  "mFeather": 14,
+  "mBite": 0.2,
+  "seed": 9
+ },
+ "depsDefaults": {
+  "fx-03-paper-tooth": {
+   "scale": 1.1,
+   "oct": 3,
+   "fibers": 3,
+   "fLen": 14,
+   "fWidth": 0.4,
+   "pits": 1,
+   "pers": 0.42,
+   "ease": [
+    "in",
+    2.4
+   ],
+   "aniso": 2.2,
+   "form": 0.3,
+   "formScale": 60,
+   "fAngle": 6,
+   "fSpread": 0.4,
+   "depth": 0.12,
+   "diffuse": 0.45,
+   "fRaise": 0.45,
+   "pDepth": 0.35,
+   "paperL": 1,
+   "fDark": 0.014,
+   "pDark": 0.02,
+   "tL": 0.7,
+   "tC": 0,
+   "th": 250,
+   "tAmt": 0.5,
+   "mShape": "rect",
+   "mText": "Counted",
+   "mInset": 22,
+   "mAmp": 2.5,
+   "mScale": 28,
+   "mRough": 5,
+   "mFeather": 1.2,
+   "mMode": "speckle",
+   "lift": 1,
+   "mBite": 0,
+   "seed": 21
+  }
+ },
+ "presets": [
+  {
+   "name": "roller",
+   "params": {}
+  },
+  {
+   "name": "dry brush",
+   "params": {
+    "streak": 7,
+    "width": 240,
+    "breakup": 1,
+    "split": 2.2,
+    "bite": 0.35,
+    "wAmp": 6,
+    "ease": [
+     "out",
+     1.6
+    ]
+   }
+  },
+  {
+   "name": "letterpress",
+   "params": {
+    "width": 3,
+    "pressure": 0.86,
+    "starve": 0.05,
+    "mottle": 0.4,
+    "wAmp": 1,
+    "density": 1.1
+   }
+  },
+  {
+   "name": "riso",
+   "params": {
+    "iL": 0.66,
+    "iC": 0.2,
+    "ih": 2,
+    "density": 0.85,
+    "mottle": 0.55,
+    "width": 60,
+    "split": 0.9
+   }
+  },
+  {
+   "name": "vertical",
+   "params": {
+    "angle": 90,
+    "edge": 0.5,
+    "width": 180
+   }
+  }
+ ],
+ "recipe": [
+  "Pressure = dropoff curve of the signed distance to a warped edge line (stroke direction, transition width), × the mask.",
+  "Ink chain: the stock height under the inked area (blended with film-splitting noise, clumped and streaked along the stroke) is ranked to percentiles; pressure P inks exactly the top P of the surface — peaks first.",
+  "Starve: valleys below the threshold never take ink. Wick: fibers carry ink past the edge. Mottle: paper formation thins the film.",
+  "Film thickness thins with pressure unless the film breaks up; color = Beer–Lambert film in linear light.",
+  "Light last: × the stock's shading — the ink sits in the tooth, not on top of it."
+ ],
+ "limits": [
+  {
+   "param": "transition",
+   "range": "< 4 px",
+   "what": "reads as a hard vector edge — no run-out to see"
+  },
+  {
+   "param": "break-up",
+   "range": "< .3",
+   "what": "the edge becomes a gradient — the \"AI gradient\" failure"
+  },
+  {
+   "param": "stock bite",
+   "range": "< .3",
+   "what": "speckle stops following the paper — reads as digital dither"
+  },
+  {
+   "param": "streak",
+   "range": "> 6",
+   "what": "marks read as scanlines unless the angle is off-axis"
+  }
+ ],
+ "testVector": {
+  "W": 256,
+  "H": 192,
+  "dpr": 1,
+  "light": {
+   "az": 225,
+   "el": 34
+  },
+  "params": "defaults",
+  "S": "defaults of every effect",
+  "output": "FX.toRGBA(R,'image',W,H)",
+  "sha256": "0e0b9b1f9ac05d6e01ef0ba430fe25340d1e237964c0a59bd54c17fd3f8ed622",
+  "engine": "V8 · Node 22.23.4"
+ }
+}

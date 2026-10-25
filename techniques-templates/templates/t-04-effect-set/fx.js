@@ -116,7 +116,8 @@ FX.mixShaded=(px,ink,dL,t,space)=>{ const L=clamp(ink.L+dL,0,1); TMP.L=L; TMP.C=
    by a feather — either as tone (soft) or as speckle (binary, blue-noise thresholded: ink that breaks up rather than fades).
    "bite" removes clumped holes whose likelihood rises toward the edge (worn, torn, starved). */
 FX.MASK_PARAMS=(d={},opt={})=>[
-  {key:'mShape',label:'Shape',group:'mask',type:'select',options:['none','rect','ellipse','band','blob'],value:d.mShape||'rect',note:'the region the effect is allowed to occupy'},
+  {key:'mShape',label:'Shape',group:'mask',type:'select',options:['none','rect','ellipse','band','blob','type','image'],value:d.mShape||'rect',note:'the region the effect may occupy — type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)'},
+  {key:'mText',label:'Mask text',group:'mask',type:'text',value:d.mText||'Counted',maxlength:60,when:{mShape:['type']},note:'set in Archivo 800, fit to the plate'},
   {key:'mInset',label:'Inset',group:'mask',type:'range',min:0,max:120,step:1,unit:'px',value:d.mInset??18,note:'distance from the plate edge to the mask edge'},
   {key:'mAmp',label:'Edge wander',group:'mask',type:'range',min:0,max:40,step:.5,unit:'px',value:d.mAmp??6,note:'how far noise pushes the edge in and out',limits:[[28,40,'above ~28 px the edge tears into islands']]},
   {key:'mScale',label:'Wander scale',group:'mask',type:'range',min:4,max:240,step:1,unit:'px',value:d.mScale??60,note:'wavelength of the wander; small = ragged, large = drifting'},
@@ -132,7 +133,7 @@ FX.mask=(o,W,H,dpr,seed)=>Float32Array.from(FX.maskField(o,W,H,dpr,seed).m);
 FX.maskField=(o,W,H,dpr,seed)=>{ const key=[o.mShape,o.mInset,o.mAmp,o.mScale,o.mRough,o.mFeather,o.mMode,o.mBite,W,H,dpr,seed].join('|'); const hit=MASKS.get(key); if(hit) return hit;
   const R=FX._mask(o,W,H,dpr,seed); MASKS.set(key,R); if(MASKS.size>16) MASKS.delete(MASKS.keys().next().value); return R; };
 FX._mask=(o,W,H,dpr,seed)=>{ const M=new Float32Array(W*H); const sh=o.mShape||'none';
-  if(sh==='none'){ M.fill(1); return {m:M,d:null}; }
+  if(sh==='none'||sh==='type'||sh==='image'){ M.fill(1); return {m:M,d:null}; } // type / image arrive as a main-thread clip (x.clips.umask)
   const D=new Float32Array(W*H);
   const w=W/dpr, h=H/dpr, ins=o.mInset, amp=o.mAmp, sc=o.mScale, oct=o.mRough|0, fe=Math.max(.5,o.mFeather), bite=o.mBite, s=seed*7+3;
   const cx=w/2, cy=h/2, rx=Math.max(1,w/2-ins), ry=Math.max(1,h/2-ins), rr=Math.min(rx,ry)*.05;
@@ -192,6 +193,13 @@ FX.hshadow=(h,W,H,dpr,depth,L,reachPx,soft=.5)=>{ const [lx,ly,lz]=FX.lightVec(L
     for(let k=1;k<=steps;k++){ const X=(x+ux*st*k)|0, Y=(y+uy*st*k)|0; if(X<0||Y<0||X>=W||Y>=H) break; const need=h0+st*k*tanE, have=h[Y*W+X]*hd; if(have>need){ const o=(have-need)/(soft*hd+1e-3); if(o>occ) occ=o; } }
     out[i]=1-(occ>1?1:occ); }
   return out; };
+/* normals of a height field given in CSS px (neighbors are 1 device px apart) */
+FX.normals=(hpx,W,H,dpr)=>{ const nx=new Float32Array(W*H), ny=new Float32Array(W*H), nz=new Float32Array(W*H), k=dpr*.5;
+  for(let y=0;y<H;y++){ const r=y*W, up=(y>0?y-1:y)*W, dn=(y<H-1?y+1:y)*W; for(let x=0;x<W;x++){ const sx=(hpx[r+(x<W-1?x+1:x)]-hpx[r+(x>0?x-1:x)])*k, sy=(hpx[dn+x]-hpx[up+x])*k, n=1/Math.sqrt(sx*sx+sy*sy+1), i=r+x; nx[i]=-sx*n; ny[i]=-sy*n; nz[i]=n; } }
+  return {nx,ny,nz}; };
+/* half vector for a viewer straight above the sheet */
+FX.halfVec=(L=FX.LIGHT)=>{ const [lx,ly,lz]=FX.lightVec(L), hx=lx, hy=ly, hz=lz+1, n=Math.hypot(hx,hy,hz); return [hx/n,hy/n,hz/n]; };
+
 /* separable box blur ×3 ≈ gaussian, radius in device px */
 FX.blur=(src,W,H,r)=>{ r=Math.max(0,Math.round(r)); if(!r) return Float32Array.from(src); let a=Float32Array.from(src), b=new Float32Array(W*H);
   const pass=(s,d,horiz)=>{ const n=horiz?W:H, m=horiz?H:W, inv=1/(2*r+1); for(let j=0;j<m;j++){ let acc=0; const at=i=>{ i=i<0?0:i>=n?n-1:i; return horiz?s[j*W+i]:s[i*W+j]; };
@@ -205,6 +213,16 @@ FX.castShadow=(alpha,W,H,dpr,L,lift=1)=>{ const [lx,ly,lz]=FX.lightVec(L), pl=Ma
   for(let i=0;i<out.length;i++){ const v=.3*c[i]+.2*a[i]; out[i]=v*(1-alpha[i]); } return out; };
 /* film LUT: per-channel transmittance ink^τ for τ ∈ [0,2], 1025 steps */
 FX.filmLUT=(ink)=>{ const N=1024, T=new Float32Array((N+1)*3), l=ink.lin.map(v=>Math.log(v<1e-4?1e-4:v)); for(let i=0;i<=N;i++){ const t=i/N*2; T[i*3]=Math.exp(l[0]*t); T[i*3+1]=Math.exp(l[1]*t); T[i*3+2]=Math.exp(l[2]*t); } return T; };
+
+/* buffers → RGBA for display / export: image (sRGB encode), ink plate (film positive), stock (normalized height), mask */
+FX.toRGBA=(R,view,W,H)=>{ const out=new Uint8ClampedArray(W*H*4);
+  if(view==='image'||!view){ const l=R.lin; for(let i=0,j=0,k=0;i<W*H;i++,j+=4,k+=3){ out[j]=FX.enc(l[k]); out[j+1]=FX.enc(l[k+1]); out[j+2]=FX.enc(l[k+2]); out[j+3]=255; } return out; }
+  const f=view==='ink'?R.ink:view==='stock'?R.stock:R.mask;
+  let mn=0, mx=1; if(view==='stock'&&f){ mn=1e9; mx=-1e9; for(let i=0;i<f.length;i++){ const v=f[i]; if(v<mn) mn=v; if(v>mx) mx=v; } if(mx-mn<1e-6){ mn=0; mx=1; } }
+  for(let i=0,j=0;i<W*H;i++,j+=4){ let v=f?f[i]:0, g;
+    if(view==='stock') g=f?Math.round(255*(v-mn)/(mx-mn)):128;          // height map: low = black, high = white
+    else { if(v>1) v=1; if(v<0) v=0; g=Math.round(255*(1-v)); }        // ink plate / mask: ink = black, as a film positive
+    out[j]=out[j+1]=out[j+2]=g; out[j+3]=255; } return out; };
 
 /* ── canvas helpers ── */
 FX.fit=(canvas,scale=1)=>{ const r=canvas.getBoundingClientRect(); const dpr=Math.min(2,(typeof devicePixelRatio!=='undefined'?devicePixelRatio:1)||1)*scale;
