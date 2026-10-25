@@ -550,7 +550,7 @@ const foil={ id:'fx-08-foil', code:'FX-08', name:'Hot foil', role:'mark · foil'
     for(let y=0;y<H;y++) for(let X=0;X<W;X++){ const i=y*W+X, base=sh[i]*hs; const u_=X/dpr, v_=y/dpr, fac=.75*FX.gnoise(u_/4.5,v_/4.5,s+4)+.25*FX.gnoise(u_/1.6+9.1,v_/1.6-3.3,s+5); hpx[i]=base*(1-o.crush*dent[i])+dent[i]*(o.grain*(fac-.5)*2.4)-o.dent*dent[i]; } // foil grain: broad facets (4.5 px) + a fainter crinkle, never per-pixel sand
     // the key is a large soft box at the light's azimuth, spanning from the light up toward the zenith (center at ~55% of the way)
     const LL=FX.LIGHT, ec=(LL.el+(90-LL.el)*.55)*PI/180, ea=LL.az*PI/180, cx_=Math.cos(ea)*Math.cos(ec), cy_=Math.sin(ea)*Math.cos(ec), cz_=Math.sin(ec), bw=1/(1+o.box*.18);
-    const N=FX.normals(hpx,W,H,dpr), [lx,ly,lz]=FX.lightVec(), fl=FX.inkOf(o,'f'), w2=W/dpr/2, h2=H/dpr/2, camZ=o.cam*Math.max(w2,h2)*2;
+    const N=FX.normals(hpx,W,H,dpr), [lx,ly,lz]=FX.lightVec(), fl=FX.inkOf(o,'f'), w2=W/dpr*(o.camX??.5), h2=H/dpr*(o.camY??.5), camZ=o.cam*Math.max(w2,h2)*2;
     const alb=baseAlb(st,x,W,H), lfb=x.lf||(st?st.lf:null), lin=light(alb,lfb,W,H), cov=new Float32Array(W*H), o3=[0,0,0]; let n=0;
     for(let y=0;y<H;y++) for(let X=0;X<W;X++){ const i=y*W+X; let c=clip[i]; if(c<=0) continue;
       if(st) c*=clamp((hp[i]-q)*dpr*40+.5,0,1); if(c>0&&c<1&&o.flash>0){ const t=lerp(c,c*c,o.flash), gn=FX.grain(X/dpr,y/dpr,s+12,.6,dpr); c=lerp(c,clamp((t-gn)*6+.5,0,1),o.flash); } if(c<=.001) continue; cov[i]=c; n++;
