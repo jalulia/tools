@@ -106,6 +106,8 @@ function copyStaticTool(name) {
     recursive: true,
     filter: (src) => {
       const base = src.split('/').pop();
+      // a folder holding a .private marker stays in the repo but is never deployed
+      if (existsSync(join(src, '.private'))) { console.log(`   private, not deployed: ${src.slice(ROOT.length + 1)}`); return false; }
       return !['tool.json', 'package.json', 'node_modules', '.git', 'dist', '_site'].includes(base);
     },
   });
