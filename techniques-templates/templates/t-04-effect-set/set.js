@@ -93,7 +93,7 @@ function clothField(o,W,H,dpr,jq){ const key=keyOf(o,CLOTH_KEYS)+'|'+W+'|'+H+'|'
     const tpx=(warpTop?pw:ph)*dpr, twA=.11*clamp((tpx-4.5)/6,0,1), twist=twA?twA*Math.sin(TAU*((warpTop?v:u)/((warpTop?pw:ph)*.62)+acrT*.9)+nT*1.7):0;
     const hT=(.42+.58*cylT*(.3+.7*along))*(worn?.82:1)+hr*.35+twist*cylT, hU=.2+.26*cylU;
     h[id]=und*hU*(1-top)+top*hT; a[id]=Math.max(top,und); hair[id]=top*clamp(hr*2+.5,0,1)*o.hair;
-    const k=id*3; px[0]=alb[k];px[1]=alb[k+1];px[2]=alb[k+2];
+    const k=id*3; if(!D||D[id]>0){ px[0]=GAP[0];px[1]=GAP[1];px[2]=GAP[2]; } else { px[0]=alb[k];px[1]=alb[k+1];px[2]=alb[k+2]; } // partial thread coverage blends over the dark behind the cloth, not the page (no bright dots at thread corners)
     const fleck=o.aMode!=='threads'&&(warpTop?hash(ti,tj-ra,s+41):hash(ti-ra,tj,s+43))<o.accent, inkT=(T.acc[nT]||fleck)?acc:T.base, inkU=U.acc[nU]?acc:U.base;
     // per-thread color is constant (dye lot, wear) → cached; AA edges blend in linear light (optical, 1 device px)
     const ground=jq&&!figAt(ti,tj);
