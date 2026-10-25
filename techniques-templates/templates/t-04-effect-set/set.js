@@ -572,6 +572,203 @@ const foil={ id:'fx-08-foil', code:'FX-08', name:'Hot foil', role:'mark · foil'
       const k=i*3; for(let ch=0;ch<3;ch++){ const m=base[ch]*env+glint*(.3+.7*base[ch]); lin[k+ch]=lin[k+ch]*(1-c)+m*c; } }
     return {alb,lf:lfb,lin,ink:cov,stock:hpx,mask:clip,marks:n,markUnit:'foiled px'}; } };
 
+/* ── new marks · e ── */
+/* shared helpers: bilinear sample (zero outside the plate), 1-D tables for per-stroke noise, pixel-integrated gaussian */
+const e_bil=(A,W,H,x,y)=>{ x-=.5; y-=.5; const x0=Math.floor(x), y0=Math.floor(y), fx=x-x0, fy=y-y0, at=(X,Y)=>X<0||Y<0||X>=W||Y>=H?0:A[Y*W+X];
+  const a=at(x0,y0), b=at(x0+1,y0), c=at(x0,y0+1), d=at(x0+1,y0+1); return a+(b-a)*fx+(c-a)*fy+(a-b-c+d)*fx*fy; };
+const e_erf=x=>{ const a=x<0?-x:x, t=1/(1+.3275911*a), y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-a*a); return x<0?-y:y; };
+const e_tab=(a,b,step,fn)=>{ const n=Math.ceil((b-a)/step)+2, T=new Float32Array(n); for(let i=0;i<n;i++) T[i]=fn(a+i*step); return {a,step,T,n,at(x){ let f=(x-this.a)/this.step; if(f<0) f=0; if(f>this.n-1.001) f=this.n-1.001; const i=f|0; return this.T[i]+(this.T[i+1]-this.T[i])*(f-i); }, d(x){ let f=(x-this.a)/this.step; if(f<0) f=0; if(f>this.n-1.001) f=this.n-1.001; const i=f|0; return (this.T[i+1]-this.T[i])/this.step; }}; };
+/* botany for the sun print: tapered ribbons along quadratics (stems, rachis, blades), ellipse pinnules, spikelets */
+const e_q=(a,c,b,t)=>{ const m=1-t; return [m*m*a[0]+2*m*t*c[0]+t*t*b[0], m*m*a[1]+2*m*t*c[1]+t*t*b[1]]; };
+const e_qt=(a,c,b,t)=>{ const m=1-t, x=2*m*(c[0]-a[0])+2*t*(b[0]-c[0]), y=2*m*(c[1]-a[1])+2*t*(b[1]-c[1]), l=Math.hypot(x,y)||1; return [x/l,y/l]; };
+const e_ribbon=(g,a,c,b,w0,w1,n=40,pw=1)=>{ const Lf=[],Rt=[]; for(let i=0;i<=n;i++){ const t=i/n, p=e_q(a,c,b,t), d=e_qt(a,c,b,t), hw=(w0+(w1-w0)*Math.pow(t,pw))/2; Lf.push([p[0]-d[1]*hw,p[1]+d[0]*hw]); Rt.push([p[0]+d[1]*hw,p[1]-d[0]*hw]); }
+  g.beginPath(); Lf.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y)); for(let i=Rt.length-1;i>=0;i--) g.lineTo(Rt[i][0],Rt[i][1]); g.closePath(); g.fill(); };
+/* a fern frond: a tapering rachis; alternate pinnae, each one closed outline with lobed (pinnatifid) margins — one leaflet, not beads */
+const e_pinna=(g,p,pc,q,wd,m,ph)=>{ const N=Math.max(24,m*8), Lf=[], Rt=[];
+  for(let i=0;i<=N;i++){ const t=i/N, c=e_q(p,pc,q,t), d=e_qt(p,pc,q,t), env=Math.sqrt(Math.max(0,1-t))*sstep(0,.1,t)*(1-.25*t)+.012;
+    for(const sd of [-1,1]){ const ph2=m*t+(sd>0?ph:ph+.5), lobe=Math.pow(Math.abs(Math.sin(PI*ph2)),.55)*(.75+.5*hash(Math.floor(ph2),sd+3,(ph*1e4)|0)), r=wd*env*(.48+.52*lobe)+.35, pt=[c[0]-d[1]*r*sd,c[1]+d[0]*r*sd]; (sd<0?Lf:Rt).push(pt); } }
+  g.beginPath(); Lf.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y)); for(let i=Rt.length-1;i>=0;i--) g.lineTo(Rt[i][0],Rt[i][1]); g.closePath(); g.fill(); };
+const e_frond=(g,base,tip,bend,R,np=40)=>{ const dx=tip[0]-base[0], dy=tip[1]-base[1], L=Math.hypot(dx,dy), c=[(base[0]+tip[0])/2-dy*bend,(base[1]+tip[1])/2+dx*bend];
+  e_ribbon(g,base,c,tip,L*.012,L*.002,60,.8);
+  for(let k=0;k<np;k++){ const side=k%2?1:-1, t=.09+.89*Math.pow(k/(np-1),.92), p=e_q(base,c,tip,t), d=e_qt(base,c,tip,t);
+    const env=t<.24?.55+.45*sstep(0,.24,t):1-.86*Math.pow((t-.24)/.76,1.05), Lp=L*.25*env*(.94+.12*R()), ang=side*(72-24*t+(R()-.5)*6)*PI/180, ca=Math.cos(ang), sa=Math.sin(ang), pd=[d[0]*ca-d[1]*sa,d[0]*sa+d[1]*ca];
+    const q=[p[0]+pd[0]*Lp,p[1]+pd[1]*Lp], pc=[p[0]+pd[0]*Lp*.5+d[0]*Lp*.16,p[1]+pd[1]*Lp*.5+d[1]*Lp*.16], wd=L*.021*(.6+.4*env), m=Math.max(2,Math.round(Lp/(L*.019)));
+    e_pinna(g,p,pc,q,wd,m,R()*.3); }
+  e_pinna(g,e_q(base,c,tip,.95),e_q(base,c,tip,.98),[tip[0]+dx/L*L*.025,tip[1]+dy/L*L*.025],L*.012,2,0); };
+const e_grass=(g,w,h,R)=>{ const B=13;
+  for(let k=0;k<B;k++){ const bx=w*(.16+.68*(k+R()*.8)/B), by=h*1.03, ht=h*(.5+.38*R()), lean=(R()-.5)*w*.36, wd=8+9*R();
+    if(R()<.3){ const tip=[bx+lean*1.5+(lean>0?w*.08:-w*.08),by-ht*.62], c=[bx+lean*.55,by-ht*1.12]; e_ribbon(g,[bx,by],c,tip,wd,.35,60,2.2); } // a blade folded over
+    else { const tip=[bx+lean,by-ht], c=[bx+lean*.15+(R()-.5)*w*.08,by-ht*.62]; e_ribbon(g,[bx,by],c,tip,wd,.35,60,2.2); } }
+  for(let k=0;k<3;k++){ const bx=w*(.3+.2*k+(R()-.5)*.08), by=h*1.03, ht=h*(.72+.14*R()), lean=(R()-.5)*w*.22, tip=[bx+lean,by-ht], c=[bx+lean*.2,by-ht*.6];
+    e_ribbon(g,[bx,by],c,tip,1.9,1,50);
+    const n=14; for(let j=0;j<n;j++){ const t=.56+.44*j/(n-1), p=e_q([bx,by],c,tip,t), d=e_qt([bx,by],c,tip,t), side=j%2?1:-1, a=Math.atan2(d[1],d[0])+side*26*PI/180, len=(9.5-3.5*(j/(n-1)))*(.9+.2*R());
+      const e=[p[0]+Math.cos(a)*len,p[1]+Math.sin(a)*len]; g.beginPath(); g.ellipse((p[0]+e[0])/2,(p[1]+e[1])/2,len*.55,len*.17+.6,a,0,TAU); g.fill();
+      const aw=[e[0]+Math.cos(a-side*.08)*len*1.3,e[1]+Math.sin(a-side*.08)*len*1.3]; e_ribbon(g,e,[(e[0]+aw[0])/2,(e[1]+aw[1])/2],aw,.9,.45,8); } } };
+const e_botany=(g,w,h,o)=>{ const R=FX.rng((o.seed|0)+101);
+  if(o.subject==='grass') return e_grass(g,w,h,R);
+  e_frond(g,[w*.14,h*.98],[w*.8,h*.08],.06,R,38); e_frond(g,[w*.97,h*.9],[w*.62,h*.42],-.1,R,22); };
+const E_TONES={fresh:[.56,.092,224],classic:[.42,.122,257],peroxide:[.34,.13,263],tea:[.5,.032,58]};
+
+/* FX-11 · Cyanotype — a sun print: brushed sensitizer, objects shading the UV, Prussian blue where the sun reached */
+const cyanotype={ id:'fx-11-cyanotype', code:'FX-11', name:'Cyanotype', role:'mark · sun print', section:'new', stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
+  clips:{ obj:(g,w,h,o)=>{ if(o.subject==='die') drawShape(g,w,h,{shape:o.dieShape,text:o.text,size:o.dieSize}); else e_botany(g,w,h,o); } },
+  presets:[['classic fern',{}],['die print',{subject:'die',dieShape:'sun',lift:2.5,contact:.62,trans:0,expo:1.15,strokes:3,dry:.35}],['overexposed',{expo:2.8,bleed:.7,lift:10,contact:.42,trans:.06,depth:1.55}],['peroxide grass',{subject:'grass',tone:'peroxide',lift:4,contact:.6,strokes:4,bAngle:-5,trans:.01}],['tea-toned',{tone:'tea',depth:1.25,bleed:.25}]],
+  sub:'A sun print. Sensitizer is brushed on in ragged strokes that pool where the brush lands and run dry where it lifts; a fern, grass or a die sits on top and the sun does the rest. Where light reached, Prussian blue; under the object, paper. Lifted parts throw soft, offset shadows away from the sheet light — pressed parts stay sharp.',
+  recipe:[
+    'Coating = brush strokes in stroke space (along s, across t): a load that runs out along the stroke; edges displaced by per-side noise (raggedness); a set-down pool and a drying rim; bristle streaks × the stock height decide where a dry brush still deposits.',
+    'Thickness τ = load × unevenness (streaks + low-frequency drag) + pools; overlapping strokes add (a double coat prints deeper); paper valleys hold more sensitizer.',
+    'Objects (procedural fern frond, grass with spikelets, or a die) are an AA clip. Lift = a smooth field × the lift dial; contact sets how much lies flat.',
+    'Shadow: for each lift level z the clip is sampled toward the sheet light at z · cot(elevation) (smeared ±20 % along the light) and blurred by z × sky scatter; each pixel blends the two levels around its lift.',
+    'Exposure E = 1 − shadow × (1 − translucency); density = τ × (1 − e^(−k·exposure·E)) — overexposure fills the penumbra in.',
+    'Wash: unexposed coating rinses away; Prussian blue bleeds a little downhill into the whites, in streaks. Color = Beer–Lambert film of the tone (fresh, classic, peroxide-oxidized, tea-toned).',
+    'Light last: × the stock\'s shading under the sheet light.'],
+  limits:[['object lift','> 18 px','penumbra wider than the leaflets — the fern dissolves into a cloud'],['exposure','> 2.5','penumbra fills in; fine pinnules and awns vanish'],['exposure','< .5','pale, greenish print — read as underexposed'],['raggedness','> .8','stroke edges tear into islands'],['strokes','> 6','brush marks shrink into stripes']],
+  params:[
+    {key:'subject',label:'Subject',group:'density',type:'select',options:['fern','grass','die'],value:'fern',note:'what lies on the sheet: a procedural fern frond, grass with seed heads, or a die mark'},
+    {key:'dieShape',label:'Die',group:'density',type:'select',options:['compass','sun','crescent','knot','monogram'],value:'compass',when:{subject:['die']},note:'an invented mark cut from card'},
+    {key:'text',label:'Monogram',group:'density',type:'text',value:'Q',maxlength:4,when:{subject:['die'],dieShape:['monogram']}},
+    {key:'dieSize',label:'Die size',group:'density',type:'range',min:.2,max:1,step:.01,value:.72,when:{subject:['die']}},
+    {key:'strokes',label:'Brush strokes',group:'density',type:'range',min:2,max:8,step:1,value:4,note:'strokes laid top to bottom, alternating direction',limits:[[7,8,'stripes']]},
+    {key:'bAngle',label:'Brush angle',group:'density',type:'range',min:-30,max:30,step:.5,unit:'°',value:-3},
+    {key:'rag',label:'Brush-edge raggedness',group:'density',type:'range',min:0,max:1,step:.01,value:.45,note:'how far bristles and drag push each stroke edge in and out',limits:[[.8,1,'edges tear']]},
+    {key:'uneven',label:'Coating unevenness',group:'density',type:'range',min:0,max:1,step:.01,value:.45,note:'streaks and drag in the sensitizer thickness'},
+    {key:'dry',label:'Dry-brush tails',group:'density',type:'range',min:0,max:1,step:.01,value:.6,note:'how far the load runs out before the brush lifts — bristle streaks on the tooth peaks'},
+    {key:'pool',label:'Pooling',group:'density',type:'range',min:0,max:1,step:.01,value:.5,note:'sensitizer beading where the brush lands and stops, and the drying rim along each edge'},
+    {key:'expo',label:'Exposure',group:'dropoff',type:'range',min:.2,max:3,step:.01,value:1,note:'sun dose; 1 = full development of an unshaded coat',limits:[[2.5,3,'penumbra fills in'],[.2,.5,'pale, underexposed']]},
+    {key:'lift',label:'Object lift',group:'relief',type:'range',min:0,max:24,step:.1,unit:'px',value:5.5,curve:1.6,note:'height of the lifted parts above the sheet — sets the penumbra width and its offset away from the sheet light',limits:[[18,24,'the subject dissolves']]},
+    {key:'contact',label:'Contact',group:'relief',type:'range',min:0,max:1,step:.01,value:.5,note:'share of the subject pressed flat (sharp); the rest curls up (soft)'},
+    {key:'scatter',label:'Sky scatter',group:'relief',type:'range',min:.05,max:1,step:.01,value:.32,note:'penumbra per px of lift — skylight and haze around the sun'},
+    {key:'trans',label:'Translucency',group:'relief',type:'range',min:0,max:.3,step:.005,value:.015,note:'UV passing through leaf tissue (cut card: 0)',when:{subject:['fern','grass']}},
+    {key:'bleed',label:'Wash bleed',group:'mixing',type:'range',min:0,max:1,step:.01,value:.35,note:'Prussian blue carried downhill into the whites during the wash, in streaks'},
+    {key:'stock',label:'Prints on',group:'stock',type:'select',options:['paper','cloth','smooth'],value:'paper',note:'paper = FX-03 live (watercolor-like sheets suit it), cloth = FX-04 live (cyanotype on cotton)'},
+    {key:'tone',label:'Tone',group:'color',type:'select',options:['fresh','classic','peroxide','tea','custom'],value:'classic',note:'fresh = before oxidation (greener); classic = air-oxidized Prussian blue; peroxide = hydrogen-peroxide bath (deeper, violet-blue); tea = tannin-toned neutral brown'},
+    {key:'depth',label:'Blue depth',group:'color',type:'range',min:.3,max:2,step:.01,value:1.45,note:'film density of a fully exposed coat (Beer–Lambert: deeper and more saturated)'},
+    ...FX.INK_PARAMS('c','Custom tone',.4,.12,256).map(p=>Object.assign(p,{when:{tone:['custom']}})),
+    FX.SEED_PARAM(19)],
+  run(o,W,H,dpr,x={}){ const w=W/dpr,h=H/dpr,s=o.seed|0,R=FX.rng(s+7), st=stockFor(o,x,W,H,dpr), obj=(x.clips&&x.clips.obj)||new Float32Array(W*H);
+    // stock height band-limited to ~.35 px: dry-brush thresholds follow the tooth but never cut single device pixels
+    const hb=st?FX.blur(st.h,W,H,Math.max(1,Math.round(.3*dpr))):null, hm=meanH(hb), hd=st?FX.blur(st.h,W,H,Math.max(1,Math.round(.9*dpr))):null, hdm=meanH(hd);
+    /* 1 · coating */
+    const n=o.strokes|0, top=h*.075, bot=h*.925, span=(bot-top)/n, C=new Float32Array(W*H), T=new Float32Array(W*H), Tm=new Float32Array(W*H);
+    for(let k=0;k<n;k++){ const bw=span*(1.2+.14*R()), cy=top+(k+.5)*span+(R()-.5)*span*.14, dir=k%2?-1:1, a=(o.bAngle+(R()-.5)*4)*PI/180, ca=Math.cos(a)*dir, sa=Math.sin(a)*dir;
+      const xa=w*(.04+.07*R()), xb=w*(.96-.07*R()), L=(xb-xa)/Math.abs(Math.cos(a)), x0=dir>0?xa:xb, y0=cy, bow=(R()-.5)*bw*.28, dK=clamp(o.dry*(.45+.8*R()),0,1), sk=s*13+k*101;
+      const S0=-bw*.6, S1=L+bw*1.2, edge=[0,1].map(sd=>e_tab(S0,S1,.25,q=>bw*.035*(FX.gfbm(q/150,sd*9+k*3,sk+1,2,.4)-.5)*4+1.5*(FX.gfbm(q/7,sd*7+k*5,sk+2,2,.5)-.5)*2)), CAP=e_tab(-bw,bw,.25,q=>(FX.gfbm(q/10,k*2.7,sk+12,2,.5)-.5)*2);
+      const fine=Math.max(.8,1.6/dpr), BT=e_tab(-bw,bw,.1,q=>.62*FX.gnoise(q/(fine*1.9),3.1,sk+3)+.38*FX.gnoise(q/fine,8.7,sk+4)), BT2=e_tab(-bw,bw,.1,q=>.62*FX.gnoise(q/(fine*1.9),5.3,sk+5)+.38*FX.gnoise(q/fine,1.7,sk+6));
+      const TL=e_tab(-bw,bw,.1,q=>Math.pow(FX.gnoise(q/1.3,2.2,sk+7)*.7+FX.gnoise(q/5,4.4,sk+8)*.3,1.6)), MIX=e_tab(S0,S1,1,q=>FX.fbm(q/46,k,sk+9,2)), WOB=e_tab(S0,S1,1,q=>(FX.fbm(q/60,k+2,sk+10,2)-.5)*2.2);
+      for(let y=0;y<H;y++){ const v=y/dpr-y0; for(let X=0;X<W;X++){ const u=X/dpr-x0, sA=u*ca+v*sa; if(sA<S0||sA>S1) continue; const t0=-u*sa+v*ca; if(t0>bw*.85||t0<-bw*.85) continue;
+        const sc=clamp(sA/L,0,1), t=t0-bow*Math.sin(PI*sc), load=1-dK*Math.pow(sc,1.7);
+        const e=edge[t>=0?1:0].at(sA)*o.rag*(1+1.4*(1-load)), hw=bw*.5*(1-.1*(1-load))+e, dE=hw-Math.abs(t); if(dE<-1) continue;
+        const tn=clamp(t/Math.max(1,hw),-1,1), dS=sA+bw*.12*Math.sqrt(1-tn*tn)+o.rag*bw*.07*CAP.at(t), dEnd=L+dK*bw*.7*TL.at(t)-sA+(1-dK)*bw*.1*Math.sqrt(1-tn*tn);
+        const cov=clamp(dE*dpr+.5,0,1)*clamp(dS*dpr+.5,0,1)*clamp(dEnd*dpr+.5,0,1); if(cov<=0) continue;
+        const i=y*W+X, tw=t+WOB.at(sA), m=MIX.at(sA), B=BT.at(tw)*(1-m)+BT2.at(tw)*m, dB=(BT.d(tw)*(1-m)+BT2.d(tw)*m)/dpr;
+        const ez=2+11*o.rag, eT=o.rag>0?.92*Math.pow(1-clamp(dE/ez,0,1),1.6):0, sT=o.rag>0?.85*Math.pow(1-clamp(Math.min(dS,dEnd)/ez,0,1),1.6):0;
+        let c=cov; const th=Math.max(1.15*(1-load)-.12,eT,sT); if(th>-.05){ const q=.78*B+.22*(hd?clamp((hd[i]-hdm)*3.2+.5,0,1):.5), band=Math.max(.06,.7*Math.abs(.78*dB)); c*=sstep(th-band,th+band,q); } if(c<=0) continue;
+        let tau=Math.pow(load,.55)*(1+o.uneven*(.55*(FX.fbm(sA/52,t/15+k*3,sk+11,2,.5)-.5)*2+.4*(B-.5)*2));
+        tau+=o.pool*(1.1*Math.exp(-Math.max(0,sA)/(bw*.26))+1.1*(1-dK)*Math.exp(-Math.max(0,dEnd)/(bw*.2))+.4*load*Math.exp(-Math.max(0,dE)/1.1));
+        if(hb) tau*=1+.6*(hm-hb[i]);
+        const tc=c*Math.max(0,tau); C[i]=1-(1-C[i])*(1-c); T[i]+=tc; if(tc>Tm[i]) Tm[i]=tc; } } }
+    /* 2 · exposure: shadow footprints per lift level, offset away from the sheet light and softened by height */
+    const [lx,ly,lz]=FX.lightVec(), pl=Math.hypot(lx,ly)||1, ux=lx/pl, uy=ly/pl, cot=Math.min(4,pl/lz), LM=o.lift, K=LM>.05?6:1;
+    const lift=new Float32Array(W*H), ra=R()*TAU, rc=Math.cos(ra), rs=Math.sin(ra), rx=.5*Math.hypot(w,h);
+    if(K>1) for(let y=0;y<H;y++){ const v=y/dpr; for(let X=0;X<W;X++){ const u=X/dpr, nn=.72*FX.fbm(u/115,v/115,s+61,3,.5)+.28*(((u-w/2)*rc+(v-h/2)*rs)/rx*.5+.5); lift[y*W+X]=LM*sstep(o.contact-.06,o.contact+.24,nn); } }
+    const S=new Float32Array(W*H);
+    for(let j=0;j<K;j++){ const z=K>1?LM*j/(K-1):0, off=z*cot*dpr, Sj=new Float32Array(W*H);
+      const r=z*o.scatter*dpr; if(off<.05) Sj.set(obj); else { const nt=clamp(Math.ceil(off*.4/Math.max(.6,r*.5))|1,3,15), fs=Array.from({length:nt},(_,q)=>.8+.4*q/(nt-1)); for(const f of fs){ const dx=ux*off*f, dy=uy*off*f; for(let y=0;y<H;y++) for(let X=0;X<W;X++) Sj[y*W+X]+=e_bil(obj,W,H,X+.5+dx,y+.5+dy)/fs.length; } }
+      const Sb=r>=.75?FX.blur(Sj,W,H,r*.75):Sj;
+      for(let i=0;i<W*H;i++){ const f=K>1?lift[i]/LM*(K-1):0, wgt=1-Math.abs(f-j); if(wgt>0) S[i]+=wgt*Sb[i]; } }
+    /* 3 · develop: Beer–Lambert density from dose; 4 · wash: bleed downhill, streaked */
+    const tr=o.subject==='die'?0:o.trans, kk=2.2, nrm=1/(1-Math.exp(-kk)), A=new Float32Array(W*H), stain=.006;
+    for(let i=0;i<W*H;i++){ if(T[i]<=0) continue; const E=1-clamp(S[i],0,1)*(1-tr), r=Math.pow(Math.min(1.2,(1-Math.exp(-kk*o.expo*E))*nrm),1.35), Tt=Tm[i]+.45*(T[i]-Tm[i]), Ts=1.3*(1-Math.exp(-Tt/1.3)); A[i]=Ts*(stain+(1-stain)*r)*o.depth; }
+    if(o.bleed>0){ const rb=Math.max(1,Math.round(2*dpr)), Ab=FX.blur(A,W,H,rb), Cb=FX.blur(C,W,H,rb*2), dy=1.8*dpr;
+      for(let y=0;y<H;y++){ const v=y/dpr; for(let X=0;X<W;X++){ const i=y*W+X; if(Cb[i]<=.01) continue; const fl=e_bil(Ab,W,H,X+.5,y+.5-dy), sk=.5+.9*FX.fbm(X/dpr/2.6,v/36,s+91,2,.5), b=o.bleed*.55*fl*sk*Math.min(1,Cb[i]*1.4); if(b>A[i]) A[i]=b; } } }
+    /* 5 · color + light */
+    const tn=E_TONES[o.tone], ink=tn?FX.ink(tn[0],tn[1],tn[2]):FX.inkOf(o,'c'), LUT=FX.filmLUT(ink), alb=baseAlb(st,x,W,H), tea=o.tone==='tea'?FX.filmLUT(FX.ink(.9,.006,70)):null;
+    for(let i=0,k=0;i<W*H;i++,k+=3){ const a=A[i]; if(a>0){ const j=((a>=2?1024:a*512+.5)|0)*3; alb[k]*=LUT[j]; alb[k+1]*=LUT[j+1]; alb[k+2]*=LUT[j+2]; }
+      if(tea&&C[i]>0){ const j=((C[i]*.35*512+.5)|0)*3; alb[k]*=tea[j]; alb[k+1]*=tea[j+1]; alb[k+2]*=tea[j+2]; } }
+    const LF=x.lf||(st?st.lf:null); return {alb,lf:LF,lin:light(alb,LF,W,H),ink:A,stock:st?st.h:null,mask:C,marks:n,markUnit:'brush strokes'}; } };
+
+/* FX-12 · Laser char — a CO₂ beam rastering a die into card: gaussian scan lines that scorch, sink and smooth the tooth */
+const E_CHAR=[[0,.968,0,0],[.12,.83,.036,70],[.34,.6,.052,58],[.6,.37,.042,50],[.84,.2,.018,46],[1,.12,.006,42]];
+const e_fill=(clip,W,H)=>{ const out=new Float32Array(W*H).fill(1), seen=new Uint8Array(W*H), st=[]; const push=i=>{ if(!seen[i]&&clip[i]<.5){ seen[i]=1; st.push(i); } };
+  for(let x=0;x<W;x++){ push(x); push((H-1)*W+x); } for(let y=0;y<H;y++){ push(y*W); push(y*W+W-1); }
+  while(st.length){ const i=st.pop(), x=i%W; out[i]=clip[i]; if(x>0) push(i-1); if(x<W-1) push(i+1); if(i>=W) push(i-W); if(i<W*H-W) push(i+W); }
+  for(let i=0;i<W*H;i++) if(!seen[i]&&clip[i]>=.5) out[i]=clip[i]; for(let i=0;i<W*H;i++) if(seen[i]) out[i]=clip[i]; return out; };
+const e_charLUT=(()=>{ let T=null; return ()=>{ if(T) return T; T=new Float32Array(257*3); const P=FX.ink(.968,0,0).lin, o=[0,0,0];
+  for(let i=0;i<=256;i++){ const c=i/256; let k=0; while(k<E_CHAR.length-2&&c>E_CHAR[k+1][0]) k++; const A=E_CHAR[k], B=E_CHAR[k+1], f=(c-A[0])/(B[0]-A[0]), L=lerp(A[1],B[1],f), Cc=lerp(A[2],B[2],f), hh=lerp(A[3]||B[3],B[3],f)*PI/180;
+    FX.lab2lin(L,Cc*Math.cos(hh),Cc*Math.sin(hh),o); for(let ch=0;ch<3;ch++) T[i*3+ch]=clamp(o[ch],0,1)/P[ch]; } return T; }; })();
+const laser={ id:'fx-12-laser', code:'FX-12', name:'Laser char', role:'mark · beam', section:'new', stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
+  clips:{ die:(g,w,h,o)=>drawShape(g,w,h,o) },
+  presets:[['light etch',{power:.32,pitch:2.6,spot:.55,halo:.15,ablate:.12,overburn:.1}],['deep raster',{power:.85,speed:.85,pitch:1.5,spot:.5,halo:.6,haloR:2.6,ablate:1.1,overburn:.25}],['cut-through with tabs',{cut:'outline',tabs:4,power:.6,pitch:1.5,halo:.5}],['tag cut',{cut:'tag',tabs:2,shape:'monogram',text:'Ferro',size:.5,power:.7,pitch:1.4}],['power ramp',{ramp:1,rampAng:0,power:1,pitch:1.8,halo:.4}],['defocused',{focus:.55,power:.75,pitch:1.6}]],
+  sub:'A CO₂ beam rasters a die into card, one scan line at a time. Each line is a gaussian burn: past a threshold the paper scorches tan → brown → black, sinks, and the tooth is burned smooth; heat browns the fibers around it. Vector cuts go through: a charred kerf opening onto the dark bed below.',
+  recipe:[
+    'Scan lines at the pitch (≥ 2 device px), at the scan angle. Dose at a pixel = Σ over nearby lines of power ÷ speed × the beam\'s gaussian, integrated over the pixel (erf) — anti-aliased lines at any angle.',
+    'Firing gate = the die clip sampled at each line\'s centerline, softened by the spot along the scan; the head\'s turnaround adds dose just inside the edges it reverses at.',
+    'Defocus widens σ and lowers the peak (same energy, larger spot): paler, softer, lines merging. A power ramp can run across the raster.',
+    'Char = 1 − e^(−k·(dose − threshold)) → an OKLab ramp tan → brown → black, multiplied into the stock albedo (fibers char darker). Heat halo = the dose spread a few px, browning fibers first.',
+    'Relief: ablation sinks the surface with dose; the tooth is burned smooth; a fine char crust. Lit by the sheet light (grooves catch it on one wall).',
+    'Vector cut: a kerf along the die outline (offset) or a tag; tabs leave bridges. The kerf opens onto the ground below, shaded by the card edge toward the light; its walls are charred.'],
+  limits:[['line pitch','< 2 device px','clamped — finer lines alias into moiré on screen'],['power ÷ speed','> 1.4','char goes black and ablates; line structure survives only in the relief'],['defocus','> .7','reads as a smudge, not a laser'],['halo reach','> 9 px','reads as a scorch accident rather than a mark'],['kerf','> 3 px','a slot, not a laser cut']],
+  params:[...SHAPE_PARAMS({shape:'compass',text:'Ferro & Lume',size:.52}),
+    {key:'power',label:'Power',group:'density',type:'range',min:.05,max:1,step:.01,value:.55,note:'beam power in the raster; dose ∝ power ÷ speed ÷ pitch'},
+    {key:'speed',label:'Speed',group:'density',type:'range',min:.25,max:3,step:.01,value:1,note:'head speed (relative); faster = less dose per line'},
+    {key:'pitch',label:'Line pitch',group:'density',type:'range',min:1,max:6,step:.05,unit:'px',value:1.6,curve:1.5,note:'distance between scan lines; clamped to ≥ 2 device px',limits:[[1,1.2,'clamped to 2 device px at 1×']]},
+    {key:'scan',label:'Scan angle',group:'density',type:'range',min:0,max:180,step:1,unit:'°',value:0,note:'direction the head travels'},
+    {key:'spot',label:'Spot',group:'density',type:'range',min:.3,max:2,step:.01,unit:'px',value:.42,note:'beam radius σ in focus'},
+    {key:'focus',label:'Defocus',group:'density',type:'range',min:0,max:1,step:.01,value:0,note:'0 = in focus; out of focus the spot widens and its peak drops',limits:[[.7,1,'a smudge']]},
+    {key:'ramp',label:'Power ramp',group:'dropoff',type:'range',min:0,max:1,step:.01,value:0,note:'power falls across the raster, to 15 % at 1'},
+    {key:'rampAng',label:'Ramp angle',group:'dropoff',type:'range',min:0,max:360,step:1,unit:'°',value:0},
+    {key:'overburn',label:'Turnaround burn',group:'dropoff',type:'range',min:0,max:1,step:.01,value:.18,note:'extra dose where the head slows to reverse at each line end'},
+    {key:'halo',label:'Heat halo',group:'relief',type:'range',min:0,max:1,step:.01,value:.45,note:'fibers browned around the burn'},
+    {key:'haloR',label:'Halo reach',group:'relief',type:'range',min:.5,max:12,step:.1,unit:'px',value:2,limits:[[9,12,'scorch accident']]},
+    {key:'ablate',label:'Ablation',group:'relief',type:'range',min:0,max:1.5,step:.01,unit:'px',value:.4,note:'how far the surface sinks at full char'},
+    {key:'diffuse',label:'Diffuse share',group:'relief',type:'range',min:0,max:1,step:.01,value:.9},
+    {key:'cut',label:'Vector cut',group:'stock',type:'select',options:['off','outline','tag'],value:'off',note:'outline = the die cut out at an offset; tag = a rounded tag with a hole'},
+    {key:'kerf',label:'Kerf',group:'stock',type:'range',min:.4,max:4,step:.05,unit:'px',value:1.3,when:{cut:['outline','tag']},limits:[[3,4,'a slot']]},
+    {key:'cutOff',label:'Cut offset',group:'stock',type:'range',min:2,max:40,step:.5,unit:'px',value:10,when:{cut:['outline']},note:'distance from the die edge to the cut'},
+    {key:'tabs',label:'Tabs',group:'stock',type:'range',min:0,max:8,step:1,value:4,when:{cut:['outline','tag']},note:'uncut bridges that hold the part'},
+    {key:'tabW',label:'Tab width',group:'stock',type:'range',min:1,max:14,step:.5,unit:'px',value:4,when:{cut:['outline','tag']}},
+    {key:'thick',label:'Card thickness',group:'stock',type:'range',min:.2,max:4,step:.05,unit:'px',value:1.4,when:{cut:['outline','tag']},note:'sizes the card edge\'s shadow on the ground in the kerf'},
+    {key:'stock',label:'Prints on',group:'stock',type:'select',options:['paper','cloth','smooth'],value:'paper'},
+    ...FX.INK_PARAMS('g','Ground below',.17,.006,255).map(p=>Object.assign(p,{when:{cut:['outline','tag']}})),
+    FX.SEED_PARAM(12)],
+  run(o,W,H,dpr,x={}){ const st=stockFor(o,x,W,H,dpr), die=(x.clips&&x.clips.die)||new Float32Array(W*H), s=o.seed|0, N=W*H;
+    const foc=Math.sqrt(1+Math.pow(o.focus*5,2)), sig=Math.max(.5,o.spot*dpr*foc), pd=Math.max(2,o.pitch*dpr), th=o.scan*PI/180, dxs=Math.cos(th), dys=Math.sin(th), nx=-dys, ny=dxs, hwp=.5*(Math.abs(nx)+Math.abs(ny)), inv=1/(Math.SQRT2*sig);
+    const gate=sig*.7>.8?FX.blur(die,W,H,sig*.6):die, near=FX.blur(die,W,H,Math.ceil(sig*2.2+pd)), SD=o.overburn>0?FX.sdf(die,W,H):null, SDo=o.cut==='outline'?FX.sdf(e_fill(die,W,H),W,H):null;
+    let bx0=W,bx1=0,by0=H,by1=0; for(let y=0;y<H;y+=2) for(let X=0;X<W;X+=2) if(die[y*W+X]>.5){ if(X<bx0)bx0=X; if(X>bx1)bx1=X; if(y<by0)by0=y; if(y>by1)by1=y; } const bcx=(bx0+bx1)/2||W/2, bcy=(by0+by1)/2||H/2;
+    const cx=W/2, cy=H/2, RR=Math.ceil(3.2*sig/pd)+1, Pref=2.6*dpr, ra=o.rampAng*PI/180, rc=Math.cos(ra), rs=Math.sin(ra), rext=Math.max(4,(Math.abs((bx1-bx0)*rc)+Math.abs((by1-by0)*rs))/2);
+    const D=new Float32Array(N), fired=new Map();
+    for(let y=0;y<H;y++) for(let X=0;X<W;X++){ const i=y*W+X; if(near[i]<1e-4) continue; const px=X+.5-cx, py=y+.5-cy, t=px*nx+py*ny, al=px*dxs+py*dys, k0=Math.floor(t/pd);
+      let e=0; for(let k=k0-RR;k<=k0+RR;k++){ const dist=t-(k+.5)*pd; if(dist>3.4*sig+1||dist<-3.4*sig-1) continue;
+        const gx=cx+al*dxs+(k+.5)*pd*nx, gy=cy+al*dys+(k+.5)*pd*ny, gt=e_bil(gate,W,H,gx,gy); if(gt<=.002) continue; if(gt>.5) fired.set(k,1);
+        e+=gt*(1+.06*(hash(k,7,s)-.5))*.5*(e_erf((dist+hwp)*inv)-e_erf((dist-hwp)*inv))/(2*hwp); }
+      if(e<=0) continue;
+      let P=o.power*(1-o.ramp*.85*clamp(((X+.5-bcx)*rc+(y+.5-bcy)*rs)/rext*.5+.5,0,1));
+      if(SD&&o.overburn>0&&SD[i]>-1){ const gxs=SD[X<W-1?i+1:i]-SD[X>0?i-1:i], gys=SD[y<H-1?i+W:i]-SD[y>0?i-W:i], gl=Math.hypot(gxs,gys)||1; P*=1+o.overburn*1.6*Math.exp(-Math.max(0,SD[i])/(1.4*dpr))*Math.abs(gxs*dxs+gys*dys)/gl; }
+      D[i]=P/o.speed*e*Pref; }
+    // vector cut: a kerf along a path, bridged by tabs; the cut's own dose chars the kerf walls
+    let V=null; if(o.cut!=='off'){ V=new Float32Array(N); const kh=o.kerf*.5*dpr, sc=Math.max(.6,.5*dpr)*foc, nt=o.tabs|0, tw=o.tabW*.5*dpr, w=W/dpr, h=H/dpr;
+      const hx=w*.41*dpr, hy=h*.37*dpr, rr=18*dpr, hcx=-hx+28*dpr, hr=7*dpr;
+      for(let y=0;y<H;y++) for(let X=0;X<W;X++){ const i=y*W+X, px=X+.5-cx, py=y+.5-cy; let l;
+        if(o.cut==='outline') l=Math.abs(SDo[i]+o.cutOff*dpr); else { const qx=Math.abs(px)-(hx-rr), qy=Math.abs(py)-(hy-rr), d=Math.hypot(Math.max(qx,0),Math.max(qy,0))+Math.min(Math.max(qx,qy),0)-rr; l=Math.min(Math.abs(d),Math.abs(Math.hypot(px-hcx,py)-hr)); }
+        if(l>kh+5*sc) continue; let tg=1;
+        if(nt>0){ const r=Math.hypot(px,py), f=(Math.atan2(py,px)/TAU+1)*nt+.25, df=Math.abs(f-Math.round(f))*TAU/nt*r; tg=clamp(df-tw+.5,0,1); if(o.cut==='tag'&&Math.hypot(px-hcx,py)<hr*3) tg=1; }
+        V[i]=clamp(kh-l+.5,0,1)*tg; const dd=Math.max(0,l-kh); D[i]+=2.4*tg*Math.exp(-dd*dd/(2*sc*sc)); } }
+    // material response: char ramp, heat halo, ablation + smoothed tooth + crust, then light
+    const LUT=e_charLUT(), alb=baseAlb(st,x,W,H), hs=stockH(st,x.S), Hb=o.halo>0?FX.blur(D,W,H,o.haloR*dpr*.7):null, halo=FX.filmLUT(FX.ink(.64,.055,64)), hpx=new Float32Array(N), CH=new Float32Array(N);
+    for(let y=0;y<H;y++) for(let X=0;X<W;X++){ const i=y*W+X, k=i*3, d=D[i], c=1-Math.exp(-Math.max(0,d-.3)*1.35); CH[i]=c;
+      if(c>0){ const j=((c*256+.5)|0)*3; alb[k]*=LUT[j]; alb[k+1]*=LUT[j+1]; alb[k+2]*=LUT[j+2]; }
+      if(Hb){ const hv=o.halo*sstep(.04,.7,Hb[i])*(1-c)*(1+2.2*(st&&st.fib?st.fib[i]:0))*(.45+1.1*FX.gnoise(X/dpr/2.6,y/dpr/2.6,s+5))*(st&&st.form?1+.6*(st.form[i]-.5):1); if(hv>0){ const j=((Math.min(2,hv*.9)*512+.5)|0)*3; alb[k]*=halo[j]; alb[k+1]*=halo[j+1]; alb[k+2]*=halo[j+2]; } }
+      const dep=o.ablate*(1-Math.exp(-Math.max(0,d-.55)*.9)), crust=c*c*.1*(FX.grain(X/dpr,y/dpr,s+3,.8,dpr)-.5);
+      hpx[i]=(st?st.h[i]*hs:0)*(1-.85*c)-dep+crust-(V?V[i]*.4:0); }
+    const lf=litFrom(hpx,W,H,dpr,o.diffuse,.45); if(st&&st.lf) for(let k=0;k<lf.length;k++) lf[k]*=lerp(1,st.lf[k],.25); carryLF(lf,x.lf,st);
+    const lin=light(alb,lf,W,H), Nm=FX.normals(hpx,W,H,dpr), [hx,hy,hz]=FX.halfVec();
+    for(let i=0,k=0;i<N;i++,k+=3){ const c=CH[i]; if(c<.25) continue; const nh=Math.max(0,Nm.nx[i]*hx+Nm.ny[i]*hy+Nm.nz[i]*hz), sp=.07*(c-.25)*Math.pow(nh,14); lin[k]+=sp; lin[k+1]+=sp; lin[k+2]+=sp*1.04; } // carbon: matte black with a faint graphite sheen on the groove walls
+    if(V){ const g=FX.inkOf(o,'g'), [lx,ly,lz]=FX.lightVec(), pl=Math.hypot(lx,ly)||1, cot=Math.min(4,pl/lz), ox=lx/pl*o.thick*cot*dpr, oy=ly/pl*o.thick*cot*dpr, sky=.3;
+      for(let y=0;y<H;y++) for(let X=0;X<W;X++){ const i=y*W+X, v=V[i]; if(v<=0) continue; const lit=e_bil(V,W,H,X+.5+ox,y+.5+oy), f=(sky+(1-sky)*lit)*(.94+.12*FX.gnoise(X/dpr/3,y/dpr/3,s+21)), k=i*3;
+        for(let ch=0;ch<3;ch++) lin[k+ch]=lin[k+ch]*(1-v)+g.lin[ch]*f*v; } }
+    const M=V?Float32Array.from(die,(a,i)=>Math.max(a,V[i])):die;
+    return {alb,lf,lin,ink:CH,stock:hpx,mask:M,marks:fired.size,markUnit:'scan lines'}; } };
+
 /* ══════════ usages · compositions; each reads the live dials merged with its overrides ══════════ */
 const onPage=(R,alpha,W,H,dpr,lift)=>{ const cs=FX.castShadow(alpha,W,H,dpr,FX.LIGHT,lift), lin=R.lin; for(let i=0,k=0;i<W*H;i++,k+=3){ const a=alpha[i], pg=1-cs[i]; lin[k]=lin[k]*a+pg*(1-a); lin[k+1]=lin[k+1]*a+pg*(1-a); lin[k+2]=lin[k+2]*a+pg*(1-a); } R.mask=alpha; return R; };
 const LINEN={wL:.7,wC:.006,wh:250,fL:.77,fC:.005,fh:250,aMode:'flecks',accent:.006,warp:34,weft:32,mShape:'none',lift:0};
@@ -1086,6 +1283,6 @@ G.FXSET={ code:'T-04', lightFor, clips:(id,W,H,dpr,o,img,mk)=>clipsFor(FXSET.eff
   system:{ read:'Ink on real stock under one raking light.', sharedCause:['stock height field → relief shading · ink acceptance · starved pinholes · wicking · ink mottle','sheet light → paper relief · thread modeling · thread cast shadows · object shadows on the page'], passOrder:['stock height (tooth · fibers · pits · formation | threads)','albedo (paper L, thread dyes in OKLab)','ink pressure (dot footprints | roller run-out) × mask','acceptance vs height → starve → wick → film thickness','color: Beer–Lambert film in linear light (or coverage mix)','light: × Lambert shade × height shadow (once, last)','page: object cast shadow, sRGB encode'] },
   source:'Mindgut · Technique & Front-End Study V01 §08 (texture recipes) · ø co. · 2026-10-23',
   jobs:[['brand','Stationery & brand'],['print','Print'],['packaging','Packaging'],['textile','Textile'],['screen','Screen & deck'],['data','Data']],
-  sections:[{id:'surfaces',title:'Four surfaces',blurb:'The source set: two stocks and two marks.'},{id:'surprise',title:'Surprise marks',blurb:'Marks that only make sense on a material system — one is pure light, one is metal, one is struck through cloth, one gleams.'}],
-  effects:[stipple,inkEdge,tooth,weave,graphite,deboss,typewriter,foil], usages };
+  sections:[{id:'surfaces',title:'Four surfaces',blurb:'The source set: two stocks and two marks.'},{id:'surprise',title:'Surprise marks',blurb:'Marks that only make sense on a material system — one is pure light, one is metal, one is struck through cloth, one gleams.'},{id:'new',title:'New marks',blurb:'Marks made by light and heat: a sun print and a laser.'}],
+  effects:[stipple,inkEdge,tooth,weave,graphite,deboss,typewriter,foil,cyanotype,laser], usages };
 })(typeof window!=='undefined'?window:self);
