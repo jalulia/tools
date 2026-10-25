@@ -7,7 +7,11 @@
    of marks, never the zoom of a tile.
    OKLab: Björn Ottosson, "A perceptual color space for image processing" (2020),
    https://bottosson.github.io/posts/oklab/ — matrices below are that post's, verbatim.
-   OKLCH as defined in CSS Color 4 (https://www.w3.org/TR/css-color-4/#ok-lab). */
+   OKLCH as defined in CSS Color 4 (https://www.w3.org/TR/css-color-4/#ok-lab).
+   v2 · material model: every effect is ink on a STOCK. A stock is a height field (paper tooth, or woven thread)
+   lit by ONE sheet light (FX.LIGHT). The same height field decides where ink lands, where it starves, where it
+   wicks, and how the relief catches the light. Ink is a film: Beer–Lambert absorption in linear light.
+   Worker-safe: no DOM in anything an effect calls. */
 (function(G){
 'use strict';
 const FX=G.FX={};
@@ -72,6 +76,8 @@ FX.WHITE=FX.ink(1,0,0);
 
 /* ── mixing rules ──
    mix(space): how a partial coverage t blends the ink into what is under it (edges, AA, thin film).
+     film   · Beer–Lambert: the ink is a transparent film; transmittance = ink^thickness per channel, in linear
+              light, multiplied into whatever is under it. Thin = pale, thick = deep; overprint is automatic.
      oklab  · straight line in OKLab — even perceived steps, no dark fringe
      oklch  · L and C linear, hue on the short arc; an achromatic end takes the other end's hue
               (CSS Color 4 "powerless hue"), so ink → white keeps its hue instead of graying
@@ -83,7 +89,8 @@ FX.WHITE=FX.ink(1,0,0);
      darken   · OKLab: keep the lower L, take the top ink's a/b */
 const LA=[0,0,0], LB=[0,0,0], O=[0,0,0];
 FX.mixInto=(px,ink,t,space)=>{ // px: Float32 [r,g,b] linear, mutated
-  if(t<=0) return; if(t>=1){ px[0]=ink.lin[0]; px[1]=ink.lin[1]; px[2]=ink.lin[2]; return; }
+  if(t<=0) return;
+  if(space==='film'){ px[0]*=Math.pow(ink.lin[0]<1e-4?1e-4:ink.lin[0],t); px[1]*=Math.pow(ink.lin[1]<1e-4?1e-4:ink.lin[1],t); px[2]*=Math.pow(ink.lin[2]<1e-4?1e-4:ink.lin[2],t); return; } if(t>=1){ px[0]=ink.lin[0]; px[1]=ink.lin[1]; px[2]=ink.lin[2]; return; }
   if(space==='linear'){ px[0]+=(ink.lin[0]-px[0])*t; px[1]+=(ink.lin[1]-px[1])*t; px[2]+=(ink.lin[2]-px[2])*t; return; }
   if(space==='srgb'){ for(let i=0;i<3;i++){ const a=enc(px[i])/255, b=enc(ink.lin[i])/255; px[i]=toLin(a+(b-a)*t); } return; }
   FX.lin2lab(px[0],px[1],px[2],LA);
@@ -108,21 +115,25 @@ FX.mixShaded=(px,ink,dL,t,space)=>{ const L=clamp(ink.L+dL,0,1); TMP.L=L; TMP.C=
    Signed distance to a shape (CSS px, + inside), displaced by fbm so the edge wanders, then turned into coverage
    by a feather — either as tone (soft) or as speckle (binary, blue-noise thresholded: ink that breaks up rather than fades).
    "bite" removes clumped holes whose likelihood rises toward the edge (worn, torn, starved). */
-FX.MASK_PARAMS=(d={})=>[
+FX.MASK_PARAMS=(d={},opt={})=>[
   {key:'mShape',label:'Shape',group:'mask',type:'select',options:['none','rect','ellipse','band','blob'],value:d.mShape||'rect',note:'the region the effect is allowed to occupy'},
   {key:'mInset',label:'Inset',group:'mask',type:'range',min:0,max:120,step:1,unit:'px',value:d.mInset??18,note:'distance from the plate edge to the mask edge'},
   {key:'mAmp',label:'Edge wander',group:'mask',type:'range',min:0,max:40,step:.5,unit:'px',value:d.mAmp??6,note:'how far noise pushes the edge in and out',limits:[[28,40,'above ~28 px the edge tears into islands']]},
   {key:'mScale',label:'Wander scale',group:'mask',type:'range',min:4,max:240,step:1,unit:'px',value:d.mScale??60,note:'wavelength of the wander; small = ragged, large = drifting'},
   {key:'mRough',label:'Roughness',group:'mask',type:'range',min:1,max:6,step:1,unit:'oct',value:d.mRough??4,note:'octaves of edge noise — adds fine teeth without moving the large shape'},
   {key:'mFeather',label:'Feather',group:'mask',type:'range',min:.5,max:60,step:.5,unit:'px',value:d.mFeather??6,note:'width over which coverage falls from 1 to 0'},
-  {key:'mMode',label:'Feather as',group:'mask',type:'select',options:['speckle','tone'],value:d.mMode||'speckle',note:'speckle = binary marks thinning out; tone = partial coverage'},
+  ...(opt.mode===false?[]:[{key:'mMode',label:'Feather as',group:'mask',type:'select',options:['speckle','tone'],value:d.mMode||'speckle',note:'speckle = binary marks thinning out; tone = partial coverage'}]),
+  ...(opt.extra||[]),
   {key:'mBite',label:'Bite',group:'mask',type:'range',min:0,max:1,step:.01,value:d.mBite??.25,note:'clumped dropouts that grow more likely toward the edge'},
 ];
 const MASKS=new Map();
-FX.mask=(o,W,H,dpr,seed)=>{ const key=[o.mShape,o.mInset,o.mAmp,o.mScale,o.mRough,o.mFeather,o.mMode,o.mBite,W,H,dpr,seed].join('|'); const hit=MASKS.get(key); if(hit) return Float32Array.from(hit);
-  const M=FX._mask(o,W,H,dpr,seed); MASKS.set(key,M); if(MASKS.size>24) MASKS.delete(MASKS.keys().next().value); return Float32Array.from(M); };
+FX.mask=(o,W,H,dpr,seed)=>Float32Array.from(FX.maskField(o,W,H,dpr,seed).m);
+/* maskField → { m: coverage 0..1, d: wandered signed distance in CSS px (+ inside), or null when shape = none } */
+FX.maskField=(o,W,H,dpr,seed)=>{ const key=[o.mShape,o.mInset,o.mAmp,o.mScale,o.mRough,o.mFeather,o.mMode,o.mBite,W,H,dpr,seed].join('|'); const hit=MASKS.get(key); if(hit) return hit;
+  const R=FX._mask(o,W,H,dpr,seed); MASKS.set(key,R); if(MASKS.size>16) MASKS.delete(MASKS.keys().next().value); return R; };
 FX._mask=(o,W,H,dpr,seed)=>{ const M=new Float32Array(W*H); const sh=o.mShape||'none';
-  if(sh==='none'){ M.fill(1); return M; }
+  if(sh==='none'){ M.fill(1); return {m:M,d:null}; }
+  const D=new Float32Array(W*H);
   const w=W/dpr, h=H/dpr, ins=o.mInset, amp=o.mAmp, sc=o.mScale, oct=o.mRough|0, fe=Math.max(.5,o.mFeather), bite=o.mBite, s=seed*7+3;
   const cx=w/2, cy=h/2, rx=Math.max(1,w/2-ins), ry=Math.max(1,h/2-ins), rr=Math.min(rx,ry)*.05;
   for(let y=0;y<H;y++){ const v=y/dpr; for(let x=0;x<W;x++){ const u=x/dpr; let d;
@@ -130,12 +141,12 @@ FX._mask=(o,W,H,dpr,seed)=>{ const M=new Float32Array(W*H); const sh=o.mShape||'
     else if(sh==='ellipse'){ const nx=(u-cx)/rx, ny=(v-cy)/ry, k=Math.hypot(nx,ny); d=(1-k)*Math.min(rx,ry); }
     else if(sh==='band'){ d=ry*.55-Math.abs(v-cy); }
     else { const a=Math.atan2(v-cy,u-cx), R=Math.min(rx,ry)*(.78+.22*FX.fbm(Math.cos(a)*1.3+5,Math.sin(a)*1.3+5,s+9,3)); d=R-Math.hypot((u-cx)*Math.min(rx,ry)/rx,(v-cy)*Math.min(rx,ry)/ry); }
-    d+=amp*(FX.fbm(u/sc,v/sc,s,oct,.55)*2-1)*1.6;
+    d+=amp*(FX.fbm(u/sc,v/sc,s,oct,.55)*2-1)*1.6; D[y*W+x]=d;
     let m=clamp(d/fe,0,1);
     if(bite>0&&m>0){ const near=1-clamp(d/(fe*4+amp*2),0,1); const holes=FX.fbm(u/(sc*.22+2),v/(sc*.22+2),s+41,3); if(holes<bite*(.25+.75*near)*.62) m*=clamp((holes-bite*(.25+.75*near)*.62+.04)/.04,0,1); }
     if(o.mMode==='speckle'&&m>0&&m<1) m=FX.blue.at(x,y)<m?1:0; else m=m*m*(3-2*m);
     M[y*W+x]=m; } }
-  return M; };
+  return {m:M,d:D}; };
 
 /* ── fast paths ──
    lut: one ink over a uniform ground, by coverage t (1025 steps) — the same mix rule, computed once per render.
@@ -144,14 +155,51 @@ FX._mask=(o,W,H,dpr,seed)=>{ const M=new Float32Array(W*H); const sh=o.mShape||'
 FX.lut=(ink,space,ground=FX.WHITE)=>{ const N=1024, T=new Float32Array((N+1)*3), px=[0,0,0]; for(let i=0;i<=N;i++){ px[0]=ground.lin[0];px[1]=ground.lin[1];px[2]=ground.lin[2]; FX.mixInto(px,ink,i/N,space); T[i*3]=px[0];T[i*3+1]=px[1];T[i*3+2]=px[2]; } return T; };
 FX.lutAt=(T,t,out,k)=>{ const j=((t<=0?0:t>=1?1024:t*1024+.5)|0)*3; out[k]=T[j]; out[k+1]=T[j+1]; out[k+2]=T[j+2]; };
 FX.DotRaster=(W,H)=>{ const cov=new Float32Array(W*H);
-  return { cov, add(cx,cy,r,rad){ // device px; rad = 7 relative radii
-    const R=r*1.6+1, x0=Math.max(0,Math.floor(cx-R)), x1=Math.min(W-1,Math.ceil(cx+R)), y0=Math.max(0,Math.floor(cy-R)), y1=Math.min(H-1,Math.ceil(cy+R));
+  return { cov, add(cx,cy,r,rad,soft=1,pk=1){ // device px; rad = 7 relative radii; soft = rim width (pressure falls off); pk = peak
+    const R=r*1.6+soft+1, x0=Math.max(0,Math.floor(cx-R)), x1=Math.min(W-1,Math.ceil(cx+R)), y0=Math.max(0,Math.floor(cy-R)), y1=Math.min(H-1,Math.ceil(cy+R));
     for(let y=y0;y<=y1;y++){ const dy=y+.5-cy; for(let x=x0;x<=x1;x++){ const dx=x+.5-cx, d=Math.hypot(dx,dy); let rr=r;
       if(rad){ let a=Math.atan2(dy,dx)/TAU*7; if(a<0)a+=7; const i=a|0, f=a-i; rr=r*(rad[i]+(rad[(i+1)%7]-rad[i])*f); }
-      const c=rr-d+.5; if(c>0){ const v=c>1?1:c, j=y*W+x; if(v>cov[j]) cov[j]=v; } } } } }; };
+      const c=(rr-d)/soft+.5; if(c>0){ const v=(c>1?1:c)*pk, j=y*W+x; if(v>cov[j]) cov[j]=v; } } } } }; };
+
+/* capsule raster: AA line segments (fibers, hairs), union by max, device px */
+FX.LineRaster=(W,H)=>{ const cov=new Float32Array(W*H);
+  return { cov, add(x0,y0,x1,y1,w,pk=1){ const r=w/2, minx=Math.max(0,Math.floor(Math.min(x0,x1)-r-1)), maxx=Math.min(W-1,Math.ceil(Math.max(x0,x1)+r+1)), miny=Math.max(0,Math.floor(Math.min(y0,y1)-r-1)), maxy=Math.min(H-1,Math.ceil(Math.max(y0,y1)+r+1));
+    const dx=x1-x0, dy=y1-y0, L2=dx*dx+dy*dy||1e-6;
+    for(let y=miny;y<=maxy;y++) for(let x=minx;x<=maxx;x++){ const px=x+.5-x0, py=y+.5-y0; let t=(px*dx+py*dy)/L2; t=t<0?0:t>1?1:t; const ex=px-dx*t, ey=py-dy*t, d=Math.sqrt(ex*ex+ey*ey); const c=r-d+.5; if(c>0){ const v=(c>1?1:c)*pk, j=y*W+x; if(v>cov[j]) cov[j]=v; } } },
+    curve(x0,y0,cx,cy,x1,y1,w,pk){ const n=Math.max(2,Math.ceil(Math.hypot(x1-x0,y1-y0)/3)); let px=x0,py=y0; for(let i=1;i<=n;i++){ const t=i/n, a=(1-t)*(1-t), b=2*(1-t)*t, c=t*t, X=a*x0+b*cx+c*x1, Y=a*y0+b*cy+c*y1; this.add(px,py,X,Y,w,pk); px=X; py=Y; } } }; };
+
+/* ── the sheet light ── one light for every plate, usage and shadow. az = direction the light comes FROM
+   (screen degrees, 0 = from the right, 90 = from below, 225 = from upper left); el = elevation above the sheet. */
+FX.LIGHT={az:225,el:34};
+FX.lightVec=(L=FX.LIGHT)=>{ const a=L.az*Math.PI/180, e=L.el*Math.PI/180; return [Math.cos(a)*Math.cos(e),Math.sin(a)*Math.cos(e),Math.sin(e)]; };
+/* Lambert shading of a height field. h ∈ 0..1 scaled to `depth` CSS px. Returns factor, 1 = a flat surface. */
+FX.shade=(h,W,H,dpr,depth,L)=>{ const [lx,ly,lz]=FX.lightVec(L), out=new Float32Array(W*H), k=depth*dpr*.5;
+  for(let y=0;y<H;y++){ const r=y*W, up=(y>0?y-1:y)*W, dn=(y<H-1?y+1:y)*W; for(let x=0;x<W;x++){ const sx=(h[r+(x<W-1?x+1:x)]-h[r+(x>0?x-1:x)])*k, sy=(h[dn+x]-h[up+x])*k;
+    const n=1/Math.sqrt(sx*sx+sy*sy+1), d=(-sx*lx-sy*ly+lz)*n; out[r+x]=(d>0?d:0)/lz; } }
+  return out; };
+/* height-field cast shadow: march toward the light; a sample higher than the ray occludes. Returns lit factor 0..1. */
+FX.hshadow=(h,W,H,dpr,depth,L,reachPx,soft=.5)=>{ const [lx,ly,lz]=FX.lightVec(L), out=new Float32Array(W*H).fill(1); const pl=Math.hypot(lx,ly)||1, ux=lx/pl, uy=ly/pl, tanE=lz/pl;
+  const steps=Math.max(2,Math.round(reachPx*dpr/1.5)), st=reachPx*dpr/steps, hd=depth*dpr;
+  for(let y=0;y<H;y++) for(let x=0;x<W;x++){ const i=y*W+x, h0=h[i]*hd; let occ=0;
+    for(let k=1;k<=steps;k++){ const X=(x+ux*st*k)|0, Y=(y+uy*st*k)|0; if(X<0||Y<0||X>=W||Y>=H) break; const need=h0+st*k*tanE, have=h[Y*W+X]*hd; if(have>need){ const o=(have-need)/(soft*hd+1e-3); if(o>occ) occ=o; } }
+    out[i]=1-(occ>1?1:occ); }
+  return out; };
+/* separable box blur ×3 ≈ gaussian, radius in device px */
+FX.blur=(src,W,H,r)=>{ r=Math.max(0,Math.round(r)); if(!r) return Float32Array.from(src); let a=Float32Array.from(src), b=new Float32Array(W*H);
+  const pass=(s,d,horiz)=>{ const n=horiz?W:H, m=horiz?H:W, inv=1/(2*r+1); for(let j=0;j<m;j++){ let acc=0; const at=i=>{ i=i<0?0:i>=n?n-1:i; return horiz?s[j*W+i]:s[i*W+j]; };
+    for(let i=-r;i<=r;i++) acc+=at(i); for(let i=0;i<n;i++){ if(horiz) d[j*W+i]=acc*inv; else d[i*W+j]=acc*inv; acc+=at(i+r+1)-at(i-r); } } };
+  for(let k=0;k<3;k++){ pass(a,b,true); pass(b,a,false); } return a; };
+/* object on the page: contact + short ambient shadow from the object's alpha, offset away from the light, tinted.
+   light-stage values (hardware-and-shadows): contact ≈ .30 at ~1–2 px, ambient ≈ .18 at ~4–9 px. Returns darkening 0..1. */
+FX.castShadow=(alpha,W,H,dpr,L,lift=1)=>{ const [lx,ly,lz]=FX.lightVec(L), pl=Math.hypot(lx,ly)||1, cot=pl/lz;
+  const off=(px)=>{ const o=new Float32Array(W*H), ox=Math.round(-lx/pl*px*cot*dpr), oy=Math.round(-ly/pl*px*cot*dpr); for(let y=0;y<H;y++){ const sy=y-oy; if(sy<0||sy>=H) continue; for(let x=0;x<W;x++){ const sx=x-ox; if(sx>=0&&sx<W) o[y*W+x]=alpha[sy*W+sx]; } } return o; };
+  const c=FX.blur(off(.8*lift),W,H,1.2*dpr*lift), a=FX.blur(off(3.2*lift),W,H,4.5*dpr*lift), out=new Float32Array(W*H);
+  for(let i=0;i<out.length;i++){ const v=.3*c[i]+.2*a[i]; out[i]=v*(1-alpha[i]); } return out; };
+/* film LUT: per-channel transmittance ink^τ for τ ∈ [0,2], 1025 steps */
+FX.filmLUT=(ink)=>{ const N=1024, T=new Float32Array((N+1)*3), l=ink.lin.map(v=>Math.log(v<1e-4?1e-4:v)); for(let i=0;i<=N;i++){ const t=i/N*2; T[i*3]=Math.exp(l[0]*t); T[i*3+1]=Math.exp(l[1]*t); T[i*3+2]=Math.exp(l[2]*t); } return T; };
 
 /* ── canvas helpers ── */
-FX.fit=(canvas,scale=1)=>{ const r=canvas.getBoundingClientRect(); const dpr=Math.min(2,window.devicePixelRatio||1)*scale;
+FX.fit=(canvas,scale=1)=>{ const r=canvas.getBoundingClientRect(); const dpr=Math.min(2,(typeof devicePixelRatio!=='undefined'?devicePixelRatio:1)||1)*scale;
   const W=Math.max(2,Math.round(r.width*dpr)), H=Math.max(2,Math.round(r.height*dpr)); if(canvas.width!==W||canvas.height!==H){ canvas.width=W; canvas.height=H; } return {W,H,dpr}; };
 /* a coverage layer rasterized by Canvas 2D (AA for free), read back as Float32 0..1 */
 FX.coverCanvas=(W,H)=>{ const c=typeof OffscreenCanvas!=='undefined'?new OffscreenCanvas(W,H):Object.assign(document.createElement('canvas'),{width:W,height:H}); const x=c.getContext('2d',{willReadFrequently:true}); x.fillStyle='#000'; x.fillRect(0,0,W,H); x.fillStyle='#fff'; x.strokeStyle='#fff'; return {c,x}; };
@@ -165,7 +213,7 @@ FX.INK_PARAMS=(p,label,L,C,h)=>[
   {key:p+'L',label:label+' · L',group:'color',type:'range',min:0,max:1,step:.005,value:L,ink:p,note:'OKLCH lightness (0 black … 1 white)'},
   {key:p+'C',label:label+' · C',group:'color',type:'range',min:0,max:.37,step:.002,value:C,ink:p,note:'OKLCH chroma; reduced at constant L/h if it leaves sRGB',limits:[[.26,.37,'most hues leave sRGB above ~.26 and get chroma-reduced']]},
   {key:p+'h',label:label+' · h',group:'color',type:'range',min:0,max:360,step:.5,unit:'°',value:h,ink:p,note:'OKLCH hue angle'}];
-FX.MIX_PARAM=(v='oklab')=>({key:'mix',label:'Mix space',group:'mixing',type:'select',options:['oklab','oklch','linear','srgb'],value:v,note:'how partial coverage (edges, AA, thin ink) blends ink into what is under it'});
+FX.MIX_PARAM=(v='film',opts=['film','oklab','oklch','linear','srgb'])=>({key:'mix',label:'Color rule',group:'mixing',type:'select',options:opts,value:v,note:'film = Beer–Lambert absorption in linear light (physical); oklab / oklch / linear / srgb = coverage mixes, for comparison'});
 FX.EASE_PARAM=(key,label,v,note)=>({key,label,group:'dropoff',type:'ease',value:v,note});
 FX.SEED_PARAM=(v)=>({key:'seed',label:'Seed',group:'seed',type:'range',min:1,max:999,step:1,value:v,note:'every random draw in the effect hangs off this one number'});
-})(window);
+})(typeof window!=='undefined'?window:self);

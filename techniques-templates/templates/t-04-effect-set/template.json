@@ -9,7 +9,8 @@
   "sheet.js": "generic runtime",
   "sheet.css": "styles on the T&T shell tokens",
   "build-sheet.mjs": "bakes index.html (static read), set.json, template.json",
-  "index.html": "build output"
+  "index.html": "build output",
+  "worker.js": "render worker (same fx.js + set.js, off the main thread)"
  },
  "layout": [
   "nav (shell)",
@@ -21,19 +22,23 @@
   "contract: files + set.js shape"
  ],
  "dials": {
-  "range": "hairline track; limit zones hatched with the reason as title; default tick; double-click label resets",
+  "tabs": "one dial group per tab (density · dropoff · stock · relief · color · mixing · edge); a dot marks tabs and rows changed from default",
+  "range": "hairline track; limit zones hatched with the reason as title; default tick; tap the value to type it; double-click label resets",
+  "light": "puck in the bar: angle = azimuth, distance from center = elevation; arrow keys step it",
   "select": "segmented buttons",
   "ease": "curve select + k + live graph",
   "ink": "swatch + oklch() + hex + \"chroma reduced\" flag; L/C/h tracks painted with the sweep",
-  "mixing": "four-row strip: ground → ink in oklab · oklch · linear · srgb, current highlighted",
+  "mixing": "five-row strip: white → ink in film · oklab · oklch · linear · srgb, current highlighted",
   "when": "params that do not apply are dimmed, not hidden"
  },
  "rendering": {
-  "draft": "½-res while dragging",
+  "workers": "pool of up to 3 (hardwareConcurrency − 1) running worker.js; main-thread fallback on file://",
+  "draft": "½-res while dragging a dial or the light",
   "full": "device px on release",
-  "queue": "one job per frame, drafts first",
-  "lazy": "IntersectionObserver, 400 px margin",
-  "state": "one params object per effect, saved per viewer in localStorage (try/catch)"
+  "scheduling": "latest job per canvas wins; drafts first, then plates, usages, rack",
+  "lazy": "IntersectionObserver (300 px margin); offscreen canvases go dirty and paint when they scroll in",
+  "coupling": "a change to effect X redraws X, every effect whose stockOf() is X, and every usage that uses either",
+  "state": "one params object per effect + the sheet light, saved per viewer in localStorage (try/catch)"
  },
- "contract": "window.FXSET = {\n  code:'T-04', title, short, set, premise, source,\n  effects:[{\n    id, code, name, sub,\n    recipe:[ 'step', … ],                 // numbered on the sheet\n    limits:[ [param, range, 'what happens'], … ],\n    params:[ { key, label, group, type, value, … } ],\n      // group: density | dropoff | color | mixing | mask | seed\n      // type:  range {min,max,step,unit,limits:[[lo,hi,why]]}\n      //        select {options} · ease (value ['smooth',k])\n      // ink:   FX.INK_PARAMS(prefix,label,L,C,h) → 3 OKLCH sliders\n      // when:  { key:[values] } dims a param that does not apply\n    run(o, W, H, dpr, x) {                // W,H device px; lengths in o are CSS px\n      // x = { base, clip, field } from usages\n      return { lin, cov, mask, marks, markUnit };\n    }\n  }],\n  usages:[{ id, title, sub, uses:[effect ids], aspect,\n            overrides:{ [effectId]:{…} }, labels:[[a,b]],\n            run(ctx, W, H, dpr, P) { return effect.run(P(id), W, H, dpr, x); } }]\n};"
+ "contract": "self.FXSET = {\n  code:'T-04', title, short, set, premise, source,\n  system:{ read, sharedCause:[…], passOrder:[…] },   // the material system, shown above the bar\n  effects:[{\n    id, code, name, sub, role,            // role: 'stock · paper', 'mark · pen' …\n    recipe:[ 'step', … ],                 // numbered on the sheet\n    limits:[ [param, range, 'what happens'], … ],\n    params:[ { key, label, group, type, value, … } ],\n      // group: density | dropoff | stock | relief | color | mixing | mask | seed\n      // type:  range {min,max,step,unit,limits:[[lo,hi,why]]}\n      //        select {options} · ease (value ['smooth',k])\n      // ink:   FX.INK_PARAMS(prefix,label,L,C,h) → 3 OKLCH sliders\n      // when:  { key:[values] } dims a param that does not apply\n    stockOf(o) { return 'fx-03-…' },      // optional: the effect this one prints on → coupled redraws\n    run(o, W, H, dpr, x) {                // W,H device px; lengths in o are CSS px; light = FX.LIGHT\n      // x = { S: every effect's params, alb, clip, field }\n      return { lin, alb, lf, ink, stock, mask, marks, markUnit };\n    }\n  }],\n  usages:[{ id, title, sub, uses:[effect ids], aspect,\n            overrides:{ [effectId]:{…} }, labels:[[a,b]],\n            clips:{ name:(ctx2d, w, h) => draw },   // main thread (fonts), passed in as Float32\n            run(P, W, H, dpr, x) { return effect.run(P(id), W, H, dpr, { S:x.S, clip:x.clips.name }); } }]\n};"
 }
