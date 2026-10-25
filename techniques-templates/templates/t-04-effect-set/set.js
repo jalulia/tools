@@ -1126,8 +1126,9 @@ const a_orange=(u,v,q,s=5)=>{ const dx=u-q.cx, dy=v-q.cy, rp=Math.hypot(dx,dy), 
    multiplies what is already sewn; inside its own threads it replaces it */
 const a_sew=(base,R,bare)=>{ const lin=R.lin, A=R.ink; for(let i=0,k=0;i<A.length;i++,k+=3){ const a=Math.min(1,A[i]);
   for(let q=0;q<3;q++){ const r=lin[k+q]/Math.max(1e-4,bare[k+q]); base[k+q]=base[k+q]*Math.min(1.25,r)*(1-a)+lin[k+q]*a; } } return base; };
-/* daylight at 60° N, hours per day on the 15th of each month (rounded) */
-const A_DAY=[6.6,9.0,11.7,14.6,17.3,18.8,18.0,15.6,12.8,10.0,7.3,5.9];
+/* daylight at 60° N, hours on the 15th of each month (2026): computed, sunrise to sunset with the sun's center at −0.833°
+   (refraction + semi-diameter), declination from the NOAA Fourier series (Spencer 1971). Not a lookup; ±0.05 h. */
+const A_DAY=[6.7,9.1,11.7,14.5,17.1,18.8,18.1,15.8,13.0,10.3,7.6,6.0];
 const a_sunGeo=(w,h)=>{ const x0=w*.14, x1=w*.9, base=h*.77, k=h*.5/24, sl=(x1-x0)/12; return {x0,x1,base,k,sl,bw:sl*.6,bx:i=>x0+sl*(i+.2),Y:hrs=>base-hrs*k}; };
 
 const usages=[
