@@ -391,7 +391,7 @@ const JORD=k=>{ const i=JOBS.findIndex(j=>j[0]===k); return i<0?99:i; };
   const fr=h('div',{class:'fs-frame',style:`aspect-ratio:${u.aspect}`},c,lbl,h('span',{class:'fs-bar-busy','aria-hidden':'true'}));
   const ov=Object.entries(u.overrides||{}).map(([k,v])=>h('div',{class:'ovr'},h('a',{href:'#'+k},EFX[k].code),h('span',null,Object.entries(v).map(([a,b])=>`${a} ${typeof b==='object'?JSON.stringify(b):b}`).join(' · '))));
   const jl=(JOBS.find(j=>j[0]===u.job)||[])[1];
-  ugrid.append(h('article',{class:'fs-ucard'+(u.span===2?' wide':''),'data-job':u.job||'','data-u':u.id},fr,h('div',{class:'cap'},h('span',{class:'code'},'U-'+String(i+1).padStart(2,'0')+(jl?' · '+jl:'')+(u.zoom>1?' · '+u.zoom+'×':'')+(u.light?' · light '+u.light.el+'°':'')),h('b',null,u.title),h('p',null,u.sub),h('div',{class:'chips'},u.uses.map(id=>h('a',{href:'#'+id},EFX[id].code+' '+EFX[id].name))),ov.length?h('details',null,h('summary',null,'overrides'),h('div',{class:'fs-ovs'},ov)):null)));
+  ugrid.append(h('article',{class:'fs-ucard'+(u.span===3?' full':u.span===2?' wide':''),'data-job':u.job||'','data-u':u.id},fr,h('div',{class:'cap'},h('span',{class:'code'},'U-'+String(i+1).padStart(2,'0')+(jl?' · '+jl:'')+(u.zoom>1?' · '+u.zoom+'×':'')+(u.light?' · light '+u.light.el+'°':'')),h('b',null,u.title),h('p',null,u.sub),h('div',{class:'chips'},u.uses.map(id=>h('a',{href:'#'+id},EFX[id].code+' '+EFX[id].name))),ov.length?h('details',null,h('summary',null,'overrides'),h('div',{class:'fs-ovs'},ov)):null)));
   register('u:'+u.id,c,fr,uJob(u,c),null,2); });
 live.append(UG);
 /* row-reading masonry: each card spans as many 6 px grid rows as its own height (aspect + caption) needs */
