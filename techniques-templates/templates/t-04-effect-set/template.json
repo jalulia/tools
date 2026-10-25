@@ -14,21 +14,35 @@
  },
  "layout": [
   "nav (shell)",
-  "head: set code, title, premise, meta cells (ground, color math, units, params, source)",
-  "sticky bar: view composite|coverage|mask · loupe 4× · jump links · copy set params · reset all · status",
-  "rack: one 4:3 cell per effect with mark count",
-  "per effect: header (code, name, sub, reset · new seed · copy params · copy call) → plate (sticky, 4:3, device px, stats: px · marks · ms · mode) + dial column grouped density · dropoff · color · mixing · mask · seed → recipe · limits · live params",
-  "usages: 3-up cards, 16:9 canvas + labels, caption, effect chips, overrides; toggle follow the dials | defaults only",
-  "contract: files + set.js shape"
+  "head: set code, title, premise, how to use",
+  "material system: read, shared causes, pass order",
+  "sticky bar: loupe 4× · section jump links (#sec-<id>) · undo/redo · copy link · copy set params · reset all · status",
+  "rack: one header per section (number, title, blurb), one 4:3 cell per effect with kind · mechanism and mark count",
+  "sections: stocks → added → changed, each with a numbered heading and blurb",
+  "per effect: header (code · kind · mechanism, name, sub, prints on / stock for, reset · new seed) → presets → plate (sticky, 4:3, device px, light puck, stats: px · marks · ms · dpr) with views image · separation · stock · mask, distance, wedge, pin · split + dial column (tabs Mark · Field · Stock · Relief · Finish · Color · Edge, seed row) → output → recipe · lift · live spec",
+  "usages: masonry cards filtered by job, canvas + labels, caption, effect chips, overrides; toggle follow the dials | defaults only",
+  "contract: ground, color math, units, params, source, files, set.js shape"
  ],
  "dials": {
-  "tabs": "one dial group per tab (density · dropoff · stock · relief · color · mixing · edge); a dot marks tabs and rows changed from default",
+  "tabs": "Mark (motif + structure) · Field · Stock (transfer) · Relief · Finish · Color (color + film) · Edge; a tab that would hold one row folds into its neighbor under a small heading; the seed is a row under the tabs; a dot marks tabs and rows changed from default",
+  "groups": {
+   "motif": "what artwork the effect follows",
+   "structure": "geometry and counts of the marks or the stock",
+   "field": "how strength varies across the plate (value, pressure, dose, exposure, wear)",
+   "transfer": "how the mark meets the stock",
+   "relief": "heights in CSS px and how they shade",
+   "finish": "view-dependent terms (sheen, gloss, reflection, soft box, camera)",
+   "color": "OKLCH colors and tone shifts",
+   "film": "how color combines (film thickness, color rule, overprint)",
+   "edge": "the mask and sheet edge",
+   "seed": "the single source of every random draw"
+  },
   "range": "hairline track; limit zones hatched with the reason as title; default tick; tap the value to type it; double-click label resets",
   "light": "puck in the bar: angle = azimuth, distance from center = elevation; arrow keys step it",
   "select": "segmented buttons",
   "ease": "curve select + k + live graph",
   "ink": "swatch + oklch() + hex + \"chroma reduced\" flag; L/C/h tracks painted with the sweep",
-  "mixing": "five-row strip: white → ink in film · oklab · oklch · linear · srgb, current highlighted",
+  "mixing": "five-row strip in the Color tab, only when the effect has a color rule (mix): white → ink in film · oklab · oklch · linear · srgb, current highlighted",
   "when": "params that do not apply are dimmed, not hidden"
  },
  "rendering": {
@@ -40,5 +54,53 @@
   "coupling": "a change to effect X redraws X, every effect whose stockOf() is X, and every usage that uses either",
   "state": "one params object per effect + the sheet light, saved per viewer in localStorage (try/catch)"
  },
- "contract": "self.FXSET = {\n  code:'T-04', title, short, set, premise, source,\n  system:{ read, sharedCause:[…], passOrder:[…] },   // the material system, shown above the bar\n  effects:[{\n    id, code, name, sub, role,            // role: 'stock · paper', 'mark · pen' …\n    recipe:[ 'step', … ],                 // numbered on the sheet\n    limits:[ [param, range, 'what happens'], … ],\n    params:[ { key, label, group, type, value, … } ],\n      // group: density | dropoff | stock | relief | color | mixing | mask | seed\n      // type:  range {min,max,step,unit,limits:[[lo,hi,why]]}\n      //        select {options} · ease (value ['smooth',k])\n      // ink:   FX.INK_PARAMS(prefix,label,L,C,h) → 3 OKLCH sliders\n      // when:  { key:[values] } dims a param that does not apply\n    stockOf(o) { return 'fx-03-…' },      // optional: the effect this one prints on → coupled redraws\n    run(o, W, H, dpr, x) {                // W,H device px; lengths in o are CSS px; light = FX.LIGHT\n      // x = { S: every effect's params, alb, clip, field }\n      return { lin, alb, lf, ink, stock, mask, marks, markUnit };\n    }\n  }],\n  usages:[{ id, title, sub, uses:[effect ids], aspect,\n            overrides:{ [effectId]:{…} }, labels:[[a,b]],\n            clips:{ name:(ctx2d, w, h) => draw },   // main thread (fonts), passed in as Float32\n            run(P, W, H, dpr, x) { return effect.run(P(id), W, H, dpr, { S:x.S, clip:x.clips.name }); } }]\n};"
+ "sections": [
+  {
+   "id": "stocks",
+   "title": "Stocks",
+   "blurb": "Paper and cloth as lit height fields. Every other effect reads their height, color and light."
+  },
+  {
+   "id": "added",
+   "title": "Added marks",
+   "blurb": "Something lands on the stock: ink, graphite, foil, varnish or thread. The stock's height decides where it takes."
+  },
+  {
+   "id": "changed",
+   "title": "Changed in place",
+   "blurb": "The stock itself changes. A die presses it, sunlight turns a brushed coating blue, a laser burns it."
+  }
+ ],
+ "classification": {
+  "kinds": [
+   "stock",
+   "mark",
+   "finish",
+   "construction",
+   "impression",
+   "process"
+  ],
+  "mechanisms": [
+   "form",
+   "deposit",
+   "transfer",
+   "deform",
+   "stitch",
+   "expose",
+   "burn",
+   "reflect"
+  ],
+  "role": "kind · tool"
+ },
+ "outputs": {
+  "lin": "Float32 W·H·3, lit linear RGB (diffuse light once, view-dependent light last)",
+  "alb": "Float32 W·H·3, unlit albedo (what a later pass prints over)",
+  "lf": "Float32 W·H·3, light factor from the sheet light",
+  "ink": "Float32 W·H, this effect's own separation (plate), 0..1; the key stays ink, the UI and docs say separation",
+  "stock": "Float32 W·H, height in CSS px: stock relief plus the effect's own relief",
+  "mask": "Float32 W·H, coverage 0..1",
+  "marks": "count of marks; pixel counts are per CSS px², so they do not grow with dpr",
+  "markUnit": "string"
+ },
+ "contract": "self.FXSET = {\n  code:'T-04', title, short, set, premise, source,\n  system:{ read, sharedCause:[…], passOrder:[…] },   // the material system, shown above the bar\n  sections:[{ id, title, blurb }],                   // stocks | added | changed; effects are listed in this order\n  jobs:[ [id, label] ],                              // usage filters\n  effects:[{\n    id, code, name, sub,\n    section, kind, tool, mechanism:[…],   // kind: stock | mark | finish | construction | impression | process\n                                          // mechanism: form | deposit | transfer | deform | stitch | expose | burn | reflect\n    role,                                 // = kind · tool, e.g. 'mark · pen'\n    presets:[ [name, { partial params }] ],\n    recipe:[ 'step', … ],                 // numbered on the sheet\n    limits:[ [param, range, 'what happens'], … ],\n    params:[ { key, label, group, type, value, … } ],\n      // group: motif | structure | field | transfer | relief | finish | color | film | edge | seed\n      //   tabs: Mark (motif + structure) · Field · Stock (transfer) · Relief · Finish · Color (color + film) · Edge;\n      //   the seed is a row under the tabs; a tab with one row folds into its neighbor\n      // type:  range {min,max,step,unit,limits:[[lo,hi,why]]}\n      //        select {options} · ease (value ['smooth',k]) · text {maxlength}\n      // ink:   FX.INK_PARAMS(prefix,label,L,C,h) → 3 OKLCH sliders\n      // when:  { key:[values] } dims a param that does not apply\n    clips:{ name:(ctx2d, w, h, o) => draw },   // optional: motifs and typed strikes, rasterized on the main thread\n    stockOf(o) { return 'fx-03-…' },      // optional: the effect this one prints on → coupled redraws\n    run(o, W, H, dpr, x) {                // W,H device px; lengths in o are CSS px; light = FX.LIGHT\n      // x = { S: every effect's params, alb + lf (an earlier pass), clip, clips:{ name: Float32 }, field }\n      return { lin, alb, lf, ink, stock, mask, marks, markUnit };\n      // lin: lit linear RGB · alb: unlit albedo · lf: diffuse light factor\n      // ink: this effect's own separation (plate), 0..1 · stock: height in CSS px · mask: coverage 0..1\n    }\n  }],\n  usages:[{ id, title, sub, uses:[effect ids], aspect,\n            overrides:{ [effectId]:{…} }, labels:[[a,b]],\n            clips:{ name:(ctx2d, w, h) => draw },   // main thread (fonts), passed in as Float32\n            run(P, W, H, dpr, x) { return effect.run(P(id), W, H, dpr, { S:x.S, clip:x.clips.name }); } }]\n};"
 }

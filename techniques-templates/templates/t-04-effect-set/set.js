@@ -71,7 +71,7 @@ function paperLit(t,W,H,dpr,L){ const P=paperField(t,W,H,dpr); const key=keyOf(t
 
 /* ══════════ STOCK 2 · cloth — woven threads as a height field with dyed albedo ══════════ */
 const PATTERNS={ plain:(i,j)=>((i+j)&1)===0, 'twill 2/1':(i,j)=>(((i+j)%3)+3)%3!==0, 'twill 2/2':(i,j)=>(((i+j)%4)+4)%4<2, basket:(i,j)=>(((i>>1)+(j>>1))&1)===0, 'satin 5':(i,j)=>(((i*2-j)%5)+5)%5!==0 };
-const CLOTH_KEYS=['warp','weft','fill','pattern','slub','slubScale','hair','irregular','wear','wEase','wAngle','wL','wC','wh','fL','fC','fh','cL','cC','ch','accent','aMode','dye','mix','mShape','mInset','mAmp','mScale','mRough','fray','seed'];
+const CLOTH_KEYS=['twist','warp','weft','fill','pattern','slub','slubScale','hair','irregular','wear','wEase','wAngle','wL','wC','wh','fL','fC','fh','cL','cC','ch','accent','aMode','dye','mix','mShape','mInset','mAmp','mScale','mRough','fray','seed'];
 const CLOTH=new Map();
 function clothField(o,W,H,dpr,jq){ const key=keyOf(o,CLOTH_KEYS)+'|'+W+'|'+H+'|'+dpr+'|'+(jq?jq.__id||(jq.__id=Math.random().toString(36).slice(2)):''); const hit=CLOTH.get(key); if(hit) return hit;
   const w=W/dpr,hh=H/dpr,s=o.seed|0, pat0=PATTERNS[o.pattern]||PATTERNS.plain, MF=FX.maskField(Object.assign({},o,{mFeather:1,mBite:0,mMode:'tone'}),W,H,dpr,s), D=MF.d;
@@ -103,7 +103,7 @@ function clothField(o,W,H,dpr,jq){ const key=keyOf(o,CLOTH_KEYS)+'|'+W+'|'+H+'|'
     const pp=Math.min(pw,ph), al=warpTop?v:u, ac=warpTop?u:v, hr=o.hair*(FX.vnoise(al/(pp*.45)+nT*3.1,ac/Math.max(.35,pp*.09),s+31)-.5);
     // ply twist: each float carries an S-twist ridge (an angled sinusoid along the thread), faded in only once a thread is
     // wide enough on screen to show it (≥ ~5 device px) — at small scale the cloth stays clean
-    const tpx=(warpTop?pw:ph)*dpr, twA=.11*clamp((tpx-4.5)/6,0,1), twist=twA?twA*Math.sin(TAU*((warpTop?v:u)/((warpTop?pw:ph)*.62)+acrT*.9)+nT*1.7):0;
+    const tpx=(warpTop?pw:ph)*dpr, twA=(o.twist??.11)*clamp((tpx-4.5)/6,0,1), twist=twA?twA*Math.sin(TAU*((warpTop?v:u)/((warpTop?pw:ph)*.62)+acrT*.9)+nT*1.7):0;
     const hT=(.42+.58*cylT*(.3+.7*along))*(worn?.82:1)+hr*.35+twist*cylT, hU=.2+.26*cylU;
     h[id]=und*hU*(1-top)+top*hT; a[id]=Math.max(top,und); hair[id]=top*clamp(hr*2+.5,0,1)*o.hair;
     const k=id*3; if(!D||D[id]>0){ px[0]=GAP[0];px[1]=GAP[1];px[2]=GAP[2]; } else { px[0]=alb[k];px[1]=alb[k+1];px[2]=alb[k+2]; } // partial thread coverage blends over the dark behind the cloth, not the page (no bright dots at thread corners)
@@ -359,6 +359,7 @@ const weave={ presets:[['source · linen',{}],['gray linen',{wL:.7,wC:.006,wh:25
     FX.EASE_PARAM('wEase','Wear curve',['in',2.2],'how wear grows along its direction'),
     {key:'wAngle',label:'Wear direction',group:'field',type:'range',min:0,max:360,step:1,unit:'°',value:90,note:'wear increases toward this direction'},
     {key:'depth',label:'Relief',group:'relief',type:'range',min:0,max:3,step:.01,value:1.2,note:'thread relief relative to pitch: how much the light models each float'},
+    {key:'twist',label:'Ply twist',group:'relief',type:'range',min:0,max:.3,step:.005,value:.11,note:'the S-twist ridge along each float; it only appears once a thread is about 5 device px wide, so it matters in close-ups'},
     {key:'diffuse',label:'Diffuse share',group:'relief',type:'range',min:0,max:1,step:.01,value:.85,note:'share of light from the sheet light vs flat ambient fill'},
     {key:'shadow',label:'Cast shadow',group:'relief',type:'range',min:0,max:1,step:.01,value:.6,note:'floats shading into gaps and onto under-threads, plus occlusion in the gaps'},
     ...FX.INK_PARAMS('w','Warp',.3,.004,265),
@@ -475,13 +476,13 @@ const deboss={ id:'fx-06-deboss', code:'FX-06', name:'Blind deboss', section:'ch
     {key:'crush',label:'Crush',group:'relief',type:'range',min:0,max:1,step:.01,value:.7,note:'how flat the tooth is pressed on the floor'},
     {key:'diffuse',label:'Diffuse share',group:'relief',type:'range',min:0,max:1,step:.01,value:.95},
     {key:'shadow',label:'Wall shadow',group:'relief',type:'range',min:0,max:1,step:.01,value:.7},
-    {key:'burnish',label:'Floor tone',group:'color',type:'range',min:0,max:.08,step:.001,unit:'ΔL',value:.012,curve:2,note:'pressed fibers read a touch darker on the floor'},
+    {key:'floorTone',label:'Floor tone',group:'color',type:'range',min:0,max:.08,step:.001,unit:'ΔL',value:.012,curve:2,note:'pressed fibers read a touch darker on the floor'},
     {key:'stock',label:'Prints on',group:'transfer',type:'select',options:['paper','cloth','smooth'],value:'paper',note:'paper = FX-03 live, cloth = FX-04 live, smooth = no substrate'},
     {key:'ink',label:'Ink on floor',group:'color',type:'range',min:0,max:1,step:.01,value:0,note:'0 = blind; 1 = full letterpress'},
     ...FX.INK_PARAMS('i','Ink',.32,.09,25).map(p=>Object.assign(p,{when:{}})),
     FX.MIX_PARAM('film'),
     FX.SEED_PARAM(3)],
-  run(o,W,H,dpr,x={}){ const st=stockFor(o,x,W,H,dpr), clip=(x.clips&&x.clips.die)||new Float32Array(W*H);
+  run(o,W,H,dpr,x={}){ if(o.burnish!=null){ o=Object.assign({},o,{floorTone:o.burnish}); } /* old key from overrides or old links */ const st=stockFor(o,x,W,H,dpr), clip=(x.clips&&x.clips.die)||new Float32Array(W*H);
     // die profile from the signed distance to the die edge (not a blur): a crisp shoulder where the sheet breaks (~.3 px
     // radius), a straight wall over the die softness, a flat floor; the lip is a narrow ridge just outside the edge
     const SD=FX.sdf(clip,W,H), wW=Math.max(.2,o.soft*.55), r0=Math.max(.5,.3*dpr), lw=wW*1.4+.8, P0=new Float32Array(W*H), L0=new Float32Array(W*H);
@@ -489,7 +490,7 @@ const deboss={ id:'fx-06-deboss', code:'FX-06', name:'Blind deboss', section:'ch
     const P=FX.blur(P0,W,H,Math.round(r0)), LP=FX.blur(L0,W,H,Math.round(r0));
     const hs=stockH(st,x.S), hpx=new Float32Array(W*H); for(let i=0;i<W*H;i++){ const base=st?st.h[i]*hs:0, lip=LP[i]*o.lip; hpx[i]=base*(1-o.crush*P[i])-o.depth*P[i]+lip*(o.depth>=0?1:-1); }
     const lf=litFrom(hpx,W,H,dpr,o.diffuse,o.shadow), alb=baseAlb(st,x,W,H), A=new Float32Array(W*H);
-    if(o.burnish>0) for(let i=0,k=0;i<W*H;i++,k+=3){ const f=1-o.burnish*3*P[i]; alb[k]*=f; alb[k+1]*=f; alb[k+2]*=f; }
+    if(o.floorTone>0) for(let i=0,k=0;i<W*H;i++,k+=3){ const f=1-o.floorTone*3*P[i]; alb[k]*=f; alb[k+1]*=f; alb[k+2]*=f; }
     if(o.ink>0){ const ink=FX.inkOf(o,'i'), LUT=FX.filmLUT(ink), px=[0,0,0]; for(let i=0,k=0;i<W*H;i++,k+=3){ const a=clip[i]*o.ink*1.2; if(a<=0) continue; A[i]=a; if(o.mix==='film') FX.filmInto(alb,k,LUT,a); else { px[0]=alb[k];px[1]=alb[k+1];px[2]=alb[k+2]; FX.mixInto(px,ink,Math.min(1,a),o.mix); alb[k]=px[0];alb[k+1]=px[1];alb[k+2]=px[2]; } } }
     if(st&&st.lf){ for(let k=0;k<lf.length;k++) lf[k]*=lerp(1,st.lf[k],.25); }
     carryLF(lf,x.lf,st);
@@ -632,7 +633,7 @@ const E_TONES={fresh:[.56,.092,224],classic:[.42,.122,257],peroxide:[.34,.13,263
 /* FX-11 · Cyanotype · a sun print: brushed sensitizer, objects shading the UV, Prussian blue where the sun reached */
 const cyanotype={ id:'fx-11-cyanotype', code:'FX-11', name:'Cyanotype', section:'changed', kind:'process', tool:'brush + sun', mechanism:['deposit','expose'], stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
   clips:{ obj:(g,w,h,o)=>{ if(o.subject==='die') drawShape(g,w,h,{shape:o.dieShape,text:o.text,size:o.dieSize}); else e_botany(g,w,h,o); } },
-  presets:[['classic fern',{}],['die print',{subject:'die',dieShape:'sun',lift:2.5,contact:.62,trans:0,expo:1.15,strokes:3,dry:.35}],['overexposed',{expo:2.8,bleed:.7,lift:10,contact:.42,trans:.06,depth:1.55}],['peroxide grass',{subject:'grass',tone:'peroxide',lift:4,contact:.6,strokes:4,bAngle:-5,trans:.01}],['tea-toned',{tone:'tea',depth:1.25,bleed:.25}]],
+  presets:[['classic fern',{}],['die print',{subject:'die',dieShape:'sun',lift:2.5,contact:.62,trans:0,expo:1.15,strokes:3,dry:.35}],['overexposed',{expo:2.8,bleed:.7,lift:10,contact:.42,trans:.06,density:1.55}],['peroxide grass',{subject:'grass',tone:'peroxide',lift:4,contact:.6,strokes:4,bAngle:-5,trans:.01}],['tea-toned',{tone:'tea',density:1.25,bleed:.25}]],
   sub:'A sun print. Sensitizer is brushed on in ragged strokes that pool where the brush lands and run dry where it lifts; a fern, grass or a cut-card motif sits on top and the sun does the rest. Where light reached, Prussian blue; under the object, paper. Lifted parts throw soft, offset shadows away from the sheet light. Pressed parts stay sharp.',
   recipe:[
     'Coating = brush strokes in stroke space (along s, across t): a load that runs out along the stroke; edges displaced by per-side noise (raggedness); a set-down pool and a drying rim; bristle streaks × the stock height decide where a dry brush still deposits.',
@@ -650,7 +651,7 @@ const cyanotype={ id:'fx-11-cyanotype', code:'FX-11', name:'Cyanotype', section:
     {key:'dieSize',label:'Motif size',group:'motif',type:'range',min:.2,max:1,step:.01,value:.72,when:{subject:['die']},note:'motif height as a share of the plate'},
     {key:'strokes',label:'Brush strokes',group:'structure',type:'range',min:2,max:8,step:1,value:4,note:'strokes laid top to bottom, alternating direction',limits:[[7,8,'stripes']]},
     {key:'bAngle',label:'Brush angle',group:'structure',type:'range',min:-30,max:30,step:.5,unit:'°',value:-3,note:'tilt of the brush strokes'},
-    {key:'rag',label:'Brush-edge raggedness',group:'structure',type:'range',min:0,max:1,step:.01,value:.45,note:'how far bristles and drag push each stroke edge in and out',limits:[[.8,1,'edges tear']]},
+    {key:'brushRag',label:'Brush-edge raggedness',group:'structure',type:'range',min:0,max:1,step:.01,value:.45,note:'how far bristles and drag push each stroke edge in and out',limits:[[.8,1,'edges tear']]},
     {key:'uneven',label:'Coating unevenness',group:'structure',type:'range',min:0,max:1,step:.01,value:.45,note:'streaks and drag in the sensitizer thickness'},
     {key:'dry',label:'Dry-brush tails',group:'structure',type:'range',min:0,max:1,step:.01,value:.6,note:'how far the load runs out before the brush lifts: bristle streaks on the tooth peaks'},
     {key:'pool',label:'Pooling',group:'structure',type:'range',min:0,max:1,step:.01,value:.5,note:'sensitizer beading where the brush lands and stops, and the drying rim along each edge'},
@@ -662,10 +663,10 @@ const cyanotype={ id:'fx-11-cyanotype', code:'FX-11', name:'Cyanotype', section:
     {key:'bleed',label:'Wash bleed',group:'transfer',type:'range',min:0,max:1,step:.01,value:.35,note:'Prussian blue carried downhill into the whites during the wash, in streaks'},
     {key:'stock',label:'Prints on',group:'transfer',type:'select',options:['paper','cloth','smooth'],value:'paper',note:'paper = FX-03 live (watercolor-like sheets suit it), cloth = FX-04 live (cyanotype on cotton)'},
     {key:'tone',label:'Tone',group:'color',type:'select',options:['fresh','classic','peroxide','tea','custom'],value:'classic',note:'fresh = before oxidation (greener); classic = air-oxidized Prussian blue; peroxide = hydrogen-peroxide bath (deeper, violet-blue); tea = tannin-toned neutral brown'},
-    {key:'depth',label:'Film density',group:'film',type:'range',min:.3,max:2,step:.01,value:1.45,note:'film density of a fully exposed coat (Beer–Lambert: deeper and more saturated)'},
+    {key:'density',label:'Film density',group:'film',type:'range',min:.3,max:2,step:.01,value:1.45,note:'film density of a fully exposed coat (Beer–Lambert: deeper and more saturated)'},
     ...FX.INK_PARAMS('c','Custom tone',.4,.12,256).map(p=>Object.assign(p,{when:{tone:['custom']}})),
     FX.SEED_PARAM(19)],
-  run(o,W,H,dpr,x={}){ const w=W/dpr,h=H/dpr,s=o.seed|0,R=FX.rng(s+7), st=stockFor(o,x,W,H,dpr), obj=(x.clips&&x.clips.obj)||new Float32Array(W*H);
+  run(o,W,H,dpr,x={}){ if(o.depth!=null||o.rag!=null){ o=Object.assign({},o); if(o.depth!=null) o.density=o.depth; if(o.rag!=null) o.brushRag=o.rag; } /* old keys (usage overrides, old links) win: defaults carry only the new keys */ const w=W/dpr,h=H/dpr,s=o.seed|0,R=FX.rng(s+7), st=stockFor(o,x,W,H,dpr), obj=(x.clips&&x.clips.obj)||new Float32Array(W*H);
     // stock height band-limited to ~.35 px: dry-brush thresholds follow the tooth but never cut single device pixels
     const hb=st?FX.blur(st.h,W,H,Math.max(1,Math.round(.3*dpr))):null, hm=meanH(hb), hd=st?FX.blur(st.h,W,H,Math.max(1,Math.round(.9*dpr))):null, hdm=meanH(hd);
     /* 1 · coating */
@@ -677,11 +678,11 @@ const cyanotype={ id:'fx-11-cyanotype', code:'FX-11', name:'Cyanotype', section:
       const TL=e_tab(-bw,bw,.1,q=>Math.pow(FX.gnoise(q/1.3,2.2,sk+7)*.7+FX.gnoise(q/5,4.4,sk+8)*.3,1.6)), MIX=e_tab(S0,S1,1,q=>FX.fbm(q/46,k,sk+9,2)), WOB=e_tab(S0,S1,1,q=>(FX.fbm(q/60,k+2,sk+10,2)-.5)*2.2);
       for(let y=0;y<H;y++){ const v=y/dpr-y0; for(let X=0;X<W;X++){ const u=X/dpr-x0, sA=u*ca+v*sa; if(sA<S0||sA>S1) continue; const t0=-u*sa+v*ca; if(t0>bw*.85||t0<-bw*.85) continue;
         const sc=clamp(sA/L,0,1), t=t0-bow*Math.sin(PI*sc), load=1-dK*Math.pow(sc,1.7);
-        const e=edge[t>=0?1:0].at(sA)*o.rag*(1+1.4*(1-load)), hw=bw*.5*(1-.1*(1-load))+e, dE=hw-Math.abs(t); if(dE<-1) continue;
-        const tn=clamp(t/Math.max(1,hw),-1,1), dS=sA+bw*.12*Math.sqrt(1-tn*tn)+o.rag*bw*.07*CAP.at(t), dEnd=L+dK*bw*.7*TL.at(t)-sA+(1-dK)*bw*.1*Math.sqrt(1-tn*tn);
+        const e=edge[t>=0?1:0].at(sA)*o.brushRag*(1+1.4*(1-load)), hw=bw*.5*(1-.1*(1-load))+e, dE=hw-Math.abs(t); if(dE<-1) continue;
+        const tn=clamp(t/Math.max(1,hw),-1,1), dS=sA+bw*.12*Math.sqrt(1-tn*tn)+o.brushRag*bw*.07*CAP.at(t), dEnd=L+dK*bw*.7*TL.at(t)-sA+(1-dK)*bw*.1*Math.sqrt(1-tn*tn);
         const cov=clamp(dE*dpr+.5,0,1)*clamp(dS*dpr+.5,0,1)*clamp(dEnd*dpr+.5,0,1); if(cov<=0) continue;
         const i=y*W+X, tw=t+WOB.at(sA), m=MIX.at(sA), B=BT.at(tw)*(1-m)+BT2.at(tw)*m, dB=(BT.d(tw)*(1-m)+BT2.d(tw)*m)/dpr;
-        const ez=2+11*o.rag, eT=o.rag>0?.92*Math.pow(1-clamp(dE/ez,0,1),1.6):0, sT=o.rag>0?.85*Math.pow(1-clamp(Math.min(dS,dEnd)/ez,0,1),1.6):0;
+        const ez=2+11*o.brushRag, eT=o.brushRag>0?.92*Math.pow(1-clamp(dE/ez,0,1),1.6):0, sT=o.brushRag>0?.85*Math.pow(1-clamp(Math.min(dS,dEnd)/ez,0,1),1.6):0;
         let c=cov; const th=Math.max(1.15*(1-load)-.12,eT,sT); if(th>-.05){ const q=.78*B+.22*(hd?clamp((hd[i]-hdm)*3.2+.5,0,1):.5), band=Math.max(.06,.7*Math.abs(.78*dB)); c*=sstep(th-band,th+band,q); } if(c<=0) continue;
         let tau=Math.pow(load,.55)*(1+o.uneven*(.55*(FX.fbm(sA/52,t/15+k*3,sk+11,2,.5)-.5)*2+.4*(B-.5)*2));
         tau+=o.pool*(1.1*Math.exp(-Math.max(0,sA)/(bw*.26))+1.1*(1-dK)*Math.exp(-Math.max(0,dEnd)/(bw*.2))+.4*load*Math.exp(-Math.max(0,dE)/1.1));
@@ -698,7 +699,7 @@ const cyanotype={ id:'fx-11-cyanotype', code:'FX-11', name:'Cyanotype', section:
       for(let i=0;i<W*H;i++){ const f=K>1?lift[i]/LM*(K-1):0, wgt=1-Math.abs(f-j); if(wgt>0) S[i]+=wgt*Sb[i]; } }
     /* 3 · develop: Beer–Lambert density from dose; 4 · wash: bleed downhill, streaked */
     const tr=o.subject==='die'?0:o.trans, kk=2.2, nrm=1/(1-Math.exp(-kk)), A=new Float32Array(W*H), stain=.006;
-    for(let i=0;i<W*H;i++){ if(T[i]<=0) continue; const E=1-clamp(S[i],0,1)*(1-tr), r=Math.pow(Math.min(1.2,(1-Math.exp(-kk*o.expo*E))*nrm),1.35), Tt=Tm[i]+.45*(T[i]-Tm[i]), Ts=1.3*(1-Math.exp(-Tt/1.3)); A[i]=Ts*(stain+(1-stain)*r)*o.depth; }
+    for(let i=0;i<W*H;i++){ if(T[i]<=0) continue; const E=1-clamp(S[i],0,1)*(1-tr), r=Math.pow(Math.min(1.2,(1-Math.exp(-kk*o.expo*E))*nrm),1.35), Tt=Tm[i]+.45*(T[i]-Tm[i]), Ts=1.3*(1-Math.exp(-Tt/1.3)); A[i]=Ts*(stain+(1-stain)*r)*o.density; }
     if(o.bleed>0){ const rb=Math.max(1,Math.round(2*dpr)), Ab=FX.blur(A,W,H,rb), Cb=FX.blur(C,W,H,rb*2), dy=1.8*dpr;
       for(let y=0;y<H;y++){ const v=y/dpr; for(let X=0;X<W;X++){ const i=y*W+X; if(Cb[i]<=.01) continue; const fl=e_bil(Ab,W,H,X+.5,y+.5-dy), sk=.5+.9*FX.fbm(X/dpr/2.6,v/36,s+91,2,.5), b=o.bleed*.55*fl*sk*Math.min(1,Cb[i]*1.4); if(b>A[i]) A[i]=b; } } }
     /* 5 · color + light */
@@ -861,7 +862,7 @@ const spotUV={ id:'fx-09-spot-uv', code:'FX-09', name:'Spot UV varnish', section
 /* FX-10 · Satin embroidery · thread floats laid across a motif, stitched into the cloth, gleaming along their length */
 const embroidery={ id:'fx-10-embroidery', code:'FX-10', name:'Satin embroidery', section:'added', kind:'construction', tool:'needle', mechanism:['stitch','deform','reflect'], stockOf:o=>o.stock==='cloth'?WEAVE:o.stock==='paper'?TOOTH:null,
   clips:{ die:(g,w,h,o)=>drawShape(g,w,h,o) },
-  presets:[['rayon gloss',{}],['matte cotton floss',{sheen:.14,twist:.55,loft:.85,density:19,yL:.7,yC:.11,yh:72,maxFloat:46}],['chain-stitch outline',{shape:'knot',size:.7,outline:'chain',oLen:6.5,angle:-62,density:26,yL:.6,yC:.1,yh:182,maxFloat:60}]],
+  presets:[['rayon gloss',{}],['matte cotton floss',{sheen:.14,twist:.55,loft:.85,count:19,yL:.7,yC:.11,yh:72,maxFloat:46}],['chain-stitch outline',{shape:'knot',size:.7,outline:'chain',oLen:6.5,angle:-62,count:26,yL:.6,yC:.1,yh:182,maxFloat:60}]],
   sub:'A satin fill: long thread floats laid side by side across the motif at one angle, each a slightly rounded body whose filaments gleam along their length, so the fill lights up or goes dark as the sheet light turns. Long floats split into staggered rows, ends land unevenly at the edge, needle holes dimple the cloth and the ground puckers where the stitches pull.',
   recipe:[
     'Motif → exact signed distance. Satin: centerlines across the motif at the stitch angle, one per 100 / stitch count px; each centerline is marched against the motif to find where the needle goes in and out (concave motifs give several floats per row).',
@@ -871,7 +872,7 @@ const embroidery={ id:'fx-10-embroidery', code:'FX-10', name:'Satin embroidery',
     'Thread light: Lambert on the thread normals + an anisotropic gleam (Kajiya–Kay along the twisted filament direction × a lobe across the cylinder), from the sheet light; a height-field shadow and cavity occlusion from the stitched relief fall onto the cloth and between floats. Color: OKLCH.'],
   limits:[['stitch count','> 45 /100 px','threads under ~2 px: the fill reads as a smooth sheet at 1× (fine at 2×+)'],['stitch count','< 12 /100 px','gaps open between floats'],['max float','> 200 px','floats too long to hold: they would snag; read as a ribbon'],['sheen','> .9 with low twist','reads as plastic'],['pull','> .7','the ground reads crumpled, not stitched']],
   params:[...SHAPE_PARAMS({shape:'crescent',size:.74,text:'Wren'}),
-    {key:'density',label:'Stitch count',group:'structure',type:'range',min:8,max:60,step:.5,unit:'/100px',value:24,note:'satin threads per 100 CSS px, across the stitch direction',limits:[[45,60,'a smooth sheet at 1×'],[8,12,'gaps open']]},
+    {key:'count',label:'Stitch count',group:'structure',type:'range',min:8,max:60,step:.5,unit:'/100px',value:24,note:'satin threads per 100 CSS px, across the stitch direction',limits:[[45,60,'a smooth sheet at 1×'],[8,12,'gaps open']]},
     {key:'angle',label:'Stitch angle',group:'structure',type:'range',min:-90,max:90,step:1,unit:'°',value:-38,note:'direction of the floats; threads gleam most when they run across the light'},
     {key:'maxFloat',label:'Max float',group:'structure',type:'range',min:8,max:400,step:1,unit:'px',value:72,curve:2,note:'longest stitch before it splits into rows (split satin); the split points stagger like brickwork',limits:[[200,400,'snags']]},
     {key:'stagger',label:'End stagger',group:'structure',type:'range',min:0,max:1,step:.01,value:.45,note:'how unevenly the stitch ends land along the motif edge (alternating needle points + jitter)'},
@@ -884,8 +885,8 @@ const embroidery={ id:'fx-10-embroidery', code:'FX-10', name:'Satin embroidery',
     ...FX.INK_PARAMS('y','Thread',.68,.165,52),
     {key:'stock',label:'Stitched into',group:'transfer',type:'select',options:['cloth','paper'],value:'cloth',note:'cloth = FX-04 live; paper = FX-03 live (a stitched card)'},
     FX.SEED_PARAM(19)],
-  run(o,W,H,dpr,x={}){ const st=stockFor(o,x,W,H,dpr), clip=(x.clips&&x.clips.die)||new Float32Array(W*H), s=o.seed|0, w=W/dpr, h=H/dpr, NP=W*H, hs=stockH(st,x.S);
-    const SD=FX.sdf(clip,W,H), pitch=100/o.density, R0=pitch*.66, loft=o.loft, th=o.angle*PI/180, ca=Math.cos(th), sa=Math.sin(th), cx=w/2, cy=h/2, ext=Math.hypot(w,h)/2+pitch*3, NJ=Math.ceil(2*ext/pitch)+1;
+  run(o,W,H,dpr,x={}){ if(o.density!=null){ o=Object.assign({},o,{count:o.density}); } /* old key from overrides or old links */ const st=stockFor(o,x,W,H,dpr), clip=(x.clips&&x.clips.die)||new Float32Array(W*H), s=o.seed|0, w=W/dpr, h=H/dpr, NP=W*H, hs=stockH(st,x.S);
+    const SD=FX.sdf(clip,W,H), pitch=100/o.count, R0=pitch*.66, loft=o.loft, th=o.angle*PI/180, ca=Math.cos(th), sa=Math.sin(th), cx=w/2, cy=h/2, ext=Math.hypot(w,h)/2+pitch*3, NJ=Math.ceil(2*ext/pitch)+1;
     const TB=new Float32Array(NJ), TR=new Float32Array(NJ), SEG=new Array(NJ), holes=[]; let nSt=0;
     // 1 · satin rows: where each centerline enters and leaves the die → floats (split when too long)
     for(let j=0;j<NJ;j++){ const bj=-ext+(j+.5)*pitch+(hash(j,1,s)-.5)*pitch*.14, R=R0*(1+(hash(j,2,s)-.5)*.12); TB[j]=bj; TR[j]=R; const ox=cx-bj*sa, oy=cy+bj*ca, out=[];
@@ -1024,7 +1025,7 @@ const c_thread=(segs,W,H,dpr,col,R,tw=.2)=>{ const a=new Float32Array(W*H), hh=n
   return {lin,a,hole}; };
 /* lay a layer over a base, in place (linear light) */
 const c_over=(out,lin,a)=>{ for(let i=0,k=0;i<a.length;i++,k+=3){ const m=a[i]; if(m<=0) continue; out[k]+=(lin[k]-out[k])*m; out[k+1]+=(lin[k+1]-out[k+1])*m; out[k+2]+=(lin[k+2]-out[k+2])*m; } return out; };
-/* stock color: multiply a lit grey sheet by a dye (OKLab) — the ink printed on it is multiplied too, as a film on colored stock is */
+/* stock color: multiply a lit gray sheet by a dye (OKLab) — the ink printed on it is multiplied too, as a film on colored stock is */
 const c_tint=(lin,L,C,h,ref=1)=>{ const t=FX.ink(L,C,h).lin; for(let k=0;k<lin.length;k+=3){ lin[k]*=t[0]/ref; lin[k+1]*=t[1]/ref; lin[k+2]*=t[2]/ref; } return lin; };
 /* swatch card geometry (card-local CSS px; the card is a rotated frame bleeding off the right and bottom of the plate) */
 const c_card=(w,h)=>{ const cw=w*1.06, ch=h*1.02; return {cx:w*.555, cy:h*.565, rot:-.016, cw, ch, hx:cw*.05, hy:ch*.115, hr:ch*.022, er:ch*.04,
@@ -1515,7 +1516,7 @@ const usages=[
       const bag=c_tint(tooth.run(Object.assign({},P(TOOTH),{scale:1.1,oct:4,aniso:1.7,fAngle:88,fSpread:.5,fibers:60,fLen:4.5,fWidth:.34,fDark:.11,fRaise:.6,form:1,formScale:12,depth:.09,paperL:.93,pits:6,pDark:.12,seed:47}),W,H,dpr,{}).lin,.3,.004,250,.8);
       shadowOn(bag,C.label,null,W,H,dpr,.9); R.lin=c_over(bag,R.lin,C.label); R.mask=C.label; return R; } },
   { id:'u-bookmacro', job:'packaging', title:'Bookcloth · 5× at the hinge', sub:'Five times into the cover of a clothbound book. The gold foil bridges the green threads and drops out in the gaps between them. The blind hinge groove crushes the weave flat, and past it the spine turns away into shadow. Raked at 17°, so every thread casts.', uses:['fx-04-weave','fx-08-foil','fx-06-deboss'], aspect:'1/1', zoom:5, light:{az:200,el:17},
-    overrides:{'fx-04-weave':Object.assign({},BOOK,{warp:170,weft:124,fill:.97,irregular:.24,slub:.45,slubScale:5,hair:.3,dye:.015,depth:1.3,shadow:.65}),'fx-08-foil':{stock:'cloth',crush:.5,grain:.05,starve:0,flash:.25,mirror:1.15,cam:2,box:2},'fx-06-deboss':{stock:'cloth',depth:3.2,soft:1.2,crush:.9,lip:.12,diffuse:.92,shadow:.9}},
+    overrides:{'fx-04-weave':Object.assign({},BOOK,{twist:.03,warp:170,weft:124,fill:.97,irregular:.24,slub:.45,slubScale:5,hair:.3,dye:.015,depth:1.3,shadow:.65}),'fx-08-foil':{stock:'cloth',crush:.5,grain:.05,starve:0,flash:.25,mirror:1.15,cam:2,box:2},'fx-06-deboss':{stock:'cloth',depth:3.2,soft:1.2,crush:.9,lip:.12,diffuse:.92,shadow:.9}},
     clips:{ foil:(g,w,h)=>typeAt(g,'Su',-w*.06,h*.86,h*.95,{track:-4}), groove:(g,w,h)=>g.fillRect(w*.86,0,w*.06,h) },
     run(P,W,H,dpr,x){ const C=x.clips, R=chain([{fx:weave,o:P('fx-04-weave')},{fx:deboss,o:P('fx-06-deboss'),x:{clips:{die:C.groove}}},{fx:foil,o:P('fx-08-foil'),x:{clips:{die:C.foil}},top:true}],W,H,dpr,x);
       // past the hinge the cloth wraps the rounded spine: it turns away from the light, a soft crest catching it first

@@ -1,24 +1,29 @@
 {
  "template": "T-04",
  "set": "Set 01",
- "title": "Effect set · Four surfaces",
- "premise": "Two stocks and ten marks, one material system. Paper and cloth are height fields; ink, graphite, foil, varnish, thread, sunlight and a laser all land on them, and one sheet light rakes all of it. No gradient stands in for anything.",
- "source": "Mindgut · Technique & Front-End Study V01 §08 (texture recipes) · ø co. · 2026-10-23",
+ "title": "Effect set · Stock and light",
+ "premise": "Two stocks and ten effects in one material system. Paper and cloth are lit height fields. Ink, graphite, foil, varnish and thread land on them; a die, sunlight and a laser change them in place. One sheet light shades all of it, and no gradient stands in for a material.",
+ "source": "Mindgut · Technique & Front-End Study V01 §08 (texture recipes) · 2026-10-23",
  "ground": "#FFFFFF",
  "system": {
-  "read": "Ink on real stock under one raking light.",
+  "read": "Every effect reads the stock's height and is lit by one sheet light.",
   "sharedCause": [
-   "stock height field → relief shading · ink acceptance · starved pinholes · wicking · ink mottle",
-   "sheet light → paper relief · thread modeling · thread cast shadows · object shadows on the page"
+   "stock height → where ink, graphite and foil take, where they starve, how fibers wick, how film mottles",
+   "stock height → how a die, a type bar, a beam or a stitch reshapes the surface, and how a coating holds",
+   "sheet light → diffuse shading of every relief: tooth, threads, deboss walls, burns, stitches",
+   "sheet light → shadows: thread gaps, lifted sheets, objects on a sun print, a laser kerf",
+   "sheet light seen as a soft box → reflections on foil, varnish, graphite and thread"
   ],
   "passOrder": [
-   "stock height (tooth · fibers · pits · formation | threads)",
-   "albedo (paper L, thread dyes in OKLab)",
-   "ink pressure (dot footprints | roller run-out) × mask",
-   "acceptance vs height → starve → wick → film thickness",
-   "color: Beer–Lambert film in linear light (or coverage mix)",
-   "light: × Lambert shade × height shadow (once, last)",
-   "page: object cast shadow, sRGB encode"
+   "stock: height (tooth, fibers, pits, formation, or threads) and albedo",
+   "driver: pressure, dose or exposure across the plate, times the mask or motif",
+   "transfer: driver against stock height → acceptance, starve or release, wick",
+   "change: deposit film or solid, lay thread, press, burn or develop",
+   "color: Beer–Lambert film or an OKLab mix, in linear light",
+   "height: stock plus the effect's own relief, in CSS px",
+   "diffuse light: Lambert and height shadow from the sheet light, applied once",
+   "view-dependent light: soft-box reflection and glints, added last",
+   "page: contact shading on the white ground, then sRGB encode"
   ]
  },
  "light": {
@@ -43,7 +48,34 @@
    "darken": "OKLab: lower L, top ink a/b"
   }
  },
- "units": "CSS px for every length; rendered at device px (dpr ≤ 2). Density params change mark count per px², never a tile scale.",
+ "units": "CSS px for every length; rendered at device px (dpr ≤ 3 on screen, any for export). Density params change mark count per px², never a tile scale.",
+ "outputs": {
+  "lin": "Float32 W·H·3, lit linear RGB",
+  "alb": "Float32 W·H·3, unlit albedo",
+  "lf": "Float32 W·H·3, diffuse light factor (applied once)",
+  "ink": "Float32 W·H, this effect's own separation (plate), 0..1",
+  "stock": "Float32 W·H, height in CSS px (stock relief plus the effect's own)",
+  "mask": "Float32 W·H, coverage 0..1",
+  "marks": "count; pixel counts are per CSS px²",
+  "markUnit": "string"
+ },
+ "sections": [
+  {
+   "id": "stocks",
+   "title": "Stocks",
+   "blurb": "Paper and cloth as lit height fields. Every other effect reads their height, color and light."
+  },
+  {
+   "id": "added",
+   "title": "Added marks",
+   "blurb": "Something lands on the stock: ink, graphite, foil, varnish or thread. The stock's height decides where it takes."
+  },
+  {
+   "id": "changed",
+   "title": "Changed in place",
+   "blurb": "The stock itself changes. A die presses it, sunlight turns a brushed coating blue, a laser burns it."
+  }
+ ],
  "shared": {
   "blueNoise": "64 × 64 void-and-cluster rank tile, σ 1.9, toroidal, seed 1993",
   "mask": "signed distance to rect | ellipse | band | blob, displaced by fbm (wander, scale, octaves), feather as tone or blue-noise speckle, bite = clumped dropouts rising toward the edge; cached by params",
@@ -60,1199 +92,17 @@
  },
  "effects": [
   {
-   "id": "fx-01-stipple",
-   "code": "FX-01",
-   "name": "Stipple ramp",
-   "role": "mark · pen",
-   "sub": "Tone made of whole pen dots. Value sets how many sites print (FM) or how big each dot is (AM); a blue-noise rank picks the sites. Each dot is crisp geometry whose edge the stock's tooth nudges — never softened.",
-   "presets": [
-    {
-     "name": "fine pen",
-     "params": {}
-    },
-    {
-     "name": "technical .1",
-     "params": {
-      "pitch": 1.2,
-      "dotR": 0.36,
-      "jitter": 0.95,
-      "sizeVar": 0.1,
-      "irregular": 0.08,
-      "rag": 0.03
-     }
-    },
-    {
-     "name": "source · coarse",
-     "params": {
-      "pitch": 2.7,
-      "dotR": 0.95,
-      "sizeVar": 0.35,
-      "irregular": 0.3,
-      "rag": 0.2,
-      "ease": [
-       "in",
-       1.5
-      ]
-     }
-    },
-    {
-     "name": "AM screen",
-     "params": {
-      "screen": 1,
-      "order": "ordered",
-      "pitch": 2.4,
-      "dotR": 1.1,
-      "jitter": 0,
-      "sizeVar": 0,
-      "irregular": 0.05
-     }
-    },
-    {
-     "name": "radial burst",
-     "params": {
-      "source": "radial",
-      "ease": [
-       "out",
-       2
-      ],
-      "from": 0,
-      "to": 0.9
-     }
-    }
-   ],
-   "printsOn": "fx-03-paper-tooth",
-   "recipe": [
-    "Site lattice at the pitch (CSS px), jittered. Value field (linear · radial · noise) eased from → to.",
-    "Screen: FM keeps a site when its blue-noise rank < value; AM keeps every site with radius ∝ √value; the dial interpolates. The mask is sampled at the site — dots are whole or absent.",
-    "Each dot is geometry: a signed distance to an irregular nib outline (7 vertex radii), so its edge is always 1 device px of anti-aliasing — never a blur.",
-    "The stock edits the edge: the distance is displaced by the stock height (edge rag), valleys inside the dot can starve, fibers wick a short way out. Film τ = thickness × pressure.",
-    "Color: Beer–Lambert film in linear light (or a coverage mix). Ink B overprints by the same film product.",
-    "Light last: × the stock's shading under the sheet light."
-   ],
-   "limits": [
-    {
-     "param": "pitch",
-     "range": "< 1.2 px",
-     "what": "sites merge into flat tone at 1× — the stipple stops reading as marks"
-    },
-    {
-     "param": "dot radius",
-     "range": "< .3 px",
-     "what": "below ~½ device px at 1× a dot is a gray pixel, not a mark"
-    },
-    {
-     "param": "dot radius",
-     "range": "> ½ pitch",
-     "what": "dots fuse into a solid; FM loses its range"
-    },
-    {
-     "param": "edge rag",
-     "range": "> .9 px",
-     "what": "dots read as fuzz, not ink"
-    },
-    {
-     "param": "selection",
-     "range": "white",
-     "what": "clumps and voids at low density"
-    }
-   ],
-   "params": [
-    {
-     "key": "pitch",
-     "label": "Pitch",
-     "group": "density",
-     "type": "range",
-     "default": 1.55,
-     "min": 0.8,
-     "max": 16,
-     "step": 0.05,
-     "unit": "px",
-     "limits": [
-      {
-       "lo": 0.8,
-       "hi": 1.2,
-       "why": "sites merge into tone at 1×"
-      }
-     ],
-     "note": "distance between dot sites — sets the COUNT of dots, not their size"
-    },
-    {
-     "key": "dotR",
-     "label": "Dot radius",
-     "group": "density",
-     "type": "range",
-     "default": 0.48,
-     "min": 0.2,
-     "max": 4,
-     "step": 0.01,
-     "unit": "px",
-     "limits": [
-      {
-       "lo": 2.4,
-       "hi": 4,
-       "why": "past ~½ pitch dots fuse"
-      }
-     ],
-     "note": "radius of a full-value dot, independent of pitch"
-    },
-    {
-     "key": "screen",
-     "label": "Screen · FM ↔ AM",
-     "group": "density",
-     "type": "range",
-     "default": 0,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "note": "0 = value changes how many dots print; 1 = how big they are"
-    },
-    {
-     "key": "sAngle",
-     "label": "Screen angle",
-     "group": "density",
-     "type": "range",
-     "default": 0,
-     "min": 0,
-     "max": 90,
-     "step": 0.5,
-     "unit": "°",
-     "note": "rotates the dot lattice — 45° is the classic single-ink angle: the eye reads the rows least, and they never beat against the pixel grid"
-    },
-    {
-     "key": "order",
-     "label": "Selection",
-     "group": "density",
-     "type": "select",
-     "default": "blue",
-     "options": [
-      "blue",
-      "white",
-      "ordered"
-     ],
-     "note": "which sites survive at a given density — blue: even thinning (void-and-cluster rank); white: hash, clumps; ordered: 8×8 Bayer, reads as a screen"
-    },
-    {
-     "key": "jitter",
-     "label": "Jitter",
-     "group": "density",
-     "type": "range",
-     "default": 0.85,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "limits": [
-      {
-       "lo": 0,
-       "hi": 0.2,
-       "why": "lattice shows through as a grid"
-      }
-     ],
-     "note": "site offset inside its cell (0 = lattice)"
-    },
-    {
-     "key": "sizeVar",
-     "label": "Size variance",
-     "group": "density",
-     "type": "range",
-     "default": 0.22,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "note": "per-dot radius spread"
-    },
-    {
-     "key": "irregular",
-     "label": "Nib irregularity",
-     "group": "density",
-     "type": "range",
-     "default": 0.16,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "note": "vertex wobble of each footprint — nib, not disc"
-    },
-    {
-     "key": "pressure",
-     "label": "Pen pressure",
-     "group": "density",
-     "type": "range",
-     "default": 1,
-     "min": 0.3,
-     "max": 1,
-     "step": 0.01,
-     "limits": [
-      {
-       "lo": 0.3,
-       "hi": 0.5,
-       "why": "dots print pale and pitted"
-      }
-     ],
-     "note": "film per dot and how many valleys it skips (with Starve)"
-    },
-    {
-     "key": "source",
-     "label": "Value field",
-     "group": "dropoff",
-     "type": "select",
-     "default": "linear",
-     "options": [
-      "linear",
-      "radial",
-      "noise"
-     ],
-     "note": "what drives value across the plate"
-    },
-    {
-     "key": "angle",
-     "label": "Ramp angle",
-     "group": "dropoff",
-     "type": "range",
-     "default": 0,
-     "min": 0,
-     "max": 360,
-     "step": 1,
-     "unit": "°",
-     "when": {
-      "source": [
-       "linear"
-      ]
-     },
-     "note": "direction of the linear ramp"
-    },
-    {
-     "key": "ease",
-     "label": "Dropoff curve",
-     "group": "dropoff",
-     "type": "ease",
-     "default": [
-      "in",
-      1.25
-     ],
-     "curves": [
-      "linear",
-      "smooth",
-      "smoother",
-      "in",
-      "out",
-      "inout",
-      "expo",
-      "sigmoid"
-     ],
-     "note": "how value travels from → to across the field"
-    },
-    {
-     "key": "from",
-     "label": "From",
-     "group": "dropoff",
-     "type": "range",
-     "default": 0.02,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "note": "value at the start of the field"
-    },
-    {
-     "key": "to",
-     "label": "To",
-     "group": "dropoff",
-     "type": "range",
-     "default": 1,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "note": "value at the end of the field"
-    },
-    {
-     "key": "fScale",
-     "label": "Field scale",
-     "group": "dropoff",
-     "type": "range",
-     "default": 140,
-     "min": 20,
-     "max": 500,
-     "step": 1,
-     "unit": "px",
-     "when": {
-      "source": [
-       "noise"
-      ]
-     },
-     "note": "noise field wavelength"
-    },
-    {
-     "key": "stock",
-     "label": "Prints on",
-     "group": "stock",
-     "type": "select",
-     "default": "paper",
-     "options": [
-      "paper",
-      "cloth",
-      "smooth"
-     ],
-     "note": "paper = FX-03 live, cloth = FX-04 live, smooth = no substrate. Tune the stock and this plate redraws."
-    },
-    {
-     "key": "rag",
-     "label": "Edge rag",
-     "group": "stock",
-     "type": "range",
-     "default": 0.07,
-     "min": 0,
-     "max": 1.5,
-     "step": 0.01,
-     "unit": "px",
-     "limits": [
-      {
-       "lo": 0.9,
-       "hi": 1.5,
-       "why": "dots read as fuzz"
-      }
-     ],
-     "note": "how far the stock's tooth pushes each dot edge in and out — 0 = perfect discs"
-    },
-    {
-     "key": "starve",
-     "label": "Starve",
-     "group": "stock",
-     "type": "range",
-     "default": 0,
-     "min": 0,
-     "max": 0.3,
-     "step": 0.002,
-     "note": "valleys inside a dot that the nib skips — single-pixel pinholes, more as pressure drops"
-    },
-    {
-     "key": "wick",
-     "label": "Wick",
-     "group": "stock",
-     "type": "range",
-     "default": 0.08,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "when": {
-      "stock": [
-       "paper",
-       "cloth"
-      ]
-     },
-     "note": "ink carried a short way out along fibers"
-    },
-    {
-     "key": "mottle",
-     "label": "Mottle",
-     "group": "stock",
-     "type": "range",
-     "default": 0.1,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "when": {
-      "stock": [
-       "paper"
-      ]
-     },
-     "note": "paper formation varying the film"
-    },
-    {
-     "key": "aL",
-     "label": "Ink A · L",
-     "group": "color",
-     "type": "range",
-     "default": 0.22,
-     "min": 0,
-     "max": 1,
-     "step": 0.005,
-     "ink": "a",
-     "note": "OKLCH lightness (0 black … 1 white)"
-    },
-    {
-     "key": "aC",
-     "label": "Ink A · C",
-     "group": "color",
-     "type": "range",
-     "default": 0.004,
-     "min": 0,
-     "max": 0.37,
-     "step": 0.002,
-     "ink": "a",
-     "limits": [
-      {
-       "lo": 0.26,
-       "hi": 0.37,
-       "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
-      }
-     ],
-     "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
-    },
-    {
-     "key": "ah",
-     "label": "Ink A · h",
-     "group": "color",
-     "type": "range",
-     "default": 285,
-     "min": 0,
-     "max": 360,
-     "step": 0.5,
-     "unit": "°",
-     "ink": "a",
-     "note": "OKLCH hue angle"
-    },
-    {
-     "key": "duo",
-     "label": "Ink B",
-     "group": "color",
-     "type": "select",
-     "default": "off",
-     "options": [
-      "off",
-      "on"
-     ],
-     "note": "a second stipple ramp running the opposite way, overprinted"
-    },
-    {
-     "key": "bL",
-     "label": "Ink B · L",
-     "group": "color",
-     "type": "range",
-     "default": 0.64,
-     "min": 0,
-     "max": 1,
-     "step": 0.005,
-     "ink": "b",
-     "when": {
-      "duo": [
-       "on"
-      ]
-     },
-     "note": "OKLCH lightness (0 black … 1 white)"
-    },
-    {
-     "key": "bC",
-     "label": "Ink B · C",
-     "group": "color",
-     "type": "range",
-     "default": 0.19,
-     "min": 0,
-     "max": 0.37,
-     "step": 0.002,
-     "ink": "b",
-     "when": {
-      "duo": [
-       "on"
-      ]
-     },
-     "limits": [
-      {
-       "lo": 0.26,
-       "hi": 0.37,
-       "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
-      }
-     ],
-     "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
-    },
-    {
-     "key": "bh",
-     "label": "Ink B · h",
-     "group": "color",
-     "type": "range",
-     "default": 36,
-     "min": 0,
-     "max": 360,
-     "step": 0.5,
-     "unit": "°",
-     "ink": "b",
-     "when": {
-      "duo": [
-       "on"
-      ]
-     },
-     "note": "OKLCH hue angle"
-    },
-    {
-     "key": "density",
-     "label": "Film thickness",
-     "group": "mixing",
-     "type": "range",
-     "default": 1.3,
-     "min": 0.2,
-     "max": 2,
-     "step": 0.01,
-     "note": "ink film at full pressure; with the film rule, thicker = deeper and more saturated (Beer–Lambert)"
-    },
-    {
-     "key": "mix",
-     "label": "Color rule",
-     "group": "mixing",
-     "type": "select",
-     "default": "film",
-     "options": [
-      "film",
-      "oklab",
-      "oklch",
-      "linear",
-      "srgb"
-     ],
-     "note": "film = Beer–Lambert absorption in linear light (physical); oklab / oklch / linear / srgb = coverage mixes, for comparison"
-    },
-    {
-     "key": "over",
-     "label": "Overprint",
-     "group": "mixing",
-     "type": "select",
-     "default": "multiply",
-     "options": [
-      "multiply",
-      "mix",
-      "darken"
-     ],
-     "when": {
-      "duo": [
-       "on"
-      ]
-     },
-     "note": "ink B over ink A when the rule is a coverage mix (film always multiplies)"
-    },
-    {
-     "key": "mShape",
-     "label": "Shape",
-     "group": "mask",
-     "type": "select",
-     "default": "rect",
-     "options": [
-      "none",
-      "rect",
-      "ellipse",
-      "band",
-      "blob",
-      "type",
-      "image"
-     ],
-     "note": "the region the effect may occupy — type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)"
-    },
-    {
-     "key": "mText",
-     "label": "Mask text",
-     "group": "mask",
-     "type": "text",
-     "default": "Counted",
-     "when": {
-      "mShape": [
-       "type"
-      ]
-     },
-     "note": "set in Archivo 800, fit to the plate"
-    },
-    {
-     "key": "mInset",
-     "label": "Inset",
-     "group": "mask",
-     "type": "range",
-     "default": 14,
-     "min": 0,
-     "max": 120,
-     "step": 1,
-     "unit": "px",
-     "note": "distance from the plate edge to the mask edge"
-    },
-    {
-     "key": "mAmp",
-     "label": "Edge wander",
-     "group": "mask",
-     "type": "range",
-     "default": 4,
-     "min": 0,
-     "max": 40,
-     "step": 0.5,
-     "unit": "px",
-     "limits": [
-      {
-       "lo": 28,
-       "hi": 40,
-       "why": "above ~28 px the edge tears into islands"
-      }
-     ],
-     "note": "how far noise pushes the edge in and out"
-    },
-    {
-     "key": "mScale",
-     "label": "Wander scale",
-     "group": "mask",
-     "type": "range",
-     "default": 70,
-     "min": 4,
-     "max": 240,
-     "step": 1,
-     "unit": "px",
-     "note": "wavelength of the wander; small = ragged, large = drifting"
-    },
-    {
-     "key": "mRough",
-     "label": "Roughness",
-     "group": "mask",
-     "type": "range",
-     "default": 4,
-     "min": 1,
-     "max": 6,
-     "step": 1,
-     "unit": "oct",
-     "note": "octaves of edge noise — adds fine teeth without moving the large shape"
-    },
-    {
-     "key": "mFeather",
-     "label": "Feather",
-     "group": "mask",
-     "type": "range",
-     "default": 10,
-     "min": 0.5,
-     "max": 60,
-     "step": 0.5,
-     "unit": "px",
-     "note": "width over which coverage falls from 1 to 0"
-    },
-    {
-     "key": "mBite",
-     "label": "Bite",
-     "group": "mask",
-     "type": "range",
-     "default": 0.15,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "note": "clumped dropouts that grow more likely toward the edge"
-    },
-    {
-     "key": "seed",
-     "label": "Seed",
-     "group": "seed",
-     "type": "range",
-     "default": 5,
-     "min": 1,
-     "max": 999,
-     "step": 1,
-     "note": "every random draw in the effect hangs off this one number"
-    }
-   ]
-  },
-  {
-   "id": "fx-02-ink-edge",
-   "code": "FX-02",
-   "name": "Ink leaving paper",
-   "role": "mark · roller",
-   "sub": "A solid that runs out. Roller pressure eases off across a warped edge; as it falls, only the peaks of the stock still touch the ink, so the run-out speckle is the paper's own tooth — with pinholes in its valleys and hairlines wicked along its fibers.",
-   "presets": [
-    {
-     "name": "roller",
-     "params": {}
-    },
-    {
-     "name": "dry brush",
-     "params": {
-      "streak": 7,
-      "width": 240,
-      "breakup": 1,
-      "split": 2.2,
-      "bite": 0.35,
-      "wAmp": 6,
-      "ease": [
-       "out",
-       1.6
-      ]
-     }
-    },
-    {
-     "name": "letterpress",
-     "params": {
-      "width": 3,
-      "pressure": 0.86,
-      "starve": 0.05,
-      "mottle": 0.4,
-      "wAmp": 1,
-      "density": 1.1
-     }
-    },
-    {
-     "name": "riso",
-     "params": {
-      "iL": 0.66,
-      "iC": 0.2,
-      "ih": 2,
-      "density": 0.85,
-      "mottle": 0.55,
-      "width": 60,
-      "split": 0.9
-     }
-    },
-    {
-     "name": "vertical",
-     "params": {
-      "angle": 90,
-      "edge": 0.5,
-      "width": 180
-     }
-    }
-   ],
-   "printsOn": "fx-03-paper-tooth",
-   "recipe": [
-    "Pressure = dropoff curve of the signed distance to a warped edge line (stroke direction, transition width), × the mask.",
-    "Ink chain: the stock height under the inked area (blended with film-splitting noise, clumped and streaked along the stroke) is ranked to percentiles; pressure P inks exactly the top P of the surface — peaks first.",
-    "Starve: valleys below the threshold never take ink. Wick: fibers carry ink past the edge. Mottle: paper formation thins the film.",
-    "Film thickness thins with pressure unless the film breaks up; color = Beer–Lambert film in linear light.",
-    "Light last: × the stock's shading — the ink sits in the tooth, not on top of it."
-   ],
-   "limits": [
-    {
-     "param": "transition",
-     "range": "< 4 px",
-     "what": "reads as a hard vector edge — no run-out to see"
-    },
-    {
-     "param": "break-up",
-     "range": "< .3",
-     "what": "the edge becomes a gradient — the \"AI gradient\" failure"
-    },
-    {
-     "param": "stock bite",
-     "range": "< .3",
-     "what": "speckle stops following the paper — reads as digital dither"
-    },
-    {
-     "param": "streak",
-     "range": "> 6",
-     "what": "marks read as scanlines unless the angle is off-axis"
-    }
-   ],
-   "params": [
-    {
-     "key": "streak",
-     "label": "Streak",
-     "group": "density",
-     "type": "range",
-     "default": 1.25,
-     "min": 1,
-     "max": 10,
-     "step": 0.1,
-     "limits": [
-      {
-       "lo": 6,
-       "hi": 10,
-       "why": "scanlines on-axis"
-      }
-     ],
-     "note": "film-split clumps stretched along the stroke — dry roller, dragged brush"
-    },
-    {
-     "key": "pressure",
-     "label": "Roller pressure",
-     "group": "density",
-     "type": "range",
-     "default": 1,
-     "min": 0.4,
-     "max": 1,
-     "step": 0.01,
-     "note": "pressure in the solid; below 1 the body starts to open up"
-    },
-    {
-     "key": "angle",
-     "label": "Stroke angle",
-     "group": "dropoff",
-     "type": "range",
-     "default": 0,
-     "min": 0,
-     "max": 360,
-     "step": 1,
-     "unit": "°",
-     "note": "direction the roller travels (it runs out along this vector)"
-    },
-    {
-     "key": "edge",
-     "label": "Edge position",
-     "group": "dropoff",
-     "type": "range",
-     "default": 0.58,
-     "min": 0,
-     "max": 1,
-     "step": 0.005,
-     "note": "where the run-out is centered across the plate"
-    },
-    {
-     "key": "width",
-     "label": "Transition",
-     "group": "dropoff",
-     "type": "range",
-     "default": 130,
-     "min": 1,
-     "max": 420,
-     "step": 1,
-     "unit": "px",
-     "limits": [
-      {
-       "lo": 1,
-       "hi": 4,
-       "why": "hard vector edge"
-      }
-     ],
-     "note": "width of the run-out band"
-    },
-    {
-     "key": "ease",
-     "label": "Dropoff curve",
-     "group": "dropoff",
-     "type": "ease",
-     "default": [
-      "smooth",
-      2
-     ],
-     "curves": [
-      "linear",
-      "smooth",
-      "smoother",
-      "in",
-      "out",
-      "inout",
-      "expo",
-      "sigmoid"
-     ],
-     "note": "pressure across the band — how fast the ink gives out"
-    },
-    {
-     "key": "wAmp",
-     "label": "Edge warp",
-     "group": "dropoff",
-     "type": "range",
-     "default": 18,
-     "min": 0,
-     "max": 90,
-     "step": 0.5,
-     "unit": "px",
-     "note": "how far the edge line wanders"
-    },
-    {
-     "key": "wScale",
-     "label": "Warp scale",
-     "group": "dropoff",
-     "type": "range",
-     "default": 90,
-     "min": 8,
-     "max": 400,
-     "step": 1,
-     "unit": "px",
-     "note": "wavelength of the wander"
-    },
-    {
-     "key": "wOct",
-     "label": "Warp octaves",
-     "group": "dropoff",
-     "type": "range",
-     "default": 3,
-     "min": 1,
-     "max": 5,
-     "step": 1,
-     "unit": "oct",
-     "note": "detail in the wander"
-    },
-    {
-     "key": "stock",
-     "label": "Prints on",
-     "group": "stock",
-     "type": "select",
-     "default": "paper",
-     "options": [
-      "paper",
-      "cloth",
-      "smooth"
-     ],
-     "note": "paper = FX-03 live, cloth = FX-04 live, smooth = no substrate (film-splitting noise only). Tune the stock and this plate redraws."
-    },
-    {
-     "key": "bite",
-     "label": "Stock bite",
-     "group": "stock",
-     "type": "range",
-     "default": 0.5,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "when": {
-      "stock": [
-       "paper",
-       "cloth"
-      ]
-     },
-     "note": "how much the stock height (vs film-splitting noise) decides where ink lands"
-    },
-    {
-     "key": "breakup",
-     "label": "Break-up ↔ thin",
-     "group": "stock",
-     "type": "range",
-     "default": 0.94,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "limits": [
-      {
-       "lo": 0,
-       "hi": 0.3,
-       "why": "reads as a gradient"
-      }
-     ],
-     "note": "1 = ink film breaks into marks on the peaks as pressure falls; 0 = the film stays whole and thins to tone"
-    },
-    {
-     "key": "starve",
-     "label": "Starve",
-     "group": "stock",
-     "type": "range",
-     "default": 0.018,
-     "min": 0,
-     "max": 0.3,
-     "step": 0.002,
-     "note": "the lowest share of the surface never takes ink — pinholes in the solid, placed by the paper's valleys and pits"
-    },
-    {
-     "key": "wick",
-     "label": "Wick",
-     "group": "stock",
-     "type": "range",
-     "default": 0.35,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "when": {
-      "stock": [
-       "paper",
-       "cloth"
-      ]
-     },
-     "note": "ink carried along fibers into the run-out (hairline feathering)"
-    },
-    {
-     "key": "mottle",
-     "label": "Mottle",
-     "group": "stock",
-     "type": "range",
-     "default": 0.15,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "when": {
-      "stock": [
-       "paper"
-      ]
-     },
-     "note": "paper formation (its low-frequency cloudiness) varying the film thickness"
-    },
-    {
-     "key": "split",
-     "label": "Film split",
-     "group": "stock",
-     "type": "range",
-     "default": 1.1,
-     "min": 0.5,
-     "max": 10,
-     "step": 0.1,
-     "unit": "px",
-     "note": "clump size of the film-splitting noise (the roller's own speckle)"
-    },
-    {
-     "key": "iL",
-     "label": "Ink · L",
-     "group": "color",
-     "type": "range",
-     "default": 0.4,
-     "min": 0,
-     "max": 1,
-     "step": 0.005,
-     "ink": "i",
-     "note": "OKLCH lightness (0 black … 1 white)"
-    },
-    {
-     "key": "iC",
-     "label": "Ink · C",
-     "group": "color",
-     "type": "range",
-     "default": 0.155,
-     "min": 0,
-     "max": 0.37,
-     "step": 0.002,
-     "ink": "i",
-     "limits": [
-      {
-       "lo": 0.26,
-       "hi": 0.37,
-       "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
-      }
-     ],
-     "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
-    },
-    {
-     "key": "ih",
-     "label": "Ink · h",
-     "group": "color",
-     "type": "range",
-     "default": 300,
-     "min": 0,
-     "max": 360,
-     "step": 0.5,
-     "unit": "°",
-     "ink": "i",
-     "note": "OKLCH hue angle"
-    },
-    {
-     "key": "density",
-     "label": "Film thickness",
-     "group": "mixing",
-     "type": "range",
-     "default": 1.2,
-     "min": 0.2,
-     "max": 2,
-     "step": 0.01,
-     "note": "ink film at full pressure (Beer–Lambert: thicker = deeper, more saturated)"
-    },
-    {
-     "key": "mix",
-     "label": "Color rule",
-     "group": "mixing",
-     "type": "select",
-     "default": "film",
-     "options": [
-      "film",
-      "oklab",
-      "oklch",
-      "linear",
-      "srgb"
-     ],
-     "note": "film = Beer–Lambert absorption in linear light (physical); oklab / oklch / linear / srgb = coverage mixes, for comparison"
-    },
-    {
-     "key": "mShape",
-     "label": "Shape",
-     "group": "mask",
-     "type": "select",
-     "default": "rect",
-     "options": [
-      "none",
-      "rect",
-      "ellipse",
-      "band",
-      "blob",
-      "type",
-      "image"
-     ],
-     "note": "the region the effect may occupy — type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)"
-    },
-    {
-     "key": "mText",
-     "label": "Mask text",
-     "group": "mask",
-     "type": "text",
-     "default": "Counted",
-     "when": {
-      "mShape": [
-       "type"
-      ]
-     },
-     "note": "set in Archivo 800, fit to the plate"
-    },
-    {
-     "key": "mInset",
-     "label": "Inset",
-     "group": "mask",
-     "type": "range",
-     "default": 14,
-     "min": 0,
-     "max": 120,
-     "step": 1,
-     "unit": "px",
-     "note": "distance from the plate edge to the mask edge"
-    },
-    {
-     "key": "mAmp",
-     "label": "Edge wander",
-     "group": "mask",
-     "type": "range",
-     "default": 5,
-     "min": 0,
-     "max": 40,
-     "step": 0.5,
-     "unit": "px",
-     "limits": [
-      {
-       "lo": 28,
-       "hi": 40,
-       "why": "above ~28 px the edge tears into islands"
-      }
-     ],
-     "note": "how far noise pushes the edge in and out"
-    },
-    {
-     "key": "mScale",
-     "label": "Wander scale",
-     "group": "mask",
-     "type": "range",
-     "default": 60,
-     "min": 4,
-     "max": 240,
-     "step": 1,
-     "unit": "px",
-     "note": "wavelength of the wander; small = ragged, large = drifting"
-    },
-    {
-     "key": "mRough",
-     "label": "Roughness",
-     "group": "mask",
-     "type": "range",
-     "default": 4,
-     "min": 1,
-     "max": 6,
-     "step": 1,
-     "unit": "oct",
-     "note": "octaves of edge noise — adds fine teeth without moving the large shape"
-    },
-    {
-     "key": "mFeather",
-     "label": "Feather",
-     "group": "mask",
-     "type": "range",
-     "default": 14,
-     "min": 0.5,
-     "max": 60,
-     "step": 0.5,
-     "unit": "px",
-     "note": "width over which coverage falls from 1 to 0"
-    },
-    {
-     "key": "mBite",
-     "label": "Bite",
-     "group": "mask",
-     "type": "range",
-     "default": 0.2,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "note": "clumped dropouts that grow more likely toward the edge"
-    },
-    {
-     "key": "seed",
-     "label": "Seed",
-     "group": "seed",
-     "type": "range",
-     "default": 9,
-     "min": 1,
-     "max": 999,
-     "step": 1,
-     "note": "every random draw in the effect hangs off this one number"
-    }
-   ]
-  },
-  {
    "id": "fx-03-paper-tooth",
    "code": "FX-03",
    "name": "Paper tooth",
-   "role": "stock · paper",
-   "sub": "White stock that is not a screen. A height field — tooth, formation, laid fibers, pits — lit by the one sheet light. On white the relief can only take light away, so the paper reads through its shadows. FX-01 and FX-02 print into this exact field.",
+   "section": "stocks",
+   "kind": "stock",
+   "tool": "paper machine",
+   "mechanism": [
+    "form"
+   ],
+   "role": "stock · paper machine",
+   "sub": "White stock that is not a screen. A height field of tooth, formation, laid fibers and pits, lit by the one sheet light. On white the relief can only take light away, so the paper reads through its shadows. FX-01 and FX-02 print into this exact field.",
    "presets": [
     {
      "name": "bond",
@@ -1314,7 +164,7 @@
    "printsOn": null,
    "recipe": [
     "Height = fbm at the tooth scale (octaves, persistence = how fast detail drops off), reshaped by the distribution curve; blended with low-frequency formation.",
-    "Fibers: curved capsules at a count per 100 × 100 px near the grain angle, raised into the height; pits: small depressions. Both also darken the albedo slightly.",
+    "Fibers: curved capsules at a count per 100 × 100 CSS px near the grain angle, raised into the height; pits: small depressions. Both also darken the albedo slightly.",
     "Normal from the height gradient → Lambert under the sheet light (azimuth + elevation from the light puck). Diffuse share vs ambient fill; the fill can be tinted.",
     "The same field is the stock for FX-01 and FX-02: its peaks take ink first, its valleys starve, its fibers wick.",
     "Mask = the sheet's cut or deckle edge; the sheet casts a contact + ambient shadow onto the page by the same light."
@@ -1323,7 +173,7 @@
     {
      "param": "relief",
      "range": "> .6 px",
-     "what": "reads as stucco — the stock-filter emboss look"
+     "what": "reads as stucco: the stock-filter emboss look"
     },
     {
      "param": "anisotropy",
@@ -1333,11 +183,11 @@
     {
      "param": "tooth scale",
      "range": "< .8 px",
-     "what": "collapses into per-pixel noise — digital grain"
+     "what": "collapses into per-pixel noise: digital grain"
     },
     {
      "param": "fibers",
-     "range": "> 30 / 100 px²",
+     "range": "> 30 /100×100 px",
      "what": "felt, not paper"
     },
     {
@@ -1350,7 +200,7 @@
     {
      "key": "scale",
      "label": "Tooth scale",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 1.1,
      "min": 0.5,
@@ -1369,7 +219,7 @@
     {
      "key": "oct",
      "label": "Octaves",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 3,
      "min": 1,
@@ -1381,13 +231,13 @@
     {
      "key": "fibers",
      "label": "Fibers",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 3,
      "min": 0,
      "max": 40,
      "step": 0.25,
-     "unit": "/100px²",
+     "unit": "/100×100 px",
      "limits": [
       {
        "lo": 30,
@@ -1400,7 +250,7 @@
     {
      "key": "fLen",
      "label": "Fiber length",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 14,
      "min": 2,
@@ -1412,7 +262,7 @@
     {
      "key": "fWidth",
      "label": "Fiber width",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.4,
      "min": 0.2,
@@ -1424,30 +274,30 @@
     {
      "key": "pits",
      "label": "Pits",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 1,
      "min": 0,
      "max": 40,
      "step": 0.25,
-     "unit": "/100px²",
+     "unit": "/100×100 px",
      "note": "depressions per 100 × 100 CSS px"
     },
     {
      "key": "pers",
      "label": "Persistence",
-     "group": "dropoff",
+     "group": "structure",
      "type": "range",
      "default": 0.42,
      "min": 0.15,
      "max": 0.85,
      "step": 0.01,
-     "note": "amplitude kept per octave — the spectral dropoff of the tooth"
+     "note": "amplitude kept per octave: the spectral dropoff of the tooth"
     },
     {
      "key": "ease",
      "label": "Distribution",
-     "group": "dropoff",
+     "group": "structure",
      "type": "ease",
      "default": [
       "in",
@@ -1468,7 +318,7 @@
     {
      "key": "aniso",
      "label": "Anisotropy",
-     "group": "dropoff",
+     "group": "structure",
      "type": "range",
      "default": 1.6,
      "min": 1,
@@ -1481,12 +331,12 @@
        "why": "reads as a stock emboss filter"
       }
      ],
-     "note": "tooth stretched along the grain angle — machine-made paper is never isotropic; 1 = the 1999 \"paper\" filter look"
+     "note": "tooth stretched along the grain angle. Machine-made paper is never isotropic; 1 = the 1999 \"paper\" filter look"
     },
     {
      "key": "form",
      "label": "Formation",
-     "group": "dropoff",
+     "group": "structure",
      "type": "range",
      "default": 0.3,
      "min": 0,
@@ -1497,7 +347,7 @@
     {
      "key": "formScale",
      "label": "Formation scale",
-     "group": "dropoff",
+     "group": "structure",
      "type": "range",
      "default": 60,
      "min": 10,
@@ -1509,7 +359,7 @@
     {
      "key": "fAngle",
      "label": "Grain angle",
-     "group": "dropoff",
+     "group": "structure",
      "type": "range",
      "default": 6,
      "min": 0,
@@ -1521,7 +371,7 @@
     {
      "key": "fSpread",
      "label": "Grain spread",
-     "group": "dropoff",
+     "group": "structure",
      "type": "range",
      "default": 0.4,
      "min": 0,
@@ -1543,10 +393,10 @@
       {
        "lo": 0.6,
        "hi": 1.6,
-       "why": "stucco — the 1999 emboss look"
+       "why": "stucco: the 1999 emboss look"
       }
      ],
-     "note": "height of the tooth in CSS px — how hard the light can rake it. The slider is weighted to the subtle end."
+     "note": "height of the tooth in CSS px: how hard the light can rake it. The slider is weighted to the subtle end."
     },
     {
      "key": "diffuse",
@@ -1674,7 +524,7 @@
     {
      "key": "mShape",
      "label": "Shape",
-     "group": "mask",
+     "group": "edge",
      "type": "select",
      "default": "rect",
      "options": [
@@ -1686,12 +536,12 @@
       "type",
       "image"
      ],
-     "note": "the region the effect may occupy — type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)"
+     "note": "the region the effect may occupy. type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)"
     },
     {
      "key": "mText",
      "label": "Mask text",
-     "group": "mask",
+     "group": "edge",
      "type": "text",
      "default": "Counted",
      "when": {
@@ -1704,7 +554,7 @@
     {
      "key": "mInset",
      "label": "Inset",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 22,
      "min": 0,
@@ -1716,7 +566,7 @@
     {
      "key": "mAmp",
      "label": "Edge wander",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 2.5,
      "min": 0,
@@ -1735,7 +585,7 @@
     {
      "key": "mScale",
      "label": "Wander scale",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 28,
      "min": 4,
@@ -1747,19 +597,19 @@
     {
      "key": "mRough",
      "label": "Roughness",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 5,
      "min": 1,
      "max": 6,
      "step": 1,
      "unit": "oct",
-     "note": "octaves of edge noise — adds fine teeth without moving the large shape"
+     "note": "octaves of edge noise: adds fine teeth without moving the large shape"
     },
     {
      "key": "mFeather",
      "label": "Feather",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 1.2,
      "min": 0.5,
@@ -1771,7 +621,7 @@
     {
      "key": "mMode",
      "label": "Feather as",
-     "group": "mask",
+     "group": "edge",
      "type": "select",
      "default": "speckle",
      "options": [
@@ -1783,7 +633,7 @@
     {
      "key": "lift",
      "label": "Sheet lift",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 1,
      "min": 0,
@@ -1798,12 +648,12 @@
        "blob"
       ]
      },
-     "note": "thickness / curl of the sheet — sizes its shadow on the page"
+     "note": "thickness / curl of the sheet: sizes its shadow on the page"
     },
     {
      "key": "mBite",
      "label": "Bite",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 0,
      "min": 0,
@@ -1820,7 +670,7 @@
      "min": 1,
      "max": 999,
      "step": 1,
-     "note": "every random draw in the effect hangs off this one number"
+     "note": "every random draw in the effect derives from this one number"
     }
    ]
   },
@@ -1828,7 +678,13 @@
    "id": "fx-04-weave",
    "code": "FX-04",
    "name": "Weave",
-   "role": "stock · cloth",
+   "section": "stocks",
+   "kind": "stock",
+   "tool": "loom",
+   "mechanism": [
+    "form"
+   ],
+   "role": "stock · loom",
    "sub": "Cloth built as cloth: warp and weft at their own counts, a real interlacing, slubbed and hairy threads, every float a raised body lit by the sheet light and casting into the gaps. A cut edge frays thread by thread. FX-01 and FX-02 can print onto it.",
    "presets": [
     {
@@ -1912,13 +768,13 @@
     "Interlacing decides the top thread per crossing; a float is the run where it stays on top. Height = cylinder across the thread × arch along the float; under-threads sit low; hair = fine noise along the thread.",
     "Albedo in OKLab: under-thread, then top thread by AA coverage; accent as flecks (single floats, as in the source) or whole threads.",
     "Light: Lambert from the height gradient + a height-field shadow march toward the sheet light, so floats shade into the gaps; ambient occlusion darkens the gaps.",
-    "Cut: the mask's signed distance plus each thread's own fray length — threads end raggedly, not on a line. The swatch casts onto the page."
+    "Cut: the mask's signed distance plus each thread's own fray length, so threads end raggedly, not on a line. The swatch casts onto the page."
    ],
    "limits": [
     {
      "param": "count",
      "range": "> 50 /100 px at 1×",
-     "what": "threads under 2 CSS px alias against a 1× display — moiré (fine on 2×/3×)"
+     "what": "threads under 2 CSS px alias against a 1× display: moiré (fine on 2×/3×)"
     },
     {
      "param": "count",
@@ -1945,7 +801,7 @@
     {
      "key": "warp",
      "label": "Warp count",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 32,
      "min": 3,
@@ -1964,19 +820,19 @@
     {
      "key": "weft",
      "label": "Weft count",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 30,
      "min": 3,
      "max": 80,
      "step": 0.5,
      "unit": "/100px",
-     "note": "horizontal threads per 100 CSS px — set apart from warp for an unbalanced cloth"
+     "note": "horizontal threads per 100 CSS px. Set it apart from warp for an unbalanced cloth"
     },
     {
      "key": "fill",
      "label": "Fill",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.92,
      "min": 0.35,
@@ -1994,12 +850,12 @@
        "why": "gutters close"
       }
      ],
-     "note": "thread width ÷ pitch — the gutters"
+     "note": "thread width ÷ pitch: the gutters"
     },
     {
      "key": "pattern",
      "label": "Interlacing",
-     "group": "density",
+     "group": "structure",
      "type": "select",
      "default": "plain",
      "options": [
@@ -2014,7 +870,7 @@
     {
      "key": "slub",
      "label": "Slub",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.35,
      "min": 0,
@@ -2025,7 +881,7 @@
     {
      "key": "slubScale",
      "label": "Slub length",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 11,
      "min": 3,
@@ -2037,7 +893,7 @@
     {
      "key": "hair",
      "label": "Hair",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.3,
      "min": 0,
@@ -2048,7 +904,7 @@
     {
      "key": "irregular",
      "label": "Irregularity",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.3,
      "min": 0,
@@ -2059,7 +915,7 @@
     {
      "key": "wear",
      "label": "Wear",
-     "group": "dropoff",
+     "group": "field",
      "type": "range",
      "default": 0.15,
      "min": 0,
@@ -2070,7 +926,7 @@
     {
      "key": "wEase",
      "label": "Wear curve",
-     "group": "dropoff",
+     "group": "field",
      "type": "ease",
      "default": [
       "in",
@@ -2091,7 +947,7 @@
     {
      "key": "wAngle",
      "label": "Wear direction",
-     "group": "dropoff",
+     "group": "field",
      "type": "range",
      "default": 90,
      "min": 0,
@@ -2109,7 +965,18 @@
      "min": 0,
      "max": 3,
      "step": 0.01,
-     "note": "thread relief relative to pitch — how much the light models each float"
+     "note": "thread relief relative to pitch: how much the light models each float"
+    },
+    {
+     "key": "twist",
+     "label": "Ply twist",
+     "group": "relief",
+     "type": "range",
+     "default": 0.11,
+     "min": 0,
+     "max": 0.3,
+     "step": 0.005,
+     "note": "the S-twist ridge along each float; it only appears once a thread is about 5 device px wide, so it matters in close-ups"
     },
     {
      "key": "diffuse",
@@ -2310,7 +1177,7 @@
     {
      "key": "mShape",
      "label": "Shape",
-     "group": "mask",
+     "group": "edge",
      "type": "select",
      "default": "rect",
      "options": [
@@ -2322,12 +1189,12 @@
       "type",
       "image"
      ],
-     "note": "the region the effect may occupy — type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)"
+     "note": "the region the effect may occupy. type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)"
     },
     {
      "key": "mText",
      "label": "Mask text",
-     "group": "mask",
+     "group": "edge",
      "type": "text",
      "default": "Counted",
      "when": {
@@ -2340,7 +1207,7 @@
     {
      "key": "mInset",
      "label": "Inset",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 22,
      "min": 0,
@@ -2352,7 +1219,7 @@
     {
      "key": "mAmp",
      "label": "Edge wander",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 3,
      "min": 0,
@@ -2371,7 +1238,7 @@
     {
      "key": "mScale",
      "label": "Wander scale",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 40,
      "min": 4,
@@ -2383,31 +1250,19 @@
     {
      "key": "mRough",
      "label": "Roughness",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 4,
      "min": 1,
      "max": 6,
      "step": 1,
      "unit": "oct",
-     "note": "octaves of edge noise — adds fine teeth without moving the large shape"
-    },
-    {
-     "key": "mFeather",
-     "label": "Feather",
-     "group": "mask",
-     "type": "range",
-     "default": 1,
-     "min": 0.5,
-     "max": 60,
-     "step": 0.5,
-     "unit": "px",
-     "note": "width over which coverage falls from 1 to 0"
+     "note": "octaves of edge noise: adds fine teeth without moving the large shape"
     },
     {
      "key": "fray",
      "label": "Fray",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 6,
      "min": 0,
@@ -2427,7 +1282,7 @@
     {
      "key": "lift",
      "label": "Swatch lift",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 0.8,
      "min": 0,
@@ -2442,18 +1297,7 @@
        "blob"
       ]
      },
-     "note": "cloth thickness — sizes its shadow on the page"
-    },
-    {
-     "key": "mBite",
-     "label": "Bite",
-     "group": "mask",
-     "type": "range",
-     "default": 0,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "note": "clumped dropouts that grow more likely toward the edge"
+     "note": "cloth thickness: sizes its shadow on the page"
     },
     {
      "key": "seed",
@@ -2464,7 +1308,1200 @@
      "min": 1,
      "max": 999,
      "step": 1,
-     "note": "every random draw in the effect hangs off this one number"
+     "note": "every random draw in the effect derives from this one number"
+    }
+   ]
+  },
+  {
+   "id": "fx-01-stipple",
+   "code": "FX-01",
+   "name": "Stipple ramp",
+   "section": "added",
+   "kind": "mark",
+   "tool": "pen",
+   "mechanism": [
+    "deposit"
+   ],
+   "role": "mark · pen",
+   "sub": "Tone made of whole pen dots. Value sets how many sites print (FM) or how big each dot is (AM); a blue-noise rank picks the sites. Each dot is crisp geometry whose edge the stock's tooth nudges. It is never softened.",
+   "presets": [
+    {
+     "name": "fine pen",
+     "params": {}
+    },
+    {
+     "name": "technical .1",
+     "params": {
+      "pitch": 1.2,
+      "dotR": 0.36,
+      "jitter": 0.95,
+      "sizeVar": 0.1,
+      "irregular": 0.08,
+      "rag": 0.03
+     }
+    },
+    {
+     "name": "source · coarse",
+     "params": {
+      "pitch": 2.7,
+      "dotR": 0.95,
+      "sizeVar": 0.35,
+      "irregular": 0.3,
+      "rag": 0.2,
+      "ease": [
+       "in",
+       1.5
+      ]
+     }
+    },
+    {
+     "name": "AM screen",
+     "params": {
+      "screen": 1,
+      "order": "ordered",
+      "pitch": 2.4,
+      "dotR": 1.1,
+      "jitter": 0,
+      "sizeVar": 0,
+      "irregular": 0.05
+     }
+    },
+    {
+     "name": "radial burst",
+     "params": {
+      "source": "radial",
+      "ease": [
+       "out",
+       2
+      ],
+      "from": 0,
+      "to": 0.9
+     }
+    }
+   ],
+   "printsOn": "fx-03-paper-tooth",
+   "recipe": [
+    "Site lattice at the pitch (CSS px), jittered. Value field (linear · radial · noise) eased from → to.",
+    "Screen: FM keeps a site when its blue-noise rank < value; AM keeps every site with radius ∝ √value; the dial interpolates. The mask is sampled at the site, so dots are whole or absent.",
+    "Each dot is geometry: a signed distance to an irregular nib outline (7 vertex radii), so its edge is always 1 device px of anti-aliasing, never a blur.",
+    "The stock edits the edge: the distance is displaced by the stock height (edge rag), valleys inside the dot can starve, fibers wick a short way out. Film τ = thickness × pressure.",
+    "Color: Beer–Lambert film in linear light (or a coverage mix). Ink B overprints by the same film product.",
+    "Light last: × the stock's shading under the sheet light."
+   ],
+   "limits": [
+    {
+     "param": "pitch",
+     "range": "< 1.2 px",
+     "what": "sites merge into flat tone at 1×: the stipple stops reading as marks"
+    },
+    {
+     "param": "dot radius",
+     "range": "< .3 px",
+     "what": "below ~½ device px at 1× a dot is a gray pixel, not a mark"
+    },
+    {
+     "param": "dot radius",
+     "range": "> ½ pitch",
+     "what": "dots fuse into a solid; FM loses its range"
+    },
+    {
+     "param": "edge rag",
+     "range": "> .9 px",
+     "what": "dots read as fuzz, not ink"
+    },
+    {
+     "param": "selection",
+     "range": "white",
+     "what": "clumps and voids at low density"
+    }
+   ],
+   "params": [
+    {
+     "key": "pitch",
+     "label": "Pitch",
+     "group": "structure",
+     "type": "range",
+     "default": 1.55,
+     "min": 0.8,
+     "max": 16,
+     "step": 0.05,
+     "unit": "px",
+     "limits": [
+      {
+       "lo": 0.8,
+       "hi": 1.2,
+       "why": "sites merge into tone at 1×"
+      }
+     ],
+     "note": "distance between dot sites. It sets the COUNT of dots, not their size"
+    },
+    {
+     "key": "dotR",
+     "label": "Dot radius",
+     "group": "structure",
+     "type": "range",
+     "default": 0.48,
+     "min": 0.2,
+     "max": 4,
+     "step": 0.01,
+     "unit": "px",
+     "note": "radius of a full-value dot, independent of pitch"
+    },
+    {
+     "key": "screen",
+     "label": "Screen · FM ↔ AM",
+     "group": "structure",
+     "type": "range",
+     "default": 0,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "0 = value changes how many dots print; 1 = how big they are"
+    },
+    {
+     "key": "sAngle",
+     "label": "Screen angle",
+     "group": "structure",
+     "type": "range",
+     "default": 0,
+     "min": 0,
+     "max": 90,
+     "step": 0.5,
+     "unit": "°",
+     "note": "rotates the dot lattice. 45° is the classic single-ink angle: the eye reads the rows least, and they never beat against the pixel grid"
+    },
+    {
+     "key": "order",
+     "label": "Selection",
+     "group": "structure",
+     "type": "select",
+     "default": "blue",
+     "options": [
+      "blue",
+      "white",
+      "ordered"
+     ],
+     "note": "which sites survive at a given density. blue: even thinning (void-and-cluster rank); white: hash, clumps; ordered: 8×8 Bayer, reads as a screen"
+    },
+    {
+     "key": "jitter",
+     "label": "Jitter",
+     "group": "structure",
+     "type": "range",
+     "default": 0.85,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "limits": [
+      {
+       "lo": 0,
+       "hi": 0.2,
+       "why": "lattice shows through as a grid"
+      }
+     ],
+     "note": "site offset inside its cell (0 = lattice)"
+    },
+    {
+     "key": "sizeVar",
+     "label": "Size variance",
+     "group": "structure",
+     "type": "range",
+     "default": 0.22,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "per-dot radius spread"
+    },
+    {
+     "key": "irregular",
+     "label": "Nib irregularity",
+     "group": "structure",
+     "type": "range",
+     "default": 0.16,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "vertex wobble of each footprint: a nib, not a disc"
+    },
+    {
+     "key": "pressure",
+     "label": "Pen pressure",
+     "group": "field",
+     "type": "range",
+     "default": 1,
+     "min": 0.3,
+     "max": 1,
+     "step": 0.01,
+     "limits": [
+      {
+       "lo": 0.3,
+       "hi": 0.5,
+       "why": "dots print pale and pitted"
+      }
+     ],
+     "note": "film per dot and how many valleys it skips (with Starve)"
+    },
+    {
+     "key": "source",
+     "label": "Value field",
+     "group": "field",
+     "type": "select",
+     "default": "linear",
+     "options": [
+      "linear",
+      "radial",
+      "noise"
+     ],
+     "note": "what drives value across the plate"
+    },
+    {
+     "key": "angle",
+     "label": "Ramp angle",
+     "group": "field",
+     "type": "range",
+     "default": 0,
+     "min": 0,
+     "max": 360,
+     "step": 1,
+     "unit": "°",
+     "when": {
+      "source": [
+       "linear"
+      ]
+     },
+     "note": "direction of the linear ramp"
+    },
+    {
+     "key": "ease",
+     "label": "Dropoff curve",
+     "group": "field",
+     "type": "ease",
+     "default": [
+      "in",
+      1.25
+     ],
+     "curves": [
+      "linear",
+      "smooth",
+      "smoother",
+      "in",
+      "out",
+      "inout",
+      "expo",
+      "sigmoid"
+     ],
+     "note": "how value travels from → to across the field"
+    },
+    {
+     "key": "from",
+     "label": "From",
+     "group": "field",
+     "type": "range",
+     "default": 0.02,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "value at the start of the field"
+    },
+    {
+     "key": "to",
+     "label": "To",
+     "group": "field",
+     "type": "range",
+     "default": 1,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "value at the end of the field"
+    },
+    {
+     "key": "fScale",
+     "label": "Field scale",
+     "group": "field",
+     "type": "range",
+     "default": 140,
+     "min": 20,
+     "max": 500,
+     "step": 1,
+     "unit": "px",
+     "when": {
+      "source": [
+       "noise"
+      ]
+     },
+     "note": "noise field wavelength"
+    },
+    {
+     "key": "stock",
+     "label": "Prints on",
+     "group": "transfer",
+     "type": "select",
+     "default": "paper",
+     "options": [
+      "paper",
+      "cloth",
+      "smooth"
+     ],
+     "note": "paper = FX-03 live, cloth = FX-04 live, smooth = no substrate. Tune the stock and this plate redraws."
+    },
+    {
+     "key": "rag",
+     "label": "Edge rag",
+     "group": "transfer",
+     "type": "range",
+     "default": 0.07,
+     "min": 0,
+     "max": 1.5,
+     "step": 0.01,
+     "unit": "px",
+     "limits": [
+      {
+       "lo": 0.9,
+       "hi": 1.5,
+       "why": "dots read as fuzz"
+      }
+     ],
+     "note": "how far the stock's tooth pushes each dot edge in and out. 0 = perfect discs"
+    },
+    {
+     "key": "starve",
+     "label": "Starve",
+     "group": "transfer",
+     "type": "range",
+     "default": 0,
+     "min": 0,
+     "max": 0.3,
+     "step": 0.002,
+     "note": "valleys inside a dot that the nib skips. The pinholes follow the stock height, AA-edged, and grow as pressure drops"
+    },
+    {
+     "key": "wick",
+     "label": "Wick",
+     "group": "transfer",
+     "type": "range",
+     "default": 0.08,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "when": {
+      "stock": [
+       "paper",
+       "cloth"
+      ]
+     },
+     "note": "ink carried a short way out along fibers"
+    },
+    {
+     "key": "mottle",
+     "label": "Mottle",
+     "group": "transfer",
+     "type": "range",
+     "default": 0.1,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "when": {
+      "stock": [
+       "paper"
+      ]
+     },
+     "note": "paper formation varying the film"
+    },
+    {
+     "key": "aL",
+     "label": "Ink A · L",
+     "group": "color",
+     "type": "range",
+     "default": 0.22,
+     "min": 0,
+     "max": 1,
+     "step": 0.005,
+     "ink": "a",
+     "note": "OKLCH lightness (0 black … 1 white)"
+    },
+    {
+     "key": "aC",
+     "label": "Ink A · C",
+     "group": "color",
+     "type": "range",
+     "default": 0.004,
+     "min": 0,
+     "max": 0.37,
+     "step": 0.002,
+     "ink": "a",
+     "limits": [
+      {
+       "lo": 0.26,
+       "hi": 0.37,
+       "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+      }
+     ],
+     "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+    },
+    {
+     "key": "ah",
+     "label": "Ink A · h",
+     "group": "color",
+     "type": "range",
+     "default": 285,
+     "min": 0,
+     "max": 360,
+     "step": 0.5,
+     "unit": "°",
+     "ink": "a",
+     "note": "OKLCH hue angle"
+    },
+    {
+     "key": "duo",
+     "label": "Ink B",
+     "group": "color",
+     "type": "select",
+     "default": "off",
+     "options": [
+      "off",
+      "on"
+     ],
+     "note": "a second stipple ramp running the opposite way, overprinted"
+    },
+    {
+     "key": "bL",
+     "label": "Ink B · L",
+     "group": "color",
+     "type": "range",
+     "default": 0.64,
+     "min": 0,
+     "max": 1,
+     "step": 0.005,
+     "ink": "b",
+     "when": {
+      "duo": [
+       "on"
+      ]
+     },
+     "note": "OKLCH lightness (0 black … 1 white)"
+    },
+    {
+     "key": "bC",
+     "label": "Ink B · C",
+     "group": "color",
+     "type": "range",
+     "default": 0.19,
+     "min": 0,
+     "max": 0.37,
+     "step": 0.002,
+     "ink": "b",
+     "when": {
+      "duo": [
+       "on"
+      ]
+     },
+     "limits": [
+      {
+       "lo": 0.26,
+       "hi": 0.37,
+       "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+      }
+     ],
+     "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+    },
+    {
+     "key": "bh",
+     "label": "Ink B · h",
+     "group": "color",
+     "type": "range",
+     "default": 36,
+     "min": 0,
+     "max": 360,
+     "step": 0.5,
+     "unit": "°",
+     "ink": "b",
+     "when": {
+      "duo": [
+       "on"
+      ]
+     },
+     "note": "OKLCH hue angle"
+    },
+    {
+     "key": "density",
+     "label": "Film thickness",
+     "group": "film",
+     "type": "range",
+     "default": 1.3,
+     "min": 0.2,
+     "max": 2,
+     "step": 0.01,
+     "note": "ink film at full pressure; with the film rule, thicker = deeper and more saturated (Beer–Lambert)"
+    },
+    {
+     "key": "mix",
+     "label": "Color rule",
+     "group": "film",
+     "type": "select",
+     "default": "film",
+     "options": [
+      "film",
+      "oklab",
+      "oklch",
+      "linear",
+      "srgb"
+     ],
+     "note": "film = Beer–Lambert absorption in linear light (physical); oklab / oklch / linear / srgb = coverage mixes, for comparison"
+    },
+    {
+     "key": "over",
+     "label": "Overprint",
+     "group": "film",
+     "type": "select",
+     "default": "multiply",
+     "options": [
+      "multiply",
+      "mix",
+      "darken"
+     ],
+     "when": {
+      "duo": [
+       "on"
+      ]
+     },
+     "note": "ink B over ink A when the rule is a coverage mix (film always multiplies)"
+    },
+    {
+     "key": "mShape",
+     "label": "Shape",
+     "group": "edge",
+     "type": "select",
+     "default": "rect",
+     "options": [
+      "none",
+      "rect",
+      "ellipse",
+      "band",
+      "blob",
+      "type",
+      "image"
+     ],
+     "note": "the region the effect may occupy. type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)"
+    },
+    {
+     "key": "mText",
+     "label": "Mask text",
+     "group": "edge",
+     "type": "text",
+     "default": "Counted",
+     "when": {
+      "mShape": [
+       "type"
+      ]
+     },
+     "note": "set in Archivo 800, fit to the plate"
+    },
+    {
+     "key": "mInset",
+     "label": "Inset",
+     "group": "edge",
+     "type": "range",
+     "default": 14,
+     "min": 0,
+     "max": 120,
+     "step": 1,
+     "unit": "px",
+     "note": "distance from the plate edge to the mask edge"
+    },
+    {
+     "key": "mAmp",
+     "label": "Edge wander",
+     "group": "edge",
+     "type": "range",
+     "default": 4,
+     "min": 0,
+     "max": 40,
+     "step": 0.5,
+     "unit": "px",
+     "limits": [
+      {
+       "lo": 28,
+       "hi": 40,
+       "why": "above ~28 px the edge tears into islands"
+      }
+     ],
+     "note": "how far noise pushes the edge in and out"
+    },
+    {
+     "key": "mScale",
+     "label": "Wander scale",
+     "group": "edge",
+     "type": "range",
+     "default": 70,
+     "min": 4,
+     "max": 240,
+     "step": 1,
+     "unit": "px",
+     "note": "wavelength of the wander; small = ragged, large = drifting"
+    },
+    {
+     "key": "mRough",
+     "label": "Roughness",
+     "group": "edge",
+     "type": "range",
+     "default": 4,
+     "min": 1,
+     "max": 6,
+     "step": 1,
+     "unit": "oct",
+     "note": "octaves of edge noise: adds fine teeth without moving the large shape"
+    },
+    {
+     "key": "mFeather",
+     "label": "Feather",
+     "group": "edge",
+     "type": "range",
+     "default": 10,
+     "min": 0.5,
+     "max": 60,
+     "step": 0.5,
+     "unit": "px",
+     "note": "width over which coverage falls from 1 to 0"
+    },
+    {
+     "key": "mBite",
+     "label": "Bite",
+     "group": "edge",
+     "type": "range",
+     "default": 0.15,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "clumped dropouts that grow more likely toward the edge"
+    },
+    {
+     "key": "seed",
+     "label": "Seed",
+     "group": "seed",
+     "type": "range",
+     "default": 5,
+     "min": 1,
+     "max": 999,
+     "step": 1,
+     "note": "every random draw in the effect derives from this one number"
+    }
+   ]
+  },
+  {
+   "id": "fx-02-ink-edge",
+   "code": "FX-02",
+   "name": "Roller run-out",
+   "section": "added",
+   "kind": "mark",
+   "tool": "roller",
+   "mechanism": [
+    "deposit"
+   ],
+   "role": "mark · roller",
+   "sub": "A solid that runs out. Roller pressure eases off across a warped edge; as it falls, only the peaks of the stock still touch the ink, so the run-out speckle is the paper's own tooth, with pinholes in its valleys and hairlines wicked along its fibers.",
+   "presets": [
+    {
+     "name": "roller",
+     "params": {}
+    },
+    {
+     "name": "dry brush",
+     "params": {
+      "streak": 7,
+      "width": 240,
+      "breakup": 1,
+      "split": 2.2,
+      "bite": 0.35,
+      "wAmp": 6,
+      "ease": [
+       "out",
+       1.6
+      ]
+     }
+    },
+    {
+     "name": "letterpress",
+     "params": {
+      "width": 3,
+      "pressure": 0.86,
+      "starve": 0.05,
+      "mottle": 0.4,
+      "wAmp": 1,
+      "density": 1.1
+     }
+    },
+    {
+     "name": "riso",
+     "params": {
+      "iL": 0.66,
+      "iC": 0.2,
+      "ih": 2,
+      "density": 0.85,
+      "mottle": 0.55,
+      "width": 60,
+      "split": 0.9
+     }
+    },
+    {
+     "name": "vertical",
+     "params": {
+      "angle": 90,
+      "edge": 0.5,
+      "width": 180
+     }
+    }
+   ],
+   "printsOn": "fx-03-paper-tooth",
+   "recipe": [
+    "Pressure = dropoff curve of the signed distance to a warped edge line (stroke direction, transition width), × the mask.",
+    "Ink chain: the stock height under the inked area (blended with film-splitting noise, clumped and streaked along the stroke) is ranked to percentiles; pressure P inks exactly the top P of the surface, peaks first.",
+    "Starve: valleys below the threshold never take ink. Wick: fibers carry ink past the edge. Mottle: paper formation thins the film.",
+    "Film thickness thins with pressure unless the film breaks up; color = Beer–Lambert film in linear light.",
+    "Light last: × the stock's shading. The ink sits in the tooth, not on top of it."
+   ],
+   "limits": [
+    {
+     "param": "transition",
+     "range": "< 4 px",
+     "what": "reads as a hard vector edge: no run-out to see"
+    },
+    {
+     "param": "break-up",
+     "range": "< .3",
+     "what": "the edge becomes a gradient: the \"AI gradient\" failure"
+    },
+    {
+     "param": "stock bite",
+     "range": "< .3",
+     "what": "speckle stops following the paper and reads as digital dither"
+    },
+    {
+     "param": "streak",
+     "range": "> 6",
+     "what": "marks read as scanlines unless the angle is off-axis"
+    }
+   ],
+   "params": [
+    {
+     "key": "streak",
+     "label": "Streak",
+     "group": "structure",
+     "type": "range",
+     "default": 1.25,
+     "min": 1,
+     "max": 10,
+     "step": 0.1,
+     "limits": [
+      {
+       "lo": 6,
+       "hi": 10,
+       "why": "scanlines on-axis"
+      }
+     ],
+     "note": "film-split clumps stretched along the stroke: a dry roller, a dragged brush"
+    },
+    {
+     "key": "pressure",
+     "label": "Roller pressure",
+     "group": "field",
+     "type": "range",
+     "default": 1,
+     "min": 0.4,
+     "max": 1,
+     "step": 0.01,
+     "note": "pressure in the solid; below 1 the body starts to open up"
+    },
+    {
+     "key": "angle",
+     "label": "Stroke angle",
+     "group": "field",
+     "type": "range",
+     "default": 0,
+     "min": 0,
+     "max": 360,
+     "step": 1,
+     "unit": "°",
+     "note": "direction the roller travels (it runs out along this vector)"
+    },
+    {
+     "key": "edge",
+     "label": "Edge position",
+     "group": "field",
+     "type": "range",
+     "default": 0.58,
+     "min": 0,
+     "max": 1,
+     "step": 0.005,
+     "note": "where the run-out is centered across the plate"
+    },
+    {
+     "key": "width",
+     "label": "Transition",
+     "group": "field",
+     "type": "range",
+     "default": 130,
+     "min": 1,
+     "max": 420,
+     "step": 1,
+     "unit": "px",
+     "limits": [
+      {
+       "lo": 1,
+       "hi": 4,
+       "why": "hard vector edge"
+      }
+     ],
+     "note": "width of the run-out band"
+    },
+    {
+     "key": "ease",
+     "label": "Dropoff curve",
+     "group": "field",
+     "type": "ease",
+     "default": [
+      "smooth",
+      2
+     ],
+     "curves": [
+      "linear",
+      "smooth",
+      "smoother",
+      "in",
+      "out",
+      "inout",
+      "expo",
+      "sigmoid"
+     ],
+     "note": "pressure across the band: how fast the ink gives out"
+    },
+    {
+     "key": "wAmp",
+     "label": "Edge warp",
+     "group": "field",
+     "type": "range",
+     "default": 18,
+     "min": 0,
+     "max": 90,
+     "step": 0.5,
+     "unit": "px",
+     "note": "how far the edge line wanders"
+    },
+    {
+     "key": "wScale",
+     "label": "Warp scale",
+     "group": "field",
+     "type": "range",
+     "default": 90,
+     "min": 8,
+     "max": 400,
+     "step": 1,
+     "unit": "px",
+     "note": "wavelength of the wander"
+    },
+    {
+     "key": "wOct",
+     "label": "Warp octaves",
+     "group": "field",
+     "type": "range",
+     "default": 3,
+     "min": 1,
+     "max": 5,
+     "step": 1,
+     "unit": "oct",
+     "note": "detail in the wander"
+    },
+    {
+     "key": "stock",
+     "label": "Prints on",
+     "group": "transfer",
+     "type": "select",
+     "default": "paper",
+     "options": [
+      "paper",
+      "cloth",
+      "smooth"
+     ],
+     "note": "paper = FX-03 live, cloth = FX-04 live, smooth = no substrate (film-splitting noise only). Tune the stock and this plate redraws."
+    },
+    {
+     "key": "bite",
+     "label": "Stock bite",
+     "group": "transfer",
+     "type": "range",
+     "default": 0.5,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "when": {
+      "stock": [
+       "paper",
+       "cloth"
+      ]
+     },
+     "note": "how much the stock height (vs film-splitting noise) decides where ink lands"
+    },
+    {
+     "key": "breakup",
+     "label": "Break-up ↔ thin",
+     "group": "transfer",
+     "type": "range",
+     "default": 0.94,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "limits": [
+      {
+       "lo": 0,
+       "hi": 0.3,
+       "why": "reads as a gradient"
+      }
+     ],
+     "note": "1 = ink film breaks into marks on the peaks as pressure falls; 0 = the film stays whole and thins to tone"
+    },
+    {
+     "key": "starve",
+     "label": "Starve",
+     "group": "transfer",
+     "type": "range",
+     "default": 0.018,
+     "min": 0,
+     "max": 0.3,
+     "step": 0.002,
+     "note": "the lowest share of the surface never takes ink. Pinholes in the solid, placed by the paper's valleys and pits"
+    },
+    {
+     "key": "wick",
+     "label": "Wick",
+     "group": "transfer",
+     "type": "range",
+     "default": 0.35,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "when": {
+      "stock": [
+       "paper",
+       "cloth"
+      ]
+     },
+     "note": "ink carried along fibers into the run-out (hairline feathering)"
+    },
+    {
+     "key": "mottle",
+     "label": "Mottle",
+     "group": "transfer",
+     "type": "range",
+     "default": 0.15,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "when": {
+      "stock": [
+       "paper"
+      ]
+     },
+     "note": "paper formation (its low-frequency cloudiness) varying the film thickness"
+    },
+    {
+     "key": "split",
+     "label": "Film split",
+     "group": "structure",
+     "type": "range",
+     "default": 1.1,
+     "min": 0.5,
+     "max": 10,
+     "step": 0.1,
+     "unit": "px",
+     "note": "clump size of the film-splitting noise (the roller's own speckle)"
+    },
+    {
+     "key": "iL",
+     "label": "Ink · L",
+     "group": "color",
+     "type": "range",
+     "default": 0.4,
+     "min": 0,
+     "max": 1,
+     "step": 0.005,
+     "ink": "i",
+     "note": "OKLCH lightness (0 black … 1 white)"
+    },
+    {
+     "key": "iC",
+     "label": "Ink · C",
+     "group": "color",
+     "type": "range",
+     "default": 0.155,
+     "min": 0,
+     "max": 0.37,
+     "step": 0.002,
+     "ink": "i",
+     "limits": [
+      {
+       "lo": 0.26,
+       "hi": 0.37,
+       "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+      }
+     ],
+     "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+    },
+    {
+     "key": "ih",
+     "label": "Ink · h",
+     "group": "color",
+     "type": "range",
+     "default": 300,
+     "min": 0,
+     "max": 360,
+     "step": 0.5,
+     "unit": "°",
+     "ink": "i",
+     "note": "OKLCH hue angle"
+    },
+    {
+     "key": "density",
+     "label": "Film thickness",
+     "group": "film",
+     "type": "range",
+     "default": 1.2,
+     "min": 0.2,
+     "max": 2,
+     "step": 0.01,
+     "note": "ink film at full pressure (Beer–Lambert: thicker = deeper, more saturated)"
+    },
+    {
+     "key": "mix",
+     "label": "Color rule",
+     "group": "film",
+     "type": "select",
+     "default": "film",
+     "options": [
+      "film",
+      "oklab",
+      "oklch",
+      "linear",
+      "srgb"
+     ],
+     "note": "film = Beer–Lambert absorption in linear light (physical); oklab / oklch / linear / srgb = coverage mixes, for comparison"
+    },
+    {
+     "key": "mShape",
+     "label": "Shape",
+     "group": "edge",
+     "type": "select",
+     "default": "rect",
+     "options": [
+      "none",
+      "rect",
+      "ellipse",
+      "band",
+      "blob",
+      "type",
+      "image"
+     ],
+     "note": "the region the effect may occupy. type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)"
+    },
+    {
+     "key": "mText",
+     "label": "Mask text",
+     "group": "edge",
+     "type": "text",
+     "default": "Counted",
+     "when": {
+      "mShape": [
+       "type"
+      ]
+     },
+     "note": "set in Archivo 800, fit to the plate"
+    },
+    {
+     "key": "mInset",
+     "label": "Inset",
+     "group": "edge",
+     "type": "range",
+     "default": 14,
+     "min": 0,
+     "max": 120,
+     "step": 1,
+     "unit": "px",
+     "note": "distance from the plate edge to the mask edge"
+    },
+    {
+     "key": "mAmp",
+     "label": "Edge wander",
+     "group": "edge",
+     "type": "range",
+     "default": 5,
+     "min": 0,
+     "max": 40,
+     "step": 0.5,
+     "unit": "px",
+     "limits": [
+      {
+       "lo": 28,
+       "hi": 40,
+       "why": "above ~28 px the edge tears into islands"
+      }
+     ],
+     "note": "how far noise pushes the edge in and out"
+    },
+    {
+     "key": "mScale",
+     "label": "Wander scale",
+     "group": "edge",
+     "type": "range",
+     "default": 60,
+     "min": 4,
+     "max": 240,
+     "step": 1,
+     "unit": "px",
+     "note": "wavelength of the wander; small = ragged, large = drifting"
+    },
+    {
+     "key": "mRough",
+     "label": "Roughness",
+     "group": "edge",
+     "type": "range",
+     "default": 4,
+     "min": 1,
+     "max": 6,
+     "step": 1,
+     "unit": "oct",
+     "note": "octaves of edge noise: adds fine teeth without moving the large shape"
+    },
+    {
+     "key": "mFeather",
+     "label": "Feather",
+     "group": "edge",
+     "type": "range",
+     "default": 14,
+     "min": 0.5,
+     "max": 60,
+     "step": 0.5,
+     "unit": "px",
+     "note": "width over which coverage falls from 1 to 0"
+    },
+    {
+     "key": "mBite",
+     "label": "Bite",
+     "group": "edge",
+     "type": "range",
+     "default": 0.2,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "clumped dropouts that grow more likely toward the edge"
+    },
+    {
+     "key": "seed",
+     "label": "Seed",
+     "group": "seed",
+     "type": "range",
+     "default": 9,
+     "min": 1,
+     "max": 999,
+     "step": 1,
+     "note": "every random draw in the effect derives from this one number"
     }
    ]
   },
@@ -2472,8 +2509,15 @@
    "id": "fx-05-graphite",
    "code": "FX-05",
    "name": "Graphite",
+   "section": "added",
+   "kind": "mark",
+   "tool": "pencil",
+   "mechanism": [
+    "deposit",
+    "reflect"
+   ],
    "role": "mark · pencil",
-   "sub": "Pencil hatching laid in strokes with tapered pressure. Graphite only lands on the tooth peaks the lead touches — and graphite is a metal: burnished, it gleams. Drag the light and the dark strokes turn silver.",
+   "sub": "Pencil hatching laid in strokes with tapered pressure. Graphite only lands on the tooth peaks the lead touches, and graphite is a metal: burnished, it gleams. Drag the light and the dark strokes turn silver.",
    "presets": [
     {
      "name": "HB hatch",
@@ -2518,7 +2562,7 @@
    "recipe": [
     "Hatch strokes along an angle at a spacing; extra layers cross at an offset angle and only print where the value field asks for more tone.",
     "Each stroke is a wobbling polyline with pressure tapering at both ends, rasterized as AA capsules (lead width).",
-    "Ink chain: pressure vs stock-height percentile — the lead touches peaks first; valleys stay white. Graphite is an opaque OKLab mix, not a film.",
+    "Ink chain: pressure vs stock-height percentile. The lead touches peaks first; valleys stay white. Graphite is an opaque OKLab mix, not a film.",
     "Sheen: normals from the stock relief plus the graphite deposit's own burnish texture; Blinn specular toward the sheet light, gated by how much graphite is there.",
     "Light last: diffuse × stock shading, + specular."
    ],
@@ -2543,7 +2587,7 @@
     {
      "key": "angle",
      "label": "Hatch angle",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 38,
      "min": -90,
@@ -2555,7 +2599,7 @@
     {
      "key": "spacing",
      "label": "Spacing",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 1.9,
      "min": 0.8,
@@ -2574,7 +2618,7 @@
     {
      "key": "layers",
      "label": "Layers",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 2,
      "min": 1,
@@ -2585,7 +2629,7 @@
     {
      "key": "cross",
      "label": "Cross angle",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 78,
      "min": 10,
@@ -2597,7 +2641,7 @@
     {
      "key": "len",
      "label": "Stroke length",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 70,
      "min": 6,
@@ -2609,7 +2653,7 @@
     {
      "key": "jit",
      "label": "Jitter",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.35,
      "min": 0,
@@ -2620,7 +2664,7 @@
     {
      "key": "wobble",
      "label": "Wobble",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.25,
      "min": 0,
@@ -2632,7 +2676,7 @@
     {
      "key": "lead",
      "label": "Lead width",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.75,
      "min": 0.3,
@@ -2650,7 +2694,7 @@
     {
      "key": "pressure",
      "label": "Pressure",
-     "group": "density",
+     "group": "field",
      "type": "range",
      "default": 0.95,
      "min": 0.3,
@@ -2661,7 +2705,7 @@
     {
      "key": "taper",
      "label": "Taper",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.6,
      "min": 0,
@@ -2672,7 +2716,7 @@
     {
      "key": "source",
      "label": "Value field",
-     "group": "dropoff",
+     "group": "field",
      "type": "select",
      "default": "linear",
      "options": [
@@ -2684,7 +2728,7 @@
     {
      "key": "vAngle",
      "label": "Ramp angle",
-     "group": "dropoff",
+     "group": "field",
      "type": "range",
      "default": 0,
      "min": 0,
@@ -2700,7 +2744,7 @@
     {
      "key": "ease",
      "label": "Dropoff curve",
-     "group": "dropoff",
+     "group": "field",
      "type": "ease",
      "default": [
       "smooth",
@@ -2721,7 +2765,7 @@
     {
      "key": "from",
      "label": "From",
-     "group": "dropoff",
+     "group": "field",
      "type": "range",
      "default": 0,
      "min": 0,
@@ -2731,7 +2775,7 @@
     {
      "key": "to",
      "label": "To",
-     "group": "dropoff",
+     "group": "field",
      "type": "range",
      "default": 1,
      "min": 0,
@@ -2741,7 +2785,7 @@
     {
      "key": "fScale",
      "label": "Field scale",
-     "group": "dropoff",
+     "group": "field",
      "type": "range",
      "default": 160,
      "min": 20,
@@ -2757,7 +2801,7 @@
     {
      "key": "stock",
      "label": "Prints on",
-     "group": "stock",
+     "group": "transfer",
      "type": "select",
      "default": "paper",
      "options": [
@@ -2770,7 +2814,7 @@
     {
      "key": "bite",
      "label": "Stock bite",
-     "group": "stock",
+     "group": "transfer",
      "type": "range",
      "default": 0.5,
      "min": 0,
@@ -2787,7 +2831,7 @@
     {
      "key": "breakup",
      "label": "Break-up ↔ thin",
-     "group": "stock",
+     "group": "transfer",
      "type": "range",
      "default": 0.55,
      "min": 0,
@@ -2805,18 +2849,18 @@
     {
      "key": "starve",
      "label": "Starve",
-     "group": "stock",
+     "group": "transfer",
      "type": "range",
      "default": 0.01,
      "min": 0,
      "max": 0.3,
      "step": 0.002,
-     "note": "the lowest share of the surface never takes ink — pinholes in the solid, placed by the paper's valleys and pits"
+     "note": "the lowest share of the surface never takes ink. Pinholes in the solid, placed by the paper's valleys and pits"
     },
     {
      "key": "mottle",
      "label": "Mottle",
-     "group": "stock",
+     "group": "transfer",
      "type": "range",
      "default": 0.1,
      "min": 0,
@@ -2832,7 +2876,7 @@
     {
      "key": "split",
      "label": "Film split",
-     "group": "stock",
+     "group": "structure",
      "type": "range",
      "default": 0.9,
      "min": 0.5,
@@ -2888,7 +2932,7 @@
     {
      "key": "density",
      "label": "Deposit",
-     "group": "mixing",
+     "group": "film",
      "type": "range",
      "default": 1,
      "min": 0.2,
@@ -2899,7 +2943,7 @@
     {
      "key": "sheen",
      "label": "Sheen",
-     "group": "relief",
+     "group": "finish",
      "type": "range",
      "default": 0.55,
      "min": 0,
@@ -2916,19 +2960,19 @@
     },
     {
      "key": "shin",
-     "label": "Gloss",
-     "group": "relief",
+     "label": "Glint tightness",
+     "group": "finish",
      "type": "range",
      "default": 22,
      "min": 2,
      "max": 120,
      "step": 1,
-     "note": "specular exponent — tight = burnished, broad = matte"
+     "note": "specular exponent: tight = burnished, broad = matte"
     },
     {
      "key": "burnish",
      "label": "Burnish texture",
-     "group": "relief",
+     "group": "finish",
      "type": "range",
      "default": 0.35,
      "min": 0,
@@ -2940,7 +2984,7 @@
     {
      "key": "mShape",
      "label": "Shape",
-     "group": "mask",
+     "group": "edge",
      "type": "select",
      "default": "rect",
      "options": [
@@ -2952,12 +2996,12 @@
       "type",
       "image"
      ],
-     "note": "the region the effect may occupy — type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)"
+     "note": "the region the effect may occupy. type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)"
     },
     {
      "key": "mText",
      "label": "Mask text",
-     "group": "mask",
+     "group": "edge",
      "type": "text",
      "default": "Counted",
      "when": {
@@ -2970,7 +3014,7 @@
     {
      "key": "mInset",
      "label": "Inset",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 26,
      "min": 0,
@@ -2982,7 +3026,7 @@
     {
      "key": "mAmp",
      "label": "Edge wander",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 8,
      "min": 0,
@@ -3001,7 +3045,7 @@
     {
      "key": "mScale",
      "label": "Wander scale",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 60,
      "min": 4,
@@ -3013,19 +3057,19 @@
     {
      "key": "mRough",
      "label": "Roughness",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 4,
      "min": 1,
      "max": 6,
      "step": 1,
      "unit": "oct",
-     "note": "octaves of edge noise — adds fine teeth without moving the large shape"
+     "note": "octaves of edge noise: adds fine teeth without moving the large shape"
     },
     {
      "key": "mFeather",
      "label": "Feather",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 14,
      "min": 0.5,
@@ -3037,7 +3081,7 @@
     {
      "key": "mBite",
      "label": "Bite",
-     "group": "mask",
+     "group": "edge",
      "type": "range",
      "default": 0,
      "min": 0,
@@ -3054,298 +3098,7 @@
      "min": 1,
      "max": 999,
      "step": 1,
-     "note": "every random draw in the effect hangs off this one number"
-    }
-   ]
-  },
-  {
-   "id": "fx-06-deboss",
-   "code": "FX-06",
-   "name": "Blind deboss",
-   "role": "mark · die",
-   "sub": "A mark with no ink. A die presses into the stock: the floor crushes the tooth flat, the walls take the light or the shadow, a lip rises at the edge. Move the light and the mark appears, flips, or disappears. Ink it to get letterpress.",
-   "presets": [
-    {
-     "name": "blind compass",
-     "params": {}
-    },
-    {
-     "name": "seal",
-     "params": {
-      "shape": "seal",
-      "text": "Oriel & Vane · Printers",
-      "size": 0.8,
-      "depth": 0.7
-     }
-    },
-    {
-     "name": "letterpress word",
-     "params": {
-      "shape": "word",
-      "text": "Counted",
-      "ink": 1,
-      "depth": 0.55,
-      "size": 0.5
-     }
-    },
-    {
-     "name": "emboss",
-     "params": {
-      "depth": -0.6,
-      "lip": 0
-     }
-    }
-   ],
-   "printsOn": "fx-03-paper-tooth",
-   "recipe": [
-    "Die = an invented mark (compass, sun, crescent, knot, monogram), a word, or a ring seal, rasterized as an AA clip on the main thread (fonts).",
-    "Plate profile from the signed distance to the die edge (exact distance transform): a crisp shoulder, a straight wall over the die softness, a flat floor; lip = a narrow ridge just outside the edge.",
-    "Height (CSS px) = stock height × (1 − crush · plate) − depth · plate + lip — the tooth flattens on the floor.",
-    "Light: Lambert from the combined height + a height-field shadow toward the sheet light (the wall on the light side falls in shadow).",
-    "Optional ink on the floor (film), so blind → letterpress is one dial."
-   ],
-   "limits": [
-    {
-     "param": "depth",
-     "range": "> 2 px",
-     "what": "reads as a carved gouge, not a deboss"
-    },
-    {
-     "param": "die softness",
-     "range": "< .3 px",
-     "what": "walls alias; > 3 px the edge goes mushy"
-    },
-    {
-     "param": "light elevation",
-     "range": "> 70°",
-     "what": "a blind deboss vanishes under overhead light — by design"
-    }
-   ],
-   "params": [
-    {
-     "key": "shape",
-     "label": "Die",
-     "group": "density",
-     "type": "select",
-     "default": "compass",
-     "options": [
-      "compass",
-      "sun",
-      "crescent",
-      "knot",
-      "monogram",
-      "word",
-      "seal"
-     ],
-     "note": "what the die (or type) is: an invented mark (compass, sun, crescent, knot, a monogram from the text), a word, or a ring seal"
-    },
-    {
-     "key": "text",
-     "label": "Text",
-     "group": "density",
-     "type": "text",
-     "default": "Four surfaces",
-     "when": {
-      "shape": [
-       "word",
-       "seal",
-       "monogram"
-      ]
-     },
-     "note": "set in Archivo 800 for word, seal and monogram (its first letter)"
-    },
-    {
-     "key": "size",
-     "label": "Size",
-     "group": "density",
-     "type": "range",
-     "default": 0.62,
-     "min": 0.15,
-     "max": 1,
-     "step": 0.01,
-     "note": "die height as a share of the plate"
-    },
-    {
-     "key": "depth",
-     "label": "Depth",
-     "group": "relief",
-     "type": "range",
-     "default": 1.2,
-     "min": -2.5,
-     "max": 2.5,
-     "step": 0.01,
-     "unit": "px",
-     "limits": [
-      {
-       "lo": 2,
-       "hi": 2.5,
-       "why": "gouge"
-      }
-     ],
-     "note": "press depth; negative = emboss (raised)"
-    },
-    {
-     "key": "soft",
-     "label": "Die softness",
-     "group": "relief",
-     "type": "range",
-     "default": 3,
-     "min": 0.2,
-     "max": 8,
-     "step": 0.05,
-     "unit": "px",
-     "note": "wall width — how sharp the die edge is"
-    },
-    {
-     "key": "lip",
-     "label": "Lip",
-     "group": "relief",
-     "type": "range",
-     "default": 0.15,
-     "min": 0,
-     "max": 0.6,
-     "step": 0.01,
-     "unit": "px",
-     "note": "paper pushed up just outside the edge"
-    },
-    {
-     "key": "crush",
-     "label": "Crush",
-     "group": "relief",
-     "type": "range",
-     "default": 0.7,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "note": "how flat the tooth is pressed on the floor"
-    },
-    {
-     "key": "diffuse",
-     "label": "Diffuse share",
-     "group": "relief",
-     "type": "range",
-     "default": 0.95,
-     "min": 0,
-     "max": 1,
-     "step": 0.01
-    },
-    {
-     "key": "shadow",
-     "label": "Wall shadow",
-     "group": "relief",
-     "type": "range",
-     "default": 0.7,
-     "min": 0,
-     "max": 1,
-     "step": 0.01
-    },
-    {
-     "key": "burnish",
-     "label": "Floor burnish",
-     "group": "relief",
-     "type": "range",
-     "default": 0.012,
-     "min": 0,
-     "max": 0.08,
-     "step": 0.001,
-     "unit": "ΔL",
-     "note": "pressed fibers read a touch darker on the floor"
-    },
-    {
-     "key": "stock",
-     "label": "Prints on",
-     "group": "stock",
-     "type": "select",
-     "default": "paper",
-     "options": [
-      "paper",
-      "cloth",
-      "smooth"
-     ]
-    },
-    {
-     "key": "ink",
-     "label": "Ink on floor",
-     "group": "color",
-     "type": "range",
-     "default": 0,
-     "min": 0,
-     "max": 1,
-     "step": 0.01,
-     "note": "0 = blind; 1 = full letterpress"
-    },
-    {
-     "key": "iL",
-     "label": "Ink · L",
-     "group": "color",
-     "type": "range",
-     "default": 0.32,
-     "min": 0,
-     "max": 1,
-     "step": 0.005,
-     "ink": "i",
-     "when": {},
-     "note": "OKLCH lightness (0 black … 1 white)"
-    },
-    {
-     "key": "iC",
-     "label": "Ink · C",
-     "group": "color",
-     "type": "range",
-     "default": 0.09,
-     "min": 0,
-     "max": 0.37,
-     "step": 0.002,
-     "ink": "i",
-     "when": {},
-     "limits": [
-      {
-       "lo": 0.26,
-       "hi": 0.37,
-       "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
-      }
-     ],
-     "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
-    },
-    {
-     "key": "ih",
-     "label": "Ink · h",
-     "group": "color",
-     "type": "range",
-     "default": 25,
-     "min": 0,
-     "max": 360,
-     "step": 0.5,
-     "unit": "°",
-     "ink": "i",
-     "when": {},
-     "note": "OKLCH hue angle"
-    },
-    {
-     "key": "mix",
-     "label": "Color rule",
-     "group": "mixing",
-     "type": "select",
-     "default": "film",
-     "options": [
-      "film",
-      "oklab",
-      "oklch",
-      "linear",
-      "srgb"
-     ],
-     "note": "film = Beer–Lambert absorption in linear light (physical); oklab / oklch / linear / srgb = coverage mixes, for comparison"
-    },
-    {
-     "key": "seed",
-     "label": "Seed",
-     "group": "seed",
-     "type": "range",
-     "default": 3,
-     "min": 1,
-     "max": 999,
-     "step": 1,
-     "note": "every random draw in the effect hangs off this one number"
+     "note": "every random draw in the effect derives from this one number"
     }
    ]
   },
@@ -3353,8 +3106,15 @@
    "id": "fx-07-typewriter",
    "code": "FX-07",
    "name": "Typewriter strike",
-   "role": "mark · type bar",
-   "sub": "Each glyph is a separate strike: its own pressure, a slight offset and rotation, sometimes only half the face lands. Ink passes through a woven ribbon, so letters carry the ribbon's weave; the type bar also dents the paper — visible under a low light.",
+   "section": "added",
+   "kind": "mark",
+   "tool": "type bar through ribbon",
+   "mechanism": [
+    "transfer",
+    "deform"
+   ],
+   "role": "mark · type bar through ribbon",
+   "sub": "Each glyph is a separate strike: its own pressure, a slight offset and rotation, sometimes only half the face lands. Ink passes through a woven ribbon, so letters carry the ribbon's weave; the type bar also dents the paper, visible under a low light.",
    "presets": [
     {
      "name": "office ribbon",
@@ -3400,8 +3160,8 @@
    ],
    "printsOn": "fx-03-paper-tooth",
    "recipe": [
-    "Text in Courier Prime (a typewriter slab; bold below 15 px, as a light strike loses thin strokes), one strike per glyph on the main thread: pressure = ribbon life (exhausting along the page) × key variance; offset, rotation, an occasional dropped baseline; half-strikes fade top or bottom.",
-    "Ribbon: a plain weave at the ribbon count — ink transfers through thread crossings, less through the gaps.",
+    "Text in Courier Prime (a typewriter slab; bold below 15 px, as a light strike loses thin strokes), one strike per glyph on the main thread: pressure = ribbon life (exhausting along the page) × key variance; offset, rotation, an occasional dropped baseline; a half strike is a linear pressure ramp across the glyph, fading top or bottom.",
+    "Ribbon: a plain weave at the ribbon count. Ink transfers through thread crossings, less through the gaps.",
     "Ink chain: pressure × ribbon vs stock-height percentile; ink squash pools film at the glyph edge.",
     "Impression: the strike dents the stock (blurred glyph × pressure); light from the combined height.",
     "Color: Beer–Lambert film."
@@ -3419,44 +3179,46 @@
     },
     {
      "param": "size",
-     "range": "< 9 px",
-     "what": "glyphs fall below the tooth scale and break up"
+     "range": "< 7 px",
+     "what": "strokes thinner than the tooth lose the ribbon texture"
     }
    ],
    "params": [
     {
      "key": "text",
      "label": "Text",
-     "group": "density",
+     "group": "motif",
      "type": "text",
-     "default": "Four surfaces, one light. / Ink on real stock — counted, / never a gradient. Set 01.",
+     "default": "Two stocks, one light. / Ink on real paper, counted, / never a gradient.",
      "note": "\"/\" starts a new line"
     },
     {
      "key": "fsize",
      "label": "Size",
-     "group": "density",
+     "group": "motif",
      "type": "range",
      "default": 24,
      "min": 8,
      "max": 48,
      "step": 0.5,
-     "unit": "px"
+     "unit": "px",
+     "note": "type size in CSS px; bold below 15 px"
     },
     {
      "key": "lead",
      "label": "Leading",
-     "group": "density",
+     "group": "motif",
      "type": "range",
      "default": 1.5,
      "min": 1,
      "max": 2.4,
-     "step": 0.01
+     "step": 0.01,
+     "note": "line spacing as a multiple of the size"
     },
     {
      "key": "vari",
      "label": "Key variance",
-     "group": "density",
+     "group": "field",
      "type": "range",
      "default": 0.3,
      "min": 0,
@@ -3467,7 +3229,7 @@
     {
      "key": "half",
      "label": "Half strikes",
-     "group": "density",
+     "group": "field",
      "type": "range",
      "default": 0.05,
      "min": 0,
@@ -3478,40 +3240,43 @@
     {
      "key": "jx",
      "label": "Jitter x",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.35,
      "min": 0,
      "max": 2,
      "step": 0.01,
-     "unit": "px"
+     "unit": "px",
+     "note": "horizontal offset per strike"
     },
     {
      "key": "jy",
      "label": "Jitter y",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.4,
      "min": 0,
      "max": 2,
      "step": 0.01,
-     "unit": "px"
+     "unit": "px",
+     "note": "vertical offset per strike"
     },
     {
      "key": "rot",
      "label": "Rotation",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.7,
      "min": 0,
      "max": 4,
      "step": 0.05,
-     "unit": "°"
+     "unit": "°",
+     "note": "rotation spread per strike"
     },
     {
      "key": "exhaust",
      "label": "Ribbon wear",
-     "group": "dropoff",
+     "group": "field",
      "type": "range",
      "default": 0.25,
      "min": 0,
@@ -3522,7 +3287,7 @@
     {
      "key": "ribbon",
      "label": "Ribbon texture",
-     "group": "stock",
+     "group": "transfer",
      "type": "range",
      "default": 0.5,
      "min": 0,
@@ -3533,7 +3298,7 @@
     {
      "key": "rcount",
      "label": "Ribbon count",
-     "group": "stock",
+     "group": "structure",
      "type": "range",
      "default": 95,
      "min": 20,
@@ -3552,7 +3317,7 @@
     {
      "key": "squash",
      "label": "Ink squash",
-     "group": "stock",
+     "group": "transfer",
      "type": "range",
      "default": 0.35,
      "min": 0,
@@ -3562,7 +3327,7 @@
     },
     {
      "key": "impress",
-     "label": "Impression",
+     "label": "Press depth",
      "group": "relief",
      "type": "range",
      "default": 0.3,
@@ -3580,12 +3345,13 @@
      "default": 0.7,
      "min": 0,
      "max": 1,
-     "step": 0.01
+     "step": 0.01,
+     "note": "share of light from the sheet light vs flat ambient fill"
     },
     {
      "key": "stock",
      "label": "Prints on",
-     "group": "stock",
+     "group": "transfer",
      "type": "select",
      "default": "paper",
      "options": [
@@ -3598,7 +3364,7 @@
     {
      "key": "bite",
      "label": "Stock bite",
-     "group": "stock",
+     "group": "transfer",
      "type": "range",
      "default": 0.55,
      "min": 0,
@@ -3615,7 +3381,7 @@
     {
      "key": "breakup",
      "label": "Break-up ↔ thin",
-     "group": "stock",
+     "group": "transfer",
      "type": "range",
      "default": 0.85,
      "min": 0,
@@ -3633,18 +3399,18 @@
     {
      "key": "starve",
      "label": "Starve",
-     "group": "stock",
+     "group": "transfer",
      "type": "range",
      "default": 0.03,
      "min": 0,
      "max": 0.3,
      "step": 0.002,
-     "note": "the lowest share of the surface never takes ink — pinholes in the solid, placed by the paper's valleys and pits"
+     "note": "the lowest share of the surface never takes ink. Pinholes in the solid, placed by the paper's valleys and pits"
     },
     {
      "key": "wick",
      "label": "Wick",
-     "group": "stock",
+     "group": "transfer",
      "type": "range",
      "default": 0.12,
      "min": 0,
@@ -3661,7 +3427,7 @@
     {
      "key": "mottle",
      "label": "Mottle",
-     "group": "stock",
+     "group": "transfer",
      "type": "range",
      "default": 0.2,
      "min": 0,
@@ -3677,7 +3443,7 @@
     {
      "key": "split",
      "label": "Film split",
-     "group": "stock",
+     "group": "transfer",
      "type": "range",
      "default": 0.8,
      "min": 0.5,
@@ -3733,17 +3499,18 @@
     {
      "key": "density",
      "label": "Film thickness",
-     "group": "mixing",
+     "group": "film",
      "type": "range",
      "default": 1.15,
      "min": 0.2,
      "max": 2,
-     "step": 0.01
+     "step": 0.01,
+     "note": "ink film at full pressure (Beer–Lambert)"
     },
     {
      "key": "mix",
      "label": "Color rule",
-     "group": "mixing",
+     "group": "film",
      "type": "select",
      "default": "film",
      "options": [
@@ -3764,7 +3531,7 @@
      "min": 1,
      "max": 999,
      "step": 1,
-     "note": "every random draw in the effect hangs off this one number"
+     "note": "every random draw in the effect derives from this one number"
     }
    ]
   },
@@ -3772,7 +3539,15 @@
    "id": "fx-08-foil",
    "code": "FX-08",
    "name": "Hot foil",
-   "role": "mark · foil",
+   "section": "added",
+   "kind": "finish",
+   "tool": "heated die",
+   "mechanism": [
+    "transfer",
+    "reflect",
+    "deform"
+   ],
+   "role": "finish · heated die",
    "sub": "A metallic film, not a color. It conforms to the tooth, skips the deepest valleys, and its brightness is the light: a broad studio reflection plus tight glints off every facet. Holographic foil shifts hue with each facet's angle.",
    "presets": [
     {
@@ -3784,8 +3559,7 @@
      "params": {
       "fL": 0.82,
       "fC": 0.006,
-      "fh": 250,
-      "warm": 0
+      "fh": 250
      }
     },
     {
@@ -3821,7 +3595,7 @@
    "recipe": [
     "Die = the same shapes as FX-06; foil lands on the AA die × the stock: valleys below the starve height release no foil (pinholes), edge flash breaks the boundary at the film-split scale.",
     "Height = stock relief × (1 − crush) + foil grain (fine crumple) − a slight deboss; normals from it.",
-    "Metal: a perspective viewer above the plate; the mirror vector per pixel samples a soft box at the sheet light (and a weak fill opposite), so the reflection sweeps across the foil; + tight Blinn glints; holo rotates the hue by facet orientation.",
+    "Metal: a perspective viewer above the plate; the mirror vector per pixel samples the studio: a round soft box at the sheet light, a dim ceiling and a dark room. The reflection sweeps across the foil; tight Blinn glints are added; holo rotates the hue by the reflection direction.",
     "Off-foil paper keeps its own light."
    ],
    "limits": [
@@ -3838,14 +3612,14 @@
     {
      "param": "light elevation",
      "range": "> 75°",
-     "what": "foil goes dark — metal reflects away from an overhead light"
+     "what": "foil goes dark: metal reflects away from an overhead light"
     }
    ],
    "params": [
     {
      "key": "shape",
-     "label": "Die",
-     "group": "density",
+     "label": "Motif",
+     "group": "motif",
      "type": "select",
      "default": "word",
      "options": [
@@ -3857,14 +3631,14 @@
       "word",
       "seal"
      ],
-     "note": "what the die (or type) is: an invented mark (compass, sun, crescent, knot, a monogram from the text), a word, or a ring seal"
+     "note": "the artwork: an invented mark (compass, sun, crescent, knot, a monogram from the text), a word, or a ring seal"
     },
     {
      "key": "text",
      "label": "Text",
-     "group": "density",
+     "group": "motif",
      "type": "text",
-     "default": "Four surfaces",
+     "default": "Stock and light",
      "when": {
       "shape": [
        "word",
@@ -3877,24 +3651,25 @@
     {
      "key": "size",
      "label": "Size",
-     "group": "density",
+     "group": "motif",
      "type": "range",
      "default": 0.5,
      "min": 0.15,
      "max": 1,
      "step": 0.01,
-     "note": "die height as a share of the plate"
+     "note": "motif height as a share of the plate"
     },
     {
      "key": "finish",
      "label": "Finish",
-     "group": "color",
+     "group": "finish",
      "type": "select",
      "default": "metal",
      "options": [
       "metal",
       "holo"
-     ]
+     ],
+     "note": "metal = one hue; holo = the hue follows the reflection direction"
     },
     {
      "key": "fL",
@@ -3943,7 +3718,7 @@
     {
      "key": "holo",
      "label": "Holo spread",
-     "group": "color",
+     "group": "finish",
      "type": "range",
      "default": 0.6,
      "min": 0,
@@ -3959,7 +3734,7 @@
     {
      "key": "mirror",
      "label": "Reflection",
-     "group": "relief",
+     "group": "finish",
      "type": "range",
      "default": 1,
      "min": 0,
@@ -3970,7 +3745,7 @@
     {
      "key": "box",
      "label": "Soft-box size",
-     "group": "relief",
+     "group": "finish",
      "type": "range",
      "default": 3,
      "min": 1,
@@ -3981,18 +3756,40 @@
     {
      "key": "cam",
      "label": "Camera distance",
-     "group": "relief",
+     "group": "finish",
      "type": "range",
      "default": 1.2,
      "min": 0.5,
      "max": 6,
      "step": 0.05,
-     "note": "viewer height in plate widths — closer = a stronger sweep of the reflection across the foil"
+     "note": "viewer height in plate widths. Closer = a stronger sweep of the reflection across the foil"
+    },
+    {
+     "key": "camX",
+     "label": "Camera x",
+     "group": "finish",
+     "type": "range",
+     "default": 0.5,
+     "min": 0.1,
+     "max": 0.9,
+     "step": 0.01,
+     "note": "viewer position across the plate (share of its width)"
+    },
+    {
+     "key": "camY",
+     "label": "Camera y",
+     "group": "finish",
+     "type": "range",
+     "default": 0.5,
+     "min": 0.1,
+     "max": 0.9,
+     "step": 0.01,
+     "note": "viewer position down the plate (share of its height)"
     },
     {
      "key": "shin",
-     "label": "Gloss",
-     "group": "relief",
+     "label": "Glint tightness",
+     "group": "finish",
      "type": "range",
      "default": 90,
      "min": 2,
@@ -4005,7 +3802,7 @@
        "why": "metallic paint"
       }
      ],
-     "note": "glint tightness"
+     "note": "specular exponent of the glints"
     },
     {
      "key": "grain",
@@ -4039,31 +3836,33 @@
     },
     {
      "key": "dent",
-     "label": "Deboss",
+     "label": "Press depth",
      "group": "relief",
      "type": "range",
      "default": 0.18,
      "min": 0,
      "max": 1,
      "step": 0.01,
-     "unit": "px"
+     "unit": "px",
+     "note": "how deep the heated die presses the foil into the stock"
     },
     {
      "key": "stock",
      "label": "Prints on",
-     "group": "stock",
+     "group": "transfer",
      "type": "select",
      "default": "paper",
      "options": [
       "paper",
       "cloth",
       "smooth"
-     ]
+     ],
+     "note": "paper = FX-03 live, cloth = FX-04 live, smooth = no substrate"
     },
     {
      "key": "starve",
      "label": "Release",
-     "group": "stock",
+     "group": "transfer",
      "type": "range",
      "default": 0.025,
      "min": 0,
@@ -4074,7 +3873,7 @@
     {
      "key": "flash",
      "label": "Edge flash",
-     "group": "stock",
+     "group": "transfer",
      "type": "range",
      "default": 0.2,
      "min": 0,
@@ -4091,7 +3890,7 @@
      "min": 1,
      "max": 999,
      "step": 1,
-     "note": "every random draw in the effect hangs off this one number"
+     "note": "every random draw in the effect derives from this one number"
     }
    ]
   },
@@ -4099,8 +3898,15 @@
    "id": "fx-09-spot-uv",
    "code": "FX-09",
    "name": "Spot UV varnish",
-   "role": "mark · clear film",
-   "sub": "A clear gloss film printed only on the die, over matte board. Head-on it all but disappears; it shows as the sheet light's soft box mirrored in a surface flatter than the paper, a crisp sheen boundary at the film edge, and a faint wet darkening of the stock beneath. Drag the light and the reflection slides across the mark.",
+   "section": "added",
+   "kind": "finish",
+   "tool": "screen / coater",
+   "mechanism": [
+    "deposit",
+    "reflect"
+   ],
+   "role": "finish · screen / coater",
+   "sub": "A clear gloss film printed only on the motif, over matte board. Head-on it all but disappears; it shows as the sheet light's soft box mirrored in a surface flatter than the paper, a crisp sheen boundary at the film edge, and a faint wet darkening of the stock beneath. Drag the light and the reflection slides across the mark.",
    "presets": [
     {
      "name": "on black board",
@@ -4145,7 +3951,7 @@
    ],
    "printsOn": "fx-03-paper-tooth",
    "recipe": [
-    "Die = an invented mark, a word or a ring seal (AA clip, main thread) → exact signed distance. Coverage pattern: solid, or an analytic line / dot screen intersected with the die (or with the sheet around it), so every line and dot keeps a 1-device-px edge.",
+    "Motif = an invented mark, a word or a ring seal (AA clip, main thread) → exact signed distance. Coverage pattern: solid, or an analytic line / dot screen intersected with the motif (or with the sheet around it), so every line and dot keeps a 1-device-px edge.",
     "Film profile from the signed distance: a rounded shoulder (1 − (1 − d / rounding)²) rising to the film build. The film levels the FX-03 tooth: its top = lerp(tooth, smoothed tooth, leveling × profile) + build × profile.",
     "Stock: FX-03's relief and fibers under a board color (OKLCH; dark by default). Matte = Lambert from FX-03 × albedo + a weak, broad rough-dielectric sheen on the tooth facets.",
     "Film: Fresnel (n = 1.5, F₀ = .04) from a perspective viewer above the plate; the mirror vector samples the studio (a rectangular soft box at the sheet light, a dim ceiling, a dark room); gloss sets the box edge softness and the glint exponent. Under the film the matte sheen is gone and the stock is darker and deeper in OKLab (wet tone).",
@@ -4181,8 +3987,8 @@
    "params": [
     {
      "key": "shape",
-     "label": "Die",
-     "group": "density",
+     "label": "Motif",
+     "group": "motif",
      "type": "select",
      "default": "sun",
      "options": [
@@ -4194,14 +4000,14 @@
       "word",
       "seal"
      ],
-     "note": "what the die (or type) is: an invented mark (compass, sun, crescent, knot, a monogram from the text), a word, or a ring seal"
+     "note": "the artwork: an invented mark (compass, sun, crescent, knot, a monogram from the text), a word, or a ring seal"
     },
     {
      "key": "text",
      "label": "Text",
-     "group": "density",
+     "group": "motif",
      "type": "text",
-     "default": "Four surfaces",
+     "default": "Stock and light",
      "when": {
       "shape": [
        "word",
@@ -4214,18 +4020,18 @@
     {
      "key": "size",
      "label": "Size",
-     "group": "density",
+     "group": "motif",
      "type": "range",
      "default": 0.74,
      "min": 0.15,
      "max": 1,
      "step": 0.01,
-     "note": "die height as a share of the plate"
+     "note": "motif height as a share of the plate"
     },
     {
      "key": "pattern",
      "label": "Coverage",
-     "group": "density",
+     "group": "structure",
      "type": "select",
      "default": "solid",
      "options": [
@@ -4238,7 +4044,7 @@
     {
      "key": "area",
      "label": "Varnish on",
-     "group": "density",
+     "group": "structure",
      "type": "select",
      "default": "die",
      "options": [
@@ -4246,12 +4052,12 @@
       "reverse",
       "die + field"
      ],
-     "note": "die = the mark is varnished · reverse = the sheet is varnished and the mark stays matte · die + field = a solid mark inside a patterned field"
+     "note": "die = the motif is varnished · reverse = the sheet is varnished and the motif stays matte · die + field = a solid motif inside a patterned field"
     },
     {
      "key": "pitch",
      "label": "Pattern pitch",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 3,
      "min": 1.2,
@@ -4270,12 +4076,13 @@
        "hi": 2.5,
        "why": "a pixel checker at 1× (fine at 2×+)"
       }
-     ]
+     ],
+     "note": "distance between lines or dots"
     },
     {
      "key": "pSize",
      "label": "Line / dot share",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.45,
      "min": 0.15,
@@ -4292,7 +4099,7 @@
     {
      "key": "pAngle",
      "label": "Pattern angle",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 45,
      "min": -90,
@@ -4304,12 +4111,13 @@
        "lines",
        "dots"
       ]
-     }
+     },
+     "note": "angle of the line or dot screen"
     },
     {
      "key": "gap",
      "label": "Keep-out",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 2.5,
      "min": 0,
@@ -4322,7 +4130,7 @@
        "die + field"
       ]
      },
-     "note": "matte ring between the mark and the varnished field"
+     "note": "matte ring between the motif and the varnished field"
     },
     {
      "key": "build",
@@ -4376,7 +4184,7 @@
     {
      "key": "gloss",
      "label": "Gloss",
-     "group": "relief",
+     "group": "finish",
      "type": "range",
      "default": 0.9,
      "min": 0,
@@ -4394,7 +4202,7 @@
     {
      "key": "mirror",
      "label": "Reflection",
-     "group": "relief",
+     "group": "finish",
      "type": "range",
      "default": 1,
      "min": 0,
@@ -4405,7 +4213,7 @@
     {
      "key": "box",
      "label": "Soft-box size",
-     "group": "relief",
+     "group": "finish",
      "type": "range",
      "default": 0.42,
      "min": 0.08,
@@ -4416,7 +4224,7 @@
     {
      "key": "cam",
      "label": "Camera distance",
-     "group": "relief",
+     "group": "finish",
      "type": "range",
      "default": 1.1,
      "min": 0.5,
@@ -4482,7 +4290,7 @@
     {
      "key": "stock",
      "label": "Prints on",
-     "group": "stock",
+     "group": "transfer",
      "type": "select",
      "default": "paper",
      "options": [
@@ -4490,6 +4298,17 @@
       "smooth"
      ],
      "note": "paper = FX-03 live (its tooth is what the film levels); smooth = a coated, toothless board"
+    },
+    {
+     "key": "seed",
+     "label": "Seed",
+     "group": "seed",
+     "type": "range",
+     "default": 9,
+     "min": 1,
+     "max": 999,
+     "step": 1,
+     "note": "every random draw in the effect derives from this one number"
     }
    ]
   },
@@ -4497,8 +4316,16 @@
    "id": "fx-10-embroidery",
    "code": "FX-10",
    "name": "Satin embroidery",
-   "role": "mark · thread",
-   "sub": "A satin fill: long thread floats laid side by side across the die at one angle, each a slightly rounded body whose filaments gleam along their length, so the fill lights up or goes dark as the sheet light turns. Long floats split into staggered rows, ends land unevenly at the edge, needle holes dimple the cloth and the ground puckers where the stitches pull.",
+   "section": "added",
+   "kind": "construction",
+   "tool": "needle",
+   "mechanism": [
+    "stitch",
+    "deform",
+    "reflect"
+   ],
+   "role": "construction · needle",
+   "sub": "A satin fill: long thread floats laid side by side across the motif at one angle, each a slightly rounded body whose filaments gleam along their length, so the fill lights up or goes dark as the sheet light turns. Long floats split into staggered rows, ends land unevenly at the edge, needle holes dimple the cloth and the ground puckers where the stitches pull.",
    "presets": [
     {
      "name": "rayon gloss",
@@ -4510,7 +4337,7 @@
       "sheen": 0.14,
       "twist": 0.55,
       "loft": 0.85,
-      "density": 19,
+      "count": 19,
       "yL": 0.7,
       "yC": 0.11,
       "yh": 72,
@@ -4525,7 +4352,7 @@
       "outline": "chain",
       "oLen": 6.5,
       "angle": -62,
-      "density": 26,
+      "count": 26,
       "yL": 0.6,
       "yC": 0.1,
       "yh": 182,
@@ -4535,20 +4362,20 @@
    ],
    "printsOn": "fx-04-weave",
    "recipe": [
-    "Die → exact signed distance. Satin: centerlines across the die at the stitch angle, one per 100 / density px; each centerline is marched against the die to find where the needle goes in and out (concave dies give several floats per row).",
+    "Motif → exact signed distance. Satin: centerlines across the motif at the stitch angle, one per 100 / stitch count px; each centerline is marched against the motif to find where the needle goes in and out (concave motifs give several floats per row).",
     "Ends stagger (alternating needle points + jitter); floats longer than the max split into rows at brick-staggered points. Each float: a capsule whose cross-section is rounded (flatter when long), sinking into its needle hole at both ends, with an S-twist ridge along it.",
-    "Floats are z-buffered by height (neighbors overlap like real satin); an optional split, running or chain stitch is traced along the die edge (marching-squares contour, real arc length) and laid on top.",
+    "Floats are z-buffered by height (neighbors overlap like real satin); an optional split, running or chain stitch is traced along the motif edge (marching-squares contour, real arc length) and laid on top.",
     "Cloth (FX-04 live): pucker ridges run along the pull direction at the stitch ends, decaying away from the edge; a crease dimples just outside the satin; needle holes darken it. Its own lighting is kept and multiplied by the pucker's Lambert.",
     "Thread light: Lambert on the thread normals + an anisotropic gleam (Kajiya–Kay along the twisted filament direction × a lobe across the cylinder), from the sheet light; a height-field shadow and cavity occlusion from the stitched relief fall onto the cloth and between floats. Color: OKLCH."
    ],
    "limits": [
     {
-     "param": "density",
+     "param": "stitch count",
      "range": "> 45 /100 px",
      "what": "threads under ~2 px: the fill reads as a smooth sheet at 1× (fine at 2×+)"
     },
     {
-     "param": "density",
+     "param": "stitch count",
      "range": "< 12 /100 px",
      "what": "gaps open between floats"
     },
@@ -4571,8 +4398,8 @@
    "params": [
     {
      "key": "shape",
-     "label": "Die",
-     "group": "density",
+     "label": "Motif",
+     "group": "motif",
      "type": "select",
      "default": "crescent",
      "options": [
@@ -4584,12 +4411,12 @@
       "word",
       "seal"
      ],
-     "note": "what the die (or type) is: an invented mark (compass, sun, crescent, knot, a monogram from the text), a word, or a ring seal"
+     "note": "the artwork: an invented mark (compass, sun, crescent, knot, a monogram from the text), a word, or a ring seal"
     },
     {
      "key": "text",
      "label": "Text",
-     "group": "density",
+     "group": "motif",
      "type": "text",
      "default": "Wren",
      "when": {
@@ -4604,18 +4431,18 @@
     {
      "key": "size",
      "label": "Size",
-     "group": "density",
+     "group": "motif",
      "type": "range",
      "default": 0.74,
      "min": 0.15,
      "max": 1,
      "step": 0.01,
-     "note": "die height as a share of the plate"
+     "note": "motif height as a share of the plate"
     },
     {
-     "key": "density",
-     "label": "Stitch density",
-     "group": "density",
+     "key": "count",
+     "label": "Stitch count",
+     "group": "structure",
      "type": "range",
      "default": 24,
      "min": 8,
@@ -4639,7 +4466,7 @@
     {
      "key": "angle",
      "label": "Stitch angle",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": -38,
      "min": -90,
@@ -4651,7 +4478,7 @@
     {
      "key": "maxFloat",
      "label": "Max float",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 72,
      "min": 8,
@@ -4670,18 +4497,18 @@
     {
      "key": "stagger",
      "label": "End stagger",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.45,
      "min": 0,
      "max": 1,
      "step": 0.01,
-     "note": "how unevenly the stitch ends land along the die edge (alternating needle points + jitter)"
+     "note": "how unevenly the stitch ends land along the motif edge (alternating needle points + jitter)"
     },
     {
      "key": "outline",
      "label": "Outline",
-     "group": "density",
+     "group": "structure",
      "type": "select",
      "default": "none",
      "options": [
@@ -4690,12 +4517,12 @@
       "running",
       "chain"
      ],
-     "note": "split stitch (each stitch pierces the last), running stitch, or chain stitch along the die edge"
+     "note": "split stitch (each stitch pierces the last), running stitch, or chain stitch along the motif edge"
     },
     {
      "key": "oLen",
      "label": "Outline stitch",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 4,
      "min": 1.5,
@@ -4736,7 +4563,7 @@
     {
      "key": "sheen",
      "label": "Sheen",
-     "group": "relief",
+     "group": "finish",
      "type": "range",
      "default": 0.82,
      "min": 0,
@@ -4816,7 +4643,7 @@
     {
      "key": "stock",
      "label": "Stitched into",
-     "group": "stock",
+     "group": "transfer",
      "type": "select",
      "default": "cloth",
      "options": [
@@ -4834,7 +4661,322 @@
      "min": 1,
      "max": 999,
      "step": 1,
-     "note": "every random draw in the effect hangs off this one number"
+     "note": "every random draw in the effect derives from this one number"
+    }
+   ]
+  },
+  {
+   "id": "fx-06-deboss",
+   "code": "FX-06",
+   "name": "Blind deboss",
+   "section": "changed",
+   "kind": "impression",
+   "tool": "die",
+   "mechanism": [
+    "deform"
+   ],
+   "role": "impression · die",
+   "sub": "A mark with no ink. A die presses into the stock: the floor crushes the tooth flat, the walls take the light or the shadow, a lip rises at the edge. Move the light and the mark appears, flips, or disappears. Ink it to get letterpress.",
+   "presets": [
+    {
+     "name": "blind compass",
+     "params": {}
+    },
+    {
+     "name": "seal",
+     "params": {
+      "shape": "seal",
+      "text": "Oriel & Vane · Printers",
+      "size": 0.8,
+      "depth": 0.7
+     }
+    },
+    {
+     "name": "letterpress word",
+     "params": {
+      "shape": "word",
+      "text": "Counted",
+      "ink": 1,
+      "depth": 0.55,
+      "size": 0.5
+     }
+    },
+    {
+     "name": "emboss",
+     "params": {
+      "depth": -0.6,
+      "lip": 0
+     }
+    }
+   ],
+   "printsOn": "fx-03-paper-tooth",
+   "recipe": [
+    "Die = an invented mark (compass, sun, crescent, knot, monogram), a word, or a ring seal, rasterized as an AA clip on the main thread (fonts).",
+    "Die profile from the signed distance to the die edge (exact distance transform): a crisp shoulder, a straight wall over the die softness, a flat floor; lip = a narrow ridge just outside the edge.",
+    "Height (CSS px) = stock height × (1 − crush · profile) − depth · profile + lip. The tooth flattens on the floor.",
+    "Light: Lambert from the combined height + a height-field shadow toward the sheet light (the wall on the light side falls in shadow).",
+    "Optional ink on the floor (film), so blind → letterpress is one dial."
+   ],
+   "limits": [
+    {
+     "param": "depth",
+     "range": "> 2 px",
+     "what": "reads as a carved gouge, not a deboss"
+    },
+    {
+     "param": "die softness",
+     "range": "< .3 px",
+     "what": "walls alias"
+    },
+    {
+     "param": "die softness",
+     "range": "> 5 px",
+     "what": "the edge goes mushy"
+    },
+    {
+     "param": "light elevation",
+     "range": "> 70°",
+     "what": "a blind deboss vanishes under overhead light, by design"
+    }
+   ],
+   "params": [
+    {
+     "key": "shape",
+     "label": "Motif",
+     "group": "motif",
+     "type": "select",
+     "default": "compass",
+     "options": [
+      "compass",
+      "sun",
+      "crescent",
+      "knot",
+      "monogram",
+      "word",
+      "seal"
+     ],
+     "note": "the artwork: an invented mark (compass, sun, crescent, knot, a monogram from the text), a word, or a ring seal"
+    },
+    {
+     "key": "text",
+     "label": "Text",
+     "group": "motif",
+     "type": "text",
+     "default": "Stock and light",
+     "when": {
+      "shape": [
+       "word",
+       "seal",
+       "monogram"
+      ]
+     },
+     "note": "set in Archivo 800 for word, seal and monogram (its first letter)"
+    },
+    {
+     "key": "size",
+     "label": "Size",
+     "group": "motif",
+     "type": "range",
+     "default": 0.62,
+     "min": 0.15,
+     "max": 1,
+     "step": 0.01,
+     "note": "motif height as a share of the plate"
+    },
+    {
+     "key": "depth",
+     "label": "Press depth",
+     "group": "relief",
+     "type": "range",
+     "default": 1.2,
+     "min": -2.5,
+     "max": 2.5,
+     "step": 0.01,
+     "unit": "px",
+     "limits": [
+      {
+       "lo": 2,
+       "hi": 2.5,
+       "why": "gouge"
+      }
+     ],
+     "note": "press depth; negative = emboss (raised)"
+    },
+    {
+     "key": "soft",
+     "label": "Die softness",
+     "group": "relief",
+     "type": "range",
+     "default": 3,
+     "min": 0.2,
+     "max": 8,
+     "step": 0.05,
+     "unit": "px",
+     "limits": [
+      {
+       "lo": 0.2,
+       "hi": 0.3,
+       "why": "walls alias"
+      },
+      {
+       "lo": 5,
+       "hi": 8,
+       "why": "the edge goes mushy"
+      }
+     ],
+     "note": "wall width: how sharp the die edge is"
+    },
+    {
+     "key": "lip",
+     "label": "Lip",
+     "group": "relief",
+     "type": "range",
+     "default": 0.15,
+     "min": 0,
+     "max": 0.6,
+     "step": 0.01,
+     "unit": "px",
+     "note": "paper pushed up just outside the edge"
+    },
+    {
+     "key": "crush",
+     "label": "Crush",
+     "group": "relief",
+     "type": "range",
+     "default": 0.7,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "how flat the tooth is pressed on the floor"
+    },
+    {
+     "key": "diffuse",
+     "label": "Diffuse share",
+     "group": "relief",
+     "type": "range",
+     "default": 0.95,
+     "min": 0,
+     "max": 1,
+     "step": 0.01
+    },
+    {
+     "key": "shadow",
+     "label": "Wall shadow",
+     "group": "relief",
+     "type": "range",
+     "default": 0.7,
+     "min": 0,
+     "max": 1,
+     "step": 0.01
+    },
+    {
+     "key": "floorTone",
+     "label": "Floor tone",
+     "group": "color",
+     "type": "range",
+     "default": 0.012,
+     "min": 0,
+     "max": 0.08,
+     "step": 0.001,
+     "unit": "ΔL",
+     "note": "pressed fibers read a touch darker on the floor"
+    },
+    {
+     "key": "stock",
+     "label": "Prints on",
+     "group": "transfer",
+     "type": "select",
+     "default": "paper",
+     "options": [
+      "paper",
+      "cloth",
+      "smooth"
+     ],
+     "note": "paper = FX-03 live, cloth = FX-04 live, smooth = no substrate"
+    },
+    {
+     "key": "ink",
+     "label": "Ink on floor",
+     "group": "color",
+     "type": "range",
+     "default": 0,
+     "min": 0,
+     "max": 1,
+     "step": 0.01,
+     "note": "0 = blind; 1 = full letterpress"
+    },
+    {
+     "key": "iL",
+     "label": "Ink · L",
+     "group": "color",
+     "type": "range",
+     "default": 0.32,
+     "min": 0,
+     "max": 1,
+     "step": 0.005,
+     "ink": "i",
+     "when": {},
+     "note": "OKLCH lightness (0 black … 1 white)"
+    },
+    {
+     "key": "iC",
+     "label": "Ink · C",
+     "group": "color",
+     "type": "range",
+     "default": 0.09,
+     "min": 0,
+     "max": 0.37,
+     "step": 0.002,
+     "ink": "i",
+     "when": {},
+     "limits": [
+      {
+       "lo": 0.26,
+       "hi": 0.37,
+       "why": "most hues leave sRGB above ~.26 and get chroma-reduced"
+      }
+     ],
+     "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+    },
+    {
+     "key": "ih",
+     "label": "Ink · h",
+     "group": "color",
+     "type": "range",
+     "default": 25,
+     "min": 0,
+     "max": 360,
+     "step": 0.5,
+     "unit": "°",
+     "ink": "i",
+     "when": {},
+     "note": "OKLCH hue angle"
+    },
+    {
+     "key": "mix",
+     "label": "Color rule",
+     "group": "film",
+     "type": "select",
+     "default": "film",
+     "options": [
+      "film",
+      "oklab",
+      "oklch",
+      "linear",
+      "srgb"
+     ],
+     "note": "film = Beer–Lambert absorption in linear light (physical); oklab / oklch / linear / srgb = coverage mixes, for comparison"
+    },
+    {
+     "key": "seed",
+     "label": "Seed",
+     "group": "seed",
+     "type": "range",
+     "default": 3,
+     "min": 1,
+     "max": 999,
+     "step": 1,
+     "note": "every random draw in the effect derives from this one number"
     }
    ]
   },
@@ -4842,8 +4984,15 @@
    "id": "fx-11-cyanotype",
    "code": "FX-11",
    "name": "Cyanotype",
-   "role": "mark · sun print",
-   "sub": "A sun print. Sensitizer is brushed on in ragged strokes that pool where the brush lands and run dry where it lifts; a fern, grass or a die sits on top and the sun does the rest. Where light reached, Prussian blue; under the object, paper. Lifted parts throw soft, offset shadows away from the sheet light — pressed parts stay sharp.",
+   "section": "changed",
+   "kind": "process",
+   "tool": "brush + sun",
+   "mechanism": [
+    "deposit",
+    "expose"
+   ],
+   "role": "process · brush + sun",
+   "sub": "A sun print. Sensitizer is brushed on in ragged strokes that pool where the brush lands and run dry where it lifts; a fern, grass or a cut-card motif sits on top and the sun does the rest. Where light reached, Prussian blue; under the object, paper. Lifted parts throw soft, offset shadows away from the sheet light. Pressed parts stay sharp.",
    "presets": [
     {
      "name": "classic fern",
@@ -4870,7 +5019,7 @@
       "lift": 10,
       "contact": 0.42,
       "trans": 0.06,
-      "depth": 1.55
+      "density": 1.55
      }
     },
     {
@@ -4889,7 +5038,7 @@
      "name": "tea-toned",
      "params": {
       "tone": "tea",
-      "depth": 1.25,
+      "density": 1.25,
       "bleed": 0.25
      }
     }
@@ -4898,9 +5047,9 @@
    "recipe": [
     "Coating = brush strokes in stroke space (along s, across t): a load that runs out along the stroke; edges displaced by per-side noise (raggedness); a set-down pool and a drying rim; bristle streaks × the stock height decide where a dry brush still deposits.",
     "Thickness τ = load × unevenness (streaks + low-frequency drag) + pools; overlapping strokes add (a double coat prints deeper); paper valleys hold more sensitizer.",
-    "Objects (procedural fern frond, grass with spikelets, or a die) are an AA clip. Lift = a smooth field × the lift dial; contact sets how much lies flat.",
+    "Objects (procedural fern frond, grass with spikelets, or a cut-card motif) are an AA clip. Lift = a smooth field × the lift dial; contact sets how much lies flat.",
     "Shadow: for each lift level z the clip is sampled toward the sheet light at z · cot(elevation) (smeared ±20 % along the light) and blurred by z × sky scatter; each pixel blends the two levels around its lift.",
-    "Exposure E = 1 − shadow × (1 − translucency); density = τ × (1 − e^(−k·exposure·E)) — overexposure fills the penumbra in.",
+    "Exposure E = 1 − shadow × (1 − translucency). Develop: r = ((1 − e^(−2.2·exposure·E)) ÷ (1 − e^(−2.2)))^1.35, capped at 1.2; the coat saturates as τ' = 1.3·(1 − e^(−τ/1.3)); density = τ' × (a faint stain + r) × film density. Overexposure fills the penumbra in.",
     "Wash: unexposed coating rinses away; Prussian blue bleeds a little downhill into the whites, in streaks. Color = Beer–Lambert film of the tone (fresh, classic, peroxide-oxidized, tea-toned).",
     "Light last: × the stock's shading under the sheet light."
    ],
@@ -4908,7 +5057,7 @@
     {
      "param": "object lift",
      "range": "> 18 px",
-     "what": "penumbra wider than the leaflets — the fern dissolves into a cloud"
+     "what": "penumbra wider than the leaflets: the fern dissolves into a cloud"
     },
     {
      "param": "exposure",
@@ -4918,7 +5067,7 @@
     {
      "param": "exposure",
      "range": "< .5",
-     "what": "pale, greenish print — read as underexposed"
+     "what": "pale, greenish print: reads as underexposed"
     },
     {
      "param": "raggedness",
@@ -4935,7 +5084,7 @@
     {
      "key": "subject",
      "label": "Subject",
-     "group": "density",
+     "group": "motif",
      "type": "select",
      "default": "fern",
      "options": [
@@ -4943,12 +5092,12 @@
       "grass",
       "die"
      ],
-     "note": "what lies on the sheet: a procedural fern frond, grass with seed heads, or a die mark"
+     "note": "what lies on the sheet: a procedural fern frond, grass with seed heads, or a motif cut from card (die)"
     },
     {
      "key": "dieShape",
-     "label": "Die",
-     "group": "density",
+     "label": "Motif",
+     "group": "motif",
      "type": "select",
      "default": "compass",
      "options": [
@@ -4968,7 +5117,7 @@
     {
      "key": "text",
      "label": "Monogram",
-     "group": "density",
+     "group": "motif",
      "type": "text",
      "default": "Q",
      "when": {
@@ -4978,12 +5127,13 @@
       "dieShape": [
        "monogram"
       ]
-     }
+     },
+     "note": "the letter for the monogram motif"
     },
     {
      "key": "dieSize",
-     "label": "Die size",
-     "group": "density",
+     "label": "Motif size",
+     "group": "motif",
      "type": "range",
      "default": 0.72,
      "min": 0.2,
@@ -4993,12 +5143,13 @@
       "subject": [
        "die"
       ]
-     }
+     },
+     "note": "motif height as a share of the plate"
     },
     {
      "key": "strokes",
      "label": "Brush strokes",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 4,
      "min": 2,
@@ -5016,18 +5167,19 @@
     {
      "key": "bAngle",
      "label": "Brush angle",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": -3,
      "min": -30,
      "max": 30,
      "step": 0.5,
-     "unit": "°"
+     "unit": "°",
+     "note": "tilt of the brush strokes"
     },
     {
-     "key": "rag",
+     "key": "brushRag",
      "label": "Brush-edge raggedness",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.45,
      "min": 0,
@@ -5045,7 +5197,7 @@
     {
      "key": "uneven",
      "label": "Coating unevenness",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.45,
      "min": 0,
@@ -5056,18 +5208,18 @@
     {
      "key": "dry",
      "label": "Dry-brush tails",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.6,
      "min": 0,
      "max": 1,
      "step": 0.01,
-     "note": "how far the load runs out before the brush lifts — bristle streaks on the tooth peaks"
+     "note": "how far the load runs out before the brush lifts: bristle streaks on the tooth peaks"
     },
     {
      "key": "pool",
      "label": "Pooling",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.5,
      "min": 0,
@@ -5078,7 +5230,7 @@
     {
      "key": "expo",
      "label": "Exposure",
-     "group": "dropoff",
+     "group": "field",
      "type": "range",
      "default": 1,
      "min": 0.2,
@@ -5101,7 +5253,7 @@
     {
      "key": "lift",
      "label": "Object lift",
-     "group": "relief",
+     "group": "field",
      "type": "range",
      "default": 5.5,
      "min": 0,
@@ -5115,12 +5267,12 @@
        "why": "the subject dissolves"
       }
      ],
-     "note": "height of the lifted parts above the sheet — sets the penumbra width and its offset away from the sheet light"
+     "note": "height of the lifted parts above the sheet. It sets the penumbra width and its offset away from the sheet light"
     },
     {
      "key": "contact",
      "label": "Contact",
-     "group": "relief",
+     "group": "field",
      "type": "range",
      "default": 0.5,
      "min": 0,
@@ -5131,18 +5283,18 @@
     {
      "key": "scatter",
      "label": "Sky scatter",
-     "group": "relief",
+     "group": "field",
      "type": "range",
      "default": 0.32,
      "min": 0.05,
      "max": 1,
      "step": 0.01,
-     "note": "penumbra per px of lift — skylight and haze around the sun"
+     "note": "penumbra per px of lift: skylight and haze around the sun"
     },
     {
      "key": "trans",
      "label": "Translucency",
-     "group": "relief",
+     "group": "field",
      "type": "range",
      "default": 0.015,
      "min": 0,
@@ -5159,7 +5311,7 @@
     {
      "key": "bleed",
      "label": "Wash bleed",
-     "group": "mixing",
+     "group": "transfer",
      "type": "range",
      "default": 0.35,
      "min": 0,
@@ -5170,7 +5322,7 @@
     {
      "key": "stock",
      "label": "Prints on",
-     "group": "stock",
+     "group": "transfer",
      "type": "select",
      "default": "paper",
      "options": [
@@ -5196,9 +5348,9 @@
      "note": "fresh = before oxidation (greener); classic = air-oxidized Prussian blue; peroxide = hydrogen-peroxide bath (deeper, violet-blue); tea = tannin-toned neutral brown"
     },
     {
-     "key": "depth",
-     "label": "Blue depth",
-     "group": "color",
+     "key": "density",
+     "label": "Film density",
+     "group": "film",
      "type": "range",
      "default": 1.45,
      "min": 0.3,
@@ -5274,7 +5426,7 @@
      "min": 1,
      "max": 999,
      "step": 1,
-     "note": "every random draw in the effect hangs off this one number"
+     "note": "every random draw in the effect derives from this one number"
     }
    ]
   },
@@ -5282,8 +5434,14 @@
    "id": "fx-12-laser",
    "code": "FX-12",
    "name": "Laser char",
-   "role": "mark · beam",
-   "sub": "A CO₂ beam rasters a die into card, one scan line at a time. Each line is a gaussian burn: past a threshold the paper scorches tan → brown → black, sinks, and the tooth is burned smooth; heat browns the fibers around it. Vector cuts go through: a charred kerf opening onto the dark bed below.",
+   "section": "changed",
+   "kind": "process",
+   "tool": "CO2 beam",
+   "mechanism": [
+    "burn"
+   ],
+   "role": "process · CO2 beam",
+   "sub": "A CO₂ beam rasters a motif into card, one scan line at a time. Each line is a gaussian burn: past a threshold the paper scorches tan → brown → black, sinks, and the tooth is burned smooth; heat browns the fibers around it. Vector cuts go through: a charred kerf opening onto the dark bed below.",
    "presets": [
     {
      "name": "light etch",
@@ -5352,18 +5510,18 @@
    ],
    "printsOn": "fx-03-paper-tooth",
    "recipe": [
-    "Scan lines at the pitch (≥ 2 device px), at the scan angle. Dose at a pixel = Σ over nearby lines of power ÷ speed × the beam's gaussian, integrated over the pixel (erf) — anti-aliased lines at any angle.",
-    "Firing gate = the die clip sampled at each line's centerline, softened by the spot along the scan; the head's turnaround adds dose just inside the edges it reverses at.",
+    "Scan lines at the pitch (≥ 2 device px), at the scan angle. Dose at a pixel = Σ over nearby lines of power ÷ speed × the beam's gaussian, integrated over the pixel (erf): anti-aliased lines at any angle. When the pitch clamps to 2 device px, the dose is scaled by the clamp so the tone matches a finer screen.",
+    "Firing gate = the motif clip sampled at each line's centerline, softened by the spot along the scan; the head's turnaround adds dose just inside the edges it reverses at.",
     "Defocus widens σ and lowers the peak (same energy, larger spot): paler, softer, lines merging. A power ramp can run across the raster.",
     "Char = 1 − e^(−k·(dose − threshold)) → an OKLab ramp tan → brown → black, multiplied into the stock albedo (fibers char darker). Heat halo = the dose spread a few px, browning fibers first.",
     "Relief: ablation sinks the surface with dose; the tooth is burned smooth; a fine char crust. Lit by the sheet light (grooves catch it on one wall).",
-    "Vector cut: a kerf along the die outline (offset) or a tag; tabs leave bridges. The kerf opens onto the ground below, shaded by the card edge toward the light; its walls are charred."
+    "Vector cut: a kerf along the motif outline (offset) or a tag; tabs leave bridges. The kerf opens onto the ground below, shaded by the card edge toward the light; its walls are charred."
    ],
    "limits": [
     {
      "param": "line pitch",
      "range": "< 2 device px",
-     "what": "clamped — finer lines alias into moiré on screen"
+     "what": "clamped: finer lines alias into moiré on screen (dose is conserved)"
     },
     {
      "param": "power ÷ speed",
@@ -5389,8 +5547,8 @@
    "params": [
     {
      "key": "shape",
-     "label": "Die",
-     "group": "density",
+     "label": "Motif",
+     "group": "motif",
      "type": "select",
      "default": "compass",
      "options": [
@@ -5402,12 +5560,12 @@
       "word",
       "seal"
      ],
-     "note": "what the die (or type) is: an invented mark (compass, sun, crescent, knot, a monogram from the text), a word, or a ring seal"
+     "note": "the artwork: an invented mark (compass, sun, crescent, knot, a monogram from the text), a word, or a ring seal"
     },
     {
      "key": "text",
      "label": "Text",
-     "group": "density",
+     "group": "motif",
      "type": "text",
      "default": "Ferro & Lume",
      "when": {
@@ -5422,18 +5580,18 @@
     {
      "key": "size",
      "label": "Size",
-     "group": "density",
+     "group": "motif",
      "type": "range",
      "default": 0.52,
      "min": 0.15,
      "max": 1,
      "step": 0.01,
-     "note": "die height as a share of the plate"
+     "note": "motif height as a share of the plate"
     },
     {
      "key": "power",
      "label": "Power",
-     "group": "density",
+     "group": "field",
      "type": "range",
      "default": 0.55,
      "min": 0.05,
@@ -5444,7 +5602,7 @@
     {
      "key": "speed",
      "label": "Speed",
-     "group": "density",
+     "group": "field",
      "type": "range",
      "default": 1,
      "min": 0.25,
@@ -5455,7 +5613,7 @@
     {
      "key": "pitch",
      "label": "Line pitch",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 1.6,
      "min": 1,
@@ -5465,16 +5623,16 @@
      "limits": [
       {
        "lo": 1,
-       "hi": 1.2,
+       "hi": 2,
        "why": "clamped to 2 device px at 1×"
       }
      ],
-     "note": "distance between scan lines; clamped to ≥ 2 device px"
+     "note": "distance between scan lines; clamped to ≥ 2 device px, with the dose scaled to match"
     },
     {
      "key": "scan",
      "label": "Scan angle",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0,
      "min": 0,
@@ -5486,7 +5644,7 @@
     {
      "key": "spot",
      "label": "Spot",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0.42,
      "min": 0.3,
@@ -5498,7 +5656,7 @@
     {
      "key": "focus",
      "label": "Defocus",
-     "group": "density",
+     "group": "structure",
      "type": "range",
      "default": 0,
      "min": 0,
@@ -5516,7 +5674,7 @@
     {
      "key": "ramp",
      "label": "Power ramp",
-     "group": "dropoff",
+     "group": "field",
      "type": "range",
      "default": 0,
      "min": 0,
@@ -5527,18 +5685,19 @@
     {
      "key": "rampAng",
      "label": "Ramp angle",
-     "group": "dropoff",
+     "group": "field",
      "type": "range",
      "default": 0,
      "min": 0,
      "max": 360,
      "step": 1,
-     "unit": "°"
+     "unit": "°",
+     "note": "direction the power falls along"
     },
     {
      "key": "overburn",
      "label": "Turnaround burn",
-     "group": "dropoff",
+     "group": "field",
      "type": "range",
      "default": 0.18,
      "min": 0,
@@ -5549,7 +5708,7 @@
     {
      "key": "halo",
      "label": "Heat halo",
-     "group": "relief",
+     "group": "color",
      "type": "range",
      "default": 0.45,
      "min": 0,
@@ -5560,7 +5719,7 @@
     {
      "key": "haloR",
      "label": "Halo reach",
-     "group": "relief",
+     "group": "color",
      "type": "range",
      "default": 2,
      "min": 0.5,
@@ -5573,7 +5732,8 @@
        "hi": 12,
        "why": "scorch accident"
       }
-     ]
+     ],
+     "note": "how far the heat browns the fibers around the burn"
     },
     {
      "key": "ablate",
@@ -5595,12 +5755,13 @@
      "default": 0.9,
      "min": 0,
      "max": 1,
-     "step": 0.01
+     "step": 0.01,
+     "note": "share of light from the sheet light vs flat ambient fill"
     },
     {
      "key": "cut",
      "label": "Vector cut",
-     "group": "stock",
+     "group": "motif",
      "type": "select",
      "default": "off",
      "options": [
@@ -5608,12 +5769,12 @@
       "outline",
       "tag"
      ],
-     "note": "outline = the die cut out at an offset; tag = a rounded tag with a hole"
+     "note": "outline = the motif cut out at an offset; tag = a rounded tag with a hole"
     },
     {
      "key": "kerf",
      "label": "Kerf",
-     "group": "stock",
+     "group": "motif",
      "type": "range",
      "default": 1.3,
      "min": 0.4,
@@ -5632,12 +5793,13 @@
        "hi": 4,
        "why": "a slot"
       }
-     ]
+     ],
+     "note": "width of the cut"
     },
     {
      "key": "cutOff",
      "label": "Cut offset",
-     "group": "stock",
+     "group": "motif",
      "type": "range",
      "default": 10,
      "min": 2,
@@ -5649,12 +5811,12 @@
        "outline"
       ]
      },
-     "note": "distance from the die edge to the cut"
+     "note": "distance from the motif edge to the cut"
     },
     {
      "key": "tabs",
      "label": "Tabs",
-     "group": "stock",
+     "group": "motif",
      "type": "range",
      "default": 4,
      "min": 0,
@@ -5671,7 +5833,7 @@
     {
      "key": "tabW",
      "label": "Tab width",
-     "group": "stock",
+     "group": "motif",
      "type": "range",
      "default": 4,
      "min": 1,
@@ -5683,12 +5845,13 @@
        "outline",
        "tag"
       ]
-     }
+     },
+     "note": "width of each bridge"
     },
     {
      "key": "thick",
      "label": "Card thickness",
-     "group": "stock",
+     "group": "relief",
      "type": "range",
      "default": 1.4,
      "min": 0.2,
@@ -5706,14 +5869,15 @@
     {
      "key": "stock",
      "label": "Prints on",
-     "group": "stock",
+     "group": "transfer",
      "type": "select",
      "default": "paper",
      "options": [
       "paper",
       "cloth",
       "smooth"
-     ]
+     ],
+     "note": "paper = FX-03 live, cloth = FX-04 live, smooth = no substrate"
     },
     {
      "key": "gL",
@@ -5786,7 +5950,7 @@
      "min": 1,
      "max": 999,
      "step": 1,
-     "note": "every random draw in the effect hangs off this one number"
+     "note": "every random draw in the effect derives from this one number"
     }
    ]
   }
@@ -5795,6 +5959,7 @@
   {
    "id": "u-suite",
    "code": "U-01",
+   "job": "brand",
    "title": "Stationery suite · a small press, on charcoal linen",
    "sub": "Letterhead, envelope and two cards for Coldharbor Editions, laid on a dark linen desk under a low window light. The letterhead carries a blind crescent, cropped at the head, and a typed letter. The envelope flaps are separate plies with hairline edges, closed by a red scalloped seal. The card's crescent is gold foil, run off the trim.",
    "uses": [
@@ -5867,6 +6032,7 @@
   {
    "id": "u-emboss",
    "code": "U-02",
+   "job": "brand",
    "title": "Raking light · a raised knot, a pressed name",
    "sub": "White cotton board under a low sun at 8°. A bindery's knot mark is embossed blind at a size the sheet cannot hold, cropped by the frame; the name is pressed small in black ink. The window draws the light: the sun patch ends at the head's shadow and a mullion crosses it. In the sun the raised walls flare; in the shade the mark is gone.",
    "uses": [
@@ -5903,6 +6069,7 @@
   {
    "id": "u-stickers",
    "code": "U-03",
+   "job": "brand",
    "title": "Club sticker · chrome mirror vinyl, peeling",
    "sub": "A cycling club's kiss-cut sticker in mirror-chrome vinyl: the club name runs round the rim and a big route number sits in the middle, both knocked out to white vinyl. Its corner is peeled back off a gray liner. The fold shows the white adhesive side, and the bare liner keeps the faint score of the die. The window light becomes one hot patch on the chrome and leaves the rest of the mirror dark. Three small matte stickers sit along the bottom for scale (a chainring, the number, the initials), with crop marks and a typed job line.",
    "uses": [
@@ -5976,6 +6143,7 @@
   {
    "id": "u-halftone",
    "code": "U-04",
+   "job": "brand",
    "title": "Juice label · a blood orange in one screen",
    "sub": "A label for a cold-pressed juice, in one ember ink. A blood orange cut in half rises from the bottom edge like a sun, run as a coarse amplitude screen at 45° and cropped on three sides: the rind's oil glands, the white pith, eleven segments and the juice sacs inside them are all just dot size. The name and the batch line print solid in the same ink.",
    "uses": [
@@ -6032,6 +6200,7 @@
   {
    "id": "u-uvcard",
    "code": "U-05",
+   "job": "brand",
    "title": "Business card · spot UV on black board",
    "sub": "A recording studio's card in matte black board, lying on gray paper. A big sun mark and a field of fine diagonal lines are printed in clear gloss varnish, so they show only where the window's soft box reflects in them; head-on they are nearly gone. A matte panel is kept clear for the name, hot-stamped small in silver foil.",
    "uses": [
@@ -6086,6 +6255,7 @@
   {
    "id": "u-patch",
    "code": "U-06",
+   "job": "brand",
    "title": "Chest mark · satin stitch on black twill",
    "sub": "An outfitter's mark embroidered straight into the chest of a black twill jacket, close up. A gold sun rises inside a gold ring over three blue waves, with the name in white below. Each color is its own run of rayon satin at its own stitch angle, so the gold, the blue and the white catch the window light differently. The cloth puckers where the stitches pull and dimples at every needle hole.",
    "uses": [
@@ -6134,6 +6304,7 @@
   {
    "id": "u-poster",
    "code": "U-07",
+   "job": "print",
    "title": "Two-drum poster · off register",
    "sub": "An untrimmed stencil print. Pink floods down from the top and blue rises from the corner. The headline is printed once per drum and the pink master sits off the blue, so the crop marks, the register targets and the color bar all come out doubled. Where the inks overprint they turn violet. The solids streak lighter along the feed.",
    "uses": [
@@ -6185,6 +6356,7 @@
   {
    "id": "u-tickets",
    "code": "U-08",
+   "job": "print",
    "title": "Tickets · three runs, fanned, one punched",
    "sub": "Three consecutive tickets dealt across the page. Same die, same chain, a different ink on each roller, each running dry at its own point. The numbers are struck in sequence. The top ticket has been punched at the door, and its chad lies on the desk with a fleck of blue ink on it.",
    "uses": [
@@ -6222,6 +6394,7 @@
   {
    "id": "u-typemacro",
    "code": "U-09",
+   "job": "print",
    "title": "Typewriter strike · under the loupe",
    "sub": "\"Dear reader,\" at twelve times, cropped through. Each key hits as a tilted plane, so one side of every letter takes more ink than the other. Where it is light you see the ribbon's weave, and where it is heavy the film pools at the edge. The type bar presses each letter into the bond. The e and the a print with their counters half full of old ink, and the D bounced.",
    "uses": [
@@ -6280,7 +6453,8 @@
   },
   {
    "id": "u-slip",
-   "code": "U-010",
+   "code": "U-10",
+   "job": "print",
    "title": "Job docket · carbon copy, box stamp, spiked",
    "sub": "A press-room docket on newsprint, torn off the pad. The type is the carbon copy, blue and soft and pressed into the sheet. A PRINTED box stamp is rolled over it at an angle, light enough to break on the tooth. It was spiked on the finished pile, and the carbon left a thumbprint where it was held.",
    "uses": [
@@ -6337,7 +6511,8 @@
   },
   {
    "id": "u-sketch",
-   "code": "U-011",
+   "code": "U-11",
+   "job": "print",
    "title": "Graphite study · cube and sphere, one light",
    "sub": "A drawing, not a texture. Every tone is hatched on one diagonal, the way a right hand draws, and crossed only where it has to go darker. The contours are searched for in several light passes that overshoot their corners, and pressed hard on the shadow side. The highlight on the sphere is lifted out with an eraser. Both cast shadows are projected from the sheet light: the cube's is a sheared prism and the sphere's is an ellipse. Drag the light and the drawing redraws itself.",
    "uses": [
@@ -6383,7 +6558,8 @@
   },
   {
    "id": "u-ginkgo",
-   "code": "U-012",
+   "code": "U-12",
+   "job": "print",
    "title": "Sun print · ginkgo, pinned to the shop wall",
    "sub": "A cyanotype on cold-press watercolor paper, pinned to a gray wall with one yellow map pin. The sensitizer went on in four brush strokes, and their ragged ends and dry tails show at the margins. A ginkgo sprig lay on the sheet in the sun. Where it was pressed flat the leaves print sharp, where it curled they blur, and the veins stay whiter than the leaf. The edition and title are in pencil, and the studio chop is blind-pressed in the corner.",
    "uses": [
@@ -6450,7 +6626,8 @@
   },
   {
    "id": "u-exlibris",
-   "code": "U-013",
+   "code": "U-13",
+   "job": "print",
    "title": "Ex libris · laser-cut, still in the sheet",
    "sub": "The top corner of a bookplate, burned into white board by a laser one scan line at a time. The tree, the frame and the type are a deep pass, charred black and sunk below the paper. The medallion behind the tree is a light pass that only browns it, and every scan line shows. The plate is cut out at an offset and held in the sheet by uncut tabs, and the kerf opens onto the dark bed below.",
    "uses": [
@@ -6500,7 +6677,8 @@
   },
   {
    "id": "u-sleeve",
-   "code": "U-014",
+   "code": "U-14",
+   "job": "print",
    "title": "Record sleeve · spot UV grooves on black",
    "sub": "The corner of a record sleeve in matte black board on a gray table. The grooves are spot UV: clear gloss rings that vanish head-on and show only where the soft box of the sheet light reflects in them. The band, the title and the catalog line are one white ink. On the side facing the light, the cut edge shows the gray core of the board.",
    "uses": [
@@ -6539,7 +6717,8 @@
   },
   {
    "id": "u-bag",
-   "code": "U-015",
+   "code": "U-15",
+   "job": "packaging",
    "title": "Coffee bag · Pellmoor seasonal label",
    "sub": "Tight on an arch-cut label stuck to a matte black bag. The gold foil name is too big for the label and runs off it. The graphite cherries are close enough to show each hatch. The roaster and lot lines are typed, and the roast date is rubber-stamped in violet, rocked light on one side.",
    "uses": [
@@ -6615,7 +6794,8 @@
   },
   {
    "id": "u-bookmacro",
-   "code": "U-016",
+   "code": "U-16",
+   "job": "packaging",
    "title": "Bookcloth · 5× at the hinge",
    "sub": "Five times into the cover of a clothbound book. The gold foil bridges the green threads and drops out in the gaps between them. The blind hinge groove crushes the weave flat, and past it the spine turns away into shadow. Raked at 17°, so every thread casts.",
    "uses": [
@@ -6646,6 +6826,7 @@
      "wear": 0.04,
      "mShape": "none",
      "lift": 0,
+     "twist": 0.03,
      "shadow": 0.65
     },
     "fx-08-foil": {
@@ -6671,7 +6852,8 @@
   },
   {
    "id": "u-lid",
-   "code": "U-017",
+   "code": "U-17",
+   "job": "packaging",
    "title": "Box lid · Mothlight, spot UV on black",
    "sub": "The corner of a rigid candle box in matte black board. A moth and the rings around a flame are printed in clear gloss varnish, so they show only where the light's reflection crosses them. A matte window is left clear around the silver foil name and the scent line. The wrap rolls over the lid edge and is mitred at the corner.",
    "uses": [
@@ -6729,7 +6911,8 @@
   },
   {
    "id": "u-swatches",
-   "code": "U-018",
+   "code": "U-18",
+   "job": "textile",
    "title": "Swatch card · Brannagh Mill, five drafts",
    "sub": "A white mill card, punched and eyeleted in brass. Five pinked swatches are stapled in a row, each typed underneath with its draft and thread count. One is ticked in pencil. The card number is printed in red.",
    "uses": [
@@ -6798,7 +6981,8 @@
   },
   {
    "id": "u-wovenmacro",
-   "code": "U-019",
+   "code": "U-19",
+   "job": "textile",
    "title": "Woven label · Haverlund, 4× at the fold",
    "sub": "Four times into a damask label sewn into a gray twill. The name is woven, not printed: white weft floats long over black warp inside each letter, so every curve steps along the threads. A border line runs inside the heat-cut side, whose threads are melted into a bead. The top end is folded under and stitched through in gray thread.",
    "uses": [
@@ -6833,7 +7017,8 @@
   },
   {
    "id": "u-tote",
-   "code": "U-020",
+   "code": "U-20",
+   "job": "textile",
    "title": "Tote · Corran & Co, one pull over the hem",
    "sub": "Canvas duck at the mouth of a grocery bag. The top is folded and double-stitched. Five waves and the name are pulled once through the screen, at a size the bag cannot hold. The screen bridges the hem's step and skips just below it. The squeegee runs dry toward the right, so the end of the name prints only on the tops of the threads.",
    "uses": [
@@ -6881,7 +7066,8 @@
   },
   {
    "id": "u-cap",
-   "code": "U-021",
+   "code": "U-21",
+   "job": "textile",
    "title": "Cap front · Kittering, satin K over the seam",
    "sub": "Twice into the front of a navy twill cap. A white rayon K is stitched across the center seam in long satin floats with a split-stitch outline, and a red satin dot stands at its foot like a full stop, its floats laid the other way. The seam is topstitched on both sides, and the brim below carries eight rows of machine stitching.",
    "uses": [
@@ -6934,7 +7120,8 @@
   },
   {
    "id": "u-towel",
-   "code": "U-022",
+   "code": "U-22",
+   "job": "textile",
    "title": "Tea towel · Fenmarch, a fern in sun print",
    "sub": "The top of a white cotton tea towel on a gray table. It was brushed with sensitizer in four ragged strokes, laid under a fern and put in the sun: Prussian blue where the light reached, and white cloth under the fronds, softer where they curled up off the weave. The hem is folded and stitched, a red tape loop comes out of it, and a printed label is sewn on below.",
    "uses": [
@@ -7006,7 +7193,8 @@
   },
   {
    "id": "u-deck",
-   "code": "U-023",
+   "code": "U-23",
+   "job": "screen",
    "title": "Title slide · a planet in stipple",
    "sub": "A deck title slide on the 16:9 stage. Crisp black type on the left. On the right a stippled planet bleeds off two edges, shaded dot by dot from the sheet light, with a thin ember haze on the lit limb and one small ember moon. Drag the light and the terminator turns.",
    "uses": [
@@ -7062,7 +7250,8 @@
   },
   {
    "id": "u-meter",
-   "code": "U-024",
+   "code": "U-24",
+   "job": "screen",
    "title": "Instrument dial · 24 h in stipple",
    "sub": "A day of readings wound onto a clock face: 48 half-hour bins radiate from a hairline ring, midnight at the top. Each bin is a count of dots, and its tip runs out instead of stopping at a hard cap. The current bin and the needle print in ember, the readout beside them in the same ink, and the hours are struck in type.",
    "uses": [
@@ -7124,7 +7313,8 @@
   },
   {
    "id": "u-chart",
-   "code": "U-025",
+   "code": "U-25",
+   "job": "data",
    "title": "Editorial figure · two years in stipple",
    "sub": "A figure as it would run in print. Visitors per day at a corner café, last year in black and this year in ember. Each area is stipple, densest at its line and thinning to the baseline. This year's ember fills only the band above last year's line, so the gain the terrace opened reads without a legend. Hairline grid and direct labels; the axis and the note are struck in type.",
    "uses": [
@@ -7186,7 +7376,8 @@
   },
   {
    "id": "u-sunprint",
-   "code": "U-026",
+   "code": "U-26",
+   "job": "data",
    "title": "Sun print · a year of daylight at 60° N",
    "sub": "A bar chart made by the sun. Twelve strips of card, cut to the hours of daylight at 60° north on the 15th of each month, were laid on brushed cyanotype paper with the cut-out title and month letters, and a cotton thread marks 12 hours. Where the card lay flat the edge is sharp; where it curled the shadow went soft. The plate number is typed in the margin.",
    "uses": [

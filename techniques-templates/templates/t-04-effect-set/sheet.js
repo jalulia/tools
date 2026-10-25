@@ -20,7 +20,10 @@ const DEF_LIGHT={az:225,el:34};
 const KEY='tt-t04:'+SET.code+':'+SET.set+':v2';
 let S=clone(DEF), LIGHT=clone(DEF_LIGHT);
 const b64e=t=>btoa(unescape(encodeURIComponent(t))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''), b64d=t=>decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/'))));
-const applySnap=j=>{ for(const id in DEF) S[id]=Object.assign({},DEF[id],(j.S||{})[id]||{}); LIGHT=Object.assign({},DEF_LIGHT,j.light||{}); };
+/* renamed keys: old share links and saved state carry the old names; move them to the new ones */
+const RENAMED={'fx-11-cyanotype':{depth:'density',rag:'brushRag'},'fx-10-embroidery':{density:'count'},'fx-06-deboss':{burnish:'floorTone'}};
+const migrate=(id,o)=>{ const r=RENAMED[id]; if(!r||!o) return o||{}; const n=Object.assign({},o); for(const k in r) if(k in n){ if(!(r[k] in n)) n[r[k]]=n[k]; delete n[k]; } return n; };
+const applySnap=j=>{ for(const id in DEF) S[id]=Object.assign({},DEF[id],migrate(id,(j.S||{})[id])); LIGHT=Object.assign({},DEF_LIGHT,j.light||{}); };
 let FROM_LINK=false;
 try{ const q=new URLSearchParams(location.search).get('s'); if(q){ applySnap(JSON.parse(b64d(q))); FROM_LINK=true; } }catch(e){ console.warn('bad share link',e); }
 if(!FROM_LINK) try{ const j=JSON.parse(localStorage.getItem(KEY)||'null'); if(j) applySnap(j); }catch(e){}
