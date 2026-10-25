@@ -1,16 +1,17 @@
-/* T-04 · Effect set · FX core · ø co. Techniques & Templates
+/* T-04 · Effect set · FX core
    Shared by every effect in a set: seeded noise, a blue-noise rank tile, ease curves,
    OKLab / OKLCH color, a randomized edge mask, and a per-pixel compositor that mixes
    coverage into the ground under an explicit color rule.
-   Units: every length a set exposes is in CSS px; effects render at device px (dpr ≤ 2),
-   so density means "marks per CSS px²" on any screen — a density dial changes the COUNT
+   Units: every length a set exposes is in CSS px; effects render at device px (dpr ≤ 3 on screen, any for export),
+   so density means "marks per CSS px²" on any screen. A density dial changes the COUNT
    of marks, never the zoom of a tile.
    OKLab: Björn Ottosson, "A perceptual color space for image processing" (2020),
    https://bottosson.github.io/posts/oklab/ — matrices below are that post's, verbatim.
    OKLCH as defined in CSS Color 4 (https://www.w3.org/TR/css-color-4/#ok-lab).
-   v2 · material model: every effect is ink on a STOCK. A stock is a height field (paper tooth, or woven thread)
-   lit by ONE sheet light (FX.LIGHT). The same height field decides where ink lands, where it starves, where it
-   wicks, and how the relief catches the light. Ink is a film: Beer–Lambert absorption in linear light.
+   v2 · material model: every effect reads a STOCK height field and one sheet light. A stock is a height field
+   (paper tooth, or woven thread) lit by ONE sheet light (FX.LIGHT). The same height field decides where a colorant
+   lands, where it starves, where it wicks, and how the relief catches the light. Ink is a film: Beer–Lambert
+   absorption in linear light.
    Worker-safe: no DOM in anything an effect calls. */
 (function(G){
 'use strict';
@@ -138,18 +139,18 @@ FX.mixShaded=(px,ink,dL,t,space)=>{ const L=clamp(ink.L+dL,0,1); TMP.L=L; TMP.C=
    Signed distance to a shape (CSS px, + inside), displaced by fbm so the edge wanders, then turned into coverage
    by a feather — either as tone (soft) or as speckle (binary, blue-noise thresholded: ink that breaks up rather than fades).
    "bite" removes clumped holes whose likelihood rises toward the edge (worn, torn, starved). */
-FX.MASK_PARAMS=(d={},opt={})=>[
-  {key:'mShape',label:'Shape',group:'mask',type:'select',options:['none','rect','ellipse','band','blob','type','image'],value:d.mShape||'rect',note:'the region the effect may occupy — type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)'},
-  {key:'mText',label:'Mask text',group:'mask',type:'text',value:d.mText||'Counted',maxlength:60,when:{mShape:['type']},note:'set in Archivo 800, fit to the plate'},
-  {key:'mInset',label:'Inset',group:'mask',type:'range',min:0,max:120,step:1,unit:'px',value:d.mInset??18,note:'distance from the plate edge to the mask edge'},
-  {key:'mAmp',label:'Edge wander',group:'mask',type:'range',min:0,max:40,step:.5,unit:'px',value:d.mAmp??6,note:'how far noise pushes the edge in and out',limits:[[28,40,'above ~28 px the edge tears into islands']]},
-  {key:'mScale',label:'Wander scale',group:'mask',type:'range',min:4,max:240,step:1,unit:'px',value:d.mScale??60,note:'wavelength of the wander; small = ragged, large = drifting'},
-  {key:'mRough',label:'Roughness',group:'mask',type:'range',min:1,max:6,step:1,unit:'oct',value:d.mRough??4,note:'octaves of edge noise — adds fine teeth without moving the large shape'},
-  {key:'mFeather',label:'Feather',group:'mask',type:'range',min:.5,max:60,step:.5,unit:'px',value:d.mFeather??6,note:'width over which coverage falls from 1 to 0'},
-  ...(opt.mode===false?[]:[{key:'mMode',label:'Feather as',group:'mask',type:'select',options:['speckle','tone'],value:d.mMode||'speckle',note:'speckle = binary marks thinning out; tone = partial coverage'}]),
+FX.MASK_PARAMS=(d={},opt={})=>{ const omit=opt.omit||[]; return [
+  {key:'mShape',label:'Shape',group:'edge',type:'select',options:['none','rect','ellipse','band','blob','type','image'],value:d.mShape||'rect',note:'the region the effect may occupy. type = your words as the mask; image = upload a PNG/SVG (alpha, or dark = ink)'},
+  {key:'mText',label:'Mask text',group:'edge',type:'text',value:d.mText||'Counted',maxlength:60,when:{mShape:['type']},note:'set in Archivo 800, fit to the plate'},
+  {key:'mInset',label:'Inset',group:'edge',type:'range',min:0,max:120,step:1,unit:'px',value:d.mInset??18,note:'distance from the plate edge to the mask edge'},
+  {key:'mAmp',label:'Edge wander',group:'edge',type:'range',min:0,max:40,step:.5,unit:'px',value:d.mAmp??6,note:'how far noise pushes the edge in and out',limits:[[28,40,'above ~28 px the edge tears into islands']]},
+  {key:'mScale',label:'Wander scale',group:'edge',type:'range',min:4,max:240,step:1,unit:'px',value:d.mScale??60,note:'wavelength of the wander; small = ragged, large = drifting'},
+  {key:'mRough',label:'Roughness',group:'edge',type:'range',min:1,max:6,step:1,unit:'oct',value:d.mRough??4,note:'octaves of edge noise: adds fine teeth without moving the large shape'},
+  {key:'mFeather',label:'Feather',group:'edge',type:'range',min:.5,max:60,step:.5,unit:'px',value:d.mFeather??6,note:'width over which coverage falls from 1 to 0'},
+  ...(opt.mode===false?[]:[{key:'mMode',label:'Feather as',group:'edge',type:'select',options:['speckle','tone'],value:d.mMode||'speckle',note:'speckle = binary marks thinning out; tone = partial coverage'}]),
   ...(opt.extra||[]),
-  {key:'mBite',label:'Bite',group:'mask',type:'range',min:0,max:1,step:.01,value:d.mBite??.25,note:'clumped dropouts that grow more likely toward the edge'},
-];
+  {key:'mBite',label:'Bite',group:'edge',type:'range',min:0,max:1,step:.01,value:d.mBite??.25,note:'clumped dropouts that grow more likely toward the edge'},
+].filter(p=>!omit.includes(p.key)); };
 const MASKS=new Map();
 FX.mask=(o,W,H,dpr,seed)=>Float32Array.from(FX.maskField(o,W,H,dpr,seed).m);
 /* maskField → { m: coverage 0..1, d: wandered signed distance in CSS px (+ inside), or null when shape = none } */
@@ -241,16 +242,19 @@ FX.castShadow=(alpha,W,H,dpr,L,lift=1)=>{ const [lx,ly,lz]=FX.lightVec(L), pl=Ma
   const up=lift>1.5?Math.min(1,(lift-1.5)/1.5):0, sh=up>0?FX.blur(off(lift*.9),W,H,Math.max(1,Math.round(lift*.3*dpr))):null, out=new Float32Array(W*H);
   for(let i=0;i<out.length;i++){ const v=.2*c[i]+.045*a[i]+(sh?.14*up*sh[i]:0); out[i]=v*(1-alpha[i]); } return out; };
 /* film LUT: per-channel transmittance ink^τ for τ ∈ [0,2], 1025 steps */
+/* apply a film LUT to one pixel of a linear RGB buffer at index k, for absorbance a (τ ∈ [0,2], clamped at 2) */
+FX.filmInto=(buf,k,LUT,a)=>{ const j=((a>=2?1024:a*512+.5)|0)*3; buf[k]*=LUT[j]; buf[k+1]*=LUT[j+1]; buf[k+2]*=LUT[j+2]; };
 FX.filmLUT=(ink)=>{ const N=1024, T=new Float32Array((N+1)*3), l=ink.lin.map(v=>Math.log(v<1e-4?1e-4:v)); for(let i=0;i<=N;i++){ const t=i/N*2; T[i*3]=Math.exp(l[0]*t); T[i*3+1]=Math.exp(l[1]*t); T[i*3+2]=Math.exp(l[2]*t); } return T; };
 
-/* buffers → RGBA for display / export: image (sRGB encode), ink plate (film positive), stock (normalized height), mask */
+/* buffers → RGBA for display / export: image (sRGB encode), separation (R.ink as a film positive), stock (height in CSS px,
+   normalized to 8 bits), mask */
 FX.toRGBA=(R,view,W,H)=>{ const out=new Uint8ClampedArray(W*H*4);
   if(view==='image'||!view){ const l=R.lin; for(let i=0,j=0,k=0;i<W*H;i++,j+=4,k+=3){ out[j]=FX.enc(l[k]); out[j+1]=FX.enc(l[k+1]); out[j+2]=FX.enc(l[k+2]); out[j+3]=255; } return out; }
   const f=view==='ink'?R.ink:view==='stock'?R.stock:R.mask;
   let mn=0, mx=1; if(view==='stock'&&f){ mn=1e9; mx=-1e9; for(let i=0;i<f.length;i++){ const v=f[i]; if(v<mn) mn=v; if(v>mx) mx=v; } if(mx-mn<1e-6){ mn=0; mx=1; } }
   for(let i=0,j=0;i<W*H;i++,j+=4){ let v=f?f[i]:0, g;
     if(view==='stock') g=f?Math.round(255*(v-mn)/(mx-mn)):128;          // height map: low = black, high = white
-    else { if(v>1) v=1; if(v<0) v=0; g=Math.round(255*(1-v)); }        // ink plate / mask: ink = black, as a film positive
+    else { if(v>1) v=1; if(v<0) v=0; g=Math.round(255*(1-v)); }        // separation / mask: ink = black, as a film positive
     out[j]=out[j+1]=out[j+2]=g; out[j+3]=255; } return out; };
 
 /* ── canvas helpers ── */
@@ -268,9 +272,9 @@ FX.INK_PARAMS=(p,label,L,C,h)=>[
   {key:p+'L',label:label+' · L',group:'color',type:'range',min:0,max:1,step:.005,value:L,ink:p,note:'OKLCH lightness (0 black … 1 white)'},
   {key:p+'C',label:label+' · C',group:'color',type:'range',min:0,max:.37,step:.002,value:C,ink:p,note:'OKLCH chroma; reduced at constant L/h if it leaves sRGB',limits:[[.26,.37,'most hues leave sRGB above ~.26 and get chroma-reduced']]},
   {key:p+'h',label:label+' · h',group:'color',type:'range',min:0,max:360,step:.5,unit:'°',value:h,ink:p,note:'OKLCH hue angle'}];
-FX.MIX_PARAM=(v='film',opts=['film','oklab','oklch','linear','srgb'])=>({key:'mix',label:'Color rule',group:'mixing',type:'select',options:opts,value:v,note:'film = Beer–Lambert absorption in linear light (physical); oklab / oklch / linear / srgb = coverage mixes, for comparison'});
-FX.EASE_PARAM=(key,label,v,note)=>({key,label,group:'dropoff',type:'ease',value:v,note});
-FX.SEED_PARAM=(v)=>({key:'seed',label:'Seed',group:'seed',type:'range',min:1,max:999,step:1,value:v,note:'every random draw in the effect hangs off this one number'});
+FX.MIX_PARAM=(v='film',opts=['film','oklab','oklch','linear','srgb'])=>({key:'mix',label:'Color rule',group:'film',type:'select',options:opts,value:v,note:'film = Beer–Lambert absorption in linear light (physical); oklab / oklch / linear / srgb = coverage mixes, for comparison'});
+FX.EASE_PARAM=(key,label,v,note,group='field')=>({key,label,group,type:'ease',value:v,note});
+FX.SEED_PARAM=(v)=>({key:'seed',label:'Seed',group:'seed',type:'range',min:1,max:999,step:1,value:v,note:'every random draw in the effect derives from this one number'});
 
 /* ── d additions ── */
 /* iso-contours of a field sampled at device px (marching squares, saddles split by the cell mean), chained into

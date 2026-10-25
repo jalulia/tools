@@ -1,4 +1,4 @@
-/* T-04 · Effect set · sheet runtime v2 · ø co. Techniques & Templates
+/* T-04 · Effect set · sheet runtime v2
    Generic: reads FXSET (set.js) and builds the rack, one technique block per effect, and the usage gallery.
    State: one params object per effect (S[id]) + one sheet light (LIGHT). Dials write it; everything reads it.
    Coupling: an effect that prints on a stock (effect.stockOf(o)) re-renders when that stock's params change.
@@ -11,7 +11,9 @@ const FX=window.FX, SET=window.FXSET, $=(s,r=document)=>r.querySelector(s), $$=(
 const h=(tag,attrs,...kids)=>{ const n=document.createElement(tag); for(const k in attrs||{}){ const v=attrs[k]; if(k==='class')n.className=v; else if(k==='html')n.innerHTML=v; else if(k.startsWith('on'))n.addEventListener(k.slice(2),v); else if(v!=null&&v!==false)n.setAttribute(k,v===true?'':v); } for(const c of kids.flat()) if(c!=null) n.append(c.nodeType?c:document.createTextNode(c)); return n; };
 const clone=o=>JSON.parse(JSON.stringify(o)), esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt=(v,p)=>{ if(typeof v!=='number') return String(v); const st=p&&p.step||.01; const d=st>=1?0:st>=.1?1:st>=.01?2:3; return v.toFixed(d); };
-const TABS=[['density','Density'],['dropoff','Dropoff'],['stock','Stock'],['relief','Relief'],['color','Color'],['mixing','Mixing'],['mask','Edge']];
+/* param group → tab label. Groups that share a label share a tab (motif + structure = Mark, color + film = Color), in this order.
+   The seed is a small row under the tabs, never a tab of its own. */
+const TABS=[['motif','Mark'],['structure','Mark'],['field','Field'],['transfer','Stock'],['relief','Relief'],['finish','Finish'],['color','Color'],['film','Color'],['edge','Edge'],['seed','Seed']];
 const EFX=Object.fromEntries(SET.effects.map(e=>[e.id,e]));
 const DEF={}; SET.effects.forEach(e=>{ DEF[e.id]={}; e.params.forEach(p=>DEF[e.id][p.key]=clone(p.value)); });
 const DEF_LIGHT={az:225,el:34};
@@ -69,7 +71,8 @@ const CLIPC=document.createElement('canvas'), UMASK={}; // UMASK[id] = uploaded 
 const mkC=(W,H)=>{ CLIPC.width=W; CLIPC.height=H; return CLIPC; };
 const makeClips=(defs,W,H,dpr,o)=>{ const clips={}; for(const k in (defs||{})){ const c=mkC(W,H), g=c.getContext('2d',{willReadFrequently:true}); g.clearRect(0,0,W,H); g.setTransform(dpr,0,0,dpr,0,0); g.fillStyle='#fff'; defs[k](g,W/dpr,H/dpr,o); const d=g.getImageData(0,0,W,H).data, f=new Float32Array(W*H); for(let i=0,j=3;i<f.length;i++,j+=4) f[i]=d[j]/255; clips[k]=f; } return clips; };
 const fxClips=(id,W,H,dpr,o)=>SET.clips(id,W,H,dpr,o,UMASK[id],mkC);
-const isStock=e=>/^stock/.test(e.role||'');
+const isStock=e=>e.kind==='stock';
+const classOf=e=>e.kind?e.kind+' · '+(e.mechanism||[]).join(' + '):(e.role||''); // shown where the role used to be
 const fxJob=(id,canvas,view,opt={})=>scale=>{ const {W,H,dpr}=dims(canvas,scale); const o=opt.S?opt.S(id):S[id], SS=opt.S?Object.assign({},S,{[id]:o}):S; return {kind:'fx',id,W,H,dpr,scale,S:SS,light:LIGHT,view:view(),proof:opt.proof?opt.proof():false,clips:fxClips(id,W,H,dpr,o)}; };
 const uJob=(u,canvas)=>scale=>{ const d0=dims(canvas,scale), W=d0.W, H=d0.H, dpr=d0.dpr*(u.zoom||1); const clips=makeClips(u.clips,W,H,dpr,null); // zoom: marks rendered larger at device px — a macro crop, never an upscale
   const SS={}; for(const id in S) SS[id]=UI.follow?S[id]:DEF[id]; return {kind:'u',id:u.id,W,H,dpr,pdpr:d0.dpr,scale,S:SS,light:LIGHT,view:'image',clips}; };
@@ -86,14 +89,21 @@ const trackBG=(o,p)=>{ const L=o[p.ink+'L'], C=o[p.ink+'C'], hh=o[p.ink+'h'], k=
 const okWhen=(o,p)=>!p.when||Object.entries(p.when).every(([k,vs])=>vs.includes(o[k]));
 const isDef=(id,k)=>JSON.stringify(S[id][k])===JSON.stringify(DEF[id][k]);
 function buildDials(e,host,onInput,onChange){ host.innerHTML=''; const o=()=>S[e.id];
-  const groups={}; e.params.forEach(p=>{ const g=p.group==='seed'?'mask':p.group; (groups[g]=groups[g]||[]).push(p); });
-  const tabs=TABS.filter(([g])=>groups[g]); const strip=h('div',{class:'fs-tabs',role:'tablist','aria-label':e.name+' dial groups'}); const panes=h('div',{class:'fs-panes'});
-  let cur=tabs[0][0]; const show=g=>{ cur=g; $$('button',strip).forEach(b=>b.setAttribute('aria-selected',String(b.dataset.g===g))); $$('.fs-pane',panes).forEach(p=>p.hidden=p.dataset.g!==g); if(g==='mixing') mixStrip(); };
-  tabs.forEach(([g,label])=>{ strip.append(h('button',{type:'button',role:'tab','data-g':g,onclick:()=>show(g)},label,h('i',{class:'mod'}))); });
+  // tabs: one per label, parts in TABS order; a param whose group is not in TABS joins the last tab
+  const tabs=[], known=new Set(TABS.map(t=>t[0]));
+  TABS.forEach(([g,label])=>{ if(g==='seed') return; const ps=e.params.filter(p=>p.group===g); if(!ps.length) return; let t=tabs.find(x=>x.label===label); if(!t) tabs.push(t={id:label.toLowerCase(),label,parts:[]}); t.parts.push({tab:label,ps}); });
+  const stray=e.params.filter(p=>!known.has(p.group)); if(stray.length){ if(!tabs.length) tabs.push({id:'other',label:'Other',parts:[]}); tabs[tabs.length-1].parts.push({tab:'Other',ps:stray}); }
+  // a tab that would hold a single row folds into the tab before it (after it, if first), under its own small heading
+  const nRows=t=>t.parts.reduce((n,pt)=>n+pt.ps.length,0);
+  for(let i=0;i<tabs.length&&tabs.length>1;i++){ if(nRows(tabs[i])>=2) continue; const into=tabs[i>0?i-1:i+1]; if(i>0) into.parts.push(...tabs[i].parts); else into.parts.unshift(...tabs[i].parts); tabs.splice(i,1); i--; }
+  tabs.forEach(t=>{ t.params=t.parts.flatMap(pt=>pt.ps); });
+  const seedP=e.params.find(p=>p.group==='seed');
+  const mixTab=(tabs.find(t=>t.params.some(p=>p.key==='mix'))||{}).id; // the five-rule strip lives with the color rule, only where a mix param exists
+  const strip=h('div',{class:'fs-tabs',role:'tablist','aria-label':e.name+' dial groups'}); const panes=h('div',{class:'fs-panes'});
+  let cur=tabs[0].id; const show=g=>{ cur=g; $$('button',strip).forEach(b=>b.setAttribute('aria-selected',String(b.dataset.g===g))); $$('.fs-pane',panes).forEach(p=>p.hidden=p.dataset.g!==g); if(g===mixTab) mixStrip(); };
+  tabs.forEach(t=>{ strip.append(h('button',{type:'button',role:'tab','data-g':t.id,onclick:()=>show(t.id)},t.label,h('i',{class:'mod'}))); });
   host.append(strip,panes);
-  tabs.forEach(([g])=>{ const pane=h('div',{class:'fs-pane',role:'tabpanel','data-g':g}); let lastInk=null;
-    groups[g].forEach(p=>{
-      if(p.ink&&p.ink!==lastInk){ lastInk=p.ink; pane.append(h('div',{class:'fs-ink','data-ink':p.ink},h('b'),h('span',{class:'nm'},p.label.split(' · ')[0]),h('code'),h('em'))); }
+  const rowOf=p=>{
       const row=h('div',{class:'fs-row t-'+p.type,'data-k':p.key,title:p.note||''});
       const lab=h('label',{title:(p.note||'')+' · double-click to reset'},p.ink?p.label.split(' · ')[1]:p.label); lab.addEventListener('dblclick',()=>{ o()[p.key]=clone(DEF[e.id][p.key]); sync(); onChange(p); });
       row.append(lab);
@@ -125,18 +135,24 @@ function buildDials(e,host,onInput,onChange){ host.innerHTML=''; const o=()=>S[e
         kin.addEventListener('input',()=>{ o()[p.key]=[o()[p.key][0],+kin.value]; row._sync(); onInput(p); }); kin.addEventListener('change',()=>onChange(p));
         row.append(h('div',{class:'fs-ease'},sel,kin),out,graph);
         row._sync=()=>{ const v=o()[p.key]; sel.value=v[0]; kin.value=v[1]; const hasK=FX.EASES[v[0]]&&FX.EASES[v[0]].k; kin.disabled=!hasK; out.textContent=hasK?'k '+(+v[1]).toFixed(2):'—'; graph.innerHTML=curveSVG(v); }; }
-      pane.append(row); });
-    if(g==='mixing') pane.append(h('div',{class:'fs-mixstrip'},h('canvas',{width:10,height:10,'aria-label':'white to ink in each color rule'}),h('div',{class:'lbl'},['film','oklab','oklch','linear','srgb'].map(s=>h('span',{'data-s':s},s)))));
+      return row; };
+  tabs.forEach(t=>{ const pane=h('div',{class:'fs-pane',role:'tabpanel','data-g':t.id}); let lastInk=null, lastTab=t.label;
+    t.parts.forEach(pt=>{ if(pt.tab!==lastTab){ pane.append(h('div',{class:'fs-gh'},pt.tab)); lastTab=pt.tab; }
+      pt.ps.forEach(p=>{
+        if(p.ink&&p.ink!==lastInk){ lastInk=p.ink; pane.append(h('div',{class:'fs-ink','data-ink':p.ink},h('b'),h('span',{class:'nm'},p.label.split(' · ')[0]),h('code'),h('em'))); }
+        pane.append(rowOf(p)); }); });
+    if(t.id===mixTab) pane.append(h('div',{class:'fs-mixstrip'},h('canvas',{width:10,height:10,'aria-label':'white to ink in each color rule'}),h('div',{class:'lbl'},['film','oklab','oklch','linear','srgb'].map(s=>h('span',{'data-s':s},s)))));
     panes.append(pane); });
+  if(seedP) host.append(h('div',{class:'fs-seedrow'},rowOf(seedP)));
   function syncInk(){ $$('.fs-ink',host).forEach(n=>{ const p=n.dataset.ink, ink=FX.ink(o()[p+'L'],o()[p+'C'],o()[p+'h']); $('b',n).style.background=ink.hex; $('code',n).textContent=ink.css+' · '+ink.hex; $('em',n).textContent=ink.mapped?'chroma reduced to fit sRGB (asked '+ink.Creq.toFixed(3)+')':''; });
     $$('.fs-row',host).forEach(r=>{ const p=e.params.find(q=>q.key===r.dataset.k); if(p&&p.ink) $('.fs-track',r).style.setProperty('--tbg',trackBG(o(),p)); });
-    if(cur==='mixing') mixStrip(); }
+    if(cur===mixTab) mixStrip(); }
   function mixStrip(){ const c=$('.fs-mixstrip canvas',host); if(!c||!c.offsetParent) return; const r=c.getBoundingClientRect(), dpr=Math.min(2,devicePixelRatio||1), W=Math.max(40,Math.round(r.width*dpr)), RH=9, G=2, Hh=Math.round(5*(RH+G)*dpr); c.width=W; c.height=Hh;
     const pre=(e.params.find(p=>p.ink)||{}).ink; if(!pre) return; const ink=FX.ink(o()[pre+'L'],o()[pre+'C'],o()[pre+'h']), sp=['film','oklab','oklch','linear','srgb'], cur_=o().mix;
     const g=c.getContext('2d'), img=g.createImageData(W,Hh), d=img.data, px=[0,0,0]; for(let r2=0;r2<5;r2++) for(let x=0;x<W;x++){ px[0]=px[1]=px[2]=1; FX.mixInto(px,ink,x/(W-1)*(sp[r2]==='film'?(o().density||1):1),sp[r2]); for(let y=Math.round(r2*(RH+G)*dpr);y<Math.round((r2*(RH+G)+RH)*dpr);y++){ const j=(y*W+x)*4; d[j]=FX.enc(px[0]);d[j+1]=FX.enc(px[1]);d[j+2]=FX.enc(px[2]);d[j+3]=255; } } g.putImageData(img,0,0);
     $$('.fs-mixstrip .lbl span',host).forEach(s=>s.classList.toggle('on',s.dataset.s===cur_)); }
   function sync(){ $$('.fs-row',host).forEach(r=>{ r._sync&&r._sync(); const p=e.params.find(q=>q.key===r.dataset.k); r.classList.toggle('off',!okWhen(o(),p)); r.classList.toggle('mod',!isDef(e.id,p.key)); });
-    tabs.forEach(([g])=>{ const b=$(`button[data-g="${g}"]`,strip); b.classList.toggle('has-mod',groups[g].some(p=>!isDef(e.id,p.key))); }); syncInk(); }
+    tabs.forEach(t=>{ const b=$(`button[data-g="${t.id}"]`,strip); b.classList.toggle('has-mod',t.params.some(p=>!isDef(e.id,p.key))); }); syncInk(); }
   host._sync=sync; host._show=show; show(cur); sync(); return sync; }
 
 /* ══════════ page ══════════ */
@@ -180,7 +196,7 @@ function makePuck(host,mini){ const disc=h('div',{class:'disc',role:'slider',tab
 const SECTS=SET.sections||[{id:'all',title:SET.short}]; const secOf=e=>e.section||SECTS[0].id;
 const racks={}; SECTS.forEach((sc,i)=>{ const r=h('section',{class:'fs-rack','aria-label':sc.title}); racks[sc.id]=r; if(SECTS.length>1) live.append(h('div',{class:'fs-rackh',id:i?null:'sec-'+sc.id},h('span',{class:'code'},String(i+1).padStart(2,'0')),h('b',null,sc.title),h('span',{class:'bl'},sc.blurb||''))); live.append(r); });
 SET.effects.forEach(e=>{ const rack=racks[secOf(e)]||racks[SECTS[0].id]; const c=h('canvas',{class:'fs-cv','aria-label':e.name}); const st=h('span',{class:'st'},'—'); const fr=h('div',{class:'fs-frame'},c);
-  rack.append(h('a',{class:'fs-cell',href:'#'+e.id},fr,h('div',{class:'cap'},h('span',{class:'code'},e.code),h('b',null,e.name),h('span',{class:'role'},e.role||''),st)));
+  rack.append(h('a',{class:'fs-cell',href:'#'+e.id},fr,h('div',{class:'cap'},h('span',{class:'code'},e.code),h('b',null,e.name),h('span',{class:'role'},classOf(e)),st)));
   register('r:'+e.id,c,fr,fxJob(e.id,c,()=>'image',{proof:()=>isStock(e)}),(s)=>{ st.textContent=fmtN(s.marks)+' '+s.unit; },3); });
 
 /* ── output destinations: device px, and — for print — physical size; mark scale keeps density physically constant ── */
@@ -206,7 +222,7 @@ function exportJob(job){ return new Promise((res,rej)=>{ if(useWorkers&&pool.len
 const stepDown=(src,dst)=>{ const real=Math.min(2,devicePixelRatio||1), fr=dst.parentElement, tw=Math.max(2,Math.round(fr.clientWidth*real)), th=Math.max(2,Math.round(fr.clientHeight*real)); dst.width=tw; dst.height=th; dst.style.width='100%'; dst.style.height='100%';
   let c=src, sw=src.width, sh=src.height; while(sw/2>tw){ const t=document.createElement('canvas'); t.width=Math.max(tw,Math.round(sw/2)); t.height=Math.max(th,Math.round(sh/2)); const g=t.getContext('2d'); g.imageSmoothingQuality='high'; g.drawImage(c,0,0,t.width,t.height); c=t; sw=t.width; sh=t.height; }
   const g=dst.getContext('2d'); g.imageSmoothingQuality='high'; g.drawImage(c,0,0,tw,th); };
-const VIEWS=[['image','image'],['ink','ink'],['stock','stock'],['mask','mask']];
+const VIEWS=[['image','image'],['separation','ink'],['stock','stock'],['mask','mask']];
 const DISTS=[['1:1',1,'as rendered (≈ 45 cm)'],['60 cm',.75,'arm\'s length'],['1.5 m',.3,'across a table'],['4 m',.11,'across a room']];
 let lastSec=null;
 SET.effects.forEach(e=>{
@@ -220,13 +236,14 @@ SET.effects.forEach(e=>{
   const onsite=h('a',{class:'fs-on',href:'#'},''); const updOn=()=>{ const sid=e.stockOf&&e.stockOf(S[id]); onsite.hidden=!sid; if(sid){ onsite.href='#'+sid; onsite.innerHTML=`prints on <b>${esc(EFX[sid].code)} ${esc(EFX[sid].name)}</b>`; } };
   const feed=h('span',{class:'fs-on feed'}); const updFeed=()=>{ const f=SET.effects.filter(x=>x.stockOf&&x.stockOf(S[x.id])===id); feed.hidden=!f.length; feed.innerHTML=f.length?'stock for '+f.map(x=>`<a href="#${x.id}"><b>${esc(x.code)}</b></a>`).join(' · '):''; };
   const bReset=h('button',{type:'button',onclick:()=>{ S[id]=clone(DEF[id]); dials._sync(); changed(); }},'reset');
-  const seedOut=h('button',{type:'button',class:'seed',title:'new seed — every random draw hangs off this number',onclick:()=>{ S[id].seed=1+Math.floor(Math.random()*999); dials._sync(); changed(); }},'');
-  sec.append(h('header',{class:'fs-fxh'},h('div',{class:'id'},h('span',{class:'code'},e.code+' · '+(e.role||'')),h('h2',null,e.name),h('div',{class:'links'},onsite,feed)),h('p',{class:'sub'},e.sub),h('div',{class:'act'},bReset,seedOut)));
+  const hasSeed=e.params.some(p=>p.key==='seed');
+  const seedOut=h('button',{type:'button',class:'seed',hidden:!hasSeed,title:'new seed: every random draw derives from this number',onclick:()=>{ S[id].seed=1+Math.floor(Math.random()*999); dials._sync(); changed(); }},'');
+  sec.append(h('header',{class:'fs-fxh'},h('div',{class:'id'},h('span',{class:'code'},e.code+' · '+classOf(e)),h('h2',null,e.name),h('div',{class:'links'},onsite,feed)),h('p',{class:'sub'},e.sub),h('div',{class:'act'},bReset,seedOut)));
   // presets
   const presetVals=pp=>Object.assign(clone(DEF[id]),clone(pp),{seed:S[id].seed});
   const pre=h('div',{class:'fs-presets',role:'group','aria-label':e.name+' presets'},h('span',null,'Start from'));
   (e.presets||[]).forEach(([name,pp])=>pre.append(h('button',{type:'button','data-p':name,onclick:()=>{ S[id]=presetVals(pp); dials._sync(); changed(); }},name)));
-  const updPre=()=>{ const cur=JSON.stringify(Object.assign({},S[id],{seed:0})); $$('button',pre).forEach(b=>{ const pp=(e.presets||[]).find(x=>x[0]===b.dataset.p)[1]; b.setAttribute('aria-pressed',String(JSON.stringify(Object.assign(presetVals(pp),{seed:0}))===cur)); }); seedOut.textContent='seed '+S[id].seed+' ↻'; };
+  const updPre=()=>{ const cur=JSON.stringify(Object.assign({},S[id],{seed:0})); $$('button',pre).forEach(b=>{ const pp=(e.presets||[]).find(x=>x[0]===b.dataset.p)[1]; b.setAttribute('aria-pressed',String(JSON.stringify(Object.assign(presetVals(pp),{seed:0}))===cur)); }); if(hasSeed) seedOut.textContent='seed '+S[id].seed+' ↻'; };
   if((e.presets||[]).length) sec.append(pre);
 
   // ── plate tools: view · distance · wedge · pin · (test strip) ──
@@ -294,7 +311,7 @@ SET.effects.forEach(e=>{
   const outD=h('details',{class:'fs-out'},h('summary',null,h('span',{class:'code'},'Output'),h('span',{class:'sumv'})),
     h('div',{class:'orow'},dSel,land),cmm,
     h('div',{class:'orow'},h('label',null,'Mark scale'),scaleIn,scaleOut),
-    h('div',{class:'orow files'},chk('image','image','the rendered plate, sRGB PNG'),chk('ink','ink plate','absorbance as a film positive — one grayscale plate per run, for riso / screen / a mask in Figma'),chk('stock','height map','the stock height as 8-bit grayscale — displacement in Blender, Cavalry, TouchDesigner'),chk('json','spec','JSON sidecar: params + deps + light + destination')),
+    h('div',{class:'orow files'},chk('image','image','the rendered plate, sRGB PNG'),chk('ink','separation','this effect\'s own separation as a film positive: one grayscale plate per run, for riso, screen or a mask in Figma'),chk('stock','height map','height in CSS px as 8-bit grayscale: displacement in Blender, Cavalry, TouchDesigner'),chk('json','spec','JSON sidecar: params + deps + light + destination')),
     prevFr,sum,h('div',{class:'orow'},bGo,prog));
   // Output stays closed: the plate and its dials lead; export is one click away (its summary shows the target)
   if(prevFr.parentNode) prevFr.after(h('p',{class:'fs-onote'},'Preview = the whole composition stepped down to this box, so fine marks average into tone, as from across a room. The export carries every mark at full size.'));
@@ -315,7 +332,7 @@ SET.effects.forEach(e=>{
     bGo.disabled=true; prog.textContent='rendering '+r.W+' × '+r.H+' …'; const t0=performance.now();
     try{ const job={kind:'fx',id,W:r.W,H:r.H,dpr:r.dpr,S,light:LIGHT,proof:false,outputs:outs.length?outs:['image'],clips:fxClips(id,r.W,r.H,r.dpr,S[id])};
       const res=await exportJob(job); prog.textContent='encoding …'; const base=`${id}_${d.id}_${r.W}x${r.H}`, files=[];
-      for(const k of outs){ const b=await toBlob(res.outs[k],r.W,r.H); files.push(new File([b],`${base}_${k==='stock'?'height':k}.png`,{type:'image/png'})); }
+      for(const k of outs){ const b=await toBlob(res.outs[k],r.W,r.H); files.push(new File([b],`${base}_${k==='stock'?'height':k==='ink'?'separation':k}.png`,{type:'image/png'})); }
       if(O.json){ const side={effect:id,code:e.code,name:e.name,set:SET.set,destination:{id:d.id,label:d.label,px:[r.W,r.H],mm:r.mm||null,dpi:r.dpi||null,dpr:+r.dpr.toFixed(4),markScale:O.scale,cssPx:[+r.cssW.toFixed(2),+r.cssH.toFixed(2)]},light:lightR(),params:roundP(e,S[id]),deps:paramsWithDeps(id),files:files.map(f=>f.name),source:BASE,rendered:new Date().toISOString()};
         files.push(new File([JSON.stringify(side,null,2)],`${base}.json`,{type:'application/json'})); }
       if(COARSE&&navigator.canShare&&navigator.canShare({files})){ await navigator.share({files,title:`${e.code} ${e.name}`}); } else for(const f of files){ dl(f,f.name); await new Promise(r_=>setTimeout(r_,350)); }
@@ -344,7 +361,7 @@ ${needsClip?`<link rel="stylesheet" href="${new URL('../../_shared/fonts.css',BA
   const clips = FXSET.clips('${id}', W, H, dpr, S['${id}']);   // dies / typed marks, rasterized here (fonts load first)`:''}
   const R = fx.run(S['${id}'], W, H, dpr, { S${needsClip?', clips':''} });
   c.getContext('2d').putImageData(new ImageData(FX.toRGBA(R, 'image', W, H), W, H), 0, 0);
-  // also: FX.toRGBA(R, 'ink' | 'stock' | 'mask', W, H) — plates and maps
+  // also: FX.toRGBA(R, 'ink' | 'stock' | 'mask', W, H): separation, height map (CSS px), mask
   });
 </script>`; };
   const bCopySnip=h('button',{type:'button'},'copy snippet'); bCopySnip.onclick=()=>copy(snippet(),bCopySnip);

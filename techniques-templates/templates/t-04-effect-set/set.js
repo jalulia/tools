@@ -1,16 +1,29 @@
-/* T-04 · Effect set · the SET file · ø co. Techniques & Templates
+/* T-04 · Effect set · the SET file
    This is the only file a new set replaces. Shape (also in template.json):
-     self.FXSET = { code, title, short, set, premise, source, system, effects:[Effect], usages:[Usage] }
-     Effect = { id, code, name, sub, role, recipe:[str], limits:[[param, range, what happens]], params:[Param],
-                stockOf?(o) → effect id it prints on (drives re-render coupling),
-                run(o, W, H, dpr, x) → { lin, alb, lf, ink, stock, mask, marks, markUnit } }
-       lin  = Float32 W·H·3 linear RGB, lit · alb = unlit albedo (for a second ink pass) · lf = light factor per px
-       ink  = absorbance (film thickness × acceptance) · stock = height field · mask = coverage
-       x    = { S: params of every effect (stock coupling), alb: albedo to print over, clip: Float32 pressure/coverage clip, field:(u,v,layer)→0..1 }
-     Param  = { key, label, group: density|dropoff|stock|relief|color|mixing|mask|seed, type: range|select|ease, value, min,max,step,unit, options, note, limits, when }
-     Usage  = { id, title, sub, uses:[ids], aspect, overrides:{id:{…}}, labels, clips?:{name:(g,w,h)=>draw}, run(P, W, H, dpr, x) }
-   Set 01 · "Four surfaces" — the texture recipes from Mindgut Technique Study V01 §08, rebuilt as ONE material system:
-   two stocks (paper, cloth) and two marks (pen stipple, roller ink). Every mark prints INTO a stock; one light rakes all of it. */
+     self.FXSET = { code, title, short, set, premise, source, system, sections:[Section], jobs, effects:[Effect], usages:[Usage] }
+     Section = { id, title, blurb }                     // stocks | added | changed
+     Effect  = { id, code, name, sub, section, kind, tool, mechanism:[str], role (= kind · tool),
+                 presets:[[name, {partial params}]], recipe:[str], limits:[[param, range, what happens]], params:[Param],
+                 clips?:{ name:(ctx2d, w, h, o) => draw },  // motifs and typed strikes, rasterized on the main thread
+                 stockOf?(o) → effect id it prints on (drives re-render coupling),
+                 run(o, W, H, dpr, x) → Output }
+       kind      = stock | mark | finish | construction | impression | process
+       mechanism = form | deposit | transfer | deform | stitch | expose | burn | reflect
+     Output contract (every effect):
+       lin   = Float32 W·H·3, linear RGB, lit (diffuse light once, view-dependent light last)
+       alb   = Float32 W·H·3, unlit albedo (what a later pass prints over)
+       lf    = Float32 W·H·3, light factor from the sheet light (diffuse, applied once)
+       ink   = Float32 W·H, this effect's own separation (plate), 0..1 (the key stays `ink`; UI and docs say "separation")
+       stock = Float32 W·H, height in CSS px (stock relief plus this effect's own relief)
+       mask  = Float32 W·H, coverage 0..1 (where the effect may act)
+       marks, markUnit = a count and its unit (pixel counts are per CSS px², so they do not grow with dpr)
+     x = { S: params of every effect (stock coupling), alb + lf: what an earlier pass left, clip: Float32 pressure/coverage clip,
+           clips:{ name: Float32 }, field:(u,v,layer)→0..1 }
+     Param   = { key, label, group, type: range|select|ease|text, value, min,max,step,unit, options, note, limits, when }
+       group = motif | structure | field | transfer | relief | finish | color | film | edge | seed
+     Usage   = { id, title, sub, job, uses:[ids], aspect, overrides:{id:{…}}, labels, clips?:{name:(g,w,h)=>draw}, run(P, W, H, dpr, x) }
+   Set 01 · "Stock and light": the texture recipes from Mindgut Technique Study V01 §08, rebuilt as ONE material system:
+   two stocks (paper, cloth) and ten effects that land on them or change them. Every effect reads the stock's height; one light shades all of it. */
 (function(G){
 'use strict';
 const FX=G.FX, PI=Math.PI, TAU=FX.TAU, clamp=FX.clamp, lerp=FX.lerp, hash=FX.hash;
@@ -21,7 +34,7 @@ const TOOTH='fx-03-paper-tooth', WEAVE='fx-04-weave';
 const proj=(w,h,deg)=>{ const a=deg*PI/180, c=Math.cos(a), s=Math.sin(a); return {c,s,ext:Math.abs(w*c)+Math.abs(h*s)}; };
 const BAYER=(()=>{ let m=[[0]]; for(let n=1;n<8;n*=2){ const z=[]; for(let y=0;y<n*2;y++){ z[y]=[]; for(let x=0;x<n*2;x++){ const q=m[y%n][x%n]*4; z[y][x]=q+(y<n?(x<n?0:2):(x<n?3:1)); } } m=z; } const N=m.length; return (x,y)=>(m[((y%N)+N)%N][((x%N)+N)%N]+.5)/(N*N); })();
 const rankOf=(order,i,j,s)=>order==='white'?hash(i,j,s):order==='ordered'?BAYER(i,j):FX.blue.at(i+s%41,j+s%29);
-const ORDER={key:'order',label:'Selection',group:'density',type:'select',options:['blue','white','ordered'],note:'which sites survive at a given density — blue: even thinning (void-and-cluster rank); white: hash, clumps; ordered: 8×8 Bayer, reads as a screen'};
+const ORDER={key:'order',label:'Selection',group:'structure',type:'select',options:['blue','white','ordered'],note:'which sites survive at a given density. blue: even thinning (void-and-cluster rank); white: hash, clumps; ordered: 8×8 Bayer, reads as a screen'};
 const lruSet=(m,k,v,n=4)=>{ m.set(k,v); if(m.size>n) m.delete(m.keys().next().value); return v; };
 const keyOf=(o,keys)=>keys.map(k=>JSON.stringify(o[k])).join('|');
 
@@ -109,6 +122,10 @@ function clothLit(o,W,H,dpr,L,jq){ const C=clothField(o,W,H,dpr,jq); const key=k
     let f=((1-d)*ao+d*sh[i]*occ); if(cs) f*=1-cs[i]*1.1; lf[k]=lf[k+1]=lf[k+2]=f; }
   return lruSet(CLOTH_LIT,key,{kind:'cloth',h:C.h,fib:C.hair,form:null,alb:C.alb,lf,marks:C.marks,a:C.a}); }
 
+/* stock relief in CSS px: paper = FX-03 depth; cloth = FX-04 depth × thread pitch × .3 (as clothLit shades it) */
+const paperRelief=t=>t.depth, clothRelief=o=>o.depth*100/Math.max(o.warp,o.weft)*.3;
+/* a stock's height field (0..1) scaled to CSS px: the `stock` output of every effect is in CSS px */
+const stockPx=(st,hs)=>st?Float32Array.from(st.h,v=>v*hs):null;
 /* the stock an ink prints on: paper (FX-03 live params), cloth (FX-04 live params), or smooth (none) */
 const stockFor=(o,x,W,H,dpr)=>{ if(x&&x.stockLit) return x.stockLit; const S=(x&&x.S)||{}; if(o.stock==='paper'&&S[TOOTH]) return paperLit(Object.assign({},S[TOOTH],{mShape:'none'}),W,H,dpr,FX.LIGHT); if(o.stock==='cloth'&&S[WEAVE]) return clothLit(Object.assign({},S[WEAVE],{mShape:'none',lift:0}),W,H,dpr,FX.LIGHT); return null; };
 
@@ -119,13 +136,13 @@ const stockFor=(o,x,W,H,dpr)=>{ if(x&&x.stockLit) return x.stockLit; const S=(x&
    wick: ink travels along fibers into the run-out. thickness τ: thins with pressure unless it breaks up; formation mottles it.
    absorbance A = acceptance × τ; color = film (Beer–Lambert, LUT) or a coverage mix; light is applied after, once. */
 const STOCK_PARAMS=(d={})=>[
-  {key:'stock',label:'Prints on',group:'stock',type:'select',options:['paper','cloth','smooth'],value:d.stock||'paper',note:'paper = FX-03 live, cloth = FX-04 live, smooth = no substrate (film-splitting noise only). Tune the stock and this plate redraws.'},
-  {key:'bite',label:'Stock bite',group:'stock',type:'range',min:0,max:1,step:.01,value:d.bite??.75,note:'how much the stock height (vs film-splitting noise) decides where ink lands',when:{stock:['paper','cloth']}},
-  {key:'breakup',label:'Break-up ↔ thin',group:'stock',type:'range',min:0,max:1,step:.01,value:d.breakup??.9,note:'1 = ink film breaks into marks on the peaks as pressure falls; 0 = the film stays whole and thins to tone',limits:[[0,.3,'reads as a gradient']]},
-  {key:'starve',label:'Starve',group:'stock',type:'range',min:0,max:.3,step:.002,value:d.starve??.02,note:'the lowest share of the surface never takes ink — pinholes in the solid, placed by the paper\'s valleys and pits'},
-  {key:'wick',label:'Wick',group:'stock',type:'range',min:0,max:1,step:.01,value:d.wick??.35,note:'ink carried along fibers into the run-out (hairline feathering)',when:{stock:['paper','cloth']}},
-  {key:'mottle',label:'Mottle',group:'stock',type:'range',min:0,max:1,step:.01,value:d.mottle??.3,note:'paper formation (its low-frequency cloudiness) varying the film thickness',when:{stock:['paper']}},
-  {key:'split',label:'Film split',group:'stock',type:'range',min:.5,max:10,step:.1,unit:'px',value:d.split??1.8,note:'clump size of the film-splitting noise (the roller\'s own speckle)'}];
+  {key:'stock',label:'Prints on',group:'transfer',type:'select',options:['paper','cloth','smooth'],value:d.stock||'paper',note:'paper = FX-03 live, cloth = FX-04 live, smooth = no substrate (film-splitting noise only). Tune the stock and this plate redraws.'},
+  {key:'bite',label:'Stock bite',group:'transfer',type:'range',min:0,max:1,step:.01,value:d.bite??.75,note:'how much the stock height (vs film-splitting noise) decides where ink lands',when:{stock:['paper','cloth']}},
+  {key:'breakup',label:'Break-up ↔ thin',group:'transfer',type:'range',min:0,max:1,step:.01,value:d.breakup??.9,note:'1 = ink film breaks into marks on the peaks as pressure falls; 0 = the film stays whole and thins to tone',limits:[[0,.3,'reads as a gradient']]},
+  {key:'starve',label:'Starve',group:'transfer',type:'range',min:0,max:.3,step:.002,value:d.starve??.02,note:'the lowest share of the surface never takes ink. Pinholes in the solid, placed by the paper\'s valleys and pits'},
+  {key:'wick',label:'Wick',group:'transfer',type:'range',min:0,max:1,step:.01,value:d.wick??.35,note:'ink carried along fibers into the run-out (hairline feathering)',when:{stock:['paper','cloth']}},
+  {key:'mottle',label:'Mottle',group:'transfer',type:'range',min:0,max:1,step:.01,value:d.mottle??.3,note:'paper formation (its low-frequency cloudiness) varying the film thickness',when:{stock:['paper']}},
+  {key:'split',label:'Film split',group:d.splitGroup||'transfer',type:'range',min:.5,max:10,step:.1,unit:'px',value:d.split??1.8,note:'clump size of the film-splitting noise (the roller\'s own speckle)'}];
 function inkChain(Pb,st,o,ink,alb,A,W,H,dpr,seed,rule,ang=0,streak=1,tauMap=null,opt={}){ const COV=opt.cov||null, BAND=opt.band||0;
   const film=rule==='film', LUT=film?FX.filmLUT(ink):null, ca=Math.cos(ang*PI/180), sa=Math.sin(ang*PI/180), g=o.split, b=.05, px=[0,0,0]; let n=0;
   // pass 1 · the effective surface height under the inked area (stock height + film-splitting noise)
@@ -149,7 +166,7 @@ function inkChain(Pb,st,o,ink,alb,A,W,H,dpr,seed,rule,ang=0,streak=1,tauMap=null
     // break-up share prints binary marks at full film; the rest is a whole film that thins as P² (vanishes fast, no haze)
     let tau=o.density*(tauMap?tauMap[i]:1); if(st&&st.form&&o.mottle) tau*=1-o.mottle*(st.form[i]-.5)*1.4;
     const a=(o.breakup*acc+(1-o.breakup)*P*P)*tau; if(a<=0) continue; A[i]=Math.max(A[i],a); if(a>.35) n++; const k=i*3;
-    if(film){ const j=((a>=2?1024:a*512+.5)|0)*3; alb[k]*=LUT[j]; alb[k+1]*=LUT[j+1]; alb[k+2]*=LUT[j+2]; }
+    if(film) FX.filmInto(alb,k,LUT,a);
     else { px[0]=alb[k];px[1]=alb[k+1];px[2]=alb[k+2]; if(rule==='darken') FX.overInto(px,ink,Math.min(1,a),'darken'); else FX.mixInto(px,ink,Math.min(1,a),rule); alb[k]=px[0];alb[k+1]=px[1];alb[k+2]=px[2]; } }
   return n; }
 /* pen chain · a dot is geometry, the stock edits its edge: coverage = AA(sd + rag · (h − h̄)), 1 device px wide.
@@ -165,15 +182,15 @@ function penChain(D,st,o,ink,alb,A,W,H,dpr,seed,rule){
     if(c<=0) continue;
     let tau=o.density*(.55+.45*P); if(st&&st.form&&o.mottle) tau*=1-o.mottle*(st.form[i]-.5)*1.4;
     const a=c*tau; A[i]=Math.max(A[i],a); if(c>.5&&sd>0) n++; const k=i*3;
-    if(film){ const j=((a>=2?1024:a*512+.5)|0)*3; alb[k]*=LUT[j]; alb[k+1]*=LUT[j+1]; alb[k+2]*=LUT[j+2]; }
+    if(film) FX.filmInto(alb,k,LUT,a);
     else { px[0]=alb[k];px[1]=alb[k+1];px[2]=alb[k+2]; if(rule==='darken') FX.overInto(px,ink,Math.min(1,a),'darken'); else FX.mixInto(px,ink,Math.min(1,a),rule); alb[k]=px[0];alb[k+1]=px[1];alb[k+2]=px[2]; } }
   return n; }
 const PEN_STOCK=(d={})=>[
-  {key:'stock',label:'Prints on',group:'stock',type:'select',options:['paper','cloth','smooth'],value:d.stock||'paper',note:'paper = FX-03 live, cloth = FX-04 live, smooth = no substrate. Tune the stock and this plate redraws.'},
-  {key:'rag',label:'Edge rag',group:'stock',type:'range',min:0,max:1.5,step:.01,unit:'px',value:d.rag??.07,curve:2,note:'how far the stock\'s tooth pushes each dot edge in and out — 0 = perfect discs',limits:[[.9,1.5,'dots read as fuzz']]},
-  {key:'starve',label:'Starve',group:'stock',type:'range',min:0,max:.3,step:.002,value:d.starve??.0,curve:2,note:'valleys inside a dot that the nib skips — single-pixel pinholes, more as pressure drops'},
-  {key:'wick',label:'Wick',group:'stock',type:'range',min:0,max:1,step:.01,value:d.wick??.08,curve:2,note:'ink carried a short way out along fibers',when:{stock:['paper','cloth']}},
-  {key:'mottle',label:'Mottle',group:'stock',type:'range',min:0,max:1,step:.01,value:d.mottle??.1,curve:2,note:'paper formation varying the film',when:{stock:['paper']}}];
+  {key:'stock',label:'Prints on',group:'transfer',type:'select',options:['paper','cloth','smooth'],value:d.stock||'paper',note:'paper = FX-03 live, cloth = FX-04 live, smooth = no substrate. Tune the stock and this plate redraws.'},
+  {key:'rag',label:'Edge rag',group:'transfer',type:'range',min:0,max:1.5,step:.01,unit:'px',value:d.rag??.07,curve:2,note:'how far the stock\'s tooth pushes each dot edge in and out. 0 = perfect discs',limits:[[.9,1.5,'dots read as fuzz']]},
+  {key:'starve',label:'Starve',group:'transfer',type:'range',min:0,max:.3,step:.002,value:d.starve??.0,curve:2,note:'valleys inside a dot that the nib skips. The pinholes follow the stock height, AA-edged, and grow as pressure drops'},
+  {key:'wick',label:'Wick',group:'transfer',type:'range',min:0,max:1,step:.01,value:d.wick??.08,curve:2,note:'ink carried a short way out along fibers',when:{stock:['paper','cloth']}},
+  {key:'mottle',label:'Mottle',group:'transfer',type:'range',min:0,max:1,step:.01,value:d.mottle??.1,curve:2,note:'paper formation varying the film',when:{stock:['paper']}}];
 const light=(alb,lf,W,H)=>{ const lin=Float32Array.from(alb); if(lf) for(let k=0;k<lin.length;k++) lin[k]*=lf[k]; return lin; };
 const baseAlb=(st,x,W,H)=>x&&x.alb?Float32Array.from(x.alb):st?Float32Array.from(st.alb):FX.ground(W,H,FX.WHITE);
 const applyClip=(M,x)=>{ if(x&&x.clip) for(let i=0;i<M.length;i++) M[i]*=x.clip[i]; const um=x&&x.clips&&x.clips.umask; if(um) for(let i=0;i<M.length;i++) M[i]*=um[i]; return M; };
@@ -189,40 +206,40 @@ function proofStrip(lin,o,stockId,W,H,dpr,x,cover,stockLit){ const S2=Object.ass
   const out=Float32Array.from(lin); for(let i=0,k=0;i<W*H;i++,k+=3){ if(r1.ink[i]>0){ out[k]=r1.lin[k]; out[k+1]=r1.lin[k+1]; out[k+2]=r1.lin[k+2]; } if(r2.ink[i]>0){ out[k]=r2.lin[k]; out[k+1]=r2.lin[k+1]; out[k+2]=r2.lin[k+2]; } }
   return out; }
 
-/* ══════════ FX-01 · Stipple ramp — pen dots, pressed into the stock ══════════ */
-const stipple={ presets:[['fine pen',{}],['technical .1',{pitch:1.2,dotR:.36,jitter:.95,sizeVar:.1,irregular:.08,rag:.03}],['source · coarse',{pitch:2.7,dotR:.95,sizeVar:.35,irregular:.3,rag:.2,ease:['in',1.5]}],['AM screen',{screen:1,order:'ordered',pitch:2.4,dotR:1.1,jitter:0,sizeVar:0,irregular:.05}],['radial burst',{source:'radial',ease:['out',2],from:0,to:.9}]], id:'fx-01-stipple', code:'FX-01', name:'Stipple ramp', role:'mark · pen', stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
-  sub:'Tone made of whole pen dots. Value sets how many sites print (FM) or how big each dot is (AM); a blue-noise rank picks the sites. Each dot is crisp geometry whose edge the stock\'s tooth nudges — never softened.',
+/* ══════════ FX-01 · Stipple ramp · pen dots, pressed into the stock ══════════ */
+const stipple={ presets:[['fine pen',{}],['technical .1',{pitch:1.2,dotR:.36,jitter:.95,sizeVar:.1,irregular:.08,rag:.03}],['source · coarse',{pitch:2.7,dotR:.95,sizeVar:.35,irregular:.3,rag:.2,ease:['in',1.5]}],['AM screen',{screen:1,order:'ordered',pitch:2.4,dotR:1.1,jitter:0,sizeVar:0,irregular:.05}],['radial burst',{source:'radial',ease:['out',2],from:0,to:.9}]], id:'fx-01-stipple', code:'FX-01', name:'Stipple ramp', section:'added', kind:'mark', tool:'pen', mechanism:['deposit'], stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
+  sub:'Tone made of whole pen dots. Value sets how many sites print (FM) or how big each dot is (AM); a blue-noise rank picks the sites. Each dot is crisp geometry whose edge the stock\'s tooth nudges. It is never softened.',
   recipe:[
     'Site lattice at the pitch (CSS px), jittered. Value field (linear · radial · noise) eased from → to.',
-    'Screen: FM keeps a site when its blue-noise rank < value; AM keeps every site with radius ∝ √value; the dial interpolates. The mask is sampled at the site — dots are whole or absent.',
-    'Each dot is geometry: a signed distance to an irregular nib outline (7 vertex radii), so its edge is always 1 device px of anti-aliasing — never a blur.',
+    'Screen: FM keeps a site when its blue-noise rank < value; AM keeps every site with radius ∝ √value; the dial interpolates. The mask is sampled at the site, so dots are whole or absent.',
+    'Each dot is geometry: a signed distance to an irregular nib outline (7 vertex radii), so its edge is always 1 device px of anti-aliasing, never a blur.',
     'The stock edits the edge: the distance is displaced by the stock height (edge rag), valleys inside the dot can starve, fibers wick a short way out. Film τ = thickness × pressure.',
     'Color: Beer–Lambert film in linear light (or a coverage mix). Ink B overprints by the same film product.',
     'Light last: × the stock\'s shading under the sheet light.'],
-  limits:[['pitch','< 1.2 px','sites merge into flat tone at 1× — the stipple stops reading as marks'],['dot radius','< .3 px','below ~½ device px at 1× a dot is a gray pixel, not a mark'],['dot radius','> ½ pitch','dots fuse into a solid; FM loses its range'],['edge rag','> .9 px','dots read as fuzz, not ink'],['selection','white','clumps and voids at low density']],
+  limits:[['pitch','< 1.2 px','sites merge into flat tone at 1×: the stipple stops reading as marks'],['dot radius','< .3 px','below ~½ device px at 1× a dot is a gray pixel, not a mark'],['dot radius','> ½ pitch','dots fuse into a solid; FM loses its range'],['edge rag','> .9 px','dots read as fuzz, not ink'],['selection','white','clumps and voids at low density']],
   params:[
-    {key:'pitch',label:'Pitch',group:'density',type:'range',min:.8,max:16,step:.05,unit:'px',value:1.55,curve:2,note:'distance between dot sites — sets the COUNT of dots, not their size',limits:[[.8,1.2,'sites merge into tone at 1×']]},
-    {key:'dotR',label:'Dot radius',group:'density',type:'range',min:.2,max:4,step:.01,unit:'px',value:.48,curve:2,note:'radius of a full-value dot, independent of pitch',limits:[[2.4,4,'past ~½ pitch dots fuse']]},
-    {key:'screen',label:'Screen · FM ↔ AM',group:'density',type:'range',min:0,max:1,step:.01,value:0,note:'0 = value changes how many dots print; 1 = how big they are'},
-    {key:'sAngle',label:'Screen angle',group:'density',type:'range',min:0,max:90,step:.5,unit:'°',value:0,note:'rotates the dot lattice — 45° is the classic single-ink angle: the eye reads the rows least, and they never beat against the pixel grid'},
+    {key:'pitch',label:'Pitch',group:'structure',type:'range',min:.8,max:16,step:.05,unit:'px',value:1.55,curve:2,note:'distance between dot sites. It sets the COUNT of dots, not their size',limits:[[.8,1.2,'sites merge into tone at 1×']]},
+    {key:'dotR',label:'Dot radius',group:'structure',type:'range',min:.2,max:4,step:.01,unit:'px',value:.48,curve:2,note:'radius of a full-value dot, independent of pitch'},
+    {key:'screen',label:'Screen · FM ↔ AM',group:'structure',type:'range',min:0,max:1,step:.01,value:0,note:'0 = value changes how many dots print; 1 = how big they are'},
+    {key:'sAngle',label:'Screen angle',group:'structure',type:'range',min:0,max:90,step:.5,unit:'°',value:0,note:'rotates the dot lattice. 45° is the classic single-ink angle: the eye reads the rows least, and they never beat against the pixel grid'},
     Object.assign({value:'blue'},ORDER),
-    {key:'jitter',label:'Jitter',group:'density',type:'range',min:0,max:1,step:.01,value:.85,note:'site offset inside its cell (0 = lattice)',limits:[[0,.2,'lattice shows through as a grid']]},
-    {key:'sizeVar',label:'Size variance',group:'density',type:'range',min:0,max:1,step:.01,value:.22,note:'per-dot radius spread'},
-    {key:'irregular',label:'Nib irregularity',group:'density',type:'range',min:0,max:1,step:.01,value:.16,note:'vertex wobble of each footprint — nib, not disc'},
-    {key:'pressure',label:'Pen pressure',group:'density',type:'range',min:.3,max:1,step:.01,value:1,note:'film per dot and how many valleys it skips (with Starve)',limits:[[.3,.5,'dots print pale and pitted']]},
-    {key:'source',label:'Value field',group:'dropoff',type:'select',options:['linear','radial','noise'],value:'linear',note:'what drives value across the plate'},
-    {key:'angle',label:'Ramp angle',group:'dropoff',type:'range',min:0,max:360,step:1,unit:'°',value:0,note:'direction of the linear ramp',when:{source:['linear']}},
+    {key:'jitter',label:'Jitter',group:'structure',type:'range',min:0,max:1,step:.01,value:.85,note:'site offset inside its cell (0 = lattice)',limits:[[0,.2,'lattice shows through as a grid']]},
+    {key:'sizeVar',label:'Size variance',group:'structure',type:'range',min:0,max:1,step:.01,value:.22,note:'per-dot radius spread'},
+    {key:'irregular',label:'Nib irregularity',group:'structure',type:'range',min:0,max:1,step:.01,value:.16,note:'vertex wobble of each footprint: a nib, not a disc'},
+    {key:'pressure',label:'Pen pressure',group:'field',type:'range',min:.3,max:1,step:.01,value:1,note:'film per dot and how many valleys it skips (with Starve)',limits:[[.3,.5,'dots print pale and pitted']]},
+    {key:'source',label:'Value field',group:'field',type:'select',options:['linear','radial','noise'],value:'linear',note:'what drives value across the plate'},
+    {key:'angle',label:'Ramp angle',group:'field',type:'range',min:0,max:360,step:1,unit:'°',value:0,note:'direction of the linear ramp',when:{source:['linear']}},
     FX.EASE_PARAM('ease','Dropoff curve',['in',1.25],'how value travels from → to across the field'),
-    {key:'from',label:'From',group:'dropoff',type:'range',min:0,max:1,step:.01,value:.02,note:'value at the start of the field'},
-    {key:'to',label:'To',group:'dropoff',type:'range',min:0,max:1,step:.01,value:1,note:'value at the end of the field'},
-    {key:'fScale',label:'Field scale',group:'dropoff',type:'range',min:20,max:500,step:1,unit:'px',value:140,note:'noise field wavelength',when:{source:['noise']}},
+    {key:'from',label:'From',group:'field',type:'range',min:0,max:1,step:.01,value:.02,note:'value at the start of the field'},
+    {key:'to',label:'To',group:'field',type:'range',min:0,max:1,step:.01,value:1,note:'value at the end of the field'},
+    {key:'fScale',label:'Field scale',group:'field',type:'range',min:20,max:500,step:1,unit:'px',value:140,note:'noise field wavelength',when:{source:['noise']}},
     ...PEN_STOCK({}),
     ...FX.INK_PARAMS('a','Ink A',.22,.004,285),
     {key:'duo',label:'Ink B',group:'color',type:'select',options:['off','on'],value:'off',note:'a second stipple ramp running the opposite way, overprinted'},
     ...FX.INK_PARAMS('b','Ink B',.64,.19,36).map(p=>Object.assign(p,{when:{duo:['on']}})),
-    {key:'density',label:'Film thickness',group:'mixing',type:'range',min:.2,max:2,step:.01,value:1.3,note:'ink film at full pressure; with the film rule, thicker = deeper and more saturated (Beer–Lambert)'},
+    {key:'density',label:'Film thickness',group:'film',type:'range',min:.2,max:2,step:.01,value:1.3,note:'ink film at full pressure; with the film rule, thicker = deeper and more saturated (Beer–Lambert)'},
     FX.MIX_PARAM('film'),
-    {key:'over',label:'Overprint',group:'mixing',type:'select',options:['multiply','mix','darken'],value:'multiply',when:{duo:['on']},note:'ink B over ink A when the rule is a coverage mix (film always multiplies)'},
+    {key:'over',label:'Overprint',group:'film',type:'select',options:['multiply','mix','darken'],value:'multiply',when:{duo:['on']},note:'ink B over ink A when the rule is a coverage mix (film always multiplies)'},
     ...FX.MASK_PARAMS({mShape:'rect',mInset:14,mAmp:4,mScale:70,mFeather:10,mBite:.15},{mode:false}),
     FX.SEED_PARAM(5)],
   run(o,W,H,dpr,x={}){ const w=W/dpr,h=H/dpr,s=o.seed|0; const M=applyClip(FX.mask(o,W,H,dpr,s),x); const P=proj(w,h,o.angle); const st=stockFor(o,x,W,H,dpr);
@@ -241,31 +258,31 @@ const stipple={ presets:[['fine pen',{}],['technical .1',{pitch:1.2,dotR:.36,jit
         D.add(sx*dpr,sy*dpr,r*dpr,rad,o.pressure*(.9+.1*hash(i,j,sL+8)),2+o.rag*dpr*2+o.wick*3*dpr); marks++; }
       const ink=FX.inkOf(o,L?'b':'a'), rule=o.mix==='film'?'film':L&&o.over==='multiply'?'film':L&&o.over==='darken'?'darken':o.mix;
       penChain(D,st,o,ink,alb,A,W,H,dpr,sL,rule); }
-    const LF=x.lf||(st?st.lf:null); return {alb,lf:LF,lin:light(alb,LF,W,H),ink:A,stock:st?st.h:null,mask:M,marks,markUnit:'dots'}; } };
+    const LF=x.lf||(st?st.lf:null); return {alb,lf:LF,lin:light(alb,LF,W,H),ink:A,stock:stockPx(st,stockH(st,x.S)),mask:M,marks,markUnit:'dots'}; } };
 
-/* ══════════ FX-02 · Ink leaving paper — a roller running out of ink across the stock ══════════ */
-const inkEdge={ presets:[['roller',{}],['dry brush',{streak:7,width:240,breakup:1,split:2.2,bite:.35,wAmp:6,ease:['out',1.6]}],['letterpress',{width:3,pressure:.86,starve:.05,mottle:.4,wAmp:1,density:1.1}],['riso',{iL:.66,iC:.2,ih:2,density:.85,mottle:.55,width:60,split:.9}],['vertical',{angle:90,edge:.5,width:180}]], id:'fx-02-ink-edge', code:'FX-02', name:'Ink leaving paper', role:'mark · roller', stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
-  sub:'A solid that runs out. Roller pressure eases off across a warped edge; as it falls, only the peaks of the stock still touch the ink, so the run-out speckle is the paper\'s own tooth — with pinholes in its valleys and hairlines wicked along its fibers.',
+/* ══════════ FX-02 · Roller run-out · a roller running out of ink across the stock ══════════ */
+const inkEdge={ presets:[['roller',{}],['dry brush',{streak:7,width:240,breakup:1,split:2.2,bite:.35,wAmp:6,ease:['out',1.6]}],['letterpress',{width:3,pressure:.86,starve:.05,mottle:.4,wAmp:1,density:1.1}],['riso',{iL:.66,iC:.2,ih:2,density:.85,mottle:.55,width:60,split:.9}],['vertical',{angle:90,edge:.5,width:180}]], id:'fx-02-ink-edge', code:'FX-02', name:'Roller run-out', section:'added', kind:'mark', tool:'roller', mechanism:['deposit'], stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
+  sub:'A solid that runs out. Roller pressure eases off across a warped edge; as it falls, only the peaks of the stock still touch the ink, so the run-out speckle is the paper\'s own tooth, with pinholes in its valleys and hairlines wicked along its fibers.',
   recipe:[
     'Pressure = dropoff curve of the signed distance to a warped edge line (stroke direction, transition width), × the mask.',
-    'Ink chain: the stock height under the inked area (blended with film-splitting noise, clumped and streaked along the stroke) is ranked to percentiles; pressure P inks exactly the top P of the surface — peaks first.',
+    'Ink chain: the stock height under the inked area (blended with film-splitting noise, clumped and streaked along the stroke) is ranked to percentiles; pressure P inks exactly the top P of the surface, peaks first.',
     'Starve: valleys below the threshold never take ink. Wick: fibers carry ink past the edge. Mottle: paper formation thins the film.',
     'Film thickness thins with pressure unless the film breaks up; color = Beer–Lambert film in linear light.',
-    'Light last: × the stock\'s shading — the ink sits in the tooth, not on top of it.'],
-  limits:[['transition','< 4 px','reads as a hard vector edge — no run-out to see'],['break-up','< .3','the edge becomes a gradient — the "AI gradient" failure'],['stock bite','< .3','speckle stops following the paper — reads as digital dither'],['streak','> 6','marks read as scanlines unless the angle is off-axis']],
+    'Light last: × the stock\'s shading. The ink sits in the tooth, not on top of it.'],
+  limits:[['transition','< 4 px','reads as a hard vector edge: no run-out to see'],['break-up','< .3','the edge becomes a gradient: the "AI gradient" failure'],['stock bite','< .3','speckle stops following the paper and reads as digital dither'],['streak','> 6','marks read as scanlines unless the angle is off-axis']],
   params:[
-    {key:'streak',label:'Streak',group:'density',type:'range',min:1,max:10,step:.1,value:1.25,note:'film-split clumps stretched along the stroke — dry roller, dragged brush',limits:[[6,10,'scanlines on-axis']]},
-    {key:'pressure',label:'Roller pressure',group:'density',type:'range',min:.4,max:1,step:.01,value:1,note:'pressure in the solid; below 1 the body starts to open up'},
-    {key:'angle',label:'Stroke angle',group:'dropoff',type:'range',min:0,max:360,step:1,unit:'°',value:0,note:'direction the roller travels (it runs out along this vector)'},
-    {key:'edge',label:'Edge position',group:'dropoff',type:'range',min:0,max:1,step:.005,value:.58,note:'where the run-out is centered across the plate'},
-    {key:'width',label:'Transition',group:'dropoff',type:'range',min:1,max:420,step:1,unit:'px',value:130,note:'width of the run-out band',limits:[[1,4,'hard vector edge']]},
-    FX.EASE_PARAM('ease','Dropoff curve',['smooth',2],'pressure across the band — how fast the ink gives out'),
-    {key:'wAmp',label:'Edge warp',group:'dropoff',type:'range',min:0,max:90,step:.5,unit:'px',value:18,note:'how far the edge line wanders'},
-    {key:'wScale',label:'Warp scale',group:'dropoff',type:'range',min:8,max:400,step:1,unit:'px',value:90,note:'wavelength of the wander'},
-    {key:'wOct',label:'Warp octaves',group:'dropoff',type:'range',min:1,max:5,step:1,unit:'oct',value:3,note:'detail in the wander'},
-    ...STOCK_PARAMS({bite:.5,breakup:.94,starve:.018,wick:.35,mottle:.15,split:1.1}),
+    {key:'streak',label:'Streak',group:'structure',type:'range',min:1,max:10,step:.1,value:1.25,note:'film-split clumps stretched along the stroke: a dry roller, a dragged brush',limits:[[6,10,'scanlines on-axis']]},
+    {key:'pressure',label:'Roller pressure',group:'field',type:'range',min:.4,max:1,step:.01,value:1,note:'pressure in the solid; below 1 the body starts to open up'},
+    {key:'angle',label:'Stroke angle',group:'field',type:'range',min:0,max:360,step:1,unit:'°',value:0,note:'direction the roller travels (it runs out along this vector)'},
+    {key:'edge',label:'Edge position',group:'field',type:'range',min:0,max:1,step:.005,value:.58,note:'where the run-out is centered across the plate'},
+    {key:'width',label:'Transition',group:'field',type:'range',min:1,max:420,step:1,unit:'px',value:130,note:'width of the run-out band',limits:[[1,4,'hard vector edge']]},
+    FX.EASE_PARAM('ease','Dropoff curve',['smooth',2],'pressure across the band: how fast the ink gives out'),
+    {key:'wAmp',label:'Edge warp',group:'field',type:'range',min:0,max:90,step:.5,unit:'px',value:18,note:'how far the edge line wanders'},
+    {key:'wScale',label:'Warp scale',group:'field',type:'range',min:8,max:400,step:1,unit:'px',value:90,note:'wavelength of the wander'},
+    {key:'wOct',label:'Warp octaves',group:'field',type:'range',min:1,max:5,step:1,unit:'oct',value:3,note:'detail in the wander'},
+    ...STOCK_PARAMS({bite:.5,breakup:.94,starve:.018,wick:.35,mottle:.15,split:1.1,splitGroup:'structure'}),
     ...FX.INK_PARAMS('i','Ink',.4,.155,300),
-    {key:'density',label:'Film thickness',group:'mixing',type:'range',min:.2,max:2,step:.01,value:1.2,note:'ink film at full pressure (Beer–Lambert: thicker = deeper, more saturated)'},
+    {key:'density',label:'Film thickness',group:'film',type:'range',min:.2,max:2,step:.01,value:1.2,note:'ink film at full pressure (Beer–Lambert: thicker = deeper, more saturated)'},
     FX.MIX_PARAM('film'),
     ...FX.MASK_PARAMS({mShape:'rect',mInset:14,mAmp:5,mScale:60,mFeather:14,mBite:.2},{mode:false}),
     FX.SEED_PARAM(9)],
@@ -275,33 +292,33 @@ const inkEdge={ presets:[['roller',{}],['dry brush',{streak:7,width:240,breakup:
       const d=edgePx-((u-w/2)*P.c+(v-h/2)*P.s)+o.wAmp*(FX.fbm(u/o.wScale,v/o.wScale,s,o.wOct,.5)*2-1)*1.5;
       Pb[i]=FX.ease(o.ease,clamp(d/o.width+.5,0,1))*o.pressure*M[i]; } }
     const alb=baseAlb(st,x,W,H), A=new Float32Array(W*H); const marks=inkChain(Pb,st,o,ink,alb,A,W,H,dpr,s,o.mix,o.angle,o.streak);
-    const LF=x.lf||(st?st.lf:null); return {alb,lf:LF,lin:light(alb,LF,W,H),ink:A,stock:st?st.h:null,mask:M,marks,markUnit:'inked px'}; } };
+    const LF=x.lf||(st?st.lf:null); return {alb,lf:LF,lin:light(alb,LF,W,H),ink:A,stock:stockPx(st,stockH(st,x.S)),mask:M,marks:Math.round(marks/(dpr*dpr)),markUnit:'inked px²'}; } };
 
-/* ══════════ FX-03 · Paper tooth — the paper stock, bare, under the sheet light ══════════ */
-const tooth={ presets:[['bond',{}],['vellum',{depth:.05,fibers:.75,pits:.25,form:.15,aniso:3}],['cold press',{scale:4,oct:4,depth:.38,ease:['out',1.4],aniso:1.4,fibers:2,diffuse:.55}],['newsprint',{paperL:.955,tL:.72,tC:.03,th:85,tAmt:.8,fibers:16,fDark:.05,fWidth:.5,pits:6,pDark:.06,depth:.1}],['deckle sheet',{mShape:'rect',mInset:20,mAmp:4,mScale:18,mRough:6,lift:1.4}]], id:TOOTH, code:'FX-03', name:'Paper tooth', role:'stock · paper',
-  sub:'White stock that is not a screen. A height field — tooth, formation, laid fibers, pits — lit by the one sheet light. On white the relief can only take light away, so the paper reads through its shadows. FX-01 and FX-02 print into this exact field.',
+/* ══════════ FX-03 · Paper tooth · the paper stock, bare, under the sheet light ══════════ */
+const tooth={ presets:[['bond',{}],['vellum',{depth:.05,fibers:.75,pits:.25,form:.15,aniso:3}],['cold press',{scale:4,oct:4,depth:.38,ease:['out',1.4],aniso:1.4,fibers:2,diffuse:.55}],['newsprint',{paperL:.955,tL:.72,tC:.03,th:85,tAmt:.8,fibers:16,fDark:.05,fWidth:.5,pits:6,pDark:.06,depth:.1}],['deckle sheet',{mShape:'rect',mInset:20,mAmp:4,mScale:18,mRough:6,lift:1.4}]], id:TOOTH, code:'FX-03', name:'Paper tooth', section:'stocks', kind:'stock', tool:'paper machine', mechanism:['form'],
+  sub:'White stock that is not a screen. A height field of tooth, formation, laid fibers and pits, lit by the one sheet light. On white the relief can only take light away, so the paper reads through its shadows. FX-01 and FX-02 print into this exact field.',
   recipe:[
     'Height = fbm at the tooth scale (octaves, persistence = how fast detail drops off), reshaped by the distribution curve; blended with low-frequency formation.',
-    'Fibers: curved capsules at a count per 100 × 100 px near the grain angle, raised into the height; pits: small depressions. Both also darken the albedo slightly.',
+    'Fibers: curved capsules at a count per 100 × 100 CSS px near the grain angle, raised into the height; pits: small depressions. Both also darken the albedo slightly.',
     'Normal from the height gradient → Lambert under the sheet light (azimuth + elevation from the light puck). Diffuse share vs ambient fill; the fill can be tinted.',
     'The same field is the stock for FX-01 and FX-02: its peaks take ink first, its valleys starve, its fibers wick.',
     'Mask = the sheet\'s cut or deckle edge; the sheet casts a contact + ambient shadow onto the page by the same light.'],
-  limits:[['relief','> .6 px','reads as stucco — the stock-filter emboss look'],['anisotropy','< 1.3','isotropic tooth reads as a 1999 paper filter'],['tooth scale','< .8 px','collapses into per-pixel noise — digital grain'],['fibers','> 30 / 100 px²','felt, not paper'],['light elevation','< 15°','every fiber becomes a hard ridge; ok for a raking-light study, not for a page']],
+  limits:[['relief','> .6 px','reads as stucco: the stock-filter emboss look'],['anisotropy','< 1.3','isotropic tooth reads as a 1999 paper filter'],['tooth scale','< .8 px','collapses into per-pixel noise: digital grain'],['fibers','> 30 /100×100 px','felt, not paper'],['light elevation','< 15°','every fiber becomes a hard ridge; ok for a raking-light study, not for a page']],
   params:[
-    {key:'scale',label:'Tooth scale',group:'density',type:'range',min:.5,max:24,step:.05,unit:'px',value:1.1,curve:2,note:'feature size of the tooth (noise wavelength), not a tile zoom',limits:[[.5,.8,'per-pixel noise']]},
-    {key:'oct',label:'Octaves',group:'density',type:'range',min:1,max:6,step:1,unit:'oct',value:3,note:'layers of finer detail'},
-    {key:'fibers',label:'Fibers',group:'density',type:'range',min:0,max:40,step:.25,unit:'/100px²',value:3,curve:2,note:'laid fibers per 100 × 100 CSS px',limits:[[30,40,'felt']]},
-    {key:'fLen',label:'Fiber length',group:'density',type:'range',min:2,max:80,step:.5,unit:'px',value:14,note:'mean fiber length'},
-    {key:'fWidth',label:'Fiber width',group:'density',type:'range',min:.2,max:3,step:.02,unit:'px',value:.4,curve:2,note:'mean fiber width'},
-    {key:'pits',label:'Pits',group:'density',type:'range',min:0,max:40,step:.25,unit:'/100px²',value:1,curve:2,note:'depressions per 100 × 100 CSS px'},
-    {key:'pers',label:'Persistence',group:'dropoff',type:'range',min:.15,max:.85,step:.01,value:.42,note:'amplitude kept per octave — the spectral dropoff of the tooth'},
-    FX.EASE_PARAM('ease','Distribution',['in',2.4],'reshapes height: power in = mostly flat with sparse valleys (smooth stock); out = broad tooth (cold press)'),
-    {key:'aniso',label:'Anisotropy',group:'dropoff',type:'range',min:1,max:6,step:.05,value:1.6,note:'tooth stretched along the grain angle — machine-made paper is never isotropic; 1 = the 1999 "paper" filter look',limits:[[1,1.3,'reads as a stock emboss filter']]},
-    {key:'form',label:'Formation',group:'dropoff',type:'range',min:0,max:1,step:.01,value:.3,note:'low-frequency cloudiness of the sheet (fiber flocs); also mottles any ink printed on it'},
-    {key:'formScale',label:'Formation scale',group:'dropoff',type:'range',min:10,max:200,step:1,unit:'px',value:60,note:'size of the flocs'},
-    {key:'fAngle',label:'Grain angle',group:'dropoff',type:'range',min:0,max:180,step:1,unit:'°',value:6,note:'machine direction of the fibers and the tooth'},
-    {key:'fSpread',label:'Grain spread',group:'dropoff',type:'range',min:0,max:1,step:.01,value:.4,note:'0 = all fibers on the grain; 1 = any direction'},
-    {key:'depth',label:'Relief',group:'relief',type:'range',min:0,max:1.6,step:.005,unit:'px',value:.12,curve:2.5,note:'height of the tooth in CSS px — how hard the light can rake it. The slider is weighted to the subtle end.',limits:[[.6,1.6,'stucco — the 1999 emboss look']]},
+    {key:'scale',label:'Tooth scale',group:'structure',type:'range',min:.5,max:24,step:.05,unit:'px',value:1.1,curve:2,note:'feature size of the tooth (noise wavelength), not a tile zoom',limits:[[.5,.8,'per-pixel noise']]},
+    {key:'oct',label:'Octaves',group:'structure',type:'range',min:1,max:6,step:1,unit:'oct',value:3,note:'layers of finer detail'},
+    {key:'fibers',label:'Fibers',group:'structure',type:'range',min:0,max:40,step:.25,unit:'/100×100 px',value:3,curve:2,note:'laid fibers per 100 × 100 CSS px',limits:[[30,40,'felt']]},
+    {key:'fLen',label:'Fiber length',group:'structure',type:'range',min:2,max:80,step:.5,unit:'px',value:14,note:'mean fiber length'},
+    {key:'fWidth',label:'Fiber width',group:'structure',type:'range',min:.2,max:3,step:.02,unit:'px',value:.4,curve:2,note:'mean fiber width'},
+    {key:'pits',label:'Pits',group:'structure',type:'range',min:0,max:40,step:.25,unit:'/100×100 px',value:1,curve:2,note:'depressions per 100 × 100 CSS px'},
+    {key:'pers',label:'Persistence',group:'structure',type:'range',min:.15,max:.85,step:.01,value:.42,note:'amplitude kept per octave: the spectral dropoff of the tooth'},
+    FX.EASE_PARAM('ease','Distribution',['in',2.4],'reshapes height: power in = mostly flat with sparse valleys (smooth stock); out = broad tooth (cold press)','structure'),
+    {key:'aniso',label:'Anisotropy',group:'structure',type:'range',min:1,max:6,step:.05,value:1.6,note:'tooth stretched along the grain angle. Machine-made paper is never isotropic; 1 = the 1999 "paper" filter look',limits:[[1,1.3,'reads as a stock emboss filter']]},
+    {key:'form',label:'Formation',group:'structure',type:'range',min:0,max:1,step:.01,value:.3,note:'low-frequency cloudiness of the sheet (fiber flocs); also mottles any ink printed on it'},
+    {key:'formScale',label:'Formation scale',group:'structure',type:'range',min:10,max:200,step:1,unit:'px',value:60,note:'size of the flocs'},
+    {key:'fAngle',label:'Grain angle',group:'structure',type:'range',min:0,max:180,step:1,unit:'°',value:6,note:'machine direction of the fibers and the tooth'},
+    {key:'fSpread',label:'Grain spread',group:'structure',type:'range',min:0,max:1,step:.01,value:.4,note:'0 = all fibers on the grain; 1 = any direction'},
+    {key:'depth',label:'Relief',group:'relief',type:'range',min:0,max:1.6,step:.005,unit:'px',value:.12,curve:2.5,note:'height of the tooth in CSS px: how hard the light can rake it. The slider is weighted to the subtle end.',limits:[[.6,1.6,'stucco: the 1999 emboss look']]},
     {key:'diffuse',label:'Diffuse share',group:'relief',type:'range',min:0,max:1,step:.01,value:.45,note:'share of light from the sheet light vs flat ambient fill'},
     {key:'fRaise',label:'Fiber raise',group:'relief',type:'range',min:0,max:1,step:.01,value:.45,note:'how far fibers stand proud of the sheet'},
     {key:'pDepth',label:'Pit depth',group:'relief',type:'range',min:0,max:1,step:.01,value:.35,note:'how deep pits go'},
@@ -310,38 +327,38 @@ const tooth={ presets:[['bond',{}],['vellum',{depth:.05,fibers:.75,pits:.25,form
     {key:'pDark',label:'Pit tone',group:'color',type:'range',min:0,max:.3,step:.001,unit:'ΔL',value:.02,curve:2,note:'albedo darkening in pits'},
     ...FX.INK_PARAMS('t','Fill tint',.7,0,250),
     {key:'tAmt',label:'Fill tint amount',group:'color',type:'range',min:0,max:1,step:.01,value:.5,note:'how much the ambient fill takes the tint (shadows go cool / warm)'},
-    ...FX.MASK_PARAMS({mShape:'rect',mInset:22,mAmp:2.5,mScale:28,mRough:5,mFeather:1.2,mMode:'speckle',mBite:0},{extra:[{key:'lift',label:'Sheet lift',group:'mask',type:'range',min:0,max:4,step:.05,unit:'px',value:1,note:'thickness / curl of the sheet — sizes its shadow on the page',when:{mShape:['rect','ellipse','band','blob']}}]}),
+    ...FX.MASK_PARAMS({mShape:'rect',mInset:22,mAmp:2.5,mScale:28,mRough:5,mFeather:1.2,mMode:'speckle',mBite:0},{extra:[{key:'lift',label:'Sheet lift',group:'edge',type:'range',min:0,max:4,step:.05,unit:'px',value:1,note:'thickness / curl of the sheet: sizes its shadow on the page',when:{mShape:['rect','ellipse','band','blob']}}]}),
     FX.SEED_PARAM(21)],
   run(o,W,H,dpr,x={}){ const s=o.seed|0, st=paperLit(o,W,H,dpr,FX.LIGHT), MF=FX.maskField(o,W,H,dpr,s), M=applyClip(Float32Array.from(MF.m),x);
     let lin=light(st.alb,st.lf,W,H);
     if(o.mShape!=='none'){ const cs=FX.castShadow(M,W,H,dpr,FX.LIGHT,o.lift); for(let i=0,k=0;i<W*H;i++,k+=3){ const a=M[i], pg=1-cs[i]; lin[k]=lin[k]*a+pg*(1-a); lin[k+1]=lin[k+1]*a+pg*(1-a); lin[k+2]=lin[k+2]*a+pg*(1-a); } }
     const ink=new Float32Array(W*H); for(let i=0;i<W*H;i++) ink[i]=1-st.lf[i*3];
     if(x.proof) lin=proofStrip(lin,o,TOOTH,W,H,dpr,x,M,st);
-    return {alb:st.alb,lf:st.lf,lin,ink,stock:st.h,mask:M,marks:st.marks,markUnit:'fibers + pits'}; } };
+    return {alb:st.alb,lf:st.lf,lin,ink,stock:stockPx(st,paperRelief(o)),mask:M,marks:st.marks,markUnit:'fibers + pits'}; } };
 
-/* ══════════ FX-04 · Weave — the cloth stock: threads as relief, cast shadows, frayed cut ══════════ */
-const weave={ presets:[['source · linen',{}],['gray linen',{wL:.7,wC:.006,wh:250,fL:.77,fC:.005,fh:250,accent:.006,warp:34,weft:32}],['fine shirting',{warp:60,weft:56,fill:.94,slub:.12,hair:.12,depth:.9,wL:.9,wC:.01,wh:250,fL:.95,fC:.004,fh:250,accent:0}],['denim 2/1',{pattern:'twill 2/1',warp:48,weft:40,fill:.97,wL:.36,wC:.075,wh:262,fL:.8,fC:.015,fh:85,accent:0,dye:.04,slub:.55,hair:.4,depth:1}],['canvas duck',{pattern:'basket',warp:14,weft:14,fill:.95,wL:.85,wC:.03,wh:85,fL:.82,fC:.03,fh:82,accent:0,hair:.5,depth:1.6}]], id:WEAVE, code:'FX-04', name:'Weave', role:'stock · cloth',
+/* ══════════ FX-04 · Weave · the cloth stock: threads as relief, cast shadows, frayed cut ══════════ */
+const weave={ presets:[['source · linen',{}],['gray linen',{wL:.7,wC:.006,wh:250,fL:.77,fC:.005,fh:250,accent:.006,warp:34,weft:32}],['fine shirting',{warp:60,weft:56,fill:.94,slub:.12,hair:.12,depth:.9,wL:.9,wC:.01,wh:250,fL:.95,fC:.004,fh:250,accent:0}],['denim 2/1',{pattern:'twill 2/1',warp:48,weft:40,fill:.97,wL:.36,wC:.075,wh:262,fL:.8,fC:.015,fh:85,accent:0,dye:.04,slub:.55,hair:.4,depth:1}],['canvas duck',{pattern:'basket',warp:14,weft:14,fill:.95,wL:.85,wC:.03,wh:85,fL:.82,fC:.03,fh:82,accent:0,hair:.5,depth:1.6}]], id:WEAVE, code:'FX-04', name:'Weave', section:'stocks', kind:'stock', tool:'loom', mechanism:['form'],
   sub:'Cloth built as cloth: warp and weft at their own counts, a real interlacing, slubbed and hairy threads, every float a raised body lit by the sheet light and casting into the gaps. A cut edge frays thread by thread. FX-01 and FX-02 can print onto it.',
   recipe:[
     'Warp columns and weft rows at their own counts (threads / 100 CSS px); each thread: jittered center, thickness, dye-lot L, fray length, accent.',
     'Interlacing decides the top thread per crossing; a float is the run where it stays on top. Height = cylinder across the thread × arch along the float; under-threads sit low; hair = fine noise along the thread.',
     'Albedo in OKLab: under-thread, then top thread by AA coverage; accent as flecks (single floats, as in the source) or whole threads.',
     'Light: Lambert from the height gradient + a height-field shadow march toward the sheet light, so floats shade into the gaps; ambient occlusion darkens the gaps.',
-    'Cut: the mask\'s signed distance plus each thread\'s own fray length — threads end raggedly, not on a line. The swatch casts onto the page.'],
-  limits:[['count','> 50 /100 px at 1×','threads under 2 CSS px alias against a 1× display — moiré (fine on 2×/3×)'],['count','< 18 /100 px','threads over ~5 px read as a woven-texture graphic, not cloth'],['fill','< .5','reads as a grid of strokes, not cloth'],['fill','> .97','gutters close; the weave flattens to a check'],['accent rate','> .15','accents stop being accents']],
+    'Cut: the mask\'s signed distance plus each thread\'s own fray length, so threads end raggedly, not on a line. The swatch casts onto the page.'],
+  limits:[['count','> 50 /100 px at 1×','threads under 2 CSS px alias against a 1× display: moiré (fine on 2×/3×)'],['count','< 18 /100 px','threads over ~5 px read as a woven-texture graphic, not cloth'],['fill','< .5','reads as a grid of strokes, not cloth'],['fill','> .97','gutters close; the weave flattens to a check'],['accent rate','> .15','accents stop being accents']],
   params:[
-    {key:'warp',label:'Warp count',group:'density',type:'range',min:3,max:80,step:.5,unit:'/100px',value:32,note:'vertical threads per 100 CSS px',limits:[[50,80,'threads under 2 px alias at 1× (fine at 2×+)']]},
-    {key:'weft',label:'Weft count',group:'density',type:'range',min:3,max:80,step:.5,unit:'/100px',value:30,note:'horizontal threads per 100 CSS px — set apart from warp for an unbalanced cloth'},
-    {key:'fill',label:'Fill',group:'density',type:'range',min:.35,max:1,step:.01,value:.92,note:'thread width ÷ pitch — the gutters',limits:[[.35,.5,'a grid of strokes'],[.97,1,'gutters close']]},
-    {key:'pattern',label:'Interlacing',group:'density',type:'select',options:Object.keys(PATTERNS),value:'plain',note:'over/under rule; twills and satin make floats longer than one crossing'},
-    {key:'slub',label:'Slub',group:'density',type:'range',min:0,max:1,step:.01,value:.35,note:'thread width variation along its length'},
-    {key:'slubScale',label:'Slub length',group:'density',type:'range',min:3,max:90,step:.5,unit:'px',value:11,note:'distance between thick and thin'},
-    {key:'hair',label:'Hair',group:'density',type:'range',min:0,max:1,step:.01,value:.3,note:'fine fiber texture along each thread (linen is hairy)'},
-    {key:'irregular',label:'Irregularity',group:'density',type:'range',min:0,max:1,step:.01,value:.3,note:'thread spacing and thickness jitter'},
-    {key:'wear',label:'Wear',group:'dropoff',type:'range',min:0,max:1,step:.01,value:.15,note:'probability a float is worn (thinned, flattened, faded) at the worn end'},
+    {key:'warp',label:'Warp count',group:'structure',type:'range',min:3,max:80,step:.5,unit:'/100px',value:32,note:'vertical threads per 100 CSS px',limits:[[50,80,'threads under 2 px alias at 1× (fine at 2×+)']]},
+    {key:'weft',label:'Weft count',group:'structure',type:'range',min:3,max:80,step:.5,unit:'/100px',value:30,note:'horizontal threads per 100 CSS px. Set it apart from warp for an unbalanced cloth'},
+    {key:'fill',label:'Fill',group:'structure',type:'range',min:.35,max:1,step:.01,value:.92,note:'thread width ÷ pitch: the gutters',limits:[[.35,.5,'a grid of strokes'],[.97,1,'gutters close']]},
+    {key:'pattern',label:'Interlacing',group:'structure',type:'select',options:Object.keys(PATTERNS),value:'plain',note:'over/under rule; twills and satin make floats longer than one crossing'},
+    {key:'slub',label:'Slub',group:'structure',type:'range',min:0,max:1,step:.01,value:.35,note:'thread width variation along its length'},
+    {key:'slubScale',label:'Slub length',group:'structure',type:'range',min:3,max:90,step:.5,unit:'px',value:11,note:'distance between thick and thin'},
+    {key:'hair',label:'Hair',group:'structure',type:'range',min:0,max:1,step:.01,value:.3,note:'fine fiber texture along each thread (linen is hairy)'},
+    {key:'irregular',label:'Irregularity',group:'structure',type:'range',min:0,max:1,step:.01,value:.3,note:'thread spacing and thickness jitter'},
+    {key:'wear',label:'Wear',group:'field',type:'range',min:0,max:1,step:.01,value:.15,note:'probability a float is worn (thinned, flattened, faded) at the worn end'},
     FX.EASE_PARAM('wEase','Wear curve',['in',2.2],'how wear grows along its direction'),
-    {key:'wAngle',label:'Wear direction',group:'dropoff',type:'range',min:0,max:360,step:1,unit:'°',value:90,note:'wear increases toward this direction'},
-    {key:'depth',label:'Relief',group:'relief',type:'range',min:0,max:3,step:.01,value:1.2,note:'thread relief relative to pitch — how much the light models each float'},
+    {key:'wAngle',label:'Wear direction',group:'field',type:'range',min:0,max:360,step:1,unit:'°',value:90,note:'wear increases toward this direction'},
+    {key:'depth',label:'Relief',group:'relief',type:'range',min:0,max:3,step:.01,value:1.2,note:'thread relief relative to pitch: how much the light models each float'},
     {key:'diffuse',label:'Diffuse share',group:'relief',type:'range',min:0,max:1,step:.01,value:.85,note:'share of light from the sheet light vs flat ambient fill'},
     {key:'shadow',label:'Cast shadow',group:'relief',type:'range',min:0,max:1,step:.01,value:.6,note:'floats shading into gaps and onto under-threads, plus occlusion in the gaps'},
     ...FX.INK_PARAMS('w','Warp',.3,.004,265),
@@ -350,21 +367,21 @@ const weave={ presets:[['source · linen',{}],['gray linen',{wL:.7,wC:.006,wh:25
     {key:'aMode',label:'Accent as',group:'color',type:'select',options:['flecks','threads'],value:'flecks',note:'flecks = single floats dyed (the source plate); threads = whole warp and weft threads'},
     {key:'accent',label:'Accent rate',group:'color',type:'range',min:0,max:.3,step:.005,value:.014,note:'share of floats (flecks) or threads dyed the accent',limits:[[.15,.3,'stops being an accent']]},
     {key:'dye',label:'Dye lot',group:'color',type:'range',min:0,max:.12,step:.002,unit:'ΔL',value:.035,note:'per-thread lightness spread'},
-    ...FX.MASK_PARAMS({mShape:'rect',mInset:22,mAmp:3,mScale:40,mFeather:1,mBite:0},{mode:false,extra:[
-      {key:'fray',label:'Fray',group:'mask',type:'range',min:0,max:40,step:.5,unit:'px',value:6,note:'how far individual threads run past the cut',when:{mShape:['rect','ellipse','band','blob']}},
-      {key:'lift',label:'Swatch lift',group:'mask',type:'range',min:0,max:4,step:.05,unit:'px',value:.8,note:'cloth thickness — sizes its shadow on the page',when:{mShape:['rect','ellipse','band','blob']}}]}),
+    ...FX.MASK_PARAMS({mShape:'rect',mInset:22,mAmp:3,mScale:40},{mode:false,omit:['mFeather','mBite'],extra:[
+      {key:'fray',label:'Fray',group:'edge',type:'range',min:0,max:40,step:.5,unit:'px',value:6,note:'how far individual threads run past the cut',when:{mShape:['rect','ellipse','band','blob']}},
+      {key:'lift',label:'Swatch lift',group:'edge',type:'range',min:0,max:4,step:.05,unit:'px',value:.8,note:'cloth thickness: sizes its shadow on the page',when:{mShape:['rect','ellipse','band','blob']}}]}),
     FX.SEED_PARAM(33)],
   run(o,W,H,dpr,x={}){ const um=x.clips&&x.clips.umask, jq=x.clips&&x.clips.jq; let st=clothLit(um?Object.assign({},o,{lift:0}):o,W,H,dpr,FX.LIGHT,jq); let lin=light(st.alb,st.lf,W,H), a=st.a;
     if(um){ a=new Float32Array(W*H); for(let i=0;i<W*H;i++) a[i]=st.a[i]*um[i]; const cs=FX.castShadow(a,W,H,dpr,FX.LIGHT,o.lift); for(let i=0,k=0;i<W*H;i++,k+=3){ const m=um[i], pg=1-cs[i]; lin[k]=lin[k]*m+pg*(1-m); lin[k+1]=lin[k+1]*m+pg*(1-m); lin[k+2]=lin[k+2]*m+pg*(1-m); } }
     if(x.proof) lin=proofStrip(lin,o,WEAVE,W,H,dpr,x,a,st);
-    return {alb:st.alb,lf:st.lf,lin,ink:a,stock:st.h,mask:a,marks:st.marks,markUnit:'floats'}; } };
+    return {alb:st.alb,lf:st.lf,lin,ink:a,stock:stockPx(st,clothRelief(o)),mask:a,marks:st.marks,markUnit:'floats'}; } };
 
 
-/* ══════════ SURPRISE MARKS · four marks that only make sense on a material system ══════════ */
+/* ══════════ motifs · the artwork an effect follows (dies, varnish, thread, beam) ══════════ */
 const SHAPE_PARAMS=(d={})=>[
-  {key:'shape',label:'Die',group:'density',type:'select',options:['compass','sun','crescent','knot','monogram','word','seal'],value:d.shape||'compass',note:'what the die (or type) is: an invented mark (compass, sun, crescent, knot, a monogram from the text), a word, or a ring seal'},
-  {key:'text',label:'Text',group:'density',type:'text',value:d.text||'Four surfaces',maxlength:40,note:'set in Archivo 800 for word, seal and monogram (its first letter)',when:{shape:['word','seal','monogram']}},
-  {key:'size',label:'Size',group:'density',type:'range',min:.15,max:1,step:.01,value:d.size??.62,note:'die height as a share of the plate'}];
+  {key:'shape',label:'Motif',group:'motif',type:'select',options:['compass','sun','crescent','knot','monogram','word','seal'],value:d.shape||'compass',note:'the artwork: an invented mark (compass, sun, crescent, knot, a monogram from the text), a word, or a ring seal'},
+  {key:'text',label:'Text',group:'motif',type:'text',value:d.text||'Stock and light',maxlength:40,note:'set in Archivo 800 for word, seal and monogram (its first letter)',when:{shape:['word','seal','monogram']}},
+  {key:'size',label:'Size',group:'motif',type:'range',min:.15,max:1,step:.01,value:d.size??.62,note:'motif height as a share of the plate'}];
 const drawShape=(g,w,h,o)=>{ const S_=Math.min(w,h)*o.size, cx=w/2, cy=h/2; g.save();
   if(o.shape==='word'){ let fs=S_*.42; const f=x=>`800 ${x}px Archivo, "Helvetica Neue", Arial, sans-serif`; g.font=f(fs); const tw=g.measureText(o.text||' ').width; fs*=Math.min(1,(w*.84)/Math.max(1,tw)); g.font=f(fs); const t2=g.measureText(o.text||' ').width; g.textBaseline='alphabetic'; g.fillText(o.text||'',cx-t2/2,cy+fs*.36); }
   else if(o.shape==='seal'){ const R0=S_*.5; g.beginPath(); g.arc(cx,cy,R0,0,TAU); g.arc(cx,cy,R0*.93,0,TAU,true); g.fill('evenodd'); g.beginPath(); g.arc(cx,cy,R0*.66,0,TAU); g.arc(cx,cy,R0*.62,0,TAU,true); g.fill('evenodd');
@@ -377,49 +394,50 @@ const drawShape=(g,w,h,o)=>{ const S_=Math.min(w,h)*o.size, cx=w/2, cy=h/2; g.sa
     g.translate(cx,cy); g.scale(R0*.5,R0*.5); MARKS.compass(g); } // the inner mark sits well inside the ring, never into the text
   else { g.translate(cx,cy); g.scale(S_*.5,S_*.5); (MARKS[o.shape]||MARKS.compass)(g,o); }
   g.restore(); };
-/* invented marks for dies and usages (no real brand): each fills the unit circle around (0,0) */
+/* invented marks for motifs and usages (no real brand): each fills the unit circle around (0,0) */
 const MARKS={
   compass:(g)=>{ g.beginPath(); for(let k=0;k<16;k++){ const a=-PI/2+k*PI/8, r=k%2?.34:(k%4?.74:1); k?g.lineTo(Math.cos(a)*r,Math.sin(a)*r):g.moveTo(Math.cos(a)*r,Math.sin(a)*r); } g.closePath(); g.moveTo(.13,0); g.arc(0,0,.13,0,TAU,true); g.fill('evenodd'); },
   sun:(g)=>{ g.beginPath(); g.arc(0,0,.44,0,TAU); g.fill(); for(let k=0;k<18;k++){ const a=k*TAU/18, w=.07; g.beginPath(); g.moveTo(Math.cos(a-w)*.55,Math.sin(a-w)*.55); g.lineTo(Math.cos(a)*1,Math.sin(a)*1); g.lineTo(Math.cos(a+w)*.55,Math.sin(a+w)*.55); g.closePath(); g.fill(); } },
   crescent:(g)=>{ g.beginPath(); g.arc(0,0,1,0,TAU); g.arc(.36,-.18,.8,0,TAU,true); g.fill('evenodd'); },
   knot:(g)=>{ for(const x of [-.36,.36]){ g.beginPath(); g.arc(x,0,.62,0,TAU); g.arc(x,0,.42,0,TAU,true); g.fill('evenodd'); } },
   monogram:(g,o={})=>{ g.beginPath(); g.arc(0,0,1,0,TAU); g.arc(0,0,.9,0,TAU,true); g.fill('evenodd'); const ch=String(o.text||'A').trim().charAt(0).toUpperCase()||'A', k=Math.hypot(g.getTransform().a,g.getTransform().b)||1; g.save(); g.scale(1/k,1/k); g.font=`800 ${1.2*k}px Archivo, "Helvetica Neue", Arial, sans-serif`; g.textBaseline='alphabetic'; const tw=g.measureText(ch).width; g.fillText(ch,-tw/2,.43*k); g.restore(); } };
-const stockH=(st,S)=>st&&st.kind==='paper'?(S&&S[TOOTH]?S[TOOTH].depth:.12):st&&st.kind==='cloth'?(S&&S[WEAVE]?S[WEAVE].depth*100/Math.max(S[WEAVE].warp,S[WEAVE].weft)*.3:.5):0;
+/* stock relief (CSS px) of the stock an effect prints on, from the live stock params */
+const stockH=(st,S)=>st&&st.kind==='paper'?(S&&S[TOOTH]?paperRelief(S[TOOTH]):.12):st&&st.kind==='cloth'?(S&&S[WEAVE]?clothRelief(S[WEAVE]):.5):0;
 /* an earlier layer's light (x.lf) carries its own relief: keep it, relative to the bare stock, under this layer's relief */
 const carryLF=(lf,prev,st)=>{ if(!lf||!prev) return lf; const base=st&&st.lf; for(let k=0;k<lf.length;k++) lf[k]*=base?prev[k]/Math.max(.05,base[k]):prev[k]; return lf; };
 const litFrom=(hpx,W,H,dpr,diffuse,shadow)=>{ let mx=1e-4,mn=1e9; for(let i=0;i<hpx.length;i++){ if(hpx[i]>mx) mx=hpx[i]; if(hpx[i]<mn) mn=hpx[i]; } const span=Math.max(1e-4,mx-mn), hn=new Float32Array(hpx.length); for(let i=0;i<hn.length;i++) hn[i]=(hpx[i]-mn)/span;
   const sh=FX.shade(hn,W,H,dpr,span,FX.LIGHT), hs=shadow>0?FX.hshadow(hn,W,H,dpr,span,FX.LIGHT,Math.max(1,span*4),.25):null, lf=new Float32Array(W*H*3);
   for(let i=0,k=0;i<W*H;i++,k+=3){ const f=((1-diffuse)+diffuse*sh[i])*(hs?lerp(1,hs[i],shadow):1); lf[k]=lf[k+1]=lf[k+2]=f; } return lf; };
 
-/* FX-05 · Graphite — pencil hatching that only catches the peaks of the tooth, and gleams under the light */
-const graphite={ id:'fx-05-graphite', code:'FX-05', name:'Graphite', role:'mark · pencil', section:'surprise', stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
+/* FX-05 · Graphite · pencil hatching that only catches the peaks of the tooth, and gleams under the light */
+const graphite={ id:'fx-05-graphite', code:'FX-05', name:'Graphite', section:'added', kind:'mark', tool:'pencil', mechanism:['deposit','reflect'], stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
   presets:[['HB hatch',{}],['6B cross',{layers:3,lead:1.1,pressure:1,gL:.3,sheen:.85,spacing:2.2}],['2H technical',{lead:.45,spacing:1.4,wobble:.05,gL:.5,sheen:.35,layers:1,jit:.05}],['scribble',{layers:2,cross:63,len:26,wobble:.8,spacing:2.6,angle:-20}]],
-  sub:'Pencil hatching laid in strokes with tapered pressure. Graphite only lands on the tooth peaks the lead touches — and graphite is a metal: burnished, it gleams. Drag the light and the dark strokes turn silver.',
-  recipe:['Hatch strokes along an angle at a spacing; extra layers cross at an offset angle and only print where the value field asks for more tone.','Each stroke is a wobbling polyline with pressure tapering at both ends, rasterized as AA capsules (lead width).','Ink chain: pressure vs stock-height percentile — the lead touches peaks first; valleys stay white. Graphite is an opaque OKLab mix, not a film.','Sheen: normals from the stock relief plus the graphite deposit\'s own burnish texture; Blinn specular toward the sheet light, gated by how much graphite is there.','Light last: diffuse × stock shading, + specular.'],
+  sub:'Pencil hatching laid in strokes with tapered pressure. Graphite only lands on the tooth peaks the lead touches, and graphite is a metal: burnished, it gleams. Drag the light and the dark strokes turn silver.',
+  recipe:['Hatch strokes along an angle at a spacing; extra layers cross at an offset angle and only print where the value field asks for more tone.','Each stroke is a wobbling polyline with pressure tapering at both ends, rasterized as AA capsules (lead width).','Ink chain: pressure vs stock-height percentile. The lead touches peaks first; valleys stay white. Graphite is an opaque OKLab mix, not a film.','Sheen: normals from the stock relief plus the graphite deposit\'s own burnish texture; Blinn specular toward the sheet light, gated by how much graphite is there.','Light last: diffuse × stock shading, + specular.'],
   limits:[['spacing','< 1.2 px','strokes merge into flat gray'],['sheen','> .8 at low light','strokes read as wet ink, not graphite'],['lead','> 1.6 px','reads as charcoal / marker']],
   params:[
-    {key:'angle',label:'Hatch angle',group:'density',type:'range',min:-90,max:90,step:1,unit:'°',value:38,note:'direction of the first layer'},
-    {key:'spacing',label:'Spacing',group:'density',type:'range',min:.8,max:10,step:.05,unit:'px',value:1.9,curve:2,note:'distance between strokes',limits:[[.8,1.2,'merges to gray']]},
-    {key:'layers',label:'Layers',group:'density',type:'range',min:1,max:4,step:1,value:2,note:'cross-hatch layers; layer k prints only where value > k / layers'},
-    {key:'cross',label:'Cross angle',group:'density',type:'range',min:10,max:90,step:1,unit:'°',value:78,note:'offset between layers'},
-    {key:'len',label:'Stroke length',group:'density',type:'range',min:6,max:300,step:1,unit:'px',value:70,curve:2,note:'mean stroke length'},
-    {key:'jit',label:'Jitter',group:'density',type:'range',min:0,max:1,step:.01,value:.35,note:'spacing and length irregularity'},
-    {key:'wobble',label:'Wobble',group:'density',type:'range',min:0,max:1.5,step:.01,unit:'px',value:.25,curve:2,note:'hand tremor across the stroke'},
-    {key:'lead',label:'Lead width',group:'density',type:'range',min:.3,max:2.5,step:.01,unit:'px',value:.75,curve:2,limits:[[1.6,2.5,'charcoal']]},
-    {key:'pressure',label:'Pressure',group:'density',type:'range',min:.3,max:1,step:.01,value:.95,note:'peak pressure in a stroke'},
-    {key:'taper',label:'Taper',group:'density',type:'range',min:0,max:1,step:.01,value:.6,note:'pressure lift at both ends'},
-    {key:'source',label:'Value field',group:'dropoff',type:'select',options:['linear','radial','noise'],value:'linear'},
-    {key:'vAngle',label:'Ramp angle',group:'dropoff',type:'range',min:0,max:360,step:1,unit:'°',value:0,when:{source:['linear']}},
+    {key:'angle',label:'Hatch angle',group:'structure',type:'range',min:-90,max:90,step:1,unit:'°',value:38,note:'direction of the first layer'},
+    {key:'spacing',label:'Spacing',group:'structure',type:'range',min:.8,max:10,step:.05,unit:'px',value:1.9,curve:2,note:'distance between strokes',limits:[[.8,1.2,'merges to gray']]},
+    {key:'layers',label:'Layers',group:'structure',type:'range',min:1,max:4,step:1,value:2,note:'cross-hatch layers; layer k prints only where value > k / layers'},
+    {key:'cross',label:'Cross angle',group:'structure',type:'range',min:10,max:90,step:1,unit:'°',value:78,note:'offset between layers'},
+    {key:'len',label:'Stroke length',group:'structure',type:'range',min:6,max:300,step:1,unit:'px',value:70,curve:2,note:'mean stroke length'},
+    {key:'jit',label:'Jitter',group:'structure',type:'range',min:0,max:1,step:.01,value:.35,note:'spacing and length irregularity'},
+    {key:'wobble',label:'Wobble',group:'structure',type:'range',min:0,max:1.5,step:.01,unit:'px',value:.25,curve:2,note:'hand tremor across the stroke'},
+    {key:'lead',label:'Lead width',group:'structure',type:'range',min:.3,max:2.5,step:.01,unit:'px',value:.75,curve:2,limits:[[1.6,2.5,'charcoal']]},
+    {key:'pressure',label:'Pressure',group:'field',type:'range',min:.3,max:1,step:.01,value:.95,note:'peak pressure in a stroke'},
+    {key:'taper',label:'Taper',group:'structure',type:'range',min:0,max:1,step:.01,value:.6,note:'pressure lift at both ends'},
+    {key:'source',label:'Value field',group:'field',type:'select',options:['linear','radial','noise'],value:'linear'},
+    {key:'vAngle',label:'Ramp angle',group:'field',type:'range',min:0,max:360,step:1,unit:'°',value:0,when:{source:['linear']}},
     FX.EASE_PARAM('ease','Dropoff curve',['smooth',2],'value from → to across the field'),
-    {key:'from',label:'From',group:'dropoff',type:'range',min:0,max:1,step:.01,value:0},
-    {key:'to',label:'To',group:'dropoff',type:'range',min:0,max:1,step:.01,value:1},
-    {key:'fScale',label:'Field scale',group:'dropoff',type:'range',min:20,max:500,step:1,unit:'px',value:160,when:{source:['noise']}},
-    ...STOCK_PARAMS({bite:.5,breakup:.55,starve:.01,wick:0,mottle:.1,split:.9}).filter(p=>p.key!=='wick'),
+    {key:'from',label:'From',group:'field',type:'range',min:0,max:1,step:.01,value:0},
+    {key:'to',label:'To',group:'field',type:'range',min:0,max:1,step:.01,value:1},
+    {key:'fScale',label:'Field scale',group:'field',type:'range',min:20,max:500,step:1,unit:'px',value:160,when:{source:['noise']}},
+    ...STOCK_PARAMS({bite:.5,breakup:.55,starve:.01,wick:0,mottle:.1,split:.9,splitGroup:'structure'}).filter(p=>p.key!=='wick'),
     ...FX.INK_PARAMS('g','Graphite',.3,.004,260),
-    {key:'density',label:'Deposit',group:'mixing',type:'range',min:.2,max:1,step:.01,value:1,note:'how opaque a full-pressure pass is'},
-    {key:'sheen',label:'Sheen',group:'relief',type:'range',min:0,max:1,step:.01,value:.55,note:'specular strength of burnished graphite',limits:[[.8,1,'wet ink']]},
-    {key:'shin',label:'Gloss',group:'relief',type:'range',min:2,max:120,step:1,value:22,curve:2,note:'specular exponent — tight = burnished, broad = matte'},
-    {key:'burnish',label:'Burnish texture',group:'relief',type:'range',min:0,max:1.5,step:.01,unit:'px',value:.35,curve:2,note:'micro-relief of the graphite deposit along the stroke (what catches the glints)'},
+    {key:'density',label:'Deposit',group:'film',type:'range',min:.2,max:1,step:.01,value:1,note:'how opaque a full-pressure pass is'},
+    {key:'sheen',label:'Sheen',group:'finish',type:'range',min:0,max:1,step:.01,value:.55,note:'specular strength of burnished graphite',limits:[[.8,1,'wet ink']]},
+    {key:'shin',label:'Glint tightness',group:'finish',type:'range',min:2,max:120,step:1,value:22,curve:2,note:'specular exponent: tight = burnished, broad = matte'},
+    {key:'burnish',label:'Burnish texture',group:'finish',type:'range',min:0,max:1.5,step:.01,unit:'px',value:.35,curve:2,note:'micro-relief of the graphite deposit along the stroke (what catches the glints)'},
     ...FX.MASK_PARAMS({mShape:'rect',mInset:26,mAmp:8,mScale:60,mFeather:14,mBite:0},{mode:false}),
     FX.SEED_PARAM(41)],
   run(o,W,H,dpr,x={}){ const w=W/dpr,h=H/dpr,s=o.seed|0, R_=FX.rng(s), M=applyClip(FX.mask(o,W,H,dpr,s),x), st=stockFor(o,x,W,H,dpr), P_=proj(w,h,o.vAngle);
@@ -443,22 +461,22 @@ const graphite={ id:'fx-05-graphite', code:'FX-05', name:'Graphite', role:'mark 
     for(let i=0,k=0;i<W*H;i++,k+=3){ const a=A[i]; if(a<=0) continue; const nh=Math.max(0,N.nx[i]*hx+N.ny[i]*hy+N.nz[i]*hz), sp=o.sheen*Math.min(1,a)*(.16*(1-lz_)+.9*Math.pow(nh,o.shin)); /* broad silvering toward a low light + tight glints off burnished strokes */ lin[k]+=sp; lin[k+1]+=sp; lin[k+2]+=sp*1.02; }
     return {alb,lf,lin,ink:A,stock:hpx.map?hpx:null,mask:M,marks:strokes,markUnit:'strokes'}; } };
 
-/* FX-06 · Blind deboss — no ink at all: a die pressed into the stock; the sheet light draws it */
-const deboss={ id:'fx-06-deboss', code:'FX-06', name:'Blind deboss', role:'mark · die', section:'surprise', stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
+/* FX-06 · Blind deboss · no ink at all: a die pressed into the stock; the sheet light draws it */
+const deboss={ id:'fx-06-deboss', code:'FX-06', name:'Blind deboss', section:'changed', kind:'impression', tool:'die', mechanism:['deform'], stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
   clips:{ die:(g,w,h,o)=>drawShape(g,w,h,o) },
   presets:[['blind compass',{}],['seal',{shape:'seal',text:'Oriel & Vane · Printers',size:.8,depth:.7}],['letterpress word',{shape:'word',text:'Counted',ink:1,depth:.55,size:.5}],['emboss',{depth:-.6,lip:0}]],
   sub:'A mark with no ink. A die presses into the stock: the floor crushes the tooth flat, the walls take the light or the shadow, a lip rises at the edge. Move the light and the mark appears, flips, or disappears. Ink it to get letterpress.',
-  recipe:['Die = an invented mark (compass, sun, crescent, knot, monogram), a word, or a ring seal, rasterized as an AA clip on the main thread (fonts).','Plate profile from the signed distance to the die edge (exact distance transform): a crisp shoulder, a straight wall over the die softness, a flat floor; lip = a narrow ridge just outside the edge.','Height (CSS px) = stock height × (1 − crush · plate) − depth · plate + lip — the tooth flattens on the floor.','Light: Lambert from the combined height + a height-field shadow toward the sheet light (the wall on the light side falls in shadow).','Optional ink on the floor (film), so blind → letterpress is one dial.'],
-  limits:[['depth','> 2 px','reads as a carved gouge, not a deboss'],['die softness','< .3 px','walls alias; > 3 px the edge goes mushy'],['light elevation','> 70°','a blind deboss vanishes under overhead light — by design']],
+  recipe:['Die = an invented mark (compass, sun, crescent, knot, monogram), a word, or a ring seal, rasterized as an AA clip on the main thread (fonts).','Die profile from the signed distance to the die edge (exact distance transform): a crisp shoulder, a straight wall over the die softness, a flat floor; lip = a narrow ridge just outside the edge.','Height (CSS px) = stock height × (1 − crush · profile) − depth · profile + lip. The tooth flattens on the floor.','Light: Lambert from the combined height + a height-field shadow toward the sheet light (the wall on the light side falls in shadow).','Optional ink on the floor (film), so blind → letterpress is one dial.'],
+  limits:[['depth','> 2 px','reads as a carved gouge, not a deboss'],['die softness','< .3 px','walls alias'],['die softness','> 5 px','the edge goes mushy'],['light elevation','> 70°','a blind deboss vanishes under overhead light, by design']],
   params:[...SHAPE_PARAMS({}),
-    {key:'depth',label:'Depth',group:'relief',type:'range',min:-2.5,max:2.5,step:.01,unit:'px',value:1.2,note:'press depth; negative = emboss (raised)',limits:[[2,2.5,'gouge']]},
-    {key:'soft',label:'Die softness',group:'relief',type:'range',min:.2,max:8,step:.05,unit:'px',value:3,curve:2,note:'wall width — how sharp the die edge is'},
+    {key:'depth',label:'Press depth',group:'relief',type:'range',min:-2.5,max:2.5,step:.01,unit:'px',value:1.2,note:'press depth; negative = emboss (raised)',limits:[[2,2.5,'gouge']]},
+    {key:'soft',label:'Die softness',group:'relief',type:'range',min:.2,max:8,step:.05,unit:'px',value:3,curve:2,note:'wall width: how sharp the die edge is',limits:[[.2,.3,'walls alias'],[5,8,'the edge goes mushy']]},
     {key:'lip',label:'Lip',group:'relief',type:'range',min:0,max:.6,step:.01,unit:'px',value:.15,note:'paper pushed up just outside the edge'},
     {key:'crush',label:'Crush',group:'relief',type:'range',min:0,max:1,step:.01,value:.7,note:'how flat the tooth is pressed on the floor'},
     {key:'diffuse',label:'Diffuse share',group:'relief',type:'range',min:0,max:1,step:.01,value:.95},
     {key:'shadow',label:'Wall shadow',group:'relief',type:'range',min:0,max:1,step:.01,value:.7},
-    {key:'burnish',label:'Floor burnish',group:'relief',type:'range',min:0,max:.08,step:.001,unit:'ΔL',value:.012,curve:2,note:'pressed fibers read a touch darker on the floor'},
-    {key:'stock',label:'Prints on',group:'stock',type:'select',options:['paper','cloth','smooth'],value:'paper'},
+    {key:'burnish',label:'Floor tone',group:'color',type:'range',min:0,max:.08,step:.001,unit:'ΔL',value:.012,curve:2,note:'pressed fibers read a touch darker on the floor'},
+    {key:'stock',label:'Prints on',group:'transfer',type:'select',options:['paper','cloth','smooth'],value:'paper',note:'paper = FX-03 live, cloth = FX-04 live, smooth = no substrate'},
     {key:'ink',label:'Ink on floor',group:'color',type:'range',min:0,max:1,step:.01,value:0,note:'0 = blind; 1 = full letterpress'},
     ...FX.INK_PARAMS('i','Ink',.32,.09,25).map(p=>Object.assign(p,{when:{}})),
     FX.MIX_PARAM('film'),
@@ -472,14 +490,14 @@ const deboss={ id:'fx-06-deboss', code:'FX-06', name:'Blind deboss', role:'mark 
     const hs=stockH(st,x.S), hpx=new Float32Array(W*H); for(let i=0;i<W*H;i++){ const base=st?st.h[i]*hs:0, lip=LP[i]*o.lip; hpx[i]=base*(1-o.crush*P[i])-o.depth*P[i]+lip*(o.depth>=0?1:-1); }
     const lf=litFrom(hpx,W,H,dpr,o.diffuse,o.shadow), alb=baseAlb(st,x,W,H), A=new Float32Array(W*H);
     if(o.burnish>0) for(let i=0,k=0;i<W*H;i++,k+=3){ const f=1-o.burnish*3*P[i]; alb[k]*=f; alb[k+1]*=f; alb[k+2]*=f; }
-    if(o.ink>0){ const ink=FX.inkOf(o,'i'), LUT=FX.filmLUT(ink), px=[0,0,0]; for(let i=0,k=0;i<W*H;i++,k+=3){ const a=clip[i]*o.ink*1.2; if(a<=0) continue; A[i]=a; if(o.mix==='film'){ const j=((a>=2?1024:a*512+.5)|0)*3; alb[k]*=LUT[j]; alb[k+1]*=LUT[j+1]; alb[k+2]*=LUT[j+2]; } else { px[0]=alb[k];px[1]=alb[k+1];px[2]=alb[k+2]; FX.mixInto(px,ink,Math.min(1,a),o.mix); alb[k]=px[0];alb[k+1]=px[1];alb[k+2]=px[2]; } } }
+    if(o.ink>0){ const ink=FX.inkOf(o,'i'), LUT=FX.filmLUT(ink), px=[0,0,0]; for(let i=0,k=0;i<W*H;i++,k+=3){ const a=clip[i]*o.ink*1.2; if(a<=0) continue; A[i]=a; if(o.mix==='film') FX.filmInto(alb,k,LUT,a); else { px[0]=alb[k];px[1]=alb[k+1];px[2]=alb[k+2]; FX.mixInto(px,ink,Math.min(1,a),o.mix); alb[k]=px[0];alb[k+1]=px[1];alb[k+2]=px[2]; } } }
     if(st&&st.lf){ for(let k=0;k<lf.length;k++) lf[k]*=lerp(1,st.lf[k],.25); }
     carryLF(lf,x.lf,st);
     const M=new Float32Array(W*H); for(let i=0;i<W*H;i++) M[i]=P[i];
-    return {alb,lf,lin:light(alb,lf,W,H),ink:A,stock:hpx,mask:M,marks:0,markUnit:'inks · light only'}; } };
+    return {alb,lf,lin:light(alb,lf,W,H),ink:A,stock:hpx,mask:M,marks:1,markUnit:'impression'}; } };
 
-/* FX-07 · Typewriter strike — glyphs struck through a woven ribbon, each with its own pressure, impressed into the stock */
-const typewriter={ id:'fx-07-typewriter', code:'FX-07', name:'Typewriter strike', role:'mark · type bar', section:'surprise', stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
+/* FX-07 · Typewriter strike · glyphs struck through a woven ribbon, each with its own pressure, impressed into the stock */
+const typewriter={ id:'fx-07-typewriter', code:'FX-07', name:'Typewriter strike', section:'added', kind:'mark', tool:'type bar through ribbon', mechanism:['transfer','deform'], stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
   clips:{ strikes:(g,w,h,o)=>{ const R_=FX.rng((o.seed|0)+5), lines=String(o.text||'').split('/').map(t=>t.trim()); let fs=o.fsize; g.font=`${fs<15?700:400} ${fs}px "Courier Prime", "JetBrains Mono", monospace`; const mw0=Math.max(...lines.map(l=>l.length))*g.measureText('M').width; if(mw0>w*.86) fs*=w*.86/mw0; const lh=fs*o.lead; g.font=`${fs<15?700:400} ${fs}px "Courier Prime", "JetBrains Mono", monospace`; const x0=o.align==='left'?2:Math.max(2,(w-Math.max(...lines.map(l=>l.length))*g.measureText('M').width)/2); let y=h*.5-((lines.length-1)*lh)/2+fs*.32, n=0, tot=lines.join('').length||1;
       g.font=`${fs<15?700:400} ${fs}px "Courier Prime", "JetBrains Mono", monospace`; g.textBaseline='alphabetic'; const cw=g.measureText('M').width;
       for(const ln of lines){ let xx=x0; for(const ch of ln){ n++; if(ch!==' '){ const life=1-o.exhaust*FX.ease(['in',1.6],n/tot), p=clamp(life*(1-o.vari*R_()),.12,1), half=R_()<o.half;
@@ -487,27 +505,27 @@ const typewriter={ id:'fx-07-typewriter', code:'FX-07', name:'Typewriter strike'
           if(half){ const gr=g.createLinearGradient(0,-fs*.8,0,fs*.1), top=R_()<.5; gr.addColorStop(0,`rgba(255,255,255,${top?p:p*.25})`); gr.addColorStop(1,`rgba(255,255,255,${top?p*.25:p})`); g.fillStyle=gr; } else g.fillStyle=`rgba(255,255,255,${p})`;
           g.fillText(ch,0,0); g.restore(); } xx+=cw; } y+=lh; } } },
   presets:[['office ribbon',{}],['worn ribbon',{exhaust:.75,vari:.5,half:.12,ribbon:.9}],['carbon copy',{ribbon:.15,iL:.45,iC:.12,ih:265,bite:.4,impress:.2,vari:.35}],['bichrome red',{iL:.5,iC:.19,ih:28}],['on linen',{stock:'cloth',fsize:20,impress:0}]],
-  sub:'Each glyph is a separate strike: its own pressure, a slight offset and rotation, sometimes only half the face lands. Ink passes through a woven ribbon, so letters carry the ribbon\'s weave; the type bar also dents the paper — visible under a low light.',
-  recipe:['Text in Courier Prime (a typewriter slab; bold below 15 px, as a light strike loses thin strokes), one strike per glyph on the main thread: pressure = ribbon life (exhausting along the page) × key variance; offset, rotation, an occasional dropped baseline; half-strikes fade top or bottom.','Ribbon: a plain weave at the ribbon count — ink transfers through thread crossings, less through the gaps.','Ink chain: pressure × ribbon vs stock-height percentile; ink squash pools film at the glyph edge.','Impression: the strike dents the stock (blurred glyph × pressure); light from the combined height.','Color: Beer–Lambert film.'],
-  limits:[['ribbon count','< 30 /100 px','weave reads as a screen pattern on the type'],['jitter','> 1.5 px','reads as broken font rendering'],['size','< 9 px','glyphs fall below the tooth scale and break up']],
+  sub:'Each glyph is a separate strike: its own pressure, a slight offset and rotation, sometimes only half the face lands. Ink passes through a woven ribbon, so letters carry the ribbon\'s weave; the type bar also dents the paper, visible under a low light.',
+  recipe:['Text in Courier Prime (a typewriter slab; bold below 15 px, as a light strike loses thin strokes), one strike per glyph on the main thread: pressure = ribbon life (exhausting along the page) × key variance; offset, rotation, an occasional dropped baseline; a half strike is a linear pressure ramp across the glyph, fading top or bottom.','Ribbon: a plain weave at the ribbon count. Ink transfers through thread crossings, less through the gaps.','Ink chain: pressure × ribbon vs stock-height percentile; ink squash pools film at the glyph edge.','Impression: the strike dents the stock (blurred glyph × pressure); light from the combined height.','Color: Beer–Lambert film.'],
+  limits:[['ribbon count','< 30 /100 px','weave reads as a screen pattern on the type'],['jitter','> 1.5 px','reads as broken font rendering'],['size','< 7 px','strokes thinner than the tooth lose the ribbon texture']],
   params:[
-    {key:'text',label:'Text',group:'density',type:'text',value:'Four surfaces, one light. / Ink on real stock — counted, / never a gradient. Set 01.',maxlength:180,note:'"/" starts a new line'},
-    {key:'fsize',label:'Size',group:'density',type:'range',min:8,max:48,step:.5,unit:'px',value:24},
-    {key:'lead',label:'Leading',group:'density',type:'range',min:1,max:2.4,step:.01,value:1.5},
-    {key:'vari',label:'Key variance',group:'density',type:'range',min:0,max:1,step:.01,value:.3,note:'how unevenly keys strike'},
-    {key:'half',label:'Half strikes',group:'density',type:'range',min:0,max:.4,step:.005,value:.05,note:'share of glyphs where only the top or bottom lands'},
-    {key:'jx',label:'Jitter x',group:'density',type:'range',min:0,max:2,step:.01,unit:'px',value:.35,curve:2},
-    {key:'jy',label:'Jitter y',group:'density',type:'range',min:0,max:2,step:.01,unit:'px',value:.4,curve:2},
-    {key:'rot',label:'Rotation',group:'density',type:'range',min:0,max:4,step:.05,unit:'°',value:.7},
-    {key:'exhaust',label:'Ribbon wear',group:'dropoff',type:'range',min:0,max:1,step:.01,value:.25,note:'ink fading along the text'},
-    {key:'ribbon',label:'Ribbon texture',group:'stock',type:'range',min:0,max:1,step:.01,value:.5,note:'how much the ribbon weave shows in the glyphs'},
-    {key:'rcount',label:'Ribbon count',group:'stock',type:'range',min:20,max:200,step:1,unit:'/100px',value:95,note:'ribbon threads per 100 CSS px',limits:[[20,30,'screen pattern']]},
-    {key:'squash',label:'Ink squash',group:'stock',type:'range',min:0,max:1,step:.01,value:.35,note:'film pooling at the glyph edge'},
-    {key:'impress',label:'Impression',group:'relief',type:'range',min:0,max:1,step:.01,unit:'px',value:.3,note:'how deep each strike dents the stock'},
-    {key:'diffuse',label:'Diffuse share',group:'relief',type:'range',min:0,max:1,step:.01,value:.7},
+    {key:'text',label:'Text',group:'motif',type:'text',value:'Two stocks, one light. / Ink on real paper, counted, / never a gradient.',maxlength:180,note:'"/" starts a new line'},
+    {key:'fsize',label:'Size',group:'motif',type:'range',min:8,max:48,step:.5,unit:'px',value:24,note:'type size in CSS px; bold below 15 px'},
+    {key:'lead',label:'Leading',group:'motif',type:'range',min:1,max:2.4,step:.01,value:1.5,note:'line spacing as a multiple of the size'},
+    {key:'vari',label:'Key variance',group:'field',type:'range',min:0,max:1,step:.01,value:.3,note:'how unevenly keys strike'},
+    {key:'half',label:'Half strikes',group:'field',type:'range',min:0,max:.4,step:.005,value:.05,note:'share of glyphs where only the top or bottom lands'},
+    {key:'jx',label:'Jitter x',group:'structure',type:'range',min:0,max:2,step:.01,unit:'px',value:.35,curve:2,note:'horizontal offset per strike'},
+    {key:'jy',label:'Jitter y',group:'structure',type:'range',min:0,max:2,step:.01,unit:'px',value:.4,curve:2,note:'vertical offset per strike'},
+    {key:'rot',label:'Rotation',group:'structure',type:'range',min:0,max:4,step:.05,unit:'°',value:.7,note:'rotation spread per strike'},
+    {key:'exhaust',label:'Ribbon wear',group:'field',type:'range',min:0,max:1,step:.01,value:.25,note:'ink fading along the text'},
+    {key:'ribbon',label:'Ribbon texture',group:'transfer',type:'range',min:0,max:1,step:.01,value:.5,note:'how much the ribbon weave shows in the glyphs'},
+    {key:'rcount',label:'Ribbon count',group:'structure',type:'range',min:20,max:200,step:1,unit:'/100px',value:95,note:'ribbon threads per 100 CSS px',limits:[[20,30,'screen pattern']]},
+    {key:'squash',label:'Ink squash',group:'transfer',type:'range',min:0,max:1,step:.01,value:.35,note:'film pooling at the glyph edge'},
+    {key:'impress',label:'Press depth',group:'relief',type:'range',min:0,max:1,step:.01,unit:'px',value:.3,note:'how deep each strike dents the stock'},
+    {key:'diffuse',label:'Diffuse share',group:'relief',type:'range',min:0,max:1,step:.01,value:.7,note:'share of light from the sheet light vs flat ambient fill'},
     ...STOCK_PARAMS({bite:.55,breakup:.85,starve:.03,wick:.12,mottle:.2,split:.8}),
     ...FX.INK_PARAMS('i','Ink',.2,.006,280),
-    {key:'density',label:'Film thickness',group:'mixing',type:'range',min:.2,max:2,step:.01,value:1.15},
+    {key:'density',label:'Film thickness',group:'film',type:'range',min:.2,max:2,step:.01,value:1.15,note:'ink film at full pressure (Beer–Lambert)'},
     FX.MIX_PARAM('film'),
     FX.SEED_PARAM(7)],
   run(o,W,H,dpr,x={}){ const st=stockFor(o,x,W,H,dpr), clip=(x.clips&&x.clips.strikes)||new Float32Array(W*H), pr=100/o.rcount, s=o.seed|0, Pb=new Float32Array(W*H);
@@ -526,27 +544,29 @@ const typewriter={ id:'fx-07-typewriter', code:'FX-07', name:'Typewriter strike'
     const glyphs=String(o.text||'').replace(/[\s/]/g,'').length;
     return {alb,lf:LFt,lin:light(alb,LFt,W,H),ink:A,stock:hpx,mask:clip,marks:glyphs,markUnit:'strikes'}; } };
 
-/* FX-08 · Hot foil — a metallic film stamped onto the stock: it mirrors the sheet light and takes the tooth */
-const foil={ id:'fx-08-foil', code:'FX-08', name:'Hot foil', role:'mark · foil', section:'surprise', stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
+/* FX-08 · Hot foil · a metallic film stamped onto the stock: it mirrors the sheet light and takes the tooth */
+const foil={ id:'fx-08-foil', code:'FX-08', name:'Hot foil', section:'added', kind:'finish', tool:'heated die', mechanism:['transfer','reflect','deform'], stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
   clips:{ die:(g,w,h,o)=>drawShape(g,w,h,o) },
-  presets:[['gold',{}],['silver',{fL:.82,fC:.006,fh:250,warm:0}],['copper',{fL:.66,fC:.12,fh:48}],['holographic',{finish:'holo',fL:.8,fC:.05,fh:250,holo:1}],['matte black foil',{fL:.18,fC:.004,fh:260,shin:6,mirror:.25}]],
+  presets:[['gold',{}],['silver',{fL:.82,fC:.006,fh:250}],['copper',{fL:.66,fC:.12,fh:48}],['holographic',{finish:'holo',fL:.8,fC:.05,fh:250,holo:1}],['matte black foil',{fL:.18,fC:.004,fh:260,shin:6,mirror:.25}]],
   sub:'A metallic film, not a color. It conforms to the tooth, skips the deepest valleys, and its brightness is the light: a broad studio reflection plus tight glints off every facet. Holographic foil shifts hue with each facet\'s angle.',
-  recipe:['Die = the same shapes as FX-06; foil lands on the AA die × the stock: valleys below the starve height release no foil (pinholes), edge flash breaks the boundary at the film-split scale.','Height = stock relief × (1 − crush) + foil grain (fine crumple) − a slight deboss; normals from it.','Metal: a perspective viewer above the plate; the mirror vector per pixel samples a soft box at the sheet light (and a weak fill opposite), so the reflection sweeps across the foil; + tight Blinn glints; holo rotates the hue by facet orientation.','Off-foil paper keeps its own light.'],
-  limits:[['gloss','< 6','reads as metallic paint, not foil'],['foil grain','> .6 px','crinkled, like a chocolate wrapper'],['light elevation','> 75°','foil goes dark — metal reflects away from an overhead light']],
-  params:[...SHAPE_PARAMS({shape:'word',text:'Four surfaces',size:.5}),
-    {key:'finish',label:'Finish',group:'color',type:'select',options:['metal','holo'],value:'metal'},
+  recipe:['Die = the same shapes as FX-06; foil lands on the AA die × the stock: valleys below the starve height release no foil (pinholes), edge flash breaks the boundary at the film-split scale.','Height = stock relief × (1 − crush) + foil grain (fine crumple) − a slight deboss; normals from it.','Metal: a perspective viewer above the plate; the mirror vector per pixel samples the studio: a round soft box at the sheet light, a dim ceiling and a dark room. The reflection sweeps across the foil; tight Blinn glints are added; holo rotates the hue by the reflection direction.','Off-foil paper keeps its own light.'],
+  limits:[['gloss','< 6','reads as metallic paint, not foil'],['foil grain','> .6 px','crinkled, like a chocolate wrapper'],['light elevation','> 75°','foil goes dark: metal reflects away from an overhead light']],
+  params:[...SHAPE_PARAMS({shape:'word',text:'Stock and light',size:.5}),
+    {key:'finish',label:'Finish',group:'finish',type:'select',options:['metal','holo'],value:'metal',note:'metal = one hue; holo = the hue follows the reflection direction'},
     ...FX.INK_PARAMS('f','Foil',.8,.13,84),
-    {key:'holo',label:'Holo spread',group:'color',type:'range',min:0,max:1,step:.01,value:.6,when:{finish:['holo']},note:'hue rotation per facet angle'},
-    {key:'mirror',label:'Reflection',group:'relief',type:'range',min:0,max:1.5,step:.01,value:1,note:'strength of the soft-box reflection'},
-    {key:'box',label:'Soft-box size',group:'relief',type:'range',min:1,max:60,step:.5,value:3,curve:2,note:'small exponent = big soft box (broad sweep); large = small hard light'},
-    {key:'cam',label:'Camera distance',group:'relief',type:'range',min:.5,max:6,step:.05,value:1.2,note:'viewer height in plate widths — closer = a stronger sweep of the reflection across the foil'},
-    {key:'shin',label:'Gloss',group:'relief',type:'range',min:2,max:400,step:1,value:90,curve:2,note:'glint tightness',limits:[[2,6,'metallic paint']]},
+    {key:'holo',label:'Holo spread',group:'finish',type:'range',min:0,max:1,step:.01,value:.6,when:{finish:['holo']},note:'hue rotation per facet angle'},
+    {key:'mirror',label:'Reflection',group:'finish',type:'range',min:0,max:1.5,step:.01,value:1,note:'strength of the soft-box reflection'},
+    {key:'box',label:'Soft-box size',group:'finish',type:'range',min:1,max:60,step:.5,value:3,curve:2,note:'small exponent = big soft box (broad sweep); large = small hard light'},
+    {key:'cam',label:'Camera distance',group:'finish',type:'range',min:.5,max:6,step:.05,value:1.2,note:'viewer height in plate widths. Closer = a stronger sweep of the reflection across the foil'},
+    {key:'camX',label:'Camera x',group:'finish',type:'range',min:.1,max:.9,step:.01,value:.5,note:'viewer position across the plate (share of its width)'},
+    {key:'camY',label:'Camera y',group:'finish',type:'range',min:.1,max:.9,step:.01,value:.5,note:'viewer position down the plate (share of its height)'},
+    {key:'shin',label:'Glint tightness',group:'finish',type:'range',min:2,max:400,step:1,value:90,curve:2,note:'specular exponent of the glints',limits:[[2,6,'metallic paint']]},
     {key:'grain',label:'Foil grain',group:'relief',type:'range',min:0,max:1,step:.01,unit:'px',value:.12,curve:2,note:'fine crumple of the film',limits:[[.6,1,'chocolate wrapper']]},
     {key:'crush',label:'Crush',group:'relief',type:'range',min:0,max:1,step:.01,value:.55,note:'how much the heated die flattens the tooth under the foil'},
-    {key:'dent',label:'Deboss',group:'relief',type:'range',min:0,max:1,step:.01,unit:'px',value:.18},
-    {key:'stock',label:'Prints on',group:'stock',type:'select',options:['paper','cloth','smooth'],value:'paper'},
-    {key:'starve',label:'Release',group:'stock',type:'range',min:0,max:.4,step:.002,value:.025,curve:2,note:'lowest share of the surface that the foil never touches (pinholes)'},
-    {key:'flash',label:'Edge flash',group:'stock',type:'range',min:0,max:1,step:.01,value:.2,note:'foil breaking at the die edge'},
+    {key:'dent',label:'Press depth',group:'relief',type:'range',min:0,max:1,step:.01,unit:'px',value:.18,note:'how deep the heated die presses the foil into the stock'},
+    {key:'stock',label:'Prints on',group:'transfer',type:'select',options:['paper','cloth','smooth'],value:'paper',note:'paper = FX-03 live, cloth = FX-04 live, smooth = no substrate'},
+    {key:'starve',label:'Release',group:'transfer',type:'range',min:0,max:.4,step:.002,value:.025,curve:2,note:'lowest share of the surface that the foil never touches (pinholes)'},
+    {key:'flash',label:'Edge flash',group:'transfer',type:'range',min:0,max:1,step:.01,value:.2,note:'foil breaking at the die edge'},
     FX.SEED_PARAM(11)],
   run(o,W,H,dpr,x={}){ const st=stockFor(o,x,W,H,dpr), clip=(x.clips&&x.clips.die)||new Float32Array(W*H), s=o.seed|0, hs=stockH(st,x.S);
     const sh=new Float32Array(W*H); for(let i=0;i<W*H;i++) sh[i]=st?st.h[i]:.5; const loc=FX.blur(sh,W,H,6*dpr), hp=new Float32Array(W*H); for(let i=0;i<W*H;i++) hp[i]=sh[i]-loc[i]; // high-pass: pinholes follow the tooth, not the formation
@@ -570,7 +590,7 @@ const foil={ id:'fx-08-foil', code:'FX-08', name:'Hot foil', role:'mark · foil'
       let base=fl.lin; if(o.finish==='holo'){ // diffraction: hue follows the REFLECTION direction (smooth bands sweeping with the view), not per-pixel normals
         const hh=fl.h*PI/180+o.holo*(Math.atan2(ry,rx)*1.2+rz*9), C=Math.max(fl.C,.11); FX.lab2lin(Math.min(.86,fl.L+.04),C*Math.cos(hh),C*Math.sin(hh),o3); base=[clamp(o3[0],0,1),clamp(o3[1],0,1),clamp(o3[2],0,1)]; }
       const k=i*3; for(let ch=0;ch<3;ch++){ const m=base[ch]*env+glint*(.3+.7*base[ch]); lin[k+ch]=lin[k+ch]*(1-c)+m*c; } }
-    return {alb,lf:lfb,lin,ink:cov,stock:hpx,mask:clip,marks:n,markUnit:'foiled px'}; } };
+    return {alb,lf:lfb,lin,ink:cov,stock:hpx,mask:clip,marks:Math.round(n/(dpr*dpr)),markUnit:'foiled px²'}; } };
 
 /* ── new marks · e ── */
 /* shared helpers: bilinear sample (zero outside the plate), 1-D tables for per-stroke noise, pixel-integrated gaussian */
@@ -609,40 +629,40 @@ const e_botany=(g,w,h,o)=>{ const R=FX.rng((o.seed|0)+101);
   e_frond(g,[w*.14,h*.98],[w*.8,h*.08],.06,R,38); e_frond(g,[w*.97,h*.9],[w*.62,h*.42],-.1,R,22); };
 const E_TONES={fresh:[.56,.092,224],classic:[.42,.122,257],peroxide:[.34,.13,263],tea:[.5,.032,58]};
 
-/* FX-11 · Cyanotype — a sun print: brushed sensitizer, objects shading the UV, Prussian blue where the sun reached */
-const cyanotype={ id:'fx-11-cyanotype', code:'FX-11', name:'Cyanotype', role:'mark · sun print', section:'new', stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
+/* FX-11 · Cyanotype · a sun print: brushed sensitizer, objects shading the UV, Prussian blue where the sun reached */
+const cyanotype={ id:'fx-11-cyanotype', code:'FX-11', name:'Cyanotype', section:'changed', kind:'process', tool:'brush + sun', mechanism:['deposit','expose'], stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
   clips:{ obj:(g,w,h,o)=>{ if(o.subject==='die') drawShape(g,w,h,{shape:o.dieShape,text:o.text,size:o.dieSize}); else e_botany(g,w,h,o); } },
   presets:[['classic fern',{}],['die print',{subject:'die',dieShape:'sun',lift:2.5,contact:.62,trans:0,expo:1.15,strokes:3,dry:.35}],['overexposed',{expo:2.8,bleed:.7,lift:10,contact:.42,trans:.06,depth:1.55}],['peroxide grass',{subject:'grass',tone:'peroxide',lift:4,contact:.6,strokes:4,bAngle:-5,trans:.01}],['tea-toned',{tone:'tea',depth:1.25,bleed:.25}]],
-  sub:'A sun print. Sensitizer is brushed on in ragged strokes that pool where the brush lands and run dry where it lifts; a fern, grass or a die sits on top and the sun does the rest. Where light reached, Prussian blue; under the object, paper. Lifted parts throw soft, offset shadows away from the sheet light — pressed parts stay sharp.',
+  sub:'A sun print. Sensitizer is brushed on in ragged strokes that pool where the brush lands and run dry where it lifts; a fern, grass or a cut-card motif sits on top and the sun does the rest. Where light reached, Prussian blue; under the object, paper. Lifted parts throw soft, offset shadows away from the sheet light. Pressed parts stay sharp.',
   recipe:[
     'Coating = brush strokes in stroke space (along s, across t): a load that runs out along the stroke; edges displaced by per-side noise (raggedness); a set-down pool and a drying rim; bristle streaks × the stock height decide where a dry brush still deposits.',
     'Thickness τ = load × unevenness (streaks + low-frequency drag) + pools; overlapping strokes add (a double coat prints deeper); paper valleys hold more sensitizer.',
-    'Objects (procedural fern frond, grass with spikelets, or a die) are an AA clip. Lift = a smooth field × the lift dial; contact sets how much lies flat.',
+    'Objects (procedural fern frond, grass with spikelets, or a cut-card motif) are an AA clip. Lift = a smooth field × the lift dial; contact sets how much lies flat.',
     'Shadow: for each lift level z the clip is sampled toward the sheet light at z · cot(elevation) (smeared ±20 % along the light) and blurred by z × sky scatter; each pixel blends the two levels around its lift.',
-    'Exposure E = 1 − shadow × (1 − translucency); density = τ × (1 − e^(−k·exposure·E)) — overexposure fills the penumbra in.',
+    'Exposure E = 1 − shadow × (1 − translucency). Develop: r = ((1 − e^(−2.2·exposure·E)) ÷ (1 − e^(−2.2)))^1.35, capped at 1.2; the coat saturates as τ\' = 1.3·(1 − e^(−τ/1.3)); density = τ\' × (a faint stain + r) × film density. Overexposure fills the penumbra in.',
     'Wash: unexposed coating rinses away; Prussian blue bleeds a little downhill into the whites, in streaks. Color = Beer–Lambert film of the tone (fresh, classic, peroxide-oxidized, tea-toned).',
     'Light last: × the stock\'s shading under the sheet light.'],
-  limits:[['object lift','> 18 px','penumbra wider than the leaflets — the fern dissolves into a cloud'],['exposure','> 2.5','penumbra fills in; fine pinnules and awns vanish'],['exposure','< .5','pale, greenish print — read as underexposed'],['raggedness','> .8','stroke edges tear into islands'],['strokes','> 6','brush marks shrink into stripes']],
+  limits:[['object lift','> 18 px','penumbra wider than the leaflets: the fern dissolves into a cloud'],['exposure','> 2.5','penumbra fills in; fine pinnules and awns vanish'],['exposure','< .5','pale, greenish print: reads as underexposed'],['raggedness','> .8','stroke edges tear into islands'],['strokes','> 6','brush marks shrink into stripes']],
   params:[
-    {key:'subject',label:'Subject',group:'density',type:'select',options:['fern','grass','die'],value:'fern',note:'what lies on the sheet: a procedural fern frond, grass with seed heads, or a die mark'},
-    {key:'dieShape',label:'Die',group:'density',type:'select',options:['compass','sun','crescent','knot','monogram'],value:'compass',when:{subject:['die']},note:'an invented mark cut from card'},
-    {key:'text',label:'Monogram',group:'density',type:'text',value:'Q',maxlength:4,when:{subject:['die'],dieShape:['monogram']}},
-    {key:'dieSize',label:'Die size',group:'density',type:'range',min:.2,max:1,step:.01,value:.72,when:{subject:['die']}},
-    {key:'strokes',label:'Brush strokes',group:'density',type:'range',min:2,max:8,step:1,value:4,note:'strokes laid top to bottom, alternating direction',limits:[[7,8,'stripes']]},
-    {key:'bAngle',label:'Brush angle',group:'density',type:'range',min:-30,max:30,step:.5,unit:'°',value:-3},
-    {key:'rag',label:'Brush-edge raggedness',group:'density',type:'range',min:0,max:1,step:.01,value:.45,note:'how far bristles and drag push each stroke edge in and out',limits:[[.8,1,'edges tear']]},
-    {key:'uneven',label:'Coating unevenness',group:'density',type:'range',min:0,max:1,step:.01,value:.45,note:'streaks and drag in the sensitizer thickness'},
-    {key:'dry',label:'Dry-brush tails',group:'density',type:'range',min:0,max:1,step:.01,value:.6,note:'how far the load runs out before the brush lifts — bristle streaks on the tooth peaks'},
-    {key:'pool',label:'Pooling',group:'density',type:'range',min:0,max:1,step:.01,value:.5,note:'sensitizer beading where the brush lands and stops, and the drying rim along each edge'},
-    {key:'expo',label:'Exposure',group:'dropoff',type:'range',min:.2,max:3,step:.01,value:1,note:'sun dose; 1 = full development of an unshaded coat',limits:[[2.5,3,'penumbra fills in'],[.2,.5,'pale, underexposed']]},
-    {key:'lift',label:'Object lift',group:'relief',type:'range',min:0,max:24,step:.1,unit:'px',value:5.5,curve:1.6,note:'height of the lifted parts above the sheet — sets the penumbra width and its offset away from the sheet light',limits:[[18,24,'the subject dissolves']]},
-    {key:'contact',label:'Contact',group:'relief',type:'range',min:0,max:1,step:.01,value:.5,note:'share of the subject pressed flat (sharp); the rest curls up (soft)'},
-    {key:'scatter',label:'Sky scatter',group:'relief',type:'range',min:.05,max:1,step:.01,value:.32,note:'penumbra per px of lift — skylight and haze around the sun'},
-    {key:'trans',label:'Translucency',group:'relief',type:'range',min:0,max:.3,step:.005,value:.015,note:'UV passing through leaf tissue (cut card: 0)',when:{subject:['fern','grass']}},
-    {key:'bleed',label:'Wash bleed',group:'mixing',type:'range',min:0,max:1,step:.01,value:.35,note:'Prussian blue carried downhill into the whites during the wash, in streaks'},
-    {key:'stock',label:'Prints on',group:'stock',type:'select',options:['paper','cloth','smooth'],value:'paper',note:'paper = FX-03 live (watercolor-like sheets suit it), cloth = FX-04 live (cyanotype on cotton)'},
+    {key:'subject',label:'Subject',group:'motif',type:'select',options:['fern','grass','die'],value:'fern',note:'what lies on the sheet: a procedural fern frond, grass with seed heads, or a motif cut from card (die)'},
+    {key:'dieShape',label:'Motif',group:'motif',type:'select',options:['compass','sun','crescent','knot','monogram'],value:'compass',when:{subject:['die']},note:'an invented mark cut from card'},
+    {key:'text',label:'Monogram',group:'motif',type:'text',value:'Q',maxlength:4,when:{subject:['die'],dieShape:['monogram']},note:'the letter for the monogram motif'},
+    {key:'dieSize',label:'Motif size',group:'motif',type:'range',min:.2,max:1,step:.01,value:.72,when:{subject:['die']},note:'motif height as a share of the plate'},
+    {key:'strokes',label:'Brush strokes',group:'structure',type:'range',min:2,max:8,step:1,value:4,note:'strokes laid top to bottom, alternating direction',limits:[[7,8,'stripes']]},
+    {key:'bAngle',label:'Brush angle',group:'structure',type:'range',min:-30,max:30,step:.5,unit:'°',value:-3,note:'tilt of the brush strokes'},
+    {key:'rag',label:'Brush-edge raggedness',group:'structure',type:'range',min:0,max:1,step:.01,value:.45,note:'how far bristles and drag push each stroke edge in and out',limits:[[.8,1,'edges tear']]},
+    {key:'uneven',label:'Coating unevenness',group:'structure',type:'range',min:0,max:1,step:.01,value:.45,note:'streaks and drag in the sensitizer thickness'},
+    {key:'dry',label:'Dry-brush tails',group:'structure',type:'range',min:0,max:1,step:.01,value:.6,note:'how far the load runs out before the brush lifts: bristle streaks on the tooth peaks'},
+    {key:'pool',label:'Pooling',group:'structure',type:'range',min:0,max:1,step:.01,value:.5,note:'sensitizer beading where the brush lands and stops, and the drying rim along each edge'},
+    {key:'expo',label:'Exposure',group:'field',type:'range',min:.2,max:3,step:.01,value:1,note:'sun dose; 1 = full development of an unshaded coat',limits:[[2.5,3,'penumbra fills in'],[.2,.5,'pale, underexposed']]},
+    {key:'lift',label:'Object lift',group:'field',type:'range',min:0,max:24,step:.1,unit:'px',value:5.5,curve:1.6,note:'height of the lifted parts above the sheet. It sets the penumbra width and its offset away from the sheet light',limits:[[18,24,'the subject dissolves']]},
+    {key:'contact',label:'Contact',group:'field',type:'range',min:0,max:1,step:.01,value:.5,note:'share of the subject pressed flat (sharp); the rest curls up (soft)'},
+    {key:'scatter',label:'Sky scatter',group:'field',type:'range',min:.05,max:1,step:.01,value:.32,note:'penumbra per px of lift: skylight and haze around the sun'},
+    {key:'trans',label:'Translucency',group:'field',type:'range',min:0,max:.3,step:.005,value:.015,note:'UV passing through leaf tissue (cut card: 0)',when:{subject:['fern','grass']}},
+    {key:'bleed',label:'Wash bleed',group:'transfer',type:'range',min:0,max:1,step:.01,value:.35,note:'Prussian blue carried downhill into the whites during the wash, in streaks'},
+    {key:'stock',label:'Prints on',group:'transfer',type:'select',options:['paper','cloth','smooth'],value:'paper',note:'paper = FX-03 live (watercolor-like sheets suit it), cloth = FX-04 live (cyanotype on cotton)'},
     {key:'tone',label:'Tone',group:'color',type:'select',options:['fresh','classic','peroxide','tea','custom'],value:'classic',note:'fresh = before oxidation (greener); classic = air-oxidized Prussian blue; peroxide = hydrogen-peroxide bath (deeper, violet-blue); tea = tannin-toned neutral brown'},
-    {key:'depth',label:'Blue depth',group:'color',type:'range',min:.3,max:2,step:.01,value:1.45,note:'film density of a fully exposed coat (Beer–Lambert: deeper and more saturated)'},
+    {key:'depth',label:'Film density',group:'film',type:'range',min:.3,max:2,step:.01,value:1.45,note:'film density of a fully exposed coat (Beer–Lambert: deeper and more saturated)'},
     ...FX.INK_PARAMS('c','Custom tone',.4,.12,256).map(p=>Object.assign(p,{when:{tone:['custom']}})),
     FX.SEED_PARAM(19)],
   run(o,W,H,dpr,x={}){ const w=W/dpr,h=H/dpr,s=o.seed|0,R=FX.rng(s+7), st=stockFor(o,x,W,H,dpr), obj=(x.clips&&x.clips.obj)||new Float32Array(W*H);
@@ -683,11 +703,11 @@ const cyanotype={ id:'fx-11-cyanotype', code:'FX-11', name:'Cyanotype', role:'ma
       for(let y=0;y<H;y++){ const v=y/dpr; for(let X=0;X<W;X++){ const i=y*W+X; if(Cb[i]<=.01) continue; const fl=e_bil(Ab,W,H,X+.5,y+.5-dy), sk=.5+.9*FX.fbm(X/dpr/2.6,v/36,s+91,2,.5), b=o.bleed*.55*fl*sk*Math.min(1,Cb[i]*1.4); if(b>A[i]) A[i]=b; } } }
     /* 5 · color + light */
     const tn=E_TONES[o.tone], ink=tn?FX.ink(tn[0],tn[1],tn[2]):FX.inkOf(o,'c'), LUT=FX.filmLUT(ink), alb=baseAlb(st,x,W,H), tea=o.tone==='tea'?FX.filmLUT(FX.ink(.9,.006,70)):null;
-    for(let i=0,k=0;i<W*H;i++,k+=3){ const a=A[i]; if(a>0){ const j=((a>=2?1024:a*512+.5)|0)*3; alb[k]*=LUT[j]; alb[k+1]*=LUT[j+1]; alb[k+2]*=LUT[j+2]; }
-      if(tea&&C[i]>0){ const j=((C[i]*.35*512+.5)|0)*3; alb[k]*=tea[j]; alb[k+1]*=tea[j+1]; alb[k+2]*=tea[j+2]; } }
-    const LF=x.lf||(st?st.lf:null); return {alb,lf:LF,lin:light(alb,LF,W,H),ink:A,stock:st?st.h:null,mask:C,marks:n,markUnit:'brush strokes'}; } };
+    for(let i=0,k=0;i<W*H;i++,k+=3){ const a=A[i]; if(a>0) FX.filmInto(alb,k,LUT,a);
+      if(tea&&C[i]>0) FX.filmInto(alb,k,tea,C[i]*.35); }
+    const LF=x.lf||(st?st.lf:null); return {alb,lf:LF,lin:light(alb,LF,W,H),ink:A,stock:stockPx(st,stockH(st,x.S)),mask:C,marks:n,markUnit:'brush strokes'}; } };
 
-/* FX-12 · Laser char — a CO₂ beam rastering a die into card: gaussian scan lines that scorch, sink and smooth the tooth */
+/* FX-12 · Laser char · a CO₂ beam rastering a motif into card: gaussian scan lines that scorch, sink and smooth the tooth */
 const E_CHAR=[[0,.968,0,0],[.12,.83,.036,70],[.34,.6,.052,58],[.6,.37,.042,50],[.84,.2,.018,46],[1,.12,.006,42]];
 const e_fill=(clip,W,H)=>{ const out=new Float32Array(W*H).fill(1), seen=new Uint8Array(W*H), st=[]; const push=i=>{ if(!seen[i]&&clip[i]<.5){ seen[i]=1; st.push(i); } };
   for(let x=0;x<W;x++){ push(x); push((H-1)*W+x); } for(let y=0;y<H;y++){ push(y*W); push(y*W+W-1); }
@@ -696,45 +716,46 @@ const e_fill=(clip,W,H)=>{ const out=new Float32Array(W*H).fill(1), seen=new Uin
 const e_charLUT=(()=>{ let T=null; return ()=>{ if(T) return T; T=new Float32Array(257*3); const P=FX.ink(.968,0,0).lin, o=[0,0,0];
   for(let i=0;i<=256;i++){ const c=i/256; let k=0; while(k<E_CHAR.length-2&&c>E_CHAR[k+1][0]) k++; const A=E_CHAR[k], B=E_CHAR[k+1], f=(c-A[0])/(B[0]-A[0]), L=lerp(A[1],B[1],f), Cc=lerp(A[2],B[2],f), hh=lerp(A[3]||B[3],B[3],f)*PI/180;
     FX.lab2lin(L,Cc*Math.cos(hh),Cc*Math.sin(hh),o); for(let ch=0;ch<3;ch++) T[i*3+ch]=clamp(o[ch],0,1)/P[ch]; } return T; }; })();
-const laser={ id:'fx-12-laser', code:'FX-12', name:'Laser char', role:'mark · beam', section:'new', stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
+const laser={ id:'fx-12-laser', code:'FX-12', name:'Laser char', section:'changed', kind:'process', tool:'CO2 beam', mechanism:['burn'], stockOf:o=>o.stock==='paper'?TOOTH:o.stock==='cloth'?WEAVE:null,
   clips:{ die:(g,w,h,o)=>drawShape(g,w,h,o) },
   presets:[['light etch',{power:.32,pitch:2.6,spot:.55,halo:.15,ablate:.12,overburn:.1}],['deep raster',{power:.85,speed:.85,pitch:1.5,spot:.5,halo:.6,haloR:2.6,ablate:1.1,overburn:.25}],['cut-through with tabs',{cut:'outline',tabs:4,power:.6,pitch:1.5,halo:.5}],['tag cut',{cut:'tag',tabs:2,shape:'monogram',text:'Ferro',size:.5,power:.7,pitch:1.4}],['power ramp',{ramp:1,rampAng:0,power:1,pitch:1.8,halo:.4}],['defocused',{focus:.55,power:.75,pitch:1.6}]],
-  sub:'A CO₂ beam rasters a die into card, one scan line at a time. Each line is a gaussian burn: past a threshold the paper scorches tan → brown → black, sinks, and the tooth is burned smooth; heat browns the fibers around it. Vector cuts go through: a charred kerf opening onto the dark bed below.',
+  sub:'A CO₂ beam rasters a motif into card, one scan line at a time. Each line is a gaussian burn: past a threshold the paper scorches tan → brown → black, sinks, and the tooth is burned smooth; heat browns the fibers around it. Vector cuts go through: a charred kerf opening onto the dark bed below.',
   recipe:[
-    'Scan lines at the pitch (≥ 2 device px), at the scan angle. Dose at a pixel = Σ over nearby lines of power ÷ speed × the beam\'s gaussian, integrated over the pixel (erf) — anti-aliased lines at any angle.',
-    'Firing gate = the die clip sampled at each line\'s centerline, softened by the spot along the scan; the head\'s turnaround adds dose just inside the edges it reverses at.',
+    'Scan lines at the pitch (≥ 2 device px), at the scan angle. Dose at a pixel = Σ over nearby lines of power ÷ speed × the beam\'s gaussian, integrated over the pixel (erf): anti-aliased lines at any angle. When the pitch clamps to 2 device px, the dose is scaled by the clamp so the tone matches a finer screen.',
+    'Firing gate = the motif clip sampled at each line\'s centerline, softened by the spot along the scan; the head\'s turnaround adds dose just inside the edges it reverses at.',
     'Defocus widens σ and lowers the peak (same energy, larger spot): paler, softer, lines merging. A power ramp can run across the raster.',
     'Char = 1 − e^(−k·(dose − threshold)) → an OKLab ramp tan → brown → black, multiplied into the stock albedo (fibers char darker). Heat halo = the dose spread a few px, browning fibers first.',
     'Relief: ablation sinks the surface with dose; the tooth is burned smooth; a fine char crust. Lit by the sheet light (grooves catch it on one wall).',
-    'Vector cut: a kerf along the die outline (offset) or a tag; tabs leave bridges. The kerf opens onto the ground below, shaded by the card edge toward the light; its walls are charred.'],
-  limits:[['line pitch','< 2 device px','clamped — finer lines alias into moiré on screen'],['power ÷ speed','> 1.4','char goes black and ablates; line structure survives only in the relief'],['defocus','> .7','reads as a smudge, not a laser'],['halo reach','> 9 px','reads as a scorch accident rather than a mark'],['kerf','> 3 px','a slot, not a laser cut']],
+    'Vector cut: a kerf along the motif outline (offset) or a tag; tabs leave bridges. The kerf opens onto the ground below, shaded by the card edge toward the light; its walls are charred.'],
+  limits:[['line pitch','< 2 device px','clamped: finer lines alias into moiré on screen (dose is conserved)'],['power ÷ speed','> 1.4','char goes black and ablates; line structure survives only in the relief'],['defocus','> .7','reads as a smudge, not a laser'],['halo reach','> 9 px','reads as a scorch accident rather than a mark'],['kerf','> 3 px','a slot, not a laser cut']],
   params:[...SHAPE_PARAMS({shape:'compass',text:'Ferro & Lume',size:.52}),
-    {key:'power',label:'Power',group:'density',type:'range',min:.05,max:1,step:.01,value:.55,note:'beam power in the raster; dose ∝ power ÷ speed ÷ pitch'},
-    {key:'speed',label:'Speed',group:'density',type:'range',min:.25,max:3,step:.01,value:1,note:'head speed (relative); faster = less dose per line'},
-    {key:'pitch',label:'Line pitch',group:'density',type:'range',min:1,max:6,step:.05,unit:'px',value:1.6,curve:1.5,note:'distance between scan lines; clamped to ≥ 2 device px',limits:[[1,1.2,'clamped to 2 device px at 1×']]},
-    {key:'scan',label:'Scan angle',group:'density',type:'range',min:0,max:180,step:1,unit:'°',value:0,note:'direction the head travels'},
-    {key:'spot',label:'Spot',group:'density',type:'range',min:.3,max:2,step:.01,unit:'px',value:.42,note:'beam radius σ in focus'},
-    {key:'focus',label:'Defocus',group:'density',type:'range',min:0,max:1,step:.01,value:0,note:'0 = in focus; out of focus the spot widens and its peak drops',limits:[[.7,1,'a smudge']]},
-    {key:'ramp',label:'Power ramp',group:'dropoff',type:'range',min:0,max:1,step:.01,value:0,note:'power falls across the raster, to 15 % at 1'},
-    {key:'rampAng',label:'Ramp angle',group:'dropoff',type:'range',min:0,max:360,step:1,unit:'°',value:0},
-    {key:'overburn',label:'Turnaround burn',group:'dropoff',type:'range',min:0,max:1,step:.01,value:.18,note:'extra dose where the head slows to reverse at each line end'},
-    {key:'halo',label:'Heat halo',group:'relief',type:'range',min:0,max:1,step:.01,value:.45,note:'fibers browned around the burn'},
-    {key:'haloR',label:'Halo reach',group:'relief',type:'range',min:.5,max:12,step:.1,unit:'px',value:2,limits:[[9,12,'scorch accident']]},
+    {key:'power',label:'Power',group:'field',type:'range',min:.05,max:1,step:.01,value:.55,note:'beam power in the raster; dose ∝ power ÷ speed ÷ pitch'},
+    {key:'speed',label:'Speed',group:'field',type:'range',min:.25,max:3,step:.01,value:1,note:'head speed (relative); faster = less dose per line'},
+    {key:'pitch',label:'Line pitch',group:'structure',type:'range',min:1,max:6,step:.05,unit:'px',value:1.6,curve:1.5,note:'distance between scan lines; clamped to ≥ 2 device px, with the dose scaled to match',limits:[[1,2,'clamped to 2 device px at 1×']]},
+    {key:'scan',label:'Scan angle',group:'structure',type:'range',min:0,max:180,step:1,unit:'°',value:0,note:'direction the head travels'},
+    {key:'spot',label:'Spot',group:'structure',type:'range',min:.3,max:2,step:.01,unit:'px',value:.42,note:'beam radius σ in focus'},
+    {key:'focus',label:'Defocus',group:'structure',type:'range',min:0,max:1,step:.01,value:0,note:'0 = in focus; out of focus the spot widens and its peak drops',limits:[[.7,1,'a smudge']]},
+    {key:'ramp',label:'Power ramp',group:'field',type:'range',min:0,max:1,step:.01,value:0,note:'power falls across the raster, to 15 % at 1'},
+    {key:'rampAng',label:'Ramp angle',group:'field',type:'range',min:0,max:360,step:1,unit:'°',value:0,note:'direction the power falls along'},
+    {key:'overburn',label:'Turnaround burn',group:'field',type:'range',min:0,max:1,step:.01,value:.18,note:'extra dose where the head slows to reverse at each line end'},
+    {key:'halo',label:'Heat halo',group:'color',type:'range',min:0,max:1,step:.01,value:.45,note:'fibers browned around the burn'},
+    {key:'haloR',label:'Halo reach',group:'color',type:'range',min:.5,max:12,step:.1,unit:'px',value:2,note:'how far the heat browns the fibers around the burn',limits:[[9,12,'scorch accident']]},
     {key:'ablate',label:'Ablation',group:'relief',type:'range',min:0,max:1.5,step:.01,unit:'px',value:.4,note:'how far the surface sinks at full char'},
-    {key:'diffuse',label:'Diffuse share',group:'relief',type:'range',min:0,max:1,step:.01,value:.9},
-    {key:'cut',label:'Vector cut',group:'stock',type:'select',options:['off','outline','tag'],value:'off',note:'outline = the die cut out at an offset; tag = a rounded tag with a hole'},
-    {key:'kerf',label:'Kerf',group:'stock',type:'range',min:.4,max:4,step:.05,unit:'px',value:1.3,when:{cut:['outline','tag']},limits:[[3,4,'a slot']]},
-    {key:'cutOff',label:'Cut offset',group:'stock',type:'range',min:2,max:40,step:.5,unit:'px',value:10,when:{cut:['outline']},note:'distance from the die edge to the cut'},
-    {key:'tabs',label:'Tabs',group:'stock',type:'range',min:0,max:8,step:1,value:4,when:{cut:['outline','tag']},note:'uncut bridges that hold the part'},
-    {key:'tabW',label:'Tab width',group:'stock',type:'range',min:1,max:14,step:.5,unit:'px',value:4,when:{cut:['outline','tag']}},
-    {key:'thick',label:'Card thickness',group:'stock',type:'range',min:.2,max:4,step:.05,unit:'px',value:1.4,when:{cut:['outline','tag']},note:'sizes the card edge\'s shadow on the ground in the kerf'},
-    {key:'stock',label:'Prints on',group:'stock',type:'select',options:['paper','cloth','smooth'],value:'paper'},
+    {key:'diffuse',label:'Diffuse share',group:'relief',type:'range',min:0,max:1,step:.01,value:.9,note:'share of light from the sheet light vs flat ambient fill'},
+    {key:'cut',label:'Vector cut',group:'motif',type:'select',options:['off','outline','tag'],value:'off',note:'outline = the motif cut out at an offset; tag = a rounded tag with a hole'},
+    {key:'kerf',label:'Kerf',group:'motif',type:'range',min:.4,max:4,step:.05,unit:'px',value:1.3,when:{cut:['outline','tag']},note:'width of the cut',limits:[[3,4,'a slot']]},
+    {key:'cutOff',label:'Cut offset',group:'motif',type:'range',min:2,max:40,step:.5,unit:'px',value:10,when:{cut:['outline']},note:'distance from the motif edge to the cut'},
+    {key:'tabs',label:'Tabs',group:'motif',type:'range',min:0,max:8,step:1,value:4,when:{cut:['outline','tag']},note:'uncut bridges that hold the part'},
+    {key:'tabW',label:'Tab width',group:'motif',type:'range',min:1,max:14,step:.5,unit:'px',value:4,when:{cut:['outline','tag']},note:'width of each bridge'},
+    {key:'thick',label:'Card thickness',group:'relief',type:'range',min:.2,max:4,step:.05,unit:'px',value:1.4,when:{cut:['outline','tag']},note:'sizes the card edge\'s shadow on the ground in the kerf'},
+    {key:'stock',label:'Prints on',group:'transfer',type:'select',options:['paper','cloth','smooth'],value:'paper',note:'paper = FX-03 live, cloth = FX-04 live, smooth = no substrate'},
     ...FX.INK_PARAMS('g','Ground below',.17,.006,255).map(p=>Object.assign(p,{when:{cut:['outline','tag']}})),
     FX.SEED_PARAM(12)],
   run(o,W,H,dpr,x={}){ const st=stockFor(o,x,W,H,dpr), die=(x.clips&&x.clips.die)||new Float32Array(W*H), s=o.seed|0, N=W*H;
     const foc=Math.sqrt(1+Math.pow(o.focus*5,2)), sig=Math.max(.5,o.spot*dpr*foc), pd=Math.max(2,o.pitch*dpr), th=o.scan*PI/180, dxs=Math.cos(th), dys=Math.sin(th), nx=-dys, ny=dxs, hwp=.5*(Math.abs(nx)+Math.abs(ny)), inv=1/(Math.SQRT2*sig);
     const gate=sig*.7>.8?FX.blur(die,W,H,sig*.6):die, near=FX.blur(die,W,H,Math.ceil(sig*2.2+pd)), SD=o.overburn>0?FX.sdf(die,W,H):null, SDo=o.cut==='outline'?FX.sdf(e_fill(die,W,H),W,H):null;
     let bx0=W,bx1=0,by0=H,by1=0; for(let y=0;y<H;y+=2) for(let X=0;X<W;X+=2) if(die[y*W+X]>.5){ if(X<bx0)bx0=X; if(X>bx1)bx1=X; if(y<by0)by0=y; if(y>by1)by1=y; } const bcx=(bx0+bx1)/2||W/2, bcy=(by0+by1)/2||H/2;
+    const dose=pd/(o.pitch*dpr); // pitch clamped to 2 device px: scale the dose by the clamp so the tone matches the asked pitch
     const cx=W/2, cy=H/2, RR=Math.ceil(3.2*sig/pd)+1, Pref=2.6*dpr, ra=o.rampAng*PI/180, rc=Math.cos(ra), rs=Math.sin(ra), rext=Math.max(4,(Math.abs((bx1-bx0)*rc)+Math.abs((by1-by0)*rs))/2);
     const D=new Float32Array(N), fired=new Map();
     for(let y=0;y<H;y++) for(let X=0;X<W;X++){ const i=y*W+X; if(near[i]<1e-4) continue; const px=X+.5-cx, py=y+.5-cy, t=px*nx+py*ny, al=px*dxs+py*dys, k0=Math.floor(t/pd);
@@ -744,7 +765,7 @@ const laser={ id:'fx-12-laser', code:'FX-12', name:'Laser char', role:'mark · b
       if(e<=0) continue;
       let P=o.power*(1-o.ramp*.85*clamp(((X+.5-bcx)*rc+(y+.5-bcy)*rs)/rext*.5+.5,0,1));
       if(SD&&o.overburn>0&&SD[i]>-1){ const gxs=SD[X<W-1?i+1:i]-SD[X>0?i-1:i], gys=SD[y<H-1?i+W:i]-SD[y>0?i-W:i], gl=Math.hypot(gxs,gys)||1; P*=1+o.overburn*1.6*Math.exp(-Math.max(0,SD[i])/(1.4*dpr))*Math.abs(gxs*dxs+gys*dys)/gl; }
-      D[i]=P/o.speed*e*Pref; }
+      D[i]=P/o.speed*e*Pref*dose; }
     // vector cut: a kerf along a path, bridged by tabs; the cut's own dose chars the kerf walls
     let V=null; if(o.cut!=='off'){ V=new Float32Array(N); const kh=o.kerf*.5*dpr, sc=Math.max(.6,.5*dpr)*foc, nt=o.tabs|0, tw=o.tabW*.5*dpr, w=W/dpr, h=H/dpr;
       const hx=w*.41*dpr, hy=h*.37*dpr, rr=18*dpr, hcx=-hx+28*dpr, hr=7*dpr;
@@ -757,7 +778,7 @@ const laser={ id:'fx-12-laser', code:'FX-12', name:'Laser char', role:'mark · b
     const LUT=e_charLUT(), alb=baseAlb(st,x,W,H), hs=stockH(st,x.S), Hb=o.halo>0?FX.blur(D,W,H,o.haloR*dpr*.7):null, halo=FX.filmLUT(FX.ink(.64,.055,64)), hpx=new Float32Array(N), CH=new Float32Array(N);
     for(let y=0;y<H;y++) for(let X=0;X<W;X++){ const i=y*W+X, k=i*3, d=D[i], c=1-Math.exp(-Math.max(0,d-.3)*1.35); CH[i]=c;
       if(c>0){ const j=((c*256+.5)|0)*3; alb[k]*=LUT[j]; alb[k+1]*=LUT[j+1]; alb[k+2]*=LUT[j+2]; }
-      if(Hb){ const hv=o.halo*sstep(.04,.7,Hb[i])*(1-c)*(1+2.2*(st&&st.fib?st.fib[i]:0))*(.45+1.1*FX.gnoise(X/dpr/2.6,y/dpr/2.6,s+5))*(st&&st.form?1+.6*(st.form[i]-.5):1); if(hv>0){ const j=((Math.min(2,hv*.9)*512+.5)|0)*3; alb[k]*=halo[j]; alb[k+1]*=halo[j+1]; alb[k+2]*=halo[j+2]; } }
+      if(Hb){ const hv=o.halo*sstep(.04,.7,Hb[i])*(1-c)*(1+2.2*(st&&st.fib?st.fib[i]:0))*(.45+1.1*FX.gnoise(X/dpr/2.6,y/dpr/2.6,s+5))*(st&&st.form?1+.6*(st.form[i]-.5):1); if(hv>0) FX.filmInto(alb,k,halo,Math.min(2,hv*.9)); }
       const dep=o.ablate*(1-Math.exp(-Math.max(0,d-.55)*.9)), crust=c*c*.1*(FX.grain(X/dpr,y/dpr,s+3,.8,dpr)-.5);
       hpx[i]=(st?st.h[i]*hs:0)*(1-.85*c)-dep+crust-(V?V[i]*.4:0); }
     const lf=litFrom(hpx,W,H,dpr,o.diffuse,.45); if(st&&st.lf) for(let k=0;k<lf.length;k++) lf[k]*=lerp(1,st.lf[k],.25); carryLF(lf,x.lf,st);
@@ -777,35 +798,36 @@ const d_at=(F,W,H,dpr,u,v)=>{ const X=clamp(u*dpr-.5,0,W-1.001), Y=clamp(v*dpr-.
 const d_studio=(L,bx,by,soft,Lbox)=>{ const ec=(L.el+(90-L.el)*.55)*PI/180, ea=L.az*PI/180, c=[Math.cos(ea)*Math.cos(ec),Math.sin(ea)*Math.cos(ec),Math.sin(ec)], e1=[-Math.sin(ea),Math.cos(ea),0], e2=[c[1]*e1[2]-c[2]*e1[1],c[2]*e1[0]-c[0]*e1[2],c[0]*e1[1]-c[1]*e1[0]];
   return (rx,ry,rz)=>{ const rl=rx*c[0]+ry*c[1]+rz*c[2]; let sb=0; if(rl>.05){ const X=(rx*e1[0]+ry*e1[1]+rz*e1[2])/rl, Y=(rx*e2[0]+ry*e2[1]+rz*e2[2])/rl; sb=sstep(bx+soft,bx-soft,Math.abs(X))*sstep(by+soft,by-soft,Math.abs(Y))*(1.2-.55*Math.min(1,(X*X)/(bx*bx)*.6+(Y*Y)/(by*by))); } /* a soft box is brightest at its center */ return sb*Lbox+.16*Math.pow(rz>0?rz:0,3)+.02+.09*Math.max(0,1-Math.abs(rz)*1.6); }; }; /* + the lit walls of the room, seen at grazing angles */
 
-/* FX-09 · Spot UV varnish — a clear gloss film on a die area of matte board: invisible head-on, it lives in the reflection */
-const spotUV={ id:'fx-09-spot-uv', code:'FX-09', name:'Spot UV varnish', role:'mark · clear film', section:'new', stockOf:o=>o.stock==='paper'?TOOTH:null,
+/* FX-09 · Spot UV varnish · a clear gloss film on a motif area of matte board: invisible head-on, it lives in the reflection */
+const spotUV={ id:'fx-09-spot-uv', code:'FX-09', name:'Spot UV varnish', section:'added', kind:'finish', tool:'screen / coater', mechanism:['deposit','reflect'], stockOf:o=>o.stock==='paper'?TOOTH:null,
   clips:{ die:(g,w,h,o)=>drawShape(g,w,h,o) },
   presets:[['on black board',{}],['tone-on-tone pattern',{shape:'monogram',text:'Marlow',size:.74,area:'die + field',pattern:'lines',pitch:2.6,pSize:.4,pAngle:-45,gap:3,bL:.38,bC:.03,bh:170,wet:.6,build:.14,round:.8,box:.42}],['raised UV',{shape:'word',text:'Nightjar',size:.62,build:1.4,round:3.8,level:1,gloss:.96,wet:.35,box:.5,cam:.85}]],
-  sub:'A clear gloss film printed only on the die, over matte board. Head-on it all but disappears; it shows as the sheet light\'s soft box mirrored in a surface flatter than the paper, a crisp sheen boundary at the film edge, and a faint wet darkening of the stock beneath. Drag the light and the reflection slides across the mark.',
+  sub:'A clear gloss film printed only on the motif, over matte board. Head-on it all but disappears; it shows as the sheet light\'s soft box mirrored in a surface flatter than the paper, a crisp sheen boundary at the film edge, and a faint wet darkening of the stock beneath. Drag the light and the reflection slides across the mark.',
   recipe:[
-    'Die = an invented mark, a word or a ring seal (AA clip, main thread) → exact signed distance. Coverage pattern: solid, or an analytic line / dot screen intersected with the die (or with the sheet around it), so every line and dot keeps a 1-device-px edge.',
+    'Motif = an invented mark, a word or a ring seal (AA clip, main thread) → exact signed distance. Coverage pattern: solid, or an analytic line / dot screen intersected with the motif (or with the sheet around it), so every line and dot keeps a 1-device-px edge.',
     'Film profile from the signed distance: a rounded shoulder (1 − (1 − d / rounding)²) rising to the film build. The film levels the FX-03 tooth: its top = lerp(tooth, smoothed tooth, leveling × profile) + build × profile.',
     'Stock: FX-03\'s relief and fibers under a board color (OKLCH; dark by default). Matte = Lambert from FX-03 × albedo + a weak, broad rough-dielectric sheen on the tooth facets.',
     'Film: Fresnel (n = 1.5, F₀ = .04) from a perspective viewer above the plate; the mirror vector samples the studio (a rectangular soft box at the sheet light, a dim ceiling, a dark room); gloss sets the box edge softness and the glint exponent. Under the film the matte sheen is gone and the stock is darker and deeper in OKLab (wet tone).',
     'One light: the box center, glint and FX-03 shading all follow FX.LIGHT.'],
   limits:[['film build','> 2 px','a blister or a sticker, not a print finish'],['edge rounding','< .4 px','the sheen boundary aliases on 1× screens'],['pattern pitch','< 2.5 px','lines and dots fall to a pixel checker at 1× (fine at 2×+)'],['gloss','< .35','reads as a matte or satin varnish: the mark stops revealing itself in the reflection'],['light elevation','> 75°','the soft box moves behind the viewer: the film nearly vanishes (as real spot UV does under overhead light)']],
   params:[...SHAPE_PARAMS({shape:'sun',size:.74}),
-    {key:'pattern',label:'Coverage',group:'density',type:'select',options:['solid','lines','dots'],value:'solid',note:'a solid film, or a fine line / dot screen of varnish'},
-    {key:'area',label:'Varnish on',group:'density',type:'select',options:['die','reverse','die + field'],value:'die',note:'die = the mark is varnished · reverse = the sheet is varnished and the mark stays matte · die + field = a solid mark inside a patterned field'},
-    {key:'pitch',label:'Pattern pitch',group:'density',type:'range',min:1.2,max:16,step:.05,unit:'px',value:3,curve:2,when:{pattern:['lines','dots']},limits:[[1.2,2.5,'a pixel checker at 1× (fine at 2×+)']]},
-    {key:'pSize',label:'Line / dot share',group:'density',type:'range',min:.15,max:.92,step:.01,value:.45,when:{pattern:['lines','dots']},note:'line width or dot diameter ÷ pitch'},
-    {key:'pAngle',label:'Pattern angle',group:'density',type:'range',min:-90,max:90,step:1,unit:'°',value:45,when:{pattern:['lines','dots']}},
-    {key:'gap',label:'Keep-out',group:'density',type:'range',min:0,max:12,step:.1,unit:'px',value:2.5,when:{area:['reverse','die + field']},note:'matte ring between the mark and the varnished field'},
+    {key:'pattern',label:'Coverage',group:'structure',type:'select',options:['solid','lines','dots'],value:'solid',note:'a solid film, or a fine line / dot screen of varnish'},
+    {key:'area',label:'Varnish on',group:'structure',type:'select',options:['die','reverse','die + field'],value:'die',note:'die = the motif is varnished · reverse = the sheet is varnished and the motif stays matte · die + field = a solid motif inside a patterned field'},
+    {key:'pitch',label:'Pattern pitch',group:'structure',type:'range',min:1.2,max:16,step:.05,unit:'px',value:3,curve:2,when:{pattern:['lines','dots']},note:'distance between lines or dots',limits:[[1.2,2.5,'a pixel checker at 1× (fine at 2×+)']]},
+    {key:'pSize',label:'Line / dot share',group:'structure',type:'range',min:.15,max:.92,step:.01,value:.45,when:{pattern:['lines','dots']},note:'line width or dot diameter ÷ pitch'},
+    {key:'pAngle',label:'Pattern angle',group:'structure',type:'range',min:-90,max:90,step:1,unit:'°',value:45,when:{pattern:['lines','dots']},note:'angle of the line or dot screen'},
+    {key:'gap',label:'Keep-out',group:'structure',type:'range',min:0,max:12,step:.1,unit:'px',value:2.5,when:{area:['reverse','die + field']},note:'matte ring between the motif and the varnished field'},
     {key:'build',label:'Film build',group:'relief',type:'range',min:.02,max:2.5,step:.01,unit:'px',value:.22,curve:2,note:'film height in CSS px at the plate\'s macro scale (flat UV ≈ .1–.3, raised / tactile UV ≈ 1–2)',limits:[[2,2.5,'blister']]},
     {key:'round',label:'Edge rounding',group:'relief',type:'range',min:.2,max:8,step:.05,unit:'px',value:1.6,curve:2,note:'width of the film\'s rounded shoulder, the meniscus that catches the light at the edge',limits:[[.2,.4,'aliases at 1×']]},
     {key:'level',label:'Leveling',group:'relief',type:'range',min:0,max:1,step:.01,value:.93,note:'how far the film fills the tooth: 1 = a glass-flat top, 0 = the film follows the paper'},
-    {key:'gloss',label:'Gloss',group:'relief',type:'range',min:0,max:1,step:.01,value:.9,note:'surface smoothness: a sharp-edged soft-box reflection and a tight glint at 1, satin at .3',limits:[[0,.35,'satin varnish']]},
-    {key:'mirror',label:'Reflection',group:'relief',type:'range',min:0,max:2,step:.01,value:1,note:'brightness of the soft box (the sheet light) seen in the film'},
-    {key:'box',label:'Soft-box size',group:'relief',type:'range',min:.08,max:1,step:.01,value:.42,note:'half-height of the sheet light\'s soft box as seen from the sheet (tangent units); its reflection is a window of sheen'},
-    {key:'cam',label:'Camera distance',group:'relief',type:'range',min:.5,max:6,step:.05,value:1.1,note:'viewer height in plate widths: closer = the reflection sweeps further across the sheet'},
+    {key:'gloss',label:'Gloss',group:'finish',type:'range',min:0,max:1,step:.01,value:.9,note:'surface smoothness: a sharp-edged soft-box reflection and a tight glint at 1, satin at .3',limits:[[0,.35,'satin varnish']]},
+    {key:'mirror',label:'Reflection',group:'finish',type:'range',min:0,max:2,step:.01,value:1,note:'brightness of the soft box (the sheet light) seen in the film'},
+    {key:'box',label:'Soft-box size',group:'finish',type:'range',min:.08,max:1,step:.01,value:.42,note:'half-height of the sheet light\'s soft box as seen from the sheet (tangent units); its reflection is a window of sheen'},
+    {key:'cam',label:'Camera distance',group:'finish',type:'range',min:.5,max:6,step:.05,value:1.1,note:'viewer height in plate widths: closer = the reflection sweeps further across the sheet'},
     {key:'wet',label:'Wet tone',group:'color',type:'range',min:0,max:1,step:.01,value:.45,note:'darkening and deepening of the stock under the film (the varnish replaces the air in the tooth)'},
     ...FX.INK_PARAMS('b','Board',.22,.006,265).map(p=>p.key==='bL'?Object.assign(p,{label:'Stock darkness · L',note:'OKLCH lightness of the board (FX-03 relief and fibers, this color)'}):p),
-    {key:'stock',label:'Prints on',group:'stock',type:'select',options:['paper','smooth'],value:'paper',note:'paper = FX-03 live (its tooth is what the film levels); smooth = a coated, toothless board'}],
+    {key:'stock',label:'Prints on',group:'transfer',type:'select',options:['paper','smooth'],value:'paper',note:'paper = FX-03 live (its tooth is what the film levels); smooth = a coated, toothless board'},
+    FX.SEED_PARAM(9)],
   run(o,W,H,dpr,x={}){ const st=stockFor(o,x,W,H,dpr), clip=(x.clips&&x.clips.die)||new Float32Array(W*H), hs=stockH(st,x.S), w=W/dpr, h=H/dpr, NP=W*H;
     const SD=FX.blur(FX.sdf(clip,W,H),W,H,Math.max(1,Math.round(.6*dpr))), pa=o.pAngle*PI/180, pc=Math.cos(pa), ps=Math.sin(pa), P=o.pitch, half=o.pSize*P*.5, pat=o.pattern, rd=Math.max(.2,o.round);
     // varnish signed distance (CSS px, + inside): die ∩ pattern, or the sheet around the die, or die ∪ patterned field
@@ -836,31 +858,31 @@ const spotUV={ id:'fx-09-spot-uv', code:'FX-09', name:'Spot UV varnish', role:'m
     const albOut=new Float32Array(NP*3); for(let k=0;k<albOut.length;k++) albOut[k]=wetA[k];
     return {alb:albOut,lf:lfb,lin,ink:cov,stock:hpx,mask:cov,marks:Math.round(n/(dpr*dpr)),markUnit:'px² under film'}; } };
 
-/* FX-10 · Satin embroidery — thread floats laid across a die, stitched into the cloth, gleaming along their length */
-const embroidery={ id:'fx-10-embroidery', code:'FX-10', name:'Satin embroidery', role:'mark · thread', section:'new', stockOf:o=>o.stock==='cloth'?WEAVE:o.stock==='paper'?TOOTH:null,
+/* FX-10 · Satin embroidery · thread floats laid across a motif, stitched into the cloth, gleaming along their length */
+const embroidery={ id:'fx-10-embroidery', code:'FX-10', name:'Satin embroidery', section:'added', kind:'construction', tool:'needle', mechanism:['stitch','deform','reflect'], stockOf:o=>o.stock==='cloth'?WEAVE:o.stock==='paper'?TOOTH:null,
   clips:{ die:(g,w,h,o)=>drawShape(g,w,h,o) },
   presets:[['rayon gloss',{}],['matte cotton floss',{sheen:.14,twist:.55,loft:.85,density:19,yL:.7,yC:.11,yh:72,maxFloat:46}],['chain-stitch outline',{shape:'knot',size:.7,outline:'chain',oLen:6.5,angle:-62,density:26,yL:.6,yC:.1,yh:182,maxFloat:60}]],
-  sub:'A satin fill: long thread floats laid side by side across the die at one angle, each a slightly rounded body whose filaments gleam along their length, so the fill lights up or goes dark as the sheet light turns. Long floats split into staggered rows, ends land unevenly at the edge, needle holes dimple the cloth and the ground puckers where the stitches pull.',
+  sub:'A satin fill: long thread floats laid side by side across the motif at one angle, each a slightly rounded body whose filaments gleam along their length, so the fill lights up or goes dark as the sheet light turns. Long floats split into staggered rows, ends land unevenly at the edge, needle holes dimple the cloth and the ground puckers where the stitches pull.',
   recipe:[
-    'Die → exact signed distance. Satin: centerlines across the die at the stitch angle, one per 100 / density px; each centerline is marched against the die to find where the needle goes in and out (concave dies give several floats per row).',
+    'Motif → exact signed distance. Satin: centerlines across the motif at the stitch angle, one per 100 / stitch count px; each centerline is marched against the motif to find where the needle goes in and out (concave motifs give several floats per row).',
     'Ends stagger (alternating needle points + jitter); floats longer than the max split into rows at brick-staggered points. Each float: a capsule whose cross-section is rounded (flatter when long), sinking into its needle hole at both ends, with an S-twist ridge along it.',
-    'Floats are z-buffered by height (neighbors overlap like real satin); an optional split, running or chain stitch is traced along the die edge (marching-squares contour, real arc length) and laid on top.',
+    'Floats are z-buffered by height (neighbors overlap like real satin); an optional split, running or chain stitch is traced along the motif edge (marching-squares contour, real arc length) and laid on top.',
     'Cloth (FX-04 live): pucker ridges run along the pull direction at the stitch ends, decaying away from the edge; a crease dimples just outside the satin; needle holes darken it. Its own lighting is kept and multiplied by the pucker\'s Lambert.',
     'Thread light: Lambert on the thread normals + an anisotropic gleam (Kajiya–Kay along the twisted filament direction × a lobe across the cylinder), from the sheet light; a height-field shadow and cavity occlusion from the stitched relief fall onto the cloth and between floats. Color: OKLCH.'],
-  limits:[['density','> 45 /100 px','threads under ~2 px: the fill reads as a smooth sheet at 1× (fine at 2×+)'],['density','< 12 /100 px','gaps open between floats'],['max float','> 200 px','floats too long to hold: they would snag; read as a ribbon'],['sheen','> .9 with low twist','reads as plastic'],['pull','> .7','the ground reads crumpled, not stitched']],
+  limits:[['stitch count','> 45 /100 px','threads under ~2 px: the fill reads as a smooth sheet at 1× (fine at 2×+)'],['stitch count','< 12 /100 px','gaps open between floats'],['max float','> 200 px','floats too long to hold: they would snag; read as a ribbon'],['sheen','> .9 with low twist','reads as plastic'],['pull','> .7','the ground reads crumpled, not stitched']],
   params:[...SHAPE_PARAMS({shape:'crescent',size:.74,text:'Wren'}),
-    {key:'density',label:'Stitch density',group:'density',type:'range',min:8,max:60,step:.5,unit:'/100px',value:24,note:'satin threads per 100 CSS px, across the stitch direction',limits:[[45,60,'a smooth sheet at 1×'],[8,12,'gaps open']]},
-    {key:'angle',label:'Stitch angle',group:'density',type:'range',min:-90,max:90,step:1,unit:'°',value:-38,note:'direction of the floats; threads gleam most when they run across the light'},
-    {key:'maxFloat',label:'Max float',group:'density',type:'range',min:8,max:400,step:1,unit:'px',value:72,curve:2,note:'longest stitch before it splits into rows (split satin); the split points stagger like brickwork',limits:[[200,400,'snags']]},
-    {key:'stagger',label:'End stagger',group:'density',type:'range',min:0,max:1,step:.01,value:.45,note:'how unevenly the stitch ends land along the die edge (alternating needle points + jitter)'},
-    {key:'outline',label:'Outline',group:'density',type:'select',options:['none','split','running','chain'],value:'none',note:'split stitch (each stitch pierces the last), running stitch, or chain stitch along the die edge'},
-    {key:'oLen',label:'Outline stitch',group:'density',type:'range',min:1.5,max:14,step:.1,unit:'px',value:4,when:{outline:['split','running','chain']},note:'stitch (or chain link) length'},
+    {key:'density',label:'Stitch count',group:'structure',type:'range',min:8,max:60,step:.5,unit:'/100px',value:24,note:'satin threads per 100 CSS px, across the stitch direction',limits:[[45,60,'a smooth sheet at 1×'],[8,12,'gaps open']]},
+    {key:'angle',label:'Stitch angle',group:'structure',type:'range',min:-90,max:90,step:1,unit:'°',value:-38,note:'direction of the floats; threads gleam most when they run across the light'},
+    {key:'maxFloat',label:'Max float',group:'structure',type:'range',min:8,max:400,step:1,unit:'px',value:72,curve:2,note:'longest stitch before it splits into rows (split satin); the split points stagger like brickwork',limits:[[200,400,'snags']]},
+    {key:'stagger',label:'End stagger',group:'structure',type:'range',min:0,max:1,step:.01,value:.45,note:'how unevenly the stitch ends land along the motif edge (alternating needle points + jitter)'},
+    {key:'outline',label:'Outline',group:'structure',type:'select',options:['none','split','running','chain'],value:'none',note:'split stitch (each stitch pierces the last), running stitch, or chain stitch along the motif edge'},
+    {key:'oLen',label:'Outline stitch',group:'structure',type:'range',min:1.5,max:14,step:.1,unit:'px',value:4,when:{outline:['split','running','chain']},note:'stitch (or chain link) length'},
     {key:'loft',label:'Thread loft',group:'relief',type:'range',min:.2,max:1.6,step:.01,value:.55,note:'thread height ÷ thread radius: round (1) or flattened (.4)'},
     {key:'twist',label:'Thread twist',group:'relief',type:'range',min:0,max:1,step:.01,value:.15,note:'ply twist: helical ridges along each float and the angle of the filaments that carry the gleam (rayon low, cotton floss high)'},
-    {key:'sheen',label:'Sheen',group:'relief',type:'range',min:0,max:1,step:.01,value:.82,note:'anisotropic gleam along the thread: polyester / rayon ≈ .8, cotton ≈ .15',limits:[[.9,1,'plastic']]},
+    {key:'sheen',label:'Sheen',group:'finish',type:'range',min:0,max:1,step:.01,value:.82,note:'anisotropic gleam along the thread: polyester / rayon ≈ .8, cotton ≈ .15',limits:[[.9,1,'plastic']]},
     {key:'pull',label:'Pull / pucker',group:'relief',type:'range',min:0,max:1,step:.01,value:.35,note:'how hard the stitches draw the ground: ridges along the pull at the stitch ends and a crease at the edge',limits:[[.7,1,'crumpled']]},
     ...FX.INK_PARAMS('y','Thread',.68,.165,52),
-    {key:'stock',label:'Stitched into',group:'stock',type:'select',options:['cloth','paper'],value:'cloth',note:'cloth = FX-04 live; paper = FX-03 live (a stitched card)'},
+    {key:'stock',label:'Stitched into',group:'transfer',type:'select',options:['cloth','paper'],value:'cloth',note:'cloth = FX-04 live; paper = FX-03 live (a stitched card)'},
     FX.SEED_PARAM(19)],
   run(o,W,H,dpr,x={}){ const st=stockFor(o,x,W,H,dpr), clip=(x.clips&&x.clips.die)||new Float32Array(W*H), s=o.seed|0, w=W/dpr, h=H/dpr, NP=W*H, hs=stockH(st,x.S);
     const SD=FX.sdf(clip,W,H), pitch=100/o.density, R0=pitch*.66, loft=o.loft, th=o.angle*PI/180, ca=Math.cos(th), sa=Math.sin(th), cx=w/2, cy=h/2, ext=Math.hypot(w,h)/2+pitch*3, NJ=Math.ceil(2*ext/pitch)+1;
@@ -1438,13 +1460,36 @@ const clipsFor=(e,W,H,dpr,o,img,mk)=>{ const make=mk?((W,H)=>mk(W,H)):((W,H)=>{ 
   if(o&&(o.mShape==='type'||(o.mShape==='image'&&img))) draw('umask',(g,w,h)=>{ if(o.mShape==='image'){ g.fillStyle='#fff'; g.fillRect(0,0,w,h); } umaskDraw(g,w,h,o,img); },o.mShape==='image');
   return out; };
 
+/* effects in sheet order (stocks → added → changed); role = kind · tool */
+const EFFECTS=[tooth,weave,stipple,inkEdge,graphite,typewriter,foil,spotUV,embroidery,deboss,cyanotype,laser];
+EFFECTS.forEach(e=>{ e.role=e.kind+' · '+e.tool; });
 /* an art-directed light per usage: its own elevation; azimuth follows the sheet light's turn from default */
 const lightFor=(u,L)=>u&&u.light?{az:((u.light.az+(L.az-225))%360+360)%360,el:u.light.el}:L;
-G.FXSET={ code:'T-04', lightFor, clips:(id,W,H,dpr,o,img,mk)=>clipsFor(FXSET.effects.find(e=>e.id===id),W,H,dpr,o,img,mk), title:'Effect set · Four surfaces', short:'Four surfaces', set:'Set 01',
-  premise:'Two stocks and ten marks, one material system. Paper and cloth are height fields; ink, graphite, foil, varnish, thread, sunlight and a laser all land on them, and one sheet light rakes all of it. No gradient stands in for anything.',
-  system:{ read:'Ink on real stock under one raking light.', sharedCause:['stock height field → relief shading · ink acceptance · starved pinholes · wicking · ink mottle','sheet light → paper relief · thread modeling · thread cast shadows · object shadows on the page'], passOrder:['stock height (tooth · fibers · pits · formation | threads)','albedo (paper L, thread dyes in OKLab)','ink pressure (dot footprints | roller run-out) × mask','acceptance vs height → starve → wick → film thickness','color: Beer–Lambert film in linear light (or coverage mix)','light: × Lambert shade × height shadow (once, last)','page: object cast shadow, sRGB encode'] },
-  source:'Mindgut · Technique & Front-End Study V01 §08 (texture recipes) · ø co. · 2026-10-23',
+G.FXSET={ code:'T-04', lightFor, clips:(id,W,H,dpr,o,img,mk)=>clipsFor(FXSET.effects.find(e=>e.id===id),W,H,dpr,o,img,mk), title:'Effect set · Stock and light', short:'Stock and light', set:'Set 01',
+  premise:'Two stocks and ten effects in one material system. Paper and cloth are lit height fields. Ink, graphite, foil, varnish and thread land on them; a die, sunlight and a laser change them in place. One sheet light shades all of it, and no gradient stands in for a material.',
+  system:{
+    read:'Every effect reads the stock\'s height and is lit by one sheet light.',
+    sharedCause:[
+      'stock height → where ink, graphite and foil take, where they starve, how fibers wick, how film mottles',
+      'stock height → how a die, a type bar, a beam or a stitch reshapes the surface, and how a coating holds',
+      'sheet light → diffuse shading of every relief: tooth, threads, deboss walls, burns, stitches',
+      'sheet light → shadows: thread gaps, lifted sheets, objects on a sun print, a laser kerf',
+      'sheet light seen as a soft box → reflections on foil, varnish, graphite and thread'],
+    passOrder:[
+      'stock: height (tooth, fibers, pits, formation, or threads) and albedo',
+      'driver: pressure, dose or exposure across the plate, times the mask or motif',
+      'transfer: driver against stock height → acceptance, starve or release, wick',
+      'change: deposit film or solid, lay thread, press, burn or develop',
+      'color: Beer–Lambert film or an OKLab mix, in linear light',
+      'height: stock plus the effect\'s own relief, in CSS px',
+      'diffuse light: Lambert and height shadow from the sheet light, applied once',
+      'view-dependent light: soft-box reflection and glints, added last',
+      'page: contact shading on the white ground, then sRGB encode'] },
+  source:'Mindgut · Technique & Front-End Study V01 §08 (texture recipes) · 2026-10-23',
   jobs:[['brand','Stationery & brand'],['print','Print'],['packaging','Packaging'],['textile','Textile'],['screen','Screen & deck'],['data','Data']],
-  sections:[{id:'surfaces',title:'Four surfaces',blurb:'The source set: two stocks and two marks.'},{id:'surprise',title:'Surprise marks',blurb:'Marks that only make sense on a material system — one is pure light, one is metal, one is struck through cloth, one gleams.'},{id:'new',title:'New marks',blurb:'Finishes and fibers past ink: each one exists only because the stock and the sheet light do.'}],
-  effects:[stipple,inkEdge,tooth,weave,graphite,deboss,typewriter,foil,spotUV,embroidery,cyanotype,laser], usages };
+  sections:[
+    {id:'stocks', title:'Stocks', blurb:'Paper and cloth as lit height fields. Every other effect reads their height, color and light.'},
+    {id:'added', title:'Added marks', blurb:'Something lands on the stock: ink, graphite, foil, varnish or thread. The stock\'s height decides where it takes.'},
+    {id:'changed', title:'Changed in place', blurb:'The stock itself changes. A die presses it, sunlight turns a brushed coating blue, a laser burns it.'}],
+  effects:EFFECTS, usages };
 })(typeof window!=='undefined'?window:self);
