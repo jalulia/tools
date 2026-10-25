@@ -1325,8 +1325,10 @@ const A4_LIT=13, A4_CYCLE=21;
 const a4_RS=(w,h)=>{ const m=w*.075, fs=a4_f(w,.024), x0=m+fs*2.6, bw=w*.3, yT=h*.135, yB=h*.925, p=(yB-yT)/A4_CYCLE, bh=p*.6;
   return {m,fs,x0,bw,x1:x0+bw,yT,yB,p,bh,cx:x0+bw+w*.075,cy:i=>yB-p*(i+.5),by:i=>yB-p*(i+.5)-bh/2}; };
 /* key swatches: a lit and an open cell, at reduced width, set in the right column */
-const a4_rsKey=(w,h)=>{ const q=a4_RS(w,h), sw=q.fs*2.4, sh=q.bh*.8; return {sw,sh,x:q.cx,y:[q.yB-q.p*4.2,q.yB-q.p*1.6]}; };
-const a4_frame=(g,x,y,ww,hh,lw)=>{ g.lineWidth=lw; g.lineJoin='miter'; g.strokeRect(x+lw/2,y+lw/2,ww-lw,hh-lw); };
+const a4_rsKey=(w,h)=>{ const q=a4_RS(w,h), sw=q.fs*2.4, sh=q.bh*.8; return {sw,sh,x:q.cx,y:[q.yB-q.p*4.8,q.yB-q.p*2.3]}; };
+/* a transfer-pattern outline: the dashed line printed on cloth before it is worked; rules snapped to device px, dashes start at each corner */
+const a4_dash=(g,x,y,ww,hh,d=3,gp=2.2)=>{ const run=(a,b,f)=>{ const L=b-a, n=Math.max(1,Math.round((L+gp)/(d+gp))), st=(L+gp)/n; for(let k=0;k<n;k++) f(a+k*st,Math.min(b,a+k*st+st-gp)); };
+  run(x,x+ww,(a,b)=>{ b3_hr(g,a,b,y+.5); b3_hr(g,a,b,y+hh-.5); }); run(y,y+hh,(a,b)=>{ b3_vr(g,x+.5,a,b); b3_vr(g,x+ww-.5,a,b); }); };
 
 /* C · transcript: an invented session, typed. [who, time, lines, overstrike = [line, column, length]] */
 const A4_TURNS=[
@@ -1920,26 +1922,26 @@ const usages=[
         A4_CLASH.forEach(([c],k)=>typeAt(g,c.toFixed(2),q.cx(k),q.ny,q.fsN,{weight:700,align:'center',track:-q.fsN*.01})); } },
     run(P,W,H,dpr,x){ const w=W/dpr,h=H/dpr,q=a4_CO(w,h),C=x.clips,E=P('fx-02-ink-edge');
       return chain([{fx:inkEdge,o:Object.assign({},E,a4_BORDER),x:{clip:C.border}},{fx:inkEdge,o:Object.assign({},E,a4_DIM),x:{clip:C.dim}},{fx:inkEdge,o:E,x:{clip:C.black}},{fx:stipple,o:P('fx-01-stipple'),x:{field:(u,v,L)=>a4_coField(q,u,v,L)}}],W,H,dpr,x); } },
-  { id:'c-respiration', job:'concept', title:'Respiration rail · 13 of 21 breaths, stitched', sub:'The RESPIRATION reading stood on end and sewn into white shirting: 21 breath cells, breath 1 at the bottom. The 13 taken are satin-filled in --c258, the color the product gives a lit respiration cell. The 8 still to come are only outlined, in split stitch, in a gray thread. The rail renews at 21. The count is a placeholder, and the labels keep the product\'s 7 px caps grammar, scaled up to read.', uses:['fx-10-embroidery','fx-02-ink-edge','fx-04-weave'], aspect:'9/16', light:{az:222,el:30},
+  { id:'c-respiration', job:'concept', title:'Respiration rail · 13 of 21 breaths, stitched', sub:'The RESPIRATION reading stood on end and sewn into white shirting: 21 breath cells, breath 1 at the bottom. The 13 taken are satin-filled in --c258, the color the product gives a lit respiration cell. The 8 still to come are not stitched at all. They are the transfer pattern, a dashed gray outline printed on the cloth before work begins: the part not yet worked. The rail renews at 21. The count is a placeholder, and the labels keep the product\'s 7 px caps grammar, scaled up to read.', uses:['fx-10-embroidery','fx-02-ink-edge','fx-04-weave'], aspect:'9/16', light:{az:222,el:30},
     overrides:{'fx-04-weave':Object.assign({},SHIRT,{warp:66,weft:62,fill:.96,slub:0,hair:.03,irregular:.02,dye:0,wear:0,depth:.35,shadow:.3,wL:.94,fL:.96,wC:.003,fC:.002}),
       'fx-10-embroidery':{stock:'cloth',count:38,angle:82,maxFloat:72,stagger:.15,outline:'none',loft:.5,twist:.32,sheen:.36,pull:.06,yL:.542,yC:.226,yh:311.4,seed:29},
       'fx-02-ink-edge':a4_ink(a4_TEXT,'cloth',1.5)},
     clips:{
       lit:(g,w,h)=>{ const q=a4_RS(w,h), K=a4_rsKey(w,h); for(let i=0;i<A4_LIT;i++) g.fillRect(q.x0,q.by(i),q.bw,q.bh); g.fillRect(K.x,K.y[0]-K.sh/2,K.sw,K.sh); },
-      open:(g,w,h)=>{ const q=a4_RS(w,h), K=a4_rsKey(w,h), lw=.8; g.strokeStyle='#fff'; for(let i=A4_LIT;i<A4_CYCLE;i++) a4_frame(g,q.x0,q.by(i),q.bw,q.bh,lw); a4_frame(g,K.x,K.y[1]-K.sh/2,K.sw,K.sh,lw); },
+      open:(g,w,h)=>{ const q=a4_RS(w,h), K=a4_rsKey(w,h); for(let i=A4_LIT;i<A4_CYCLE;i++) a4_dash(g,q.x0,q.by(i),q.bw,q.bh); a4_dash(g,K.x,K.y[1]-K.sh/2,K.sw,K.sh,2.4,1.8); },
       dim:(g,w,h)=>{ const q=a4_RS(w,h), K=a4_rsKey(w,h), f=q.fs, tx=K.x+K.sw+f*.9;
         a4_lab(g,'Respiration',q.m,q.m+f,f); a4_labR(g,'Folio 02',w-q.m,q.m+f,f);
         [[0,'1'],[A4_LIT-1,'13'],[A4_CYCLE-1,'21']].forEach(([i,t])=>{ a4_labR(g,t,q.x0-f*.7,q.cy(i)+f*.36,f); });
         a4_lab(g,'Next renewal',q.cx,q.cy(A4_CYCLE-1)+f*.36,f); a4_lab(g,'at 21',q.cx,q.cy(A4_CYCLE-1)+f*1.9,f);
         a4_lab(g,'Exchanges',q.cx,q.cy(A4_LIT-1)+f*2.2,f); a4_lab(g,'of 21 this cycle',q.cx,q.cy(A4_LIT-1)+f*3.75,f); a4_lab(g,(A4_CYCLE-A4_LIT)+' to go',q.cx,q.cy(A4_LIT-1)+f*5.3,f);
         a4_lab(g,'c258 · lit',tx,K.y[0]-f*.2,f); a4_lab(g,'a breath taken',tx,K.y[0]+f*1.35,f);
-        a4_lab(g,'Open',tx,K.y[1]-f*.2,f); a4_lab(g,'still to come',tx,K.y[1]+f*1.35,f);
+        a4_lab(g,'Open · pattern,',tx,K.y[1]-f*.2,f); a4_lab(g,'not yet',tx,K.y[1]+f*1.35,f); a4_lab(g,'stitched',tx,K.y[1]+f*2.9,f);
         a4_lab(g,'Placeholder',q.cx,q.yB-f*.2,f); a4_lab(g,'count',q.cx,q.yB+f*1.35,f); },
       black:(g,w,h)=>{ const q=a4_RS(w,h), f=q.fs; typeAt(g,String(A4_LIT),q.cx-w*.008,q.cy(A4_LIT-1)+f*.1,w*.19,{weight:800,track:-w*.006});
         [[0],[A4_LIT-1],[A4_CYCLE-1]].forEach(([i])=>b3_hr(g,q.x0-f*.45,q.x0-f*.1,q.cy(i),1)); } },
     run(P,W,H,dpr,x){ const C=x.clips, E=P('fx-10-embroidery'), I=P('fx-02-ink-edge');
-      const base=chain([{fx:inkEdge,o:Object.assign({},I,a4_DIM),x:{clip:C.dim}},{fx:inkEdge,o:I,x:{clip:C.black}}],W,H,dpr,x), bare=base.lin, lin=Float32Array.from(bare), ink=new Float32Array(W*H); let n=0;
-      [[E,C.lit],[Object.assign({},E,{count:50,angle:45,outline:'split',oLen:2.3,loft:.26,twist:.5,yL:.64,yC:.004,yh:280,sheen:.2,pull:0,seed:31}),C.open]].forEach(([o,die])=>{ const R=embroidery.run(o,W,H,dpr,{S:x.S,alb:base.alb,lf:base.lf,clips:{die}}); a_sew(lin,R,bare); for(let i=0;i<ink.length;i++) ink[i]=Math.max(ink[i],R.ink[i]); n+=R.marks; });
+      const base=chain([{fx:inkEdge,o:Object.assign({},I,{iL:.64,iC:0,ih:0,density:1.2}),x:{clip:C.open}},{fx:inkEdge,o:Object.assign({},I,a4_DIM),x:{clip:C.dim}},{fx:inkEdge,o:I,x:{clip:C.black}}],W,H,dpr,x), bare=base.lin, lin=Float32Array.from(bare), ink=new Float32Array(W*H); let n=0;
+      [[E,C.lit]].forEach(([o,die])=>{ const R=embroidery.run(o,W,H,dpr,{S:x.S,alb:base.alb,lf:base.lf,clips:{die}}); a_sew(lin,R,bare); for(let i=0;i<ink.length;i++) ink[i]=Math.max(ink[i],R.ink[i]); n+=R.marks; });
       return Object.assign({},base,{lin,ink,mask:ink,marks:n,markUnit:'stitches'}); } },
   { id:'c-transcript', job:'concept', title:'Session docket · a conversation, typed', sub:'A Mindgut session as a typed docket. Each turn carries the product\'s left rule: --c147 blue for the person (.msg.user) and --c258 purple for Mir (.msg.assistant). The rule is struck through the colored half of the ribbon, one bar per line. Times, the turn count and the duration are typed from the session itself, and one slip is struck out with x\'s. The session is fictional and the text is invented.', uses:['fx-07-typewriter','fx-03-paper-tooth'], aspect:'2/3', light:{az:220,el:30},
     overrides:{'fx-03-paper-tooth':{depth:.035,aniso:1.6,fibers:1.6,pits:.4,form:.2,fRaise:.45,fWidth:.4,mShape:'none'},
