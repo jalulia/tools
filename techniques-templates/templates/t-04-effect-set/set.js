@@ -1121,7 +1121,7 @@ const b_plate=(g,w,h,part)=>{ const q=b_XL(w,h), u=q.u, R=FX.rng(31), mx=q.mx, m
   typeAt(g,'No. 0147',w*.93,q.y0+u*23.4,u*2.9,{align:'right',font:'mono',weight:700,track:u*.35});
   g.fillRect(q.x0+u*9.5,q.y0+u*18.2,w*.93-q.x0-u*9.5,u*.5);
   // the owner, set up the left margin
-  g.save(); g.translate(q.x0+u*8.6,my+mr*1.05); g.rotate(-PI/2); typeAt(g,'ASHGROVE READING ROOM',0,0,u*3,{font:'mono',weight:700,track:u*1.05}); g.restore();
+  g.save(); g.translate(q.x0+u*8.6,my+mr*1.05); g.rotate(-PI/2); typeAt(g,'LARCHMERE READING ROOM',0,0,u*3,{font:'mono',weight:700,track:u*1.05}); g.restore();
   g.beginPath(); g.arc(mx,my,mr+u*1.5,0,TAU); g.arc(mx,my,mr+u*.9,0,TAU,true); g.fill('evenodd');
   // the ash: a winter tree, every twig tapering and none finer than the beam can hold, rooted on a ground line inside the medallion
   g.save(); g.beginPath(); g.arc(mx,my,mr-u*.2,0,TAU); g.clip(); const gy=my+mr*.6; g.fillRect(mx-mr,gy,mr*2,mr); b_tree(g,mx,gy+u*.5,-PI/2,mr*.34,u*2.9,8,R,1.5);
@@ -1344,7 +1344,7 @@ const usages=[
       for(let i=0,k=0;i<W*H;i++,k+=3){ const m=C.erase[i]; if(m<=0) continue; const u=(i%W)/dpr, v=((i/W)|0)/dpr, al=u*ex+v*ey, ac=-u*ey+v*ex, n=FX.fbm(al/9,ac/.9,61,2,.5), t=m*clamp(.8+.5*(n-.5)*2,0,.96);
         R0.lin[k]+=(pap[k]-R0.lin[k])*t; R0.lin[k+1]+=(pap[k+1]-R0.lin[k+1])*t; R0.lin[k+2]+=(pap[k+2]-R0.lin[k+2])*t; }
       return R0; } },
-  { id:'u-sunprint', job:'print', title:'Sun print · ginkgo, pinned to the shop wall', sub:'A cyanotype on cold-press watercolor paper, pinned to a gray wall with one yellow map pin. The sensitizer went on in four brush strokes, and their ragged ends and dry tails show at the margins. A ginkgo sprig lay on the sheet in the sun. Where it was pressed flat the leaves print sharp, where it curled they blur, and the veins stay whiter than the leaf. The edition and title are in pencil, and the studio chop is blind-pressed in the corner.', uses:['fx-11-cyanotype','fx-06-deboss','fx-05-graphite','fx-03-paper-tooth'], aspect:'4/5', light:{az:214,el:38},
+  { id:'u-ginkgo', job:'print', title:'Sun print · ginkgo, pinned to the shop wall', sub:'A cyanotype on cold-press watercolor paper, pinned to a gray wall with one yellow map pin. The sensitizer went on in four brush strokes, and their ragged ends and dry tails show at the margins. A ginkgo sprig lay on the sheet in the sun. Where it was pressed flat the leaves print sharp, where it curled they blur, and the veins stay whiter than the leaf. The edition and title are in pencil, and the studio chop is blind-pressed in the corner.', uses:['fx-11-cyanotype','fx-06-deboss','fx-05-graphite','fx-03-paper-tooth'], aspect:'4/5', light:{az:214,el:38},
     overrides:{'fx-03-paper-tooth':{scale:1.8,oct:3,depth:.1,aniso:1.15,fibers:2.6,fLen:9,pits:.8,form:.24,formScale:60,diffuse:.45,paperL:.972,mShape:'none'},'fx-11-cyanotype':{stock:'paper',subject:'fern',tone:'classic',strokes:4,bAngle:-1.5,lift:4.5,contact:.55,trans:.015,expo:1.1,bleed:.3,depth:1.5,seed:23},
       'fx-06-deboss':{stock:'paper',depth:.5,soft:1.1,lip:.08,crush:.6,shadow:.6,ink:0,burnish:.006},'fx-05-graphite':{stock:'paper',mShape:'none',spacing:2,lead:.5,pressure:.85,sheen:.5,shin:26,bite:.14,breakup:.3,starve:0,mottle:0,split:.6}},
     clips:{ obj:(g,w,h)=>b_ginkgo(g,w,h),
