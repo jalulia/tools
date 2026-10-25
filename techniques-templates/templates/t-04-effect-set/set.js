@@ -1229,133 +1229,207 @@ const a_sew=(base,R,bare)=>{ const lin=R.lin, A=R.ink; for(let i=0,k=0;i<A.lengt
 const A_DAY=[6.7,9.1,11.7,14.5,17.1,18.8,18.1,15.8,13.0,10.3,7.6,6.0];
 const a_sunGeo=(w,h)=>{ const x0=w*.14, x1=w*.9, base=h*.77, k=h*.5/24, sl=(x1-x0)/12; return {x0,x1,base,k,sl,bw:sl*.6,bx:i=>x0+sl*(i+.2),Y:hrs=>base-hrs*k}; };
 
+/* ── r3-a helpers ── */
+/* label size: a share of the plate width, never under 9 CSS px (phone width) */
+const a3_fs=(w,k)=>Math.max(9,w*k);
+/* a hairline from (x0,y0) to (x1,y1), lw CSS px; dashed when d>0 (dash d, gap gp) */
+const a3_line=(g,x0,y0,x1,y1,lw,d=0,gp=0)=>{ g.lineWidth=lw; g.lineCap='butt'; g.setLineDash(d?[d,gp]:[]); g.beginPath(); g.moveTo(x0,y0); g.lineTo(x1,y1); g.stroke(); g.setLineDash([]); };
+const a3_circ=(g,cx,cy,r,lw,d=0,gp=0)=>{ g.lineWidth=lw; g.setLineDash(d?[d,gp]:[]); g.beginPath(); g.arc(cx,cy,r,0,TAU); g.stroke(); g.setLineDash([]); };
+/* an architect's dimension line: the line, extension stubs and 45° ticks at both ends */
+const a3_dim=(g,x0,y0,x1,y1,tk,lw)=>{ a3_line(g,x0,y0,x1,y1,lw); const L=Math.hypot(x1-x0,y1-y0)||1, ux=(x1-x0)/L, uy=(y1-y0)/L, nx=-uy, ny=ux;
+  for(const [px,py] of [[x0,y0],[x1,y1]]){ a3_line(g,px-(ux+nx)*tk*.7,py-(uy+ny)*tk*.7,px+(ux+nx)*tk*.7,py+(uy+ny)*tk*.7,lw*1.6); a3_line(g,px-nx*tk*1.3,py-ny*tk*1.3,px+nx*tk*1.3,py+ny*tk*1.3,lw); } };
+/* the Orlo mark (u-construct): an eccentric ring (outer R = 5u, inner R = 3.3u set 1.4u right of center: a .3u wall on the thin side) and a 1.4u dot on the true center */
+const a3_ORLO=(w,h)=>{ const R=w*.26, u=R/5, cx=w*.5, cy=h*.44; return {R,u,cx,cy,ix:cx+1.4*u,iy:cy,r:3.3*u,dx:cx,dy:cy,dr:.7*u}; };
+const a3_orloDie=(g,q)=>{ g.beginPath(); g.arc(q.cx,q.cy,q.R,0,TAU); g.arc(q.ix,q.iy,q.r,0,TAU,true); g.fill('evenodd'); g.beginPath(); g.arc(q.dx,q.dy,q.dr,0,TAU); g.fill(); };
+/* drawdown card (u-drawdown): the strip, the black band across it, and the roller's nominal pressure along the strip
+   (FX-02's own curve: smooth ease of the distance to the run-out line, no warp) */
+const a3_DD=(w,h)=>{ const x0=w*.07, x1=w*.93, y0=h*.4, y1=h*.64, b0=h*.495, b1=h*.545, edge=.5, width=(x1-x0)*1.02; return {x0,x1,y0,y1,b0,b1,edge,width,P:u=>FX.ease(['smooth',2],clamp((edge*w-u)/width+.5,0,1)),st:[.1,.3,.5,.7,.9].map(t=>x0+(x1-x0)*t)}; };
+/* the mean color of a run-out station on white (FX-02's ink chain, averaged): a share P of the surface takes the film
+   at a = (breakup + (1 − breakup)·P²)·τ, the rest a = (1 − breakup)·P²·τ; transmittance = ink^a (Beer–Lambert) → OKLCH */
+const a3_station=(P,ink,dens,bu)=>{ const a1=(bu+(1-bu)*P*P)*dens, a0=(1-bu)*P*P*dens, m=ink.lin.map(c=>P*Math.pow(c,a1)+(1-P)*Math.pow(c,a0)), o=[0,0,0]; FX.lin2lab(m[0],m[1],m[2],o); const C=Math.hypot(o[1],o[2]); return {L:o[0],C,h:((Math.atan2(o[2],o[1])*180/PI)+360)%360}; };
+/* moon calendar (u-lunar): the illuminated fraction of the moon at 00:00 UTC on each day of 2027. Computed, not looked up:
+   age = (JD − 2451550.1) / 29.530588853 mod 1 (mean synodic month from the mean new moon of 6 Jan 2000, Meeus ch. 49),
+   fraction = (1 − cos 2π·age) / 2. Mean motion only (no anomaly terms), so a full moon can land a day early or late. */
+const a3_MOON=(()=>{ const out=[]; for(let m=0;m<12;m++){ const row=[], n=new Date(Date.UTC(2027,m+1,0)).getUTCDate(); for(let d=1;d<=n;d++){ const jd=Date.UTC(2027,m,d)/864e5+2440587.5, age=(((jd-2451550.1)/29.530588853)%1+1)%1; row.push((1-Math.cos(TAU*age))/2); } out.push(row); } return out; })();
+const a3_LG=(w,h)=>{ const x0=w*(w<600?.38:.355), x1=w*.955, y0=h*.215, y1=h*.865, cw=(x1-x0)/31, rh=(y1-y0)/12; return {x0,x1,y0,y1,cw,rh,cx:d=>x0+cw*(d+.5),cy:m=>y0+rh*(m+.5),R:Math.min(cw,rh)*.47}; };
+/* a dark board as an albedo to print on: FX-03's albedo (its fibers and formation) × an OKLCH color */
+const a3_board=(S,W,H,dpr,L,C,hh,seed)=>{ const st=paperLit(Object.assign({},S[TOOTH],{mShape:'none'},seed!=null?{seed}:{}),W,H,dpr,FX.LIGHT), ink=FX.ink(L,C,hh), a=Float32Array.from(st.alb); let m=0, n=0; for(let k=0;k<a.length;k+=21){ m+=a[k]; n++; } m/=n; for(let k=0;k<a.length;k+=3){ const r=a[k]/m; a[k]=ink.lin[0]*r; a[k+1]=ink.lin[1]*r; a[k+2]=ink.lin[2]*r; } return a; };
+/* the Hayate wind mark (u-thread): a disc cut by an S-shaped gust into two halves with a narrow seam. half = 0 (upper) or 1 (lower) */
+const a3_wind=(g,cx,cy,R,half)=>{ const cut=t=>-.32*t+.2*Math.sin(PI*t), gap=.045; g.save(); g.beginPath(); g.arc(cx,cy,R,0,TAU); g.clip(); g.beginPath(); const N=64, s=half?1:-1;
+  for(let k=0;k<=N;k++){ const t=-1.1+2.2*k/N; const X=cx+t*R, Y=cy+(cut(t)+s*gap)*R; k?g.lineTo(X,Y):g.moveTo(X,Y); } g.lineTo(cx+1.1*R,cy+s*1.2*R); g.lineTo(cx-1.1*R,cy+s*1.2*R); g.closePath(); g.fill(); g.restore(); };
+/* layout: the big mark, three test tiles (stitch-angle pairs), each [angle A, angle B] */
+const a3_WM=(w,h)=>({bx:w*.255,by:h*.5,bR:h*.3,tiles:[[0,90],[-55,35],[35,35]].map((ab,k)=>({x:w*(.605+k*.14),y:h*.63,R:w*.054,ab}))});
+/* medal table (u-medals): fictional studios and results; each medal is one foil dot. Sorted by gold, then silver, then bronze */
+const a3_RES=[['Taller Arcilla Azul','OAXACA',4,1,2],['Studio Ishiyama','SHIGARAKI',3,3,1],['Kalabash Works','ACCRA',2,2,3],['Grès Rouge','LA BORNE',2,1,1],['Onggi House','ICHEON',1,3,2],['Ferro Kiln Co.','FAENZA',1,1,4],['Mbuya Clay','HARARE',0,2,2],['Northfield Pots','LEEDS',0,1,3]].sort((a,b)=>b[2]-a[2]||b[3]-a[3]||b[4]-a[4]);
+const a3_MT=(w,h)=>{ const y0=h*.36, y1=h*.875, rh=(y1-y0)/a3_RES.length, cols=[w*.49,w*.625,w*.76], d=Math.min(w*.0135,rh*.3); return {y0,y1,rh,cols,d,row:k=>y0+rh*(k+.5)}; };
+/* atlas plate (u-atlas): an invented city, Brasca. Map rect, legend swatches; density (0..1, 1 = 500 residents / ha) is a
+   modeled field: a core, three satellite towns, three radial corridors, parks, a river with no one in it. Map = 12 km wide. */
+const a3_AT=(w,h)=>{ const x0=w*.07, x1=w*.93, y0=h*.245, y1=h*.775; return {x0,x1,y0,y1,mw:x1-x0,mh:y1-y0,km:12,sw:[.1,.3,.5,.7,.9],swY:h*.83,swS:Math.max(w*.062,18),swX:k=>x0+k*Math.max(w*.062,18)*1.32}; };
+const a3_river=t=>.4+.07*Math.sin(TAU*t*1.15+.6)+.025*Math.sin(TAU*t*3.1);
+const a3_dens=(s,t)=>{ const g=(cx,cy,sg)=>Math.exp(-((s-cx)*(s-cx)+(t-cy)*(t-cy))/(2*sg*sg)); let v=.92*g(.44,.56,.11)+.5*g(.76,.27,.065)+.42*g(.2,.76,.07)+.36*g(.75,.8,.055);
+  for(const a of [.35,2.5,4.3]){ const dx=s-.44, dy=t-.56, al=dx*Math.cos(a)+dy*Math.sin(a), ac=-dx*Math.sin(a)+dy*Math.cos(a); if(al>0) v+=.3*Math.exp(-ac*ac/(2*.018*.018))*Math.exp(-al/.35); }
+  v+=.06+.08*(FX.fbm(s*7,t*7,61,3,.5)-.5); v*=1-.85*sstep(.62,.7,FX.fbm(s*5+3,t*5,67,3,.5)); // suburbs, and parks where no one lives
+  const rv=Math.abs(t-a3_river(s)); if(rv<.016) return 0; v*=sstep(.016,.03,rv); return clamp(v,0,.96); };
+/* peak and population, integrated on a 160 × 120 grid over the 12 km × 9.2 km map (computed, not invented twice) */
+const a3_ATSTAT=(()=>{ let pk=0, ps=0, pt=0, sum=0; const N=160, M=120; for(let j=0;j<M;j++) for(let i=0;i<N;i++){ const s=(i+.5)/N, t=(j+.5)/M, v=a3_dens(s,t); sum+=v; if(v>pk){ pk=v; ps=s; pt=t; } } return {pk,ps,pt,mean:sum/(N*M)}; })();
+/* all-day poster (u-allday): 14:00 → 02:00 down the rolled block; invented lineup, set start times in minutes from 14:00 */
+const a3_LINE=[[0,'Kora Ferrous'],[90,'Lua Brava'],[180,'Okra Static'],[270,'Sister Ultramarine'],[360,'Mitsu Weather'],[450,'Pale Dial'],[540,'DJ Halwa'],[630,'Tamarindo Sound']];
+const a3_PO=(w,h)=>{ const x0=w*.07, x1=w*.4, y0=h*.285, y1=h*.845; return {x0,x1,y0,y1,Y:min=>y0+(y1-y0)*min/720,bar:[1,.8,.6,.4,.2,.1],bY:h*.885,bS:Math.max(w*.05,15)}; };
 const usages=[
   /* ═══ stationery & brand ═══ */
-  { id:'u-suite', job:'brand', title:'Stationery suite · a small press, on charcoal linen', sub:'Letterhead, envelope and two cards for Coldharbor Editions, laid on a dark linen desk under a low window light. The letterhead carries a blind crescent, cropped at the head, and a typed letter. The envelope flaps are separate plies with hairline edges, closed by a vermilion scalloped seal pressed with a C. The card\'s crescent is gold foil, run off the trim.', uses:['fx-06-deboss','fx-07-typewriter','fx-08-foil','fx-03-paper-tooth','fx-04-weave'], aspect:'16/9', span:2, light:{az:48,el:30},
-    overrides:{'fx-03-paper-tooth':{depth:.025,aniso:1.5,form:.1,mShape:'none'},'fx-06-deboss':{depth:.85,soft:.8,lip:.12,stock:'paper',shadow:.9},'fx-07-typewriter':{stock:'paper',impress:.32,exhaust:.1,vari:.24},'fx-08-foil':{stock:'paper',crush:.8,grain:.035,box:30,cam:.32,shin:160,mirror:.85,starve:0,flash:.06,fL:.68,fC:.13,fh:76},
-      'fx-04-weave':Object.assign({},LINEN,{pattern:'twill 2/1',warp:36,weft:32,fill:.96,slub:.35,hair:.35,irregular:.2,depth:.6,shadow:.35,wL:.27,wC:.008,wh:250,fL:.235,fC:.01,fh:70,dye:.025,accent:0,wear:0})},
-    clips:(()=>{ const LH=(w,h)=>{ const hS=h*1.34; return {cx:w*.265,cy:h*.7,w:hS*.707,h:hS,rot:-.055}; }, EV=(w,h)=>{ const ew=w*.5; return {cx:w*.735,cy:h*.27,w:ew,h:ew*.5,rot:.065}; },
-        CD=(w,h)=>{ const cw=w*.3; return {cx:w*.6,cy:h*.7,w:cw,h:cw*.58,rot:-.115}; }, C2=(w,h)=>{ const cw=w*.3; return {cx:w*.632,cy:h*.745,w:cw,h:cw*.58,rot:.035}; };
-      const at=(Fr,fn)=>(g,w,h)=>{ const f=Fr(w,h); inFrame(g,f.cx,f.cy,f.rot,f.w,f.h,fn); };
-      return {
-      lhA:at(LH,(g,a,b)=>g.fillRect(0,0,a,b)), lhDie:at(LH,(g,a,b)=>a_mark(g,a*.78,a*.06,a*.6,'crescent')),
-      lhType:at(LH,(g,a,b)=>sub(g,a*.09,a*.35,a*.86,b*.4,(g,c,d)=>strikes(g,c,d,{text:'9 October 2026 / / Dear printer, / / Proofs approved. Run the letter- / head blind on 300 g cotton, the / seal in red, the cards in gold. / / — the editors, Coldharbor',fsize:a*.038,lead:1.55,align:'left',seed:12}))),
-      evA:at(EV,(g,a,b)=>g.fillRect(0,0,a,b)),
-      evBot:at(EV,(g,a,b)=>poly(g,[[0,b],[a*.5,b*.36],[a,b]])),
-      evTop:at(EV,(g,a,b)=>{ g.beginPath(); g.moveTo(0,0); g.lineTo(a,0); g.lineTo(a*.53,b*.6); g.quadraticCurveTo(a*.5,b*.63,a*.47,b*.6); g.closePath(); g.fill(); }),
-      evSeal:at(EV,(g,a,b)=>{ const R=b*.2, cx=a*.5, cy=b*.6; a_rosette(g,cx,cy,R,30,.06); g.save(); g.clip(); g.fillRect(0,0,a,b); g.globalCompositeOperation='destination-out'; g.fillStyle='#000'; for(let k=0;k<36;k++){ const a=k/36*TAU; g.beginPath(); g.arc(cx+Math.cos(a)*R*.8,cy+Math.sin(a)*R*.8,R*.028,0,TAU); g.fill(); } // a beaded border, as a wax seal is cut
-        g.font=`800 ${R*1.12}px Archivo, "Helvetica Neue", Arial, sans-serif`; g.textBaseline='alphabetic'; const tw=g.measureText('C').width; g.fillText('C',cx-tw/2,cy+R*.4); g.restore(); }),
-      cdA:at(CD,(g,a,b)=>{ rrect(g,0,0,a,b,1); g.fill(); }), c2A:at(C2,(g,a,b)=>{ rrect(g,0,0,a,b,1); g.fill(); }),
-      cdFoil:at(CD,(g,a,b)=>a_mark(g,a*.84,b*.5,b*1.18,'crescent')),
-      cdName:at(CD,(g,a,b)=>{ typeAt(g,'Coldharbor',a*.075,b*.26,b*.135,{track:-.3}); typeAt(g,'Editions',a*.075,b*.41,b*.135,{track:-.3}); }),
-      cdLine:at(CD,(g,a,b)=>sub(g,a*.075,b*.7,a*.5,b*.2,(g,c,d)=>strikes(g,c,d,{text:'Small press / since 2011',fsize:Math.max(b*.11,7.5),lead:1.45,align:'left',seed:4,exhaust:0}))) }; })(),
-    run(P,W,H,dpr,x){ const C=x.clips, D=P('fx-06-deboss'), T=P('fx-07-typewriter'), Fo=P('fx-08-foil'), Sv=k=>Object.assign({},x.S,{[TOOTH]:Object.assign({},x.S[TOOTH],{seed:21+k*13})});
-      const desk=weave.run(Object.assign({},P('fx-04-weave'),{mShape:'none',lift:0}),W,H,dpr,{S:x.S}).lin;
-      const lh=chain([{fx:deboss,o:Object.assign({},D,{depth:.95,soft:.35,lip:.04,shadow:.5}),x:{S:Sv(0),clips:{die:C.lhDie}}},{fx:typewriter,o:T,x:{S:Sv(0),clips:{strikes:C.lhType}}}],W,H,dpr,{S:Sv(0)});
-      const ev=chain([{fx:deboss,o:Object.assign({},D,{shape:'seal',depth:.75,soft:.3,lip:.08,ink:.95,iL:.58,iC:.17,ih:32}),x:{S:Sv(1),clips:{die:C.evSeal}}}],W,H,dpr,{S:Sv(1)});
-      const cd=chain([{fx:deboss,o:Object.assign({},D,{depth:.5,soft:.2,lip:.06,ink:1,iL:.19,iC:.006,ih:280}),x:{S:Sv(2),clips:{die:C.cdName}}},{fx:typewriter,o:Object.assign({},T,{impress:.22,exhaust:0}),x:{S:Sv(2),clips:{strikes:C.cdLine}}},{fx:foil,o:Fo,x:{S:Sv(2),clips:{die:C.cdFoil}},top:true}],W,H,dpr,{S:Sv(2)});
-      const c2=tooth.run(Object.assign({},Sv(3)[TOOTH],{mShape:'none'}),W,H,dpr,{S:Sv(3)}).lin;
-      return a_stackOn(desk,[{lin:lh.lin,alpha:C.lhA,lift:.7},{lin:ev.lin,alpha:C.evA,lift:1.1},{lin:ev.lin,alpha:C.evBot,lift:.22},{lin:ev.lin,alpha:C.evTop,lift:.28},{lin:c2,alpha:C.c2A,lift:1},{lin:cd.lin,alpha:C.cdA,lift:.9}],W,H,dpr); } },
-  { id:'u-emboss', job:'brand', title:'Raking light · a raised knot, a pressed name', sub:'White cotton board under a low sun at 8°. A bindery\'s knot mark is embossed blind and large, its two loops crossing; the name is pressed small in black ink. The window draws the light: the sun patch ends at the head\'s shadow and a mullion crosses it. In the sun the raised walls flare; in the shade the mark is gone.', uses:['fx-06-deboss','fx-03-paper-tooth'], aspect:'16/9', light:{az:196,el:8},
-    overrides:{'fx-03-paper-tooth':{depth:.03,scale:.9,aniso:2,fibers:1.5,fWidth:.25,fLen:9,pits:.5,form:.35,formScale:40,paperL:.93,mShape:'none'},'fx-06-deboss':{depth:-2.4,soft:.9,lip:0,crush:.4,stock:'paper',shadow:.35,diffuse:.97,burnish:0}},
-    clips:{ big:(g,w,h)=>a_mark(g,w*.66,h*.5,h*1.15,'knot'),
-      name:(g,w,h)=>{ const X=w*.055, s=h*.052; typeAt(g,'QUILLON',X,h*.8,s,{weight:800,track:s*.16}); typeAt(g,'BINDERY',X,h*.8+s*1.25,s,{weight:800,track:s*.16}); typeAt(g,'HAND-SEWN · EST. 1974',X,h*.8+s*2.55,s*.74,{font:'mono',weight:700,track:s*.16}); } },
-    run(P,W,H,dpr,x){ const D=P('fx-06-deboss'), st=paperLit(Object.assign({},x.S[TOOTH],{mShape:'none'}),W,H,dpr,FX.LIGHT), alb=a_dyed(st,a_lab(.95,0,0));
-      const R=chain([{fx:deboss,o:D,x:{alb,clips:{die:x.clips.big}}},{fx:deboss,o:Object.assign({},D,{depth:.4,soft:.35,lip:.05,crush:.85,burnish:0,ink:.85,iL:.22,iC:.004,ih:280,mix:'film'}),x:{clips:{die:x.clips.name}}}],W,H,dpr,x);
-      // the window: the patch of sun ends at the head's shadow (an edge across the light) and one mullion crosses it (a stripe along the light)
-      const [lx,ly]=FX.lightVec(), pl=Math.hypot(lx,ly)||1, ux=lx/pl, uy=ly/pl, w=W/dpr, h=H/dpr, lin=R.lin;
-      for(let y=0;y<H;y++) for(let X=0;X<W;X++){ const u=X/dpr-w*.5, v=y/dpr-h*.5, al=-(u*ux+v*uy), ac=-u*uy+v*ux, pen=1.5+Math.max(0,al+w*.5)*.01;
-        const sun=sstep(-pen,pen,w*.3-al)*(1-sstep(-pen,pen,h*.04-Math.abs(ac-h*.3))), i=y*W+X, k=i*3; for(let c=0;c<3;c++) lin[k+c]=R.alb[k+c]*lerp(.36,R.lf[k+c],sun); }
-      a_falloff(lin,W,H,dpr,.3); return R; } },
-  { id:'u-stickers', job:'brand', title:'Club sticker · chrome mirror vinyl, peeling', sub:'A cycling club\'s kiss-cut sticker in mirror-chrome vinyl: the club name runs round the rim and a big route number sits in the middle, both knocked out to white vinyl. Its corner is peeled back off a gray liner. The fold shows the white adhesive side, and the bare liner keeps the faint score of the die. The window light becomes one hot patch on the chrome and leaves the rest of the mirror dark. Three small matte stickers sit along the bottom for scale (a chainring, the number, the initials), with crop marks and a typed job line.', uses:['fx-08-foil','fx-06-deboss','fx-07-typewriter','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'4/5', light:{az:226,el:36},
-    overrides:{'fx-03-paper-tooth':{depth:.038,aniso:2.4,fibers:1.5,fLen:10,fWidth:.3,fDark:.03,pits:.6,form:.45,formScale:36,paperL:.95,mShape:'none'},'fx-08-foil':{stock:'smooth',crush:0,dent:0,grain:.025,starve:0,flash:0,box:22,cam:.6,camX:.33,camY:.84,shin:220,mirror:1.0,fL:.84,fC:.008,fh:250},'fx-06-deboss':{depth:.22,soft:.35,lip:0,stock:'paper',shadow:.6},'fx-07-typewriter':{stock:'paper',impress:.18,exhaust:0,vari:.08,seed:14},'fx-02-ink-edge':Object.assign({},SOLID,{stock:'paper',iL:.2,iC:.006,ih:280,density:1.2})},
-    clips:(()=>{ const G=a_stk, refl=(g,q)=>{ const k=q.P0[0]*q.n[0]+q.P0[1]*q.n[1]; g.transform(1-2*q.n[0]*q.n[0],-2*q.n[0]*q.n[1],-2*q.n[0]*q.n[1],1-2*q.n[1]*q.n[1],2*k*q.n[0],2*k*q.n[1]); };
-      const cap=(g,q,keep)=>{ g.save(); g.beginPath(); g.arc(q.cx,q.cy,q.R,0,TAU); g.clip(); const L=q.R*3, t=[-q.n[1],q.n[0]], s=keep?-1:1, P=q.P0; poly(g,[[P[0]+t[0]*L,P[1]+t[1]*L],[P[0]+t[0]*L+s*q.n[0]*L,P[1]+t[1]*L+s*q.n[1]*L],[P[0]-t[0]*L+s*q.n[0]*L,P[1]-t[1]*L+s*q.n[1]*L],[P[0]-t[0]*L,P[1]-t[1]*L]]); g.restore(); };
-      return {
-      hero:(g,w,h)=>cap(g,G(w,h),true),
-      gold:(g,w,h)=>{ const q=G(w,h), R=q.R; g.beginPath(); g.arc(q.cx,q.cy,R,0,TAU); g.fill(); g.globalCompositeOperation='destination-out'; g.strokeStyle='#000';
-        g.lineWidth=R*.012; g.beginPath(); g.arc(q.cx,q.cy,R*.93,0,TAU); g.stroke(); g.lineWidth=R*.008; g.beginPath(); g.arc(q.cx,q.cy,R*.69,0,TAU); g.stroke();
-        a_ring(g,q.cx,q.cy,R*.81,'KESTREL CYCLE CLUB',R*.115,-PI/2,1,R*.018,800); a_ring(g,q.cx,q.cy,R*.81,'ROUTE · SEVEN · HILLS',R*.085,PI/2,-1,R*.03,700);
-        [-1,1].forEach(sd=>{ g.beginPath(); g.arc(q.cx+sd*R*.81,q.cy,R*.022,0,TAU); g.fill(); });
-        g.font=`900 ${R*.82}px Archivo, "Helvetica Neue", Arial, sans-serif`; if('letterSpacing' in g) g.letterSpacing=(-R*.04)+'px'; g.textBaseline='alphabetic'; const tw=g.measureText('07').width; g.fillText('07',q.cx-tw/2+R*.02,q.cy+R*.3); if('letterSpacing' in g) g.letterSpacing='0px'; },
-      flap:(g,w,h)=>{ const q=G(w,h); g.save(); refl(g,q); cap(g,q,false); g.restore(); },
-      score:(g,w,h)=>{ const q=G(w,h); g.save(); g.beginPath(); g.rect(-w,-h,3*w,3*h); g.clip(); g.strokeStyle='#fff'; g.lineWidth=.6; g.beginPath(); g.arc(q.cx,q.cy,q.R,0,TAU); g.stroke(); g.restore(); },
-      dots:(g,w,h)=>G(w,h).dots.forEach(([x0,y0,r])=>{ g.beginPath(); g.arc(x0,y0,r,0,TAU); g.fill(); }),
-      dotInk:(g,w,h)=>G(w,h).dots.forEach(([x0,y0,r],k)=>{ g.save(); g.translate(x0,y0); g.rotate([0,.18,-.12][k]);
-        if(k===0) a_chainring(g,0,0,r*.72,28); else if(k===1){ g.font=`900 ${r*1.05}px Archivo, "Helvetica Neue", Arial, sans-serif`; g.textBaseline='alphabetic'; const tw=g.measureText('07').width; g.fillText('07',-tw/2,r*.37); }
-        else { g.font=`800 ${r*.56}px Archivo, "Helvetica Neue", Arial, sans-serif`; g.textBaseline='alphabetic'; const tw=g.measureText('KCC').width; g.fillText('KCC',-tw/2,r*.2); g.fillRect(-r*.5,r*.36,r,r*.06); } g.restore(); }),
-      type:(g,w,h)=>{ sub(g,w*.06,h*.025,w*.8,h*.08,(g,a,b)=>strikes(g,a,b,{text:'KESTREL CC — DIE 04 / MIRROR CHROME VINYL · KISS CUT',fsize:h*.021,lead:1.45,align:'left',seed:14,exhaust:0,vari:.08,half:0})); sub(g,w*.6,h*.86,w*.36,h*.08,(g,a,b)=>strikes(g,a,b,{text:'SHEET 03 OF 12',fsize:h*.021,align:'left',seed:19,exhaust:0,vari:.08,half:0})); },
-      crops:(g,w,h)=>{ const m=w*.035, l=w*.05, t=.8; [[m,m,1,1],[w-m,m,-1,1],[m,h-m,1,-1],[w-m,h-m,-1,-1]].forEach(([x0,y0,sx,sy])=>{ g.fillRect(sx>0?x0:x0-l,y0-t/2,l,t); g.fillRect(x0-t/2,sy>0?y0:y0-l,t,l); });
-        const rx=w*.5, ry=h*.955, rr=w*.016; g.strokeStyle='#fff'; g.lineWidth=t; g.beginPath(); g.arc(rx,ry,rr,0,TAU); g.stroke(); g.fillRect(rx-rr*1.7,ry-t/2,rr*3.4,t); g.fillRect(rx-t/2,ry-rr*1.7,t,rr*3.4); } }; })(),
-    run(P,W,H,dpr,x){ const C=x.clips, w=W/dpr, h=H/dpr, q=a_stk(w,h), F=P('fx-08-foil');
-      const st=paperLit(Object.assign({},x.S[TOOTH],{mShape:'none'}),W,H,dpr,FX.LIGHT), kraft=a_dyed(st,a_lab(.9,.003,250));
-      const liner=chain([{fx:deboss,o:P('fx-06-deboss'),x:{alb:kraft,clips:{die:C.score}}},{fx:inkEdge,o:P('fx-02-ink-edge'),x:{clip:C.crops}},{fx:typewriter,o:P('fx-07-typewriter'),x:{clips:{strikes:C.type}}}],W,H,dpr,x);
-      const vin=a_lab(.97,0,0), valb=new Float32Array(W*H*3); for(let k=0;k<valb.length;k+=3){ valb[k]=vin[0]*.92; valb[k+1]=vin[1]*.92; valb[k+2]=vin[2]*.92; }
-      const gold=foil.run(F,W,H,dpr,{S:x.S,alb:valb,clips:{die:C.gold}}).lin;
-      const dots=inkEdge.run(Object.assign({},P('fx-02-ink-edge'),{stock:'smooth',split:.7}),W,H,dpr,{S:x.S,alb:valb,clip:C.dotInk}).lin;
-      // the adhesive side of the peeled flap: white vinyl back, rolling over at the fold (a bright crest, then the flat underside)
-      const back=new Float32Array(W*H*3), vb=a_lab(.93,.002,250), [lx,ly,lz]=FX.lightVec(), cr=clamp(.55+.6*(lx*q.n[0]+ly*q.n[1]),.2,1.1);
-      for(let y=0;y<H;y++) for(let X=0;X<W;X++){ const i=y*W+X; if(C.flap[i]<=0) continue; const d=Math.max(0,((q.P0[0]-X/dpr)*q.n[0]+(q.P0[1]-y/dpr)*q.n[1])), f=.78+.1*sstep(0,q.R*.7,d)+.34*cr*Math.exp(-d/(q.R*.025))-.2*Math.exp(-Math.pow((d-q.R*.07)/(q.R*.05),2)), k=i*3; back[k]=vb[0]*f; back[k+1]=vb[1]*f; back[k+2]=vb[2]*f; }
-      return a_stackOn(liner.lin,[{lin:gold,alpha:C.hero,lift:.28},{lin:dots,alpha:C.dots,lift:.25},{lin:back,alpha:C.flap,lift:2.2}],W,H,dpr); } },
-  { id:'u-halftone', job:'brand', title:'Juice label · a blood orange in one screen', sub:'A label for a cold-pressed juice, in one ember ink. A blood orange cut in half rises from the bottom edge like a sun, run as a coarse amplitude screen at 45° and cropped on three sides: the rind\'s oil glands, the white pith, eleven segments and the juice sacs inside them are all just dot size. The name and the batch line print solid in the same ink.', uses:['fx-01-stipple','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'1/1',
-    overrides:{'fx-03-paper-tooth':{depth:.03,aniso:1.6,fibers:2,pits:.4,form:.25,mShape:'none'},'fx-01-stipple':{stock:'paper',mShape:'none',duo:'off',screen:1,sAngle:45,order:'ordered',jitter:0,sizeVar:0,irregular:.03,pitch:2.9,dotR:2.15,rag:.04,aL:.62,aC:.2,ah:36,density:1.2},'fx-02-ink-edge':Object.assign({},SOLID,{stock:'paper',iL:.62,iC:.2,ih:36,density:1.25})},
-    clips:{ type:(g,w,h)=>{ const X=w*.06, R=w*.94, s=w*.105; typeAt(g,'Sanguina',X,h*.135,s,{weight:900,track:-s*.035});
-        const m=w*.027; typeAt(g,'BLOOD ORANGE',R,h*.075,m,{font:'mono',weight:700,track:w*.003,align:'right'}); typeAt(g,'NO. 3 · 250 ML',R,h*.075+m*1.45,m,{font:'mono',weight:700,track:w*.003,align:'right'});
-        g.fillRect(R-w*.27,h*.075+m*2.2,w*.27,Math.max(1,w*.0016)); typeAt(g,'BATCH 26-298',R,h*.075+m*3.5,m*.85,{font:'mono',weight:600,track:w*.003,align:'right'}); typeAt(g,'KEEP COLD',R,h*.075+m*4.75,m*.85,{font:'mono',weight:600,track:w*.003,align:'right'}); } },
-    run(P,W,H,dpr,x){ const q=a_ORG(W/dpr,H/dpr); return chain([{fx:inkEdge,o:P('fx-02-ink-edge'),x:{clip:x.clips.type}},{fx:stipple,o:P('fx-01-stipple'),x:{field:(u,v)=>a_orange(u,v,q)}}],W,H,dpr,x); } },
-  { id:'u-uvcard', job:'brand', title:'Business card · spot UV on black board', sub:'A recording studio\'s card in matte black board, lying on gray paper. A big sun mark and a field of fine diagonal lines are printed in clear gloss varnish, so they show only where the window\'s soft box reflects in them; head-on they are nearly gone. A matte panel is kept clear for the name, hot-stamped small in silver foil.', uses:['fx-09-spot-uv','fx-08-foil','fx-03-paper-tooth'], aspect:'4/3', light:{az:222,el:32},
+  { id:'u-construct', job:'brand', title:'Mark construction · Orlo, pressed blind', sub:'A plate from a lighting workshop\'s identity guide. The mark is an eccentric ring and a center dot, pressed blind into white cotton board: no ink, only the die, so the raking light draws it. The geometry that builds it is printed over the pressing in black hairline, with the dimensions in ember: two radii, the 1.4u offset, the .3u wall on the thin side and a 10u ruler.', uses:['fx-06-deboss','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'1/1', light:{az:214,el:20},
+    overrides:{'fx-03-paper-tooth':{depth:.03,aniso:1.5,fibers:1.2,pits:.3,form:.15,fRaise:.45,fWidth:.4,mShape:'none'},'fx-06-deboss':{stock:'paper',depth:1.15,soft:1.5,lip:.16,crush:.75,shadow:.8,diffuse:.96,floorTone:.016,ink:0},'fx-02-ink-edge':Object.assign({},SOLID,{stock:'paper',iL:.17,iC:.004,ih:280,density:1.35,starve:0,mottle:0,bite:.2,breakup:.55})},
+    clips:{
+      die:(g,w,h)=>a3_orloDie(g,a3_ORLO(w,h)),
+      ink:(g,w,h)=>{ const q=a3_ORLO(w,h), m=w*.065, f=a3_fs(w,.021), hl=Math.max(1.1,w*.0024); g.strokeStyle='#fff';
+        typeAt(g,w<420?'ORLO LIGHTING · IDENTITY':'ORLO LIGHTING WORKSHOP · IDENTITY',m,m+f*.6,f,{font:'mono',weight:600,track:f*.12}); typeAt(g,'PLATE 02 / 06',w-m,m+f*.6,f,{font:'mono',weight:600,track:f*.12,align:'right'});
+        a3_line(g,m,m+f*1.4,w-m,m+f*1.4,hl);
+        // construction: both axes through the true center, the inner center's vertical, center marks
+        const ext=q.R+q.u*1.1; a3_line(g,q.cx-ext,q.cy,q.cx+ext,q.cy,hl*.8,q.u*.35,q.u*.2); a3_line(g,q.cx,q.cy-q.R-q.u*.4,q.cx,q.cy+ext,hl*.8,q.u*.35,q.u*.2);
+        a3_line(g,q.ix,q.cy-q.r-q.u*.6,q.ix,q.cy+q.r+q.u*.6,hl*.8,q.u*.12,q.u*.16);
+        const cm=(x,y,s)=>{ a3_line(g,x-s,y,x+s,y,hl); a3_line(g,x,y-s,x,y+s,hl); }; cm(q.ix,q.iy,q.u*.35);
+        // ruler under the mark: 0 … 10u
+        const ry=q.cy+q.R+q.u*.95; a3_line(g,q.cx-q.R,ry,q.cx+q.R,ry,hl); for(let k=0;k<=10;k++){ const X=q.cx-q.R+k*q.u, L=k%5?q.u*.18:q.u*.36; a3_line(g,X,ry,X,ry+L,hl); }
+        for(let k=0;k<20;k++){ const X=q.cx-q.R+(k+.5)*q.u*.5; if(k%2===0) continue; }
+        ['0','5','10u'].forEach((t,k)=>typeAt(g,t,q.cx-q.R+k*5*q.u,ry+q.u*.36+f*1.15,f,{font:'mono',weight:600,align:k===0?'left':k===2?'right':'center'}));
+        // title block
+        const ty=h*.835; a3_line(g,m,ty,w-m,ty,hl); typeAt(g,'Mark construction',m,ty+w*.06,w*.052,{track:-w*.001}); if(w<420){ typeAt(g,'MAGNESIUM DIE · 1.1 MM BLIND · 600 G COTTON',m,ty+w*.06+f*1.75,f,{font:'mono',weight:600,track:f*.04}); return; }
+        typeAt(g,'Pressed blind. No ink; the light draws it.',m,ty+w*.06+a3_fs(w,.03)*1.45,a3_fs(w,.03),{weight:500});
+        const rx=w-m; ['DIE · MAGNESIUM, 7 MM','DEPTH · 1.1 MM BLIND','BOARD · 600 G COTTON'].forEach((t,k)=>typeAt(g,t,rx,ty+f*2+k*f*1.5,f,{font:'mono',weight:600,track:f*.08,align:'right'})); },
+      dim:(g,w,h)=>{ const q=a3_ORLO(w,h), f=a3_fs(w,.021), hl=Math.max(1.1,w*.0024), tk=q.u*.16; g.strokeStyle='#fff';
+        // overall: 10u across the top
+        const dy=q.cy-q.R-q.u*.75; a3_line(g,q.cx-q.R,q.cy,q.cx-q.R,dy-q.u*.2,hl*.7); a3_line(g,q.cx+q.R,q.cy,q.cx+q.R,dy-q.u*.2,hl*.7); a3_dim(g,q.cx-q.R,dy,q.cx+q.R,dy,tk,hl); typeAt(g,'Ø 10u',q.cx,dy-f*.55,f,{font:'mono',weight:700,align:'center',track:f*.06});
+        // outer radius, down-left, label outside
+        const a=PI*.78, ex=q.cx+Math.cos(a)*q.R, ey=q.cy+Math.sin(a)*q.R; a3_line(g,q.cx,q.cy,ex,ey,hl); a3_line(g,ex,ey,ex-q.u*1.1,ey,hl); typeAt(g,'R 5u',ex-q.u*1.2,ey+f*.35,f,{font:'mono',weight:700,align:'right'});
+        // inner radius from its own center, up-right, label in the hollow
+        const b=-PI*.22, ix=q.ix+Math.cos(b)*q.r, iy=q.iy+Math.sin(b)*q.r; a3_line(g,q.ix,q.iy,ix,iy,hl); typeAt(g,'R 3.3u',q.ix+q.u*.2,q.iy-q.u*1.9,f,{font:'mono',weight:700});
+        // offset e between the centers
+        const oy=q.cy+q.u*1.25; a3_dim(g,q.cx,oy,q.ix,oy,tk*.8,hl); typeAt(g,'e 1.4u',q.ix+q.u*.3,oy+f*.38,f,{font:'mono',weight:700});
+        // the thin wall
+        const wx=q.cx+q.R, wy=q.cy-q.u*1.6; a3_line(g,wx-q.u*.15,q.cy-q.u*.05,wx+q.u*.7,wy,hl); a3_line(g,wx+q.u*.7,wy,wx+q.u*1.1,wy,hl); typeAt(g,'.3u',wx+q.u*1.18,wy+f*.35,f,{font:'mono',weight:700}); } },
+    run(P,W,H,dpr,x){ const C=x.clips, E=P('fx-02-ink-edge');
+      return chain([{fx:inkEdge,o:E,x:{clip:C.ink}},{fx:inkEdge,o:Object.assign({},E,{iL:.64,iC:.2,ih:38,density:1.25}),x:{clip:C.dim}},{fx:deboss,o:P('fx-06-deboss'),x:{clips:{die:C.die}}}],W,H,dpr,x); } },
+  { id:'u-drawdown', job:'brand', title:'Brand ink · a hand-roller drawdown', sub:'The spec card for a grocer\'s one brand color. The ink is rolled once across the card, over white and over a black opacity band, and runs out as the roller empties: solid on the left, then only the peaks of the board, then nothing. Each station is labeled with the share of the surface that took ink and the color it averages to, computed from the same film model that printed it. On the band the transparent ink all but disappears.', uses:['fx-02-ink-edge','fx-03-paper-tooth'], aspect:'3/2', light:{az:220,el:30},
+    overrides:{'fx-03-paper-tooth':{depth:.045,aniso:1.4,fibers:1.4,pits:.35,form:.25,fRaise:.45,fWidth:.4,mShape:'none'},'fx-02-ink-edge':Object.assign({},SOLID,{stock:'paper',iL:.17,iC:.004,ih:280,density:1.35,starve:0,mottle:0,bite:.2,breakup:.55})},
+    clips:{
+      strip:(g,w,h)=>{ const q=a3_DD(w,h); g.fillRect(q.x0,q.y0,q.x1-q.x0,q.y1-q.y0); },
+      bar:(g,w,h)=>{ const q=a3_DD(w,h); g.fillRect(q.x0-w*.008,q.b0,q.x1-q.x0+w*.016,q.b1-q.b0); },
+      title:(g,w,h)=>{ typeAt(g,'Ember',w*.064,h*.315,w*.155,{track:-w*.004}); },
+      ink:(g,w,h)=>{ const q=a3_DD(w,h), m=w*.07, f=a3_fs(w,.02), hl=Math.max(1.1,w*.0024), ink=FX.ink(.64,.2,38);
+        typeAt(g,'POMELO GROCERS · BRAND COLOR',m,h*.1,f,{font:'mono',weight:600,track:f*.1}); typeAt(g,'SPEC CARD',w-m,h*.1,f,{font:'mono',weight:600,track:f*.1,align:'right'});
+        const ds=a3_fs(w,.026); typeAt(g,'Our one color, rolled once',w*.58,h*.23,ds,{weight:500}); typeAt(g,'across the card.',w*.58,h*.23+ds*1.3,ds,{weight:500});
+        typeAt(g,'COVER · OKLCH AT FIVE STATIONS',q.x0,q.y0-f*.8,f,{font:'mono',weight:700,track:f*.08}); typeAt(g,'OVER A BLACK BAND',q.x1,q.y0-f*.8,f,{font:'mono',weight:700,track:f*.08,align:'right'});
+        q.st.forEach((x,k)=>{ const P=q.P(x), c=a3_station(P,ink,1.2,.94); a3_line(g,x,q.y1+h*.012,x,q.y1+h*.045,hl);
+          typeAt(g,Math.round(P*100)+'%',x,q.y1+h*.045+f*1.45,f*1.2,{font:'mono',weight:700,align:'center'});
+          typeAt(g,c.L.toFixed(2).slice(1)+' '+c.C.toFixed(2).slice(1),x,q.y1+h*.045+f*2.75,f,{font:'mono',weight:600,align:'center'}); typeAt(g,'h '+Math.round(c.h),x,q.y1+h*.045+f*3.95,f,{font:'mono',weight:600,align:'center'}); });
+        a3_line(g,m,h*.915,w-m,h*.915,hl);
+        typeAt(g,'HAND ROLLER · ONE PASS · 300 G COATED',m,h*.915+f*1.5,f,{font:'mono',weight:600,track:f*.06}); if(w>=420) typeAt(g,'INK 01',w-m,h*.915+f*1.5,f,{font:'mono',weight:600,track:f*.08,align:'right'}); } },
+    run(P,W,H,dpr,x){ const C=x.clips, h=H/dpr, w=W/dpr, q=a3_DD(w,h), E=P('fx-02-ink-edge');
+      const roll=Object.assign({},E,{iL:.64,iC:.2,ih:38,density:1.2,angle:0,edge:q.edge,width:q.width,ease:['smooth',2],wAmp:5,wScale:120,breakup:.94,bite:.55,starve:.004,wick:.3,mottle:.18,split:1.1,streak:2.4,seed:41});
+      return chain([{fx:inkEdge,o:E,x:{clip:C.ink}},{fx:inkEdge,o:Object.assign({},E,{breakup:1}),x:{clip:C.bar}},{fx:inkEdge,o:Object.assign({},E,{iL:.64,iC:.2,ih:38,density:1.25,breakup:1}),x:{clip:C.title}},{fx:inkEdge,o:roll,x:{clip:C.strip}}],W,H,dpr,x); } },
+  { id:'u-lunar', job:'brand', title:'Moon calendar · 2027 in spot UV', sub:'A year card for a mezcal house, on matte black board. Every night of 2027 is a printed gray point; the moon is printed only in clear gloss varnish, a disc on each night sized to how much of it is lit. Head-on the card is a calm grid of points. Where the soft box of the sheet light reflects, the phases rise out of it, row by row, as a wave of full and new moons. The phases are computed from the mean synodic month, as the footer says.', uses:['fx-09-spot-uv','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'16/9', span:2, light:{az:226,el:46},
     overrides:{'fx-03-paper-tooth':{depth:.035,aniso:1.4,fibers:1.2,fDark:.02,pits:.25,form:.15,mShape:'none'},
-      'fx-09-spot-uv':{stock:'paper',area:'die',pattern:'solid',pitch:3.2,pSize:.42,pAngle:-45,build:.2,round:.75,level:.95,gloss:.93,wet:.55,box:.75,cam:1.1,mirror:1.15,bL:.17,bC:.004,bh:265},
-      'fx-08-foil':{stock:'paper',fL:.84,fC:.006,fh:250,crush:.7,grain:.03,box:6,cam:.9,shin:140,mirror:1.1}},
-    clips:(()=>{ const K=(w,h)=>({cx:w*.565,cy:h*.53,rot:-.045,w:w*.99,h:w*.565}), at=fn=>(g,w,h)=>{ const k=K(w,h); inFrame(g,k.cx,k.cy,k.rot,k.w,k.h,(g,a,b)=>{ g.beginPath(); g.rect(0,0,a,b); g.clip(); fn(g,a,b); }); };
-      const SUN=(a,b)=>[a*.71,b*.5,b*.98], PANEL=(a,b)=>[a*.045,b*.57,a*.42,b*.36];
-      return {
-      card:at((g,a,b)=>g.fillRect(0,0,a,b)),
-      sun:at((g,a,b)=>{ const [x,y,d]=SUN(a,b); a_mark(g,x,y,d,'sun'); }),
-      field:at((g,a,b)=>{ g.fillRect(0,0,a,b); g.globalCompositeOperation='destination-out'; const [x,y,d]=SUN(a,b); g.beginPath(); g.arc(x,y,d*.5+b*.035,0,TAU); g.fill(); const [px,py,pw,ph]=PANEL(a,b); g.fillRect(px,py,pw,ph); }),
-      type:at((g,a,b)=>{ const X=a*.075; typeAt(g,'KINO HUM',X,b*.71,b*.085,{weight:800,track:b*.012}); typeAt(g,'RECORDING',X,b*.71+b*.075,Math.max(b*.04,9),{font:'mono',weight:700,track:b*.006});
-        typeAt(g,'ROOM 3 · LATE SESSIONS',X,b*.71+b*.075+Math.max(b*.055,12.5),Math.max(b*.033,9),{font:'mono',weight:600,track:b*.005}); typeAt(g,'NO. 0412',a*.075,b*.12,Math.max(b*.033,9),{font:'mono',weight:600,track:b*.005}); }) }; })(),
-    run(P,W,H,dpr,x){ const C=x.clips, U=P('fx-09-spot-uv');
-      const A=spotUV.run(U,W,H,dpr,{S:x.S,clips:{die:C.sun}}), B=spotUV.run(Object.assign({},U,{pattern:'lines',build:.02,box:.18,round:.5}),W,H,dpr,{S:x.S,clips:{die:C.field}}), Fo=foil.run(P('fx-08-foil'),W,H,dpr,{S:x.S,clips:{die:C.type}});
-      const card=c_over(c_over(A.lin,B.lin,B.ink),Fo.lin,Fo.ink);
-      const st=paperLit(Object.assign({},x.S[TOOTH],{seed:31,mShape:'none'}),W,H,dpr,FX.LIGHT), desk=light(a_dyed(st,a_lab(.6,0,0)),st.lf,W,H); a_falloff(desk,W,H,dpr,.25);
-      return a_stackOn(desk,[{lin:card,alpha:C.card,lift:.8}],W,H,dpr); } },
-  { id:'u-patch', job:'brand', title:'Chest mark · satin stitch on black twill', sub:'A rowing club\'s mark embroidered straight into the chest of a black twill jacket, close up. A gold sun rises inside a gold ring over three blue waves, with the name in white below. Each color is its own run of rayon satin at its own stitch angle, so the gold, the blue and the white catch the window light differently. The cloth puckers where the stitches pull and dimples at every needle hole.', uses:['fx-10-embroidery','fx-04-weave'], aspect:'4/5', zoom:1.6, light:{az:214,el:30},
-    overrides:{'fx-04-weave':{pattern:'twill 2/1',warp:96,weft:84,fill:.97,slub:.2,hair:.25,irregular:.1,depth:.8,shadow:.4,wL:.23,wC:.006,wh:260,fL:.2,fC:.006,fh:260,accent:0,aMode:'threads',dye:.02,wear:0,mShape:'none',lift:0},
-      'fx-10-embroidery':{stock:'cloth',density:44,maxFloat:58,stagger:.4,outline:'none',loft:.42,twist:.12,sheen:.82,pull:.3,seed:23}},
-    clips:(()=>{ const M=(w,h)=>({cx:w*.5,cy:h*.41,r:w*.36}), hz=q=>q.cy+q.r*.08;
-      return {
-      gold:(g,w,h)=>{ const q=M(w,h), y0=hz(q); g.beginPath(); g.arc(q.cx,q.cy,q.r,0,TAU); g.arc(q.cx,q.cy,q.r*.88,0,TAU,true); g.fill('evenodd');
-        g.save(); g.beginPath(); g.rect(0,0,w,y0-q.r*.035); g.clip(); g.beginPath(); g.arc(q.cx,y0,q.r*.5,0,TAU); g.fill(); g.restore(); },
-      waves:(g,w,h)=>{ const q=M(w,h), y0=hz(q); g.save(); g.beginPath(); g.arc(q.cx,q.cy,q.r*.8,0,TAU); g.clip(); const bh=q.r*.13, gap=q.r*.085, A=q.r*.035, L=q.r*.36;
-        for(let k=0;k<3;k++){ const t=y0+q.r*.02+k*(bh+gap), ph=k*1.3; g.beginPath(); for(let X=q.cx-q.r;X<=q.cx+q.r;X+=.5){ const y=t+A*Math.sin((X-q.cx)/L*TAU+ph); X===q.cx-q.r?g.moveTo(X,y):g.lineTo(X,y); } for(let X=q.cx+q.r;X>=q.cx-q.r;X-=.5) g.lineTo(X,t+bh+A*Math.sin((X-q.cx)/L*TAU+ph)); g.closePath(); g.fill(); } g.restore(); },
-      word:(g,w,h)=>{ const q=M(w,h); typeAt(g,'OXBOW',w*.5,q.cy+q.r+w*.19,w*.15,{weight:800,align:'center',track:w*.01,maxW:w*.86}); },
-      small:(g,w,h)=>{ const q=M(w,h); typeAt(g,'ROWING CLUB',w*.5,q.cy+q.r+w*.295,w*.072,{weight:800,align:'center',track:w*.01,maxW:w*.74}); } }; })(),
-    run(P,W,H,dpr,x){ const C=x.clips, E=P('fx-10-embroidery'), st=stockFor({stock:'cloth'},{S:x.S},W,H,dpr), bare=light(st.alb,st.lf,W,H);
-      const gold=embroidery.run(Object.assign({},E,{angle:-38,yL:.78,yC:.15,yh:78}),W,H,dpr,{S:x.S,clips:{die:C.gold}});
-      const wav=embroidery.run(Object.assign({},E,{angle:78,yL:.58,yC:.14,yh:248,seed:31}),W,H,dpr,{S:x.S,clips:{die:C.waves}});
-      const wrd=embroidery.run(Object.assign({},E,{angle:-58,density:56,maxFloat:30,yL:.95,yC:.008,yh:90,seed:37,pull:.22}),W,H,dpr,{S:x.S,clips:{die:C.word}});
-      const sml=embroidery.run(Object.assign({},E,{angle:-72,density:80,maxFloat:14,loft:.36,yL:.95,yC:.008,yh:90,seed:41,pull:.15}),W,H,dpr,{S:x.S,clips:{die:C.small}});
-      const lin=Float32Array.from(gold.lin); a_sew(lin,wav,bare); a_sew(lin,wrd,bare); a_sew(lin,sml,bare); const ink=new Float32Array(W*H); for(let i=0;i<ink.length;i++) ink[i]=Math.max(gold.ink[i],wav.ink[i],wrd.ink[i],sml.ink[i]);
-      return Object.assign({},gold,{lin,ink,mask:ink,marks:gold.marks+wav.marks+wrd.marks+sml.marks}); } },
+      'fx-09-spot-uv':{stock:'paper',area:'die',pattern:'solid',build:.24,round:.8,level:.95,gloss:.94,wet:.6,box:.5,cam:1,mirror:1.2,bL:.17,bC:.004,bh:265},
+      'fx-02-ink-edge':Object.assign({},SOLID,{stock:'paper',mix:'oklab',iL:.95,iC:0,ih:0,density:1,starve:0,mottle:0,bite:.15,breakup:.5})},
+    clips:{
+      white:(g,w,h)=>{ const q=a3_LG(w,h), m=w*.045, f=a3_fs(w,.0125);
+        typeAt(g,'CASA LUNARES · MEZCAL',m,h*.1,f,{font:'mono',weight:600,track:f*.12}); typeAt(g,'2027',m-w*.004,h*.42,w*.112,{track:-w*.004});
+        if(w>=600){ typeAt(g,'Every night of the year.',m,h*.53,a3_fs(w,.02),{weight:500}); typeAt(g,'The moon is in the varnish:',m,h*.53+a3_fs(w,.02)*1.35,a3_fs(w,.02),{weight:500}); typeAt(g,'tilt the card to the light.',m,h*.53+a3_fs(w,.02)*2.7,a3_fs(w,.02),{weight:500}); }
+        else { typeAt(g,'Tilt it',m,h*.56,a3_fs(w,.02),{weight:500}); typeAt(g,'to the light.',m,h*.56+a3_fs(w,.02)*1.3,a3_fs(w,.02),{weight:500}); }
+        'JFMAMJJASOND'.split('').forEach((c,k)=>typeAt(g,c,q.x0-w*.022,q.cy(k)+f*.36,f,{font:'mono',weight:700,align:'center'}));
+        [1,8,15,22,29].forEach(d=>typeAt(g,String(d),q.cx(d-1),q.y0-h*.03,f,{font:'mono',weight:700,align:'center'})); },
+      gray:(g,w,h)=>{ const q=a3_LG(w,h), f=a3_fs(w,.0125), r=Math.max(.75,q.R*.16);
+        a3_MOON.forEach((row,m)=>row.forEach((_,d)=>{ g.beginPath(); g.arc(q.cx(d),q.cy(m),r,0,TAU); g.fill(); }));
+        g.strokeStyle='#fff'; a3_line(g,w*.045,h*.905,w*.955,h*.905,Math.max(1,w*.0012));
+        if(w>=600){ typeAt(g,'PHASE AT 00:00 UTC FROM THE MEAN SYNODIC MONTH, 29.5306 DAYS · MAY LAND A DAY EARLY OR LATE',w*.045,h*.905+f*1.6,f,{font:'mono',weight:600,track:f*.06}); typeAt(g,'CARD 12 / 12',w*.955,h*.905+f*1.6,f,{font:'mono',weight:600,track:f*.08,align:'right'}); }
+        else typeAt(g,'PHASE FROM THE MEAN SYNODIC MONTH · ±1 DAY',w*.045,h*.905+f*1.5,f,{font:'mono',weight:600,track:f*.04}); },
+      moon:(g,w,h)=>{ const q=a3_LG(w,h); a3_MOON.forEach((row,m)=>row.forEach((k,d)=>{ const r=q.R*Math.sqrt(k); if(r<.6) return; g.beginPath(); g.arc(q.cx(d),q.cy(m),r,0,TAU); g.fill(); })); } },
+    run(P,W,H,dpr,x){ const C=x.clips, E=P('fx-02-ink-edge'), board=a3_board(x.S,W,H,dpr,.17,.004,265);
+      return chain([{fx:inkEdge,o:E,x:{alb:board,clip:C.white}},{fx:inkEdge,o:Object.assign({},E,{iL:.46,breakup:.3}),x:{clip:C.gray}},{fx:spotUV,o:P('fx-09-spot-uv'),x:{clips:{die:C.moon}},top:true}],W,H,dpr,x); } },
+  { id:'u-thread', job:'brand', title:'Embroidery standard · one thread, two directions', sub:'A sheet from a track club\'s identity guide. The wind mark is satin-stitched into white card in a single ember rayon. Its two halves are the same thread and differ only in stitch direction: the upper half runs across the light and gleams, the lower runs along it and stays matte, and that is the mark. Three test tiles show the angle pairs that were tried. At +35° and +35° both halves run the same way and the mark is gone; only the seam is left.', uses:['fx-10-embroidery','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'3/2', span:2, light:{az:212,el:32},
+    overrides:{'fx-03-paper-tooth':{depth:.04,aniso:1.4,fibers:1.4,pits:.3,form:.2,fRaise:.45,fWidth:.4,mShape:'none'},
+      'fx-10-embroidery':{stock:'paper',count:24,maxFloat:64,stagger:.4,outline:'none',loft:.5,twist:.28,sheen:.95,pull:0,yL:.6,yC:.19,yh:38,seed:23},
+      'fx-02-ink-edge':Object.assign({},SOLID,{stock:'paper',iL:.17,iC:.004,ih:280,density:1.35,starve:0,mottle:0,bite:.2,breakup:.55})},
+    clips:(()=>{ const halves=(want)=>(g,w,h)=>{ const q=a3_WM(w,h); if(want(-55)) a3_wind(g,q.bx,q.by,q.bR,0); if(want(35)) a3_wind(g,q.bx,q.by,q.bR,1); q.tiles.forEach(t=>{ if(want(t.ab[0])) a3_wind(g,t.x,t.y,t.R,0); if(want(t.ab[1])) a3_wind(g,t.x,t.y,t.R,1); }); };
+      const C={ ink:(g,w,h)=>{ const q=a3_WM(w,h), m=w*.045, f=a3_fs(w,.0125), hl=Math.max(1.1,w*.0013); g.strokeStyle='#fff';
+        typeAt(g,'HAYATE TRACK CLUB · IDENTITY',m,h*.085,f,{font:'mono',weight:600,track:f*.12}); typeAt(g,'EMBROIDERY · E-1',w-m,h*.085,f,{font:'mono',weight:600,track:f*.12,align:'right'}); a3_line(g,m,h*.085+f*.9,w-m,h*.085+f*.9,hl);
+        const X=w*.535; typeAt(g,'One thread,',X,h*.25,w*.05,{track:-w*.001}); typeAt(g,'two directions.',X,h*.25+w*.052,w*.05,{track:-w*.001});
+        typeAt(g,'The halves differ only in stitch angle.',X,h*.25+w*.052+a3_fs(w,.019)*1.7,a3_fs(w,.019),{weight:500});
+        const nar=w<600, sg=a=>(a>0?'+':a<0?'−':'')+Math.abs(a)+(nar?'':'°'); q.tiles.forEach((t,k)=>{ typeAt(g,sg(t.ab[0])+(nar?'/':' / ')+sg(t.ab[1]),t.x,t.y+t.R+f*2,f,{font:'mono',weight:700,align:'center'}); typeAt(g,['SQUARE','IN USE','NO MARK'][k],t.x,t.y+t.R+f*3.5,f,{font:'mono',weight:600,align:'center',track:f*.1}); });
+        // stitch-direction key under the big mark: A runs −35°, B runs +55°
+        const ky=h*.9; [[-55,'A · UPPER · −55°'],[35,'B · LOWER · +35°']].forEach(([a,s],k)=>{ const x0=w*.07+k*(nar?w*.47:w*.2), L=f*1.6, r=a*PI/180; a3_line(g,x0-Math.cos(r)*L/2,ky-f*.35-Math.sin(r)*L/2,x0+Math.cos(r)*L/2,ky-f*.35+Math.sin(r)*L/2,hl*1.2); typeAt(g,s,x0+f*1.4,ky,f,{font:'mono',weight:600,track:f*.08}); });
+        if(nar) return; a3_line(g,w*.535,h*.9-f*1.6,w-m,h*.9-f*1.6,hl); typeAt(g,'RAYON 40 WT · ONE COLOR · 24 / 100 · FLOAT ≤ 64',w-m,h*.9,f,{font:'mono',weight:600,track:f*.08,align:'right'}); } };
+      [-55,35,0,90].forEach(a=>{ C['s'+a]=halves(b=>b===a); }); return C; })(),
+    run(P,W,H,dpr,x){ const C=x.clips, E=P('fx-10-embroidery'), base=chain([{fx:inkEdge,o:P('fx-02-ink-edge'),x:{clip:C.ink}}],W,H,dpr,x), bare=base.lin;
+      const st=stockFor({stock:'paper'},{S:x.S},W,H,dpr), plain=light(st.alb,st.lf,W,H), lin=Float32Array.from(bare), ink=new Float32Array(W*H); let n=0;
+      [-55,35,0,90].forEach((a,k)=>{ const R=embroidery.run(Object.assign({},E,{angle:a,seed:23+k*7}),W,H,dpr,{S:x.S,alb:base.alb,lf:base.lf,clips:{die:C['s'+a]}}); a_sew(lin,R,bare); for(let i=0;i<ink.length;i++) ink[i]=Math.max(ink[i],R.ink[i]); n+=R.marks; });
+      return Object.assign({},base,{lin,ink,mask:ink,marks:n,markUnit:'stitches'}); } },
   /* ═══ print ═══ */
-  { id:'u-poster', job:'print', title:'Two-drum poster · off register', sub:'An untrimmed stencil print. Pink floods down from the top and blue rises from the corner. The headline is printed once per drum and the pink lands a little early along the feed, so the crop marks, the register targets and the color bar all come out doubled. Where the inks overprint they turn violet. The solids streak lighter along the feed.', uses:['fx-01-stipple','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'3/4',
-    overrides:{'fx-03-paper-tooth':{depth:.09,aniso:2.2,fibers:2.5,paperL:.972},'fx-01-stipple':{duo:'on',stock:'paper',mShape:'none',aL:.76,aC:.21,ah:358,bL:.58,bC:.17,bh:258,pitch:2.05,dotR:.8,density:.85,sizeVar:.15},'fx-02-ink-edge':Object.assign({},SOLID,{stock:'paper',iL:.64,iC:.17,ih:250,density:.78,mottle:.45,starve:.012,bite:.6})},
-    clips:(()=>{ const HEAD=(g,d,w,h)=>{ typeAt(g,'Cold',d.x0-w*.05,h*.44,h*.25,{track:-6}); typeAt(g,'water.',d.x0-w*.012,h*.7,h*.25,{track:-6,maxW:(d.x1-d.x0)*.98}); };
-      const BAR=(g,w,h,which)=>{ const s=h*.02, gp=w*.022, y=h*.932, x=w*.9-s*3-gp*2; which.forEach(k=>g.fillRect(x+k*(s+gp),y,s,s)); };
+  { id:'u-medals', job:'print', title:'Medal table · each medal a foil dot', sub:'The results sheet of a wood-fired ceramics open, one page, black on white. Eight studios are ranked by gold, then silver, then bronze, and every medal is one hot-foil dot in its own metal: gold, silver and copper, each from its own heated die. The table reads as a dot plot of metal, and the sheet light sweeps across the foil, so each dot catches it a little differently. The studios and results are invented.', uses:['fx-08-foil','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'4/5', light:{az:222,el:36},
+    overrides:{'fx-03-paper-tooth':{depth:.03,aniso:1.5,fibers:1.3,pits:.3,form:.15,fRaise:.45,fWidth:.4,mShape:'none'},'fx-08-foil':{stock:'paper',crush:.8,grain:.1,dent:.2,box:1.2,cam:.55,camX:.55,camY:.55,shin:150,mirror:1,starve:0,flash:.08,fL:.74,fC:.13,fh:84},
+      'fx-02-ink-edge':Object.assign({},SOLID,{stock:'paper',iL:.17,iC:.004,ih:280,density:1.35,starve:0,mottle:0,bite:.2,breakup:.55})},
+    clips:(()=>{ const dots=(c)=>(g,w,h)=>{ const q=a3_MT(w,h); g.beginPath(); g.arc(q.cols[c],q.y0-q.rh*.66,q.d*1.9,0,TAU); g.fill(); a3_RES.forEach((r,k)=>{ for(let j=0;j<r[2+c];j++){ g.beginPath(); g.arc(q.cols[c]-q.d*3.3+j*q.d*2.2,q.row(k),q.d,0,TAU); g.fill(); } }); };
+      return { gold:dots(0), silver:dots(1), copper:dots(2),
+      ink:(g,w,h)=>{ const q=a3_MT(w,h), m=w*.07, f=a3_fs(w,.021), hl=Math.max(1.1,w*.0024); g.strokeStyle='#fff';
+        typeAt(g,'THE ANAGAMA OPEN · 2026',m,m*.8,f,{font:'mono',weight:600,track:f*.12}); typeAt(g,'SHEET 1 / 1',w-m,m*.8,f,{font:'mono',weight:600,track:f*.12,align:'right'}); a3_line(g,m,m*.8+f*.9,w-m,m*.8+f*.9,hl);
+        typeAt(g,'Medal table',m-w*.004,h*.19,w*.118,{track:-w*.003}); typeAt(g,'Wood-fired ceramics. Three firings, eight studios.',m,h*.19+a3_fs(w,.03)*1.6,a3_fs(w,.03),{weight:500});
+        ['GOLD','SILVER','BRONZE'].forEach((t,c)=>typeAt(g,t,q.cols[c],q.y0-q.rh*.05,f,{font:'mono',weight:700,align:'center',track:f*.08})); typeAt(g,'TOTAL',w-m,q.y0-q.rh*.05,f,{font:'mono',weight:700,align:'right',track:f*.08});
+        a3_line(g,m,q.y0+q.rh*.02,w-m,q.y0+q.rh*.02,hl);
+        a3_RES.forEach((r,k)=>{ const y=q.row(k); typeAt(g,String(k+1),m,y+w*.012,w*.036,{weight:800}); typeAt(g,r[0],m+w*.06,y-f*.08,a3_fs(w,.026),{weight:700,maxW:w*.31}); typeAt(g,r[1],m+w*.06,y+f*1.15,f*.92,{font:'mono',weight:600,track:f*.12});
+          typeAt(g,String(r[2]+r[3]+r[4]),w-m,y+w*.012,w*.036,{weight:800,align:'right'}); if(k<a3_RES.length-1) a3_line(g,m,y+q.rh*.5,w-m,y+q.rh*.5,hl*.75); });
+        a3_line(g,m,q.y1+q.rh*.08,w-m,q.y1+q.rh*.08,hl); typeAt(g,'INVENTED RESULTS · FOIL: GOLD, SILVER, COPPER',m,q.y1+q.rh*.08+f*1.7,f,{font:'mono',weight:600,track:f*.08}); } }; })(),
+    run(P,W,H,dpr,x){ const C=x.clips, F=P('fx-08-foil');
+      return chain([{fx:inkEdge,o:P('fx-02-ink-edge'),x:{clip:C.ink}},{fx:foil,o:Object.assign({},F,{mirror:.95,grain:.18,box:3.2}),x:{clips:{die:C.gold}},top:true},{fx:foil,o:Object.assign({},F,{fL:.84,fC:.006,fh:250,seed:13}),x:{clips:{die:C.silver}},top:true},{fx:foil,o:Object.assign({},F,{fL:.66,fC:.12,fh:46,seed:17}),x:{clips:{die:C.copper}},top:true}],W,H,dpr,x); } },
+  { id:'u-atlas', job:'print', title:'Atlas plate · Brasca, where people sleep', sub:'A plate from an atlas of invented cities. Density is drawn in stipple: each dot is a fixed number of residents, so tone is a head count and the river, the parks and the edges of the satellite towns appear as the dots thin out. The key is five swatches of the same pen, not a gradient. The population, the peak and the residents per dot are integrated from the same modeled field that places the dots, at the scale this plate is drawn.', uses:['fx-01-stipple','fx-02-ink-edge','fx-03-paper-tooth'], aspect:'4/5',
+    overrides:{'fx-03-paper-tooth':{depth:.02,aniso:1.5,fibers:1.3,pits:.3,form:.1,fRaise:.45,fWidth:.4,mShape:'none'},'fx-01-stipple':{duo:'off',stock:'paper',mShape:'none',aL:.19,aC:.004,ah:280,pitch:1.55,dotR:.62,sizeVar:.12,irregular:.06,density:1.25,rag:.02,jitter:.85},'fx-02-ink-edge':Object.assign({},SOLID,{stock:'paper',iL:.17,iC:.004,ih:280,density:1.35,starve:0,mottle:0,bite:.2,breakup:.55})},
+    clips:(()=>{ const pop=(w,h)=>{ const q=a3_AT(w,h), mpp=q.km*1000/q.mw, ha=q.mw*q.mh*mpp*mpp/1e4; return {mpp,people:a3_ATSTAT.mean*500*ha,perDot:500*Math.pow(1.55*mpp,2)/1e4}; };
+      const fmtK=n=>n>=1e6?(n/1e6).toFixed(2)+' million':Math.round(n/1000)+',000';
       return {
-      head:(g,w,h)=>b_inDrum(g,w,h,0,(g,d)=>HEAD(g,d,w,h)), headP:(g,w,h)=>b_inDrum(g,w,h,1,(g,d)=>HEAD(g,d,w,h)),
-      marks:(g,w,h)=>b_inDrum(g,w,h,0,(g,d)=>b_marks(g,d,w,h),false), marksP:(g,w,h)=>b_inDrum(g,w,h,1,(g,d)=>b_marks(g,d,w,h),false),
-      barB:(g,w,h)=>b_inDrum(g,w,h,0,()=>BAR(g,w,h,[1,2]),false), barP:(g,w,h)=>b_inDrum(g,w,h,1,()=>BAR(g,w,h,[0,2]),false),
-      foot:(g,w,h)=>b_inDrum(g,w,h,0,()=>{ const fs=Math.max(h*.0165,9); typeAt(g,'NIGHT SWIM · NORTH LIDO · SAT 14 JUNE · 9 PM',w*.05,h*.944,fs,{font:'mono',weight:600,track:.6,maxW:w*.7}); typeAt(g,'TIDEWORK RISO · 041 / 120 · 12 × 16 IN',w*.05,h*.944+Math.max(h*.024,fs*1.25),fs,{font:'mono',weight:600,track:.6,maxW:w*.7}); },false) }; })(),
-    run(P,W,H,dpr,x){ const w=W/dpr,h=H/dpr, o=P('fx-01-stipple'), C=x.clips, D0=b_DRUM(w,h,0), D1=b_DRUM(w,h,1);
-      const inA=(u,v,d)=>{ const [a,b]=b_toDrum(u,v,d); return a>=d.x0&&a<=d.x1&&b>=d.y0&&b<=d.y1; };
-      const field=(u,v,L)=>L?(inA(u,v,D0)?FX.ease(['in',1.4],clamp(1-Math.hypot(u-w,v-h)/(Math.hypot(w,h)*.75),0,1))*.9:0):(inA(u,v,D1)?clamp(1.25-v/h*1.4+(FX.fbm(u/90,v/90,4,3,.5)-.5)*.35,0,1)*.95:0);
-      // a big solid starves the drum: ink thins along the feed and streaks where the blade loads unevenly — pressure < 1 opens the solid on the paper's valleys
-      const streak=(src,s)=>{ const out=new Float32Array(W*H); for(let y=0;y<H;y++){ const v=y/dpr; for(let X=0;X<W;X++){ const i=y*W+X, c=src[i]; if(c<=0) continue; const u=X/dpr; out[i]=c*(1-.35*sstep(.45,.8,FX.fbm(u/5.5,v/260,s,3,.55))-.07*v/h); } } return out; };
-      const blue=Object.assign({},P('fx-02-ink-edge')), pink=Object.assign({},blue,{iL:.76,iC:.21,ih:358,density:.95,seed:77});
-      const B=streak(C.head,31), Pk=streak(C.headP,47); for(let i=0;i<W*H;i++){ B[i]=Math.max(B[i],C.marks[i],C.foot[i],C.barB[i]); Pk[i]=Math.max(Pk[i],C.marksP[i],C.barP[i]); }
-      return chain([{fx:stipple,o,x:{field}},{fx:inkEdge,o:pink,x:{clip:Pk}},{fx:inkEdge,o:blue,x:{clip:B}}],W,H,dpr,x); } },
+      ink:(g,w,h)=>{ const q=a3_AT(w,h), m=w*.07, f=a3_fs(w,.021), hl=Math.max(1.1,w*.0024), p=pop(w,h); g.strokeStyle='#fff';
+        typeAt(g,'ATLAS OF INVENTED CITIES',m,m*.8,f,{font:'mono',weight:600,track:f*.12}); typeAt(g,'PLATE 14',w-m,m*.8,f,{font:'mono',weight:600,track:f*.12,align:'right'}); a3_line(g,m,m*.8+f*.9,w-m,m*.8+f*.9,hl);
+        typeAt(g,'Brasca',m-w*.004,h*.165,w*.12,{track:-w*.003}); typeAt(g,'Where its '+fmtK(p.people)+' people sleep.',m,h*.165+a3_fs(w,.029)*1.6,a3_fs(w,.029),{weight:500});
+        g.lineWidth=hl*.8; g.strokeRect(q.x0,q.y0,q.mw,q.mh);
+        // river banks
+        for(const sd of [-1,1]){ g.lineWidth=hl*.8; g.beginPath(); for(let k=0;k<=200;k++){ const s=k/200, X=q.x0+s*q.mw, Y=q.y0+(a3_river(s)+sd*.016)*q.mh; k?g.lineTo(X,Y):g.moveTo(X,Y); } g.stroke(); }
+        // district labels on knocked-out ground (see `hole`)
+        [['OLD TOWN',.44,.66],['CANAL QUARTER',.76,.18],['SAN ROQUE',.2,.88],['VILLA ALTA',.74,.92]].forEach(([t,s,u])=>typeAt(g,t,q.x0+s*q.mw,q.y0+u*q.mh,f*.95,{font:'mono',weight:700,align:'center',track:f*.1}));
+        typeAt(g,'RIVER BRAS',q.x0+.08*q.mw,q.y0+(a3_river(.08)+.085)*q.mh,f*.85,{font:'mono',weight:600,track:f*.14});
+        // key: five swatches, their values in residents per hectare, scale bar, dots
+        q.sw.forEach((v,k)=>{ g.lineWidth=hl*.7; g.strokeRect(q.swX(k),q.swY,q.swS,q.swS); typeAt(g,String(Math.round(v*500)),q.swX(k)+q.swS/2,q.swY+q.swS+f*1.3,f,{font:'mono',weight:600,align:'center'}); });
+        typeAt(g,'RESIDENTS / HA',q.x0,q.swY-f*.7,f,{font:'mono',weight:700,track:f*.1});
+        const kmPx=q.mw/q.km, bx=w-m-kmPx*2; a3_line(g,bx,q.swY+q.swS*.4,bx+kmPx*2,q.swY+q.swS*.4,hl); [0,1,2].forEach(k=>a3_line(g,bx+k*kmPx,q.swY+q.swS*.4-f*.4,bx+k*kmPx,q.swY+q.swS*.4,hl)); typeAt(g,'2 KM',w-m,q.swY+q.swS*.4-f*.8,f,{font:'mono',weight:700,align:'right'});
+        typeAt(g,'1 DOT ≈ '+Math.round(p.perDot)+' PEOPLE',w-m,q.swY+q.swS+f*1.3,f,{font:'mono',weight:700,align:'right',track:f*.06});
+        a3_line(g,m,h*.94,w-m,h*.94,hl); typeAt(g,'INVENTED CITY · DENSITY MODELED, NOT SURVEYED',m,h*.94+f*1.55,f,{font:'mono',weight:600,track:f*.08}); },
+      peak:(g,w,h)=>{ const q=a3_AT(w,h), f=a3_fs(w,.021), X=q.x0+a3_ATSTAT.ps*q.mw, Y=q.y0+a3_ATSTAT.pt*q.mh, r=w*.03; g.strokeStyle='#fff'; a3_circ(g,X,Y,r,Math.max(1.3,w*.003)); a3_line(g,X+r,Y,X+r*2.2,Y,Math.max(1.2,w*.0026)); typeAt(g,'PEAK '+Math.round(a3_ATSTAT.pk*500)+' / HA',X+r*2.4,Y+f*.36,f,{font:'mono',weight:700,track:f*.06}); },
+      hole:(g,w,h)=>{ const q=a3_AT(w,h), f=a3_fs(w,.021); g.font=`700 ${f*.95}px "JetBrains Mono", monospace`; if('letterSpacing' in g) g.letterSpacing=(f*.1)+'px';
+        [['OLD TOWN',.44,.66],['CANAL QUARTER',.76,.18],['SAN ROQUE',.2,.88],['VILLA ALTA',.74,.92]].forEach(([t,s,u])=>{ const tw=g.measureText(t).width; g.fillRect(q.x0+s*q.mw-tw/2-f*.5,q.y0+u*q.mh-f*1.05,tw+f,f*1.45); });
+        g.font=`600 ${f*.85}px "JetBrains Mono", monospace`; const tw=g.measureText('RIVER BRAS').width+f*1.4; g.fillRect(q.x0+.08*q.mw-f*.4,q.y0+(a3_river(.08)+.085)*q.mh-f*.95,tw+f*.8,f*1.3);
+        const X=q.x0+a3_ATSTAT.ps*q.mw, Y=q.y0+a3_ATSTAT.pt*q.mh, r=w*.03; g.font=`700 ${f}px "JetBrains Mono", monospace`; const pw=g.measureText('PEAK 000 / HA').width+f*1.2; g.fillRect(X+r*2,Y-f*.85,pw+r*.4,f*1.6); if('letterSpacing' in g) g.letterSpacing='0px'; } }; })(),
+    run(P,W,H,dpr,x){ const C=x.clips, w=W/dpr, h=H/dpr, q=a3_AT(w,h), E=P('fx-02-ink-edge');
+      const field=(u,v)=>{ if(v>=q.swY&&v<=q.swY+q.swS){ for(let k=0;k<q.sw.length;k++){ const X=q.swX(k); if(u>=X+1.5&&u<=X+q.swS-1.5&&v>=q.swY+1.5&&v<=q.swY+q.swS-1.5) return q.sw[k]; } return 0; }
+        if(u<=q.x0+1||u>=q.x1-1||v<=q.y0+1||v>=q.y1-1) return 0; if(smp(C.hole,u,v,W,H,dpr)>.5) return 0; return a3_dens((u-q.x0)/q.mw,(v-q.y0)/q.mh); };
+      return chain([{fx:inkEdge,o:E,x:{clip:C.ink}},{fx:inkEdge,o:Object.assign({},E,{iL:.64,iC:.2,ih:38,density:1.25}),x:{clip:C.peak}},{fx:stipple,o:P('fx-01-stipple'),x:{field}}],W,H,dpr,x); } },
+  { id:'u-allday', job:'print', title:'All-day poster · the ink runs out with the day', sub:'A poster for a twelve-hour bill at an invented venue. One ember block is rolled once down the sheet, from the first set to the last, and the roller is not re-inked: solid at two in the afternoon, only the peaks of the paper by midnight, nearly bare at two in the morning. The timetable hangs off the block\'s edge, so each set\'s time is also how much ink was left. A press bar along the foot shows the same roller at six fixed pressures.', uses:['fx-02-ink-edge','fx-03-paper-tooth'], aspect:'2/3', light:{az:220,el:30},
+    overrides:{'fx-03-paper-tooth':{depth:.05,aniso:1.6,fibers:1.8,pits:.4,form:.3,fRaise:.45,fWidth:.4,mShape:'none'},'fx-02-ink-edge':Object.assign({},SOLID,{stock:'paper',iL:.17,iC:.004,ih:280,density:1.35,starve:0,mottle:0,bite:.2,breakup:.55})},
+    clips:{
+      block:(g,w,h)=>{ const q=a3_PO(w,h); g.fillRect(q.x0,q.y0,q.x1-q.x0,q.y1-q.y0); },
+      bar:(g,w,h)=>{ const q=a3_PO(w,h); q.bar.forEach((p,k)=>{ g.fillStyle=`rgba(255,255,255,${p})`; g.fillRect(q.x0+k*q.bS*1.12,q.bY,q.bS,q.bS); }); },
+      ink:(g,w,h)=>{ const q=a3_PO(w,h), m=w*.07, f=a3_fs(w,.021), hl=Math.max(1.1,w*.0024); g.strokeStyle='#fff';
+        typeAt(g,'SALA TAMARINDO PRESENTS',m,m*.75,f,{font:'mono',weight:600,track:f*.12}); typeAt(g,'SAT 07.11.26',w-m,m*.75,f,{font:'mono',weight:600,track:f*.12,align:'right'});
+        typeAt(g,'Long',m-w*.006,h*.15,w*.2,{track:-w*.006}); typeAt(g,'Day',m-w*.006,h*.248,w*.2,{track:-w*.006});
+        typeAt(g,'Twelve hours,',w*.56,h*.195,a3_fs(w,.03),{weight:500}); typeAt(g,'one roll of ink.',w*.56,h*.195+a3_fs(w,.03)*1.3,a3_fs(w,.03),{weight:500});
+        const nx=q.x1+w*.07; a3_LINE.forEach(([mn,name])=>{ const y=q.Y(mn), hh=(14+Math.floor(mn/60))%24, mm=mn%60; a3_line(g,q.x1+w*.012,y,q.x1+w*.05,y,hl);
+          typeAt(g,String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0'),nx,y+f*.36,f,{font:'mono',weight:700}); typeAt(g,name,nx+f*4.2,y+w*.014,w*.045,{weight:800,track:-w*.0006,maxW:w*.93-nx-f*4.2}); });
+        a3_line(g,q.x1+w*.012,q.y1,q.x1+w*.05,q.y1,hl); typeAt(g,'02:00',nx,q.y1+f*.36,f,{font:'mono',weight:700}); typeAt(g,'CLOSE',nx+f*4.2,q.y1+f*.36,f,{font:'mono',weight:700,track:f*.1});
+        q.bar.forEach((p,k)=>typeAt(g,String(Math.round(p*100)),q.x0+k*q.bS*1.12+q.bS/2,q.bY+q.bS+f*1.25,f*.9,{font:'mono',weight:600,align:'center'}));
+        typeAt(g,'ROLLER PRESSURE %',q.x0,q.bY-f*.6,f*.9,{font:'mono',weight:700,track:f*.1});
+        // register target and the door line
+        const rx=w-m-q.bS*.5, ry=q.bY+q.bS*.5, rr=q.bS*.32; a3_circ(g,rx,ry,rr,hl); a3_line(g,rx-rr*1.6,ry,rx+rr*1.6,ry,hl); a3_line(g,rx,ry-rr*1.6,rx,ry+rr*1.6,hl);
+        typeAt(g,'DOORS 13:30 · €18',rx-q.bS*.9,ry+f*.36,f,{font:'mono',weight:700,align:'right',track:f*.08}); } },
+    run(P,W,H,dpr,x){ const C=x.clips, h=H/dpr, w=W/dpr, q=a3_PO(w,h), E=P('fx-02-ink-edge');
+      const roll=Object.assign({},E,{iL:.64,iC:.2,ih:38,density:1.2,angle:90,edge:(q.y0+(q.y1-q.y0)*.5)/h,width:(q.y1-q.y0)*1.02,ease:['out',1.7],wAmp:7,wScale:110,breakup:.94,bite:.55,starve:.004,wick:.3,mottle:.18,split:1.1,streak:2.6,seed:57});
+      const press=Object.assign({},roll,{edge:3,width:10,wAmp:0,seed:59});
+      return chain([{fx:inkEdge,o:E,x:{clip:C.ink}},{fx:inkEdge,o:roll,x:{clip:C.block}},{fx:inkEdge,o:press,x:{clip:C.bar}}],W,H,dpr,x); } },
   { id:'u-tickets', job:'print', title:'Tickets · three runs, fanned, one punched', sub:'Three consecutive tickets dealt across the page. Same die, same chain, a different ink on each roller, each running dry at its own point. The numbers are struck in sequence. The top ticket has been punched at the door, and its chad lies on the desk with a fleck of blue ink on it.', uses:['fx-02-ink-edge','fx-07-typewriter','fx-03-paper-tooth'], aspect:'4/3', light:{az:222,el:30},
     overrides:{'fx-03-paper-tooth':{depth:.035,scale:1.3,aniso:1.5,fibers:1.6,pits:.5,form:.1,paperL:.966},'fx-02-ink-edge':{mShape:'none',stock:'paper',angle:0,breakup:.6,split:.5,streak:3.5},'fx-07-typewriter':{stock:'paper',impress:.3,exhaust:0,vari:.2}},
     clips:(()=>{ const shape=(g,a,b,hole)=>{ const sx=a*.74, r=b*.08; g.beginPath(); g.moveTo(0,0); g.lineTo(sx-r,0); g.arc(sx,0,r,PI,0,true); g.lineTo(a,0); g.lineTo(a,b); g.lineTo(sx+r,b); g.arc(sx,b,r,0,PI,true); g.lineTo(0,b); g.closePath(); g.fill(); g.globalCompositeOperation='destination-out'; for(let y=r*1.6;y<b-r*1.4;y+=b*.07){ g.beginPath(); g.arc(sx,y,b*.016,0,TAU); g.fill(); }
