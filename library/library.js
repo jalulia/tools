@@ -1,23 +1,21 @@
-/* library/library.js — reads window.LIBRARY (catalog.js) and draws the front door.
-   A classic script: no modules, no network, opens from file://. Every number on the
-   page is counted from the catalog at load. */
+/* library/library.js: draws the page from window.LIBRARY (catalog.js).
+   A classic script. No modules, no network; opens from file://. Counts come from the catalog. */
 (function () {
   'use strict';
   var L = window.LIBRARY;
   var $lib = document.getElementById('lib'), $rail = document.getElementById('rail'), $views = document.getElementById('views'),
-      $q = document.getElementById('q'), $tally = document.getElementById('tally'), $drawer = document.getElementById('drawer'),
-      $frame = document.getElementById('frame'), $tip = document.getElementById('tip');
+      $q = document.getElementById('q'), $drawer = document.getElementById('drawer'), $frame = document.getElementById('frame'), $tip = document.getElementById('tip');
   if (!L || !$lib) return;
 
   /* ---------------------------------------------------------------- index */
-  var R = L.records, byId = {}, byAcc = {}, COL = {}, TECH = {}, ATOM = {}, SEE = {}, IN = {};
+  var R = L.records, byId = {}, byAcc = {}, COL = {}, TECH = {}, ATOM = {}, SEE = {}, IN = {}, GROUP = {};
   L.collections.forEach(function (c, i) { c._i = i; COL[c.id] = c; });
   L.authority.techniques.forEach(function (t) { TECH[t.key] = t; });
   L.authority.atoms.forEach(function (a) { ATOM[a.key] = a; });
-  R.forEach(function (r, i) { r._i = i; byId[r.id] = r; byAcc[r.acc] = r; });
+  R.forEach(function (r, i) { r._i = i; byId[r.id] = r; byAcc[r.acc] = r; if (r.pic_group) (GROUP[r.pic_group] = GROUP[r.pic_group] || []).push(r); });
   L.authority.see_also.links.forEach(function (l) {
-    (SEE[l.a] = SEE[l.a] || []).push({ to: l.b, relation: l.relation, by: l.by, date: l.date, basis: l.basis });
-    (SEE[l.b] = SEE[l.b] || []).push({ to: l.a, relation: l.relation, by: l.by, date: l.date, basis: l.basis, back: true });
+    (SEE[l.a] = SEE[l.a] || []).push({ to: l.b, relation: l.relation, by: l.by, basis: l.basis });
+    (SEE[l.b] = SEE[l.b] || []).push({ to: l.a, relation: l.relation, by: l.by, basis: l.basis });
   });
   R.forEach(function (r) { (r.rel || []).forEach(function (x) { if (byId[x.to]) (IN[x.to] = IN[x.to] || []).push({ type: x.type, from: r.id }); }); });
   R.forEach(function (r) {
@@ -33,18 +31,21 @@
   var VIEWS = [['plates', 'Plates'], ['shelves', 'Shelves'], ['techniques', 'Techniques'], ['atoms', 'Atoms'], ['ledger', 'Ledger'], ['audit', 'Audit']];
   var FACETS = [
     { k: 'kind', title: 'Kind', values: KINDS, label: cap, mark: function (v) { return glyph(v, 'canonical'); }, tip: function (v) { return L.vocabulary.kind[v]; } },
-    { k: 'collection', title: 'Collection', values: L.collections.map(function (c) { return c.id; }), label: function (v) { return COL[v].title; }, mark: function () { return ''; }, tip: function (v) { return COL[v].note; } },
-    { k: 'status', title: 'Status', values: STATUSES, label: function (v) { return v ? cap(v.replace('-', ' ')) : 'None on file'; }, mark: function (v) { return glyph('study', v); }, tip: function (v) { return L.vocabulary.status[v]; } },
+    { k: 'collection', title: 'Collection', values: L.collections.map(function (c) { return c.id; }), label: function (v) { return COL[v].title; }, mark: function (v) { return '<span class="cd">' + COL[v].code + '</span>'; }, tip: function (v) { return COL[v].note; } },
+    { k: 'status', title: 'Status', values: STATUSES, label: function (v) { return v ? cap(v.replace('-', ' ')) : 'No status'; }, mark: function (v) { return glyph('study', v); }, tip: function (v) { return L.vocabulary.status[v]; } },
     { k: 'access', title: 'Access', values: ACCESS, label: cap, mark: function (v) { return glyph('study', '', v); }, tip: function (v) { return L.vocabulary.access[v]; } },
     { k: 'lane', title: 'Lane', values: LANES, label: function (v) { return v; }, mark: function () { return ''; } }
   ];
   var SCHEME_LABEL = { enc: 'ENC', 'enc.read': 'ENC·R', tt: 'TT', st: 'ST', hld: 'HLD' };
+  var NOFILTER = { kind: [], collection: [], status: [], access: [], lane: [] };
 
   /* ---------------------------------------------------------------- state */
   var S = { view: 'plates', q: '', f: { kind: [], collection: [], status: [], access: [], lane: [] }, d: 's', sort: 'modified', r: null, term: null, scheme: '', tsort: 'n', ls: 'acc', ld: 1, open: {} };
   var LIST = R;   // the records the drawer pages through
-  var MEM = null; // the route, kept in memory where the host will not let the page write its own address
+  var MEM = null; // the route, kept here when the host does not let the page write its own address
   var BASE = L.base || '../', PREVIEW = !!L.preview;
+  var DPR = Math.min(window.devicePixelRatio || 1, 2);
+  function phone() { return window.innerWidth <= 720; }
 
   function parse(from) {
     var h = (from != null ? from : MEM != null ? MEM : location.hash).replace(/^#\/?/, ''), i = h.indexOf('?');
@@ -80,7 +81,6 @@
     render();
     if (S.view !== before) window.scrollTo(0, 0);
   }
-
   function setHash(h, replace) {
     try { history[replace ? 'replaceState' : 'pushState'](null, '', h); MEM = null; } catch (err) { MEM = h; }
   }
@@ -88,37 +88,57 @@
   /* ---------------------------------------------------------------- helpers */
   function e(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
-  function glyph(kind, status, access) {
-    var ink = '#101014', stroke = access && access !== 'public' ? '#F4551E' : ink, fill = 'none', sw = 1.3, dash = '', extra = '';
-    if (status === 'canonical') fill = ink;
-    else if (status === 'exploration') { fill = 'url(#g-dot)'; sw = 1; }
-    else if (status === 'proposed') extra = '<circle cx="10.3" cy="1.7" r="1.7" fill="#F4551E"/>';
-    else if (status === 'unsorted') { stroke = '#A9A9AD'; sw = 1; }
-    else if (status === 'known-failure') { fill = ink; extra = '<path d="M2.6 9.4L9.4 2.6" stroke="#fff" stroke-width="1.5"/>'; }
-    else if (status === 'historical') dash = ' stroke-dasharray="1.7 1.5"';
-    var a = ' fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + sw + '"' + dash + '/>';
-    var shape = {
-      technique: '<path d="M6 1.5L10.9 10.5H1.1Z"' + a,
-      atom: '<circle cx="6" cy="6" r="4.3"' + a,
-      exploration: '<path d="M6 1.1L10.9 6L6 10.9L1.1 6Z"' + a,
-      coupling: '<circle cx="4.3" cy="6" r="3.1"' + a + '<circle cx="7.7" cy="6" r="3.1"' + a,
-      study: '<rect x="1.7" y="1.7" width="8.6" height="8.6"' + a,
-      template: '<rect x="1" y="3.2" width="10" height="5.6"' + a,
-      instrument: '<path d="M4.5 1.3h3v3.2h3.2v3H7.5v3.2h-3V7.5H1.3v-3h3.2z"' + a
-    }[kind] || '<rect x="1.7" y="1.7" width="8.6" height="8.6"' + a;
-    return '<svg class="sw" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">' + shape + extra + '</svg>';
-  }
-  function frame(r, big) {
-    var src = big && r.thumb_master ? r.thumb_master : r.thumb;
-    if (src) return '<span class="fr"><img src="' + e(src) + '" alt="" loading="lazy" decoding="async" data-call="' + e(r.call || r.title) + '"></span>';
-    return '<span class="fr">' + placeholder(r) + '</span>';
-  }
-  function placeholder(r) {
-    var why = r.access === 'public' ? 'no thumbnail on file' : r.access === 'staged' ? 'staged, not live' : 'held locally';
-    return '<span class="ph">' + (r.call ? '<b>' + e(r.call) + '</b>' : '<b class="w">' + e(r.title) + '</b>') + '<i>' + why + '</i></span>';
-  }
-  function statusLabel(r) { return r.status ? r.status.replace('-', ' ') : (r.kind === 'instrument' ? '' : 'no status'); }
   function recHref(r) { return hash({ r: r.acc }); }
+  function label(r) { return (r.call ? r.call + ' · ' : '') + r.title; }
+
+  /* A shape is a kind. Its fill is a status. A --flag outline is work that is not live. */
+  function glyph(kind, status, access) {
+    var stroke = access && access !== 'public' ? 'var(--flag)' : 'currentColor', fill = 'none', sw = 1.3, dash = '', extra = '', half = false;
+    if (status === 'canonical') fill = 'currentColor';
+    else if (status === 'exploration') half = true;
+    else if (status === 'proposed') extra = '<circle cx="10.3" cy="1.7" r="1.7" style="fill:var(--flag)"/>';
+    else if (status === 'unsorted') { if (stroke === 'currentColor') stroke = '#A9A9AD'; sw = 1; }
+    else if (status === 'known-failure') { fill = 'currentColor'; extra = '<path d="M2.6 9.4L9.4 2.6" style="stroke:var(--bg)" stroke-width="1.5"/>'; }
+    else if (status === 'historical') dash = ' stroke-dasharray="1.7 1.5"';
+    var geo = {
+      technique: ['<path d="M6 1.5L10.9 10.5H1.1Z"'],
+      atom: ['<circle cx="6" cy="6" r="4.3"'],
+      exploration: ['<path d="M6 1.1L10.9 6L6 10.9L1.1 6Z"'],
+      coupling: ['<circle cx="4.3" cy="6" r="3.1"', '<circle cx="7.7" cy="6" r="3.1"'],
+      study: ['<rect x="1.7" y="1.7" width="8.6" height="8.6"'],
+      template: ['<rect x="1" y="3.2" width="10" height="5.6"'],
+      instrument: ['<path d="M4.5 1.3h3v3.2h3.2v3H7.5v3.2h-3V7.5H1.3v-3h3.2z"']
+    }[kind] || ['<rect x="1.7" y="1.7" width="8.6" height="8.6"'];
+    var s = geo.map(function (g) { return g + ' style="fill:' + fill + ';stroke:' + stroke + '" stroke-width="' + sw + '"' + dash + '/>'; }).join('');
+    if (half) s += '<g clip-path="url(#g-half)">' + geo.map(function (g) { return g + ' style="fill:currentColor"/>'; }).join('') + '</g>';
+    return '<svg class="sw" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">' + s + extra + '</svg>';
+  }
+
+  /* A picture, whole. --ar is its shape; --nat is the widest it may be drawn without enlarging its pixels. */
+  function shape(r) { var ar = r.thumb && r.thumb_w ? r.thumb_w / r.thumb_h : 4 / 3; return Math.max(.5, Math.min(3.2, ar)); }
+  function pic(r, sizes, quiet) {
+    if (!r.thumb) return '<span class="fr none" style="--ar:1.3333">' + (quiet ? '' : '<i>' + e(r.no_pic ? r.no_pic.label : 'no picture') + '</i>') + '</span>';
+    var lay = shape(r), exact = r.thumb_w && Math.abs(lay - r.thumb_w / r.thumb_h) < .001, big = r.thumb_2x_w || r.thumb_w;
+    return '<span class="fr' + (exact ? '' : ' fit') + '" style="--ar:' + lay.toFixed(4) + (big ? ';--nat:' + Math.round(big / DPR) + 'px' : '') + '"><img src="' + e(r.thumb) + '"' +
+      (r.thumb_2x ? ' srcset="' + e(r.thumb) + ' ' + r.thumb_w + 'w, ' + e(r.thumb_2x) + ' ' + r.thumb_2x_w + 'w" sizes="' + sizes + '"' : '') +
+      (r.thumb_w ? ' width="' + r.thumb_w + '" height="' + r.thumb_h + '"' : '') + ' alt="" loading="lazy" decoding="async"></span>';
+  }
+  /* Records that show one picture are drawn once, with a count. */
+  function stacks(list) {
+    var seen = {}, out = [];
+    list.forEach(function (r) {
+      if (!r.pic_group) { out.push({ r: r, more: [] }); return; }
+      if (seen[r.pic_group]) { seen[r.pic_group].more.push(r); return; }
+      out.push(seen[r.pic_group] = { r: r, more: [] });
+    });
+    return out;
+  }
+  function tile(g, h) {
+    var r = g.r, n = g.more.length, lay = shape(r), all = [r.acc].concat(g.more.map(function (x) { return x.acc; }));
+    return '<a class="pl" style="--ar:' + lay.toFixed(4) + '" href="' + recHref(r) + '" data-r="' + r.acc + '" data-rs="' + all.join(' ') + '" title="' + e(label(r) + (n ? ' · and ' + n + ' more with this picture' : '')) + '"' +
+      (S.r && all.indexOf(S.r) >= 0 ? ' aria-current="true"' : '') + '>' + pic(r, Math.round(lay * h * 1.5) + 'px') + '<span class="c">' + e(r.call || r.acc) + (n ? '<s>+' + n + '</s>' : '') + '</span></a>';
+  }
+  function strip(list, h) { return '<div class="strip">' + stacks(list).map(function (g) { return tile(g, h); }).join('') + '</div>'; }
 
   /* ---------------------------------------------------------------- filter */
   function tokens() { return S.q.toLowerCase().split(/\s+/).filter(Boolean); }
@@ -130,112 +150,104 @@
     for (var j = 0; j < tk.length; j++) if (r._hay.indexOf(tk[j]) < 0) return false;
     return true;
   }
+  var SHELF = {}; L.collections.forEach(function (c) { var n = 0; c.sections.forEach(function (s) { s.records.forEach(function (id) { SHELF[id] = n++; }); }); });
   function filtered() {
     var tk = tokens(), out = R.filter(function (r) { return match(r, null, tk); });
     if (S.sort === 'title') out.sort(function (a, b) { return a.title.localeCompare(b.title); });
     else if (S.sort === 'modified') out.sort(function (a, b) { return (b.dates.modified || '').localeCompare(a.dates.modified || '') || a._i - b._i; });
-    else if (S.sort === 'shelf') out.sort(function (a, b) { return COL[a.collection]._i - COL[b.collection]._i || shelfPos(a) - shelfPos(b); });
+    else if (S.sort === 'shelf') out.sort(function (a, b) { return COL[a.collection]._i - COL[b.collection]._i || (SHELF[a.id] || 0) - (SHELF[b.id] || 0); });
     return out;
   }
-  var SHELF = {}; L.collections.forEach(function (c) { var n = 0; c.sections.forEach(function (s) { s.records.forEach(function (id) { SHELF[id] = n++; }); }); });
-  function shelfPos(r) { return SHELF[r.id] || 0; }
   function anyFilter() { return S.q || FACETS.some(function (F) { return S.f[F.k].length; }); }
 
   /* ---------------------------------------------------------------- bar + rail */
-  function drawBar(n) {
+  function drawBar() {
+    var n = { plates: R.length, shelves: L.collections.length, techniques: L.authority.techniques.length, atoms: L.authority.atoms.length, audit: L.audit.filter(function (a) { return a.level !== 'note'; }).length };
     $views.innerHTML = VIEWS.map(function (v) {
-      var c = v[0] === 'plates' ? R.length : v[0] === 'shelves' ? L.collections.length : v[0] === 'techniques' ? L.authority.techniques.length : v[0] === 'atoms' ? L.authority.atoms.length : v[0] === 'audit' ? L.audit.filter(function (a) { return a.level !== 'note'; }).length : '';
-      return '<button type="button" data-view="' + v[0] + '"' + (S.view === v[0] ? ' aria-current="page"' : '') + '>' + v[1] + (c !== '' ? '<i>' + c + '</i>' : '') + '</button>';
+      return '<button type="button" data-view="' + v[0] + '"' + (S.view === v[0] ? ' aria-current="page"' : '') + '>' + v[1] + (n[v[0]] != null ? '<i>' + n[v[0]] + '</i>' : '') + '</button>';
     }).join('');
-    $tally.innerHTML = n == null ? '' : '<b>' + n + '</b>' + (n === R.length ? 'records' : 'of ' + R.length);
   }
   function drawRail() {
     var railed = S.view === 'plates' || S.view === 'ledger' || S.view === 'shelves';
     $frame.classList.toggle('norail', !railed);
     if (!railed) { $rail.innerHTML = ''; return; }
-    var tk = tokens(), nActive = FACETS.reduce(function (n, F) { return n + S.f[F.k].length; }, 0);
-    var h = '<button type="button" class="railtog" data-railtog>Filters' + (nActive ? ' · ' + nActive + ' on' : '') + '<span>' + ($rail.classList.contains('open') ? '–' : '+') + '</span></button>';
+    var tk = tokens(), on = FACETS.reduce(function (n, F) { return n + S.f[F.k].length; }, 0);
+    var h = '<button type="button" class="railtog" data-railtog aria-expanded="' + $rail.classList.contains('open') + '">Filters' + (on ? ' · ' + on : '') + '<span>' + ($rail.classList.contains('open') ? '–' : '+') + '</span></button>';
     FACETS.forEach(function (F) {
-      var counts = {}, max = 0;
+      var counts = {};
       R.forEach(function (r) { if (match(r, F.k, tk)) { var v = r[F.k] == null ? '' : r[F.k]; counts[v] = (counts[v] || 0) + 1; } });
-      F.values.forEach(function (v) { if ((counts[v] || 0) > max) max = counts[v]; });
       var vals = F.values.filter(function (v) { return counts[v] || S.f[F.k].indexOf(v) >= 0 || F.k !== 'lane'; });
       if (!vals.length) return;
-      h += '<section class="fg"><h2><span class="k">' + F.title + '</span>' + (S.f[F.k].length ? '<button type="button" data-clear="' + F.k + '">clear</button>' : '') + '</h2><div class="fvs">';
+      h += '<section class="fg' + (F.k === 'collection' ? ' code' : '') + '"><h2><span class="k">' + F.title + '</span>' + (S.f[F.k].length ? '<button type="button" data-clear="' + F.k + '">Clear</button>' : '') + '</h2><div class="fvs">';
       vals.forEach(function (v) {
-        var n = counts[v] || 0, on = S.f[F.k].indexOf(v) >= 0;
-        h += '<button type="button" class="fv' + (n ? '' : ' zero') + '" data-f="' + F.k + '" data-v="' + e(v) + '" aria-pressed="' + on + '"' + (F.tip && F.tip(v) ? ' title="' + e(F.tip(v)) + '"' : '') + '>' +
-          '<span>' + (F.mark(v) || (F.k === 'collection' ? '<span class="mono" style="font-size:8px;letter-spacing:.04em;color:#66666A">' + COL[v].code.slice(0, 2) + '</span>' : '')) + '</span>' +
-          '<span class="lb">' + e(F.label(v)) + '</span><span class="ct">' + n + '</span><span class="bar"><i style="width:' + (max ? Math.round(n / max * 100) : 0) + '%"></i></span></button>';
+        var n = counts[v] || 0, tip = F.tip && F.tip(v);
+        h += '<button type="button" class="fv' + (n ? '' : ' zero') + '" data-f="' + F.k + '" data-v="' + e(v) + '" aria-pressed="' + (S.f[F.k].indexOf(v) >= 0) + '"' + (tip ? ' title="' + e(tip) + '"' : '') + '>' +
+          '<span>' + F.mark(v) + '</span><span class="lb">' + e(F.label(v)) + '</span><span class="ct">' + n + '</span></button>';
       });
       h += '</div></section>';
     });
-    h += '<div class="rail-note">A shape is a kind. Its fill is a status: solid is canonical, dotted is an exploration, an orange point is proposed, a pale outline is unsorted. An orange outline is not live yet.' +
-      '<span class="mono">' + e(L.schema) + ' · ' + e(L.generated) + (L.source_commit ? ' · ' + e(L.source_commit) : '') + '</span></div>';
     $rail.innerHTML = h;
   }
 
   /* ---------------------------------------------------------------- shared pieces */
-  function head(title, lede, tools) {
-    return '<header class="vh"><div><h1>' + title + '</h1><p>' + lede + '</p></div>' + (tools ? '<div class="tools">' + tools + '</div>' : '') + '</header>';
-  }
-  function activeBar(n, noun, noFacets) {
+  function toolbar(tools, n, total, noFacets) {
     var chips = '';
     if (S.q) chips += '<button type="button" class="chip" data-unq>“' + e(S.q) + '”</button>';
     if (!noFacets) FACETS.forEach(function (F) { S.f[F.k].forEach(function (v) { chips += '<button type="button" class="chip" data-f="' + F.k + '" data-v="' + e(v) + '">' + e(F.label(v)) + '</button>'; }); });
-    return '<div class="active"><span class="n"><b>' + n + '</b> ' + noun + (n === 1 ? '' : 's') + (chips ? ' where' : '') + '</span>' + chips + (chips ? '<button type="button" class="clear" data-clearall>clear all</button>' : '') + '</div>';
+    var flt = chips || n !== total ? '<div class="flt"><span class="n"><b>' + n + '</b> of ' + total + '</span>' + chips + (chips ? '<button type="button" class="clear" data-clearall>Clear</button>' : '') + '</div>' : '';
+    return tools || flt ? '<div class="tb">' + (tools || '') + flt + '</div>' : '';
   }
+  function seg(name, opts, cur) {
+    return '<div class="seg" role="group" aria-label="' + name + '">' + opts.map(function (o) { return '<button type="button" ' + o[0] + ' aria-pressed="' + (o[2] === cur) + '"' + (o[3] ? ' title="' + e(o[3]) + '"' : '') + '>' + o[1] + '</button>'; }).join('') + '</div>';
+  }
+  function empty(what) { return '<div class="empty">No ' + what + ' match.' + (anyFilter() ? '<button type="button" data-clearall>Clear filters</button>' : '') + '</div>'; }
   function foot() {
-    return '<footer class="foot"><p>Collections stay where they were made, in their own order and their own shell. The library keeps one record per work, a number that never changes, and the way in.</p>' +
-      '<p class="mono">' + (PREVIEW ? 'a preview of library/ · the data files ship with it' : '<a href="catalog.json">catalog.json</a> · <a href="accessions.json">accessions.json</a> · <a href="fixity.json">fixity.json</a> · <a href="llms.txt">llms.txt</a>') + '<br>' +
-      e(L.schema) + ' · built ' + e(L.generated) + (L.source_commit ? ' from ' + e(L.source_commit) : '') + '</p></footer>';
+    return '<footer class="foot"><span>' + (PREVIEW ? 'Preview of library/' : '<a href="catalog.json">catalog.json</a> · <a href="accessions.json">accessions.json</a> · <a href="fixity.json">fixity.json</a> · <a href="llms.txt">llms.txt</a>') + '</span>' +
+      '<span>' + e(L.schema) + ' · built ' + e(L.generated) + (L.source_commit ? ' · ' + e(L.source_commit) : '') + '</span></footer>';
   }
   function card(r) {
-    var flags = '';
-    if (r.access !== 'public') flags += '<span style="border-color:#F4551E">' + r.access + '</span>';
-    else { if (r.plate && r.plate.modules) flags += '<span>lift</span>'; else if (r.plate && r.plate.spec) flags += '<span>spec</span>'; }
-    return '<a class="pl" href="' + recHref(r) + '" data-r="' + r.acc + '" title="' + e((r.call ? r.call + ' · ' : '') + r.title) + '"' + (S.r === r.acc ? ' aria-current="true"' : '') + '>' + frame(r) +
-      (flags ? '<span class="flags">' + flags + '</span>' : '') +
-      '<span class="l1"><b class="call">' + e(r.call || '—') + '</b><span class="acc">' + r.acc + '</span></span>' +
+    var st = r.status ? r.status.replace('-', ' ') : '';
+    var has = r.access !== 'public' ? '<span class="not">' + r.access + '</span>'
+      : r.plate && r.plate.modules ? '<span class="has" title="Has modules to lift">lift</span>' : r.plate && r.plate.spec ? '<span class="has" title="Has a spec">spec</span>' : '';
+    return '<a class="cdx" href="' + recHref(r) + '" data-r="' + r.acc + '" title="' + e(label(r)) + '"' + (S.r === r.acc ? ' aria-current="true"' : '') + '><span class="cell">' + pic(r, '(max-width:720px) 46vw, 240px', r.access !== 'public') + '</span>' +
+      '<span class="l1"><b class="call">' + e(r.call || r.acc) + '</b><span class="col">' + COL[r.collection].code + '</span></span>' +
       '<span class="tt">' + e(r.title) + '</span>' +
-      '<span class="l3">' + glyph(r.kind, r.status, r.access) + '<span class="st">' + e(r.kind) + (statusLabel(r) ? ' · ' + e(statusLabel(r)) : '') + '</span><span class="col">' + COL[r.collection].code + '</span></span></a>';
+      '<span class="l3">' + glyph(r.kind, r.status, r.access) + '<span class="st">' + e(r.kind) + (st ? ' · ' + e(st) : '') + '</span>' + has + '</span></a>';
   }
 
-  /* ---------------------------------------------------------------- lanes */
+  /* ---------------------------------------------------------------- arrival chart: one mark per record, a row per collection, on whole pixels */
   function lanes(list) {
-    var W = Math.max(320, $lib.clientWidth - 48), gut = 36, n = R.length, step = (W - gut) / n, rowH = 10, rows = L.collections.length, H = rows * rowH + 22;
+    var W = Math.max(320, $lib.clientWidth - 40), gut = 34, n = R.length, step = Math.max(2, Math.floor((W - gut) / n)), mw = Math.max(1, step - 1), rowH = 11, rows = L.collections.length, top = rows * rowH;
     var inSet = {}; list.forEach(function (r) { inSet[r.id] = 1; });
-    var s = '<div class="lanes"><div class="cap"><span class="k">Arrival · ' + R[0].acc + ' → ' + R[n - 1].acc + '</span><span class="k">one mark per record · a row per collection</span></div>' +
-      '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="Every record in order of arrival, one row per collection">';
+    var s = '<div class="lanes"><svg width="' + (gut + n * step) + '" height="' + (top + 18) + '" role="img" aria-label="Records in order of arrival, one row per collection">';
     L.collections.forEach(function (c, i) {
-      var y = i * rowH;
-      s += '<line class="rule" x1="' + gut + '" x2="' + W + '" y1="' + (y + rowH - .5) + '" y2="' + (y + rowH - .5) + '"/><text class="lab" x="0" y="' + (y + 7) + '">' + c.code + '</text>';
+      s += '<line class="rule" x1="' + gut + '" x2="' + (gut + n * step) + '" y1="' + (i * rowH + rowH - .5) + '" y2="' + (i * rowH + rowH - .5) + '"/><text x="0" y="' + (i * rowH + 8) + '">' + c.code + '</text>';
     });
-    var mw = Math.max(1.4, step - 1), lastLabel = -99, lastDate = '';
+    var lastLabel = -99, lastDate = '';
     R.forEach(function (r, i) {
-      var x = gut + i * step, y = COL[r.collection]._i * rowH + 1.5;
-      s += '<rect class="m' + (inSet[r.id] ? '' : ' off') + (S.r === r.acc ? ' sel' : '') + '" data-r="' + r.acc + '" x="' + x.toFixed(2) + '" y="' + y + '" width="' + mw.toFixed(2) + '" height="' + (rowH - 3.5) + '"/>';
+      var x = gut + i * step, y = COL[r.collection]._i * rowH + 2;
+      s += '<rect class="m' + (inSet[r.id] ? '' : ' off') + (S.r === r.acc ? ' sel' : '') + '" data-r="' + r.acc + '" x="' + x + '" y="' + y + '" width="' + mw + '" height="' + (rowH - 4) + '"/>';
       var d = r.dates.accessioned || '';
       if (d !== lastDate) {
         lastDate = d;
-        s += '<line class="tick" x1="' + x.toFixed(2) + '" x2="' + x.toFixed(2) + '" y1="' + (rows * rowH) + '" y2="' + (rows * rowH + 4) + '"/>';
-        if (x - lastLabel > 44) { s += '<text class="date" x="' + x.toFixed(2) + '" y="' + (rows * rowH + 14) + '">' + d.slice(5) + '</text>'; lastLabel = x; }
+        s += '<line class="tick" x1="' + (x + .5) + '" x2="' + (x + .5) + '" y1="' + top + '" y2="' + (top + 4) + '"/>';
+        if (x - lastLabel > 46) { s += '<text x="' + x + '" y="' + (top + 15) + '">' + d.slice(5) + '</text>'; lastLabel = x; }
       }
     });
-    R.forEach(function (r, i) { s += '<rect class="hit" data-r="' + r.acc + '" x="' + (gut + i * step).toFixed(2) + '" y="0" width="' + step.toFixed(2) + '" height="' + (rows * rowH) + '"/>'; });
+    R.forEach(function (r, i) { s += '<rect class="hit" data-r="' + r.acc + '" x="' + (gut + i * step) + '" y="0" width="' + step + '" height="' + top + '"/>'; });
     return s + '</svg></div>';
   }
 
   /* ---------------------------------------------------------------- views */
   function vPlates() {
     var list = filtered(); LIST = list;
-    var tools = '<button type="button" data-d="s" aria-pressed="' + (S.d === 's') + '">Contact sheet</button><button type="button" data-d="m" aria-pressed="' + (S.d === 'm') + '">Cards</button>' +
-      '<label>Order <select data-sort><option value="modified"' + sel('modified') + '>Last changed</option><option value="acc"' + sel('acc') + '>Arrival</option><option value="shelf"' + sel('shelf') + '>Shelf</option><option value="title"' + sel('title') + '>Title</option></select></label>';
     function sel(v) { return S.sort === v ? ' selected' : ''; }
-    var body = list.length ? '<div class="grid ' + S.d + '">' + list.map(card).join('') + '</div>'
-      : '<div class="empty"><b>Nothing matches.</b>Loosen a filter, or search the technique and atom lists instead.</div>';
-    $lib.innerHTML = head('Plates', 'Every work in every collection. Open one to see where it lives, what it is made of and what it connects to.', tools) + activeBar(list.length, 'record') + lanes(list) + body + foot();
-    drawBar(list.length);
+    var tools = seg('Layout', [['data-d="s"', 'Sheet', 's'], ['data-d="m"', 'Cards', 'm']], S.d) +
+      '<label class="ord">Order <select data-sort><option value="modified"' + sel('modified') + '>Last changed</option><option value="acc"' + sel('acc') + '>Arrival</option><option value="shelf"' + sel('shelf') + '>Shelf</option><option value="title"' + sel('title') + '>Title</option></select></label>';
+    var body = !list.length ? empty('records')
+      : S.d === 's' ? '<div class="sheet">' + strip(list, phone() ? 76 : 104) + '</div>'
+      : '<div class="cards">' + list.map(card).join('') + '</div>';
+    $lib.innerHTML = '<h1 class="vh">Plates</h1>' + toolbar(tools, list.length, R.length) + body + foot();
   }
 
   function vShelves() {
@@ -247,19 +259,14 @@
         var recs = s.records.map(function (id) { return byId[id]; }).filter(function (r) { return !any || match(r, null, tk); });
         if (!recs.length) return;
         n += recs.length; LIST = LIST.concat(recs);
-        secs += '<div class="sec"><h3><b>' + e(s.title) + '</b>' + recs.length + '</h3><div class="tiles">' + recs.map(function (r) {
-          return '<a class="tile" href="' + recHref(r) + '" data-r="' + r.acc + '" title="' + e((r.call ? r.call + ' · ' : '') + r.title) + '">' + frame(r) + '<span class="c">' + e(r.call || r.acc) + '</span></a>';
-        }).join('') + '</div></div>';
+        secs += '<div class="sec"><h3>' + e(s.title) + '<span>' + recs.length + '</span></h3>' + strip(recs, phone() ? 56 : 64) + '</div>';
       });
       if (any && !n) return;
       total += n;
-      h += '<section class="shelf"><header><div class="code">' + c.code + '</div><div><h2>' + e(c.title) + ' <span class="k" style="margin-left:8px">' + n + (n === c.n ? '' : ' of ' + c.n) + '</span></h2><p class="note">' + e(c.note) + '</p><div class="truth">source of truth · ' + e(c.truth) + '</div></div>' +
-        (c.index ? '<a class="go" href="' + e(c.index) + '">Open its own index ↗</a>' : '<span></span>') + '</header>' + secs + '</section>';
+      h += '<section class="shelf"><header><h2><span class="k code">' + c.code + '</span>' + e(c.title) + '<span class="k">' + n + (n === c.n ? '' : ' of ' + c.n) + '</span></h2>' +
+        (c.index ? '<a class="go" href="' + e(c.index) + '">Index ↗</a>' : '') + '<p class="note">' + e(c.note) + '</p><div class="truth">' + e(c.truth) + '</div></header>' + secs + '</section>';
     });
-    var sup = L.superseded.map(function (s) { return '<code>' + e(s.path) + '/</code> into ' + e(s.folded_into); }).join(', ');
-    $lib.innerHTML = head('Shelves', 'Each collection in the order its makers left it. Folded in and not counted twice: ' + sup + '.', '') + activeBar(total, 'record') +
-      (h || '<div class="empty"><b>Nothing matches.</b></div>') + foot();
-    drawBar(total);
+    $lib.innerHTML = '<h1 class="vh">Shelves</h1>' + toolbar('', total, R.length) + (h || empty('records')) + foot();
   }
 
   function vTerms(which) {
@@ -272,77 +279,79 @@
       var hay = (t.id + ' ' + t.name + ' ' + (t.atom_kind || '') + ' ' + t.uses.map(function (u) { return byId[u.rec] ? byId[u.rec].title + ' ' + byId[u.rec].call : ''; }).join(' ')).toLowerCase();
       return tk.every(function (x) { return hay.indexOf(x) >= 0; });
     });
-    var nrec = function (t) { var s = {}; t.uses.forEach(function (u) { s[u.rec] = 1; }); return Object.keys(s).length; };
-    list.forEach(function (t) { t._n = nrec(t); });
+    list.forEach(function (t) { var s = {}; t.uses.forEach(function (u) { s[u.rec] = 1; }); t._n = Object.keys(s).length; });
     if (S.tsort === 'n') list.sort(function (a, b) { return b._n - a._n || a.id.localeCompare(b.id); }); else list.sort(function (a, b) { return a.id.localeCompare(b.id); });
     var max = list.reduce(function (m, t) { return Math.max(m, t._n); }, 1);
-    var tools = '<button type="button" data-scheme="" aria-pressed="' + (!S.scheme) + '">All</button>' + schemes.map(function (s) {
-      return '<button type="button" data-scheme="' + s + '" aria-pressed="' + (S.scheme === s) + '" title="' + e(L.vocabulary.scheme[s] || s) + '">' + (SCHEME_LABEL[s] || s) + '</button>';
-    }).join('') + '<button type="button" data-ts="' + (S.tsort === 'n' ? 'az' : 'n') + '">' + (S.tsort === 'n' ? 'Most used first' : 'A to Z') + '</button>';
-    var lede = which === 'techniques'
-      ? 'A technique entry is a page of its own. A technique read is one block of a plate’s spec. Each vocabulary keeps its own ids; a see-also link joins two only once someone writes it down.'
-      : 'An atom is a noun with parameters. The encyclopedia files atoms as entries; Techniques &amp; Templates tags each read with the atoms it is built from.';
-    var h = head(cap(which), lede, tools) + activeBar(list.length, 'term', true);
+    var tools = seg('Vocabulary', [['data-scheme=""', 'All', '']].concat(schemes.map(function (s) { return ['data-scheme="' + s + '"', SCHEME_LABEL[s] || s, s, L.vocabulary.scheme[s] || s]; })), S.scheme) +
+      seg('Order', [['data-ts="n"', 'By use', 'n'], ['data-ts="az"', 'A–Z', 'az']], S.tsort);
+    var h = '<h1 class="vh">' + cap(which) + '</h1>' + toolbar(tools, list.length, all.length, true);
     h += list.length ? '<ul class="terms">' + list.map(function (t) {
       var open = S.term === t.key;
       return '<li class="term"' + (open ? ' open' : '') + ' id="t-' + e(t.key) + '"><button type="button" data-term="' + e(t.key) + '" aria-expanded="' + open + '">' +
-        '<span class="sc">' + (SCHEME_LABEL[t.scheme] || t.scheme) + '</span><span class="id">' + e(t.id) + '</span><span class="nm">' + e(t.name !== t.id ? t.name : '') + (t.atom_kind ? ' · ' + e(t.atom_kind) : '') + (SEE[type + ':' + t.key] ? ' · see also' : '') + '</span>' +
-        '<span class="ct"><i style="width:' + Math.max(2, Math.round(t._n / max * 70)) + 'px"></i>' + t._n + '</span></button>' + (open ? termBody(t, type) : '') + '</li>';
-    }).join('') + '</ul>' : '<div class="empty"><b>No term matches.</b></div>';
+        '<span class="sc">' + (SCHEME_LABEL[t.scheme] || t.scheme) + '</span><span class="id">' + e(t.id) + '</span><span class="nm">' + e([t.name !== t.id ? t.name : '', t.atom_kind, SEE[type + ':' + t.key] ? 'see also' : ''].filter(Boolean).join(' · ')) + '</span>' +
+        '<span class="ct"><i style="width:' + Math.max(2, Math.round(t._n / max * 60)) + 'px"></i>' + t._n + '</span></button>' + (open ? termBody(t, type) : '') + '</li>';
+    }).join('') + '</ul>' : empty('terms');
     $lib.innerHTML = h + foot();
-    LIST = R; drawBar(list.length);
+    LIST = R;
     if (S.term) { var el = document.getElementById('t-' + S.term); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' }); }
   }
   function termBody(t, type) {
     var h = '<div class="body">';
     (SEE[type + ':' + t.key] || []).forEach(function (s) { h += seeBox(s); });
-    if (t.record && byId[t.record]) h += '<div class="see"><span class="tag ruled">entry</span>This term has a page of its own: <a href="' + recHref(byId[t.record]) + '" data-r="' + byId[t.record].acc + '">' + e(byId[t.record].title) + '</a></div>';
-    var uses = t.uses.slice().sort(function (a, b) { return byId[a.rec]._i - byId[b.rec]._i; });
-    uses.forEach(function (u) {
-      var r = byId[u.rec]; if (!r || (u.role === 'entry')) return;
-      h += '<div class="use"><a href="' + recHref(r) + '" data-r="' + r.acc + '">' + frame(r) + '</a><div><h4><span class="call">' + e(r.call || r.acc) + '</span><a href="' + recHref(r) + '" data-r="' + r.acc + '">' + e(r.title) + '</a><span class="role">' + e(u.role === 'in' ? 'in ' + (u.via || '').split(':').pop() : u.role) + '</span></h4>' +
-        (u.implementation ? '<p>' + e(u.implementation) + '</p>' : '') + (u.limits ? '<p class="lim">Limits. ' + e(u.limits) + '</p>' : '') +
-        (u.module ? '<p><code>' + e(u.module) + '</code></p>' : '') + '</div></div>';
+    if (t.record && byId[t.record]) h += '<div class="see"><span class="tag">Entry</span><a href="' + recHref(byId[t.record]) + '" data-r="' + byId[t.record].acc + '">' + e(byId[t.record].title) + '</a></div>';
+    // one row per record: a record that uses the term in several modules lists them together
+    var rows = [], at = {};
+    t.uses.slice().sort(function (a, b) { return byId[a.rec]._i - byId[b.rec]._i; }).forEach(function (u) {
+      var r = byId[u.rec]; if (!r || u.role === 'entry') return;
+      var row = at[u.rec]; if (!row) { row = at[u.rec] = { r: r, roles: [], ins: [], notes: [] }; rows.push(row); }
+      if (u.role === 'in') { var m = (u.via || '').split(':').pop(); if (m && row.ins.indexOf(m) < 0) row.ins.push(m); }
+      else if (row.roles.indexOf(u.role) < 0) row.roles.push(u.role);
+      var note = (u.implementation ? '<p>' + e(u.implementation) + '</p>' : '') + (u.limits ? '<p class="lim">Limits: ' + e(u.limits) + '</p>' : '') + (u.module ? '<p><code>' + e(u.module) + '</code></p>' : '');
+      if (note && row.notes.indexOf(note) < 0) row.notes.push(note);
     });
-    if (t.scheme === 'tt') h += '<div class="see"><span class="tag ruled">parameters</span><a href="' + e(BASE) + 'techniques-templates/?' + (type === 'atom' ? 'a' : 't') + '=' + encodeURIComponent(t.id) + '">Open ' + e(t.id) + ' in Techniques &amp; Templates ↗</a></div>';
+    rows.forEach(function (row) {
+      var r = row.r, role = row.roles.concat(row.ins.length ? ['in ' + row.ins.join(', ')] : []).join(' · ');
+      h += '<div class="use"><a class="pic" href="' + recHref(r) + '" data-r="' + r.acc + '" tabindex="-1">' + pic(r, '96px') + '</a><div><h4><span class="call">' + e(r.call || r.acc) + '</span><a href="' + recHref(r) + '" data-r="' + r.acc + '">' + e(r.title) + '</a><span class="role">' + e(role) + '</span></h4>' + row.notes.join('') + '</div></div>';
+    });
+    if (t.scheme === 'tt') h += '<div class="see"><a href="' + e(BASE) + 'techniques-templates/?' + (type === 'atom' ? 'a' : 't') + '=' + encodeURIComponent(t.id) + '">Parameters in Techniques &amp; Templates ↗</a></div>';
     return h + '</div>';
   }
   function seeBox(s) {
-    var parts = s.to.split(':'), type = parts[0], key = parts.slice(1).join(':'), label, href, attr = '';
-    if (type === 'record') { var r = byId[key]; label = (r.call ? r.call + ' ' : '') + r.title; href = recHref(r); attr = ' data-r="' + r.acc + '"'; }
-    else { var t = (type === 'technique' ? TECH : ATOM)[key]; label = key + (t && t.name !== t.id ? ' · ' + t.name : ''); href = hash({ view: type + 's', term: key, r: null, q: '', scheme: '' }); }
-    return '<div class="see"><span class="tag' + (s.by === 'proposed' ? '' : ' ruled') + '">' + (s.by === 'proposed' ? 'proposed' : 'see also') + '</span><span class="mono" style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#66666A">' + type + '</span> <a href="' + href + '"' + attr + '>' + e(label) + '</a><span class="rel">' + e(s.relation) + '</span><p>' + e(s.basis) + (s.by === 'proposed' ? ' Not yet ruled.' : ' Source: ' + e(s.by) + '.') + '</p></div>';
+    var parts = s.to.split(':'), type = parts[0], key = parts.slice(1).join(':'), text, href, attr = '', prop = s.by === 'proposed';
+    if (type === 'record') { var r = byId[key]; text = (r.call ? r.call + ' ' : '') + r.title; href = recHref(r); attr = ' data-r="' + r.acc + '"'; }
+    else { var t = (type === 'technique' ? TECH : ATOM)[key]; text = key + (t && t.name !== t.id ? ' · ' + t.name : ''); href = hash({ view: type + 's', term: key, r: null, q: '', scheme: '' }); }
+    return '<div class="see' + (prop ? ' prop' : '') + '"><span class="tag">' + (prop ? 'Proposed' : 'See also') + '</span><span class="ty">' + type + '</span><a href="' + href + '"' + attr + '>' + e(text) + '</a><span class="rel">' + e(s.relation) + '</span><p>' + e(s.basis) + '</p></div>';
   }
 
   function vLedger() {
     var list = filtered();
-    var cols = [['acc', 'Accession'], ['call', 'Call'], ['title', 'Title'], ['kind', 'Kind'], ['collection', 'Collection'], ['section_title', 'Section'], ['status', 'Status'], ['access', 'Access'], ['arrived', 'Arrived'], ['modified', 'Changed'], ['fixity', 'Fixity']];
+    var cols = [['acc', 'Accession'], ['call', 'Call'], ['title', 'Title'], ['kind', 'Kind'], ['collection', 'Coll.'], ['section_title', 'Section'], ['status', 'Status'], ['access', 'Access'], ['arrived', 'Arrived'], ['modified', 'Changed'], ['fixity', 'Fixity']];
     var val = function (r, k) { return k === 'arrived' ? r.dates.accessioned : k === 'modified' ? r.dates.modified : k === 'collection' ? COL[r.collection].code : k === 'acc' ? r.acc.slice(5) : (r[k] || ''); };
     list.sort(function (a, b) { return String(val(a, S.ls)).localeCompare(String(val(b, S.ls))) * S.ld || a._i - b._i; });
     LIST = list;
-    var h = head('Ledger', 'The accession register. A number is given once, in order of arrival, and stays with the work whatever shelf it moves to.', '') + activeBar(list.length, 'record');
-    h += '<div class="lwrap"><table class="ledger"><colgroup><col style="width:104px"><col style="width:76px"><col><col style="width:128px"><col style="width:56px"><col style="width:150px"><col style="width:104px"><col style="width:70px"><col style="width:94px"><col style="width:94px"><col style="width:84px"></colgroup><thead><tr>' + cols.map(function (c) { return '<th scope="col" data-ls="' + c[0] + '"' + (S.ls === c[0] ? ' aria-sort="' + (S.ld > 0 ? 'ascending' : 'descending') + '"' : '') + '>' + c[1] + '</th>'; }).join('') + '</tr></thead><tbody>' +
+    var h = '<h1 class="vh">Ledger</h1>' + toolbar('', list.length, R.length) + lanes(list);
+    h += '<div class="lwrap"><table class="ledger"><thead><tr>' +
+      cols.map(function (c) { return '<th scope="col" class="c-' + c[0] + '" data-ls="' + c[0] + '"' + (S.ls === c[0] ? ' aria-sort="' + (S.ld > 0 ? 'ascending' : 'descending') + '"' : '') + '>' + c[1] + '</th>'; }).join('') + '</tr></thead><tbody>' +
       list.map(function (r) {
-        return '<tr data-r="' + r.acc + '"' + (S.r === r.acc ? ' aria-current="true"' : '') + '><td>' + r.acc + '</td><td>' + e(r.call) + '</td><td class="t">' + e(r.title) + '</td><td><span class="gl">' + glyph(r.kind, r.status, r.access) + e(r.kind) + '</span></td><td>' + COL[r.collection].code + '</td><td class="n">' + e(r.section_title) + '</td><td>' + e(r.status || '') + '</td><td class="n">' + e(r.access) + '</td><td class="n">' + e(r.dates.accessioned) + '</td><td class="n">' + e(r.dates.modified) + '</td><td class="n">' + e(r.fixity ? r.fixity.slice(0, 8) : '') + '</td></tr>';
+        return '<tr data-r="' + r.acc + '"' + (S.r === r.acc ? ' aria-current="true"' : '') + '><td>' + r.acc + '</td><td>' + e(r.call) + '</td><td class="t">' + e(r.title) + '</td><td><span class="gl">' + glyph(r.kind, r.status, r.access) + e(r.kind) + '</span></td><td>' + COL[r.collection].code + '</td><td class="n c-section_title">' + e(r.section_title) + '</td><td>' + e(r.status || '') + '</td><td class="n c-access">' + e(r.access) + '</td><td class="n">' + e(r.dates.accessioned) + '</td><td class="n c-modified">' + e(r.dates.modified) + '</td><td class="n c-fixity">' + e(r.fixity ? r.fixity.slice(0, 8) : '') + '</td></tr>';
       }).join('') + '</tbody></table></div>';
     $lib.innerHTML = h + foot();
-    drawBar(list.length);
   }
 
   function vAudit() {
-    var groups = [['ruling', 'Wants a ruling'], ['gap', 'Gaps'], ['drift', 'Drift'], ['note', 'Notes']], h = head('Audit', 'What the catalog found while reading. Nothing here was changed. A ruling is yours; a gap is missing data; drift is two places saying different things.', '');
-    groups.forEach(function (g) {
+    var h = '<h1 class="vh">Audit</h1>';
+    [['ruling', 'To rule'], ['gap', 'Gaps'], ['drift', 'Drift'], ['note', 'Notes']].forEach(function (g) {
       var fs = L.audit.filter(function (a) { return a.level === g[0]; });
       if (!fs.length) return;
-      h += '<section class="aud"><h2>' + g[1] + '</h2>';
-      fs.forEach(function (a, i) {
-        var key = g[0] + i, n = a.records ? a.records.length : a.items ? a.items.length : a.links ? a.links.length : (a.n != null ? a.n : ''), open = !!S.open[key], has = a.records || a.items || a.links;
-        var big = a.of != null ? a.n + '<small>/' + a.of + '</small>' : n;
-        h += '<div class="fd"><button type="button"' + (has ? ' data-fd="' + key + '" aria-expanded="' + open + '"' : ' disabled style="cursor:default"') + '><h3>' + e(a.title) + '</h3><p>' + e(a.detail) + '</p><span class="big">' + big + '</span></button>';
-        if (open && has) {
+      h += '<section class="aud"><h2 class="k">' + g[1] + '</h2>';
+      fs.forEach(function (a) {
+        var n = a.of != null ? a.n + '<small>/' + a.of + '</small>' : a.n != null ? a.n : a.records ? a.records.length : a.items ? a.items.length : a.links ? a.links.length : '';
+        var has = a.records || a.items || a.links, open = has && !!S.open[a.id];
+        h += '<div class="fd"><button type="button"' + (has ? ' data-fd="' + e(a.id) + '" aria-expanded="' + open + '"' : ' disabled') + '><span class="n">' + n + '</span><span class="t">' + e(a.title) + '</span><span class="d">' + e(a.detail) + '</span>' + (has ? '<span class="x">' + (open ? '–' : '+') + '</span>' : '') + '</button>';
+        if (open) {
           h += '<div class="more">';
           if (a.items || a.links) h += '<ul>' + (a.items || a.links).map(function (x) { return '<li>' + e(x) + '</li>'; }).join('') + '</ul>';
-          if (a.records) h += a.records.map(function (id) { var r = byId[id]; return r ? '<a href="' + recHref(r) + '" data-r="' + r.acc + '"><span class="mono">' + r.acc + '</span><span class="mono cl2">' + e(r.call) + '</span><span class="ti">' + e(r.title) + '</span></a>' : ''; }).join('');
+          else h += a.records.map(function (id) { var r = byId[id]; return r ? '<a href="' + recHref(r) + '" data-r="' + r.acc + '"><span class="m">' + r.acc + '</span><span class="m cl2">' + e(r.call) + '</span><span class="ti">' + e(r.title) + '</span></a>' : ''; }).join('');
           h += '</div>';
         }
         h += '</div>';
@@ -350,80 +359,79 @@
       h += '</section>';
     });
     $lib.innerHTML = h + foot();
-    LIST = R; drawBar(null);
-    $tally.innerHTML = '<b>' + L.audit.filter(function (a) { return a.level !== 'note'; }).length + '</b>findings';
+    LIST = R;
   }
 
   /* ---------------------------------------------------------------- drawer */
+  var RIGHTS = { 'first-party': 'First-party', 'reference-withheld': 'Third-party reference, not published', 'reference-published': 'Published with the plate', adapted: 'Adapted', 'reference-study': 'Reference study' };
   function syncDrawer() {
     var r = S.r ? byAcc[S.r] : null;
     if (!r) { $drawer.setAttribute('aria-hidden', 'true'); return; }
-    var i = LIST.indexOf(r), prev = i > 0 ? LIST[i - 1] : null, next = i >= 0 && i < LIST.length - 1 ? LIST[i + 1] : null, c = COL[r.collection], p = r.provenance || {};
-    var h = '<div class="dh"><span class="where">' + e(c.title) + ' / ' + e(r.section_title) + '<span class="acc">' + (i >= 0 ? (i + 1) + ' of ' + LIST.length : '') + '</span></span>' +
-      '<button type="button" data-r="' + (prev ? prev.acc : '') + '"' + (prev ? '' : ' disabled') + ' aria-label="Previous record">←</button><button type="button" data-r="' + (next ? next.acc : '') + '"' + (next ? '' : ' disabled') + ' aria-label="Next record">→</button><button type="button" data-close aria-label="Close">Close ×</button></div><div class="db">';
-    h += frame(r, true);
-    h += '<div class="l1"><b class="call">' + e(r.call || '—') + '</b><span class="acc">' + r.acc + '</span></div><h1>' + e(r.title) + '</h1>' + (r.sub ? '<p class="sub">' + e(r.sub) + '</p>' : '');
-    h += '<div class="acts">' + (r.href ? '<a class="pri" href="' + e(r.href) + '">Open the plate ↗</a>' : '<span class="off acts-off" style="font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;border:1px dashed #A9A9AD;padding:8px 11px;line-height:1;color:#66666A">Not published</span>') +
+    var i = LIST.indexOf(r), prev = i > 0 ? LIST[i - 1] : null, next = i >= 0 && i < LIST.length - 1 ? LIST[i + 1] : null, c = COL[r.collection], p = r.provenance || {}, pl = r.plate || {};
+    var h = '<div class="dh"><span class="id">' + (r.call ? '<b>' + e(r.call) + '</b>' : '') + r.acc + '</span><span>' + (i >= 0 ? (i + 1) + ' / ' + LIST.length : '') + '</span>' +
+      '<button type="button" data-r="' + (prev ? prev.acc : '') + '"' + (prev ? '' : ' disabled') + ' aria-label="Previous record">←</button><button type="button" data-r="' + (next ? next.acc : '') + '"' + (next ? '' : ' disabled') + ' aria-label="Next record">→</button><button type="button" data-close aria-label="Close">×</button></div><div class="db">';
+    h += pic(r, '(max-width:720px) 92vw, 500px') + '<h1>' + e(r.title) + '</h1>' + (r.sub ? '<p class="sub">' + e(r.sub) + '</p>' : '');
+    h += '<div class="acts">' + (r.href ? '<a class="pri" href="' + e(r.href) + '">Open plate ↗</a>' : '<span>Not published</span>') +
       (r.spec_href ? '<a href="' + e(r.spec_href) + '">Spec JSON ↗</a>' : '') + '<button type="button" data-copy="record">Copy record</button>' + (PREVIEW ? '' : '<button type="button" data-copy="link">Copy link</button>') + '</div>';
     var rows = [];
-    rows.push(['Accession', r.acc + ' <small>· arrived ' + e(r.dates.accessioned) + (r.dates.modified && r.dates.modified !== r.dates.accessioned ? ', changed ' + e(r.dates.modified) : '') + '</small>']);
     rows.push(['Kind', '<span class="gl">' + glyph(r.kind, r.status, r.access) + e(r.kind) + (r.atom_kind ? ' · ' + e(r.atom_kind) : '') + '</span>']);
-    rows.push(['Status', r.status ? e(r.status.replace('-', ' ')) + (L.vocabulary.status[r.status] ? ' <small>· ' + e(L.vocabulary.status[r.status]) + '</small>' : '') : '<small>None on file. This collection does not record one.</small>']);
-    if (r.proposed_grade) rows.push(['Proposed grade', e(r.proposed_grade) + ' <small>· a researcher’s grade, not a ruling</small>']);
-    if (r.ruling) rows.push(['Ruling', 'by ' + e(r.ruling.by) + (r.ruling.date ? ', ' + e(r.ruling.date) : '')]);
-    rows.push(['Collection', '<a href="' + hash({ view: 'shelves', r: null, term: null, q: '', f: { kind: [], collection: [r.collection], status: [], access: [], lane: [] } }) + '" style="border-bottom:1px solid #A9A9AD">' + e(c.title) + '</a> <small>· ' + e(r.section_title) + '</small>']);
-    var mk = [r.lane && 'lane ' + r.lane, r.layer && 'layer ' + r.layer.toLowerCase(), r.style && 'style ' + r.style].filter(Boolean);
-    if (mk.length) rows.push(['Made as', e(mk.join(' · '))]);
-    var pl = r.plate || {}, has = [pl.spec && 'spec', pl.points && pl.points + '-point read', pl.variants && pl.variants + ' variants', pl.motion && 'motion', pl.live && 'live', pl.compare && 'reference compare', pl.modules && pl.modules + ' liftable modules', pl.examples && pl.examples + (pl.examples === 1 ? ' example' : ' examples'), pl.params && pl.params + ' parameters'].filter(Boolean);
-    if (has.length) rows.push(['Carries', e(has.join(' · '))]);
-    var src = [p.kind && p.kind.replace('-', ' '), p.title, p.author, p.date, p.license].filter(Boolean).map(e).join(' · ');
-    if (src) rows.push(['Source', src + (p.url ? ' <a href="' + e(p.url) + '" style="border-bottom:1px solid #A9A9AD">link ↗</a>' : '')]);
-    if (p.rights) rows.push(['Reference', e({ 'first-party': 'First-party. Published.', 'reference-withheld': 'Third-party reference, held locally and not published.', 'reference-published': 'Reference published with the plate.', adapted: 'Adapted. Prose condensed, code written here.', 'reference-study': 'Studied from the corpus, cited by file and line.' }[p.rights] || p.rights)]);
+    rows.push(['Status', r.status ? e(r.status.replace('-', ' ')) + (r.ruling ? ' <small>· ruled by ' + e(r.ruling.by) + (r.ruling.date ? ', ' + e(r.ruling.date) : '') + '</small>' : '') + (r.proposed_grade ? ' <small>· proposed grade ' + e(r.proposed_grade) + '</small>' : '') : '<small>none recorded</small>']);
+    if (r.access !== 'public') rows.push(['Access', e(cap(r.access)) + ' <small>· ' + e(L.vocabulary.access[r.access]) + (r.target ? ' For ' + e(r.target) + '.' : '') + '</small>']);
+    rows.push(['Collection', '<a href="' + hash({ view: 'shelves', r: null, term: null, q: '', f: { kind: [], collection: [r.collection], status: [], access: [], lane: [] } }) + '">' + e(c.title) + '</a> <small>· ' + e(r.section_title) + '</small>']);
+    rows.push(['Dates', 'Arrived ' + e(r.dates.accessioned) + (r.dates.modified && r.dates.modified !== r.dates.accessioned ? ' <small>· changed ' + e(r.dates.modified) + '</small>' : '')]);
+    var mk = [r.lane, r.layer && r.layer.toLowerCase(), r.style].filter(Boolean);
+    if (mk.length) rows.push(['Build', e(mk.join(' · '))]);
+    var has = [pl.spec && 'spec', pl.points && pl.points + '-point read', pl.variants && pl.variants + ' variants', pl.motion && 'motion', pl.live && 'live', pl.compare && 'reference compare', pl.modules && pl.modules + ' modules to lift', pl.examples && pl.examples + (pl.examples === 1 ? ' example' : ' examples'), pl.params && pl.params + ' parameters'].filter(Boolean);
+    if (has.length) rows.push(['Plate', e(has.join(' · '))]);
+    var src = [p.title, p.author, p.date, p.license].filter(Boolean).map(e).join(' · ');
+    if (src || p.rights) rows.push(['Source', [RIGHTS[p.rights] || '', src].filter(Boolean).join(' · ') + (p.url ? ' <a href="' + e(p.url) + '">link ↗</a>' : '')]);
     if (r.governed_by) rows.push(['Governed by', e(r.governed_by.join(' · '))]);
     if (r.swatches) rows.push(['Palette', '<span class="swatches">' + r.swatches.map(function (x) { return '<i style="background:' + e(x) + '" title="' + e(x) + '"></i>'; }).join('') + '</span>']);
-    if (r.thumb_kind === 'snapshot') rows.push(['Picture', 'A snapshot of the live plate, taken by the library. <small>The plate has no thumbnail of its own.</small>']);
-    rows.push(['Location', r.location ? e(r.location) : '<code>' + e(r.source) + '</code>']);
+    var grp = r.pic_group ? GROUP[r.pic_group].filter(function (x) { return x !== r; }) : [];
+    var about = !r.thumb ? ['None.' + (r.no_pic && r.no_pic.why ? ' ' + e(r.no_pic.why) : '')] : r.thumb_kind === 'snapshot' ? ['Library snapshot of the live plate.'] : [];
+    if (grp.length) about.push('Shared with ' + grp.map(function (x) { return '<a href="' + recHref(x) + '" data-r="' + x.acc + '">' + e(x.call || x.acc) + '</a>'; }).join(', ') + '.');
+    if (about.length) rows.push(['Picture', about.join(' ')]);
+    rows.push(['File', r.location ? e(r.location) : '<code>' + e(r.source) + '</code>']);
     if (r.fixity && r.access === 'public') rows.push(['Fixity', '<code>sha256 ' + e(r.fixity) + '…</code>']);
-    if (r.access !== 'public') rows.push(['Access', e(cap(r.access)) + ' <small>· ' + e(L.vocabulary.access[r.access]) + (r.target ? ' Bound for ' + e(r.target) + '.' : '') + '</small>']);
     h += '<dl class="dl">' + rows.map(function (x) { return '<dt>' + x[0] + '</dt><dd>' + x[1] + '</dd>'; }).join('') + '</dl>';
 
     if (r.techniques && r.techniques.length) {
-      h += '<section class="dsec"><h2><span class="k">Techniques · ' + r.techniques.length + '</span>' + (pl.modules ? '<span class="k">◆ has a module to lift</span>' : '') + '</h2><div class="chips">' + r.techniques.map(function (k) {
+      h += '<section class="dsec"><h2 class="k">Techniques · ' + r.techniques.length + '</h2><div class="chips">' + r.techniques.map(function (k) {
         var t = TECH[k], mod = t && t.uses.some(function (u) { return u.rec === r.id && u.module; });
-        return '<a class="' + (mod ? 'mod' : '') + '" href="' + hash({ view: 'techniques', term: k, r: null, q: '', scheme: '' }) + '" title="' + e(t ? t.name : k) + '">' + e(k.split(':').pop()) + '</a>';
+        return '<a' + (mod ? ' class="mod"' : '') + ' href="' + hash({ view: 'techniques', term: k, r: null, q: '', scheme: '' }) + '" title="' + e((t ? t.name : k) + (mod ? ' · has a module to lift' : '')) + '">' + e(k.split(':').pop()) + '</a>';
       }).join('') + '</div></section>';
     }
     if (r.atoms && r.atoms.length) {
-      h += '<section class="dsec"><h2><span class="k">Atoms · ' + r.atoms.length + '</span></h2><div class="chips">' + r.atoms.map(function (k) {
+      h += '<section class="dsec"><h2 class="k">Atoms · ' + r.atoms.length + '</h2><div class="chips">' + r.atoms.map(function (k) {
         return '<a href="' + hash({ view: 'atoms', term: k, r: null, q: '', scheme: '' }) + '" title="' + e(ATOM[k] ? ATOM[k].name : k) + '">' + e(k.split(':').pop()) + '</a>';
       }).join('') + '</div></section>';
     }
     var rel = (r.rel || []).filter(function (x) { return byId[x.to]; }).map(function (x) { return { ty: x.type, o: byId[x.to] }; })
       .concat((IN[r.id] || []).map(function (x) { return { ty: '← ' + x.type, o: byId[x.from] }; }));
     if (rel.length) {
-      h += '<section class="dsec"><h2><span class="k">Connected · ' + rel.length + '</span></h2><div class="rels">' + rel.map(function (x) {
+      h += '<section class="dsec"><h2 class="k">Connected · ' + rel.length + '</h2><div class="rels">' + rel.map(function (x) {
         return '<a href="' + recHref(x.o) + '" data-r="' + x.o.acc + '"><span class="ty">' + e(x.ty) + '</span><span class="cl">' + e(x.o.call || x.o.acc) + '</span><span>' + e(x.o.title) + '</span></a>';
       }).join('') + '</div></section>';
     }
     var see = SEE['record:' + r.id];
-    if (see) h += '<section class="dsec"><h2><span class="k">See also</span></h2>' + see.map(seeBox).join('<div style="height:6px"></div>') + '</section>';
+    if (see) h += '<section class="dsec"><h2 class="k">See also</h2>' + see.map(seeBox).join('') + '</section>';
     $drawer.innerHTML = h + '</div>';
     $drawer.setAttribute('aria-hidden', 'false');
     $drawer.scrollTop = 0;
   }
   function markCurrent() {
-    var els = document.querySelectorAll('[aria-current="true"]'), i;
+    var els = document.querySelectorAll('#lib [aria-current="true"]'), i;
     for (i = 0; i < els.length; i++) els[i].removeAttribute('aria-current');
     els = document.querySelectorAll('.lanes .m.sel'); for (i = 0; i < els.length; i++) els[i].classList.remove('sel');
     if (!S.r) return;
-    els = document.querySelectorAll('.pl[data-r="' + S.r + '"],.ledger tr[data-r="' + S.r + '"]'); for (i = 0; i < els.length; i++) els[i].setAttribute('aria-current', 'true');
+    els = document.querySelectorAll('.pl[data-rs~="' + S.r + '"],.cdx[data-r="' + S.r + '"],.ledger tr[data-r="' + S.r + '"]'); for (i = 0; i < els.length; i++) els[i].setAttribute('aria-current', 'true');
     els = document.querySelectorAll('.lanes .m[data-r="' + S.r + '"]'); for (i = 0; i < els.length; i++) els[i].classList.add('sel');
   }
 
   /* ---------------------------------------------------------------- render */
   function render() {
     if ($q.value !== S.q && document.activeElement !== $q) $q.value = S.q;
-    drawRail();
+    drawBar(); drawRail();
     if (S.view === 'plates') vPlates();
     else if (S.view === 'shelves') vShelves();
     else if (S.view === 'techniques' || S.view === 'atoms') vTerms(S.view);
@@ -444,7 +452,7 @@
   document.addEventListener('click', function (ev) {
     var t = ev.target.closest('[data-view],[data-f],[data-clear],[data-clearall],[data-unq],[data-d],[data-r],[data-close],[data-term],[data-scheme],[data-ts],[data-ls],[data-fd],[data-copy],[data-railtog]');
     if (!t) {
-      // a link to another view: route it here, so it works where the host owns the address bar
+      // a link to another view is routed here, so it works where the host owns the address bar
       var a = ev.target.closest('a[href^="#/"]');
       if (a && !(ev.metaKey || ev.ctrlKey || ev.shiftKey)) { ev.preventDefault(); parse(a.getAttribute('href')); setHash(hash()); render(); window.scrollTo(0, 0); return; }
       if (S.r && !ev.target.closest('#drawer') && !ev.target.closest('a,button,input,select')) go({ r: null });
@@ -455,7 +463,7 @@
     if ('railtog' in d) { $rail.classList.toggle('open'); drawRail(); return; }
     if ('copy' in d) {
       var r = byAcc[S.r], o = {}; for (var k in r) if (k.charAt(0) !== '_') o[k] = r[k];
-      if (d.copy === 'record') copy(JSON.stringify(o, null, 2), 'Record copied'); else copy(location.href.split('#')[0] + hash({ view: 'plates', term: null, q: '', scheme: '', f: { kind: [], collection: [], status: [], access: [], lane: [] } }), 'Link copied');
+      if (d.copy === 'record') copy(JSON.stringify(o, null, 2), 'Record copied'); else copy(location.href.split('#')[0] + hash({ view: 'plates', term: null, q: '', scheme: '', f: NOFILTER }), 'Link copied');
       return;
     }
     ev.preventDefault();
@@ -478,29 +486,29 @@
   document.addEventListener('keydown', function (ev) {
     var typing = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName);
     if (ev.key === '/' && !typing) { ev.preventDefault(); $q.focus(); $q.select(); }
-    else if (ev.key === 'Escape') { if (S.r) go({ r: null }); else if (typing) { $q.blur(); } else if (S.q) { $q.value = ''; go({ q: '' }); } }
+    else if (ev.key === 'Escape') { if (S.r) go({ r: null }); else if (typing) $q.blur(); else if (S.q) { $q.value = ''; go({ q: '' }); } }
     else if (S.r && !typing && (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight')) {
       var i = LIST.indexOf(byAcc[S.r]), n = LIST[i + (ev.key === 'ArrowRight' ? 1 : -1)];
       if (i >= 0 && n) { ev.preventDefault(); go({ r: n.acc }, true); }
     }
   });
-  // a thumbnail that fails to load becomes the same plate a record with no thumbnail gets
+  // a picture that fails to load leaves an empty frame
   document.addEventListener('error', function (ev) {
-    var im = ev.target; if (!im || im.tagName !== 'IMG' || !im.parentNode || !im.parentNode.classList.contains('fr')) return;
-    im.parentNode.innerHTML = '<span class="ph"><b class="w">' + e(im.dataset.call || '') + '</b><i>thumbnail did not load</i></span>';
+    var im = ev.target, fr = im && im.tagName === 'IMG' && im.parentNode;
+    if (!fr || !fr.classList || !fr.classList.contains('fr')) return;
+    fr.classList.add('none'); fr.innerHTML = '<i>no picture</i>';
   }, true);
-  // lanes: what a mark is, on hover
+  // arrival chart: name the mark under the pointer
   document.addEventListener('mousemove', function (ev) {
     var t = ev.target.closest && ev.target.closest('.lanes .hit');
     if (!t) { if (!$tip.hidden) $tip.hidden = true; return; }
     var r = byAcc[t.dataset.r];
-    $tip.innerHTML = '<b>' + e((r.call ? r.call + ' · ' : '') + r.title) + '</b><i>' + r.acc + ' · ' + e(COL[r.collection].title) + ' · ' + e(r.dates.accessioned) + '</i>';
+    $tip.innerHTML = e(label(r)) + '<i>' + r.acc + ' · ' + e(COL[r.collection].title) + ' · ' + e(r.dates.accessioned) + '</i>';
     $tip.hidden = false;
-    var x = Math.min(ev.clientX + 12, window.innerWidth - $tip.offsetWidth - 8);
-    $tip.style.left = x + 'px'; $tip.style.top = (ev.clientY + 16) + 'px';
+    $tip.style.left = Math.min(ev.clientX + 12, window.innerWidth - $tip.offsetWidth - 8) + 'px'; $tip.style.top = (ev.clientY + 16) + 'px';
   });
   var rt, lastW = window.innerWidth;
-  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { if (window.innerWidth !== lastW) { lastW = window.innerWidth; if (S.view === 'plates') render(); } }, 160); });
+  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { if (window.innerWidth !== lastW) { lastW = window.innerWidth; render(); } }, 160); });
   window.addEventListener('popstate', function () { MEM = null; parse(); render(); });
   window.addEventListener('hashchange', function () { MEM = null; parse(); render(); });
 

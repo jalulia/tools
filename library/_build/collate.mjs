@@ -1,18 +1,16 @@
 #!/usr/bin/env node
-// library/_build/collate.mjs — the union catalog.
+// library/_build/collate.mjs: builds the catalog.
 //
-// Reads every collection where it lies and writes one catalog over all of
-// them. It moves nothing, renames nothing and edits no source: a collection
-// keeps its folder, its shell, its codes and its own order. What the library
-// adds is a record per work, a number that never changes, two authority
-// files, a see-also table, a fixity list and an audit.
+// Reads each collection in place and writes library/catalog.json, catalog.js,
+// accessions.json, fixity.json, llms.txt and the static table in index.html.
+// It writes only inside library/.
 //
 //   node library/_build/collate.mjs            build
-//   node library/_build/collate.mjs --thumbs   build, and (re)make access copies of the thumbs
-//   node library/_build/collate.mjs --check    verify fixity + accessions against disk; writes nothing; exit 1 on drift
+//   node library/_build/collate.mjs --thumbs   build, and remake access copies whose master changed
+//   node library/_build/collate.mjs --check    compare disk against the last build; writes nothing; exit 1 on a difference
 //
-// No dependencies, same as scripts/build-site.mjs. Adding a collection is one
-// row in collections.json; a new source shape is one reader below.
+// No npm dependencies. --thumbs uses Pillow (thumb.py), or sips on macOS.
+// A new collection is one row in collections.json; a new source shape is one reader below.
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSync } from 'node:fs';
 import { join, dirname, relative, resolve } from 'node:path';
@@ -366,35 +364,94 @@ for (const r of raw) { r.acc = ACC.records[r.id].acc; r.dates.accessioned = ACC.
 raw.sort((a, b) => a.acc.slice(5).localeCompare(b.acc.slice(5)));
 const byId = new Map(raw.map((r) => [r.id, r]));
 
-/* access copies of the thumbs --------------------------------------------- */
+/* pictures ------------------------------------------------------------------
+   thumbs/<acc>.jpg is an access copy, 480 px on its long edge. The master stays
+   with its record and serves as the larger size. A snapshot has no master, so
+   snap.mjs also writes thumbs/<acc>-960.jpg. thumbs/index.json holds each
+   copy's size, the hash of its master and a signature for grouping. */
 const THUMB_DIR = join(LIB, 'thumbs');
-function makeThumb(src, dst) {
-  if (process.platform === 'darwin') {
-    try { execFileSync('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', '82', '-Z', '480', src, '--out', dst], { stdio: 'ignore' }); return true; } catch { /* fall through */ }
-  }
+const PIC_FILE = join(THUMB_DIR, 'index.json');
+const PICS = existsSync(PIC_FILE) ? readJson(PIC_FILE).pictures : {};
+function makeCopies(jobs) {
   try {
-    execFileSync('python3', ['-c',
-      'import sys\nfrom PIL import Image\nim=Image.open(sys.argv[1]).convert("RGB")\nw,h=im.size\ns=min(1,480/max(w,h))\nim=im.resize((max(1,round(w*s)),max(1,round(h*s))),Image.LANCZOS)\nim.save(sys.argv[2],"JPEG",quality=82,optimize=True)',
-      src, dst], { stdio: 'ignore' });
-    return true;
-  } catch { return false; }
+    const out = execFileSync('python3', [join(HERE, 'thumb.py')], { input: JSON.stringify(jobs), encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['pipe', 'pipe', 'ignore'] });
+    return JSON.parse(out);
+  } catch { /* no Pillow here */ }
+  if (process.platform !== 'darwin') return null;
+  const dim = (f) => { const o = execFileSync('sips', ['-g', 'pixelWidth', '-g', 'pixelHeight', f], { encoding: 'utf8' }); return [Number(/pixelWidth: (\d+)/.exec(o)[1]), Number(/pixelHeight: (\d+)/.exec(o)[1])]; };
+  const sips = (src, dst, edge) => execFileSync('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', '90', '-Z', String(edge), src, '--out', dst], { stdio: 'ignore' });
+  const res = {};
+  for (const j of jobs) {
+    try {
+      sips(j.src, `${j.dst}.jpg`, 480);
+      const [w, h] = dim(`${j.dst}.jpg`), [mw, mh] = dim(j.src);
+      res[j.key] = { w, h, mw, mh };
+    } catch (e) { res[j.key] = { error: String(e.message || e) }; }
+  }
+  return res;
+}
+const masterSha = new Map();
+const jobs = [];
+for (const r of raw) {
+  if (!r.thumbSrc) continue;
+  const sha = sha256(readFileSync(join(ROOT, r.thumbSrc))).slice(0, 16);
+  masterSha.set(r.id, sha);
+  const have = PICS[r.acc];
+  if (THUMBS && !CHECK && (!have || have.from !== 'copy' || have.master !== sha || !existsSync(join(THUMB_DIR, `${r.acc}.jpg`)))) jobs.push({ key: r.acc, src: join(ROOT, r.thumbSrc), dst: join(THUMB_DIR, r.acc), sha });
 }
 let thumbsMade = 0, thumbsFailed = 0;
+if (jobs.length) {
+  mkdirSync(THUMB_DIR, { recursive: true });
+  const res = makeCopies(jobs) || {};
+  for (const j of jobs) {
+    const p = res[j.key];
+    if (!p || p.error) { thumbsFailed++; console.error(`  access copy failed: ${j.src.slice(ROOT.length + 1)}${p && p.error ? ` (${p.error})` : ' (no Pillow or sips here; the page loads the master)'}`); continue; }
+    PICS[j.key] = { from: 'copy', master: j.sha, w: p.w, h: p.h, mw: p.mw, mh: p.mh };
+    if (p.sig) PICS[j.key].sig = p.sig;
+    thumbsMade++;
+  }
+}
+const stalePics = [];
 for (const r of raw) {
-  r.thumb = null; r.thumb_kind = null;
-  const name = `${r.acc}.jpg`, dst = join(THUMB_DIR, name);
-  if (!r.thumbSrc) {
-    // no thumbnail of its own: a snapshot made by snap.mjs may stand in
-    if (existsSync(dst)) { r.thumb = `thumbs/${name}`; r.thumb_kind = 'snapshot'; }
-    continue;
+  const p = PICS[r.acc], onDisk = existsSync(join(THUMB_DIR, `${r.acc}.jpg`));
+  r.thumb = null; r.thumb_kind = null; r.pic = null;
+  if (r.thumbSrc) {
+    r.thumb_master = `../${r.thumbSrc}`; r.thumb_kind = 'copy';
+    if (p && p.from === 'copy' && onDisk) { r.thumb = `thumbs/${r.acc}.jpg`; r.pic = p; if (p.master !== masterSha.get(r.id)) stalePics.push(r.id); }
+    else r.thumb = r.thumb_master;   // no access copy yet: the page loads the master
+  } else if (p && p.from === 'snapshot' && onDisk) { r.thumb = `thumbs/${r.acc}.jpg`; r.thumb_kind = 'snapshot'; r.pic = p; }
+  if (!r.thumb) {
+    const cfg = (CFG.no_snapshot || {})[r.id];
+    r.no_pic = r.access === 'staged' ? { label: 'staged', why: 'Not on the site yet.' }
+      : r.access === 'local' ? { label: 'local', why: 'The files are on the working machine.' }
+      : cfg ? { label: cfg.label, why: cfg.why }
+      : r.lane === 'audio' ? { label: 'sound', why: 'Sound entry.' }
+      : { label: 'no picture', why: '' };
   }
-  const src = join(ROOT, r.thumbSrc);
-  if (THUMBS && !CHECK && (!existsSync(dst) || statSync(dst).mtimeMs < statSync(src).mtimeMs)) {
-    mkdirSync(THUMB_DIR, { recursive: true });
-    if (makeThumb(src, dst)) thumbsMade++; else thumbsFailed++;
+}
+// Records that show the same picture. With a signature: same shape, mean difference
+// at most 0.4 and no cell further than 6 of 255. Two snapshots of one moving stage
+// differ a little more, so a pair of snapshots is allowed 3 and 24.
+// Without a signature: the same master file.
+{
+  const sig = (r) => (r.pic && r.pic.sig ? Buffer.from(r.pic.sig, 'base64') : null);
+  const ar = (r) => (r.pic ? r.pic.w / r.pic.h : 0);
+  const same = (a, b) => {
+    const x = sig(a), y = sig(b);
+    if (!x || !y) return !!masterSha.get(a.id) && masterSha.get(a.id) === masterSha.get(b.id);
+    if (Math.abs(ar(a) - ar(b)) / ar(a) > 0.02) return false;
+    const snaps = a.thumb_kind === 'snapshot' && b.thumb_kind === 'snapshot';
+    const far = snaps ? 24 : 6, mean = snaps ? 3 : 0.4;
+    let sum = 0;
+    for (let i = 0; i < x.length; i++) { const d = Math.abs(x[i] - y[i]); if (d > far) return false; sum += d; }
+    return sum / x.length <= mean;
+  };
+  const leaders = [];
+  for (const r of raw) {
+    if (!r.thumb) continue;
+    const l = leaders.find((x) => same(x, r));
+    if (l) { r.pic_group = l.acc; l.pic_group = l.acc; } else leaders.push(r);
   }
-  r.thumb = existsSync(dst) ? `thumbs/${name}` : `../${r.thumbSrc}`;   // the master stays with its record
-  r.thumb_master = `../${r.thumbSrc}`; r.thumb_kind = 'copy';
 }
 
 /* authority: techniques ---------------------------------------------------- */
@@ -457,38 +514,51 @@ for (const l of XW.links) {
 const audit = [];
 const finding = (id, level, title, detail, extra = {}) => audit.push({ id, level, title, detail, ...extra });
 const pub = raw.filter((r) => r.access === 'public');
+const tag = (r) => `${r.acc} ${r.call ? r.call + ' ' : ''}${r.title}`;
 {
+  /* to rule */
   const uns = raw.filter((r) => r.status === 'unsorted');
-  if (uns.length) finding('unsorted', 'ruling', 'Imports awaiting a ruling', 'Filed from the inventory with a proposed grade. Each wants a section and a status.', { records: uns.map((r) => r.id) });
+  if (uns.length) finding('unsorted', 'ruling', 'Unsorted imports', 'Imported from the inventory with a proposed grade. Each needs a section and a status.', { records: uns.map((r) => r.id) });
   const prop = raw.filter((r) => r.status === 'proposed' && r.access === 'public');
-  if (prop.length) finding('proposed', 'ruling', 'Proposed, live, not yet ruled canonical', 'Written by the tool. Only a person graduates work to canonical.', { records: prop.map((r) => r.id) });
+  if (prop.length) finding('proposed', 'ruling', 'Proposed entries on the live site', 'Written by the tool. A ruling in the manifest makes an entry canonical.', { records: prop.map((r) => r.id) });
   const staged = raw.filter((r) => r.access === 'staged');
-  if (staged.length) finding('staged', 'ruling', 'Staged, not live', 'Patches and proposals outside the deployed site.', { records: staged.map((r) => r.id) });
-  const local = raw.filter((r) => r.access === 'local');
-  if (local.length) finding('local', 'gap', 'Kept on the working machine only', 'Catalogued from build notes. Not in the repository.', { records: local.map((r) => r.id) });
+  if (staged.length) finding('staged', 'ruling', 'Staged work', 'Patches and proposals that are not on the deployed site.', { records: staged.map((r) => r.id) });
   const xp = see.filter((l) => l.by === 'proposed');
-  if (xp.length) finding('see-also-proposed', 'ruling', 'See-also links not yet ruled', 'Hand-written by the tool in library/_build/crosswalk.json. Shown as PROPOSED and used for nothing else.', { links: xp.map((l) => `${l.a} · ${l.relation} · ${l.b}`) });
+  if (xp.length) finding('see-also-proposed', 'ruling', 'See-also links to confirm', 'Written by the tool in library/_build/crosswalk.json. Set `by` to a name to confirm a link, or delete its row.', { links: xp.map((l) => `${l.a} · ${l.relation} · ${l.b}`) });
+  // one work in two places: links marked also-filed-as, and records that share a title
+  const twice = new Map();
+  const pair = (a, b, why) => { const k = [a.id, b.id].sort().join('|'); if (!twice.has(k)) twice.set(k, `${tag(a)}  ↔  ${tag(b)} (${why})`); };
+  for (const l of see) if (l.relation === 'also-filed-as') pair(byId.get(l.a.replace(/^record:/, '')), byId.get(l.b.replace(/^record:/, '')), 'see-also');
+  const titles = new Map();
+  for (const r of raw) { const k = r.title.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); (titles.get(k) || titles.set(k, []).get(k)).push(r); }
+  const linked = (a, b) => a.rel.some((x) => x.to === b.id) || b.rel.some((x) => x.to === a.id);   // a technique and its instance may share a title
+  for (const v of titles.values()) for (let i = 1; i < v.length; i++) if (!linked(v[0], v[i])) pair(v[0], v[i], 'same title');
+  if (twice.size) finding('filed-twice', 'ruling', 'Possible double filings', 'Pairs that may be one work filed in two places.', { n: twice.size, items: [...twice.values()], records: [...new Set([...twice.keys()].flatMap((k) => k.split('|')))] });
 
+  /* gaps */
+  const local = raw.filter((r) => r.access === 'local');
+  if (local.length) finding('local', 'gap', 'Local only', 'Listed from build notes. The files are not in the repository.', { records: local.map((r) => r.id) });
   const noStatus = pub.filter((r) => !r.status && r.kind !== 'instrument');
-  if (noStatus.length) finding('no-status', 'gap', 'No status on file', 'These collections carry no status field. The library shows a blank, never a guess.', { records: noStatus.map((r) => r.id) });
+  if (noStatus.length) finding('no-status', 'gap', 'No status', 'Their collections have no status field.', { records: noStatus.map((r) => r.id) });
   const noThumb = pub.filter((r) => !r.thumb);
-  if (noThumb.length) finding('no-surrogate', 'gap', 'No thumbnail on file', 'The plate exists; its picture for the index does not.', { records: noThumb.map((r) => r.id) });
+  if (noThumb.length) finding('no-surrogate', 'gap', 'No picture', 'Public records with no thumbnail and no snapshot.', { records: noThumb.map((r) => r.id) });
   const snaps = pub.filter((r) => r.thumb_kind === 'snapshot');
-  if (snaps.length) finding('snapshot', 'gap', 'A page snapshot stands in for a thumbnail', 'These plates have no thumbnail of their own. The library photographed the live page (library/_build/snap.mjs).', { records: snaps.map((r) => r.id) });
+  if (snaps.length) finding('snapshot', 'gap', 'Library snapshots', 'The collection has no thumbnail for these. The picture is a snapshot of the live plate, made by library/_build/snap.mjs.', { records: snaps.map((r) => r.id) });
+  const groups = new Map();
+  for (const r of raw) if (r.pic_group) (groups.get(r.pic_group) || groups.set(r.pic_group, []).get(r.pic_group)).push(r);
+  if (groups.size) finding('shared-picture', 'gap', 'Shared pictures', 'Records that show the same picture as another record. Most are a screenshot of the page an import was lifted from.', {
+    items: [...groups.values()].map((v) => `${v.length} records: ${v.map((r) => r.call || r.acc).join(', ')}`), records: [...groups.values()].flat().map((r) => r.id), n: [...groups.values()].reduce((n, v) => n + v.length - 1, 0) });
   const fromId = raw.filter((r) => r.title_from_id);
-  if (fromId.length) finding('title-from-id', 'gap', 'Title written from the slug', 'Holdings whose real title is in a document the catalog cannot read.', { records: fromId.map((r) => r.id) });
-
-  // atoms no technique produces (the open join-passes)
+  if (fromId.length) finding('title-from-id', 'gap', 'Titles written from the slug', 'Holdings titled from their id. The real title is in a document outside the repository.', { records: fromId.map((r) => r.id) });
   const produced = new Set(raw.flatMap((r) => r.rel.filter((x) => x.type === 'produces' && r.access === 'public').map((x) => x.to)));
   const orphans = raw.filter((r) => r.kind === 'atom' && !produced.has(r.id));
-  if (orphans.length) finding('orphan-atom', 'gap', 'Atoms no live technique produces', 'Substrates, engines and buses are inputs and may stay this way. Process atoms can be closed by a technique.', { records: orphans.map((r) => r.id) });
-
-  // parts-bin coverage
+  if (orphans.length) finding('orphan-atom', 'gap', 'Atoms no technique produces', 'Substrates, engines and buses are inputs. A process atom can be closed by a technique.', { records: orphans.map((r) => r.id) });
   const ttUses = [...techniques.values()].filter((t) => t.scheme === 'tt').flatMap((t) => t.uses);
   const lift = ttUses.filter((u) => u.module).length;
-  if (ttUses.length) finding('module-coverage', 'gap', 'Technique reads with a liftable module', `${lift} of ${ttUses.length} reads in Techniques & Templates name a module file. The rest are described, not yet liftable.`, { n: lift, of: ttUses.length, records: [...new Set(ttUses.filter((u) => u.module).map((u) => u.rec))] });
+  if (ttUses.length) finding('module-coverage', 'gap', 'Reads with a module to lift', `${lift} of ${ttUses.length} technique reads in Techniques & Templates name a module file.`, { n: lift, of: ttUses.length, records: [...new Set(ttUses.filter((u) => u.module).map((u) => u.rec))] });
 
-  // one id, two vocabularies
+  /* drift */
+  if (stalePics.length) finding('stale-pictures', 'drift', 'Access copies older than their master', 'Run node library/_build/collate.mjs --thumbs.', { records: stalePics });
   const tIds = new Map(); for (const t of techniques.values()) (tIds.get(t.id) || tIds.set(t.id, []).get(t.id)).push(t.key);
   const aIds = new Map(); for (const a of atoms.values()) (aIds.get(a.id) || aIds.set(a.id, []).get(a.id)).push(a.key);
   const clash = [];
@@ -496,15 +566,11 @@ const pub = raw.filter((r) => r.access === 'public');
     const asAtom = aIds.get(id) || [];
     if (asAtom.length) clash.push(`${id}: technique in ${keys.map((k) => k.split(':')[0]).join(', ')} · atom in ${asAtom.map((k) => k.split(':')[0]).join(', ')}`);
   }
-  if (clash.length) finding('vocabulary-collision', 'drift', 'One id filed at two levels', 'The same word is a technique in one vocabulary and an atom in another.', { items: clash });
-
-  // call numbers that collide across collections
+  if (clash.length) finding('vocabulary-collision', 'drift', 'Ids used as both technique and atom', 'The same id names a technique in one vocabulary and an atom in another.', { items: clash });
   const calls = new Map();
   for (const r of raw) { if (!r.call) continue; const k = r.call.replace(/[^A-Za-z0-9]/g, '').toUpperCase(); (calls.get(k) || calls.set(k, []).get(k)).push(r); }
   const dup = [...calls.values()].filter((v) => new Set(v.map((r) => r.collection)).size > 1);
-  if (dup.length) finding('call-collision', 'drift', 'Call numbers used by two collections', 'Codes are local to a collection. The accession number is the one that is unique.', { items: dup.map((v) => v.map((r) => `${r.call} ${r.title} (${r.collection})`).join('  ↔  ')), records: dup.flat().map((r) => r.id) });
-
-  // counts stated by hand on the gallery page
+  if (dup.length) finding('call-collision', 'drift', 'Call numbers shared by two collections', 'A call number is local to its collection. The accession number is unique.', { items: dup.map((v) => v.map((r) => `${r.call} ${r.title} (${r.collection})`).join('  ↔  ')), records: dup.flat().map((r) => r.id) });
   if (exists('gallery/index.html')) {
     const g = read(join(ROOT, 'gallery/index.html'));
     const count = (c, k) => raw.filter((r) => r.collection === c && (!k || r.kind === k)).length;
@@ -518,13 +584,23 @@ const pub = raw.filter((r) => r.access === 'public');
         if (Number(n[1]) !== want) stated.push(`gallery card "${col.title}" says ${n[1]} ${n[2]}; the source has ${want}`);
       }
     }
-    if (stated.length) finding('stated-count', 'drift', 'Counts written by hand that no longer match', 'A number typed into a page drifts. Every count in the library is derived.', { items: stated });
+    if (stated.length) finding('stated-count', 'drift', 'Hand-typed counts that are out of date', 'Counts typed into gallery/index.html that differ from the source.', { items: stated });
   }
+  // the repository's copy is US English; list the British spellings the catalog displays
+  const BRIT = /\b(colour\w*|grey\w*|centre[sd]?|catalogue[sd]?|fibres?|metres?|analyse[drs]?|analysers|behaviour\w*|favour\w*|flavour\w*|honour\w*|labour\w*|neighbour\w*|travell(?:ed|ing|ers?)|modell(?:ed|ing)|labell(?:ed|ing)|cancell(?:ed|ing)|artefacts?|programmes?|licences?|defences?|aluminium|moulds?|judgements?|(?:organ|real|recogn|optim|visual|normal|quant|random|memo|initial|synchron|minim|maxim|character|general|special|standard|summar|categor|digit|raster|parameter|vector|linear|stabil|custom|priorit|local)is(?:e[ds]?|ing|ations?))\b/gi;
+  const brit = [];
+  for (const r of raw) {
+    const hits = [...new Set((`${r.title} ${r.sub}`.match(BRIT) || []).map((w) => w.toLowerCase()))];
+    if (hits.length) brit.push({ r, hits });
+  }
+  if (brit.length) finding('spelling', 'drift', 'British spellings in source text', 'In titles and descriptions the catalog reads from the collections.', { items: brit.map((x) => `${tag(x.r)}: ${x.hits.join(', ')}`), records: brit.map((x) => x.r.id) });
+  if (problems.length) finding('problem', 'drift', 'Unresolved references', 'Ids that point at nothing.', { items: [...problems] });
+
+  /* notes */
   const wh = Object.values(colMeta).reduce((n, m) => n + (m.withheld || 0), 0);
-  if (wh) finding('withheld', 'note', 'Left out by a .private marker', 'Folders the deploy skips are skipped here too. They are counted, not named.', { n: wh });
-  if (withdrawn.length) finding('withdrawn', 'note', 'Accession numbers whose record is gone', 'A number is never reused. If a record was renamed, restore the id or accept the withdrawal.', { items: withdrawn.map((w) => `${w.acc} ${w.id} (${w.withdrawn})`) });
-  for (const s of CFG.superseded) finding(`superseded:${s.path}`, 'note', `${s.path}/ is not counted twice`, `${s.note}`, {});
-  for (const p of problems) finding('problem', 'drift', 'Does not resolve', p, {});
+  if (wh) finding('withheld', 'note', 'Withheld by .private', 'Folders with a .private marker are skipped and not named.', { n: wh });
+  if (withdrawn.length) finding('withdrawn', 'note', 'Withdrawn accession numbers', 'The record is gone from its collection. Its number is not reused.', { items: withdrawn.map((w) => `${w.acc} ${w.id} (${w.withdrawn})`) });
+  if (CFG.superseded.length) finding('superseded', 'note', 'Folders folded into another collection', 'Not read as collections of their own.', { items: CFG.superseded.map((s) => `${s.path}/ into ${s.folded_into}. ${s.note}`) });
 }
 
 /* shape the public catalog -------------------------------------------------- */
@@ -541,8 +617,13 @@ const out = (r) => {
   };
   for (const k of ['spec_href', 'thumb_master']) if (r[k]) o[k] = k === 'spec_href' ? `../${r[k]}` : r[k];
   for (const k of ['governed_by', 'tags']) if (r[k] && r[k].length) o[k] = r[k];
-  for (const k of ['swatches', 'ruling', 'proposed_grade', 'atom_kind', 'location', 'target']) if (r[k]) o[k] = r[k];
+  for (const k of ['swatches', 'ruling', 'proposed_grade', 'atom_kind', 'location', 'target', 'pic_group', 'no_pic']) if (r[k]) o[k] = r[k];
   if (r.thumb_kind === 'snapshot') o.thumb_kind = 'snapshot';
+  if (r.pic) {
+    o.thumb_w = r.pic.w; o.thumb_h = r.pic.h;
+    if (r.pic.w2) { o.thumb_2x = `thumbs/${r.acc}-960.jpg`; o.thumb_2x_w = r.pic.w2; }   // a snapshot's larger copy
+    else if (r.pic.mw > r.pic.w) { o.thumb_2x = r.thumb_master; o.thumb_2x_w = r.pic.mw; } // the master is the larger size
+  }
   return o;
 };
 const records = raw.map(out);
@@ -569,16 +650,16 @@ const catalog = {
   },
   vocabulary: {
     kind: {
-      technique: 'A verb with a lesson: a way of doing something, with its instances.',
-      atom: 'A noun with parameters: a substrate, process, texture, color, engine, field, mark, voice, space or bus.',
-      exploration: 'A piece that runs techniques on a subject. Kept because it asks or answers something.',
+      technique: 'A method, with the pieces that use it.',
+      atom: 'A reusable part with parameters: substrate, process, texture, color, engine, field, mark, voice, space or bus.',
+      exploration: 'A piece that runs techniques on a subject.',
       coupling: 'An exploration with one driver and named consequences.',
-      study: 'One reference measured, one technique system rebuilt in code, one spec filed.',
-      template: 'A composed layout meant to be reused with new content.',
+      study: 'A reference measured and rebuilt in code, with a spec.',
+      template: 'A layout made for reuse with new content.',
       instrument: 'A working tool.'
     },
-    status: { ...(colMeta.encyclopedia?.status_vocabulary || {}), '': 'No status on file. The collection does not record one.' },
-    access: { public: 'On the deployed site.', staged: 'Built or proposed, waiting to land.', local: 'On the working machine only.' },
+    status: { ...(colMeta.encyclopedia?.status_vocabulary || {}), '': 'The collection records no status.' },
+    access: { public: 'On the deployed site.', staged: 'Built or proposed, not yet on the site.', local: 'On the working machine only.' },
     scheme: { enc: 'Encyclopedia technique entries and atoms', 'enc.read': 'Technique reads inside encyclopedia plates', tt: 'Techniques & Templates', st: 'Technique Studies', hld: 'Holdings' }
   },
   collections, superseded: CFG.superseded, not_collated: CFG.not_collated,
@@ -604,6 +685,8 @@ if (CHECK) {
     for (const p of Object.keys(fixity)) if (!old[p]) drift.push(`new since last build: ${p}`);
   } else drift.push('no fixity.json yet: run a build first');
   if (JSON.stringify(ACC.records) !== before) drift.push('accessions.json would change: records were added, withdrawn or renamed');
+  for (const id of stalePics) drift.push(`thumbnail changed since its access copy was made: ${byId.get(id).thumbSrc}`);
+  for (const r of raw) if (r.thumbSrc && !r.pic) drift.push(`no access copy yet: ${r.thumbSrc}`);
   for (const p of problems) drift.push(p);
   console.log(drift.length ? `✘ ${drift.length} difference(s)\n  · ${drift.join('\n  · ')}` : `✔ ${records.length} records, ${Object.keys(fixity).length} source files, nothing changed`);
   process.exit(drift.length ? 1 : 0);
@@ -611,24 +694,27 @@ if (CHECK) {
 
 /* write -------------------------------------------------------------------- */
 const sortObj = (o) => Object.fromEntries(Object.entries(o).sort(([a], [b]) => a.localeCompare(b)));
-ACC.note = 'The accession register. A number is given once, in order of arrival, and never changes or gets reused, whatever happens to the record. Written by library/_build/collate.mjs; do not renumber by hand.';
-ACC.scheme = 'YYYY.NNNN — year the work first entered the repository, then a running number across the whole library';
+ACC.note = 'Record id to accession number. A number is given once, in order of arrival, and is not changed or reused. Written by library/_build/collate.mjs; do not edit by hand.';
+ACC.scheme = 'YYYY.NNNN: the year the work entered the repository, then a running number across the library';
 writeFileSync(ACC_FILE, JSON.stringify({ note: ACC.note, scheme: ACC.scheme, next: ACC.next, records: Object.fromEntries(Object.entries(ACC.records).sort((a, b) => a[1].acc.slice(5).localeCompare(b[1].acc.slice(5)))) }, null, 1) + '\n');
-writeFileSync(join(LIB, 'fixity.json'), JSON.stringify({ note: 'sha256 of each record\'s source file at build time. `node library/_build/collate.mjs --check` compares disk against this list.', algorithm: 'sha256', generated: TODAY, source_commit: catalog.source_commit, files: sortObj(fixity) }, null, 1) + '\n');
+writeFileSync(join(LIB, 'fixity.json'), JSON.stringify({ note: 'sha256 of each record\'s source file at build time. `node library/_build/collate.mjs --check` compares disk against it.', algorithm: 'sha256', generated: TODAY, source_commit: catalog.source_commit, files: sortObj(fixity) }, null, 1) + '\n');
+{
+  mkdirSync(THUMB_DIR, { recursive: true });
+  writeFileSync(PIC_FILE, JSON.stringify({ note: 'One entry per access copy in this folder: its size in pixels, where it came from (a copy of the collection\'s thumbnail, or a snapshot by snap.mjs), the sha256 of the master it was made from, and a signature for grouping identical pictures. Written by collate.mjs and snap.mjs.', pictures: sortObj(PICS) }, null, 1) + '\n');
+}
 writeFileSync(join(LIB, 'catalog.json'), JSON.stringify(catalog) + '\n');
-writeFileSync(join(LIB, 'catalog.js'), `/* generated by library/_build/collate.mjs — do not edit; edit the sources and rebuild */\nwindow.LIBRARY=${JSON.stringify(catalog)};\n`);
+writeFileSync(join(LIB, 'catalog.js'), `/* generated by library/_build/collate.mjs. Do not edit: change the sources and rebuild. */\nwindow.LIBRARY=${JSON.stringify(catalog)};\n`);
 
 /* llms.txt ------------------------------------------------------------------ */
 {
   const L = [];
-  L.push('# Library', '', `> One catalog over every collection in this repository: ${collections.map((c) => c.title).join(', ')}. ${records.length} records, each with a permanent accession number, a link to its plate, and its technique and atom terms.`, '');
-  L.push('Read the data, not the page. Every record names its source file; every technique and atom term lists the records that use it.', '');
-  L.push('## Data', '', '- [Catalog](catalog.json): all records, both authority files, the see-also table and the audit, in one JSON file.', '- [Accession register](accessions.json): record id to permanent number.', '- [Fixity](fixity.json): sha256 of every source file at build time.', '');
+  L.push('# Library', '', `> A catalog of ${records.length} works in ${collections.length} collections in this repository. Each record has a permanent accession number, a link to its plate, its source file, and its technique and atom terms.`, '');
+  L.push('## Data', '', '- [Catalog](catalog.json): records, technique and atom terms with the records that use them, see-also links, audit.', '- [Accession register](accessions.json): record id to accession number.', '- [Fixity](fixity.json): sha256 of each source file at build time.', '');
   L.push('## Collections', '');
-  for (const c of collections) L.push(`- [${c.title}](${c.index || '.'}): ${c.n} records. ${c.note} Source of truth: \`${c.truth}\`.`);
-  L.push('', '## Measured specs', '');
+  for (const c of collections) L.push(`- [${c.title}](${c.index || '.'}): ${c.n} records. ${c.note} Source: \`${c.truth}\`.`);
+  L.push('', '## Specs', '');
   for (const r of records.filter((x) => x.spec_href)) L.push(`- [${r.call} ${r.title}](${r.spec_href}): ${r.sub}`);
-  L.push('', '## Optional', '', '- [Techniques by id](../techniques-templates/techniques.json): every Techniques & Templates read with its parameters.', '- [Atoms by id](../techniques-templates/atoms.json)', '');
+  L.push('', '## Optional', '', '- [Techniques by id](../techniques-templates/techniques.json): each Techniques & Templates read with its parameters.', '- [Atoms by id](../techniques-templates/atoms.json)', '');
   writeFileSync(join(LIB, 'llms.txt'), L.join('\n'));
 }
 
@@ -639,11 +725,11 @@ writeFileSync(join(LIB, 'catalog.js'), `/* generated by library/_build/collate.m
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
     const colTitle = new Map(collections.map((c) => [c.id, c.title]));
     const rows = records.map((r) => `<tr><td>${esc(r.acc)}</td><td>${esc(r.call)}</td><td>${r.href ? `<a href="${esc(r.href)}">${esc(r.title)}</a>` : esc(r.title)}</td><td>${esc(r.kind)}</td><td>${esc(colTitle.get(r.collection))}</td><td>${esc(r.status || '')}</td><td>${esc(r.sub)}</td></tr>`).join('\n');
-    const block = `<!--LIB:STATIC built by library/_build/collate.mjs; library.js replaces this on load. Hand edits here are overwritten.-->
+    const block = `<!--LIB:STATIC written by library/_build/collate.mjs and replaced by library.js on load. Edits here are overwritten.-->
 <section class="static">
 <h1>Library</h1>
-<p>${records.length} records across ${collections.length} collections, ${techniques.size} technique terms and ${atoms.size} atom terms. Built ${TODAY}${catalog.source_commit ? ` from ${catalog.source_commit}` : ''}. Data: <a href="catalog.json">catalog.json</a> · <a href="llms.txt">llms.txt</a>.</p>
-<table><thead><tr><th>Accession</th><th>Call</th><th>Title</th><th>Kind</th><th>Collection</th><th>Status</th><th>Note</th></tr></thead><tbody>
+<p>${records.length} records in ${collections.length} collections. ${techniques.size} technique terms, ${atoms.size} atom terms. Built ${TODAY}${catalog.source_commit ? ` from ${catalog.source_commit}` : ''}. <a href="catalog.json">catalog.json</a> · <a href="llms.txt">llms.txt</a></p>
+<table><thead><tr><th>Accession</th><th>Call</th><th>Title</th><th>Kind</th><th>Collection</th><th>Status</th><th>Description</th></tr></thead><tbody>
 ${rows}
 </tbody></table>
 </section>
@@ -659,6 +745,6 @@ ${rows}
 console.log(`library · ${records.length} records · ${collections.length} collections · ${techniques.size} techniques · ${atoms.size} atoms${catalog.source_commit ? ' · ' + catalog.source_commit : ''}`);
 for (const c of collections) console.log(`  ${c.code.padEnd(4)} ${String(c.n).padStart(4)}  ${c.title}`);
 console.log(`  accessions: ${pending.length} new, ${withdrawn.length} withdrawn, next ${ACC.next}`);
-if (THUMBS) console.log(`  access copies: ${thumbsMade} made${thumbsFailed ? `, ${thumbsFailed} failed (no sips or PIL on this machine; the page falls back to the masters)` : ''}`);
+if (THUMBS) console.log(`  access copies: ${thumbsMade} made${thumbsFailed ? `, ${thumbsFailed} failed` : ''}`);
 for (const a of audit.filter((x) => x.level !== 'note')) console.log(`  ${a.level.padEnd(6)} ${a.title}${a.records ? ` (${a.records.length})` : a.items ? ` (${a.items.length})` : a.links ? ` (${a.links.length})` : ''}`);
 if (problems.length) { console.error(`\n✘ ${problems.length} problem(s):\n  · ${problems.join('\n  · ')}`); process.exit(1); }
