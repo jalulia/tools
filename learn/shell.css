@@ -166,7 +166,10 @@ body[data-index="closed"] .rail { display: none; }
 .ent { position: relative; display: flex; align-items: baseline; gap: 10px;
        padding: 7px 0; cursor: pointer; text-decoration: none; color: inherit; }
 .ent .n { font-family: var(--f-mach); font-size: var(--t-index); color: var(--ink-3);
-          min-width: 20px; letter-spacing: .02em; }
+          /* flex:none — an explicit min-width replaces the automatic one, so a
+             long wrapping title was allowed to squeeze a four-character index
+             (1035, 1680, E5-ALT) down to 20px and its digits ran into the title. */
+          flex: none; min-width: 20px; letter-spacing: .02em; }
 .ent .t { font-size: var(--t-entry); color: var(--ink-2); line-height: 1.3;
           transition: color var(--m-state) var(--ease); }
 .ent .f { margin-left: auto; width: var(--mark-size); height: var(--mark-size);
@@ -1165,3 +1168,26 @@ table.cons { min-width: 0; }
                                    font-size: var(--t-prose-sm); }
 .skill-instance-group .ig-list a:hover b { text-decoration: underline;
                                            text-decoration-color: var(--ink-4); }
+
+/* ---------------------------------------------------------------------------
+   Card swatch — an atom (or a proposed driver built on one) with no thumbnail
+   paints its own swatch in the contact-sheet cell instead of a bare id label.
+   --------------------------------------------------------------------------- */
+.card .prev .card-sw { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.card .prev .card-sw[data-painted] ~ .queued,
+.card .prev:has(.card-sw[data-painted]) .queued { display: none; }
+
+/* ---------------------------------------------------------------------------
+   Record figure — an imported entry with a thumbnail and a source line but no
+   code on file. Replaces the empty stage that used to be captioned RENDERED.
+   --------------------------------------------------------------------------- */
+.record { margin: 0; background: var(--bench); padding: var(--mat-pad); }
+.record img { display: block; width: 100%; height: auto; max-height: 70vh; object-fit: contain;
+              object-position: 0 0; background: var(--paper); outline: 1px solid var(--rule); }
+.record .nothumb { display: grid; place-items: center; aspect-ratio: 3 / 1;
+                   font-family: var(--f-mach); font-size: var(--t-label); letter-spacing: var(--tr-label);
+                   text-transform: uppercase; color: var(--ink-2); outline: 1px dashed var(--ink-4); }
+.record figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px;
+                     padding-top: 10px; font-family: var(--f-mach); font-size: var(--t-label);
+                     letter-spacing: var(--tr-label); text-transform: uppercase; color: var(--ink-2);
+                     overflow-wrap: anywhere; }

@@ -493,15 +493,32 @@
       x.moveTo(6, 6); x.lineTo(6, 20); x.moveTo(6, 6); x.lineTo(20, 6);
       x.moveTo(w - 6, h - 6); x.lineTo(w - 6, h - 20); x.moveTo(w - 6, h - 6); x.lineTo(w - 20, h - 6);
       x.stroke();
-      /* label */
-      x.fillStyle = '#0b0b0c';
-      x.font = 'bold ' + Math.max(11, Math.round(w / 12)) + 'px "Commit Mono", "DejaVu Sans Mono", monospace';
+      /* label + signature. The two lines used to be placed at fixed ±6/+12 px
+         offsets while their sizes scaled with the cell (w/12, w/20), so on the
+         atom page's wide swatch a 100 px label sat on top of a 60 px signature.
+         Size each line to the width it has, then stack them on their own
+         measured heights. */
+      var mono = '"Commit Mono", "DejaVu Sans Mono", monospace';
+      var pad = Math.max(10, w * 0.08), avail = w - pad * 2;
+      function fitSize(text, weight, want, min) {
+        var s = want;
+        x.font = weight + s + 'px ' + mono;
+        var m = x.measureText(text).width;
+        if (m > avail) s = Math.max(min, Math.floor(s * avail / m));
+        return s;
+      }
+      var ls = fitSize(label, 'bold ', Math.min(Math.max(11, Math.round(w / 12)), Math.round(h * 0.2)), 9);
+      var ss = subtitle ? fitSize(subtitle, '', Math.max(9, Math.round(ls * 0.55)), 8) : 0;
+      var gap = subtitle ? Math.round(ls * 0.45) : 0;
+      var top = (h - (ls + gap + ss)) / 2;
       x.textAlign = 'center'; x.textBaseline = 'middle';
-      x.fillText(label, w / 2, h / 2 - 6);
+      x.fillStyle = '#0b0b0c';
+      x.font = 'bold ' + ls + 'px ' + mono;
+      x.fillText(label, w / 2, top + ls / 2);
       if (subtitle) {
         x.fillStyle = '#74747a';
-        x.font = Math.max(9, Math.round(w / 20)) + 'px "Commit Mono", monospace';
-        x.fillText(subtitle, w / 2, h / 2 + 12);
+        x.font = ss + 'px ' + mono;
+        x.fillText(subtitle, w / 2, top + ls + gap + ss / 2);
       }
     };
   }

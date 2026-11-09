@@ -215,14 +215,37 @@
        rule that clears aspect-ratio for fragment stages, so no second rule. */
     var audioStage = (lane === 'audio');
 
+    /* An imported record (the 74 unfiled rows) declares a lane but ships no
+       code: no examples[], no fragment, no stages. Mounting the glsl or
+       canvas2d adapter on it painted an empty stage captioned RENDERED, or
+       the adapter's default gradient captioned COMPILED — a stand-in wearing
+       a real piece's id. Show what is actually on file: the thumbnail and
+       the source line. Nothing runs, and the caption says so. */
+    var hasFragment = !!(e.fragment || (e.frame && e.frame.fragment));
+    var nothingToRun = !ex && !hasFragment && !audioStage && !catalogueStage &&
+      !(e.stages || []).length && !(e.gallery || []).length;
+    var recThumb = e.thumb && (typeof e.thumb === 'string' ? e.thumb : e.thumb.file);
+    var recordHTML = nothingToRun
+      ? '<figure class="record">' +
+          (recThumb
+            ? '<img src="' + esc(pathOf(e) + recThumb) + '" alt="Thumbnail on file for ' + esc(e.title) + '" ' +
+              'onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),{className:\'nothumb\',textContent:\'no thumbnail on file\'}))">'
+            : '<span class="nothumb">no thumbnail on file</span>') +
+          '<figcaption><span>record only · nothing runs here</span>' +
+            '<span>' + esc(lane || '—') + ' · source not imported' +
+            (e.source && e.source.title ? ' · ' + esc(e.source.title) : '') + '</span></figcaption>' +
+        '</figure>'
+      : '';
+
     var body = '' +
       '<article style="--stage-aspect:' + esc(aspect.replace('/', ' / ')) + '">' +
         head(e) +
+        (nothingToRun ? recordHTML :
         '<div class="mat"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i>' +
           '<div class="stage" id="stage"' +
             (catalogueStage ? ' data-fit="lens"' : audioStage ? ' data-fit="audio"' : '') + '></div>' +
         '</div>' +
-        '<div class="draw" id="bar"></div>' +
+        '<div class="draw" id="bar"></div>') +
         '<nav class="strip" id="strip" aria-label="Examples"></nav>' +
         '<div class="read" id="read">' + (proseOf(e) || '') + '</div>' +
         (mode === 'course' ? courseBlocks(e) : '') +
@@ -234,7 +257,8 @@
     el('view').innerHTML = body;
 
     renderStrip(e, ex);
-    S.mountAdapter({
+    if (nothingToRun) S.unmountAdapter();
+    else S.mountAdapter({
       stage: el('stage'), bar: el('bar'), entry: e, example: ex,
       query: query || {}, params: paramValues(e, ex)
     });
@@ -625,6 +649,15 @@
     }).join('') + '</nav>';
   }
 
+  /* A neighbour's label is "index · title", but 24 atoms and every proposed
+     technique have no index, and a deep-linked page renders before its
+     neighbours' entry.js has landed — both cases printed a bare " · ". Print
+     only the parts that exist; fall back to the id so the link is never blank. */
+  function pagerLabel(n) {
+    var bits = [n.index, n.title].filter(function (v) { return v !== undefined && v !== null && v !== ''; });
+    return esc(bits.length ? bits.join(' · ') : n.id);
+  }
+
   function pagerHTML(e) {
     // prev/next walk the FILTERED list, so a filter that hides things also
     // stops the pager walking into them
@@ -633,10 +666,10 @@
     var prev = list[i - 1], next = list[i + 1];
     return '<nav class="pager" aria-label="Pager">' +
       (prev ? '<a href="#/' + esc(prev.id) + '"><span class="lab">← Previous</span>' +
-              '<span class="t">' + esc(prev.index || '') + ' · ' + esc(prev.title) + '</span></a>'
+              '<span class="t">' + pagerLabel(prev) + '</span></a>'
             : '<span></span>') +
       (next ? '<a class="next" href="#/' + esc(next.id) + '"><span class="lab">Next →</span>' +
-              '<span class="t">' + esc(next.index || '') + ' · ' + esc(next.title) + '</span></a>'
+              '<span class="t">' + pagerLabel(next) + '</span></a>'
             : '<span></span>') +
       '</nav>';
   }
@@ -755,11 +788,22 @@
   var ND = '<i class="nd" aria-hidden="true">∅</i>' +
            '<span class="vh">no decomposition on file</span>';
 
+  /* Which atom swatch a card may honestly show: the atom's own, or — for a
+     proposed "<atom> as driver" technique — the atom it is built on. */
+  function cardSwatchId(e) {
+    var sw = S.swatches || {};
+    if (e.entity === 'atom' && sw[e.id]) return e.id;
+    var base = String(e.id).replace(/-driver$/, '');
+    if (base !== e.id && sw[base] && S.byId[base] && S.byId[base].entity === 'atom') return base;
+    return '';
+  }
+
   function cardHTML(e) {
     var thumb = e.thumb && (typeof e.thumb === 'string' ? e.thumb : e.thumb.file);
     return '<a class="card" href="#/' + esc(e.id) + '">' +
       '<span class="prev" data-id="' + esc(e.id) + '">' +
-        '<span class="queued">' + esc(e.index || e.id) + '</span>' +
+ '<span class="queued">' + esc(e.index || e.id) + '</span>' +
+        (!thumb && cardSwatchId(e) ? '<canvas class="card-sw" data-atom="' + esc(cardSwatchId(e)) + '" aria-hidden="true"></canvas>' : '') +
         (thumb ? '<img src="' + esc(pathOf(e) + thumb) + '" alt="" loading="lazy" ' +
                  'onerror="this.remove()">' : '') +
       '</span>' +
@@ -1109,7 +1153,7 @@
         }).join('') + '</div></section>'
       : '<section class="atom-block"><div class="blk-head"><span class="lab">Used by</span>' +
         '<span class="n">nothing yet</span></div>' +
-        '<p class="empty">Zero uses. Tyvek showing ×0 is the discipline — do not hide empty cells.</p></section>';
+        '<p class="empty">Zero uses. An atom showing ×0 stays on the shelf — empty cells are not hidden.</p></section>';
 
     var producesHTML = produces.length
       ? '<div class="atom-side-block"><span class="lab">Produced by</span>' + produces.map(function (t) {
@@ -1994,8 +2038,8 @@
       couplings:    'Couplings'
     };
     var TAGLINES = {
-      explorations: 'Dated artefacts with provenance, status, faults and a technique stack.',
-      sound:        'A lane of the same practice. Six pieces doing compound causality before anyone asked.',
+      explorations: 'Dated artifacts with provenance, status, faults and a technique stack.',
+      sound:        'A lane of the same practice: pieces, atoms and proposed drivers doing compound causality before anyone asked.',
       symptoms:     'Entries that overuse an atom. A visible gap, not a shame list.',
       unfiled:      'Imported from the inventory without a ruling. Counted.',
       skills:       'The fourteen skills that produce, critique or govern this work. Only competency rungs get pages.',
@@ -2033,6 +2077,7 @@
       body;
 
     S.observePreviews(el('view'));
+    observeSwatches(el('view'));
   }
 
   function renderLoading(e) {
@@ -2058,6 +2103,15 @@
     }
     if (view.kind === 'atom' && S.current && el('view'))      renderAtomPage(S.current);
     if (view.kind === 'technique' && S.current && el('view')) renderTechniquePage(S.current);
+    /* Entry pages are not re-rendered on a late registration (that would
+       remount the stage), but their pager and related links were drawn from
+       neighbours that may not have loaded yet. Swap just those two navs. */
+    if (view.kind === 'entry' && S.current && el('view')) {
+      var pg = el('view').querySelector('nav.pager:not(.style-pager)');
+      if (pg) pg.outerHTML = pagerHTML(S.current);
+      var rl = el('view').querySelector('nav.rel');
+      if (rl) { var rh = relatedHTML(S.current); if (rh) rl.outerHTML = rh; }
+    }
     if (S.current) position();
   }
 

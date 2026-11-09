@@ -214,7 +214,7 @@
   function href(e) { return '#/' + e.id; }
   function meta(e) { return [e.entity, e.section, e.status].filter(Boolean).join(' · '); }
 
-  var root, minimised = !!lsGet(LS.min, false), showTok = false;
+  var root, minimised = !!lsGet(LS.min, true)   /* closed until asked for: open, it sits on top of the entry's right column */, showTok = false;
 
   function mount() {
     var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
