@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-25",
+  "generated": "2026-11-10",
   "note": "file by atom, read by technique — every entry in Techniques & Templates, keyed by technique id",
   "techniques": {
     "ring-screen": {
@@ -2091,6 +2091,494 @@
             "rot": "θ += .01 t"
           },
           "implementation": "Every motion is a physical control of the instrument: rotate the polarizer, load the sheet, turn the sheet."
+        }
+      ]
+    },
+    "tone-field": {
+      "name": "Tone field (the picture)",
+      "used_in": [
+        {
+          "entry": "ts-15-banknote-engraving",
+          "code": "TS-15",
+          "params": {
+            "subject": "headland with a signal tower and sheds, sea, far ridge — generated, lit from the left",
+            "res": {
+              "value": 0.5,
+              "range": [
+                0.25,
+                1
+              ],
+              "note": "source resolution as a fraction of the sheet"
+            },
+            "horizon_v": {
+              "value": 0.62,
+              "range": [
+                0.45,
+                0.8
+              ]
+            },
+            "soften_px": {
+              "value": 0.7,
+              "range": [
+                0,
+                3
+              ],
+              "unit": "px"
+            },
+            "seed": {
+              "value": 1507,
+              "range": [
+                1,
+                9999
+              ],
+              "step": 1
+            }
+          },
+          "implementation": "Sky, ridge, headland and sea are evaluated per pixel from seeded Perlin noise; tower, sheds and boat are drawn as flat lit/shadow faces on top. The function returns a canvas; every later technique only reads it.",
+          "limits": "Any RGB picture works in its place. Pictures with no smooth area above upper_v show no guilloche; pictures with no pixel inside the hue range print as one ink.",
+          "module": "techniques/ts-15-banknote-engraving/lib/tone-field.js"
+        }
+      ]
+    },
+    "tone-curve": {
+      "name": "Exposure and contrast",
+      "used_in": [
+        {
+          "entry": "ts-15-banknote-engraving",
+          "code": "TS-15",
+          "params": {
+            "luminance": "0.2126 R + 0.7152 G + 0.0722 B",
+            "exposure": {
+              "value": 0.1,
+              "range": [
+                -1.5,
+                1.5
+              ],
+              "unit": "stops"
+            },
+            "contrast": {
+              "value": 1.25,
+              "range": [
+                0.5,
+                2.5
+              ]
+            },
+            "map": "clamp((L · 2^exposure − 0.5) · contrast + 0.5)"
+          },
+          "implementation": "Luminance is exposed and stretched about mid-gray before it sets any line width, so paper and solid shadow are reached inside the picture, not only at its extremes.",
+          "limits": "Contrast above ~2 clips most of the sheet to paper or solid line; the swelling line then reads as a two-level threshold.",
+          "module": "techniques/ts-15-banknote-engraving/lib/tone-curve.js"
+        }
+      ]
+    },
+    "contour-flow": {
+      "name": "Contour flow (tone-warped phase)",
+      "used_in": [
+        {
+          "entry": "ts-15-banknote-engraving",
+          "code": "TS-15",
+          "params": {
+            "flow": {
+              "value": 0.65,
+              "range": [
+                0,
+                1
+              ]
+            },
+            "amp_pitches": {
+              "value": 6,
+              "range": [
+                0,
+                12
+              ],
+              "note": "phase shift in pitches at flow = 1 for a black-to-white step"
+            },
+            "radius_u": {
+              "value": 24,
+              "range": [
+                4,
+                60
+              ],
+              "unit": "u"
+            },
+            "edge_gain": {
+              "value": 9,
+              "range": [
+                2,
+                30
+              ],
+              "note": "edge-energy channel used by guilloche"
+            },
+            "phase": "s += flow · amp_pitches · blur(L, radius)"
+          },
+          "implementation": "A quarter-resolution copy of the picture is blurred; its luminance is added to the line phase, so lines rise over light forms and sink into dark ones. The same pass stores blurred edge energy for the guilloche mask.",
+          "limits": "flow · amp_pitches · pitch must stay under ~1.5 × radius or neighboring lines fold over each other at hard edges.",
+          "module": "techniques/ts-15-banknote-engraving/lib/contour-flow.js"
+        }
+      ]
+    },
+    "engraved-line": {
+      "name": "Swelling line screen",
+      "used_in": [
+        {
+          "entry": "ts-15-banknote-engraving",
+          "code": "TS-15",
+          "params": {
+            "pitch_u": {
+              "value": 6,
+              "range": [
+                2,
+                14
+              ],
+              "unit": "u",
+              "note": "reference: 3.2 px on its own image; 6 u resolves at plate size"
+            },
+            "angle_deg": {
+              "value": 0,
+              "range": [
+                -90,
+                90
+              ],
+              "unit": "°"
+            },
+            "weight": {
+              "value": 0.94,
+              "range": [
+                0.3,
+                1.1
+              ]
+            },
+            "duty_min": {
+              "value": 0.06,
+              "range": [
+                0,
+                0.3
+              ]
+            },
+            "duty_max": {
+              "value": 0.94,
+              "range": [
+                0.5,
+                1
+              ]
+            },
+            "gamma": {
+              "value": 1.15,
+              "range": [
+                0.5,
+                2.5
+              ]
+            },
+            "paper_below": {
+              "value": 0.04,
+              "range": [
+                0,
+                0.3
+              ],
+              "note": "darkness under this prints nothing"
+            },
+            "dash_below": {
+              "value": 0.22,
+              "range": [
+                0,
+                0.6
+              ]
+            },
+            "dash_len_pitches": {
+              "value": 5,
+              "range": [
+                2,
+                16
+              ]
+            },
+            "width": "pitch · (duty_min + (duty_max·weight − duty_min) · darkness^gamma)"
+          },
+          "implementation": "Distance to the nearest line center is compared with half the tone-set width and antialiased over one device pixel. In the highlights each line is cut into dashes whose fill falls with darkness, with a hashed offset per line.",
+          "limits": "Under ~2.5 device px of pitch the lines alias into tone. duty_max · weight at 1 closes the shadows to solid ink and the crosshatch has nothing to cross.",
+          "module": "techniques/ts-15-banknote-engraving/lib/engraved-line.js"
+        }
+      ]
+    },
+    "shadow-crosshatch": {
+      "name": "Shadow crosshatch",
+      "used_in": [
+        {
+          "entry": "ts-15-banknote-engraving",
+          "code": "TS-15",
+          "params": {
+            "strength": {
+              "value": 0.65,
+              "range": [
+                0,
+                1
+              ]
+            },
+            "angle_deg": {
+              "value": 62,
+              "range": [
+                20,
+                90
+              ],
+              "unit": "°",
+              "note": "relative to the main lines"
+            },
+            "pitch_u": {
+              "value": 6,
+              "range": [
+                2,
+                14
+              ],
+              "unit": "u"
+            },
+            "start": {
+              "value": 0.58,
+              "range": [
+                0.2,
+                0.9
+              ]
+            },
+            "full": {
+              "value": 0.92,
+              "range": [
+                0.5,
+                1
+              ]
+            },
+            "duty_max": {
+              "value": 0.62,
+              "range": [
+                0.2,
+                0.9
+              ]
+            }
+          },
+          "implementation": "A second, unwarped line set whose width ramps from 0 at start to duty_max · strength at full darkness; the two sets are combined as 1 − (1−a)(1−b).",
+          "limits": "start under ~0.35 puts hatch into the midtones and the picture reads as a net, not an engraving.",
+          "module": "techniques/ts-15-banknote-engraving/lib/shadow-crosshatch.js"
+        }
+      ]
+    },
+    "guilloche": {
+      "name": "Guilloche in upper smooth regions",
+      "used_in": [
+        {
+          "entry": "ts-15-banknote-engraving",
+          "code": "TS-15",
+          "params": {
+            "strength": {
+              "value": 0.69,
+              "range": [
+                0,
+                1
+              ]
+            },
+            "upper_v": {
+              "value": 0.4,
+              "range": [
+                0,
+                1
+              ]
+            },
+            "feather_v": {
+              "value": 0.07,
+              "range": [
+                0.01,
+                0.3
+              ]
+            },
+            "scale_u": {
+              "value": 103,
+              "range": [
+                30,
+                400
+              ],
+              "unit": "u"
+            },
+            "curvature": {
+              "value": 1.55,
+              "range": [
+                0.2,
+                4
+              ],
+              "note": "max slope of the wave; amplitude = curvature · scale / 2π"
+            },
+            "pitch_u": {
+              "value": 10,
+              "range": [
+                2.5,
+                20
+              ],
+              "unit": "u"
+            },
+            "duty": {
+              "value": 0.17,
+              "range": [
+                0.08,
+                0.6
+              ]
+            },
+            "tone": {
+              "value": 0.7,
+              "range": [
+                0,
+                1.5
+              ],
+              "note": "how much darkness thickens the guilloche line"
+            },
+            "drift": {
+              "value": 0.9,
+              "range": [
+                0,
+                3
+              ],
+              "note": "phase wander of family A down the sheet"
+            },
+            "smooth_lo": {
+              "value": 0.1,
+              "range": [
+                0,
+                0.5
+              ]
+            },
+            "smooth_hi": {
+              "value": 0.3,
+              "range": [
+                0.1,
+                1
+              ]
+            },
+            "shear": {
+              "value": 0.37,
+              "range": [
+                0,
+                1
+              ],
+              "note": "family B phase advance per unit y, in units of 2π/S — tilts the braid so it does not stripe"
+            },
+            "lines": "A: y + a·sin(2πx/S + drift·sin(2πy/2.3S)) = k·pitch;  B: y − a·sin(2πx/S + shear·2πy/S + 1.1) = k·pitch"
+          },
+          "implementation": "Two families of stacked sine lines, mirrored, give the braided cells. Vertical distance is divided by √(1 + slope²) so line width stays even on the steep parts. The mask is (above upper_v) × (edge energy low); the straight lines fade by the same mask.",
+          "limits": "curvature above ~3 makes the wave steeper than the antialiasing estimate holds; pitch near the main pitch makes the hand-over at upper_v invisible.",
+          "module": "techniques/ts-15-banknote-engraving/lib/guilloche.js"
+        }
+      ]
+    },
+    "hue-key": {
+      "name": "Kept hue as a second ink",
+      "used_in": [
+        {
+          "entry": "ts-15-banknote-engraving",
+          "code": "TS-15",
+          "params": {
+            "hue_deg": {
+              "value": 22,
+              "range": [
+                0,
+                360
+              ],
+              "unit": "°"
+            },
+            "tolerance_deg": {
+              "value": 30,
+              "range": [
+                2,
+                90
+              ],
+              "unit": "°"
+            },
+            "feather_deg": {
+              "value": 18,
+              "range": [
+                0,
+                60
+              ],
+              "unit": "°"
+            },
+            "min_sat": {
+              "value": 18,
+              "range": [
+                0,
+                80
+              ],
+              "unit": "%"
+            },
+            "strength": {
+              "value": 0.8,
+              "range": [
+                0,
+                1
+              ]
+            },
+            "keep_shadows": {
+              "value": 0.65,
+              "range": [
+                0,
+                1
+              ]
+            },
+            "ink_sat": {
+              "value": 0.62,
+              "range": [
+                0.2,
+                1
+              ]
+            },
+            "ink_light": {
+              "value": 0.4,
+              "range": [
+                0.2,
+                0.6
+              ]
+            },
+            "mode": "variant.accent — \"hue\": ink takes each pixel’s own hue · \"#hex\": one custom ink · \"off\": monochrome"
+          },
+          "implementation": "Mask = 1 inside tolerance of the chosen hue, feathered to 0, gated by saturation, scaled by strength and pulled back toward the main ink in the shadows by keep_shadows. It changes ink color only — line width is unchanged.",
+          "limits": "tolerance + feather above ~90° keys most warm pictures whole; min_sat under ~8 % keys neutral grays by their noise hue.",
+          "module": "techniques/ts-15-banknote-engraving/lib/hue-key.js"
+        }
+      ]
+    },
+    "paper-grain": {
+      "name": "Paper grain",
+      "used_in": [
+        {
+          "entry": "ts-15-banknote-engraving",
+          "code": "TS-15",
+          "params": {
+            "amp": {
+              "value": 0.03,
+              "range": [
+                0,
+                0.12
+              ]
+            },
+            "cell_u": {
+              "value": 1.4,
+              "range": [
+                0.5,
+                4
+              ],
+              "unit": "u"
+            },
+            "corr": {
+              "value": 0.35,
+              "range": [
+                0,
+                0.8
+              ]
+            },
+            "seed": {
+              "value": 15,
+              "range": [
+                1,
+                9999
+              ],
+              "step": 1
+            }
+          },
+          "implementation": "One multiplicative monochrome noise pass over paper and ink together, on cells of 1.4 u with lag-1 correlation.",
+          "limits": "Above ~0.06 the grain reads before the line; this pass is the last thing to add and the first to remove.",
+          "module": "techniques/ts-15-banknote-engraving/lib/paper-grain.js"
         }
       ]
     }

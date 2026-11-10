@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="only light">
+<meta name="description" content="TS-15 · Banknote engraving — A picture printed as swelling lines, hatch, guilloche and one kept hue.">
+<link rel="icon" href="data:,">
+<title>TS-15 — Banknote engraving · Techniques &amp; Templates · ø co.</title>
+<link rel="stylesheet" href="../../_shared/fonts.css">
+<link rel="stylesheet" href="../../_shared/shell.css?v=202611102327">
+<link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
+</head>
+<body class="plate-page" data-root="../../">
+<!-- <a class="brand" href="../../index.html" title="Index"><svg class="o" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-554.33,-11.46)" fill="currentColor" fill-rule="evenodd"><path d="M682.33,35.81c-57.24,0-103.65,46.4-103.65,103.65s46.4,103.65,103.65,103.65,103.65-46.4,103.65-103.65-46.4-103.65-103.65-103.65ZM682.33,187.75c-26.67,0-48.29-21.62-48.29-48.29s21.62-48.29,48.29-48.29,48.29,21.62,48.29,48.29-21.62,48.29-48.29,48.29Z"/><rect x="666.18" y="-5.46" width="32.29" height="289.83" transform="translate(298.46 -441.63) rotate(45)"/></g></svg><span class="wm">IMP<i>Ø</i>SSIBLE</span></a>
+  <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Banknote engraving</b><span class="code">TS-15</span></span>
+  <span class="pager"><a href="../../techniques/ts-14-deep-space-chroma/index.html" title="Deep Space Chroma · birefringence">← TS-14</a><a href="../../index.html#techniques"><span class="n">15</span>&nbsp;/ 15</a><a class="off">→</a></span> <p class="kicker">Technique · TS-15</p><h1 class="lede">A picture printed as swelling lines, hatch, guilloche and one kept hue.</h1><div class="body"><p>One ink on paper. Tone is carried by line width, not by gray: a 6 u line screen whose lines swell from 6 % to 88 % of the pitch as the picture darkens, break into dashes in the highlights and stop at paper. The line phase is pushed by a blurred copy of the picture, so the lines bend around forms. Past 58 % darkness a second line set crosses the first at 62°.</p><p>Smooth areas in the upper 40 % of the sheet drop the straight lines for a guilloche — two mirrored sine-line families that braid. Pixels within 30° of one chosen hue print in an ink of their own hue; everything else prints in the main ink. The picture is a parameter: Live (L) runs the same seven functions on any image you drop in.</p></div>
+  <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>picture</b> · tone field drawn or supplied, upsampled to the sheet</div></li><li><div><b>curve</b> · luminance → exposure → contrast</div></li><li><div><b>field</b> · blurred luminance + edge energy at ¼ resolution</div></li><li><div><b>lines</b> · phase = y/pitch + flow field; width from darkness; dashes in the highlights</div></li><li><div><b>hatch</b> · second set at 62° above 58 % darkness</div></li><li><div><b>guilloche</b> · two sine families where upper and smooth; straight lines fade there</div></li><li><div><b>ink</b> · kept-hue ink or main ink, composited on paper by line coverage</div></li><li><div><b>grain</b> · ±3 % multiplicative</div></li></ol></div>
+  <div class="meta"><div class="full"><h2>Vocabulary · a technique highlights its reads · an atom finds every use</h2><div class="vocab" id="chips"><div class="vr"><span data-t="tone-field" title="Tone field (the picture)"><b>SRC</b>tone-field</span><span class="at"><a href="../../index.html#techniques?a=source">source</a><i>·</i><a href="../../index.html#techniques?a=procedural">procedural</a><i>·</i><a href="../../index.html#techniques?a=field">field</a></span></div><div class="vr"><span data-t="tone-curve" title="Exposure and contrast"><b>TONE</b>tone-curve</span><span class="at"><a href="../../index.html#techniques?a=tone-curve">tone-curve</a><i>·</i><a href="../../index.html#techniques?a=luminance">luminance</a></span></div><div class="vr"><span data-t="contour-flow" title="Contour flow (tone-warped phase)"><b>FLOW</b>contour-flow</span><span class="at"><a href="../../index.html#techniques?a=phase-warp">phase-warp</a><i>·</i><a href="../../index.html#techniques?a=blur">blur</a><i>·</i><a href="../../index.html#techniques?a=field">field</a></span></div><div class="vr"><span data-t="engraved-line" title="Swelling line screen"><b>LINE</b>engraved-line</span><span class="at"><a href="../../index.html#techniques?a=line-screen">line-screen</a><i>·</i><a href="../../index.html#techniques?a=width-modulation">width-modulation</a><i>·</i><a href="../../index.html#techniques?a=dash">dash</a></span></div><div class="vr"><span data-t="shadow-crosshatch" title="Shadow crosshatch"><b>XHAT</b>shadow-crosshatch</span><span class="at"><a href="../../index.html#techniques?a=hatch">hatch</a><i>·</i><a href="../../index.html#techniques?a=line-screen">line-screen</a><i>·</i><a href="../../index.html#techniques?a=threshold">threshold</a></span></div><div class="vr"><span data-t="guilloche" title="Guilloche in upper smooth regions"><b>GUIL</b>guilloche</span><span class="at"><a href="../../index.html#techniques?a=guilloche">guilloche</a><i>·</i><a href="../../index.html#techniques?a=sine-line">sine-line</a><i>·</i><a href="../../index.html#techniques?a=mask">mask</a></span></div><div class="vr"><span data-t="hue-key" title="Kept hue as a second ink"><b>HKEY</b>hue-key</span><span class="at"><a href="../../index.html#techniques?a=hue-key">hue-key</a><i>·</i><a href="../../index.html#techniques?a=spot-ink">spot-ink</a><i>·</i><a href="../../index.html#techniques?a=mask">mask</a></span></div><div class="vr"><span data-t="paper-grain" title="Paper grain"><b>GRAIN</b>paper-grain</span><span class="at"><a href="../../index.html#techniques?a=grain">grain</a><i>·</i><a href="../../index.html#techniques?a=stock">stock</a></span></div></div></div>
+  <div><h2>Reference</h2><div class="ro">Reference 15 · Figma community file “$Dollar Bill texture shader” — the Banknote Engraving effect (Line Relief Studio), read from its Shader and Instruction pages at 214 %</div></div><div><h2>Study</h2><div class="nm">Banknote engraving</div><div class="ro">TS-15 · Techniques · 15 / 15</div></div></div>
+  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>tone-field</b> · Tone field (the picture) — Sky, ridge, headland and sea are evaluated per pixel from seeded Perlin noise; tower, sheds and boat are drawn as flat lit/shadow faces on top. The function returns a canvas; every later technique only reads it. <span class="ro">Limits · Any RGB picture works in its place. Pictures with no smooth area above upper_v show no guilloche; pictures with no pixel inside the hue range print as one ink.</span> <a href="lib/tone-field.js">lib/tone-field.js</a></div></li><li><div><b>tone-curve</b> · Exposure and contrast — Luminance is exposed and stretched about mid-gray before it sets any line width, so paper and solid shadow are reached inside the picture, not only at its extremes. <span class="ro">Limits · Contrast above ~2 clips most of the sheet to paper or solid line; the swelling line then reads as a two-level threshold.</span> <a href="lib/tone-curve.js">lib/tone-curve.js</a></div></li><li><div><b>contour-flow</b> · Contour flow (tone-warped phase) — A quarter-resolution copy of the picture is blurred; its luminance is added to the line phase, so lines rise over light forms and sink into dark ones. The same pass stores blurred edge energy for the guilloche mask. <span class="ro">Limits · flow · amp_pitches · pitch must stay under ~1.5 × radius or neighboring lines fold over each other at hard edges.</span> <a href="lib/contour-flow.js">lib/contour-flow.js</a></div></li><li><div><b>engraved-line</b> · Swelling line screen — Distance to the nearest line center is compared with half the tone-set width and antialiased over one device pixel. In the highlights each line is cut into dashes whose fill falls with darkness, with a hashed offset per line. <span class="ro">Limits · Under ~2.5 device px of pitch the lines alias into tone. duty_max · weight at 1 closes the shadows to solid ink and the crosshatch has nothing to cross.</span> <a href="lib/engraved-line.js">lib/engraved-line.js</a></div></li><li><div><b>shadow-crosshatch</b> · Shadow crosshatch — A second, unwarped line set whose width ramps from 0 at start to duty_max · strength at full darkness; the two sets are combined as 1 − (1−a)(1−b). <span class="ro">Limits · start under ~0.35 puts hatch into the midtones and the picture reads as a net, not an engraving.</span> <a href="lib/shadow-crosshatch.js">lib/shadow-crosshatch.js</a></div></li><li><div><b>guilloche</b> · Guilloche in upper smooth regions — Two families of stacked sine lines, mirrored, give the braided cells. Vertical distance is divided by √(1 + slope²) so line width stays even on the steep parts. The mask is (above upper_v) × (edge energy low); the straight lines fade by the same mask. <span class="ro">Limits · curvature above ~3 makes the wave steeper than the antialiasing estimate holds; pitch near the main pitch makes the hand-over at upper_v invisible.</span> <a href="lib/guilloche.js">lib/guilloche.js</a></div></li><li><div><b>hue-key</b> · Kept hue as a second ink — Mask = 1 inside tolerance of the chosen hue, feathered to 0, gated by saturation, scaled by strength and pulled back toward the main ink in the shadows by keep_shadows. It changes ink color only — line width is unchanged. <span class="ro">Limits · tolerance + feather above ~90° keys most warm pictures whole; min_sat under ~8 % keys neutral grays by their noise hue.</span> <a href="lib/hue-key.js">lib/hue-key.js</a></div></li><li><div><b>paper-grain</b> · Paper grain — One multiplicative monochrome noise pass over paper and ink together, on cells of 1.4 u with lag-1 correlation. <span class="ro">Limits · Above ~0.06 the grain reads before the line; this pass is the last thing to add and the first to remove.</span> <a href="lib/paper-grain.js">lib/paper-grain.js</a></div></li></ol></div>
+  <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>GUIL</b> · Guilloche · two mirrored sine-line families, period 103 u, max slope 1.55 <span class="ro">u 0.20 · v 0.12 · guilloche</span></div></li><li><div><b>GUIL</b> · Guilloche edge · fades out by v 0.40 and where the edge map rises <span class="ro">u 0.82 · v 0.33 · guilloche</span></div></li><li><div><b>LINE</b> · Swelling line · pitch 6 u, width 6 → 88 % of pitch with darkness <span class="ro">u 0.36 · v 0.80 · engraved-line</span></div></li><li><div><b>LINE</b> · Broken line · dashes below 22 % darkness, paper below 4 % <span class="ro">u 0.12 · v 0.47 · engraved-line</span></div></li><li><div><b>FLOW</b> · Contour flow · line phase + 3.9 pitches × blurred tone <span class="ro">u 0.50 · v 0.47 · contour-flow</span></div></li><li><div><b>XHAT</b> · Crosshatch · second set at 62°, starts at 58 % darkness <span class="ro">u 0.88 · v 0.60 · shadow-crosshatch</span></div></li><li><div><b>HKEY</b> · Kept hue · rust band within 30° of 22° prints in its own hue <span class="ro">u 0.64 · v 0.20 · hue-key</span></div></li><li><div><b>TONE</b> · Tone curve · exposure +0.1 stop, contrast 1.25 about mid-gray <span class="ro">u 0.44 · v 0.38 · tone-curve</span></div></li><li><div><b>SRC</b> · Tone field · the picture as data: noise sea, lit from the left <span class="ro">u 0.70 · v 0.86 · tone-field</span></div></li><li><div><b>GRAIN</b> · Paper grain · ±3 % on 1.4 u cells, after the ink <span class="ro">u 0.50 · v 0.96 · paper-grain</span></div></li></ol></div>
+  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read · <b>L</b> live</span><span>ø co. · 2026</span></div> {
+  &quot;id&quot;: &quot;ts-15-banknote-engraving&quot;,
+  &quot;code&quot;: &quot;TS-15&quot;,
+  &quot;title&quot;: &quot;Banknote engraving&quot;,
+  &quot;section&quot;: &quot;techniques&quot;,
+  &quot;variants&quot;: [
+    {
+      &quot;id&quot;: &quot;ref&quot;,
+      &quot;label&quot;: &quot;Teal + kept hue&quot;,
+      &quot;swatches&quot;: [
+        &quot;#134757&quot;,
+        &quot;#B8532A&quot;,
+        &quot;#F4F5F3&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;io&quot;,
+      &quot;label&quot;: &quot;Blue / ember&quot;,
+      &quot;swatches&quot;: [
+        &quot;#2F5AE6&quot;,
+        &quot;#F4551E&quot;,
+        &quot;#FFFFFF&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;note&quot;,
+      &quot;label&quot;: &quot;Note green&quot;,
+      &quot;swatches&quot;: [
+        &quot;#1F5A3A&quot;,
+        &quot;#B8532A&quot;,
+        &quot;#F3F5F2&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;mono&quot;,
+      &quot;label&quot;: &quot;Ink, no key&quot;,
+      &quot;swatches&quot;: [
+        &quot;#101014&quot;,
+        &quot;#FFFFFF&quot;
+      ]
+    }
+  ],
+  &quot;reference&quot;: {
+    &quot;file&quot;: null,
+    &quot;px&quot;: null,
+    &quot;url&quot;: &quot;https://www.figma.com/design/NYBMQibG1CYhkzkf0mYfO6/-Dollar-Bill-texture-shader&quot;,
+    &quot;grammar&quot;: &quot;image effect: a photograph reprinted as one-ink intaglio — tone as line width, crosshatch in the shadows, lines that bend with the form, a looping guilloche in smooth upper areas, one hue range kept as a second ink, paper grain&quot;,
+    &quot;read_from&quot;: &quot;canvas at 214 % (Instruction page, “Rome · terracotta accent”) and the settings panel on the Shader page; shader source not read (view-only file)&quot;,
+    &quot;figma_panel&quot;: {
+      &quot;main_ink&quot;: &quot;#134757&quot;,
+      &quot;paper&quot;: &quot;#F5EEDD&quot;,
+      &quot;preserve_selected_hue&quot;: true,
+      &quot;selected_hue&quot;: 52,
+      &quot;hue_tolerance&quot;: 30,
+      &quot;hue_feather&quot;: 18,
+      &quot;minimum_saturation&quot;: 18,
+      &quot;accent_strength&quot;: 80,
+      &quot;keep_shadows&quot;: 65,
+      &quot;accent_colour&quot;: &quot;Original hue · printed ink&quot;,
+      &quot;custom_accent&quot;: &quot;#B24F1F&quot;,
+      &quot;engraving_spacing&quot;: 3.2,
+      &quot;line_weight&quot;: 94,
+      &quot;engraving_angle&quot;: 0,
+      &quot;contour_flow&quot;: 65,
+      &quot;shadow_crosshatch&quot;: 65,
+      &quot;guilloche_strength&quot;: 69,
+      &quot;guilloche_placement&quot;: &quot;Upper smooth regions&quot;,
+      &quot;upper_region&quot;: 40,
+      &quot;guilloche_scale&quot;: 103,
+      &quot;guilloche_curvature&quot;: 155,
+      &quot;exposure&quot;: 0.1,
+      &quot;contrast&quot;: 1.25
+    }
+  },
+  &quot;units&quot;: &quot;design units, 1000 = sheet width&quot;,
+  &quot;palette&quot;: {
+    &quot;paper&quot;: &quot;#F4F5F3&quot;,
+    &quot;ink&quot;: &quot;#134757&quot;,
+    &quot;kept_hue_ink&quot;: &quot;hsl(source hue, 62 %, 40 %)&quot;,
+    &quot;reference_paper_not_used&quot;: &quot;#F5EEDD&quot;
+  },
+  &quot;techniques&quot;: [
+    {
+      &quot;id&quot;: &quot;tone-field&quot;,
+      &quot;short&quot;: &quot;SRC&quot;,
+      &quot;name&quot;: &quot;Tone field (the picture)&quot;,
+      &quot;layer&quot;: 0,
+      &quot;pass&quot;: 0,
+      &quot;atoms&quot;: [
+        &quot;source&quot;,
+        &quot;procedural&quot;,
+        &quot;field&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;subject&quot;: &quot;headland with a signal tower and sheds, sea, far ridge — generated, lit from the left&quot;,
+        &quot;res&quot;: {
+          &quot;value&quot;: 0.5,
+          &quot;range&quot;: [
+            0.25,
+            1
+          ],
+          &quot;note&quot;: &quot;source resolution as a fraction of the sheet&quot;
+        },
+        &quot;horizon_v&quot;: {
+          &quot;value&quot;: 0.62,
+          &quot;range&quot;: [
+            0.45,
+            0.8
+          ]
+        },
+        &quot;soften_px&quot;: {
+          &quot;value&quot;: 0.7,
+          &quot;range&quot;: [
+            0,
+            3
+          ],
+          &quot;unit&quot;: &quot;px&quot;
+        },
+        &quot;seed&quot;: {
+          &quot;value&quot;: 1507,
+          &quot;range&quot;: [
+            1,
+            9999
+          ],
+          &quot;step&quot;: 1
+        }
+      },
+      &quot;limits&quot;: &quot;Any RGB picture works in its place. Pictures with no smooth area above upper_v show no guilloche; pictures with no pixel inside the hue range print as one ink.&quot;,
+      &quot;implementation&quot;: &quot;Sky, ridge, headland and sea are evaluated per pixel from seeded Perlin noise; tower, sheds and boat are drawn as flat lit/shadow faces on top. The function returns a canvas; every later technique only reads it.&quot;,
+      &quot;module&quot;: &quot;lib/tone-field.js&quot;
+    },
+    {
+      &quot;id&quot;: &quot;tone-curve&quot;,
+      &quot;short&quot;: &quot;TONE&quot;,
+      &quot;name&quot;: &quot;Exposure and contrast&quot;,
+      &quot;layer&quot;: 1,
+      &quot;pass&quot;: 1,
+      &quot;atoms&quot;: [
+        &quot;tone-curve&quot;,
+        &quot;luminance&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;luminance&quot;: &quot;0.2126 R + 0.7152 G + 0.0722 B&quot;,
+        &quot;exposure&quot;: {
+          &quot;value&quot;: 0.1,
+          &quot;range&quot;: [
+            -1.5,
+            1.5
+          ],
+          &quot;unit&quot;: &quot;stops&quot;
+        },
+        &quot;contrast&quot;: {
+          &quot;value&quot;: 1.25,
+          &quot;range&quot;: [
+            0.5,
+            2.5
+          ]
+        },
+        &quot;map&quot;: &quot;clamp((L · 2^exposure − 0.5) · contrast + 0.5)&quot;
+      },
+      &quot;limits&quot;: &quot;Contrast above ~2 clips most of the sheet to paper or solid line; the swelling line then reads as a two-level threshold.&quot;,
+      &quot;implementation&quot;: &quot;Luminance is exposed and stretched about mid-gray before it sets any line width, so paper and solid shadow are reached inside the picture, not only at its extremes.&quot;,
+      &quot;module&quot;: &quot;lib/tone-curve.js&quot;
+    },
+    {
+      &quot;id&quot;: &quot;contour-flow&quot;,
+      &quot;short&quot;: &quot;FLOW&quot;,
+      &quot;name&quot;: &quot;Contour flow (tone-warped phase)&quot;,
+      &quot;layer&quot;: 1,
+      &quot;pass&quot;: 2,
+      &quot;atoms&quot;: [
+        &quot;phase-warp&quot;,
+        &quot;blur&quot;,
+        &quot;field&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;flow&quot;: {
+          &quot;value&quot;: 0.65,
+          &quot;range&quot;: [
+            0,
+            1
+          ]
+        },
+        &quot;amp_pitches&quot;: {
+          &quot;value&quot;: 6,
+          &quot;range&quot;: [
+            0,
+            12
+          ],
+          &quot;note&quot;: &quot;phase shift in pitches at flow = 1 for a black-to-white step&quot;
+        },
+        &quot;radius_u&quot;: {
+          &quot;value&quot;: 24,
+          &quot;range&quot;: [
+            4,
+            60
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        },
+        &quot;edge_gain&quot;: {
+          &quot;value&quot;: 9,
+          &quot;range&quot;: [
+            2,
+            30
+          ],
+          &quot;note&quot;: &quot;edge-energy channel used by guilloche&quot;
+        },
+        &quot;phase&quot;: &quot;s += flow · amp_pitches · blur(L, radius)&quot;
+      },
+      &quot;limits&quot;: &quot;flow · amp_pitches · pitch must stay under ~1.5 × radius or neighboring lines fold over each other at hard edges.&quot;,
+      &quot;implementation&quot;: &quot;A quarter-resolution copy of the picture is blurred; its luminance is added to the line phase, so lines rise over light forms and sink into dark ones. The same pass stores blurred edge energy for the guilloche mask.&quot;,
+      &quot;module&quot;: &quot;lib/contour-flow.js&quot;
+    },
+    {
+      &quot;id&quot;: &quot;engraved-line&quot;,
+      &quot;short&quot;: &quot;LINE&quot;,
+      &quot;name&quot;: &quot;Swelling line screen&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 3,
+      &quot;atoms&quot;: [
+        &quot;line-screen&quot;,
+        &quot;width-modulation&quot;,
+        &quot;dash&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;pitch_u&quot;: {
+          &quot;value&quot;: 6,
+          &quot;range&quot;: [
+            2,
+            14
+          ],
+          &quot;unit&quot;: &quot;u&quot;,
+          &quot;note&quot;: &quot;reference: 3.2 px on its own image; 6 u resolves at plate size&quot;
+        },
+        &quot;angle_deg&quot;: {
+          &quot;value&quot;: 0,
+          &quot;range&quot;: [
+            -90,
+            90
+          ],
+          &quot;unit&quot;: &quot;°&quot;
+        },
+        &quot;weight&quot;: {
+          &quot;value&quot;: 0.94,
+          &quot;range&quot;: [
+            0.3,
+            1.1
+          ]
+        },
+        &quot;duty_min&quot;: {
+          &quot;value&quot;: 0.06,
+          &quot;range&quot;: [
+            0,
+            0.3
+          ]
+        },
+        &quot;duty_max&quot;: {
+          &quot;value&quot;: 0.94,
+          &quot;range&quot;: [
+            0.5,
+            1
+          ]
+        },
+        &quot;gamma&quot;: {
+          &quot;value&quot;: 1.15,
+          &quot;range&quot;: [
+            0.5,
+            2.5
+          ]
+        },
+        &quot;paper_below&quot;: {
+          &quot;value&quot;: 0.04,
+          &quot;range&quot;: [
+            0,
+            0.3
+          ],
+          &quot;note&quot;: &quot;darkness under this prints nothing&quot;
+        },
+        &quot;dash_below&quot;: {
+          &quot;value&quot;: 0.22,
+          &quot;range&quot;: [
+            0,
+            0.6
+          ]
+        },
+        &quot;dash_len_pitches&quot;: {
+          &quot;value&quot;: 5,
+          &quot;range&quot;: [
+            2,
+            16
+          ]
+        },
+        &quot;width&quot;: &quot;pitch · (duty_min + (duty_max·weight − duty_min) · darkness^gamma)&quot;
+      },
+      &quot;limits&quot;: &quot;Under ~2.5 device px of pitch the lines alias into tone. duty_max · weight at 1 closes the shadows to solid ink and the crosshatch has nothing to cross.&quot;,
+      &quot;implementation&quot;: &quot;Distance to the nearest line center is compared with half the tone-set width and antialiased over one device pixel. In the highlights each line is cut into dashes whose fill falls with darkness, with a hashed offset per line.&quot;,
+      &quot;module&quot;: &quot;lib/engraved-line.js&quot;
+    },
+    {
+      &quot;id&quot;: &quot;shadow-crosshatch&quot;,
+      &quot;short&quot;: &quot;XHAT&quot;,
+      &quot;name&quot;: &quot;Shadow crosshatch&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 4,
+      &quot;atoms&quot;: [
+        &quot;hatch&quot;,
+        &quot;line-screen&quot;,
+        &quot;threshold&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;strength&quot;: {
+          &quot;value&quot;: 0.65,
+          &quot;range&quot;: [
+            0,
+            1
+          ]
+        },
+        &quot;angle_deg&quot;: {
+          &quot;value&quot;: 62,
+          &quot;range&quot;: [
+            20,
+            90
+          ],
+          &quot;unit&quot;: &quot;°&quot;,
+          &quot;note&quot;: &quot;relative to the main lines&quot;
+        },
+        &quot;pitch_u&quot;: {
+          &quot;value&quot;: 6,
+          &quot;range&quot;: [
+            2,
+            14
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        },
+        &quot;start&quot;: {
+          &quot;value&quot;: 0.58,
+          &quot;range&quot;: [
+            0.2,
+            0.9
+          ]
+        },
+        &quot;full&quot;: {
+          &quot;value&quot;: 0.92,
+          &quot;range&quot;: [
+            0.5,
+            1
+          ]
+        },
+        &quot;duty_max&quot;: {
+          &quot;value&quot;: 0.62,
+          &quot;range&quot;: [
+            0.2,
+            0.9
+          ]
+        }
+      },
+      &quot;limits&quot;: &quot;start under ~0.35 puts hatch into the midtones and the picture reads as a net, not an engraving.&quot;,
+      &quot;implementation&quot;: &quot;A second, unwarped line set whose width ramps from 0 at start to duty_max · strength at full darkness; the two sets are combined as 1 − (1−a)(1−b).&quot;,
+      &quot;module&quot;: &quot;lib/shadow-crosshatch.js&quot;
+    },
+    {
+      &quot;id&quot;: &quot;guilloche&quot;,
+      &quot;short&quot;: &quot;GUIL&quot;,
+      &quot;name&quot;: &quot;Guilloche in upper smooth regions&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 5,
+      &quot;atoms&quot;: [
+        &quot;guilloche&quot;,
+        &quot;sine-line&quot;,
+        &quot;mask&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;strength&quot;: {
+          &quot;value&quot;: 0.69,
+          &quot;range&quot;: [
+            0,
+            1
+          ]
+        },
+        &quot;upper_v&quot;: {
+          &quot;value&quot;: 0.4,
+          &quot;range&quot;: [
+            0,
+            1
+          ]
+        },
+        &quot;feather_v&quot;: {
+          &quot;value&quot;: 0.07,
+          &quot;range&quot;: [
+            0.01,
+            0.3
+          ]
+        },
+        &quot;scale_u&quot;: {
+          &quot;value&quot;: 103,
+          &quot;range&quot;: [
+            30,
+            400
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        },
+        &quot;curvature&quot;: {
+          &quot;value&quot;: 1.55,
+          &quot;range&quot;: [
+            0.2,
+            4
+          ],
+          &quot;note&quot;: &quot;max slope of the wave; amplitude = curvature · scale / 2π&quot;
+        },
+        &quot;pitch_u&quot;: {
+          &quot;value&quot;: 10,
+          &quot;range&quot;: [
+            2.5,
+            20
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        },
+        &quot;duty&quot;: {
+          &quot;value&quot;: 0.17,
+          &quot;range&quot;: [
+            0.08,
+            0.6
+          ]
+        },
+        &quot;tone&quot;: {
+          &quot;value&quot;: 0.7,
+          &quot;range&quot;: [
+            0,
+            1.5
+          ],
+          &quot;note&quot;: &quot;how much darkness thickens the guilloche line&quot;
+        },
+        &quot;drift&quot;: {
+          &quot;value&quot;: 0.9,
+          &quot;range&quot;: [
+            0,
+            3
+          ],
+          &quot;note&quot;: &quot;phase wander of family A down the sheet&quot;
+        },
+        &quot;smooth_lo&quot;: {
+          &quot;value&quot;: 0.1,
+          &quot;range&quot;: [
+            0,
+            0.5
+          ]
+        },
+        &quot;smooth_hi&quot;: {
+          &quot;value&quot;: 0.3,
+          &quot;range&quot;: [
+            0.1,
+            1
+          ]
+        },
+        &quot;shear&quot;: {
+          &quot;value&quot;: 0.37,
+          &quot;range&quot;: [
+            0,
+            1
+          ],
+          &quot;note&quot;: &quot;family B phase advance per unit y, in units of 2π/S — tilts the braid so it does not stripe&quot;
+        },
+        &quot;lines&quot;: &quot;A: y + a·sin(2πx/S + drift·sin(2πy/2.3S)) = k·pitch;  B: y − a·sin(2πx/S + shear·2πy/S + 1.1) = k·pitch&quot;
+      },
+      &quot;limits&quot;: &quot;curvature above ~3 makes the wave steeper than the antialiasing estimate holds; pitch near the main pitch makes the hand-over at upper_v invisible.&quot;,
+      &quot;implementation&quot;: &quot;Two families of stacked sine lines, mirrored, give the braided cells. Vertical distance is divided by √(1 + slope²) so line width stays even on the steep parts. The mask is (above upper_v) × (edge energy low); the straight lines fade by the same mask.&quot;,
+      &quot;module&quot;: &quot;lib/guilloche.js&quot;
+    },
+    {
+      &quot;id&quot;: &quot;hue-key&quot;,
+      &quot;short&quot;: &quot;HKEY&quot;,
+      &quot;name&quot;: &quot;Kept hue as a second ink&quot;,
+      &quot;layer&quot;: 3,
+      &quot;pass&quot;: 6,
+      &quot;atoms&quot;: [
+        &quot;hue-key&quot;,
+        &quot;spot-ink&quot;,
+        &quot;mask&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;hue_deg&quot;: {
+          &quot;value&quot;: 22,
+          &quot;range&quot;: [
+            0,
+            360
+          ],
+          &quot;unit&quot;: &quot;°&quot;
+        },
+        &quot;tolerance_deg&quot;: {
+          &quot;value&quot;: 30,
+          &quot;range&quot;: [
+            2,
+            90
+          ],
+          &quot;unit&quot;: &quot;°&quot;
+        },
+        &quot;feather_deg&quot;: {
+          &quot;value&quot;: 18,
+          &quot;range&quot;: [
+            0,
+            60
+          ],
+          &quot;unit&quot;: &quot;°&quot;
+        },
+        &quot;min_sat&quot;: {
+          &quot;value&quot;: 18,
+          &quot;range&quot;: [
+            0,
+            80
+          ],
+          &quot;unit&quot;: &quot;%&quot;
+        },
+        &quot;strength&quot;: {
+          &quot;value&quot;: 0.8,
+          &quot;range&quot;: [
+            0,
+            1
+          ]
+        },
+        &quot;keep_shadows&quot;: {
+          &quot;value&quot;: 0.65,
+          &quot;range&quot;: [
+            0,
+            1
+          ]
+        },
+        &quot;ink_sat&quot;: {
+          &quot;value&quot;: 0.62,
+          &quot;range&quot;: [
+            0.2,
+            1
+          ]
+        },
+        &quot;ink_light&quot;: {
+          &quot;value&quot;: 0.4,
+          &quot;range&quot;: [
+            0.2,
+            0.6
+          ]
+        },
+        &quot;mode&quot;: &quot;variant.accent — \&quot;hue\&quot;: ink takes each pixel’s own hue · \&quot;#hex\&quot;: one custom ink · \&quot;off\&quot;: monochrome&quot;
+      },
+      &quot;limits&quot;: &quot;tolerance + feather above ~90° keys most warm pictures whole; min_sat under ~8 % keys neutral grays by their noise hue.&quot;,
+      &quot;implementation&quot;: &quot;Mask = 1 inside tolerance of the chosen hue, feathered to 0, gated by saturation, scaled by strength and pulled back toward the main ink in the shadows by keep_shadows. It changes ink color only — line width is unchanged.&quot;,
+      &quot;module&quot;: &quot;lib/hue-key.js&quot;
+    },
+    {
+      &quot;id&quot;: &quot;paper-grain&quot;,
+      &quot;short&quot;: &quot;GRAIN&quot;,
+      &quot;name&quot;: &quot;Paper grain&quot;,
+      &quot;layer&quot;: 4,
+      &quot;pass&quot;: 7,
+      &quot;atoms&quot;: [
+        &quot;grain&quot;,
+        &quot;stock&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;amp&quot;: {
+          &quot;value&quot;: 0.03,
+          &quot;range&quot;: [
+            0,
+            0.12
+          ]
+        },
+        &quot;cell_u&quot;: {
+          &quot;value&quot;: 1.4,
+          &quot;range&quot;: [
+            0.5,
+            4
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        },
+        &quot;corr&quot;: {
+          &quot;value&quot;: 0.35,
+          &quot;range&quot;: [
+            0,
+            0.8
+          ]
+        },
+        &quot;seed&quot;: {
+          &quot;value&quot;: 15,
+          &quot;range&quot;: [
+            1,
+            9999
+          ],
+          &quot;step&quot;: 1
+        }
+      },
+      &quot;limits&quot;: &quot;Above ~0.06 the grain reads before the line; this pass is the last thing to add and the first to remove.&quot;,
+      &quot;implementation&quot;: &quot;One multiplicative monochrome noise pass over paper and ink together, on cells of 1.4 u with lag-1 correlation.&quot;,
+      &quot;module&quot;: &quot;lib/paper-grain.js&quot;
+    }
+  ],
+  &quot;pass_order&quot;: [
+    &quot;picture · tone field drawn or supplied, upsampled to the sheet&quot;,
+    &quot;curve · luminance → exposure → contrast&quot;,
+    &quot;field · blurred luminance + edge energy at ¼ resolution&quot;,
+    &quot;lines · phase = y/pitch + flow field; width from darkness; dashes in the highlights&quot;,
+    &quot;hatch · second set at 62° above 58 % darkness&quot;,
+    &quot;guilloche · two sine families where upper and smooth; straight lines fade there&quot;,
+    &quot;ink · kept-hue ink or main ink, composited on paper by line coverage&quot;,
+    &quot;grain · ±3 % multiplicative&quot;
+  ],
+  &quot;notes&quot;: [
+    &quot;Parameter names and values under reference.figma_panel are copied from the effect’s settings panel as shown in the file. How the effect maps them internally is not known; the functions here are a rebuild from the rendered result, not a port of its shader.&quot;,
+    &quot;Figma’s Selected hue 52 is on its own scale (the file’s quick start gives orange ≈ 25°, green ≈ 105°, red ≈ 0°); this spec uses degrees.&quot;,
+    &quot;Reference paper is #F5EEDD; the rebuild prints on neutral #F4F5F3 in every variant.&quot;,
+    &quot;No reference image is bundled (third-party file); compare is off for this plate.&quot;,
+    &quot;Seeds 1507 (picture), 15 (grain).&quot;
+  ]
+} are BAKED here by `node _build/build.mjs` from study.js — a static read for readers that
+     cannot run scripts. shell.js redraws all of it on load. Edit study.js or _build/, never the generated index.html. -->
+<nav class="nav" id="nav" aria-label="Site navigation">{{NAV}}</nav>
+<main class="plate">
+  <section class="notes" id="copy">{{NOTES}}</section>
+  <section class="figure" id="stage">
+    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"><img src="thumb.png" alt="TS-15 rebuild, still frame" loading="lazy"></canvas></div>
+    <div class="live" id="live"></div>
+    <div class="log" id="log">
+      <div class="ctl">
+        <button id="bRead" type="button" class="on" title="toggle the read overlay">Read</button>
+        <button id="bReplay" type="button" title="re-run the read (space)">↻ Replay</button>
+        <button id="bMode" type="button" title="cycle rebuild / reference / split (R)">Rebuild</button>
+        <button id="bMotion" type="button" hidden title="run the motion version (M)">Motion</button>
+        <button id="bLive" type="button" hidden title="open the live DOM version (L)">Live</button>
+        <button id="bSpec" type="button" title="open the machine-readable spec (S)">Spec ⇥</button>
+      </div>
+      <div class="vtabs" id="vtabs"></div>
+      <div class="prail" id="prail" hidden></div>
+      <div class="lbody">
+        <div class="lh"><span>Track log</span><span id="ctr">0 / 10</span></div>
+        <div class="rows" id="rows"></div>
+        <div class="read" id="read"><b>Read</b><span id="readtxt">Hover or select a point.</span><code id="readcode"></code></div>
+        <div class="fid" id="fid"></div>
+      </div>
+    </div>
+    <div class="rel" id="rel"></div>
+  </section>
+</main>
+<aside class="spec" id="spec" aria-hidden="true">
+  <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
+  <pre id="specpre">{{SPEC}}</pre>
+</aside>
+<script src="../../_shared/entries.js?v=202611102327"></script>
+<script src="../../_shared/vocab.js?v=202611102327"></script>
+<script src="../../_shared/art.js?v=202611102327"></script>
+<script src="ref.js"></script>
+<script src="study.js"></script>
+<script src="../../_shared/shell.js?v=202611102327"></script>
+</body>
+</html>
