@@ -57,7 +57,7 @@ a:hover{text-decoration-color:var(--bone)}
 .plate{position:relative;background:var(--stock);outline:1px solid var(--rule);outline-offset:-1px;min-width:0}
 .plate canvas,.plate svg.ov{position:absolute;inset:0;width:100%;height:100%;display:block}
 .plate svg.ov{pointer-events:none;overflow:visible}
-.plate[data-pointer]{cursor:crosshair;touch-action:none}
+.plate{cursor:crosshair}
 .ov text{font-family:var(--mono);font-size:13px;letter-spacing:.08em;fill:var(--bone-2)}
 .ov text.b{fill:var(--bone)}.ov text.s{font-size:11px;fill:var(--bone-3)}
 .ov text.lamp{fill:var(--lamp)}.ov text.scent{fill:var(--scent)}.ov text.sonar{fill:var(--sonar)}
@@ -123,13 +123,36 @@ pre{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--bone-2);
   .plate{min-width:720px}
   .fig .plate::before,.fig .plate::after{display:none}
 }
+/* interaction */
+.hero h1 i{transition:text-shadow .5s ease}
+.hero h1:hover i{text-shadow:0 0 26px rgba(240,162,59,.6),0 0 90px rgba(240,162,59,.35)}
+.census canvas{cursor:crosshair}
+.fig .plate::before,.fig .plate::after{transition:border-color .25s,width .25s,height .25s}
+.fig:hover .plate::before,.fig:hover .plate::after{border-color:var(--bone);width:22px;height:22px}
+.fig:hover .figcap .mono:first-child{color:var(--bone)}
+.figcap .mono{transition:color .25s}
+.co .cl{fill:none;stroke:var(--bone-2);stroke-width:1;transition:stroke .2s}
+.co text{transition:fill .2s}
+.co.on .cl{stroke:var(--c);stroke-width:1.5}
+.co.on text.b{fill:var(--c)}
+.co.on text.s{fill:var(--bone)}
+.co.on .pt{stroke:var(--c)}
+.co a{cursor:pointer}
+[data-hl]{cursor:help;text-decoration:underline dotted var(--bone-3);text-underline-offset:4px;transition:color .2s}
+[data-hl]:hover,[data-hl]:focus-visible{color:var(--bone)}
+.ch dt[data-hl]:hover,.ch dt[data-hl]:focus-visible{color:var(--lamp)}
+.ch .num .mono:last-child{transition:letter-spacing .3s}
+.ch:hover .num .mono:last-child{letter-spacing:.2em}
+.btn{transition:color .15s,border-color .15s,background .15s}
+.hint{color:var(--bone-3)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 
 <div class="wrap">
 
 <header class="mast">
   <span class="mono">Field manual · Lepidoptera after dark</span>
-  <span class="mono">Seven plates · drawn at load · four inks</span>
+  <span class="mono">Seven plates · drawn at load · every one answers the pointer</span>
 </header>
 
 <section class="hero" id="top">
@@ -144,22 +167,23 @@ pre{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--bone-2);
   <canvas id="census" width="2400" height="64" role="img" aria-label="1,775 dots: 1,600 for moths, 175 for butterflies"></canvas>
   <div class="row">
     <span class="mono">One dot = 100 described species · moths ≈ 160,000</span>
+    <span class="mono hint" id="cen-read">Run the pointer along the row</span>
     <span class="mono k-lamp">butterflies ≈ 17,500</span>
   </div>
 </section>
 
 <section class="plain" id="specimen" style="border-top:0;padding-top:0">
   <figure class="fig">
-    <div class="figcap"><span class="mono">Fig. 0 — <span class="k-bone">Actias luna</span>, dorsal · the parts this manual opens</span><span class="mono">≈ 24,000 scales, laid tip over base from the wing root</span></div>
+    <div class="figcap"><span class="mono">Fig. 0 — <span class="k-bone">Actias luna</span>, dorsal · the parts this manual opens</span><span class="mono">the pointer is a light · press a wing and its scales rub off</span></div>
     <div class="plate-scroll"><div class="plate" id="p-hero">
-      <canvas class="bg" role="img" aria-label="A luna moth drawn scale by scale, with numbered callouts to the antennae, thorax, eye, wing scales, tails and abdomen"></canvas>
+      <canvas class="bg" role="img" aria-label="A luna moth drawn scale by scale, with numbered callouts to the antennae, thorax, eye, wing scales, tails and abdomen"></canvas><canvas class="fg" aria-hidden="true"></canvas>
       <svg class="ov" viewBox="0 0 1200 880" aria-hidden="true">
         <g id="callouts"></g>
       </svg>
     </div></div>
     <div class="figfoot"><span class="mono">Inks</span>
       <span class="mono k-bone">● bone · the body</span><span class="mono k-lamp">● amber · light and heat</span>
-      <span class="mono k-scent">● violet · scent</span><span class="mono k-sonar">● teal · ultrasound</span></div>
+      <span class="mono k-scent">● violet · scent</span><span class="mono k-sonar">● teal · ultrasound</span><span class="mono" style="margin-left:auto">Scales <b id="r-total">0</b> · rubbed off <b id="r-lost">0</b></span><button class="btn" id="h-new" type="button">New specimen</button></div>
   </figure>
 </section>
 
@@ -177,16 +201,16 @@ pre{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--bone-2);
     
     </div>
     <div class="side"><dl>
-      <dt>Larva</dt><dd>A walking gut in a pressurized bag. No wings, almost no long-range vision, and a few thousand muscles for gripping and chewing.</dd>
-      <dt>Imago</dt><dd>A light, rigid chitin airframe driven by a few massive flight muscles, carrying chemical, visual and acoustic sensors.</dd>
-      <dt>Kept</dt><dd>Parts of the <b>mushroom bodies</b>, the insect brain's memory regions, pass through metamorphosis intact.</dd>
+      <dt data-hl="p-meta:larva" tabindex="0">Larva</dt><dd>A walking gut in a pressurized bag. No wings, almost no long-range vision, and a few thousand muscles for gripping and chewing.</dd>
+      <dt data-hl="p-meta:imago" tabindex="0">Imago</dt><dd>A light, rigid chitin airframe driven by a few massive flight muscles, carrying chemical, visual and acoustic sensors.</dd>
+      <dt data-hl="p-meta:kept" tabindex="0">Kept</dt><dd>Parts of the <b>mushroom bodies</b>, the insect brain's memory regions, pass through metamorphosis intact.</dd>
     </dl>
     <p class="note"><b>Source.</b> Blackiston, Silva Casey &amp; Weiss, 2008, in <i>Manduca sexta</i>. Memory carried over when training happened late in larval life. "Soup" is shorthand: the nervous system, tracheae and parts of the gut are remodeled, not dissolved.</p>
     </div>
   </div>
   <div class="figs">
     <figure class="fig">
-      <div class="figcap"><span class="mono">Fig. 1 — Larva, pupa, imago · <i>Manduca sexta</i></span><span class="mono k-scent">violet = the trained odor memory</span></div>
+      <div class="figcap"><span class="mono">Fig. 1 — Larva, pupa, imago · <i>Manduca sexta</i></span><span class="mono k-scent">move across to run the change · violet = odor memory</span></div>
       <div class="plate-scroll"><div class="plate" id="p-meta">
         <canvas class="bg"></canvas><canvas class="fg" role="img" aria-label="A hornworm caterpillar, its pupa with drifting dissolved tissue and bright imaginal discs, and the adult hawkmoth. A violet mark for odor memory sits in the head of all three."></canvas>
         <svg class="ov" viewBox="0 0 1200 660" aria-hidden="true">
@@ -203,10 +227,10 @@ pre{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--bone-2);
           <g id="days"></g>
           <text x="60" y="632" class="s">NO MOUTHPARTS, NO GUT. FLIES ON FAT STORED AS A CATERPILLAR.</text>
           <text x="640" y="552">HAWKMOTH · BODY AGAINST PROBOSCIS</text>
-          <rect x="640" y="570" width="150" height="9" fill="#e8e0cd"/><text x="800" y="580" class="s">BODY</text>
-          <path d="M640 600h214" stroke="#f0a23b" stroke-width="2" fill="none"/><path d="M854 600c26 0 26 -16 10 -16c-12 0 -12 12 -2 12" stroke="#f0a23b" stroke-width="2" fill="none"/>
-          <text x="890" y="604" class="lamp">PROBOSCIS</text>
-          <text x="640" y="632" class="s">A PUMP AND A CAPILLARY SPONGE, SOMETIMES LONGER THAN THE MOTH.</text>
+          <rect x="640" y="562" width="150" height="9" fill="#e8e0cd"/><text x="800" y="571" class="s">BODY</text>
+          
+          <text x="900" y="610" class="lamp">PROBOSCIS · HOVER TO UNCOIL</text>
+          <text x="640" y="644" class="s">A PUMP AND A CAPILLARY SPONGE, SOMETIMES LONGER THAN THE MOTH.</text>
         </svg>
       </div></div>
     </figure>
@@ -229,16 +253,16 @@ pre{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--bone-2);
     
     </div>
     <div class="side"><dl>
-      <dt>Fur</dt><dd>Dense thoracic scales insulate like mammal fur and keep heat in the flight motor.</dd>
-      <dt>Radiator</dt><dd>If hovering overheats it, the tubular heart sends hot hemolymph through the narrow waist into the bare abdomen, which sheds it to the night air.</dd>
-      <dt>Box</dt><dd>The big flight muscles pull on the thorax wall, not the wings. The shell rings at its resonant frequency and the wings are levered by it.</dd>
-      <dt>Vortex</dt><dd>Each stroke spins a <b>leading-edge vortex</b> that stays attached above the wing: low pressure, high lift, enough to hover.</dd>
+      <dt data-hl="p-heat:fur" tabindex="0">Fur</dt><dd>Dense thoracic scales insulate like mammal fur and keep heat in the flight motor.</dd>
+      <dt data-hl="p-heat:radiator" tabindex="0">Radiator</dt><dd>If hovering overheats it, the tubular heart sends hot hemolymph through the narrow waist into the bare abdomen, which sheds it to the night air.</dd>
+      <dt data-hl="p-heat:box" tabindex="0">Box</dt><dd>The big flight muscles pull on the thorax wall, not the wings. The shell rings at its resonant frequency and the wings are levered by it.</dd>
+      <dt data-hl="p-heat:vortex" tabindex="0">Vortex</dt><dd>Each stroke spins a <b>leading-edge vortex</b> that stays attached above the wing: low pressure, high lift, enough to hover.</dd>
     </dl>
     </div>
   </div>
   <div class="figs">
     <figure class="fig">
-      <div class="figcap"><span class="mono">Fig. 2 — Hawkmoth in side view, read as temperature</span><span class="mono k-lamp">every dot is colored by the heat at that point</span></div>
+      <div class="figcap"><span class="mono">Fig. 2 — Hawkmoth in side view, read as temperature</span><span class="mono k-lamp">hover the body to read its temperature</span></div>
       <div class="plate-scroll"><div class="plate" id="p-heat">
         <canvas class="bg"></canvas><canvas class="fg" role="img" aria-label="A thermal dot drawing of a hawkmoth. The thorax heats from 8 to about 40 degrees while shivering, then hot blood flows into the abdomen, which sheds the heat."></canvas>
         <svg class="ov" viewBox="0 0 1200 700" aria-hidden="true">
@@ -246,9 +270,9 @@ pre{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--bone-2);
           <text x="232" y="548" class="s">THORAX · INSULATED BY FUR</text><text x="540" y="468" class="s">ABDOMEN · BARE RADIATOR</text>
           <text x="418" y="468" class="s">WAIST</text><path class="ld" d="M436 452L424 402"/>
           <g id="ramp"></g>
-          <text x="872" y="52" class="b">THE RESONANT BOX</text><text x="872" y="72" class="s">THORAX IN SECTION · SLOWED</text>
-          <text x="872" y="392" class="b">LEADING-EDGE VORTEX</text><text x="872" y="412" class="s">WING IN SECTION</text>
-          <text x="1140" y="412" text-anchor="end" class="lamp">LOW PRESSURE</text>
+          <text x="872" y="52" class="b">THE RESONANT BOX</text><text x="872" y="72" class="s">IN SECTION · HOVER TO WORK IT BY HAND</text>
+          <text x="872" y="392" class="b">LEADING-EDGE VORTEX</text><text x="872" y="412" class="s">IN SECTION · MOVE RIGHT FOR MORE AIR</text>
+          <text x="1140" y="392" text-anchor="end" class="s" style="fill:#f0a23b">LOW PRESSURE</text>
           <line x1="840" y1="40" x2="840" y2="660" stroke="#262b38"/>
           <line x1="872" y1="350" x2="1140" y2="350" stroke="#262b38"/>
         </svg>
@@ -271,15 +295,15 @@ pre{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--bone-2);
     
     </div>
     <div class="side"><dl>
-      <dt class="k-scent">Surge</dt><dd><b>Odor on.</b> The instant an antenna clips a filament, turn and fly straight upwind, reading wind from the ground sliding under the eyes.</dd>
-      <dt>Cast</dt><dd><b>Odor off.</b> Stop advancing and zigzag across the wind in widening sweeps until the next ribbon is cut.</dd>
+      <dt class="k-scent" data-hl="p-plume:surge" tabindex="0">Surge</dt><dd><b>Odor on.</b> The instant an antenna clips a filament, turn and fly straight upwind, reading wind from the ground sliding under the eyes.</dd>
+      <dt data-hl="p-plume:cast" tabindex="0">Cast</dt><dd><b>Odor off.</b> Stop advancing and zigzag across the wind in widening sweeps until the next ribbon is cut.</dd>
     </dl>
     <p class="note"><b>Scale.</b> Around 100 to 200 molecules a second on the antenna is enough to launch a male, by Kaissling's measurements in <i>Bombyx</i>. Field tracking over kilometers is reported but hard to measure. Robots hunting gas leaks and hydrothermal vents use the same rule.</p>
     </div>
   </div>
   <div class="figs">
     <figure class="fig">
-      <div class="figcap"><span class="mono">Fig. 3 — Surge and cast, seen from above · running live</span><span class="mono k-scent">violet = pheromone filaments</span></div>
+      <div class="figcap"><span class="mono">Fig. 3 — Surge and cast, seen from above · running live</span><span class="mono k-scent">hold to release scent · move to stir the air</span></div>
       <div class="plate-scroll"><div class="plate" id="p-plume">
         <canvas class="bg"></canvas><canvas class="fg" role="img" aria-label="A live simulation. Pheromone filaments blow downwind from a female. A male flies upwind when he touches one and zigzags across the wind when he loses it."></canvas>
         <svg class="ov" viewBox="0 0 1200 640" aria-hidden="true">
@@ -303,21 +327,21 @@ pre{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--bone-2);
     </div>
     <div class="body">
     <p>For roughly 60 million years moths have been hunted by bats calling at 20 to over 100&nbsp;kHz. Different families answered in different ways.</p>
-    <p><strong>The two-neuron ear.</strong> A noctuid's eardrum feeds just two cells. <em>A1</em> is sensitive and fires at faint ultrasound: a bat is about, not yet locked on. Comparing left and right tells the moth where, and it banks away. <em>A2</em> needs about ten times the sound pressure. When both fire the bat is close, and steering gives way to loops, rolls and power dives.</p>
+    <p><strong>The two-neuron ear.</strong> A noctuid's eardrum feeds just two cells. <em data-hl="p-bat:a1" tabindex="0">A1</em> is sensitive and fires at faint ultrasound: a bat is about, not yet locked on. Comparing left and right tells the moth where, and it banks away. <em data-hl="p-bat:a2" tabindex="0">A2</em> needs about ten times the sound pressure. When both fire the bat is close, and steering gives way to loops, rolls and power dives.</p>
     
     </div>
     <div class="side"><dl>
-      <dt>Stealth</dt><dd>Earless silk moths wear an absorber. Wing scales each resonate at a slightly different pitch and together soak up <b>as much as 72%</b> of a sonar pulse.</dd>
-      <dt>Decoy</dt><dd>A luna's twisted tails spin and throw echoes behind the body. Bats aimed at the tails in <b>55%</b> of attacks and rarely caught the moth when they did.</dd>
-      <dt>Jam</dt><dd>Tiger moths click back from a ribbed tymbal at up to <b>4,500 clicks a second</b>. Some are advertising toxins. <i>Bertholdia trigona</i> lands its clicks inside the bat's echo window and spoils the range estimate.</dd>
+      <dt data-hl="p-counter:absorb" tabindex="0">Stealth</dt><dd>Earless silk moths wear an absorber. Wing scales each resonate at a slightly different pitch and together soak up <b>as much as 72%</b> of a sonar pulse.</dd>
+      <dt data-hl="p-counter:deflect" tabindex="0">Decoy</dt><dd>A luna's twisted tails spin and throw echoes behind the body. Bats aimed at the tails in <b>55%</b> of attacks and rarely caught the moth when they did.</dd>
+      <dt data-hl="p-counter:jam" tabindex="0">Jam</dt><dd>Tiger moths click back from a ribbed tymbal at up to <b>4,500 clicks a second</b>. Some are advertising toxins. <i>Bertholdia trigona</i> lands its clicks inside the bat's echo window and spoils the range estimate.</dd>
     </dl>
     <p class="note"><b>Caveat.</b> The A1/A2 split is Kenneth Roeder's reading from the 1960s. Later recordings, including from moths whose ears have a single cell, question whether A2 alone triggers the dive. The rings in Fig. 4 are schematic, not to scale.</p>
     </div>
   </div>
   <div class="figs">
     <figure class="fig">
-      <div class="figcap"><span class="mono">Fig. 4 — A noctuid's ear · move the bat with your pointer</span><span class="mono k-sonar">teal = sonar</span></div>
-      <div class="plate-scroll"><div class="plate" id="p-bat" data-pointer>
+      <div class="figcap"><span class="mono">Fig. 4 — A noctuid's ear</span><span class="mono k-sonar">fly the bat with your pointer · brush the spike record</span></div>
+      <div class="plate-scroll"><div class="plate" id="p-bat">
         <canvas class="bg"></canvas><canvas class="fg" role="img" aria-label="A live simulation. A bat emits sonar pulses toward a moth. Past the outer ring only neuron A1 fires and the moth turns away. Inside the inner ring A2 fires too and the moth dives erratically."></canvas>
         <svg class="ov" viewBox="0 0 1200 660" aria-hidden="true">
           <text x="60" y="52" class="b" id="bat-state">CRUISING</text><text x="60" y="72" class="s" id="bat-sub">NO ULTRASOUND AT THE EAR</text>
@@ -325,12 +349,12 @@ pre{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--bone-2);
           <text x="1140" y="548" text-anchor="end" class="s">SPIKES · LAST 4 SECONDS</text>
         </svg>
       </div></div>
-      <div class="figfoot"><span class="mono">A1 <b id="r-a1">0</b> spikes/s</span><span class="mono">A2 <b id="r-a2">0</b> spikes/s</span><span class="mono">Bat call rate <b id="r-rate">8</b> /s</span><span class="mono">Passes survived <b id="r-esc">0</b></span></div>
+      <div class="figfoot"><span class="mono">A1 <b id="r-a1">0</b> spikes/s</span><span class="mono">A2 <b id="r-a2">0</b> spikes/s</span><span class="mono">Bat call rate <b id="r-rate">8</b> /s</span><span class="mono">Passes survived <b id="r-esc">0</b></span><span class="mono">Caught <b id="r-caught">0</b></span><span class="seg" style="margin-left:auto" role="group" aria-label="Hearing"><button class="btn" id="e-on" type="button" aria-pressed="true">With ears</button><button class="btn" id="e-off" type="button" aria-pressed="false">Deafened</button></span></div>
     </figure>
     <figure class="fig">
-      <div class="figcap"><span class="mono">Fig. 5 — Three answers that need no ears, counted in dots</span><span class="mono">each mark is one percent, one attack or one click</span></div>
+      <div class="figcap"><span class="mono">Fig. 5 — Three answers that need no ears, counted in dots</span><span class="mono">hover a panel · the third silences the moth</span></div>
       <div class="plate-scroll"><div class="plate" id="p-counter">
-        <canvas class="bg" role="img" aria-label="Three dot counts. Of 100 units of sonar, wing scales return 28 and thorax fur returns 15. Of 87 bat attacks on luna moths, 48 were aimed at the tails. A tiger moth fits about 28 clicks between two bat calls."></canvas>
+        <canvas class="bg" role="img" aria-label="Three dot counts. Of 100 units of sonar, wing scales return 28 and thorax fur returns 15. Of 87 bat attacks on luna moths, 48 were aimed at the tails. A tiger moth fits about 28 clicks between two bat calls."></canvas><canvas class="fg" aria-hidden="true"></canvas>
         <svg class="ov" viewBox="0 0 1200 400" aria-hidden="true">
           <text x="60" y="52" class="b">ABSORB</text><text x="60" y="72" class="s">ECHO RETURNED PER 100 SENT</text>
           <text x="60" y="268" class="s">BARE</text><text x="182" y="268" class="s">WING SCALES</text><text x="304" y="268" class="s">THORAX FUR</text>
@@ -338,10 +362,10 @@ pre{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--bone-2);
           <text x="60" y="352" class="s">PEAK ABSORPTION 72% AT 78 KHZ (WINGS)</text><text x="60" y="372" class="s">AND UP TO 85% (FUR), IN EARLESS SILK MOTHS</text>
           <line x1="430" y1="40" x2="430" y2="372" stroke="#262b38"/>
           <text x="462" y="52" class="b">DEFLECT</text><text x="462" y="72" class="s">WHERE 87 ATTACKS WERE AIMED</text>
-          <text x="462" y="352" class="s">AT THE BODY</text><text x="462" y="372" class="b">39</text>
-          <text x="640" y="352" class="s">AT THE TAILS</text><text x="640" y="372" class="sonar">48</text>
+          <text x="462" y="352" class="s">AT THE BODY</text><text x="462" y="372" class="b" id="c-body">39</text>
+          <text x="640" y="352" class="s">AT THE TAILS</text><text x="640" y="372" class="sonar" id="c-tail">48</text>
           <line x1="800" y1="40" x2="800" y2="372" stroke="#262b38"/>
-          <text x="832" y="52" class="b">JAM</text><text x="832" y="72" class="s">ONE GAP BETWEEN TWO BAT CALLS</text>
+          <text x="832" y="52" class="b">JAM</text><text x="832" y="72" class="s">ONE GAP BETWEEN TWO BAT CALLS</text><text x="832" y="106" class="s" style="fill:#e8e0cd" id="c-jam">CLICKS FILL THE WINDOW · RANGE LOST</text>
           <text x="832" y="352" class="sonar">BAT · ABOUT 160 CALLS/S AT THE BUZZ</text><text x="832" y="372" class="b">MOTH · UP TO 4,500 CLICKS/S</text>
         </svg>
       </div></div>
@@ -360,8 +384,8 @@ pre{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--bone-2);
     </div>
     </div>
     <div class="body">
-    <p>In dim moonlight our cones starve and we see in grey. A day-flying butterfly's <em>apposition</em> eye is no better at night: each lens sits on a walled tube and feeds only its own sensor.</p>
-    <p>A nocturnal moth's <em>superposition</em> eye has a wide clear zone inside. Light entering hundreds of neighboring lenses is bent onto a single photoreceptor, which makes the eye up to about <strong>1,000 times</strong> more sensitive. Elephant hawkmoths pick out blue, yellow and ultraviolet flowers by starlight.</p>
+    <p>In dim moonlight our cones starve and we see in grey. A day-flying butterfly's <em data-hl="p-eye:ap" tabindex="0">apposition</em> eye is no better at night: each lens sits on a walled tube and feeds only its own sensor.</p>
+    <p>A nocturnal moth's <em data-hl="p-eye:su" tabindex="0">superposition</em> eye has a wide clear zone inside. Light entering hundreds of neighboring lenses is bent onto a single photoreceptor, which makes the eye up to about <strong>1,000 times</strong> more sensitive. Elephant hawkmoths pick out blue, yellow and ultraviolet flowers by starlight.</p>
     </div>
     <div class="side">
     <p>That leaves the lamp. The old story was a moth steering by the moon and mistaking a bulb for it. But moths do not spiral in. They orbit, stall, flip over the bulb and fall.</p>
@@ -371,7 +395,7 @@ pre{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--bone-2);
   </div>
   <div class="figs">
     <figure class="fig">
-      <div class="figcap"><span class="mono">Fig. 6 — Two compound eyes in section, same light</span><span class="mono k-lamp">amber = photons</span></div>
+      <div class="figcap"><span class="mono">Fig. 6 — Two compound eyes in section, same light</span><span class="mono k-lamp">move the star · amber = photons</span></div>
       <div class="plate-scroll"><div class="plate" id="p-eye">
         <canvas class="bg"></canvas><canvas class="fg" role="img" aria-label="Two eye diagrams. In the apposition eye one of nine lenses delivers light to its receptor. In the superposition eye all nine lenses focus onto one receptor."></canvas>
         <svg class="ov" viewBox="0 0 1200 560" aria-hidden="true">
@@ -384,7 +408,7 @@ pre{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--bone-2);
       </div></div>
     </figure>
     <figure class="fig">
-      <div class="figcap"><span class="mono">Fig. 7 — The dorsal light response, side view · running live</span><span class="mono k-lamp">the amber tick is each moth's back</span></div>
+      <div class="figcap"><span class="mono">Fig. 7 — The dorsal light response, side view · running live</span><span class="mono k-lamp">carry the lamp · the amber tick is each moth's back</span></div>
       <div class="plate-scroll"><div class="plate" id="p-dlr">
         <canvas class="bg"></canvas><canvas class="fg" role="img" aria-label="A live simulation of moths that always turn their backs to the brightest light. Under a bright sky they fly level. Around a point lamp they orbit, stall and flip. Over a lit floor they invert and crash."></canvas>
         <svg class="ov" viewBox="0 0 1200 660" aria-hidden="true">
@@ -435,7 +459,8 @@ pre{font-family:var(--mono);font-size:12px;line-height:1.55;color:var(--bone-2);
 /* ====================================================================== core */
 var TAU=Math.PI*2, RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 var BONE=[232,224,205], LAMP=[240,162,59], SCENT=[197,140,245], SONAR=[79,211,196], HOT=[255,90,54],
-    PLUM=[138,78,112], STOCK=[16,19,27], LEAF=[190,220,186];
+    PLUM=[138,78,112], STOCK=[16,19,27], LEAF=[190,220,186], NIGHT=[10,12,18];
+var MONO='"Geist Mono",ui-monospace,Menlo,Consolas,monospace';
 function mul(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function h2(x,y,s){var h=Math.imul(x,374761393)+Math.imul(y,668265263)+Math.imul(s,1442695041)|0;h=Math.imul(h^h>>>13,1274126177);return((h^h>>>16)>>>0)/4294967296}
 function vn(x,y,s){var xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf),
@@ -448,6 +473,7 @@ function css(c,a){return 'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+','+(a==null
 function smooth(a,b,x){var t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)}
 function $(id){return document.getElementById(id)}
 function setText(id,v){var e=$(id);if(e&&e.textContent!==String(v))e.textContent=v}
+function label(x,s,px,py,col,al,align){x.font='11px '+MONO;x.textAlign=align||'left';x.fillStyle=css(col,al==null?1:al);x.fillText(s,px,py)}
 var HIT=document.createElement('canvas').getContext('2d');
 function dpr(){return Math.min(window.devicePixelRatio||1,2)}
 
@@ -461,7 +487,6 @@ function tooth(){
 }
 function stock(x,W,H,seed){
   x.fillStyle=css(STOCK);x.fillRect(0,0,W,H);
-  /* mottle: paint small, scale up; the upscale is the blur */
   var m=document.createElement('canvas');m.width=150;m.height=Math.max(8,Math.round(150*H/W));var mx=m.getContext('2d'),im=mx.createImageData(m.width,m.height);
   for(var j=0;j<m.height;j++)for(var i=0;i<m.width;i++){var v=fbm(i*.04,j*.04,seed,4),k=(j*m.width+i)*4;
     if(v>.5){im.data[k]=120;im.data[k+1]=132;im.data[k+2]=170;im.data[k+3]=(v-.5)*44}else{im.data[k]=0;im.data[k+1]=0;im.data[k+2]=0;im.data[k+3]=(.5-v)*110}}
@@ -472,40 +497,68 @@ function stock(x,W,H,seed){
   x.save();x.setTransform(1,0,0,1,0,0);x.fillStyle=x.createPattern(tooth(),'repeat');x.fillRect(0,0,x.canvas.width,x.canvas.height);x.restore();
 }
 /* stipple: jittered hex grid, kept with probability = density. */
+function stipplePts(o){
+  var out=[],p=o.pitch,r=o.rnd,row=0,rad=o.r||1.1;
+  for(var y=o.y0;y<o.y1;y+=p*.866,row++)for(var xx=o.x0+((row&1)?p/2:0);xx<o.x1;xx+=p){
+    var px=xx+(r()-.5)*p*.9,py=y+(r()-.5)*p*.9,d=o.dens(px,py);if(d<=0||r()>d)continue;
+    out.push([px,py,rad*(o.flat?1:(.62+.55*Math.min(1,d))),d]);}
+  return out;
+}
 function stipple(x,o){
-  var p=o.pitch,r=o.rnd,row=0,rad=o.r||1.1,col=o.col;
-  for(var y=o.y0;y<o.y1;y+=p*.866,row++){
-    for(var xx=o.x0+((row&1)?p/2:0);xx<o.x1;xx+=p){
-      var px=xx+(r()-.5)*p*.9,py=y+(r()-.5)*p*.9,d=o.dens(px,py);
-      if(d<=0||r()>d)continue;
-      x.fillStyle=typeof col==='function'?col(px,py,d):col;
-      x.beginPath();x.arc(px,py,rad*(o.flat?1:(.62+.55*Math.min(1,d))),0,TAU);x.fill();
-    }
-  }
+  var pts=stipplePts(o),col=o.col;
+  for(var i=0;i<pts.length;i++){var p=pts[i];x.fillStyle=typeof col==='function'?col(p[0],p[1],p[3]):col;x.beginPath();x.arc(p[0],p[1],p[2],0,TAU);x.fill()}
+}
+/* one fill for a whole population of dots; fn may move each dot */
+var TMP=[0,0];
+function dots(x,pts,col,al,fn){
+  if(al<=.01)return;x.fillStyle=col;x.globalAlpha=al;x.beginPath();
+  for(var i=0;i<pts.length;i++){var p=pts[i],qx=p[0],qy=p[1];if(fn){fn(p,TMP);qx=TMP[0];qy=TMP[1]}x.moveTo(qx+p[2],qy);x.arc(qx,qy,p[2],0,TAU)}
+  x.fill();x.globalAlpha=1;
 }
 function bez(a,b,c,d,n,out){for(var i=0;i<=n;i++){var t=i/n,u=1-t;out.push([u*u*u*a[0]+3*u*u*t*b[0]+3*u*t*t*c[0]+t*t*t*d[0],u*u*u*a[1]+3*u*u*t*b[1]+3*u*t*t*c[1]+t*t*t*d[1]])}return out}
 function dPoly(P,x,y){var m=1e9;for(var i=0;i<P.length;i++){var dx=P[i][0]-x,dy=P[i][1]-y,q=dx*dx+dy*dy;if(q<m)m=q}return Math.sqrt(m)}
+function lineSDF(pts){return function(x,y){var m=1e9,k=0;for(var i=0;i<pts.length;i++){var dx=pts[i][0]-x,dy=pts[i][1]-y,q=Math.sqrt(dx*dx+dy*dy)-pts[i][2];if(q<m){m=q;k=i}}return [m,k]}}
+/* proof-sheet brackets: how the text points at a part of a plate */
+function brackets(x,r,col,t){
+  var a=.65+.35*Math.sin(t*5),l=18;x.strokeStyle=css(col,a);x.lineWidth=1.6;x.lineCap='butt';x.beginPath();
+  [[r[0],r[1],1,1],[r[2],r[1],-1,1],[r[0],r[3],1,-1],[r[2],r[3],-1,-1]].forEach(function(c){x.moveTo(c[0]+c[2]*l,c[1]);x.lineTo(c[0],c[1]);x.lineTo(c[0],c[1]+c[3]*l)});
+  x.stroke();
+}
 
 /* ====================================================================== plate */
-var plates=[];
+var plates=[],byId={};
 function Plate(id,o){
   var el=$(id);if(!el)return null;
-  var P={el:el,W:o.w,H:o.h,o:o,t:0,vis:false,ready:false,S:{}};
+  var P={el:el,W:o.w,H:o.h,o:o,t:0,vis:false,ready:false,S:{},ptr:null};byId[id]=P;
   el.style.aspectRatio=o.w+' / '+o.h;
   P.bg=el.querySelector('canvas.bg');P.fg=el.querySelector('canvas.fg');
+  function pp(e){var q=el.getBoundingClientRect();return {x:(e.clientX-q.left)/q.width*o.w,y:(e.clientY-q.top)/q.height*o.h,down:false,dx:0,dy:0}}
+  el.addEventListener('pointermove',function(e){var old=P.ptr;P.ptr=pp(e);if(old){P.ptr.down=old.down;P.ptr.dx=P.ptr.x-old.x;P.ptr.dy=P.ptr.y-old.y}if(RM&&P.ready)P.draw(0)});
+  el.addEventListener('pointerdown',function(e){P.ptr=pp(e);P.ptr.down=true;if(o.down)o.down(P);if(RM&&P.ready)P.draw(0)});
+  el.addEventListener('pointerup',function(){if(P.ptr)P.ptr.down=false});
+  el.addEventListener('pointerleave',function(){P.ptr=null;if(RM&&P.ready)P.draw(0)});
+  el.addEventListener('pointercancel',function(){P.ptr=null});
   P.size=function(){
     var cw=el.clientWidth;if(!cw)return;var k=cw*dpr()/o.w;P.k=k;P.cw=cw;
     [P.bg,P.fg].forEach(function(c){if(c){c.width=Math.round(o.w*k);c.height=Math.round(o.h*k)}});
     var x=P.bg.getContext('2d');x.setTransform(k,0,0,k,0,0);stock(x,o.w,o.h,o.seed||1);
+    if(!P.ready&&o.init)o.init(P);
     if(o.paint)o.paint(x,P);
     if(P.fg){P.fx=P.fg.getContext('2d');P.fx.setTransform(k,0,0,k,0,0)}
-    if(!P.ready&&o.init)o.init(P);
-    P.ready=true;
-    if(RM&&o.frame){for(var i=0;i<(o.warm||90);i++){P.t+=1/30;P.fx.clearRect(0,0,o.w,o.h);o.frame(P.fx,P,1/30)}}
-    else P.draw(0);
+    var first=!P.ready;P.ready=true;
+    if(RM&&o.frame&&first){for(var i=0;i<(o.warm||90);i++){P.t+=1/30;P.fx.clearRect(0,0,o.w,o.h);o.frame(P.fx,P,1/30)}}
+    P.draw(0);
   };
-  P.draw=function(dt){if(!o.frame||!P.fx)return;P.fx.clearRect(0,0,o.w,o.h);o.frame(P.fx,P,dt)};
+  P.draw=function(dt){if(!o.frame||!P.fx)return;P.fx.clearRect(0,0,o.w,o.h);o.frame(P.fx,P,dt);
+    if(P.S.hl&&o.regions&&o.regions[P.S.hl])brackets(P.fx,o.regions[P.S.hl],o.regionInk||BONE,P.t)};
   plates.push(P);return P;
+}
+/* text → figure: a term in the prose brackets its part of the plate */
+function wireTerms(){
+  [].forEach.call(document.querySelectorAll('[data-hl]'),function(n){var a=n.getAttribute('data-hl').split(':');
+    function on(){var P=byId[a[0]];if(!P)return;P.S.hl=a[1];if(P.o.onhl)P.o.onhl(P,a[1]);if(RM&&P.ready)P.draw(0)}
+    function off(){var P=byId[a[0]];if(P&&P.S.hl===a[1]){P.S.hl=null;if(RM&&P.ready)P.draw(0)}}
+    n.addEventListener('mouseenter',on);n.addEventListener('mouseleave',off);n.addEventListener('focus',on);n.addEventListener('blur',off)});
 }
 function boot(){
   var i=0;(function next(){if(i>=plates.length){loop();return}plates[i++].size();setTimeout(next,16)})();
@@ -515,6 +568,7 @@ function boot(){
   } else plates.forEach(function(p){p.vis=true});
   var lw=window.innerWidth,tm;
   window.addEventListener('resize',function(){clearTimeout(tm);tm=setTimeout(function(){if(Math.abs(window.innerWidth-lw)>40){lw=window.innerWidth;plates.forEach(function(p){p.size()});census()}},280)});
+  wireTerms();
 }
 var last=0;
 function loop(){
@@ -527,11 +581,19 @@ function loop(){
 }
 
 /* ====================================================================== census */
+var cen=null;
 function census(){
-  var c=$('census');if(!c)return;var cw=c.clientWidth||1200,k=dpr();c.width=Math.round(cw*k);var p=cw/355,h=p*5+2;c.height=Math.round(h*k);
-  var x=c.getContext('2d');x.setTransform(k,0,0,k,0,0);x.clearRect(0,0,cw,h);
-  for(var i=0;i<355;i++)for(var j=0;j<5;j++){x.fillStyle=i>=320?css(LAMP):css(BONE,.55+.45*h2(i,j,7));x.beginPath();x.arc(p*(i+.5),1+p*(j+.5),Math.max(.6,p*.3),0,TAU);x.fill()}
+  var c=$('census');if(!c)return;var cw=c.clientWidth||1200,k=dpr();c.width=Math.round(cw*k);var p=cw/355,pad=12,h=p*5+pad*2;c.height=Math.round(h*k);
+  var x=c.getContext('2d');x.setTransform(k,0,0,k,0,0);x.clearRect(0,0,cw,h);var inside=0,but=0,R=34;
+  for(var i=0;i<355;i++)for(var j=0;j<5;j++){var px=p*(i+.5),py=pad+p*(j+.5),s=1,lit=0;
+    if(cen){var d=Math.hypot(px-cen.x,py-cen.y);if(d<R){inside++;if(i>=320)but++}lit=Math.exp(-d*d/(2*20*20));s=1+1.5*lit}
+    x.fillStyle=i>=320?css(mix(LAMP,[255,236,200],lit*.7)):css(mix(BONE,[255,255,250],lit),.55+.45*Math.max(lit,h2(i,j,7)));
+    x.beginPath();x.arc(px,py,Math.max(.6,p*.3)*s,0,TAU);x.fill()}
+  setText('cen-read',cen?('In the light: '+((inside-but)*100).toLocaleString('en-US')+' moth species'+(but?' · '+(but*100).toLocaleString('en-US')+' butterfly':'')):'Run the pointer along the row');
 }
+(function(){var c=$('census');if(!c)return;
+  c.addEventListener('pointermove',function(e){var q=c.getBoundingClientRect();cen={x:e.clientX-q.left,y:e.clientY-q.top};census()});
+  c.addEventListener('pointerleave',function(){cen=null;census()});})();
 
 /* ====================================================================== luna */
 var FW=[[.05,-.13],[.30,-.40],[.70,-.50],[.98,-.44],[.93,-.30],[.80,-.02],[.66,.10],[.45,.07],[.20,.03],[.05,.02]];
@@ -541,8 +603,14 @@ function wing(pts,cx,cy,S,sg){
   for(var i=1;i+2<pts.length;i+=3){var b=U(pts[i]),c=U(pts[i+1]),d=U(pts[i+2]);p.bezierCurveTo(b[0],b[1],c[0],c[1],d[0],d[1]);segs.push(bez(a,b,c,d,26,[]));a=d}
   p.closePath();return {path:p,segs:segs,root:U(pts[0])};
 }
-/* scales: rows of small ellipses on arcs around the wing root, drawn from the
-   margin inward so each row lies over the base of the one beyond it. */
+/* a scale: [x,y,ux,uy,len,wid,angle,r,g,b]. b lifts it toward the light. */
+function drawScale(x,s,b,flat){
+  if(!flat){x.fillStyle='rgba(4,6,10,.5)';x.beginPath();x.ellipse(s[0]+s[2]*s[4]*.62,s[1]+s[3]*s[4]*.62+.6,s[4],s[5]*1.12,s[6],0,TAU);x.fill()}
+  x.fillStyle=b?css([lerp(s[7],255,b),lerp(s[8],250,b),lerp(s[9],226,b)]):css([s[7],s[8],s[9]]);
+  x.beginPath();x.ellipse(s[0]+s[2]*s[4]*.5,s[1]+s[3]*s[4]*.5,s[4],s[5],s[6],0,TAU);x.fill();
+}
+/* rows of scales on arcs around the wing root, laid from the margin inward so
+   each row lies over the base of the one beyond it. */
 function layScales(x,w,sg,o){
   var R=w.root,row=0,r=mul(o.seed);
   for(var rad=o.rmax;rad>3;rad-=o.pitch*.6,row++){
@@ -550,9 +618,8 @@ function layScales(x,w,sg,o){
     for(var th=o.a0+((row&1)?dth/2:0);th<o.a1;th+=dth){
       var ux=sg*Math.cos(th),uy=Math.sin(th),px=R[0]+ux*rad,py=R[1]+uy*rad;
       if(!HIT.isPointInPath(w.path,px,py))continue;
-      var c=o.color(px,py,rad,th,r),L=o.pitch*(1.15+r()*.25),wd=o.pitch*(.56+r()*.1),ang=Math.atan2(uy,ux)+(r()-.5)*.22;
-      x.fillStyle='rgba(4,6,10,.5)';x.beginPath();x.ellipse(px+ux*L*.62,py+uy*L*.62+.6,L,wd*1.12,ang,0,TAU);x.fill();
-      x.fillStyle=c;x.beginPath();x.ellipse(px+ux*L*.5,py+uy*L*.5,L,wd,ang,0,TAU);x.fill();
+      var c=o.color(px,py,rad,th,r),s=[px,py,ux,uy,o.pitch*(1.15+r()*.25),o.pitch*(.56+r()*.1),Math.atan2(uy,ux)+(r()-.5)*.22,c[0],c[1],c[2]];
+      s[10]=o.tag||0;drawScale(x,s,0);if(o.collect)o.collect.push(s);
     }
   }
 }
@@ -566,7 +633,7 @@ function lunaColor(w,kind,S,veins){
     if(dm<S*.016){c=mix(LEAF,LAMP,.75);v+=.12}
     if(costa){var dc=dPoly(costa,px,py);if(dc<S*.03){c=mix(PLUM,BONE,.12);v=.72+(r()-.5)*.2+.2*smooth(S*.03,0,dc)}}
     v=clamp(v,.2,1.08);
-    return css([c[0]*v,c[1]*v,c[2]*v]);
+    return [c[0]*v,c[1]*v,c[2]*v];
   };
 }
 function eyespot(x,cx,cy,rx,ry,sg,rnd){
@@ -579,136 +646,252 @@ function eyespot(x,cx,cy,rx,ry,sg,rnd){
   x.strokeStyle=css(BONE,.7);x.lineWidth=.8;x.beginPath();x.ellipse(sg*-rx*.1,0,rx*.26,ry*.3,0,0,TAU);x.stroke();
   x.restore();
 }
+function drawAntenna(x,cx,cy,S,sg,dx,dy){
+  var bw=S*.07,a=[cx+sg*bw*.25,cy-.19*S],b=[cx+sg*.07*S+dx*.2,cy-.30*S+dy*.2],c=[cx+sg*.16*S+dx*.6,cy-.335*S+dy*.6],d=[cx+sg*.235*S+dx,cy-.30*S+dy],sp=bez(a,b,c,d,54,[]);
+  x.lineCap='round';x.lineWidth=.7;
+  for(var i=1;i<sp.length-1;i++){
+    var tt=i/(sp.length-1),tx=sp[i+1][0]-sp[i-1][0],ty=sp[i+1][1]-sp[i-1][1],m=Math.sqrt(tx*tx+ty*ty);tx/=m;ty/=m;
+    var len=S*.058*Math.pow(Math.sin(Math.PI*clamp(tt*1.04,0,1)),.55);
+    for(var sd=-1;sd<=1;sd+=2){var nx=-ty*sd,ny=tx*sd;x.strokeStyle=css(mix(LAMP,BONE,.45),.55+.35*h2(i,sd+2,sg+5));
+      x.beginPath();x.moveTo(sp[i][0],sp[i][1]);x.quadraticCurveTo(sp[i][0]+nx*len*.6+tx*len*.1,sp[i][1]+ny*len*.6+ty*len*.1,sp[i][0]+nx*len+tx*len*.38,sp[i][1]+ny*len+ty*len*.38);x.stroke()}
+  }
+  x.strokeStyle=css(mix(LAMP,BONE,.3));x.lineWidth=1.3;x.beginPath();x.moveTo(sp[0][0],sp[0][1]);sp.forEach(function(q){x.lineTo(q[0],q[1])});x.stroke();
+}
 function drawLuna(x,cx,cy,S,o){
-  o=o||{};var pitch=o.pitch||3.5,rnd=mul(o.seed||5);
+  o=o||{};var pitch=o.pitch||3.5,rnd=mul(o.seed||5),part=o.part||'all';
   var veinF=[-1.02,-.86,-.70,-.52,-.34,-.16,.02],veinH=[.12,.34,.56,.78,1.0,1.2,1.4];
-  [1,-1].forEach(function(sg){
-    var hw=wing(HW,cx,cy,S,sg);
-    layScales(x,hw,sg,{pitch:pitch,rmax:S*1.14,a0:-.35,a1:1.78,seed:11+sg,color:lunaColor(hw,'hw',S,veinH)});
-    if(!o.plain)eyespot(x,cx+sg*.35*S,cy+.21*S,S*.048,S*.044,sg,rnd);
-  });
-  [1,-1].forEach(function(sg){
-    var fw=wing(FW,cx,cy,S,sg);
-    x.save();x.fillStyle='rgba(3,4,8,.42)';x.translate(0,S*.012);x.fill(fw.path);x.restore();
-    layScales(x,fw,sg,{pitch:pitch,rmax:S*1.08,a0:-1.25,a1:.5,seed:21+sg,color:lunaColor(fw,'fw',S,veinF)});
-    if(!o.plain)eyespot(x,cx+sg*.5*S,cy-.205*S,S*.036,S*.027,sg,rnd);
-  });
-  /* body: dark core, then fur laid head to tail */
-  var bw=S*.07;
+  if(part!=='body'){
+    [1,-1].forEach(function(sg){
+      var hw=wing(HW,cx,cy,S,sg);
+      layScales(x,hw,sg,{pitch:pitch,rmax:S*1.14,a0:-.35,a1:1.78,seed:11+sg,color:lunaColor(hw,'hw',S,veinH),collect:o.collect});
+      if(!o.plain)eyespot(x,cx+sg*.35*S,cy+.21*S,S*.048,S*.044,sg,rnd);
+    });
+    [1,-1].forEach(function(sg){
+      var fw=wing(FW,cx,cy,S,sg);
+      x.save();x.fillStyle='rgba(3,4,8,.42)';x.translate(0,S*.012);x.fill(fw.path);x.restore();
+      layScales(x,fw,sg,{pitch:pitch,rmax:S*1.08,a0:-1.25,a1:.5,seed:21+sg,color:lunaColor(fw,'fw',S,veinF),collect:o.collect,tag:1});
+      if(!o.plain)eyespot(x,cx+sg*.5*S,cy-.205*S,S*.036,S*.027,sg,rnd);
+    });
+  }
+  if(part==='wings')return;
+  var bw=S*.07,rb=mul((o.seed||5)+99);
   x.fillStyle='rgba(8,9,14,.96)';x.beginPath();x.ellipse(cx,cy-.05*S,bw*1.05,S*.12,0,0,TAU);x.fill();
   x.beginPath();x.ellipse(cx,cy+.17*S,bw*.8,S*.2,0,0,TAU);x.fill();
   var n=o.plain?700:3400;
   for(var i=0;i<n;i++){
-    var t=rnd(),y=cy-.165*S+t*.53*S,half=t<.33?bw*Math.sin(Math.PI*clamp(t/.33,.06,1)*.5+.25)*1.05:bw*.84*Math.pow(1-(t-.33)/.67,.55)+1.5,
-      u=(rnd()*2-1),px=cx+u*half,l=S*(.016+rnd()*.03)*(t<.33?1.25:.85),ang=Math.PI/2+u*.75+(rnd()-.5)*.3,
+    var t=rb(),y=cy-.165*S+t*.53*S,half=t<.33?bw*Math.sin(Math.PI*clamp(t/.33,.06,1)*.5+.25)*1.05:bw*.84*Math.pow(1-(t-.33)/.67,.55)+1.5,
+      u=(rb()*2-1),px=cx+u*half,l=S*(.016+rb()*.03)*(t<.33?1.25:.85),ang=Math.PI/2+u*.75+(rb()-.5)*.3,
       seg=t>.33?.72+.28*Math.abs(Math.sin((t-.33)*30)):1,sh=(.5+.5*(1-Math.abs(u)))*seg;
-    x.strokeStyle=css(mix(BONE,[255,252,244],rnd()*.5),.2+.6*sh*rnd());x.lineWidth=.5+rnd()*.5;
+    x.strokeStyle=css(mix(BONE,[255,252,244],rb()*.5),.2+.6*sh*rb());x.lineWidth=.5+rb()*.5;
     x.beginPath();x.moveTo(px,y);x.quadraticCurveTo(px+Math.cos(ang)*l*.5+u*2,y+Math.sin(ang)*l*.5,px+Math.cos(ang)*l,y+Math.sin(ang)*l);x.stroke();
   }
-  /* plum collar, head, eyes */
   x.fillStyle=css(PLUM,.9);x.beginPath();x.ellipse(cx,cy-.158*S,bw*.9,S*.014,0,0,TAU);x.fill();
   x.fillStyle=css(mix(BONE,STOCK,.25));x.beginPath();x.ellipse(cx,cy-.178*S,bw*.5,S*.022,0,0,TAU);x.fill();
   [1,-1].forEach(function(sg){
     x.fillStyle='#07080c';x.beginPath();x.arc(cx+sg*bw*.5,cy-.178*S,S*.017,0,TAU);x.fill();
     x.fillStyle=css(LAMP,.9);x.beginPath();x.arc(cx+sg*bw*.5+sg*S*.005,cy-.183*S,S*.004,0,TAU);x.fill();
-    /* bipectinate antenna */
-    var a=[cx+sg*bw*.25,cy-.19*S],b=[cx+sg*.07*S,cy-.30*S],c=[cx+sg*.16*S,cy-.335*S],d=[cx+sg*.235*S,cy-.30*S],sp=bez(a,b,c,d,54,[]);
-    x.lineCap='round';
-    for(var i=1;i<sp.length-1;i++){
-      var tt=i/(sp.length-1),tx=sp[i+1][0]-sp[i-1][0],ty=sp[i+1][1]-sp[i-1][1],m=Math.sqrt(tx*tx+ty*ty);tx/=m;ty/=m;
-      var len=S*.058*Math.pow(Math.sin(Math.PI*clamp(tt*1.04,0,1)),.55);
-      [1,-1].forEach(function(sd){var nx=-ty*sd,ny=tx*sd;x.strokeStyle=css(mix(LAMP,BONE,.45),.55+.35*rnd());x.lineWidth=.7;
-        x.beginPath();x.moveTo(sp[i][0],sp[i][1]);x.quadraticCurveTo(sp[i][0]+nx*len*.6+tx*len*.1,sp[i][1]+ny*len*.6+ty*len*.1,sp[i][0]+nx*len+tx*len*.38,sp[i][1]+ny*len+ty*len*.38);x.stroke()});
-    }
-    x.strokeStyle=css(mix(LAMP,BONE,.3));x.lineWidth=1.3;x.beginPath();x.moveTo(sp[0][0],sp[0][1]);sp.forEach(function(q){x.lineTo(q[0],q[1])});x.stroke();
+    if(!o.noAnt)drawAntenna(x,cx,cy,S,sg,0,0);
   });
 }
-Plate('p-hero',{w:1200,h:880,seed:3,paint:function(x,P){
-  var cx=600,cy=365,S=440,r=mul(41);
-  /* lamp halo behind the specimen: the only light on the sheet */
+/* callouts: [chapter, name, line, anchor x, y, label x, y, align, href, ink, glow radius] */
+var HC=[[2,'THORAX','THE FLIGHT ENGINE, RUN AT 38 °C UNDER FUR.',600,343,60,66,'start','#c2',LAMP,64],
+        [5,'EYE','POOLS LIGHT FROM HUNDREDS OF LENSES.',614,287,600,66,'middle','#c5',LAMP,36],
+        [3,'ANTENNA','A SIEVE FOR SINGLE MOLECULES.',676,226,1140,66,'end','#c3',SCENT,74],
+        [4,'WING SCALES','ALSO A SONAR ABSORBER.',322,292,60,520,'start','#c4',SONAR,120],
+        [1,'ABDOMEN','SEALED FUEL TANK. NO MOUTH.',600,470,600,724,'middle','#c1',BONE,64],
+        [4,'TAIL','A SPINNING DECOY FOR BATS.',786,822,1140,724,'end','#c4',SONAR,74]];
+Plate('p-hero',{w:1200,h:880,seed:3,warm:60,
+ init:function(P){var S=P.S;S.dust=[];S.ant={'1':[0,0],'-1':[0,0]};S.hov=-1;S.act=-2;S.born=0;S.flap=0;S.r=mul(515);
+  var b=$('h-new');if(b)b.addEventListener('click',function(){S.build();S.born=0;S.flap=.5;if(RM)P.draw(0)});},
+ paint:function(x,P){
+  var S=P.S,cx=600,cy=365,Sz=440,k=P.k,r=mul(41);
+  /* lamp halo behind the specimen */
   stipple(x,{x0:20,y0:10,x1:1180,y1:870,pitch:6,rnd:r,r:.95,col:function(px,py,d){return css(LAMP,.22+.6*d)},
     dens:function(px,py){var dx=px-cx,dy=(py-cy-70)*1.1,q=Math.sqrt(dx*dx+dy*dy);return .7*Math.pow(clamp(1-q/640,0,1),2)}});
-  drawLuna(x,cx,cy,S,{pitch:3.5});
-  /* callouts */
-  var g=$('callouts');if(g&&!g.firstChild){
-    var C=[[2,'THORAX','THE FLIGHT ENGINE, RUN AT 38 °C UNDER FUR.',600,343,60,66,'start','#c2'],
-           [5,'EYE','POOLS LIGHT FROM HUNDREDS OF LENSES.',614,287,600,66,'middle','#c5'],
-           [3,'ANTENNA','A SIEVE FOR SINGLE MOLECULES.',676,226,1140,66,'end','#c3'],
-           [4,'WING SCALES','ALSO A SONAR ABSORBER.',322,292,60,520,'start','#c4'],
-           [1,'ABDOMEN','SEALED FUEL TANK. NO MOUTH.',600,470,600,724,'middle','#c1'],
-           [4,'TAIL','A SPINNING DECOY FOR BATS.',786,822,1140,724,'end','#c4']],h='';
-    C.forEach(function(c){var uw=(c[1].length+4)*9+10,d,an=c[7];
+  function layer(){var c=document.createElement('canvas');c.width=P.bg.width;c.height=P.bg.height;var g=c.getContext('2d');g.setTransform(k,0,0,k,0,0);return g}
+  /* wings and body live on their own sheets so the wings can move */
+  S.build=function(){var g=layer();S.scales=[];drawLuna(g,cx,cy,Sz,{pitch:3.5,part:'wings',collect:S.scales});S.wings=g.canvas;S.wctx=g;
+    S.grid={};for(var i=0;i<S.scales.length;i++){var s=S.scales[i],key=(s[0]>>5)+(s[1]>>5)*64;(S.grid[key]||(S.grid[key]=[])).push(i)}
+    var f1=wing(FW,cx,cy,Sz,1).path,f2=wing(FW,cx,cy,Sz,-1).path,ES=[[.35,.21,.06],[-.35,.21,.06],[.5,-.205,.048],[-.5,-.205,.048]];
+    S.scales.forEach(function(s){var hid=s[10]===0&&(HIT.isPointInPath(f1,s[0],s[1]-4)||HIT.isPointInPath(f2,s[0],s[1]-4));
+      for(var e=0;e<4&&!hid;e++)if(Math.hypot(s[0]-cx-ES[e][0]*Sz,s[1]-cy-ES[e][1]*Sz)<ES[e][2]*Sz)hid=true;s[11]=hid?1:0});
+    S.shed=new Uint8Array(S.scales.length);S.lost=0;setText('r-lost','0');setText('r-total',S.scales.length.toLocaleString('en-US'))};
+  S.build();var gb=layer();drawLuna(gb,cx,cy,Sz,{part:'body',noAnt:true});S.body=gb.canvas;
+  var g=$('callouts');if(g&&!g.firstChild){var h='';
+    HC.forEach(function(c,i){var uw=(c[1].length+4)*9+10,d,an=c[7];
       if(an==='start')d='M'+c[3]+' '+c[4]+'L'+(c[5]+uw)+' '+(c[6]+8)+'H'+c[5];
       else if(an==='end')d='M'+c[3]+' '+c[4]+'L'+(c[5]-uw)+' '+(c[6]+8)+'H'+c[5];
       else d='M'+c[3]+' '+c[4]+'V'+(c[4]>c[6]?c[6]+44:c[6]-22);
-      h+='<path d="'+d+'" fill="none" stroke="#0a0c12" stroke-width="4" opacity=".7"/><path class="ld" d="'+d+'" style="stroke:#aaa697"/>'+
+      h+='<g class="co" style="--c:rgb('+c[9].join(',')+')"><path d="'+d+'" fill="none" stroke="#0a0c12" stroke-width="4" opacity=".7"/><path class="cl" d="'+d+'"/>'+
          '<rect class="pt" x="'+(c[3]-5.5)+'" y="'+(c[4]-5.5)+'" width="11" height="11"/><rect class="chip" x="'+(c[3]-1.5)+'" y="'+(c[4]-1.5)+'" width="3" height="3"/>'+
-         '<a href="'+c[8]+'" style="pointer-events:auto"><text x="'+c[5]+'" y="'+c[6]+'" text-anchor="'+an+'" class="b">'+c[0]+' · '+c[1]+'</text>'+
-         '<text x="'+c[5]+'" y="'+(c[6]+30)+'" text-anchor="'+an+'" class="s">'+c[2]+'</text></a>'});
+         '<a href="'+c[8]+'" style="pointer-events:auto" data-i="'+i+'"><text x="'+c[5]+'" y="'+c[6]+'" text-anchor="'+an+'" class="b">'+c[0]+' · '+c[1]+'</text>'+
+         '<text x="'+c[5]+'" y="'+(c[6]+30)+'" text-anchor="'+an+'" class="s">'+c[2]+'</text></a></g>'});
     g.innerHTML=h;
+    [].forEach.call(g.querySelectorAll('a'),function(a){var i=+a.getAttribute('data-i');
+      function on(){S.hov=i;if(RM)P.draw(0)}function off(){S.hov=-1;if(RM)P.draw(0)}
+      a.addEventListener('mouseenter',on);a.addEventListener('mouseleave',off);a.addEventListener('focus',on);a.addEventListener('blur',off)});
   }
-}});
+ },
+ down:function(P){P.S.flap=Math.min(1,P.S.flap+.5)},
+ frame:function(x,P,dt){
+  var S=P.S,t=P.t,cx=600,cy=365,Sz=440,k=P.k,ptr=P.ptr,i,gx,gy,cell,s,dx,dy,d;
+  /* eclosion: wings open out from the root when the plate first shows */
+  S.born=Math.min(1,S.born+dt/1.6);var e=RM?1:.68+.32*(1-Math.pow(1-S.born,3));
+  S.flap=Math.max(0,S.flap-dt*.7);
+  var phi=RM?.1:.11+.07*Math.sin(t*1.1)+S.flap*(.5+.45*Math.sin(t*19)),sx=Math.cos(phi)*e,sy=e;
+  var W=S.wings,y0=cy+.6*Sz,y1=cy+1.1*Sz;
+  x.save();x.translate(cx,cy);x.scale(sx,sy);x.translate(-cx,-cy);
+  x.drawImage(W,0,0,W.width,y0*k,0,0,P.W,y0);
+  /* tails: drawn in strips so they can sway and twist */
+  for(var sg=-1;sg<=1;sg+=2){var X0=sg<0?0:cx,xc=cx+sg*.43*Sz;
+    for(var y=y0;y<y1;y+=5){var g=smooth(y0,y1,y),tw=RM?1:1-g*.82*(.5-.5*Math.cos(t*2.3+sg*.9+g*3.2)),off=RM?0:Math.sin(t*1.6+sg+g*2.6)*7*g;
+      x.save();x.translate(xc+off,0);x.scale(tw,1);x.translate(-xc,0);x.drawImage(W,(xc-70)*k,y*k,140*k,5*k,xc-70,y,140,5.5);x.restore()}}
+  /* the pointer is a light: scales near it turn their faces to it */
+  if(ptr){
+    var wx=cx+(ptr.x-cx)/sx,wy=cy+(ptr.y-cy)/sy,R=84,sel=[];
+    for(gy=(wy-R)>>5;gy<=(wy+R)>>5;gy++)for(gx=(wx-R)>>5;gx<=(wx+R)>>5;gx++){cell=S.grid[gx+gy*64];if(cell)for(i=0;i<cell.length;i++)sel.push(cell[i])}
+    sel.sort(function(a,b){return a-b});
+    var shedN=0;
+    for(i=0;i<sel.length;i++){s=S.scales[sel[i]];if(S.shed[sel[i]]||s[11])continue;dx=s[0]-wx;dy=s[1]-wy;d=Math.sqrt(dx*dx+dy*dy);if(d>R)continue;
+      /* pressed: scales rub off as dust and leave bare membrane */
+      if(ptr.down&&d<13&&shedN<9){S.shed[sel[i]]=1;S.lost++;shedN++;
+        S.wctx.fillStyle='rgba(30,38,36,.5)';S.wctx.beginPath();S.wctx.ellipse(s[0]+s[2]*s[4]*.5,s[1]+s[3]*s[4]*.5,s[4]*1.05,s[5]*1.12,s[6],0,TAU);S.wctx.fill();
+        S.dust.push([cx+(s[0]-cx)*sx,cy+(s[1]-cy)*sy,(S.r()-.5)*46+(ptr.dx||0)*5,-18-S.r()*46+(ptr.dy||0)*5,0,s[7],s[8],s[9],s[6],1.2+S.r()*1.6]);continue}
+      if(s[1]>y0-6)continue;
+      var f=1-d/R,b=f*f*(.26+.74*Math.pow(Math.abs(Math.cos(s[6]-Math.atan2(dy,dx))),2));if(b<.02)continue;x.globalAlpha=Math.min(1,f*2.6);drawScale(x,s,Math.min(.86,b));}
+    x.globalAlpha=1;
+    if(shedN)setText('r-lost',S.lost.toLocaleString('en-US'));
+  }
+  x.restore();
+  x.drawImage(S.body,(cx-80)*k,(cy-.24*Sz)*k,160*k,.7*Sz*k,cx-80,cy-.24*Sz,160,.7*Sz);
+  /* antennae lean toward whatever is near, the way they sample air */
+  for(sg=-1;sg<=1;sg+=2){var tx=0,ty=0,sw=RM?0:Math.sin(t*.9+sg*1.3)*4;
+    if(ptr){var vx=ptr.x-(cx+sg*.235*Sz),vy=ptr.y-(cy-.30*Sz),m=Math.hypot(vx,vy)||1,pull=26*Math.exp(-m/420);tx=vx/m*pull;ty=vy/m*pull}
+    var A=S.ant[sg];A[0]+=(tx+sw-A[0])*(RM?1:Math.min(1,dt*6));A[1]+=(ty-A[1])*(RM?1:Math.min(1,dt*6));drawAntenna(x,cx,cy,Sz,sg,A[0],A[1])}
+  /* dust */
+  for(i=S.dust.length-1;i>=0;i--){d=S.dust[i];d[4]+=dt;d[3]+=120*dt;d[2]*=1-dt*1.2;d[0]+=d[2]*dt+Math.sin(d[4]*7+i)*14*dt;d[1]+=d[3]*dt*.6;
+    if(d[4]>d[9]||d[1]>880){S.dust.splice(i,1);continue}
+    x.fillStyle=css([d[5],d[6],d[7]],1-d[4]/d[9]);x.beginPath();x.ellipse(d[0],d[1],3.4,1.5,d[8]+d[4]*5,0,TAU);x.fill()}
+  /* callouts wake when the pointer nears their anchor or their label */
+  var act=S.hov;if(act<0&&ptr){var best=44;for(i=0;i<HC.length;i++){d=Math.hypot(HC[i][3]-ptr.x,HC[i][4]-ptr.y);if(d<best){best=d;act=i}}}
+  if(act!==S.act){S.act=act;var gs=P.el.querySelectorAll('.co');for(i=0;i<gs.length;i++)gs[i].classList.toggle('on',i===act)}
+  x.save();x.globalCompositeOperation='lighter';
+  if(ptr){var gp=x.createRadialGradient(ptr.x,ptr.y,0,ptr.x,ptr.y,130);gp.addColorStop(0,css(LAMP,.10));gp.addColorStop(1,css(LAMP,0));x.fillStyle=gp;x.beginPath();x.arc(ptr.x,ptr.y,130,0,TAU);x.fill()}
+  if(act>=0){var c=HC[act],gr=x.createRadialGradient(c[3],c[4],0,c[3],c[4],c[10]);gr.addColorStop(0,css(c[9],.34));gr.addColorStop(1,css(c[9],0));x.fillStyle=gr;x.beginPath();x.arc(c[3],c[4],c[10],0,TAU);x.fill()}
+  x.restore();
+  if(act>=0){c=HC[act];x.strokeStyle=css(c[9],.95);x.lineWidth=1.3;x.beginPath();x.arc(c[3],c[4],14+3*Math.sin(t*5),0,TAU);x.stroke()}
+ }});
 
 /* ====================================================================== 1 · metamorphosis */
-function lineSDF(pts){return function(x,y){var m=1e9,k=0;for(var i=0;i<pts.length;i++){var dx=pts[i][0]-x,dy=pts[i][1]-y,q=Math.sqrt(dx*dx+dy*dy)-pts[i][2];if(q<m){m=q;k=i}}return [m,k]}}
-Plate('p-meta',{w:1200,h:660,seed:8,
- paint:function(x,P){
-  var r=mul(77),S=P.S;
+function metaGeom(S){
+  if(S.g)return;S.g=1;var r=mul(77),i,t;
   /* larva: a chain of circles on a gentle S, radius pinched at each segment */
-  var L=[];for(var i=0;i<=90;i++){var t=i/90,px=70+t*310,py=250+Math.sin(t*5.2+.4)*20-22*Math.pow(t,3)+10*Math.pow(1-t,4),
-     rr=(34+6*Math.sin(t*Math.PI))*(.84+.16*Math.abs(Math.sin(t*Math.PI*11.5)))*smooth(0,.06,t)*smooth(1.0,.93,t)*(t>.9?.86:1);L.push([px,py,Math.max(2,rr),t])}
+  var L=[];for(i=0;i<=90;i++){t=i/90;var lx=70+t*310,ly=250+Math.sin(t*5.2+.4)*20-22*Math.pow(t,3)+10*Math.pow(1-t,4),
+     rr=(34+6*Math.sin(t*Math.PI))*(.84+.16*Math.abs(Math.sin(t*Math.PI*11.5)))*smooth(0,.06,t)*smooth(1.0,.93,t)*(t>.9?.86:1);L.push([lx,ly,Math.max(2,rr),t])}
   var sd=lineSDF(L);
-  stipple(x,{x0:20,y0:150,x1:420,y1:340,pitch:2.7,rnd:r,r:1,col:css(BONE),
-    dens:function(px,py){var q=sd(px,py),d=q[0],c=L[q[1]];if(d>0)return 0;var rr=c[2],dy=(py-c[1])/rr,dep=-d/rr,
+  S.larva=stipplePts({x0:20,y0:150,x1:420,y1:340,pitch:2.7,rnd:r,r:1,
+    dens:function(px,py){var q=sd(px,py),d=q[0],c=L[q[1]];if(d>0)return 0;var rad=c[2],dy=(py-c[1])/rad,dep=-d/rad,
       lit=.2+.62*clamp(.6-dy*.8,0,1),rim=smooth(.2,0,dep)*.6,groove=Math.abs(Math.sin(c[3]*Math.PI*11.5))<.16?-.3:0,
       gut=Math.abs(dy+.05)<.3&&c[3]>.08&&c[3]<.94?-.42:0,
       stripe=.26*smooth(.82,1,Math.sin((c[3]*11.5-.25)*Math.PI*2+dy*2.4+1.2))*(dy>-.5?1:0);
       return clamp(lit+rim+gut+stripe+groove,0.03,1)}});
-  /* spiracles, horn, prolegs, head */
-  for(var s=1;s<=8;s++){var c=L[Math.round((s+.9)/11.5*90)];x.fillStyle=css(LAMP);x.beginPath();x.arc(c[0],c[1]+c[2]*.34,2.2,0,TAU);x.fill()}
-  x.strokeStyle=css(BONE,.9);x.lineWidth=1.6;x.lineCap='round';var tl=L[85];x.beginPath();x.moveTo(tl[0],tl[1]-tl[2]*.8);x.quadraticCurveTo(tl[0]+10,tl[1]-tl[2]-20,tl[0]+24,tl[1]-tl[2]-22);x.stroke();
-  [3.2,4.2,5.2,6.2].forEach(function(s){var c=L[Math.round((s+1.6)/11.5*90)];stipple(x,{x0:c[0]-9,y0:c[1]+c[2]-4,x1:c[0]+9,y1:c[1]+c[2]+13,pitch:2.6,rnd:r,r:.95,col:css(BONE,.85),dens:function(){return .7}})});
-  S.mem=[[L[5][0]+4,L[5][1]-8]];
-  /* pupa: static rim and segment lines; the contents move on the fg canvas */
+  S.larva.forEach(function(p){p[3]=L[sd(p[0],p[1])[1]][3]});
+  for(var s=1;s<=8;s++){var c=L[Math.round((s+.9)/11.5*90)];S.larva.push([c[0],c[1]+c[2]*.34,1.9,c[3]])}
+  [3.2,4.2,5.2,6.2].forEach(function(sgm){var c=L[Math.round((sgm+1.6)/11.5*90)];
+    stipplePts({x0:c[0]-9,y0:c[1]+c[2]-4,x1:c[0]+9,y1:c[1]+c[2]+13,pitch:2.6,rnd:r,r:.95,dens:function(){return .7}}).forEach(function(p){p[3]=c[3];S.larva.push(p)})});
+  S.horn=[L[85][0],L[85][1]-L[85][2]*.8,0,L[85][3]];
+  /* the discs already ride inside the caterpillar */
+  S.ldisc=[];[.13,.17,.21,.25].forEach(function(tt){var c=L[Math.round(tt*90)];for(var k=0;k<6;k++)S.ldisc.push([c[0]+(r()-.5)*9,c[1]+c[2]*.3+(r()-.5)*7,1.15,c[3]])});
+  S.mem=[[L[5][0]+4,L[5][1]-8,0,L[5][3]],[498,236],[975,206]];
+  S.memd=[];for(i=0;i<26;i++){var a=r()*TAU,q=Math.pow(r(),.7)*8;S.memd.push([Math.cos(a)*q,Math.sin(a)*q*.7,1.15])}
+  /* pupa */
   var PU=[];for(i=0;i<=80;i++){t=i/80;PU.push([470+t*270,250+6*Math.sin(t*3),Math.max(2,54*Math.pow(Math.sin(Math.PI*clamp(t*.96+.02,0,1)),.58)*(1-.3*t)),t])}
-  var sp=lineSDF(PU);S.pu=sp;S.PU=PU;
-  stipple(x,{x0:440,y0:170,x1:770,y1:340,pitch:2.9,rnd:r,r:1,col:css(BONE),
+  var sp=lineSDF(PU);S.pu=sp;
+  S.pupa=stipplePts({x0:440,y0:170,x1:770,y1:340,pitch:2.9,rnd:r,r:1,
     dens:function(px,py){var q=sp(px,py),d=q[0],c=PU[q[1]];if(d>0)return 0;var dep=-d/c[2];
       return clamp(.95*smooth(.24,0,dep)+(c[3]>.5?.3*smooth(.9,1,Math.sin(c[3]*62))*smooth(.5,.6,c[3]):0)+.035,0,1)}});
-  S.mem.push([498,236]);
+  S.soup=[];var n=0;while(S.soup.length<520&&n++<9000){var px=476+r()*258,py=196+r()*110;if(sp(px,py)[0]<-7)S.soup.push([px,py,.9+r()*.6,(r()-.5)*8,(r()-.5)*8,r()])}
+  S.discs=[[560,226,13],[606,222,15],[566,276,12],[612,280,13],[512,262,8],[528,226,7],[656,252,9]];
+  S.dd=[];S.discs.forEach(function(D){for(var k=0;k<54;k++){var an=r()*TAU,q=Math.sqrt(r());S.dd.push([D[0],D[1],1.15,Math.cos(an)*q*D[2],Math.sin(an)*q*D[2]*.8,S.dd.length%7])}});
   /* imago: Manduca from above, wings swept */
   var mcx=975,mcy=262,wl=new Path2D(),wr=new Path2D();
   [[wr,1],[wl,-1]].forEach(function(a){var p=a[0],g=a[1];
     p.moveTo(mcx+g*12,mcy-34);p.bezierCurveTo(mcx+g*70,mcy-78,mcx+g*150,mcy-88,mcx+g*196,mcy-62);p.bezierCurveTo(mcx+g*170,mcy-34,mcx+g*120,mcy-6,mcx+g*74,mcy+6);
     p.bezierCurveTo(mcx+g*92,mcy+26,mcx+g*86,mcy+52,mcx+g*58,mcy+58);p.bezierCurveTo(mcx+g*36,mcy+50,mcx+g*18,mcy+26,mcx+g*12,mcy+4);p.closePath()});
-  stipple(x,{x0:mcx-205,y0:mcy-95,x1:mcx+205,y1:mcy+70,pitch:2.7,rnd:r,r:1,col:css(BONE),
-    dens:function(px,py){var inR=HIT.isPointInPath(wr,px,py),inL=HIT.isPointInPath(wl,px,py);if(!inR&&!inL)return 0;
+  S.iw=stipplePts({x0:mcx-205,y0:mcy-95,x1:mcx+205,y1:mcy+70,pitch:2.7,rnd:r,r:1,
+    dens:function(px,py){if(!HIT.isPointInPath(wr,px,py)&&!HIT.isPointInPath(wl,px,py))return 0;
       var dx=Math.abs(px-mcx),band=.5+.5*Math.sin(dx*.12+(py-mcy)*.09+fbm(px*.03,py*.03,5,2)*5);
       return clamp(.16+.5*band*band+.25*fbm(px*.05,py*.05,9,2),.05,.95)}});
-  x.fillStyle='rgba(8,9,14,.95)';x.beginPath();x.ellipse(mcx,mcy+18,15,84,0,0,TAU);x.fill();
-  stipple(x,{x0:mcx-18,y0:mcy-72,x1:mcx+18,y1:mcy+104,pitch:2.5,rnd:r,r:1,col:function(px,py){return (py>mcy+6&&Math.abs(px-mcx)>5&&Math.sin((py-mcy)*.38)>.35)?css(LAMP):css(BONE)},
+  S.ib=stipplePts({x0:mcx-18,y0:mcy-72,x1:mcx+18,y1:mcy+104,pitch:2.5,rnd:r,r:1,
     dens:function(px,py){var ty=(py-(mcy+18))/84,tx=(px-mcx)/(15*Math.sqrt(Math.max(0,1-ty*ty)));if(Math.abs(tx)>1||Math.abs(ty)>1)return 0;return .35+.55*(1-Math.abs(tx))}});
-  x.strokeStyle=css(BONE,.8);x.lineWidth=1;[1,-1].forEach(function(g){x.beginPath();x.moveTo(mcx+g*5,mcy-64);x.quadraticCurveTo(mcx+g*26,mcy-100,mcx+g*52,mcy-108);x.stroke()});
-  S.mem.push([mcx,mcy-56]);
-  /* memory marks, joined */
+  /* tissue in transit: larva → pupa → imago. [ax,ay,bx,by,cx,cy,phase,kind] */
+  S.tr=[];for(i=0;i<470;i++){var kind=i<400?0:i<446?1:2,A,B,C,D;
+    if(kind===0){A=S.larva[(r()*S.larva.length)|0];B=S.soup[(r()*S.soup.length)|0];C=r()<.78?S.iw[(r()*S.iw.length)|0]:S.ib[(r()*S.ib.length)|0]}
+    else if(kind===1){A=S.ldisc[(r()*S.ldisc.length)|0];D=S.discs[(r()*4)|0];B=[D[0]+(r()-.5)*D[2],D[1]+(r()-.5)*D[2]];C=S.iw[(r()*S.iw.length)|0]}
+    else{A=[S.mem[0][0]+(r()-.5)*8,S.mem[0][1]+(r()-.5)*6];B=[S.mem[1][0]+(r()-.5)*8,S.mem[1][1]+(r()-.5)*6];C=[S.mem[2][0]+(r()-.5)*8,S.mem[2][1]+(r()-.5)*6]}
+    S.tr.push([A[0],A[1],B[0],B[1],C[0],C[1],r(),kind])}
+}
+Plate('p-meta',{w:1200,h:660,seed:8,warm:1,regions:{larva:[36,150,432,348],imago:[768,150,1182,372],kept:[60,196,1010,438]},regionInk:BONE,
+ init:function(P){var S=P.S;metaGeom(S);S.u=0;S.rear=0;S.tw=0;S.fl=0;S.ext=.55;
+  var g=$('days');if(g&&!g.firstChild){var h='';for(var d=1;d<=10;d++){var on=d>=7;h+='<rect x="'+(60+(d-1)*34)+'" y="570" width="28" height="'+(on?16:9)+'" fill="'+(on?'#f0a23b':'#e8e0cd')+'" opacity="'+(on?1:.8)+'"/><text x="'+(74+(d-1)*34)+'" y="606" text-anchor="middle" class="s">'+d+'</text>'}g.innerHTML=h}},
+ paint:function(x,P){var S=P.S;
+  /* the rail the memory rides on, and the scrubber's track */
   x.setLineDash([2,5]);x.strokeStyle=css(SCENT,.6);x.lineWidth=1;
   S.mem.forEach(function(m){x.beginPath();x.moveTo(m[0],m[1]+12);x.lineTo(m[0],424);x.stroke()});
   x.beginPath();x.moveTo(60,424);x.lineTo(S.mem[2][0],424);x.stroke();x.setLineDash([]);
-  S.mem.forEach(function(m){for(var k=0;k<26;k++){var a=r()*TAU,q=Math.pow(r(),.7)*8;x.fillStyle=css(SCENT,.95);x.beginPath();x.arc(m[0]+Math.cos(a)*q,m[1]+Math.sin(a)*q*.7,1.15,0,TAU);x.fill()}});
-  /* luna lifespan ruler */
-  var g=$('days');if(g&&!g.firstChild){var h='';for(var d=1;d<=10;d++){var on=d>=7;h+='<rect x="'+(60+(d-1)*34)+'" y="570" width="28" height="'+(on?16:9)+'" fill="'+(on?'#f0a23b':'#e8e0cd')+'" opacity="'+(on?1:.8)+'"/><text x="'+(74+(d-1)*34)+'" y="606" text-anchor="middle" class="s">'+d+'</text>'}g.innerHTML=h}
  },
- init:function(P){var r=mul(5),S=P.S;S.soup=[];var n=0;
-   while(S.soup.length<520&&n++<9000){var px=476+r()*258,py=196+r()*110,q=S.pu(px,py);if(q[0]<-7)S.soup.push([px,py,(r()-.5)*8,(r()-.5)*8,r()])}
-   S.discs=[[560,226,13,'wing'],[606,222,15,'wing'],[566,276,12,'wing'],[612,280,13,'wing'],[512,262,8,'eye'],[528,226,7,'antenna'],[656,252,9,'leg']];
-   S.dd=S.discs.map(function(d){var a=[];for(var i=0;i<54;i++){var an=r()*TAU,q=Math.sqrt(r());a.push([Math.cos(an)*q,Math.sin(an)*q,r()])}return a});},
- frame:function(x,P,dt){var S=P.S,t=P.t;
-   for(var i=0;i<S.soup.length;i++){var s=S.soup[i];s[2]+=(Math.sin(t*.9+s[4]*40)*6-s[2])*dt*.8;s[3]+=(Math.cos(t*.7+s[4]*31)*6-s[3])*dt*.8;
-     var nx=s[0]+s[2]*dt,ny=s[1]+s[3]*dt;if(S.pu(nx,ny)[0]<-6){s[0]=nx;s[1]=ny}else{s[2]*=-1;s[3]*=-1}
-     x.fillStyle=css(BONE,.16+.3*s[4]);x.beginPath();x.arc(s[0],s[1],.9+s[4]*.6,0,TAU);x.fill()}
-   for(var d=0;d<S.discs.length;d++){var D=S.discs[d],grow=1+.16*Math.sin(t*.8+d*1.3);
-     for(var k=0;k<S.dd[d].length;k++){var q=S.dd[d][k];x.fillStyle=css(LAMP,.55+.45*q[2]);x.beginPath();x.arc(D[0]+q[0]*D[2]*grow,D[1]+q[1]*D[2]*grow*.8,1.15,0,TAU);x.fill()}}
+ frame:function(x,P,dt){
+  var S=P.S,t=P.t,ptr=P.ptr,i,q;
+  /* u runs 0 → 2: larva, pupa, imago. The pointer scrubs it; otherwise it plays. */
+  var au=t%16,ua=au<2?0:au<7?(au-2)/5:au<9?1:au<14?1+(au-9)/5:2,scrub=ptr&&ptr.y<470,tgt=scrub?clamp((ptr.x-230)/745*2,0,2):ua;
+  S.u+=(tgt-S.u)*Math.min(1,dt*(scrub?7:40));var u=S.u;
+  var hovL=scrub&&ptr.x<436,hovP=scrub&&ptr.x>440&&ptr.x<770,hovI=scrub&&ptr.x>790;
+  S.rear+=((hovL?1:0)-S.rear)*Math.min(1,dt*5);
+  S.tw=Math.max(0,S.tw-dt*1.1);if(hovP||(!scrub&&(t%5)<.06))S.tw=1;
+  S.fl+=((hovI?1:(!scrub&&u>1.92?.3:0))-S.fl)*Math.min(1,dt*4);
+  var aL=RM?1:.3+.7*smooth(.85,.12,Math.abs(u)),aP=RM?1:.3+.7*smooth(.85,.12,Math.abs(u-1)),aI=RM?1:.3+.7*smooth(.85,.12,Math.abs(u-2));
+  /* larva: a peristaltic wave; disturbed, it rears like a sphinx */
+  function fL(p,o){var w=RM?0:Math.sin(p[3]*15-t*3.4),lift=S.rear*smooth(.26,0,p[3]);o[0]=p[0]+2.2*w+lift*10;o[1]=p[1]-3.2*Math.max(0,w)-lift*34}
+  /* pupa: the abdomen flicks when touched */
+  var twA=S.tw*.16*Math.sin(t*13);
+  function fP(p,o){var g=smooth(600,700,p[0])*twA,dx=p[0]-600,dy=p[1]-252,c=Math.cos(g),s=Math.sin(g);o[0]=600+dx*c-dy*s;o[1]=252+dx*s+dy*c}
+  /* imago: wings shiver; hovered, they beat */
+  var sc=RM?1:Math.cos(S.fl*(.72+.38*Math.sin(t*16))+.06*Math.abs(Math.sin(t*31))*(1-S.fl));
+  function fI(p,o){var dx=p[0]-975;o[0]=975+dx*sc;o[1]=p[1]-(1-sc)*Math.abs(dx)*.16}
+  dots(x,S.larva,css(BONE),aL,fL);dots(x,S.ldisc,css(LAMP),aL,fL);
+  fL(S.horn,TMP);x.strokeStyle=css(BONE,.9*aL);x.lineWidth=1.6;x.lineCap='round';x.beginPath();x.moveTo(TMP[0],TMP[1]);x.quadraticCurveTo(TMP[0]+10,TMP[1]-22,TMP[0]+24,TMP[1]-24);x.stroke();
+  dots(x,S.pupa,css(BONE),aP,fP);
+  if(dt>0)for(i=0;i<S.soup.length;i++){q=S.soup[i];q[3]+=(Math.sin(t*.9+q[5]*40)*6-q[3])*dt*.8;q[4]+=(Math.cos(t*.7+q[5]*31)*6-q[4])*dt*.8;
+    var nx=q[0]+q[3]*dt,ny=q[1]+q[4]*dt;if(S.pu(nx,ny)[0]<-6){q[0]=nx;q[1]=ny}else{q[3]*=-1;q[4]*=-1}}
+  dots(x,S.soup,css(BONE),aP*.34,fP);
+  var grow=1+.16*Math.sin(t*.8);
+  dots(x,S.dd,css(LAMP),Math.max(aP,.45),function(p,o){var g1=1+.16*Math.sin(t*.8+p[5]*1.3);TMP2[0]=p[0]+p[3]*g1;TMP2[1]=p[1]+p[4]*g1;TMP2[2]=p[2];fP(TMP2,o)});
+  x.globalAlpha=aI;x.fillStyle='rgba(8,9,14,.95)';x.beginPath();x.ellipse(975,280,15,84,0,0,TAU);x.fill();x.globalAlpha=1;
+  dots(x,S.iw,css(BONE),aI,fI);dots(x,S.ib,css(BONE),aI);
+  x.strokeStyle=css(BONE,.8*aI);x.lineWidth=1;for(var g=-1;g<=1;g+=2){x.beginPath();x.moveTo(975+g*5,198);x.quadraticCurveTo(975+g*26,162,975+g*(52+3*Math.sin(t*2+g)),154);x.stroke()}
+  /* the memory: present in all three, whatever stage is lit */
+  fL(S.mem[0],TMP);var m0=[TMP[0],TMP[1]];fP([S.mem[1][0],S.mem[1][1]],TMP);var m1=[TMP[0],TMP[1]];
+  [m0,m1,S.mem[2]].forEach(function(m){x.fillStyle=css(SCENT,.95);x.beginPath();for(var k=0;k<S.memd.length;k++){var d=S.memd[k];x.moveTo(m[0]+d[0]+d[2],m[1]+d[1]);x.arc(m[0]+d[0],m[1]+d[1],d[2],0,TAU)}x.fill()});
+  /* tissue in transit */
+  if(!RM){x.lineCap='round';x.lineWidth=2;var leg=u<1?0:1,uu=leg?u-1:u;
+    for(i=0;i<S.tr.length;i++){q=S.tr[i];var s=clamp(uu*1.6-q[6]*.6,0,1);if(s<=0||s>=1)continue;
+      var ax=leg?q[2]:q[0],ay=leg?q[3]:q[1],bx=leg?q[4]:q[2],by=leg?q[5]:q[3],s0=Math.max(0,s-.013),e1=s*s*(3-2*s),e0=s0*s0*(3-2*s0),arc=46+70*q[6];
+      x.strokeStyle=css(q[7]===0?BONE:q[7]===1?LAMP:SCENT,Math.pow(Math.sin(Math.PI*s),.6)*(q[7]?1:.75));x.beginPath();
+      x.moveTo(lerp(ax,bx,e0)+Math.sin(s0*9+q[6]*30)*6,lerp(ay,by,e0)-Math.sin(Math.PI*s0)*arc);
+      x.lineTo(lerp(ax,bx,e1)+Math.sin(s*9+q[6]*30)*6,lerp(ay,by,e1)-Math.sin(Math.PI*s)*arc);x.stroke()}}
+  /* scrubber on the memory rail */
+  var hx=lerp(S.mem[0][0],S.mem[2][0],u/2);x.fillStyle=css(SCENT);x.beginPath();x.moveTo(hx,416);x.lineTo(hx+7,424);x.lineTo(hx,432);x.lineTo(hx-7,424);x.closePath();x.fill();
+  if(scrub){x.strokeStyle=css(SCENT,.5);x.lineWidth=1;x.beginPath();x.arc(hx,424,12,0,TAU);x.stroke()}
+  /* the extremes */
+  if(ptr&&ptr.y>535&&ptr.y<625&&ptr.x>56&&ptr.x<404){var d=clamp(Math.floor((ptr.x-60)/34),0,9)+1;x.strokeStyle=css(d>=7?LAMP:BONE);x.lineWidth=1;x.strokeRect(60+(d-1)*34-3.5,563.5,35,29);
+    label(x,'DAY '+d+(d>=7?' · THE TANK RUNS DRY':' · FLYING ON STORED FAT'),414,582,d>=7?LAMP:BONE)}
+  var hovPr=ptr&&ptr.y>535&&ptr.x>630;S.ext+=((hovPr?1:.55+(RM?0:.05*Math.sin(t*1.3)))-S.ext)*Math.min(1,dt*4);
+  var X0=640,Y=606,LT=236,stl=LT*S.ext,rem=LT-stl,a=.8,th=Math.sqrt(2*rem/a),xe=X0+stl;
+  x.strokeStyle=css(LAMP);x.lineWidth=2;x.lineCap='round';x.lineJoin='round';x.beginPath();x.moveTo(X0,Y);x.lineTo(xe,Y);
+  if(rem>3){var cyc=Y-a*th;for(var f=0;f<=th-1.2;f+=.15){var rr=a*(th-f);x.lineTo(xe+rr*Math.sin(f),cyc+rr*Math.cos(f))}}x.stroke();
+  if(S.ext>.93&&!RM){var nx2=xe-((t*130)%LT);x.fillStyle=css([255,232,190]);x.beginPath();x.arc(nx2,Y,3.2,0,TAU);x.fill();label(x,'DRINKING',X0,Y+16,LAMP,.9)}
  }});
+var TMP2=[0,0,0];
 
 /* ====================================================================== 2 · heat */
 var RAMP=[[8,[84,100,150]],[15,[128,138,170]],[23,[206,200,184]],[30,[240,172,70]],[37,[255,104,48]],[43,[255,238,206]]];
@@ -716,49 +899,50 @@ function heat(T){for(var i=1;i<RAMP.length;i++)if(T<=RAMP[i][0]){var a=RAMP[i-1]
 var HEATLUT=[];for(var hi=0;hi<=140;hi++)HEATLUT.push(css(heat(8+hi*.25)));
 function heatCss(T){return HEATLUT[clamp(Math.round((T-8)*4),0,140)]}
 function bodyZone(px,py){
-  var a=(px-176)/36,b=(py-338)/32;if(a*a+b*b<1)return [0,Math.sqrt(a*a+b*b)];
-  a=(px-306)/118;b=(py-326)/92;if(a*a+b*b<1)return [1,Math.sqrt(a*a+b*b)];
+  var a=(px-176)/36,b=(py-338)/32;if(a*a+b*b<1)return [0,Math.sqrt(a*a+b*b),0];
+  a=(px-306)/118;b=(py-326)/92;if(a*a+b*b<1)return [1,Math.sqrt(a*a+b*b),0];
   if(px>404&&px<780){var t=(px-404)/376,half=(t<.08?lerp(34,64,t/.08):64*Math.pow(1-(t-.08)/.92,.62))+4,cy=338+t*26;if(Math.abs(py-cy)<half)return [2,Math.abs(py-cy)/half,t]}
   return null;
 }
-Plate('p-heat',{w:1200,h:700,seed:12,warm:240,
+function bodyT(zone,z1,z2,Tth,Tab,flow,ph,jit){
+  if(zone===1)return Tth-(Tth-8)*.3*z1*z1+jit;
+  if(zone===0)return 8+(Tth-8)*.42;
+  var front=smooth(z2-.2,z2,flow*1.2),T=lerp(8+(Tth-8)*.1*(1-z2),Tab+6*(1-z2)*(1-z1),ph===3?front:0);
+  if(z1<.16&&ph===3)T+=5*front;return T;
+}
+Plate('p-heat',{w:1200,h:700,seed:12,warm:240,regions:{fur:[164,212,440,446],radiator:[398,262,796,430],box:[866,96,1150,330],vortex:[866,432,1150,654]},regionInk:LAMP,
+ onhl:function(P,k){if(RM)return;if(k==='fur')P.t=Math.floor(P.t/17)*17+3;if(k==='radiator')P.t=Math.floor(P.t/17)*17+12.4;if(k==='vortex'||k==='box')P.t=Math.floor(P.t/17)*17+8.5},
+ init:function(P){var r=mul(3),S=P.S,i;S.dots=[];
+  for(var y=220,row=0;y<470;y+=3.9,row++)for(var xx=130+((row&1)?2.25:0);xx<790;xx+=4.5){var px=xx+(r()-.5)*3.6,py=y+(r()-.5)*3.6,z=bodyZone(px,py);if(z&&(r()<.95-.35*z[1]*z[1]||z[1]>.86))S.dots.push([px,py,z[0],z[1],z[2],r()])}
+  /* fur: insulation, drawn as hairs standing off the thorax */
+  S.fur=[];var rf=mul(19);for(i=0;i<900;i++){var a=rf()*TAU,ex=306+Math.cos(a)*118,ey=326+Math.sin(a)*92;if(ex>408)continue;S.fur.push([ex-Math.cos(a)*6,ey-Math.sin(a)*6,8+rf()*16,a+(rf()-.5)*.7+.5,.12+.3*rf()])}
+  S.shed=[];S.vort=[];for(i=0;i<170;i++)S.vort.push([r(),r(),r()]);
+  ['ph0','ph1','ph2','ph3'].forEach(function(id,k){var b=$(id);if(b)b.addEventListener('click',function(){P.t=Math.floor(P.t/17)*17+[0,2,8,12][k]+.01;if(RM)P.draw(0)})});
+  var g=$('ramp');if(g&&!g.firstChild){var h='';for(var k=0;k<=70;k++){var T=8+k*.5,c=heat(T);h+='<rect x="'+(60+k*6)+'" y="590" width="6.4" height="10" fill="rgb('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+')"/>'}
+    [8,15,23,30,37,43].forEach(function(T){h+='<text x="'+(60+(T-8)*12)+'" y="622" class="s">'+T+'°</text><path class="ld" d="M'+(60+(T-8)*12+.5)+' 586v18"/>'});
+    h+='<path id="mk-th" d="M0 0l-6 -9h12z" fill="#e8e0cd"/><path id="mk-ab" d="M0 0l-6 9h12z" fill="#aaa697"/><text x="60" y="574" class="s">▼ THORAX · ▲ ABDOMEN</text>';g.innerHTML=h}},
  paint:function(x,P){
-  var r=mul(19);
-  /* fur: insulation drawn as hairs standing off the thorax */
-  for(var i=0;i<900;i++){var a=r()*TAU,ex=306+Math.cos(a)*118,ey=326+Math.sin(a)*92;if(ex>408)continue;var l=8+r()*16,an=a+(r()-.5)*.7+.5;
-    x.strokeStyle=css(BONE,.12+.3*r());x.lineWidth=.6;x.beginPath();x.moveTo(ex-Math.cos(a)*6,ey-Math.sin(a)*6);x.lineTo(ex+Math.cos(an)*l,ey+Math.sin(an)*l);x.stroke()}
-  /* legs and antenna, plain line */
   x.strokeStyle=css(BONE,.5);x.lineWidth=1;[[250,410,226,470,246,512],[300,418,296,476,322,516],[350,410,366,468,398,500]].forEach(function(q){x.beginPath();x.moveTo(q[0],q[1]);x.lineTo(q[2],q[3]);x.lineTo(q[4],q[5]);x.stroke()});
   x.beginPath();x.moveTo(160,312);x.quadraticCurveTo(120,260,92,250);x.stroke();
   x.beginPath();x.moveTo(146,352);x.bezierCurveTo(110,372,116,398,140,392);x.stroke();
-  /* temperature ramp */
-  for(var j=0;j<140;j++){x.fillStyle=heatCss(43-j*.25);x.fillRect(60,560+0,0,0)}
-  var g=$('ramp');if(g&&!g.firstChild){var h='';for(var k=0;k<=70;k++){var T=8+k*.5,c=heat(T);h+='<rect x="'+(60+k*6)+'" y="590" width="6.4" height="10" fill="rgb('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+')"/>'}
-    [8,15,23,30,37,43].forEach(function(T){h+='<text x="'+(60+(T-8)*12)+'" y="622" class="s">'+T+'°</text><path class="ld" d="M'+(60+(T-8)*12+.5)+' 586v18"/>'});
-    h+='<path id="mk-th" d="M0 0l-6 -9h12z" fill="#e8e0cd"/><path id="mk-ab" d="M0 0l-6 9h12z" fill="#aaa697"/><text x="60" y="574" class="s">▼ THORAX · ▲ ABDOMEN</text>';g.innerHTML=h}
  },
- init:function(P){var r=mul(3),S=P.S;S.dots=[];
-  for(var y=220,row=0;y<470;y+=3.9,row++)for(var xx=130+((row&1)?2.25:0);xx<790;xx+=4.5){var px=xx+(r()-.5)*3.6,py=y+(r()-.5)*3.6,z=bodyZone(px,py);if(z&&(r()<.95-.35*z[1]*z[1]||z[1]>.86))S.dots.push([px,py,z[0],z[1],z[2]||0,r()])}
-  S.shed=[];S.vort=[];for(var i=0;i<170;i++)S.vort.push([r(),r(),r()]);
-  S.set=function(i){P.t=[0,2,8,12][i]};
-  ['ph0','ph1','ph2','ph3'].forEach(function(id,i){var b=$(id);if(b)b.addEventListener('click',function(){S.set(i)})});},
  frame:function(x,P,dt){
-  var S=P.S,t=P.t%17,ph=t<2?0:t<8?1:t<12?2:3,Tth,Tab,amp,hz,flow=0,i;
-  if(ph===0){Tth=8;Tab=8;amp=0;hz=0}
-  else if(ph===1){var u=(t-2)/6;Tth=8+30*(1-Math.pow(1-u,2.2));Tab=8+2*u;amp=.035;hz=28}
-  else if(ph===2){u=(t-8)/4;Tth=38+4.6*u;Tab=10+2*u;amp=1.05;hz=28}
-  else{u=(t-12)/5;flow=clamp(u*2.2,0,1);Tth=42.6-4.4*smooth(0,.8,u);Tab=12+19*smooth(0,.7,u);amp=1.05;hz=28}
+  var S=P.S,t=P.t%17,ph=t<2?0:t<8?1:t<12?2:3,Tth,Tab,amp,flow=0,i,u,ptr=P.ptr;
+  if(ph===0){Tth=8;Tab=8;amp=0}
+  else if(ph===1){u=(t-2)/6;Tth=8+30*(1-Math.pow(1-u,2.2));Tab=8+2*u;amp=.035}
+  else if(ph===2){u=(t-8)/4;Tth=38+4.6*u;Tab=10+2*u;amp=1.05}
+  else{u=(t-12)/5;flow=clamp(u*2.2,0,1);Tth=42.6-4.4*smooth(0,.8,u);Tab=12+19*smooth(0,.7,u);amp=1.05}
   var names=['REST','SHIVERING','HOVERING','DUMPING HEAT'],subs=['AIR 8 °C · MUSCLE TOO COLD TO FLY','BOTH MUSCLE SETS FIRE AT ONCE · WINGS BARELY MOVE','FULL STROKE · THE MOTOR KEEPS HEATING','HOT BLOOD THROUGH THE WAIST · ABDOMEN RADIATES'];
   setText('heat-phase',names[ph]);setText('heat-sub',subs[ph]);setText('r-th',Tth.toFixed(0));setText('r-ab',Tab.toFixed(0));setText('r-hz',ph===0?'0':ph===1?'≈ 0 · shiver':'28');
-  ['ph0','ph1','ph2','ph3'].forEach(function(id,i){var b=$(id);if(b)b.setAttribute('aria-pressed',i===ph?'true':'false')});
+  ['ph0','ph1','ph2','ph3'].forEach(function(id,k){var b=$(id);if(b)b.setAttribute('aria-pressed',k===ph?'true':'false')});
   var mt=$('mk-th'),ma=$('mk-ab');if(mt)mt.setAttribute('transform','translate('+(60+(Tth-8)*12)+',586)');if(ma)ma.setAttribute('transform','translate('+(60+(Tab-8)*12)+',604)');
-  /* body dots */
-  var D=S.dots;for(var i=0;i<D.length;i++){var d=D[i],T;
-    if(d[2]===1)T=Tth-(Tth-8)*.3*d[3]*d[3]+(d[5]-.5)*1.4;
-    else if(d[2]===0)T=8+(Tth-8)*.42;
-    else{var front=smooth(flow*1.25-.25,flow*1.25,1-d[4])*0+smooth(d[4]-.2,d[4],flow*1.2);T=lerp(8+(Tth-8)*.1*(1-d[4]),Tab+6*(1-d[4])*(1-d[3]),ph===3?front:0);
-      if(Math.abs(d[3])<.16&&ph===3)T+=5*front}
-    x.fillStyle=heatCss(T);x.beginPath();x.arc(d[0],d[1],1.45+(d[2]===1?.25:0),0,TAU);x.fill()}
+  /* fur: trembles with the shiver, parts around the pointer */
+  x.lineWidth=.6;x.lineCap='round';
+  for(i=0;i<S.fur.length;i++){var f=S.fur[i],an=f[3];if(ph===1&&!RM)an+=Math.sin(t*80+i)*.1;
+    if(ptr){var fx=f[0]-ptr.x,fy=f[1]-ptr.y,d2=fx*fx+fy*fy;if(d2<8100){var aw=Math.atan2(fy,fx);an+=Math.atan2(Math.sin(aw-an),Math.cos(aw-an))*(1-d2/8100)*.85}}
+    x.strokeStyle=css(BONE,f[4]);x.beginPath();x.moveTo(f[0],f[1]);x.lineTo(f[0]+Math.cos(an)*(f[2]+6),f[1]+Math.sin(an)*(f[2]+6));x.stroke()}
+  /* body dots, each colored by the heat at that point */
+  var D=S.dots;for(i=0;i<D.length;i++){var d=D[i];x.fillStyle=heatCss(bodyT(d[2],d[3],d[4],Tth,Tab,flow,ph,(d[5]-.5)*1.4));x.beginPath();x.arc(d[0],d[1],1.45+(d[2]===1?.25:0),0,TAU);x.fill()}
   /* wing: folded along the back at rest, a blur of positions in the stroke */
   var base=ph===0?-.16:ph===1?-.3:-1.32,sw=ph===1?.035:ph>=2?.92:0;
   function blade(an,al){var ca=Math.cos(an),sa=Math.sin(an),hx=322,hy=258,l=262;x.fillStyle=css(BONE,al);x.beginPath();x.moveTo(hx,hy);
@@ -766,50 +950,64 @@ Plate('p-heat',{w:1200,h:700,seed:12,warm:240,
   if(ph>=2)for(var gI=0;gI<11;gI++)blade(base+sw*Math.cos(gI/10*Math.PI),.07);
   blade(base+sw*Math.sin(t*(ph===1?70:TAU*2.6)),ph>=2?.5:.62);
   /* shed heat */
-  if(ph===3&&S.shed.length<260){for(var k=0;k<3;k++){var tx=Math.random();S.shed.push([404+tx*370,338+tx*26-(64*Math.pow(1-tx,.62)+6),0,Math.random()])}}
+  if(ph===3&&S.shed.length<260&&dt>0){for(var k=0;k<3;k++){var tx=Math.random();S.shed.push([404+tx*370,338+tx*26-(64*Math.pow(1-tx,.62)+6),0,Math.random()])}}
   for(i=S.shed.length-1;i>=0;i--){var s=S.shed[i];s[2]+=dt;s[0]+=(14+8*s[3])*dt;s[1]-=(26+20*s[3])*dt;if(s[2]>2.4){S.shed.splice(i,1);continue}
     x.fillStyle=css(LAMP,.75*(1-s[2]/2.4));x.beginPath();x.arc(s[0]+Math.sin(s[2]*4+s[3]*9)*4,s[1],1.2,0,TAU);x.fill()}
-  /* resonant box, slowed */
-  var ph2=amp>0?Math.sin(t*(ph===1?40:5)):0,k2=ph===1?.12:1,roof=ph2*10*k2,bx=1006,by=205;
+  /* spot meter: the pointer reads the temperature under it */
+  if(ptr&&ptr.x<836&&ptr.y>96&&ptr.y<540){var z=bodyZone(ptr.x,ptr.y),Tp=z?bodyT(z[0],z[1],z[2],Tth,Tab,flow,ph,0):8,col=z?heat(Tp):BONE;
+    x.strokeStyle=css(BONE,.95);x.lineWidth=1;x.beginPath();x.arc(ptr.x,ptr.y,10,0,TAU);x.moveTo(ptr.x-16,ptr.y);x.lineTo(ptr.x-6,ptr.y);x.moveTo(ptr.x+6,ptr.y);x.lineTo(ptr.x+16,ptr.y);x.moveTo(ptr.x,ptr.y-16);x.lineTo(ptr.x,ptr.y-6);x.moveTo(ptr.x,ptr.y+6);x.lineTo(ptr.x,ptr.y+16);x.stroke();
+    var txt=Tp.toFixed(0)+' °C'+(z?(z[0]===1?' · THORAX':z[0]===2?' · ABDOMEN':' · HEAD'):' · AIR');x.font='12px '+MONO;var tw=x.measureText(txt).width+16;
+    x.fillStyle=css(NIGHT,.92);x.fillRect(ptr.x+18,ptr.y-34,tw,22);x.strokeStyle=css(col);x.strokeRect(ptr.x+18.5,ptr.y-33.5,tw,22);x.fillStyle=css(BONE);x.textAlign='left';x.fillText(txt,ptr.x+26,ptr.y-19);
+    x.strokeStyle=css(BONE);x.lineWidth=1.5;x.beginPath();x.moveTo(60+(Tp-8)*12,582);x.lineTo(60+(Tp-8)*12,608);x.stroke()}
+  /* resonant box, slowed; the pointer can work it by hand */
+  var inBox=ptr&&ptr.x>860&&ptr.y>90&&ptr.y<336,ph2=amp>0?Math.sin(t*(ph===1?40:5)):0,k2=ph===1?.12:1;
+  if(inBox){ph2=clamp((205-ptr.y)/70,-1,1);k2=1}
+  var roof=ph2*10*k2,bx=1006,by=205;
   x.strokeStyle=css(BONE,.9);x.lineWidth=1.4;x.beginPath();x.moveTo(bx-70,by-40-roof*.2);x.lineTo(bx-70,by+62);x.quadraticCurveTo(bx,by+86,bx+70,by+62);x.lineTo(bx+70,by-40-roof*.2);x.stroke();
   x.beginPath();x.moveTo(bx-62,by-44-roof);x.quadraticCurveTo(bx,by-62-roof*1.5,bx+62,by-44-roof);x.stroke();
-  [1,-1].forEach(function(g){var wa=roof*.06;x.beginPath();x.moveTo(bx+g*62,by-44-roof);x.lineTo(bx+g*70,by-40-roof*.2);x.lineTo(bx+g*(70+118*Math.cos(wa)),by-40+118*Math.sin(wa)*1.0+roof*.0);x.stroke();
-    x.lineWidth=2.5+3*clamp(-ph2*k2,0,1);x.strokeStyle=css(HOT,.35+.6*clamp(-ph2*k2,0,1));x.beginPath();x.moveTo(bx+g*42,by-46-roof);x.lineTo(bx+g*50,by+60);x.stroke();x.lineWidth=1.4;x.strokeStyle=css(BONE,.9)});
+  for(var g=-1;g<=1;g+=2){var wa=-roof*.07;x.lineWidth=1.4;x.strokeStyle=css(BONE,.9);x.beginPath();x.moveTo(bx+g*62,by-44-roof);x.lineTo(bx+g*70,by-40-roof*.2);x.lineTo(bx+g*(70+118*Math.cos(wa)),by-40+118*Math.sin(wa));x.stroke();
+    x.lineWidth=2.5+3*clamp(-ph2*k2,0,1);x.strokeStyle=css(HOT,.35+.6*clamp(-ph2*k2,0,1));x.beginPath();x.moveTo(bx+g*42,by-46-roof);x.lineTo(bx+g*50,by+60);x.stroke()}
   x.fillStyle=css(HOT,.3+.6*clamp(ph2*k2,0,1));x.beginPath();x.ellipse(bx,by+4,22+7*clamp(ph2*k2,0,1),30-5*clamp(ph2*k2,0,1),0,0,TAU);x.fill();
-  x.font='11px '+getComputedStyle(document.body).getPropertyValue('--mono');x.fillStyle=css(BONE,.55);x.textAlign='center';
-  x.fillText(ph2*k2>0?'LENGTHWISE MUSCLE · ROOF UP · WINGS DOWN':'UPRIGHT MUSCLES · ROOF DOWN · WINGS UP',bx,by+118);
-  /* leading-edge vortex */
-  var vx=1000,vy=520;x.save();x.translate(vx,vy);x.rotate(-.5);x.fillStyle=css(BONE,.9);x.beginPath();x.ellipse(0,0,84,5,0,0,TAU);x.fill();x.restore();
-  var cxv=vx+50,cyv=vy-62;for(i=0;i<S.vort.length;i++){var v=S.vort[i],rr=6+v[0]*44,a2=v[1]*TAU-t*(3.4-2.2*v[0])*(amp>0?1:.15);
-    x.fillStyle=css(LAMP,.25+.7*(1-v[0]));x.beginPath();x.arc(cxv+Math.cos(a2)*rr*1.15,cyv+Math.sin(a2)*rr*.8,1.1+.5*(1-v[0]),0,TAU);x.fill()}
-  for(i=0;i<5;i++){var yy=vy+34+i*13,sh=(t*60+i*37)%220;x.strokeStyle=css(BONE,.28);x.lineWidth=1;x.setLineDash([10,12]);x.lineDashOffset=sh;x.beginPath();x.moveTo(880,yy+8);x.quadraticCurveTo(1000,yy+2,1130,yy+18);x.stroke()}
-  x.setLineDash([]);x.strokeStyle=css(LAMP,.9);x.lineWidth=1.4;x.beginPath();x.moveTo(vx+6,vy-22);x.lineTo(vx+6,vy-96);x.moveTo(vx,vy-88);x.lineTo(vx+6,vy-98);x.lineTo(vx+12,vy-88);x.stroke();
-  x.fillStyle=css(LAMP);x.textAlign='left';x.fillText('LIFT',vx-34,vy-90);
+  label(x,ph2*k2>0?'LENGTHWISE MUSCLE · ROOF UP · WINGS DOWN':'UPRIGHT MUSCLES · ROOF DOWN · WINGS UP',bx,by+118,BONE,.55,'center');
+  if(inBox){x.strokeStyle=css(LAMP);x.lineWidth=1;x.beginPath();x.moveTo(bx-84,ptr.y);x.lineTo(bx-74,ptr.y);x.stroke()}
+  /* leading-edge vortex; airspeed under the pointer */
+  var inV=ptr&&ptr.x>860&&ptr.y>380,spd=inV?clamp((ptr.x-880)/240,0,1)*2:(amp>0?1:.15),vx=1000,vy=520;
+  if(!S.va)S.va=0;S.va+=dt*spd;
+  x.save();x.translate(vx,vy);x.rotate(-.5);x.fillStyle=css(BONE,.9);x.beginPath();x.ellipse(0,0,84,5,0,0,TAU);x.fill();x.restore();
+  var cxv=vx+50,cyv=vy-62;for(i=0;i<S.vort.length;i++){var v=S.vort[i],rr=6+v[0]*44,a2=v[1]*TAU-S.va*(3.4-2.2*v[0]);
+    x.fillStyle=css(LAMP,(.25+.7*(1-v[0]))*clamp(.25+spd*.75,0,1));x.beginPath();x.arc(cxv+Math.cos(a2)*rr*1.15,cyv+Math.sin(a2)*rr*.8,1.1+.5*(1-v[0]),0,TAU);x.fill()}
+  for(i=0;i<5;i++){var yy=vy+34+i*13;x.strokeStyle=css(BONE,.28);x.lineWidth=1;x.setLineDash([10,12]);x.lineDashOffset=-(S.va*60+i*37)%220;x.beginPath();x.moveTo(880,yy+8);x.quadraticCurveTo(1000,yy+2,1130,yy+18);x.stroke()}
+  x.setLineDash([]);var lf=20+56*Math.min(1.4,spd);x.strokeStyle=css(LAMP,.9);x.lineWidth=1.4;x.beginPath();x.moveTo(vx+6,vy-22);x.lineTo(vx+6,vy-22-lf);x.moveTo(vx,vy-14-lf);x.lineTo(vx+6,vy-24-lf);x.lineTo(vx+12,vy-14-lf);x.stroke();
+  label(x,'LIFT',vx-34,vy-16-lf,LAMP);
+  if(inV)label(x,'AIRSPEED × '+spd.toFixed(1),880,vy+122,BONE,.8);
  }});
 
 /* ====================================================================== 3 · plume */
 Plate('p-plume',{w:1200,h:640,seed:21,warm:420,
  paint:function(x,P){
-  var r=mul(64);
-  /* inset: one antenna branch with hairs */
   x.fillStyle='rgba(6,8,13,.72)';x.fillRect(40,478,330,126);x.strokeStyle=css(BONE,.28);x.lineWidth=1;x.strokeRect(40.5,478.5,330,126);
   x.strokeStyle=css(mix(LAMP,BONE,.4));x.lineWidth=2;x.beginPath();x.moveTo(54,590);x.lineTo(356,560);x.stroke();
   for(var i=0;i<15;i++){var bx=70+i*19,by=588.5-i*1.9,l=74-Math.abs(i-7)*2.2;x.strokeStyle=css(mix(LAMP,BONE,.5),.85);x.lineWidth=1.1;x.beginPath();x.moveTo(bx,by);x.lineTo(bx+8,by-l);x.stroke();
     for(var k=1;k<11;k++){var hx=bx+8*k/11,hy=by-l*k/11;x.strokeStyle=css(BONE,.4);x.lineWidth=.5;x.beginPath();x.moveTo(hx,hy);x.lineTo(hx+7,hy-4);x.moveTo(hx,hy);x.lineTo(hx-6,hy-5);x.stroke()}}
-  /* female */
   x.strokeStyle=css(SCENT);x.lineWidth=1.2;x.beginPath();x.arc(66,320,10,0,TAU);x.stroke();x.fillStyle=css(SCENT);x.beginPath();x.arc(66,320,3,0,TAU);x.fill();
   x.strokeStyle=css(SCENT,.5);x.beginPath();x.moveTo(66,300);x.lineTo(66,280);x.stroke();
  },
  init:function(P){var S=P.S;S.p=[];S.r=mul(808);S.found=0;S.hitLog=[];S.mol=[];S.sp=[];
   S.spawn=function(){S.m={x:1130,y:110+S.r()*420,vx:-1,vy:0,st:'CAST',dir:S.r()<.5?1:-1,leg:.25,legT:0,last:-9,trail:[],hold:0}};S.spawn();S.T=0;
-  S.step=function(dt){var r=S.r,T=(S.T+=dt);
+  S.step=function(dt){var r=S.r,T=(S.T+=dt),ptr=P.ptr,i,q,inset=ptr&&ptr.x<372&&ptr.y>476;
     var gate=fbm(T*.9,3.3,9,2),mea=(fbm(T*.33,1.1,4,3)-.5)*230+(fbm(T*1.4,7.7,6,2)-.5)*70;
-    if(gate>.36)for(var i=0;i<4;i++)S.p.push([66,320+(r()-.5)*5,mea+(r()-.5)*16,0,r()]);
+    if(gate>.36)for(i=0;i<4;i++)S.p.push([66,320+(r()-.5)*5,mea+(r()-.5)*16,0,r()]);
     if(fbm(T*1.2,9.1,13,2)>.56)for(i=0;i<2;i++)S.p.push([66,320+(r()-.5)*5,-mea*.55+34+(r()-.5)*14,0,r()]);
-    for(i=S.p.length-1;i>=0;i--){var q=S.p[i];q[3]+=dt;q[0]+=152*dt;q[1]+=(q[2]*Math.exp(-q[3]*.22)+Math.sin(q[3]*3+q[4]*20)*9)*dt;if(q[0]>1230||q[1]<-20||q[1]>660)S.p.splice(i,1)}
+    /* held down, the pointer is a second source of scent */
+    if(ptr&&ptr.down&&!inset)for(i=0;i<5;i++)S.p.push([ptr.x+(r()-.5)*6,ptr.y+(r()-.5)*8,(r()-.5)*40,0,r()]);
+    for(i=S.p.length-1;i>=0;i--){q=S.p[i];q[3]+=dt;q[0]+=152*dt;q[1]+=(q[2]*Math.exp(-q[3]*.22)+Math.sin(q[3]*3+q[4]*20)*9)*dt;
+      /* moving, it stirs the air */
+      if(ptr&&!inset){var sx=q[0]-ptr.x,sy=q[1]-ptr.y,s2=sx*sx+sy*sy;if(s2<4900){var w=1-s2/4900;q[0]+=ptr.dx*.55*w;q[1]+=ptr.dy*.55*w+sy*.02*w}}
+      if(q[0]>1230||q[1]<-20||q[1]>660)S.p.splice(i,1)}
+    if(ptr){ptr.dx*=.82;ptr.dy*=.82}
     var m=S.m;if(m.hold>0){m.hold-=dt;if(m.hold<=0)S.spawn();return}
     var hit=false;for(i=0;i<S.p.length;i++){var dx=S.p[i][0]-m.x,dy=S.p[i][1]-m.y;if(dx*dx+dy*dy<150){hit=true;m.ty=S.p[i][1];break}}
-    if(hit){S.hitLog.push(T);m.last=T;if(m.st!=='SURGE'){m.st='SURGE'}}
+    if(hit){S.hitLog.push(T);m.last=T;m.st='SURGE'}
     else if(T-m.last>.16&&m.st==='SURGE'){m.st='CAST';m.leg=.2;m.legT=0;m.dir=(m.ty>m.y)?1:-1}
     if(m.st==='SURGE'){m.vx=-168;m.vy=clamp(((m.ty||m.y)-m.y)*5,-70,70)}
     else{m.legT+=dt;if(m.legT>m.leg){m.legT=0;m.dir*=-1;m.leg=Math.min(1.5,m.leg*1.34)}m.vx=14;m.vy=m.dir*190;if(m.y<34&&m.dir<0||m.y>606&&m.dir>0){m.dir*=-1;m.legT=0}}
@@ -818,17 +1016,23 @@ Plate('p-plume',{w:1200,h:640,seed:21,warm:420,
     if(m.x<96&&Math.abs(m.y-320)<60){S.found++;m.hold=1.4}
     if(m.x<60&&m.st==='CAST'&&T-m.last>4){S.spawn()}
   };
-  for(var i=0;i<540;i++){var keep=S.m;S.step(1/60)}S.spawn();S.hitLog=[];S.found=0;},
- frame:function(x,P,dt){var S=P.S;if(dt>0){S.step(dt)}
-  var i,q;for(i=0;i<S.p.length;i++){q=S.p[i];var a=.85*Math.exp(-q[3]*.13);x.fillStyle=css(SCENT,a);x.beginPath();x.arc(q[0],q[1],1.25+q[4]*.5,0,TAU);x.fill()}
-  var m=S.m,tr=m.trail;x.lineJoin='round';x.lineCap='round';
-  for(i=1;i<tr.length;i++){if(tr[i][2]!==tr[i-1][2]||i===1){if(i>1)x.stroke();x.beginPath();x.moveTo(tr[i-1][0],tr[i-1][1]);x.strokeStyle=tr[i][2]?css(SCENT,.95):css(BONE,.55);x.lineWidth=tr[i][2]?2.2:1}x.lineTo(tr[i][0],tr[i][1])}
+  for(var i=0;i<540;i++)S.step(1/60);S.spawn();S.hitLog=[];S.found=0;},
+ frame:function(x,P,dt){var S=P.S,ptr=P.ptr;if(dt>0)S.step(dt);
+  var i,q;for(i=0;i<S.p.length;i++){q=S.p[i];x.fillStyle=css(SCENT,.85*Math.exp(-q[3]*.13));x.beginPath();x.arc(q[0],q[1],1.25+q[4]*.5,0,TAU);x.fill()}
+  var m=S.m,tr=m.trail,hl=S.hl;x.lineJoin='round';x.lineCap='round';
+  for(i=1;i<tr.length;i++){if(tr[i][2]!==tr[i-1][2]||i===1){if(i>1)x.stroke();x.beginPath();x.moveTo(tr[i-1][0],tr[i-1][1]);
+      var dim=(hl==='surge'&&!tr[i][2])||(hl==='cast'&&tr[i][2])?.18:1,em=(hl==='surge'&&tr[i][2])||(hl==='cast'&&!tr[i][2]);
+      x.strokeStyle=tr[i][2]?css(SCENT,.95*dim):css(BONE,(em?.95:.55)*dim);x.lineWidth=tr[i][2]?(em?3.2:2.2):(em?2:1)}x.lineTo(tr[i][0],tr[i][1])}
   if(tr.length>1)x.stroke();
   var an=Math.atan2(m.vy,m.vx);x.save();x.translate(m.x,m.y);x.rotate(an);x.fillStyle=css(BONE);x.beginPath();x.moveTo(11,0);x.lineTo(-7,-9);x.lineTo(-3,0);x.lineTo(-7,9);x.closePath();x.fill();
   x.strokeStyle=css(m.st==='SURGE'?SCENT:BONE,.9);x.lineWidth=1;x.beginPath();x.moveTo(9,0);x.lineTo(17,-6);x.moveTo(9,0);x.lineTo(17,6);x.stroke();x.restore();
+  if(m.hold<=0)label(x,m.st==='SURGE'?'SURGE · ODOR ON':'CAST · ODOR OFF',m.x+20,m.y-24,m.st==='SURGE'?SCENT:BONE,.9);
   if(m.hold>0){x.strokeStyle=css(SCENT,m.hold/1.4);x.lineWidth=1.5;x.beginPath();x.arc(66,320,14+(1.4-m.hold)*40,0,TAU);x.stroke()}
-  /* inset molecules: each strike sends a spark down the branch */
-  if(dt>0&&Math.random()<(m.st==='SURGE'?.5:.08))S.mol.push([372,490+Math.random()*70,0,60+Math.random()*250]);
+  var inset=ptr&&ptr.x<372&&ptr.y>476;
+  if(ptr&&!inset){x.strokeStyle=css(SCENT,ptr.down?.95:.45);x.lineWidth=1;x.beginPath();x.arc(ptr.x,ptr.y,ptr.down?9:14,0,TAU);x.stroke();if(!ptr.down)label(x,'HOLD TO RELEASE SCENT',ptr.x+20,ptr.y+4,SCENT,.75)}
+  /* inset: each strike on a hair sends one impulse down the branch */
+  if(dt>0){if(inset&&Math.random()<.7)S.mol.push([ptr.x+16,ptr.y+(Math.random()-.5)*10,0,ptr.x-4]);
+    else if(Math.random()<(m.st==='SURGE'?.5:.08))S.mol.push([372,490+Math.random()*70,0,60+Math.random()*250])}
   for(i=S.mol.length-1;i>=0;i--){q=S.mol[i];q[0]-=150*dt;if(q[0]<q[3]){S.sp.push([q[3],0]);S.mol.splice(i,1);continue}x.fillStyle=css(SCENT);x.beginPath();x.arc(q[0],q[1],1.6,0,TAU);x.fill()}
   for(i=S.sp.length-1;i>=0;i--){q=S.sp[i];q[1]+=dt;var sx=q[0]-q[1]*420;if(sx<54){S.sp.splice(i,1);continue}var sy=590-(sx-54)*.0993;
     x.fillStyle=css(LAMP,1);x.beginPath();x.arc(sx,sy,2.6,0,TAU);x.fill();x.fillStyle=css(LAMP,.25);x.beginPath();x.arc(sx,sy,6,0,TAU);x.fill()}
@@ -839,21 +1043,22 @@ Plate('p-plume',{w:1200,h:640,seed:21,warm:420,
 /* ====================================================================== 4 · bat */
 Plate('p-bat',{w:1200,h:660,seed:33,warm:150,
  paint:function(x,P){x.strokeStyle=css(BONE,.14);x.lineWidth=1;x.beginPath();x.moveTo(60,560);x.lineTo(1140,560);x.moveTo(60,602);x.lineTo(1140,602);x.stroke()},
- init:function(P){var S=P.S;S.r=mul(4);S.R1=300;S.R2=118;S.m={x:560,y:270,h:0,sp:95,trail:[]};S.b={x:1100,y:90,h:Math.PI,auto:true,cool:0};S.pulses=[];S.spk=[];S.next=0;S.T=0;S.esc=0;S.wasIn=false;S.ptr=null;
-  var el=P.el;function pos(e){var q=el.getBoundingClientRect();return {x:(e.clientX-q.left)/q.width*P.W,y:(e.clientY-q.top)/q.height*P.H}}
-  el.addEventListener('pointermove',function(e){S.ptr=pos(e)});el.addEventListener('pointerdown',function(e){S.ptr=pos(e)});
-  el.addEventListener('pointerleave',function(){S.ptr=null});
-  S.step=function(dt){var T=(S.T+=dt),m=S.m,b=S.b,r=S.r;
-    /* bat */
-    if(S.ptr&&S.ptr.y<530){b.x+=(S.ptr.x-b.x)*Math.min(1,dt*9);b.y+=(S.ptr.y-b.y)*Math.min(1,dt*9);b.h=Math.atan2(m.y-b.y,m.x-b.x)}
-    else{var want=Math.atan2(m.y-b.y,m.x-b.x);if(b.cool>0){b.cool-=dt;want=b.away}var dh=Math.atan2(Math.sin(want-b.h),Math.cos(want-b.h));b.h+=clamp(dh,-1.5*dt,1.5*dt);b.x+=Math.cos(b.h)*165*dt;b.y+=Math.sin(b.h)*165*dt;
-      b.x=clamp(b.x,30,1170);b.y=clamp(b.y,30,510)}
+ init:function(P){var S=P.S;S.r=mul(4);S.R1=300;S.R2=118;S.m={x:560,y:270,h:0,sp:95,trail:[]};S.b={x:1100,y:90,h:Math.PI,cool:0,away:0};S.pulses=[];S.spk=[];S.next=0;S.T=0;S.esc=0;S.caught=0;S.wasIn=false;S.chase=0;S.deaf=false;S.flash=null;
+  function setDeaf(v){S.deaf=v;var a=$('e-on'),b=$('e-off');if(a)a.setAttribute('aria-pressed',v?'false':'true');if(b)b.setAttribute('aria-pressed',v?'true':'false');S.esc=0;S.caught=0;S.spk=[];if(RM){for(var i=0;i<240;i++)S.step(1/30);P.draw(0)}}
+  var a=$('e-on'),b=$('e-off');if(a)a.addEventListener('click',function(){setDeaf(false)});if(b)b.addEventListener('click',function(){setDeaf(true)});
+  S.step=function(dt){var T=(S.T+=dt),m=S.m,b=S.b,r=S.r,ptr=P.ptr,i,fly=ptr&&ptr.y<530,want,spd,turn;
+    /* bat: the pointer is where it wants to go, at a bat's speed */
+    if(b.cool>0)b.cool-=dt;
+    if(fly){want=Math.atan2(ptr.y-b.y,ptr.x-b.x);spd=Math.min(232,Math.hypot(ptr.x-b.x,ptr.y-b.y)*4);turn=6}
+    else{want=b.cool>0?b.away:Math.atan2(m.y-b.y,m.x-b.x);spd=165;turn=1.5}
+    var dh=Math.atan2(Math.sin(want-b.h),Math.cos(want-b.h));b.h+=clamp(dh,-turn*dt,turn*dt);b.x=clamp(b.x+Math.cos(b.h)*spd*dt,30,1170);b.y=clamp(b.y+Math.sin(b.h)*spd*dt,30,510);
     var dx=b.x-m.x,dy=b.y-m.y,d=Math.sqrt(dx*dx+dy*dy);S.d=d;
-    if(d<26&&b.cool<=0){b.cool=4.2;b.away=Math.atan2(b.y-m.y,b.x-m.x)+(r()-.5)*1.2;S.esc++}
-    /* calls: faster as range closes */
+    if(d<S.R2)S.wasIn=true;else if(S.wasIn&&d>S.R1){S.esc++;S.wasIn=false}
+    if(!fly&&d<S.R1){S.chase+=dt;if(S.chase>6){S.chase=0;b.cool=4;b.away=Math.atan2(b.y-m.y,b.x-m.x)+(r()-.5)}}
+    if(d<22&&b.cool<=0){S.caught++;S.wasIn=false;S.chase=0;S.flash=[m.x,m.y,T];b.cool=2.6;b.away=b.h+(r()-.5);m.x=220+r()*760;m.y=170+r()*240;m.h=r()*TAU;m.trail=[];return}
     var rate=d>S.R1?8:d>S.R2?lerp(38,10,(d-S.R2)/(S.R1-S.R2)):lerp(120,40,d/S.R2);S.rate=rate;
     if(T>=S.next){S.next=T+1/rate;S.pulses.push({x:b.x,y:b.y,h:b.h,t:T,d:d,done:false})}
-    for(var i=S.pulses.length-1;i>=0;i--){var p=S.pulses[i],rad=(T-p.t)*900;if(!p.done&&rad>=p.d){p.done=true;if(p.d<S.R1){var n=1+Math.floor(3*(1-p.d/S.R1));for(var k=0;k<n;k++)S.spk.push([T+k*.012,1])}if(p.d<S.R2)S.spk.push([T+.004,2],[T+.02,2])}
+    for(i=S.pulses.length-1;i>=0;i--){var p=S.pulses[i],rad=(T-p.t)*900;if(!p.done&&rad>=p.d){p.done=true;if(!S.deaf){if(p.d<S.R1){var n=1+Math.floor(3*(1-p.d/S.R1));for(var k=0;k<n;k++)S.spk.push([T+k*.012,1])}if(p.d<S.R2)S.spk.push([T+.004,2],[T+.02,2])}}
       if(rad>520)S.pulses.splice(i,1)}
     while(S.spk.length&&T-S.spk[0][0]>4.2)S.spk.shift();
     var a1=0,a2=0;for(i=S.spk.length-1;i>=0&&T-S.spk[i][0]<.35;i--){if(S.spk[i][1]===1)a1++;else a2++}
@@ -862,91 +1067,116 @@ Plate('p-bat',{w:1200,h:660,seed:33,warm:150,
     if(st===0){m.h+=(r()-.5)*1.2*dt+Math.sin(T*.5)*.25*dt;m.sp+=(95-m.sp)*dt*2}
     else if(st===1){var aw=Math.atan2(m.y-b.y,m.x-b.x),e=Math.atan2(Math.sin(aw-m.h),Math.cos(aw-m.h));m.h+=clamp(e,-2.6*dt,2.6*dt);m.sp+=(125-m.sp)*dt*3}
     else{m.h+=(Math.sin(T*23)*9+Math.sin(T*37+1)*7+6)*dt;m.sp+=(205-m.sp)*dt*5}
-    /* keep the moth on the sheet */
     var mx=m.x+Math.cos(m.h)*90,my=m.y+Math.sin(m.h)*90;if(mx<190||mx>1010||my<150||my>440){var c=Math.atan2(290-m.y,600-m.x),ee=Math.atan2(Math.sin(c-m.h),Math.cos(c-m.h));m.h+=clamp(ee,-5.2*dt,5.2*dt)}
     m.x=clamp(m.x+Math.cos(m.h)*m.sp*dt,120,1080);m.y=clamp(m.y+Math.sin(m.h)*m.sp*dt,120,470);
-    m.trail.push([m.x,m.y,st]);if(m.trail.length>520)m.trail.shift();
+    m.trail.push([m.x,m.y,st,T]);if(m.trail.length>520)m.trail.shift();
   };},
- frame:function(x,P,dt){var S=P.S;if(dt>0)S.step(dt);var m=S.m,b=S.b,T=S.T,i;
-  /* rings */
-  x.setLineDash([3,7]);x.lineWidth=1;x.strokeStyle=css(SONAR,.5);x.beginPath();x.arc(m.x,m.y,S.R1,0,TAU);x.stroke();
-  x.strokeStyle=css(HOT,.6);x.beginPath();x.arc(m.x,m.y,S.R2,0,TAU);x.stroke();x.setLineDash([]);
-  x.font='11px '+getComputedStyle(document.body).getPropertyValue('--mono');x.textAlign='center';
-  if(m.y-S.R1>96){x.fillStyle=css(SONAR,.8);x.fillText('A1 HEARS FROM HERE',m.x,m.y-S.R1-8)}else{x.fillStyle=css(SONAR,.8);x.fillText('A1 HEARS FROM HERE',m.x,Math.min(520,m.y+S.R1+18))}x.fillStyle=css(HOT,.85);x.fillText('A2 JOINS',m.x,m.y-S.R2-8);
-  /* pulses: arcs of dots opening from the bat */
+ frame:function(x,P,dt){var S=P.S,ptr=P.ptr;if(dt>0)S.step(dt);var m=S.m,b=S.b,T=S.T,i,hl=S.hl;
+  x.setLineDash(hl==='a1'?[]:[3,7]);x.lineWidth=hl==='a1'?2:1;x.strokeStyle=css(SONAR,hl==='a1'?.95:.5);x.beginPath();x.arc(m.x,m.y,S.R1,0,TAU);x.stroke();
+  x.setLineDash(hl==='a2'?[]:[3,7]);x.lineWidth=hl==='a2'?2:1;x.strokeStyle=css(HOT,hl==='a2'?.95:.6);x.beginPath();x.arc(m.x,m.y,S.R2,0,TAU);x.stroke();x.setLineDash([]);
+  label(x,'A1 HEARS FROM HERE',m.x,m.y-S.R1>96?m.y-S.R1-8:Math.min(520,m.y+S.R1+18),SONAR,.8,'center');label(x,'A2 JOINS',m.x,m.y-S.R2-8,HOT,.85,'center');
   for(i=0;i<S.pulses.length;i++){var p=S.pulses[i],rad=(T-p.t)*900,al=clamp(1-rad/520,0,1);x.strokeStyle=css(SONAR,.75*al);x.lineWidth=1.6;x.setLineDash([1.5,5]);x.lineCap='round';
     x.beginPath();x.arc(p.x,p.y,rad,p.h-.55,p.h+.55);x.stroke()}
   x.setLineDash([]);
-  /* moth trail + moth */
   var tr=m.trail;for(i=1;i<tr.length;i++){var st=tr[i][2];x.strokeStyle=st===2?css(HOT,.9*i/tr.length):st===1?css(SONAR,.8*i/tr.length):css(BONE,.5*i/tr.length);x.lineWidth=st?1.6:1;x.beginPath();x.moveTo(tr[i-1][0],tr[i-1][1]);x.lineTo(tr[i][0],tr[i][1]);x.stroke()}
   x.save();x.translate(m.x,m.y);x.rotate(m.h);x.fillStyle=css(BONE);x.beginPath();x.moveTo(12,0);x.lineTo(-8,-10);x.lineTo(-3,0);x.lineTo(-8,10);x.closePath();x.fill();x.restore();
+  if(S.flash){var fa=1-(T-S.flash[2])/1.2;if(fa>0){x.strokeStyle=css(HOT,fa);x.lineWidth=2;x.beginPath();x.arc(S.flash[0],S.flash[1],10+(1-fa)*46,0,TAU);x.stroke();label(x,'CAUGHT',S.flash[0]+22,S.flash[1]-12,HOT,fa)}else S.flash=null}
   /* bat */
   x.save();x.translate(b.x,b.y);x.rotate(b.h);var fl=Math.sin(T*22)*.35;x.fillStyle=css(mix(STOCK,BONE,.5));x.strokeStyle=css(BONE,.9);x.lineWidth=1;
-  [1,-1].forEach(function(g){x.beginPath();x.moveTo(6,g*2);x.quadraticCurveTo(8,g*20,-1-fl*9,g*42);x.quadraticCurveTo(-8,g*33,-10,g*30);x.quadraticCurveTo(-8,g*23,-16,g*20);
+  for(var g=-1;g<=1;g+=2){x.beginPath();x.moveTo(6,g*2);x.quadraticCurveTo(8,g*20,-1-fl*9,g*42);x.quadraticCurveTo(-8,g*33,-10,g*30);x.quadraticCurveTo(-8,g*23,-16,g*20);
     x.quadraticCurveTo(-13,g*13,-20,g*9);x.quadraticCurveTo(-14,g*5,-14,g*1);x.closePath();x.fill();x.stroke();
-    x.beginPath();x.moveTo(4,g*4);x.lineTo(-10,g*30);x.moveTo(4,g*4);x.lineTo(-16,g*20);x.moveTo(4,g*4);x.lineTo(-20,g*9);x.stroke()});
+    x.beginPath();x.moveTo(4,g*4);x.lineTo(-10,g*30);x.moveTo(4,g*4);x.lineTo(-16,g*20);x.moveTo(4,g*4);x.lineTo(-20,g*9);x.stroke()}
   x.fillStyle=css(BONE);x.beginPath();x.ellipse(0,0,10,4.5,0,0,TAU);x.fill();x.beginPath();x.moveTo(8,-3);x.lineTo(14,-7);x.lineTo(11,-1);x.moveTo(8,3);x.lineTo(14,7);x.lineTo(11,1);x.fill();x.restore();
+  if(ptr&&ptr.y<530){x.strokeStyle=css(BONE,.4);x.lineWidth=1;x.setLineDash([2,5]);x.beginPath();x.moveTo(b.x,b.y);x.lineTo(ptr.x,ptr.y);x.stroke();x.setLineDash([]);x.beginPath();x.arc(ptr.x,ptr.y,5,0,TAU);x.stroke()}
   /* spike raster */
   for(i=0;i<S.spk.length;i++){var s=S.spk[i],age=T-s[0];if(age<0)continue;var sx=1140-age/4*1040;if(sx<100)continue;
     x.strokeStyle=s[1]===1?css(SONAR,.95):css(HOT,.95);x.lineWidth=1.3;x.beginPath();if(s[1]===1){x.moveTo(sx,560);x.lineTo(sx,580)}else{x.moveTo(sx,602);x.lineTo(sx,624)}x.stroke()}
+  /* brush the record: a moment on the raster finds its place on the flight path */
+  if(ptr&&ptr.y>536&&ptr.x>100&&ptr.x<1140){var ag=(1140-ptr.x)/1040*4,bestI=-1,bd=1e9;for(i=0;i<tr.length;i++){var dd=Math.abs((T-tr[i][3])-ag);if(dd<bd){bd=dd;bestI=i}}
+    x.strokeStyle=css(BONE,.9);x.lineWidth=1;x.beginPath();x.moveTo(ptr.x,546);x.lineTo(ptr.x,632);x.stroke();label(x,'−'+ag.toFixed(1)+' S',ptr.x+8,546,BONE,.9);
+    if(bestI>=0&&bd<.2){var q=tr[bestI];x.beginPath();x.arc(q[0],q[1],9,0,TAU);x.stroke();x.setLineDash([2,5]);x.beginPath();x.moveTo(ptr.x,546);x.lineTo(q[0],q[1]+9);x.stroke();x.setLineDash([]);
+      label(x,['CRUISING','TURNING AWAY','DIVING'][q[2]],q[0]+16,q[1]+4,q[2]===2?HOT:q[2]===1?SONAR:BONE,.95)}}
   var names=['CRUISING','BANKING AWAY','EVASIVE DIVE'],subs=['NO ULTRASOUND AT THE EAR','A1 ONLY · A BAT IS NEAR, NOT YET LOCKED ON','A1 AND A2 · THE BAT IS CLOSE · STEERING ABANDONED'];
-  setText('bat-state',names[S.st|0]);setText('bat-sub',subs[S.st|0]);setText('r-a1',Math.round(S.a1||0));setText('r-a2',Math.round(S.a2||0));setText('r-rate',Math.round(S.rate||8));setText('r-esc',S.esc);
+  setText('bat-state',S.deaf?'DEAFENED':names[S.st|0]);setText('bat-sub',S.deaf?'NO EAR, NO WARNING · IT FLIES ON AS IF ALONE':subs[S.st|0]);
+  setText('r-a1',Math.round(S.a1||0));setText('r-a2',Math.round(S.a2||0));setText('r-rate',Math.round(S.rate||8));setText('r-esc',S.esc);setText('r-caught',S.caught);
  }});
 
 /* ====================================================================== 5 · counts */
-Plate('p-counter',{w:1200,h:400,seed:44,paint:function(x,P){
-  var r=mul(12);
-  /* absorb: three 10 x 10 grids, shuffled so the survivors scatter */
-  [[60,100],[182,28],[304,15]].forEach(function(gq,gi){var idx=[];for(var i=0;i<100;i++)idx.push(i);for(i=99;i>0;i--){var j=Math.floor(r()*(i+1)),t=idx[i];idx[i]=idx[j];idx[j]=t}
-    for(i=0;i<100;i++){var c=idx[i]%10,rw=Math.floor(idx[i]/10),px=gq[0]+5+c*10.6,py=124+rw*10.6+(rw>4?0:0);
-      if(i<gq[1]){x.fillStyle=css(SONAR);x.beginPath();x.arc(px,py,3.1,0,TAU);x.fill()}else{x.strokeStyle=css(BONE,.28);x.lineWidth=.8;x.beginPath();x.arc(px,py,2.4,0,TAU);x.stroke()}}});
-  /* deflect: a small luna, 39 strikes on the body, 48 on the tails */
+Plate('p-counter',{w:1200,h:400,seed:44,warm:420,regions:{absorb:[44,92,424,312],deflect:[446,92,790,312],jam:[816,92,1156,312]},regionInk:SONAR,
+ init:function(P){var S=P.S,r=mul(12),i,a,q;
+  S.grids=[[60,100],[182,28],[304,15]].map(function(g){var idx=[];for(i=0;i<100;i++)idx.push(i);for(i=99;i>0;i--){var j=Math.floor(r()*(i+1)),t=idx[i];idx[i]=idx[j];idx[j]=t}
+    var cells=[];for(i=0;i<100;i++)cells.push([g[0]+5+(idx[i]%10)*10.6,124+Math.floor(idx[i]/10)*10.6,i<g[1]]);return cells});
+  S.marks=[];for(i=0;i<39;i++){a=r()*TAU;q=Math.sqrt(r());S.marks.push([615+Math.cos(a)*q*30,180+Math.sin(a)*q*40,0,r()])}
+  for(i=0;i<48;i++){a=r()*TAU;q=Math.sqrt(r());var g=i%2?1:-1;S.marks.push([615+g*47+Math.cos(a)*q*15,288+Math.sin(a)*q*20,1,r()])}
+  S.marks.sort(function(u,v){return u[3]-v[3]});
+  S.clk=[];for(i=0;i<34;i++)S.clk.push(r());S.jam=1;S.t0=0;S.pan=-1;},
+ paint:function(x,P){
   drawLuna(x,615,178,112,{pitch:2.9,plain:true,seed:9});
-  function mark(px,py,c){x.strokeStyle=c;x.lineWidth=1.5;x.beginPath();x.moveTo(px-3.4,py-3.4);x.lineTo(px+3.4,py+3.4);x.moveTo(px+3.4,py-3.4);x.lineTo(px-3.4,py+3.4);x.stroke()}
-  for(var i=0;i<39;i++){var a=r()*TAU,q=Math.sqrt(r());mark(615+Math.cos(a)*q*30,180+Math.sin(a)*q*40,css(BONE))}
-  for(i=0;i<48;i++){a=r()*TAU;q=Math.sqrt(r());var g=i%2?1:-1;mark(615+g*47+Math.cos(a)*q*15,288+Math.sin(a)*q*20,css(SONAR))}
-  /* jam: two bat calls, the echo window, and the moth's clicks filling it */
   var x0=832,x1=1140,y=190;x.strokeStyle=css(BONE,.2);x.lineWidth=1;x.beginPath();x.moveTo(x0,y+40);x.lineTo(x1,y+40);x.stroke();
   [x0+4,x1-4].forEach(function(px){x.strokeStyle=css(SONAR);x.lineWidth=3;x.beginPath();x.moveTo(px,y-52);x.lineTo(px,y+40);x.stroke()});
   x.fillStyle=css(SONAR,.12);x.fillRect(x0+40,y-30,150,70);x.strokeStyle=css(SONAR,.6);x.lineWidth=1;x.setLineDash([2,4]);x.strokeRect(x0+40.5,y-29.5,150,70);x.setLineDash([]);
-  for(i=0;i<28;i++){var px=x0+14+i*10.4+(r()-.5)*2;x.strokeStyle=css(BONE,.95);x.lineWidth=1.2;x.beginPath();x.moveTo(px,y+40);x.lineTo(px,y+40-22-r()*18);x.stroke()}
-  x.font='11px '+getComputedStyle(document.body).getPropertyValue('--mono');x.fillStyle=css(SONAR,.9);x.fillText('WHERE THE BAT LISTENS FOR ITS ECHO',x0+40,y-40);
-  x.fillStyle=css(BONE,.6);x.fillText('6 MS',x0+140,y+62);x.strokeStyle=css(BONE,.4);x.beginPath();x.moveTo(x0+4,y+54);x.lineTo(x0+4,y+62);x.moveTo(x0+4,y+58);x.lineTo(x0+130,y+58);x.moveTo(x0+178,y+58);x.lineTo(x1-4,y+58);x.moveTo(x1-4,y+54);x.lineTo(x1-4,y+62);x.stroke();
-}});
+  label(x,'WHERE THE BAT LISTENS FOR ITS ECHO',x0+40,y-40,SONAR,.9);label(x,'6 MS',x0+140,y+62,BONE,.6);
+  x.strokeStyle=css(BONE,.4);x.beginPath();x.moveTo(x0+4,y+54);x.lineTo(x0+4,y+62);x.moveTo(x0+4,y+58);x.lineTo(x0+130,y+58);x.moveTo(x0+178,y+58);x.lineTo(x1-4,y+58);x.moveTo(x1-4,y+54);x.lineTo(x1-4,y+62);x.stroke();
+ },
+ frame:function(x,P,dt){
+  var S=P.S,t=P.t,ptr=P.ptr,i,panel=ptr?(ptr.x<430?0:ptr.x<800?1:2):-1;
+  /* absorb: a pulse crosses each surface; what comes back is the echo */
+  var w=RM?1.25:(t*.5)%1.8,hg=panel===0?(ptr.x<172?0:ptr.x<294?1:2):-1;
+  S.grids.forEach(function(cells,gi){var gx=[60,182,304][gi],al=hg<0||hg===gi?1:.28,out=gx-10+w*130,echo=gx+120-(w-1)*165;
+    for(var k=0;k<cells.length;k++){var c=cells[k];
+      if(c[2]){var b=w>1?Math.exp(-Math.pow((c[0]-echo)/12,2)):0;x.fillStyle=css(mix(SONAR,[220,255,248],b),al);x.beginPath();x.arc(c[0],c[1],3.1+2.2*b,0,TAU);x.fill()}
+      else{var o=w<1?Math.exp(-Math.pow((c[0]-out)/10,2)):0;x.strokeStyle=css(BONE,(.28+.6*o)*al);x.lineWidth=.8;x.beginPath();x.arc(c[0],c[1],2.4,0,TAU);x.stroke()}}
+    if(w<1&&!RM){x.strokeStyle=css(SONAR,.55*al);x.lineWidth=1.2;x.beginPath();x.moveTo(out,114);x.lineTo(out,230);x.stroke()}});
+  /* deflect: the 87 attacks, replayed one at a time */
+  if(panel===1&&S.pan!==1)S.t0=t;S.pan=panel;
+  var prog=((t-S.t0)%18)*7.5,n=RM?87:Math.min(87,Math.floor(prog)),nb=0,nt=0;
+  for(i=0;i<n;i++){var m=S.marks[i];if(m[2])nt++;else nb++;x.strokeStyle=css(m[2]?SONAR:BONE);x.lineWidth=1.5;x.beginPath();x.moveTo(m[0]-3.4,m[1]-3.4);x.lineTo(m[0]+3.4,m[1]+3.4);x.moveTo(m[0]+3.4,m[1]-3.4);x.lineTo(m[0]-3.4,m[1]+3.4);x.stroke()}
+  if(!RM&&n<87){var nm=S.marks[n],f=prog-Math.floor(prog);x.strokeStyle=css(nm[2]?SONAR:BONE,.9);x.lineWidth=1.3;x.beginPath();x.moveTo(nm[0]+150*(1-f),nm[1]-110*(1-f));x.lineTo(nm[0]+150*(1-f)*.72,nm[1]-110*(1-f)*.72);x.stroke();
+    if(n>0){var lm=S.marks[n-1];x.strokeStyle=css(lm[2]?SONAR:BONE,1-f);x.beginPath();x.arc(lm[0],lm[1],5+f*14,0,TAU);x.stroke()}}
+  setText('c-body',nb);setText('c-tail',nt);
+  /* jam: the moth's clicks pour through the window where the echo is due */
+  S.jam+=((panel===2?0:1)-S.jam)*(RM?1:Math.min(1,dt*6));
+  var x0=832,x1=1140,y=190,span=x1-x0-24;
+  for(i=0;i<34;i++){var px=x0+12+((i*9.06+(RM?0:t*30))%span),h=20+20*S.clk[i]*(RM?1:.7+.3*Math.sin(t*20+i));x.strokeStyle=css(BONE,.95*S.jam);x.lineWidth=1.2;x.beginPath();x.moveTo(px,y+40);x.lineTo(px,y+40-h);x.stroke()}
+  var ex=x0+118;x.strokeStyle=css(SONAR,.4+.6*(1-S.jam));x.lineWidth=2.6;x.beginPath();x.moveTo(ex,y+40);x.lineTo(ex,y-6);x.stroke();
+  if(S.jam<.5){label(x,'ECHO',ex+8,y,SONAR,1-S.jam*2);x.strokeStyle=css(SONAR,1-S.jam*2);x.lineWidth=1;x.beginPath();x.arc(ex,y+16,30,0,TAU);x.stroke()}
+  setText('c-jam',S.jam>.5?'CLICKS FILL THE WINDOW · RANGE LOST':'MOTH SILENCED · ECHO READS CLEAN');
+ }});
 
 /* ====================================================================== 6 · eyes */
-Plate('p-eye',{w:1200,h:560,seed:55,warm:200,
+Plate('p-eye',{w:1200,h:560,seed:55,warm:200,regions:{ap:[44,92,580,492],su:[620,92,1156,492]},regionInk:LAMP,
+ init:function(P){var S=P.S;S.ph=[];S.n=[0,0];S.glow=[0,0];S.gp=[null,null];S.acc=0;S.r=mul(7);S.th=0},
  paint:function(x,P){var S=P.S,r=mul(31);S.eyes=[];
-  [300,900].forEach(function(cx,ei){var C=[cx,640],Ro=400,Ri=ei?215:228,E={C:C,rays:[]};
-    for(var k=-4;k<=4;k++){var a=k*.105,o=[C[0]+Math.sin(a)*Ro,C[1]-Math.cos(a)*Ro],inn=[C[0]+Math.sin(a)*Ri,C[1]-Math.cos(a)*Ri];
-      /* lens */
-      x.save();x.translate(o[0],o[1]);x.rotate(a);x.strokeStyle=css(BONE,.9);x.lineWidth=1.3;x.beginPath();x.moveTo(-19,4);x.quadraticCurveTo(0,-12,19,4);x.quadraticCurveTo(0,13,-19,4);x.stroke();
-      x.fillStyle=css(BONE,.1);x.fill();x.restore();
-      if(!ei){ /* walled tube */
-        var a1=a-.052,a2=a+.052;x.strokeStyle=k===0?css(LAMP,.8):css(BONE,.45);x.lineWidth=1;[a1,a2].forEach(function(aa){x.beginPath();x.moveTo(C[0]+Math.sin(aa)*(Ro-8),C[1]-Math.cos(aa)*(Ro-8));x.lineTo(C[0]+Math.sin(aa)*(Ri+6),C[1]-Math.cos(aa)*(Ri+6));x.stroke()});
-        E.rays.push(k===0?{p:[[o[0],60],o,inn],ok:true}:{p:[[o[0],60],o,[o[0],o[1]+44+Math.abs(k)*3]],ok:false});
-      } else E.rays.push({p:[[o[0],60],o,[C[0],C[1]-Ri]],ok:true});
-      /* receptor */
-      x.fillStyle=css(BONE,.75);x.beginPath();x.ellipse(inn[0],inn[1]+10,5,11,a,0,TAU);x.fill();
-    }
-    /* retina band */
+  [300,900].forEach(function(cx,ei){var C=[cx,640],Ro=400,Ri=ei?215:228,E={C:C,Ro:Ro,Ri:Ri,o:[],inn:[],a:[]};
+    for(var k=-4;k<=4;k++){var a=k*.105,o=[C[0]+Math.sin(a)*Ro,C[1]-Math.cos(a)*Ro],inn=[C[0]+Math.sin(a)*Ri,C[1]-Math.cos(a)*Ri];E.o.push(o);E.inn.push(inn);E.a.push(a);
+      x.save();x.translate(o[0],o[1]);x.rotate(a);x.strokeStyle=css(BONE,.9);x.lineWidth=1.3;x.beginPath();x.moveTo(-19,4);x.quadraticCurveTo(0,-12,19,4);x.quadraticCurveTo(0,13,-19,4);x.stroke();x.fillStyle=css(BONE,.1);x.fill();x.restore();
+      if(!ei){x.strokeStyle=css(BONE,.45);x.lineWidth=1;[a-.052,a+.052].forEach(function(aa){x.beginPath();x.moveTo(C[0]+Math.sin(aa)*(Ro-8),C[1]-Math.cos(aa)*(Ro-8));x.lineTo(C[0]+Math.sin(aa)*(Ri+6),C[1]-Math.cos(aa)*(Ri+6));x.stroke()})}
+      x.fillStyle=css(BONE,.75);x.beginPath();x.ellipse(inn[0],inn[1]+10,5,11,a,0,TAU);x.fill();}
     stipple(x,{x0:cx-260,y0:400,x1:cx+260,y1:470,pitch:3.4,rnd:r,r:.9,col:css(BONE,.6),dens:function(px,py){var dx=px-C[0],dy=C[1]-py,rr=Math.sqrt(dx*dx+dy*dy),an=Math.atan2(dx,dy);return (Math.abs(an)<.5&&rr<Ri-12&&rr>Ri-34)?.75:0}});
-    if(ei){x.font='11px '+getComputedStyle(document.body).getPropertyValue('--mono');x.fillStyle=css(BONE,.45);x.textAlign='center';x.fillText('CLEAR ZONE',cx+170,330)}
-    /* ray guides */
-    E.rays.forEach(function(q){x.strokeStyle=css(LAMP,q.ok?.3:.16);x.lineWidth=1;x.beginPath();x.moveTo(q.p[0][0],q.p[0][1]);x.lineTo(q.p[1][0],q.p[1][1]);x.lineTo(q.p[2][0],q.p[2][1]);x.stroke();
-      if(!q.ok){var e=q.p[2];x.strokeStyle=css(BONE,.6);x.beginPath();x.moveTo(e[0]-4,e[1]-4);x.lineTo(e[0]+4,e[1]+4);x.moveTo(e[0]+4,e[1]-4);x.lineTo(e[0]-4,e[1]+4);x.stroke()}});
-    S.eyes.push(E);
-  });
+    if(ei)label(x,'CLEAR ZONE',cx+212,330,BONE,.45,'center');
+    S.eyes.push(E);});
  },
- init:function(P){var S=P.S;S.ph=[];S.n=[0,0];S.glow=[0,0];S.acc=0;S.r=mul(7)},
- frame:function(x,P,dt){var S=P.S,i;S.acc+=dt;
-  while(S.acc>.11){S.acc-=.11;var k=Math.floor(S.r()*9);[0,1].forEach(function(e){S.ph.push({e:e,k:k,s:0})})}
-  for(i=S.ph.length-1;i>=0;i--){var p=S.ph[i],q=S.eyes[p.e].rays[p.k],a=q.p[0],b=q.p[1],c=q.p[2],l1=Math.hypot(b[0]-a[0],b[1]-a[1]),l2=Math.hypot(c[0]-b[0],c[1]-b[1]);
-    p.s+=dt*330;var px,py;if(p.s<l1){px=lerp(a[0],b[0],p.s/l1);py=lerp(a[1],b[1],p.s/l1)}else if(p.s<l1+l2){var u=(p.s-l1)/l2;px=lerp(b[0],c[0],u);py=lerp(b[1],c[1],u)}
-    else{if(q.ok){S.n[p.e]++;S.glow[p.e]=1}S.ph.splice(i,1);continue}
-    x.fillStyle=css(LAMP,q.ok||p.s<l1?1:.5);x.beginPath();x.arc(px,py,2.3,0,TAU);x.fill()}
-  [0,1].forEach(function(e){S.glow[e]=Math.max(0,S.glow[e]-dt*(e?1.2:2.2));var E=S.eyes[e],f=E.rays[e?0:4].p[2],g=S.glow[e];
-    if(g>0){var gr=x.createRadialGradient(f[0],f[1]+8,0,f[0],f[1]+8,e?46:26);gr.addColorStop(0,css(LAMP,.85*g));gr.addColorStop(1,css(LAMP,0));x.fillStyle=gr;x.beginPath();x.arc(f[0],f[1]+8,e?46:26,0,TAU);x.fill()}});
+ frame:function(x,P,dt){
+  var S=P.S,t=P.t,ptr=P.ptr,i,e,k;
+  /* the star: its direction is the pointer's, or it drifts */
+  var tgt=ptr?clamp((ptr.x-(ptr.x<600?300:900))/250,-1,1)*.36:.3*Math.sin(t*.4);S.th+=(tgt-S.th)*(RM?1:Math.min(1,dt*8));
+  var th=S.th,sn=Math.sin(th),cs=Math.cos(th),kk=clamp(Math.round(th/.105),-4,4)+4;
+  function path(e,k){var E=S.eyes[e],o=E.o[k],L=(o[1]-96)/cs,ok=e===1||k===kk;return {p:[[o[0]+sn*L,96],o,ok?E.inn[kk]:[o[0]-sn*46,o[1]+cs*46]],ok:ok,e:e,s:0}}
+  for(e=0;e<2;e++){var E=S.eyes[e];
+    for(k=0;k<9;k++){var q=path(e,k);x.strokeStyle=css(LAMP,q.ok?.34:.16);x.lineWidth=1;x.beginPath();x.moveTo(q.p[0][0],q.p[0][1]);x.lineTo(q.p[1][0],q.p[1][1]);x.lineTo(q.p[2][0],q.p[2][1]);x.stroke();
+      if(!q.ok){var en=q.p[2];x.strokeStyle=css(BONE,.6);x.beginPath();x.moveTo(en[0]-4,en[1]-4);x.lineTo(en[0]+4,en[1]+4);x.moveTo(en[0]+4,en[1]-4);x.lineTo(en[0]-4,en[1]+4);x.stroke()}}
+    if(!e){x.strokeStyle=css(LAMP,.9);x.lineWidth=1.2;[E.a[kk]-.052,E.a[kk]+.052].forEach(function(aa){x.beginPath();x.moveTo(E.C[0]+Math.sin(aa)*(E.Ro-8),E.C[1]-Math.cos(aa)*(E.Ro-8));x.lineTo(E.C[0]+Math.sin(aa)*(E.Ri+6),E.C[1]-Math.cos(aa)*(E.Ri+6));x.stroke()})}
+    /* the star itself */
+    var sx=E.C[0]+sn/cs*148,sy=82,pu=3+1.2*Math.sin(t*3+e);x.fillStyle=css([255,240,214]);x.beginPath();
+    x.moveTo(sx,sy-pu*2.6);x.lineTo(sx+pu*.6,sy-pu*.6);x.lineTo(sx+pu*2.6,sy);x.lineTo(sx+pu*.6,sy+pu*.6);x.lineTo(sx,sy+pu*2.6);x.lineTo(sx-pu*.6,sy+pu*.6);x.lineTo(sx-pu*2.6,sy);x.lineTo(sx-pu*.6,sy-pu*.6);x.closePath();x.fill();
+    var rc=E.inn[kk];x.strokeStyle=css(LAMP,.9);x.lineWidth=1;x.beginPath();x.arc(rc[0],rc[1]+10,15,0,TAU);x.stroke();}
+  S.acc+=dt;while(S.acc>.09){S.acc-=.09;k=Math.floor(S.r()*9);S.ph.push(path(0,k),path(1,k))}
+  for(i=S.ph.length-1;i>=0;i--){var p=S.ph[i],a=p.p[0],b=p.p[1],c=p.p[2],l1=Math.hypot(b[0]-a[0],b[1]-a[1]),l2=Math.hypot(c[0]-b[0],c[1]-b[1]),px,py;
+    p.s+=dt*330;if(p.s<l1){px=lerp(a[0],b[0],p.s/l1);py=lerp(a[1],b[1],p.s/l1)}else if(p.s<l1+l2){var u=(p.s-l1)/l2;px=lerp(b[0],c[0],u);py=lerp(b[1],c[1],u)}
+    else{if(p.ok){S.n[p.e]++;S.glow[p.e]=1;S.gp[p.e]=c}S.ph.splice(i,1);continue}
+    x.fillStyle=css(LAMP,p.ok||p.s<l1?1:.5);x.beginPath();x.arc(px,py,2.3,0,TAU);x.fill()}
+  for(e=0;e<2;e++){S.glow[e]=Math.max(0,S.glow[e]-dt*(e?1.2:2.2));var f=S.gp[e],g=S.glow[e];
+    if(g>0&&f){var R=e?46:26,gr=x.createRadialGradient(f[0],f[1]+8,0,f[0],f[1]+8,R);gr.addColorStop(0,css(LAMP,.85*g));gr.addColorStop(1,css(LAMP,0));x.fillStyle=gr;x.beginPath();x.arc(f[0],f[1]+8,R,0,TAU);x.fill()}}
   setText('r-ap',S.n[0]);setText('r-su',S.n[1]);
  }});
 
@@ -957,25 +1187,26 @@ Plate('p-dlr',{w:1200,h:660,seed:66,warm:300,
   stipple(x,{x0:0,y0:624,x1:1200,y1:660,pitch:5,rnd:r,r:.8,col:css(BONE,.3),dens:function(){return .5}});
   function layer(fn){var c=document.createElement('canvas');c.width=P.bg.width;c.height=P.bg.height;var g=c.getContext('2d');g.setTransform(k,0,0,k,0,0);fn(g);return c}
   S.layers.lamp=layer(function(g){
-    stipple(g,{x0:140,y0:0,x1:1060,y1:620,pitch:4.6,rnd:r,r:1,col:function(px,py,d){return css(LAMP,.3+.7*Math.min(1,d*1.6))},dens:function(px,py){var q=Math.hypot(px-600,py-330);return q<9?0:Math.min(1,1/(1+Math.pow(q/74,2))*1.4)}});
-    g.fillStyle=css([255,240,214]);g.beginPath();g.arc(600,330,8,0,TAU);g.fill();g.strokeStyle=css(BONE,.5);g.lineWidth=1;g.beginPath();g.moveTo(600,338);g.lineTo(600,622);g.stroke()});
+    stipple(g,{x0:160,y0:0,x1:1040,y1:660,pitch:4.6,rnd:r,r:1,col:function(px,py,d){return css(LAMP,.3+.7*Math.min(1,d*1.6))},dens:function(px,py){var q=Math.hypot(px-600,py-330);return q<9?0:Math.min(1,1/(1+Math.pow(q/74,2))*1.4)*smooth(330,200,q)}})});
   S.layers.sky=layer(function(g){stipple(g,{x0:0,y0:0,x1:1200,y1:250,pitch:4.6,rnd:r,r:1,col:function(px,py,d){return css(LAMP,.3+.6*d)},dens:function(px,py){return .9*Math.pow(clamp(1-py/250,0,1),1.6)}})});
   S.layers.floor=layer(function(g){stipple(g,{x0:0,y0:400,x1:1200,y1:622,pitch:4.6,rnd:r,r:1,col:function(px,py,d){return css(LAMP,.3+.6*d)},dens:function(px,py){return .95*Math.pow(clamp((py-400)/222,0,1),1.7)}})});
  },
- init:function(P){var S=P.S;S.r=mul(17);S.mode='lamp';S.crash=0;S.pass=0;S.marks=[];S.T=0;
+ init:function(P){var S=P.S;S.r=mul(17);S.mode='lamp';S.crash=0;S.pass=0;S.marks=[];S.T=0;S.lx=600;S.ly=330;
   S.spawn=function(m){var left=S.r()<.5;m.x=left?-20:1220;m.y=120+S.r()*380;m.hand=left?1:-1;m.phi=-Math.PI/2;m.vx=m.hand*112;m.vy=0;m.trail=[];m.inv=false;return m};
   S.moths=[];for(var i=0;i<7;i++){var m=S.spawn({});m.x=S.r()*1200;S.moths.push(m)}
   var T={sky:['NIGHT SKY','THE BRIGHT HALF IS OVERHEAD · BACKS UP · LEVEL FLIGHT'],lamp:['POINT LAMP','BACKS TURN TO THE BULB · ORBIT, STALL, FLIP'],floor:['LIT FLOOR','THE BRIGHT HALF IS BELOW · BACKS DOWN · THEY FALL']};
   S.setMode=function(md){S.mode=md;S.crash=0;S.pass=0;S.marks=[];['sky','lamp','floor'].forEach(function(q){var b=$('m-'+q);if(b)b.setAttribute('aria-pressed',q===md?'true':'false')});setText('dlr-t',T[md][0]);setText('dlr-s',T[md][1])};
   ['sky','lamp','floor'].forEach(function(q){var b=$('m-'+q);if(b)b.addEventListener('click',function(){S.setMode(q);if(RM){for(var i=0;i<200;i++)S.step(1/30);P.draw(0)}})});
-  S.step=function(dt){S.T+=dt;var inv=0;
+  S.step=function(dt){S.T+=dt;var inv=0,ptr=P.ptr;
+   /* the lamp goes where the pointer carries it */
+   var tx=600,ty=330;if(S.mode==='lamp'&&ptr){tx=clamp(ptr.x,60,1140);ty=clamp(ptr.y,60,580)}
+   S.lx+=(tx-S.lx)*Math.min(1,dt*(ptr?10:1.5));S.ly+=(ty-S.ly)*Math.min(1,dt*(ptr?10:1.5));
    for(var i=0;i<S.moths.length;i++){var m=S.moths[i],lx,ly;
     if(S.mode==='sky'){lx=0;ly=-1}else if(S.mode==='floor'){lx=0;ly=1}
-    else{var dx=600-m.x,dy=330-m.y,q=Math.hypot(dx,dy)||1,w=1/(1+Math.pow(q/330,3));lx=dx/q*w;ly=dy/q*w-(1-w)*.9;var n=Math.hypot(lx,ly)||1;lx/=n;ly/=n}
+    else{var dx=S.lx-m.x,dy=S.ly-m.y,q=Math.hypot(dx,dy)||1,w=1/(1+Math.pow(q/330,3));lx=dx/q*w;ly=dy/q*w-(1-w)*.9;var n=Math.hypot(lx,ly)||1;lx/=n;ly/=n}
     var want=Math.atan2(ly,lx),e=Math.atan2(Math.sin(want-m.phi),Math.cos(want-m.phi));m.phi+=clamp(e,-4.2*dt,4.2*dt);
-    var ddx=Math.cos(m.phi),ddy=Math.sin(m.phi),fx=-ddy*m.hand,fy=ddx*m.hand; /* forward = back rotated a quarter turn */
-    var lift=236;
-    var ax=fx*165+ddx*lift-1.5*m.vx,ay=fy*165+ddy*lift-1.5*m.vy+230;
+    var ddx=Math.cos(m.phi),ddy=Math.sin(m.phi),fx=-ddy*m.hand,fy=ddx*m.hand;
+    var ax=fx*165+ddx*236-1.5*m.vx,ay=fy*165+ddy*236-1.5*m.vy+230;
     m.vx+=ax*dt;m.vy+=ay*dt;m.x+=m.vx*dt;m.y+=m.vy*dt;
     m.inv=ddy>.25;if(m.inv)inv++;
     m.trail.push([m.x,m.y]);if(m.trail.length>300)m.trail.shift();
@@ -984,36 +1215,52 @@ Plate('p-dlr',{w:1200,h:660,seed:66,warm:300,
    }
    S.inv=inv;while(S.marks.length&&S.T-S.marks[0][1]>7)S.marks.shift();
   };},
- frame:function(x,P,dt){var S=P.S;if(dt>0)S.step(dt);
-  var L=S.layers[S.mode];if(L)x.drawImage(L,0,0,P.W,P.H);
+ frame:function(x,P,dt){var S=P.S,ptr=P.ptr;if(dt>0)S.step(dt);
+  var L=S.layers[S.mode];if(L){if(S.mode==='lamp')x.drawImage(L,S.lx-600,S.ly-330,P.W,P.H);else x.drawImage(L,0,0,P.W,P.H)}
+  if(S.mode==='lamp'){x.strokeStyle=css(BONE,.5);x.lineWidth=1;x.beginPath();x.moveTo(S.lx,S.ly+8);x.lineTo(S.lx,622);x.stroke();
+    x.fillStyle=css([255,240,214]);x.beginPath();x.arc(S.lx,S.ly,8,0,TAU);x.fill();
+    if(ptr){x.strokeStyle=css(LAMP,.7);x.beginPath();x.arc(S.lx,S.ly,16,0,TAU);x.stroke()}else label(x,'CARRY ME',S.lx+18,S.ly+4,LAMP,.7)}
   for(var i=0;i<S.marks.length;i++){var mk=S.marks[i],a=1-(S.T-mk[1])/7;x.strokeStyle=css(HOT,a);x.lineWidth=1.6;x.beginPath();x.moveTo(mk[0]-6,612);x.lineTo(mk[0]+6,622);x.moveTo(mk[0]+6,612);x.lineTo(mk[0]-6,622);x.stroke()}
-  for(i=0;i<S.moths.length;i++){var m=S.moths[i],tr=m.trail;x.lineWidth=1;
-    for(var j=1;j<tr.length;j++){x.strokeStyle=css(BONE,.55*j/tr.length);x.beginPath();x.moveTo(tr[j-1][0],tr[j-1][1]);x.lineTo(tr[j][0],tr[j][1]);x.stroke()}
+  var near=-1,nd=60;if(ptr&&S.mode!=='lamp')for(i=0;i<S.moths.length;i++){var dq=Math.hypot(S.moths[i].x-ptr.x,S.moths[i].y-ptr.y);if(dq<nd){nd=dq;near=i}}
+  for(i=0;i<S.moths.length;i++){var m=S.moths[i],tr=m.trail;x.lineWidth=i===near?1.8:1;
+    for(var j=1;j<tr.length;j++){x.strokeStyle=css(BONE,(i===near?.95:.55)*j/tr.length);x.beginPath();x.moveTo(tr[j-1][0],tr[j-1][1]);x.lineTo(tr[j][0],tr[j][1]);x.stroke()}
     var dx=Math.cos(m.phi),dy=Math.sin(m.phi),fx=-dy*m.hand,fy=dx*m.hand;
     x.strokeStyle=css(BONE);x.lineWidth=3.2;x.lineCap='round';x.beginPath();x.moveTo(m.x-fx*9,m.y-fy*9);x.lineTo(m.x+fx*9,m.y+fy*9);x.stroke();
     x.strokeStyle=css(m.inv?HOT:LAMP);x.lineWidth=2;x.beginPath();x.moveTo(m.x,m.y);x.lineTo(m.x+dx*11,m.y+dy*11);x.stroke();
-    x.fillStyle=css(BONE);x.beginPath();x.arc(m.x+fx*10,m.y+fy*10,2.4,0,TAU);x.fill()}
+    x.fillStyle=css(BONE);x.beginPath();x.arc(m.x+fx*10,m.y+fy*10,2.4,0,TAU);x.fill();
+    if(i===near)label(x,m.inv?'BACK TO THE LIGHT · UPSIDE DOWN':'BACK TO THE LIGHT · LEVEL',m.x+18,m.y-14,m.inv?HOT:LAMP,.95)}
   setText('r-inv',S.inv||0);setText('r-crash',S.crash);setText('r-pass',S.pass);
  }});
 
 /* ====================================================================== spec */
 var SPEC={
-  system:"night stock, four inks, one stipple engine",
-  substrate:{color:"#10131b",tooth:"256px noise tile at device pixels",mottle:"3-octave fBm painted 60px wide, upscaled",fibres:170},
+  system:"night stock, four inks, one stipple engine, every plate answers the pointer",
+  substrate:{color:"#10131b",tooth:"256px noise tile at device pixels",mottle:"4-octave fBm painted 150px wide, upscaled",fibres:170},
   inks:{bone:"#e8e0cd body",lamp:"#f0a23b light and heat",scent:"#c58cf5 pheromone and odor memory",sonar:"#4fd3c4 ultrasound",hot:"#ff5a36 alarm states only"},
   operators:[
     {id:"stipple",grid:"jittered hex",keep:"P = density(x,y)",radius:"0.62 + 0.55·density",drives:["form shading","light fields","thermal map","counts"]},
-    {id:"scale-lay",rows:"arcs about the wing root",step:"0.6·pitch",order:"margin inward, so tips overlap bases",shape:"ellipse 1.15–1.4·pitch by 0.56–0.66·pitch",shadow:"one dark ellipse under each scale",color:"fBm value × vein lift × margin and costa bands"},
+    {id:"scale-lay",rows:"arcs about the wing root",step:"0.6·pitch",order:"margin inward, so tips overlap bases",shape:"ellipse 1.15–1.4·pitch by 0.56–0.66·pitch",shadow:"one dark ellipse under each scale",color:"fBm value × vein lift × margin and costa bands",stored:"every scale kept as [x,y,ux,uy,len,wid,angle,r,g,b] in a 32px grid"},
     {id:"fur",marks:3400,curve:"quadratic, head to tail, splayed by lateral offset"},
-    {id:"thermal-ramp",stops:[[8,"#3a486e"],[15,"#68728e"],[23,"#cec8b8"],[30,"#f0ac46"],[37,"#ff6830"],[43,"#ffeece"]],read:"per dot, from a two-zone heat model"}
+    {id:"thermal-ramp",stops:[[8,"#546496"],[15,"#808aaa"],[23,"#cec8b8"],[30,"#f0ac46"],[37,"#ff6830"],[43,"#ffeece"]],read:"per dot, from a two-zone heat model"}
   ],
+  motion:[
+    {plate:"fig0",idle:"wings breathe (scaleX = cos φ about the body axis); tails drawn in 3u strips, each offset and narrowed to sway and twist; antennae sway",pointer:"a light: scales within 96u redraw brighter by (1−d/R)² × cos²(scale angle − light angle)",press:"scales within 13u are struck from the wing sheet and fall as dust",enter:"wings open from 0.68 to 1 over 1.6s"},
+    {plate:"fig1",idle:"u runs 0→2 on a 16s loop; 470 tissue streaks arc larva→pupa→imago; peristaltic wave; pupal flick; wing shiver",pointer:"x scrubs u; the hovered stage rears, flicks or beats; day ruler and proboscis respond"},
+    {plate:"fig2",idle:"17s cycle: rest, shiver, hover, dump heat",pointer:"spot meter reads the model temperature under it; fur parts; the box is worked by hand; airspeed drives the vortex"},
+    {plate:"fig3",pointer:"moving stirs filaments; held, it releases scent the male will track"},
+    {plate:"fig4",pointer:"the bat flies toward it at ≤232 u/s; over the raster it brushes time back onto the flight path",toggle:"deafened: no spikes, no evasion"},
+    {plate:"fig5",idle:"pulse and echo cross the grids; 87 attacks replay; clicks stream",pointer:"isolates a grid; restarts the replay; silences the moth"},
+    {plate:"fig6",pointer:"sets the star's direction; one facet accepts it in the apposition eye, all nine refocus it in the superposition eye"},
+    {plate:"fig7",pointer:"carries the lamp"}
+  ],
+  links:"terms in the prose carry data-hl=plate:part and bracket that part of the figure",
   simulations:{
     surge_cast:{wind:"152 u/s",detect:"any filament particle within 12 u",surge:"upwind at 168 u/s",cast:"crosswind 190 u/s, leg × 1.34 each reversal"},
     two_neuron_ear:{A1:"fires inside the outer ring, 1–4 spikes per call",A2:"fires inside the inner ring",behavior:["cruise","turn away","erratic"],rings:"schematic"},
-    dorsal_light:{rule:"rotate the back toward the brightest direction at ≤ 4.2 rad/s",lift:"along the back, scaled by airspeed",modes:["sky","point lamp","lit floor"]}
+    dorsal_light:{rule:"rotate the back toward the brightest direction at ≤ 4.2 rad/s",thrust:"236 along the back, 165 forward, drag 1.5·v, gravity 230",modes:["sky","point lamp","lit floor"]}
   },
   type:{display:"Instrument Serif",text:"Geist",data:"Geist Mono"},
-  rules:["no image files","every count is drawn as its own number of marks","violet, teal and amber never stand for anything but scent, sound and light"]
+  rules:["no image files","every count is drawn as its own number of marks","violet, teal and amber never stand for anything but scent, sound and light","no motion without a cause in the animal","reduced motion: every plate holds a finished still and redraws on pointer events"]
 };
 var sp=$('spec');if(sp)sp.textContent=JSON.stringify(SPEC,null,2);
 
