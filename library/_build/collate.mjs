@@ -271,6 +271,9 @@ const READERS = {
   /** A working tool. */
   'instrument'(col) { return folderRecords(col, 'ins', 'instrument'); },
 
+  /** A collection whose records are rows in works.json. The rows are added after the readers run. */
+  'works'() { return []; },
+
   /** Work outside the deployed site, kept by hand in holdings.json. */
   'holdings'(col) {
     const H = readJson(join(HERE, 'holdings.json'));
@@ -321,6 +324,27 @@ for (const col of CFG.collections) {
   colMeta[col.id] = recs.meta || {};
   for (const r of recs) raw.push(r);
 }
+/* works kept by hand -------------------------------------------------------
+   works.json lists work that lives outside this repository: a page on another
+   site, with its address. works-private.json, when present, adds work that is
+   not public; it is never committed, and its records are numbered apart. */
+for (const f of ['works.json', 'works-private.json']) {
+  if (!existsSync(join(HERE, f))) continue;
+  const W = readJson(join(HERE, f)), priv = f !== 'works.json';
+  if (W.collections) { const at = CFG.collections.findIndex((c) => c.id === 'holdings'); CFG.collections.splice(at < 0 ? CFG.collections.length : at, 0, ...W.collections.map((c) => ({ reader: 'works', path: null, index: null, ...c, private: priv }))); for (const c of W.collections) colMeta[c.id] = {}; }
+  W.records.forEach((w, i) => {
+    const col = CFG.collections.find((c) => c.id === w.collection);
+    if (!col) { problems.push(`${f}: no collection "${w.collection}" for ${w.id}`); return; }
+    raw.push({
+      id: w.id, slug: w.id.split(':').pop(), call: w.call || '', title: w.title, sub: w.sub || '', kind: w.kind, collection: w.collection,
+      section: w.section || 'pages', section_title: w.section_title || 'Pages', status: w.status ?? null, lane: null, layer: null, style: null,
+      href: w.href || null, thumbSrc: null, source: w.source || f, dirs: [], held_date: w.date || null, ext_fixity: w.fixity || null,
+      plate: { spec: false, points: 0 }, reads: [], rel: w.rel || [], governed_by: [],
+      provenance: { kind: 'original', title: w.source || null, author: null, date: w.date || null, license: null, url: null, rights: 'first-party' },
+      location: w.location || null, access: w.access || 'public', private: priv, tags: w.tags || [], order: 1000 + i
+    });
+  });
+}
 {
   const seen = new Set();
   for (const r of raw) { if (seen.has(r.id)) problems.push(`duplicate record id ${r.id}`); seen.add(r.id); }
@@ -334,7 +358,7 @@ for (const r of raw) {
   if (r.source && exists(r.source)) {
     if (!fixity[r.source]) fixity[r.source] = sha256(readFileSync(join(ROOT, r.source)));
     r.fixity = fixity[r.source];
-  } else r.fixity = null;
+  } else r.fixity = r.ext_fixity || null;
 }
 
 /* accession numbers ------------------------------------------------------- */
@@ -342,7 +366,14 @@ const ACC_FILE = join(LIB, 'accessions.json');
 const ACC = existsSync(ACC_FILE) ? readJson(ACC_FILE) : { records: {}, next: 1 };
 const before = JSON.stringify(ACC.records);
 const colOrder = new Map(CFG.collections.map((c, i) => [c.id, i]));
-const pending = raw.filter((r) => !ACC.records[r.id])
+// private work is numbered in its own file, so the public register never depends on it
+const ACCP_FILE = join(LIB, 'accessions-private.json');
+const ACCP = existsSync(ACCP_FILE) ? readJson(ACCP_FILE) : { records: {}, next: 1 };
+for (const r of raw.filter((x) => x.private && !ACCP.records[x.id]).sort((a, b) => (a.dates.accessioned || '9999').localeCompare(b.dates.accessioned || '9999') || a.order - b.order)) {
+  const date = r.dates.accessioned || TODAY;
+  ACCP.records[r.id] = { acc: `${date.slice(0, 4)}.P${String(ACCP.next++).padStart(3, '0')}`, accessioned: date };
+}
+const pending = raw.filter((r) => !r.private && !ACC.records[r.id])
   .sort((a, b) => (a.dates.accessioned || '9999').localeCompare(b.dates.accessioned || '9999') || colOrder.get(a.collection) - colOrder.get(b.collection) || a.order - b.order);
 for (const r of pending) {
   // a holding that landed in a collection keeps the number it was given as a holding
@@ -360,7 +391,7 @@ for (const [id, v] of Object.entries(ACC.records)) {
   if (!v.withdrawn) v.withdrawn = TODAY;
   withdrawn.push({ id, acc: v.acc, withdrawn: v.withdrawn });
 }
-for (const r of raw) { r.acc = ACC.records[r.id].acc; r.dates.accessioned = ACC.records[r.id].accessioned; }
+for (const r of raw) { const a = r.private ? ACCP.records[r.id] : ACC.records[r.id]; r.acc = a.acc; r.dates.accessioned = a.accessioned; }
 raw.sort((a, b) => a.acc.slice(5).localeCompare(b.acc.slice(5)));
 const byId = new Map(raw.map((r) => [r.id, r]));
 
@@ -429,6 +460,36 @@ for (const r of raw) {
       : { label: 'no picture', why: '' };
   }
 }
+/* works ---------------------------------------------------------------------
+   A work is drawn once. editions.json names the other records that are the same
+   work (versions) and the records lifted out of a work (parts). A record that
+   is a version or a part carries `work` and `role`; the work lists them. */
+for (const f of ['editions.json', 'editions-private.json']) {
+  if (!existsSync(join(HERE, f))) continue;
+  const E = readJson(join(HERE, f));
+  const top = (id) => { let r = byId.get(id); while (r && r.work) r = byId.get(r.work); return r; };
+  for (const v of E.versions || []) {
+    const w = top(v.work); if (!w) continue;
+    for (const id of v.of) { const m = byId.get(id); if (m && m !== w && !m.work) { m.work = w.id; m.role = 'version'; } }
+  }
+  for (const p of E.parts || []) {
+    const members = raw.filter((r) => !r.work && r.role !== 'version' && r.provenance && r.provenance.title && r.provenance.title.startsWith(p.source));
+    const w = p.work ? top(p.work) : null;
+    // with no record for the source, the parts carry its name and no picture of their own
+    for (const m of members) if (m !== w) { m.role = 'part'; if (w) { m.work = w.id; delete m.part_of; } else if (p.label) m.part_of = p.label; }
+  }
+}
+for (const r of raw) {
+  if (!r.work) continue;
+  const w = byId.get(r.work);
+  (w[r.role === 'part' ? 'parts' : 'versions'] ||= []).push(r.id);
+}
+// a work with no picture of its own shows its newest pictured version
+for (const w of raw) {
+  if (w.work || w.thumb || !w.versions) continue;
+  const v = w.versions.map((id) => byId.get(id)).filter((x) => x.thumb).sort((a, b) => (b.dates.modified || '').localeCompare(a.dates.modified || ''))[0];
+  if (v) { w.thumb = v.thumb; w.thumb_kind = v.thumb_kind; w.pic = v.pic; w.pic_acc = v.acc; w.thumb_master = v.thumb_master; w.thumb_from = v.id; delete w.no_pic; }
+}
 // Records that show the same picture. With a signature: same shape, mean difference
 // at most 0.4 and no cell further than 6 of 255. Two snapshots of one moving stage
 // differ a little more, so a pair of snapshots is allowed 3 and 24.
@@ -448,7 +509,7 @@ for (const r of raw) {
   };
   const leaders = [];
   for (const r of raw) {
-    if (!r.thumb) continue;
+    if (!r.thumb || r.role) continue;
     const l = leaders.find((x) => same(x, r));
     if (l) { r.pic_group = l.acc; l.pic_group = l.acc; } else leaders.push(r);
   }
@@ -609,7 +670,7 @@ const out = (r) => {
     acc: r.acc, id: r.id, call: r.call, title: r.title, sub: r.sub, kind: r.kind,
     collection: r.collection, section: r.section, section_title: r.section_title,
     status: r.status, lane: r.lane, layer: r.layer, style: r.style, access: r.access,
-    href: r.href ? `../${r.href}` : null, thumb: r.thumb, source: r.source,
+    href: r.href ? (/^https?:/.test(r.href) ? r.href : `../${r.href}`) : null, thumb: r.thumb, source: r.source,
     dates: r.dates, fixity: r.fixity ? r.fixity.slice(0, 16) : null,
     plate: r.plate, techniques: [...new Set([...(r.kind === 'technique' ? [`${r.collection === 'holdings' ? 'hld' : 'enc'}:${r.slug}`] : []), ...r.rel.filter((x) => x.type === 'instance-of').map((x) => x.to), ...r.reads.map((x) => `${x.scheme}:${x.id}`)])],
     atoms: [...new Set([...r.rel.filter((x) => x.type === 'uses' || x.type === 'produces').map((x) => x.to), ...r.reads.flatMap((x) => (x.atoms || []).map((a) => `${x.scheme}:${a}`))])],
@@ -617,11 +678,12 @@ const out = (r) => {
   };
   for (const k of ['spec_href', 'thumb_master']) if (r[k]) o[k] = k === 'spec_href' ? `../${r[k]}` : r[k];
   for (const k of ['governed_by', 'tags']) if (r[k] && r[k].length) o[k] = r[k];
-  for (const k of ['swatches', 'ruling', 'proposed_grade', 'atom_kind', 'location', 'target', 'pic_group', 'no_pic']) if (r[k]) o[k] = r[k];
+  for (const k of ['swatches', 'ruling', 'proposed_grade', 'atom_kind', 'location', 'target', 'pic_group', 'no_pic', 'work', 'role', 'part_of', 'versions', 'parts', 'thumb_from']) if (r[k]) o[k] = r[k];
   if (r.thumb_kind === 'snapshot') o.thumb_kind = 'snapshot';
+  if (r.private) o.private = true;
   if (r.pic) {
     o.thumb_w = r.pic.w; o.thumb_h = r.pic.h;
-    if (r.pic.w2) { o.thumb_2x = `thumbs/${r.acc}-960.jpg`; o.thumb_2x_w = r.pic.w2; }   // a snapshot's larger copy
+    if (r.pic.w2) { o.thumb_2x = `thumbs/${r.pic_acc || r.acc}-960.jpg`; o.thumb_2x_w = r.pic.w2; }   // a snapshot's larger copy
     else if (r.pic.mw > r.pic.w) { o.thumb_2x = r.thumb_master; o.thumb_2x_w = r.pic.mw; } // the master is the larger size
   }
   return o;
@@ -642,7 +704,7 @@ const collections = CFG.collections.map((c) => {
 const catalog = {
   schema: SCHEMA, generated: TODAY, source_commit: GIT?.head || null,
   counts: {
-    records: records.length,
+    records: records.length, works: records.filter((r) => !r.role).length,
     public: records.filter((r) => r.access === 'public').length,
     collections: collections.length,
     techniques: techniques.size, atoms: atoms.size,
@@ -656,10 +718,11 @@ const catalog = {
       coupling: 'An exploration with one driver and named consequences.',
       study: 'A reference measured and rebuilt in code, with a spec.',
       template: 'A layout made for reuse with new content.',
-      instrument: 'A working tool.'
+      instrument: 'A working tool.',
+      document: 'A written piece with figures: a design document, a report, a dossier.'
     },
     status: { ...(colMeta.encyclopedia?.status_vocabulary || {}), '': 'The collection records no status.' },
-    access: { public: 'On the deployed site.', staged: 'Built or proposed, not yet on the site.', local: 'On the working machine only.' },
+    access: { public: 'On a public site.', staged: 'Built or proposed, not yet on the site.', local: 'On the working machine only.', private: 'A private link or file.' },
     scheme: { enc: 'Encyclopedia technique entries and atoms', 'enc.read': 'Technique reads inside encyclopedia plates', tt: 'Techniques & Templates', st: 'Technique Studies', hld: 'Holdings' }
   },
   collections, superseded: CFG.superseded, not_collated: CFG.not_collated,
@@ -697,6 +760,7 @@ const sortObj = (o) => Object.fromEntries(Object.entries(o).sort(([a], [b]) => a
 ACC.note = 'Record id to accession number. A number is given once, in order of arrival, and is not changed or reused. Written by library/_build/collate.mjs; do not edit by hand.';
 ACC.scheme = 'YYYY.NNNN: the year the work entered the repository, then a running number across the library';
 writeFileSync(ACC_FILE, JSON.stringify({ note: ACC.note, scheme: ACC.scheme, next: ACC.next, records: Object.fromEntries(Object.entries(ACC.records).sort((a, b) => a[1].acc.slice(5).localeCompare(b[1].acc.slice(5)))) }, null, 1) + '\n');
+if (raw.some((r) => r.private)) writeFileSync(ACCP_FILE, JSON.stringify({ note: 'Accession numbers for private work. Not committed.', next: ACCP.next, records: ACCP.records }, null, 1) + '\n');
 writeFileSync(join(LIB, 'fixity.json'), JSON.stringify({ note: 'sha256 of each record\'s source file at build time. `node library/_build/collate.mjs --check` compares disk against it.', algorithm: 'sha256', generated: TODAY, source_commit: catalog.source_commit, files: sortObj(fixity) }, null, 1) + '\n');
 {
   mkdirSync(THUMB_DIR, { recursive: true });

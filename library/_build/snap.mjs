@@ -49,7 +49,7 @@ const SELECT = {
 const WAIT = { 'printed-matter': 2600, instruments: 3500 };
 // Capture scale. Five encyclopedia atom swatches fill only part of their canvas above 1x
 // (the draw code ignores the pixel ratio), so atoms are photographed at 1x.
-const SCALE = (r) => (r.collection === 'encyclopedia' && r.kind === 'atom' ? 1 : 2);
+const SCALE = (r) => ((r.collection === 'encyclopedia' && r.kind === 'atom') || /^https?:/.test(r.href) ? 1 : 2);
 // site furniture that floats over the page
 const HIDE = '#gt,#pill,#tn,#tn-menu,#tools-grab-hud{display:none!important}';
 
@@ -99,7 +99,7 @@ const pages = {};
 let fontsFailed = false;
 async function pageAt(scale) {
   if (pages[scale]) return pages[scale];
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: scale });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: scale });
   if (KIT) {
     await ctx.route('https://fonts.googleapis.com/**', (r) => r.fulfill({ status: 200, contentType: 'text/css', headers: { 'access-control-allow-origin': '*' }, body: kitCss(r.request().url()) }));
     await ctx.route('https://fonts.gstatic.com/kit/**', (r) => {
@@ -123,7 +123,8 @@ for (const r of want) {
   if (have && have.from === 'snapshot' && existsSync(`${dst}.jpg`) && !FORCE) continue;
   const no = (CFG.no_snapshot || {})[r.id];
   if (no) { skip(r, no.why); continue; }
-  const pick = SELECT[r.collection];
+  const remote = /^https?:/.test(r.href);   // a page on another site: its first screen
+  const pick = remote ? () => 'page' : SELECT[r.collection];
   if (!pick) { skip(r, `no rule for ${r.collection}`); continue; }
   const sel = pick(r);
   if (!sel) { skip(r, `nothing to photograph (${r.lane || r.kind})`); continue; }
@@ -131,7 +132,7 @@ for (const r of want) {
   try {
     fontsFailed = false;
     const page = await pageAt(SCALE(r));
-    await page.goto(BASE + r.href.replace(/^\.\.\//, ''), { waitUntil: 'load' });
+    await page.goto(remote ? r.href : BASE + r.href.replace(/^\.\.\//, ''), { waitUntil: 'load' });
     await page.evaluate(() => document.fonts && document.fonts.ready);
     await page.addStyleTag({ content: HIDE });
     await page.waitForTimeout(WAIT[r.collection] || 1600);

@@ -25,6 +25,8 @@ library/
     collections.json                      one row per collection
     holdings.json                         work that is not on the deployed site
     crosswalk.json                        see-also links
+    works.json                            work on other sites, one row per page
+    editions.json                         which records are one work: versions and parts
 ```
 
 ## Commands
@@ -94,6 +96,17 @@ their own shape, so `thumbs/index.json` records each copy's size.
 - A public record with no thumbnail can be photographed by `snap.mjs`. The catalog marks the result
   as a snapshot. `no_snapshot` in `collections.json` lists records to leave out, with the reason.
 - Records that show the same picture are grouped (`pic_group`). The sheet draws a group once.
+
+## Works, versions, parts
+
+The sheet draws a work once. `editions.json` says which records are the same work
+(`versions`) and which were lifted out of a work (`parts`). Those records keep their
+accession numbers and stay in the Ledger; the work's record lists them. A work with no
+picture is named in a list, not framed.
+
+`works.json` adds pages that live in other repositories, with their addresses.
+`works-private.json` and `editions-private.json`, when present, add work that is not
+public. They are git-ignored, and their records are numbered apart (`YYYY.Pnnn`).
 
 ## Adding
 

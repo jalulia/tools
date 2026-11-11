@@ -18,15 +18,19 @@
     (SEE[l.b] = SEE[l.b] || []).push({ to: l.a, relation: l.relation, by: l.by, basis: l.basis });
   });
   R.forEach(function (r) { (r.rel || []).forEach(function (x) { if (byId[x.to]) (IN[x.to] = IN[x.to] || []).push({ type: x.type, from: r.id }); }); });
+  // A work is drawn once. Its versions and parts are records too; they are listed under it and in the Ledger.
+  var WORKS = R.filter(function (r) { return !r.role; });
+  function members(r, k) { return (r[k] || []).map(function (id) { return byId[id]; }).filter(Boolean); }
   R.forEach(function (r) {
     var names = (r.techniques || []).map(function (k) { return TECH[k] ? TECH[k].id + ' ' + TECH[k].name : k; });
     r._hay = [r.acc, r.call, r.title, r.sub, r.kind, r.atom_kind, COL[r.collection].title, COL[r.collection].code, r.section_title, r.status, r.lane, r.layer, r.style,
       (r.tags || []).join(' '), names.join(' '), (r.atoms || []).join(' '), r.provenance && r.provenance.title, r.id].join(' ').toLowerCase();
   });
+  WORKS.forEach(function (w) { members(w, 'versions').concat(members(w, 'parts')).forEach(function (m) { w._hay += ' ' + [m.acc, m.call, m.title].join(' ').toLowerCase(); }); });
 
-  var KINDS = ['technique', 'atom', 'exploration', 'coupling', 'study', 'template', 'instrument'];
+  var KINDS = ['technique', 'atom', 'exploration', 'coupling', 'study', 'template', 'instrument', 'document'].filter(function (k) { return k !== 'document' || R.some(function (r) { return r.kind === 'document'; }); });
   var STATUSES = ['canonical', 'exploration', 'proposed', 'unsorted', 'known-failure', 'historical', ''];
-  var ACCESS = ['public', 'staged', 'local'];
+  var ACCESS = ['public', 'staged', 'local', 'private'].filter(function (a) { return a !== 'private' || R.some(function (r) { return r.access === 'private'; }); });
   var LANES = []; R.forEach(function (r) { if (r.lane && LANES.indexOf(r.lane) < 0) LANES.push(r.lane); }); LANES.sort();
   var VIEWS = [['plates', 'Plates'], ['shelves', 'Shelves'], ['techniques', 'Techniques'], ['atoms', 'Atoms'], ['ledger', 'Ledger'], ['audit', 'Audit']];
   var FACETS = [
@@ -107,7 +111,8 @@
       coupling: ['<circle cx="4.3" cy="6" r="3.1"', '<circle cx="7.7" cy="6" r="3.1"'],
       study: ['<rect x="1.7" y="1.7" width="8.6" height="8.6"'],
       template: ['<rect x="1" y="3.2" width="10" height="5.6"'],
-      instrument: ['<path d="M4.5 1.3h3v3.2h3.2v3H7.5v3.2h-3V7.5H1.3v-3h3.2z"']
+      instrument: ['<path d="M4.5 1.3h3v3.2h3.2v3H7.5v3.2h-3V7.5H1.3v-3h3.2z"'],
+      document: ['<path d="M2.7 1.2h4.6l2 2v7.6H2.7z"']
     }[kind] || ['<rect x="1.7" y="1.7" width="8.6" height="8.6"'];
     var s = geo.map(function (g) { return g + ' style="fill:' + fill + ';stroke:' + stroke + '" stroke-width="' + sw + '"' + dash + '/>'; }).join('');
     if (half) s += '<g clip-path="url(#g-half)">' + geo.map(function (g) { return g + ' style="fill:currentColor"/>'; }).join('') + '</g>';
@@ -134,11 +139,25 @@
     return out;
   }
   function tile(g, h) {
-    var r = g.r, n = g.more.length, lay = shape(r), all = [r.acc].concat(g.more.map(function (x) { return x.acc; }));
-    return '<a class="pl" style="--ar:' + lay.toFixed(4) + '" href="' + recHref(r) + '" data-r="' + r.acc + '" data-rs="' + all.join(' ') + '" title="' + e(label(r) + (n ? ' · and ' + n + ' more with this picture' : '')) + '"' +
-      (S.r && all.indexOf(S.r) >= 0 ? ' aria-current="true"' : '') + '>' + pic(r, Math.round(lay * h * 1.5) + 'px') + '<span class="c">' + e(r.call || r.acc) + (n ? '<s>+' + n + '</s>' : '') + '</span></a>';
+    var r = g.r, lay = shape(r), all = [r.acc].concat(g.more.map(function (x) { return x.acc; })), nv = (r.versions || []).length, n = g.more.length + nv;
+    return '<a class="pl" style="--ar:' + lay.toFixed(4) + '" href="' + recHref(r) + '" data-r="' + r.acc + '" data-rs="' + all.join(' ') + '" title="' + e(label(r) + (nv ? ' · ' + (nv + 1) + ' versions' : '') + (g.more.length ? ' · and ' + g.more.length + ' more with this picture' : '')) + '"' +
+      (S.r && all.indexOf(S.r) >= 0 ? ' aria-current="true"' : '') + '>' + pic(r, Math.round(lay * h * 1.5) + 'px') + '<span class="c' + (r.call ? '' : ' t') + '"><b>' + e(r.call || r.title) + '</b>' + (n ? '<s>+' + n + '</s>' : '') + '</span></a>';
   }
-  function strip(list, h) { return '<div class="strip">' + stacks(list).map(function (g) { return tile(g, h); }).join('') + '</div>'; }
+  /* Only a work with a picture gets a frame. The rest are listed by name. */
+  function strip(list, h) {
+    var shown = list.filter(function (r) { return r.thumb; }), bare = list.filter(function (r) { return !r.thumb; });
+    return (shown.length ? '<div class="strip">' + stacks(shown).map(function (g) { return tile(g, h); }).join('') + '</div>' : '') + unpictured(bare);
+  }
+  function unpictured(list) {
+    if (!list.length) return '';
+    return '<div class="bare"><h4 class="k">Not pictured · ' + list.length + '</h4>' + list.map(function (r) {
+      return '<a href="' + recHref(r) + '" data-r="' + r.acc + '"' + (S.r === r.acc ? ' aria-current="true"' : '') + '><span class="m">' + e(r.call || r.acc) + '</span><span class="ti">' + e(r.title) + '</span><span class="m why">' + e(r.no_pic && r.no_pic.why ? r.no_pic.why : r.access !== 'public' ? cap(r.access) : '') + '</span></a>';
+    }).join('') + '</div>';
+  }
+  function partsLine(list) {
+    if (!list.length) return '';
+    return '<p class="partsl"><span class="k">Parts · ' + list.length + '</span>' + list.map(function (r) { return '<a href="' + recHref(r) + '" data-r="' + r.acc + '" title="' + e(r.title) + '">' + e(r.call || r.acc) + '</a>'; }).join('') + '</p>';
+  }
 
   /* ---------------------------------------------------------------- filter */
   function tokens() { return S.q.toLowerCase().split(/\s+/).filter(Boolean); }
@@ -152,17 +171,18 @@
   }
   var SHELF = {}; L.collections.forEach(function (c) { var n = 0; c.sections.forEach(function (s) { s.records.forEach(function (id) { SHELF[id] = n++; }); }); });
   function filtered() {
-    var tk = tokens(), out = R.filter(function (r) { return match(r, null, tk); });
+    var tk = tokens(), out = base().filter(function (r) { return match(r, null, tk); });
     if (S.sort === 'title') out.sort(function (a, b) { return a.title.localeCompare(b.title); });
     else if (S.sort === 'modified') out.sort(function (a, b) { return (b.dates.modified || '').localeCompare(a.dates.modified || '') || a._i - b._i; });
     else if (S.sort === 'shelf') out.sort(function (a, b) { return COL[a.collection]._i - COL[b.collection]._i || (SHELF[a.id] || 0) - (SHELF[b.id] || 0); });
     return out;
   }
+  function base() { return S.view === 'ledger' ? R : WORKS; }
   function anyFilter() { return S.q || FACETS.some(function (F) { return S.f[F.k].length; }); }
 
   /* ---------------------------------------------------------------- bar + rail */
   function drawBar() {
-    var n = { plates: R.length, shelves: L.collections.length, techniques: L.authority.techniques.length, atoms: L.authority.atoms.length, audit: L.audit.filter(function (a) { return a.level !== 'note'; }).length };
+    var n = { plates: WORKS.length, shelves: L.collections.length, techniques: L.authority.techniques.length, atoms: L.authority.atoms.length, audit: L.audit.filter(function (a) { return a.level !== 'note'; }).length };
     $views.innerHTML = VIEWS.map(function (v) {
       return '<button type="button" data-view="' + v[0] + '"' + (S.view === v[0] ? ' aria-current="page"' : '') + '>' + v[1] + (n[v[0]] != null ? '<i>' + n[v[0]] + '</i>' : '') + '</button>';
     }).join('');
@@ -175,7 +195,7 @@
     var h = '<button type="button" class="railtog" data-railtog aria-expanded="' + $rail.classList.contains('open') + '">Filters' + (on ? ' · ' + on : '') + '<span>' + ($rail.classList.contains('open') ? '–' : '+') + '</span></button>';
     FACETS.forEach(function (F) {
       var counts = {};
-      R.forEach(function (r) { if (match(r, F.k, tk)) { var v = r[F.k] == null ? '' : r[F.k]; counts[v] = (counts[v] || 0) + 1; } });
+      base().forEach(function (r) { if (match(r, F.k, tk)) { var v = r[F.k] == null ? '' : r[F.k]; counts[v] = (counts[v] || 0) + 1; } });
       var vals = F.values.filter(function (v) { return counts[v] || S.f[F.k].indexOf(v) >= 0 || F.k !== 'lane'; });
       if (!vals.length) return;
       h += '<section class="fg' + (F.k === 'collection' ? ' code' : '') + '"><h2><span class="k">' + F.title + '</span>' + (S.f[F.k].length ? '<button type="button" data-clear="' + F.k + '">Clear</button>' : '') + '</h2><div class="fvs">';
@@ -212,7 +232,7 @@
     return '<a class="cdx" href="' + recHref(r) + '" data-r="' + r.acc + '" title="' + e(label(r)) + '"' + (S.r === r.acc ? ' aria-current="true"' : '') + '><span class="cell">' + pic(r, '(max-width:720px) 46vw, 240px', r.access !== 'public') + '</span>' +
       '<span class="l1"><b class="call">' + e(r.call || r.acc) + '</b><span class="col">' + COL[r.collection].code + '</span></span>' +
       '<span class="tt">' + e(r.title) + '</span>' +
-      '<span class="l3">' + glyph(r.kind, r.status, r.access) + '<span class="st">' + e(r.kind) + (st ? ' · ' + e(st) : '') + '</span>' + has + '</span></a>';
+      '<span class="l3">' + glyph(r.kind, r.status, r.access) + '<span class="st">' + e(r.kind) + (st ? ' · ' + e(st) : '') + (r.versions ? ' · ' + (r.versions.length + 1) + ' versions' : '') + (r.parts ? ' · ' + r.parts.length + ' parts' : '') + '</span>' + has + '</span></a>';
   }
 
   /* ---------------------------------------------------------------- arrival chart: one mark per record, a row per collection, on whole pixels */
@@ -246,8 +266,8 @@
       '<label class="ord">Order <select data-sort><option value="modified"' + sel('modified') + '>Last changed</option><option value="acc"' + sel('acc') + '>Arrival</option><option value="shelf"' + sel('shelf') + '>Shelf</option><option value="title"' + sel('title') + '>Title</option></select></label>';
     var body = !list.length ? empty('records')
       : S.d === 's' ? '<div class="sheet">' + strip(list, phone() ? 76 : 104) + '</div>'
-      : '<div class="cards">' + list.map(card).join('') + '</div>';
-    $lib.innerHTML = '<h1 class="vh">Plates</h1>' + toolbar(tools, list.length, R.length) + body + foot();
+      : '<div class="cards">' + list.filter(function (r) { return r.thumb; }).map(card).join('') + '</div>' + unpictured(list.filter(function (r) { return !r.thumb; }));
+    $lib.innerHTML = '<h1 class="vh">Plates</h1>' + toolbar(tools, list.length, WORKS.length) + body + foot();
   }
 
   function vShelves() {
@@ -256,17 +276,20 @@
     L.collections.forEach(function (c) {
       var secs = '', n = 0;
       c.sections.forEach(function (s) {
-        var recs = s.records.map(function (id) { return byId[id]; }).filter(function (r) { return !any || match(r, null, tk); });
-        if (!recs.length) return;
+        var all = s.records.map(function (id) { return byId[id]; });
+        var recs = all.filter(function (r) { return !r.role && (!any || match(r, null, tk)); });
+        var parts = any ? [] : all.filter(function (r) { return r.role === 'part'; });
+        if (!recs.length && !parts.length) return;
         n += recs.length; LIST = LIST.concat(recs);
-        secs += '<div class="sec"><h3>' + e(s.title) + '<span>' + recs.length + '</span></h3>' + strip(recs, phone() ? 56 : 64) + '</div>';
+        secs += '<div class="sec"><h3>' + e(s.title) + '<span>' + recs.length + '</span></h3>' + strip(recs, phone() ? 56 : 64) + partsLine(parts) + '</div>';
       });
       if (any && !n) return;
       total += n;
-      h += '<section class="shelf"><header><h2><span class="k code">' + c.code + '</span>' + e(c.title) + '<span class="k">' + n + (n === c.n ? '' : ' of ' + c.n) + '</span></h2>' +
+      var cw = WORKS.filter(function (r) { return r.collection === c.id; }).length;
+      h += '<section class="shelf"><header><h2><span class="k code">' + c.code + '</span>' + e(c.title) + '<span class="k">' + n + (n === cw ? '' : ' of ' + cw) + '</span></h2>' +
         (c.index ? '<a class="go" href="' + e(c.index) + '">Index ↗</a>' : '') + '<p class="note">' + e(c.note) + '</p><div class="truth">' + e(c.truth) + '</div></header>' + secs + '</section>';
     });
-    $lib.innerHTML = '<h1 class="vh">Shelves</h1>' + toolbar('', total, R.length) + (h || empty('records')) + foot();
+    $lib.innerHTML = '<h1 class="vh">Shelves</h1>' + toolbar('', total, WORKS.length) + (h || empty('records')) + foot();
   }
 
   function vTerms(which) {
@@ -371,9 +394,11 @@
     var h = '<div class="dh"><span class="id">' + (r.call ? '<b>' + e(r.call) + '</b>' : '') + r.acc + '</span><span>' + (i >= 0 ? (i + 1) + ' / ' + LIST.length : '') + '</span>' +
       '<button type="button" data-r="' + (prev ? prev.acc : '') + '"' + (prev ? '' : ' disabled') + ' aria-label="Previous record">←</button><button type="button" data-r="' + (next ? next.acc : '') + '"' + (next ? '' : ' disabled') + ' aria-label="Next record">→</button><button type="button" data-close aria-label="Close">×</button></div><div class="db">';
     h += pic(r, '(max-width:720px) 92vw, 500px') + '<h1>' + e(r.title) + '</h1>' + (r.sub ? '<p class="sub">' + e(r.sub) + '</p>' : '');
-    h += '<div class="acts">' + (r.href ? '<a class="pri" href="' + e(r.href) + '">Open plate ↗</a>' : '<span>Not published</span>') +
+    h += '<div class="acts">' + (r.href ? '<a class="pri" href="' + e(r.href) + '">Open ↗</a>' : '<span>' + (r.access === 'private' || r.access === 'local' ? 'Local file' : 'Not published') + '</span>') +
       (r.spec_href ? '<a href="' + e(r.spec_href) + '">Spec JSON ↗</a>' : '') + '<button type="button" data-copy="record">Copy record</button>' + (PREVIEW ? '' : '<button type="button" data-copy="link">Copy link</button>') + '</div>';
     var rows = [];
+    var of = r.work ? byId[r.work] : null;
+    if (r.role) rows.push([r.role === 'version' ? 'Version of' : 'Part of', of ? '<a href="' + recHref(of) + '" data-r="' + of.acc + '">' + e(label(of)) + '</a>' : e(cap(r.part_of || ''))]);
     rows.push(['Kind', '<span class="gl">' + glyph(r.kind, r.status, r.access) + e(r.kind) + (r.atom_kind ? ' · ' + e(r.atom_kind) : '') + '</span>']);
     rows.push(['Status', r.status ? e(r.status.replace('-', ' ')) + (r.ruling ? ' <small>· ruled by ' + e(r.ruling.by) + (r.ruling.date ? ', ' + e(r.ruling.date) : '') + '</small>' : '') + (r.proposed_grade ? ' <small>· proposed grade ' + e(r.proposed_grade) + '</small>' : '') : '<small>none recorded</small>']);
     if (r.access !== 'public') rows.push(['Access', e(cap(r.access)) + ' <small>· ' + e(L.vocabulary.access[r.access]) + (r.target ? ' For ' + e(r.target) + '.' : '') + '</small>']);
@@ -388,13 +413,22 @@
     if (r.governed_by) rows.push(['Governed by', e(r.governed_by.join(' · '))]);
     if (r.swatches) rows.push(['Palette', '<span class="swatches">' + r.swatches.map(function (x) { return '<i style="background:' + e(x) + '" title="' + e(x) + '"></i>'; }).join('') + '</span>']);
     var grp = r.pic_group ? GROUP[r.pic_group].filter(function (x) { return x !== r; }) : [];
-    var about = !r.thumb ? ['None.' + (r.no_pic && r.no_pic.why ? ' ' + e(r.no_pic.why) : '')] : r.thumb_kind === 'snapshot' ? ['Library snapshot of the live plate.'] : [];
+    var about = !r.thumb ? ['None.' + (r.no_pic && r.no_pic.why ? ' ' + e(r.no_pic.why) : '')] : r.thumb_from && byId[r.thumb_from] ? ['From the version ' + e(byId[r.thumb_from].title) + '.'] : r.thumb_kind === 'snapshot' ? ['Library snapshot of the live page.'] : [];
     if (grp.length) about.push('Shared with ' + grp.map(function (x) { return '<a href="' + recHref(x) + '" data-r="' + x.acc + '">' + e(x.call || x.acc) + '</a>'; }).join(', ') + '.');
     if (about.length) rows.push(['Picture', about.join(' ')]);
     rows.push(['File', r.location ? e(r.location) : '<code>' + e(r.source) + '</code>']);
     if (r.fixity && r.access === 'public') rows.push(['Fixity', '<code>sha256 ' + e(r.fixity) + '…</code>']);
     h += '<dl class="dl">' + rows.map(function (x) { return '<dt>' + x[0] + '</dt><dd>' + x[1] + '</dd>'; }).join('') + '</dl>';
 
+    var vs = members(r, 'versions'), ps = members(r, 'parts');
+    function mrow(x, cur) {
+      return '<a href="' + recHref(x) + '" data-r="' + x.acc + '"' + (cur ? ' aria-current="true"' : '') + '><span class="ty">' + e(x.dates.modified || x.dates.accessioned || '') + '</span><span class="cl">' + e(COL[x.collection].code + (x.access === 'public' ? '' : ' · ' + x.access)) + '</span><span>' + e(x.title) + '</span></a>';
+    }
+    if (vs.length) {
+      var allv = [r].concat(vs).sort(function (a, b) { return (b.dates.modified || '').localeCompare(a.dates.modified || ''); });
+      h += '<section class="dsec"><h2 class="k">Versions · ' + allv.length + '</h2><div class="rels vers">' + allv.map(function (x) { return mrow(x, x === r); }).join('') + '</div></section>';
+    }
+    if (ps.length) h += '<section class="dsec"><h2 class="k">Parts · ' + ps.length + '</h2><div class="rels vers">' + ps.map(function (x) { return '<a href="' + recHref(x) + '" data-r="' + x.acc + '"><span class="ty">' + e(x.call || x.acc) + '</span><span class="cl">' + e(x.kind) + '</span><span>' + e(x.title) + '</span></a>'; }).join('') + '</div></section>';
     if (r.techniques && r.techniques.length) {
       h += '<section class="dsec"><h2 class="k">Techniques · ' + r.techniques.length + '</h2><div class="chips">' + r.techniques.map(function (k) {
         var t = TECH[k], mod = t && t.uses.some(function (u) { return u.rec === r.id && u.module; });
