@@ -1,0 +1,158 @@
+{
+  "id": "bh01-lensed-page",
+  "title": "Lensed page",
+  "written": "2026-11-05",
+  "source": {
+    "kind": "reference-study",
+    "author": "siddharth (@buildwithsid)",
+    "piece": "black hole.mp4",
+    "url": "https://x.com/buildwithsid/status/2112492064336388249",
+    "posted": "2026-10-20",
+    "duration_s": 48.04,
+    "frame_px": [1204, 720],
+    "how_it_was_built": "unknown. The post gives no method and no code. The first two dozen replies were read on 2026-11-05; one asks how it was made and none answers."
+  },
+  "reads_as": "A page of typed notes with a black hole resting on it. The type bends around the hole, and the hole itself is set in type.",
+
+  "plate": {
+    "design_px": [1284, 720],
+    "aspect": "1284/720",
+    "grid": { "cols": 214, "rows": 60, "cell_px": [6, 12] },
+    "type": { "face": "JetBrains Mono", "file": "encyclopedia/content/_styles/fonts/JetBrainsMono.woff2", "size_px": 10, "weight": 400, "advance_em": 0.6, "line_height": 1.2 },
+    "paper": "#f6f6f6",
+    "ink": "#0a0a0b",
+    "hot_ink": "#e23a72",
+    "text_origin_cells": { "col": 3, "row": 2 },
+    "texture": "none. This is a screen piece."
+  },
+
+  "page_text": {
+    "status": "draft, original. Replace freely. Never reuse the reference's copy.",
+    "rule": "The text describes what the hole is doing to it. Short paragraphs, 4-space first-line indent, set solid from the origin to the right edge, repeated top to bottom until the page is full.",
+    "title_line": "FIELD NOTES ON A HEAVY THING",
+    "paragraphs": [
+      "This page is flat until something heavy is set down on it. After that, every line has to go around.",
+      "Light keeps a straight course. The space it crosses is what bends, and the heavy thing is what bent it.",
+      "So a letter behind the weight can reach you by two roads. You may see it twice. You may see it pulled into an arc. Line it up exactly and it becomes a ring.",
+      "Closer in, light can be caught in a circle around the weight. Light aimed any nearer than that does not come back, and that part of the page shows nothing.",
+      "The bright band is matter on its way in, hot enough to read by. The side turning toward you is the brighter side. The far side shows over the top, because its light went the long way round.",
+      "A letter that falls in does not vanish while you watch. It slows. It reddens. It dims. You lose the ability to read it long before it is gone.",
+      "Read this while it is still here."
+    ]
+  },
+
+  "hole": {
+    "units": "r_s, the Schwarzschild radius. Everything below scales from this one number.",
+    "r_s_px": 27.8,
+    "r_s_cells": { "cols": 4.63, "rows": 2.32 },
+    "regions": [
+      { "name": "far field", "where": "more than 13 r_s from the hole", "shows": "the page character of that cell, untouched" },
+      { "name": "halo", "where": "outside the disk image, inside 13 r_s", "shows": "a page character taken from where the lens says the light came from, or nothing" },
+      { "name": "disk", "where": "cells whose ray lands on the disk, r 3.0 to 9.5 r_s in the disk plane", "shows": "a ramp glyph for the luminance of that spot on the disk" },
+      { "name": "shadow", "where": "cells whose ray is captured (impact parameter under 2.598 r_s)", "shows": "nothing. Bare paper." }
+    ]
+  },
+
+  "halo": {
+    "lens_map": "beta = theta * (1 - w(rho) * (theta_E / rho)^2); theta is the cell's offset from the hole in px, rho = |theta|; the cell shows page[round((hole + beta) / cell)]",
+    "theta_E_r_s": 5,
+    "taper": "w(rho) = 1 - smoothstep(8 r_s, 13 r_s, rho), so the map is the identity at the halo edge and the far field needs no special case",
+    "dropout": {
+      "keep_probability": "0.22 + 0.78 * smoothstep(6 r_s, 13 r_s, rho)^1.5",
+      "decision": "hash(col, row, floor(t / 0.12 s)) < keep. A cell prints fully or not at all.",
+      "shimmer_hz": 8.3
+    },
+    "hot_cells": "a printed halo cell uses hot_ink with probability 0.004 per decision",
+    "glyph_drawing": "upright, unscaled, unrotated, full opacity, on the grid"
+  },
+
+  "disk": {
+    "geometry": {
+      "metric": "Schwarzschild",
+      "plane": "z = 0",
+      "r_in_r_s": 3.0,
+      "r_out_r_s": 9.5,
+      "camera": { "elevation_deg": 10, "distance_r_s": 60, "projection": "orthographic" },
+      "orbit": "clockwise seen from above, so the right side of the image approaches the viewer"
+    },
+    "ray": {
+      "equation": "x'' = -1.5 * h^2 * x / |x|^5, with h^2 = |x cross v|^2 fixed at launch and |v| = 1 (r_s = 1)",
+      "integrator": "leapfrog, dt = clamp(0.06 * (|x| - 0.9), 0.02, 0.5)",
+      "stop": ["|x| < 1: captured, the cell is shadow", "|x| > 65 and moving outward: escaped, the cell is halo", "first crossing of z = 0 with r_in <= r <= r_out: disk hit, record r, phi and the ray direction"]
+    },
+    "luminance": {
+      "formula": "L = (r_in / r)^1.6 * (doppler * grav)^3.5 * tex",
+      "doppler": "1 / (gamma * (1 - beta * dot(orbit_dir, photon_dir))), beta = sqrt(0.5 / (r - 1)), gamma = 1 / sqrt(1 - beta^2)",
+      "grav": "sqrt(1 - 1 / r)",
+      "tex": "0.75 + 0.25 * noise(r, phi - omega(r) * t), omega(r) = 0.9 * (r_in / r)^1.5 rad/s",
+      "to_glyph": "index = 1 + floor((L / L_max)^0.45 * (n - 1)), n = ramp length"
+    },
+    "ramp": {
+      "start": " .':;!|il1[]{}()/?7IJYVXZ235$%&8BQ0@#MW",
+      "rule": "Re-sort this ramp by measured ink coverage in the glyph atlas for the face in use. The order above is by eye."
+    },
+    "hot_cells": "a disk cell with L / L_max above 0.82 uses hot_ink with probability 0.35 per decision",
+    "bake": {
+      "what": "Trace once, in the hole's own frame, on a table of screen offsets. Per frame, each cell reads the table at (cell center - hole center). Only tex and the dropout change over time.",
+      "extent_r_s": { "x": 10.5, "y": 5.5 },
+      "pitch_px": 3,
+      "stores": ["kind: none, disk or shadow", "r", "phi", "doppler * grav"],
+      "cost": "about 17,000 rays. Run it in idle chunks so first paint is not blocked."
+    },
+    "verified": {
+      "by": "bake-prototype.js in this folder, run 2026-11-05 with Node",
+      "result": "expected-bake.txt",
+      "shadow_px": { "wide": 132, "tall": 108 },
+      "bright_to_dim_side": "2.81 to 0.28, about 10 to 1, bright side on the right",
+      "disk_cells": 940, "shadow_cells": 166
+    }
+  },
+
+  "motion": {
+    "position": "follows the pointer through a critically damped spring, time constant 0.9 s",
+    "idle": "after 2 s without pointer input, and in thumbnails, the hole wanders: hole = center + (0.22 * W * n1(0.035 t), 0.16 * H * n2(0.03 t)), n1 and n2 smooth noise in -1..1",
+    "speed_cap": "0.05 plate widths per second",
+    "reduced_motion": "hole fixed at (0.62 W, 0.45 H); no shimmer, no disk rotation; one static frame",
+    "pause": "stop all work on lens:pause. fragment-boot.js already holds requestAnimationFrame."
+  },
+
+  "pass_order": [
+    "page grid: every cell gets its page character",
+    "lens map: halo cells swap in the character from their source cell",
+    "dropout: halo cells print or go blank",
+    "disk: cells that hit the disk are overwritten with a ramp glyph",
+    "shadow: captured cells are cleared",
+    "hot ink: a few printed cells change ink",
+    "draw: one glyph per printed cell from the atlas"
+  ],
+  "pass_order_why": "Dropout runs before the disk so it cannot punch holes in the disk. The shadow clears last so nothing prints inside it.",
+  "coupling": "One mass at one position. r_s sets the shadow (2.598 r_s), the disk (3 to 9.5 r_s), the Einstein radius (5 r_s) and the halo edge (13 r_s), and the hole position moves all four together. The halo, the disk and the shadow cannot disagree about where the hole is or how heavy it is.",
+  "operators": ["character grid", "point-lens remap", "dropout", "geodesic bake", "luminance ramp"],
+  "why_it_survives": "Remove the remap and the halo is noise around a picture. Remove the disk and the bend has no cause. Remove the grid and it is an image filter over text.",
+
+  "measured_from_reference": {
+    "at_frame_px": [1204, 720],
+    "grid": "about 214 columns by 65 rows; cell about 5.6 by 11.0 px",
+    "paper": "#f6f6f6",
+    "ink": "#000000 at full coverage",
+    "pink": "#d17691 averaged over antialiased, compressed pixels; the solid ink is more saturated",
+    "shadow_px": "131 to 135 wide",
+    "disk_px": "bright ring to about 184 from center, faint glyphs to about 250",
+    "halo_px": "text is untouched beyond about 340 from center; the boundary is close to a circle",
+    "hole_speed": "0.02 to 0.05 frame widths per second, direction changing every 8 to 12 s",
+    "bright_side": "right",
+    "page_copy": "a self-describing essay under an all-caps title, repeated down the page"
+  },
+  "inferred": [
+    "the lens formula, theta_E and the taper",
+    "dropout curve and shimmer rate (set by eye from frames 0.15 s apart)",
+    "that the hole follows a pointer; the video shows a slow wander and no cursor",
+    "disk radii, camera elevation and the luminance exponents (chosen so the bake matches the reference silhouette)",
+    "hot ink value and probabilities"
+  ],
+  "not_checked": [
+    "the reference at full resolution; frames were read from the 1204 x 720 stream",
+    "quote posts and later replies, for a stated method",
+    "frame rate on a low-power laptop"
+  ]
+}
