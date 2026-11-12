@@ -1,68 +1,43 @@
-/* shape-mask · Shape clip — TS-22 Capsule rain system · Techniques & Templates · ø co.
+/* shape-mask · Shape clip with a masked edge — TS-22 Capsule system · Techniques & Templates · ø co.
    Lifted from techniques/ts-22-capsule-rain/study.js by _build/build.mjs — do not edit here. Self-contained: every helper it uses is inlined.
    make(P,u,A) — P: params as plain values (defaults below; override any), u: device px per design unit
    (canvas.width / 1000), A: the helpers, V: variant colors (hex strings) where the signature asks for them.
-   Limits: An inner radius within ~20 u of the outer leaves a band thinner than one long capsule and the field no longer reads. */
-export const id="shape-mask", name="Shape clip", code="TS-22", entry="ts-22-capsule-rain";
-export const atoms=["clip","mask"];
+   Limits: A feather above ~20 u erodes a third of a narrow panel. On flat fields the ramp would show as a gray band, so it is off there. */
+export const id="shape-mask", name="Shape clip with a masked edge", code="TS-22", entry="ts-22-capsule-rain";
+export const atoms=["clip","mask","feather"];
 export const spec={
   "id": "shape-mask",
   "short": "MASK",
-  "name": "Shape clip",
+  "name": "Shape clip with a masked edge",
   "layer": 2,
   "pass": 2,
   "atoms": [
     "clip",
-    "mask"
+    "mask",
+    "feather"
   ],
   "params": {
-    "ring": {
-      "center_u": [
-        232,
-        562
+    "feather_u": {
+      "value": 5,
+      "range": [
+        0,
+        24
       ],
-      "outer_u": {
-        "value": 132,
-        "range": [
-          40,
-          300
-        ],
-        "unit": "u"
-      },
-      "inner_u": {
-        "value": 70,
-        "range": [
-          0,
-          280
-        ],
-        "unit": "u"
-      },
-      "gap_deg": [
-        -34,
-        34
-      ]
+      "unit": "u",
+      "note": "width over which coverage ramps down before a clip edge; stippled fields only"
     },
-    "shapes": "frame rectangle · ring with a gap"
+    "shapes": "rectangle · arch · ring with a gap"
   },
-  "limits": "An inner radius within ~20 u of the outer leaves a band thinner than one long capsule and the field no longer reads.",
-  "implementation": "The capsule field is drawn through a clip path: a rectangle for framed panels, a ring with an opening for the mark."
+  "limits": "A feather above ~20 u erodes a third of a narrow panel. On flat fields the ramp would show as a gray band, so it is off there.",
+  "implementation": "A field is drawn through a clip path. Three erasing strokes along the path then lower coverage toward the edge; the stipple turns that ramp into single pixels."
 };
 export const params={
-  "ring": {
-    "center_u": [
-      232,
-      562
-    ],
-    "outer_u": 132,
-    "inner_u": 70,
-    "gap_deg": [
-      -34,
-      34
-    ]
-  },
-  "shapes": "frame rectangle · ring with a gap"
+  "feather_u": 5,
+  "shapes": "rectangle · arch · ring with a gap"
 };
 export const A={};
 
-export const make=(P,u,A)=>({ rect:(x,R)=>{ x.beginPath(); x.rect(R.x,R.y,R.w,R.h); }, ring:x=>{ const c=P.ring, cx=c.center_u[0]*u, cy=c.center_u[1]*u, a0=c.gap_deg[0]*Math.PI/180, a1=c.gap_deg[1]*Math.PI/180; x.beginPath(); x.arc(cx,cy,c.outer_u*u,a1,a0+6.2832,false); x.arc(cx,cy,c.inner_u*u,a0+6.2832,a1,true); x.closePath(); return { x:cx-c.outer_u*u, y:cy-c.outer_u*u, w:2*c.outer_u*u, h:2*c.outer_u*u }; } });
+export const make=(P,u,A)=>({ rect:(c,R)=>{ c.beginPath(); c.rect(R.x,R.y,R.w,R.h); }, arch:(c,R)=>{ const r=R.w/2; c.beginPath(); c.moveTo(R.x,R.y+R.h); c.lineTo(R.x,R.y+r); c.arc(R.x+r,R.y+r,r,Math.PI,0); c.lineTo(R.x+R.w,R.y+R.h); c.closePath(); },
+      ring:(c,cx,cy,ro,ri,g0,g1)=>{ c.beginPath(); c.arc(cx,cy,ro,g1,g0+6.2832,false); c.arc(cx,cy,ri,g0+6.2832,g1,true); c.closePath(); },
+      erode:(c,path)=>{ const f=P.feather_u*u; if(f<=0)return; c.save(); c.globalCompositeOperation='destination-out'; c.lineJoin='round'; c.strokeStyle='#000'; c.globalAlpha=0.34; for(let k=3;k>=1;k--){ c.lineWidth=2*f*k/3; path(c); c.stroke(); } c.restore(); } });
 export default make;

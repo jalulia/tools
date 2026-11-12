@@ -1,8 +1,8 @@
-/* wedge-envelope · Wedge envelope — TS-22 Capsule rain system · Techniques & Templates · ø co.
+/* wedge-envelope · Wedge envelope — TS-22 Capsule system · Techniques & Templates · ø co.
    Lifted from techniques/ts-22-capsule-rain/study.js by _build/build.mjs — do not edit here. Self-contained: every helper it uses is inlined.
    make(P,u,A) — P: params as plain values (defaults below; override any), u: device px per design unit
    (canvas.width / 1000), A: the helpers, V: variant colors (hex strings) where the signature asks for them.
-   Limits: floor at 1 fills the frame and the wedge is gone. scatter above ~0.4 hides the wedge edge. */
+   Limits: floor at 1 fills the panel and the wedge is gone. scatter above ~0.4 hides the wedge edge. */
 export const id="wedge-envelope", name="Wedge envelope", code="TS-22", entry="ts-22-capsule-rain";
 export const atoms=["envelope","ramp"];
 export const spec={
@@ -38,11 +38,11 @@ export const spec={
         0,
         0.6
       ],
-      "note": "chance of a pill above the wedge, falling with distance"
+      "note": "chance of a capsule above the wedge, falling with distance"
     }
   },
-  "limits": "floor at 1 fills the frame and the wedge is gone. scatter above ~0.4 hides the wedge edge.",
-  "implementation": "The filled height is floor + (1 − floor)·t^power from the anchor side; a few pills are allowed past the edge."
+  "limits": "floor at 1 fills the panel and the wedge is gone. scatter above ~0.4 hides the wedge edge.",
+  "implementation": "The filled height is floor + (1 − floor)·t^power from the bottom; a few capsules are allowed past the edge."
 };
 export const params={
   "anchor": "bottom",

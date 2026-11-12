@@ -1,4 +1,4 @@
-/* tracked-label · Tracked mono label — TS-22 Capsule rain system · Techniques & Templates · ø co.
+/* tracked-label · Tracked mono label — TS-22 Capsule system · Techniques & Templates · ø co.
    Lifted from techniques/ts-22-capsule-rain/study.js by _build/build.mjs — do not edit here. Self-contained: every helper it uses is inlined.
    make(P,u,A) — P: params as plain values (defaults below; override any), u: device px per design unit
    (canvas.width / 1000), A: the helpers, V: variant colors (hex strings) where the signature asks for them.
@@ -70,5 +70,5 @@ export const A={};
 
 export const make=(P,u,A)=>({ draw:(x,lines,X,Y,color,rule)=>{ const sz=P.size_u*u; x.font=`500 ${sz}px "JetBrains Mono", monospace`; x.textBaseline='alphabetic'; x.fillStyle=color; let y=Y;
         for(const ln of lines){ let cx=X; for(const ch of ln){ x.fillText(ch,cx,y); cx+=x.measureText(ch).width+P.tracking_em*sz; } y+=sz*P.leading; }
-        if(rule!==false){ x.fillRect(X,y-sz*P.leading+P.rule_gap_u*u,P.rule_u[0]*u,P.rule_u[1]*u); } } });
+        if(rule!==false)x.fillRect(X,y-sz*P.leading+P.rule_gap_u*u,P.rule_u[0]*u,P.rule_u[1]*u); } });
 export default make;

@@ -1,4 +1,4 @@
-/* ink-bands · Ink bands on the axis — TS-22 Capsule rain system · Techniques & Templates · ø co.
+/* ink-bands · Ink bands on the axis — TS-22 Capsule system · Techniques & Templates · ø co.
    Lifted from techniques/ts-22-capsule-rain/study.js by _build/build.mjs — do not edit here. Self-contained: every helper it uses is inlined.
    make(P,u,A,V) — P: params as plain values (defaults below; override any), u: device px per design unit
    (canvas.width / 1000), A: the helpers, V: variant colors (hex strings) where the signature asks for them.
@@ -43,7 +43,7 @@ export const spec={
     "blend": "multiply"
   },
   "limits": "width above ~0.35 mixes all five inks everywhere. Under ~0.05 the inks meet in hard stripes.",
-  "implementation": "Each pill draws its ink from five gaussian bands along t and is composited with multiply, so overlaps print darker."
+  "implementation": "A capsule draws its ink from five gaussian bands along t. Each ink has its own layer; the layers are composited with the variant’s blend."
 };
 export const params={
   "centers": [
@@ -59,5 +59,5 @@ export const params={
 };
 export const A={};
 
-export const make=(P,u,A,V)=>({ blend:V.blend||P.blend, pick:(t0,k)=>{ const t=((t0+P.offset)%1+1)%1; let s=0; const w=P.centers.map(c=>{ const d=(t-c)/P.width; const v=Math.exp(-d*d); s+=v; return v; }); let a=k*s; for(let i=0;i<w.length;i++){ a-=w[i]; if(a<=0)return V.inks[i]; } return V.inks[w.length-1]; } });
+export const make=(P,u,A,V)=>({ blend:V.blend||P.blend, pick:(t0,k)=>{ const t=((t0+P.offset)%1+1)%1; let s=0; const w=P.centers.map(c=>{ const d=(t-c)/P.width; const v=Math.exp(-d*d); s+=v; return v; }); let a=k*s; for(let i=0;i<w.length;i++){ a-=w[i]; if(a<=0)return i; } return w.length-1; } });
 export default make;

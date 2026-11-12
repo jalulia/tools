@@ -4261,7 +4261,7 @@
                 0.05,
                 2
               ],
-              "note": "gap as a share of the pill length"
+              "note": "gap as a share of the capsule length"
             },
             "fill": {
               "value": 0.94,
@@ -4269,7 +4269,7 @@
                 0.05,
                 1
               ],
-              "note": "chance that a slot holds a pill"
+              "note": "chance that a slot holds a capsule"
             },
             "jitter_u": {
               "value": 1.2,
@@ -4278,6 +4278,14 @@
                 6
               ],
               "unit": "u"
+            },
+            "lean_deg": {
+              "value": 12,
+              "range": [
+                -30,
+                30
+              ],
+              "unit": "°"
             },
             "fall": {
               "value": 0,
@@ -4296,8 +4304,8 @@
               "step": 1
             }
           },
-          "implementation": "Each column is filled top to bottom with rounded bars whose length and width are set by the column’s position t on the growth axis; lengths vary ±50 %.",
-          "limits": "Pitch under the largest width (10.5 u) makes columns overlap their neighbors; that is intended at 6.5 u and turns to a solid tint under ~4 u. gap under ~0.1 fuses a column into a bar.",
+          "implementation": "Each column is filled top to bottom with capsules whose length and width follow the column’s position t on the growth axis; lengths vary ±50 %. A column repeats every panel height, so the fall loops.",
+          "limits": "Pitch under ~4 u turns the late columns into a solid tint. gap under ~0.1 fuses a column into a bar. A lean past ±30° crosses three columns and the axis stops reading.",
           "module": "techniques/ts-22-capsule-rain/lib/capsule-rain.js"
         }
       ]
@@ -4331,11 +4339,11 @@
                 0,
                 0.6
               ],
-              "note": "chance of a pill above the wedge, falling with distance"
+              "note": "chance of a capsule above the wedge, falling with distance"
             }
           },
-          "implementation": "The filled height is floor + (1 − floor)·t^power from the anchor side; a few pills are allowed past the edge.",
-          "limits": "floor at 1 fills the frame and the wedge is gone. scatter above ~0.4 hides the wedge edge.",
+          "implementation": "The filled height is floor + (1 − floor)·t^power from the bottom; a few capsules are allowed past the edge.",
+          "limits": "floor at 1 fills the panel and the wedge is gone. scatter above ~0.4 hides the wedge edge.",
           "module": "techniques/ts-22-capsule-rain/lib/wedge-envelope.js"
         }
       ]
@@ -4372,50 +4380,306 @@
             },
             "blend": "multiply"
           },
-          "implementation": "Each pill draws its ink from five gaussian bands along t and is composited with multiply, so overlaps print darker.",
+          "implementation": "A capsule draws its ink from five gaussian bands along t. Each ink has its own layer; the layers are composited with the variant’s blend.",
           "limits": "width above ~0.35 mixes all five inks everywhere. Under ~0.05 the inks meet in hard stripes.",
           "module": "techniques/ts-22-capsule-rain/lib/ink-bands.js"
         }
       ]
     },
     "shape-mask": {
-      "name": "Shape clip",
+      "name": "Shape clip with a masked edge",
       "used_in": [
         {
           "entry": "ts-22-capsule-rain",
           "code": "TS-22",
           "params": {
-            "ring": {
-              "center_u": [
-                232,
-                562
+            "feather_u": {
+              "value": 5,
+              "range": [
+                0,
+                24
               ],
-              "outer_u": {
-                "value": 132,
-                "range": [
-                  40,
-                  300
-                ],
-                "unit": "u"
-              },
-              "inner_u": {
-                "value": 70,
-                "range": [
-                  0,
-                  280
-                ],
-                "unit": "u"
-              },
-              "gap_deg": [
-                -34,
-                34
+              "unit": "u",
+              "note": "width over which coverage ramps down before a clip edge; stippled fields only"
+            },
+            "shapes": "rectangle · arch · ring with a gap"
+          },
+          "implementation": "A field is drawn through a clip path. Three erasing strokes along the path then lower coverage toward the edge; the stipple turns that ramp into single pixels.",
+          "limits": "A feather above ~20 u erodes a third of a narrow panel. On flat fields the ramp would show as a gray band, so it is off there.",
+          "module": "techniques/ts-22-capsule-rain/lib/shape-mask.js"
+        }
+      ]
+    },
+    "fine-stipple": {
+      "name": "One-pixel stipple",
+      "used_in": [
+        {
+          "entry": "ts-22-capsule-rain",
+          "code": "TS-22",
+          "params": {
+            "density": {
+              "value": 0.97,
+              "range": [
+                0.3,
+                1
+              ],
+              "note": "share of pixels on at full coverage"
+            },
+            "fade": {
+              "value": 0.42,
+              "range": [
+                0,
+                1
+              ],
+              "note": "coverage lost from the head of a capsule to its tail"
+            },
+            "edge_u": {
+              "value": 0.4,
+              "range": [
+                0,
+                3
+              ],
+              "unit": "u",
+              "note": "blur of the coverage before the threshold; it dissolves the capsule edge"
+            },
+            "all": {
+              "value": 0,
+              "range": [
+                0,
+                1
+              ],
+              "step": 1,
+              "note": "1 = stipple every field in every variant"
+            },
+            "seed": {
+              "value": 17,
+              "range": [
+                1,
+                9999
+              ],
+              "step": 1
+            }
+          },
+          "implementation": "Capsules are drawn into a coverage layer per ink. Each pixel of the layer is then set fully on or off: on when a random number is under coverage × density.",
+          "limits": "edge above ~1.5 u dissolves the smallest capsules. density under ~0.5 reads as a tint, not as ink.",
+          "module": "techniques/ts-22-capsule-rain/lib/fine-stipple.js"
+        }
+      ]
+    },
+    "capsule-helix": {
+      "name": "Capsule helix",
+      "used_in": [
+        {
+          "entry": "ts-22-capsule-rain",
+          "code": "TS-22",
+          "params": {
+            "rungs": {
+              "value": 46,
+              "range": [
+                8,
+                90
+              ],
+              "step": 1
+            },
+            "turns": {
+              "value": 2.5,
+              "range": [
+                0.5,
+                6
               ]
             },
-            "shapes": "frame rectangle · ring with a gap"
+            "amplitude": {
+              "value": 0.92,
+              "range": [
+                0.2,
+                1
+              ],
+              "note": "share of the band height"
+            },
+            "width_u": {
+              "value": 6,
+              "range": [
+                2,
+                14
+              ],
+              "unit": "u"
+            },
+            "node_u": {
+              "value": 5,
+              "range": [
+                0,
+                12
+              ],
+              "unit": "u",
+              "note": "diameter of the strand dots at mid depth"
+            },
+            "phase": {
+              "value": 0,
+              "range": [
+                0,
+                1
+              ],
+              "note": "turns the helix; Motion runs it"
+            },
+            "strand_ink": 3
           },
-          "implementation": "The capsule field is drawn through a clip path: a rectangle for framed panels, a ring with an opening for the mark.",
-          "limits": "An inner radius within ~20 u of the outer leaves a band thinner than one long capsule and the field no longer reads.",
-          "module": "techniques/ts-22-capsule-rain/lib/shape-mask.js"
+          "implementation": "Each rung is a vertical capsule whose length is 2 × amplitude × |sin φ|. Two dots sit at its ends; the near strand’s dot is 45 % larger and the far one 45 % smaller.",
+          "limits": "Over ~90 rungs the capsules touch and the helix reads as a ribbon. Under one turn there is no crossing and it reads as a lens.",
+          "module": "techniques/ts-22-capsule-rain/lib/capsule-helix.js"
+        }
+      ]
+    },
+    "capsule-dial": {
+      "name": "Capsule dial",
+      "used_in": [
+        {
+          "entry": "ts-22-capsule-rain",
+          "code": "TS-22",
+          "params": {
+            "spokes": {
+              "value": 54,
+              "range": [
+                8,
+                120
+              ],
+              "step": 1
+            },
+            "inner_u": {
+              "value": 44,
+              "range": [
+                10,
+                120
+              ],
+              "unit": "u"
+            },
+            "length_u": [
+              14,
+              96
+            ],
+            "width_u": [
+              3,
+              9
+            ],
+            "lobes": {
+              "value": 3,
+              "range": [
+                0,
+                8
+              ],
+              "step": 1
+            },
+            "turn": {
+              "value": 0,
+              "range": [
+                0,
+                1
+              ],
+              "note": "turns the dial; Motion runs it"
+            },
+            "seed": {
+              "value": 6,
+              "range": [
+                1,
+                9999
+              ],
+              "step": 1
+            }
+          },
+          "implementation": "Capsules point outward from a circle. Length and width follow a sine with three lobes around the dial; ink follows the angle through the five bands.",
+          "limits": "Over ~120 spokes the inner ends overlap into a ring. lobes at 0 gives a plain sun.",
+          "module": "techniques/ts-22-capsule-rain/lib/capsule-dial.js"
+        }
+      ]
+    },
+    "capsule-ui": {
+      "name": "Controls from one pill",
+      "used_in": [
+        {
+          "entry": "ts-22-capsule-rain",
+          "code": "TS-22",
+          "params": {
+            "height_u": {
+              "value": 38,
+              "range": [
+                24,
+                60
+              ],
+              "unit": "u"
+            },
+            "line_u": {
+              "value": 1.2,
+              "range": [
+                0.4,
+                4
+              ],
+              "unit": "u"
+            },
+            "type_u": {
+              "value": 11.5,
+              "range": [
+                8,
+                18
+              ],
+              "unit": "u"
+            },
+            "toggle": {
+              "value": 1,
+              "range": [
+                0,
+                1
+              ],
+              "step": 1
+            },
+            "slider": {
+              "value": 0.62,
+              "range": [
+                0,
+                1
+              ]
+            },
+            "page": {
+              "value": 1,
+              "range": [
+                0,
+                4
+              ],
+              "step": 1
+            }
+          },
+          "implementation": "Button, toggle, three chips, slider, pager and a nine-bar meter are all one rounded bar at different sizes, filled or outlined. The meter reads the slider value.",
+          "limits": "Under 24 u height the 11.5 u label touches the pill edge.",
+          "module": "techniques/ts-22-capsule-rain/lib/capsule-ui.js"
+        }
+      ]
+    },
+    "capsule-icons": {
+      "name": "Capsule icons",
+      "used_in": [
+        {
+          "entry": "ts-22-capsule-rain",
+          "code": "TS-22",
+          "params": {
+            "scale": {
+              "value": 0.62,
+              "range": [
+                0.3,
+                0.9
+              ],
+              "note": "icon size as a share of its cell"
+            },
+            "stroke_u": {
+              "value": 7,
+              "range": [
+                2,
+                12
+              ],
+              "unit": "u"
+            },
+            "set": "arrow · plus · menu · signal · pause · check · sun · helix"
+          },
+          "implementation": "Each icon is two to eight straight round-cap strokes on a 2 × 2 unit square; the last stroke takes an ink.",
+          "limits": "stroke above ~10 u closes the gaps in the sun and the helix.",
+          "module": "techniques/ts-22-capsule-rain/lib/capsule-icons.js"
         }
       ]
     },
@@ -4434,9 +4698,9 @@
               ],
               "unit": "u"
             },
-            "corner": "square"
+            "corner": "square, or the clip shape"
           },
-          "implementation": "A square-cornered rectangle stroked once over the clipped field.",
+          "implementation": "The clip path of a panel is stroked once over the field.",
           "limits": "Above ~3 u the frame competes with the capsules.",
           "module": "techniques/ts-22-capsule-rain/lib/hairline-frame.js"
         }

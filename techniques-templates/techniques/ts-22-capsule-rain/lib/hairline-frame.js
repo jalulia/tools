@@ -1,4 +1,4 @@
-/* hairline-frame · Hairline frame — TS-22 Capsule rain system · Techniques & Templates · ø co.
+/* hairline-frame · Hairline frame — TS-22 Capsule system · Techniques & Templates · ø co.
    Lifted from techniques/ts-22-capsule-rain/study.js by _build/build.mjs — do not edit here. Self-contained: every helper it uses is inlined.
    make(P,u,A) — P: params as plain values (defaults below; override any), u: device px per design unit
    (canvas.width / 1000), A: the helpers, V: variant colors (hex strings) where the signature asks for them.
@@ -9,8 +9,8 @@ export const spec={
   "id": "hairline-frame",
   "short": "FRAME",
   "name": "Hairline frame",
-  "layer": 3,
-  "pass": 3,
+  "layer": 4,
+  "pass": 4,
   "atoms": [
     "rule",
     "frame"
@@ -24,16 +24,16 @@ export const spec={
       ],
       "unit": "u"
     },
-    "corner": "square"
+    "corner": "square, or the clip shape"
   },
   "limits": "Above ~3 u the frame competes with the capsules.",
-  "implementation": "A square-cornered rectangle stroked once over the clipped field."
+  "implementation": "The clip path of a panel is stroked once over the field."
 };
 export const params={
   "line_u": 1.2,
-  "corner": "square"
+  "corner": "square, or the clip shape"
 };
 export const A={};
 
-export const make=(P,u,A)=>({ draw:(x,R,color)=>{ x.strokeStyle=color; x.lineWidth=P.line_u*u; x.strokeRect(R.x,R.y,R.w,R.h); }, line:P.line_u*u });
+export const make=(P,u,A)=>({ line:P.line_u*u, path:(x,path,color)=>{ path(x); x.strokeStyle=color; x.lineWidth=P.line_u*u; x.stroke(); } });
 export default make;

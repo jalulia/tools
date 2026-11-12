@@ -1,4 +1,4 @@
-/* sheet-grain · Sheet grain — TS-22 Capsule rain system · Techniques & Templates · ø co.
+/* sheet-grain · Sheet grain — TS-22 Capsule system · Techniques & Templates · ø co.
    Lifted from techniques/ts-22-capsule-rain/study.js by _build/build.mjs — do not edit here. Self-contained: every helper it uses is inlined.
    make(P,u,A) — P: params as plain values (defaults below; override any), u: device px per design unit
    (canvas.width / 1000), A: the helpers, V: variant colors (hex strings) where the signature asks for them.
