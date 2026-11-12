@@ -239,7 +239,7 @@
 
   /* ---------------------------------------------------------------- arrival chart: one mark per record, a row per collection, on whole pixels */
   function lanes(list) {
-    var W = Math.max(320, $lib.clientWidth - 40), gut = 34, n = R.length, step = Math.max(2, Math.floor((W - gut) / n)), mw = Math.max(1, step - 1), rowH = 11, rows = L.collections.length, top = rows * rowH;
+    var W = Math.max(320, $lib.clientWidth - 40), gut = 34, n = R.length, step = Math.max(1, Math.floor((W - gut) / n)), mw = Math.max(1, step - 1), rowH = 11, rows = L.collections.length, top = rows * rowH;
     var inSet = {}; list.forEach(function (r) { inSet[r.id] = 1; });
     var s = '<div class="lanes"><svg width="' + (gut + n * step) + '" height="' + (top + 18) + '" role="img" aria-label="Records in order of arrival, one row per collection">';
     L.collections.forEach(function (c, i) {
