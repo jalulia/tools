@@ -451,8 +451,11 @@ for (const r of raw) {
     if (p && p.from === 'copy' && onDisk) { r.thumb = `thumbs/${r.acc}.jpg`; r.pic = p; if (p.master !== masterSha.get(r.id)) stalePics.push(r.id); }
     else r.thumb = r.thumb_master;   // no access copy yet: the page loads the master
   } else if (p && p.from === 'snapshot' && onDisk) { r.thumb = `thumbs/${r.acc}.jpg`; r.thumb_kind = 'snapshot'; r.pic = p; }
+  // no_frame: a plain field, or a picture already drawn on another work, is listed, not framed
+  const nf = (CFG.no_frame || {})[r.id];
+  if (nf) { r.thumb = null; r.thumb_kind = null; r.pic = null; delete r.thumb_master; }
   if (!r.thumb) {
-    const cfg = (CFG.no_snapshot || {})[r.id];
+    const cfg = nf || (CFG.no_snapshot || {})[r.id];
     r.no_pic = r.access === 'staged' ? { label: 'staged', why: 'Not on the site yet.' }
       : r.access === 'local' ? { label: 'local', why: 'The files are on the working machine.' }
       : cfg ? { label: cfg.label, why: cfg.why }
@@ -772,7 +775,7 @@ if (CHECK) {
   } else drift.push('no fixity.json yet: run a build first');
   if (JSON.stringify(ACC.records) !== before) drift.push('accessions.json would change: records were added, withdrawn or renamed');
   for (const id of stalePics) drift.push(`thumbnail changed since its access copy was made: ${byId.get(id).thumbSrc}`);
-  for (const r of raw) if (r.thumbSrc && !r.pic) drift.push(`no access copy yet: ${r.thumbSrc}`);
+  for (const r of raw) if (r.thumbSrc && !r.pic && !(CFG.no_frame || {})[r.id]) drift.push(`no access copy yet: ${r.thumbSrc}`);
   for (const p of problems) drift.push(p);
   console.log(drift.length ? `✘ ${drift.length} difference(s)\n  · ${drift.join('\n  · ')}` : `✔ ${records.length} records, ${Object.keys(fixity).length} source files, nothing changed`);
   process.exit(drift.length ? 1 : 0);
