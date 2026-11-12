@@ -259,16 +259,20 @@ const PLATES = [];
       const j = (y * W + x) * 4, wx = x + (nB(y / (90 * u), 1) - .5) * (P.warpW ?? 2.5) * u, wy = y + (nB(x / (90 * u), 7) - .5) * (P.weftW ?? 6) * u;
       /* thread lattice: straight warp threads down the sheet, wandering weft threads across it, each thread with its own
          brightness; at every crossing one thread lies on top and its rounded profile sets the height */
-      const ci = Math.floor(wx / px), fx = wx / px - ci, rj = Math.floor(wy / py), fy = wy / py - rj, tv = P.threadVar ?? .15;
+      /* each thread sits a little off its grid line: a per-thread phase jitter of up to ±0.3 pitch breaks the lag-8 regularity of the over/under alternation */
+      const c0 = Math.floor(wx / px), r0 = Math.floor(wy / py), wxj = wx - (hashI(c0, 9, P.seed + 303) - .5) * (P.jit ?? .15) * px, wyj = wy - (hashI(9, r0, P.seed + 304) - .5) * (P.jit ?? .15) * py;
+      const ci = Math.floor(wxj / px), fx = wxj / px - ci, rj = Math.floor(wyj / py), fy = wyj / py - rj, tv = P.threadVar ?? .15;
       const bw = 1 + tv * (hashI(ci, 0, P.seed + 301) - .5) + .2 * tv * (nA(ci * 3.1, y / (40 * u)) - .5), bf = (P.weftK ?? .85) * (1 + tv * (hashI(0, rj, P.seed + 302) - .5) + .2 * tv * (nA(x / (40 * u), rj * 3.7 + 90) - .5));
       const pw = Math.pow(Math.sin(Math.PI * fx), P.threadPow ?? .9), pf = Math.pow(Math.sin(Math.PI * fy), P.threadPow ?? .9);
-      const hl = (ci + rj) & 1 ? pw * bw * (.7 + .3 * pf) : pf * bf * (.7 + .3 * pw); let h = hl * (P.reg ?? .55) + (1 - (P.reg ?? .55)) * nA(x / ((P.ns ?? 1.6) * u), y / ((P.ns ?? 1.6) * u));
+      /* knot brightness carries an exponential tail: most knots sit near the base, a few stand 2 to 3 times brighter */
+      const ktop = Math.max(0, ((ci + rj) & 1 ? pw : pf) - .7) / .3, ktail = ktop > 0 ? ktop * (P.tailAmp ?? .04) * -Math.log(1 - .98 * hashI(ci, rj, P.seed + 305)) : 0;
+      const hl = ((ci + rj) & 1 ? pw * bw * (.7 + .3 * pf) : pf * bf * (.7 + .3 * pw)) * (1 + ktail); let h = hl * (P.reg ?? .45) + (1 - (P.reg ?? .45)) * nA(x / ((P.ns ?? 1.6) * u), y / ((P.ns ?? 1.6) * u));
       const load = nB(x / (160 * u), y / (160 * u));
       const ld = (P.ld ?? .4) * (load - .5 + (nB(x / (22 * u), y / (22 * u)) - .5) * .7) + (P.md ?? .975) * (nA(x / ((P.ms ?? 4) * u) + 50, y / ((P.ms ?? 4) * u)) - .5); let r = sk[0] + ld * 22, gg = sk[1] + ld * 18, b = sk[2] + ld * 14;
       const ta = td[j + 3] / 255; if (ta > 0) { const a = ta * sstep(.42, .7, h + (nA(x / (9 * u), y / (60 * u)) - .5) * .5) * .8; r += (C.pale[0] - r) * a; gg += (C.pale[1] - gg) * a; b += (C.pale[2] - b) * a; }
       const sa = sd[j + 3] / 255; if (sa > 0) { r += (sd[j] - r) * sa; gg += (sd[j + 1] - gg) * sa; b += (sd[j + 2] - b) * sa; }
       /* the shapes are laid on thicker than the sky wash, so the weave shades them less and fewer knots break through */
-      const L = (.299 * r + .587 * gg + .114 * b) / 255, thick = sa > 0 ? (P.thick ?? .6) : 1, sh = 1 + P.weave * thick * (Math.max(h, P.hfloor ?? .2) - .5) * ((P.wl ?? .0654) + (P.wd ?? 1.1) * (1 - L)); r *= sh; gg *= sh; b *= sh;
+      const L = (.299 * r + .587 * gg + .114 * b) / 255, thick = sa > 0 ? (P.thick ?? .45) : 1, sh = 1 + P.weave * thick * (Math.max(h, P.hfloor ?? .2) - .5) * ((P.wl ?? .0654) + (P.wd ?? 1.05) * (1 - L)); r *= sh; gg *= sh; b *= sh;
       /* primer specks sit on the knots of the weave: the top of the top thread, where the paint is thinnest. Each knot has its
          own strength, more of them where the paint load is thin and on dark paint */
       { const kt = Math.max(0, hl - (P.knot ?? .78)) / (1.1 - (P.knot ?? .78)); if (kt > 0) { const thin = Math.pow(clamp((nB(x / (70 * u) + 30, y / (70 * u)) - .25) / .6, 0, 1), (P.sk ?? 1.5)), ks = hashI(ci, rj, P.seed + 201), a = P.skips * (P.sa ?? 2.5) * thick * kt * kt * Math.pow(ks, P.sp ?? 3) * (.3 + 1.2 * (1 - L)) * (.25 + 1.5 * thin); if (a > .01) { const aa = Math.min(1, a); r += (prim[0] - r) * aa; gg += (prim[1] - gg) * aa; b += (prim[2] - b) * aa; } } }
@@ -311,22 +315,22 @@ const PLATES = [];
     motion: [{ key: "weave", amp: .25, period: 6, mode: "sine" }, { key: "skips", amp: .4, period: 9, mode: "drift" }],
     live: { x: { key: "density", min: 0, max: 2.5 }, y: { key: "weave", min: 0, max: 2.5 } },
     source: "Reference 2: gouache on canvas, 1000 × 1254 px JPEG",
-    passes: ["flat paint: sky wash with a 26-level warm drift toward the foot, disc, ground, lobed shapes", "dry-brush streaks into a mask (they only catch thread tops)", "dabs: three-tone discs lit from the upper left, in the neighboring color, dense at the edge and thinning inward; ground dabs in the sky color with a pale center", "thread lattice: straight warp threads on a 4 px pitch, weft threads on 4.4 px that wander by up to 6 px, each thread with its own brightness (±7 %), the top thread at each crossing setting the height; 55 % lattice, 45 % 1.6 px tooth", "paint load: two scales of luminance drift, 160 px and 22 px", "weave shading: valleys floored at 0.2 so the dark side is shallow; shapes are laid on 0.6 as thick as the sky wash", "primer specks on the knots of the weave: strength per knot (cubed), more on dark paint and where the load is thin"],
+    passes: ["flat paint: sky wash with a 26-level warm drift toward the foot, disc, ground, lobed shapes", "dry-brush streaks into a mask (they only catch thread tops)", "dabs: three-tone discs lit from the upper left, in the neighboring color, dense at the edge and thinning inward; ground dabs in the sky color with a pale center", "thread lattice: straight warp threads on a 4 px pitch, weft threads on 4.4 px that wander by up to 6 px, each thread set off its grid line by up to ±0.075 pitch and carrying its own brightness (±7 %); the top thread at each crossing sets the height, and its knots carry an exponential brightness tail (scale 0.04) so a few stand 2 to 3 times brighter; 45 % lattice, 55 % 1.6 px tooth", "paint load: two scales of luminance drift, 160 px and 22 px", "weave shading: valleys floored at 0.2 so the dark side is shallow; shapes are laid on 0.45 as thick as the sky wash", "primer specks on the knots of the weave: strength per knot (cubed), more on dark paint and where the load is thin"],
     measured: { weave_pitch_px: { warp: 4.0, weft: 4.4, method: "column-profile autocorrelation ±0.8 at lag 4 in the sky patch; row-profile peaks at lags 4 to 5 and 13 to 14" }, column_profile: { peaks: [112, 116], troughs: [99, 106], method: "local maxima of the column means, 60..188 × 60..188" }, sky: { mean: [22, 144, 161], sigma_L: 16.1, hist_share_above_144: .031, method: "sky patch pixels" }, ground: { mean: [10, 158, 111], dab_share: .086, dab_mean: [52, 153, 144], dab_diameter_px: 12.8, method: "pixels with B > 0.8 G in 960..1240 × 10..140, components over 20 px" }, pale: [242, 240, 175], disc: [250, 233, 101], fringe_sky_share: .477 },
-    limits: ["The picture is an original arrangement in the technique; the reference's figure is not redrawn, and the pale-paint and ground rects were chosen with search.py.", "The sky histogram scores 0.86 to 0.90: the reference's weave is softened by JPEG at 4 px pitch and its bright side (knots, specks) runs further than the lattice model's, which keeps the dark side shallow but not the bright tail that long.", "The ground histogram scores about 0.89 to 0.90: the reference's ground lobe is 58 % in one 16-level bin with its spread in the dabs; one weave depth serves every paint here, scaled 0.6 on the shapes."],
+    limits: ["The picture is an original arrangement in the technique; the reference's figure is not redrawn, and the pale-paint and ground rects were chosen with search.py.", "The sky histogram scores about 0.88: the reference's lobe is 47 % in one 16-level bin with a tail to 224; the lattice shading plus the knot tail gives 37 % in that bin.", "The ground histogram scores about 0.94: the reference's ground lobe is 58 % in one bin with its spread in the dabs; one weave depth serves every paint here, scaled 0.45 on the shapes."],
     study: { slug: "stipple-gouache", lede: "Flat gouache shapes whose edges dissolve into dabs, all of it shaded by one thread lattice on a 4 px pitch that breaks through as primer specks on its knots.",
-      body: ["The reference is gouache on a fine canvas. The weave is a thread lattice: warp threads run straight down the sheet on a 4.0 px pitch, weft threads cross on about 4.4 px and wander by several pixels, and at each crossing one thread lies on top. Each thread has its own brightness, so the column means vary 99 to 116 across the sky. The paint sits in the valleys; the knots stand up through it, and where the paint is thin the primer shows as a pale speck. The shapes are edged with dabs in the neighboring color, three tones each, lit from the upper left, dense at the edge and thinning inward. The ground carries scattered dabs in the sky color, 13 px across, with a pale center.", "The rebuild draws the paint flat: the sky wash with its warm drift, the disc, the ground, the lobed shapes, then the dabs. The dry-brush streaks go into a mask that only the thread tops reach. One pixel pass builds the lattice, mixes it with a 1.6 px tooth, adds two scales of paint-load drift and shades every paint by the lattice height, with the valleys floored so the dark side stays shallow. Density, dab size and fringe depth set the stipple. Pitch and weave depth set the canvas. Primer specks sets how many knots break through; dry-brush streaks sets how much pale paint catches the thread tops."],
+      body: ["The reference is gouache on a fine canvas. The weave is a thread lattice: warp threads run straight down the sheet on a 4.0 px pitch, weft threads cross on about 4.4 px and wander by several pixels, and at each crossing one thread lies on top. Each thread has its own brightness and sits a little off its grid line, so the column means vary 99 to 116 across the sky and the lattice never repeats cleanly at 8 px. The paint sits in the valleys; the knots stand up through it, and where the paint is thin the primer shows as a pale speck. The shapes are edged with dabs in the neighboring color, three tones each, lit from the upper left, dense at the edge and thinning inward. The ground carries scattered dabs in the sky color, 13 px across, with a pale center.", "The rebuild draws the paint flat: the sky wash with its warm drift, the disc, the ground, the lobed shapes, then the dabs. The dry-brush streaks go into a mask that only the thread tops reach. One pixel pass builds the lattice, mixes it with a 1.6 px tooth, adds two scales of paint-load drift and shades every paint by the lattice height, with the valleys floored so the dark side stays shallow. Density, dab size and fringe depth set the stipple. Pitch and weave depth set the canvas. Primer specks sets how many knots break through; dry-brush streaks sets how much pale paint catches the thread tops."],
       method: "Flat paint · Dry-brush mask · Three-tone dabs · Thread lattice · Load drift · Knot specks",
       points: [
-        { u: .12, v: .1, d: "KEY", label: "Open sky: the 4 px lattice at ±16 levels, 55 % lattice and 45 % tooth, column means 99 to 116.", t: "weave", dir: [-1, -1] },
-        { u: .3, v: .14, d: "READ", label: "Primer speck on a knot: the top thread's crest at a crossing, strength per knot, more where the load is thin.", t: "speck", dir: [0, -1] },
+        { u: .12, v: .1, d: "KEY", label: "Open sky: the 4 px lattice at ±16 levels, 45 % lattice and 55 % tooth, column means 99 to 116.", t: "weave", dir: [-1, -1] },
+        { u: .3, v: .14, d: "READ", label: "Knot: the top thread's crest at a crossing, its brightness drawn from an exponential tail; the strongest break through to primer.", t: "speck", dir: [0, -1] },
         { u: .35, v: .3, d: "KEY", label: "Stipple fringe: dabs in the sky color climb into the pale shape, exponential in depth, 4.4 to 7.4 px radius.", t: "dab", dir: [1, 0] },
         { u: .6, v: .27, d: "READ", label: "Pale paint: the same lattice at ±5 % because the shading scales with darkness, and a few dabs that strayed.", t: "weave", dir: [1, -1] },
         { u: .7, v: .11, d: "READ", label: "Disc: flat paint; its edge is the one hard edge on the sheet.", t: "paint", dir: [1, -1] },
         { u: .45, v: .55, d: "READ", label: "Dry-brush streak: pale paint that only reaches thread tops, gated by lattice height above 0.42.", t: "streak", dir: [-1, 0] },
         { u: .5, v: .72, d: "READ", label: "Branch: a 30 px ink stroke with a 22 px ground stroke laid 3 px above it, so one dark edge remains.", t: "paint", dir: [1, 1] },
         { u: .1, v: .85, d: "KEY", label: "Ground dabs: sky color with a pale center, 13 px across, their share 8.6 % of the ground.", t: "dab", dir: [-1, 1] },
-        { u: .5, v: .9, d: "READ", label: "Ground paint: laid 0.6 as thick as the sky wash, so the lattice shades it less and fewer knots break through.", t: "weave", dir: [0, 1] },
+        { u: .5, v: .9, d: "READ", label: "Ground paint: laid 0.45 as thick as the sky wash, so the lattice shades it less and fewer knots break through.", t: "weave", dir: [0, 1] },
         { u: .85, v: .5, d: "READ", label: "Paint load: 160 px and 22 px drifts of ±9 levels under everything.", t: "paint", dir: [1, 0] }
       ] }
   });
@@ -486,7 +490,7 @@ window.STUDY={
   kicker:'Technique study · 14',
   lede:'Flat gouache shapes whose edges dissolve into dabs, all of it shaded by one thread lattice on a 4 px pitch that breaks through as primer specks on its knots.',
   body:[
-    'The reference is gouache on a fine canvas. The weave is a thread lattice: warp threads run straight down the sheet on a 4.0 px pitch, weft threads cross on about 4.4 px and wander by several pixels, and at each crossing one thread lies on top. Each thread has its own brightness, so the column means vary 99 to 116 across the sky. The paint sits in the valleys; the knots stand up through it, and where the paint is thin the primer shows as a pale speck. The shapes are edged with dabs in the neighboring color, three tones each, lit from the upper left, dense at the edge and thinning inward. The ground carries scattered dabs in the sky color, 13 px across, with a pale center.',
+    'The reference is gouache on a fine canvas. The weave is a thread lattice: warp threads run straight down the sheet on a 4.0 px pitch, weft threads cross on about 4.4 px and wander by several pixels, and at each crossing one thread lies on top. Each thread has its own brightness and sits a little off its grid line, so the column means vary 99 to 116 across the sky and the lattice never repeats cleanly at 8 px. The paint sits in the valleys; the knots stand up through it, and where the paint is thin the primer shows as a pale speck. The shapes are edged with dabs in the neighboring color, three tones each, lit from the upper left, dense at the edge and thinning inward. The ground carries scattered dabs in the sky color, 13 px across, with a pale center.',
     'The rebuild draws the paint flat: the sky wash with its warm drift, the disc, the ground, the lobed shapes, then the dabs. The dry-brush streaks go into a mask that only the thread tops reach. One pixel pass builds the lattice, mixes it with a 1.6 px tooth, adds two scales of paint-load drift and shades every paint by the lattice height, with the valleys floored so the dark side stays shallow. Density, dab size and fringe depth set the stipple. Pitch and weave depth set the canvas. Primer specks sets how many knots break through; dry-brush streaks sets how much pale paint catches the thread tops.'
   ],
   method:'Flat paint · Dry-brush mask · Three-tone dabs · Thread lattice · Load drift · Knot specks',
@@ -494,15 +498,15 @@ window.STUDY={
   spot:[8,160,108],
   ref:{w:1000,h:1254},
   points:[
-    {u:0.120,v:0.100,d:'KEY',  label:'Open sky: the 4 px lattice at ±16 levels, 55 % lattice…', t:'weave', dir:[1,-1], note:'Open sky: the 4 px lattice at ±16 levels, 55 % lattice and 45 % tooth, column means 99 to 116.'},
-    {u:0.300,v:0.140,d:'READ', label:'Primer speck on a knot: the top thread\'s crest at a…', t:'speck', dir:[0,-1], note:'Primer speck on a knot: the top thread\'s crest at a crossing, strength per knot, more where the load is thin.'},
+    {u:0.120,v:0.100,d:'KEY',  label:'Open sky: the 4 px lattice at ±16 levels, 45 % lattice…', t:'weave', dir:[1,-1], note:'Open sky: the 4 px lattice at ±16 levels, 45 % lattice and 55 % tooth, column means 99 to 116.'},
+    {u:0.300,v:0.140,d:'READ', label:'Knot: the top thread\'s crest at a crossing, its…', t:'speck', dir:[0,-1], note:'Knot: the top thread\'s crest at a crossing, its brightness drawn from an exponential tail; the strongest break through to primer.'},
     {u:0.350,v:0.300,d:'KEY',  label:'Stipple fringe: dabs in the sky color climb into the pale…', t:'dab', dir:[1,0], note:'Stipple fringe: dabs in the sky color climb into the pale shape, exponential in depth, 4.4 to 7.4 px radius.'},
     {u:0.600,v:0.270,d:'READ', label:'Pale paint: the same lattice at ±5 % because the shading…', t:'weave', dir:[1,-1], note:'Pale paint: the same lattice at ±5 % because the shading scales with darkness, and a few dabs that strayed.'},
     {u:0.700,v:0.110,d:'READ', label:'Disc: flat paint; its edge is the one hard edge on the…', t:'paint', dir:[1,-1], note:'Disc: flat paint; its edge is the one hard edge on the sheet.'},
     {u:0.450,v:0.550,d:'READ', label:'Dry-brush streak: pale paint that only reaches thread…', t:'streak', dir:[-1,0], note:'Dry-brush streak: pale paint that only reaches thread tops, gated by lattice height above 0.42.'},
     {u:0.500,v:0.720,d:'READ', label:'Branch: a 30 px ink stroke with a 22 px ground stroke…', t:'paint', dir:[1,1], note:'Branch: a 30 px ink stroke with a 22 px ground stroke laid 3 px above it, so one dark edge remains.'},
     {u:0.100,v:0.850,d:'KEY',  label:'Ground dabs: sky color with a pale center, 13 px across…', t:'dab', dir:[1,1], note:'Ground dabs: sky color with a pale center, 13 px across, their share 8.6 % of the ground.'},
-    {u:0.500,v:0.900,d:'READ', label:'Ground paint: laid 0.6 as thick as the sky wash, so the…', t:'weave', dir:[0,1], note:'Ground paint: laid 0.6 as thick as the sky wash, so the lattice shades it less and fewer knots break through.'},
+    {u:0.500,v:0.900,d:'READ', label:'Ground paint: laid 0.45 as thick as the sky wash, so the…', t:'weave', dir:[0,1], note:'Ground paint: laid 0.45 as thick as the sky wash, so the lattice shades it less and fewer knots break through.'},
     {u:0.850,v:0.500,d:'READ', label:'Paint load: 160 px and 22 px drifts of ±9 levels under…', t:'paint', dir:[-1,0], note:'Paint load: 160 px and 22 px drifts of ±9 levels under everything.'}
   ],
   spec:{
@@ -581,16 +585,16 @@ window.STUDY={
         layer:0,
         pass:6,
         params:{ pitch:4, weave:1 },
-        implementation:'Open sky: the 4 px lattice at ±16 levels, 55 % lattice and 45 % tooth, column means 99 to 116.'
+        implementation:'Open sky: the 4 px lattice at ±16 levels, 45 % lattice and 55 % tooth, column means 99 to 116.'
       },
       {
         id:'speck',
         short:'READ',
         name:'Speck',
         layer:1,
-        pass:7,
+        pass:4,
         params:{ skips:1 },
-        implementation:'Primer speck on a knot: the top thread\'s crest at a crossing, strength per knot, more where the load is thin.'
+        implementation:'Knot: the top thread\'s crest at a crossing, its brightness drawn from an exponential tail; the strongest break through to primer.'
       },
       {
         id:'dab',
@@ -624,9 +628,9 @@ window.STUDY={
       'flat paint: sky wash with a 26-level warm drift toward the foot, disc, ground, lobed shapes',
       'dry-brush streaks into a mask (they only catch thread tops)',
       'dabs: three-tone discs lit from the upper left, in the neighboring color, dense at the edge and thinning inward; ground dabs in the sky color with a pale center',
-      'thread lattice: straight warp threads on a 4 px pitch, weft threads on 4.4 px that wander by up to 6 px, each thread with its own brightness (±7 %), the top thread at each crossing setting the height; 55 % lattice, 45 % 1.6 px tooth',
+      'thread lattice: straight warp threads on a 4 px pitch, weft threads on 4.4 px that wander by up to 6 px, each thread set off its grid line by up to ±0.075 pitch and carrying its own brightness (±7 %); the top thread at each crossing sets the height, and its knots carry an exponential brightness tail (scale 0.04) so a few stand 2 to 3 times brighter; 45 % lattice, 55 % 1.6 px tooth',
       'paint load: two scales of luminance drift, 160 px and 22 px',
-      'weave shading: valleys floored at 0.2 so the dark side is shallow; shapes are laid on 0.6 as thick as the sky wash',
+      'weave shading: valleys floored at 0.2 so the dark side is shallow; shapes are laid on 0.45 as thick as the sky wash',
       'primer specks on the knots of the weave: strength per knot (cubed), more on dark paint and where the load is thin'
     ],
     measured:{
@@ -664,8 +668,8 @@ window.STUDY={
     },
     limits:[
       'The picture is an original arrangement in the technique; the reference\'s figure is not redrawn, and the pale-paint and ground rects were chosen with search.py.',
-      'The sky histogram scores 0.86 to 0.90: the reference\'s weave is softened by JPEG at 4 px pitch and its bright side (knots, specks) runs further than the lattice model\'s, which keeps the dark side shallow but not the bright tail that long.',
-      'The ground histogram scores about 0.89 to 0.90: the reference\'s ground lobe is 58 % in one 16-level bin with its spread in the dabs; one weave depth serves every paint here, scaled 0.6 on the shapes.'
+      'The sky histogram scores about 0.88: the reference\'s lobe is 47 % in one 16-level bin with a tail to 224; the lattice shading plus the knot tail gives 37 % in that bin.',
+      'The ground histogram scores about 0.94: the reference\'s ground lobe is 58 % in one bin with its spread in the dabs; one weave depth serves every paint here, scaled 0.45 on the shapes.'
     ],
     keys:{ S:'spec', space:'re-read', M:'motion', L:'live', N:'new seed', C:'next palette' },
     notes:[
