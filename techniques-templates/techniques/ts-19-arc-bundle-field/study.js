@@ -89,18 +89,19 @@ window.STUDY={
     nodes.draw(x,ends,W,H,V.text); },
   render(canvas,w,h,dpr,V,done,O){ const x=canvas.getContext('2d'); x.setTransform(1,0,0,1,0,0); window.STUDY.draw(x,canvas.width,canvas.height,V,O,null); if(done)done(); },
   /* motion: every bundle sways once in 12 s and a pulse runs each strand in 3.2 s */
-  motion(canvas,w,h,dpr,V,t,ctx){ ctx.save(); ctx.setTransform(1,0,0,1,0,0); window.STUDY.draw(ctx,canvas.width,canvas.height,V,{ 'arc-bundle':{ sway:(t/12)%1 } },t); ctx.restore(); },
+  motion(canvas,w,h,dpr,V,t,ctx,UO){ const MO=(a,b)=>{ const o={}; for(const k of new Set([...Object.keys(a||{}),...Object.keys(b||{})]))o[k]=Object.assign({},(a||{})[k],(b||{})[k]); return o; }; ctx.save(); ctx.setTransform(1,0,0,1,0,0); window.STUDY.draw(ctx,canvas.width,canvas.height,V,MO(UO,{ 'arc-bundle':{ sway:(t/12)%1 } }),t); ctx.restore(); },
   /* live: the pointer carries the hub */
   pointer(px,py){ return { 'arc-bundle':{ 'hub.x':px*1000, 'hub.y':py*577 } }; },
   liveScale:1.5,
-  live(V){ const S=window.STUDY, A=window.ART; const fn=f=>{ const s=f.toString(); return /^(function\b|\(|[\w$]+\s*=>)/.test(s)?s:'function '+s; };
+  live(V,UO){ const S=window.STUDY, A=window.ART; const fn=f=>{ const s=f.toString(); return /^(function\b|\(|[\w$]+\s*=>)/.test(s)?s:'function '+s; };
     const art=Object.keys(A).map(k=>'A.'+k+'='+fn(A[k])+';').join('\n'); const tech='{'+Object.keys(S.techniques).map(k=>JSON.stringify(k)+':'+fn(S.techniques[k])).join(',')+'}';
     const extra=Object.keys(S).filter(k=>typeof S[k]==='function'&&k!=='live'&&k!=='motion').map(k=>k+':'+fn(S[k])).join(',');
     return `<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="../../_shared/fonts.css"><style>html,body{margin:0;height:100%;overflow:hidden}canvas{width:100%;height:100%;display:block;cursor:crosshair;touch-action:none}</style><canvas id="c"></canvas><script>
 const A={};${art}
 window.ART=A; window.STUDY={spec:${JSON.stringify(S.spec)},techniques:${tech},${extra}};
+const UO=${JSON.stringify(UO||{})}; const MO=(a,b)=>{ const o={}; for(const k of new Set([...Object.keys(a||{}),...Object.keys(b||{})]))o[k]=Object.assign({},(a||{})[k],(b||{})[k]); return o; };
 const S=window.STUDY,V=${JSON.stringify(V)},c=document.getElementById('c'),d=${S.liveScale||0.6};let px=0.47,py=0.5,q=0;
-const draw=()=>{q=0;c.width=Math.max(2,Math.round(innerWidth*d));c.height=Math.max(2,Math.round(innerHeight*d));S.render(c,innerWidth,innerHeight,d,V,null,S.pointer(px,py));};
+const draw=()=>{q=0;c.width=Math.max(2,Math.round(innerWidth*d));c.height=Math.max(2,Math.round(innerHeight*d));S.render(c,innerWidth,innerHeight,d,V,null,MO(UO,S.pointer(px,py)));};
 addEventListener('pointermove',e=>{px=e.clientX/innerWidth;py=e.clientY/innerHeight;if(!q)q=requestAnimationFrame(draw);});addEventListener('resize',draw);(document.fonts?document.fonts.ready:Promise.resolve()).then(draw);
 <\/script>`; }
 };

@@ -8,7 +8,7 @@
 <link rel="icon" href="data:,">
 <title>TS-10 — Thermal blob field · Techniques &amp; Templates · ø co.</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
-<link rel="stylesheet" href="../../_shared/shell.css?v=202611121921">
+<link rel="stylesheet" href="../../_shared/shell.css?v=202611121938">
 <link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
@@ -20,7 +20,7 @@
   <div><h2>Reference</h2><div class="ro">Reference 10 · blurred blob background with a dark rim, 1200 × 800</div></div><div><h2>Study</h2><div class="nm">Thermal blob field</div><div class="ro">TS-10 · Techniques · 10 / 19</div></div></div>
   <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>blob-field</b> · Blurred blob field — Four Fourier-radius blobs are filled with a radial white-to-gray gradient on a black canvas (union by lighten) at one-third resolution, blurred with σ = 46 u and read back as a 0..1 luminance field. <span class="ro">Limits · Under σ ~15 u the edge profile is too steep for the ramp and the bands alias. Past σ ~110 u neighboring blobs fuse and the rim stop no longer closes. harmonic_scale above ~2 makes r(θ) cross zero and the outline self-intersects.</span> <a href="lib/blob-field.js">lib/blob-field.js</a></div></li><li><div><b>gradient-map</b> · Gradient map — Every pixel of the field is replaced by LUT[field]; the ramp is the only place color enters, so all four colourways share one field. <span class="ro">Limits · The ramp is read at 256 levels; contrast above ~2 leaves fewer than 6 levels across the rim and it stair-steps. A shift past ±0.15 moves the paper stop into the blobs or the core out of range.</span> <a href="lib/gradient-map.js">lib/gradient-map.js</a></div></li><li><div><b>rim-stop</b> · Dark rim stop — The darkest stop sits just under the mid-point of the blurred edge, where the profile is steepest, so it occupies few pixels and reads as a drawn outline; the blue halo is the ramp segment just outside it. <span class="ro">Limits · from must stay below to, and both inside 0.41–0.53 (the stops on either side). A band wider than ~0.07 reads as a dark fill, not an outline.</span> <a href="lib/rim-stop.js">lib/rim-stop.js</a></div></li><li><div><b>paper-tooth</b> · Paper tooth — Multiplicative mono grain per device pixel, then a low-frequency perlin mottle, both on the whole sheet including the blobs. <span class="ro">Limits · Grain above ~0.08 reads as noise on the paper and breaks the rim. A mottle cell under ~30 u reads as a second grain.</span> <a href="lib/paper-tooth.js">lib/paper-tooth.js</a></div></li><li><div><b>rule-ledger</b> · Rules, caption and label — Two 1 u ink rules across the sheet; the caption is set right-aligned 12 u under the first rule, the two-line studio label under the second. <span class="ro">Limits · Rules under 1 device px are drawn at 1 px. A caption past ~22 u collides with the second rule’s label on a narrow sheet.</span> <a href="lib/rule-ledger.js">lib/rule-ledger.js</a></div></li></ol></div>
   <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>BLOB</b> · Blob 2 · Fourier-radius shape, R 280 u, four harmonics <span class="ro">u 0.22 · v 0.75 · blob-field</span></div></li><li><div><b>BLOB</b> · Blob 1 · center off-sheet above, only its lower edge shows <span class="ro">u 0.33 · v 0.06 · blob-field</span></div></li><li><div><b>BLOB</b> · Blob 3 · merges with blob 2, union before the blur <span class="ro">u 0.72 · v 0.96 · blob-field</span></div></li><li><div><b>RIM</b> · Rim · navy stop at field 0.44, band about 16 u wide <span class="ro">u 0.39 · v 0.55 · rim-stop</span></div></li><li><div><b>RIM</b> · Blue halo · outside the rim, field 0.335–0.41 <span class="ro">u 0.40 · v 0.37 · rim-stop</span></div></li><li><div><b>RAMP</b> · Core · field ≥ 0.9 maps to yellow <span class="ro">u 0.30 · v 0.85 · gradient-map</span></div></li><li><div><b>RAMP</b> · Inside the rim · plum → red → orange over field 0.53–0.70 <span class="ro">u 0.36 · v 0.62 · gradient-map</span></div></li><li><div><b>TOOTH</b> · Paper · mono grain amp 0.03 plus mottle amp 0.012 <span class="ro">u 0.70 · v 0.28 · paper-tooth</span></div></li><li><div><b>RULE</b> · Rule 1 · 1 u ink, v 0.475, full width less 12 u <span class="ro">u 0.55 · v 0.47 · rule-ledger</span></div></li><li><div><b>RULE</b> · Rule 2 and label · caption right-set under rule 1, studio label under rule 2 <span class="ro">u 0.10 · v 0.93 · rule-ledger</span></div></li></ol></div>
-  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read · <b>M</b> motion</span><span>ø co. · 2026</span></div> {
+  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>F</b> expand · <b>space</b> re-read · <b>M</b> motion</span><span>ø co. · 2026</span></div> {
   &quot;id&quot;: &quot;ts-10-thermal-blob-field&quot;,
   &quot;code&quot;: &quot;TS-10&quot;,
   &quot;title&quot;: &quot;Thermal blob field&quot;,
@@ -451,6 +451,7 @@
         <button id="bMode" type="button" title="cycle rebuild / reference / split (R)">Rebuild</button>
         <button id="bMotion" type="button" hidden title="run the motion version (M)">Motion</button>
         <button id="bLive" type="button" hidden title="open the live DOM version (L)">Live</button>
+        <button id="bWide" type="button" title="fold the notes away and fill the page (F)">Expand</button>
         <button id="bSpec" type="button" title="open the machine-readable spec (S)">Spec ⇥</button>
       </div>
       <div class="vtabs" id="vtabs"></div>
@@ -469,11 +470,11 @@
   <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
   <pre id="specpre">{{SPEC}}</pre>
 </aside>
-<script src="../../_shared/entries.js?v=202611121921"></script>
-<script src="../../_shared/vocab.js?v=202611121921"></script>
-<script src="../../_shared/art.js?v=202611121921"></script>
+<script src="../../_shared/entries.js?v=202611121938"></script>
+<script src="../../_shared/vocab.js?v=202611121938"></script>
+<script src="../../_shared/art.js?v=202611121938"></script>
 <script src="ref.js"></script>
 <script src="study.js"></script>
-<script src="../../_shared/shell.js?v=202611121921"></script>
+<script src="../../_shared/shell.js?v=202611121938"></script>
 </body>
 </html>

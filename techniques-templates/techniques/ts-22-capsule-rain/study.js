@@ -176,20 +176,21 @@ window.STUDY={
     label.draw(x,['SOLID','BLOCK'],784*u,1122*u,V.blockText); },
   render(canvas,w,h,dpr,V,done,O){ const A=window.ART, S=window.STUDY; const W=canvas.width, H=canvas.height; S.fields(canvas,W,H,V,O); const x=canvas.getContext('2d'); S.chrome(x,W,H,V,O); S.techniques['sheet-grain'](A.params(S.spec,O)['sheet-grain'],W/1000,A).apply(x); if(done)done(); },
   /* motion: columns fall (9 s loop), the helix turns (6 s), the dial turns (40 s). Fields are printed at half size and shown without smoothing; chrome stays at full size. */
-  motion(canvas,w,h,dpr,V,t,ctx){ const S=window.STUDY; const W=canvas.width, H=canvas.height, fw=Math.round(W/2), fh=Math.round(H/2); if(!S._f||S._f.width!==fw||S._f.height!==fh){ S._f=document.createElement('canvas'); S._f.width=fw; S._f.height=fh; }
-    const O={ 'capsule-rain':{ fall:(t/9)%1 }, 'capsule-helix':{ phase:(t/6)%1 }, 'capsule-dial':{ turn:(t/40)%1 } }; S.fields(S._f,fw,fh,V,O);
+  motion(canvas,w,h,dpr,V,t,ctx,UO){ const MO=(a,b)=>{ const o={}; for(const k of new Set([...Object.keys(a||{}),...Object.keys(b||{})]))o[k]=Object.assign({},(a||{})[k],(b||{})[k]); return o; }; const S=window.STUDY; const W=canvas.width, H=canvas.height, fw=Math.round(W/2), fh=Math.round(H/2); if(!S._f||S._f.width!==fw||S._f.height!==fh){ S._f=document.createElement('canvas'); S._f.width=fw; S._f.height=fh; }
+    const O=MO(UO,{ 'capsule-rain':{ fall:(t/9)%1 }, 'capsule-helix':{ phase:(t/6)%1 }, 'capsule-dial':{ turn:(t/40)%1 } }); S.fields(S._f,fw,fh,V,O);
     ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.imageSmoothingEnabled=false; ctx.drawImage(S._f,0,0,W,H); S.chrome(ctx,W,H,V,O); ctx.restore(); },
   /* live: pointer x slides the inks and the slider; pointer y sets the helix turns */
   pointer(px,py){ return { 'ink-bands':{ offset:px-0.5 }, 'capsule-ui':{ slider:px }, 'capsule-helix':{ turns:0.8+4*py } }; },
   liveScale:1.5,
-  live(V){ const S=window.STUDY, A=window.ART; const fn=f=>{ const s=f.toString(); return /^(function\b|\(|[\w$]+\s*=>)/.test(s)?s:'function '+s; };
+  live(V,UO){ const S=window.STUDY, A=window.ART; const fn=f=>{ const s=f.toString(); return /^(function\b|\(|[\w$]+\s*=>)/.test(s)?s:'function '+s; };
     const art=Object.keys(A).map(k=>'A.'+k+'='+fn(A[k])+';').join('\n'); const tech='{'+Object.keys(S.techniques).map(k=>JSON.stringify(k)+':'+fn(S.techniques[k])).join(',')+'}';
     const extra=Object.keys(S).filter(k=>typeof S[k]==='function'&&k!=='live'&&k!=='motion').map(k=>k+':'+fn(S[k])).join(',');
     return `<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="../../_shared/fonts.css"><style>html,body{margin:0;height:100%;overflow:hidden}canvas{width:100%;height:100%;display:block;cursor:crosshair;touch-action:none}</style><canvas id="c"></canvas><script>
 const A={};${art}
 window.ART=A; window.STUDY={spec:${JSON.stringify(S.spec)},techniques:${tech},${extra}};
+const UO=${JSON.stringify(UO||{})}; const MO=(a,b)=>{ const o={}; for(const k of new Set([...Object.keys(a||{}),...Object.keys(b||{})]))o[k]=Object.assign({},(a||{})[k],(b||{})[k]); return o; };
 const S=window.STUDY,V=${JSON.stringify(V)},c=document.getElementById('c'),d=${S.liveScale||0.6};let px=0.62,py=0.42,q=0;
-const draw=()=>{q=0;c.width=Math.max(2,Math.round(innerWidth*d));c.height=Math.max(2,Math.round(innerHeight*d));S.render(c,innerWidth,innerHeight,d,V,null,S.pointer(px,py));};
+const draw=()=>{q=0;c.width=Math.max(2,Math.round(innerWidth*d));c.height=Math.max(2,Math.round(innerHeight*d));S.render(c,innerWidth,innerHeight,d,V,null,MO(UO,S.pointer(px,py)));};
 addEventListener('pointermove',e=>{px=e.clientX/innerWidth;py=e.clientY/innerHeight;if(!q)q=requestAnimationFrame(draw);});addEventListener('resize',draw);(document.fonts?document.fonts.ready:Promise.resolve()).then(draw);
 <\/script>`; }
 };

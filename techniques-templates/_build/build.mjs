@@ -38,7 +38,7 @@ const plateNotes=(S,e)=>{ const section=TT.sections.find(s=>s.id===e.section)||{
   <div><h2>Reference</h2><div class="ro">${esc(S.source)}</div></div><div><h2>Study</h2><div class="nm">${esc(S.title)}</div><div class="ro">${esc(S.code)} · ${esc(section.title)} · ${idx+1} / ${sib.length}</div></div></div>
   ${techs?`<div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps">${techs}</ol></div>`:''}
   ${reads?`<div class="meta static" style="display:block"><h2>${(S.points||[]).length} reads · u, v on the sheet</h2><ol class="steps">${reads}</ol></div>`:''}
-  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read${S.motion?' · <b>M</b> motion':''}${S.live?' · <b>L</b> live':''}</span><span>ø co. · 2026</span></div>`; };
+  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>F</b> expand · <b>space</b> re-read${S.motion?' · <b>M</b> motion':''}${S.live?' · <b>L</b> live':''}</span><span>ø co. · 2026</span></div>`; };
 for(const e of TT.entries){ if(only.length&&!only.some(o=>e.id.includes(o)))continue; const dir=path.join(root,e.path); if(!fs.existsSync(path.join(dir,'study.js'))){ console.warn('skip (no study.js):',e.id); continue; }
   // reference → ref.js
   const refSrc=['ref.png','ref.jpg'].map(f=>path.join(dir,f)).find(fs.existsSync);
@@ -85,8 +85,9 @@ if(!only.length){ fs.writeFileSync('techniques.json',JSON.stringify({generated:n
   console.log('wrote _shared/vocab.js',Object.keys(names).length,'techniques',Object.keys(byAtom).length,'atoms');
   // root index: bake nav + both sections' card grids between the <nav> and <main> tags (the inline script redraws them).
   // card() and the find/vocab markup here MUST match render() in index.html's inline script.
-  const REG=(()=>{ const c={window:{}}; vm.runInNewContext(fs.readFileSync('_shared/reg-index.js','utf8'),c); vm.runInNewContext(fs.readFileSync('_shared/reg-view.js','utf8'),c); return { data:c.window.TT_REG, view:c.window.TT_REGVIEW }; })();
-  const count=s=>s==='all'?REG.data.entries.length:TT.entries.filter(e=>e.section===s).length;
+  const REG=(()=>{ const c={window:{}}; vm.runInNewContext(fs.readFileSync('_shared/reg-index.js','utf8'),c); vm.runInNewContext(fs.readFileSync('_shared/reg-view.js','utf8'),c); return { data:c.window.TT_REG, view:c.window.TT_REGVIEW, lib:c.window.TT_LIB, libview:c.window.TT_LIBVIEW }; })();
+  const libN=REG.lib.groups.reduce((n,g)=>n+g.cards.length,0);
+  const count=s=>s==='all'?REG.data.entries.length:TT.entries.filter(e=>e.section===s).length+(s==='techniques'?libN:0);
   const TERMS=[]; for(const [id,ents] of Object.entries(byTechnique))TERMS.push({id,kind:'t',name:names[id]||'',n:ents.length}); for(const [id,ents] of Object.entries(byAtom))TERMS.push({id,kind:'a',name:'',n:ents.length}); TERMS.sort((a,b)=>b.n-a.n||a.id.localeCompare(b.id)); const SHARED=TERMS.filter(t=>t.n>1);
   const nav=`<a class="brand" href="index.html">${TT.mark}<span class="wm">IMP<i>Ø</i>SSIBLE</span></a><span class="crumb"><b>Techniques &amp; Templates</b></span><span class="pager"><span><span class="n">${TT.entries.length}</span>&nbsp;entries</span><a href="techniques.json" title="every technique, keyed by id">techniques.json</a></span>`;
   const tabs=TT.sections.map((s,i)=>`<a href="#${s.id}" class="${i===0?'on':''}">${esc(s.title)} <i>${count(s.id)}</i></a>`).join('');
@@ -95,11 +96,11 @@ if(!only.length){ fs.writeFileSync('techniques.json',JSON.stringify({generated:n
   const card=e=>{ const sw=(e.variants||[])[0]||[]; const badges=[(e.variants||[]).length>1?e.variants.length+' variants':'', e.motion?'motion':'', e.live?'live':''].filter(Boolean).join(' · ');
     const tks=(e.techniques||[]).map(t=>`<a href="#${esc(e.section)}?t=${encodeURIComponent(t)}" class=""${names[t]?` title="${esc(names[t])}"`:''}>${esc(t)}</a>`).join('<i>·</i>');
     return `<div class="card"><a class="pv" href="${e.path}index.html"><img src="${e.path}thumb.png" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><span class="sw">${sw.map(c=>`<i style="background:${esc(c)}"></i>`).join('')}</span></a><div class="tx"><div class="code"><span>${esc(e.code)}</span> ${badges?`<span>${esc(badges)}</span>`:''}</div><a class="ttl" href="${e.path}index.html">${esc(e.title)}</a><div class="sub">${esc(e.sub)}</div>${tks?`<div class="tks">${tks}</div>`:''}</div></div>`; };
-  const sections=TT.sections.map(s=>{ if(s.id==='all')return `<section id="s-all"><h2><span>${esc(s.title)}</span><span>${count('all')} techniques</span></h2><p class="blurb">${esc(s.blurb)}</p>${REG.view(REG.data,{}).html}</section>`; const es=TT.entries.filter(e=>e.section===s.id); return `<section id="s-${esc(s.id)}"><h2><span>${esc(s.title)}</span><span>${es.length} ${es.length===1?'entry':'entries'}</span></h2>${s.id!=='techniques'?`<p class="blurb">${esc(s.blurb)}</p>`:''}<div class="grid">${es.map(card).join('')}</div></section>`; }).join('');
+  const sections=TT.sections.map(s=>{ if(s.id==='all')return `<section id="s-all"><h2><span>${esc(s.title)}</span><span>${count('all')} techniques</span></h2><p class="blurb">${esc(s.blurb)}</p>${REG.view(REG.data,{}).html}</section>`; const es=TT.entries.filter(e=>e.section===s.id); return `<section id="s-${esc(s.id)}"><h2><span>${esc(s.id==='techniques'?'Rebuilds · TS':s.title)}</span><span>${es.length} ${es.length===1?'entry':'entries'}</span></h2>${s.id!=='techniques'?`<p class="blurb">${esc(s.blurb)}</p>`:''}<div class="grid">${es.map(card).join('')}</div></section>${s.id==='techniques'?REG.libview(REG.lib,{}).html:''}`; }).join('');
   const main=`<div class="hd"><h1>${esc(TT.title)}</h1><p>${esc(TT.sections[0].blurb)}</p></div><div class="tabs">${tabs}</div>${bar}${vocab}${sections}`;
   let ix=fs.readFileSync('index.html','utf8');
   ix=ix.replace(/(<nav class="nav" id="nav"[^>]*>)[\s\S]*?(<\/nav>)/,(m,a,b)=>a+nav+b).replace(/(<main class="ix" id="ix">)[\s\S]*?(<\/main>)/,(m,a,b)=>a+main+b);
-  const desc=`<meta name="description" content="${esc(`${count('techniques')} technique read plates and ${count('templates')} composed templates. ${TT.sections[0].blurb}`)}">`;
+  const desc=`<meta name="description" content="${esc(`${count('techniques')-libN} technique read plates and ${count('templates')} composed templates. ${TT.sections[0].blurb}`)}">`;
   ix=/<meta name="description"/.test(ix)?ix.replace(/<meta name="description"[^>]*>/,desc):ix.replace('<link rel="icon"',`${desc}\n<link rel="icon"`);
   if(!/rel="alternate"[^>]*techniques\.json/.test(ix)) ix=ix.replace('</head>',`<link rel="alternate" type="application/json" href="techniques.json" title="every technique, keyed by id">\n</head>`);
   ix=version(ix); fs.writeFileSync('index.html',ix); console.log('baked index.html',TT.entries.length,'cards',SHARED.length,'shared terms'); }

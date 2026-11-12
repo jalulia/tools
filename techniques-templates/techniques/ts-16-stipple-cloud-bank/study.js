@@ -113,19 +113,20 @@ window.STUDY={
     for(let g=0;g<n;g++){ const color=g===0?V.ray:V.banks[sc.B[g-1].fill].dot; for(let z=0;z<3;z++)put(G[g*3+z],color,r*(1+sw*z*0.5)); } },
   render(canvas,w,h,dpr,V,done,O){ const S=window.STUDY; const W=canvas.width, H=canvas.height; const x=canvas.getContext('2d'); x.setTransform(1,0,0,1,0,0); const sc=S.scene(W,H,V,O); x.drawImage(sc.base,0,0); S.paintDots(x,sc,V,0,1,0,0); sc.tooth.apply(x); if(done)done(); },
   /* motion: the burst sways ±8° and its rays breathe; the dot thresholds shimmer. Fills and wash are painted once. */
-  motion(canvas,w,h,dpr,V,t,ctx){ const S=window.STUDY; const W=canvas.width, H=canvas.height; const key=W+'x'+H+V.id; if(!S._sc||S._sc.key!==key){ S._sc=S.scene(W,H,V); S._sc.key=key; }
+  motion(canvas,w,h,dpr,V,t,ctx,UO){ const MO=(a,b)=>{ const o={}; for(const k of new Set([...Object.keys(a||{}),...Object.keys(b||{})]))o[k]=Object.assign({},(a||{})[k],(b||{})[k]); return o; }; const S=window.STUDY; const W=canvas.width, H=canvas.height; const key=W+'x'+H+V.id+JSON.stringify(UO||{}); if(!S._sc||S._sc.key!==key){ S._sc=S.scene(W,H,V,UO); S._sc.key=key; }
     ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.drawImage(S._sc.base,0,0); S.paintDots(ctx,S._sc,V,0.14*Math.sin(t*0.3),1+0.07*Math.sin(t*0.9),0.08,t); ctx.restore(); },
   /* live: the pointer carries the burst */
   pointer(px,py){ return { 'dot-burst':{ 'center.x':px*1000, 'center.y':py*1200 } }; },
   liveScale:1,
-  live(V){ const S=window.STUDY, A=window.ART; const fn=f=>{ const s=f.toString(); return /^(function\b|\(|[\w$]+\s*=>)/.test(s)?s:'function '+s; };
+  live(V,UO){ const S=window.STUDY, A=window.ART; const fn=f=>{ const s=f.toString(); return /^(function\b|\(|[\w$]+\s*=>)/.test(s)?s:'function '+s; };
     const art=Object.keys(A).map(k=>'A.'+k+'='+fn(A[k])+';').join('\n'); const tech='{'+Object.keys(S.techniques).map(k=>JSON.stringify(k)+':'+fn(S.techniques[k])).join(',')+'}';
     const extra=Object.keys(S).filter(k=>typeof S[k]==='function'&&k!=='live'&&k!=='motion').map(k=>k+':'+fn(S[k])).join(',');
     return `<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="../../_shared/fonts.css"><style>html,body{margin:0;height:100%;overflow:hidden}canvas{width:100%;height:100%;display:block;cursor:crosshair;touch-action:none}</style><canvas id="c"></canvas><script>
 const A={};${art}
 window.ART=A; window.STUDY={spec:${JSON.stringify(S.spec)},techniques:${tech},${extra}};
+const UO=${JSON.stringify(UO||{})}; const MO=(a,b)=>{ const o={}; for(const k of new Set([...Object.keys(a||{}),...Object.keys(b||{})]))o[k]=Object.assign({},(a||{})[k],(b||{})[k]); return o; };
 const S=window.STUDY,V=${JSON.stringify(V)},c=document.getElementById('c'),d=${S.liveScale||0.6};let px=0.5,py=0.5,q=0;
-const draw=()=>{q=0;c.width=Math.max(2,Math.round(innerWidth*d));c.height=Math.max(2,Math.round(innerHeight*d));S.render(c,innerWidth,innerHeight,d,V,null,S.pointer(px,py));};
+const draw=()=>{q=0;c.width=Math.max(2,Math.round(innerWidth*d));c.height=Math.max(2,Math.round(innerHeight*d));S.render(c,innerWidth,innerHeight,d,V,null,MO(UO,S.pointer(px,py)));};
 addEventListener('pointermove',e=>{px=e.clientX/innerWidth;py=e.clientY/innerHeight;if(!q)q=requestAnimationFrame(draw);});addEventListener('resize',draw);(document.fonts?document.fonts.ready:Promise.resolve()).then(draw);
 <\/script>`; }
 };

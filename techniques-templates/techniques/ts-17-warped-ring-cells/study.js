@@ -93,20 +93,21 @@ window.STUDY={
     if(soften>0){ const soft=A.blur(canvas,soften*dpr); x.drawImage(soft,0,0); }
     if(done)done(); },
   /* motion: the pulls swing through one cycle every 16 s and the pools loop every 22 s; printed at half size, shown without smoothing */
-  motion(canvas,w,h,dpr,V,t,ctx){ const S=window.STUDY; const W=Math.round(canvas.width/2), H=Math.round(canvas.height/2); if(!S._m||S._m.width!==W||S._m.height!==H){ S._m=document.createElement('canvas'); S._m.width=W; S._m.height=H; }
-    const mx=S._m.getContext('2d'); const id=mx.createImageData(W,H); S.paint(id.data,W,H,V,{ 'sheet-pull':{ swing:(t/16)%1 }, 'ink-pool':{ drift:(t/22)%1 } }); mx.putImageData(id,0,0);
+  motion(canvas,w,h,dpr,V,t,ctx,UO){ const MO=(a,b)=>{ const o={}; for(const k of new Set([...Object.keys(a||{}),...Object.keys(b||{})]))o[k]=Object.assign({},(a||{})[k],(b||{})[k]); return o; }; const S=window.STUDY; const W=Math.round(canvas.width/2), H=Math.round(canvas.height/2); if(!S._m||S._m.width!==W||S._m.height!==H){ S._m=document.createElement('canvas'); S._m.width=W; S._m.height=H; }
+    const mx=S._m.getContext('2d'); const id=mx.createImageData(W,H); S.paint(id.data,W,H,V,MO(UO,{ 'sheet-pull':{ swing:(t/16)%1 }, 'ink-pool':{ drift:(t/22)%1 } })); mx.putImageData(id,0,0);
     ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.imageSmoothingEnabled=false; ctx.drawImage(S._m,0,0,canvas.width,canvas.height); ctx.restore(); },
   /* live: a fifth pull sits under the pointer */
   pointer(px,py){ return { 'sheet-pull':{ 'grab.x':px, 'grab.y':py, 'grab.pull_u':230 } }; },
   liveScale:0.5,
-  live(V){ const S=window.STUDY, A=window.ART; const fn=f=>{ const s=f.toString(); return /^(function\b|\(|[\w$]+\s*=>)/.test(s)?s:'function '+s; };
+  live(V,UO){ const S=window.STUDY, A=window.ART; const fn=f=>{ const s=f.toString(); return /^(function\b|\(|[\w$]+\s*=>)/.test(s)?s:'function '+s; };
     const art=Object.keys(A).map(k=>'A.'+k+'='+fn(A[k])+';').join('\n'); const tech='{'+Object.keys(S.techniques).map(k=>JSON.stringify(k)+':'+fn(S.techniques[k])).join(',')+'}';
     const extra=Object.keys(S).filter(k=>typeof S[k]==='function'&&k!=='live'&&k!=='motion').map(k=>k+':'+fn(S[k])).join(',');
     return `<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="../../_shared/fonts.css"><style>html,body{margin:0;height:100%;overflow:hidden}canvas{width:100%;height:100%;display:block;cursor:crosshair;touch-action:none;image-rendering:pixelated}</style><canvas id="c"></canvas><script>
 const A={};${art}
 window.ART=A; window.STUDY={spec:${JSON.stringify(S.spec)},techniques:${tech},${extra}};
+const UO=${JSON.stringify(UO||{})}; const MO=(a,b)=>{ const o={}; for(const k of new Set([...Object.keys(a||{}),...Object.keys(b||{})]))o[k]=Object.assign({},(a||{})[k],(b||{})[k]); return o; };
 const S=window.STUDY,V=${JSON.stringify(V)},c=document.getElementById('c'),d=${S.liveScale||0.6};let px=0.5,py=0.5,q=0;
-const draw=()=>{q=0;c.width=Math.max(2,Math.round(innerWidth*d));c.height=Math.max(2,Math.round(innerHeight*d));S.render(c,innerWidth,innerHeight,d,V,null,S.pointer(px,py));};
+const draw=()=>{q=0;c.width=Math.max(2,Math.round(innerWidth*d));c.height=Math.max(2,Math.round(innerHeight*d));S.render(c,innerWidth,innerHeight,d,V,null,MO(UO,S.pointer(px,py)));};
 addEventListener('pointermove',e=>{px=e.clientX/innerWidth;py=e.clientY/innerHeight;if(!q)q=requestAnimationFrame(draw);});addEventListener('resize',draw);(document.fonts?document.fonts.ready:Promise.resolve()).then(draw);
 <\/script>`; }
 };
