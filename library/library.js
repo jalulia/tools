@@ -143,7 +143,7 @@
   function tile(g, h) {
     var r = g.r, lay = shape(r), all = [r.acc].concat(g.more.map(function (x) { return x.acc; })), nv = (r.versions || []).length, n = g.more.length + nv;
     return '<a class="pl" style="--ar:' + lay.toFixed(4) + '" href="' + recHref(r) + '" data-r="' + r.acc + '" data-rs="' + all.join(' ') + '" title="' + e(label(r) + (nv ? ' · ' + (nv + 1) + ' versions' : '') + (g.more.length ? ' · and ' + g.more.length + ' more with this picture' : '')) + '"' +
-      (S.r && all.indexOf(S.r) >= 0 ? ' aria-current="true"' : '') + '>' + pic(r, Math.round(lay * h * 1.5) + 'px') + '<span class="c' + (r.call ? '' : ' t') + '"><b>' + e(r.call || r.title) + '</b>' + (n ? '<s>+' + n + '</s>' : '') + '</span></a>';
+      (S.r && all.indexOf(S.r) >= 0 ? ' aria-current="true"' : '') + '>' + pic(r, Math.round(lay * h * 1.5) + 'px') + '<span class="c' + (r.call ? '' : ' t') + '"><b>' + e(r.call || r.title) + '</b>' + (n ? '<s>+' + n + '</s>' : '') + '</span>' + nw(r) + '</a>';
   }
   /* Only a work with a picture gets a frame. The rest are listed by name. */
   function strip(list, h) {
@@ -227,11 +227,17 @@
     return '<footer class="foot"><span>' + (PREVIEW ? 'Preview of library/' : '<a href="catalog.json">catalog.json</a> · <a href="accessions.json">accessions.json</a> · <a href="fixity.json">fixity.json</a> · <a href="llms.txt">llms.txt</a>') + '</span>' +
       '<span>' + e(L.schema) + ' · built ' + e(L.generated) + (L.source_commit ? ' · ' + e(L.source_commit) : '') + '</span></footer>';
   }
+  /* A small control on a tile: the work's page in a new window, or its picture when it has no page. */
+  var NW_SVG = '<svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M5 2.5H2.5v7h7V7M7 2.5h2.5V5M9.5 2.5 5.5 6.5" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>';
+  function nw(r) {
+    var u = r.href || r.thumb_2x || r.thumb; if (!u) return '';
+    return '<span class="nw" role="button" tabindex="-1" data-open="' + e(u) + '" title="' + (r.href ? 'Open in a new window' : 'Open the picture in a new window') + '">' + NW_SVG + '</span>';
+  }
   function card(r) {
     var st = r.status ? r.status.replace('-', ' ') : '';
     var has = r.access !== 'public' ? '<span class="not">' + r.access + '</span>'
       : r.plate && r.plate.modules ? '<span class="has" title="Has modules to lift">lift</span>' : r.plate && r.plate.spec ? '<span class="has" title="Has a spec">spec</span>' : '';
-    return '<a class="cdx" href="' + recHref(r) + '" data-r="' + r.acc + '" title="' + e(label(r)) + '"' + (S.r === r.acc ? ' aria-current="true"' : '') + '><span class="cell">' + pic(r, '(max-width:720px) 46vw, 240px', r.access !== 'public') + '</span>' +
+    return '<a class="cdx" href="' + recHref(r) + '" data-r="' + r.acc + '" title="' + e(label(r)) + '"' + (S.r === r.acc ? ' aria-current="true"' : '') + '><span class="cell">' + pic(r, '(max-width:720px) 46vw, 240px', r.access !== 'public') + nw(r) + '</span>' +
       '<span class="l1"><b class="call">' + e(r.call || r.acc) + '</b><span class="col">' + COL[r.collection].code + '</span></span>' +
       '<span class="tt">' + e(r.title) + '</span>' +
       '<span class="l3">' + glyph(r.kind, r.status, r.access) + '<span class="st">' + e(r.kind) + (st ? ' · ' + e(st) : '') + (r.versions ? ' · ' + (r.versions.length + 1) + ' versions' : '') + (r.parts ? ' · ' + r.parts.length + ' parts' : '') + '</span>' + has + '</span></a>';
@@ -248,7 +254,7 @@
     var tail = r.kind === 'plate' && /\/(\d{2})$/.exec(r.id), num = r.call || (tail ? tail[1] : r.acc.slice(5).replace(/^0+/, '')), st = r.access !== 'public' ? r.access : r.status ? r.status.replace('-', ' ') : (r.family || '').replace(/-/g, ' ');
     return '<a class="tb-c cut-' + (FCUT[r.family] || CUT[r.kind] || 'step') + (r.access !== 'public' ? ' off' : '') + '" href="' + recHref(r) + '" data-r="' + r.acc + '" title="' + e(label(r)) + '"' + (S.r === r.acc ? ' aria-current="true"' : '') + '>' +
       '<span class="edge"><span class="face"><img src="' + e(r.thumb_2x && r.thumb_2x_w <= 1200 ? r.thumb_2x : r.thumb) + '" alt="" loading="lazy" decoding="async">' +
-      '<span class="strip2"><span class="k">' + e(r.kind) + '</span><b' + (num.length > 5 ? ' class="long"' : '') + '>' + e(num) + '</b><span class="k st">' + e(st || COL[r.collection].code) + '</span><i>↗</i></span></span></span>' +
+      '<span class="strip2"><span class="k">' + e(r.kind) + '</span><b' + (num.length > 5 ? ' class="long"' : '') + '>' + e(num) + '</b><span class="k st">' + e(st || COL[r.collection].code) + '</span>' + (nw(r) || '<i>↗</i>') + '</span></span></span>' +
       '<span class="nm">' + e(r.title) + '</span></a>';
   }
 
@@ -503,6 +509,8 @@
     function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (err) { toast('Copy failed'); } ta.remove(); }
   }
   document.addEventListener('click', function (ev) {
+    var nwEl = ev.target.closest && ev.target.closest('.nw');
+    if (nwEl) { ev.preventDefault(); ev.stopPropagation(); window.open(nwEl.getAttribute('data-open'), '_blank', 'noopener'); return; }
     var t = ev.target.closest('[data-view],[data-f],[data-clear],[data-clearall],[data-unq],[data-d],[data-r],[data-close],[data-term],[data-scheme],[data-ts],[data-ls],[data-fd],[data-copy],[data-railtog]');
     if (!t) {
       // a link to another view is routed here, so it works where the host owns the address bar
