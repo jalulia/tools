@@ -193,6 +193,24 @@
           "implementation": "Flat cream fill; the print sits inset by 34 u on every side.",
           "limits": "Above ~120 u the margin crops the beat fringe at the left edge.",
           "module": "techniques/ts-01-moire-ring-screens/lib/paper-margin.js"
+        },
+        {
+          "entry": "ts-17-warped-ring-cells",
+          "code": "TS-17",
+          "params": {
+            "width_u": {
+              "value": 34,
+              "range": [
+                0,
+                120
+              ],
+              "unit": "u"
+            },
+            "rule": "none"
+          },
+          "implementation": "Flat paper fill; the print sits inset on every side.",
+          "limits": "Above ~120 u the margin crops the stretched cells at the sheet edge.",
+          "module": "techniques/ts-17-warped-ring-cells/lib/paper-margin.js"
         }
       ]
     },
@@ -879,6 +897,39 @@
             }
           },
           "implementation": "Before the perforation punch the stamp layer is multiplied by a low-frequency fbm and then by ART.grain, so both tooth and mottle follow the stamp and stop at the bites."
+        },
+        {
+          "entry": "ts-16-stipple-cloud-bank",
+          "code": "TS-16",
+          "params": {
+            "amp": {
+              "value": 0.035,
+              "range": [
+                0,
+                0.12
+              ]
+            },
+            "pitch_px": {
+              "value": 1,
+              "range": [
+                1,
+                4
+              ],
+              "step": 1,
+              "unit": "px"
+            },
+            "seed": {
+              "value": 5,
+              "range": [
+                1,
+                9999
+              ],
+              "step": 1
+            }
+          },
+          "implementation": "A mono multiply grain over the finished sheet.",
+          "limits": "Above ~0.08 the grain competes with the dots.",
+          "module": "techniques/ts-16-stipple-cloud-bank/lib/paper-tooth.js"
         }
       ]
     },
@@ -3044,6 +3095,809 @@
           "implementation": "One multiplicative monochrome noise pass over paper and ink together, on cells of 1.4 u with lag-1 correlation.",
           "limits": "Above ~0.06 the grain reads before the line; this pass is the last thing to add and the first to remove.",
           "module": "techniques/ts-15-banknote-engraving/lib/paper-grain.js"
+        }
+      ]
+    },
+    "scallop-bank": {
+      "name": "Scalloped flat bank",
+      "used_in": [
+        {
+          "entry": "ts-16-stipple-cloud-bank",
+          "code": "TS-16",
+          "params": {
+            "banks": [
+              {
+                "fill": "warm",
+                "from": [
+                  1090,
+                  520
+                ],
+                "to": [
+                  430,
+                  1300
+                ],
+                "R": 104,
+                "seed": 11
+              },
+              {
+                "fill": "dark",
+                "from": [
+                  1100,
+                  760
+                ],
+                "to": [
+                  330,
+                  1560
+                ],
+                "R": 96,
+                "seed": 23
+              },
+              {
+                "fill": "pale",
+                "from": [
+                  -90,
+                  1010
+                ],
+                "to": [
+                  1120,
+                  1640
+                ],
+                "R": 128,
+                "seed": 37
+              },
+              {
+                "fill": "dark",
+                "from": [
+                  -100,
+                  1330
+                ],
+                "to": [
+                  640,
+                  1880
+                ],
+                "R": 92,
+                "seed": 51
+              }
+            ],
+            "R_scale": {
+              "value": 1,
+              "range": [
+                0.5,
+                1.8
+              ],
+              "note": "multiplies every lobe radius"
+            },
+            "R_var": {
+              "value": 0.3,
+              "range": [
+                0,
+                0.6
+              ],
+              "note": "lobe radius varies ± this share"
+            },
+            "spacing": {
+              "value": 1.25,
+              "range": [
+                0.8,
+                1.9
+              ],
+              "note": "lobe centers sit this many radii apart"
+            }
+          },
+          "implementation": "Each bank is a row of circles along a spine from one point to another, filled together with the polygon under the spine; later banks cover earlier ones.",
+          "limits": "spacing above ~1.9 opens gaps between lobes and the edge reads as beads. R_var above ~0.6 makes single lobes swallow their neighbors.",
+          "module": "techniques/ts-16-stipple-cloud-bank/lib/scallop-bank.js"
+        }
+      ]
+    },
+    "stipple-fill": {
+      "name": "Jittered dot layer",
+      "used_in": [
+        {
+          "entry": "ts-16-stipple-cloud-bank",
+          "code": "TS-16",
+          "params": {
+            "pitch_u": {
+              "value": 6.4,
+              "range": [
+                3.5,
+                16
+              ],
+              "unit": "u"
+            },
+            "radius_u": {
+              "value": 1.5,
+              "range": [
+                0.6,
+                3.5
+              ],
+              "unit": "u"
+            },
+            "jitter": {
+              "value": 0.42,
+              "range": [
+                0,
+                0.5
+              ],
+              "note": "share of the pitch"
+            },
+            "seed": {
+              "value": 161,
+              "range": [
+                1,
+                9999
+              ],
+              "step": 1
+            },
+            "tone": "one dot color per fill, close to the fill; the sky carries no dot layer"
+          },
+          "implementation": "One dot per grid cell, moved by up to 0.42 of the pitch; the fill under the dot center picks the dot color.",
+          "limits": "radius above ~0.45 × pitch merges dots into a tint. jitter 0 shows the grid as rows. Below 3.5 u pitch the layer costs over 100 k dots per sheet.",
+          "module": "techniques/ts-16-stipple-cloud-bank/lib/stipple-fill.js"
+        }
+      ]
+    },
+    "shade-field": {
+      "name": "Density shading",
+      "used_in": [
+        {
+          "entry": "ts-16-stipple-cloud-bank",
+          "code": "TS-16",
+          "params": {
+            "scale_u": {
+              "value": 260,
+              "range": [
+                80,
+                900
+              ],
+              "unit": "u"
+            },
+            "floor": {
+              "value": 0.45,
+              "range": [
+                0,
+                1
+              ],
+              "note": "lowest share of dots kept"
+            },
+            "seed": {
+              "value": 9,
+              "range": [
+                1,
+                9999
+              ],
+              "step": 1
+            },
+            "density": "floor + (1 − floor) · smoothstep(−0.25, 0.3, fbm)"
+          },
+          "implementation": "A two-octave noise field gives each dot a keep probability between the floor and 1.",
+          "limits": "floor at 1 removes the shading. scale under ~80 u reads as blotches, not form.",
+          "module": "techniques/ts-16-stipple-cloud-bank/lib/shade-field.js"
+        }
+      ]
+    },
+    "dot-burst": {
+      "name": "Dot sunburst",
+      "used_in": [
+        {
+          "entry": "ts-16-stipple-cloud-bank",
+          "code": "TS-16",
+          "params": {
+            "center_u": [
+              470,
+              800
+            ],
+            "rays": {
+              "value": 30,
+              "range": [
+                6,
+                60
+              ],
+              "step": 1
+            },
+            "fan_deg": [
+              -172,
+              -8
+            ],
+            "length_u": {
+              "value": 560,
+              "range": [
+                200,
+                900
+              ],
+              "unit": "u"
+            },
+            "length_var": {
+              "value": 0.3,
+              "range": [
+                0,
+                0.6
+              ]
+            },
+            "root_width_u": {
+              "value": 64,
+              "range": [
+                6,
+                140
+              ],
+              "unit": "u"
+            },
+            "dots_per_ray": {
+              "value": 520,
+              "range": [
+                60,
+                1200
+              ],
+              "step": 1
+            },
+            "core_dots": {
+              "value": 7000,
+              "range": [
+                0,
+                16000
+              ],
+              "step": 1
+            },
+            "core_sigma_u": {
+              "value": 185,
+              "range": [
+                40,
+                300
+              ],
+              "unit": "u"
+            },
+            "dot_u": {
+              "value": 1.5,
+              "range": [
+                0.6,
+                3
+              ],
+              "unit": "u"
+            },
+            "gap_u": {
+              "value": 5.2,
+              "range": [
+                0,
+                10
+              ],
+              "unit": "u",
+              "note": "no two dots closer than this"
+            },
+            "seed": {
+              "value": 77,
+              "range": [
+                1,
+                9999
+              ],
+              "step": 1
+            }
+          },
+          "implementation": "Dots are placed along each ray with a spread that narrows to the tip and a count that thins with distance; a gaussian core sits on the center. A dot is dropped when another already sits within the gap. Dots land only on the sky.",
+          "limits": "Over ~60 rays the streams merge into a disc; root_width above ~140 u does the same. core_dots at 0 leaves the rays unjoined. gap at 0 lets dots pile up and the burst reads as spray, not stipple.",
+          "module": "techniques/ts-16-stipple-cloud-bank/lib/dot-burst.js"
+        }
+      ]
+    },
+    "lens-warp": {
+      "name": "Pinch lens",
+      "used_in": [
+        {
+          "entry": "ts-17-warped-ring-cells",
+          "code": "TS-17",
+          "params": {
+            "center_u": [
+              520,
+              700
+            ],
+            "radius_u": {
+              "value": 700,
+              "range": [
+                200,
+                1600
+              ],
+              "unit": "u"
+            },
+            "k": {
+              "value": 0.85,
+              "range": [
+                -0.6,
+                3
+              ],
+              "note": "pinch strength; negative bulges"
+            },
+            "stretch_y": {
+              "value": 1.1,
+              "range": [
+                -0.8,
+                1.6
+              ],
+              "note": "extra pull above the center"
+            },
+            "q": "c + d / (1 + k·|d/R|²), with d.y scaled by 1 − stretch_y·clamp(−d.y/R, 0, 1)·0.5"
+          },
+          "implementation": "Each pixel is mapped to a sample point pulled toward the lens center by 1/(1 + k·r²); the grid is evaluated at the sample point.",
+          "limits": "k below about −0.6 folds the grid over itself inside the sheet. k above ~3 stretches the outer cells past the sheet and they read as bars.",
+          "module": "techniques/ts-17-warped-ring-cells/lib/lens-warp.js"
+        }
+      ]
+    },
+    "ring-cell": {
+      "name": "Ringed rounded cell",
+      "used_in": [
+        {
+          "entry": "ts-17-warped-ring-cells",
+          "code": "TS-17",
+          "params": {
+            "pitch_u": {
+              "value": 64,
+              "range": [
+                28,
+                160
+              ],
+              "unit": "u"
+            },
+            "turn_deg": {
+              "value": 14,
+              "range": [
+                -45,
+                45
+              ],
+              "unit": "°"
+            },
+            "roundness": {
+              "value": 2.7,
+              "range": [
+                2,
+                8
+              ],
+              "note": "superellipse exponent; 2 is a circle"
+            },
+            "outer": {
+              "at": {
+                "value": 0.37,
+                "range": [
+                  0.3,
+                  0.5
+                ]
+              },
+              "width": {
+                "value": 0.05,
+                "range": [
+                  0.02,
+                  0.16
+                ]
+              },
+              "grow": {
+                "value": 0.07,
+                "range": [
+                  0,
+                  0.25
+                ],
+                "note": "added width at full field strength"
+              }
+            },
+            "gutter": {
+              "tint": {
+                "value": 0.6,
+                "range": [
+                  0,
+                  0.9
+                ],
+                "note": "ink coverage between cells"
+              }
+            },
+            "edge": {
+              "value": 0.075,
+              "range": [
+                0.01,
+                0.2
+              ],
+              "note": "softness of a band edge, in cell units"
+            },
+            "inner": {
+              "at": {
+                "value": 0.2,
+                "range": [
+                  0.1,
+                  0.3
+                ]
+              },
+              "width": {
+                "value": 0.04,
+                "range": [
+                  0.01,
+                  0.1
+                ]
+              },
+              "share": {
+                "value": 0.7,
+                "range": [
+                  0,
+                  1
+                ],
+                "note": "share of cells that carry it"
+              }
+            },
+            "field": {
+              "sigma_u": {
+                "value": 400,
+                "range": [
+                  150,
+                  1200
+                ],
+                "unit": "u"
+              },
+              "floor": {
+                "value": 0.1,
+                "range": [
+                  0,
+                  1
+                ]
+              }
+            },
+            "cell_var": {
+              "value": 0.55,
+              "range": [
+                0,
+                1
+              ],
+              "note": "how much ring strength varies cell to cell"
+            },
+            "seed": {
+              "value": 31,
+              "range": [
+                1,
+                9999
+              ],
+              "step": 1
+            }
+          },
+          "implementation": "Inside each cell the distance to the center is measured as a superellipse; two bands of that distance carry ink and the space past 0.45 carries a lighter tint. Both strengthen with a gaussian field centered on the lens.",
+          "limits": "outer.at + width + grow above ~0.6 closes every gutter and the cells read as holes in a flat tint. Pitch under ~28 u falls below the speckle and the rings vanish.",
+          "module": "techniques/ts-17-warped-ring-cells/lib/ring-cell.js"
+        }
+      ]
+    },
+    "hue-field": {
+      "name": "Anchored ink regions",
+      "used_in": [
+        {
+          "entry": "ts-17-warped-ring-cells",
+          "code": "TS-17",
+          "params": {
+            "anchors_u": [
+              [
+                480,
+                130
+              ],
+              [
+                520,
+                640
+              ],
+              [
+                760,
+                1040
+              ],
+              [
+                60,
+                860
+              ],
+              [
+                960,
+                420
+              ]
+            ],
+            "sharpness": {
+              "value": 3,
+              "range": [
+                1,
+                8
+              ],
+              "note": "higher gives harder region borders"
+            },
+            "mix": {
+              "value": 0.38,
+              "range": [
+                0,
+                0.5
+              ],
+              "note": "chance that a cell takes its second-nearest ink"
+            },
+            "inner": "the inner ring takes the next ink in the list"
+          },
+          "implementation": "Five anchor points carry one ink each. A cell takes the ink of its nearest anchor, or with up to 30 % chance the second nearest.",
+          "limits": "sharpness under ~1.5 mixes every region and no ink dominates anywhere. mix above ~0.4 reads as random color.",
+          "module": "techniques/ts-17-warped-ring-cells/lib/hue-field.js"
+        }
+      ]
+    },
+    "stochastic-speckle": {
+      "name": "Noise-threshold print",
+      "used_in": [
+        {
+          "entry": "ts-17-warped-ring-cells",
+          "code": "TS-17",
+          "params": {
+            "gain": {
+              "value": 0.82,
+              "range": [
+                0.3,
+                1
+              ],
+              "note": "highest ink coverage"
+            },
+            "stray": {
+              "value": 0.15,
+              "range": [
+                0,
+                0.3
+              ],
+              "note": "share of stock pixels that take an ink"
+            },
+            "stock_noise": {
+              "value": 0.1,
+              "range": [
+                0,
+                0.2
+              ]
+            },
+            "soften_px": {
+              "value": 0.8,
+              "range": [
+                0,
+                3
+              ],
+              "unit": "px"
+            },
+            "seed": {
+              "value": 211,
+              "range": [
+                1,
+                9999
+              ],
+              "step": 1
+            }
+          },
+          "implementation": "Per pixel: ink if a random number is under the coverage, else stock; a share of stock pixels take a random ink. A 0.8 px blur follows.",
+          "limits": "stray above ~0.2 lifts the stock to a tint and the rings lose contrast. soften above ~1.5 px turns the speckle into tone.",
+          "module": "techniques/ts-17-warped-ring-cells/lib/stochastic-speckle.js"
+        }
+      ]
+    },
+    "meridian-grid": {
+      "name": "Dashed meridians",
+      "used_in": [
+        {
+          "entry": "ts-19-arc-bundle-field",
+          "code": "TS-19",
+          "params": {
+            "center_u": [
+              500,
+              288
+            ],
+            "radius_u": {
+              "value": 560,
+              "range": [
+                200,
+                1200
+              ],
+              "unit": "u"
+            },
+            "count": {
+              "value": 11,
+              "range": [
+                3,
+                31
+              ],
+              "step": 1
+            },
+            "dash_u": [
+              6,
+              5
+            ],
+            "line_u": {
+              "value": 1.1,
+              "range": [
+                0.4,
+                3
+              ],
+              "unit": "u"
+            },
+            "tilt_deg": {
+              "value": 0,
+              "range": [
+                -30,
+                30
+              ],
+              "unit": "°"
+            },
+            "axis": "the middle meridian is solid"
+          },
+          "implementation": "Each meridian is an ellipse with the sphere radius as its tall axis and radius·|sin λ| as its wide one, stroked with a 6 on 5 dash.",
+          "limits": "Over ~31 meridians the dashes of neighbors align into bands. A radius under the half-height of the sheet shows the sphere outline and the picture reads as a ball, not a field.",
+          "module": "techniques/ts-19-arc-bundle-field/lib/meridian-grid.js"
+        }
+      ]
+    },
+    "arc-bundle": {
+      "name": "Nested arc bundle",
+      "used_in": [
+        {
+          "entry": "ts-19-arc-bundle-field",
+          "code": "TS-19",
+          "params": {
+            "hub_u": [
+              470,
+              292
+            ],
+            "bundles": {
+              "value": 14,
+              "range": [
+                1,
+                24
+              ],
+              "step": 1
+            },
+            "strands": [
+              10,
+              34
+            ],
+            "reach_u": [
+              230,
+              520
+            ],
+            "fan_u": {
+              "value": 78,
+              "range": [
+                10,
+                400
+              ],
+              "unit": "u",
+              "note": "length of the line the strokes end along"
+            },
+            "stagger": {
+              "value": 0.3,
+              "range": [
+                0,
+                0.8
+              ],
+              "note": "share of the reach by which stroke ends step back across the bundle"
+            },
+            "bend": [
+              0.04,
+              0.36
+            ],
+            "line_u": {
+              "value": 1.5,
+              "range": [
+                0.4,
+                4
+              ],
+              "unit": "u"
+            },
+            "seed": {
+              "value": 404,
+              "range": [
+                1,
+                9999
+              ],
+              "step": 1
+            },
+            "curve": "quadratic; control point at mid-chord, pushed sideways by bend × chord length"
+          },
+          "implementation": "For each bundle a target point is picked around the hub; stroke ends are spaced along a line through it, and each stroke is a quadratic curve whose sideways bend steps up across the bundle.",
+          "limits": "fan under ~10 u collapses a bundle to one thick line. Past ~24 bundles the sheet fills and single arcs stop reading.",
+          "module": "techniques/ts-19-arc-bundle-field/lib/arc-bundle.js"
+        }
+      ]
+    },
+    "stroke-gradient": {
+      "name": "Along-stroke gradient",
+      "used_in": [
+        {
+          "entry": "ts-19-arc-bundle-field",
+          "code": "TS-19",
+          "params": {
+            "root_alpha": {
+              "value": 0.2,
+              "range": [
+                0,
+                1
+              ]
+            },
+            "tip_alpha": {
+              "value": 0.66,
+              "range": [
+                0,
+                1
+              ]
+            },
+            "ink_step": "ink index steps across the bundle, mixed with the next ink",
+            "blend": "lighter"
+          },
+          "implementation": "A linear gradient from the hub to the stroke end colors each stroke: faint at the root, full ink at the tip. Strokes are composited with the lighter blend.",
+          "limits": "With both alphas at 1 on a dark ground, crossings near the hub clip to white.",
+          "module": "techniques/ts-19-arc-bundle-field/lib/stroke-gradient.js"
+        }
+      ]
+    },
+    "glow-pass": {
+      "name": "Additive glow",
+      "used_in": [
+        {
+          "entry": "ts-19-arc-bundle-field",
+          "code": "TS-19",
+          "params": {
+            "sigma_u": {
+              "value": 5,
+              "range": [
+                0,
+                30
+              ],
+              "unit": "u"
+            },
+            "gain": {
+              "value": 0.35,
+              "range": [
+                0,
+                1.5
+              ]
+            }
+          },
+          "implementation": "The stroke layer is blurred and added back over itself.",
+          "limits": "gain above ~1 washes the thin strokes into a haze.",
+          "module": "techniques/ts-19-arc-bundle-field/lib/glow-pass.js"
+        }
+      ]
+    },
+    "node-label": {
+      "name": "Numbered nodes",
+      "used_in": [
+        {
+          "entry": "ts-19-arc-bundle-field",
+          "code": "TS-19",
+          "params": {
+            "nodes": {
+              "value": 34,
+              "range": [
+                0,
+                90
+              ],
+              "step": 1
+            },
+            "square_u": {
+              "value": 3.4,
+              "range": [
+                1.5,
+                8
+              ],
+              "unit": "u"
+            },
+            "type_u": {
+              "value": 13.5,
+              "range": [
+                9,
+                26
+              ],
+              "unit": "u"
+            },
+            "offset_u": [
+              5,
+              -5
+            ],
+            "seed": {
+              "value": 52,
+              "range": [
+                1,
+                9999
+              ],
+              "step": 1
+            },
+            "format": "three digits, one decimal"
+          },
+          "implementation": "Square markers sit on bundle ends and on seeded free points; each carries a seeded number set up and to the right.",
+          "limits": "Over ~60 nodes the labels overlap. Type under 9 u is unreadable at 900 px.",
+          "module": "techniques/ts-19-arc-bundle-field/lib/node-label.js"
         }
       ]
     }

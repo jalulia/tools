@@ -1,0 +1,329 @@
+{
+  "id": "ts-19-arc-bundle-field",
+  "code": "TS-19",
+  "title": "Arc bundles on a dashed globe",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "Blue",
+      "swatches": [
+        "#000000",
+        "#1E6BFF",
+        "#19C8FF",
+        "#B46CFF",
+        "#3DF0A0"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "Ø",
+      "swatches": [
+        "#101014",
+        "#F4551E",
+        "#2F5AE6",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "paper",
+      "label": "Paper",
+      "swatches": [
+        "#FFFFFF",
+        "#101014",
+        "#2F5AE6",
+        "#E0402D"
+      ]
+    },
+    {
+      "id": "heat",
+      "label": "Heat",
+      "swatches": [
+        "#0B0508",
+        "#FF3D2E",
+        "#FFB000",
+        "#FF5FA8"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      702,
+      405
+    ],
+    "grammar": "bundles of thin gradient arcs from a hub on black; dashed meridians of a sphere; small square nodes with numeric labels; soft glow"
+  },
+  "units": "design units, 1000 = sheet width",
+  "palette": {
+    "ground": "#000000",
+    "grid": "#8C8C90",
+    "text": "#FFFFFF",
+    "blue": "#1E6BFF",
+    "cyan": "#19C8FF",
+    "violet": "#B46CFF",
+    "green": "#3DF0A0"
+  },
+  "techniques": [
+    {
+      "id": "meridian-grid",
+      "short": "GRID",
+      "name": "Dashed meridians",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "sphere",
+        "ellipse",
+        "dash"
+      ],
+      "params": {
+        "center_u": [
+          500,
+          288
+        ],
+        "radius_u": {
+          "value": 560,
+          "range": [
+            200,
+            1200
+          ],
+          "unit": "u"
+        },
+        "count": {
+          "value": 11,
+          "range": [
+            3,
+            31
+          ],
+          "step": 1
+        },
+        "dash_u": [
+          6,
+          5
+        ],
+        "line_u": {
+          "value": 1.1,
+          "range": [
+            0.4,
+            3
+          ],
+          "unit": "u"
+        },
+        "tilt_deg": {
+          "value": 0,
+          "range": [
+            -30,
+            30
+          ],
+          "unit": "°"
+        },
+        "axis": "the middle meridian is solid"
+      },
+      "limits": "Over ~31 meridians the dashes of neighbors align into bands. A radius under the half-height of the sheet shows the sphere outline and the picture reads as a ball, not a field.",
+      "implementation": "Each meridian is an ellipse with the sphere radius as its tall axis and radius·|sin λ| as its wide one, stroked with a 6 on 5 dash.",
+      "module": "lib/meridian-grid.js"
+    },
+    {
+      "id": "arc-bundle",
+      "short": "ARC",
+      "name": "Nested arc bundle",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "bezier",
+        "fan",
+        "bundle"
+      ],
+      "params": {
+        "hub_u": [
+          470,
+          292
+        ],
+        "bundles": {
+          "value": 14,
+          "range": [
+            1,
+            24
+          ],
+          "step": 1
+        },
+        "strands": [
+          10,
+          34
+        ],
+        "reach_u": [
+          230,
+          520
+        ],
+        "fan_u": {
+          "value": 78,
+          "range": [
+            10,
+            400
+          ],
+          "unit": "u",
+          "note": "length of the line the strokes end along"
+        },
+        "stagger": {
+          "value": 0.3,
+          "range": [
+            0,
+            0.8
+          ],
+          "note": "share of the reach by which stroke ends step back across the bundle"
+        },
+        "bend": [
+          0.04,
+          0.36
+        ],
+        "line_u": {
+          "value": 1.5,
+          "range": [
+            0.4,
+            4
+          ],
+          "unit": "u"
+        },
+        "seed": {
+          "value": 404,
+          "range": [
+            1,
+            9999
+          ],
+          "step": 1
+        },
+        "curve": "quadratic; control point at mid-chord, pushed sideways by bend × chord length"
+      },
+      "limits": "fan under ~10 u collapses a bundle to one thick line. Past ~24 bundles the sheet fills and single arcs stop reading.",
+      "implementation": "For each bundle a target point is picked around the hub; stroke ends are spaced along a line through it, and each stroke is a quadratic curve whose sideways bend steps up across the bundle.",
+      "module": "lib/arc-bundle.js"
+    },
+    {
+      "id": "stroke-gradient",
+      "short": "GRAD",
+      "name": "Along-stroke gradient",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "gradient",
+        "additive"
+      ],
+      "params": {
+        "root_alpha": {
+          "value": 0.2,
+          "range": [
+            0,
+            1
+          ]
+        },
+        "tip_alpha": {
+          "value": 0.66,
+          "range": [
+            0,
+            1
+          ]
+        },
+        "ink_step": "ink index steps across the bundle, mixed with the next ink",
+        "blend": "lighter"
+      },
+      "limits": "With both alphas at 1 on a dark ground, crossings near the hub clip to white.",
+      "implementation": "A linear gradient from the hub to the stroke end colors each stroke: faint at the root, full ink at the tip. Strokes are composited with the lighter blend.",
+      "module": "lib/stroke-gradient.js"
+    },
+    {
+      "id": "glow-pass",
+      "short": "GLOW",
+      "name": "Additive glow",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "blur",
+        "additive"
+      ],
+      "params": {
+        "sigma_u": {
+          "value": 5,
+          "range": [
+            0,
+            30
+          ],
+          "unit": "u"
+        },
+        "gain": {
+          "value": 0.35,
+          "range": [
+            0,
+            1.5
+          ]
+        }
+      },
+      "limits": "gain above ~1 washes the thin strokes into a haze.",
+      "implementation": "The stroke layer is blurred and added back over itself.",
+      "module": "lib/glow-pass.js"
+    },
+    {
+      "id": "node-label",
+      "short": "NODE",
+      "name": "Numbered nodes",
+      "layer": 4,
+      "pass": 4,
+      "atoms": [
+        "marker",
+        "data-label"
+      ],
+      "params": {
+        "nodes": {
+          "value": 34,
+          "range": [
+            0,
+            90
+          ],
+          "step": 1
+        },
+        "square_u": {
+          "value": 3.4,
+          "range": [
+            1.5,
+            8
+          ],
+          "unit": "u"
+        },
+        "type_u": {
+          "value": 13.5,
+          "range": [
+            9,
+            26
+          ],
+          "unit": "u"
+        },
+        "offset_u": [
+          5,
+          -5
+        ],
+        "seed": {
+          "value": 52,
+          "range": [
+            1,
+            9999
+          ],
+          "step": 1
+        },
+        "format": "three digits, one decimal"
+      },
+      "limits": "Over ~60 nodes the labels overlap. Type under 9 u is unreadable at 900 px.",
+      "implementation": "Square markers sit on bundle ends and on seeded free points; each carries a seeded number set up and to the right.",
+      "module": "lib/node-label.js"
+    }
+  ],
+  "pass_order": [
+    "ground · flat",
+    "grid · dashed meridians, one solid axis",
+    "arcs · bundles from the hub, gradient strokes, lighter blend",
+    "glow · blurred copy added",
+    "nodes · squares and numbers"
+  ],
+  "notes": [
+    "Measured on ref.png: stroke ≈ 0.9 px at 702 px (1.25 u); dash ≈ 4 px on, 3.5 px off; label cap height ≈ 7.5 px.",
+    "The numbers are generated and stand for nothing. The subject is new: hub, bundle directions and node positions differ from the reference."
+  ]
+}

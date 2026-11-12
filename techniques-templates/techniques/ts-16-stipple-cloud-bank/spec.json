@@ -1,0 +1,408 @@
+{
+  "id": "ts-16-stipple-cloud-bank",
+  "code": "TS-16",
+  "title": "Stipple bank and dot burst",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "Sky",
+      "swatches": [
+        "#5E9BCB",
+        "#EDE9DA",
+        "#0E1418",
+        "#F3D2BD"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "Ø",
+      "swatches": [
+        "#2F5AE6",
+        "#FFFFFF",
+        "#101014",
+        "#F4551E"
+      ]
+    },
+    {
+      "id": "dusk",
+      "label": "Dusk",
+      "swatches": [
+        "#3B2F63",
+        "#F2EFF4",
+        "#15121C",
+        "#E86F8E"
+      ]
+    },
+    {
+      "id": "leaf",
+      "label": "Leaf",
+      "swatches": [
+        "#2E7D5B",
+        "#F4F6EE",
+        "#0F1A14",
+        "#E6D26A"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      736,
+      1308
+    ],
+    "grammar": "flat color areas with scalloped edges; one layer of small dots per area in a near tone; a sunburst made only of dots; fine sheet grain"
+  },
+  "units": "design units, 1000 = sheet width",
+  "palette": {
+    "sky": "#5E9BCB",
+    "pale": "#EDE9DA",
+    "dark": "#0E1418",
+    "warm": "#F3D2BD",
+    "ray": "#F4F6F2"
+  },
+  "techniques": [
+    {
+      "id": "scallop-bank",
+      "short": "BANK",
+      "name": "Scalloped flat bank",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "flat-fill",
+        "circle-union",
+        "hard-edge"
+      ],
+      "params": {
+        "banks": [
+          {
+            "fill": "warm",
+            "from": [
+              1090,
+              520
+            ],
+            "to": [
+              430,
+              1300
+            ],
+            "R": 104,
+            "seed": 11
+          },
+          {
+            "fill": "dark",
+            "from": [
+              1100,
+              760
+            ],
+            "to": [
+              330,
+              1560
+            ],
+            "R": 96,
+            "seed": 23
+          },
+          {
+            "fill": "pale",
+            "from": [
+              -90,
+              1010
+            ],
+            "to": [
+              1120,
+              1640
+            ],
+            "R": 128,
+            "seed": 37
+          },
+          {
+            "fill": "dark",
+            "from": [
+              -100,
+              1330
+            ],
+            "to": [
+              640,
+              1880
+            ],
+            "R": 92,
+            "seed": 51
+          }
+        ],
+        "R_scale": {
+          "value": 1,
+          "range": [
+            0.5,
+            1.8
+          ],
+          "note": "multiplies every lobe radius"
+        },
+        "R_var": {
+          "value": 0.3,
+          "range": [
+            0,
+            0.6
+          ],
+          "note": "lobe radius varies ± this share"
+        },
+        "spacing": {
+          "value": 1.25,
+          "range": [
+            0.8,
+            1.9
+          ],
+          "note": "lobe centers sit this many radii apart"
+        }
+      },
+      "limits": "spacing above ~1.9 opens gaps between lobes and the edge reads as beads. R_var above ~0.6 makes single lobes swallow their neighbors.",
+      "implementation": "Each bank is a row of circles along a spine from one point to another, filled together with the polygon under the spine; later banks cover earlier ones.",
+      "module": "lib/scallop-bank.js"
+    },
+    {
+      "id": "stipple-fill",
+      "short": "STIP",
+      "name": "Jittered dot layer",
+      "layer": 2,
+      "pass": 3,
+      "atoms": [
+        "stipple",
+        "jittered-grid",
+        "near-tone"
+      ],
+      "params": {
+        "pitch_u": {
+          "value": 6.4,
+          "range": [
+            3.5,
+            16
+          ],
+          "unit": "u"
+        },
+        "radius_u": {
+          "value": 1.5,
+          "range": [
+            0.6,
+            3.5
+          ],
+          "unit": "u"
+        },
+        "jitter": {
+          "value": 0.42,
+          "range": [
+            0,
+            0.5
+          ],
+          "note": "share of the pitch"
+        },
+        "seed": {
+          "value": 161,
+          "range": [
+            1,
+            9999
+          ],
+          "step": 1
+        },
+        "tone": "one dot color per fill, close to the fill; the sky carries no dot layer"
+      },
+      "limits": "radius above ~0.45 × pitch merges dots into a tint. jitter 0 shows the grid as rows. Below 3.5 u pitch the layer costs over 100 k dots per sheet.",
+      "implementation": "One dot per grid cell, moved by up to 0.42 of the pitch; the fill under the dot center picks the dot color.",
+      "module": "lib/stipple-fill.js"
+    },
+    {
+      "id": "shade-field",
+      "short": "SHAD",
+      "name": "Density shading",
+      "layer": 2,
+      "pass": 3,
+      "atoms": [
+        "noise-field",
+        "density"
+      ],
+      "params": {
+        "scale_u": {
+          "value": 260,
+          "range": [
+            80,
+            900
+          ],
+          "unit": "u"
+        },
+        "floor": {
+          "value": 0.45,
+          "range": [
+            0,
+            1
+          ],
+          "note": "lowest share of dots kept"
+        },
+        "seed": {
+          "value": 9,
+          "range": [
+            1,
+            9999
+          ],
+          "step": 1
+        },
+        "density": "floor + (1 − floor) · smoothstep(−0.25, 0.3, fbm)"
+      },
+      "limits": "floor at 1 removes the shading. scale under ~80 u reads as blotches, not form.",
+      "implementation": "A two-octave noise field gives each dot a keep probability between the floor and 1.",
+      "module": "lib/shade-field.js"
+    },
+    {
+      "id": "dot-burst",
+      "short": "RAYS",
+      "name": "Dot sunburst",
+      "layer": 1,
+      "pass": 2,
+      "atoms": [
+        "radial",
+        "dot-stream",
+        "falloff"
+      ],
+      "params": {
+        "center_u": [
+          470,
+          800
+        ],
+        "rays": {
+          "value": 30,
+          "range": [
+            6,
+            60
+          ],
+          "step": 1
+        },
+        "fan_deg": [
+          -172,
+          -8
+        ],
+        "length_u": {
+          "value": 560,
+          "range": [
+            200,
+            900
+          ],
+          "unit": "u"
+        },
+        "length_var": {
+          "value": 0.3,
+          "range": [
+            0,
+            0.6
+          ]
+        },
+        "root_width_u": {
+          "value": 64,
+          "range": [
+            6,
+            140
+          ],
+          "unit": "u"
+        },
+        "dots_per_ray": {
+          "value": 520,
+          "range": [
+            60,
+            1200
+          ],
+          "step": 1
+        },
+        "core_dots": {
+          "value": 7000,
+          "range": [
+            0,
+            16000
+          ],
+          "step": 1
+        },
+        "core_sigma_u": {
+          "value": 185,
+          "range": [
+            40,
+            300
+          ],
+          "unit": "u"
+        },
+        "dot_u": {
+          "value": 1.5,
+          "range": [
+            0.6,
+            3
+          ],
+          "unit": "u"
+        },
+        "gap_u": {
+          "value": 5.2,
+          "range": [
+            0,
+            10
+          ],
+          "unit": "u",
+          "note": "no two dots closer than this"
+        },
+        "seed": {
+          "value": 77,
+          "range": [
+            1,
+            9999
+          ],
+          "step": 1
+        }
+      },
+      "limits": "Over ~60 rays the streams merge into a disc; root_width above ~140 u does the same. core_dots at 0 leaves the rays unjoined. gap at 0 lets dots pile up and the burst reads as spray, not stipple.",
+      "implementation": "Dots are placed along each ray with a spread that narrows to the tip and a count that thins with distance; a gaussian core sits on the center. A dot is dropped when another already sits within the gap. Dots land only on the sky.",
+      "module": "lib/dot-burst.js"
+    },
+    {
+      "id": "paper-tooth",
+      "short": "TOOTH",
+      "name": "Sheet grain",
+      "layer": 3,
+      "pass": 4,
+      "atoms": [
+        "grain",
+        "stock"
+      ],
+      "params": {
+        "amp": {
+          "value": 0.035,
+          "range": [
+            0,
+            0.12
+          ]
+        },
+        "pitch_px": {
+          "value": 1,
+          "range": [
+            1,
+            4
+          ],
+          "step": 1,
+          "unit": "px"
+        },
+        "seed": {
+          "value": 5,
+          "range": [
+            1,
+            9999
+          ],
+          "step": 1
+        }
+      },
+      "limits": "Above ~0.08 the grain competes with the dots.",
+      "implementation": "A mono multiply grain over the finished sheet.",
+      "module": "lib/paper-tooth.js"
+    }
+  ],
+  "pass_order": [
+    "sky · flat fill",
+    "banks · scalloped fills, back to front",
+    "burst · dot streams and core on the sky",
+    "dots · one layer per fill, thinned by the shade field",
+    "grain · 3.5 % mono"
+  ],
+  "notes": [
+    "Measured on ref.png: dot pitch ≈ 4.7 px at 736 px (6.4 u); dot radius ≈ 1.1 px; sky (94,155,203); pale (237,233,218); dark (14,20,24).",
+    "The subject is new: the banks and the burst are placed differently from the reference."
+  ]
+}

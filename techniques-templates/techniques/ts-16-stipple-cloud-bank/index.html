@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="only light">
+<meta name="description" content="TS-16 · Stipple bank and dot burst — Flat scalloped banks, each carried by one layer of dots.">
+<link rel="icon" href="data:,">
+<title>TS-16 — Stipple bank and dot burst · Techniques &amp; Templates · ø co.</title>
+<link rel="stylesheet" href="../../_shared/fonts.css">
+<link rel="stylesheet" href="../../_shared/shell.css?v=202611121738">
+<link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
+</head>
+<body class="plate-page" data-root="../../">
+<!-- <a class="brand" href="../../index.html" title="Index"><svg class="o" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-554.33,-11.46)" fill="currentColor" fill-rule="evenodd"><path d="M682.33,35.81c-57.24,0-103.65,46.4-103.65,103.65s46.4,103.65,103.65,103.65,103.65-46.4,103.65-103.65-46.4-103.65-103.65-103.65ZM682.33,187.75c-26.67,0-48.29-21.62-48.29-48.29s21.62-48.29,48.29-48.29,48.29,21.62,48.29,48.29-21.62,48.29-48.29,48.29Z"/><rect x="666.18" y="-5.46" width="32.29" height="289.83" transform="translate(298.46 -441.63) rotate(45)"/></g></svg><span class="wm">IMP<i>Ø</i>SSIBLE</span></a>
+  <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Stipple bank and dot burst</b><span class="code">TS-16</span></span>
+  <span class="pager"><a href="../../techniques/ts-15-banknote-engraving/index.html" title="Banknote engraving">← TS-15</a><a href="../../index.html#techniques"><span class="n">16</span>&nbsp;/ 18</a><a href="../../techniques/ts-17-warped-ring-cells/index.html" title="Warped ring cells">TS-17 →</a></span> <p class="kicker">Technique · TS-16</p><h1 class="lede">Flat scalloped banks, each carried by one layer of dots.</h1><div class="body"><p>Four flat fills with scalloped edges: a row of circles along a spine, joined to the area under it. Every bank carries one layer of small dots on a jittered 6.4 u grid, in a tone close to the fill. A slow noise field thins the dots, which is the only shading.</p><p>The burst behind the banks is dots only. Each ray is a stream that narrows toward its tip; a dense core joins the rays at the center. A 3.5 % mono grain covers the sheet.</p></div>
+  <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>sky</b> · flat fill</div></li><li><div><b>banks</b> · scalloped fills, back to front</div></li><li><div><b>burst</b> · dot streams and core on the sky</div></li><li><div><b>dots</b> · one layer per fill, thinned by the shade field</div></li><li><div><b>grain</b> · 3.5 % mono</div></li></ol></div>
+  <div class="meta"><div class="full"><h2>Vocabulary · a technique highlights its reads · an atom finds every use</h2><div class="vocab" id="chips"><div class="vr"><span data-t="scallop-bank" title="Scalloped flat bank"><b>BANK</b>scallop-bank</span><span class="at"><a href="../../index.html#techniques?a=flat-fill">flat-fill</a><i>·</i><a href="../../index.html#techniques?a=circle-union">circle-union</a><i>·</i><a href="../../index.html#techniques?a=hard-edge">hard-edge</a></span></div><div class="vr"><span data-t="stipple-fill" title="Jittered dot layer"><b>STIP</b>stipple-fill</span><span class="at"><a href="../../index.html#techniques?a=stipple">stipple</a><i>·</i><a href="../../index.html#techniques?a=jittered-grid">jittered-grid</a><i>·</i><a href="../../index.html#techniques?a=near-tone">near-tone</a></span></div><div class="vr"><span data-t="shade-field" title="Density shading"><b>SHAD</b>shade-field</span><span class="at"><a href="../../index.html#techniques?a=noise-field">noise-field</a><i>·</i><a href="../../index.html#techniques?a=density">density</a></span></div><div class="vr"><span data-t="dot-burst" title="Dot sunburst"><b>RAYS</b>dot-burst</span><span class="at"><a href="../../index.html#techniques?a=radial">radial</a><i>·</i><a href="../../index.html#techniques?a=dot-stream">dot-stream</a><i>·</i><a href="../../index.html#techniques?a=falloff">falloff</a></span></div><div class="vr"><span data-t="paper-tooth" title="Sheet grain"><b>TOOTH</b>paper-tooth</span><span class="at"><a href="../../index.html#techniques?a=grain">grain</a><i>·</i><a href="../../index.html#techniques?a=stock">stock</a></span></div></div></div>
+  <div><h2>Reference</h2><div class="ro">Reference 16 · stippled cloud print with a dotted sunburst, 736 × 1308</div></div><div><h2>Study</h2><div class="nm">Stipple bank and dot burst</div><div class="ro">TS-16 · Techniques · 16 / 18</div></div></div>
+  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>scallop-bank</b> · Scalloped flat bank — Each bank is a row of circles along a spine from one point to another, filled together with the polygon under the spine; later banks cover earlier ones. <span class="ro">Limits · spacing above ~1.9 opens gaps between lobes and the edge reads as beads. R_var above ~0.6 makes single lobes swallow their neighbors.</span> <a href="lib/scallop-bank.js">lib/scallop-bank.js</a></div></li><li><div><b>stipple-fill</b> · Jittered dot layer — One dot per grid cell, moved by up to 0.42 of the pitch; the fill under the dot center picks the dot color. <span class="ro">Limits · radius above ~0.45 × pitch merges dots into a tint. jitter 0 shows the grid as rows. Below 3.5 u pitch the layer costs over 100 k dots per sheet.</span> <a href="lib/stipple-fill.js">lib/stipple-fill.js</a></div></li><li><div><b>shade-field</b> · Density shading — A two-octave noise field gives each dot a keep probability between the floor and 1. <span class="ro">Limits · floor at 1 removes the shading. scale under ~80 u reads as blotches, not form.</span> <a href="lib/shade-field.js">lib/shade-field.js</a></div></li><li><div><b>dot-burst</b> · Dot sunburst — Dots are placed along each ray with a spread that narrows to the tip and a count that thins with distance; a gaussian core sits on the center. A dot is dropped when another already sits within the gap. Dots land only on the sky. <span class="ro">Limits · Over ~60 rays the streams merge into a disc; root_width above ~140 u does the same. core_dots at 0 leaves the rays unjoined. gap at 0 lets dots pile up and the burst reads as spray, not stipple.</span> <a href="lib/dot-burst.js">lib/dot-burst.js</a></div></li><li><div><b>paper-tooth</b> · Sheet grain — A mono multiply grain over the finished sheet. <span class="ro">Limits · Above ~0.08 the grain competes with the dots.</span> <a href="lib/paper-tooth.js">lib/paper-tooth.js</a></div></li></ol></div>
+  <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>RAYS</b> · Ray · a dot stream 560 u long, 64 u wide at the root <span class="ro">u 0.30 · v 0.33 · dot-burst</span></div></li><li><div><b>RAYS</b> · Core · 7000 dots, σ 185 u, joins the rays <span class="ro">u 0.50 · v 0.45 · dot-burst</span></div></li><li><div><b>BANK</b> · Scallop · circles of 62–118 u along a spine <span class="ro">u 0.62 · v 0.54 · scallop-bank</span></div></li><li><div><b>BANK</b> · Bank edge · hard, no blur <span class="ro">u 0.20 · v 0.62 · scallop-bank</span></div></li><li><div><b>STIP</b> · Dots on the pale fill · gray-green, r 1.5 u <span class="ro">u 0.72 · v 0.70 · stipple-fill</span></div></li><li><div><b>STIP</b> · Dots on the dark fill · light blue, same grid <span class="ro">u 0.16 · v 0.80 · stipple-fill</span></div></li><li><div><b>STIP</b> · Dots on the warm fill · orange, same grid <span class="ro">u 0.90 · v 0.47 · stipple-fill</span></div></li><li><div><b>SHAD</b> · Thinned dots · noise field drops density to 45 % <span class="ro">u 0.46 · v 0.78 · shade-field</span></div></li><li><div><b>SHAD</b> · Full density · the field is near 1 here <span class="ro">u 0.88 · v 0.90 · shade-field</span></div></li><li><div><b>TOOTH</b> · Sheet grain · 3.5 % mono, 1 px <span class="ro">u 0.08 · v 0.08 · paper-tooth</span></div></li></ol></div>
+  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read</span><span>ø co. · 2026</span></div> {
+  &quot;id&quot;: &quot;ts-16-stipple-cloud-bank&quot;,
+  &quot;code&quot;: &quot;TS-16&quot;,
+  &quot;title&quot;: &quot;Stipple bank and dot burst&quot;,
+  &quot;section&quot;: &quot;techniques&quot;,
+  &quot;variants&quot;: [
+    {
+      &quot;id&quot;: &quot;ref&quot;,
+      &quot;label&quot;: &quot;Sky&quot;,
+      &quot;swatches&quot;: [
+        &quot;#5E9BCB&quot;,
+        &quot;#EDE9DA&quot;,
+        &quot;#0E1418&quot;,
+        &quot;#F3D2BD&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;io&quot;,
+      &quot;label&quot;: &quot;Ø&quot;,
+      &quot;swatches&quot;: [
+        &quot;#2F5AE6&quot;,
+        &quot;#FFFFFF&quot;,
+        &quot;#101014&quot;,
+        &quot;#F4551E&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;dusk&quot;,
+      &quot;label&quot;: &quot;Dusk&quot;,
+      &quot;swatches&quot;: [
+        &quot;#3B2F63&quot;,
+        &quot;#F2EFF4&quot;,
+        &quot;#15121C&quot;,
+        &quot;#E86F8E&quot;
+      ]
+    },
+    {
+      &quot;id&quot;: &quot;leaf&quot;,
+      &quot;label&quot;: &quot;Leaf&quot;,
+      &quot;swatches&quot;: [
+        &quot;#2E7D5B&quot;,
+        &quot;#F4F6EE&quot;,
+        &quot;#0F1A14&quot;,
+        &quot;#E6D26A&quot;
+      ]
+    }
+  ],
+  &quot;reference&quot;: {
+    &quot;file&quot;: &quot;ref.png&quot;,
+    &quot;px&quot;: [
+      736,
+      1308
+    ],
+    &quot;grammar&quot;: &quot;flat color areas with scalloped edges; one layer of small dots per area in a near tone; a sunburst made only of dots; fine sheet grain&quot;
+  },
+  &quot;units&quot;: &quot;design units, 1000 = sheet width&quot;,
+  &quot;palette&quot;: {
+    &quot;sky&quot;: &quot;#5E9BCB&quot;,
+    &quot;pale&quot;: &quot;#EDE9DA&quot;,
+    &quot;dark&quot;: &quot;#0E1418&quot;,
+    &quot;warm&quot;: &quot;#F3D2BD&quot;,
+    &quot;ray&quot;: &quot;#F4F6F2&quot;
+  },
+  &quot;techniques&quot;: [
+    {
+      &quot;id&quot;: &quot;scallop-bank&quot;,
+      &quot;short&quot;: &quot;BANK&quot;,
+      &quot;name&quot;: &quot;Scalloped flat bank&quot;,
+      &quot;layer&quot;: 1,
+      &quot;pass&quot;: 1,
+      &quot;atoms&quot;: [
+        &quot;flat-fill&quot;,
+        &quot;circle-union&quot;,
+        &quot;hard-edge&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;banks&quot;: [
+          {
+            &quot;fill&quot;: &quot;warm&quot;,
+            &quot;from&quot;: [
+              1090,
+              520
+            ],
+            &quot;to&quot;: [
+              430,
+              1300
+            ],
+            &quot;R&quot;: 104,
+            &quot;seed&quot;: 11
+          },
+          {
+            &quot;fill&quot;: &quot;dark&quot;,
+            &quot;from&quot;: [
+              1100,
+              760
+            ],
+            &quot;to&quot;: [
+              330,
+              1560
+            ],
+            &quot;R&quot;: 96,
+            &quot;seed&quot;: 23
+          },
+          {
+            &quot;fill&quot;: &quot;pale&quot;,
+            &quot;from&quot;: [
+              -90,
+              1010
+            ],
+            &quot;to&quot;: [
+              1120,
+              1640
+            ],
+            &quot;R&quot;: 128,
+            &quot;seed&quot;: 37
+          },
+          {
+            &quot;fill&quot;: &quot;dark&quot;,
+            &quot;from&quot;: [
+              -100,
+              1330
+            ],
+            &quot;to&quot;: [
+              640,
+              1880
+            ],
+            &quot;R&quot;: 92,
+            &quot;seed&quot;: 51
+          }
+        ],
+        &quot;R_scale&quot;: {
+          &quot;value&quot;: 1,
+          &quot;range&quot;: [
+            0.5,
+            1.8
+          ],
+          &quot;note&quot;: &quot;multiplies every lobe radius&quot;
+        },
+        &quot;R_var&quot;: {
+          &quot;value&quot;: 0.3,
+          &quot;range&quot;: [
+            0,
+            0.6
+          ],
+          &quot;note&quot;: &quot;lobe radius varies ± this share&quot;
+        },
+        &quot;spacing&quot;: {
+          &quot;value&quot;: 1.25,
+          &quot;range&quot;: [
+            0.8,
+            1.9
+          ],
+          &quot;note&quot;: &quot;lobe centers sit this many radii apart&quot;
+        }
+      },
+      &quot;limits&quot;: &quot;spacing above ~1.9 opens gaps between lobes and the edge reads as beads. R_var above ~0.6 makes single lobes swallow their neighbors.&quot;,
+      &quot;implementation&quot;: &quot;Each bank is a row of circles along a spine from one point to another, filled together with the polygon under the spine; later banks cover earlier ones.&quot;,
+      &quot;module&quot;: &quot;lib/scallop-bank.js&quot;
+    },
+    {
+      &quot;id&quot;: &quot;stipple-fill&quot;,
+      &quot;short&quot;: &quot;STIP&quot;,
+      &quot;name&quot;: &quot;Jittered dot layer&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 3,
+      &quot;atoms&quot;: [
+        &quot;stipple&quot;,
+        &quot;jittered-grid&quot;,
+        &quot;near-tone&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;pitch_u&quot;: {
+          &quot;value&quot;: 6.4,
+          &quot;range&quot;: [
+            3.5,
+            16
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        },
+        &quot;radius_u&quot;: {
+          &quot;value&quot;: 1.5,
+          &quot;range&quot;: [
+            0.6,
+            3.5
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        },
+        &quot;jitter&quot;: {
+          &quot;value&quot;: 0.42,
+          &quot;range&quot;: [
+            0,
+            0.5
+          ],
+          &quot;note&quot;: &quot;share of the pitch&quot;
+        },
+        &quot;seed&quot;: {
+          &quot;value&quot;: 161,
+          &quot;range&quot;: [
+            1,
+            9999
+          ],
+          &quot;step&quot;: 1
+        },
+        &quot;tone&quot;: &quot;one dot color per fill, close to the fill; the sky carries no dot layer&quot;
+      },
+      &quot;limits&quot;: &quot;radius above ~0.45 × pitch merges dots into a tint. jitter 0 shows the grid as rows. Below 3.5 u pitch the layer costs over 100 k dots per sheet.&quot;,
+      &quot;implementation&quot;: &quot;One dot per grid cell, moved by up to 0.42 of the pitch; the fill under the dot center picks the dot color.&quot;,
+      &quot;module&quot;: &quot;lib/stipple-fill.js&quot;
+    },
+    {
+      &quot;id&quot;: &quot;shade-field&quot;,
+      &quot;short&quot;: &quot;SHAD&quot;,
+      &quot;name&quot;: &quot;Density shading&quot;,
+      &quot;layer&quot;: 2,
+      &quot;pass&quot;: 3,
+      &quot;atoms&quot;: [
+        &quot;noise-field&quot;,
+        &quot;density&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;scale_u&quot;: {
+          &quot;value&quot;: 260,
+          &quot;range&quot;: [
+            80,
+            900
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        },
+        &quot;floor&quot;: {
+          &quot;value&quot;: 0.45,
+          &quot;range&quot;: [
+            0,
+            1
+          ],
+          &quot;note&quot;: &quot;lowest share of dots kept&quot;
+        },
+        &quot;seed&quot;: {
+          &quot;value&quot;: 9,
+          &quot;range&quot;: [
+            1,
+            9999
+          ],
+          &quot;step&quot;: 1
+        },
+        &quot;density&quot;: &quot;floor + (1 − floor) · smoothstep(−0.25, 0.3, fbm)&quot;
+      },
+      &quot;limits&quot;: &quot;floor at 1 removes the shading. scale under ~80 u reads as blotches, not form.&quot;,
+      &quot;implementation&quot;: &quot;A two-octave noise field gives each dot a keep probability between the floor and 1.&quot;,
+      &quot;module&quot;: &quot;lib/shade-field.js&quot;
+    },
+    {
+      &quot;id&quot;: &quot;dot-burst&quot;,
+      &quot;short&quot;: &quot;RAYS&quot;,
+      &quot;name&quot;: &quot;Dot sunburst&quot;,
+      &quot;layer&quot;: 1,
+      &quot;pass&quot;: 2,
+      &quot;atoms&quot;: [
+        &quot;radial&quot;,
+        &quot;dot-stream&quot;,
+        &quot;falloff&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;center_u&quot;: [
+          470,
+          800
+        ],
+        &quot;rays&quot;: {
+          &quot;value&quot;: 30,
+          &quot;range&quot;: [
+            6,
+            60
+          ],
+          &quot;step&quot;: 1
+        },
+        &quot;fan_deg&quot;: [
+          -172,
+          -8
+        ],
+        &quot;length_u&quot;: {
+          &quot;value&quot;: 560,
+          &quot;range&quot;: [
+            200,
+            900
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        },
+        &quot;length_var&quot;: {
+          &quot;value&quot;: 0.3,
+          &quot;range&quot;: [
+            0,
+            0.6
+          ]
+        },
+        &quot;root_width_u&quot;: {
+          &quot;value&quot;: 64,
+          &quot;range&quot;: [
+            6,
+            140
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        },
+        &quot;dots_per_ray&quot;: {
+          &quot;value&quot;: 520,
+          &quot;range&quot;: [
+            60,
+            1200
+          ],
+          &quot;step&quot;: 1
+        },
+        &quot;core_dots&quot;: {
+          &quot;value&quot;: 7000,
+          &quot;range&quot;: [
+            0,
+            16000
+          ],
+          &quot;step&quot;: 1
+        },
+        &quot;core_sigma_u&quot;: {
+          &quot;value&quot;: 185,
+          &quot;range&quot;: [
+            40,
+            300
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        },
+        &quot;dot_u&quot;: {
+          &quot;value&quot;: 1.5,
+          &quot;range&quot;: [
+            0.6,
+            3
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        },
+        &quot;gap_u&quot;: {
+          &quot;value&quot;: 5.2,
+          &quot;range&quot;: [
+            0,
+            10
+          ],
+          &quot;unit&quot;: &quot;u&quot;,
+          &quot;note&quot;: &quot;no two dots closer than this&quot;
+        },
+        &quot;seed&quot;: {
+          &quot;value&quot;: 77,
+          &quot;range&quot;: [
+            1,
+            9999
+          ],
+          &quot;step&quot;: 1
+        }
+      },
+      &quot;limits&quot;: &quot;Over ~60 rays the streams merge into a disc; root_width above ~140 u does the same. core_dots at 0 leaves the rays unjoined. gap at 0 lets dots pile up and the burst reads as spray, not stipple.&quot;,
+      &quot;implementation&quot;: &quot;Dots are placed along each ray with a spread that narrows to the tip and a count that thins with distance; a gaussian core sits on the center. A dot is dropped when another already sits within the gap. Dots land only on the sky.&quot;,
+      &quot;module&quot;: &quot;lib/dot-burst.js&quot;
+    },
+    {
+      &quot;id&quot;: &quot;paper-tooth&quot;,
+      &quot;short&quot;: &quot;TOOTH&quot;,
+      &quot;name&quot;: &quot;Sheet grain&quot;,
+      &quot;layer&quot;: 3,
+      &quot;pass&quot;: 4,
+      &quot;atoms&quot;: [
+        &quot;grain&quot;,
+        &quot;stock&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;amp&quot;: {
+          &quot;value&quot;: 0.035,
+          &quot;range&quot;: [
+            0,
+            0.12
+          ]
+        },
+        &quot;pitch_px&quot;: {
+          &quot;value&quot;: 1,
+          &quot;range&quot;: [
+            1,
+            4
+          ],
+          &quot;step&quot;: 1,
+          &quot;unit&quot;: &quot;px&quot;
+        },
+        &quot;seed&quot;: {
+          &quot;value&quot;: 5,
+          &quot;range&quot;: [
+            1,
+            9999
+          ],
+          &quot;step&quot;: 1
+        }
+      },
+      &quot;limits&quot;: &quot;Above ~0.08 the grain competes with the dots.&quot;,
+      &quot;implementation&quot;: &quot;A mono multiply grain over the finished sheet.&quot;,
+      &quot;module&quot;: &quot;lib/paper-tooth.js&quot;
+    }
+  ],
+  &quot;pass_order&quot;: [
+    &quot;sky · flat fill&quot;,
+    &quot;banks · scalloped fills, back to front&quot;,
+    &quot;burst · dot streams and core on the sky&quot;,
+    &quot;dots · one layer per fill, thinned by the shade field&quot;,
+    &quot;grain · 3.5 % mono&quot;
+  ],
+  &quot;notes&quot;: [
+    &quot;Measured on ref.png: dot pitch ≈ 4.7 px at 736 px (6.4 u); dot radius ≈ 1.1 px; sky (94,155,203); pale (237,233,218); dark (14,20,24).&quot;,
+    &quot;The subject is new: the banks and the burst are placed differently from the reference.&quot;
+  ]
+} are BAKED here by `node _build/build.mjs` from study.js — a static read for readers that
+     cannot run scripts. shell.js redraws all of it on load. Edit study.js or _build/, never the generated index.html. -->
+<nav class="nav" id="nav" aria-label="Site navigation">{{NAV}}</nav>
+<main class="plate">
+  <section class="notes" id="copy">{{NOTES}}</section>
+  <section class="figure" id="stage">
+    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"><img src="thumb.png" alt="TS-16 rebuild, still frame" loading="lazy"></canvas></div>
+    <div class="live" id="live"></div>
+    <div class="log" id="log">
+      <div class="ctl">
+        <button id="bRead" type="button" class="on" title="toggle the read overlay">Read</button>
+        <button id="bReplay" type="button" title="re-run the read (space)">↻ Replay</button>
+        <button id="bMode" type="button" title="cycle rebuild / reference / split (R)">Rebuild</button>
+        <button id="bMotion" type="button" hidden title="run the motion version (M)">Motion</button>
+        <button id="bLive" type="button" hidden title="open the live DOM version (L)">Live</button>
+        <button id="bSpec" type="button" title="open the machine-readable spec (S)">Spec ⇥</button>
+      </div>
+      <div class="vtabs" id="vtabs"></div>
+      <div class="prail" id="prail" hidden></div>
+      <div class="lbody">
+        <div class="lh"><span>Track log</span><span id="ctr">0 / 10</span></div>
+        <div class="rows" id="rows"></div>
+        <div class="read" id="read"><b>Read</b><span id="readtxt">Hover or select a point.</span><code id="readcode"></code></div>
+        <div class="fid" id="fid"></div>
+      </div>
+    </div>
+    <div class="rel" id="rel"></div>
+  </section>
+</main>
+<aside class="spec" id="spec" aria-hidden="true">
+  <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
+  <pre id="specpre">{{SPEC}}</pre>
+</aside>
+<script src="../../_shared/entries.js?v=202611121738"></script>
+<script src="../../_shared/vocab.js?v=202611121738"></script>
+<script src="../../_shared/art.js?v=202611121738"></script>
+<script src="ref.js"></script>
+<script src="study.js"></script>
+<script src="../../_shared/shell.js?v=202611121738"></script>
+</body>
+</html>
