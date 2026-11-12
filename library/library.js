@@ -28,7 +28,7 @@
   });
   WORKS.forEach(function (w) { members(w, 'versions').concat(members(w, 'parts')).forEach(function (m) { w._hay += ' ' + [m.acc, m.call, m.title].join(' ').toLowerCase(); }); });
 
-  var KINDS = ['technique', 'atom', 'exploration', 'coupling', 'study', 'template', 'instrument', 'document'].filter(function (k) { return k !== 'document' || R.some(function (r) { return r.kind === 'document'; }); });
+  var KINDS = ['technique', 'atom', 'exploration', 'coupling', 'study', 'template', 'instrument', 'document', 'plate'].filter(function (k) { return (k !== 'document' && k !== 'plate') || R.some(function (r) { return r.kind === k; }); });
   var STATUSES = ['canonical', 'exploration', 'proposed', 'unsorted', 'known-failure', 'historical', ''];
   var ACCESS = ['public', 'staged', 'local', 'private'].filter(function (a) { return a !== 'private' || R.some(function (r) { return r.access === 'private'; }); });
   var LANES = []; R.forEach(function (r) { if (r.lane && LANES.indexOf(r.lane) < 0) LANES.push(r.lane); }); LANES.sort();
@@ -38,13 +38,14 @@
     { k: 'collection', title: 'Collection', values: L.collections.map(function (c) { return c.id; }), label: function (v) { return COL[v].title; }, mark: function (v) { return '<span class="cd">' + COL[v].code + '</span>'; }, tip: function (v) { return COL[v].note; } },
     { k: 'status', title: 'Status', values: STATUSES, label: function (v) { return v ? cap(v.replace('-', ' ')) : 'No status'; }, mark: function (v) { return glyph('study', v); }, tip: function (v) { return L.vocabulary.status[v]; } },
     { k: 'access', title: 'Access', values: ACCESS, label: cap, mark: function (v) { return glyph('study', '', v); }, tip: function (v) { return L.vocabulary.access[v]; } },
+    { k: 'family', title: 'Family', values: Object.keys(L.vocabulary.family || {}), label: function (v) { return cap(v.replace(/-/g, ' ')); }, mark: function () { return ''; }, tip: function (v) { return L.vocabulary.family[v]; } },
     { k: 'lane', title: 'Lane', values: LANES, label: function (v) { return v; }, mark: function () { return ''; } }
   ];
   var SCHEME_LABEL = { enc: 'ENC', 'enc.read': 'ENC·R', tt: 'TT', st: 'ST', hld: 'HLD' };
-  var NOFILTER = { kind: [], collection: [], status: [], access: [], lane: [] };
+  var NOFILTER = { kind: [], collection: [], status: [], access: [], family: [], lane: [] };
 
   /* ---------------------------------------------------------------- state */
-  var S = { view: 'plates', q: '', f: { kind: [], collection: [], status: [], access: [], lane: [] }, d: 's', sort: 'modified', r: null, term: null, scheme: '', tsort: 'n', ls: 'acc', ld: 1, open: {} };
+  var S = { view: 'plates', q: '', f: { kind: [], collection: [], status: [], access: [], family: [], lane: [] }, d: 's', sort: 'modified', r: null, term: null, scheme: '', tsort: 'n', ls: 'acc', ld: 1, open: {} };
   var LIST = R;   // the records the drawer pages through
   var MEM = null; // the route, kept here when the host does not let the page write its own address
   var BASE = L.base || '../', PREVIEW = !!L.preview;
@@ -112,7 +113,8 @@
       study: ['<rect x="1.7" y="1.7" width="8.6" height="8.6"'],
       template: ['<rect x="1" y="3.2" width="10" height="5.6"'],
       instrument: ['<path d="M4.5 1.3h3v3.2h3.2v3H7.5v3.2h-3V7.5H1.3v-3h3.2z"'],
-      document: ['<path d="M2.7 1.2h4.6l2 2v7.6H2.7z"']
+      document: ['<path d="M2.7 1.2h4.6l2 2v7.6H2.7z"'],
+      plate: ['<rect x="1.2" y="2.4" width="9.6" height="7.2"', '<rect x="3.4" y="4.4" width="5.2" height="3.2"']
     }[kind] || ['<rect x="1.7" y="1.7" width="8.6" height="8.6"'];
     var s = geo.map(function (g) { return g + ' style="fill:' + fill + ';stroke:' + stroke + '" stroke-width="' + sw + '"' + dash + '/>'; }).join('');
     if (half) s += '<g clip-path="url(#g-half)">' + geo.map(function (g) { return g + ' style="fill:currentColor"/>'; }).join('') + '</g>';
@@ -402,8 +404,9 @@
     rows.push(['Kind', '<span class="gl">' + glyph(r.kind, r.status, r.access) + e(r.kind) + (r.atom_kind ? ' · ' + e(r.atom_kind) : '') + '</span>']);
     rows.push(['Status', r.status ? e(r.status.replace('-', ' ')) + (r.ruling ? ' <small>· ruled by ' + e(r.ruling.by) + (r.ruling.date ? ', ' + e(r.ruling.date) : '') + '</small>' : '') + (r.proposed_grade ? ' <small>· proposed grade ' + e(r.proposed_grade) + '</small>' : '') : '<small>none recorded</small>']);
     if (r.access !== 'public') rows.push(['Access', e(cap(r.access)) + ' <small>· ' + e(L.vocabulary.access[r.access]) + (r.target ? ' For ' + e(r.target) + '.' : '') + '</small>']);
-    rows.push(['Collection', '<a href="' + hash({ view: 'shelves', r: null, term: null, q: '', f: { kind: [], collection: [r.collection], status: [], access: [], lane: [] } }) + '">' + e(c.title) + '</a> <small>· ' + e(r.section_title) + '</small>']);
+    rows.push(['Collection', '<a href="' + hash({ view: 'shelves', r: null, term: null, q: '', f: { kind: [], collection: [r.collection], status: [], access: [], family: [], lane: [] } }) + '">' + e(c.title) + '</a> <small>· ' + e(r.section_title) + '</small>']);
     rows.push(['Dates', 'Arrived ' + e(r.dates.accessioned) + (r.dates.modified && r.dates.modified !== r.dates.accessioned ? ' <small>· changed ' + e(r.dates.modified) + '</small>' : '')]);
+    if (r.family) rows.push(['Family', '<a href="' + e(BASE) + 'techniques-templates/">' + e(cap(r.family.replace(/-/g, ' '))) + '</a>' + (r.form ? ' <small>· ' + e(r.form) + '</small>' : '')]);
     var mk = [r.lane, r.layer && r.layer.toLowerCase(), r.style].filter(Boolean);
     if (mk.length) rows.push(['Build', e(mk.join(' · '))]);
     var has = [pl.spec && 'spec', pl.points && pl.points + '-point read', pl.variants && pl.variants + ' variants', pl.motion && 'motion', pl.live && 'live', pl.compare && 'reference compare', pl.modules && pl.modules + ' modules to lift', pl.examples && pl.examples + (pl.examples === 1 ? ' example' : ' examples'), pl.params && pl.params + ' parameters'].filter(Boolean);
@@ -506,7 +509,7 @@
     if ('r' in d) { if (d.r) go({ r: d.r === S.r && !t.closest('#drawer') ? null : d.r }); return; }
     if (d.f) return toggle(d.f, d.v);
     if (d.clear) { var f = {}; for (var x in S.f) f[x] = S.f[x]; f[d.clear] = []; return go({ f: f }); }
-    if ('clearall' in d) { $q.value = ''; return go({ q: '', f: { kind: [], collection: [], status: [], access: [], lane: [] } }); }
+    if ('clearall' in d) { $q.value = ''; return go({ q: '', f: { kind: [], collection: [], status: [], access: [], family: [], lane: [] } }); }
     if ('unq' in d) { $q.value = ''; return go({ q: '' }); }
     if (d.d) return go({ d: d.d });
     if ('term' in d) return go({ term: S.term === d.term ? null : d.term });

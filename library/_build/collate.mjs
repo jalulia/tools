@@ -341,7 +341,7 @@ for (const f of ['works.json', 'works-private.json']) {
       href: w.href || null, thumbSrc: null, source: w.source || f, dirs: [], held_date: w.date || null, ext_fixity: w.fixity || null,
       plate: { spec: false, points: 0 }, reads: [], rel: w.rel || [], governed_by: [],
       provenance: { kind: 'original', title: w.source || null, author: null, date: w.date || null, license: null, url: null, rights: 'first-party' },
-      location: w.location || null, access: w.access || 'public', private: priv, tags: w.tags || [], order: 1000 + i
+      location: w.location || null, access: w.access || 'public', private: priv, tags: w.tags || [], family: w.family || null, form: w.form || null, order: 1000 + i
     });
   });
 }
@@ -460,6 +460,27 @@ for (const r of raw) {
       : { label: 'no picture', why: '' };
   }
 }
+/* families -----------------------------------------------------------------
+   The technique registry in Techniques & Templates gives each technique a
+   family. A record takes the family most of its techniques belong to; a row in
+   works.json may name one directly. */
+const REG_FILE = join(ROOT, 'techniques-templates', 'registry.json');
+const REG = existsSync(REG_FILE) ? readJson(REG_FILE) : null;
+const famOf = new Map();
+if (REG) for (const e of REG.entries) for (const a of e.aliases || []) famOf.set(a, e.family);
+// the registry also names the plates that use each technique, by call number or title
+const usedBy = new Map();
+if (REG) for (const e of REG.entries) for (const u of new Set([...(e.used_in || []), ...(e.proposed_uses || [])])) { if (!usedBy.has(u)) usedBy.set(u, []); usedBy.get(u).push(e.family); }
+for (const r of raw) {
+  if (r.family) continue;
+  const ids = [...(r.kind === 'technique' ? [`${r.collection === 'holdings' ? 'hld' : 'enc'}:${r.slug}`] : []), ...r.rel.filter((x) => x.type === 'instance-of').map((x) => x.to), ...r.reads.map((x) => `${x.scheme}:${x.id}`)];
+  const n = {};
+  for (const id of ids) { const f = famOf.get(id); if (f) n[f] = (n[f] || 0) + 1; }
+  for (const f of [...(r.call && r.collection !== 'holdings' ? usedBy.get(r.call) || [] : []), ...(usedBy.get(r.title) || [])]) n[f] = (n[f] || 0) + 1;
+  const top = Object.entries(n).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
+  r.family = top ? top[0] : null;
+}
+
 /* works ---------------------------------------------------------------------
    A work is drawn once. editions.json names the other records that are the same
    work (versions) and the records lifted out of a work (parts). A record that
@@ -678,7 +699,7 @@ const out = (r) => {
   };
   for (const k of ['spec_href', 'thumb_master']) if (r[k]) o[k] = k === 'spec_href' ? `../${r[k]}` : r[k];
   for (const k of ['governed_by', 'tags']) if (r[k] && r[k].length) o[k] = r[k];
-  for (const k of ['swatches', 'ruling', 'proposed_grade', 'atom_kind', 'location', 'target', 'pic_group', 'no_pic', 'work', 'role', 'part_of', 'versions', 'parts', 'thumb_from']) if (r[k]) o[k] = r[k];
+  for (const k of ['swatches', 'ruling', 'proposed_grade', 'atom_kind', 'location', 'target', 'pic_group', 'no_pic', 'work', 'role', 'part_of', 'versions', 'parts', 'thumb_from', 'family', 'form']) if (r[k]) o[k] = r[k];
   if (r.thumb_kind === 'snapshot') o.thumb_kind = 'snapshot';
   if (r.private) o.private = true;
   if (r.pic) {
@@ -719,9 +740,11 @@ const catalog = {
       study: 'A reference measured and rebuilt in code, with a spec.',
       template: 'A layout made for reuse with new content.',
       instrument: 'A working tool.',
-      document: 'A written piece with figures: a design document, a report, a dossier.'
+      document: 'A written piece with figures: a design document, a report, a dossier.',
+      plate: 'One figure isolated from a page.'
     },
     status: { ...(colMeta.encyclopedia?.status_vocabulary || {}), '': 'The collection records no status.' },
+    family: Object.fromEntries((REG ? REG.families : []).map((f) => [f.id, f.blurb])),
     access: { public: 'On a public site.', staged: 'Built or proposed, not yet on the site.', local: 'On the working machine only.', private: 'A private link or file.' },
     scheme: { enc: 'Encyclopedia technique entries and atoms', 'enc.read': 'Technique reads inside encyclopedia plates', tt: 'Techniques & Templates', st: 'Technique Studies', hld: 'Holdings' }
   },
