@@ -60,7 +60,7 @@
     S.term = path[1] ? decodeURIComponent(path.slice(1).join('/')) : null;
     S.q = p.q || '';
     FACETS.forEach(function (F) { S.f[F.k] = p[F.k] != null ? p[F.k].split(',').map(function (v) { return v === '-' ? '' : v; }).filter(function (v) { return F.values.indexOf(v) >= 0; }) : []; });
-    S.d = p.d === 'm' ? 'm' : 's';
+    S.d = p.d === 'm' ? 'm' : p.d === 't' ? 't' : 's';
     S.sort = ['acc', 'title', 'modified', 'shelf'].indexOf(p.sort) >= 0 ? p.sort : 'modified';
     S.scheme = p.scheme || '';
     S.tsort = p.ts === 'az' ? 'az' : 'n';
@@ -71,7 +71,7 @@
     var qs = [];
     if (o.q) qs.push('q=' + encodeURIComponent(o.q));
     FACETS.forEach(function (F) { var v = o.f[F.k]; if (v && v.length) qs.push(F.k + '=' + v.map(function (x) { return x === '' ? '-' : encodeURIComponent(x); }).join(',')); });
-    if (o.d === 'm') qs.push('d=m');
+    if (o.d === 'm' || o.d === 't') qs.push('d=' + o.d);
     if (o.sort !== 'modified') qs.push('sort=' + o.sort);
     if (o.scheme) qs.push('scheme=' + encodeURIComponent(o.scheme));
     if (o.tsort === 'az') qs.push('ts=az');
@@ -237,6 +237,21 @@
       '<span class="l3">' + glyph(r.kind, r.status, r.access) + '<span class="st">' + e(r.kind) + (st ? ' · ' + e(st) : '') + (r.versions ? ' · ' + (r.versions.length + 1) + ' versions' : '') + (r.parts ? ' · ' + r.parts.length + ' parts' : '') + '</span>' + has + '</span></a>';
   }
 
+  /* A die-cut index card. The cut is the technique family: an arch for light and fields, a stepped
+     corner for print and tone, a folder tab for layout, type and charts, a clipped corner for line,
+     construction and pixel work. With no family, the kind picks the cut.
+     The picture fills the window (cropped here, and only here); the label strip is paper. */
+  var FCUT = { 'light-gradient': 'arch', 'fields-optics': 'arch', sound: 'arch', 'print-physics': 'step', 'screen-tone': 'step', 'grain-stock': 'step',
+    'layout-ephemera': 'tab', type: 'tab', 'data-display': 'tab', 'motion-runtime': 'tab', line: 'clip', 'subject-construction': 'clip', 'pixel-sprite': 'clip', 'shader-fundamentals': 'clip' };
+  var CUT = { technique: 'arch', atom: 'arch', plate: 'arch', study: 'step', exploration: 'step', coupling: 'step', template: 'tab', instrument: 'tab', document: 'tab' };
+  function tab(r) {
+    var tail = r.kind === 'plate' && /\/(\d{2})$/.exec(r.id), num = r.call || (tail ? tail[1] : r.acc.slice(5).replace(/^0+/, '')), st = r.access !== 'public' ? r.access : r.status ? r.status.replace('-', ' ') : (r.family || '').replace(/-/g, ' ');
+    return '<a class="tb-c cut-' + (FCUT[r.family] || CUT[r.kind] || 'step') + (r.access !== 'public' ? ' off' : '') + '" href="' + recHref(r) + '" data-r="' + r.acc + '" title="' + e(label(r)) + '"' + (S.r === r.acc ? ' aria-current="true"' : '') + '>' +
+      '<span class="edge"><span class="face"><img src="' + e(r.thumb_2x && r.thumb_2x_w <= 1200 ? r.thumb_2x : r.thumb) + '" alt="" loading="lazy" decoding="async">' +
+      '<span class="strip2"><span class="k">' + e(r.kind) + '</span><b' + (num.length > 5 ? ' class="long"' : '') + '>' + e(num) + '</b><span class="k st">' + e(st || COL[r.collection].code) + '</span><i>↗</i></span></span></span>' +
+      '<span class="nm">' + e(r.title) + '</span></a>';
+  }
+
   /* ---------------------------------------------------------------- arrival chart: one mark per record, a row per collection, on whole pixels */
   function lanes(list) {
     var W = Math.max(320, $lib.clientWidth - 40), gut = 34, n = R.length, step = Math.max(1, Math.floor((W - gut) / n)), mw = Math.max(1, step - 1), rowH = 11, rows = L.collections.length, top = rows * rowH;
@@ -264,10 +279,11 @@
   function vPlates() {
     var list = filtered(); LIST = list;
     function sel(v) { return S.sort === v ? ' selected' : ''; }
-    var tools = seg('Layout', [['data-d="s"', 'Sheet', 's'], ['data-d="m"', 'Cards', 'm']], S.d) +
+    var tools = seg('Layout', [['data-d="s"', 'Sheet', 's'], ['data-d="m"', 'Cards', 'm'], ['data-d="t"', 'Tabs', 't', 'Die-cut index cards: the cut is the technique family']], S.d) +
       '<label class="ord">Order <select data-sort><option value="modified"' + sel('modified') + '>Last changed</option><option value="acc"' + sel('acc') + '>Arrival</option><option value="shelf"' + sel('shelf') + '>Shelf</option><option value="title"' + sel('title') + '>Title</option></select></label>';
     var body = !list.length ? empty('records')
       : S.d === 's' ? '<div class="sheet">' + strip(list, phone() ? 76 : 104) + '</div>'
+      : S.d === 't' ? '<div class="tabs">' + list.filter(function (r) { return r.thumb; }).map(tab).join('') + '</div>' + unpictured(list.filter(function (r) { return !r.thumb; }))
       : '<div class="cards">' + list.filter(function (r) { return r.thumb; }).map(card).join('') + '</div>' + unpictured(list.filter(function (r) { return !r.thumb; }));
     $lib.innerHTML = '<h1 class="vh">Plates</h1>' + toolbar(tools, list.length, WORKS.length) + body + foot();
   }
