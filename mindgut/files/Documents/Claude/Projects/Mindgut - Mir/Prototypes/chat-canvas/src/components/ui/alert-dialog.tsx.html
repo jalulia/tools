@@ -1,0 +1,105 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>alert-dialog.tsx</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>alert-dialog.tsx</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/chat-canvas/src/components/ui/alert-dialog.tsx</span><span>0.00 MB · sha256 c8b01137c7552e63…</span><a download="alert-dialog.tsx" id="dl" href="#">Download the original</a></header><main><pre>import * as React from &quot;react&quot;;
+import * as AlertDialogPrimitive from &quot;@radix-ui/react-alert-dialog&quot;;
+
+import { cn } from &quot;@/lib/utils&quot;;
+import { buttonVariants } from &quot;@/components/ui/button&quot;;
+
+const AlertDialog = AlertDialogPrimitive.Root;
+
+const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
+
+const AlertDialogPortal = AlertDialogPrimitive.Portal;
+
+const AlertDialogOverlay = React.forwardRef&lt;
+  React.ElementRef&lt;typeof AlertDialogPrimitive.Overlay&gt;,
+  React.ComponentPropsWithoutRef&lt;typeof AlertDialogPrimitive.Overlay&gt;
+&gt;(({ className, ...props }, ref) =&gt; (
+  &lt;AlertDialogPrimitive.Overlay
+    className={cn(
+      &quot;fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0&quot;,
+      className,
+    )}
+    {...props}
+    ref={ref}
+  /&gt;
+));
+AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName;
+
+const AlertDialogContent = React.forwardRef&lt;
+  React.ElementRef&lt;typeof AlertDialogPrimitive.Content&gt;,
+  React.ComponentPropsWithoutRef&lt;typeof AlertDialogPrimitive.Content&gt;
+&gt;(({ className, ...props }, ref) =&gt; (
+  &lt;AlertDialogPortal&gt;
+    &lt;AlertDialogOverlay /&gt;
+    &lt;AlertDialogPrimitive.Content
+      ref={ref}
+      className={cn(
+        &quot;fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg&quot;,
+        className,
+      )}
+      {...props}
+    /&gt;
+  &lt;/AlertDialogPortal&gt;
+));
+AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName;
+
+const AlertDialogHeader = ({ className, ...props }: React.HTMLAttributes&lt;HTMLDivElement&gt;) =&gt; (
+  &lt;div className={cn(&quot;flex flex-col space-y-2 text-center sm:text-left&quot;, className)} {...props} /&gt;
+);
+AlertDialogHeader.displayName = &quot;AlertDialogHeader&quot;;
+
+const AlertDialogFooter = ({ className, ...props }: React.HTMLAttributes&lt;HTMLDivElement&gt;) =&gt; (
+  &lt;div className={cn(&quot;flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2&quot;, className)} {...props} /&gt;
+);
+AlertDialogFooter.displayName = &quot;AlertDialogFooter&quot;;
+
+const AlertDialogTitle = React.forwardRef&lt;
+  React.ElementRef&lt;typeof AlertDialogPrimitive.Title&gt;,
+  React.ComponentPropsWithoutRef&lt;typeof AlertDialogPrimitive.Title&gt;
+&gt;(({ className, ...props }, ref) =&gt; (
+  &lt;AlertDialogPrimitive.Title ref={ref} className={cn(&quot;text-lg font-semibold&quot;, className)} {...props} /&gt;
+));
+AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName;
+
+const AlertDialogDescription = React.forwardRef&lt;
+  React.ElementRef&lt;typeof AlertDialogPrimitive.Description&gt;,
+  React.ComponentPropsWithoutRef&lt;typeof AlertDialogPrimitive.Description&gt;
+&gt;(({ className, ...props }, ref) =&gt; (
+  &lt;AlertDialogPrimitive.Description ref={ref} className={cn(&quot;text-sm text-muted-foreground&quot;, className)} {...props} /&gt;
+));
+AlertDialogDescription.displayName = AlertDialogPrimitive.Description.displayName;
+
+const AlertDialogAction = React.forwardRef&lt;
+  React.ElementRef&lt;typeof AlertDialogPrimitive.Action&gt;,
+  React.ComponentPropsWithoutRef&lt;typeof AlertDialogPrimitive.Action&gt;
+&gt;(({ className, ...props }, ref) =&gt; (
+  &lt;AlertDialogPrimitive.Action ref={ref} className={cn(buttonVariants(), className)} {...props} /&gt;
+));
+AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName;
+
+const AlertDialogCancel = React.forwardRef&lt;
+  React.ElementRef&lt;typeof AlertDialogPrimitive.Cancel&gt;,
+  React.ComponentPropsWithoutRef&lt;typeof AlertDialogPrimitive.Cancel&gt;
+&gt;(({ className, ...props }, ref) =&gt; (
+  &lt;AlertDialogPrimitive.Cancel
+    ref={ref}
+    className={cn(buttonVariants({ variant: &quot;outline&quot; }), &quot;mt-2 sm:mt-0&quot;, className)}
+    {...props}
+  /&gt;
+));
+AlertDialogCancel.displayName = AlertDialogPrimitive.Cancel.displayName;
+
+export {
+  AlertDialog,
+  AlertDialogPortal,
+  AlertDialogOverlay,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+};
+</pre></main><script>var b=atob("aW1wb3J0ICogYXMgUmVhY3QgZnJvbSAicmVhY3QiOwppbXBvcnQgKiBhcyBBbGVydERpYWxvZ1ByaW1pdGl2ZSBmcm9tICJAcmFkaXgtdWkvcmVhY3QtYWxlcnQtZGlhbG9nIjsKCmltcG9ydCB7IGNuIH0gZnJvbSAiQC9saWIvdXRpbHMiOwppbXBvcnQgeyBidXR0b25WYXJpYW50cyB9IGZyb20gIkAvY29tcG9uZW50cy91aS9idXR0b24iOwoKY29uc3QgQWxlcnREaWFsb2cgPSBBbGVydERpYWxvZ1ByaW1pdGl2ZS5Sb290OwoKY29uc3QgQWxlcnREaWFsb2dUcmlnZ2VyID0gQWxlcnREaWFsb2dQcmltaXRpdmUuVHJpZ2dlcjsKCmNvbnN0IEFsZXJ0RGlhbG9nUG9ydGFsID0gQWxlcnREaWFsb2dQcmltaXRpdmUuUG9ydGFsOwoKY29uc3QgQWxlcnREaWFsb2dPdmVybGF5ID0gUmVhY3QuZm9yd2FyZFJlZjwKICBSZWFjdC5FbGVtZW50UmVmPHR5cGVvZiBBbGVydERpYWxvZ1ByaW1pdGl2ZS5PdmVybGF5PiwKICBSZWFjdC5Db21wb25lbnRQcm9wc1dpdGhvdXRSZWY8dHlwZW9mIEFsZXJ0RGlhbG9nUHJpbWl0aXZlLk92ZXJsYXk+Cj4oKHsgY2xhc3NOYW1lLCAuLi5wcm9wcyB9LCByZWYpID0+ICgKICA8QWxlcnREaWFsb2dQcmltaXRpdmUuT3ZlcmxheQogICAgY2xhc3NOYW1lPXtjbigKICAgICAgImZpeGVkIGluc2V0LTAgei01MCBiZy1ibGFjay84MCBkYXRhLVtzdGF0ZT1vcGVuXTphbmltYXRlLWluIGRhdGEtW3N0YXRlPWNsb3NlZF06YW5pbWF0ZS1vdXQgZGF0YS1bc3RhdGU9Y2xvc2VkXTpmYWRlLW91dC0wIGRhdGEtW3N0YXRlPW9wZW5dOmZhZGUtaW4tMCIsCiAgICAgIGNsYXNzTmFtZSwKICAgICl9CiAgICB7Li4ucHJvcHN9CiAgICByZWY9e3JlZn0KICAvPgopKTsKQWxlcnREaWFsb2dPdmVybGF5LmRpc3BsYXlOYW1lID0gQWxlcnREaWFsb2dQcmltaXRpdmUuT3ZlcmxheS5kaXNwbGF5TmFtZTsKCmNvbnN0IEFsZXJ0RGlhbG9nQ29udGVudCA9IFJlYWN0LmZvcndhcmRSZWY8CiAgUmVhY3QuRWxlbWVudFJlZjx0eXBlb2YgQWxlcnREaWFsb2dQcmltaXRpdmUuQ29udGVudD4sCiAgUmVhY3QuQ29tcG9uZW50UHJvcHNXaXRob3V0UmVmPHR5cGVvZiBBbGVydERpYWxvZ1ByaW1pdGl2ZS5Db250ZW50Pgo+KCh7IGNsYXNzTmFtZSwgLi4ucHJvcHMgfSwgcmVmKSA9PiAoCiAgPEFsZXJ0RGlhbG9nUG9ydGFsPgogICAgPEFsZXJ0RGlhbG9nT3ZlcmxheSAvPgogICAgPEFsZXJ0RGlhbG9nUHJpbWl0aXZlLkNvbnRlbnQKICAgICAgcmVmPXtyZWZ9CiAgICAgIGNsYXNzTmFtZT17Y24oCiAgICAgICAgImZpeGVkIGxlZnQtWzUwJV0gdG9wLVs1MCVdIHotNTAgZ3JpZCB3LWZ1bGwgbWF4LXctbGcgdHJhbnNsYXRlLXgtWy01MCVdIHRyYW5zbGF0ZS15LVstNTAlXSBnYXAtNCBib3JkZXIgYmctYmFja2dyb3VuZCBwLTYgc2hhZG93LWxnIGR1cmF0aW9uLTIwMCBkYXRhLVtzdGF0ZT1vcGVuXTphbmltYXRlLWluIGRhdGEtW3N0YXRlPWNsb3NlZF06YW5pbWF0ZS1vdXQgZGF0YS1bc3RhdGU9Y2xvc2VkXTpmYWRlLW91dC0wIGRhdGEtW3N0YXRlPW9wZW5dOmZhZGUtaW4tMCBkYXRhLVtzdGF0ZT1jbG9zZWRdOnpvb20tb3V0LTk1IGRhdGEtW3N0YXRlPW9wZW5dOnpvb20taW4tOTUgZGF0YS1bc3RhdGU9Y2xvc2VkXTpzbGlkZS1vdXQtdG8tbGVmdC0xLzIgZGF0YS1bc3RhdGU9Y2xvc2VkXTpzbGlkZS1vdXQtdG8tdG9wLVs0OCVdIGRhdGEtW3N0YXRlPW9wZW5dOnNsaWRlLWluLWZyb20tbGVmdC0xLzIgZGF0YS1bc3RhdGU9b3Blbl06c2xpZGUtaW4tZnJvbS10b3AtWzQ4JV0gc206cm91bmRlZC1sZyIsCiAgICAgICAgY2xhc3NOYW1lLAogICAgICApfQogICAgICB7Li4ucHJvcHN9CiAgICAvPgogIDwvQWxlcnREaWFsb2dQb3J0YWw+CikpOwpBbGVydERpYWxvZ0NvbnRlbnQuZGlzcGxheU5hbWUgPSBBbGVydERpYWxvZ1ByaW1pdGl2ZS5Db250ZW50LmRpc3BsYXlOYW1lOwoKY29uc3QgQWxlcnREaWFsb2dIZWFkZXIgPSAoeyBjbGFzc05hbWUsIC4uLnByb3BzIH06IFJlYWN0LkhUTUxBdHRyaWJ1dGVzPEhUTUxEaXZFbGVtZW50PikgPT4gKAogIDxkaXYgY2xhc3NOYW1lPXtjbigiZmxleCBmbGV4LWNvbCBzcGFjZS15LTIgdGV4dC1jZW50ZXIgc206dGV4dC1sZWZ0IiwgY2xhc3NOYW1lKX0gey4uLnByb3BzfSAvPgopOwpBbGVydERpYWxvZ0hlYWRlci5kaXNwbGF5TmFtZSA9ICJBbGVydERpYWxvZ0hlYWRlciI7Cgpjb25zdCBBbGVydERpYWxvZ0Zvb3RlciA9ICh7IGNsYXNzTmFtZSwgLi4ucHJvcHMgfTogUmVhY3QuSFRNTEF0dHJpYnV0ZXM8SFRNTERpdkVsZW1lbnQ+KSA9PiAoCiAgPGRpdiBjbGFzc05hbWU9e2NuKCJmbGV4IGZsZXgtY29sLXJldmVyc2Ugc206ZmxleC1yb3cgc206anVzdGlmeS1lbmQgc206c3BhY2UteC0yIiwgY2xhc3NOYW1lKX0gey4uLnByb3BzfSAvPgopOwpBbGVydERpYWxvZ0Zvb3Rlci5kaXNwbGF5TmFtZSA9ICJBbGVydERpYWxvZ0Zvb3RlciI7Cgpjb25zdCBBbGVydERpYWxvZ1RpdGxlID0gUmVhY3QuZm9yd2FyZFJlZjwKICBSZWFjdC5FbGVtZW50UmVmPHR5cGVvZiBBbGVydERpYWxvZ1ByaW1pdGl2ZS5UaXRsZT4sCiAgUmVhY3QuQ29tcG9uZW50UHJvcHNXaXRob3V0UmVmPHR5cGVvZiBBbGVydERpYWxvZ1ByaW1pdGl2ZS5UaXRsZT4KPigoeyBjbGFzc05hbWUsIC4uLnByb3BzIH0sIHJlZikgPT4gKAogIDxBbGVydERpYWxvZ1ByaW1pdGl2ZS5UaXRsZSByZWY9e3JlZn0gY2xhc3NOYW1lPXtjbigidGV4dC1sZyBmb250LXNlbWlib2xkIiwgY2xhc3NOYW1lKX0gey4uLnByb3BzfSAvPgopKTsKQWxlcnREaWFsb2dUaXRsZS5kaXNwbGF5TmFtZSA9IEFsZXJ0RGlhbG9nUHJpbWl0aXZlLlRpdGxlLmRpc3BsYXlOYW1lOwoKY29uc3QgQWxlcnREaWFsb2dEZXNjcmlwdGlvbiA9IFJlYWN0LmZvcndhcmRSZWY8CiAgUmVhY3QuRWxlbWVudFJlZjx0eXBlb2YgQWxlcnREaWFsb2dQcmltaXRpdmUuRGVzY3JpcHRpb24+LAogIFJlYWN0LkNvbXBvbmVudFByb3BzV2l0aG91dFJlZjx0eXBlb2YgQWxlcnREaWFsb2dQcmltaXRpdmUuRGVzY3JpcHRpb24+Cj4oKHsgY2xhc3NOYW1lLCAuLi5wcm9wcyB9LCByZWYpID0+ICgKICA8QWxlcnREaWFsb2dQcmltaXRpdmUuRGVzY3JpcHRpb24gcmVmPXtyZWZ9IGNsYXNzTmFtZT17Y24oInRleHQtc20gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIiwgY2xhc3NOYW1lKX0gey4uLnByb3BzfSAvPgopKTsKQWxlcnREaWFsb2dEZXNjcmlwdGlvbi5kaXNwbGF5TmFtZSA9IEFsZXJ0RGlhbG9nUHJpbWl0aXZlLkRlc2NyaXB0aW9uLmRpc3BsYXlOYW1lOwoKY29uc3QgQWxlcnREaWFsb2dBY3Rpb24gPSBSZWFjdC5mb3J3YXJkUmVmPAogIFJlYWN0LkVsZW1lbnRSZWY8dHlwZW9mIEFsZXJ0RGlhbG9nUHJpbWl0aXZlLkFjdGlvbj4sCiAgUmVhY3QuQ29tcG9uZW50UHJvcHNXaXRob3V0UmVmPHR5cGVvZiBBbGVydERpYWxvZ1ByaW1pdGl2ZS5BY3Rpb24+Cj4oKHsgY2xhc3NOYW1lLCAuLi5wcm9wcyB9LCByZWYpID0+ICgKICA8QWxlcnREaWFsb2dQcmltaXRpdmUuQWN0aW9uIHJlZj17cmVmfSBjbGFzc05hbWU9e2NuKGJ1dHRvblZhcmlhbnRzKCksIGNsYXNzTmFtZSl9IHsuLi5wcm9wc30gLz4KKSk7CkFsZXJ0RGlhbG9nQWN0aW9uLmRpc3BsYXlOYW1lID0gQWxlcnREaWFsb2dQcmltaXRpdmUuQWN0aW9uLmRpc3BsYXlOYW1lOwoKY29uc3QgQWxlcnREaWFsb2dDYW5jZWwgPSBSZWFjdC5mb3J3YXJkUmVmPAogIFJlYWN0LkVsZW1lbnRSZWY8dHlwZW9mIEFsZXJ0RGlhbG9nUHJpbWl0aXZlLkNhbmNlbD4sCiAgUmVhY3QuQ29tcG9uZW50UHJvcHNXaXRob3V0UmVmPHR5cGVvZiBBbGVydERpYWxvZ1ByaW1pdGl2ZS5DYW5jZWw+Cj4oKHsgY2xhc3NOYW1lLCAuLi5wcm9wcyB9LCByZWYpID0+ICgKICA8QWxlcnREaWFsb2dQcmltaXRpdmUuQ2FuY2VsCiAgICByZWY9e3JlZn0KICAgIGNsYXNzTmFtZT17Y24oYnV0dG9uVmFyaWFudHMoeyB2YXJpYW50OiAib3V0bGluZSIgfSksICJtdC0yIHNtOm10LTAiLCBjbGFzc05hbWUpfQogICAgey4uLnByb3BzfQogIC8+CikpOwpBbGVydERpYWxvZ0NhbmNlbC5kaXNwbGF5TmFtZSA9IEFsZXJ0RGlhbG9nUHJpbWl0aXZlLkNhbmNlbC5kaXNwbGF5TmFtZTsKCmV4cG9ydCB7CiAgQWxlcnREaWFsb2csCiAgQWxlcnREaWFsb2dQb3J0YWwsCiAgQWxlcnREaWFsb2dPdmVybGF5LAogIEFsZXJ0RGlhbG9nVHJpZ2dlciwKICBBbGVydERpYWxvZ0NvbnRlbnQsCiAgQWxlcnREaWFsb2dIZWFkZXIsCiAgQWxlcnREaWFsb2dGb290ZXIsCiAgQWxlcnREaWFsb2dUaXRsZSwKICBBbGVydERpYWxvZ0Rlc2NyaXB0aW9uLAogIEFsZXJ0RGlhbG9nQWN0aW9uLAogIEFsZXJ0RGlhbG9nQ2FuY2VsLAp9Owo="),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

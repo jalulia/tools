@@ -1,0 +1,44 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>alert.tsx</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>alert.tsx</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/chat-canvas/src/components/ui/alert.tsx</span><span>0.00 MB · sha256 6352c232d36b2aeb…</span><a download="alert.tsx" id="dl" href="#">Download the original</a></header><main><pre>import * as React from &quot;react&quot;;
+import { cva, type VariantProps } from &quot;class-variance-authority&quot;;
+
+import { cn } from &quot;@/lib/utils&quot;;
+
+const alertVariants = cva(
+  &quot;relative w-full rounded-lg border p-4 [&amp;&gt;svg~*]:pl-7 [&amp;&gt;svg+div]:translate-y-[-3px] [&amp;&gt;svg]:absolute [&amp;&gt;svg]:left-4 [&amp;&gt;svg]:top-4 [&amp;&gt;svg]:text-foreground&quot;,
+  {
+    variants: {
+      variant: {
+        default: &quot;bg-background text-foreground&quot;,
+        destructive: &quot;border-destructive/50 text-destructive dark:border-destructive [&amp;&gt;svg]:text-destructive&quot;,
+      },
+    },
+    defaultVariants: {
+      variant: &quot;default&quot;,
+    },
+  },
+);
+
+const Alert = React.forwardRef&lt;
+  HTMLDivElement,
+  React.HTMLAttributes&lt;HTMLDivElement&gt; &amp; VariantProps&lt;typeof alertVariants&gt;
+&gt;(({ className, variant, ...props }, ref) =&gt; (
+  &lt;div ref={ref} role=&quot;alert&quot; className={cn(alertVariants({ variant }), className)} {...props} /&gt;
+));
+Alert.displayName = &quot;Alert&quot;;
+
+const AlertTitle = React.forwardRef&lt;HTMLParagraphElement, React.HTMLAttributes&lt;HTMLHeadingElement&gt;&gt;(
+  ({ className, ...props }, ref) =&gt; (
+    &lt;h5 ref={ref} className={cn(&quot;mb-1 font-medium leading-none tracking-tight&quot;, className)} {...props} /&gt;
+  ),
+);
+AlertTitle.displayName = &quot;AlertTitle&quot;;
+
+const AlertDescription = React.forwardRef&lt;HTMLParagraphElement, React.HTMLAttributes&lt;HTMLParagraphElement&gt;&gt;(
+  ({ className, ...props }, ref) =&gt; (
+    &lt;div ref={ref} className={cn(&quot;text-sm [&amp;_p]:leading-relaxed&quot;, className)} {...props} /&gt;
+  ),
+);
+AlertDescription.displayName = &quot;AlertDescription&quot;;
+
+export { Alert, AlertTitle, AlertDescription };
+</pre></main><script>var b=atob("aW1wb3J0ICogYXMgUmVhY3QgZnJvbSAicmVhY3QiOwppbXBvcnQgeyBjdmEsIHR5cGUgVmFyaWFudFByb3BzIH0gZnJvbSAiY2xhc3MtdmFyaWFuY2UtYXV0aG9yaXR5IjsKCmltcG9ydCB7IGNuIH0gZnJvbSAiQC9saWIvdXRpbHMiOwoKY29uc3QgYWxlcnRWYXJpYW50cyA9IGN2YSgKICAicmVsYXRpdmUgdy1mdWxsIHJvdW5kZWQtbGcgYm9yZGVyIHAtNCBbJj5zdmd+Kl06cGwtNyBbJj5zdmcrZGl2XTp0cmFuc2xhdGUteS1bLTNweF0gWyY+c3ZnXTphYnNvbHV0ZSBbJj5zdmddOmxlZnQtNCBbJj5zdmddOnRvcC00IFsmPnN2Z106dGV4dC1mb3JlZ3JvdW5kIiwKICB7CiAgICB2YXJpYW50czogewogICAgICB2YXJpYW50OiB7CiAgICAgICAgZGVmYXVsdDogImJnLWJhY2tncm91bmQgdGV4dC1mb3JlZ3JvdW5kIiwKICAgICAgICBkZXN0cnVjdGl2ZTogImJvcmRlci1kZXN0cnVjdGl2ZS81MCB0ZXh0LWRlc3RydWN0aXZlIGRhcms6Ym9yZGVyLWRlc3RydWN0aXZlIFsmPnN2Z106dGV4dC1kZXN0cnVjdGl2ZSIsCiAgICAgIH0sCiAgICB9LAogICAgZGVmYXVsdFZhcmlhbnRzOiB7CiAgICAgIHZhcmlhbnQ6ICJkZWZhdWx0IiwKICAgIH0sCiAgfSwKKTsKCmNvbnN0IEFsZXJ0ID0gUmVhY3QuZm9yd2FyZFJlZjwKICBIVE1MRGl2RWxlbWVudCwKICBSZWFjdC5IVE1MQXR0cmlidXRlczxIVE1MRGl2RWxlbWVudD4gJiBWYXJpYW50UHJvcHM8dHlwZW9mIGFsZXJ0VmFyaWFudHM+Cj4oKHsgY2xhc3NOYW1lLCB2YXJpYW50LCAuLi5wcm9wcyB9LCByZWYpID0+ICgKICA8ZGl2IHJlZj17cmVmfSByb2xlPSJhbGVydCIgY2xhc3NOYW1lPXtjbihhbGVydFZhcmlhbnRzKHsgdmFyaWFudCB9KSwgY2xhc3NOYW1lKX0gey4uLnByb3BzfSAvPgopKTsKQWxlcnQuZGlzcGxheU5hbWUgPSAiQWxlcnQiOwoKY29uc3QgQWxlcnRUaXRsZSA9IFJlYWN0LmZvcndhcmRSZWY8SFRNTFBhcmFncmFwaEVsZW1lbnQsIFJlYWN0LkhUTUxBdHRyaWJ1dGVzPEhUTUxIZWFkaW5nRWxlbWVudD4+KAogICh7IGNsYXNzTmFtZSwgLi4ucHJvcHMgfSwgcmVmKSA9PiAoCiAgICA8aDUgcmVmPXtyZWZ9IGNsYXNzTmFtZT17Y24oIm1iLTEgZm9udC1tZWRpdW0gbGVhZGluZy1ub25lIHRyYWNraW5nLXRpZ2h0IiwgY2xhc3NOYW1lKX0gey4uLnByb3BzfSAvPgogICksCik7CkFsZXJ0VGl0bGUuZGlzcGxheU5hbWUgPSAiQWxlcnRUaXRsZSI7Cgpjb25zdCBBbGVydERlc2NyaXB0aW9uID0gUmVhY3QuZm9yd2FyZFJlZjxIVE1MUGFyYWdyYXBoRWxlbWVudCwgUmVhY3QuSFRNTEF0dHJpYnV0ZXM8SFRNTFBhcmFncmFwaEVsZW1lbnQ+PigKICAoeyBjbGFzc05hbWUsIC4uLnByb3BzIH0sIHJlZikgPT4gKAogICAgPGRpdiByZWY9e3JlZn0gY2xhc3NOYW1lPXtjbigidGV4dC1zbSBbJl9wXTpsZWFkaW5nLXJlbGF4ZWQiLCBjbGFzc05hbWUpfSB7Li4ucHJvcHN9IC8+CiAgKSwKKTsKQWxlcnREZXNjcmlwdGlvbi5kaXNwbGF5TmFtZSA9ICJBbGVydERlc2NyaXB0aW9uIjsKCmV4cG9ydCB7IEFsZXJ0LCBBbGVydFRpdGxlLCBBbGVydERlc2NyaXB0aW9uIH07Cg=="),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

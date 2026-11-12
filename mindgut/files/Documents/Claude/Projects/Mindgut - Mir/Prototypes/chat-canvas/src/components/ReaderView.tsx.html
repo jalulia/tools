@@ -1,0 +1,195 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ReaderView.tsx</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>ReaderView.tsx</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/chat-canvas/src/components/ReaderView.tsx</span><span>0.01 MB · sha256 d881e0df871bd251…</span><a download="ReaderView.tsx" id="dl" href="#">Download the original</a></header><main><pre>import { useState, useCallback, useRef, useEffect } from &#x27;react&#x27;;
+import { ArrowLeft, FileText, Code } from &#x27;lucide-react&#x27;;
+import type { ParsedTranscript } from &#x27;@/lib/parseTranscript&#x27;;
+import ChatTurn from &#x27;./ChatTurn&#x27;;
+import { exportAsPDF, exportAsHTML } from &#x27;@/lib/exportUtils&#x27;;
+
+interface ReaderViewProps {
+  transcript: ParsedTranscript;
+  subtitle: string;
+  onBack: () =&gt; void;
+}
+
+const ReaderView = ({ transcript, subtitle, onBack }: ReaderViewProps) =&gt; {
+  const [exporting, setExporting] = useState(false);
+  const contentRef = useRef&lt;HTMLDivElement&gt;(null);
+
+  useEffect(() =&gt; {
+    const obs = new IntersectionObserver(
+      (entries) =&gt; {
+        entries.forEach((entry) =&gt; {
+          if (entry.isIntersecting) {
+            entry.target.classList.add(&#x27;in&#x27;);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    contentRef.current?.querySelectorAll(&#x27;.turn&#x27;).forEach((el) =&gt; obs.observe(el));
+    return () =&gt; obs.disconnect();
+  }, []);
+
+  const handleExportPDF = useCallback(async () =&gt; {
+    setExporting(true);
+    try {
+      await exportAsPDF(transcript, []);
+    } finally {
+      setExporting(false);
+    }
+  }, [transcript]);
+
+  const handleExportHTML = useCallback(() =&gt; {
+    exportAsHTML(transcript, []);
+  }, [transcript]);
+
+  return (
+    &lt;div style={{ background: &#x27;var(--paper)&#x27; }} className=&quot;min-h-screen&quot;&gt;
+      {/* Chrome bar */}
+      &lt;div
+        className=&quot;fixed inset-x-0 top-0 z-50 flex items-center justify-between px-7 py-5 font-mono-editorial text-[10.5px] tracking-[0.16em] uppercase text-white pointer-events-none&quot;
+        style={{ mixBlendMode: &#x27;difference&#x27; }}
+      &gt;
+        &lt;span&gt;CHAT CANVAS&lt;/span&gt;
+        &lt;span&gt;TRANSCRIPT TOOL · MMXXVI&lt;/span&gt;
+      &lt;/div&gt;
+
+      {/* Hero section */}
+      &lt;section
+        className=&quot;relative min-h-[70vh] w-full overflow-hidden flex items-center justify-center text-center px-6 py-24&quot;
+        style={{ background: &#x27;var(--ink)&#x27; }}
+      &gt;
+        &lt;div className=&quot;relative z-10&quot;&gt;
+          &lt;div
+            className=&quot;font-mono-editorial text-[10.5px] tracking-[0.22em] uppercase mb-5 inline-flex items-center gap-3&quot;
+            style={{ color: &#x27;rgba(255,255,255,.5)&#x27; }}
+          &gt;
+            &lt;span className=&quot;w-7 h-px&quot; style={{ background: &#x27;rgba(255,255,255,.3)&#x27; }} /&gt;
+            &lt;span&gt;{transcript.messages.length} turns · {transcript.speakers.length} speakers&lt;/span&gt;
+            &lt;span className=&quot;w-7 h-px&quot; style={{ background: &#x27;rgba(255,255,255,.3)&#x27; }} /&gt;
+          &lt;/div&gt;
+          &lt;h1
+            className=&quot;font-display text-[clamp(48px,10vw,140px)] leading-[0.92] tracking-[-0.025em] mb-7&quot;
+            style={{ color: &#x27;#f6f1e4&#x27; }}
+          &gt;
+            {transcript.speakers.join(&#x27; &amp; &#x27;)}
+          &lt;/h1&gt;
+          &lt;p
+            className=&quot;text-lg font-light max-w-[52ch] mx-auto leading-relaxed&quot;
+            style={{ color: &#x27;rgba(255,255,255,.6)&#x27; }}
+          &gt;
+            {subtitle || &#x27;A conversation rendered as editorial artifact.&#x27;}
+          &lt;/p&gt;
+        &lt;/div&gt;
+        &lt;div
+          className=&quot;absolute left-1/2 bottom-7 -translate-x-1/2 font-mono-editorial text-[9.5px] tracking-[0.22em] uppercase flex flex-col items-center gap-2.5 z-10&quot;
+          style={{ color: &#x27;rgba(255,255,255,.5)&#x27; }}
+        &gt;
+          &lt;span&gt;scroll&lt;/span&gt;
+          &lt;span
+            className=&quot;w-px h-9 block animate-drip&quot;
+            style={{ background: &#x27;linear-gradient(to bottom, rgba(255,255,255,.6), transparent)&#x27; }}
+          /&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+
+      {/* Toolbar */}
+      &lt;div
+        className=&quot;sticky top-0 z-40 backdrop-blur-md border-b&quot;
+        style={{
+          background: &#x27;rgba(255,255,255,.9)&#x27;,
+          borderColor: &#x27;var(--line)&#x27;,
+        }}
+      &gt;
+        &lt;div className=&quot;max-w-3xl mx-auto px-7 py-3 flex items-center justify-between&quot;&gt;
+          &lt;button
+            onClick={onBack}
+            className=&quot;inline-flex items-center gap-2 transition-colors font-mono-editorial text-[10px] tracking-[0.14em] uppercase&quot;
+            style={{ color: &#x27;var(--mute)&#x27; }}
+            onMouseEnter={(e) =&gt; (e.currentTarget.style.color = &#x27;var(--ink)&#x27;)}
+            onMouseLeave={(e) =&gt; (e.currentTarget.style.color = &#x27;var(--mute)&#x27;)}
+          &gt;
+            &lt;ArrowLeft className=&quot;w-3.5 h-3.5&quot; /&gt;
+            New transcript
+          &lt;/button&gt;
+          &lt;div className=&quot;flex items-center gap-2&quot;&gt;
+            &lt;button
+              onClick={handleExportPDF}
+              disabled={exporting}
+              className=&quot;inline-flex items-center gap-1.5 px-3 py-1.5 border rounded-sm transition-all font-mono-editorial text-[10px] tracking-[0.14em] uppercase&quot;
+              style={{
+                borderColor: &#x27;var(--line)&#x27;,
+                color: &#x27;var(--mute)&#x27;,
+                opacity: exporting ? 0.4 : 1,
+              }}
+              onMouseEnter={(e) =&gt; {
+                e.currentTarget.style.color = &#x27;var(--ink)&#x27;;
+                e.currentTarget.style.borderColor = &#x27;var(--mute)&#x27;;
+              }}
+              onMouseLeave={(e) =&gt; {
+                e.currentTarget.style.color = &#x27;var(--mute)&#x27;;
+                e.currentTarget.style.borderColor = &#x27;var(--line)&#x27;;
+              }}
+            &gt;
+              &lt;FileText className=&quot;w-3.5 h-3.5&quot; /&gt;
+              PDF
+            &lt;/button&gt;
+            &lt;button
+              onClick={handleExportHTML}
+              className=&quot;inline-flex items-center gap-1.5 px-3 py-1.5 border rounded-sm transition-all font-mono-editorial text-[10px] tracking-[0.14em] uppercase&quot;
+              style={{
+                borderColor: &#x27;var(--line)&#x27;,
+                color: &#x27;var(--mute)&#x27;,
+              }}
+              onMouseEnter={(e) =&gt; {
+                e.currentTarget.style.color = &#x27;var(--ink)&#x27;;
+                e.currentTarget.style.borderColor = &#x27;var(--mute)&#x27;;
+              }}
+              onMouseLeave={(e) =&gt; {
+                e.currentTarget.style.color = &#x27;var(--mute)&#x27;;
+                e.currentTarget.style.borderColor = &#x27;var(--line)&#x27;;
+              }}
+            &gt;
+              &lt;Code className=&quot;w-3.5 h-3.5&quot; /&gt;
+              HTML
+            &lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      {/* Content */}
+      &lt;main className=&quot;py-24 pb-44&quot; ref={contentRef}&gt;
+        &lt;section className=&quot;relative&quot;&gt;
+          &lt;div className=&quot;max-w-[40rem] mx-auto px-7 relative&quot;&gt;
+            {/* Center rail */}
+            &lt;div
+              className=&quot;absolute left-1/2 top-0 bottom-0 w-px pointer-events-none&quot;
+              style={{
+                background: &#x27;var(--rail)&#x27;,
+                transform: &#x27;translateX(-50%)&#x27;,
+              }}
+            /&gt;
+
+            {transcript.messages.map((msg) =&gt; (
+              &lt;ChatTurn key={msg.id} message={msg} /&gt;
+            ))}
+          &lt;/div&gt;
+        &lt;/section&gt;
+      &lt;/main&gt;
+
+      {/* Footer */}
+      &lt;footer
+        className=&quot;max-w-3xl mx-auto px-7 py-8 border-t flex justify-between font-mono-editorial text-[10px] tracking-[0.18em] uppercase&quot;
+        style={{
+          borderColor: &#x27;var(--line)&#x27;,
+          color: &#x27;var(--mute)&#x27;,
+        }}
+      &gt;
+        &lt;span&gt;Chat Canvas&lt;/span&gt;
+        &lt;span&gt;{transcript.messages.length} messages&lt;/span&gt;
+      &lt;/footer&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default ReaderView;</pre></main><script>var b=atob("aW1wb3J0IHsgdXNlU3RhdGUsIHVzZUNhbGxiYWNrLCB1c2VSZWYsIHVzZUVmZmVjdCB9IGZyb20gJ3JlYWN0JzsKaW1wb3J0IHsgQXJyb3dMZWZ0LCBGaWxlVGV4dCwgQ29kZSB9IGZyb20gJ2x1Y2lkZS1yZWFjdCc7CmltcG9ydCB0eXBlIHsgUGFyc2VkVHJhbnNjcmlwdCB9IGZyb20gJ0AvbGliL3BhcnNlVHJhbnNjcmlwdCc7CmltcG9ydCBDaGF0VHVybiBmcm9tICcuL0NoYXRUdXJuJzsKaW1wb3J0IHsgZXhwb3J0QXNQREYsIGV4cG9ydEFzSFRNTCB9IGZyb20gJ0AvbGliL2V4cG9ydFV0aWxzJzsKCmludGVyZmFjZSBSZWFkZXJWaWV3UHJvcHMgewogIHRyYW5zY3JpcHQ6IFBhcnNlZFRyYW5zY3JpcHQ7CiAgc3VidGl0bGU6IHN0cmluZzsKICBvbkJhY2s6ICgpID0+IHZvaWQ7Cn0KCmNvbnN0IFJlYWRlclZpZXcgPSAoeyB0cmFuc2NyaXB0LCBzdWJ0aXRsZSwgb25CYWNrIH06IFJlYWRlclZpZXdQcm9wcykgPT4gewogIGNvbnN0IFtleHBvcnRpbmcsIHNldEV4cG9ydGluZ10gPSB1c2VTdGF0ZShmYWxzZSk7CiAgY29uc3QgY29udGVudFJlZiA9IHVzZVJlZjxIVE1MRGl2RWxlbWVudD4obnVsbCk7CgogIHVzZUVmZmVjdCgoKSA9PiB7CiAgICBjb25zdCBvYnMgPSBuZXcgSW50ZXJzZWN0aW9uT2JzZXJ2ZXIoCiAgICAgIChlbnRyaWVzKSA9PiB7CiAgICAgICAgZW50cmllcy5mb3JFYWNoKChlbnRyeSkgPT4gewogICAgICAgICAgaWYgKGVudHJ5LmlzSW50ZXJzZWN0aW5nKSB7CiAgICAgICAgICAgIGVudHJ5LnRhcmdldC5jbGFzc0xpc3QuYWRkKCdpbicpOwogICAgICAgICAgfQogICAgICAgIH0pOwogICAgICB9LAogICAgICB7IHRocmVzaG9sZDogMC4xNSB9CiAgICApOwoKICAgIGNvbnRlbnRSZWYuY3VycmVudD8ucXVlcnlTZWxlY3RvckFsbCgnLnR1cm4nKS5mb3JFYWNoKChlbCkgPT4gb2JzLm9ic2VydmUoZWwpKTsKICAgIHJldHVybiAoKSA9PiBvYnMuZGlzY29ubmVjdCgpOwogIH0sIFtdKTsKCiAgY29uc3QgaGFuZGxlRXhwb3J0UERGID0gdXNlQ2FsbGJhY2soYXN5bmMgKCkgPT4gewogICAgc2V0RXhwb3J0aW5nKHRydWUpOwogICAgdHJ5IHsKICAgICAgYXdhaXQgZXhwb3J0QXNQREYodHJhbnNjcmlwdCwgW10pOwogICAgfSBmaW5hbGx5IHsKICAgICAgc2V0RXhwb3J0aW5nKGZhbHNlKTsKICAgIH0KICB9LCBbdHJhbnNjcmlwdF0pOwoKICBjb25zdCBoYW5kbGVFeHBvcnRIVE1MID0gdXNlQ2FsbGJhY2soKCkgPT4gewogICAgZXhwb3J0QXNIVE1MKHRyYW5zY3JpcHQsIFtdKTsKICB9LCBbdHJhbnNjcmlwdF0pOwoKICByZXR1cm4gKAogICAgPGRpdiBzdHlsZT17eyBiYWNrZ3JvdW5kOiAndmFyKC0tcGFwZXIpJyB9fSBjbGFzc05hbWU9Im1pbi1oLXNjcmVlbiI+CiAgICAgIHsvKiBDaHJvbWUgYmFyICovfQogICAgICA8ZGl2CiAgICAgICAgY2xhc3NOYW1lPSJmaXhlZCBpbnNldC14LTAgdG9wLTAgei01MCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gcHgtNyBweS01IGZvbnQtbW9uby1lZGl0b3JpYWwgdGV4dC1bMTAuNXB4XSB0cmFja2luZy1bMC4xNmVtXSB1cHBlcmNhc2UgdGV4dC13aGl0ZSBwb2ludGVyLWV2ZW50cy1ub25lIgogICAgICAgIHN0eWxlPXt7IG1peEJsZW5kTW9kZTogJ2RpZmZlcmVuY2UnIH19CiAgICAgID4KICAgICAgICA8c3Bhbj5DSEFUIENBTlZBUzwvc3Bhbj4KICAgICAgICA8c3Bhbj5UUkFOU0NSSVBUIFRPT0wgwrcgTU1YWFZJPC9zcGFuPgogICAgICA8L2Rpdj4KCiAgICAgIHsvKiBIZXJvIHNlY3Rpb24gKi99CiAgICAgIDxzZWN0aW9uCiAgICAgICAgY2xhc3NOYW1lPSJyZWxhdGl2ZSBtaW4taC1bNzB2aF0gdy1mdWxsIG92ZXJmbG93LWhpZGRlbiBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciB0ZXh0LWNlbnRlciBweC02IHB5LTI0IgogICAgICAgIHN0eWxlPXt7IGJhY2tncm91bmQ6ICd2YXIoLS1pbmspJyB9fQogICAgICA+CiAgICAgICAgPGRpdiBjbGFzc05hbWU9InJlbGF0aXZlIHotMTAiPgogICAgICAgICAgPGRpdgogICAgICAgICAgICBjbGFzc05hbWU9ImZvbnQtbW9uby1lZGl0b3JpYWwgdGV4dC1bMTAuNXB4XSB0cmFja2luZy1bMC4yMmVtXSB1cHBlcmNhc2UgbWItNSBpbmxpbmUtZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTMiCiAgICAgICAgICAgIHN0eWxlPXt7IGNvbG9yOiAncmdiYSgyNTUsMjU1LDI1NSwuNSknIH19CiAgICAgICAgICA+CiAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0idy03IGgtcHgiIHN0eWxlPXt7IGJhY2tncm91bmQ6ICdyZ2JhKDI1NSwyNTUsMjU1LC4zKScgfX0gLz4KICAgICAgICAgICAgPHNwYW4+e3RyYW5zY3JpcHQubWVzc2FnZXMubGVuZ3RofSB0dXJucyDCtyB7dHJhbnNjcmlwdC5zcGVha2Vycy5sZW5ndGh9IHNwZWFrZXJzPC9zcGFuPgogICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9InctNyBoLXB4IiBzdHlsZT17eyBiYWNrZ3JvdW5kOiAncmdiYSgyNTUsMjU1LDI1NSwuMyknIH19IC8+CiAgICAgICAgICA8L2Rpdj4KICAgICAgICAgIDxoMQogICAgICAgICAgICBjbGFzc05hbWU9ImZvbnQtZGlzcGxheSB0ZXh0LVtjbGFtcCg0OHB4LDEwdncsMTQwcHgpXSBsZWFkaW5nLVswLjkyXSB0cmFja2luZy1bLTAuMDI1ZW1dIG1iLTciCiAgICAgICAgICAgIHN0eWxlPXt7IGNvbG9yOiAnI2Y2ZjFlNCcgfX0KICAgICAgICAgID4KICAgICAgICAgICAge3RyYW5zY3JpcHQuc3BlYWtlcnMuam9pbignICYgJyl9CiAgICAgICAgICA8L2gxPgogICAgICAgICAgPHAKICAgICAgICAgICAgY2xhc3NOYW1lPSJ0ZXh0LWxnIGZvbnQtbGlnaHQgbWF4LXctWzUyY2hdIG14LWF1dG8gbGVhZGluZy1yZWxheGVkIgogICAgICAgICAgICBzdHlsZT17eyBjb2xvcjogJ3JnYmEoMjU1LDI1NSwyNTUsLjYpJyB9fQogICAgICAgICAgPgogICAgICAgICAgICB7c3VidGl0bGUgfHwgJ0EgY29udmVyc2F0aW9uIHJlbmRlcmVkIGFzIGVkaXRvcmlhbCBhcnRpZmFjdC4nfQogICAgICAgICAgPC9wPgogICAgICAgIDwvZGl2PgogICAgICAgIDxkaXYKICAgICAgICAgIGNsYXNzTmFtZT0iYWJzb2x1dGUgbGVmdC0xLzIgYm90dG9tLTcgLXRyYW5zbGF0ZS14LTEvMiBmb250LW1vbm8tZWRpdG9yaWFsIHRleHQtWzkuNXB4XSB0cmFja2luZy1bMC4yMmVtXSB1cHBlcmNhc2UgZmxleCBmbGV4LWNvbCBpdGVtcy1jZW50ZXIgZ2FwLTIuNSB6LTEwIgogICAgICAgICAgc3R5bGU9e3sgY29sb3I6ICdyZ2JhKDI1NSwyNTUsMjU1LC41KScgfX0KICAgICAgICA+CiAgICAgICAgICA8c3Bhbj5zY3JvbGw8L3NwYW4+CiAgICAgICAgICA8c3BhbgogICAgICAgICAgICBjbGFzc05hbWU9InctcHggaC05IGJsb2NrIGFuaW1hdGUtZHJpcCIKICAgICAgICAgICAgc3R5bGU9e3sgYmFja2dyb3VuZDogJ2xpbmVhci1ncmFkaWVudCh0byBib3R0b20sIHJnYmEoMjU1LDI1NSwyNTUsLjYpLCB0cmFuc3BhcmVudCknIH19CiAgICAgICAgICAvPgogICAgICAgIDwvZGl2PgogICAgICA8L3NlY3Rpb24+CgogICAgICB7LyogVG9vbGJhciAqL30KICAgICAgPGRpdgogICAgICAgIGNsYXNzTmFtZT0ic3RpY2t5IHRvcC0wIHotNDAgYmFja2Ryb3AtYmx1ci1tZCBib3JkZXItYiIKICAgICAgICBzdHlsZT17ewogICAgICAgICAgYmFja2dyb3VuZDogJ3JnYmEoMjU1LDI1NSwyNTUsLjkpJywKICAgICAgICAgIGJvcmRlckNvbG9yOiAndmFyKC0tbGluZSknLAogICAgICAgIH19CiAgICAgID4KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ibWF4LXctM3hsIG14LWF1dG8gcHgtNyBweS0zIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiI+CiAgICAgICAgICA8YnV0dG9uCiAgICAgICAgICAgIG9uQ2xpY2s9e29uQmFja30KICAgICAgICAgICAgY2xhc3NOYW1lPSJpbmxpbmUtZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgdHJhbnNpdGlvbi1jb2xvcnMgZm9udC1tb25vLWVkaXRvcmlhbCB0ZXh0LVsxMHB4XSB0cmFja2luZy1bMC4xNGVtXSB1cHBlcmNhc2UiCiAgICAgICAgICAgIHN0eWxlPXt7IGNvbG9yOiAndmFyKC0tbXV0ZSknIH19CiAgICAgICAgICAgIG9uTW91c2VFbnRlcj17KGUpID0+IChlLmN1cnJlbnRUYXJnZXQuc3R5bGUuY29sb3IgPSAndmFyKC0taW5rKScpfQogICAgICAgICAgICBvbk1vdXNlTGVhdmU9eyhlKSA9PiAoZS5jdXJyZW50VGFyZ2V0LnN0eWxlLmNvbG9yID0gJ3ZhcigtLW11dGUpJyl9CiAgICAgICAgICA+CiAgICAgICAgICAgIDxBcnJvd0xlZnQgY2xhc3NOYW1lPSJ3LTMuNSBoLTMuNSIgLz4KICAgICAgICAgICAgTmV3IHRyYW5zY3JpcHQKICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIj4KICAgICAgICAgICAgPGJ1dHRvbgogICAgICAgICAgICAgIG9uQ2xpY2s9e2hhbmRsZUV4cG9ydFBERn0KICAgICAgICAgICAgICBkaXNhYmxlZD17ZXhwb3J0aW5nfQogICAgICAgICAgICAgIGNsYXNzTmFtZT0iaW5saW5lLWZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjUgcHgtMyBweS0xLjUgYm9yZGVyIHJvdW5kZWQtc20gdHJhbnNpdGlvbi1hbGwgZm9udC1tb25vLWVkaXRvcmlhbCB0ZXh0LVsxMHB4XSB0cmFja2luZy1bMC4xNGVtXSB1cHBlcmNhc2UiCiAgICAgICAgICAgICAgc3R5bGU9e3sKICAgICAgICAgICAgICAgIGJvcmRlckNvbG9yOiAndmFyKC0tbGluZSknLAogICAgICAgICAgICAgICAgY29sb3I6ICd2YXIoLS1tdXRlKScsCiAgICAgICAgICAgICAgICBvcGFjaXR5OiBleHBvcnRpbmcgPyAwLjQgOiAxLAogICAgICAgICAgICAgIH19CiAgICAgICAgICAgICAgb25Nb3VzZUVudGVyPXsoZSkgPT4gewogICAgICAgICAgICAgICAgZS5jdXJyZW50VGFyZ2V0LnN0eWxlLmNvbG9yID0gJ3ZhcigtLWluayknOwogICAgICAgICAgICAgICAgZS5jdXJyZW50VGFyZ2V0LnN0eWxlLmJvcmRlckNvbG9yID0gJ3ZhcigtLW11dGUpJzsKICAgICAgICAgICAgICB9fQogICAgICAgICAgICAgIG9uTW91c2VMZWF2ZT17KGUpID0+IHsKICAgICAgICAgICAgICAgIGUuY3VycmVudFRhcmdldC5zdHlsZS5jb2xvciA9ICd2YXIoLS1tdXRlKSc7CiAgICAgICAgICAgICAgICBlLmN1cnJlbnRUYXJnZXQuc3R5bGUuYm9yZGVyQ29sb3IgPSAndmFyKC0tbGluZSknOwogICAgICAgICAgICAgIH19CiAgICAgICAgICAgID4KICAgICAgICAgICAgICA8RmlsZVRleHQgY2xhc3NOYW1lPSJ3LTMuNSBoLTMuNSIgLz4KICAgICAgICAgICAgICBQREYKICAgICAgICAgICAgPC9idXR0b24+CiAgICAgICAgICAgIDxidXR0b24KICAgICAgICAgICAgICBvbkNsaWNrPXtoYW5kbGVFeHBvcnRIVE1MfQogICAgICAgICAgICAgIGNsYXNzTmFtZT0iaW5saW5lLWZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjUgcHgtMyBweS0xLjUgYm9yZGVyIHJvdW5kZWQtc20gdHJhbnNpdGlvbi1hbGwgZm9udC1tb25vLWVkaXRvcmlhbCB0ZXh0LVsxMHB4XSB0cmFja2luZy1bMC4xNGVtXSB1cHBlcmNhc2UiCiAgICAgICAgICAgICAgc3R5bGU9e3sKICAgICAgICAgICAgICAgIGJvcmRlckNvbG9yOiAndmFyKC0tbGluZSknLAogICAgICAgICAgICAgICAgY29sb3I6ICd2YXIoLS1tdXRlKScsCiAgICAgICAgICAgICAgfX0KICAgICAgICAgICAgICBvbk1vdXNlRW50ZXI9eyhlKSA9PiB7CiAgICAgICAgICAgICAgICBlLmN1cnJlbnRUYXJnZXQuc3R5bGUuY29sb3IgPSAndmFyKC0taW5rKSc7CiAgICAgICAgICAgICAgICBlLmN1cnJlbnRUYXJnZXQuc3R5bGUuYm9yZGVyQ29sb3IgPSAndmFyKC0tbXV0ZSknOwogICAgICAgICAgICAgIH19CiAgICAgICAgICAgICAgb25Nb3VzZUxlYXZlPXsoZSkgPT4gewogICAgICAgICAgICAgICAgZS5jdXJyZW50VGFyZ2V0LnN0eWxlLmNvbG9yID0gJ3ZhcigtLW11dGUpJzsKICAgICAgICAgICAgICAgIGUuY3VycmVudFRhcmdldC5zdHlsZS5ib3JkZXJDb2xvciA9ICd2YXIoLS1saW5lKSc7CiAgICAgICAgICAgICAgfX0KICAgICAgICAgICAgPgogICAgICAgICAgICAgIDxDb2RlIGNsYXNzTmFtZT0idy0zLjUgaC0zLjUiIC8+CiAgICAgICAgICAgICAgSFRNTAogICAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgIDwvZGl2PgogICAgICAgIDwvZGl2PgogICAgICA8L2Rpdj4KCiAgICAgIHsvKiBDb250ZW50ICovfQogICAgICA8bWFpbiBjbGFzc05hbWU9InB5LTI0IHBiLTQ0IiByZWY9e2NvbnRlbnRSZWZ9PgogICAgICAgIDxzZWN0aW9uIGNsYXNzTmFtZT0icmVsYXRpdmUiPgogICAgICAgICAgPGRpdiBjbGFzc05hbWU9Im1heC13LVs0MHJlbV0gbXgtYXV0byBweC03IHJlbGF0aXZlIj4KICAgICAgICAgICAgey8qIENlbnRlciByYWlsICovfQogICAgICAgICAgICA8ZGl2CiAgICAgICAgICAgICAgY2xhc3NOYW1lPSJhYnNvbHV0ZSBsZWZ0LTEvMiB0b3AtMCBib3R0b20tMCB3LXB4IHBvaW50ZXItZXZlbnRzLW5vbmUiCiAgICAgICAgICAgICAgc3R5bGU9e3sKICAgICAgICAgICAgICAgIGJhY2tncm91bmQ6ICd2YXIoLS1yYWlsKScsCiAgICAgICAgICAgICAgICB0cmFuc2Zvcm06ICd0cmFuc2xhdGVYKC01MCUpJywKICAgICAgICAgICAgICB9fQogICAgICAgICAgICAvPgoKICAgICAgICAgICAge3RyYW5zY3JpcHQubWVzc2FnZXMubWFwKChtc2cpID0+ICgKICAgICAgICAgICAgICA8Q2hhdFR1cm4ga2V5PXttc2cuaWR9IG1lc3NhZ2U9e21zZ30gLz4KICAgICAgICAgICAgKSl9CiAgICAgICAgICA8L2Rpdj4KICAgICAgICA8L3NlY3Rpb24+CiAgICAgIDwvbWFpbj4KCiAgICAgIHsvKiBGb290ZXIgKi99CiAgICAgIDxmb290ZXIKICAgICAgICBjbGFzc05hbWU9Im1heC13LTN4bCBteC1hdXRvIHB4LTcgcHktOCBib3JkZXItdCBmbGV4IGp1c3RpZnktYmV0d2VlbiBmb250LW1vbm8tZWRpdG9yaWFsIHRleHQtWzEwcHhdIHRyYWNraW5nLVswLjE4ZW1dIHVwcGVyY2FzZSIKICAgICAgICBzdHlsZT17ewogICAgICAgICAgYm9yZGVyQ29sb3I6ICd2YXIoLS1saW5lKScsCiAgICAgICAgICBjb2xvcjogJ3ZhcigtLW11dGUpJywKICAgICAgICB9fQogICAgICA+CiAgICAgICAgPHNwYW4+Q2hhdCBDYW52YXM8L3NwYW4+CiAgICAgICAgPHNwYW4+e3RyYW5zY3JpcHQubWVzc2FnZXMubGVuZ3RofSBtZXNzYWdlczwvc3Bhbj4KICAgICAgPC9mb290ZXI+CiAgICA8L2Rpdj4KICApOwp9OwoKZXhwb3J0IGRlZmF1bHQgUmVhZGVyVmlldzs="),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Ghost in the Overlay</title>
+<style>
+  :root{
+    --bg:#0b0d10; --fg:#e8ecef; --dim:#8a9098; --accent:#7fd1ff;
+    --violet:#b789ff; --green:#7fe0a0; --amber:#ffc266; --red:#ff7a7a;
+    --line:#2a2f36;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+    line-height:1.55; font-size:17px}
+  main{max-width:820px;margin:0 auto;padding:64px 28px 120px}
+  h1{font-size:2.2rem;font-weight:600;letter-spacing:-.02em;margin:0 0 .3em}
+  h2{font-size:1.35rem;font-weight:600;letter-spacing:-.01em;
+    margin:3em 0 .6em;color:var(--fg)}
+  h3{font-size:1.05rem;font-weight:600;color:var(--accent);margin:2em 0 .4em}
+  p{color:#c8ccd1}
+  .lede{font-size:1.15rem;color:var(--dim);margin-bottom:2em}
+  .card{background:#111418;border:1px solid var(--line);
+    border-radius:12px;padding:20px;margin:1.5em 0}
+  .row{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  label{color:var(--dim);font-size:.9rem}
+  input[type=range]{flex:1;min-width:180px;accent-color:var(--accent)}
+  button{background:#1a1f26;color:var(--fg);border:1px solid var(--line);
+    padding:8px 14px;border-radius:8px;font-size:.95rem;cursor:pointer;
+    font-family:inherit}
+  button:hover{background:#232932;border-color:#3a4048}
+  button.primary{background:var(--accent);color:#001220;border-color:var(--accent);font-weight:600}
+  button.primary:hover{background:#a3dcff}
+  .val{color:var(--accent);font-variant-numeric:tabular-nums;min-width:3em;text-align:right}
+  canvas{display:block;width:100%;height:auto;border-radius:8px;background:#000}
+  svg{display:block;width:100%;height:auto;background:#0a0c0f;border-radius:8px}
+  .note{color:var(--dim);font-size:.9rem;margin-top:.6em}
+  .caption{color:var(--dim);font-size:.88rem;text-align:center;margin-top:.6em}
+  .status{padding:10px 14px;border-radius:8px;background:#151a20;
+    border-left:3px solid var(--dim);margin-top:14px;font-size:.95rem}
+  .status.ok{border-left-color:var(--green);color:#d8f5e2}
+  .status.stuck{border-left-color:var(--amber);color:#ffe4b8}
+  .status.win{border-left-color:var(--accent);color:#d8ecff}
+  kbd{background:#1a1f26;border:1px solid var(--line);border-radius:4px;
+    padding:1px 6px;font-size:.85em}
+  .quiet{color:var(--dim)}
+  .glyph-legend{display:flex;gap:20px;flex-wrap:wrap;font-size:.88rem;color:var(--dim);margin-top:10px}
+  .swatch{display:inline-block;width:12px;height:12px;border-radius:50%;
+    vertical-align:middle;margin-right:6px}
+  footer{color:var(--dim);font-size:.85rem;margin-top:4em;border-top:1px solid var(--line);padding-top:20px}
+</style>
+</head>
+<body>
+<main>
+
+<h1>The Ghost in the Overlay</h1>
+<p class="lede">A pattern that isn't in either layer. A point that has no name inside its own field.
+Same shape, three ways of looking at it.</p>
+
+<h2>1. The moiré fringe</h2>
+<p>Two grids. Individually, nothing surprising — just lines. Overlay them and a third
+pattern appears that isn't drawn in either one. It lives in the <em>relation</em> between them.</p>
+
+<div class="card">
+  <canvas id="moire" width="760" height="420"></canvas>
+  <div class="row" style="margin-top:14px">
+    <label>Angle</label>
+    <input id="angle" type="range" min="0" max="30" step="0.1" value="6">
+    <span class="val" id="angleVal">6.0°</span>
+  </div>
+  <div class="row">
+    <label>Grid spacing</label>
+    <input id="spacing" type="range" min="4" max="24" step="0.5" value="10">
+    <span class="val" id="spacingVal">10</span>
+  </div>
+  <div class="row">
+    <button id="showA">Layer A only</button>
+    <button id="showB">Layer B only</button>
+    <button id="showBoth" class="primary">Both (overlay)</button>
+  </div>
+  <p class="note">Drag the angle. The fringe pattern that swims across the overlay
+  is not in Layer A. It is not in Layer B. It is a real, measurable structure that
+  exists only in their interference. In lithography, aligning chip layers uses this
+  fringe. In twisted-bilayer graphene, superconductivity appears at specific angles —
+  a property neither sheet has alone.</p>
+</div>
+
+<h2>2. The sealed set</h2>
+<p>Now the same idea, stripped to combinatorics. A field is a set of points
+plus a set of relations (each relation is a subset — "these points belong together").
+To <em>name</em> a point, some relation has to touch it and no other unnamed point —
+single it out.</p>
+
+<p>A <strong>stopping set</strong> is a subset where every relation that touches it,
+touches it in <em>two or more places at once</em>. Nothing can be singled out.
+The set is sealed — not because the answer is ambiguous, but because
+<em>no relation can isolate anyone</em>.</p>
+
+<div class="card">
+  <svg id="fano" viewBox="0 0 400 380"></svg>
+  <p class="caption">The Fano plane. Seven points, seven lines (six straight + one circle).
+  Every line has three points; every pair of points lies on one line.</p>
+  <div class="row">
+    <button id="peel">Try to peel</button>
+    <button id="bridge" class="primary">Add bridge from outside</button>
+    <button id="resetFano">Reset</button>
+  </div>
+  <div id="fanoStatus" class="status">Four violet points form a stopping set.
+  Every line that touches them, touches them twice. Try peeling first.</div>
+  <div class="glyph-legend">
+    <span><span class="swatch" style="background:#b789ff"></span>sealed (in the stopping set)</span>
+    <span><span class="swatch" style="background:#7fe0a0"></span>visible / named</span>
+    <span><span class="swatch" style="background:#ffc266"></span>just-named this step</span>
+    <span><span class="swatch" style="background:#7fd1ff"></span>outside bridge</span>
+  </div>
+</div>
+
+
+<h2>3. The same move</h2>
+<p>The moiré fringe and the ghost point are the same shape:</p>
+
+<div class="card">
+  <table style="width:100%;border-collapse:collapse;font-size:.95rem">
+    <thead><tr style="color:var(--dim);text-align:left">
+      <th style="padding:8px 12px;border-bottom:1px solid var(--line)">Moiré</th>
+      <th style="padding:8px 12px;border-bottom:1px solid var(--line)">Sealed set</th>
+      <th style="padding:8px 12px;border-bottom:1px solid var(--line)">What's happening</th>
+    </tr></thead>
+    <tbody>
+      <tr><td style="padding:8px 12px">Grid A</td>
+          <td style="padding:8px 12px">Field A</td>
+          <td style="padding:8px 12px;color:var(--dim)">a structure with its own internal rules</td></tr>
+      <tr><td style="padding:8px 12px">Grid B (overlaid)</td>
+          <td style="padding:8px 12px">Bridge relation</td>
+          <td style="padding:8px 12px;color:var(--dim)">a second structure that <em>relates</em> to A from outside</td></tr>
+      <tr><td style="padding:8px 12px">Fringe pattern</td>
+          <td style="padding:8px 12px">Ghost point</td>
+          <td style="padding:8px 12px;color:var(--dim)">a nameable thing that exists only in the overlay</td></tr>
+      <tr><td style="padding:8px 12px">Chip alignment / bilayer superconductivity</td>
+          <td style="padding:8px 12px">Cross-field recovery</td>
+          <td style="padding:8px 12px;color:var(--dim)">the interference does real work</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p>The paper's claim — the strong one — is that this isn't a metaphor for how
+meaning works. It's the mechanism. Interference between fields is what makes
+things nameable. Not a byproduct of two things existing. The thing itself.</p>
+
+<footer>
+  Made for Julia — from <em>The Universal Engine</em>, Sojka.
+  Everything on this page is a live construction; nothing is quoted.
+</footer>
+
+</main>
+<script>
+/* ================= MOIRÉ ================= */
+(() => {
+  const cvs = document.getElementById('moire');
+  const ctx = cvs.getContext('2d');
+  const angleEl = document.getElementById('angle');
+  const spacingEl = document.getElementById('spacing');
+  const angleVal = document.getElementById('angleVal');
+  const spacingVal = document.getElementById('spacingVal');
+  let mode = 'both'; // 'A' | 'B' | 'both'
+
+  function resize(){
+    const dpr = window.devicePixelRatio || 1;
+    const w = cvs.clientWidth, h = 420;
+    cvs.width = w * dpr; cvs.height = h * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener('resize', () => { resize(); draw(); });
+
+  function drawGrid(angleDeg, spacing, color){
+    const w = cvs.clientWidth, h = 420;
+    const cx = w/2, cy = h/2;
+    const rad = angleDeg * Math.PI / 180;
+    const diag = Math.hypot(w, h);
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rad);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for(let x = -diag; x <= diag; x += spacing){
+      ctx.moveTo(x, -diag);
+      ctx.lineTo(x,  diag);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function draw(){
+    const w = cvs.clientWidth, h = 420;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0,0,w,h);
+    const s = parseFloat(spacingEl.value);
+    const a = parseFloat(angleEl.value);
+    if(mode==='A' || mode==='both') drawGrid(0, s, 'rgba(127,209,255,0.75)');
+    if(mode==='B' || mode==='both') drawGrid(a, s, 'rgba(183,137,255,0.75)');
+    angleVal.textContent = a.toFixed(1) + '°';
+    spacingVal.textContent = s.toFixed(1);
+  }
+
+  angleEl.addEventListener('input', draw);
+  spacingEl.addEventListener('input', draw);
+  document.getElementById('showA').onclick    = () => { mode='A'; draw(); };
+  document.getElementById('showB').onclick    = () => { mode='B'; draw(); };
+  document.getElementById('showBoth').onclick = () => { mode='both'; draw(); };
+
+  resize(); draw();
+})();
+
+
+/* ================= FANO PEELING ================= */
+(() => {
+  const svg = document.getElementById('fano');
+  const NS = 'http://www.w3.org/2000/svg';
+  const status = document.getElementById('fanoStatus');
+
+  // Fano plane: 7 points arranged as vertices, edge-midpoints, centroid
+  const P = {
+    1:{x:200,y:60},   // top vertex
+    2:{x:60, y:300},  // bottom-left vertex
+    3:{x:340,y:300},  // bottom-right vertex
+    4:{x:130,y:180},  // mid(1,2)
+    5:{x:270,y:180},  // mid(1,3)
+    6:{x:200,y:300},  // mid(2,3)
+    7:{x:200,y:220},  // centroid
+  };
+  // 7 lines: 3 triangle edges + 3 medians + 1 incircle
+  const LINES = [
+    {kind:'seg', pts:[1,4,2]},
+    {kind:'seg', pts:[1,5,3]},
+    {kind:'seg', pts:[2,6,3]},
+    {kind:'seg', pts:[1,7,6]},
+    {kind:'seg', pts:[2,7,5]},
+    {kind:'seg', pts:[3,7,4]},
+    {kind:'circ',pts:[4,5,6], cx:200, cy:220, r:82},
+  ];
+
+  // Stopping set (complement of line {1,7,6}):
+  const SEALED_INIT = new Set([2,3,4,5]);
+
+  // Bridge singles out point 2. Then cascade recovers 3,4,5.
+  const BRIDGE_POINT = 2;
+  const BRIDGE = {x:0, y:340}; // outside point
+
+  let sealed = new Set(SEALED_INIT);       // still-erased points
+  let justNamed = new Set();               // amber flash this step
+  let named = new Set();                   // recovered (green)
+  let bridged = false;
+
+  function reset(){
+    sealed = new Set(SEALED_INIT);
+    justNamed.clear(); named.clear();
+    bridged = false;
+    setStatus('stuck', 'Four violet points form a stopping set. Every line that touches them, touches them twice. Try peeling first.');
+    render();
+  }
+
+  function setStatus(cls, msg){
+    status.className = 'status ' + cls;
+    status.textContent = msg;
+  }
+
+  // vote(X): points singled out by some line intersecting X in exactly one point,
+  // where X is the current sealed set.
+  function computeVote(){
+    const singles = new Set();
+    for(const L of LINES){
+      const hit = L.pts.filter(p => sealed.has(p));
+      if(hit.length === 1) singles.add(hit[0]);
+    }
+    return singles;
+  }
+
+  function peelStep(){
+    const vote = computeVote();
+    if(vote.size === 0){
+      if(sealed.size > 0){
+        setStatus('stuck', 'Peeling halts. No line touches the sealed set in exactly one point — every relation points at the group collectively, not at any member. Nothing inside can name anything.');
+      } else {
+        setStatus('win', 'Field fully recovered. Every point named.');
+      }
+      return false;
+    }
+    justNamed = vote;
+    for(const p of vote){ sealed.delete(p); named.add(p); }
+    return true;
+  }
+
+  function doBridge(){
+    if(bridged) return;
+    bridged = true;
+    // The bridge is a relation from outside that touches the sealed set
+    // in exactly one point — BRIDGE_POINT — singling it out.
+    justNamed = new Set([BRIDGE_POINT]);
+    sealed.delete(BRIDGE_POINT);
+    named.add(BRIDGE_POINT);
+    setStatus('ok', 'Bridge from outside singles out point ' + BRIDGE_POINT + '. It is now named — not by any internal rule, but by its relation to the outside. Watch what happens next…');
+    render();
+    // Cascade after a beat
+    setTimeout(() => {
+      const ok = peelStep();
+      if(ok){
+        setStatus('win', 'Cascade: with point ' + BRIDGE_POINT + ' named, three internal lines now touch the remaining sealed set in exactly one place each. All three points fall in a single step. These are ghosts — nameable only through the outside bridge.');
+      }
+      render();
+    }, 900);
+  }
+
+  function tryPeel(){
+    justNamed.clear();
+    const ok = peelStep();
+    render();
+  }
+
+  // -------- rendering --------
+  function render(){
+    svg.innerHTML = '';
+    // draw lines first (behind points)
+    for(const L of LINES){
+      if(L.kind === 'seg'){
+        const [a,b,c] = L.pts;
+        const path = document.createElementNS(NS,'line');
+        path.setAttribute('x1', P[a].x); path.setAttribute('y1', P[a].y);
+        path.setAttribute('x2', P[c].x); path.setAttribute('y2', P[c].y);
+        path.setAttribute('stroke', '#2a2f36');
+        path.setAttribute('stroke-width', '2');
+        svg.appendChild(path);
+      } else {
+        const c = document.createElementNS(NS,'circle');
+        c.setAttribute('cx', L.cx); c.setAttribute('cy', L.cy);
+        c.setAttribute('r', L.r);
+        c.setAttribute('fill','none');
+        c.setAttribute('stroke','#2a2f36');
+        c.setAttribute('stroke-width','2');
+        svg.appendChild(c);
+      }
+    }
+
+    // if bridged, draw bridge line + external point
+    if(bridged){
+      const b = document.createElementNS(NS,'line');
+      b.setAttribute('x1', BRIDGE.x); b.setAttribute('y1', BRIDGE.y);
+      b.setAttribute('x2', P[BRIDGE_POINT].x); b.setAttribute('y2', P[BRIDGE_POINT].y);
+      b.setAttribute('stroke','#7fd1ff');
+      b.setAttribute('stroke-width','2.5');
+      b.setAttribute('stroke-dasharray','6 4');
+      svg.appendChild(b);
+      const bp = document.createElementNS(NS,'circle');
+      bp.setAttribute('cx', BRIDGE.x); bp.setAttribute('cy', BRIDGE.y);
+      bp.setAttribute('r', 8);
+      bp.setAttribute('fill', '#7fd1ff');
+      svg.appendChild(bp);
+      const bt = document.createElementNS(NS,'text');
+      bt.setAttribute('x', BRIDGE.x); bt.setAttribute('y', BRIDGE.y+22);
+      bt.setAttribute('text-anchor','middle');
+      bt.setAttribute('fill','#7fd1ff');
+      bt.setAttribute('font-size','11');
+      bt.textContent = 'outside';
+      svg.appendChild(bt);
+    }
+
+    // draw points
+    for(let i=1;i<=7;i++){
+      const p = P[i];
+      const c = document.createElementNS(NS,'circle');
+      c.setAttribute('cx', p.x); c.setAttribute('cy', p.y);
+      c.setAttribute('r', 11);
+      let fill = '#7fe0a0'; // green = named/visible by default
+      if(sealed.has(i)) fill = '#b789ff'; // violet = sealed
+      if(justNamed.has(i)) fill = '#ffc266'; // amber = just-named
+      if(named.has(i) && !justNamed.has(i)) fill = '#7fe0a0';
+      c.setAttribute('fill', fill);
+      c.setAttribute('stroke', '#0b0d10');
+      c.setAttribute('stroke-width', '2');
+      svg.appendChild(c);
+      const t = document.createElementNS(NS,'text');
+      t.setAttribute('x', p.x); t.setAttribute('y', p.y+4);
+      t.setAttribute('text-anchor','middle');
+      t.setAttribute('fill','#0b0d10');
+      t.setAttribute('font-size','11');
+      t.setAttribute('font-weight','700');
+      t.textContent = i;
+      svg.appendChild(t);
+    }
+  }
+
+  document.getElementById('peel').onclick = tryPeel;
+  document.getElementById('bridge').onclick = doBridge;
+  document.getElementById('resetFano').onclick = reset;
+
+  reset();
+})();
+</script>
+</body>
+</html>

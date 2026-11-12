@@ -1,0 +1,55 @@
+<section class="page" id="page-quickstart" data-title="Quickstart" data-num="03" hidden>
+<aside class="notes">
+<div class="note-id">Chapter / 03</div>
+<h1>Quickstart</h1>
+<div class="intro"><p>Three readers, three paths. Each ends at the same place: a turn written into the record.</p></div>
+<nav class="page-links" aria-label="In Quickstart"><a href="#quickstart/user"><span>01</span>As a user</a><a href="#quickstart/developer"><span>02</span>As a developer</a><a href="#quickstart/model"><span>03</span>As a model on the record</a><a href="#quickstart/environment"><span>04</span>Environment</a></nav>
+<div class="takeaways"><h4>Key takeaways</h4><ol><li>Model and effort are chosen in the sidebar and apply from the next message.</li><li>The scanner is a command-line tool as well: any file → HELIX, no model needed.</li><li>A model attached to the record should read the preamble as peripheral vision and pull strands before asserting the past.</li></ol></div>
+<div class="release"><span class="mono">BUILD 2.2.58 · SOURCE cbf4e42</span><br><a href="#evidence/what-was-read">Evidence register ↗</a><a href="#glossary">Glossary ↗</a></div>
+</aside>
+<div class="main"><article class="article">
+<h2 id="quickstart/user"><a class="section-anchor" href="#quickstart/user">As a user</a></h2>
+<ol>
+<li><b>Open the app.</b> A local server starts in a thread and a native window opens on it. The boot overlay runs until the account's HELIX is loaded. <span class="cite">desktop/ · app.js showBootOverlay</span></li>
+<li><b>Sign in.</b> The account's HELIX opens and a session is created on it. Only a 401 signs you out again. <span class="tag o">OBSERVED</span> 2.2.42</li>
+<li><b>Pick a model and effort</b> in the sidebar, or keep the defaults (<span class="mono">claude-fable-5-1</span>; effort <span class="mono">xhigh</span> since 2.2.57 <span class="tag o">OBSERVED</span>). Both apply from the next message. <span class="cite">app.js MG_DEFAULT_MODEL</span></li>
+<li><b>Type.</b> Enter sends. While the model is working, Enter sends an <em>aside</em>, delivered at the next tool boundary. <span class="cite">index.html .chat-input-row · app.js</span></li>
+<li><b>Drop files</b> to upload; the file appears under <b>Input</b> and a file-event strand is written.</li>
+<li><b>Mount a folder</b> (the folder row in the sidebar) to let the model read and write your files; a <b>Scan folder</b> button appears beside the Scanner.</li>
+<li><b>Toggle advanced mode</b> (gauge icon, top right) to see Tokens, <span style="white-space:nowrap">H<sub>t</sub></span>, Respiration, Ø and HELIX. Normal mode hides them. <span class="cite">app.css:100</span></li>
+</ol>
+<figure class="plate" id="fig-07"><figcaption><span class="fig-id">FIG. 07</span><h3>The shipped screen, normal mode</h3></figcaption><div class="figure-body flat"><button class="zoom" data-full="app-normal" style="width:100%;padding:0;border:0;background:none"><img class="shot" src="{{IMG_APP_NORMAL}}" alt="Mindgut application, normal mode, dark theme: chat on the left with a synthetic Packaging review conversation, sidebar on the right with account, model and effort menus, folder, scanner, to-do, output, drafts and input panels"></button></div><div class="figure-note">Offline rendering of the shipped <span class="mono">index.html</span> + <span class="mono">app.css</span> with scripts removed and synthetic content. Not a live session. Click to enlarge. <span class="tag m">MEASURED</span> fixture, 1280×850 @2×</div></figure>
+<h2 id="quickstart/developer"><a class="section-anchor" href="#quickstart/developer">As a developer</a></h2>
+<pre><code>git clone <public repository>  # The-Impossible-Outcomes-Co/mindgut @ cbf4e42; lags the build (chapter 10)
+pip install -e ".[desktop]"
+export ANTHROPIC_API_KEY=…
+python -m mindgut.server        # web, :8080
+
+MINDGUT_DESKTOP=1 MINDGUT_MOUNT_ROOT=~/work \
+python -m mindgut.desktop       # native window on the local server
+
+# any file → HELIX, no model
+python -m mindgut.engine.scanner in.pdf out_HELIX.json</code></pre>
+<p class="quiet"><span class="cite">pyproject.toml [project.scripts] · config.py</span></p>
+<p>What a change touches:</p>
+<div class="table-scroll"><table><thead><tr><th>To change…</th><th>Edit</th><th>Then check</th></tr></thead><tbody>
+<tr><td>How many exchanges stay in context</td><td><span class="mono">config.py N, SHEAR_EXHALE</span></td><td>The Respiration panel; the ledger shows what was shed</td></tr>
+<tr><td>Which strands the preamble picks</td><td><span class="mono">assembly/recall.py select_strands</span></td><td>The recall ledger, one line per turn</td></tr>
+<tr><td>What the summary strand records</td><td><span class="mono">engine/crystallizer_v2.py</span></td><td>Open the HELIX; the last two strands</td></tr>
+<tr><td>Add a model to the roster</td><td><span class="mono">app.js MG_MODEL_GROUPS</span> (one line) + the provider adapter in the compiled server <span class="tag o">OBSERVED</span></td><td>The sidebar select; <span class="mono">POST /session/{id}/model</span></td></tr>
+<tr><td>A tool's schema or cap</td><td><span class="mono">server/tool_defs.py</span></td><td>The tool list the model receives at boot</td></tr>
+</tbody></table></div>
+<h2 id="quickstart/model"><a class="section-anchor" href="#quickstart/model">As a model on the record</a></h2>
+<p>The preamble is involuntary and partial. The record is the source of truth. Before asserting anything about the past:</p>
+<ol><li><span class="mono">read_field()</span> before any self-description, so the numbers are measured rather than estimated.</li><li><span class="mono">pull_memory(reach=…)</span> for conceptual recall; read the <b>a / b</b> header before the crossings (<b>a</b> = strands where the user wrote the concept, <b>b</b> = strands where the model did). <b>a = 0, b &gt; 0</b> is something the model said and the user never did.</li><li><span class="mono">pull_memory(sequence_id=N, count=K)</span> for the neighbourhood of a strand.</li><li><span class="mono">pull_memory(grep=…)</span> when attribution matters.</li><li>For files, the file tools: the record holds what was said about a file, not the file.</li></ol>
+<div class="note">Signal the kind of recall. "In the last few turns you said…" (context), "the record has…" (pulled on purpose), "the preamble surfaced…" (involuntary). The three have different reliability and the reader deserves to know which. <span class="tag o">OBSERVED</span></div>
+<h2 id="quickstart/environment"><a class="section-anchor" href="#quickstart/environment">Environment</a></h2>
+<div class="table-scroll"><table><thead><tr><th>Variable</th><th>Effect</th><th>Status</th></tr></thead><tbody>
+<tr><td><span class="mono">ANTHROPIC_API_KEY</span></td><td>Required for the public source's one vendor</td><td><span class="tag">SOURCE</span></td></tr>
+<tr><td><span class="mono">MINDGUT_DATA_DIR</span></td><td>Per-user data directories</td><td><span class="tag">SOURCE</span></td></tr>
+<tr><td><span class="mono">MINDGUT_GEOMETRY</span></td><td>Path to the PFD book used for bridges and <span class="mono">pull_strand</span></td><td><span class="tag">SOURCE</span></td></tr>
+<tr><td><span class="mono">MINDGUT_DESKTOP</span> · <span class="mono">MINDGUT_MOUNT_ROOT</span></td><td>Local tools; the mounted folder root</td><td><span class="tag">SOURCE</span></td></tr>
+<tr><td>Other vendors' keys</td><td>How 2.2.58 reaches ChatGPT, Gemini and Grok models</td><td>Not in public source. <span class="tag o">OBSERVED</span></td></tr>
+</tbody></table></div>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#concepts"><small>Previous</small>Concepts</a><a href="#architecture"><small>Next</small>Architecture →</a></nav>
+</article></div></section>

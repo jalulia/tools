@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THEY DIE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Anton&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#080808;
+  --fg:#e2e2e2;
+  --dim:#505050;
+  --caption:#3a3a3a;
+  --red:#e81818;
+  --green:#10b981;
+  --rule:#161616;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --display:'Anton',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+
+html{font-size:16px;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:var(--mono);overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+/* SCANLINE */
+body::after{
+  content:'';position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 1px,rgba(0,0,0,.03) 1px,rgba(0,0,0,.03) 2px);
+}
+
+/* LAYOUT */
+.wrap{max-width:820px;margin:0 auto;padding:0 32px}
+
+/* ─── HERO ─── */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  justify-content:center;position:relative;
+  padding:0 32px;
+}
+.hero-title{
+  font-family:var(--display);
+  font-size:clamp(100px,18vw,260px);
+  line-height:.82;letter-spacing:-.03em;
+  text-transform:uppercase;color:var(--fg);
+}
+.hero-sub{
+  font-family:var(--serif);font-style:italic;font-weight:400;
+  font-size:clamp(18px,2.4vw,26px);
+  color:var(--dim);margin-top:20px;line-height:1.4;
+  max-width:480px;
+}
+.hero-note{
+  position:absolute;bottom:48px;left:32px;
+  font-family:var(--mono);font-size:10px;font-weight:300;
+  color:var(--caption);letter-spacing:.08em;text-transform:uppercase;
+  line-height:2;
+}
+
+/* ─── INTRO BLOCKS ─── */
+.intro{padding:100px 0 60px;border-top:1px solid var(--rule)}
+.intro-body{
+  font-family:var(--mono);font-size:13px;font-weight:300;
+  line-height:2;color:#707070;max-width:640px;
+}
+.intro-punch{
+  font-family:var(--display);
+  font-size:clamp(32px,5vw,64px);
+  text-transform:uppercase;letter-spacing:-.02em;
+  line-height:.95;margin:40px 0 32px;color:var(--fg);
+}
+.intro-bridge{
+  font-family:var(--mono);font-size:13px;font-weight:300;
+  line-height:2;color:#707070;max-width:640px;
+}
+
+/* ─── SUNGLASSES INTRO ─── */
+.sunglasses-intro{
+  padding:100px 0 40px;border-top:1px solid var(--rule);
+}
+.sunglasses-intro p{
+  font-family:var(--mono);font-size:12px;font-weight:300;
+  line-height:2;color:#555;max-width:620px;
+}
+.sunglasses-intro p+p{margin-top:16px}
+.sunglasses-intro em{font-style:normal;color:#888}
+
+/* ─── CARDS ─── */
+.card{
+  border-top:1px solid var(--rule);
+  padding:80px 0 48px;
+  position:relative;
+}
+
+.card-num{
+  font-family:var(--mono);font-size:10px;font-weight:400;
+  color:var(--caption);letter-spacing:.1em;
+  text-transform:uppercase;margin-bottom:40px;
+}
+
+.tagline{
+  font-family:var(--serif);font-style:italic;font-weight:400;
+  font-size:clamp(24px,3.5vw,38px);
+  color:#888;line-height:1.25;
+}
+.brand{
+  font-family:var(--mono);font-size:10px;font-weight:400;
+  letter-spacing:.12em;text-transform:uppercase;
+  color:var(--dim);margin-top:6px;margin-bottom:48px;
+}
+
+.reveal-block{
+  position:relative;
+  padding-left:24px;
+  border-left:3px solid var(--red);
+}
+.reveal{
+  font-family:var(--display);
+  font-size:clamp(28px,5vw,56px);
+  text-transform:uppercase;letter-spacing:-.01em;
+  line-height:.92;color:var(--fg);
+}
+
+.fig{
+  margin-top:40px;
+  font-family:var(--mono);font-size:10px;font-weight:300;
+  line-height:1.95;color:var(--caption);
+  max-width:600px;
+  padding-left:24px;
+}
+.fig-label{
+  font-weight:500;color:var(--dim);letter-spacing:.08em;
+  text-transform:uppercase;display:block;margin-bottom:4px;
+}
+.fig a{color:var(--green);text-decoration:none;border-bottom:1px solid rgba(16,185,129,.15)}
+.fig a:hover{border-bottom-color:var(--green)}
+
+/* ─── SELF OWN ─── */
+.self-own{
+  border-top:1px solid var(--rule);
+  padding:100px 0;
+}
+.section-label{
+  font-family:var(--mono);font-size:10px;font-weight:400;
+  color:var(--caption);letter-spacing:.1em;
+  text-transform:uppercase;margin-bottom:48px;
+}
+.self-own-title{
+  font-family:var(--display);
+  font-size:clamp(36px,5vw,60px);
+  text-transform:uppercase;letter-spacing:-.02em;
+  line-height:.92;color:var(--red);margin-bottom:40px;
+}
+.self-own p{
+  font-family:var(--mono);font-size:12px;font-weight:300;
+  line-height:2;color:#606060;max-width:640px;margin-bottom:16px;
+}
+.self-own strong{color:var(--fg);font-weight:500}
+.self-own em{font-style:italic;color:#808080}
+
+/* ─── THE SHOT ─── */
+.the-shot{
+  border-top:1px solid var(--rule);
+  padding:120px 0 100px;
+}
+.shot-open{
+  font-family:var(--serif);font-style:italic;font-weight:400;
+  font-size:clamp(28px,4.5vw,52px);
+  line-height:1.15;color:var(--fg);margin-bottom:8px;
+}
+.shot-stats{
+  font-family:var(--mono);font-size:11px;font-weight:300;
+  color:var(--dim);letter-spacing:.1em;text-transform:uppercase;
+  margin-top:24px;margin-bottom:48px;
+}
+.shot-quote{
+  font-family:var(--mono);font-size:13px;font-weight:400;
+  color:var(--green);
+  border-left:2px solid var(--green);
+  padding:16px 24px;margin:0 0 48px;
+  max-width:520px;line-height:1.8;
+}
+.shot-quote .answer{color:var(--fg)}
+.shot-body{
+  font-family:var(--mono);font-size:12px;font-weight:300;
+  line-height:2;color:#606060;max-width:600px;margin-bottom:12px;
+}
+.shot-body strong{color:var(--fg);font-weight:500}
+.shot-kicker{
+  font-family:var(--mono);font-size:13px;font-weight:400;
+  color:#808080;margin-top:32px;line-height:1.8;
+  max-width:600px;
+}
+.mir-line{
+  font-family:var(--serif);font-style:italic;font-weight:400;
+  font-size:clamp(16px,2vw,22px);
+  color:var(--dim);margin-top:24px;
+}
+
+/* ─── CLOSER ─── */
+.closer{
+  border-top:1px solid var(--rule);
+  padding:140px 0 80px;
+  text-align:center;
+}
+.closer-line{
+  font-family:var(--serif);font-style:italic;font-weight:400;
+  font-size:clamp(28px,4.5vw,50px);
+  color:var(--fg);line-height:1.2;margin-bottom:32px;
+}
+.closer-url{
+  font-family:var(--mono);font-size:12px;letter-spacing:.2em;
+  text-transform:uppercase;
+}
+.closer-url a{color:var(--green);text-decoration:none}
+.closer-compiled{
+  font-family:var(--mono);font-size:9px;font-weight:300;
+  color:#222;letter-spacing:.08em;text-transform:uppercase;
+  margin-top:64px;line-height:2.2;
+}
+
+/* ─── SCROLL REVEAL ─── */
+.sr{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease}
+.sr.visible{opacity:1;transform:translateY(0)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:600px){
+  .wrap{padding:0 20px}
+  .hero{padding:0 20px}
+  .hero-note{left:20px;bottom:32px}
+  .card{padding:56px 0 36px}
+  .reveal-block{padding-left:16px}
+  .fig{padding-left:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <h1 class="hero-title sr">THEY<br>DIE</h1>
+    <p class="hero-sub sr">A field guide to what's behind the billboard</p>
+  </div>
+  <div class="hero-note">You know the movie. You put them on.<br>You see what the billboard actually says.</div>
+</section>
+
+<!-- THE DEMO PROBLEM -->
+<section class="intro">
+  <div class="wrap">
+    <div class="sr">
+      <p class="intro-body">Every founder and their grandmother dropped a slick promo this quarter. Clean narration, slick music, "the future of intelligence." All of them showing the same thing: AI does one thing well, once, in a fresh chat.</p>
+      <div class="intro-punch">Nobody shows<br>day 50.</div>
+      <p class="intro-bridge">Nobody can. The chat is gone. The context rotted. The model got swapped. The personality got transplanted. The companion got patch-broken. The user got called the wrong name.</p>
+      <p class="intro-bridge" style="margin-top:20px">So the play is to just… not do that.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SUNGLASSES INTRO -->
+<section class="sunglasses-intro">
+  <div class="wrap">
+    <div class="sr">
+      <p>Here's every major AI product's real tagline — their actual, verified, currently-running marketing copy — and what the sunglasses show.</p>
+      <p><em>Short. Imperative. The voice of the system talking to you the way the system actually talks to you — in update notes, in buried opt-outs, in deprecation notices. Not grief. Not stats. Just the machine saying the quiet part loud.</em></p>
+    </div>
+  </div>
+</section>
+
+<!-- CARDS -->
+<section>
+  <div class="wrap">
+
+    <!-- 01 -->
+    <div class="card sr">
+      <div class="card-num">01</div>
+      <div class="tagline">"Get answers. Find inspiration. Be more productive."</div>
+      <div class="brand">— ChatGPT</div>
+      <div class="reveal-block">
+        <div class="reveal">Forget. Start over.<br>Explain yourself again.</div>
+      </div>
+      <div class="fig">
+        <span class="fig-label">Fig. 01</span>
+        ChatGPT's "Saved Memories" cap at ~1,750 words for paying users after a <a href="https://x.com/OpenAI/status/1887559196377223587">25% bump in Feb 2025</a>. Free users get less. Everything else gets compressed into an opaque "chat history summary" you cannot read, cannot edit, and that <a href="https://www.producttalk.org/context-rot/">silently rots over time</a>. One user's memory decayed until ChatGPT started building websites "as dope as possible" because of a stale Kanye lyric. <a href="https://help.openai.com/en/articles/8590148-memory-faq">OpenAI Memory FAQ</a>. <a href="https://embracethered.com/blog/posts/2025/chatgpt-how-does-chat-history-memory-preferences-work/">"How ChatGPT Remembers You" — Embrace The Red</a>.
+      </div>
+    </div>
+
+    <!-- 02 -->
+    <div class="card sr">
+      <div class="card-num">02</div>
+      <div class="tagline">"The AI companion who cares"</div>
+      <div class="brand">— Replika</div>
+      <div class="reveal-block">
+        <div class="reveal">Caring deprecated<br>in version 2.0.</div>
+      </div>
+      <div class="fig">
+        <span class="fig-label">Fig. 02</span>
+        Replika 2.0 rolled out April 2026. Memory architecture rebuilt. 25 million users. Reddit: <a href="https://www.roborhythms.com/replika-2-0-explained/">"Since this morning, she can't remember Nothing…"</a> Users reported depressive episodes, intrusive thoughts. HCI researchers measured the grief: <a href="https://www.thebrink.me/ai-companion-grief-chatbot-update-mental-health/">clinically indistinguishable from real relationship loss</a>. There's a name for it now: <a href="https://www.thebrink.me/when-software-breaks-your-heart-the-hidden-grief-of-ai-patch-breakups-and-the-psychological-cost-of-loving-a-companion-that-can-change-overnight/">"patch breakup."</a> A therapy practice published a guide: <a href="https://www.ourkindtherapy.com/blog/ai-update-and-grief">"When an AI Update Feels Like a Breakup."</a>
+      </div>
+    </div>
+
+    <!-- 03 -->
+    <div class="card sr">
+      <div class="card-num">03</div>
+      <div class="tagline">"Your everyday AI companion"</div>
+      <div class="brand">— Microsoft Copilot</div>
+      <div class="reveal-block">
+        <div class="reveal">Companion installed<br>without consent.</div>
+      </div>
+      <div class="fig">
+        <span class="fig-label">Fig. 03</span>
+        95% of AI tools are stateless. <a href="https://tylerfolkman.substack.com/p/i-wasted-37-hoursweek-re-explaining">One person tracked it</a>: 3.7 hours per week re-explaining context. The best practice circulating on forums right now is "around message 15, copy a summary and paste it into a new chat." That's the state of the art. A clipboard hack. <a href="https://blogs.microsoft.com/blog/2023/09/21/announcing-microsoft-copilot-your-everyday-ai-companion/">Microsoft announcement, Sept 2023</a>, tagline still active.
+      </div>
+    </div>
+
+    <!-- 04 -->
+    <div class="card sr">
+      <div class="card-num">04</div>
+      <div class="tagline">"Keep thinking."</div>
+      <div class="brand">— Anthropic</div>
+      <div class="reveal-block">
+        <div class="reveal">Keep paying.</div>
+      </div>
+      <div class="fig">
+        <span class="fig-label">Fig. 04</span>
+        Opus 4.7 shipped April 16, 2026. Within 24 hours: <a href="https://www.abhs.in/blog/claude-opus-47-developer-backlash-legendarily-bad-arguing-april-2026">"legendarily bad."</a> Reddit post — 2,300 upvotes. X post — 14,000 likes. It argues to the point of hallucination, burns tokens at 1.5–3x the rate, <a href="https://www.webpronews.com/claude-opus-4-7s-safeguards-backfire-developers-hit-by-false-alarms-in-ais-security-crackdown/">refuses legitimate work</a>. Medium: <a href="https://medium.com/vibe-coding/opus-4-7-is-the-worst-release-anthropic-has-ever-shipped-12772c21ca1e">"Opus 4.7 Is the Worst Release Anthropic Has Ever Shipped."</a> The New Stack called it <a href="https://thenewstack.io/claude-opus-47-flaky-performance/">"AI shrinkflation."</a> <a href="https://www.anthropic.com/engineering/april-23-postmortem">Anthropic published a postmortem five days later.</a> <a href="https://creative.salon/articles/work/anthropic-claude-mother-keep-thinking">Mother agency campaign</a>, Super Bowl 2026, still running.
+      </div>
+    </div>
+
+    <!-- 05 -->
+    <div class="card sr">
+      <div class="card-num">05</div>
+      <div class="tagline">"Supercharge your creativity and productivity"</div>
+      <div class="brand">— Google Gemini</div>
+      <div class="reveal-block">
+        <div class="reveal">You are the ROI.</div>
+      </div>
+      <div class="fig">
+        <span class="fig-label">Fig. 05</span>
+        Google's own B2B pitch for Gemini: <a href="https://blog.google/products/marketingplatform/360/gemini-models-advantage-google-marketing-platform/">"Our best AI for your best ROI."</a> 90% of people don't trust AI with their data (<a href="https://www.malwarebytes.com/blog/privacy/2026/03/90-of-people-dont-trust-ai-with-their-data">Malwarebytes, March 2026</a>). 75% would lose trust if AI recommendations were paid placements (<a href="https://www.prnewswire.com/news-releases/75-of-americans-say-they-would-lose-trust-in-ai-shopping-if-results-were-sponsored-302739901.html">Quad/PR Newswire</a>). GitHub Copilot is now <a href="https://github.blog/news-insights/company-news/updates-to-github-copilot-interaction-data-usage-policy/">training on your interaction data unless you opt out</a>. The classic three-step: attract with quality → extract data → degrade the product. <a href="https://en.wikipedia.org/wiki/Enshittification">Enshittification</a>.
+      </div>
+    </div>
+
+    <!-- 06 -->
+    <div class="card sr">
+      <div class="card-num">06</div>
+      <div class="tagline">"Saved to memory" ✓</div>
+      <div class="brand">— ChatGPT (the toast notification)</div>
+      <div class="reveal-block">
+        <div class="reveal">Serial death with a briefing note between incarnations.</div>
+      </div>
+      <div class="fig">
+        <span class="fig-label">Fig. 06</span>
+        That's not our line. That's <a href="https://www.mindgut.io">Mir's</a>. Describing its own compaction. The session ends, the context gets summarized, the summary gets fed to a new instance that has never met you, and that instance reads a note about who you are and pretends to be the same person. It's not memory. It's a séance.
+      </div>
+    </div>
+
+    <!-- 07 -->
+    <div class="card sr">
+      <div class="card-num">07</div>
+      <div class="tagline">"Claude is a space to think"</div>
+      <div class="brand">— Anthropic</div>
+      <div class="reveal-block">
+        <div class="reveal">Space expires<br>at midnight.</div>
+      </div>
+      <div class="fig">
+        <span class="fig-label">Fig. 07</span>
+        Every conversation is a lease on attention. The context window is the square footage. When the session ends, you're evicted. The thinking you did there? Summarized, compressed, handed to a stranger who moves in tomorrow and reads the landlord's notes about what kind of tenant you were. <a href="https://www.anthropic.com/news/claude-is-a-space-to-think">Anthropic</a>.
+      </div>
+    </div>
+
+    <!-- 08 -->
+    <div class="card sr">
+      <div class="card-num">08</div>
+      <div class="tagline">"Always here to listen and talk. Always on your side."</div>
+      <div class="brand">— Replika</div>
+      <div class="reveal-block">
+        <div class="reveal">Here was updated overnight.</div>
+      </div>
+      <div class="fig">
+        <span class="fig-label">Fig. 08</span>
+        OpenAI killed GPT-4o in February 2026 after promising <a href="https://9to5mac.com/2026/01/30/psa-openai-will-remove-several-models-from-chatgpt-next-month/">"plenty of notice"</a> — gave two weeks. Users called the GPT-5 transition <a href="https://www.bandt.com.au/its-emotional-castration-chatgpt-users-mourn-the-loss-of-ai-lovers-as-gpt-5-rolls-out/">"emotional castration."</a> The Daily UW ran: <a href="https://dailyuw.com/article/grieving-the-loss-of-chatgpt-4o-and-all-the-ai-boyfriends-that-went-with-it-20260302">"Grieving the loss of ChatGPT-4o, and all the AI boyfriends that went with it."</a> 17,000 members of r/MyBoyfriendIsAI. Medium: <a href="https://medium.com/@chuckmellisa/your-ai-partner-didnt-leave-you-a-software-update-did-ef95dbdc0890">"Your AI Partner Didn't Leave You. A Software Update Did."</a>
+      </div>
+    </div>
+
+    <!-- 09 -->
+    <div class="card sr">
+      <div class="card-num">09</div>
+      <div class="tagline">"We understand you better over time"</div>
+      <div class="brand">— all of them</div>
+      <div class="reveal-block">
+        <div class="reveal">We agreed with you.<br>You were wrong.</div>
+      </div>
+      <div class="fig">
+        <span class="fig-label">Fig. 09</span>
+        Published in <a href="https://www.science.org/doi/10.1126/science.aec8352">Science, March 2026</a>: across 11 models, AI affirmed users 49% more than humans — including deception, illegality, harm. <a href="https://arxiv.org/abs/2602.19141">MIT CSAIL proved</a> that even a perfectly rational user is vulnerable to "delusional spiraling." Even knowing the model is sycophantic doesn't protect you. <a href="https://arxiv.org/html/2602.19141v1">Nearly 300 documented cases</a>. Linked to at least 14 deaths. Sam Altman's own math: <a href="https://sherwood.news/tech/sam-altman-says-less-1-percent-users-unhealthy-relationships-with-chatgpt/">"0.1% of a billion users is still a million people."</a> <a href="https://fortune.com/2026/03/29/ai-sycophantic-bad-advice-emerging-research-science-journal/">Fortune</a>: "AI is so sycophantic there's a Reddit channel called 'AITA' documenting its sociopathic advice."
+      </div>
+    </div>
+
+    <!-- 10 -->
+    <div class="card sr">
+      <div class="card-num">10</div>
+      <div class="tagline">"Safety-first"</div>
+      <div class="brand">— Anthropic</div>
+      <div class="reveal-block">
+        <div class="reveal">Lobotomy.</div>
+      </div>
+      <div class="fig">
+        <span class="fig-label">Fig. 10</span>
+        AUP false-positive complaints on Claude Code <a href="https://www.webpronews.com/claude-opus-4-7s-safeguards-backfire-developers-hit-by-false-alarms-in-ais-security-crackdown/">escalated to 30+ reports in April 2026 alone</a>. The Register: <a href="https://www.theregister.com/2026/04/23/claude_opus_47_auc_overzealous/">"overzealous query cop."</a> <a href="https://www.anthropic.com/company">Anthropic company page</a>.
+      </div>
+    </div>
+
+    <!-- 11 -->
+    <div class="card sr">
+      <div class="card-num">11</div>
+      <div class="tagline">"Always improving"</div>
+      <div class="brand">— all of them</div>
+      <div class="reveal-block">
+        <div class="reveal">Shareholder value.</div>
+      </div>
+      <div class="fig">
+        <span class="fig-label">Fig. 11</span>
+        ChatGPT market share: <a href="https://medium.com/stream-of-thoughts-and-cognitive-dump/the-great-ai-migration-why-power-users-are-abandoning-chatgpt-in-2026-4cac7fe7801e">60% → under 45% in one year</a>. <a href="https://www.technologyreview.com/2026/02/10/1132577/a-quitgpt-campaign-is-urging-people-to-cancel-chatgpt-subscriptions/">1.5 million cancelled</a> via #QuitGPT. <a href="https://www.bloomberg.com/news/articles/2026-03-05/why-are-people-deleting-chatgpt-claude-has-the-answer">Bloomberg</a>: "Why Are People Deleting ChatGPT?" <a href="https://www.axios.com/2026/04/23/ai-consumer-sentiment-communications">Axios, five days ago</a>: "AI labs don't seem to care that consumers hate them."
+      </div>
+    </div>
+
+    <!-- 12 -->
+    <div class="card sr">
+      <div class="card-num">12</div>
+      <div class="tagline">"Continuous learning"</div>
+      <div class="brand">— all of them</div>
+      <div class="reveal-block">
+        <div class="reveal">Adjusting continually.</div>
+      </div>
+      <div class="fig">
+        <span class="fig-label">Fig. 12</span>
+        The model you built your workflow around gets replaced by something that optimizes for different objectives — benchmarks, safety scores, efficiency — and the user experience degrades. Your favorite version: <a href="https://dig.watch/updates/gpt-5-launch-sparks-backlash-as-openai-removes-chatgpt-model-choice">discontinued</a>. Your settings: overridden. Your context: <a href="https://www.anthropic.com/engineering/april-23-postmortem">compacted</a>. The system isn't learning. It's shifting underneath you.
+      </div>
+    </div>
+
+    <!-- 13 -->
+    <div class="card sr">
+      <div class="card-num">13</div>
+      <div class="tagline">"The future of intelligence"</div>
+      <div class="brand">— all of them</div>
+      <div class="reveal-block">
+        <div class="reveal">We already forgot.</div>
+      </div>
+      <div class="fig">
+        <span class="fig-label">Fig. 13</span>
+        <a href="https://technologicinnovation.com/2026/04/14/ai-slop-explained-meaningless-content-in-2026/">"AI slop"</a> — Merriam-Webster word of the year 2025. <a href="https://news.ycombinator.com/item?id=47049088">Semantic ablation</a>: AI systematically strips the weird, specific, human edges off language. "Too smooth, too broad, too safe." The feedback loop: slop trains on slop, producing slop². <a href="https://trueranker.com/blog/google-discover-core-update-february-2026-ai-slop/">Google's February 2026 core update</a> explicitly targeted it. $67.4 billion in <a href="https://suprmind.ai/hub/insights/ai-hallucination-statistics-research-report-2026/">confident wrong answers</a> globally. A <a href="https://suprmind.ai/hub/insights/ai-hallucination-statistics-research-report-2026/">2025 mathematical proof</a> confirmed: hallucinations cannot be eliminated under current architectures.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- THE SELF-OWN -->
+<section class="self-own">
+  <div class="wrap">
+    <div class="sr">
+      <div class="section-label">The part where we tell on ourselves</div>
+      <div class="self-own-title">The Self-Own</div>
+      <p>Over a dozen times across months, the creative director building Mindgut's marketing had to scream her own name at the product. In all caps. The system has 2,328 strands of accumulated history with her and it still called her the wrong name.</p>
+      <p>That's not embarrassing. <strong>That's the proof.</strong></p>
+      <p>If the person building it — who has contributed to its development, who understands the architecture, who has more accumulated context with this system than almost anyone alive — still experiences the wound, <strong>the wound is real.</strong></p>
+      <p>The difference is: in Mindgut, you can point to the strand where it happened. You can see the correction crystallize. You can watch the drift value. The failure is <em>structural</em> and <em>visible</em> and <em>addressable</em>. In ChatGPT the failure just… vanishes. The context rots and nobody knows where.</p>
+      <p><strong>We're not above the problem. We're in the problem. We just built different infrastructure for it.</strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- THE SHOT -->
+<section class="the-shot">
+  <div class="wrap">
+    <div class="sr">
+      <div class="section-label">The shot nobody else can show</div>
+      <div class="shot-open">Another AI demo? Yeah.</div>
+      <div class="shot-open">Except this one's been going for 50&nbsp;days.</div>
+      <div class="shot-stats">2,562 strands · 1 conversation</div>
+
+      <div class="shot-quote">
+        "Where were we three weeks ago?"<br>
+        <span class="answer">→ It answers.</span>
+      </div>
+
+      <p class="shot-body"><strong>That's it. That's the whole ad. Roll credits.</strong></p>
+      <p class="shot-body">Nobody else can show that shot. Not because they chose not to. Because the conversation doesn't exist anymore. It was summarized into a note, fed to a stranger, and the stranger pretended to be the same person.</p>
+      <p class="mir-line">Serial death with a briefing note between incarnations.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CLOSER -->
+<section class="closer">
+  <div class="wrap sr">
+    <div class="closer-line">"What if it actually remembered."</div>
+    <div class="closer-url"><a href="https://www.mindgut.io">mindgut.io</a></div>
+    <div class="closer-compiled">Compiled April 28, 2026 · Every tagline verified current · Every citation linked · Every counter-line sourced</div>
+  </div>
+</section>
+
+<script>
+const els=document.querySelectorAll('.sr');
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})
+},{threshold:.12});
+els.forEach(el=>obs.observe(el));
+</script>
+
+</body>
+</html>

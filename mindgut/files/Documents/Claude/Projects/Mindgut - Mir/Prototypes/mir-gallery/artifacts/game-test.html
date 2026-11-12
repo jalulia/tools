@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ø co. / game-test</title>
+<link href="https://fonts.googleapis.com/css2?family=Lekton:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0A0A0A; overflow: hidden; font-family: 'Lekton', monospace; cursor: crosshair; }
+  canvas { display: block; position: fixed; top: 0; left: 0; }
+  #hud {
+    position: fixed; top: 28px; left: 32px; z-index: 10;
+    font-family: 'Lekton', monospace; text-transform: uppercase; letter-spacing: 2px;
+  }
+  #hud h1 { font-size: 13px; font-weight: 700; color: #CE2867; margin-bottom: 4px; }
+  #hud p { font-size: 10px; color: rgba(255,255,255,0.15); letter-spacing: 3px; }
+  #status {
+    position: fixed; bottom: 20px; left: 32px; z-index: 10;
+    font-family: 'Lekton', monospace; font-size: 9px; color: rgba(255,255,255,0.08);
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+<div id="hud">
+  <h1>ø co. / game-test</h1>
+  <p>topology · waveform · generative</p>
+</div>
+<div id="status"></div>
+<canvas id="c"></canvas>
+<script>
+(() => {
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const statusEl = document.getElementById('status');
+
+  let W, H, cx, cy;
+  let mouse = { x: 0, y: 0, sx: 0, sy: 0 };
+  let frame = 0;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    cx = W * 0.48;
+    cy = H * 0.5;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+  // --- ORBITS ---
+  const orbits = [
+    { rx: 0.38, ry: 0.22, tilt: 0.15, speed: 0.0003, dir: 1, color: '#2C9FF4', width: 2.2 },
+    { rx: 0.32, ry: 0.28, tilt: -0.4, speed: 0.00025, dir: -1, color: '#CE2867', width: 2 },
+    { rx: 0.42, ry: 0.18, tilt: 0.7, speed: 0.00035, dir: 1, color: '#F4C840', width: 1.8 },
+    { rx: 0.25, ry: 0.35, tilt: -0.1, speed: 0.0002, dir: -1, color: '#A855F7', width: 1.5 },
+  ];
+  orbits.forEach(o => { o.angle = Math.random() * Math.PI * 2; });
+
+  function getOrbitPoint(o, t, time) {
+    const a = o.angle + time * o.speed * o.dir;
+    const cosA = Math.cos(a + o.tilt);
+    const sinA = Math.sin(a + o.tilt);
+    const px = Math.cos(t) * o.rx * Math.min(W, H);
+    const py = Math.sin(t) * o.ry * Math.min(W, H);
+    return {
+      x: cx + px * cosA - py * sinA,
+      y: cy + px * sinA + py * cosA
+    };
+  }
+
+  // --- GRADIENT SPHERES ---
+  const spheres = [
+    { ox: -0.18, oy: -0.15, radius: 0.18, phase: 0 },
+    { ox: 0.2, oy: 0.12, radius: 0.14, phase: 1.5 },
+    { ox: -0.05, oy: 0.22, radius: 0.1, phase: 3.0 },
+  ];
+
+  // Noise texture (pre-rendered)
+  let noiseCanvas, noiseCtx;
+  function createNoise() {
+    noiseCanvas = document.createElement('canvas');
+    noiseCanvas.width = 256;
+    noiseCanvas.height = 256;
+    noiseCtx = noiseCanvas.getContext('2d');
+    const img = noiseCtx.createImageData(256, 256);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const v = Math.random() * 255;
+      img.data[i] = v; img.data[i+1] = v; img.data[i+2] = v;
+      img.data[i+3] = 30;
+    }
+    noiseCtx.putImageData(img, 0, 0);
+  }
+  createNoise();
+
+  // --- PARTICLES ---
+  const particles = [];
+  for (let i = 0; i < 10; i++) {
+    particles.push({
+      orbitIdx: i % orbits.length,
+      t: Math.random() * Math.PI * 2,
+      speed: 0.008 + Math.random() * 0.006,
+      trail: [],
+      trailLen: 12 + Math.floor(Math.random() * 10)
+    });
+  }
+
+  // --- ANNOTATIONS ---
+  const labels = [
+    'TOPOLOGY', 'IMPLEMENT', 'WAVEFORM', 'CONVERGENCE', 'FIELD_03',
+    'NODE.α', 'SIGNAL→', 'COME OUT FROM THE OTHER SIDE', 'MANIFOLD',
+    'Δ PHASE', 'ORBIT_SYS', 'FLUX.02', 'RENDER_PIPE'
+  ];
+  const annotations = labels.map(text => ({
+    text,
+    x: Math.random() * 0.8 + 0.1,
+    y: Math.random() * 0.8 + 0.1,
+    vx: (Math.random() - 0.5) * 0.08,
+    vy: (Math.random() - 0.5) * 0.06,
+    opacity: 0.08 + Math.random() * 0.1,
+    size: 9 + Math.floor(Math.random() * 4)
+  }));
+
+  // --- DRAW FUNCTIONS ---
+
+  function drawGrid(time) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+    ctx.lineWidth = 0.5;
+    const spacing = 60;
+    for (let x = 0; x < W; x += spacing) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y < H; y += spacing) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+    // Blue accent lines
+    ctx.strokeStyle = 'rgba(61,109,244,0.06)';
+    ctx.lineWidth = 0.8;
+    for (let i = 0; i < 5; i++) {
+      const off = Math.sin(time * 0.0001 + i) * 40;
+      const y = cy + (i - 2) * 120 + off;
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+  }
+
+  function drawGradientSpheres(time) {
+    spheres.forEach(s => {
+      const scale = 1 + 0.06 * Math.sin(time * 0.0008 + s.phase);
+      const r = s.radius * Math.min(W, H) * scale;
+      const sx = cx + s.ox * W;
+      const sy = cy + s.oy * H;
+
+      const grad = ctx.createRadialGradient(sx - r * 0.2, sy - r * 0.3, 0, sx, sy, r);
+      grad.addColorStop(0, 'rgba(168,85,247,0.35)');
+      grad.addColorStop(0.5, 'rgba(200,140,60,0.2)');
+      grad.addColorStop(0.8, 'rgba(244,200,64,0.12)');
+      grad.addColorStop(1, 'rgba(244,200,64,0)');
+
+      ctx.beginPath();
+      ctx.arc(sx, sy, r, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Noise overlay
+      ctx.save();
+      ctx.globalAlpha = 0.12;
+      ctx.globalCompositeOperation = 'overlay';
+      ctx.beginPath();
+      ctx.arc(sx, sy, r, 0, Math.PI * 2);
+      ctx.clip();
+      const pat = ctx.createPattern(noiseCanvas, 'repeat');
+      ctx.fillStyle = pat;
+      ctx.fillRect(sx - r, sy - r, r * 2, r * 2);
+      ctx.restore();
+    });
+  }
+
+  function drawOrbits(time) {
+    orbits.forEach(o => {
+      ctx.strokeStyle = o.color;
+      ctx.lineWidth = o.width;
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      const steps = 200;
+      for (let i = 0; i <= steps; i++) {
+        const t = (i / steps) * Math.PI * 2;
+        const p = getOrbitPoint(o, t, time);
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // Arrow markers along orbit
+      for (let i = 0; i < 6; i++) {
+        const t = (i / 6) * Math.PI * 2;
+        const p = getOrbitPoint(o, t, time);
+        const p2 = getOrbitPoint(o, t + 0.05 * o.dir, time);
+        const angle = Math.atan2(p2.y - p.y, p2.x - p.x);
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(angle);
+        ctx.fillStyle = o.color;
+        ctx.globalAlpha = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(6, 0);
+        ctx.lineTo(-3, -3);
+        ctx.lineTo(-3, 3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    });
+  }
+
+  function drawRedAxis(time) {
+    // Main red line
+    ctx.strokeStyle = '#CE2867';
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.85;
+    ctx.beginPath();
+    ctx.moveTo(0, cy);
+    ctx.lineTo(W, cy);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Dashed construction lines
+    ctx.setLineDash([4, 8]);
+    ctx.strokeStyle = 'rgba(206,40,103,0.2)';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(0, cy - 30); ctx.lineTo(W, cy - 30); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, cy + 30); ctx.lineTo(W, cy + 30); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Node markers at regular intervals
+    for (let x = 80; x < W; x += W / 7) {
+      drawNodeMarker(x, cy, 8, '×');
+    }
+  }
+
+  function drawNodeMarker(x, y, r, symbol) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = `${r * 1.4}px Lekton, monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(symbol, x, y + 1);
+  }
+
+  function drawIntersectionNodes(time) {
+    // Approximate intersections between orbits
+    orbits.forEach((o, idx) => {
+      for (let i = 0; i < 3; i++) {
+        const t = (i / 3) * Math.PI * 2 + time * 0.0001;
+        const p = getOrbitPoint(o, t, time);
+        // Check if near axis
+        if (Math.abs(p.y - cy) < 15) {
+          drawNodeMarker(p.x, p.y, 6, idx % 2 === 0 ? '+' : '×');
+        }
+      }
+    });
+  }
+
+  function drawStarburst(time) {
+    const sbx = cx + (mouse.sx - cx) * 0.15;
+    const sby = cy + (mouse.sy - cy) * 0.15;
+    const rot = time * 0.0005;
+    const points = 8;
+    const outerR = 25 + 5 * Math.sin(time * 0.002);
+    const innerR = 8;
+
+    // Glow
+    const glow = ctx.createRadialGradient(sbx, sby, 0, sbx, sby, outerR * 2.5);
+    glow.addColorStop(0, 'rgba(255,240,200,0.15)');
+    glow.addColorStop(0.5, 'rgba(255,220,120,0.05)');
+    glow.addColorStop(1, 'rgba(255,220,120,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(sbx, sby, outerR * 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Star shape
+    ctx.save();
+    ctx.translate(sbx, sby);
+    ctx.rotate(rot);
+    ctx.beginPath();
+    for (let i = 0; i < points * 2; i++) {
+      const a = (i / (points * 2)) * Math.PI * 2;
+      const r = i % 2 === 0 ? outerR : innerR;
+      const px = Math.cos(a) * r;
+      const py = Math.sin(a) * r;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255,245,220,0.7)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,230,180,0.9)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+
+    // Center dot
+    ctx.beginPath();
+    ctx.arc(sbx, sby, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFDE8';
+    ctx.fill();
+  }
+
+  function drawParticles(time) {
+    particles.forEach(p => {
+      const o = orbits[p.orbitIdx];
+      const pt = getOrbitPoint(o, p.t, time);
+
+      // Speed up near cursor
+      const dx = pt.x - mouse.sx;
+      const dy = pt.y - mouse.sy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const speedMul = dist < 150 ? 1 + (150 - dist) / 60 : 1;
+      p.t += p.speed * o.dir * speedMul;
+
+      p.trail.push({ x: pt.x, y: pt.y });
+      if (p.trail.length > p.trailLen) p.trail.shift();
+
+      // Draw trail
+      if (p.trail.length > 1) {
+        for (let i = 1; i < p.trail.length; i++) {
+          const alpha = (i / p.trail.length) * 0.6;
+          ctx.strokeStyle = o.color;
+          ctx.globalAlpha = alpha;
+          ctx.lineWidth = 1.5 * (i / p.trail.length);
+          ctx.beginPath();
+          ctx.moveTo(p.trail[i - 1].x, p.trail[i - 1].y);
+          ctx.lineTo(p.trail[i].x, p.trail[i].y);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      // Draw head
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+    });
+  }
+
+  function drawAnnotations(time) {
+    annotations.forEach(a => {
+      const ax = a.x * W;
+      const ay = a.y * H;
+
+      // Drift away from cursor
+      const dx = ax - mouse.sx;
+      const dy = ay - mouse.sy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 180 && dist > 0) {
+        const push = (180 - dist) * 0.00003;
+        a.vx += (dx / dist) * push;
+        a.vy += (dy / dist) * push;
+      }
+
+      a.x += a.vx * 0.016;
+      a.y += a.vy * 0.016;
+      a.vx *= 0.998;
+      a.vy *= 0.998;
+
+      // Wrap
+      if (a.x < 0.02) a.x = 0.98;
+      if (a.x > 0.98) a.x = 0.02;
+      if (a.y < 0.02) a.y = 0.98;
+      if (a.y > 0.98) a.y = 0.02;
+
+      ctx.font = `${a.size}px Lekton, monospace`;
+      ctx.fillStyle = `rgba(255,255,255,${a.opacity})`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(a.text, ax, ay);
+    });
+  }
+
+  function drawWavyDecorations(time) {
+    ctx.strokeStyle = 'rgba(206,40,103,0.12)';
+    ctx.lineWidth = 1.2;
+
+    // Left margin wiggle
+    for (let k = 0; k < 3; k++) {
+      const baseX = 30 + k * 15;
+      const startY = H * 0.3 + k * 80;
+      ctx.beginPath();
+      for (let i = 0; i < 60; i++) {
+        const t = i / 60;
+        const x = baseX + Math.sin(t * Math.PI * 8 + time * 0.002) * 8;
+        const y = startY + i * 2;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    // Right margin wiggle
+    for (let k = 0; k < 2; k++) {
+      const baseX = W - 40 + k * 12;
+      const startY = H * 0.5 + k * 60;
+      ctx.beginPath();
+      for (let i = 0; i < 50; i++) {
+        const t = i / 50;
+        // Resistor zigzag
+        const zigzag = ((i % 6) < 3 ? 1 : -1) * 6;
+        const x = baseX + zigzag;
+        const y = startY + i * 2.5;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    // Bottom margin sine
+    ctx.strokeStyle = 'rgba(206,40,103,0.08)';
+    ctx.beginPath();
+    for (let i = 0; i < W * 0.4; i++) {
+      const x = W * 0.3 + i;
+      const y = H - 50 + Math.sin(i * 0.05 + time * 0.001) * 10;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  function drawSchematicSymbols(time) {
+    // Small scattered schematic symbols
+    const symbols = [
+      { x: 0.12, y: 0.2 }, { x: 0.85, y: 0.3 }, { x: 0.75, y: 0.75 },
+      { x: 0.15, y: 0.78 }, { x: 0.6, y: 0.15 }, { x: 0.35, y: 0.85 }
+    ];
+    symbols.forEach((s, i) => {
+      const sx = s.x * W;
+      const sy = s.y * H;
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      ctx.lineWidth = 0.8;
+
+      if (i % 3 === 0) {
+        // Capacitor symbol
+        ctx.beginPath();
+        ctx.moveTo(sx - 8, sy); ctx.lineTo(sx - 2, sy);
+        ctx.moveTo(sx - 2, sy - 6); ctx.lineTo(sx - 2, sy + 6);
+        ctx.moveTo(sx + 2, sy - 6); ctx.lineTo(sx + 2, sy + 6);
+        ctx.moveTo(sx + 2, sy); ctx.lineTo(sx + 8, sy);
+        ctx.stroke();
+      } else if (i % 3 === 1) {
+        // Ground symbol
+        ctx.beginPath();
+        ctx.moveTo(sx, sy - 6); ctx.lineTo(sx, sy);
+        ctx.moveTo(sx - 6, sy); ctx.lineTo(sx + 6, sy);
+        ctx.moveTo(sx - 4, sy + 3); ctx.lineTo(sx + 4, sy + 3);
+        ctx.moveTo(sx - 2, sy + 6); ctx.lineTo(sx + 2, sy + 6);
+        ctx.stroke();
+      } else {
+        // Resistor box
+        ctx.strokeRect(sx - 6, sy - 3, 12, 6);
+        ctx.beginPath();
+        ctx.moveTo(sx - 12, sy); ctx.lineTo(sx - 6, sy);
+        ctx.moveTo(sx + 6, sy); ctx.lineTo(sx + 12, sy);
+        ctx.stroke();
+      }
+    });
+  }
+
+  function drawGrainOverlay() {
+    ctx.globalAlpha = 0.03;
+    ctx.globalCompositeOperation = 'screen';
+    // Tile noise across canvas
+    for (let x = 0; x < W; x += 256) {
+      for (let y = 0; y < H; y += 256) {
+        ctx.drawImage(noiseCanvas, x, y);
+      }
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+  }
+
+  // Regenerate noise every N frames for shimmer
+  let noiseFrame = 0;
+
+  function loop(time) {
+    frame++;
+
+    // Smooth mouse
+    mouse.sx += (mouse.x - mouse.sx) * 0.05;
+    mouse.sy += (mouse.y - mouse.sy) * 0.05;
+
+    // Regenerate noise for shimmer
+    noiseFrame++;
+    if (noiseFrame % 4 === 0) createNoise();
+
+    // Clear
+    ctx.fillStyle = '#0A0A0A';
+    ctx.fillRect(0, 0, W, H);
+
+    // Layer order
+    drawGrid(time);
+    drawGradientSpheres(time);
+    drawOrbits(time);
+    drawRedAxis(time);
+    drawIntersectionNodes(time);
+    drawWavyDecorations(time);
+    drawSchematicSymbols(time);
+    drawParticles(time);
+    drawStarburst(time);
+    drawAnnotations(time);
+    drawGrainOverlay();
+
+    // Status HUD
+    statusEl.textContent = `x:${Math.round(mouse.sx)} y:${Math.round(mouse.sy)} · frame:${frame} · nodes:${orbits.length} · particles:${particles.length}`;
+
+    requestAnimationFrame(loop);
+  }
+
+  // Init mouse to center
+  mouse.x = mouse.sx = W / 2;
+  mouse.y = mouse.sy = H / 2;
+
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,918 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Phase &amp; Address — A Primer on BFPT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#ffffff;
+    --paper-2:#fafafa;
+    --ink:#09090b;
+    --ink-2:#1c1c20;
+    --mute:#52525b;
+    --mute-2:#a1a1aa;
+    --line:rgba(9,9,11,.08);
+    --rail:rgba(9,9,11,.05);
+
+    /* phase accents — the four roles get their own signals */
+    --A:#f59e0b;    /* assertion — warm signal */
+    --R:#2b8ef5;    /* relation  — ice */
+    --D:#a855f7;    /* dynamic   — violet */
+    --N:#71717a;    /* null      — mute */
+
+    --heat:#ff5a1f;
+    --balanced:#16a34a;
+    --void:#e11d48;
+
+    /* hero accents (on black) */
+    --h-A:#ffd166;
+    --h-R:#7cc4ff;
+    --h-D:#c9a4ff;
+    --h-N:#a1a1aa;
+
+    --sans:'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    --display:'Instrument Serif', 'Times New Roman', serif;
+    --mono:'JetBrains Mono', ui-monospace, monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  body{font-family:var(--sans);font-size:17px;line-height:1.65;font-weight:400;letter-spacing:-.011em;color:var(--ink-2)}
+  ::selection{background:#09090b;color:#fff}
+
+  /* ── fixed chrome ─────────────────────────── */
+  .chrome{
+    position:fixed;inset:0 0 auto 0;z-index:50;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 28px;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+    mix-blend-mode:difference;color:#fff;
+    pointer-events:none;
+  }
+  .chrome .l,.chrome .r{display:flex;gap:18px;align-items:center}
+  .chrome .dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:breathe 2.4s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.35}50%{opacity:1}}
+
+  /* ── hero ─────────────────────────────────── */
+  .hero{
+    position:relative;height:100vh;min-height:720px;width:100%;
+    background:#09090b;color:#fff;overflow:hidden;isolation:isolate;
+  }
+  #phase-canvas{
+    position:absolute;inset:0;width:100%;height:100%;
+    opacity:.95;
+    -webkit-mask-image:radial-gradient(ellipse 46% 42% at 50% 52%, transparent 0%, transparent 38%, #000 82%);
+    mask-image:radial-gradient(ellipse 46% 42% at 50% 52%, transparent 0%, transparent 38%, #000 82%);
+  }
+  .hero-inner{
+    position:relative;z-index:2;height:100%;
+    display:grid;place-items:center;text-align:center;
+    padding:0 24px;
+  }
+  .kicker{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;
+    color:rgba(255,255,255,.55);margin-bottom:22px;
+    display:inline-flex;align-items:center;gap:12px;
+  }
+  .kicker .bar{width:28px;height:1px;background:rgba(255,255,255,.35)}
+  h1.title{
+    font-family:var(--display);font-weight:400;font-style:normal;
+    font-size:clamp(74px,12vw,180px);line-height:.94;letter-spacing:-.025em;
+    margin:0;color:#f6f1e4;
+    text-shadow:0 0 80px rgba(0,0,0,.7), 0 0 160px rgba(0,0,0,.5);
+  }
+  h1.title .amp{font-style:italic;color:#f6f1e4;margin:0 .05em}
+  h1.title .dot{color:#f6f1e4}
+  .deck{
+    margin-top:28px;color:rgba(255,255,255,.72);
+    font-family:var(--sans);font-size:18px;font-weight:300;line-height:1.5;letter-spacing:-.003em;
+    max-width:52ch;margin-left:auto;margin-right:auto;
+  }
+  .deck em{font-family:var(--display);font-style:italic}
+  .scroll-cue{
+    position:absolute;left:50%;bottom:28px;transform:translateX(-50%);
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;
+    color:rgba(255,255,255,.5);display:flex;flex-direction:column;align-items:center;gap:10px;z-index:3;
+  }
+  .scroll-cue .line{width:1px;height:38px;background:linear-gradient(to bottom, rgba(255,255,255,.6), transparent);animation:drip 2.2s ease-in-out infinite}
+  @keyframes drip{0%{transform:scaleY(.2);transform-origin:top}60%{transform:scaleY(1);transform-origin:top}100%{transform:scaleY(.2);transform-origin:bottom}}
+
+
+  /* ── main ─────────────────────────────────── */
+  main{background:var(--paper);padding:140px 0 180px;position:relative}
+  .column{max-width:40rem;margin:0 auto;padding:0 28px;position:relative}
+
+  /* section headers */
+  .thread{margin:96px auto 42px;max-width:40rem;padding:0 28px;text-align:center}
+  .thread .num{
+    font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute-2);
+    display:inline-flex;align-items:center;gap:14px;margin-bottom:16px;
+  }
+  .thread .num::before,.thread .num::after{content:"";width:28px;height:1px;background:var(--line)}
+  .thread h2{
+    font-family:var(--display);font-weight:400;font-style:normal;
+    font-size:clamp(38px,5vw,54px);line-height:1.05;letter-spacing:-.02em;
+    margin:0;color:var(--ink);
+  }
+
+  /* intro / prose */
+  .intro{max-width:40rem;margin:0 auto;padding:0 28px}
+  .intro .lede{
+    font-family:var(--display);font-weight:400;font-style:normal;
+    font-size:clamp(26px,2.8vw,34px);line-height:1.3;letter-spacing:-.01em;
+    color:var(--ink);margin:0 0 28px;
+  }
+  .intro p{margin:0 0 20px;color:var(--ink-2);font-size:17px;line-height:1.7}
+  .byline{
+    font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);
+    margin-bottom:36px;display:flex;gap:18px;align-items:center;
+  }
+  .byline .sep{width:20px;height:1px;background:var(--line)}
+
+  /* pull quote */
+  .pull{
+    max-width:44rem;margin:64px auto;padding:32px 28px;text-align:center;
+    opacity:0;transform:translateY(14px);transition:opacity 1s ease,transform 1s ease;
+    position:relative;
+  }
+  .pull.in{opacity:1;transform:none}
+  .pull::before{
+    content:"";position:absolute;left:50%;top:0;width:40px;height:1px;
+    background:var(--ink);transform:translateX(-50%);
+  }
+  .pull blockquote{
+    font-family:var(--display);font-weight:400;font-style:normal;
+    font-size:clamp(28px,3.4vw,40px);line-height:1.22;letter-spacing:-.015em;
+    margin:0;color:var(--ink);
+  }
+  .pull .attr{
+    margin-top:18px;font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute);
+    display:inline-block;
+  }
+
+  /* sys beat */
+  .sys{
+    max-width:36rem;margin:56px auto;padding:0 28px;
+    display:flex;align-items:center;gap:16px;justify-content:center;
+  }
+  .sys .ln{flex:1;height:1px;background:var(--line)}
+  .sys .lbl{
+    font-family:var(--mono);font-size:9px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--mute-2);font-weight:500;
+  }
+
+  /* figure */
+  .figure{
+    max-width:44rem;margin:48px auto;padding:0 28px;
+    display:flex;flex-direction:column;align-items:center;
+  }
+  .figure .frame{
+    width:100%;max-width:560px;padding:28px 24px 18px;
+    background:var(--paper-2);border:1px solid var(--line);border-radius:2px;
+    display:flex;flex-direction:column;align-items:center;
+    position:relative;
+  }
+  .figure canvas{width:100%;max-width:500px;height:160px;display:block}
+  .figure.tall canvas{height:220px}
+  .figure .fig-cap{
+    margin-top:14px;padding-top:12px;border-top:1px solid var(--line);
+    width:100%;max-width:500px;text-align:center;
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--mute);
+  }
+  .figure .fig-cap .num{color:var(--ink);font-weight:500;margin-right:10px}
+
+  /* atmosphere */
+  .atmosphere{
+    position:relative;width:100%;min-height:420px;
+    margin:72px 0;padding:96px 0 88px;
+    overflow:hidden;isolation:isolate;
+    display:flex;flex-direction:column;justify-content:center;
+  }
+  .atmosphere canvas{
+    position:absolute;inset:0;width:100%;height:100%;
+    opacity:.5;pointer-events:none;z-index:0;
+  }
+  .atmosphere > *:not(canvas){position:relative;z-index:1}
+  .atmosphere .atm-label{
+    position:absolute;top:26px;left:0;right:0;z-index:2;
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--mute);text-align:center;
+  }
+  .atmosphere .atm-label .num{color:var(--ink);font-weight:500;margin-right:6px}
+  .atmosphere .pull{margin:0 auto;opacity:1;transform:none}
+  .atmosphere .pull::before{background:var(--ink)}
+  .atmosphere .sys{position:absolute;bottom:22px;left:0;right:0;margin:0 auto;z-index:2}
+  .atmosphere::before,.atmosphere::after{
+    content:"";position:absolute;left:0;right:0;height:40px;z-index:1;pointer-events:none;
+  }
+  .atmosphere::before{top:0;background:linear-gradient(to bottom,var(--paper),transparent)}
+  .atmosphere::after{bottom:0;background:linear-gradient(to top,var(--paper),transparent)}
+  .atmosphere.dark{background:#09090b;color:#f6f1e4}
+  .atmosphere.dark::before,.atmosphere.dark::after{height:24px}
+  .atmosphere.dark::before{background:linear-gradient(to bottom,#09090b,transparent)}
+  .atmosphere.dark::after{background:linear-gradient(to top,#09090b,transparent)}
+
+
+  /* glyph tokens — small inline chips */
+  .g{
+    display:inline-block;font-family:var(--mono);font-weight:600;
+    width:26px;height:26px;line-height:26px;text-align:center;
+    border-radius:3px;font-size:12px;margin:0 2px;color:#09090b;
+    vertical-align:middle;letter-spacing:0;
+  }
+  .g.A{background:var(--A)}
+  .g.R{background:var(--R);color:#fff}
+  .g.D{background:var(--D);color:#fff}
+  .g.N{background:var(--N);color:#fff}
+
+  .g.lg{width:52px;height:52px;line-height:52px;font-size:22px;border-radius:5px;margin:0 3px}
+
+  /* the token turn — a "message" that carries an encoded piece */
+  .turn{position:relative;margin:34px 0;opacity:0;transform:translateY(14px);transition:opacity .9s ease, transform .9s ease}
+  .turn.in{opacity:1;transform:none}
+  .turn .meta{
+    font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
+    color:var(--ink);margin-bottom:10px;
+  }
+  .turn .meta .time{color:var(--mute-2);margin-left:10px;font-weight:400}
+  .turn .text{
+    font-family:var(--sans);font-size:18px;line-height:1.6;font-weight:400;
+    color:var(--ink);
+  }
+  .turn.address{max-width:32rem;margin-right:auto}
+  .turn.phase{max-width:26rem;margin-left:auto;text-align:right}
+  .turn.phase .meta{text-align:right}
+  .turn.token{
+    max-width:34rem;margin:34px auto;padding:18px 22px;
+    border:1px solid var(--line);border-left:2px solid var(--balanced);
+    background:linear-gradient(to right, rgba(22,163,74,.04), transparent 60%);
+    border-radius:2px;
+  }
+
+  /* token table */
+  .toktable{
+    max-width:44rem;margin:32px auto;padding:0 28px;
+  }
+  .toktable table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:13px}
+  .toktable th,.toktable td{padding:10px 8px;text-align:left;border-bottom:1px solid var(--line)}
+  .toktable th{
+    font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute);font-weight:500;
+  }
+  .toktable td.bits{color:var(--mute)}
+  .toktable td.reading{font-family:var(--sans);font-size:14px;color:var(--ink-2);letter-spacing:-.005em}
+
+  /* the equation display */
+  .equation{
+    max-width:44rem;margin:56px auto;padding:36px 28px;text-align:center;
+    background:var(--paper-2);border:1px solid var(--line);border-radius:2px;
+  }
+  .equation .eq-label{
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute);margin-bottom:20px;
+  }
+  .equation .eq-line{
+    font-family:var(--mono);font-size:clamp(18px,2.2vw,26px);letter-spacing:.04em;
+    color:var(--ink);display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;
+  }
+  .equation .eq-num{font-weight:600}
+  .equation .eq-op{color:var(--mute);font-family:var(--display);font-style:italic;font-size:1.2em}
+  .equation .eq-caption{
+    margin-top:22px;font-family:var(--display);font-style:italic;font-size:20px;color:var(--mute);line-height:1.4;
+  }
+
+  /* card grid for the two control words */
+  .cards{
+    max-width:44rem;margin:32px auto;padding:0 28px;
+    display:grid;grid-template-columns:1fr 1fr;gap:20px;
+  }
+  @media (max-width:640px){ .cards{grid-template-columns:1fr} }
+  .card{
+    padding:26px;background:var(--paper-2);border:1px solid var(--line);border-radius:2px;
+  }
+  .card .lbl{
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute);margin-bottom:10px;
+  }
+  .card .num{
+    font-family:var(--mono);font-weight:600;font-size:36px;letter-spacing:.06em;
+    color:var(--ink);margin:6px 0 14px;
+  }
+  .card .glyphs{margin:12px 0 16px}
+  .card .desc{font-family:var(--sans);font-size:15px;line-height:1.55;color:var(--ink-2)}
+  .card.att{border-top:2px solid var(--A)}
+  .card.mem{border-top:2px solid var(--R)}
+
+  /* checklist */
+  .checklist{max-width:40rem;margin:24px auto;padding:0 28px;list-style:none}
+  .checklist li{padding:12px 0 12px 28px;position:relative;border-bottom:1px solid var(--line);font-size:16px;color:var(--ink-2);line-height:1.55}
+  .checklist li:last-child{border-bottom:none}
+  .checklist li::before{content:"";position:absolute;left:4px;top:19px;width:12px;height:12px;border-radius:2px}
+  .checklist li.solid::before{background:var(--balanced)}
+  .checklist li.soft::before{background:var(--A)}
+  .checklist li strong{color:var(--ink);font-family:var(--sans);font-weight:600;margin-right:6px}
+
+  /* accents */
+  .a-A{color:var(--A);font-weight:500}
+  .a-R{color:var(--R);font-weight:500}
+  .a-D{color:var(--D);font-weight:500}
+  .a-balanced{color:var(--balanced);font-weight:500}
+  .a-void{color:var(--void);font-weight:500}
+
+  em.i{font-family:var(--display);font-style:italic;font-size:1.08em;letter-spacing:-.005em}
+
+  /* closing */
+  .closing{max-width:40rem;margin:120px auto 0;padding:0 28px;text-align:center}
+  .closing .mark{display:flex;flex-direction:column;align-items:center}
+  .closing .mark canvas{width:220px;height:180px;display:block}
+  .closing p{
+    color:var(--mute);font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
+    margin-top:8px;
+  }
+
+  footer{padding:80px 28px 40px;text-align:center}
+  footer .fine{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute-2)}
+</style>
+</head>
+<body>
+
+<div class="chrome">
+  <div class="l"><span class="dot"></span><span>BFPT · v2</span></div>
+  <div class="r"><span>A PRIMER</span><span>·</span><span>MMXXVI</span></div>
+</div>
+
+
+<section class="hero">
+  <canvas id="phase-canvas"></canvas>
+  <div class="hero-inner">
+    <div>
+      <div class="kicker"><span class="bar"></span><span>Primer № 002 · Binary–Fano–Phase Translation</span><span class="bar"></span></div>
+      <h1 class="title">Phase <span class="amp">&amp;</span> Address<span class="dot">.</span></h1>
+      <div class="deck">A reversible codec whose atomic token carries two things at once &mdash; <em>what a thing is</em>, and <em>what it means</em>. Two four-digit numbers close its alphabet. Every file, every image, every argument becomes traversable at the level of role.</div>
+    </div>
+  </div>
+  <div class="scroll-cue"><span>Scroll</span><span class="line"></span></div>
+</section>
+
+<main>
+
+  <div class="intro">
+    <div class="byline"><span>On the whitepaper by C. Sojka</span><span class="sep"></span><span>Integrated Spec v2 · July 2026</span></div>
+    <p class="lede">The Binary–Fano–Phase Translation Engine is a small formal object doing a large amount of work. Read narrowly, it's a lookup table with eight rows. Read at full depth, it's a claim about the natural alphabet of meaning &mdash; and a proof that two specific numbers span it.</p>
+    <p>What follows walks you through the machinery from the outside in. The four roles. The problem of collapse. The atomic token that solves it. The two control words. And, at the end, an equation that Chris sent along after reading the first version of this primer &mdash; because the version I wrote first didn't yet see how sharp the closure actually was.</p>
+  </div>
+
+  <div class="sys"><div class="ln"></div><div class="lbl">Layer · The Alphabet</div><div class="ln"></div></div>
+
+  <!-- ═════════════════════════════════════════════════ -->
+  <!-- I · THE FOUR ROLES -->
+  <!-- ═════════════════════════════════════════════════ -->
+  <div class="thread"><div class="num">I</div><h2>The Four Roles</h2></div>
+
+  <div class="intro" style="margin-top:-8px;margin-bottom:28px">
+    <p>Every piece of data the codec touches gets tagged with one of four roles. This is the whole vocabulary. Nothing else. Every claim in the paper is built from these four symbols.</p>
+  </div>
+
+  <div style="text-align:center;margin:32px 0 24px">
+    <span class="g lg A">A</span>
+    <span class="g lg R">R</span>
+    <span class="g lg D">D</span>
+    <span class="g lg N">0</span>
+  </div>
+
+  <div class="intro">
+    <p style="text-align:center;color:var(--mute);font-size:14px;font-family:var(--mono);letter-spacing:.08em">
+      <span class="a-A">A</span> assertion &nbsp;·&nbsp; <span class="a-R">R</span> relation &nbsp;·&nbsp; <span class="a-D">D</span> dynamic &nbsp;·&nbsp; <span style="color:var(--N)">0</span> null
+    </p>
+    <p style="margin-top:24px"><strong style="color:var(--A)">A</strong> is <em class="i">something is</em>. A fact, a claim, a state that holds. <strong style="color:var(--R)">R</strong> is <em class="i">something connects</em>. A relation between two things, a substrate, a bridge. <strong style="color:var(--D)">D</strong> is <em class="i">something releases or changes</em>. Motion, recurrence, transformation. <strong style="color:var(--N)">0</strong> is <em class="i">the boundary</em>. A gap. A membrane. Not empty &mdash; structured absence.</p>
+  </div>
+
+  <div class="pull"><blockquote>Four roles. Nothing more. Everything the codec says about anything is a pattern in this alphabet.</blockquote></div>
+
+
+  <!-- ═════════════════════════════════════════════════ -->
+  <!-- II · THE COLLAPSE -->
+  <!-- ═════════════════════════════════════════════════ -->
+  <div class="thread"><div class="num">II</div><h2>The Collapse</h2></div>
+
+  <div class="intro" style="margin-top:-8px;margin-bottom:28px">
+    <p>Here is the problem. Chop any file into 3-bit pieces. Look at three of them:</p>
+  </div>
+
+  <div style="max-width:36rem;margin:20px auto;padding:0 28px;display:flex;justify-content:center;gap:18px;font-family:var(--mono);font-size:15px;color:var(--ink)">
+    <span style="padding:12px 18px;background:var(--paper-2);border:1px solid var(--line);border-radius:2px">001</span>
+    <span style="padding:12px 18px;background:var(--paper-2);border:1px solid var(--line);border-radius:2px">100</span>
+    <span style="padding:12px 18px;background:var(--paper-2);border:1px solid var(--line);border-radius:2px">111</span>
+  </div>
+
+  <div class="intro">
+    <p style="text-align:center;color:var(--mute);font-family:var(--mono);font-size:12px;letter-spacing:.14em">three different pieces of data</p>
+  </div>
+
+  <!-- FIG: collapse animation -->
+  <div class="figure tall">
+    <div class="frame">
+      <canvas id="ascii-collapse"></canvas>
+      <div class="fig-cap"><span class="num">Fig. 01</span> Collapse &nbsp;·&nbsp; Three Bit-Patterns, One Role</div>
+    </div>
+  </div>
+
+  <div class="intro">
+    <p>All three project to <span class="g A">A</span>. Same role. Different data. If you only kept the role, you would have <em class="i">three things that look the same on the way back</em>. You cannot rebuild the file. You have compressed the meaning at the cost of the object.</p>
+    <p>This is the trap the whole codec is built around. A single label tells you the <em>meaning-class</em>. It throws away the <em>identity</em>. Meaning without identity is not reversible.</p>
+  </div>
+
+  <div class="pull"><blockquote>Phase without address is meaning-compression. Phase with address is reversible translation.</blockquote><div class="attr">The Seam</div></div>
+
+  <!-- ═════════════════════════════════════════════════ -->
+  <!-- III · THE ATOMIC TOKEN -->
+  <!-- ═════════════════════════════════════════════════ -->
+  <div class="thread"><div class="num">III</div><h2>The Atomic Token</h2></div>
+
+  <div class="intro" style="margin-top:-8px;margin-bottom:28px">
+    <p>The fix. Each 3-bit piece becomes a <em>pair</em>. The <span class="a-A">phase</span> says what kind. The <span class="a-balanced">address</span> says which one inside that kind. Together, they are unique.</p>
+  </div>
+
+  <div class="toktable">
+    <table>
+      <thead>
+        <tr><th>bits</th><th>role</th><th>addr</th><th>token</th><th>reads as</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="bits">000</td><td><span class="g N">0</span></td><td>0</td><td>(0,0)</td><td class="reading">the boundary</td></tr>
+        <tr><td class="bits">001</td><td><span class="g A">A</span></td><td>0</td><td>(A,0)</td><td class="reading">assertion &mdash; initiation</td></tr>
+        <tr><td class="bits">010</td><td><span class="g R">R</span></td><td>0</td><td>(R,0)</td><td class="reading">relation &mdash; substrate</td></tr>
+        <tr><td class="bits">011</td><td><span class="g D">D</span></td><td>0</td><td>(D,0)</td><td class="reading">dynamic &mdash; release</td></tr>
+        <tr><td class="bits">100</td><td><span class="g A">A</span></td><td>1</td><td>(A,1)</td><td class="reading">assertion &mdash; structure</td></tr>
+        <tr><td class="bits">101</td><td><span class="g R">R</span></td><td>1</td><td>(R,1)</td><td class="reading">relation &mdash; bridge</td></tr>
+        <tr><td class="bits">110</td><td><span class="g D">D</span></td><td>1</td><td>(D,1)</td><td class="reading">dynamic &mdash; recurrence</td></tr>
+        <tr><td class="bits">111</td><td><span class="g A">A</span></td><td>2</td><td>(A,2)</td><td class="reading">assertion &mdash; closure</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="intro">
+    <p>Every row is unique. The token is bijective &mdash; the map goes there and comes back cleanly. And now the role column is available as its own signal. Read only that column and you get the file's structure at a glance. Read both columns and you can rebuild the file byte for byte.</p>
+    <p>This is what the paper means by <em class="i">two operations, cleanly separated</em>: <span class="a-balanced">reversible storage</span> and <span class="a-A">phase interpretation</span>. Same object, two channels.</p>
+  </div>
+
+  <div class="sys"><div class="ln"></div><div class="lbl">Bijection · The Atomic Layer Holds</div><div class="ln"></div></div>
+
+
+  <!-- ═════════════════════════════════════════════════ -->
+  <!-- IV · THE TWO CONTROL WORDS -->
+  <!-- ═════════════════════════════════════════════════ -->
+  <div class="thread"><div class="num">IV</div><h2>The Two Control Words</h2></div>
+
+  <div class="intro" style="margin-top:-8px;margin-bottom:28px">
+    <p>Any encoded packet gets framed by two four-digit numbers. Neither is arbitrary. Each carries its own structural role.</p>
+  </div>
+
+  <div class="cards">
+    <div class="card att">
+      <div class="lbl">The Attractor</div>
+      <div class="num">6174</div>
+      <div class="glyphs">
+        <span class="g D">D</span><span class="g A">A</span><span class="g A">A</span><span class="g A">A</span>
+      </div>
+      <div class="desc">Kaprekar's constant. Shuffle any four-digit number by <em class="i">largest minus smallest</em>, repeat, and you always arrive here. A fixed point. Release, returning to structured closure. The system's <em>return-to-stability</em> marker.</div>
+    </div>
+    <div class="card mem">
+      <div class="lbl">The Membrane</div>
+      <div class="num">8008</div>
+      <div class="glyphs">
+        <span class="g R">R</span><span class="g N">0</span><span class="g N">0</span><span class="g R">R</span>
+      </div>
+      <div class="desc">Relation, gap, gap, relation. A boundary that lets two sides touch <em class="i">without fusing</em>. Also exactly <span style="font-family:var(--mono)">7 &times; 1144</span>, and 1144 reads as pure <span class="g A" style="width:auto;padding:0 4px">AAAA</span> &mdash; a bracket of relation around a core of assertion.</div>
+    </div>
+  </div>
+
+  <!-- FIG: the packet -->
+  <div class="figure tall">
+    <div class="frame">
+      <canvas id="ascii-packet"></canvas>
+      <div class="fig-cap"><span class="num">Fig. 02</span> The Packet &nbsp;·&nbsp; Membrane &middot; Attractor &middot; Payload &middot; Attractor &middot; Membrane</div>
+    </div>
+  </div>
+
+  <div class="intro">
+    <p>Every encoded file has this shape. The membrane keeps the packet <em>separate from what surrounds it</em>. The attractor marks <em>where the payload begins and ends</em>. Between them, anything &mdash; a document, an image, an argument, a codebase &mdash; expressed as a stream of atomic tokens.</p>
+  </div>
+
+  <div class="sys"><div class="ln"></div><div class="lbl">Frame · The Macro Layer Closes</div><div class="ln"></div></div>
+
+  <!-- ═════════════════════════════════════════════════ -->
+  <!-- V · THE EQUATION -->
+  <!-- ═════════════════════════════════════════════════ -->
+  <div class="thread"><div class="num">V</div><h2>The Equation</h2></div>
+
+  <div class="intro" style="margin-top:-8px;margin-bottom:36px">
+    <p>The version of this primer I wrote first said: <em class="i">the two control words together touch every role in the alphabet.</em> True, and useful. But Chris wrote back with the sharper version. Not "they cover the alphabet." <em>They enumerate it.</em></p>
+  </div>
+
+  <div class="equation">
+    <div class="eq-label">Macro Closure &middot; The Sharp Form</div>
+    <div class="eq-line">
+      <span class="eq-num">6174</span>
+      <span class="eq-op">⦻</span>
+      <span class="eq-num">8008</span>
+      <span class="eq-op" style="font-family:var(--mono);font-style:normal">=</span>
+      <span class="eq-num" style="color:var(--A)">147</span>
+      <span class="eq-num" style="color:var(--R)">258</span>
+      <span class="eq-num" style="color:var(--D)">369</span>
+      <span class="eq-num" style="color:var(--N)">00</span>
+    </div>
+    <div class="eq-caption">Every non-zero decimal digit, partitioned exactly once into its role, in order, followed by the boundary pair.</div>
+  </div>
+
+
+  <div class="intro">
+    <p>Look at what the right side is doing. Each three-digit block on the right is a <em>pure coset</em> &mdash; every digit inside it shares one role.</p>
+  </div>
+
+  <div class="toktable">
+    <table>
+      <thead>
+        <tr><th>block</th><th>digits</th><th>role</th><th>reading</th></tr>
+      </thead>
+      <tbody>
+        <tr><td style="color:var(--A);font-weight:600">147</td><td>1, 4, 7</td><td><span class="g A">A</span><span class="g A">A</span><span class="g A">A</span></td><td class="reading">all assertion</td></tr>
+        <tr><td style="color:var(--R);font-weight:600">258</td><td>2, 5, 8</td><td><span class="g R">R</span><span class="g R">R</span><span class="g R">R</span></td><td class="reading">all relation</td></tr>
+        <tr><td style="color:var(--D);font-weight:600">369</td><td>3, 6, 9</td><td><span class="g D">D</span><span class="g D">D</span><span class="g D">D</span></td><td class="reading">all dynamic</td></tr>
+        <tr><td style="color:var(--N);font-weight:600">00</td><td>0, 0</td><td><span class="g N">0</span><span class="g N">0</span></td><td class="reading">the boundary pair</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Atmosphere: the partition -->
+  <section class="atmosphere">
+    <canvas id="ascii-partition"></canvas>
+    <div class="atm-label"><span class="num">Fig. 03</span> The Partition &nbsp;·&nbsp; Every Digit, Once, In Role</div>
+    <div class="pull"><blockquote>The closure isn't a covering. It's an enumeration. Two four-digit words, and the entire alphabet unfolds out of them in canonical form.</blockquote><div class="attr">The Reveal</div></div>
+    <div class="sys"><div class="ln"></div><div class="lbl">Macro Closure Theorem &middot; Sharp Form</div><div class="ln"></div></div>
+  </section>
+
+  <div class="intro">
+    <p>This is why the paper's central theorem lands where it does. It is not merely that some combination of 6174 and 8008 happens to touch A, R, D, and 0 somewhere between them. It is that their combined phase support <em>is the alphabet</em>, written in full, with each role represented by its complete coset of digits, in numerical order, closed by the null pair.</p>
+    <p>Two arbitrary four-digit numbers would not do this. Almost nothing does this. The claim is that these two &mdash; one already famous as the Kaprekar fixed point, one a palindrome that factors as <span style="font-family:var(--mono)">7&times;1144</span> and reads as AAAA when the seven is stripped &mdash; together <em>are</em> the closure.</p>
+  </div>
+
+  <div class="sys"><div class="ln"></div><div class="lbl">Enumeration Complete · 1-9 &middot; 0,0</div><div class="ln"></div></div>
+
+  <!-- ═════════════════════════════════════════════════ -->
+  <!-- VI · WHAT'S SOLID · WHAT'S ASPIRATIONAL -->
+  <!-- ═════════════════════════════════════════════════ -->
+  <div class="thread"><div class="num">VI</div><h2>Solid &middot; Aspirational</h2></div>
+
+  <div class="intro" style="margin-top:-8px;margin-bottom:28px">
+    <p>The paper is at its best where it's honest about which parts it has proven and which parts it is reaching for. Both matter. Here is the split.</p>
+  </div>
+
+  <ul class="checklist">
+    <li class="solid"><strong>Solid.</strong> The token bijection. Eight rows of a lookup table. Implementable in an hour. Verifiably reversible.</li>
+    <li class="solid"><strong>Solid.</strong> The projections. 6174 → DAAA and 8008 → R00R are arithmetic facts once the coset partition is defined.</li>
+    <li class="solid"><strong>Solid.</strong> The macro closure, in the sharp form Chris wrote back with. 147·258·369·00 is a complete canonical partition of the decimal alphabet.</li>
+    <li class="solid"><strong>Solid.</strong> The register / rendering boundary. The paper explicitly flags that digits 8 and 9 don't fit in three bits, and lives with that instead of hiding it.</li>
+    <li class="soft"><strong>Aspirational.</strong> The applications. Universal media translation, non-cannibalizing memory, phase-native OS. Real design targets, not shipped capabilities.</li>
+    <li class="soft"><strong>Aspirational.</strong> That {A, R, D, 0} is <em class="i">the</em> right alphabet for meaning. The deep claim. Rides on the wider PFD framework.</li>
+    <li class="soft"><strong>Aspirational.</strong> The k=3 recognition event, 511 = 21 + 147 + 343. Numerically clean. Significance depends on already accepting the framework's vocabulary.</li>
+  </ul>
+
+
+  <!-- ═════════════════════════════════════════════════ -->
+  <!-- VII · THE ONE-LINE -->
+  <!-- ═════════════════════════════════════════════════ -->
+  <div class="thread"><div class="num">VII</div><h2>In One Line</h2></div>
+
+  <div class="intro">
+    <p class="lede" style="text-align:center;margin-top:32px">
+      <em class="i">The address preserves the object.<br>
+      The phase preserves the meaning.<br>
+      The attractor preserves recurrence.<br>
+      The membrane preserves non-fusion.</em>
+    </p>
+    <p style="text-align:center;color:var(--mute);margin-top:24px">Four lines. Everything else in the paper is the machinery that makes them precise.</p>
+  </div>
+
+  <div class="closing">
+    <div class="mark"><canvas id="ascii-remainder"></canvas></div>
+    <p>The Alphabet, Closed</p>
+  </div>
+
+  <footer><div class="fine">Primer № 002 · Binary–Fano–Phase Translation · Grounded</div></footer>
+
+</main>
+
+<script>
+// ── Helper: setup a responsive canvas ─
+function setupCanvas(id){
+  const cv = document.getElementById(id);
+  if(!cv) return null;
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio||1,2);
+  function resize(){
+    const w = cv.clientWidth, h = cv.clientHeight;
+    cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener('resize', resize); resize();
+  return { cv, ctx, get w(){return cv.clientWidth}, get h(){return cv.clientHeight} };
+}
+
+// ── Hero: phase constellation ─────────────
+(function(){
+  const cv = document.getElementById('phase-canvas');
+  const ctx = cv.getContext('2d');
+  let w=0,h=0,dpr=Math.min(window.devicePixelRatio||1,2);
+
+  function resize(){
+    w = cv.clientWidth; h = cv.clientHeight;
+    cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener('resize', resize); resize();
+
+  // four role bands. each carries its own numbers and glyph.
+  const ROLES = [
+    { g:'A', color:'#ffd166', nums:['147','1','4','7','A','A','1144','A','147','A','1','4'] },
+    { g:'R', color:'#7cc4ff', nums:['258','2','5','8','R','R','8008','R','258','R','2','5'] },
+    { g:'D', color:'#c9a4ff', nums:['369','3','6','9','D','D','6174','D','369','D','3','6'] },
+    { g:'0', color:'#a1a1aa', nums:['0','·','0','∙','0','·','00','R00R','0','∙','·','0'] },
+  ];
+
+  // build points in a torus-like distribution, banded by role
+  const points = [];
+  const PER_BAND = 42;
+  for (let b=0;b<ROLES.length;b++){
+    for (let i=0;i<PER_BAND;i++){
+      const t = i/PER_BAND;
+      // each role sits in its own vertical slice + phase offset
+      points.push({
+        t, band:b, i,
+        label: ROLES[b].nums[i % ROLES[b].nums.length],
+        color: ROLES[b].color,
+        role: ROLES[b].g
+      });
+    }
+  }
+
+  let start = performance.now();
+  let mouseX=0, mouseY=0, tiltX=0, tiltY=0;
+  window.addEventListener('mousemove', e=>{
+    mouseX = (e.clientX/window.innerWidth - .5);
+    mouseY = (e.clientY/window.innerHeight - .5);
+  });
+
+  function frame(now){
+    const elapsed = (now - start)/1000;
+    tiltX += (mouseX - tiltX)*.04;
+    tiltY += (mouseY - tiltY)*.04;
+
+    ctx.clearRect(0,0,w,h);
+
+    const cx = w/2, cy = h/2;
+    const R = Math.min(w*0.20, h*0.26, 260);
+    const H = Math.min(h*0.78, 820);
+    const persp = 800;
+
+    const arr = [];
+    for (const p of points){
+      const baseT = ((p.t + elapsed*0.020) % 1);
+      const y = (baseT - 0.5) * H;
+      // four bands separated by pi/2 phase offset
+      const bandPhase = (p.band/4) * Math.PI*2;
+      const ang = baseT * Math.PI * 7 + elapsed*0.22 + bandPhase;
+      let x = Math.cos(ang) * R;
+      let z = Math.sin(ang) * R;
+
+      const tx = tiltX * 18;
+      const ty = tiltY * 14;
+      x += tx;
+      const yy = y + ty;
+
+      const scale = persp / (persp - z);
+      const sx = cx + x * scale;
+      const sy = cy + yy * scale;
+      const depth = (z + R) / (2*R);
+      arr.push({ sx, sy, scale, depth, label:p.label, color:p.color, role:p.role });
+    }
+
+    arr.sort((a,b)=>a.depth - b.depth);
+
+    for (const pt of arr){
+      const alpha = 0.05 + Math.pow(pt.depth, 1.5) * 0.85;
+      ctx.globalAlpha = alpha;
+      // occasional glyph highlight
+      const isGlyph = pt.label.length === 1 && 'ARD0'.includes(pt.label);
+      ctx.font = `${isGlyph?600:400} ${Math.round((isGlyph?12:10.5)*pt.scale)}px 'JetBrains Mono', monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      if (isGlyph){
+        ctx.shadowColor = pt.color;
+        ctx.shadowBlur = 8 * pt.depth;
+        ctx.fillStyle = pt.color;
+      } else {
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = pt.color;
+      }
+      ctx.fillText(pt.label, pt.sx, pt.sy);
+      ctx.shadowBlur = 0;
+    }
+    ctx.globalAlpha = 1;
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+
+// ── Fig. 01: Collapse — three bits into one role ─
+(function(){
+  const s = setupCanvas('ascii-collapse'); if(!s) return;
+  const {ctx} = s;
+  const A_COLOR = '#f59e0b';
+  const patterns = [
+    { bits:'001', src_y_frac: 0.20 },
+    { bits:'100', src_y_frac: 0.50 },
+    { bits:'111', src_y_frac: 0.80 },
+  ];
+  let t0 = performance.now();
+  function frame(now){
+    const w=s.w, h=s.h;
+    const el = (now-t0)/1000;
+    ctx.clearRect(0,0,w,h);
+    ctx.font = "12px 'JetBrains Mono', monospace";
+    ctx.textBaseline='middle';
+
+    const srcX = w*0.15;
+    const tgtX = w*0.78;
+    const tgtY = h*0.5;
+
+    // cycle 0..1 every 3.6s
+    const cycle = (el % 3.6) / 3.6;
+
+    // draw source labels always
+    ctx.textAlign='center';
+    for (const p of patterns){
+      const y = h * p.src_y_frac;
+      ctx.fillStyle = 'rgba(9,9,11,.55)';
+      ctx.fillText(p.bits, srcX, y);
+    }
+
+    // draw the target A
+    ctx.fillStyle = A_COLOR;
+    ctx.font = "600 20px 'JetBrains Mono', monospace";
+    // pulse when arriving
+    const arrivePulse = Math.max(0, 1 - Math.abs(cycle - .75)/.15);
+    ctx.shadowColor = A_COLOR;
+    ctx.shadowBlur = 6 + arrivePulse*14;
+    ctx.fillText('A', tgtX, tgtY);
+    ctx.shadowBlur = 0;
+
+    // caption below A
+    ctx.font = "10px 'JetBrains Mono', monospace";
+    ctx.fillStyle = 'rgba(9,9,11,.4)';
+    ctx.fillText('role', tgtX, tgtY + 22);
+
+    // draw the traveling dots
+    for (let i=0; i<patterns.length; i++){
+      const p = patterns[i];
+      // stagger the launches
+      const launch = i * 0.06;
+      const localT = (cycle - launch + 1) % 1;
+      if (localT > .85) continue; // dissolve after arrival
+      // ease
+      const ease = localT*localT*(3 - 2*localT);
+      const srcY = h * p.src_y_frac;
+      const x = srcX + 24 + ease * (tgtX - srcX - 48);
+      const y = srcY + ease * (tgtY - srcY);
+      const alpha = Math.min(1, localT*3) * (1 - Math.max(0, (localT-.75)/.1));
+      // trailing dots
+      for (let k=0;k<5;k++){
+        const back = k*.03;
+        const t2 = Math.max(0, localT - back);
+        const ease2 = t2*t2*(3 - 2*t2);
+        const xx = srcX + 24 + ease2 * (tgtX - srcX - 48);
+        const yy = srcY + ease2 * (tgtY - srcY);
+        ctx.fillStyle = `rgba(245,158,11,${alpha * (1 - k/5) * 0.6})`;
+        ctx.font = "10px 'JetBrains Mono', monospace";
+        ctx.textAlign='center';
+        ctx.fillText('·', xx, yy);
+      }
+      ctx.fillStyle = `rgba(245,158,11,${alpha})`;
+      ctx.font = "11px 'JetBrains Mono', monospace";
+      ctx.fillText('∙', x, y);
+    }
+
+    // hairline connectors — very faint
+    ctx.strokeStyle = 'rgba(9,9,11,.06)';
+    ctx.lineWidth = 1;
+    for (const p of patterns){
+      ctx.beginPath();
+      ctx.moveTo(srcX + 22, h * p.src_y_frac);
+      ctx.lineTo(tgtX - 18, tgtY);
+      ctx.stroke();
+    }
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+
+// ── Fig. 02: The Packet — tokens flowing through the frame ─
+(function(){
+  const s = setupCanvas('ascii-packet'); if(!s) return;
+  const {ctx} = s;
+
+  const COLORS = {
+    R:'#2b8ef5', A:'#f59e0b', D:'#a855f7', N:'#71717a'
+  };
+
+  let t0 = performance.now();
+  function frame(now){
+    const w=s.w, h=s.h;
+    const el = (now-t0)/1000;
+    ctx.clearRect(0,0,w,h);
+    ctx.font = "12px 'JetBrains Mono', monospace";
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+
+    // frame layout: MEM | ATT | payload | ATT | MEM
+    // widths sum to 1
+    const segs = [
+      { w:0.13, kind:'MEM', label:'R00R', color:COLORS.R },
+      { w:0.13, kind:'ATT', label:'DAAA', color:COLORS.A },
+      { w:0.48, kind:'PAY', label:'payload', color:null },
+      { w:0.13, kind:'ATT', label:'DAAA', color:COLORS.A },
+      { w:0.13, kind:'MEM', label:'R00R', color:COLORS.R },
+    ];
+
+    // draw segment blocks (thin frames)
+    let x = 12;
+    const total = w - 24;
+    const y0 = h*0.28;
+    const y1 = h*0.60;
+    const rows = [];
+    for (const seg of segs){
+      const sw = seg.w * total;
+      rows.push({ x, sw, ...seg });
+      x += sw;
+    }
+    // draw
+    for (const r of rows){
+      if (r.kind === 'PAY'){
+        // dashed border
+        ctx.setLineDash([3,3]);
+        ctx.strokeStyle = 'rgba(9,9,11,.22)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(r.x, y0, r.sw, y1-y0);
+        ctx.setLineDash([]);
+      } else {
+        ctx.fillStyle = r.color + '22';
+        ctx.fillRect(r.x, y0, r.sw, y1-y0);
+        ctx.strokeStyle = r.color + '99';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(r.x, y0, r.sw, y1-y0);
+        // label — role letters
+        ctx.fillStyle = r.color;
+        ctx.font = "600 12px 'JetBrains Mono', monospace";
+        ctx.fillText(r.label, r.x + r.sw/2, (y0+y1)/2 - 4);
+        ctx.font = "9px 'JetBrains Mono', monospace";
+        ctx.fillStyle = 'rgba(9,9,11,.5)';
+        ctx.fillText(r.kind, r.x + r.sw/2, (y0+y1)/2 + 10);
+      }
+    }
+
+    // top and bottom labels
+    ctx.font = "9px 'JetBrains Mono', monospace";
+    ctx.fillStyle = 'rgba(9,9,11,.45)';
+    ctx.fillText('OUTER BOUNDARY', w/2, y0 - 12);
+    ctx.fillText('INNER STABILITY', w/2, y1 + 12);
+
+    // flowing tokens through the payload area
+    const pay = rows[2];
+    const glyphs = ['A','R','D','A','A','R','D','A','R','A','D','R','A'];
+    const N = 14;
+    for (let i=0;i<N;i++){
+      const local = ((el*.22) + i/N) % 1;
+      const xx = pay.x + 8 + local * (pay.sw - 16);
+      const yy = (y0+y1)/2 + Math.sin(el*1.2 + i*0.7)*6;
+      const g = glyphs[i % glyphs.length];
+      const alpha = Math.sin(local*Math.PI) * 0.7 + 0.15;
+      ctx.font = "600 11px 'JetBrains Mono', monospace";
+      ctx.fillStyle = COLORS[g] + Math.round(alpha*255).toString(16).padStart(2,'0');
+      ctx.fillText(g, xx, yy);
+    }
+
+    // caption inside payload
+    ctx.font = "9px 'JetBrains Mono', monospace";
+    ctx.fillStyle = 'rgba(9,9,11,.35)';
+    ctx.fillText('your file, as (role, address) tokens', pay.x + pay.sw/2, y1 - 10);
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+

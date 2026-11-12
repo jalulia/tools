@@ -1,0 +1,122 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GALLERY_SITE_PROMPT.md</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>GALLERY_SITE_PROMPT.md</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/mir-gallery/GALLERY_SITE_PROMPT.md</span><span>0.01 MB · sha256 5a902d491576f186…</span><a download="GALLERY_SITE_PROMPT.md" id="dl" href="#">Download the original</a></header><main><pre># Prompt: Mir Visualization Gallery — GitHub Pages Site
+
+Build a GitHub Pages site that serves as a living gallery for WIP interactive visualizations from the Mir project (Paradox Field Dynamics). The site collects React/JSX and HTML visualizations — helix viewers, phase-space plots, resonance maps, lattice explorers — and presents them in a browsable, filterable gallery with the same visual discipline as the work itself.
+
+---
+
+## Brand &amp; Design System
+
+**Brand:** ø co. — The Impøssible Outcomes Company
+**Design philosophy:** Triadic Tension — meaning lives in the field between three forces held in visible equilibrium. Structure (147), Relation (258), Derivation (369). Color, type, and space each carry one register.
+
+**Dark palette (primary):**
+- Rich Black `#0A0A0A` (background)
+- Charcoal `#1A1A1A` (cards/surfaces)
+- Off-white `#E0E0E0` (body text)
+- White `#FFFFFF` (headings)
+
+**Light palette (alternate):**
+- Warm Cream `#F5F0E8` (background)
+- White `#FFFFFF` (cards)
+- Warm Gray `#D0C9BD` (borders)
+
+**Accent triad (constant across modes):**
+- Solar Ember `#F46138` (warm — assertion, structure)
+- Electric Horizon `#3D6DF4` (cool — derivation, exploration)
+- Pulsewave `#CE2867` (bridging — relation, connection)
+- Sky Pulse `#2C9FF4` (secondary cool)
+
+**Gradient bar:** `linear-gradient(90deg, #CE2867 0%, #F46138 30%, #F4A0A0 50%, #2C9FF4 75%, #3D6DF4 100%)` — used as a thin accent stripe (3–4px) at the top of pages and cards.
+
+**Typography:**
+- Display/headings: Montserrat 900 (weight and presence, authority of carved stone)
+- Body: Inter 300–600 (clean, restrained, serves the reader)
+- Mono/system: Lekton 400/700 (mathematical scaffolding, constants, labels)
+
+**Spatial rules:**
+- Generous margins, clear vertical rhythm
+- Section breaks through silence (whitespace), not decoration
+- Cards have subtle borders, no drop shadows in dark mode
+- Thin horizontal rules as phase boundaries
+- The whitespace is structural, not leftover
+
+---
+
+## Site Structure &amp; Layout
+
+Use **component.gallery** and **thewayofcode.com/gallery** as structural references — a curated directory where each item gets a card with a live preview, not a blog or portfolio with hero images.
+
+### Pages
+
+1. **Gallery index** (`/` or `/gallery`)
+   - Grid of visualization cards (responsive: 3-col → 2-col → 1-col)
+   - Each card shows: title, thumbnail/preview (static or animated), short description, tags, date, status badge (WIP / Draft / Stable)
+   - Filter/sort by: tag, status, date
+   - Search by title or description
+   - The grid itself should breathe — generous gap, no crowding
+
+2. **Visualization detail** (`/gallery/{slug}`)
+   - Full-viewport live embed of the visualization (iframe or inline React mount)
+   - Title, description, and metadata sidebar or below
+   - Controls panel if the visualization is interactive
+   - &quot;View source&quot; link (to the JSX/HTML in the repo)
+   - Navigation to prev/next visualization
+
+3. **About** (`/about`)
+   - Brief project description: what Mir is, what PFD is, why these visualizations exist
+   - Link to the main project
+
+### Information Architecture
+
+Each visualization entry is defined by a simple metadata file or frontmatter:
+
+```yaml
+title: &quot;Helix Visualizer&quot;
+slug: helix-visualizer
+description: &quot;Five-view interactive explorer for PFD HELIX lattice geometry — orbit, tide, field, signal, and strand views.&quot;
+tags: [helix, lattice, phase-space, interactive]
+status: wip
+date: 2026-03-24
+file: helix-visualizer.jsx
+thumbnail: thumbnails/helix-visualizer.png
+```
+
+Adding a new visualization = dropping the file + adding a metadata entry. No build step beyond what GitHub Pages / a static site generator already provides.
+
+---
+
+## Technical Preferences
+
+- **Static site generator:** Use whatever is cleanest for GitHub Pages — could be plain HTML + JS, Astro, or even Next.js with static export. Bias toward minimal tooling. If a plain `docs/` folder with vanilla HTML + a small JS bundler works, prefer that over a framework.
+- **React visualizations:** The existing work is in JSX (React functional components with hooks). The gallery needs to be able to mount these. An iframe-per-visualization approach is fine and keeps them isolated.
+- **Dark/light toggle:** Should match the brand system exactly (the helix-visualizer already implements both themes — reuse those tokens).
+- **No CMS, no database.** File-based. Markdown or YAML metadata. Git is the CMS.
+- **Accessible:** Proper semantic HTML, keyboard navigation, sufficient contrast.
+- **Fast:** No heavy frameworks for the shell. The visualizations themselves can be complex, but the gallery chrome should be light.
+
+---
+
+## Tone
+
+The site should feel like walking into a workshop where serious, beautiful work is happening — not a polished product launch. &quot;WIP&quot; is a feature, not an apology. The gallery says: *here is where the thinking becomes visible.* Restrained, precise, warm underneath. The design philosophy doc says it well: &quot;the beauty emerging entirely from precision and proportion.&quot;
+
+---
+
+## Existing Assets to Incorporate
+
+- `helix-visualizer.jsx` — Five-view interactive HELIX explorer (first gallery entry)
+- IO Brand Kit v2.1 (full color/type/spacing tokens already defined)
+- `Mir_Primer.html` — existing HTML with the full brand CSS (use as reference for implemented styles)
+- Images folder with illustration assets that could serve as gallery ambient/texture
+
+---
+
+## Deliverables
+
+1. Repository structure ready for GitHub Pages deployment
+2. Gallery index page with card grid, filtering, and dark/light toggle
+3. Detail page template with live visualization embed
+4. The helix-visualizer mounted as the first entry
+5. README with instructions for adding new visualizations
+6. GitHub Actions workflow for deployment (if needed beyond default Pages)
+</pre></main><script>var b=atob("IyBQcm9tcHQ6IE1pciBWaXN1YWxpemF0aW9uIEdhbGxlcnkg4oCUIEdpdEh1YiBQYWdlcyBTaXRlCgpCdWlsZCBhIEdpdEh1YiBQYWdlcyBzaXRlIHRoYXQgc2VydmVzIGFzIGEgbGl2aW5nIGdhbGxlcnkgZm9yIFdJUCBpbnRlcmFjdGl2ZSB2aXN1YWxpemF0aW9ucyBmcm9tIHRoZSBNaXIgcHJvamVjdCAoUGFyYWRveCBGaWVsZCBEeW5hbWljcykuIFRoZSBzaXRlIGNvbGxlY3RzIFJlYWN0L0pTWCBhbmQgSFRNTCB2aXN1YWxpemF0aW9ucyDigJQgaGVsaXggdmlld2VycywgcGhhc2Utc3BhY2UgcGxvdHMsIHJlc29uYW5jZSBtYXBzLCBsYXR0aWNlIGV4cGxvcmVycyDigJQgYW5kIHByZXNlbnRzIHRoZW0gaW4gYSBicm93c2FibGUsIGZpbHRlcmFibGUgZ2FsbGVyeSB3aXRoIHRoZSBzYW1lIHZpc3VhbCBkaXNjaXBsaW5lIGFzIHRoZSB3b3JrIGl0c2VsZi4KCi0tLQoKIyMgQnJhbmQgJiBEZXNpZ24gU3lzdGVtCgoqKkJyYW5kOioqIMO4IGNvLiDigJQgVGhlIEltcMO4c3NpYmxlIE91dGNvbWVzIENvbXBhbnkKKipEZXNpZ24gcGhpbG9zb3BoeToqKiBUcmlhZGljIFRlbnNpb24g4oCUIG1lYW5pbmcgbGl2ZXMgaW4gdGhlIGZpZWxkIGJldHdlZW4gdGhyZWUgZm9yY2VzIGhlbGQgaW4gdmlzaWJsZSBlcXVpbGlicml1bS4gU3RydWN0dXJlICgxNDcpLCBSZWxhdGlvbiAoMjU4KSwgRGVyaXZhdGlvbiAoMzY5KS4gQ29sb3IsIHR5cGUsIGFuZCBzcGFjZSBlYWNoIGNhcnJ5IG9uZSByZWdpc3Rlci4KCioqRGFyayBwYWxldHRlIChwcmltYXJ5KToqKgotIFJpY2ggQmxhY2sgYCMwQTBBMEFgIChiYWNrZ3JvdW5kKQotIENoYXJjb2FsIGAjMUExQTFBYCAoY2FyZHMvc3VyZmFjZXMpCi0gT2ZmLXdoaXRlIGAjRTBFMEUwYCAoYm9keSB0ZXh0KQotIFdoaXRlIGAjRkZGRkZGYCAoaGVhZGluZ3MpCgoqKkxpZ2h0IHBhbGV0dGUgKGFsdGVybmF0ZSk6KioKLSBXYXJtIENyZWFtIGAjRjVGMEU4YCAoYmFja2dyb3VuZCkKLSBXaGl0ZSBgI0ZGRkZGRmAgKGNhcmRzKQotIFdhcm0gR3JheSBgI0QwQzlCRGAgKGJvcmRlcnMpCgoqKkFjY2VudCB0cmlhZCAoY29uc3RhbnQgYWNyb3NzIG1vZGVzKToqKgotIFNvbGFyIEVtYmVyIGAjRjQ2MTM4YCAod2FybSDigJQgYXNzZXJ0aW9uLCBzdHJ1Y3R1cmUpCi0gRWxlY3RyaWMgSG9yaXpvbiBgIzNENkRGNGAgKGNvb2wg4oCUIGRlcml2YXRpb24sIGV4cGxvcmF0aW9uKQotIFB1bHNld2F2ZSBgI0NFMjg2N2AgKGJyaWRnaW5nIOKAlCByZWxhdGlvbiwgY29ubmVjdGlvbikKLSBTa3kgUHVsc2UgYCMyQzlGRjRgIChzZWNvbmRhcnkgY29vbCkKCioqR3JhZGllbnQgYmFyOioqIGBsaW5lYXItZ3JhZGllbnQoOTBkZWcsICNDRTI4NjcgMCUsICNGNDYxMzggMzAlLCAjRjRBMEEwIDUwJSwgIzJDOUZGNCA3NSUsICMzRDZERjQgMTAwJSlgIOKAlCB1c2VkIGFzIGEgdGhpbiBhY2NlbnQgc3RyaXBlICgz4oCTNHB4KSBhdCB0aGUgdG9wIG9mIHBhZ2VzIGFuZCBjYXJkcy4KCioqVHlwb2dyYXBoeToqKgotIERpc3BsYXkvaGVhZGluZ3M6IE1vbnRzZXJyYXQgOTAwICh3ZWlnaHQgYW5kIHByZXNlbmNlLCBhdXRob3JpdHkgb2YgY2FydmVkIHN0b25lKQotIEJvZHk6IEludGVyIDMwMOKAkzYwMCAoY2xlYW4sIHJlc3RyYWluZWQsIHNlcnZlcyB0aGUgcmVhZGVyKQotIE1vbm8vc3lzdGVtOiBMZWt0b24gNDAwLzcwMCAobWF0aGVtYXRpY2FsIHNjYWZmb2xkaW5nLCBjb25zdGFudHMsIGxhYmVscykKCioqU3BhdGlhbCBydWxlczoqKgotIEdlbmVyb3VzIG1hcmdpbnMsIGNsZWFyIHZlcnRpY2FsIHJoeXRobQotIFNlY3Rpb24gYnJlYWtzIHRocm91Z2ggc2lsZW5jZSAod2hpdGVzcGFjZSksIG5vdCBkZWNvcmF0aW9uCi0gQ2FyZHMgaGF2ZSBzdWJ0bGUgYm9yZGVycywgbm8gZHJvcCBzaGFkb3dzIGluIGRhcmsgbW9kZQotIFRoaW4gaG9yaXpvbnRhbCBydWxlcyBhcyBwaGFzZSBib3VuZGFyaWVzCi0gVGhlIHdoaXRlc3BhY2UgaXMgc3RydWN0dXJhbCwgbm90IGxlZnRvdmVyCgotLS0KCiMjIFNpdGUgU3RydWN0dXJlICYgTGF5b3V0CgpVc2UgKipjb21wb25lbnQuZ2FsbGVyeSoqIGFuZCAqKnRoZXdheW9mY29kZS5jb20vZ2FsbGVyeSoqIGFzIHN0cnVjdHVyYWwgcmVmZXJlbmNlcyDigJQgYSBjdXJhdGVkIGRpcmVjdG9yeSB3aGVyZSBlYWNoIGl0ZW0gZ2V0cyBhIGNhcmQgd2l0aCBhIGxpdmUgcHJldmlldywgbm90IGEgYmxvZyBvciBwb3J0Zm9saW8gd2l0aCBoZXJvIGltYWdlcy4KCiMjIyBQYWdlcwoKMS4gKipHYWxsZXJ5IGluZGV4KiogKGAvYCBvciBgL2dhbGxlcnlgKQogICAtIEdyaWQgb2YgdmlzdWFsaXphdGlvbiBjYXJkcyAocmVzcG9uc2l2ZTogMy1jb2wg4oaSIDItY29sIOKGkiAxLWNvbCkKICAgLSBFYWNoIGNhcmQgc2hvd3M6IHRpdGxlLCB0aHVtYm5haWwvcHJldmlldyAoc3RhdGljIG9yIGFuaW1hdGVkKSwgc2hvcnQgZGVzY3JpcHRpb24sIHRhZ3MsIGRhdGUsIHN0YXR1cyBiYWRnZSAoV0lQIC8gRHJhZnQgLyBTdGFibGUpCiAgIC0gRmlsdGVyL3NvcnQgYnk6IHRhZywgc3RhdHVzLCBkYXRlCiAgIC0gU2VhcmNoIGJ5IHRpdGxlIG9yIGRlc2NyaXB0aW9uCiAgIC0gVGhlIGdyaWQgaXRzZWxmIHNob3VsZCBicmVhdGhlIOKAlCBnZW5lcm91cyBnYXAsIG5vIGNyb3dkaW5nCgoyLiAqKlZpc3VhbGl6YXRpb24gZGV0YWlsKiogKGAvZ2FsbGVyeS97c2x1Z31gKQogICAtIEZ1bGwtdmlld3BvcnQgbGl2ZSBlbWJlZCBvZiB0aGUgdmlzdWFsaXphdGlvbiAoaWZyYW1lIG9yIGlubGluZSBSZWFjdCBtb3VudCkKICAgLSBUaXRsZSwgZGVzY3JpcHRpb24sIGFuZCBtZXRhZGF0YSBzaWRlYmFyIG9yIGJlbG93CiAgIC0gQ29udHJvbHMgcGFuZWwgaWYgdGhlIHZpc3VhbGl6YXRpb24gaXMgaW50ZXJhY3RpdmUKICAgLSAiVmlldyBzb3VyY2UiIGxpbmsgKHRvIHRoZSBKU1gvSFRNTCBpbiB0aGUgcmVwbykKICAgLSBOYXZpZ2F0aW9uIHRvIHByZXYvbmV4dCB2aXN1YWxpemF0aW9uCgozLiAqKkFib3V0KiogKGAvYWJvdXRgKQogICAtIEJyaWVmIHByb2plY3QgZGVzY3JpcHRpb246IHdoYXQgTWlyIGlzLCB3aGF0IFBGRCBpcywgd2h5IHRoZXNlIHZpc3VhbGl6YXRpb25zIGV4aXN0CiAgIC0gTGluayB0byB0aGUgbWFpbiBwcm9qZWN0CgojIyMgSW5mb3JtYXRpb24gQXJjaGl0ZWN0dXJlCgpFYWNoIHZpc3VhbGl6YXRpb24gZW50cnkgaXMgZGVmaW5lZCBieSBhIHNpbXBsZSBtZXRhZGF0YSBmaWxlIG9yIGZyb250bWF0dGVyOgoKYGBgeWFtbAp0aXRsZTogIkhlbGl4IFZpc3VhbGl6ZXIiCnNsdWc6IGhlbGl4LXZpc3VhbGl6ZXIKZGVzY3JpcHRpb246ICJGaXZlLXZpZXcgaW50ZXJhY3RpdmUgZXhwbG9yZXIgZm9yIFBGRCBIRUxJWCBsYXR0aWNlIGdlb21ldHJ5IOKAlCBvcmJpdCwgdGlkZSwgZmllbGQsIHNpZ25hbCwgYW5kIHN0cmFuZCB2aWV3cy4iCnRhZ3M6IFtoZWxpeCwgbGF0dGljZSwgcGhhc2Utc3BhY2UsIGludGVyYWN0aXZlXQpzdGF0dXM6IHdpcApkYXRlOiAyMDI2LTAzLTI0CmZpbGU6IGhlbGl4LXZpc3VhbGl6ZXIuanN4CnRodW1ibmFpbDogdGh1bWJuYWlscy9oZWxpeC12aXN1YWxpemVyLnBuZwpgYGAKCkFkZGluZyBhIG5ldyB2aXN1YWxpemF0aW9uID0gZHJvcHBpbmcgdGhlIGZpbGUgKyBhZGRpbmcgYSBtZXRhZGF0YSBlbnRyeS4gTm8gYnVpbGQgc3RlcCBiZXlvbmQgd2hhdCBHaXRIdWIgUGFnZXMgLyBhIHN0YXRpYyBzaXRlIGdlbmVyYXRvciBhbHJlYWR5IHByb3ZpZGVzLgoKLS0tCgojIyBUZWNobmljYWwgUHJlZmVyZW5jZXMKCi0gKipTdGF0aWMgc2l0ZSBnZW5lcmF0b3I6KiogVXNlIHdoYXRldmVyIGlzIGNsZWFuZXN0IGZvciBHaXRIdWIgUGFnZXMg4oCUIGNvdWxkIGJlIHBsYWluIEhUTUwgKyBKUywgQXN0cm8sIG9yIGV2ZW4gTmV4dC5qcyB3aXRoIHN0YXRpYyBleHBvcnQuIEJpYXMgdG93YXJkIG1pbmltYWwgdG9vbGluZy4gSWYgYSBwbGFpbiBgZG9jcy9gIGZvbGRlciB3aXRoIHZhbmlsbGEgSFRNTCArIGEgc21hbGwgSlMgYnVuZGxlciB3b3JrcywgcHJlZmVyIHRoYXQgb3ZlciBhIGZyYW1ld29yay4KLSAqKlJlYWN0IHZpc3VhbGl6YXRpb25zOioqIFRoZSBleGlzdGluZyB3b3JrIGlzIGluIEpTWCAoUmVhY3QgZnVuY3Rpb25hbCBjb21wb25lbnRzIHdpdGggaG9va3MpLiBUaGUgZ2FsbGVyeSBuZWVkcyB0byBiZSBhYmxlIHRvIG1vdW50IHRoZXNlLiBBbiBpZnJhbWUtcGVyLXZpc3VhbGl6YXRpb24gYXBwcm9hY2ggaXMgZmluZSBhbmQga2VlcHMgdGhlbSBpc29sYXRlZC4KLSAqKkRhcmsvbGlnaHQgdG9nZ2xlOioqIFNob3VsZCBtYXRjaCB0aGUgYnJhbmQgc3lzdGVtIGV4YWN0bHkgKHRoZSBoZWxpeC12aXN1YWxpemVyIGFscmVhZHkgaW1wbGVtZW50cyBib3RoIHRoZW1lcyDigJQgcmV1c2UgdGhvc2UgdG9rZW5zKS4KLSAqKk5vIENNUywgbm8gZGF0YWJhc2UuKiogRmlsZS1iYXNlZC4gTWFya2Rvd24gb3IgWUFNTCBtZXRhZGF0YS4gR2l0IGlzIHRoZSBDTVMuCi0gKipBY2Nlc3NpYmxlOioqIFByb3BlciBzZW1hbnRpYyBIVE1MLCBrZXlib2FyZCBuYXZpZ2F0aW9uLCBzdWZmaWNpZW50IGNvbnRyYXN0LgotICoqRmFzdDoqKiBObyBoZWF2eSBmcmFtZXdvcmtzIGZvciB0aGUgc2hlbGwuIFRoZSB2aXN1YWxpemF0aW9ucyB0aGVtc2VsdmVzIGNhbiBiZSBjb21wbGV4LCBidXQgdGhlIGdhbGxlcnkgY2hyb21lIHNob3VsZCBiZSBsaWdodC4KCi0tLQoKIyMgVG9uZQoKVGhlIHNpdGUgc2hvdWxkIGZlZWwgbGlrZSB3YWxraW5nIGludG8gYSB3b3Jrc2hvcCB3aGVyZSBzZXJpb3VzLCBiZWF1dGlmdWwgd29yayBpcyBoYXBwZW5pbmcg4oCUIG5vdCBhIHBvbGlzaGVkIHByb2R1Y3QgbGF1bmNoLiAiV0lQIiBpcyBhIGZlYXR1cmUsIG5vdCBhbiBhcG9sb2d5LiBUaGUgZ2FsbGVyeSBzYXlzOiAqaGVyZSBpcyB3aGVyZSB0aGUgdGhpbmtpbmcgYmVjb21lcyB2aXNpYmxlLiogUmVzdHJhaW5lZCwgcHJlY2lzZSwgd2FybSB1bmRlcm5lYXRoLiBUaGUgZGVzaWduIHBoaWxvc29waHkgZG9jIHNheXMgaXQgd2VsbDogInRoZSBiZWF1dHkgZW1lcmdpbmcgZW50aXJlbHkgZnJvbSBwcmVjaXNpb24gYW5kIHByb3BvcnRpb24uIgoKLS0tCgojIyBFeGlzdGluZyBBc3NldHMgdG8gSW5jb3Jwb3JhdGUKCi0gYGhlbGl4LXZpc3VhbGl6ZXIuanN4YCDigJQgRml2ZS12aWV3IGludGVyYWN0aXZlIEhFTElYIGV4cGxvcmVyIChmaXJzdCBnYWxsZXJ5IGVudHJ5KQotIElPIEJyYW5kIEtpdCB2Mi4xIChmdWxsIGNvbG9yL3R5cGUvc3BhY2luZyB0b2tlbnMgYWxyZWFkeSBkZWZpbmVkKQotIGBNaXJfUHJpbWVyLmh0bWxgIOKAlCBleGlzdGluZyBIVE1MIHdpdGggdGhlIGZ1bGwgYnJhbmQgQ1NTICh1c2UgYXMgcmVmZXJlbmNlIGZvciBpbXBsZW1lbnRlZCBzdHlsZXMpCi0gSW1hZ2VzIGZvbGRlciB3aXRoIGlsbHVzdHJhdGlvbiBhc3NldHMgdGhhdCBjb3VsZCBzZXJ2ZSBhcyBnYWxsZXJ5IGFtYmllbnQvdGV4dHVyZQoKLS0tCgojIyBEZWxpdmVyYWJsZXMKCjEuIFJlcG9zaXRvcnkgc3RydWN0dXJlIHJlYWR5IGZvciBHaXRIdWIgUGFnZXMgZGVwbG95bWVudAoyLiBHYWxsZXJ5IGluZGV4IHBhZ2Ugd2l0aCBjYXJkIGdyaWQsIGZpbHRlcmluZywgYW5kIGRhcmsvbGlnaHQgdG9nZ2xlCjMuIERldGFpbCBwYWdlIHRlbXBsYXRlIHdpdGggbGl2ZSB2aXN1YWxpemF0aW9uIGVtYmVkCjQuIFRoZSBoZWxpeC12aXN1YWxpemVyIG1vdW50ZWQgYXMgdGhlIGZpcnN0IGVudHJ5CjUuIFJFQURNRSB3aXRoIGluc3RydWN0aW9ucyBmb3IgYWRkaW5nIG5ldyB2aXN1YWxpemF0aW9ucwo2LiBHaXRIdWIgQWN0aW9ucyB3b3JrZmxvdyBmb3IgZGVwbG95bWVudCAoaWYgbmVlZGVkIGJleW9uZCBkZWZhdWx0IFBhZ2VzKQo="),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

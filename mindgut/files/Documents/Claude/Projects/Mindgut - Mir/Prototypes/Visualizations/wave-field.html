@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wave Field</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; overflow: hidden; cursor: crosshair; }
+  canvas { display: block; position: fixed; top: 0; left: 0; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+let W, H, cx, cy;
+let mx = 0.5, my = 0.5; // normalized mouse
+let smx = 0.5, smy = 0.5;
+let t = 0;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  cx = W / 2;
+  cy = H / 2;
+}
+window.addEventListener('resize', resize);
+resize();
+
+window.addEventListener('mousemove', e => {
+  mx = e.clientX / W;
+  my = e.clientY / H;
+});
+window.addEventListener('touchmove', e => {
+  mx = e.touches[0].clientX / W;
+  my = e.touches[0].clientY / H;
+  e.preventDefault();
+}, { passive: false });
+
+// --- Colors ---
+const CYAN = [0, 220, 255];
+const BLUE = [30, 100, 255];
+const RED = [255, 50, 70];
+const PINK = [255, 100, 140];
+const GREEN = [0, 220, 100];
+const WHITE = [255, 255, 255];
+
+function rgba(c, a) { return `rgba(${c[0]},${c[1]},${c[2]},${a})`; }
+
+// --- Drawing Helpers ---
+function line(x1, y1, x2, y2, color, lw = 1) {
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  ctx.stroke();
+}
+
+function circle(x, y, r, color, lw = 1) {
+  if (r < 0) r = 0;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  ctx.stroke();
+}
+
+function filledCircle(x, y, r, color) {
+  if (r < 0) r = 0;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+// --- Reticle hash marks around outer circle ---
+function drawReticle(r) {
+  const marks = 24;
+  const hashLen = 12;
+  for (let i = 0; i < marks; i++) {
+    const angle = (i / marks) * Math.PI * 2 + t * 0.02;
+    const x1 = cx + (r - hashLen) * Math.cos(angle);
+    const y1 = cy + (r - hashLen) * Math.sin(angle);
+    const x2 = cx + (r + hashLen) * Math.cos(angle);
+    const y2 = cy + (r + hashLen) * Math.sin(angle);
+
+    // Double hash for cardinal directions
+    if (i % 6 === 0) {
+      const perp = 4;
+      const px = perp * Math.cos(angle + Math.PI/2);
+      const py = perp * Math.sin(angle + Math.PI/2);
+      line(x1 + px, y1 + py, x2 + px, y2 + py, rgba(WHITE, 0.5), 1);
+      line(x1 - px, y1 - py, x2 - px, y2 - py, rgba(WHITE, 0.5), 1);
+    } else {
+      line(x1, y1, x2, y2, rgba(WHITE, 0.25), 0.8);
+    }
+
+    // Triangle markers at 12, 3, 6, 9 positions
+    if (i % 6 === 3) {
+      const tx = cx + (r + 28) * Math.cos(angle);
+      const ty = cy + (r + 28) * Math.sin(angle);
+      const s = 8;
+      ctx.beginPath();
+      ctx.moveTo(tx + s * Math.cos(angle), ty + s * Math.sin(angle));
+      ctx.lineTo(tx + s * Math.cos(angle + 2.3), ty + s * Math.sin(angle + 2.3));
+      ctx.lineTo(tx + s * Math.cos(angle - 2.3), ty + s * Math.sin(angle - 2.3));
+      ctx.closePath();
+      ctx.strokeStyle = rgba(WHITE, 0.4);
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+}
+
+// --- Concentric rings (center iris) ---
+function drawConcentricRings(radius) {
+  const rings = 14;
+  const pulse = Math.sin(t * 1.5) * 0.1;
+  for (let i = 0; i < rings; i++) {
+    const r = (i / rings) * radius;
+    const wave = Math.sin(t * 2 + i * 0.5) * 3;
+    const alpha = 0.15 + 0.4 * (1 - i / rings);
+    const blend = i / rings;
+    const color = [
+      CYAN[0] + (BLUE[0] - CYAN[0]) * blend,
+      CYAN[1] + (BLUE[1] - CYAN[1]) * blend,
+      CYAN[2] + (BLUE[2] - CYAN[2]) * blend
+    ];
+    circle(cx, cy, r + wave, rgba(color, alpha + pulse), 1.2);
+  }
+
+  // Bright filled center glow
+  const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.6);
+  grd.addColorStop(0, rgba(CYAN, 0.35));
+  grd.addColorStop(0.5, rgba(BLUE, 0.1));
+  grd.addColorStop(1, 'transparent');
+  ctx.fillStyle = grd;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius * 0.6, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// --- Central "pupil" ---
+function drawPupil() {
+  const pr = Math.min(W, H) * 0.02;
+  // Dark red surround
+  filledCircle(cx, cy, pr * 2.5, rgba(RED, 0.6));
+  filledCircle(cx, cy, pr * 1.8, rgba([80, 0, 0], 0.9));
+  // White bright dot
+  filledCircle(cx + pr * 0.3, cy - pr * 0.3, pr * 0.7, rgba(WHITE, 0.95));
+  filledCircle(cx, cy, pr * 0.3, rgba(WHITE, 0.5));
+}
+
+// --- Wireframe mesh (the bulging bilateral shape) ---
+function drawWireframeMesh(side, color1, color2, meshInfluence) {
+  const scale = Math.min(W, H) * 0.42;
+  const uSteps = 40;
+  const vSteps = 20;
+  const dir = side; // -1 left, +1 right
+
+  // Parametric bulging shape
+  function getPoint(u, v) {
+    // u: 0..1 along length, v: 0..1 around circumference
+    const angle = v * Math.PI * 2;
+    const along = u;
+
+    // Envelope: bulges in middle, tapers at ends
+    const taper = Math.sin(along * Math.PI);
+    const squeeze = 1 - along * along * 0.3;
+
+    // Mouse influence stretches the shape
+    const mInfluence = meshInfluence * 0.3;
+
+    const baseRadius = scale * 0.55 * taper * squeeze;
+    const waveR = baseRadius * (1 + 0.08 * Math.sin(along * 12 + t * 2 + v * 3));
+
+    // Add wave distortion
+    const distort = Math.sin(along * 8 - t * 1.5 + v * 4) * scale * 0.04 * taper;
+
+    const px = cx + dir * along * scale * (0.9 + mInfluence * 0.3);
+    const py = cy + (waveR + distort) * Math.sin(angle);
+    const pz = (waveR + distort) * Math.cos(angle); // for depth shading
+
+    return { x: px, y: py, z: pz };
+  }
+
+  // Draw longitudinal lines (along u)
+  for (let vi = 0; vi < vSteps; vi++) {
+    const v = vi / vSteps;
+    ctx.beginPath();
+    for (let ui = 0; ui <= uSteps; ui++) {
+      const u = ui / uSteps;
+      const p = getPoint(u, v);
+      if (ui === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    const depthFade = 0.15 + 0.2 * (0.5 + 0.5 * Math.sin(v * Math.PI * 2));
+    const blend = vi / vSteps;
+    const c = [
+      color1[0] + (color2[0] - color1[0]) * blend,
+      color1[1] + (color2[1] - color1[1]) * blend,
+      color1[2] + (color2[2] - color1[2]) * blend
+    ];
+    ctx.strokeStyle = rgba(c, depthFade);
+    ctx.lineWidth = 0.7;
+    ctx.stroke();
+  }
+
+  // Draw latitudinal rings (along v)
+  for (let ui = 2; ui <= uSteps; ui += 2) {
+    const u = ui / uSteps;
+    ctx.beginPath();
+    for (let vi = 0; vi <= vSteps; vi++) {
+      const v = vi / vSteps;
+      const p = getPoint(u, v);
+      if (vi === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    const alpha = 0.08 + 0.12 * Math.sin(u * Math.PI);
+    ctx.strokeStyle = rgba(color1, alpha);
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+}
+
+// --- Red planar slices (vertical planes) ---
+function drawPlanarSlices() {
+  const numPlanes = 7;
+  const spread = Math.min(W, H) * 0.22;
+  const planeH = Math.min(W, H) * 0.42;
+  const planeW = Math.min(W, H) * 0.34;
+  const mouseShift = (smx - 0.5) * 40;
+
+  for (let i = 0; i < numPlanes; i++) {
+    const offset = ((i - numPlanes / 2 + 0.5) / (numPlanes / 2)) * spread + mouseShift * 0.3;
+    const perspective = 1 - Math.abs(offset) / (spread * 1.8);
+    const pw = planeW * perspective;
+    const ph = planeH * perspective;
+    const px = cx + offset;
+
+    const alpha = 0.08 + 0.15 * perspective;
+
+    // Vertical plane rectangle
+    ctx.beginPath();
+    ctx.rect(px - 1, cy - ph / 2, 2, ph);
+    ctx.strokeStyle = rgba(PINK, alpha);
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // Horizontal lines across plane
+    const hLines = 6;
+    for (let h = 0; h <= hLines; h++) {
+      const hy = cy - ph / 2 + (h / hLines) * ph;
+      const hw = pw * 0.15;
+      line(px - hw, hy, px + hw, hy, rgba(PINK, alpha * 0.6), 0.6);
+    }
+
+    // Top and bottom horizontal bars
+    line(px - pw * 0.15, cy - ph / 2, px + pw * 0.15, cy - ph / 2, rgba(PINK, alpha), 1);
+    line(px - pw * 0.15, cy + ph / 2, px + pw * 0.15, cy + ph / 2, rgba(PINK, alpha), 1);
+  }
+}
+
+// --- Signal emitter (left side circles) ---
+function drawEmitter() {
+  const ex = cx - Math.min(W, H) * 0.44;
+  const ey = cy;
+  const maxR = Math.min(W, H) * 0.06;
+  const rings = 6;
+
+  for (let i = 0; i < rings; i++) {
+    const r = maxR * (0.2 + (i / rings) * 0.8);
+    const pulse = Math.sin(t * 3 - i * 0.5) * 0.3;
+    const alpha = 0.15 + 0.3 * (1 - i / rings) + pulse * 0.1;
+    const blend = i / rings;
+    const c = [
+      BLUE[0] * (1 - blend) + CYAN[0] * blend,
+      BLUE[1] * (1 - blend) + CYAN[1] * blend,
+      BLUE[2] * (1 - blend) + CYAN[2] * blend
+    ];
+    circle(ex, ey, r, rgba(c, alpha), 1.2);
+  }
+
+  // Small dot
+  filledCircle(ex, ey, 3, rgba(WHITE, 0.6));
+
+  // Horizontal axis line
+  line(ex + maxR, ey, cx + Math.min(W, H) * 0.48, ey, rgba(WHITE, 0.15), 0.8);
+
+  // Emitter endpoint dot
+  circle(ex + maxR * 0.3, ey, 4, rgba(WHITE, 0.4), 1);
+}
+
+// --- Right-side trailing mesh (red + green) ---
+function drawTrailingMesh() {
+  const startX = cx + Math.min(W, H) * 0.15;
+  const endX = cx + Math.min(W, H) * 0.48;
+  const scale = Math.min(W, H) * 0.18;
+  const mouseStretch = (smx - 0.5) * 0.5 + 0.5;
+
+  // Red trailing mesh
+  const uSteps = 30;
+  const vSteps = 14;
+
+  for (let vi = 0; vi < vSteps; vi++) {
+    const v = vi / vSteps;
+    const angle = v * Math.PI * 2;
+    ctx.beginPath();
+    for (let ui = 0; ui <= uSteps; ui++) {
+      const u = ui / uSteps;
+      const along = u;
+      const taper = (1 - along) * (1 - along * 0.5);
+      const r = scale * taper * mouseStretch;
+      const wave = Math.sin(along * 10 - t * 2 + v * 5) * r * 0.15;
+      const px = startX + (endX - startX) * along;
+      const py = cy + (r + wave) * Math.sin(angle);
+
+      if (ui === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.strokeStyle = rgba(RED, 0.1 + 0.15 * (0.5 + 0.5 * Math.sin(v * Math.PI * 2)));
+    ctx.lineWidth = 0.6;
+    ctx.stroke();
+  }
+
+  // Green trailing mesh (smaller, overlaid)
+  for (let vi = 0; vi < vSteps; vi++) {
+    const v = vi / vSteps;
+    const angle = v * Math.PI * 2;
+    ctx.beginPath();
+    for (let ui = 0; ui <= uSteps; ui++) {
+      const u = ui / uSteps;
+      const along = u;
+      const taper = (1 - along) * (1 - along);
+      const r = scale * 0.6 * taper * mouseStretch;
+      const wave = Math.sin(along * 12 - t * 2.5 + v * 4) * r * 0.2;
+      const px = startX + (endX - startX) * along * 0.8;
+      const py = cy + (r + wave) * Math.sin(angle + 0.2);
+
+      if (ui === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.strokeStyle = rgba(GREEN, 0.08 + 0.12 * (0.5 + 0.5 * Math.sin(v * Math.PI * 2)));
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+
+  // Endpoint dot right
+  const dotX = cx + Math.min(W, H) * 0.44;
+  circle(dotX, cy, 4, rgba(WHITE, 0.4), 1);
+}
+
+// --- Outer white circles ---
+function drawOuterCircles() {
+  const r1 = Math.min(W, H) * 0.4;
+  const r2 = Math.min(W, H) * 0.35;
+  const r3 = Math.min(W, H) * 0.25;
+
+  const breathe = Math.sin(t * 0.5) * 3;
+
+  circle(cx, cy, r1 + breathe, rgba(WHITE, 0.18), 1.2);
+  circle(cx, cy, r2 + breathe * 0.5, rgba(WHITE, 0.1), 0.8);
+  circle(cx, cy, r3 - breathe * 0.3, rgba(WHITE, 0.08), 0.6);
+
+  drawReticle(r1 + breathe);
+}
+
+// --- Scanning line ---
+function drawScanLine() {
+  const angle = t * 0.4;
+  const r = Math.min(W, H) * 0.44;
+  const x2 = cx + r * Math.cos(angle);
+  const y2 = cy + r * Math.sin(angle);
+
+  const grd = ctx.createLinearGradient(cx, cy, x2, y2);
+  grd.addColorStop(0, 'transparent');
+  grd.addColorStop(0.5, rgba(CYAN, 0.06));
+  grd.addColorStop(1, rgba(CYAN, 0.02));
+
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = grd;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+// --- MAIN LOOP ---
+function animate() {
+  t += 0.016;
+
+  smx += (mx - smx) * 0.06;
+  smy += (my - smy) * 0.06;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const meshInfluence = (smx - 0.5) * 2; // -1 to 1
+
+  // Background subtle radial
+  const bgGrd = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(W, H) * 0.6);
+  bgGrd.addColorStop(0, 'rgba(5,10,20,1)');
+  bgGrd.addColorStop(1, 'rgba(0,0,0,1)');
+  ctx.fillStyle = bgGrd;
+  ctx.fillRect(0, 0, W, H);
+
+  // Draw order: back to front
+  drawOuterCircles();
+  drawScanLine();
+  drawEmitter();
+
+  // Left wireframe mesh (blue)
+  drawWireframeMesh(-1, BLUE, CYAN, meshInfluence);
+
+  // Right wireframe mesh (blue, mirrored)
+  drawWireframeMesh(1, BLUE, CYAN, meshInfluence);
+
+  // Red + green trailing meshes
+  drawTrailingMesh();
+
+  // Planar slices
+  drawPlanarSlices();
+
+  // Center iris
+  const irisR = Math.min(W, H) * 0.17;
+  drawConcentricRings(irisR);
+
+  // Pupil
+  drawPupil();
+
+  // Horizontal axis accent
+  line(cx - Math.min(W,H) * 0.45, cy, cx + Math.min(W,H) * 0.45, cy, rgba(WHITE, 0.06), 0.5);
+
+  // Vertical axis accent
+  line(cx, cy - Math.min(W,H) * 0.4, cx, cy + Math.min(W,H) * 0.4, rgba(WHITE, 0.04), 0.5);
+
+  // Mouse cursor interaction: radial lines from center to mouse
+  const mouseAngle = Math.atan2((smy - 0.5) * H, (smx - 0.5) * W);
+  const mouseR = Math.min(W, H) * 0.42;
+  const mx2 = cx + mouseR * Math.cos(mouseAngle);
+  const my2 = cy + mouseR * Math.sin(mouseAngle);
+  line(cx, cy, mx2, my2, rgba(WHITE, 0.04), 0.8);
+
+  // Small tracking crosshair at mouse
+  const mxp = smx * W, myp = smy * H;
+  line(mxp - 12, myp, mxp + 12, myp, rgba(CYAN, 0.25), 0.6);
+  line(mxp, myp - 12, mxp, myp + 12, rgba(CYAN, 0.25), 0.6);
+  circle(mxp, myp, 6, rgba(CYAN, 0.15), 0.6);
+
+  requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+</body>
+</html>

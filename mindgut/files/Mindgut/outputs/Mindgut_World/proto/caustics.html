@@ -1,0 +1,25 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#1F3FE0;overflow:hidden}canvas{display:block;width:100vw;height:100vh}</style></head>
+<body><canvas id="c"></canvas><script>
+const gl=document.getElementById('c').getContext('webgl');const c=gl.canvas;
+const V=`attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}`;
+const F=`precision highp float;uniform vec2 R;uniform float T;
+vec2 h(vec2 p){p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));return -1.+2.*fract(sin(p)*43758.5453);}
+float n(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*(3.-2.*f);
+ return mix(mix(dot(h(i),f),dot(h(i+vec2(1,0)),f-vec2(1,0)),u.x),mix(dot(h(i+vec2(0,1)),f-vec2(0,1)),dot(h(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);}
+float caus(vec2 p,float t){ // ridged noise: zero-crossings become bright filaments
+ vec2 w=p+0.35*vec2(n(p*0.7+t*0.11),n(p*0.7-t*0.09));
+ float a=1.-abs(n(w*1.0+t*0.07)); float b=1.-abs(n(w*2.1-t*0.05+3.7));
+ return pow(a,14.)*0.55+pow(b,18.)*0.35+pow(a*b,9.)*0.5;}
+void main(){vec2 uv=(gl_FragCoord.xy-0.5*R)/R.y*2.2;float t=T*0.6;
+ float r=caus(uv,t),g=caus(uv+vec2(0.004,0.),t),b=caus(uv-vec2(0.004,0.),t);
+ vec3 cobalt=vec3(0.122,0.247,0.878);vec3 col=cobalt+vec3(r,g,b)*0.9;
+ col=mix(col,vec3(0.95,0.96,1.),smoothstep(0.55,1.1,(r+g+b)/3.)); // hot cores go pure white
+ gl_FragColor=vec4(col,1.);}`;
+function sh(t,s){const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))console.error(gl.getShaderInfoLog(o));return o;}
+const P=gl.createProgram();gl.attachShader(P,sh(gl.VERTEX_SHADER,V));gl.attachShader(P,sh(gl.FRAGMENT_SHADER,F));gl.linkProgram(P);gl.useProgram(P);
+const B=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,B);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+const a=gl.getAttribLocation(P,'p');gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,2,gl.FLOAT,false,0,0);
+const uR=gl.getUniformLocation(P,'R'),uT=gl.getUniformLocation(P,'T');
+function fit(){const d=Math.min(devicePixelRatio||1,1.5);c.width=innerWidth*d;c.height=innerHeight*d;gl.viewport(0,0,c.width,c.height);}addEventListener('resize',fit);fit();
+(function f(t){gl.uniform2f(uR,c.width,c.height);gl.uniform1f(uT,t*0.001);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);requestAnimationFrame(f);})(0);
+</script></body></html>

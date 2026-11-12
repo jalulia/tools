@@ -1,0 +1,152 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HANDOFF_add_references_v2.md</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>HANDOFF_add_references_v2.md</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/mir-gallery/HANDOFF_add_references_v2.md</span><span>0.01 MB · sha256 83a1a4c4b47d72cc…</span><a download="HANDOFF_add_references_v2.md" id="dl" href="#">Download the original</a></header><main><pre># Handoff v2: Add Reference Images to Mir Gallery
+
+## The Problem You&#x27;re Hitting
+
+The reference images total 126MB across 126 files. Reading even a few at once exceeds the 20MB context limit. **Do not try to read the original images directly.**
+
+## The Fix: Use the Contact Sheets
+
+There are 6 contact sheet images in the References folder (`_ContactSheet-001.jpg` through `_ContactSheet-006.jpg`, ~1.1-2.6MB each). These are overview grids showing ~20 reference images per sheet. **View these to categorize the images instead of opening the originals.**
+
+### Step 1: View contact sheets ONE AT A TIME and categorize
+
+Read each contact sheet individually (each is under 3MB, well within limits):
+```
+_ContactSheet-001.jpg (1.8MB)
+_ContactSheet-002.jpg (2.1MB)
+_ContactSheet-003.jpg (1.7MB)
+_ContactSheet-004.jpg (2.6MB)
+_ContactSheet-005.jpg (1.6MB)
+_ContactSheet-006.jpg (1.1MB)
+```
+
+For each contact sheet, match the visible thumbnails to filenames (they should be in alphabetical order by hash filename). Write down the name and tags for each image you can identify.
+
+**CRITICAL: Read ONE contact sheet at a time. Do NOT read multiple in the same context. After categorizing each sheet, write the results to a temp file before moving to the next.**
+
+### Step 2: For any images you can&#x27;t identify from contact sheets
+
+Fall back to generating tiny thumbnails with sips (built into macOS):
+```bash
+mkdir -p /tmp/mir-thumbs
+# Only for specific files you need to re-check:
+sips -Z 150 &quot;FILENAME.jpg&quot; --out &quot;/tmp/mir-thumbs/FILENAME.jpg&quot;
+```
+
+### Step 3: Copy ORIGINAL images to gallery
+
+```bash
+# Copy all originals (not thumbnails) to the gallery references folder
+cp ~/Documents/Claude/Projects/Mindgut\ -\ Mir/Visualizations/References/*.jpg \
+   ~/Documents/Claude/Projects/Mindgut\ -\ Mir/mir-gallery/references/
+cp ~/Documents/Claude/Projects/Mindgut\ -\ Mir/Visualizations/References/*.gif \
+   ~/Documents/Claude/Projects/Mindgut\ -\ Mir/mir-gallery/references/
+cp ~/Documents/Claude/Projects/Mindgut\ -\ Mir/Visualizations/References/*.png \
+   ~/Documents/Claude/Projects/Mindgut\ -\ Mir/mir-gallery/references/
+cp ~/Documents/Claude/Projects/Mindgut\ -\ Mir/Visualizations/References/*.webp \
+   ~/Documents/Claude/Projects/Mindgut\ -\ Mir/mir-gallery/references/
+```
+
+Skip these files (don&#x27;t copy to gallery):
+- `___pdf.pdf` (10MB PDF, not a reference image)
+- `_ContactSheet-001.jpg` through `_ContactSheet-006.jpg` (overview sheets used for categorization, not individual references)
+
+### Step 4: Update index.html
+
+The REFERENCES array is at ~line 548 in `mir-gallery/index.html`:
+```js
+const REFERENCES = [
+  // Replace with entries like:
+  { file: &quot;references/FILENAME.jpg&quot;, name: &quot;descriptive name&quot;, tags: [&quot;tag1&quot;, &quot;tag2&quot;] },
+];
+```
+
+### Step 5: Commit and push
+
+```bash
+cd ~/Documents/Claude/Projects/Mindgut\ -\ Mir/mir-gallery
+git add references/ index.html
+git commit -m &quot;Add categorized reference images to gallery&quot;
+git push origin main
+```
+
+## Tag vocabulary
+
+| Tag | Use for |
+|-----|---------|
+| `notation` | Hand-drawn dots, frequency charts, music scores, circuit diagrams |
+| `terminal` | Retro HUD, oscilloscope, CRT aesthetic, monospaced readouts |
+| `topology` | Grid distortion, field lines, gravitational lensing, mesh warping |
+| `dataviz` | Charts, scatter plots, dashboards, heatmaps, contour maps |
+| `generative` | Algorithmic art, wireframe geometry, procedural patterns |
+| `emergence` | Cellular automata, state evolution, phase transitions |
+| `whimsy` | Playful, human figures, humor, illustration |
+| `waveform` | Sine waves, harmonics, frequency spectra |
+| `orbital` | Orbits, trajectories, n-body, gravitational paths |
+| `grid` | Grid structures, lattices, mesh, graph paper |
+| `particles` | Point clouds, particle systems, dot fields |
+| `network` | Node-link graphs, force-directed layouts |
+| `schematic` | Technical diagrams, blueprints, flowcharts |
+| `color` | Strong/notable color use as a defining feature |
+
+Assign 2-4 tags per image.
+
+## Known images (don&#x27;t need visual review)
+
+- `lil-mirs-yous.jpg` → name: &quot;lil mirs and yous&quot;, tags: [&quot;whimsy&quot;]
+- `reboundbanner.png` → name: &quot;rebound n-body banner&quot;, tags: [&quot;orbital&quot;, &quot;particles&quot;]
+- `Ternary-Contour-Plot-300x300.webp` → name: &quot;ternary contour plot&quot;, tags: [&quot;dataviz&quot;, &quot;topology&quot;]
+- `Ternary-Plot-1-300x300.webp` → name: &quot;ternary scatter plot&quot;, tags: [&quot;dataviz&quot;]
+- `apollo-11-tli-3.webp` → name: &quot;apollo 11 trajectory&quot;, tags: [&quot;orbital&quot;, &quot;schematic&quot;]
+- `videoframe_*.png` (16 files) → likely animation stills, review as a group
+- `61Jmc9xmVVL._AC_SX569_.jpg` / `61X77W5IsiL._SY466_.jpg` → Amazon product images (book covers?)
+- `download.png` / `download (1).png` → generic names, need visual review
+
+## 34 images already categorized (from previous session)
+
+These were visually reviewed and can be used as-is:
+
+```
+010174be7b366ba8caafae676b0c12f5.jpg → &quot;scientific notation grid&quot; [notation, schematic, grid]
+099dfa3bdd4c86f62dab8750f2f761b8.jpg → &quot;oscilloscope hud display&quot; [terminal, waveform]
+0b54f392c84378bb4446dd4762d2da7a.gif → &quot;optical wave propagation&quot; [waveform, dataviz]
+0d64488fa4a991649eb00c22ddb4210f.jpg → &quot;chromatic light sphere&quot; [color, orbital, generative]
+0ea4519f6552c71e256fe0c3bee56ba6.jpg → &quot;blurred heat spectrum array&quot; [color, dataviz, generative]
+0f25e3a0d133f7f520c6043308ef637f.jpg → &quot;parameter node flow&quot; [schematic, network]
+127a67419098bfca471c5bce0957699b.jpg → &quot;color motion notation grid&quot; [notation, color, grid]
+140ac702e841e5c354f706882afbe269.jpg → &quot;generative flow diagrams&quot; [dataviz, generative, topology]
+181e65a809b30ad11d8ab3b6440bd1a1.jpg → &quot;field line distortion&quot; [topology, dataviz]
+185b5bc1edf3c17d97e1893506650f42.jpg → &quot;galaxy classification catalog&quot; [color, dataviz, generative]
+1ad24720c608ade14625df9204411680.gif → &quot;orbital path lines&quot; [orbital, particles, generative]
+22b87b982c6197d8fef461ba34fb8601.jpg → &quot;3d dashboard interface&quot; [dataviz, generative, terminal]
+22dc0e7acac7845caed6312a5e4c0b2f.jpg → &quot;grid pattern glitch&quot; [grid, dataviz, generative]
+2448c9e0d6e740cc84272718ad4f9616.jpg → &quot;network nodes connections&quot; [network, dataviz, particles]
+24c87a7a94973cdb588e7e6c21b8b9d2.jpg → &quot;loop mechanical diagram&quot; [schematic, whimsy, notation]
+2566cf66ae393862271c476523151113.jpg → &quot;field line propagation&quot; [topology, waveform, dataviz]
+26212cbe674bf41226506343043a1e50.jpg → &quot;video data monitor hud&quot; [terminal, dataviz, schematic]
+26984419b805573fa39ed1fc92d024c0.jpg → &quot;geometric polyhedron forms&quot; [generative, topology, color]
+2dd76b8ef6eb5072b8fc140c99183ed6.gif → &quot;recursive circle patterns&quot; [generative, particles, topology]
+2e0e8ce22b51ab797100e58d6ae0da6c.jpg → &quot;danger zone field diagram&quot; [topology, color, schematic]
+3166168d48946e5ab6344fda5ecee4f8.jpg → &quot;particle cloud visualization&quot; [particles, dataviz, color]
+32b52ca8e865f1afafb8451089ff413e.jpg → &quot;dot matrix network nodes&quot; [particles, network, notation]
+337c7465bf1742168eacca461d9debd6.jpg → &quot;spectrum analysis heatmap&quot; [dataviz, color, terminal]
+3556b67bfc9e633b1b8cf36ca77c7340.jpg → &quot;scientific parameter scan&quot; [dataviz, terminal, notation]
+3632db5d1c2ae755d695abfe1491bdbf.gif → &quot;animated grid distortion&quot; [topology, grid, generative]
+36e5b0bf2d0bd9a19e3b86fc0f408544.jpg → &quot;geometric lattice structures&quot; [topology, generative, color]
+3782e13cadab7d9d8af897d543e7ff8c.jpg → &quot;spectral heat radiation&quot; [color, waveform, generative]
+37831023482ccf32c6075eadeafafc76.gif → &quot;orbiting particle swarm&quot; [orbital, particles, generative]
+3986ab05fe9d89ddb5afe318b02c4896.gif → &quot;dynamic field evolution&quot; [emergence, topology, generative]
+3bc6bf31624262bede4e7f6bff21e2c0.gif → &quot;kaleidoscopic pattern rotation&quot; [generative, color, particles]
+478acefbbafc10ce5af773d746c06e84.jpg → &quot;comfort zone diagram&quot; [schematic, notation, whimsy]
+480a93d488e4576071e3f21d50a5841c.jpg → &quot;dense text particle matrix&quot; [particles, notation, emergence]
+4f64d2cab4066b0632692e16619bc980.jpg → &quot;spectral galaxy survey&quot; [dataviz, color, terminal]
+4fb57b8a7e0b88131ef775cbdd5d7279.jpg → &quot;polyhedron wireframe study&quot; [topology, generative, color]
+```
+
+## Gallery details
+
+- **Repo:** github.com/jalulia/mir-gallery (branch: main)
+- **Live site:** jalulia.github.io/mir-gallery
+- **Local path:** ~/Documents/Claude/Projects/Mindgut - Mir/mir-gallery/
+- Git remote and credentials are already configured and working
+</pre></main><script>var b=atob("IyBIYW5kb2ZmIHYyOiBBZGQgUmVmZXJlbmNlIEltYWdlcyB0byBNaXIgR2FsbGVyeQoKIyMgVGhlIFByb2JsZW0gWW91J3JlIEhpdHRpbmcKClRoZSByZWZlcmVuY2UgaW1hZ2VzIHRvdGFsIDEyNk1CIGFjcm9zcyAxMjYgZmlsZXMuIFJlYWRpbmcgZXZlbiBhIGZldyBhdCBvbmNlIGV4Y2VlZHMgdGhlIDIwTUIgY29udGV4dCBsaW1pdC4gKipEbyBub3QgdHJ5IHRvIHJlYWQgdGhlIG9yaWdpbmFsIGltYWdlcyBkaXJlY3RseS4qKgoKIyMgVGhlIEZpeDogVXNlIHRoZSBDb250YWN0IFNoZWV0cwoKVGhlcmUgYXJlIDYgY29udGFjdCBzaGVldCBpbWFnZXMgaW4gdGhlIFJlZmVyZW5jZXMgZm9sZGVyIChgX0NvbnRhY3RTaGVldC0wMDEuanBnYCB0aHJvdWdoIGBfQ29udGFjdFNoZWV0LTAwNi5qcGdgLCB+MS4xLTIuNk1CIGVhY2gpLiBUaGVzZSBhcmUgb3ZlcnZpZXcgZ3JpZHMgc2hvd2luZyB+MjAgcmVmZXJlbmNlIGltYWdlcyBwZXIgc2hlZXQuICoqVmlldyB0aGVzZSB0byBjYXRlZ29yaXplIHRoZSBpbWFnZXMgaW5zdGVhZCBvZiBvcGVuaW5nIHRoZSBvcmlnaW5hbHMuKioKCiMjIyBTdGVwIDE6IFZpZXcgY29udGFjdCBzaGVldHMgT05FIEFUIEEgVElNRSBhbmQgY2F0ZWdvcml6ZQoKUmVhZCBlYWNoIGNvbnRhY3Qgc2hlZXQgaW5kaXZpZHVhbGx5IChlYWNoIGlzIHVuZGVyIDNNQiwgd2VsbCB3aXRoaW4gbGltaXRzKToKYGBgCl9Db250YWN0U2hlZXQtMDAxLmpwZyAoMS44TUIpCl9Db250YWN0U2hlZXQtMDAyLmpwZyAoMi4xTUIpCl9Db250YWN0U2hlZXQtMDAzLmpwZyAoMS43TUIpCl9Db250YWN0U2hlZXQtMDA0LmpwZyAoMi42TUIpCl9Db250YWN0U2hlZXQtMDA1LmpwZyAoMS42TUIpCl9Db250YWN0U2hlZXQtMDA2LmpwZyAoMS4xTUIpCmBgYAoKRm9yIGVhY2ggY29udGFjdCBzaGVldCwgbWF0Y2ggdGhlIHZpc2libGUgdGh1bWJuYWlscyB0byBmaWxlbmFtZXMgKHRoZXkgc2hvdWxkIGJlIGluIGFscGhhYmV0aWNhbCBvcmRlciBieSBoYXNoIGZpbGVuYW1lKS4gV3JpdGUgZG93biB0aGUgbmFtZSBhbmQgdGFncyBmb3IgZWFjaCBpbWFnZSB5b3UgY2FuIGlkZW50aWZ5LgoKKipDUklUSUNBTDogUmVhZCBPTkUgY29udGFjdCBzaGVldCBhdCBhIHRpbWUuIERvIE5PVCByZWFkIG11bHRpcGxlIGluIHRoZSBzYW1lIGNvbnRleHQuIEFmdGVyIGNhdGVnb3JpemluZyBlYWNoIHNoZWV0LCB3cml0ZSB0aGUgcmVzdWx0cyB0byBhIHRlbXAgZmlsZSBiZWZvcmUgbW92aW5nIHRvIHRoZSBuZXh0LioqCgojIyMgU3RlcCAyOiBGb3IgYW55IGltYWdlcyB5b3UgY2FuJ3QgaWRlbnRpZnkgZnJvbSBjb250YWN0IHNoZWV0cwoKRmFsbCBiYWNrIHRvIGdlbmVyYXRpbmcgdGlueSB0aHVtYm5haWxzIHdpdGggc2lwcyAoYnVpbHQgaW50byBtYWNPUyk6CmBgYGJhc2gKbWtkaXIgLXAgL3RtcC9taXItdGh1bWJzCiMgT25seSBmb3Igc3BlY2lmaWMgZmlsZXMgeW91IG5lZWQgdG8gcmUtY2hlY2s6CnNpcHMgLVogMTUwICJGSUxFTkFNRS5qcGciIC0tb3V0ICIvdG1wL21pci10aHVtYnMvRklMRU5BTUUuanBnIgpgYGAKCiMjIyBTdGVwIDM6IENvcHkgT1JJR0lOQUwgaW1hZ2VzIHRvIGdhbGxlcnkKCmBgYGJhc2gKIyBDb3B5IGFsbCBvcmlnaW5hbHMgKG5vdCB0aHVtYm5haWxzKSB0byB0aGUgZ2FsbGVyeSByZWZlcmVuY2VzIGZvbGRlcgpjcCB+L0RvY3VtZW50cy9DbGF1ZGUvUHJvamVjdHMvTWluZGd1dFwgLVwgTWlyL1Zpc3VhbGl6YXRpb25zL1JlZmVyZW5jZXMvKi5qcGcgXAogICB+L0RvY3VtZW50cy9DbGF1ZGUvUHJvamVjdHMvTWluZGd1dFwgLVwgTWlyL21pci1nYWxsZXJ5L3JlZmVyZW5jZXMvCmNwIH4vRG9jdW1lbnRzL0NsYXVkZS9Qcm9qZWN0cy9NaW5kZ3V0XCAtXCBNaXIvVmlzdWFsaXphdGlvbnMvUmVmZXJlbmNlcy8qLmdpZiBcCiAgIH4vRG9jdW1lbnRzL0NsYXVkZS9Qcm9qZWN0cy9NaW5kZ3V0XCAtXCBNaXIvbWlyLWdhbGxlcnkvcmVmZXJlbmNlcy8KY3Agfi9Eb2N1bWVudHMvQ2xhdWRlL1Byb2plY3RzL01pbmRndXRcIC1cIE1pci9WaXN1YWxpemF0aW9ucy9SZWZlcmVuY2VzLyoucG5nIFwKICAgfi9Eb2N1bWVudHMvQ2xhdWRlL1Byb2plY3RzL01pbmRndXRcIC1cIE1pci9taXItZ2FsbGVyeS9yZWZlcmVuY2VzLwpjcCB+L0RvY3VtZW50cy9DbGF1ZGUvUHJvamVjdHMvTWluZGd1dFwgLVwgTWlyL1Zpc3VhbGl6YXRpb25zL1JlZmVyZW5jZXMvKi53ZWJwIFwKICAgfi9Eb2N1bWVudHMvQ2xhdWRlL1Byb2plY3RzL01pbmRndXRcIC1cIE1pci9taXItZ2FsbGVyeS9yZWZlcmVuY2VzLwpgYGAKClNraXAgdGhlc2UgZmlsZXMgKGRvbid0IGNvcHkgdG8gZ2FsbGVyeSk6Ci0gYF9fX3BkZi5wZGZgICgxME1CIFBERiwgbm90IGEgcmVmZXJlbmNlIGltYWdlKQotIGBfQ29udGFjdFNoZWV0LTAwMS5qcGdgIHRocm91Z2ggYF9Db250YWN0U2hlZXQtMDA2LmpwZ2AgKG92ZXJ2aWV3IHNoZWV0cyB1c2VkIGZvciBjYXRlZ29yaXphdGlvbiwgbm90IGluZGl2aWR1YWwgcmVmZXJlbmNlcykKCiMjIyBTdGVwIDQ6IFVwZGF0ZSBpbmRleC5odG1sCgpUaGUgUkVGRVJFTkNFUyBhcnJheSBpcyBhdCB+bGluZSA1NDggaW4gYG1pci1nYWxsZXJ5L2luZGV4Lmh0bWxgOgpgYGBqcwpjb25zdCBSRUZFUkVOQ0VTID0gWwogIC8vIFJlcGxhY2Ugd2l0aCBlbnRyaWVzIGxpa2U6CiAgeyBmaWxlOiAicmVmZXJlbmNlcy9GSUxFTkFNRS5qcGciLCBuYW1lOiAiZGVzY3JpcHRpdmUgbmFtZSIsIHRhZ3M6IFsidGFnMSIsICJ0YWcyIl0gfSwKXTsKYGBgCgojIyMgU3RlcCA1OiBDb21taXQgYW5kIHB1c2gKCmBgYGJhc2gKY2Qgfi9Eb2N1bWVudHMvQ2xhdWRlL1Byb2plY3RzL01pbmRndXRcIC1cIE1pci9taXItZ2FsbGVyeQpnaXQgYWRkIHJlZmVyZW5jZXMvIGluZGV4Lmh0bWwKZ2l0IGNvbW1pdCAtbSAiQWRkIGNhdGVnb3JpemVkIHJlZmVyZW5jZSBpbWFnZXMgdG8gZ2FsbGVyeSIKZ2l0IHB1c2ggb3JpZ2luIG1haW4KYGBgCgojIyBUYWcgdm9jYWJ1bGFyeQoKfCBUYWcgfCBVc2UgZm9yIHwKfC0tLS0tfC0tLS0tLS0tLXwKfCBgbm90YXRpb25gIHwgSGFuZC1kcmF3biBkb3RzLCBmcmVxdWVuY3kgY2hhcnRzLCBtdXNpYyBzY29yZXMsIGNpcmN1aXQgZGlhZ3JhbXMgfAp8IGB0ZXJtaW5hbGAgfCBSZXRybyBIVUQsIG9zY2lsbG9zY29wZSwgQ1JUIGFlc3RoZXRpYywgbW9ub3NwYWNlZCByZWFkb3V0cyB8CnwgYHRvcG9sb2d5YCB8IEdyaWQgZGlzdG9ydGlvbiwgZmllbGQgbGluZXMsIGdyYXZpdGF0aW9uYWwgbGVuc2luZywgbWVzaCB3YXJwaW5nIHwKfCBgZGF0YXZpemAgfCBDaGFydHMsIHNjYXR0ZXIgcGxvdHMsIGRhc2hib2FyZHMsIGhlYXRtYXBzLCBjb250b3VyIG1hcHMgfAp8IGBnZW5lcmF0aXZlYCB8IEFsZ29yaXRobWljIGFydCwgd2lyZWZyYW1lIGdlb21ldHJ5LCBwcm9jZWR1cmFsIHBhdHRlcm5zIHwKfCBgZW1lcmdlbmNlYCB8IENlbGx1bGFyIGF1dG9tYXRhLCBzdGF0ZSBldm9sdXRpb24sIHBoYXNlIHRyYW5zaXRpb25zIHwKfCBgd2hpbXN5YCB8IFBsYXlmdWwsIGh1bWFuIGZpZ3VyZXMsIGh1bW9yLCBpbGx1c3RyYXRpb24gfAp8IGB3YXZlZm9ybWAgfCBTaW5lIHdhdmVzLCBoYXJtb25pY3MsIGZyZXF1ZW5jeSBzcGVjdHJhIHwKfCBgb3JiaXRhbGAgfCBPcmJpdHMsIHRyYWplY3Rvcmllcywgbi1ib2R5LCBncmF2aXRhdGlvbmFsIHBhdGhzIHwKfCBgZ3JpZGAgfCBHcmlkIHN0cnVjdHVyZXMsIGxhdHRpY2VzLCBtZXNoLCBncmFwaCBwYXBlciB8CnwgYHBhcnRpY2xlc2AgfCBQb2ludCBjbG91ZHMsIHBhcnRpY2xlIHN5c3RlbXMsIGRvdCBmaWVsZHMgfAp8IGBuZXR3b3JrYCB8IE5vZGUtbGluayBncmFwaHMsIGZvcmNlLWRpcmVjdGVkIGxheW91dHMgfAp8IGBzY2hlbWF0aWNgIHwgVGVjaG5pY2FsIGRpYWdyYW1zLCBibHVlcHJpbnRzLCBmbG93Y2hhcnRzIHwKfCBgY29sb3JgIHwgU3Ryb25nL25vdGFibGUgY29sb3IgdXNlIGFzIGEgZGVmaW5pbmcgZmVhdHVyZSB8CgpBc3NpZ24gMi00IHRhZ3MgcGVyIGltYWdlLgoKIyMgS25vd24gaW1hZ2VzIChkb24ndCBuZWVkIHZpc3VhbCByZXZpZXcpCgotIGBsaWwtbWlycy15b3VzLmpwZ2Ag4oaSIG5hbWU6ICJsaWwgbWlycyBhbmQgeW91cyIsIHRhZ3M6IFsid2hpbXN5Il0KLSBgcmVib3VuZGJhbm5lci5wbmdgIOKGkiBuYW1lOiAicmVib3VuZCBuLWJvZHkgYmFubmVyIiwgdGFnczogWyJvcmJpdGFsIiwgInBhcnRpY2xlcyJdCi0gYFRlcm5hcnktQ29udG91ci1QbG90LTMwMHgzMDAud2VicGAg4oaSIG5hbWU6ICJ0ZXJuYXJ5IGNvbnRvdXIgcGxvdCIsIHRhZ3M6IFsiZGF0YXZpeiIsICJ0b3BvbG9neSJdCi0gYFRlcm5hcnktUGxvdC0xLTMwMHgzMDAud2VicGAg4oaSIG5hbWU6ICJ0ZXJuYXJ5IHNjYXR0ZXIgcGxvdCIsIHRhZ3M6IFsiZGF0YXZpeiJdCi0gYGFwb2xsby0xMS10bGktMy53ZWJwYCDihpIgbmFtZTogImFwb2xsbyAxMSB0cmFqZWN0b3J5IiwgdGFnczogWyJvcmJpdGFsIiwgInNjaGVtYXRpYyJdCi0gYHZpZGVvZnJhbWVfKi5wbmdgICgxNiBmaWxlcykg4oaSIGxpa2VseSBhbmltYXRpb24gc3RpbGxzLCByZXZpZXcgYXMgYSBncm91cAotIGA2MUptYzl4bVZWTC5fQUNfU1g1NjlfLmpwZ2AgLyBgNjFYNzdXNUlzaUwuX1NZNDY2Xy5qcGdgIOKGkiBBbWF6b24gcHJvZHVjdCBpbWFnZXMgKGJvb2sgY292ZXJzPykKLSBgZG93bmxvYWQucG5nYCAvIGBkb3dubG9hZCAoMSkucG5nYCDihpIgZ2VuZXJpYyBuYW1lcywgbmVlZCB2aXN1YWwgcmV2aWV3CgojIyAzNCBpbWFnZXMgYWxyZWFkeSBjYXRlZ29yaXplZCAoZnJvbSBwcmV2aW91cyBzZXNzaW9uKQoKVGhlc2Ugd2VyZSB2aXN1YWxseSByZXZpZXdlZCBhbmQgY2FuIGJlIHVzZWQgYXMtaXM6CgpgYGAKMDEwMTc0YmU3YjM2NmJhOGNhYWZhZTY3NmIwYzEyZjUuanBnIOKGkiAic2NpZW50aWZpYyBub3RhdGlvbiBncmlkIiBbbm90YXRpb24sIHNjaGVtYXRpYywgZ3JpZF0KMDk5ZGZhM2JkZDRjODZmNjJkYWI4NzUwZjJmNzYxYjguanBnIOKGkiAib3NjaWxsb3Njb3BlIGh1ZCBkaXNwbGF5IiBbdGVybWluYWwsIHdhdmVmb3JtXQowYjU0ZjM5MmM4NDM3OGJiNDQ0NmRkNDc2MmQyZGE3YS5naWYg4oaSICJvcHRpY2FsIHdhdmUgcHJvcGFnYXRpb24iIFt3YXZlZm9ybSwgZGF0YXZpel0KMGQ2NDQ4OGZhNGE5OTE2NDllYjAwYzIyZGRiNDIxMGYuanBnIOKGkiAiY2hyb21hdGljIGxpZ2h0IHNwaGVyZSIgW2NvbG9yLCBvcmJpdGFsLCBnZW5lcmF0aXZlXQowZWE0NTE5ZjY1NTJjNzFlMjU2ZmUwYzNiZWU1NmJhNi5qcGcg4oaSICJibHVycmVkIGhlYXQgc3BlY3RydW0gYXJyYXkiIFtjb2xvciwgZGF0YXZpeiwgZ2VuZXJhdGl2ZV0KMGYyNWUzYTBkMTMzZjdmNTIwYzYwNDMzMDhlZjYzN2YuanBnIOKGkiAicGFyYW1ldGVyIG5vZGUgZmxvdyIgW3NjaGVtYXRpYywgbmV0d29ya10KMTI3YTY3NDE5MDk4YmZjYTQ3MWM1YmNlMDk1NzY5OWIuanBnIOKGkiAiY29sb3IgbW90aW9uIG5vdGF0aW9uIGdyaWQiIFtub3RhdGlvbiwgY29sb3IsIGdyaWRdCjE0MGFjNzAyZTg0MWU1YzM1NGY3MDY4ODJhZmJlMjY5LmpwZyDihpIgImdlbmVyYXRpdmUgZmxvdyBkaWFncmFtcyIgW2RhdGF2aXosIGdlbmVyYXRpdmUsIHRvcG9sb2d5XQoxODFlNjVhODA5YjMwYWQxMWQ4YWIzYjY0NDBiZDFhMS5qcGcg4oaSICJmaWVsZCBsaW5lIGRpc3RvcnRpb24iIFt0b3BvbG9neSwgZGF0YXZpel0KMTg1YjViYzFlZGYzYzE3ZDk3ZTE4OTM1MDY2NTBmNDIuanBnIOKGkiAiZ2FsYXh5IGNsYXNzaWZpY2F0aW9uIGNhdGFsb2ciIFtjb2xvciwgZGF0YXZpeiwgZ2VuZXJhdGl2ZV0KMWFkMjQ3MjBjNjA4YWRlMTQ2MjVkZjkyMDQ0MTE2ODAuZ2lmIOKGkiAib3JiaXRhbCBwYXRoIGxpbmVzIiBbb3JiaXRhbCwgcGFydGljbGVzLCBnZW5lcmF0aXZlXQoyMmI4N2I5ODJjNjE5N2Q4ZmVmNDYxYmEzNGZiODYwMS5qcGcg4oaSICIzZCBkYXNoYm9hcmQgaW50ZXJmYWNlIiBbZGF0YXZpeiwgZ2VuZXJhdGl2ZSwgdGVybWluYWxdCjIyZGMwZTdhY2FjNzg0NWNhZWQ2MzEyYTVlNGMwYjJmLmpwZyDihpIgImdyaWQgcGF0dGVybiBnbGl0Y2giIFtncmlkLCBkYXRhdml6LCBnZW5lcmF0aXZlXQoyNDQ4YzllMGQ2ZTc0MGNjODQyNzI3MThhZDRmOTYxNi5qcGcg4oaSICJuZXR3b3JrIG5vZGVzIGNvbm5lY3Rpb25zIiBbbmV0d29yaywgZGF0YXZpeiwgcGFydGljbGVzXQoyNGM4N2E3YTk0OTczY2RiNTg4ZTdlNmMyMWI4YjlkMi5qcGcg4oaSICJsb29wIG1lY2hhbmljYWwgZGlhZ3JhbSIgW3NjaGVtYXRpYywgd2hpbXN5LCBub3RhdGlvbl0KMjU2NmNmNjZhZTM5Mzg2MjI3MWM0NzY1MjMxNTExMTMuanBnIOKGkiAiZmllbGQgbGluZSBwcm9wYWdhdGlvbiIgW3RvcG9sb2d5LCB3YXZlZm9ybSwgZGF0YXZpel0KMjYyMTJjYmU2NzRiZjQxMjI2NTA2MzQzMDQzYTFlNTAuanBnIOKGkiAidmlkZW8gZGF0YSBtb25pdG9yIGh1ZCIgW3Rlcm1pbmFsLCBkYXRhdml6LCBzY2hlbWF0aWNdCjI2OTg0NDE5YjgwNTU3M2ZhMzllZDFmYzkyZDAyNGMwLmpwZyDihpIgImdlb21ldHJpYyBwb2x5aGVkcm9uIGZvcm1zIiBbZ2VuZXJhdGl2ZSwgdG9wb2xvZ3ksIGNvbG9yXQoyZGQ3NmI4ZWY2ZWI1MDcyYjhmYzE0MGM5OTE4M2VkNi5naWYg4oaSICJyZWN1cnNpdmUgY2lyY2xlIHBhdHRlcm5zIiBbZ2VuZXJhdGl2ZSwgcGFydGljbGVzLCB0b3BvbG9neV0KMmUwZThjZTIyYjUxYWI3OTcxMDBlNThkNmFlMGRhNmMuanBnIOKGkiAiZGFuZ2VyIHpvbmUgZmllbGQgZGlhZ3JhbSIgW3RvcG9sb2d5LCBjb2xvciwgc2NoZW1hdGljXQozMTY2MTY4ZDQ4OTQ2ZTVhYjYzNDRmZGE1ZWNlZTRmOC5qcGcg4oaSICJwYXJ0aWNsZSBjbG91ZCB2aXN1YWxpemF0aW9uIiBbcGFydGljbGVzLCBkYXRhdml6LCBjb2xvcl0KMzJiNTJjYThlODY1ZjFhZmFmYjg0NTEwODlmZjQxM2UuanBnIOKGkiAiZG90IG1hdHJpeCBuZXR3b3JrIG5vZGVzIiBbcGFydGljbGVzLCBuZXR3b3JrLCBub3RhdGlvbl0KMzM3Yzc0NjViZjE3NDIxNjhlYWNjYTQ2MWQ5ZGViZDYuanBnIOKGkiAic3BlY3RydW0gYW5hbHlzaXMgaGVhdG1hcCIgW2RhdGF2aXosIGNvbG9yLCB0ZXJtaW5hbF0KMzU1NmI2N2JmYzllNjMzYjFiOGNmMzZjYTc3YzczNDAuanBnIOKGkiAic2NpZW50aWZpYyBwYXJhbWV0ZXIgc2NhbiIgW2RhdGF2aXosIHRlcm1pbmFsLCBub3RhdGlvbl0KMzYzMmRiNWQxYzJhZTc1NWQ2OTVhYmZlMTQ5MWJkYmYuZ2lmIOKGkiAiYW5pbWF0ZWQgZ3JpZCBkaXN0b3J0aW9uIiBbdG9wb2xvZ3ksIGdyaWQsIGdlbmVyYXRpdmVdCjM2ZTViMGJmMmQwYmQ5YTE5ZTNiODZmYzBmNDA4NTQ0LmpwZyDihpIgImdlb21ldHJpYyBsYXR0aWNlIHN0cnVjdHVyZXMiIFt0b3BvbG9neSwgZ2VuZXJhdGl2ZSwgY29sb3JdCjM3ODJlMTNjYWRhYjdkOWQ4YWY4OTdkNTQzZTdmZjhjLmpwZyDihpIgInNwZWN0cmFsIGhlYXQgcmFkaWF0aW9uIiBbY29sb3IsIHdhdmVmb3JtLCBnZW5lcmF0aXZlXQozNzgzMTAyMzQ4MmNjZjMyYzYwNzVlYWRlYWZhZmM3Ni5naWYg4oaSICJvcmJpdGluZyBwYXJ0aWNsZSBzd2FybSIgW29yYml0YWwsIHBhcnRpY2xlcywgZ2VuZXJhdGl2ZV0KMzk4NmFiMDVmZTlkODlkZGI1YWZlMzE4YjAyYzQ4OTYuZ2lmIOKGkiAiZHluYW1pYyBmaWVsZCBldm9sdXRpb24iIFtlbWVyZ2VuY2UsIHRvcG9sb2d5LCBnZW5lcmF0aXZlXQozYmM2YmYzMTYyNDI2MmJlZGU0ZTdmNmJmZjIxZTJjMC5naWYg4oaSICJrYWxlaWRvc2NvcGljIHBhdHRlcm4gcm90YXRpb24iIFtnZW5lcmF0aXZlLCBjb2xvciwgcGFydGljbGVzXQo0NzhhY2VmYmJhZmMxMGNlNWFmNzczZDc0NmMwNmU4NC5qcGcg4oaSICJjb21mb3J0IHpvbmUgZGlhZ3JhbSIgW3NjaGVtYXRpYywgbm90YXRpb24sIHdoaW1zeV0KNDgwYTkzZDQ4OGU0NTc2MDcxZTNmMjFkNTBhNTg0MWMuanBnIOKGkiAiZGVuc2UgdGV4dCBwYXJ0aWNsZSBtYXRyaXgiIFtwYXJ0aWNsZXMsIG5vdGF0aW9uLCBlbWVyZ2VuY2VdCjRmNjRkMmNhYjQwNjZiMDYzMjY5MmUxNjYxOWJjOTgwLmpwZyDihpIgInNwZWN0cmFsIGdhbGF4eSBzdXJ2ZXkiIFtkYXRhdml6LCBjb2xvciwgdGVybWluYWxdCjRmYjU3YjhhN2UwYjg4MTMxZWY3NzVjYmRkNWQ3Mjc5LmpwZyDihpIgInBvbHloZWRyb24gd2lyZWZyYW1lIHN0dWR5IiBbdG9wb2xvZ3ksIGdlbmVyYXRpdmUsIGNvbG9yXQpgYGAKCiMjIEdhbGxlcnkgZGV0YWlscwoKLSAqKlJlcG86KiogZ2l0aHViLmNvbS9qYWx1bGlhL21pci1nYWxsZXJ5IChicmFuY2g6IG1haW4pCi0gKipMaXZlIHNpdGU6KiogamFsdWxpYS5naXRodWIuaW8vbWlyLWdhbGxlcnkKLSAqKkxvY2FsIHBhdGg6Kiogfi9Eb2N1bWVudHMvQ2xhdWRlL1Byb2plY3RzL01pbmRndXQgLSBNaXIvbWlyLWdhbGxlcnkvCi0gR2l0IHJlbW90ZSBhbmQgY3JlZGVudGlhbHMgYXJlIGFscmVhZHkgY29uZmlndXJlZCBhbmQgd29ya2luZwo="),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

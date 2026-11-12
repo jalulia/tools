@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mir 818 — Archimedean Spiral</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lekton:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0A0A0A;
+  overflow: hidden;
+  font-family: 'Lekton', monospace;
+  color: rgba(255,255,255,0.8);
+  cursor: crosshair;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══ SIDEBAR ═══ */
+#sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: 240px;
+  background: rgba(10,10,10,0.97);
+  backdrop-filter: blur(16px);
+  border-right: 1px solid rgba(255,255,255,0.04);
+  padding: 18px 14px;
+  overflow-y: auto;
+  z-index: 20;
+}
+#sidebar::-webkit-scrollbar { width: 2px; }
+#sidebar::-webkit-scrollbar-track { background: transparent; }
+#sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 1px; }
+
+#sidebar h1 {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: #3D6DF4; margin-bottom: 2px;
+}
+.subtitle {
+  font-size: 9px; color: rgba(255,255,255,0.4);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  margin-bottom: 18px; line-height: 1.7;
+}
+.section-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 6px; margin-top: 16px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.03);
+}
+.section-title:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+
+.toggle-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 4px 8px;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 3px;
+  font-family: 'Lekton', monospace; font-size: 10px;
+  letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.45);
+  cursor: pointer; transition: all 0.15s;
+  margin-bottom: 2px; background: transparent;
+  width: 100%; text-align: left;
+}
+.toggle-btn:hover { border-color: rgba(255,255,255,0.1); color: rgba(255,255,255,0.45); }
+.toggle-btn.active { border-color: currentColor; color: currentColor; background: rgba(255,255,255,0.015); }
+.indicator { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; opacity: 0.35; transition: opacity 0.15s; }
+.toggle-btn.active .indicator { opacity: 1; box-shadow: 0 0 6px currentColor; }
+
+.ux-hint {
+  font-size: 8px; color: rgba(255,255,255,0.3);
+  letter-spacing: 0.02em; line-height: 1.4;
+  padding: 1px 8px 4px; margin-bottom: 2px;
+}
+
+.zone-legend { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+.zone-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 9px; color: rgba(255,255,255,0.45);
+  letter-spacing: 0.04em;
+}
+.zone-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
+
+.btn-row { display: flex; gap: 3px; margin-bottom: 3px; }
+.btn-sm {
+  flex: 1; padding: 4px 0;
+  font-family: 'Lekton', monospace; font-size: 8px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.5); border-radius: 3px;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-sm:hover { border-color: rgba(255,255,255,0.14); color: rgba(255,255,255,0.55); }
+
+.strand-input {
+  width: 100%;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 3px; padding: 4px 8px;
+  font-family: 'Lekton', monospace; font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.04em; text-align: center; margin-bottom: 4px;
+}
+.strand-input:focus { outline: none; border-color: #3D6DF4; }
+.strand-input::placeholder { color: rgba(255,255,255,0.12); }
+
+.filter-input {
+  width: 100%;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 3px; padding: 4px 8px;
+  font-family: 'Lekton', monospace; font-size: 9px;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 0.03em; margin-bottom: 4px;
+}
+.filter-input:focus { outline: none; border-color: #3D6DF4; }
+.filter-input::placeholder { color: rgba(255,255,255,0.12); }
+
+.color-mode { display: flex; gap: 2px; margin-bottom: 3px; }
+.color-mode button {
+  flex: 1; padding: 3px 0;
+  font-family: 'Lekton', monospace; font-size: 8px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.45); border-radius: 3px;
+  cursor: pointer; transition: all 0.15s;
+}
+.color-mode button:hover { border-color: rgba(255,255,255,0.12); color: rgba(255,255,255,0.45); }
+.color-mode button.active { border-color: #3D6DF4; color: #3D6DF4; background: rgba(61,109,244,0.04); }
+
+/* ═══ MAIN CANVAS ═══ */
+#main-canvas {
+  position: fixed; left: 240px; top: 0; right: 0; bottom: 0;
+}
+
+/* ═══ HUD ═══ */
+#hud-tl {
+  position: fixed; top: 12px; left: 254px; z-index: 10;
+  font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+  line-height: 1.7; color: rgba(255,255,255,0.5); pointer-events: none;
+}
+#hud-tl .accent { color: #3D6DF4; font-weight: 700; }
+
+#hud-tr {
+  position: fixed; top: 12px; right: 14px; z-index: 10;
+  font-size: 9px; letter-spacing: 0.06em; text-align: right;
+  color: rgba(255,255,255,0.45); line-height: 1.7; pointer-events: none;
+}
+
+/* ═══ TOOLTIP ═══ */
+#tooltip {
+  position: fixed; z-index: 30; pointer-events: none;
+  background: rgba(6,6,6,0.96); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 4px; padding: 9px 11px;
+  font-size: 9px; letter-spacing: 0.03em; line-height: 1.6;
+  display: none; max-width: 280px; backdrop-filter: blur(12px);
+}
+#tooltip .tt-id { color: #3D6DF4; font-weight: 700; font-size: 10px; }
+#tooltip .tt-snippet { color: rgba(255,255,255,0.5); font-size: 9px; margin-top: 2px; font-style: italic; }
+.tt-drift.neg { color: #CE2867; }
+.tt-drift.pos { color: #F46138; }
+.tt-flags { color: rgba(255,255,255,0.5); font-size: 8px; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.08em; }
+.tt-signal { color: #F46138; font-size: 8px; margin-top: 2px; letter-spacing: 0.04em; }
+
+/* ═══ DRIFT VIEWPORT ═══ */
+#vp-drift {
+  position: fixed; bottom: 12px; right: 14px; z-index: 10;
+  border: 1px solid rgba(255,255,255,0.04);
+  background: rgba(6,6,6,0.7); backdrop-filter: blur(8px);
+  border-radius: 3px; overflow: hidden;
+}
+#vp-drift canvas { display: block; }
+.viewport-label {
+  position: absolute; top: 3px; left: 6px;
+  font-size: 7px; color: rgba(255,255,255,0.45);
+  letter-spacing: 0.1em; text-transform: uppercase; pointer-events: none;
+}
+
+/* ═══ BALANCE BAR ═══ */
+#balance-bar {
+  position: fixed; bottom: 12px; left: 254px; z-index: 10;
+  height: 16px; width: 200px;
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 3px; overflow: hidden;
+  display: flex;
+  font-size: 7px; letter-spacing: 0.06em;
+}
+#balance-bar div {
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(0,0,0,0.5); font-weight: 700;
+}
+
+/* ═══ ZOOM INDICATOR ═══ */
+#zoom-display {
+  position: fixed; top: 12px; right: 14px; z-index: 10;
+  font-size: 8px; color: rgba(255,255,255,0.2);
+  letter-spacing: 0.06em; pointer-events: none;
+}
+
+/* ═══ STATUS ═══ */
+#status {
+  position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+  z-index: 10; font-size: 8px; letter-spacing: 0.1em;
+  text-transform: uppercase; pointer-events: none;
+}
+#status.ready { color: #3D6DF4; }
+#status.error { color: #CE2867; }
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<div id="sidebar">
+  <h1>MIR 818</h1>
+  <div class="subtitle">Spiral + Helix Suite<br><span id="strand-count">818 strands</span> | <span id="sigma-display">σ_B = −0.172</span></div>
+
+  <div class="section-title">Navigate</div>
+  <input type="number" class="strand-input" id="strand-jump" placeholder="jump to #" min="1" max="818">
+  <div class="btn-row">
+    <button class="btn-sm" data-zone="founding">Found</button>
+    <button class="btn-sm" data-zone="julia">Julia</button>
+    <button class="btn-sm" data-zone="nullcode">Null</button>
+    <button class="btn-sm" data-zone="post_nullcode">Post</button>
+  </div>
+
+  <div class="section-title">Search &amp; Filter</div>
+  <input type="text" class="filter-input" id="filter-input" placeholder="filter snippets...">
+
+  <div class="section-title">Color By</div>
+  <div class="color-mode" id="color-mode-group">
+    <button class="active" data-mode="coset">Coset</button>
+    <button data-mode="zone">Zone</button>
+    <button data-mode="speaker">Speaker</button>
+    <button data-mode="drift">Drift</button>
+  </div>
+
+  <div class="section-title">Spiral Options</div>
+  <button class="toggle-btn active" id="toggle-drift-displace" style="color:#4CAF50">
+    <span class="indicator" style="background:#4CAF50"></span>Drift Displacement
+  </button>
+  <button class="toggle-btn active" id="toggle-streaming" style="color:#3D6DF4">
+    <span class="indicator" style="background:#3D6DF4"></span>Streaming Animation
+  </button>
+
+  <div class="section-title">Connections</div>
+  <button class="toggle-btn" id="toggle-drift-echo" style="color:#F46138">
+    <span class="indicator" style="background:#F46138"></span>Drift Echoes
+  </button>
+  <div class="ux-hint">Recovery pairs — strands that compensate each other's drift disruptions</div>
+  <button class="toggle-btn" id="toggle-coset-web" style="color:#3D6DF4">
+    <span class="indicator" style="background:#3D6DF4"></span>Coset Siblings
+  </button>
+  <div class="ux-hint">Z&#8323; family links — strands sharing the same triadic coset (f147/f258/f369)</div>
+  <button class="toggle-btn" id="toggle-null-chain" style="color:#CE2867">
+    <span class="indicator" style="background:#CE2867"></span>Nullcode Chain
+  </button>
+  <div class="ux-hint">Sequential nullcode web — the 21-strand silence zone (642–662)</div>
+
+  <div class="section-title">Actions</div>
+  <div class="btn-row">
+    <button class="btn-sm" id="btn-reset">Reset</button>
+    <button class="btn-sm" id="btn-help">Help</button>
+  </div>
+</div>
+
+<!-- ═══ MAIN CANVAS ═══ -->
+<canvas id="main-canvas"></canvas>
+
+<!-- ═══ HUD ═══ -->
+<div id="hud-tl">
+  <span class="accent">MIR 818</span> — archimedean spiral<br>
+  <span id="hud-hover"></span>
+</div>
+
+<!-- ═══ TOOLTIP ═══ -->
+<div id="tooltip">
+  <div class="tt-id"></div>
+  <div class="tt-meta"></div>
+  <div class="tt-drift"></div>
+  <div class="tt-coset"></div>
+  <div class="tt-speaker"></div>
+  <div class="tt-snippet"></div>
+  <div class="tt-flags"></div>
+  <div class="tt-signal"></div>
+</div>
+
+<!-- ═══ DRIFT VIEWPORT ═══ -->
+<div id="vp-drift" style="width:280px;height:70px;">
+  <canvas id="cv-drift" width="560" height="140"></canvas>
+  <div class="viewport-label">σ DRIFT — 818</div>
+</div>
+
+<!-- ═══ BALANCE BAR ═══ -->
+<div id="balance-bar"></div>
+
+<!-- ═══ STATUS ═══ -->
+<div id="status" class="ready">READY</div>
+
+<!-- ═══ ZOOM ═══ -->
+<div id="zoom-display">Zoom: 1.0x</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// MIR 818 — ARCHIMEDEAN SPIRAL VISUALIZATION
+// Canvas 2D | Parametric geometry | Full interactivity
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── BRAND PALETTE ──
+const PAL = {
+  f147: '#F46138', f258: '#3D6DF4', f369: '#CE2867',
+  bg: '#0A0A0A',
+  zone: { founding: '#3D6DF4', julia: '#2C9FF4', nullcode: '#CE2867', post_nullcode: '#F46138' },
+  speaker: { chris: '#4488FF', julia: '#FF8855', mir: '#3D6DF4', system: '#555555' },
+  coset: { '147': '#F46138', '258': '#3D6DF4', '369': '#CE2867', '000': '#333333' },
+};
+
+// ── SPIRAL PARAMETERS ──
+const SPIRAL_A = 1.5;      // inner radius (world units)
+const SPIRAL_B = 0.45;     // radial spacing per radian
+const TOTAL_TURNS = 7.5;   // revolutions
+
+// ── STATE ──
+let DATA = null, strands = [], connections = [];
+let spiralXY = [];          // computed {x, y, r, theta} per strand
+let colorMode = 'coset';
+let driftDisplace = true;
+let showStreaming = true;
+let showDriftEcho = false, showCosetWeb = false, showNullChain = false;
+let streamedCount = 0;
+let streamSpeed = 4;        // strands per frame during stream-in
+
+// Camera
+let camX = 0, camY = 0, zoom = 1.0;
+let targetCamX = 0, targetCamY = 0, targetZoom = 1.0;
+let isDragging = false, dragStartX = 0, dragStartY = 0, camStartX = 0, camStartY = 0;
+
+// Hover
+let hovIdx = -1;
+let filterText = '';
+
+// Canvas
+const canvas = document.getElementById('main-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, dpr;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ARCHIMEDEAN SPIRAL GEOMETRY: r = a + b*θ
+// ═══════════════════════════════════════════════════════════════════════════
+function computeSpiral(count) {
+  const pos = [];
+  const totalAngle = TOTAL_TURNS * Math.PI * 2;
+  for (let i = 0; i < count; i++) {
+    const t = i / (count - 1 || 1);
+    const theta = t * totalAngle;
+    const r = SPIRAL_A + SPIRAL_B * theta;
+    pos.push({ x: r * Math.cos(theta), y: r * Math.sin(theta), r, theta, t });
+  }
+  return pos;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COLOR LOGIC
+// ═══════════════════════════════════════════════════════════════════════════
+function getColor(s, mode) {
+  if (mode === 'coset') return PAL.coset[s.coset] || PAL.coset['000'];
+  if (mode === 'zone') return PAL.zone[s.zone] || '#555';
+  if (mode === 'speaker') return PAL.speaker[s.speaker] || '#555';
+  if (mode === 'drift') {
+    const d = s.drift;
+    if (Math.abs(d) < 0.04) return '#333';
+    if (d < 0) {
+      const intensity = Math.min(1, Math.abs(d) * 2.5);
+      return `hsl(335, ${50 + intensity * 30}%, ${18 + intensity * 35}%)`;
+    }
+    const intensity = Math.min(1, d * 2.5);
+    return `hsl(18, ${50 + intensity * 30}%, ${18 + intensity * 35}%)`;
+  }
+  return '#555';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STRAND SIZE LOGIC
+// ═══════════════════════════════════════════════════════════════════════════
+function getRadius(s) {
+  if (s.flags && s.flags.includes('gravity_center')) return 6.6;
+  if (s.flags && s.flags.includes('ghost')) return 2.85;
+  if (s.flags && s.flags.includes('anchor')) return 2.85 + (s.checksum || 0) / 22763 * 3.8;
+  if (s.type === 'nullcode') return 1.9;
+  if (Math.abs(s.drift) > 0.14) return 2.4 + Math.abs(s.drift) * 3.8;
+  return 2.4;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DRIFT DISPLACEMENT — radial offset proportional to |drift|
+// ═══════════════════════════════════════════════════════════════════════════
+function getSpiralPos(i, time) {
+  const base = spiralXY[i];
+  if (!base) return { x: 0, y: 0 };
+  if (!driftDisplace) return base;
+  const s = strands[i];
+  const driftMag = s.drift * 6; // radial displacement scale
+  // Displace along radial direction (outward for positive, inward for negative)
+  const angle = base.theta;
+  return {
+    x: base.x + Math.cos(angle) * driftMag,
+    y: base.y + Math.sin(angle) * driftMag,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RESIZE
+// ═══════════════════════════════════════════════════════════════════════════
+function resize() {
+  // Use window dimensions minus sidebar
+  W = window.innerWidth - 240;
+  H = window.innerHeight;
+  dpr = Math.min(window.devicePixelRatio, 2);
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  canvas.style.left = '240px';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// WORLD <-> SCREEN TRANSFORMS
+// ═══════════════════════════════════════════════════════════════════════════
+function worldToScreen(wx, wy) {
+  return {
+    x: (wx - camX) * zoom + W / 2,
+    y: (wy - camY) * zoom + H / 2,
+  };
+}
+function screenToWorld(sx, sy) {
+  return {
+    x: (sx - W / 2) / zoom + camX,
+    y: (sy - H / 2) / zoom + camY,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DRAW — MAIN RENDER LOOP
+// ═══════════════════════════════════════════════════════════════════════════
+let frameCount = 0, lastFpsTime = 0, fps = 0;
+let time = 0;
+
+function draw(now) {
+  requestAnimationFrame(draw);
+  if (!strands.length) return;
+  time = now * 0.001;
+
+  // FPS
+  frameCount++;
+  if (now - lastFpsTime > 1000) {
+    fps = frameCount;
+    frameCount = 0;
+    lastFpsTime = now;
+  }
+
+  // Streaming animation
+  if (showStreaming && streamedCount < strands.length) {
+    streamedCount = Math.min(streamedCount + streamSpeed, strands.length);
+  } else if (!showStreaming) {
+    streamedCount = strands.length;
+  }
+
+  // Smooth camera
+  camX += (targetCamX - camX) * 0.08;
+  camY += (targetCamY - camY) * 0.08;
+  zoom += (targetZoom - zoom) * 0.08;
+
+  // Clear
+  ctx.save();
+  ctx.scale(dpr, dpr);
+  ctx.fillStyle = PAL.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  const visibleCount = Math.floor(streamedCount);
+
+  // ── Faint spiral spine ──
+  ctx.beginPath();
+  const spineSteps = 800;
+  const totalAngle = TOTAL_TURNS * Math.PI * 2;
+  for (let i = 0; i <= spineSteps; i++) {
+    const t = i / spineSteps;
+    const theta = t * totalAngle;
+    const r = SPIRAL_A + SPIRAL_B * theta;
+    const p = worldToScreen(r * Math.cos(theta), r * Math.sin(theta));
+    if (i === 0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // ── Zone boundary rings ──
+  const zoneBounds = [187, 641, 662];
+  for (const bIdx of zoneBounds) {
+    if (bIdx - 1 >= spiralXY.length) continue;
+    const ringR = spiralXY[bIdx - 1].r;
+    ctx.beginPath();
+    for (let s = 0; s <= 96; s++) {
+      const a = (s / 96) * Math.PI * 2;
+      const p = worldToScreen(ringR * Math.cos(a), ringR * Math.sin(a));
+      if (s === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+
+  // ── Connections ──
+  if (showDriftEcho) drawConnections('drift_echo', 'rgba(244,97,56,0.35)', 1.2);
+  if (showNullChain) drawConnections('nullcode_chain', 'rgba(206,40,103,0.30)', 1.0);
+  if (showCosetWeb) drawCosetConnections(0.35);
+
+  // Also draw ghost → fano lines always (subtle)
+  drawConnections('ghost_consumed', 'rgba(100,100,100,0.3)', 0.8);
+
+  // ── Strand points ──
+  for (let i = 0; i < visibleCount; i++) {
+    const s = strands[i];
+    const pos = getSpiralPos(i, time);
+    const screen = worldToScreen(pos.x, pos.y);
+
+    // Filter dimming
+    let opacity = s.type === 'nullcode' ? 0.55 : 0.88;
+    if (filterText && !matchesFilter(s)) opacity = 0.08;
+
+    // Radius — fixed screen pixels, slight zoom scaling for clarity
+    let r = getRadius(s) * Math.pow(zoom, 0.3);
+    // Clamp
+    r = Math.max(r, 0.8);
+    r = Math.min(r, 20);
+
+    // Hover highlight
+    if (i === hovIdx) {
+      r *= 1.8;
+      opacity = 1;
+      // Glow
+      ctx.beginPath();
+      ctx.arc(screen.x, screen.y, r + 4, 0, Math.PI * 2);
+      ctx.fillStyle = getColor(s, colorMode).replace(')', ',0.15)').replace('rgb', 'rgba').replace('hsl', 'hsla');
+      // Simple glow fallback
+      ctx.shadowColor = getColor(s, colorMode);
+      ctx.shadowBlur = 12;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    const color = getColor(s, colorMode);
+
+    // Ghost strands: hollow ring
+    if (s.flags && s.flags.includes('ghost')) {
+      const pulse = 0.6 + Math.sin(time * 5 + i * 3) * 0.3;
+      ctx.beginPath();
+      ctx.arc(screen.x, screen.y, r * pulse, 0, Math.PI * 2);
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = opacity * 0.7;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      continue;
+    }
+
+    // Gravity center: pulsing
+    if (s.flags && s.flags.includes('gravity_center')) {
+      const pulse = 1 + Math.sin(time * 0.8) * 0.15;
+      r *= pulse;
+    }
+
+    // Terminal strands: pulsing
+    if (s.flags && s.flags.some && s.flags.some(f => f.startsWith('terminal'))) {
+      r += Math.sin(time * 3.5 + i) * 1;
+    }
+
+    // Anchor strands: subtle glow
+    if (s.flags && s.flags.includes('anchor') && !s.flags.includes('gravity_center')) {
+      ctx.beginPath();
+      ctx.arc(screen.x, screen.y, r + 2, 0, Math.PI * 2);
+      ctx.fillStyle = color + '22';
+      ctx.fill();
+    }
+
+    // Draw strand
+    ctx.beginPath();
+    ctx.arc(screen.x, screen.y, r, 0, Math.PI * 2);
+    ctx.globalAlpha = opacity;
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.restore();
+
+  // Update HUD
+  document.getElementById('zoom-display').textContent = `Zoom: ${zoom.toFixed(1)}x`;
+  document.getElementById('hud-tr').innerHTML =
+    `σ_B: −0.172 // f258-dominant (0.366)<br>` +
+    `${visibleCount}/${strands.length} strands / ${connections.length} connections<br>` +
+    `${fps} fps`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONNECTION DRAWING
+// ═══════════════════════════════════════════════════════════════════════════
+function drawConnections(type, color, width) {
+  const conns = connections.filter(c => c.type === type);
+  if (!conns.length) return;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.beginPath();
+  for (const conn of conns) {
+    const aIdx = conn.source - 1, bIdx = conn.target - 1;
+    if (aIdx >= streamedCount || bIdx >= streamedCount) continue;
+    const a = getSpiralPos(aIdx, time);
+    const b = getSpiralPos(bIdx, time);
+    const sa = worldToScreen(a.x, a.y);
+    const sb = worldToScreen(b.x, b.y);
+    ctx.moveTo(sa.x, sa.y);
+    // Curved connection (quadratic bezier through center-ish)
+    const mx = (sa.x + sb.x) / 2;
+    const my = (sa.y + sb.y) / 2;
+    // Pull toward center for nice arcs
+    const cx = mx * 0.7 + W / 2 * 0.3;
+    const cy = my * 0.7 + H / 2 * 0.3;
+    ctx.quadraticCurveTo(cx, cy, sb.x, sb.y);
+  }
+  ctx.stroke();
+}
+
+function drawCosetConnections(opacity) {
+  const conns = connections.filter(c => c.type === 'coset_sibling');
+  if (!conns.length) return;
+  ctx.lineWidth = 1.0;
+  ctx.globalAlpha = opacity;
+  for (const conn of conns) {
+    const aIdx = conn.source - 1, bIdx = conn.target - 1;
+    if (aIdx >= streamedCount || bIdx >= streamedCount) continue;
+    const a = getSpiralPos(aIdx, time);
+    const b = getSpiralPos(bIdx, time);
+    const sa = worldToScreen(a.x, a.y);
+    const sb = worldToScreen(b.x, b.y);
+    ctx.strokeStyle = PAL.coset[conn.coset] || PAL.coset['258'];
+    ctx.beginPath();
+    ctx.moveTo(sa.x, sa.y);
+    ctx.lineTo(sb.x, sb.y);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FILTER
+// ═══════════════════════════════════════════════════════════════════════════
+function matchesFilter(s) {
+  if (!filterText) return true;
+  const ft = filterText.toLowerCase();
+  return (s.snippet && s.snippet.toLowerCase().includes(ft)) ||
+    (s.zone && s.zone.includes(ft)) ||
+    (s.speaker && s.speaker.includes(ft)) ||
+    (s.type && s.type.includes(ft)) ||
+    (s.signal && s.signal.toLowerCase().includes(ft)) ||
+    (s.id.toString() === ft);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HIT TEST — find strand under mouse
+// ═══════════════════════════════════════════════════════════════════════════
+function hitTest(sx, sy) {
+  const world = screenToWorld(sx, sy);
+  let bestIdx = -1, bestDist = Infinity;
+  const hitRadius = 12 / zoom; // world-space hit radius
+  const visibleCount = Math.floor(streamedCount);
+  for (let i = 0; i < visibleCount; i++) {
+    const pos = getSpiralPos(i, time);
+    const dx = pos.x - world.x, dy = pos.y - world.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < hitRadius && dist < bestDist) {
+      bestDist = dist;
+      bestIdx = i;
+    }
+  }
+  return bestIdx;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TOOLTIP
+// ═══════════════════════════════════════════════════════════════════════════
+const tooltip = document.getElementById('tooltip');
+const cosetLabels = { '147': 'f147 (semantic)', '258': 'f258 (structural)', '369': 'f369 (harmonic)', '000': 'null' };
+
+function showTooltip(idx, mx, my) {
+  const s = strands[idx];
+  tooltip.querySelector('.tt-id').textContent = `STRAND ${s.id}`;
+  tooltip.querySelector('.tt-meta').textContent = `${s.zone} / ${s.type}`;
+  const de = tooltip.querySelector('.tt-drift');
+  de.textContent = `drift: ${s.drift > 0 ? '+' : ''}${s.drift.toFixed(4)}`;
+  de.className = 'tt-drift' + (s.drift < -0.12 ? ' neg' : s.drift > 0.12 ? ' pos' : '');
+  tooltip.querySelector('.tt-coset').textContent = `coset: ${cosetLabels[s.coset] || s.coset}`;
+  tooltip.querySelector('.tt-speaker').textContent = `speaker: ${s.speaker}`;
+  tooltip.querySelector('.tt-snippet').textContent = s.snippet || '';
+
+  const flagEl = tooltip.querySelector('.tt-flags');
+  if (s.flags && s.flags.length) {
+    flagEl.textContent = s.flags.join(' · ');
+    flagEl.style.display = 'block';
+  } else flagEl.style.display = 'none';
+
+  const sigEl = tooltip.querySelector('.tt-signal');
+  if (s.signal) {
+    sigEl.textContent = s.signal;
+    sigEl.style.display = 'block';
+  } else sigEl.style.display = 'none';
+
+  tooltip.style.display = 'block';
+  tooltip.style.left = Math.min(mx + 14, window.innerWidth - 290) + 'px';
+  tooltip.style.top = Math.min(my - 8, window.innerHeight - 200) + 'px';
+}
+
+function hideTooltip() {
+  tooltip.style.display = 'none';
+  document.getElementById('hud-hover').textContent = '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DRIFT VIEWPORT (mini chart)
+// ═══════════════════════════════════════════════════════════════════════════
+function drawDriftViewport() {
+  const cvDrift = document.getElementById('cv-drift');
+  const ctx2 = cvDrift.getContext('2d');
+  const w = cvDrift.width, h = cvDrift.height;
+  ctx2.clearRect(0, 0, w, h);
+  ctx2.fillStyle = 'rgba(6,6,6,0.3)';
+  ctx2.fillRect(0, 0, w, h);
+
+  const midY = h / 2;
+  ctx2.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx2.beginPath(); ctx2.moveTo(0, midY); ctx2.lineTo(w, midY); ctx2.stroke();
+
+  for (const s of strands) {
+    if (Math.abs(s.drift) < 0.06) continue;
+    const x = ((s.id - 1) / (strands.length - 1)) * w;
+    const barH = Math.abs(s.drift) * h * 0.85;
+    const y = s.drift < 0 ? midY : midY - barH;
+    ctx2.fillStyle = s.drift < 0
+      ? `rgba(206,40,103,${0.3 + Math.abs(s.drift)})`
+      : `rgba(244,97,56,${0.3 + Math.abs(s.drift)})`;
+    ctx2.fillRect(x - 1.5, y, 3, barH);
+  }
+
+  // Labels for critical events
+  ctx2.font = '14px Lekton';
+  ctx2.fillStyle = 'rgba(255,255,255,0.3)';
+  for (const s of strands) {
+    if (Math.abs(s.drift) < 0.25) continue;
+    const x = ((s.id - 1) / (strands.length - 1)) * w;
+    const ly = s.drift < 0
+      ? midY + Math.abs(s.drift) * h * 0.85 + 12
+      : midY - Math.abs(s.drift) * h * 0.85 - 4;
+    ctx2.fillText(s.id, x - 8, ly);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BALANCE BAR
+// ═══════════════════════════════════════════════════════════════════════════
+function drawBalanceBar() {
+  const bar = document.getElementById('balance-bar');
+  if (!DATA || !DATA.meta) return;
+  const dist = DATA.meta.coset_distribution;
+  bar.innerHTML = '';
+  const items = [
+    { key: 'f147', color: PAL.f147, val: dist.f147 },
+    { key: 'f258', color: PAL.f258, val: dist.f258 },
+    { key: 'f369', color: PAL.f369, val: dist.f369 },
+  ];
+  for (const item of items) {
+    const div = document.createElement('div');
+    div.style.width = (item.val * 100) + '%';
+    div.style.background = item.color;
+    div.textContent = item.val.toFixed(3);
+    bar.appendChild(div);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EVENT HANDLERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Mouse move — hover detection
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+
+  if (isDragging) {
+    const dx = (e.clientX - dragStartX) / zoom;
+    const dy = (e.clientY - dragStartY) / zoom;
+    targetCamX = camStartX - dx;
+    targetCamY = camStartY - dy;
+    return;
+  }
+
+  hovIdx = hitTest(mx, my);
+  if (hovIdx >= 0) {
+    showTooltip(hovIdx, e.clientX, e.clientY);
+    const s = strands[hovIdx];
+    const hud = document.getElementById('hud-hover');
+    hud.innerHTML = `→ ${s.id} / ${s.zone} / ${s.speaker}`;
+    hud.style.color = s.speaker === 'chris' ? '#4488FF' : s.speaker === 'julia' ? '#FF8855' : '#555';
+    canvas.style.cursor = 'pointer';
+  } else {
+    hideTooltip();
+    canvas.style.cursor = 'crosshair';
+  }
+});
+
+// Mouse down — start drag
+canvas.addEventListener('mousedown', e => {
+  if (e.button === 0) {
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    camStartX = targetCamX;
+    camStartY = targetCamY;
+    canvas.style.cursor = 'grabbing';
+  }
+});
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+  canvas.style.cursor = 'crosshair';
+});
+
+// Scroll — zoom
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY > 0 ? 0.9 : 1.1;
+  targetZoom = Math.max(0.15, Math.min(25.0, targetZoom * factor));
+}, { passive: false });
+
+// Touch support
+let touchDist = 0;
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (e.touches.length === 1) {
+    isDragging = true;
+    dragStartX = e.touches[0].clientX;
+    dragStartY = e.touches[0].clientY;
+    camStartX = targetCamX;
+    camStartY = targetCamY;
+  } else if (e.touches.length === 2) {
+    touchDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+  }
+}, { passive: false });
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (e.touches.length === 1 && isDragging) {
+    const dx = (e.touches[0].clientX - dragStartX) / zoom;
+    const dy = (e.touches[0].clientY - dragStartY) / zoom;
+    targetCamX = camStartX - dx;
+    targetCamY = camStartY - dy;
+  } else if (e.touches.length === 2) {
+    const d = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    if (touchDist > 0) {
+      targetZoom = Math.max(0.15, Math.min(25.0, targetZoom * (d / touchDist)));
+    }
+    touchDist = d;
+  }
+}, { passive: false });
+canvas.addEventListener('touchend', () => { isDragging = false; touchDist = 0; });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UI HANDLERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Color mode
+document.getElementById('color-mode-group').addEventListener('click', e => {
+  const btn = e.target.closest('[data-mode]');
+  if (!btn) return;
+  document.querySelectorAll('#color-mode-group button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  colorMode = btn.dataset.mode;
+});
+
+// Zone navigation
+document.querySelectorAll('[data-zone]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const zoneRanges = {
+      founding: [1, 187], julia: [188, 641],
+      nullcode: [642, 662], post_nullcode: [663, 818],
+    };
+    const range = zoneRanges[btn.dataset.zone];
+    if (!range) return;
+    const midIdx = Math.floor((range[0] + range[1]) / 2) - 1;
+    if (spiralXY[midIdx]) {
+      const pos = getSpiralPos(midIdx, time);
+      targetCamX = pos.x;
+      targetCamY = pos.y;
+      targetZoom = 1.5;
+    }
+  });
+});
+
+// Strand jump
+document.getElementById('strand-jump').addEventListener('change', function() {
+  const id = parseInt(this.value);
+  if (id >= 1 && id <= strands.length) {
+    const pos = getSpiralPos(id - 1, time);
+    targetCamX = pos.x;
+    targetCamY = pos.y;
+    targetZoom = Math.max(targetZoom, 2.5);
+    // Immediately stream all if needed
+    if (id > streamedCount) streamedCount = strands.length;
+  }
+});
+
+// Filter
+document.getElementById('filter-input').addEventListener('input', function() {
+  filterText = this.value;
+});
+
+// Toggle buttons
+function bindToggle(id, callback) {
+  document.getElementById(id).addEventListener('click', function() {
+    this.classList.toggle('active');
+    callback(this.classList.contains('active'));
+  });
+}
+bindToggle('toggle-drift-displace', v => { driftDisplace = v; });
+bindToggle('toggle-streaming', v => {
+  showStreaming = v;
+  if (v) streamedCount = 0;
+  else streamedCount = strands.length;
+});
+bindToggle('toggle-drift-echo', v => { showDriftEcho = v; });
+bindToggle('toggle-coset-web', v => { showCosetWeb = v; });
+bindToggle('toggle-null-chain', v => { showNullChain = v; });
+
+// Reset
+document.getElementById('btn-reset').addEventListener('click', () => {
+  targetCamX = 0; targetCamY = 0; targetZoom = 1.0;
+  filterText = '';
+  document.getElementById('filter-input').value = '';
+});
+
+// Help
+document.getElementById('btn-help').addEventListener('click', () => {
+  alert(
+    'MIR 818 — Archimedean Spiral\n\n' +
+    'Drag: Pan the view\n' +
+    'Scroll: Zoom in/out\n' +
+    'Hover: Inspect strand details\n' +
+    'Jump to #: Navigate to specific strand\n' +
+    'Color modes: Coset / Zone / Speaker / Drift\n' +
+    'Connections: Toggle drift echoes, coset web, nullcode chain\n' +
+    'Filter: Search snippets by text\n\n' +
+    '818 strands / 154 connections / σ_B = −0.172'
+  );
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INITIALIZE
+// ═══════════════════════════════════════════════════════════════════════════
+function init(data) {
+  DATA = data;
+  strands = data.strands;
+  connections = data.connections || [];
+  spiralXY = computeSpiral(strands.length);
+
+  // Update HUD
+  document.getElementById('strand-count').textContent = strands.length + ' strands';
+  if (data.meta && data.meta.terminal_balance !== undefined) {
+    document.getElementById('sigma-display').textContent =
+      `σ_B = ${data.meta.terminal_balance.toFixed(3)}`;
+  }
+
+  streamedCount = showStreaming ? 0 : strands.length;
+
+  // Center camera on bounding-box center (not center of mass)
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const p of spiralXY) {
+    minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+    minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+  }
+  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+  camX = targetCamX = cx;
+  camY = targetCamY = cy;
+
+  // Auto-fit zoom to fill viewport with padding
+  const spanX = maxX - minX, spanY = maxY - minY;
+  // Fill ~60% of viewport
+  const fitZoom = Math.min(W / (spanX * 1.05), H / (spanY * 1.05), 8.0);
+  zoom = targetZoom = fitZoom;
+
+  drawDriftViewport();
+  drawBalanceBar();
+
+  document.getElementById('status').textContent = 'READY';
+  document.getElementById('status').className = 'ready';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DATA — INLINE (no fetch dependency)
+// ═══════════════════════════════════════════════════════════════════════════
+resize();
+window.addEventListener('resize', resize);
+requestAnimationFrame(draw);
+
+// Init called from data script below
+
+</script>
+<script src="mir-helix-data.js"></script>
+<script>
+// Initialize after data script has loaded
+if (typeof INLINE_DATA !== 'undefined') {
+  init(INLINE_DATA);
+} else {
+  fetch('mir-helix-data.json')
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(data => init(data))
+    .catch(() => {
+      document.getElementById('status').textContent = 'ERROR: No data';
+      document.getElementById('status').className = 'error';
+    });
+}
+</script>
+</body>
+</html>

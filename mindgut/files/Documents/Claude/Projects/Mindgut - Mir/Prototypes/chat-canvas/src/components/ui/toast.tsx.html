@@ -1,0 +1,112 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>toast.tsx</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>toast.tsx</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/chat-canvas/src/components/ui/toast.tsx</span><span>0.00 MB · sha256 8f4db67ae4633904…</span><a download="toast.tsx" id="dl" href="#">Download the original</a></header><main><pre>import * as React from &quot;react&quot;;
+import * as ToastPrimitives from &quot;@radix-ui/react-toast&quot;;
+import { cva, type VariantProps } from &quot;class-variance-authority&quot;;
+import { X } from &quot;lucide-react&quot;;
+
+import { cn } from &quot;@/lib/utils&quot;;
+
+const ToastProvider = ToastPrimitives.Provider;
+
+const ToastViewport = React.forwardRef&lt;
+  React.ElementRef&lt;typeof ToastPrimitives.Viewport&gt;,
+  React.ComponentPropsWithoutRef&lt;typeof ToastPrimitives.Viewport&gt;
+&gt;(({ className, ...props }, ref) =&gt; (
+  &lt;ToastPrimitives.Viewport
+    ref={ref}
+    className={cn(
+      &quot;fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]&quot;,
+      className,
+    )}
+    {...props}
+  /&gt;
+));
+ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
+
+const toastVariants = cva(
+  &quot;group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full&quot;,
+  {
+    variants: {
+      variant: {
+        default: &quot;border bg-background text-foreground&quot;,
+        destructive: &quot;destructive group border-destructive bg-destructive text-destructive-foreground&quot;,
+      },
+    },
+    defaultVariants: {
+      variant: &quot;default&quot;,
+    },
+  },
+);
+
+const Toast = React.forwardRef&lt;
+  React.ElementRef&lt;typeof ToastPrimitives.Root&gt;,
+  React.ComponentPropsWithoutRef&lt;typeof ToastPrimitives.Root&gt; &amp; VariantProps&lt;typeof toastVariants&gt;
+&gt;(({ className, variant, ...props }, ref) =&gt; {
+  return &lt;ToastPrimitives.Root ref={ref} className={cn(toastVariants({ variant }), className)} {...props} /&gt;;
+});
+Toast.displayName = ToastPrimitives.Root.displayName;
+
+const ToastAction = React.forwardRef&lt;
+  React.ElementRef&lt;typeof ToastPrimitives.Action&gt;,
+  React.ComponentPropsWithoutRef&lt;typeof ToastPrimitives.Action&gt;
+&gt;(({ className, ...props }, ref) =&gt; (
+  &lt;ToastPrimitives.Action
+    ref={ref}
+    className={cn(
+      &quot;inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors group-[.destructive]:border-muted/40 hover:bg-secondary group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 group-[.destructive]:focus:ring-destructive disabled:pointer-events-none disabled:opacity-50&quot;,
+      className,
+    )}
+    {...props}
+  /&gt;
+));
+ToastAction.displayName = ToastPrimitives.Action.displayName;
+
+const ToastClose = React.forwardRef&lt;
+  React.ElementRef&lt;typeof ToastPrimitives.Close&gt;,
+  React.ComponentPropsWithoutRef&lt;typeof ToastPrimitives.Close&gt;
+&gt;(({ className, ...props }, ref) =&gt; (
+  &lt;ToastPrimitives.Close
+    ref={ref}
+    className={cn(
+      &quot;absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity group-hover:opacity-100 group-[.destructive]:text-red-300 hover:text-foreground group-[.destructive]:hover:text-red-50 focus:opacity-100 focus:outline-none focus:ring-2 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600&quot;,
+      className,
+    )}
+    toast-close=&quot;&quot;
+    {...props}
+  &gt;
+    &lt;X className=&quot;h-4 w-4&quot; /&gt;
+  &lt;/ToastPrimitives.Close&gt;
+));
+ToastClose.displayName = ToastPrimitives.Close.displayName;
+
+const ToastTitle = React.forwardRef&lt;
+  React.ElementRef&lt;typeof ToastPrimitives.Title&gt;,
+  React.ComponentPropsWithoutRef&lt;typeof ToastPrimitives.Title&gt;
+&gt;(({ className, ...props }, ref) =&gt; (
+  &lt;ToastPrimitives.Title ref={ref} className={cn(&quot;text-sm font-semibold&quot;, className)} {...props} /&gt;
+));
+ToastTitle.displayName = ToastPrimitives.Title.displayName;
+
+const ToastDescription = React.forwardRef&lt;
+  React.ElementRef&lt;typeof ToastPrimitives.Description&gt;,
+  React.ComponentPropsWithoutRef&lt;typeof ToastPrimitives.Description&gt;
+&gt;(({ className, ...props }, ref) =&gt; (
+  &lt;ToastPrimitives.Description ref={ref} className={cn(&quot;text-sm opacity-90&quot;, className)} {...props} /&gt;
+));
+ToastDescription.displayName = ToastPrimitives.Description.displayName;
+
+type ToastProps = React.ComponentPropsWithoutRef&lt;typeof Toast&gt;;
+
+type ToastActionElement = React.ReactElement&lt;typeof ToastAction&gt;;
+
+export {
+  type ToastProps,
+  type ToastActionElement,
+  ToastProvider,
+  ToastViewport,
+  Toast,
+  ToastTitle,
+  ToastDescription,
+  ToastClose,
+  ToastAction,
+};
+</pre></main><script>var b=atob("aW1wb3J0ICogYXMgUmVhY3QgZnJvbSAicmVhY3QiOwppbXBvcnQgKiBhcyBUb2FzdFByaW1pdGl2ZXMgZnJvbSAiQHJhZGl4LXVpL3JlYWN0LXRvYXN0IjsKaW1wb3J0IHsgY3ZhLCB0eXBlIFZhcmlhbnRQcm9wcyB9IGZyb20gImNsYXNzLXZhcmlhbmNlLWF1dGhvcml0eSI7CmltcG9ydCB7IFggfSBmcm9tICJsdWNpZGUtcmVhY3QiOwoKaW1wb3J0IHsgY24gfSBmcm9tICJAL2xpYi91dGlscyI7Cgpjb25zdCBUb2FzdFByb3ZpZGVyID0gVG9hc3RQcmltaXRpdmVzLlByb3ZpZGVyOwoKY29uc3QgVG9hc3RWaWV3cG9ydCA9IFJlYWN0LmZvcndhcmRSZWY8CiAgUmVhY3QuRWxlbWVudFJlZjx0eXBlb2YgVG9hc3RQcmltaXRpdmVzLlZpZXdwb3J0PiwKICBSZWFjdC5Db21wb25lbnRQcm9wc1dpdGhvdXRSZWY8dHlwZW9mIFRvYXN0UHJpbWl0aXZlcy5WaWV3cG9ydD4KPigoeyBjbGFzc05hbWUsIC4uLnByb3BzIH0sIHJlZikgPT4gKAogIDxUb2FzdFByaW1pdGl2ZXMuVmlld3BvcnQKICAgIHJlZj17cmVmfQogICAgY2xhc3NOYW1lPXtjbigKICAgICAgImZpeGVkIHRvcC0wIHotWzEwMF0gZmxleCBtYXgtaC1zY3JlZW4gdy1mdWxsIGZsZXgtY29sLXJldmVyc2UgcC00IHNtOmJvdHRvbS0wIHNtOnJpZ2h0LTAgc206dG9wLWF1dG8gc206ZmxleC1jb2wgbWQ6bWF4LXctWzQyMHB4XSIsCiAgICAgIGNsYXNzTmFtZSwKICAgICl9CiAgICB7Li4ucHJvcHN9CiAgLz4KKSk7ClRvYXN0Vmlld3BvcnQuZGlzcGxheU5hbWUgPSBUb2FzdFByaW1pdGl2ZXMuVmlld3BvcnQuZGlzcGxheU5hbWU7Cgpjb25zdCB0b2FzdFZhcmlhbnRzID0gY3ZhKAogICJncm91cCBwb2ludGVyLWV2ZW50cy1hdXRvIHJlbGF0aXZlIGZsZXggdy1mdWxsIGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gc3BhY2UteC00IG92ZXJmbG93LWhpZGRlbiByb3VuZGVkLW1kIGJvcmRlciBwLTYgcHItOCBzaGFkb3ctbGcgdHJhbnNpdGlvbi1hbGwgZGF0YS1bc3dpcGU9Y2FuY2VsXTp0cmFuc2xhdGUteC0wIGRhdGEtW3N3aXBlPWVuZF06dHJhbnNsYXRlLXgtW3ZhcigtLXJhZGl4LXRvYXN0LXN3aXBlLWVuZC14KV0gZGF0YS1bc3dpcGU9bW92ZV06dHJhbnNsYXRlLXgtW3ZhcigtLXJhZGl4LXRvYXN0LXN3aXBlLW1vdmUteCldIGRhdGEtW3N3aXBlPW1vdmVdOnRyYW5zaXRpb24tbm9uZSBkYXRhLVtzdGF0ZT1vcGVuXTphbmltYXRlLWluIGRhdGEtW3N0YXRlPWNsb3NlZF06YW5pbWF0ZS1vdXQgZGF0YS1bc3dpcGU9ZW5kXTphbmltYXRlLW91dCBkYXRhLVtzdGF0ZT1jbG9zZWRdOmZhZGUtb3V0LTgwIGRhdGEtW3N0YXRlPWNsb3NlZF06c2xpZGUtb3V0LXRvLXJpZ2h0LWZ1bGwgZGF0YS1bc3RhdGU9b3Blbl06c2xpZGUtaW4tZnJvbS10b3AtZnVsbCBkYXRhLVtzdGF0ZT1vcGVuXTpzbTpzbGlkZS1pbi1mcm9tLWJvdHRvbS1mdWxsIiwKICB7CiAgICB2YXJpYW50czogewogICAgICB2YXJpYW50OiB7CiAgICAgICAgZGVmYXVsdDogImJvcmRlciBiZy1iYWNrZ3JvdW5kIHRleHQtZm9yZWdyb3VuZCIsCiAgICAgICAgZGVzdHJ1Y3RpdmU6ICJkZXN0cnVjdGl2ZSBncm91cCBib3JkZXItZGVzdHJ1Y3RpdmUgYmctZGVzdHJ1Y3RpdmUgdGV4dC1kZXN0cnVjdGl2ZS1mb3JlZ3JvdW5kIiwKICAgICAgfSwKICAgIH0sCiAgICBkZWZhdWx0VmFyaWFudHM6IHsKICAgICAgdmFyaWFudDogImRlZmF1bHQiLAogICAgfSwKICB9LAopOwoKY29uc3QgVG9hc3QgPSBSZWFjdC5mb3J3YXJkUmVmPAogIFJlYWN0LkVsZW1lbnRSZWY8dHlwZW9mIFRvYXN0UHJpbWl0aXZlcy5Sb290PiwKICBSZWFjdC5Db21wb25lbnRQcm9wc1dpdGhvdXRSZWY8dHlwZW9mIFRvYXN0UHJpbWl0aXZlcy5Sb290PiAmIFZhcmlhbnRQcm9wczx0eXBlb2YgdG9hc3RWYXJpYW50cz4KPigoeyBjbGFzc05hbWUsIHZhcmlhbnQsIC4uLnByb3BzIH0sIHJlZikgPT4gewogIHJldHVybiA8VG9hc3RQcmltaXRpdmVzLlJvb3QgcmVmPXtyZWZ9IGNsYXNzTmFtZT17Y24odG9hc3RWYXJpYW50cyh7IHZhcmlhbnQgfSksIGNsYXNzTmFtZSl9IHsuLi5wcm9wc30gLz47Cn0pOwpUb2FzdC5kaXNwbGF5TmFtZSA9IFRvYXN0UHJpbWl0aXZlcy5Sb290LmRpc3BsYXlOYW1lOwoKY29uc3QgVG9hc3RBY3Rpb24gPSBSZWFjdC5mb3J3YXJkUmVmPAogIFJlYWN0LkVsZW1lbnRSZWY8dHlwZW9mIFRvYXN0UHJpbWl0aXZlcy5BY3Rpb24+LAogIFJlYWN0LkNvbXBvbmVudFByb3BzV2l0aG91dFJlZjx0eXBlb2YgVG9hc3RQcmltaXRpdmVzLkFjdGlvbj4KPigoeyBjbGFzc05hbWUsIC4uLnByb3BzIH0sIHJlZikgPT4gKAogIDxUb2FzdFByaW1pdGl2ZXMuQWN0aW9uCiAgICByZWY9e3JlZn0KICAgIGNsYXNzTmFtZT17Y24oCiAgICAgICJpbmxpbmUtZmxleCBoLTggc2hyaW5rLTAgaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHJvdW5kZWQtbWQgYm9yZGVyIGJnLXRyYW5zcGFyZW50IHB4LTMgdGV4dC1zbSBmb250LW1lZGl1bSByaW5nLW9mZnNldC1iYWNrZ3JvdW5kIHRyYW5zaXRpb24tY29sb3JzIGdyb3VwLVsuZGVzdHJ1Y3RpdmVdOmJvcmRlci1tdXRlZC80MCBob3ZlcjpiZy1zZWNvbmRhcnkgZ3JvdXAtWy5kZXN0cnVjdGl2ZV06aG92ZXI6Ym9yZGVyLWRlc3RydWN0aXZlLzMwIGdyb3VwLVsuZGVzdHJ1Y3RpdmVdOmhvdmVyOmJnLWRlc3RydWN0aXZlIGdyb3VwLVsuZGVzdHJ1Y3RpdmVdOmhvdmVyOnRleHQtZGVzdHJ1Y3RpdmUtZm9yZWdyb3VuZCBmb2N1czpvdXRsaW5lLW5vbmUgZm9jdXM6cmluZy0yIGZvY3VzOnJpbmctcmluZyBmb2N1czpyaW5nLW9mZnNldC0yIGdyb3VwLVsuZGVzdHJ1Y3RpdmVdOmZvY3VzOnJpbmctZGVzdHJ1Y3RpdmUgZGlzYWJsZWQ6cG9pbnRlci1ldmVudHMtbm9uZSBkaXNhYmxlZDpvcGFjaXR5LTUwIiwKICAgICAgY2xhc3NOYW1lLAogICAgKX0KICAgIHsuLi5wcm9wc30KICAvPgopKTsKVG9hc3RBY3Rpb24uZGlzcGxheU5hbWUgPSBUb2FzdFByaW1pdGl2ZXMuQWN0aW9uLmRpc3BsYXlOYW1lOwoKY29uc3QgVG9hc3RDbG9zZSA9IFJlYWN0LmZvcndhcmRSZWY8CiAgUmVhY3QuRWxlbWVudFJlZjx0eXBlb2YgVG9hc3RQcmltaXRpdmVzLkNsb3NlPiwKICBSZWFjdC5Db21wb25lbnRQcm9wc1dpdGhvdXRSZWY8dHlwZW9mIFRvYXN0UHJpbWl0aXZlcy5DbG9zZT4KPigoeyBjbGFzc05hbWUsIC4uLnByb3BzIH0sIHJlZikgPT4gKAogIDxUb2FzdFByaW1pdGl2ZXMuQ2xvc2UKICAgIHJlZj17cmVmfQogICAgY2xhc3NOYW1lPXtjbigKICAgICAgImFic29sdXRlIHJpZ2h0LTIgdG9wLTIgcm91bmRlZC1tZCBwLTEgdGV4dC1mb3JlZ3JvdW5kLzUwIG9wYWNpdHktMCB0cmFuc2l0aW9uLW9wYWNpdHkgZ3JvdXAtaG92ZXI6b3BhY2l0eS0xMDAgZ3JvdXAtWy5kZXN0cnVjdGl2ZV06dGV4dC1yZWQtMzAwIGhvdmVyOnRleHQtZm9yZWdyb3VuZCBncm91cC1bLmRlc3RydWN0aXZlXTpob3Zlcjp0ZXh0LXJlZC01MCBmb2N1czpvcGFjaXR5LTEwMCBmb2N1czpvdXRsaW5lLW5vbmUgZm9jdXM6cmluZy0yIGdyb3VwLVsuZGVzdHJ1Y3RpdmVdOmZvY3VzOnJpbmctcmVkLTQwMCBncm91cC1bLmRlc3RydWN0aXZlXTpmb2N1czpyaW5nLW9mZnNldC1yZWQtNjAwIiwKICAgICAgY2xhc3NOYW1lLAogICAgKX0KICAgIHRvYXN0LWNsb3NlPSIiCiAgICB7Li4ucHJvcHN9CiAgPgogICAgPFggY2xhc3NOYW1lPSJoLTQgdy00IiAvPgogIDwvVG9hc3RQcmltaXRpdmVzLkNsb3NlPgopKTsKVG9hc3RDbG9zZS5kaXNwbGF5TmFtZSA9IFRvYXN0UHJpbWl0aXZlcy5DbG9zZS5kaXNwbGF5TmFtZTsKCmNvbnN0IFRvYXN0VGl0bGUgPSBSZWFjdC5mb3J3YXJkUmVmPAogIFJlYWN0LkVsZW1lbnRSZWY8dHlwZW9mIFRvYXN0UHJpbWl0aXZlcy5UaXRsZT4sCiAgUmVhY3QuQ29tcG9uZW50UHJvcHNXaXRob3V0UmVmPHR5cGVvZiBUb2FzdFByaW1pdGl2ZXMuVGl0bGU+Cj4oKHsgY2xhc3NOYW1lLCAuLi5wcm9wcyB9LCByZWYpID0+ICgKICA8VG9hc3RQcmltaXRpdmVzLlRpdGxlIHJlZj17cmVmfSBjbGFzc05hbWU9e2NuKCJ0ZXh0LXNtIGZvbnQtc2VtaWJvbGQiLCBjbGFzc05hbWUpfSB7Li4ucHJvcHN9IC8+CikpOwpUb2FzdFRpdGxlLmRpc3BsYXlOYW1lID0gVG9hc3RQcmltaXRpdmVzLlRpdGxlLmRpc3BsYXlOYW1lOwoKY29uc3QgVG9hc3REZXNjcmlwdGlvbiA9IFJlYWN0LmZvcndhcmRSZWY8CiAgUmVhY3QuRWxlbWVudFJlZjx0eXBlb2YgVG9hc3RQcmltaXRpdmVzLkRlc2NyaXB0aW9uPiwKICBSZWFjdC5Db21wb25lbnRQcm9wc1dpdGhvdXRSZWY8dHlwZW9mIFRvYXN0UHJpbWl0aXZlcy5EZXNjcmlwdGlvbj4KPigoeyBjbGFzc05hbWUsIC4uLnByb3BzIH0sIHJlZikgPT4gKAogIDxUb2FzdFByaW1pdGl2ZXMuRGVzY3JpcHRpb24gcmVmPXtyZWZ9IGNsYXNzTmFtZT17Y24oInRleHQtc20gb3BhY2l0eS05MCIsIGNsYXNzTmFtZSl9IHsuLi5wcm9wc30gLz4KKSk7ClRvYXN0RGVzY3JpcHRpb24uZGlzcGxheU5hbWUgPSBUb2FzdFByaW1pdGl2ZXMuRGVzY3JpcHRpb24uZGlzcGxheU5hbWU7Cgp0eXBlIFRvYXN0UHJvcHMgPSBSZWFjdC5Db21wb25lbnRQcm9wc1dpdGhvdXRSZWY8dHlwZW9mIFRvYXN0PjsKCnR5cGUgVG9hc3RBY3Rpb25FbGVtZW50ID0gUmVhY3QuUmVhY3RFbGVtZW50PHR5cGVvZiBUb2FzdEFjdGlvbj47CgpleHBvcnQgewogIHR5cGUgVG9hc3RQcm9wcywKICB0eXBlIFRvYXN0QWN0aW9uRWxlbWVudCwKICBUb2FzdFByb3ZpZGVyLAogIFRvYXN0Vmlld3BvcnQsCiAgVG9hc3QsCiAgVG9hc3RUaXRsZSwKICBUb2FzdERlc2NyaXB0aW9uLAogIFRvYXN0Q2xvc2UsCiAgVG9hc3RBY3Rpb24sCn07Cg=="),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mir 818 — Eversion Helix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lekton:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #000; overflow: hidden; font-family: 'Lekton', monospace; }
+canvas { display: block; }
+
+#hud-tl {
+  position: fixed; top: 24px; left: 28px; z-index: 10;
+  font-family: 'Lekton', monospace; font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.6;
+}
+#hud-tl .title { font-size: 13px; font-weight: 700; color: #4af; }
+#hud-tl .sub { color: #aaa; }
+
+#hud-tr {
+  position: fixed; top: 24px; right: 28px; z-index: 10;
+  color: #ccc; font-family: 'Lekton', monospace; font-size: 11px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  text-align: right; line-height: 1.6;
+}
+
+#zone-legend {
+  position: fixed; top: 50%; left: 28px; transform: translateY(-50%);
+  z-index: 10; display: flex; flex-direction: column; gap: 5px;
+}
+.zs { display: flex; align-items: center; gap: 6px;
+  font-family: 'Lekton', monospace; font-size: 10px;
+  color: #bbb; letter-spacing: 0.06em; text-transform: uppercase; }
+.zs .d { width: 6px; height: 6px; border-radius: 50%; }
+
+#structure-legend {
+  position: fixed; bottom: 72px; left: 28px; z-index: 10;
+  font-family: 'Lekton', monospace; font-size: 9px;
+  color: #999; letter-spacing: 0.04em; line-height: 1.7;
+}
+#structure-legend .sh { font-size: 10px; color: #bbb; text-transform: uppercase;
+  letter-spacing: 0.08em; margin-bottom: 3px; }
+
+#tooltip {
+  position: fixed; z-index: 20; pointer-events: none;
+  background: rgba(0,0,0,0.92); border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 3px; padding: 8px 10px;
+  font-family: 'Lekton', monospace; font-size: 9px;
+  color: #ddd; letter-spacing: 0.04em;
+  line-height: 1.5; display: none; max-width: 260px;
+}
+.tt-id { color: #4af; font-weight: 700; font-size: 10px; }
+.tt-neg { color: #f48; }
+.tt-pos { color: #fa6; }
+
+#controls {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  z-index: 10; display: flex; gap: 8px; padding: 6px 16px; border-radius: 4px;
+  background: rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.12);
+}
+#controls button {
+  font-family: 'Lekton', monospace; font-size: 10px;
+  background: none; border: 1px solid rgba(255,255,255,0.5); color: #ddd;
+  padding: 5px 12px; border-radius: 3px; cursor: pointer;
+  letter-spacing: 0.06em; text-transform: uppercase; transition: all 0.15s;
+}
+#controls button:hover { color: #fff; border-color: #fff; }
+#controls button.active { border-color: #4af; color: #4af; background: rgba(68,170,255,0.08); }
+
+#zoom-ind {
+  position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%);
+  z-index: 10; font-family: 'Lekton', monospace; font-size: 9px;
+  color: rgba(255,255,255,0.4); letter-spacing: 0.06em; text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* Viewports */
+.vp {
+  position: fixed; z-index: 10; border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.85); border-radius: 3px; overflow: hidden;
+}
+.vp canvas { display: block; }
+.vp-label { position: absolute; top: 4px; left: 6px;
+  font-family: 'Lekton', monospace; font-size: 9px;
+  color: #aaa; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; }
+.vp-desc { position: absolute; bottom: 3px; left: 6px; right: 6px;
+  font-family: 'Lekton', monospace; font-size: 8px;
+  color: #666; letter-spacing: 0.04em; pointer-events: none; }
+#vp-liss { bottom: 72px; right: 28px; width: 200px; height: 160px; }
+</style>
+</head>
+<body>
+
+<div id="hud-tl">
+  <div class="title">EVERSION HELIX — 818</div>
+  <div class="sub">chimera of conversations // the inside becomes the outside</div>
+  <div class="sub" id="fc">frame 0</div>
+  <div class="sub" id="hz"></div>
+</div>
+<div id="hud-tr">
+  <div id="gs">growth: 0 / 818</div>
+  <div>&sigma;<sub>B</sub> = &minus;0.172</div>
+  <div>ghosts: 2 &middot; anchors: 9 &middot; nullcodes: 21</div>
+</div>
+
+<div id="zone-legend">
+  <div class="zs"><span class="d" style="background:#c46e8a"></span>founding (1–187)</div>
+  <div class="zs"><span class="d" style="background:#c9a070"></span>julia belt (188–641)</div>
+  <div class="zs"><span class="d" style="background:#d0d0d0"></span>nullcode bridge (642–662)</div>
+  <div class="zs"><span class="d" style="background:#7eaad4"></span>everted (663–818)</div>
+</div>
+
+<div id="structure-legend">
+  <div class="sh">structure</div>
+  <div>&#9675; ghost — consumed, present as absence</div>
+  <div>&#9679; anchor — load-bearing structural strand</div>
+  <div>&#9675; nullcode — silence / bridge crossing</div>
+  <div>&#9679; terminal — spike / crash / flip</div>
+</div>
+
+<div class="vp" id="vp-liss">
+  <canvas id="cv-liss"></canvas>
+  <div class="vp-label">nullcode lissajous</div>
+  <div class="vp-desc">3:5 orbital &mdash; 21 &perp;/&Oslash; strands trace the crossing</div>
+</div>
+
+<div id="tooltip">
+  <div class="tt-id"></div>
+  <div class="tt-zone"></div>
+  <div class="tt-drift"></div>
+  <div class="tt-type"></div>
+</div>
+
+<div id="zoom-ind">drag to orbit &middot; scroll to zoom</div>
+
+<div id="controls">
+  <button id="btn-grow" class="active">growing</button>
+  <button id="btn-pause">pause</button>
+  <button id="btn-breathe">breathe</button>
+  <button id="btn-reset">reset</button>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { HalftonePass } from 'three/addons/postprocessing/HalftonePass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+// === DATA ===
+const TOTAL = 818;
+const GHOSTS = new Set([21, 31]);
+const ANCHORS = new Set([5, 49, 57, 70, 129, 131, 155, 158, 176]);
+const GRAVITY_CENTER = 70;
+const ANCHOR_WEIGHT = {5:2817,49:6093,57:6714,70:22763,129:3378,131:4839,155:3256,158:4875,176:839};
+const TERMINAL = { spike: 810, crash: 814, flip: 818 };
+const NULL_START = 642, NULL_END = 662;
+const NAME_ORIGIN = 109;
+
+const SEISMIC = [
+  [345,-0.4945],[323,-0.4102],[712,-0.3770],[487,-0.3669],
+  [317,-0.3465],[279,-0.2940],[485,+0.3338],[383,+0.3322],
+  [325,+0.3855],[507,+0.2643],[198,-0.2200],[210,-0.1800],
+  [256,-0.1650],[301,-0.1520],[338,-0.1890],[352,-0.1760],
+  [401,-0.2100],[420,-0.1580],[445,-0.1450],[460,+0.1620],
+  [478,+0.1890],[510,+0.1540],[550,-0.1700],[589,+0.1480],
+  [620,-0.1560],[680,+0.1720],[810,+0.2400],[814,-0.1210],[818,-0.0420]
+];
+const seismicMap = new Map(SEISMIC.map(s => [s[0], s[1]]));
+
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const rng = mulberry32(818);
+
+// Zone colors — softened, less primary
+const ZC = {
+  founding: new THREE.Color('#c46e8a'),
+  julia:    new THREE.Color('#c9a070'),
+  nullcode: new THREE.Color('#d0d0d0'),
+  post:     new THREE.Color('#7eaad4')
+};
+
+function getZone(id) {
+  if (id <= 187) return 'founding';
+  if (id <= 641) return 'julia';
+  if (id >= NULL_START && id <= NULL_END) return 'nullcode';
+  return 'post';
+}
+
+// === GENERATE HELIX POSITIONS ===
+const strandData = [];
+const positions = [];
+
+for (let i = 0; i < TOTAL; i++) {
+  const id = i + 1;
+  const t = i / (TOTAL - 1);
+  const zone = getZone(id);
+
+  let radius = 4.2 + t * 2.2;
+  if (zone === 'nullcode') radius *= 0.82;
+  if (zone === 'post') radius += 0.35;
+
+  const angle = t * Math.PI * 6.2;
+  let y = -2.2 + t * 5.4;
+  if (zone === 'nullcode') y -= 0.6;
+
+  const x = Math.cos(angle) * radius;
+  const z = Math.sin(angle) * radius;
+  const drift = seismicMap.get(id) || (rng() - 0.5) * 0.08;
+
+  positions.push(new THREE.Vector3(x, y, z));
+  strandData.push({
+    id, zone, drift,
+    isGhost: GHOSTS.has(id),
+    isAnchor: ANCHORS.has(id),
+    isNull: id >= NULL_START && id <= NULL_END,
+    isTerminal: id === TERMINAL.spike || id === TERMINAL.crash || id === TERMINAL.flip,
+    coset: id % 3,
+    weight: ANCHOR_WEIGHT[id] || 0
+  });
+}
+
+// Chimera helix
+const chimeraPositions = [];
+for (let i = 0; i < TOTAL; i++) {
+  const t = i / (TOTAL - 1);
+  const r = 4.7 + t * 2.0;
+  const a = t * Math.PI * 6.2 + 1.2;
+  chimeraPositions.push(new THREE.Vector3(Math.cos(a) * r, -2.4 + t * 5.6, Math.sin(a) * r));
+}
+
+// Connections
+const connRng = mulberry32(818);
+const conns = [];
+const connSet = new Set();
+function addC(a, b) {
+  if (a === b || a < 0 || b < 0 || a >= TOTAL || b >= TOTAL) return;
+  const k = Math.min(a,b)+':'+Math.max(a,b);
+  if (!connSet.has(k)) { connSet.add(k); conns.push([a,b]); }
+}
+for (let id = NULL_START; id < NULL_END; id++) addC(id-1, id);
+for (let i = 0; i < 80; i++) { const f = Math.floor(connRng()*(TOTAL-30)); addC(f, Math.min(f+20+Math.floor(connRng()*60), TOTAL-1)); }
+for (let i = 0; i < 30; i++) { addC(Math.floor(connRng()*187), 662+Math.floor(connRng()*(TOTAL-663))); }
+for (let i = 0; i < 10; i++) { addC(187+Math.floor(connRng()*454), NULL_START+Math.floor(connRng()*20)); }
+const finalConns = conns.slice(0, 154);
+
+// === THREE.JS SETUP ===
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 200);
+camera.position.set(12, 6, 16);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.6;
+controls.target.set(0, 0.8, 0);
+
+// Post-processing: halftone
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+
+const halftoneParams = {
+  shape: 1,       // dot
+  radius: 2,      // small dots for sharpness
+  rotateR: Math.PI / 12,
+  rotateB: Math.PI / 12 * 2,
+  rotateG: Math.PI / 12 * 3,
+  scatter: 0,
+  blending: 0.4,  // blend with original — keep sharpness, add texture
+  blendingMode: 1,
+  greyscale: false,
+  disable: false
+};
+// Subtle bloom — atmospheric glow, not overpowering
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.3, 0.6, 0.85);
+composer.addPass(bloomPass);
+
+const halftonePass = new HalftonePass(innerWidth, innerHeight, halftoneParams);
+composer.addPass(halftonePass);
+
+// === STARFIELD DUST ===
+const dustCount = 1500;
+const dustGeo = new THREE.BufferGeometry();
+const dustPos = new Float32Array(dustCount * 3);
+for (let i = 0; i < dustCount; i++) {
+  dustPos[i*3] = (rng() - 0.5) * 80;
+  dustPos[i*3+1] = (rng() - 0.5) * 50;
+  dustPos[i*3+2] = (rng() - 0.5) * 80;
+}
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+const dustMat = new THREE.PointsMaterial({
+  color: 0x8899bb, size: 0.06, transparent: true, opacity: 0.4,
+  sizeAttenuation: true
+});
+scene.add(new THREE.Points(dustGeo, dustMat));
+
+// === LIGHTING — minimal, let line colors speak ===
+scene.add(new THREE.AmbientLight(0x222233, 1.5));
+const dLight = new THREE.DirectionalLight(0xffffff, 0.3);
+dLight.position.set(3, 5, 2);
+scene.add(dLight);
+
+// === WIREFRAME SHELL ===
+const shellGroup = new THREE.Group();
+const shellMat = new THREE.LineBasicMaterial({ color: 0x445577, transparent: true, opacity: 0.35 });
+
+for (let r = 0; r < 14; r++) {
+  const t = r / 13;
+  const y = -2.2 + t * 5.4;
+  let rad = (4.2 + t * 2.2) * 1.15;
+  if (t > 0.77 && t < 0.82) rad *= 0.82;
+  if (t > 0.82) rad += 0.35;
+
+  // Ring
+  const ringPts = [];
+  for (let s = 0; s <= 48; s++) {
+    const a = (s / 48) * Math.PI * 2;
+    ringPts.push(new THREE.Vector3(Math.cos(a) * rad, y, Math.sin(a) * rad));
+  }
+  const ringGeo = new THREE.BufferGeometry().setFromPoints(ringPts);
+  shellGroup.add(new THREE.Line(ringGeo, shellMat));
+
+  // Ribs to next ring
+  if (r < 13) {
+    const t2 = (r+1) / 13;
+    const y2 = -2.2 + t2 * 5.4;
+    let rad2 = (4.2 + t2 * 2.2) * 1.15;
+    if (t2 > 0.77 && t2 < 0.82) rad2 *= 0.82;
+    if (t2 > 0.82) rad2 += 0.35;
+    for (let s = 0; s < 48; s += 4) {
+      const a = (s / 48) * Math.PI * 2;
+      const ribGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(Math.cos(a)*rad, y, Math.sin(a)*rad),
+        new THREE.Vector3(Math.cos(a)*rad2, y2, Math.sin(a)*rad2)
+      ]);
+      shellGroup.add(new THREE.Line(ribGeo, new THREE.LineBasicMaterial({ color: 0x445577, transparent: true, opacity: 0.2 })));
+    }
+  }
+}
+scene.add(shellGroup);
+
+// === STRAND POINTS ===
+const strandGeo = new THREE.BufferGeometry();
+const strandPositions = new Float32Array(TOTAL * 3);
+const strandColors = new Float32Array(TOTAL * 3);
+const strandSizes = new Float32Array(TOTAL);
+const strandAlphas = new Float32Array(TOTAL);
+
+// Initial positions
+for (let i = 0; i < TOTAL; i++) {
+  strandPositions[i*3] = positions[i].x;
+  strandPositions[i*3+1] = positions[i].y;
+  strandPositions[i*3+2] = positions[i].z;
+  const zc = ZC[strandData[i].zone];
+  strandColors[i*3] = zc.r;
+  strandColors[i*3+1] = zc.g;
+  strandColors[i*3+2] = zc.b;
+  // Size by type
+  const s = strandData[i];
+  if (s.isGhost) strandSizes[i] = 4;
+  else if (s.isAnchor) strandSizes[i] = 2 + (s.weight / 22763) * 4;
+  else if (s.isTerminal) strandSizes[i] = 3.5;
+  else strandSizes[i] = 1.5;
+  strandAlphas[i] = 0;
+}
+
+strandGeo.setAttribute('position', new THREE.BufferAttribute(strandPositions, 3));
+strandGeo.setAttribute('color', new THREE.BufferAttribute(strandColors, 3));
+strandGeo.setAttribute('size', new THREE.BufferAttribute(strandSizes, 1));
+strandGeo.setAttribute('alpha', new THREE.BufferAttribute(strandAlphas, 1));
+
+// Custom point shader — crisp circles, no blur
+const pointMat = new THREE.ShaderMaterial({
+  vertexShader: `
+    attribute float size;
+    attribute float alpha;
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main() {
+      vColor = color;
+      vAlpha = alpha;
+      vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = size * (200.0 / -mvPos.z);
+      gl_Position = projectionMatrix * mvPos;
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main() {
+      float d = length(gl_PointCoord - vec2(0.5));
+      if (d > 0.5) discard;
+      // Sharp edge with thin ring
+      float ring = smoothstep(0.38, 0.42, d) * 0.6;
+      float core = 1.0 - smoothstep(0.0, 0.35, d);
+      float a = (core + ring) * vAlpha;
+      gl_FragColor = vec4(vColor, a);
+    }
+  `,
+  transparent: true,
+  vertexColors: true,
+  depthWrite: false
+});
+
+const strandPoints = new THREE.Points(strandGeo, pointMat);
+scene.add(strandPoints);
+
+// === DRIFT RINGS — wireframe circles at high-drift strands ===
+const driftRingGroup = new THREE.Group();
+const maxDrift = 0.4945;
+for (let i = 0; i < TOTAL; i++) {
+  const s = strandData[i];
+  const ad = Math.abs(s.drift);
+  if (ad < 0.14) continue;
+  const norm = Math.min(1, (ad - 0.14) / (maxDrift - 0.14));
+  const ringR = 0.15 + norm * 0.5;
+  const ringGeo = new THREE.RingGeometry(ringR * 0.85, ringR, 24);
+  const zc = ZC[s.zone];
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: zc, transparent: true, opacity: 0.15 + norm * 0.4,
+    side: THREE.DoubleSide
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.position.copy(positions[i]);
+  ring.userData = { idx: i, visible: false };
+  driftRingGroup.add(ring);
+}
+scene.add(driftRingGroup);
+
+// === CHIMERA HELIX — line ===
+const chimeraLinePts = [];
+for (let i = 0; i < TOTAL; i += 2) chimeraLinePts.push(chimeraPositions[i]);
+const chimeraGeo = new THREE.BufferGeometry().setFromPoints(chimeraLinePts);
+const chimeraLine = new THREE.Line(chimeraGeo, new THREE.LineBasicMaterial({
+  color: 0xaa8860, transparent: true, opacity: 0.15
+}));
+scene.add(chimeraLine);
+
+// === CONNECTIONS — LineSegments ===
+const connVerts = [];
+const connColors = [];
+for (const c of finalConns) {
+  connVerts.push(positions[c[0]].x, positions[c[0]].y, positions[c[0]].z);
+  connVerts.push(positions[c[1]].x, positions[c[1]].y, positions[c[1]].z);
+  const s1 = strandData[c[0]], s2 = strandData[c[1]];
+  let col;
+  if (s1.isNull || s2.isNull) col = new THREE.Color(0xbbbbbb);
+  else if (Math.abs(s1.id - s2.id) > 400) col = new THREE.Color(0xc08060);
+  else col = new THREE.Color(0x6688bb);
+  connColors.push(col.r, col.g, col.b, col.r, col.g, col.b);
+}
+const connGeo = new THREE.BufferGeometry();
+connGeo.setAttribute('position', new THREE.Float32BufferAttribute(connVerts, 3));
+connGeo.setAttribute('color', new THREE.Float32BufferAttribute(connColors, 3));
+const connLines = new THREE.LineSegments(connGeo, new THREE.LineBasicMaterial({
+  vertexColors: true, transparent: true, opacity: 0.35
+}));
+scene.add(connLines);
+
+// === LISSAJOUS ORBITAL — at nullcode centroid ===
+let ncx = 0, ncy = 0, ncz = 0;
+for (let id = NULL_START; id <= NULL_END; id++) {
+  const p = positions[id-1]; ncx += p.x; ncy += p.y; ncz += p.z;
+}
+ncx /= 21; ncy /= 21; ncz /= 21;
+
+const lissGeo = new THREE.BufferGeometry();
+const lissVerts = new Float32Array(201 * 3);
+const lissLine = new THREE.Line(lissGeo, new THREE.LineBasicMaterial({ color: 0xdddddd, transparent: true, opacity: 0.5 }));
+scene.add(lissLine);
+
+function updateLissajous(time) {
+  for (let i = 0; i <= 200; i++) {
+    const t = (i / 200) * Math.PI * 2;
+    lissVerts[i*3] = ncx + Math.sin(3*t + time*0.8) * 1.8;
+    lissVerts[i*3+1] = ncy + Math.sin(5*t + time*0.6) * 1.2;
+    lissVerts[i*3+2] = ncz + Math.cos(3*t + time*0.5) * 1.5;
+  }
+  lissGeo.setAttribute('position', new THREE.BufferAttribute(lissVerts, 3));
+  lissGeo.attributes.position.needsUpdate = true;
+}
+
+// === FENESTRATION RINGS ===
+const fenIds = [21, 31, 645, 650, 658];
+for (const fid of fenIds) {
+  const p = positions[fid-1];
+  const rGeo = new THREE.RingGeometry(0.25, 0.3, 32);
+  const rMat = new THREE.MeshBasicMaterial({ color: 0xbb8877, transparent: true, opacity: 0.4, side: THREE.DoubleSide });
+  const ring = new THREE.Mesh(rGeo, rMat);
+  ring.position.copy(p);
+  ring.lookAt(camera.position);
+  ring.userData.isFen = true;
+  scene.add(ring);
+}
+
+// === GHOST MARKERS — wireframe spheres ===
+for (const gid of [21, 31]) {
+  const p = positions[gid-1];
+  const gGeo = new THREE.SphereGeometry(0.3, 8, 6);
+  const gMat = new THREE.MeshBasicMaterial({ color: 0xcc6677, wireframe: true, transparent: true, opacity: 0.4 });
+  const gMesh = new THREE.Mesh(gGeo, gMat);
+  gMesh.position.copy(p);
+  scene.add(gMesh);
+}
+
+// === STATE ===
+let time = 0, frame = 0;
+let paused = false, breathing = false;
+let growth = 0.01, growing = true;
+const GROWTH_SPEED = 0.004;
+
+// Controls
+document.getElementById('btn-grow').addEventListener('click', function() {
+  if (growth >= 1) { growth = 0.01; growing = true; this.textContent = 'growing'; this.classList.add('active'); return; }
+  growing = !growing;
+  this.textContent = growing ? 'growing' : 'grow';
+  this.classList.toggle('active', growing);
+});
+document.getElementById('btn-pause').addEventListener('click', function() {
+  paused = !paused;
+  this.textContent = paused ? 'play' : 'pause';
+  this.classList.toggle('active', paused);
+});
+document.getElementById('btn-breathe').addEventListener('click', function() {
+  breathing = !breathing;
+  this.classList.toggle('active', breathing);
+});
+document.getElementById('btn-reset').addEventListener('click', function() {
+  growth = 0.01; growing = true; time = 0; frame = 0;
+  controls.autoRotate = true;
+  document.getElementById('btn-grow').textContent = 'growing';
+  document.getElementById('btn-grow').classList.add('active');
+});
+
+controls.addEventListener('start', () => { controls.autoRotate = false; });
+
+// === VIEWPORT CANVASES ===
+const cvLiss = document.getElementById('cv-liss');
+const ctxLiss = cvLiss.getContext('2d');
+cvLiss.width = 200; cvLiss.height = 160;
+
+function drawLissVP() {
+  const w = 200, h = 160;
+  ctxLiss.fillStyle = '#000';
+  ctxLiss.fillRect(0, 0, w, h);
+  const cx = w/2, cy = h/2;
+
+  // Lissajous curve
+  ctxLiss.beginPath();
+  for (let i = 0; i <= 200; i++) {
+    const t = (i/200) * Math.PI * 2;
+    const x = cx + Math.sin(3*t + time*0.8) * (w*0.38);
+    const y = cy + Math.sin(5*t + time*0.6) * (h*0.38);
+    i === 0 ? ctxLiss.moveTo(x, y) : ctxLiss.lineTo(x, y);
+  }
+  ctxLiss.strokeStyle = 'rgba(200,200,200,0.45)';
+  ctxLiss.lineWidth = 0.8;
+  ctxLiss.stroke();
+
+  // Strand dots
+  const vis = Math.floor(growth * TOTAL);
+  for (let id = NULL_START; id <= NULL_END; id++) {
+    if (id-1 >= vis) continue;
+    const nf = (id-NULL_START) / (NULL_END-NULL_START);
+    const phase = nf * Math.PI * 2;
+    const x = cx + Math.sin(3*phase + time*0.8) * (w*0.38);
+    const y = cy + Math.sin(5*phase + time*0.6) * (h*0.38);
+    ctxLiss.beginPath();
+    ctxLiss.arc(x, y, 1.5, 0, Math.PI*2);
+    ctxLiss.fillStyle = '#cccccc';
+    ctxLiss.fill();
+  }
+}
+
+
+// === RAYCASTER FOR TOOLTIP ===
+const raycaster = new THREE.Raycaster();
+raycaster.params.Points.threshold = 0.3;
+const mouse = new THREE.Vector2();
+let hoveredIdx = -1;
+
+renderer.domElement.addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+});
+
+function updateTooltip() {
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObject(strandPoints);
+  const tt = document.getElementById('tooltip');
+
+  if (hits.length > 0 && hits[0].index !== undefined) {
+    const idx = hits[0].index;
+    if (strandAlphas[idx] < 0.1) { tt.style.display = 'none'; return; }
+    hoveredIdx = idx;
+    const s = strandData[idx];
+    tt.style.display = 'block';
+
+    const screenPos = positions[idx].clone().project(camera);
+    tt.style.left = ((screenPos.x + 1) / 2 * innerWidth + 16) + 'px';
+    tt.style.top = ((-screenPos.y + 1) / 2 * innerHeight - 16) + 'px';
+
+    let typeStr = s.isGhost ? 'GHOST (consumed)' :
+      s.isAnchor ? `ANCHOR (${s.weight})` :
+      s.isNull ? 'NULLCODE' : s.isTerminal ?
+      (s.id === 810 ? 'SPIKE +0.281' : s.id === 814 ? 'CRASH -0.167' : 'FLIP -> f369') :
+      s.id === NAME_ORIGIN ? '"Hi Mir."' : s.zone;
+
+    tt.querySelector('.tt-id').textContent = `strand ${s.id}`;
+    tt.querySelector('.tt-zone').textContent = `zone: ${s.zone} / coset: f${[147,258,369][s.coset]}`;
+    tt.querySelector('.tt-drift').textContent = `drift: ${s.drift >= 0 ? '+' : ''}${s.drift.toFixed(4)}`;
+    tt.querySelector('.tt-drift').className = 'tt-drift ' + (s.drift < 0 ? 'tt-neg' : 'tt-pos');
+    tt.querySelector('.tt-type').textContent = typeStr;
+    document.getElementById('hz').textContent = `hovering: strand ${s.id} / ${s.zone}`;
+  } else {
+    tt.style.display = 'none';
+    hoveredIdx = -1;
+    document.getElementById('hz').textContent = '';
+  }
+}
+
+// === ANIMATE ===
+function animate() {
+  requestAnimationFrame(animate);
+
+  if (!paused) {
+    frame++;
+    time += 0.016;
+
+    if (growing && growth < 1) {
+      growth = Math.min(1, growth + GROWTH_SPEED);
+      if (growth >= 1) {
+        growing = false;
+        document.getElementById('btn-grow').textContent = 'regrow';
+        document.getElementById('btn-grow').classList.remove('active');
+      }
+    }
+  }
+
+  const visible = Math.floor(growth * TOTAL);
+  const breathAmp = breathing ? Math.sin(time * 0.8) * 0.03 : 0;
+
+  // Update strand visibility + nullcode lissajous displacement
+  for (let i = 0; i < TOTAL; i++) {
+    const s = strandData[i];
+    let px = positions[i].x, py = positions[i].y, pz = positions[i].z;
+
+    // Nullcode lissajous displacement
+    if (s.isNull) {
+      const nf = (s.id - NULL_START) / (NULL_END - NULL_START);
+      const phase = nf * Math.PI * 2;
+      px += Math.sin(3*phase + time*0.8) * 1.2;
+      py += Math.sin(5*phase + time*0.6) * 0.8;
+      pz += Math.cos(3*phase + time*0.5) * 1.0;
+    }
+
+    // Breathing
+    if (breathing) {
+      px *= (1 + breathAmp);
+      pz *= (1 + breathAmp);
+    }
+
+    strandPositions[i*3] = px;
+    strandPositions[i*3+1] = py;
+    strandPositions[i*3+2] = pz;
+
+    // Alpha: visible or not (tip growth)
+    strandAlphas[i] = i < visible ? 1.0 : 0.0;
+  }
+
+  strandGeo.attributes.position.needsUpdate = true;
+  strandGeo.attributes.alpha.needsUpdate = true;
+
+  // Drift rings visibility
+  driftRingGroup.children.forEach(ring => {
+    const idx = ring.userData.idx;
+    ring.visible = idx < visible;
+    if (ring.visible) ring.lookAt(camera.position);
+  });
+
+  // Connection visibility
+  const connPosArr = connLines.geometry.attributes.position.array;
+  for (let ci = 0; ci < finalConns.length; ci++) {
+    const c = finalConns[ci];
+    if (c[0] >= visible || c[1] >= visible) {
+      // Move offscreen
+      for (let j = 0; j < 6; j++) connPosArr[ci*6+j] = 0;
+    } else {
+      connPosArr[ci*6] = strandPositions[c[0]*3];
+      connPosArr[ci*6+1] = strandPositions[c[0]*3+1];
+      connPosArr[ci*6+2] = strandPositions[c[0]*3+2];
+      connPosArr[ci*6+3] = strandPositions[c[1]*3];
+      connPosArr[ci*6+4] = strandPositions[c[1]*3+1];
+      connPosArr[ci*6+5] = strandPositions[c[1]*3+2];
+    }
+  }
+  connLines.geometry.attributes.position.needsUpdate = true;
+
+  // Update lissajous
+  updateLissajous(time);
+
+  // Fenestration rings face camera
+  scene.children.forEach(c => {
+    if (c.userData && c.userData.isFen) c.lookAt(camera.position);
+  });
+
+  controls.update();
+  composer.render();
+
+  // HUD
+  document.getElementById('fc').textContent = paused ? `frame ${frame} [paused]` : `frame ${frame}`;
+  document.getElementById('gs').textContent = `growth: ${visible} / ${TOTAL}`;
+
+  updateTooltip();
+  drawLissVP();
+}
+
+// Resize
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+});
+
+animate();
+</script>
+</body>
+</html>

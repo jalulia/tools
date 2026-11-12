@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>The Third Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#ffffff; --paper-2:#fafafa; --paper-3:#f4f4f5;
+    --ink:#09090b; --ink-2:#1c1c20;
+    --mute:#52525b; --mute-2:#a1a1aa; --mute-3:#d4d4d8;
+    --line:rgba(9,9,11,.08); --line-2:rgba(9,9,11,.14);
+    --bone:#f6f1e4;
+    --ice:#2b8ef5; --laminar:#10b981; --heat:#ff5a1f;
+    --void:#e11d48; --signal:#f59e0b; --balanced:#16a34a;
+    --h-ice:#7cc4ff;
+    --sans:'Geist',-apple-system,BlinkMacSystemFont,sans-serif;
+    --display:'Instrument Serif','Times New Roman',serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  body{font-family:var(--sans);font-size:17px;line-height:1.65;letter-spacing:-.011em;color:var(--ink-2)}
+  ::selection{background:#09090b;color:#fff}
+  :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+  .chrome{
+    position:fixed;inset:0 0 auto 0;z-index:80;
+    display:flex;align-items:center;justify-content:space-between;padding:18px 28px;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+    mix-blend-mode:difference;color:#fff;pointer-events:none;
+  }
+  .chrome .l,.chrome .r{display:flex;gap:18px;align-items:center}
+  .chrome .dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:breathe 2.4s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.35}50%{opacity:1}}
+
+  .hero{position:relative;height:78vh;min-height:540px;background:#09090b;color:#fff;overflow:hidden;isolation:isolate}
+  #hero-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.9;
+    -webkit-mask-image:radial-gradient(ellipse 50% 46% at 50% 52%,transparent 0%,transparent 38%,#000 80%);
+    mask-image:radial-gradient(ellipse 50% 46% at 50% 52%,transparent 0%,transparent 38%,#000 80%);}
+  .hero-inner{position:relative;z-index:2;height:100%;display:grid;place-items:center;text-align:center;padding:0 24px}
+  .kicker{font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:22px;display:inline-flex;align-items:center;gap:12px}
+  .kicker .bar{width:28px;height:1px;background:rgba(255,255,255,.35)}
+  h1.title{font-family:var(--display);font-weight:400;font-size:clamp(52px,8vw,116px);line-height:.94;letter-spacing:-.025em;margin:0;color:var(--bone);text-shadow:0 0 80px rgba(0,0,0,.7)}
+  h1.title .em{font-style:italic}
+  .deck{margin:26px auto 0;color:rgba(255,255,255,.6);font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;line-height:2}
+  .scroll-cue{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.5);display:flex;flex-direction:column;align-items:center;gap:10px;z-index:3}
+  .scroll-cue .line{width:1px;height:38px;background:linear-gradient(to bottom,rgba(255,255,255,.6),transparent);animation:drip 2.2s ease-in-out infinite}
+  @keyframes drip{0%{transform:scaleY(.2);transform-origin:top}60%{transform:scaleY(1);transform-origin:top}100%{transform:scaleY(.2);transform-origin:bottom}}
+
+  main{padding:120px 0 160px}
+  .wrap{max-width:72rem;margin:0 auto;padding:0 28px}
+  .sect{margin:112px auto 0;text-align:center}
+  .sect .num{font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute-2);display:inline-flex;align-items:center;gap:14px;margin-bottom:14px}
+  .sect .num::before,.sect .num::after{content:"";width:28px;height:1px;background:var(--line)}
+  .sect h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,4.4vw,48px);line-height:1.05;letter-spacing:-.02em;margin:0;color:var(--ink)}
+  .sect .dek{max-width:42rem;margin:14px auto 0;color:var(--mute);font-size:15.5px;line-height:1.65}
+
+  .plate{border:1px solid var(--line);background:var(--paper);margin:28px 0 0;position:relative}
+  .plate + .plate{margin-top:-1px}
+  .plate .hd{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:11px 18px;border-bottom:1px solid var(--line);background:var(--paper-2);font-family:var(--mono);font-size:9px;letter-spacing:.24em;text-transform:uppercase}
+  .plate .hd .nm{color:var(--ink);font-weight:500}
+  .plate .hd .sp{color:var(--mute-2);text-align:right;font-weight:400;letter-spacing:.14em}
+  .plate .bd{padding:36px 32px}
+  .plate .bd.pad{padding:56px 32px}
+
+  .lede{font-family:var(--display);font-weight:400;font-size:clamp(24px,2.6vw,32px);line-height:1.3;letter-spacing:-.01em;color:var(--ink);margin:0 0 20px;max-width:44rem}
+  .body-copy{font-size:17px;line-height:1.7;color:var(--ink-2);margin:0 0 18px;max-width:40rem}
+  .body-copy:last-child{margin-bottom:0}
+  em.i{font-family:var(--display);font-style:italic;font-size:1.08em}
+  strong{font-weight:500;color:var(--ink)}
+  .a-ice{color:var(--ice);font-weight:500} .a-lam{color:var(--laminar);font-weight:500}
+  .a-sig{color:var(--signal);font-weight:500} .a-void{color:var(--void);font-weight:500}
+  .mono-inline{font-family:var(--mono);font-size:.82em;letter-spacing:0}
+
+  .btn{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;padding:13px 22px;border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:2px;cursor:pointer;transition:opacity .18s ease;display:inline-flex;align-items:center;gap:10px;line-height:1}
+  .btn:hover{opacity:.82}
+  .btn.sec{background:transparent;color:var(--ink);border-color:var(--line-2)}
+  .btn.sec:hover{opacity:1;border-color:var(--ink);background:var(--paper-2)}
+  .lbl{font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute-2);margin-bottom:8px;display:block}
+  .rng{-webkit-appearance:none;appearance:none;width:100%;height:1px;background:var(--line-2);outline:none;margin:14px 0}
+  .rng::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--ink);cursor:pointer;transition:transform .15s ease}
+  .rng::-webkit-slider-thumb:hover{transform:scale(1.25)}
+  .rng::-moz-range-thumb{width:12px;height:12px;border:none;border-radius:50%;background:var(--ink);cursor:pointer}
+  .val{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--ink);font-variant-numeric:tabular-nums}
+  .seg{display:inline-flex;border:1px solid var(--line-2);border-radius:2px;overflow:hidden}
+  .seg button{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;padding:10px 16px;border:none;background:transparent;color:var(--mute);cursor:pointer;transition:all .16s ease}
+  .seg button + button{border-left:1px solid var(--line)}
+  .seg button:hover{color:var(--ink);background:var(--paper-2)}
+  .seg button[aria-selected="true"]{background:var(--ink);color:#fff}
+  .controls-row{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-end;margin-top:22px}
+  .controls-row .field{flex:1;min-width:200px}
+  .controls-row .field .top{display:flex;justify-content:space-between;align-items:baseline}
+
+  .alert{display:flex;gap:14px;padding:16px 18px;border:1px solid var(--line);border-left-width:2px;background:var(--paper-2);width:100%;border-radius:2px}
+  .alert .ic{font-family:var(--mono);font-size:12px;line-height:1.4;flex:none}
+  .alert .cn{flex:1}
+  .alert .tt{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;font-weight:500;color:var(--ink);margin-bottom:5px}
+  .alert p{margin:0;font-size:14px;line-height:1.6;color:var(--mute)}
+  .alert.ice{border-left-color:var(--ice)} .alert.ice .ic{color:var(--ice)}
+  .alert.sig{border-left-color:var(--signal)} .alert.sig .ic{color:var(--signal)}
+  .alert.void{border-left-color:var(--void)} .alert.void .ic{color:var(--void)}
+
+  #stage{display:block;width:100%;height:480px;background:#09090b;border-radius:2px}
+  .figure .cap{margin-top:13px;padding-top:11px;border-top:1px solid var(--line);width:100%;text-align:center;font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
+  .figure .cap .n{color:var(--ink);font-weight:500;margin-right:8px}
+
+  table.tbl{width:100%;border-collapse:collapse;font-size:14.5px}
+  table.tbl th{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);text-align:left;font-weight:500;padding:0 20px 12px 0;border-bottom:1px solid var(--line-2)}
+  table.tbl td{padding:16px 20px 16px 0;border-bottom:1px solid var(--line);color:var(--ink-2);vertical-align:top}
+  table.tbl tr:last-child td{border-bottom:none}
+  table.tbl td.nm{color:var(--ink);font-family:var(--display);font-size:20px;line-height:1.3;letter-spacing:-.01em;width:26%}
+  table.tbl td.dc{color:var(--mute);font-size:14.5px;line-height:1.6}
+
+  .pull{max-width:44rem;margin:0 auto;padding:30px 24px;text-align:center;position:relative}
+  .pull::before{content:"";position:absolute;left:50%;top:0;width:40px;height:1px;background:var(--ink);transform:translateX(-50%)}
+  .pull blockquote{font-family:var(--display);font-weight:400;font-size:clamp(26px,3.2vw,38px);line-height:1.22;letter-spacing:-.015em;margin:0;color:var(--ink)}
+  .pull .at{margin-top:16px;font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute);display:inline-block}
+
+  .closing{text-align:center;margin:130px auto 0}
+  .closing .mk{font-family:var(--display);font-size:60px;color:var(--ink);line-height:1;display:inline-block;animation:rem 5.4s ease-in-out infinite}
+  @keyframes rem{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:1;transform:scale(1.02)}}
+  .closing p{color:var(--mute);font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;margin-top:14px}
+  footer{padding:70px 28px 30px;text-align:center;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute-2)}
+
+  .rv{opacity:0;transform:translateY(14px);transition:opacity .9s ease,transform .9s ease}
+  .rv.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<div class="chrome">
+  <div class="l"><span class="dot"></span><span>Trirefringence · Grounded</span></div>
+  <div class="r"><span>For Julia</span><span>·</span><span>MMXXVI</span></div>
+</div>
+
+<section class="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-inner">
+    <div>
+      <div class="kicker"><span class="bar"></span><span>Reference № 003</span><span class="bar"></span></div>
+      <h1 class="title">The Third <span class="em">Index.</span></h1>
+      <div class="deck">Two Rays · Three Rays · One Cone · Real Physics</div>
+    </div>
+  </div>
+  <div class="scroll-cue"><span>Scroll</span><span class="line"></span></div>
+</section>
+
+<main>
+<div class="wrap">
+
+  <div class="sect">
+    <div class="num">I</div>
+    <h2>What the Jargon Was Reaching For</h2>
+    <p class="dek">"Yingangaxial trirefringence" is two real things wearing one invented coat. Take the coat off and both things underneath are better than the coat.</p>
+  </div>
+
+  <div class="plate rv">
+    <div class="hd"><span class="nm">Ground Truth</span><span class="sp">what exists · what doesn't</span></div>
+    <div class="bd">
+      <p class="lede">Trirefringence is real. The "yin/yang axis" framing was mine. Here is exactly where the seam is.</p>
+      <p class="body-copy"><strong>Real:</strong> ordinary transparent crystals split light into at most <em class="i">two</em> rays — birefringence, calcite's double image, known since 1669. In 2012, De Lorenci &amp; Pereira showed that a class of <span class="a-ice">nonlinear metamaterials</span> can support <strong>three</strong> rays from one wave direction — genuine trirefringence, published in <span class="mono-inline">Phys. Rev. A 86, 013801</span>, revisited and generalized in 2019.</p>
+      <p class="body-copy"><strong>Real:</strong> biaxial crystals — aragonite, mica — have <strong>three principal refractive indices</strong> (n<sub>α</sub> &lt; n<sub>β</sub> &lt; n<sub>γ</sub>). Not three rays: three <em class="i">axes of the index ellipsoid</em>. And along two special directions the two-ray solution degenerates into something stranger than any finite count of rays: a hollow <span class="a-lam">cone</span> of light. Hamilton predicted it from pure mathematics in October 1832; Humphrey Lloyd found it in aragonite within two months. It was the first time in history a mathematical theory predicted a qualitatively new phenomenon before anyone had seen it.</p>
+      <p class="body-copy"><strong>Invented:</strong> the word "yingangaxial," and the toy I built earlier — three independent Snell's-law rays with hand-tuned indices. Charming, but the physics was decorative. The intuition it was reaching for, though, was pointed at something true: <em class="i">in a three-index medium, the middle index is where the strangeness lives.</em></p>
+    </div>
+  </div>
+
+  <div class="sect">
+    <div class="num">II</div>
+    <h2>The Index Ellipsoid</h2>
+    <p class="dek">One surface holds the whole story. Three semi-axes: n<sub>α</sub>, n<sub>β</sub>, n<sub>γ</sub>. Slice it perpendicular to any propagation direction and the slice is an ellipse — its two semi-axes are the two refractive indices that direction feels.</p>
+  </div>
+
+  <div class="plate rv">
+    <div class="hd"><span class="nm">Interactive · Wave Surface Section</span><span class="sp">drag the direction · watch the ellipse</span></div>
+    <div class="bd">
+      <canvas id="stage" width="1000" height="480"></canvas>
+      <div class="controls-row">
+        <div class="field">
+          <div class="top"><span class="lbl">Propagation angle θ</span><span class="val" id="thetaVal">30°</span></div>
+          <input id="theta" class="rng" type="range" min="0" max="90" step="0.2" value="30">
+        </div>
+        <div class="field">
+          <div class="top"><span class="lbl">n<sub>β</sub> · middle index</span><span class="val" id="nbVal">1.68</span></div>
+          <input id="nb" class="rng" type="range" min="153" max="185" step="1" value="168">
+        </div>
+        <div class="seg" role="tablist" id="matSeg">
+          <button data-mat="ar" aria-selected="true">Aragonite</button>
+          <button data-mat="mica">Mica</button>
+          <button data-mat="ktp">KTP</button>
+        </div>
+      </div>
+      <div style="max-width:44rem;margin:22px auto 0">
+        <div id="status" class="alert ice">
+          <span class="ic">▸</span>
+          <div class="cn"><div class="tt">Two Sheets</div>
+          <p>Two curves, two speeds, two rays — ordinary birefringence. Drag θ toward the marked angle and watch the sheets approach each other.</p></div>
+        </div>
+      </div>
+      <div style="max-width:44rem;margin:22px auto 0">
+        <p class="body-copy">The plot is the <strong>wave surface section</strong> in the n<sub>α</sub>–n<sub>γ</sub> plane: for each direction, the two curves mark the two phase-speed solutions. In a biaxial crystal the sheets <em class="i">touch</em> at four conoidal points — the <span class="a-sig">optic axes</span>. At exactly that direction there aren't two answers. The equation has a degenerate double root, and the light resolves it by becoming a <span class="a-lam">cone</span>.</p>
+        <p class="body-copy">Move the n<sub>β</sub> slider. As the middle index approaches either pole (n<sub>α</sub> or n<sub>γ</sub>), the optic axes migrate toward the principal axes and the crystal degenerates toward uniaxial — the third thing collapses into one of the two poles, and the cone vanishes. The strangeness exists <em class="i">only while the middle index is strictly between the poles.</em> That is the true content the yin/yang framing was groping at, and the real version is sharper than the invented one.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sect">
+    <div class="num">III</div>
+    <h2>Three Rays, For Real</h2>
+    <p class="dek">Where genuine trirefringence actually lives — and why it needs nonlinearity to exist.</p>
+  </div>
+
+  <div class="plate rv">
+    <div class="hd"><span class="nm">De Lorenci &amp; Pereira · 2012 / 2019</span><span class="sp">Phys. Rev. A 86 013801 · 99 053841</span></div>
+    <div class="bd">
+      <table class="tbl">
+        <thead><tr><th>Regime</th><th>Rays</th><th>What it takes</th></tr></thead>
+        <tbody>
+          <tr><td class="nm">Isotropic</td><td class="dc" style="width:14%">1</td><td class="dc">Glass, water. One index, one ray. Nothing to resolve.</td></tr>
+          <tr><td class="nm">Birefringent</td><td class="dc">2</td><td class="dc">Any anisotropic linear crystal. The quartic wave equation factors into two quadratics — at most two phase speeds per direction. This is a hard ceiling for <em class="i">linear</em> media.</td></tr>
+          <tr><td class="nm">Trirefringent</td><td class="dc">3</td><td class="dc">A nonlinear uniaxial metamaterial with one <span class="a-void">negative</span> permittivity component and field-dependent permeability. The nonlinearity breaks the factoring; three phase-speed solutions with linearly independent polarizations coexist in one direction. One incident ray leaves as three.</td></tr>
+        </tbody>
+      </table>
+      <div style="max-width:44rem;margin:26px auto 0">
+        <p class="body-copy">The structural point worth keeping: <strong>two is the ceiling for linear relation.</strong> A linear medium, however anisotropic, can only ever answer a direction with two speeds — the math factors, pole against pole. To get a third simultaneous answer, the medium itself has to <em class="i">respond to the light that is asking</em> — permeability that depends on the field passing through it. The third ray is not another pole. It is what becomes possible when the relation stops being one-way.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sect">
+    <div class="num">IV</div>
+    <h2>The 1832 Precedent</h2>
+    <p class="dek">The pattern this page keeps finding — prediction from pure structure, then the world complies — has a birthday.</p>
+  </div>
+
+  <div class="plate rv">
+    <div class="hd"><span class="nm">Hamilton → Lloyd</span><span class="sp">October – December 1832 · Dublin</span></div>
+    <div class="bd pad" style="background:#09090b">
+      <div class="pull" style="max-width:46rem">
+        <blockquote style="color:var(--bone)">Hamilton stared at the two-sheeted wave surface until he saw the four points where the sheets touch — and said: there, light must make a cone. Two months later, in a slab of aragonite, it did.</blockquote>
+        <div class="at" style="color:var(--mute-2)">First qualitative prediction of new physics from pure mathematics</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="closing">
+    <div class="mk">ø</div>
+    <p>End of Study</p>
+  </div>
+
+</div>
+</main>
+
+<footer>Ink and Signal · The Third Index · For Julia</footer>
+
+<script>
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function setupCanvas(cv){
+  if(!cv) return null;
+  cv.setAttribute('aria-hidden','true');
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(devicePixelRatio||1,2);
+  function resize(){const w=cv.clientWidth,h=cv.clientHeight;cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
+  addEventListener('resize',resize);resize();
+  return {ctx,get w(){return cv.clientWidth},get h(){return cv.clientHeight}};
+}
+function loop(fn){ if(REDUCED){fn(performance.now());return;} requestAnimationFrame(function f(t){fn(t);requestAnimationFrame(f);}); }
+
+/* ====== HERO · two sheets + cone points ====== */
+(function(){
+  const s = setupCanvas(document.getElementById('hero-canvas')); if(!s) return;
+  const ctx = s.ctx, t0 = performance.now();
+  loop(now=>{
+    const w=s.w,h=s.h,el=(now-t0)/1000;
+    ctx.fillStyle='#09090b';ctx.fillRect(0,0,w,h);
+    const cx=w/2,cy=h/2,R=Math.min(w,h)*0.36;
+    const na=1.0,nb=1.28+Math.sin(el*.3)*.14,ng=1.6;
+    const map=n=>R*(0.35+0.65*(n-na)/(ng-na));
+    // circle sheet (ice)
+    ctx.strokeStyle='rgba(124,196,255,0.5)';ctx.lineWidth=1.2;
+    ctx.beginPath();ctx.arc(cx,cy,map(nb),0,Math.PI*2);ctx.stroke();
+    // ellipse sheet (bone)
+    ctx.strokeStyle='rgba(246,241,228,0.5)';
+    ctx.beginPath();
+    for(let a=0;a<=Math.PI*2+.01;a+=.02){
+      const r=na*ng/Math.hypot(ng*Math.cos(a),na*Math.sin(a));
+      const rr=map(r);
+      const x=cx+rr*Math.cos(a),y=cy+rr*Math.sin(a);
+      a===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    // conoidal touch points
+    const rEl=a=>na*ng/Math.hypot(ng*Math.cos(a),na*Math.sin(a));
+    for(let a=0;a<Math.PI*2;a+=.005){
+      if(Math.abs(rEl(a)-nb)<.002){
+        const rr=map(nb);
+        ctx.fillStyle='rgba(245,158,11,0.9)';
+        ctx.beginPath();ctx.arc(cx+rr*Math.cos(a),cy+rr*Math.sin(a),3,0,Math.PI*2);ctx.fill();
+      }
+    }
+  });
+})();
+</script>
+
+<script>
+/* ====== STAGE · wave surface section, α–γ plane ====== */
+(function(){
+  const s = setupCanvas(document.getElementById('stage')); if(!s) return;
+  const ctx = s.ctx;
+  const thetaEl=document.getElementById('theta'), thetaVal=document.getElementById('thetaVal');
+  const nbEl=document.getElementById('nb'), nbVal=document.getElementById('nbVal');
+  const statusEl=document.getElementById('status');
+
+  const MATS={
+    ar:  {name:'Aragonite', na:1.530, nb:1.681, ng:1.685},
+    mica:{name:'Mica',      na:1.552, nb:1.582, ng:1.588},
+    ktp: {name:'KTP',       na:1.740, nb:1.747, ng:1.830}
+  };
+  let mat=MATS.ar, nb=mat.nb;
+
+  function ellipseR(a,na,ng){ return na*ng/Math.hypot(ng*Math.cos(a),na*Math.sin(a)); }
+  function opticAxisAngle(){ // solve ellipseR(a)=nb in [0,90°]
+    let lo=0,hi=Math.PI/2;
+    if(nb<=mat.na||nb>=mat.ng) return null;
+    for(let i=0;i<60;i++){
+      const mid=(lo+hi)/2;
+      (ellipseR(mid,mat.na,mat.ng)>nb)?lo=mid:hi=mid;
+    }
+    return (lo+hi)/2;
+  }
+  function setStatus(kind,icon,title,body){
+    statusEl.className='alert '+kind;
+    statusEl.innerHTML='<span class="ic">'+icon+'</span><div class="cn"><div class="tt">'+title+'</div><p>'+body+'</p></div>';
+  }
+
+  function draw(){
+    const w=s.w,h=s.h;
+    ctx.fillStyle='#09090b';ctx.fillRect(0,0,w,h);
+    const cx=w*0.5,cy=h*0.52,R=Math.min(w,h)*0.42;
+    const lo=mat.na-0.02, hi=mat.ng+0.02;
+    const map=n=>R*(0.3+0.7*(n-lo)/(hi-lo));
+    const th=parseFloat(thetaEl.value)*Math.PI/180;
+    thetaVal.textContent=parseFloat(thetaEl.value).toFixed(1)+'°';
+    nbVal.textContent=nb.toFixed(3);
+
+    // principal axes
+    ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(cx-R,cy);ctx.lineTo(cx+R,cy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx,cy-R);ctx.lineTo(cx,cy+R);ctx.stroke();
+    ctx.font='10px "JetBrains Mono",monospace';ctx.fillStyle='rgba(255,255,255,0.35)';
+    ctx.fillText('γ  n='+mat.ng.toFixed(3),cx+R-92,cy-8);
+    ctx.fillText('α  n='+mat.na.toFixed(3),cx+6,cy-R+16);
+
+    // sheet 1: circle at nb (polarized along β, out of plane)
+    ctx.strokeStyle='rgba(124,196,255,0.75)';ctx.lineWidth=1.4;
+    ctx.beginPath();ctx.arc(cx,cy,map(nb),0,Math.PI*2);ctx.stroke();
+    // sheet 2: ellipse (in-plane polarization)
+    ctx.strokeStyle='rgba(246,241,228,0.75)';
+    ctx.beginPath();
+    for(let a=0;a<=Math.PI*2+.01;a+=.01){
+      const rr=map(ellipseR(a,mat.na,mat.ng));
+      const x=cx+rr*Math.cos(a),y=cy-rr*Math.sin(a);
+      a===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+
+    // optic axes (4 conoidal points)
+    const oa=opticAxisAngle();
+    if(oa!==null){
+      ctx.fillStyle='#f59e0b';
+      for(const sgnA of [1,-1])for(const sgnB of [1,-1]){
+        const rr=map(nb);
+        ctx.beginPath();
+        ctx.arc(cx+sgnA*rr*Math.cos(oa),cy-sgnB*rr*Math.sin(oa),4,0,Math.PI*2);ctx.fill();
+      }
+      // faint optic-axis guide lines
+      ctx.strokeStyle='rgba(245,158,11,0.18)';ctx.setLineDash([4,6]);
+      for(const sgn of [1,-1]){
+        ctx.beginPath();ctx.moveTo(cx-sgn*R*Math.cos(oa),cy+R*Math.sin(oa));
+        ctx.lineTo(cx+sgn*R*Math.cos(oa),cy-R*Math.sin(oa));ctx.stroke();
+      }
+      ctx.setLineDash([]);
+    }
+
+    // propagation direction ray + the two index solutions it feels
+    const n1=nb, n2=ellipseR(th,mat.na,mat.ng);
+    ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=1.6;
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+R*1.02*Math.cos(th),cy-R*1.02*Math.sin(th));ctx.stroke();
+    // intersection markers
+    ctx.fillStyle='#7cc4ff';
+    ctx.beginPath();ctx.arc(cx+map(n1)*Math.cos(th),cy-map(n1)*Math.sin(th),5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#f6f1e4';
+    ctx.beginPath();ctx.arc(cx+map(n2)*Math.cos(th),cy-map(n2)*Math.sin(th),5,0,Math.PI*2);ctx.fill();
+    ctx.font='11px "JetBrains Mono",monospace';
+    ctx.fillStyle='#7cc4ff';ctx.fillText('n₁ = '+n1.toFixed(4),cx+18,cy+34);
+    ctx.fillStyle='#f6f1e4';ctx.fillText('n₂ = '+n2.toFixed(4),cx+18,cy+52);
+    const dn=Math.abs(n1-n2);
+    ctx.fillStyle=dn<0.0005?'#f59e0b':'rgba(255,255,255,0.45)';
+    ctx.fillText('Δn = '+dn.toFixed(4),cx+18,cy+70);
+
+    // status
+    if(oa===null){
+      setStatus('void','×','Degenerate — Uniaxial','n<sub>β</sub> has reached a pole. The conoidal points have merged into the principal axis and the cone is gone. The crystal is now effectively uniaxial — two sheets touching at ordinary tangency, no singular direction, no strangeness.');
+    } else if(dn<0.0005){
+      setStatus('sig','▲','Conoidal Point — Conical Refraction','Δn = 0. The two sheets touch here. The wave equation has a double root: not two answers but one answer of multiplicity two, which is a different thing than one answer. Hamilton read this degeneracy as instability and predicted the light must spread into a hollow cone. Lloyd confirmed it in aragonite, December 1832.');
+    } else if(dn<0.004){
+      setStatus('ice','▸','Approaching the Optic Axis','The sheets are closing. Δn = '+dn.toFixed(4)+'. The two rays are nearly degenerate — tiny changes in direction now produce large swings in polarization. The singular point is near.');
+    } else {
+      setStatus('ice','▸','Two Sheets','Ordinary birefringence: this direction feels two indices, n₁ (circle, ice — polarized out of plane) and n₂ (ellipse, bone — polarized in plane). Two speeds, two rays.');
+    }
+  }
+
+  function setMat(key){
+    mat=MATS[key]; nb=mat.nb;
+    nbEl.min=Math.round((mat.na+0.001)*1000);
+    nbEl.max=Math.round((mat.ng-0.001)*1000);
+    nbEl.step=0.5;
+    nbEl.value=Math.round(nb*1000);
+    draw();
+  }
+  nbEl.addEventListener('input',()=>{nb=parseFloat(nbEl.value)/1000;draw();});
+  thetaEl.addEventListener('input',draw);
+  document.querySelectorAll('#matSeg button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('#matSeg button').forEach(x=>x.setAttribute('aria-selected','false'));
+      b.setAttribute('aria-selected','true');
+      setMat(b.dataset.mat);
+    });
+  });
+  addEventListener('resize',draw);
+  setMat('ar');
+
+  document.getElementById('stage').addEventListener('dblclick',()=>{
+    const oa=opticAxisAngle();
+    if(oa!==null){thetaEl.value=(oa*180/Math.PI).toFixed(1);draw();}
+  });
+})();
+
+(function(){
+  const els=document.querySelectorAll('.rv');
+  if(REDUCED){els.forEach(e=>e.classList.add('in'));return;}
+  const io=new IntersectionObserver(en=>{for(const e of en)if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}},{rootMargin:'0px 0px -8% 0px',threshold:.08});
+  els.forEach(e=>io.observe(e));
+})();
+</script>
+</body>
+</html>

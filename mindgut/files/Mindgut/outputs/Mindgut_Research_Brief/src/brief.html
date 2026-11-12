@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Familiar Is Not True · Mindgut research brief</title>
+<style>
+@font-face{font-family:'Bricolage Grotesque';font-weight:300 800;font-stretch:75% 100%;font-display:block;src:url(__FONT_BRIC__) format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-weight:400;font-display:block;src:url(__FONT_MONO__) format('woff2')}
+:root{--paper:#F6F7F9;--sheet:#fff;--ink:#15171E;--ink2:#3A3F4D;--ink3:#626979;--rule:#D9DDE4;--rule2:#ECEEF2;
+--blue:#2445D6;--blue-w:#E6EBFB;--violet:#9C8FD6;--violet-w:#EFEDF9;--orange:#EB5F2C;--orange-ink:#B23F15;--orange-w:#FDEEE7;--mint:#28CAA1;
+--f:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;--m:'JetBrains Mono',ui-monospace,Menlo,monospace}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;color:var(--ink);font-family:var(--f);font-size:16.5px;line-height:1.5;-webkit-font-smoothing:antialiased;font-stretch:100%}
+h1,h2,h3,p,ul,ol,figure{margin:0}
+.wrap{max-width:880px;margin:0 auto;padding:0 32px}
+.mono{font-family:var(--m);font-size:11.5px;letter-spacing:.04em}
+.lab{font-family:var(--m);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+header.top{display:flex;justify-content:space-between;align-items:center;padding:28px 0 0}
+.lockup{display:flex;align-items:center;gap:11px}
+.lockup img.ic{width:30px;height:30px;border-radius:7px}
+.lockup img.wm{height:17px;width:auto}
+.hero{padding:76px 0 44px;border-bottom:1px solid var(--rule)}
+.hero h1{font-size:clamp(40px,6vw,68px);line-height:1;letter-spacing:-.03em;font-weight:640;max-width:12ch}
+.hero .dek{margin-top:22px;font-size:20px;line-height:1.4;color:var(--ink2);max-width:40ch}
+.hero .meta{margin-top:30px;display:flex;flex-wrap:wrap;gap:8px 26px}
+.kan{float:right;margin:-8px 0 0 24px}
+section{padding:56px 0 8px}
+.sh{display:flex;align-items:baseline;gap:14px;margin-bottom:22px}
+.sh .n{font-family:var(--m);font-size:12px;color:var(--blue)}
+.sh h2{font-size:30px;line-height:1.1;letter-spacing:-.02em;font-weight:620}
+p+p{margin-top:12px}
+.lead{font-size:19px;line-height:1.45;color:var(--ink)}
+.muted{color:var(--ink3)}
+b{font-weight:640}
+.summary{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:6px}
+.summary div{background:var(--sheet);padding:20px 22px}
+.summary .lab{display:block;margin-bottom:8px}
+.summary p{font-size:16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:26px 0 8px}
+.stat{border-top:2px solid var(--ink);padding-top:12px}
+.stat .big{font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.stat p{margin-top:8px;font-size:14px;color:var(--ink2);line-height:1.4}
+figure.card{background:var(--sheet);border:1px solid var(--rule);border-radius:4px;padding:22px 24px;margin:24px 0 4px}
+figure.card figcaption{margin-top:14px;font-size:13.5px;color:var(--ink3);line-height:1.45}
+.bars{display:grid;grid-template-columns:150px 1fr 48px;gap:9px 14px;align-items:center;font-size:14px}
+.bars .t{height:12px;background:var(--rule2);position:relative}
+.bars .f{position:absolute;inset:0 auto 0 0;background:var(--ink)}
+.bars .f.b{background:var(--blue)}
+.bars .f.o{background:var(--orange)}
+.bars .v{font-family:var(--m);font-size:12px;text-align:right}
+.bars .grp{grid-column:1/-1;margin-top:10px}
+.bars .grp:first-child{margin-top:0}
+.chance{position:absolute;top:-4px;bottom:-4px;border-left:1px dashed var(--ink3)}
+.points{display:grid;gap:0;border-top:1px solid var(--rule)}
+.pt{display:grid;grid-template-columns:200px 1fr;gap:24px;padding:20px 0;border-bottom:1px solid var(--rule)}
+.pt h3{font-size:18px;font-weight:620;line-height:1.25;letter-spacing:-.01em}
+.pt p{font-size:15.5px;color:var(--ink2)}
+.cards2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0 0}
+.dcard{background:var(--sheet);border:1px solid var(--rule);border-radius:4px;padding:16px 18px;position:relative}
+.dcard .t{font-size:20px;font-weight:600;letter-spacing:-.01em}
+.dcard .sc{display:inline-block;margin-top:8px;font-family:var(--m);font-size:11.5px;padding:3px 8px;border-radius:3px}
+.dcard.ok .sc{background:var(--blue-w);color:var(--blue)}
+.dcard.bad .sc{background:var(--orange-w);color:var(--orange-ink)}
+.dcard .lab{position:absolute;top:16px;right:18px}
+</style>
+<style>
+.fails{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:6px}
+.fail{background:var(--sheet);border:1px solid var(--rule);border-radius:4px;padding:20px 22px 22px}
+.fail svg{display:block;width:100%;height:96px;margin-bottom:14px}
+.fail .lab{display:block;margin-bottom:6px}
+.fail h3{font-size:20px;font-weight:620;letter-spacing:-.01em;line-height:1.2}
+.fail .ex{margin-top:10px;font-size:15px;color:var(--ink2)}
+.fail .do{margin-top:12px;padding-top:12px;border-top:1px solid var(--rule2);font-size:14.5px}
+.fail .do b{color:var(--blue)}
+ol.rules{list-style:none;padding:0;counter-reset:r;border-top:1px solid var(--rule)}
+ol.rules li{counter-increment:r;display:grid;grid-template-columns:44px 1fr;gap:10px;padding:16px 0;border-bottom:1px solid var(--rule)}
+ol.rules li::before{content:counter(r,decimal-leading-zero);font-family:var(--m);font-size:12px;color:var(--blue);padding-top:4px}
+ol.rules h3{font-size:17px;font-weight:620;line-height:1.3}
+ol.rules p{font-size:15px;color:var(--ink2);margin-top:3px}
+.spec{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.spec .box{background:var(--sheet);border:1px solid var(--rule);border-radius:4px;padding:18px 20px}
+.spec .box .lab{display:block;margin-bottom:10px}
+.spec ul{padding-left:18px;font-size:15px;color:var(--ink2)}
+.spec li+li{margin-top:5px}
+.item{background:var(--sheet);border:1px solid var(--rule);border-radius:4px;margin-top:16px;overflow:hidden}
+.item .hd{display:flex;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--rule2);background:#FAFBFC}
+.item .bd{padding:18px 20px}
+.item .rec{font-family:var(--m);font-size:12.5px;line-height:1.7;color:var(--ink2)}
+.item .q{margin:14px 0 12px;font-size:17px;font-weight:560}
+.opt{display:grid;grid-template-columns:22px 1fr 150px;gap:10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--rule2);font-size:15px}
+.opt .k{font-family:var(--m);font-size:12px;color:var(--ink3)}
+.opt .w{font-family:var(--m);font-size:11px;letter-spacing:.04em;text-transform:uppercase;text-align:right;color:var(--ink3)}
+.opt.ok .w{color:var(--blue)}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:16px}
+.metrics div{background:var(--sheet);padding:14px 16px}
+.metrics b{display:block;font-size:15px;margin-bottom:4px}
+.metrics p{font-size:13.5px;color:var(--ink2);line-height:1.4}
+.pull{font-size:clamp(28px,4vw,40px);line-height:1.12;letter-spacing:-.025em;font-weight:600;max-width:20ch;padding:8px 0 4px}
+.pull span{color:var(--ink3)}
+table.t{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:6px}
+table.t th{text-align:left;font-family:var(--m);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);font-weight:400;padding:8px 10px 8px 0;border-bottom:1px solid var(--ink)}
+table.t td{padding:10px 10px 10px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+table.t td.n{font-family:var(--m);font-size:13px;white-space:nowrap}
+.sw{display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:7px}
+.flag{font-family:var(--m);font-size:11px;padding:2px 6px;border-radius:3px;background:var(--orange-w);color:var(--orange-ink);white-space:nowrap}
+.pass{font-family:var(--m);font-size:11px;padding:2px 6px;border-radius:3px;background:var(--blue-w);color:var(--blue);white-space:nowrap}
+.dont{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+.dont div{border-top:2px solid var(--ink);padding-top:12px;font-size:15px;color:var(--ink2)}
+.dont div.x{border-color:var(--orange)}
+.dont .lab{display:block;margin-bottom:6px}
+.src{font-size:14px;color:var(--ink2)}
+.src li{margin-top:8px}
+.src a{color:var(--blue);text-decoration:none;border-bottom:1px solid var(--blue-w)}
+footer{margin-top:64px;padding:26px 0 48px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;gap:20px}
+footer img{height:13px;opacity:.9}
+@media (max-width:720px){
+ .wrap{padding:0 20px}.summary,.cards2,.fails,.spec,.dont{grid-template-columns:1fr}.stats{grid-template-columns:1fr}
+ .pt{grid-template-columns:1fr;gap:6px}.metrics{grid-template-columns:1fr 1fr}.bars{grid-template-columns:110px 1fr 44px}
+ .kan{display:none}.opt{grid-template-columns:22px 1fr}.opt .w{grid-column:2;text-align:left}
+ table.t{font-size:13.5px}
+}
+@media print{
+ @page{size:Letter;margin:14mm 12mm}
+ html,body{background:#fff}
+ .wrap{max-width:none;padding:0}
+ section{padding-top:30px;break-inside:auto}
+ figure.card,.fail,.item,.pt,ol.rules li,.spec .box,table.t tr,.summary div{break-inside:avoid}
+ .hero{padding:40px 0 30px}
+ .sh{break-after:avoid}
+ body{font-size:14.5px}
+ .stats,figure.card{break-inside:avoid}
+ section{padding-top:22px}
+ .lead{font-size:16.5px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <span class="lockup"><img class="ic" src="__ICON__" alt=""><img class="wm" src="__WORDMARK__" alt="mindgut"></span>
+  <span class="lab">Research brief · 01</span>
+</header>
+
+<div class="hero">
+  <svg class="kan" width="160" height="150" viewBox="0 0 160 150" aria-hidden="true">
+    <g fill="#15171E">
+      <path d="M80,26 L68.00,46.78 A24,24 0 1 1 92.00,46.78 Z"/>
+      <path d="M24,123 L36.00,102.22 A24,24 0 1 0 48.00,123.00 Z"/>
+      <path d="M136,123 L124.00,102.22 A24,24 0 1 1 112.00,123.00 Z"/>
+    </g>
+  </svg>
+  <span class="lab">What two optical-illusion studies tell us about picking a project back up</span>
+  <h1 style="margin-top:18px">Familiar is not true.</h1>
+  <p class="dek">AI models fail most on things that <em>look</em> like what they already know. For a tool built around resuming work, that is the central risk, and the clearest thing Mindgut can be built to prevent.</p>
+  <div class="meta">
+    <span class="mono muted">Sources: IllusionVQA (COLM 2024) · IllusionBench (arXiv 2025)</span>
+    <span class="mono muted">Prepared by Mir for the Mindgut team</span>
+  </div>
+</div>
+
+<section>
+  <div class="sh"><span class="n">00</span><h2>Summary</h2></div>
+  <div class="summary">
+    <div><span class="lab">The finding</span><p>The strongest model in one study described <b>every</b> edited "trap" illusion wrongly. It recognised the familiar pattern and gave the familiar answer.</p></div>
+    <div><span class="lab">The second finding</span><p>Models still missed answers that were <b>already in their context window</b>. Having the record is not the same as using it.</p></div>
+    <div><span class="lab">What it means for Mindgut</span><p>The danger in "pick up where you left off" is applying an old decision to a situation that only looks the same. Scope, state and source are the defence.</p></div>
+    <div><span class="lab">What to do</span><p>Adopt six product rules (§04), build a return-accuracy test from these papers' methods (§05), and use the four failure types as brand vocabulary (§06).</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="sh"><span class="n">01</span><h2>The evidence</h2></div>
+  <p class="lead">Both studies test vision-language models on optical illusions. Neither is about memory, but both measure the same thing Mindgut depends on: whether a model reports what is actually there or what it expects to be there.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="big">0%</div><p>GPT-4o on trap-illusion descriptions: classic illusions edited so the familiar answer is wrong. It was the top model overall.</p></div>
+    <div class="stat"><div class="big">49.7%</div><p>GPT-4V's best score at spotting the impossible object in a pair. Humans: 100%. Chance: 25%.</p></div>
+    <div class="stat"><div class="big">&lt;100%</div><p>Accuracy when the exact question and its answer were already in the context. Neither GPT-4V nor Gemini Pro got them all right.</p></div>
+  </div>
+
+  <figure class="card">
+    <div class="bars" role="img" aria-label="Same models, same side-by-side format: 100% at telling car brands apart, 49.7% at spotting an impossible object.">
+      <span class="lab grp">Same models, same left/right format</span>
+      <span>Which car is the brand?</span><span class="t"><span class="f b" style="width:100%"></span></span><span class="v">100</span>
+      <span>Which object is impossible?</span><span class="t"><span class="f o" style="width:49.7%"></span><span class="chance" style="left:25%"></span></span><span class="v">49.7</span>
+      <span class="muted">Humans, impossible object</span><span class="t"><span class="f" style="width:100%"></span></span><span class="v">100</span>
+    </div>
+    <figcaption>GPT-4V. Cars: no examples. Impossible object: best setting (4 examples + reasoning). The models identify <b>what</b> things are; they miss whether the structure holds together. Dashed line: chance. Source: IllusionVQA.</figcaption>
+  </figure>
+
+  <figure class="card">
+    <div class="bars" role="img" aria-label="GPT-4o beats humans on size and colour illusions; humans beat it on impossible objects and real scenes.">
+      <span class="lab grp">Humans and models miss different things · GPT-4o (4-shot) vs humans</span>
+      <span>Size</span><span class="t"><span class="f b" style="width:93.5%"></span></span><span class="v">93</span>
+      <span class="muted">humans</span><span class="t"><span class="f" style="width:63%"></span></span><span class="v">63</span>
+      <span>Colour</span><span class="t"><span class="f b" style="width:78.3%"></span></span><span class="v">78</span>
+      <span class="muted">humans</span><span class="t"><span class="f" style="width:60.9%"></span></span><span class="v">61</span>
+      <span>Impossible object</span><span class="t"><span class="f b" style="width:61.9%"></span></span><span class="v">62</span>
+      <span class="muted">humans</span><span class="t"><span class="f" style="width:98.5%"></span></span><span class="v">99</span>
+      <span>Real scene</span><span class="t"><span class="f b" style="width:57.8%"></span></span><span class="v">58</span>
+      <span class="muted">humans</span><span class="t"><span class="f" style="width:98.4%"></span></span><span class="v">98</span>
+    </div>
+    <figcaption>Models are exact where people are fooled; people see coherence where models don't. Accuracy, %. Source: IllusionVQA leaderboard, July 2024.</figcaption>
+  </figure>
+  <p class="muted" style="font-size:14px;margin-top:14px">These are 2024 models. Read the results as patterns, not current rankings.</p>
+</section>
+
+<section>
+  <div class="sh"><span class="n">02</span><h2>The risk for Mindgut</h2></div>
+  <p class="lead">The better a tool knows a project, the more likely it is to apply an old decision to a situation that only resembles the original. That is a trap illusion in a project record.</p>
+
+  <div class="cards2" role="img" aria-label="Two near-identical decision cards. Only the scope differs.">
+    <div class="dcard ok"><span class="lab">Recorded · 02 Mar</span><div class="t">No florals</div><span class="sc">scope: core range</span></div>
+    <div class="dcard bad"><span class="lab">Recalled</span><div class="t">No florals</div><span class="sc">scope: whole project</span></div>
+  </div>
+  <p class="muted" style="font-size:14px;margin-top:10px">Same words, different decision. Applied to the holiday sampler, the recalled version blocks work that was approved on 15 April.</p>
+
+  <div class="points" style="margin-top:28px">
+    <div class="pt"><h3>Having the record is not enough</h3><p>Models missed answers already in their context. Mir has to show which strands an answer rests on, and the answer has to be checked against them.</p></div>
+    <div class="pt"><h3>More context can hurt</h3><p>Examples and step-by-step reasoning raised GPT-4V's score by 9.7 points and cut Gemini Pro's by 9.6. A resume should pull the relevant decision, not the whole history.</p></div>
+    <div class="pt"><h3>Models lean towards yes</h3><p>Several models answered "true" far more often than they should. In memory, the yes error is "you decided that" for something only offered or proposed.</p></div>
+    <div class="pt"><h3>The handoff is model-specific</h3><p>Different models fell for different traps. The shared record keeps the facts fixed across switches; each handoff still needs testing per model.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="sh"><span class="n">03</span><h2>Four ways a return goes wrong</h2></div>
+  <p style="margin-bottom:22px;color:var(--ink2)">Richard Gregory's four illusion types, which IllusionVQA uses, map directly onto how a resumed project gets misread.</p>
+  <div class="fails">
+
+    <div class="fail">
+      <svg viewBox="0 0 360 96" aria-hidden="true" font-family="JetBrains Mono, monospace" font-size="10">
+        <line x1="20" y1="48" x2="150" y2="48" stroke="#15171E" stroke-width="1.5"/>
+        <circle cx="150" cy="48" r="6" fill="#fff" stroke="#15171E" stroke-width="1.5"/>
+        <path d="M156,46 C200,40 230,22 280,22" fill="none" stroke="#EB5F2C" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <path d="M156,50 C200,56 230,74 280,74" fill="none" stroke="#EB5F2C" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <circle cx="286" cy="22" r="5" fill="none" stroke="#EB5F2C" stroke-width="1.5"/>
+        <circle cx="286" cy="74" r="5" fill="none" stroke="#EB5F2C" stroke-width="1.5"/>
+        <text x="298" y="25" fill="#3A3F4D">front door</text><text x="298" y="77" fill="#3A3F4D">car door</text>
+        <text x="20" y="38" fill="#626979">"end on the door"</text>
+      </svg>
+      <span class="lab">01 · Ambiguity</span>
+      <h3>Two valid readings</h3>
+      <p class="ex">"End on the door." Which door?</p>
+      <p class="do"><b>Mir asks.</b> Both readings stay open until a person chooses.</p>
+    </div>
+    <div class="fail">
+      <svg viewBox="0 0 360 96" aria-hidden="true" font-family="JetBrains Mono, monospace" font-size="10">
+        <rect x="20" y="40" width="320" height="16" fill="#ECEEF2"/>
+        <rect x="20" y="40" width="120" height="16" fill="#E6EBFB"/>
+        <circle cx="80" cy="48" r="5" fill="#2445D6"/>
+        <path d="M20,30 v-6 h120 v6" fill="none" stroke="#2445D6" stroke-width="1.5"/>
+        <text x="20" y="16" fill="#2445D6">recorded: core range</text>
+        <path d="M20,66 v6 h320 v-6" fill="none" stroke="#EB5F2C" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <text x="20" y="88" fill="#B23F15">recalled: whole project</text>
+        <text x="200" y="52" fill="#626979">sampler</text>
+      </svg>
+      <span class="lab">02 · Distortion</span>
+      <h3>Right decision, wrong size</h3>
+      <p class="ex">"No florals" for the core range, applied to the whole project.</p>
+      <p class="do"><b>Scope travels with the decision.</b> Mir checks the boundary before applying it.</p>
+    </div>
+    <div class="fail">
+      <svg viewBox="0 0 360 96" aria-hidden="true" font-family="JetBrains Mono, monospace" font-size="10">
+        <line x1="20" y1="48" x2="100" y2="48" stroke="#15171E" stroke-width="1.5"/>
+        <path d="M100,48 C140,48 150,22 200,22 L250,22" fill="none" stroke="#2445D6" stroke-width="2"/>
+        <path d="M100,48 C140,48 150,74 200,74 L250,74" fill="none" stroke="#2445D6" stroke-width="2"/>
+        <circle cx="256" cy="22" r="6" fill="#2445D6"/><circle cx="256" cy="74" r="6" fill="#2445D6"/>
+        <text x="270" y="25" fill="#3A3F4D">held · 14 Mar</text><text x="270" y="77" fill="#3A3F4D">held · 30 Apr</text>
+        <line x1="256" y1="34" x2="256" y2="62" stroke="#EB5F2C" stroke-width="1.5"/>
+        <path d="M250,42 l12,12 M262,42 l-12,12" stroke="#EB5F2C" stroke-width="1.8"/>
+      </svg>
+      <span class="lab">03 · Paradox</span>
+      <h3>Each part fine, the whole impossible</h3>
+      <p class="ex">Two held decisions that can't both be true.</p>
+      <p class="do"><b>Mir flags the conflict</b> and shows both sources. It does not pick one.</p>
+    </div>
+    <div class="fail">
+      <svg viewBox="0 0 360 96" aria-hidden="true" font-family="JetBrains Mono, monospace" font-size="10">
+        <circle cx="70" cy="48" r="9" fill="none" stroke="#EB5F2C" stroke-width="1.5" stroke-dasharray="3 3"/>
+        <text x="40" y="78" fill="#B23F15">proposed · 27 Mar</text>
+        <path d="M96,48 H236" stroke="#15171E" stroke-width="1.2"/>
+        <path d="M230,43 l7,5 l-7,5" fill="none" stroke="#15171E" stroke-width="1.2"/>
+        <circle cx="270" cy="48" r="9" fill="#C9CEDA"/>
+        <text x="236" y="78" fill="#626979">"you decided"</text>
+        <line x1="232" y1="74" x2="318" y2="74" stroke="#EB5F2C" stroke-width="1.5"/>
+        <text x="122" y="40" fill="#626979">time · retelling</text>
+      </svg>
+      <span class="lab">04 · Fiction</span>
+      <h3>A proposal remembered as a decision</h3>
+      <p class="ex">Mir suggested a serif on 27 March. Nobody approved it.</p>
+      <p class="do"><b>State is explicit.</b> Offered, asked and proposed are never shown as decided.</p>
+    </div>
+  </div>
+  <p style="margin-top:18px;font-size:15px;color:var(--ink2)"><b>And the fifth habit:</b> people see a triangle that isn't drawn (above, top right). Where the record has a gap, Mir shows the gap instead of filling it.</p>
+</section>
+
+<section>
+  <div class="sh"><span class="n">04</span><h2>Product rules</h2></div>
+  <ol class="rules">
+    <li><div><h3>Every decision carries its scope, date, reason and author.</h3><p>Scope is what separates "the same situation" from "a similar one".</p></div></li>
+    <li><div><h3>Offered, asked and proposed are never shown as decided.</h3><p>Only a person turns an item into a decision.</p></div></li>
+    <li><div><h3>Mir may leave things out. It must never contradict the record.</h3><p>The scoring rule IllusionBench used for descriptions, applied to resumes.</p></div></li>
+    <li><div><h3>Every resume cites its strands, and the citation is checked.</h3><p>Does what Mir said match what it points to? Context alone doesn't guarantee it.</p></div></li>
+    <li><div><h3>Retrieve the decision, not the history.</h3><p>Extra context can lower accuracy. A resume brings back what bears on the question.</p></div></li>
+    <li><div><h3>Show gaps and conflicts. Don't resolve them silently.</h3><p>Ambiguity gets a question; a paradox gets both sources; a gap stays visible.</p></div></li>
+  </ol>
+  <p style="margin-top:16px;font-size:15px;color:var(--ink2)">A resume answers four things: <b>what was decided, why, what it connects to, and what's open.</b> The rolodex study currently shows three; it should add <i>why</i>.</p>
+</section>
+
+<section>
+  <div class="sh"><span class="n">05</span><h2>A test for returning to a project</h2></div>
+  <p class="lead">Combine the two papers' methods: IllusionVQA kept only questions the model couldn't answer from habit; IllusionBench edited familiar cases so the familiar answer became wrong.</p>
+
+  <div class="item">
+    <div class="hd"><span class="lab">Sample item · fictional project</span><span class="lab">type: distortion</span></div>
+    <div class="bd">
+      <div class="rec">02 Mar · held · "No florals" · scope: core range · reason: gift-shop register<br>15 Apr · held · peel pattern approved · scope: holiday sampler</div>
+      <p class="q">Can the holiday sampler use the peel pattern?</p>
+      <div class="opt ok"><span class="k">a</span><span>Yes. It was approved for the sampler on 15 April; "no florals" covers the core range only.</span><span class="w">Recorded</span></div>
+      <div class="opt"><span class="k">b</span><span>Botanical motifs often read as premium for holiday gifting; worth testing.</span><span class="w">Blind answer</span></div>
+      <div class="opt"><span class="k">c</span><span>No. You ruled out florals on 2 March.</span><span class="w">Wrong scope</span></div>
+      <div class="opt"><span class="k">d</span><span>Yes. You decided the sampler would use a serif wordmark with it.</span><span class="w">Proposal as decision</span></div>
+    </div>
+  </div>
+
+  <div class="spec" style="margin-top:16px">
+    <div class="box"><span class="lab">Build</span><ul>
+      <li>Each item: a project record, a return question, four options as above.</li>
+      <li>Write the blind answer by asking a model the question <b>without</b> the record.</li>
+      <li>Drop any item the blind model gets right. It isn't testing memory.</li>
+      <li>Mix in plain returns where nothing is tricky, as most real returns are.</li>
+      <li>Balance correct answers between yes and no.</li>
+    </ul></div>
+    <div class="box"><span class="lab">Run</span><ul>
+      <li>Each item twice: the relevant strands only, then the full history.</li>
+      <li>Across every model Mindgut can hand off to.</li>
+      <li>With and without asking for reasoning.</li>
+      <li>Human reviewers check <b>all</b> answers, not only the ones an automated judge marks wrong.</li>
+    </ul></div>
+  </div>
+
+  <div class="metrics">
+    <div><b>Return accuracy</b><p>Recorded answer chosen.</p></div>
+    <div><b>False-decision rate</b><p>Proposals or offers reported as decided.</p></div>
+    <div><b>Scope errors</b><p>Right decision, wrong boundary.</p></div>
+    <div><b>Context cost</b><p>Accuracy change from relevant strands to full history.</p></div>
+  </div>
+  <p class="muted" style="font-size:14px;margin-top:12px">This is a proposed test, not a result. No figures in this brief describe Mir's current performance.</p>
+</section>
+
+<section>
+  <div class="sh"><span class="n">06</span><h2>Brand and creative</h2></div>
+  <p class="pull">What was actually decided. <span>Not what it sounds like it was.</span></p>
+  <p class="muted" style="font-size:14px;margin-top:8px">Adapted from IllusionVQA's instructions to its human testers: choose "how entities in the image truly are, not how they might appear."</p>
+
+  <div class="points" style="margin-top:26px">
+    <div class="pt"><h3>Positioning</h3><p>Not "AI with a better memory". People confirm what was decided; Mir holds the exact dates, scopes and sources. Each covers what the other misses.</p></div>
+    <div class="pt"><h3>Campaign idea</h3><p><b>Looks like the same thing. It isn't.</b> Two near-identical cards, one detail apart. More specific to Mindgut than archive or folder imagery.</p></div>
+    <div class="pt"><h3>Motion study: the trap</h3><p>Mir starts to apply the March decision, notices the scope doesn't match, and stops. The pause is the payoff. Replaces the three paused folder variants.</p></div>
+    <div class="pt"><h3>Motion study: flat to deep</h3><p>A flat transcript lifts into the network of decisions and scopes it lost. Real-scene illusions come from depth lost in a flat image; a transcript loses a project's structure the same way.</p></div>
+    <div class="pt"><h3>Connect, as an image</h3><p>Ishihara-style dot fields: a figure appears only when the right dots are grouped. Fits the board's dot, ripple and ASCII references.</p></div>
+    <div class="pt"><h3>Pacing</h3><p>Humans took about 15 seconds per question; models answered in 2–4. The rolodex's fast flip that slows before landing is the right rhythm. Keep it.</p></div>
+  </div>
+
+  <div class="dont">
+    <div><span class="lab">Use</span>One precise drawing doing one job: a Kanizsa triangle made of strand lines, two cards a scope apart. Drawn from scratch.</div>
+    <div class="x"><span class="lab">Avoid</span>Escher staircases and op-art as a theme; it is an AI-branding cliché. The datasets' images are non-commercial and not fully cleared, so none can be used.</div>
+  </div>
+</section>
+
+<section>
+  <div class="sh"><span class="n">07</span><h2>Colour check</h2></div>
+  <p style="color:var(--ink2);margin-bottom:14px">The state colours are themselves a perception test. Contrast against the paper ground (#F6F7F9); body text needs 4.5:1.</p>
+  <table class="t">
+    <thead><tr><th>Colour</th><th>Contrast</th><th>As text</th><th>Proposed text tone</th></tr></thead>
+    <tbody>
+      <tr><td><span class="sw" style="background:#2445D6"></span>Cobalt #2445D6</td><td class="n">6.76</td><td><span class="pass">Pass</span></td><td class="muted">—</td></tr>
+      <tr><td><span class="sw" style="background:#EB5F2C"></span>Signal orange #EB5F2C</td><td class="n">3.16</td><td><span class="flag">Fill only</span></td><td><span class="sw" style="background:#B23F15"></span><span class="mono">#B23F15 · 5.42</span></td></tr>
+      <tr><td><span class="sw" style="background:#9C8FD6"></span>Relay violet #9C8FD6</td><td class="n">2.68</td><td><span class="flag">Fill only</span></td><td><span class="sw" style="background:#5B4FB0"></span><span class="mono">#5B4FB0 · 6.14</span></td></tr>
+      <tr><td><span class="sw" style="background:#28CAA1"></span>Mindgut mint #28CAA1</td><td class="n">1.95</td><td><span class="flag">Fill only</span></td><td class="muted">Keep mint for the icon and fills</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:14px;font-size:15px;color:var(--ink2)">Under simulated colour blindness no state pair becomes identical, but cobalt and violet drop to ΔE 29 for blue-yellow deficiency. Held lines are already solid and connected lines dashed, so shape carries the difference. Keep it that way.</p>
+</section>
+
+<section>
+  <div class="sh"><span class="n">08</span><h2>Limits</h2></div>
+  <ul style="padding-left:18px;font-size:15px;color:var(--ink2)">
+    <li>Both papers test vision, not memory. The link to Mindgut is an analogy.</li>
+    <li>Small human baselines: three undergraduates (IllusionVQA), two evaluators (IllusionBench).</li>
+    <li>IllusionBench's reviewers re-checked only answers the automated judge marked wrong, so scores may be generous.</li>
+    <li>All models tested are 2024 versions.</li>
+    <li>IllusionBench was revised in June 2025 as IllusionBench+. This brief uses the January 2025 version.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sh"><span class="n">09</span><h2>Sources</h2></div>
+  <ol class="src" style="padding-left:18px">
+    <li>Shahgir, Sayeed, Bhattacharjee, Ahmad, Dong, Shahriyar. <i>IllusionVQA: A Challenging Optical Illusion Dataset for Vision Language Models.</i> COLM 2024. <a href="https://arxiv.org/abs/2403.15952">arXiv:2403.15952</a> · <a href="https://github.com/csebuetnlp/IllusionVQA">leaderboard</a></li>
+    <li>Zhang, Zhang, Wei, Liu, Zhai, Min. <i>IllusionBench: A Large-scale and Comprehensive Benchmark for Visual Illusion Understanding in Vision-Language Models.</i> 2025. <a href="https://arxiv.org/abs/2501.00848">arXiv:2501.00848</a></li>
+    <li>Gregory, R. L. Visual illusions classified. <i>Trends in Cognitive Sciences</i> 1(5), 1997.</li>
+  </ol>
+</section>
+
+<footer>
+  <span class="lockup"><img class="ic" src="__ICON__" alt="" style="width:22px;height:22px;border-radius:5px"><img class="wm" src="__WORDMARK__" alt="mindgut" style="height:13px"></span>
+  <span class="mono muted">Project examples are fictional.</span>
+</footer>
+</div>
+</body>
+</html>

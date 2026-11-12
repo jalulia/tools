@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRAIN_GRAPH — neural topology</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #050508;
+    overflow: hidden;
+    font-family: 'JetBrains Mono', monospace;
+    color: #c8ffa0;
+    cursor: crosshair;
+  }
+
+  canvas { display: block; }
+
+  /* ── BOOT SCREEN ── */
+  #boot-screen {
+    position: fixed; inset: 0;
+    background: #050508;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    transition: opacity 1.2s ease, visibility 1.2s ease;
+  }
+  #boot-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+  }
+  #boot-screen h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 3.2rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #e0ffe0;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+  }
+  #boot-screen .sub {
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: #5a7a40;
+    margin-bottom: 2.5rem;
+    text-transform: uppercase;
+  }
+  #boot-log {
+    font-size: 0.65rem;
+    color: #4a6a35;
+    line-height: 1.8;
+    max-width: 520px;
+    width: 90%;
+  }
+  #boot-log .line { opacity: 0; transition: opacity 0.4s ease; }
+  #boot-log .line.visible { opacity: 1; }
+  #boot-bar {
+    width: 90%; max-width: 520px;
+    height: 2px; background: #1a2a10;
+    margin-top: 1.5rem; border-radius: 1px;
+    overflow: hidden;
+  }
+  #boot-bar-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #c8ffa0, #60ff80);
+    transition: width 0.3s ease;
+    border-radius: 1px;
+  }
+
+  /* ── HUD OVERLAY ── */
+  #hud {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 1s ease 0.5s;
+  }
+  #hud.visible { opacity: 1; }
+
+  #hud-top-left {
+    position: absolute; top: 20px; left: 24px;
+  }
+  #hud-top-left .title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.35em;
+    color: #5a7a40;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  #hud-top-left h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #e0ffe0;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  #hud-top-right {
+    position: absolute; top: 20px; right: 24px;
+    text-align: right;
+    font-size: 0.6rem;
+    color: #3d5a2a;
+    letter-spacing: 0.1em;
+    line-height: 1.8;
+  }
+  #hud-top-right span { color: #7aaa55; }
+
+  #hud-bottom-left {
+    position: absolute; bottom: 20px; left: 24px;
+    font-size: 0.55rem;
+    color: #3d5a2a;
+    letter-spacing: 0.15em;
+    line-height: 2;
+  }
+
+  /* ── MODE BUTTONS ── */
+  #mode-bar {
+    position: absolute; top: 20px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 2px;
+    pointer-events: all;
+  }
+  #mode-bar button {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    background: rgba(20, 35, 12, 0.6);
+    border: 1px solid #2a3d1a;
+    color: #5a7a40;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    pointer-events: all;
+  }
+  #mode-bar button:hover {
+    background: rgba(40, 70, 25, 0.5);
+    color: #c8ffa0;
+    border-color: #5a7a40;
+  }
+  #mode-bar button.active {
+    background: rgba(80, 140, 50, 0.2);
+    color: #c8ffa0;
+    border-color: #7aaa55;
+    box-shadow: 0 0 12px rgba(120, 200, 80, 0.15);
+  }
+
+  /* ── REGION LABELS (3D projected) ── */
+  .region-label {
+    position: absolute;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #ff6b6b;
+    pointer-events: none;
+    white-space: nowrap;
+    text-shadow: 0 0 8px rgba(255, 107, 107, 0.4);
+    transition: opacity 0.3s ease;
+  }
+
+  /* ── TOOLTIP ── */
+  #tooltip {
+    position: fixed;
+    padding: 8px 14px;
+    background: rgba(10, 18, 6, 0.92);
+    border: 1px solid #2a3d1a;
+    border-left: 2px solid #c8ffa0;
+    font-size: 0.6rem;
+    color: #8ab868;
+    letter-spacing: 0.08em;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 100;
+    max-width: 220px;
+    backdrop-filter: blur(8px);
+  }
+  #tooltip.visible { opacity: 1; }
+  #tooltip .node-id { color: #c8ffa0; font-weight: 500; }
+  #tooltip .node-type { color: #5a7a40; font-size: 0.5rem; margin-top: 2px; }
+
+  /* ── SCAN LINE ── */
+  #scanline {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 5;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    );
+  }
+
+  /* ── VIGNETTE ── */
+  #vignette {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 4;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(5,5,8,0.7) 100%);
+  }
+</style>
+</head>
+<body>
+
+<!-- BOOT SCREEN -->
+<div id="boot-screen">
+  <div class="sub">GRAPH_INIT_SEQUENCE</div>
+  <h1>NEURAL<br>TOPOLOGY</h1>
+  <div id="boot-log"></div>
+  <div id="boot-bar"><div id="boot-bar-fill"></div></div>
+</div>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="hud-top-left">
+    <div class="title">brain_graph_v0.1</div>
+    <h2>Neural Topology</h2>
+  </div>
+  <div id="hud-top-right">
+    <span id="node-count">0</span> NODES<br>
+    <span id="edge-count">0</span> SYNAPSES<br>
+    <span id="region-count">0</span> REGIONS<br>
+    <span id="fps-display">60</span> FPS
+  </div>
+  <div id="mode-bar">
+    <button class="active" data-mode="brain">BRAIN</button>
+    <button data-mode="explode">EXPLODE</button>
+    <button data-mode="pulse">PULSE</button>
+    <button data-mode="spin">SPIN</button>
+    <button data-mode="dream">DREAM</button>
+  </div>
+  <div id="hud-bottom-left">
+    SCROLL TO ZOOM · DRAG TO ORBIT · CLICK NODE TO INSPECT<br>
+    NEURAL MAPPING — SYNTHETIC CORTEX
+  </div>
+</div>
+
+<div id="tooltip">
+  <div class="node-id"></div>
+  <div class="node-type"></div>
+</div>
+
+<div id="scanline"></div>
+<div id="vignette"></div>
+
+<!-- REGION LABELS (positioned via JS) -->
+<div id="labels-container"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ═══════════════════════════════════════════
+// BRAIN GRAPH VISUALIZER
+// ═══════════════════════════════════════════
+
+// ── BOOT SEQUENCE ──
+const bootLines = [
+  '> initializing neural substrate...',
+  '> allocating cortical regions (6 lobes)...',
+  '> generating 2400 neuron nodes...',
+  '> computing synaptic connections...',
+  '> mapping 3200+ synapses across hemispheres...',
+  '> applying force-directed brain topology...',
+  '> building instanced mesh (GPU accelerated)...',
+  '> initializing post-processing pipeline...',
+  '> bloom / scanlines / vignette ready',
+  '> neural topology online.'
+];
+
+const bootLog = document.getElementById('boot-log');
+const bootBarFill = document.getElementById('boot-bar-fill');
+let bootReady = false;
+
+(function runBoot() {
+  bootLines.forEach((text, i) => {
+    const div = document.createElement('div');
+    div.className = 'line';
+    div.textContent = text;
+    bootLog.appendChild(div);
+    setTimeout(() => {
+      div.classList.add('visible');
+      bootBarFill.style.width = ((i + 1) / bootLines.length * 100) + '%';
+      if (i === bootLines.length - 1) {
+        setTimeout(() => {
+          document.getElementById('boot-screen').classList.add('hidden');
+          document.getElementById('hud').classList.add('visible');
+          bootReady = true;
+        }, 600);
+      }
+    }, 250 * (i + 1));
+  });
+})();
+
+
+// ── SCENE SETUP ──
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050508);
+scene.fog = new THREE.FogExp2(0x050508, 0.0008);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 5000);
+camera.position.set(0, 60, 280);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+document.body.prepend(renderer.domElement);
+
+
+// ── ORBIT CONTROLS (manual) ──
+const orbit = {
+  target: new THREE.Vector3(0, 0, 0),
+  spherical: new THREE.Spherical(280, Math.PI / 2.2, 0),
+  isDragging: false,
+  prev: { x: 0, y: 0 },
+  autoRotate: 0.001,
+  damping: { phi: 0, theta: 0 }
+};
+
+renderer.domElement.addEventListener('mousedown', e => {
+  orbit.isDragging = true;
+  orbit.prev = { x: e.clientX, y: e.clientY };
+});
+window.addEventListener('mouseup', () => orbit.isDragging = false);
+window.addEventListener('mousemove', e => {
+  if (!orbit.isDragging) return;
+  const dx = e.clientX - orbit.prev.x;
+  const dy = e.clientY - orbit.prev.y;
+  orbit.damping.theta -= dx * 0.005;
+  orbit.damping.phi -= dy * 0.005;
+  orbit.prev = { x: e.clientX, y: e.clientY };
+});
+renderer.domElement.addEventListener('wheel', e => {
+  orbit.spherical.radius += e.deltaY * 0.3;
+  orbit.spherical.radius = Math.max(80, Math.min(800, orbit.spherical.radius));
+});
+
+function updateCamera() {
+  orbit.spherical.theta += orbit.damping.theta + orbit.autoRotate;
+  orbit.spherical.phi += orbit.damping.phi;
+  orbit.spherical.phi = Math.max(0.2, Math.min(Math.PI - 0.2, orbit.spherical.phi));
+  orbit.damping.theta *= 0.92;
+  orbit.damping.phi *= 0.92;
+  camera.position.setFromSpherical(orbit.spherical).add(orbit.target);
+  camera.lookAt(orbit.target);
+}
+
+
+// ── BRAIN GEOMETRY ──
+// We create a brain shape by combining two hemisphere ellipsoids
+// with a cerebellum at the back-bottom, and a brainstem below.
+// Nodes are scattered within these volumes using rejection sampling.
+
+const REGIONS = [
+  { name: 'FRONTAL LOBE',       color: 0xffaa44, labelColor: '#ffaa44', center: [0, 20, 60],   rx: 55, ry: 40, rz: 45 },
+  { name: 'PARIETAL LOBE',      color: 0x44ddff, labelColor: '#44ddff', center: [0, 40, -10],  rx: 55, ry: 30, rz: 40 },
+  { name: 'TEMPORAL L',         color: 0xff6688, labelColor: '#ff6688', center: [-50, -10, 15], rx: 30, ry: 25, rz: 45 },
+  { name: 'TEMPORAL R',         color: 0xff6688, labelColor: '#ff6688', center: [50, -10, 15],  rx: 30, ry: 25, rz: 45 },
+  { name: 'OCCIPITAL LOBE',     color: 0xaa66ff, labelColor: '#aa66ff', center: [0, 15, -60],  rx: 40, ry: 35, rz: 30 },
+  { name: 'CEREBELLUM',         color: 0x66ff99, labelColor: '#66ff99', center: [0, -25, -50], rx: 40, ry: 22, rz: 25 },
+  { name: 'BRAINSTEM',          color: 0xffdd44, labelColor: '#ffdd44', center: [0, -45, -30], rx: 12, ry: 25, rz: 12 },
+  { name: 'LIMBIC SYSTEM',      color: 0xff44aa, labelColor: '#ff44aa', center: [0, 5, 10],    rx: 20, ry: 18, rz: 30 },
+];
+
+// Also define the overall brain shell for rejection sampling
+function isInsideBrain(x, y, z) {
+  // Main cerebrum — two overlapping ellipsoids
+  const cerebL = ((x + 15) / 65) ** 2 + ((y - 15) / 50) ** 2 + (z / 70) ** 2;
+  const cerebR = ((x - 15) / 65) ** 2 + ((y - 15) / 50) ** 2 + (z / 70) ** 2;
+  // Cerebellum
+  const cbell = (x / 45) ** 2 + ((y + 25) / 28) ** 2 + ((z + 50) / 30) ** 2;
+  // Brainstem
+  const bstem = (x / 14) ** 2 + ((y + 45) / 30) ** 2 + ((z + 30) / 14) ** 2;
+  return Math.min(cerebL, cerebR) < 1 || cbell < 1 || bstem < 1;
+}
+
+function assignRegion(x, y, z) {
+  let best = -1, bestDist = Infinity;
+  for (let i = 0; i < REGIONS.length; i++) {
+    const r = REGIONS[i];
+    const d = ((x - r.center[0]) / r.rx) ** 2 + ((y - r.center[1]) / r.ry) ** 2 + ((z - r.center[2]) / r.rz) ** 2;
+    if (d < bestDist) { bestDist = d; best = i; }
+  }
+  return best;
+}
+
+// Generate nodes
+const NODE_COUNT = 2400;
+const nodes = [];
+const nodeNames = [
+  'memory.episodic', 'motor.cortex', 'visual.v1', 'auditory.proc', 'language.broca',
+  'language.wernicke', 'emotion.amygdala', 'spatial.map', 'decision.prefrontal',
+  'attention.focus', 'reward.pathway', 'fear.response', 'habit.loop', 'dream.generator',
+  'creativity.net', 'empathy.mirror', 'pattern.recog', 'rhythm.clock', 'balance.vestib',
+  'smell.olfactory', 'taste.gustatory', 'pain.matrix', 'pleasure.center', 'sleep.cycle',
+  'learning.hebbian', 'impulse.control', 'face.recog', 'voice.identity', 'time.percept',
+  'self.awareness', 'intuition.net', 'prediction.engine', 'curiosity.drive', 'abstract.thought'
+];
+
+let attempts = 0;
+while (nodes.length < NODE_COUNT && attempts < 100000) {
+  attempts++;
+  const x = (Math.random() - 0.5) * 160;
+  const y = (Math.random() - 0.5) * 130 + 5;
+  const z = (Math.random() - 0.5) * 160;
+  if (isInsideBrain(x, y, z)) {
+    const region = assignRegion(x, y, z);
+    // Add slight jitter toward region center for clustering
+    const r = REGIONS[region];
+    const cx = x * 0.85 + r.center[0] * 0.15;
+    const cy = y * 0.85 + r.center[1] * 0.15;
+    const cz = z * 0.85 + r.center[2] * 0.15;
+    nodes.push({
+      pos: new THREE.Vector3(cx, cy, cz),
+      region,
+      name: nodeNames[Math.floor(Math.random() * nodeNames.length)] + '.' + nodes.length.toString(16)
+    });
+  }
+}
+
+document.getElementById('node-count').textContent = nodes.length;
+document.getElementById('region-count').textContent = REGIONS.length;
+
+
+// ── EDGES (synaptic connections) ──
+// Connect nearby nodes, with preference for same-region
+const edges = [];
+const MAX_DIST = 28;
+const MAX_DIST_CROSS = 45;
+
+for (let i = 0; i < nodes.length; i++) {
+  let connCount = 0;
+  for (let j = i + 1; j < nodes.length && connCount < 4; j++) {
+    const d = nodes[i].pos.distanceTo(nodes[j].pos);
+    const sameRegion = nodes[i].region === nodes[j].region;
+    const threshold = sameRegion ? MAX_DIST : MAX_DIST_CROSS;
+    const prob = sameRegion ? 0.35 : 0.04;
+    if (d < threshold && Math.random() < prob) {
+      edges.push([i, j]);
+      connCount++;
+    }
+  }
+}
+
+document.getElementById('edge-count').textContent = edges.length;
+
+
+// ── INSTANCED NODE MESH ──
+const nodeGeom = new THREE.IcosahedronGeometry(0.6, 1);
+const nodeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+const instancedNodes = new THREE.InstancedMesh(nodeGeom, nodeMat, nodes.length);
+
+const dummy = new THREE.Object3D();
+const nodeColors = new Float32Array(nodes.length * 3);
+const basePositions = nodes.map(n => n.pos.clone());
+
+for (let i = 0; i < nodes.length; i++) {
+  dummy.position.copy(nodes[i].pos);
+  const s = 0.5 + Math.random() * 1.2;
+  dummy.scale.set(s, s, s);
+  dummy.updateMatrix();
+  instancedNodes.setMatrixAt(i, dummy.matrix);
+
+  const col = new THREE.Color(REGIONS[nodes[i].region].color);
+  nodeColors[i * 3] = col.r;
+  nodeColors[i * 3 + 1] = col.g;
+  nodeColors[i * 3 + 2] = col.b;
+}
+instancedNodes.instanceColor = new THREE.InstancedBufferAttribute(nodeColors, 3);
+scene.add(instancedNodes);
+
+
+// ── GLOW PARTICLES ──
+const glowCount = nodes.length;
+const glowPositions = new Float32Array(glowCount * 3);
+const glowColors = new Float32Array(glowCount * 3);
+const glowSizes = new Float32Array(glowCount);
+
+for (let i = 0; i < glowCount; i++) {
+  glowPositions[i * 3] = nodes[i].pos.x;
+  glowPositions[i * 3 + 1] = nodes[i].pos.y;
+  glowPositions[i * 3 + 2] = nodes[i].pos.z;
+
+  const col = new THREE.Color(REGIONS[nodes[i].region].color);
+  glowColors[i * 3] = col.r;
+  glowColors[i * 3 + 1] = col.g;
+  glowColors[i * 3 + 2] = col.b;
+
+  glowSizes[i] = 3 + Math.random() * 6;
+}
+
+const glowGeom = new THREE.BufferGeometry();
+glowGeom.setAttribute('position', new THREE.BufferAttribute(glowPositions, 3));
+glowGeom.setAttribute('color', new THREE.BufferAttribute(glowColors, 3));
+glowGeom.setAttribute('size', new THREE.BufferAttribute(glowSizes, 1));
+
+const glowMat = new THREE.ShaderMaterial({
+  uniforms: { uTime: { value: 0 } },
+  vertexShader: `
+    attribute float size;
+    varying vec3 vColor;
+    varying float vAlpha;
+    uniform float uTime;
+    void main() {
+      vColor = color;
+      vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+      float pulse = 0.7 + 0.3 * sin(uTime * 2.0 + position.x * 0.1 + position.z * 0.08);
+      gl_PointSize = size * pulse * (200.0 / -mvPos.z);
+      vAlpha = pulse * 0.7;
+      gl_Position = projectionMatrix * mvPos;
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main() {
+      float d = length(gl_PointCoord - 0.5) * 2.0;
+      float falloff = exp(-d * d * 3.0);
+      gl_FragColor = vec4(vColor, falloff * vAlpha);
+    }
+  `,
+  transparent: true,
+  vertexColors: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending
+});
+
+const glowPoints = new THREE.Points(glowGeom, glowMat);
+scene.add(glowPoints);
+
+
+// ── EDGE LINES ──
+const edgePositions = new Float32Array(edges.length * 6);
+const edgeColors = new Float32Array(edges.length * 6);
+
+for (let i = 0; i < edges.length; i++) {
+  const [a, b] = edges[i];
+  edgePositions[i * 6] = nodes[a].pos.x;
+  edgePositions[i * 6 + 1] = nodes[a].pos.y;
+  edgePositions[i * 6 + 2] = nodes[a].pos.z;
+  edgePositions[i * 6 + 3] = nodes[b].pos.x;
+  edgePositions[i * 6 + 4] = nodes[b].pos.y;
+  edgePositions[i * 6 + 5] = nodes[b].pos.z;
+
+  const colA = new THREE.Color(REGIONS[nodes[a].region].color);
+  const colB = new THREE.Color(REGIONS[nodes[b].region].color);
+  edgeColors[i * 6] = colA.r * 0.3;
+  edgeColors[i * 6 + 1] = colA.g * 0.3;
+  edgeColors[i * 6 + 2] = colA.b * 0.3;
+  edgeColors[i * 6 + 3] = colB.r * 0.3;
+  edgeColors[i * 6 + 4] = colB.g * 0.3;
+  edgeColors[i * 6 + 5] = colB.b * 0.3;
+}
+
+const edgeGeom = new THREE.BufferGeometry();
+edgeGeom.setAttribute('position', new THREE.BufferAttribute(edgePositions, 3));
+edgeGeom.setAttribute('color', new THREE.BufferAttribute(edgeColors, 3));
+const edgeMat = new THREE.LineBasicMaterial({
+  vertexColors: true,
+  transparent: true,
+  opacity: 0.25,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false
+});
+const edgeLines = new THREE.LineSegments(edgeGeom, edgeMat);
+scene.add(edgeLines);
+
+
+// ── FIRING PULSES (traveling along edges) ──
+const PULSE_COUNT = 120;
+const pulseGeom = new THREE.BufferGeometry();
+const pulsePos = new Float32Array(PULSE_COUNT * 3);
+const pulseCol = new Float32Array(PULSE_COUNT * 3);
+const pulseSizes = new Float32Array(PULSE_COUNT);
+
+const pulses = [];
+for (let i = 0; i < PULSE_COUNT; i++) {
+  const edgeIdx = Math.floor(Math.random() * edges.length);
+  pulses.push({
+    edge: edgeIdx,
+    t: Math.random(),
+    speed: 0.003 + Math.random() * 0.008,
+    direction: Math.random() > 0.5 ? 1 : -1
+  });
+  pulseSizes[i] = 4 + Math.random() * 4;
+}
+
+pulseGeom.setAttribute('position', new THREE.BufferAttribute(pulsePos, 3));
+pulseGeom.setAttribute('color', new THREE.BufferAttribute(pulseCol, 3));
+pulseGeom.setAttribute('size', new THREE.BufferAttribute(pulseSizes, 1));
+
+const pulseMat = new THREE.ShaderMaterial({
+  vertexShader: `
+    attribute float size;
+    varying vec3 vColor;
+    void main() {
+      vColor = color;
+      vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = size * (200.0 / -mvPos.z);
+      gl_Position = projectionMatrix * mvPos;
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vColor;
+    void main() {
+      float d = length(gl_PointCoord - 0.5) * 2.0;
+      float glow = exp(-d * d * 4.0);
+      gl_FragColor = vec4(vColor * 1.5, glow * 0.9);
+    }
+  `,
+  transparent: true,
+  vertexColors: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending
+});
+
+const pulsePoints = new THREE.Points(pulseGeom, pulseMat);
+scene.add(pulsePoints);
+
+
+// ── AMBIENT DUST ──
+const dustCount = 600;
+const dustGeom = new THREE.BufferGeometry();
+const dustPos = new Float32Array(dustCount * 3);
+for (let i = 0; i < dustCount; i++) {
+  dustPos[i * 3] = (Math.random() - 0.5) * 500;
+  dustPos[i * 3 + 1] = (Math.random() - 0.5) * 400;
+  dustPos[i * 3 + 2] = (Math.random() - 0.5) * 500;
+}
+dustGeom.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+const dustMat = new THREE.PointsMaterial({
+  size: 0.8,
+  color: 0x334422,
+  transparent: true,
+  opacity: 0.3,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending
+});
+scene.add(new THREE.Points(dustGeom, dustMat));
+
+
+// ── REGION LABELS (HTML overlays) ──
+const labelsContainer = document.getElementById('labels-container');
+const labelElements = [];
+
+REGIONS.forEach(r => {
+  const el = document.createElement('div');
+  el.className = 'region-label';
+  el.textContent = r.name;
+  el.style.color = r.labelColor;
+  el.style.textShadow = `0 0 8px ${r.labelColor}55`;
+  labelsContainer.appendChild(el);
+  labelElements.push({ el, worldPos: new THREE.Vector3(r.center[0], r.center[1] + 12, r.center[2]) });
+});
+
+function updateLabels() {
+  labelElements.forEach(({ el, worldPos }) => {
+    const v = worldPos.clone().project(camera);
+    if (v.z > 1) { el.style.opacity = '0'; return; }
+    const x = (v.x * 0.5 + 0.5) * innerWidth;
+    const y = (-v.y * 0.5 + 0.5) * innerHeight;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.style.opacity = Math.max(0, 1 - Math.abs(v.z) * 0.5).toString();
+  });
+}
+
+
+// ── RAYCASTER FOR TOOLTIP ──
+const raycaster = new THREE.Raycaster();
+raycaster.params.Points.threshold = 3;
+const mouse = new THREE.Vector2();
+const tooltip = document.getElementById('tooltip');
+
+window.addEventListener('mousemove', e => {
+  mouse.x = (e.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObject(glowPoints);
+
+  if (intersects.length > 0) {
+    const idx = intersects[0].index;
+    const node = nodes[idx];
+    tooltip.querySelector('.node-id').textContent = node.name;
+    tooltip.querySelector('.node-type').textContent = REGIONS[node.region].name;
+    tooltip.style.left = (e.clientX + 16) + 'px';
+    tooltip.style.top = (e.clientY - 10) + 'px';
+    tooltip.classList.add('visible');
+  } else {
+    tooltip.classList.remove('visible');
+  }
+});
+
+
+// ── VIEW MODES ──
+let currentMode = 'brain';
+const modeButtons = document.querySelectorAll('#mode-bar button');
+
+modeButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    modeButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    if (currentMode === 'spin') orbit.autoRotate = 0.008;
+    else orbit.autoRotate = 0.001;
+  });
+});
+
+
+// ── BLOOM COMPOSER (manual unreal bloom via layered rendering) ──
+// Since we can't import post-processing, we fake bloom with additive blending
+// and a second render pass on a lower-res target
+const bloomRT = new THREE.WebGLRenderTarget(innerWidth / 3, innerHeight / 3, {
+  minFilter: THREE.LinearFilter,
+  magFilter: THREE.LinearFilter,
+  format: THREE.RGBAFormat
+});
+
+const bloomQuadGeom = new THREE.PlaneGeometry(2, 2);
+const bloomQuadMat = new THREE.ShaderMaterial({
+  uniforms: {
+    tBase: { value: null },
+    tBloom: { value: bloomRT.texture },
+    bloomStrength: { value: 0.7 }
+  },
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = vec4(position.xy, 0.0, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform sampler2D tBase;
+    uniform sampler2D tBloom;
+    uniform float bloomStrength;
+    varying vec2 vUv;
+    void main() {
+      vec4 base = texture2D(tBase, vUv);
+      vec4 bloom = texture2D(tBloom, vUv);
+      gl_FragColor = base + bloom * bloomStrength;
+    }
+  `
+});
+
+const baseRT = new THREE.WebGLRenderTarget(innerWidth, innerHeight, {
+  minFilter: THREE.LinearFilter,
+  magFilter: THREE.LinearFilter,
+  format: THREE.RGBAFormat
+});
+
+const bloomScene = new THREE.Scene();
+const bloomCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const bloomQuad = new THREE.Mesh(bloomQuadGeom, bloomQuadMat);
+bloomScene.add(bloomQuad);
+
+
+// ── ANIMATION LOOP ──
+let time = 0;
+let lastTime = performance.now();
+let frameCount = 0;
+let fpsTimer = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const now = performance.now();
+  const dt = (now - lastTime) / 1000;
+  lastTime = now;
+  time += dt;
+
+  frameCount++;
+  fpsTimer += dt;
+  if (fpsTimer >= 0.5) {
+    document.getElementById('fps-display').textContent = Math.round(frameCount / fpsTimer);
+    frameCount = 0;
+    fpsTimer = 0;
+  }
+
+  // Update glow shader time
+  glowMat.uniforms.uTime.value = time;
+
+  // Update pulses
+  const pPos = pulsePoints.geometry.attributes.position.array;
+  const pCol = pulsePoints.geometry.attributes.color.array;
+  for (let i = 0; i < PULSE_COUNT; i++) {
+    const p = pulses[i];
+    p.t += p.speed * p.direction;
+    if (p.t > 1 || p.t < 0) {
+      p.edge = Math.floor(Math.random() * edges.length);
+      p.t = p.direction > 0 ? 0 : 1;
+    }
+    const [a, b] = edges[p.edge];
+    const posA = nodes[a].pos;
+    const posB = nodes[b].pos;
+    pPos[i * 3] = posA.x + (posB.x - posA.x) * p.t;
+    pPos[i * 3 + 1] = posA.y + (posB.y - posA.y) * p.t;
+    pPos[i * 3 + 2] = posA.z + (posB.z - posA.z) * p.t;
+
+    const col = new THREE.Color(REGIONS[nodes[a].region].color);
+    col.lerp(new THREE.Color(REGIONS[nodes[b].region].color), p.t);
+    pCol[i * 3] = col.r;
+    pCol[i * 3 + 1] = col.g;
+    pCol[i * 3 + 2] = col.b;
+  }
+  pulsePoints.geometry.attributes.position.needsUpdate = true;
+  pulsePoints.geometry.attributes.color.needsUpdate = true;
+
+  // Mode effects
+  const gPos = glowPoints.geometry.attributes.position.array;
+  const nPos = instancedNodes.geometry.attributes ? null : null;
+
+  if (currentMode === 'explode') {
+    for (let i = 0; i < nodes.length; i++) {
+      const base = basePositions[i];
+      const dir = base.clone().normalize();
+      const explodeFactor = 1 + 0.4 * Math.sin(time * 0.5);
+      const target = base.clone().add(dir.multiplyScalar(explodeFactor * 30));
+      nodes[i].pos.lerp(target, 0.02);
+      gPos[i * 3] = nodes[i].pos.x;
+      gPos[i * 3 + 1] = nodes[i].pos.y;
+      gPos[i * 3 + 2] = nodes[i].pos.z;
+    }
+    glowPoints.geometry.attributes.position.needsUpdate = true;
+  } else if (currentMode === 'pulse') {
+    for (let i = 0; i < nodes.length; i++) {
+      const base = basePositions[i];
+      const wave = Math.sin(time * 3 + base.x * 0.05 + base.z * 0.05) * 3;
+      nodes[i].pos.set(base.x, base.y + wave, base.z);
+      gPos[i * 3] = nodes[i].pos.x;
+      gPos[i * 3 + 1] = nodes[i].pos.y;
+      gPos[i * 3 + 2] = nodes[i].pos.z;
+    }
+    glowPoints.geometry.attributes.position.needsUpdate = true;
+  } else if (currentMode === 'dream') {
+    for (let i = 0; i < nodes.length; i++) {
+      const base = basePositions[i];
+      const t2 = time * 0.4;
+      const drift = new THREE.Vector3(
+        Math.sin(t2 + i * 0.01) * 8,
+        Math.cos(t2 * 0.7 + i * 0.02) * 6,
+        Math.sin(t2 * 0.5 + i * 0.015) * 8
+      );
+      nodes[i].pos.copy(base).add(drift);
+      gPos[i * 3] = nodes[i].pos.x;
+      gPos[i * 3 + 1] = nodes[i].pos.y;
+      gPos[i * 3 + 2] = nodes[i].pos.z;
+    }
+    glowPoints.geometry.attributes.position.needsUpdate = true;
+  } else {
+    // Return to base
+    for (let i = 0; i < nodes.length; i++) {
+      nodes[i].pos.lerp(basePositions[i], 0.04);
+      gPos[i * 3] = nodes[i].pos.x;
+      gPos[i * 3 + 1] = nodes[i].pos.y;
+      gPos[i * 3 + 2] = nodes[i].pos.z;
+    }
+    glowPoints.geometry.attributes.position.needsUpdate = true;
+  }
+
+  // Update instanced mesh positions to match
+  for (let i = 0; i < nodes.length; i++) {
+    dummy.position.copy(nodes[i].pos);
+    const s = 0.5 + Math.sin(time * 2 + i) * 0.15;
+    dummy.scale.set(s, s, s);
+    dummy.updateMatrix();
+    instancedNodes.setMatrixAt(i, dummy.matrix);
+  }
+  instancedNodes.instanceMatrix.needsUpdate = true;
+
+  // Update edges
+  const ePos = edgeLines.geometry.attributes.position.array;
+  for (let i = 0; i < edges.length; i++) {
+    const [a, b] = edges[i];
+    ePos[i * 6] = nodes[a].pos.x;
+    ePos[i * 6 + 1] = nodes[a].pos.y;
+    ePos[i * 6 + 2] = nodes[a].pos.z;
+    ePos[i * 6 + 3] = nodes[b].pos.x;
+    ePos[i * 6 + 4] = nodes[b].pos.y;
+    ePos[i * 6 + 5] = nodes[b].pos.z;
+  }
+  edgeLines.geometry.attributes.position.needsUpdate = true;
+
+  // Camera
+  updateCamera();
+
+  // Labels
+  updateLabels();
+
+  // Render with bloom
+  renderer.setRenderTarget(baseRT);
+  renderer.render(scene, camera);
+
+  renderer.setRenderTarget(bloomRT);
+  renderer.render(scene, camera);
+
+  bloomQuadMat.uniforms.tBase.value = baseRT.texture;
+  renderer.setRenderTarget(null);
+  renderer.render(bloomScene, bloomCamera);
+}
+
+animate();
+
+
+// ── RESIZE ──
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  baseRT.setSize(innerWidth, innerHeight);
+  bloomRT.setSize(innerWidth / 3, innerHeight / 3);
+});
+</script>
+</body>
+</html>

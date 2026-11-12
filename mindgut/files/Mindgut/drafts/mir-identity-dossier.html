@@ -1,0 +1,3628 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="obsidian">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mir — An Interactive Visual Identity Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root, [data-theme="obsidian"] {
+  --bg: #080908;
+  --bg-elev: #0e110e;
+  --plate-bg: #0b0d0b;
+  --ink: #ece7d9;
+  --ink-dim: #9a988e;
+  --ink-mute: #5a5b53;
+  --hair: rgba(236, 231, 217, 0.14);
+  --hair-soft: rgba(236, 231, 217, 0.06);
+  --signal: #d4ff00;
+  --carbon: #f2e9d8;
+  --silicon: #4fd3c4;
+  --warm: #ff6b3d;
+  --amber: #f0a23b;
+  --violet: #c58cf5;
+  --pill-bg: rgba(236, 231, 217, 0.05);
+  color-scheme: dark;
+}
+
+[data-theme="paper"] {
+  --bg: #f6f5f0;
+  --bg-elev: #ffffff;
+  --plate-bg: #111311;
+  --ink: #15140f;
+  --ink-dim: #626159;
+  --ink-mute: #99988f;
+  --hair: rgba(21, 20, 15, 0.15);
+  --hair-soft: rgba(21, 20, 15, 0.07);
+  --signal: #126b3d;
+  --carbon: #15140f;
+  --silicon: #0d6efd;
+  --warm: #c40021;
+  --amber: #d05810;
+  --violet: #6b3fa0;
+  --pill-bg: rgba(21, 20, 15, 0.04);
+  color-scheme: light;
+}
+
+[data-theme="sage"] {
+  --bg: #eef2e7;
+  --bg-elev: #f5f7f0;
+  --plate-bg: #0d120e;
+  --ink: #151b17;
+  --ink-dim: #545e56;
+  --ink-mute: #879188;
+  --hair: rgba(21, 27, 23, 0.14);
+  --hair-soft: rgba(21, 27, 23, 0.06);
+  --signal: #126b3d;
+  --carbon: #151b17;
+  --silicon: #1d6fa5;
+  --warm: #d94e1f;
+  --amber: #c77716;
+  --violet: #6c46a8;
+  --pill-bg: rgba(21, 27, 23, 0.05);
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; background: var(--bg); color: var(--ink); font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); color: var(--ink); overflow-x: hidden; transition: background 0.35s ease, color 0.35s ease; }
+
+/* Subtle tactile grain overlay */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0.032;
+  background-image: radial-gradient(rgba(255,255,255,0.7) 1px, transparent 0);
+  background-size: 3px 3px;
+}
+
+/* Top Minimal Navigation Rail */
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 52px;
+  z-index: 100;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--hair);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.brand img.bot { width: 20px; height: 20px; object-fit: contain; }
+.brand .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #d4ff00;
+  box-shadow: 0 0 10px #d4ff00;
+}
+.brand .title { font-weight: 500; letter-spacing: 0.18em; }
+.nav-links { display: flex; gap: 22px; color: var(--ink-dim); }
+.nav-links a { color: inherit; text-decoration: none; transition: color 0.2s; }
+.nav-links a:hover { color: var(--ink); }
+.theme-switch { display: flex; gap: 6px; align-items: center; }
+.theme-switch button {
+  all: unset;
+  cursor: pointer;
+  padding: 5px 10px;
+  border: 1px solid var(--hair);
+  color: var(--ink-dim);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  transition: all 0.2s;
+}
+.theme-switch button:hover { color: var(--ink); border-color: var(--ink); }
+.theme-switch button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); font-weight: 500; }
+
+/* Section Layout — ST-09 / ST-10 / ST-11 Inspired Gallery Sheets */
+.sheet {
+  margin: 18px;
+  margin-top: 70px;
+  border: 1px solid var(--hair);
+  background: var(--bg-elev);
+  display: grid;
+  grid-template-columns: 410px 1fr;
+  align-items: stretch;
+  position: relative;
+}
+.sheet + .sheet {
+  margin-top: 28px;
+}
+
+/* Left Notes Column (ST-09/10/11 exact proportion & breathing room) */
+.notes {
+  border-right: 1px solid var(--hair);
+  padding: clamp(38px, 6vh, 68px) 36px 28px 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+}
+.kicker {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--warm);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kicker::before {
+  content: "";
+  width: 6px; height: 6px;
+  background: currentColor;
+  display: inline-block;
+}
+.lede {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(34px, 3.3vw, 48px);
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  margin-bottom: 22px;
+  color: var(--ink);
+}
+.lede em {
+  font-style: italic;
+  color: var(--amber);
+}
+[data-theme="obsidian"] .lede em {
+  color: #d4ff00;
+}
+.body {
+  font-size: 14px;
+  line-height: 1.66;
+  color: var(--ink-dim);
+  max-width: 38ch;
+}
+.body p + p { margin-top: 14px; }
+.body strong { color: var(--ink); font-weight: 500; }
+
+/* Interactive Controls & Sliders in Notes Footer (ST-09/10/11 style) */
+.meta {
+  margin-top: 32px;
+  padding-top: 18px;
+  border-top: 1px solid var(--hair);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 18px;
+}
+.meta h3 {
+  font-family: 'Geist Mono', monospace;
+  font-weight: 400;
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 4px;
+}
+.meta .val {
+  font-family: 'Geist', sans-serif;
+  font-weight: 500;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+.meta .sub {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  color: var(--ink-dim);
+  margin-top: 2px;
+}
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.tags span {
+  font-family: 'Geist Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  color: var(--ink-dim);
+  border: 1px solid var(--hair);
+  padding: 3px 7px;
+  background: var(--pill-bg);
+}
+.ctl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.ctl button {
+  all: unset;
+  cursor: pointer;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  border: 1px solid var(--hair);
+  padding: 7px 11px;
+  line-height: 1;
+  transition: all 0.18s;
+}
+.ctl button:hover { color: var(--ink); border-color: var(--ink); }
+.ctl button.on {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+  font-weight: 500;
+}
+[data-theme="obsidian"] .ctl button.on {
+  background: #d4ff00;
+  color: #080908;
+  border-color: #d4ff00;
+}
+
+.prow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 10px;
+  align-items: center;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.prow .pv { color: var(--ink); font-variant-numeric: tabular-nums; }
+.prow input[type="range"] {
+  grid-column: 1 / 3;
+  width: 100%;
+  accent-color: var(--signal);
+  cursor: pointer;
+}
+.prow input[type="text"] {
+  grid-column: 1 / 3;
+  width: 100%;
+  font-family: 'Geist Mono', monospace;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--hair);
+  padding: 8px 10px;
+  outline: none;
+}
+.prow input[type="text"]:focus { border-color: var(--signal); }
+
+.livehud {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  line-height: 1.55;
+  padding-top: 6px;
+  border-top: 1px dashed var(--hair);
+}
+
+/* Right Figure Stage (Canvas + Track Log + Title Block) */
+.stage {
+  position: relative;
+  min-width: 0;
+  min-height: 580px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+.cv-box {
+  position: relative;
+  flex: 1;
+  min-height: 680px;
+  height: 100%;
+  overflow: hidden;
+}
+.cv-box canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+/* Track Log Overlay on Stage Right (ST-09/10/11 style) */
+.track-log {
+  position: absolute;
+  right: 24px;
+  top: 56px;
+  width: 215px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--bg-elev) 82%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--hair);
+  padding: 12px 14px;
+  z-index: 5;
+}
+.track-log .lh {
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-mute);
+  letter-spacing: 0.18em;
+  margin-bottom: 6px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--hair);
+}
+.track-log .tr-row {
+  display: grid;
+  grid-template-columns: 22px 42px 42px 1fr;
+  gap: 6px;
+  line-height: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+  margin: 0 -4px;
+  font-variant-numeric: tabular-nums;
+}
+.track-log .tr-row span:nth-child(n+2) { color: var(--ink-dim); }
+.track-log .tr-row:hover, .track-log .tr-row.on {
+  background: var(--pill-bg);
+}
+.track-log .tr-row:hover span:last-child, .track-log .tr-row.on span:last-child {
+  color: var(--signal);
+}
+.track-log .tr-read {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--hair);
+  font-family: 'Geist', sans-serif;
+  font-size: 11.5px;
+  line-height: 1.48;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+  min-height: 48px;
+}
+.track-log .tr-read b {
+  display: block;
+  font-family: 'Geist Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 3px;
+  font-weight: 400;
+}
+
+/* Bottom Title Block (ST-09/10/11 architectural stamp) */
+.title-block {
+  border-top: 1px solid var(--hair);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  font-family: 'Geist Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  background: var(--bg-elev);
+}
+.title-block .cell {
+  padding: 9px 14px;
+  border-right: 1px solid var(--hair);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.title-block .cell:last-child { border-right: 0; }
+.title-block .cell span:first-child { color: var(--ink-mute); }
+.title-block .cell span:last-child { color: var(--ink); font-weight: 500; }
+
+/* Review Gallery Section (Fresh-Eyes Visual Critique) */
+.review-band {
+  margin: 28px 18px;
+  border: 1px solid var(--hair);
+  background: var(--bg-elev);
+  padding: 48px 40px;
+}
+.review-header {
+  max-width: 680px;
+  margin-bottom: 36px;
+}
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.review-card {
+  border: 1px solid var(--hair);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.review-card canvas {
+  width: 100%;
+  height: 210px;
+  display: block;
+  border-bottom: 1px solid var(--hair);
+  cursor: pointer;
+}
+.review-card .rc-body {
+  padding: 22px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+.review-card .rc-tag {
+  font-family: 'Geist Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.review-card h4 {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1.1;
+  color: var(--ink);
+}
+.review-card p {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-dim);
+}
+.review-card .rc-verdict {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--hair-soft);
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+/* Seven Moments Interactive Grid */
+.moments-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  padding: 24px;
+  flex: 1;
+  align-content: center;
+}
+.moment-card {
+  border: 1px solid var(--hair);
+  background: var(--bg-elev);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+  min-height: 230px;
+}
+.moment-card:hover {
+  border-color: var(--signal);
+}
+.moment-card canvas {
+  width: 100%;
+  height: 135px;
+  display: block;
+  border-bottom: 1px solid var(--hair);
+}
+.moment-card .mc-info {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.moment-card .mc-num {
+  font-family: 'Geist Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+}
+.moment-card .mc-title {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--ink);
+}
+.moment-card .mc-desc {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--ink-dim);
+}
+
+@media (max-width: 1080px) {
+  .sheet { grid-template-columns: 1fr; }
+  .notes { border-right: 0; border-bottom: 1px solid var(--hair); }
+  .review-grid { grid-template-columns: 1fr; }
+  .moments-grid { grid-template-columns: repeat(2, 1fr); }
+  .track-log { position: static; width: auto; margin: 12px; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a href="#top" class="brand">
+    <img class="bot" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAP/klEQVR4nOWaCXRUZZbHf/WqKlWVpLKvhCUxsg8iJLIjuAMCRx1ZWhsaEG1RBxD3bpVNbY/YCgpzXFjcEAUFRqLQbZJhGSGERUhC2BqIJJGQjSRVSe1Vc+6XhaZn+pyGhMY+uee8VOW977367v+7y//e7+l65H4coB2LRjsXjXYuGu1cNNq5aLRz0WjnotHORaOdi+Gf9kv+AIFAI+fS6XSg6Ro/ofF803V1pun6vz4AAQj4/ej0GvpQC3qzCfx+vC43PqcLr9utlDUYjWghJgwmE4KAz+nG1+BUY9Fr/6IA+Pxg0BMUFYGvrp6qH36kdt8R/EXnMNtdhAQ0DOiQxbcH/DiMOtxhFrTkBKzpvYlM64UhxIKnxtYIhHZ1gNBdjVog4PVhCA+Feidn1mzCn3WAQQnJDO1/E4mJiRhMQWh6vRgIgYAfr9eL3+PF7XRRWlpKwemT5FaV4BtxA12mjAezEW9tPTqD/pcPQMDnIyg6gtrt+ylZ9CG/HnwrE381mdOlJezZm0P5+XL0ej3BwRaCg4OVm8j/odZQBUpIcAix0dEkREWzPSubj3OySXpxJmHDbsRdVYNOr//lukDA58MUE0np+1+hrd7K1k8+pbrBzrwXnic2JoYnnniCcePGERIScsl9lZWVvPnmm9Q3NHDq5En8Xi8FR45w48CbWDt6NLPnzaXhoTEkPnQPrsoLbQqCoU1XPiqCslWbMa/cSlbObpa+s4yVH6xk/Yb13HvPPRw8eJBXXnmFCxcuYLEEExcXS0RkJG+//TYJ8fHcd9997M3JYcyYMSyZMYMPP/yQ3LxDrPvyS6ZP+hXnjQZifz0GT3Vtm4FgaJOn+P3oQ4Ox5xZgW7KW3B8PsmDhQrZs2cLevTk4HA4efPBBdu7axR233058fDx1NhuHDx+mrq6OSRMnsWDBfOUKRT8VMX/+fMrKypgyZQojRozg088+4z/XrGLS/fcT2qcrph5d8De42iRV6tokBgQCBIUEkzdqFu8/s4AqZz2/e+55PvjgAzZt2sQPP/xATGwsPx48SFhY2N99zI4dO5gydQrTfjNN/Z+RkcG0adN44IEH+HrzJiqKinlpwxpu2Pw2Llt9C4+4thbg86OPsHJuczb/Zoqi94A0hg0ewiuvvsrGjRt56KGHVOTv1r27Un7u3LnKFYxGI/4mYhTwB6iuriI/P59Qq5UGh4P4uDhef/11nnrqKRITE7ipfxplHTvRY+1ayrf9QPSoofjq7K1Oj7rWWoAQHVNkOHn3z+MP907jL+dK6dyxozLtL778kpLiYp599lmKi0tYt+5zdu7cycmTJ5W5NzND+WuQTBAais/no6qqivLycrbv2MGpU6dISU4mIiKCmb99hF1b/8yS3D/R59M/4FJZQbuGFhAIoAUZcZ4tw1JaQ0xSItb4WPbt24fdZsNiMbN9+3amTJ1K/3796NKls7KInj17/s2DxJQD+IXwNFHlqKgonn76afr06cOSJUvIysrig/fe5+EZM1j6+Ue4SsvRhQWD19dIna8ZAGYTFwpO0jE0gqi4WE7/5RSFR46Qm5vL+vXrueWWW7hpwAD69+/P+g0b2LptG0aDkQDC+5tqgb/6Lpbhcjm58847eeONNxg1ahRbMjJ45plnyPj2W2Li40myhGErPEXkyHR8tvprB0BAADAasB8voldiB2pqa9H0GuER4er62rVrefTRR5UiVqv1in7jwIEDCoSpU6bgcrno3bs3SXHx5J0oIvqOQXgDjfZzzYKgTqfDfa5S+WhSUhJ7d+8hOytb5fTjJ06wefNmzp07x+LFi9XqNpu7rFrzxCUGtHwPNFaFbo+HrMxM8vLyqK6uZtasWezNzWXVmtX07NGTnJ+K0KkA2LokZmil+soNvNU1JKR2pXPnzmRmZSq/l1VX5a1OR319vQpqzcqqCkjuvaj1JYA0jxs4aJDiAQKCBFXJCr+d9Shd45Pwl9VffE4rxNCqu2XeQkY0HdGRUdRcqCEhIZHhw4ero0fPHqxYsYLHH3+cjz766Ip/RojU+PHj2b17N9169iDYexG01oqhdXdr0ODGf6oYbXAQO3ftVBngm2++UROecP8Exf9Xr16t8rvEAYn0kiGU+TaaQ4sRtzRDCKBpGh63h/T0dJYuXcry5cvp0aMHKampBIWG4T9TjM7laTUbNFzpjQGfH0OklbIVG7i350AKi05xaOOPeNxuJk2apCygvKKCQ4cOcezYMWw2G6vXrCEnJ4ffvfACHZKSVEyQ/P//iQAgYCUnJ6v/pWSWcxkZW+ifns7dyX3Z/0kGsdPH47lQd8V8wEArRK9p1Bw6RsfuA+kzeADnSkpVPd9QX8/3339PeEQE0dHRChCPx8Nzzz1HQX4+vXr1+od/Qwqn7P/O5tlnn1OWEh8Xz+hRoyjYs4+s/ELi9a0LhLorZYIBjxdDhJWKF9+jfFM2w0eMYNCAAYSHh6t0VVtbS1FRkVK8Y8eOVFZVsnPnLl78/e8xmUy43W7WrVvH2bNn0RsManUNBgOmIBMmswlraCjWsDDCrFbMZrNyH6knnA4He/ftIzszk4SpY4l+/jd4xQKMV7aWhiu6S6fDbzFBsIlaR4M6tWvHDjolJXH02FGcDqeacGxsrEqPkgmkHhg2dJgCwqA34PP7GD1mDEaDQZm6ANBMjQVAORoaGrDZ7ao2KDtfxukzZ7CYzUp5EbvLSXSIGZ/DgdHf1Fy96hagawzAxs27aTh6mgSPnoOZ21VhU1pSQkxMDCUlJRQXF6v8f/r0aaWIpMHyinLF+Dwer4p1AkxzQSQ+HhQUpNxK3CYyKkqBd31qqvpfOEZqaqpyseTrUggyBtH3tps5r/diTeuJY1Q6mj9wdS0g4PNjjAzj3GcZdN98gH8fP5a0gQNYE2Rh08ZNqoaXyYrJy+S3bdvG/v37iYuL4+WXXyYlJeXiswKN3F+xSU1TR7McKSxk+TvvKhZ4obqahQsXqupRxgqoXreHSRMmMm7M3RzLL2DrugzKTBBz9/DLrhA1LlP8fh/6Q6ex6/xUe5wUnjjOwzMfVtfEr2VVhbQMGTqURYsWqcZH3743cuddd1FYWKiUlopPxolC4vfyXc7JNWmg3Ni3L++9/54qiS0WC7fceqvKIjLO6XKqz5kPP8yJ06eodDXgCPjQCopUSrxcN9Aua7Bew9XgINpk4b+++lr1963WUEaPHq0ClJi6yLfffUt+Xp5KcxMmTGDu3DmqCbp8xQq10qKsyIkTJ/j444+VQs1p7p133lXf5V6pI1566SUOHz7E1q1b1T3VVdV0SU5m5IgRymWkH/HN15sIrnXgcTgvsaQ2B0CnLMCPyWSmQ4cOPDJzJrl7c5V5i2U0K1Za+rNSQG/QM//llxkxciQF+QUqpannNDE4ie7zFyxQ9b+YuIi4kdwrikyaPInBQ4Zgt9nVGBEBRyxtwYIFnDlzhhnTpxMZFYlR3xhML5cdapcz2O8PEGQ2U+2wqxXesPFrPF4PNTU12OpsanIiAwcMUGBIp8deX8/OHTvU5IYMHtzyLDFVMe+fiop47bXXWlZu4MCB6l4BRIDM2bNHnR80aJD6lGu1NTWqQLLb7WRs/Y6Tx09QZ9EICraoOHXVAAgE/GpTw5OaqMiNTNLn8yufl4k1KyEsUEiPcACvx6POSUk7Y8aMFisRK5AOkLTJli1bpgKegPTkk08yZMgQ5U7+pme++uqr9OvXr2UeYgFOp1ONl5Q7efJktN4pLT2Fq5YFdEJP7Q5Mdw3EXFjKwf/ZQ6fUFI4dP94S3ES8Xp+q3KQkPnr0qKoSpTHSLDJOAmRWVrZaRckYUkOkpaUp7iBN1MzMTJXybrjhBqW8gCmAy6cc0nsQTlCwbz+B/tdjvvlG/PaGy95L1F02D5ASN8io0k19yXlqNm2n/qtsdWnjpo3ce8+9LVG+2SLOnz+vTLYZoGZfX7lypYoDEiglRTanRVFU0qmAISLn5ZCMIXsFjzzyiDpvnTqG8LsGEZrcEcxBgvxlxwADlyuSvtwe1QqLvjkd3ZEiQq3hnLfVUltT24RRY24XhYcOHYrdXk/KdcmYTWbF2oXsCB0W0iSKSetM0pu4k8zf5XSplNmtezcytmRcbJ4GAi2BNDI4BGuvVCKGp+H6uQLdFSjfKioszUjpx3k0SEm5jvP5P5JfUNAyRBSTaC4R+o477lCmvGrVKqKioqmsrMDldjdG7SawmgGRaC/dn++++07FAbkmwVUsSo4jhUdU7dD1+q6c1VBz0AlA2j+7GtS0xm3rlERMEScZNHgwX37xBX98881Lhi1etIiRI29R+V7yvriCdHsTEhJaXESAEDeR7q+wSJvdxtrPP+fggQOXPEuAkBbb7bfdhs3hQOsS39gVbkVPQLvyO3X46h1EpfXmkK2CSePuoc5uU72/ZnYnE05Pv0kFvNlz5qjc/disx6isqFBuIFxCFJaxsvJz5sxh9uzZzJv3lMoM3bt3VwFPnifWJNcsISGMHnkr+b5aInp3xedwXdu2uD7IiHn6GFYtW8mKd5fz+pI3sARbmP0fsxVTExDmzZtHUocOLFy0WO0NiKlL71B4hXpMU1w4nHeYsnNlrFm9mrFjxyrLkIAoNHjxK4vZu38fb72xhPm/f5Gw+VNamuqt6QvqWr0z1LQrXPL+BhK+2c/jjz3GT+fLSOqYxNjRY1QF99e9vQ0bNqjenpi8lLwiJrNZ7RQPHzaciRMnNlLcpnxfUFDAn7MyFRtMiIjkj8uWYpt6Ox2m3I27DXaJdW2xOSrsKygqnOrsvVSt+IoB1nh6pHalz8B0RYq6dOmiGiX/6GamRHthl9JKE7BOHMrjcOERDtRXkPjMVMKH92uzLXJdW70hIpZgCAsFj5eKnQeo+dNu3N/uUXS3U6dOWIKDW7o88imrLhyghdk5HMrUhRgJfZbG6U9nz+JyuzDfN4Kwm9OIuzmNgEGPVyL/L+r9AFATUttU0rcbPYyYfj05nnlAZYvJDzzAheoq1TYXN5D0JkSoOb+LyUsaFEDCwsNUYJRGyVtvvUVwaAjXPz0dX5QVb3Ujz/hFviGiRLW6A6pL6/d4MMVF4Sgu45MPV9KtV086dOrI9Z27KXeQABgaEtL4SqDsBzqdyuxLS0opyMvnWP4R9e6gPi5KWQgX6hqjfRvsBVz1t8QQumw04K+spWbzdqq/z8Fzsvj//njz8L+9oEFQ92Si7xxM2Ljh6KLClGu1tfJXDwAR1Tg0oA82g8OF9+dKvGfL8BSX46uuw1vfAG5RStJAkHqR0hAbibFDLMZO8egToxW/99U7r4jjX/sXJXU6tWqqZa3p0ZJiMCUnYtJrF7PBJVtCjW+KIH0Ejxefy03A4WzcQbpKyl/9V2WFvzcFrIDLQ8DpbtzP/DsbGaqeF12bfL2t3wm8ti9L65qU4pclGu1cNNq5aLRz0WjnotHORaOdi0Y7F412Ltq1nsC1lv8FzBeE11GU6tgAAAAASUVORK5CYII=" alt="Mir">
+    <span class="dot"></span>
+    <span class="title">MIR · VISUAL IDENTITY &amp; TECHNIQUE STUDY</span>
+  </a>
+  <nav class="nav-links">
+    <a href="#sec-hero">01 · The Chord</a>
+    <a href="#sec-reviews">02 · Fresh Review</a>
+    <a href="#sec-numbers">03 · Words by Number</a>
+    <a href="#sec-helix-paint">04 · 1,200-Cell Helix</a>
+    <a href="#sec-io-moth">05 · Io Moth</a>
+    <a href="#sec-patina">06 · Playing In</a>
+    <a href="#sec-breath">07 · Breath</a>
+    <a href="#sec-moments">08 · 7 Marks</a>
+  </nav>
+  <div class="theme-switch">
+    <button type="button" class="on" data-set-theme="obsidian">Nocturne</button>
+    <button type="button" data-set-theme="paper">Gallery Paper</button>
+    <button type="button" data-set-theme="sage">Sage</button>
+  </div>
+</header>
+
+
+<!-- =====================================================================
+     SHEET 01 · HERO — TWO VOICES, ONE LIGHT (ST-09 + ST-10 + STANDING WAVE)
+     ===================================================================== -->
+<section class="sheet" id="sec-hero">
+  <div class="notes">
+    <div>
+      <p class="kicker">Sheet 01 · Identity &amp; Optical Field</p>
+      <h1 class="lede">Not a brain in a jar. The <em>chord</em> between two voices.</h1>
+      <div class="body">
+        <p>Open almost any AI and you meet a blank stranger pretending to be a person. Mir is built on a simpler truth: a voice only becomes real in the space <strong>between</strong> the person speaking and the instrument answering.</p>
+        <p>On this plate, <strong>You</strong> (warm amber) and <strong>The Model</strong> (cool cyan) pull on the canvas like two live color sources in OKLab space (<code>ST-10</code>). Between them runs a helical stroke rendered as a closed-form distance field (<code>ST-09</code>). Drag the two sources closer—or switch to <strong>Draw</strong> and sketch your own path—and watch the line bloom into a bright chartreuse glow where your rhythms lock.</p>
+      </div>
+    </div>
+
+    <div class="meta">
+      <div class="meta-grid">
+        <div>
+          <h3>Plate</h3>
+          <div class="val">The Crossing Chord</div>
+          <div class="sub">FIG. 1.1 · ST-09 × ST-10</div>
+        </div>
+        <div>
+          <h3>Techniques Synthesized</h3>
+          <div class="sub">OKLab Gaussian pulls · Curl stir · Centerline SDF · Closed-form erf blur</div>
+        </div>
+      </div>
+      <div class="tags">
+        <span>oklab pull</span><span>curl stir</span><span>centerline sdf</span><span>erf glow</span><span>needle taper</span><span>two-source wave</span>
+      </div>
+      <div class="ctl" id="ctl-hero">
+        <button type="button" class="on" data-act="orbit">Orbit</button>
+        <button type="button" data-act="draw">Draw Stroke</button>
+        <button type="button" data-act="swap">Swap Model · Claude</button>
+        <button type="button" data-act="reset">Reset</button>
+      </div>
+      <label class="prow">
+        <span>Glow Blur Reach (σ)</span>
+        <span class="pv" id="val-hero-sig">6.8 % w</span>
+        <input type="range" id="rng-hero-sig" min="0.015" max="0.14" step="0.002" value="0.068">
+      </label>
+      <label class="prow">
+        <span>Field Curl Stir</span>
+        <span class="pv" id="val-hero-warp">18 %</span>
+        <input type="range" id="rng-hero-warp" min="0" max="1" step="0.01" value="0.18">
+      </label>
+      <div class="livehud" id="hud-hero">YOU (0.28, 0.52) · MODEL (0.72, 0.48) · RESONANCE 94 % · DRAG SOURCES OR STIR FIELD</div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="cv-box">
+      <canvas id="cv-hero" aria-label="Interactive WebGL and canvas plate: Two voices and the glowing chord between them"></canvas>
+      <div class="track-log" id="log-hero">
+        <div class="lh"><span>Track Log</span><span id="ctr-hero">6 / 6</span></div>
+        <div id="rows-hero"></div>
+        <div class="tr-read" id="read-hero"><b>Readout</b><span>Hover a numbered point on the plate, or drag the two glowing sources.</span></div>
+      </div>
+    </div>
+    <div class="title-block">
+      <div class="cell"><span>Figure</span><span>FIG. 1.1 — THE CHORD BETWEEN TWO VOICES</span></div>
+      <div class="cell"><span>Method</span><span>OKLAB GAUSSIAN PULLS + CLOSED-FORM ERF GLOW</span></div>
+      <div class="cell"><span>Interaction</span><span>DRAG SOURCES · STIR FIELD · DRAW STROKE</span></div>
+      <div class="cell"><span>Sheet</span><span>01 / 05 · 2026</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     SECTION 02 · FRESH-EYES VISUAL CRITIQUE (3 INTERACTIVE STUDY CARDS)
+     ===================================================================== -->
+<section class="review-band" id="sec-reviews">
+  <div class="review-header">
+    <p class="kicker">Section 02 · Fresh-Eyes Design Review</p>
+    <h2 class="lede" style="font-size:clamp(30px, 3vw, 42px); margin-bottom:12px;">Three documents studied from the outside in.</h2>
+    <p class="body" style="max-width:62ch;">Stepping back as a newcomer to Mindgut, we reviewed the three reference worlds side by side: the nocturnal specimen manual (<em>How a Moth Works</em>), Colin’s brand exploration (<em>Three Expressions</em>), and the three optical shader studies (<em>ST-09, ST-10, ST-11</em>). Touch each live canvas below to see what we kept, what we questioned, and how they fuse.</p>
+  </div>
+
+  <div class="review-grid">
+    <!-- Card 1: How a Moth Works -->
+    <article class="review-card">
+      <canvas id="cv-rev-moth" aria-label="Interactive moth wing scale brush demo"></canvas>
+      <div class="rc-body">
+        <span class="rc-tag">01 · How a Moth Works.html</span>
+        <h4>Show with touchable marks, never lecture.</h4>
+        <p>To a first-time reader, the moth explainer feels magical because <strong>every number is drawn as its actual count of marks</strong>. You don’t read a paragraph claiming moth scales shed to escape spiderwebs—you drag your cursor across the wing above and rub the scales off into glowing dust.</p>
+        <p><strong>What Mir takes from it:</strong> One dark, tactile paper-and-glass substrate; strict color discipline where each hue means one thing only; and direct hand manipulation on every plate.</p>
+        <div class="rc-verdict">VERDICT · ADOPT THE EVIDENTIARY DRAWING &amp; TACTILE SCALE ENGINE</div>
+      </div>
+    </article>
+
+    <!-- Card 2: Colin's Three Expressions -->
+    <article class="review-card">
+      <canvas id="cv-rev-colin" aria-label="Interactive comparison: Brain silhouette vs Two-source chord"></canvas>
+      <div class="rc-body">
+        <span class="rc-tag">02 · mindgut_three_expressions.html</span>
+        <h4>An instrument played in—not a cortical brain.</h4>
+        <p>Colin’s core metaphor—<em>“an instrument you play in over years, not a blank rental”</em>—and his seven quiet motion marks are immediately clear to anyone. But morphing the hero wave into a <strong>human brain silhouette</strong> sends the opposite message ("AI = brain in a jar"), and putting electric chartreuse on pale sage paper washes out the glow.</p>
+        <p><strong>Click the canvas above</strong> to toggle between Colin’s brain-on-sage and our two-source chord on darkroom obsidian.</p>
+        <div class="rc-verdict">VERDICT · KEEP THE "PLAYED-IN" STORY &amp; 7 MARKS · REPLACE THE BRAIN</div>
+      </div>
+    </article>
+
+    <!-- Card 3: ST-09 / ST-10 / ST-11 -->
+    <article class="review-card">
+      <canvas id="cv-rev-st" aria-label="Interactive miniature of ST-09 erf blur, ST-10 OKLab pull, and ST-11 numbered cells"></canvas>
+      <div class="rc-body">
+        <span class="rc-tag">03 · Technique Studies ST-09 · ST-10 · ST-11</span>
+        <h4>One field decides light, color, and number.</h4>
+        <p>In <code>ST-09</code>, a single light drives ground color, Gaussian <code>erf</code> blur, and needle taper together. In <code>ST-10</code>, colors pull in perceptual OKLab space without ever turning muddy gray. In <code>ST-11</code>, continuous light quantizes into wet-paint numbered squares (<code>1–9</code>).</p>
+        <p><strong>Move your cursor across the canvas above</strong> to see all three optical laws working inside a single lens.</p>
+        <div class="rc-verdict">VERDICT · THE CORE OPTICAL ENGINE FOR MIR’S VISUAL IDENTITY</div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- =====================================================================
+     SHEET 02 · GRADIENT BY NUMBER (ST-11 ENGINE FOR HOW MIR READS WORDS)
+     ===================================================================== -->
+<section class="sheet" id="sec-numbers">
+  <div class="notes">
+    <div>
+      <p class="kicker">Sheet 02 · Technique Study ST-11 Applied</p>
+      <h2 class="lede">Every word has a number, with the <em>paint</em> still wet.</h2>
+      <div class="body">
+        <p>How does Mir sense the <strong>posture</strong> of what you write—whether you are staking a claim, building a bridge, or bringing a thought to rest? Before looking up definitions, it reads every letter as a number from <strong>1 to 9</strong>.</p>
+        <p>Here, Antonin Waterkeyn’s numbered graph paper (<code>ST-11</code>) becomes Mir’s live reading lens. Type any word or character below, or drag the orbiting light across the sheet. An exact Euclidean distance transform measures depth into the letterform, stamps each inked square with its <strong>1–9</strong> level, and paints a linear gradient pointing uphill along the slope in <strong>OKLab</strong> space.</p>
+      </div>
+    </div>
+
+    <div class="meta">
+      <div class="meta-grid">
+        <div>
+          <h3>Three Natural Moods</h3>
+          <div class="sub"><strong>1·4·7</strong> Step Forward (Assertion)<br><strong>2·5·8</strong> Connect (Relation)<br><strong>3·6·9</strong> Settle (Completion)</div>
+        </div>
+        <div>
+          <h3>Method (ST-11)</h3>
+          <div class="sub">Exact 2D Distance Transform (<code>edt1</code>) · Slope ∇f per cell · OKLab ramp · Grid drawn last</div>
+        </div>
+      </div>
+      <div class="ctl" id="ctl-num-presets">
+        <button type="button" class="on" data-word="mir">“mir”</button>
+        <button type="button" data-word="8008">“8008”</button>
+        <button type="button" data-word="you">“you”</button>
+        <button type="button" data-word="9">“9”</button>
+        <button type="button" data-act="ramp" id="btn-num-ramp">Ramp · Mindgut</button>
+        <button type="button" data-act="orbit" class="on" id="btn-num-orbit">Orbit Light</button>
+      </div>
+      <label class="prow">
+        <span>Type any word or glyph (1–5 chars)</span>
+        <span class="pv" id="val-num-root">Root · 6 (Settle)</span>
+        <input type="text" id="inp-num-word" maxlength="5" value="mir" placeholder="Type a word…">
+      </label>
+      <label class="prow">
+        <span>Graph Grid Density</span>
+        <span class="pv" id="val-num-cols">42 cols</span>
+        <input type="range" id="rng-num-cols" min="26" max="58" step="2" value="42">
+      </label>
+      <label class="prow">
+        <span>Cell Slope Facet</span>
+        <span class="pv" id="val-num-facet">100 %</span>
+        <input type="range" id="rng-num-facet" min="0" max="1" step="0.02" value="1">
+      </label>
+      <div class="livehud" id="hud-numbers">WORD “MIR” · INKED CELLS 412 · DRAG THE ORBITING LIGHT ACROSS THE GRAPH PAPER</div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="cv-box">
+      <canvas id="cv-numbers" aria-label="Interactive ST-11 Gradient by Number plate"></canvas>
+      <div class="track-log" id="log-numbers">
+        <div class="lh"><span>Cell Inspector</span><span id="ctr-numbers">LIVE</span></div>
+        <div id="rows-numbers"></div>
+        <div class="tr-read" id="read-numbers"><b>Hovered Cell</b><span>Move across any numbered square to read its depth, slope vector ∇f, and 1–9 tone level.</span></div>
+      </div>
+    </div>
+    <div class="title-block">
+      <div class="cell"><span>Figure</span><span>FIG. 2.1 — GRADIENT BY NUMBER (ST-11 ENGINE)</span></div>
+      <div class="cell"><span>Method</span><span>EXACT EDT · 5-SAMPLE CELL VOTE · PER-CELL SLOPE GRADIENT</span></div>
+      <div class="cell"><span>Color Space</span><span>CONTINUOUS OKLAB RAMP · GRID OVER FILLS</span></div>
+      <div class="cell"><span>Sheet</span><span>02 / 05 · 2026</span></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- =====================================================================
+     SHEET 02B · THE WHOLE 1,200-STRAND HELIX PAINTED BY NUMBER (ST-10 × ST-11)
+     ===================================================================== -->
+<section class="sheet" id="sec-helix-paint">
+  <div class="notes">
+    <div>
+      <p class="kicker">Sheet 02B · Whole Helix by Number (ST-10 × ST-11)</p>
+      <h2 class="lede">1,200 real turns on one wet-paint <em>canvas</em>.</h2>
+      <div class="body">
+        <p>What happens when we paint our entire <strong>1,200-strand HELIX</strong> using <code>ST-10</code> (Stirred Mesh Gradient) and <code>ST-11</code> (Gradient by Number) together? Here, every single square on the <strong>40 × 30 graph sheet</strong> is one real turn from our shared history—from <strong>Strand #1</strong> at the top-left to <strong>Strand #1,200</strong> at the bottom-right.</p>
+        <p>Underneath the grid sit seven <strong>OKLab Gaussian color sources</strong> representing seven eras of our work together. Each cell’s <strong>1–9</strong> digit is its measured tone vector, and its fill is a tiny linear gradient pointing uphill along the local OKLab slope (∇f). <strong>Drag the era handles to pull colors, drag the field to stir the wet paint with curl noise, or hover any square to read that turn.</strong></p>
+      </div>
+    </div>
+
+    <div class="meta">
+      <div class="meta-grid">
+        <div>
+          <h3>40 × 30 Graph Matrix</h3>
+          <div class="val">1,200 Live Cells</div>
+          <div class="sub">1 cell = 1 real strand in our HELIX</div>
+        </div>
+        <div>
+          <h3>Fusion (ST-10 × ST-11)</h3>
+          <div class="sub">OKLab Gaussian pulls + curl stir drive per-cell uphill slope gradients</div>
+        </div>
+      </div>
+      <div class="ctl" id="ctl-hx">
+        <button type="button" class="on" data-act="handles">Show Era Handles</button>
+        <button type="button" data-act="drift">Drift Eras</button>
+        <button type="button" data-act="shuffle">Shuffle OKLab Palette</button>
+        <button type="button" data-act="reset">Reset to History</button>
+      </div>
+      <label class="prow">
+        <span>Curl-Noise Stirring (Marbling)</span>
+        <span class="pv" id="val-hx-warp">15 %</span>
+        <input type="range" id="rng-hx-warp" min="0" max="1" step="0.01" value="0.15">
+      </label>
+      <div class="livehud" id="hud-hx">STRAND #1198 · ERA: TECHNIQUE STUDIES &amp; MOTHS · DIGIT 6 (SETTLE) · DRAG HANDLES OR STIR THE FIELD</div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="cv-box">
+      <canvas id="cv-hx" aria-label="1,200-strand Helix painted by number with stirred OKLab sources"></canvas>
+      <div class="track-log" id="log-hx">
+        <div class="lh"><span>Era Anchors</span><span id="ctr-hx">7 ERAS</span></div>
+        <div id="rows-hx"></div>
+        <div class="tr-read" id="read-hx"><b>Strand Readout</b><span>Move across any of the 1,200 numbered cells to inspect that turn, or drag an era source to pull its OKLab color across the grid.</span></div>
+      </div>
+    </div>
+    <div class="title-block">
+      <div class="cell"><span>Figure</span><span>FIG. 2.2 — THE 1,200-STRAND HELIX BY NUMBER (ST-10 × ST-11)</span></div>
+      <div class="cell"><span>Grid</span><span>40 × 30 CELLS = 1,200 STRANDS · DIGITS 1–9</span></div>
+      <div class="cell"><span>Interaction</span><span>DRAG ERA SOURCES · STIR FIELD · HOVER ANY STRAND</span></div>
+      <div class="cell"><span>Sheet</span><span>02B / 06 · 2026</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     SHEET 02C · AUTOMERIS IO — THE I/O MOTH (FOLDED BARK TO TWIN EYESPOTS)
+     ===================================================================== -->
+<section class="sheet" id="sec-io-moth">
+  <div class="notes">
+    <div>
+      <p class="kicker">Sheet 02C · Automeris io — The I/O Moth</p>
+      <h2 class="lede">Quiet bark at rest. Twin <em>eyespots</em> when you touch it.</h2>
+      <div class="body">
+        <p>Even its scientific name is a gift: <strong><em>Automeris io</em> — the Io Moth (<code>I/O</code>, Input / Output)</strong>. Sitting on a tree trunk, its forewings fold into quiet moss-and-ochre bark. It never flashes to beg for attention. Only at the moment of encounter—when a hand or a shadow reaches in—do the forewings snap forward in <strong>0.3 seconds</strong> to reveal two blazing concentric eyespots on crimson-and-saffron hindwings.</p>
+        <p>That is the exact posture of Mir: <strong>quiet until touched; two witnesses locking eyes when engaged</strong>. Here the Io moth is built from numbered wet-paint scales (<code>ST-11</code>) over an OKLab crimson-to-gold field (<code>ST-10</code>) with a closed-form ultraviolet crescent glint (<code>ST-09</code>). <strong>Move your cursor close to startle the wings open, or drag the slider to study the unhinging in slow motion.</strong></p>
+      </div>
+    </div>
+
+    <div class="meta">
+      <div class="meta-grid">
+        <div>
+          <h3>At Rest (Open = 0 %)</h3>
+          <div class="sub">Forewings coupled over the back; quiet cryptic bark &amp; lichen.</div>
+        </div>
+        <div>
+          <h3>Startled (Open = 100 %)</h3>
+          <div class="sub">Twin eyespots (Carbon &amp; Silicon pupils) with UV white crescent glint.</div>
+        </div>
+      </div>
+      <div class="ctl" id="ctl-io">
+        <button type="button" class="on" data-act="startle">Startle Reflex (0.3 s)</button>
+        <button type="button" data-act="fold">Fold Forewings (Rest)</button>
+        <button type="button" data-act="numbers" id="btn-io-num" class="on">Show Scale Numbers (1–9)</button>
+      </div>
+      <label class="prow">
+        <span>Forewing Unhinge (Manual Scrub)</span>
+        <span class="pv" id="val-io-open">100 % Open</span>
+        <input type="range" id="rng-io-open" min="0" max="1" step="0.01" value="1">
+      </label>
+      <div class="livehud" id="hud-io">AUTOMERIS IO (I/O) · FOREWINGS PARTED 100 % · TWIN EYESPOTS LOCKED · MOVE CURSOR ACROSS SCALES</div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="cv-box">
+      <canvas id="cv-io" aria-label="Interactive Automeris io moth with numbered wet-paint scales and twin eyespots"></canvas>
+    </div>
+    <div class="title-block">
+      <div class="cell"><span>Specimen</span><span>FIG. 2.3 — AUTOMERIS IO (THE I/O MOTH)</span></div>
+      <div class="cell"><span>Synthesis</span><span>MOTH SHINGLE SCALES × ST-11 DIGITS × ST-10 OKLAB × ST-09 GLINT</span></div>
+      <div class="cell"><span>Behavior</span><span>QUIET AT REST · TWIN EYESPOTS REVEALED ON ENCOUNTER</span></div>
+      <div class="cell"><span>Sheet</span><span>02C / 06 · 2026</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     SHEET 03 · PLAYING IN (MOTH SHINGLE SCALES + PARABOLIC FOCUS + ST-09 GLOW)
+     ===================================================================== -->
+<section class="sheet" id="sec-patina">
+  <div class="notes">
+    <div>
+      <p class="kicker">Sheet 03 · How Identity Accumulates</p>
+      <h2 class="lede">Ten blank windows are <em>strangers</em>. One played-in instrument is yours.</h2>
+      <div class="body">
+        <p>Two acoustic guitars leave the same workshop sounding identical. Five years later, one has been played every night by one musician—its spruce top has opened up around the exact chords they reach for most.</p>
+        <p>Scrub the <strong>Conversations Together</strong> slider from <strong>Day 1</strong> to <strong>Day 500</strong>, or brush your cursor through the shingle scales. On Day 1, ten blank windows scatter light into noise. As shared history accumulates, hundreds of individual memory scales align into a parabolic reflector that focuses any new question—even across different underlying AI models—into one unmistakable voice.</p>
+      </div>
+    </div>
+
+    <div class="meta">
+      <div class="meta-grid">
+        <div>
+          <h3>Day 1 · Uncoupled</h3>
+          <div class="sub">Isotropic scatter; nothing carries over when the tab closes.</div>
+        </div>
+        <div>
+          <h3>Day 500 · Played In</h3>
+          <div class="sub">Shingled memory scales align into a parabolic mirror with one focus <em>F</em>.</div>
+        </div>
+      </div>
+      <div class="ctl" id="ctl-patina">
+        <button type="button" data-days="1">Day 1 · Blank</button>
+        <button type="button" data-days="60">Day 60</button>
+        <button type="button" data-days="220">Day 220</button>
+        <button type="button" class="on" data-days="500">Day 500 · Played In</button>
+        <button type="button" data-act="pluck">Send Test Wave</button>
+      </div>
+      <label class="prow">
+        <span>Conversations Together (Patina Depth)</span>
+        <span class="pv" id="val-patina-days">500 turns</span>
+        <input type="range" id="rng-patina-days" min="1" max="500" step="1" value="500">
+      </label>
+      <div class="livehud" id="hud-patina">500 CONVERSATIONS · 1,200 MEMORY SCALES ALIGNED · FOCAL LOCK 98 % · BRUSH SCALES WITH CURSOR</div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="cv-box">
+      <canvas id="cv-patina" aria-label="Interactive parabolic scale-lay and focal convergence plate"></canvas>
+    </div>
+    <div class="title-block">
+      <div class="cell"><span>Figure</span><span>FIG. 3.1 — FROM SCATTER TO PARABOLIC FOCUS</span></div>
+      <div class="cell"><span>Technique</span><span>SHINGLED SCALE-LAY (MOTH ENGINE) + ERF FOCAL BEAM</span></div>
+      <div class="cell"><span>Interaction</span><span>SCRUB DAYS 1→500 · BRUSH SCALES · SEND WAVE</span></div>
+      <div class="cell"><span>Sheet</span><span>03 / 05 · 2026</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     SHEET 04 · BREATHING ROOM (4 → 7 → 4 CADENCE IN ST-10 OKLAB FIELD)
+     ===================================================================== -->
+<section class="sheet" id="sec-breath">
+  <div class="notes">
+    <div>
+      <p class="kicker">Sheet 04 · Why Mir Exhales</p>
+      <h2 class="lede">Seven turns in, <em>three</em> let go—so the room stays clear.</h2>
+      <div class="body">
+        <p>When a conversation never exhales, the room fills with smoke. By turn thirty, an ordinary chat window is dragging thousands of stale words behind it, growing repetitive, slow, and overheated.</p>
+        <p>Mir breathes on a natural <strong>4 → 7 → 4</strong> rhythm. Click <strong>+ Inhale a Turn</strong> below: each exchange adds a warm OKLab color source to the live room. On the <strong>7th turn</strong>, Mir exhales: the oldest <strong>3 turns</strong> crystallize into permanent beads along the spine on the right, while the freshest <strong>4 turns</strong> stay in the room—carrying a golden momentum arc so the direction of your thought continues without the weight.</p>
+      </div>
+    </div>
+
+    <div class="meta">
+      <div class="meta-grid">
+        <div>
+          <h3>Live Working Room</h3>
+          <div class="val" id="val-breath-room">4 of 7 turns</div>
+          <div class="sub">Fills from 4 to 7, then exhales back to 4.</div>
+        </div>
+        <div>
+          <h3>Permanent Spine</h3>
+          <div class="val" id="val-breath-spine">1,200 threads</div>
+          <div class="sub">Every exhaled turn crystallizes into the record.</div>
+        </div>
+      </div>
+      <div class="ctl" id="ctl-breath">
+        <button type="button" class="on" data-act="inhale">+ Inhale a Turn</button>
+        <button type="button" data-act="auto" id="btn-breath-auto">Auto-Breathe</button>
+        <button type="button" data-act="exhale">Exhale Now (7 → 4)</button>
+      </div>
+      <div class="livehud" id="hud-breath">ROOM: 4 / 7 TURNS · HEAT 1.8 (COOL) · CLICK “+ INHALE A TURN” THREE TIMES TO TRIGGER THE 7 → 4 EXHALE</div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="cv-box">
+      <canvas id="cv-breath" aria-label="Interactive 4 to 7 breathing chamber and spine crystallization"></canvas>
+    </div>
+    <div class="title-block">
+      <div class="cell"><span>Figure</span><span>FIG. 4.1 — THE 4 → 7 → 4 RESPIRATION CHAMBER</span></div>
+      <div class="cell"><span>Cycle</span><span>INHALE TO 7 · CRYSTALLIZE OLDEST 3 · KEEP FRESHEST 4</span></div>
+      <div class="cell"><span>Carryover</span><span>MOMENTUM ARC PRESERVES DIRECTION ACROSS THE EXHALE</span></div>
+      <div class="cell"><span>Sheet</span><span>04 / 05 · 2026</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================================================================
+     SHEET 05 · SEVEN QUIET MOMENTS & PLAYABLE MINDGUT INSTRUMENT
+     ===================================================================== -->
+<section class="sheet" id="sec-moments">
+  <div class="notes">
+    <div>
+      <p class="kicker">Sheet 05 · Visual Grammar &amp; Live Instrument</p>
+      <h2 class="lede">Seven quiet moments that move once, then <em>rest</em>.</h2>
+      <div class="body">
+        <p>Mir never uses bouncing typing dots, spinning loaders, or a cartoon face. Instead, its visual identity is built from <strong>seven quiet physical marks</strong>—each triggered by a real event in the conversation, and each settling back to stillness as soon as the moment passes.</p>
+        <p>Click any of the <strong>seven interactive cards</strong> on the stage to replay that moment—including <strong>True Forgetting</strong> (card 05), where clicking a memory cluster unbinds its dots so they drift away and stay gone—and test the live <strong>Mindgut Instrument Rail</strong> in card 08.</p>
+      </div>
+    </div>
+
+    <div class="meta">
+      <div class="meta-grid">
+        <div>
+          <h3>Motion Rule</h3>
+          <div class="sub">Event, then rest. Nothing loops just to look busy.</div>
+        </div>
+        <div>
+          <h3>Color Grammar</h3>
+          <div class="sub">Bone = You · Cyan = Model · Chartreuse = Shared Lock · Amber = Recall</div>
+        </div>
+      </div>
+      <div class="ctl" id="ctl-moments">
+        <button type="button" class="on" data-act="trigger-all">Replay All 7 Marks</button>
+        <button type="button" data-act="forget-demo">Trigger Forget (Mark 05)</button>
+        <button type="button" data-act="lock-demo">Trigger Shared Lock (Mark 06)</button>
+      </div>
+      <div class="livehud" id="hud-moments">CLICK ANY OF THE 8 LIVE PLATES ON THE STAGE TO TRIGGER OR SCRUB ITS MOTION</div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="moments-grid" id="moments-grid">
+      <div class="moment-card" data-m="0">
+        <canvas id="cv-m0"></canvas>
+        <div class="mc-info">
+          <span class="mc-num">Moment 01 · Coupling</span>
+          <div class="mc-title">You start talking</div>
+          <p class="mc-desc">Two separate ripples meet in the middle and settle into a shared standing wave.</p>
+        </div>
+      </div>
+      <div class="moment-card" data-m="1">
+        <canvas id="cv-m1"></canvas>
+        <div class="mc-info">
+          <span class="mc-num">Moment 02 · Crystallizing</span>
+          <div class="mc-title">Something stays</div>
+          <p class="mc-desc">A finished exchange folds into two permanent glowing beads on the helical spine.</p>
+        </div>
+      </div>
+      <div class="moment-card" data-m="2">
+        <canvas id="cv-m2"></canvas>
+        <div class="mc-info">
+          <span class="mc-num">Moment 03 · Unprompted Recall</span>
+          <div class="mc-title">It comes back on its own</div>
+          <p class="mc-desc">Seven distant points on the spine light up automatically because their shape matches today’s.</p>
+        </div>
+      </div>
+      <div class="moment-card" data-m="3">
+        <canvas id="cv-m3"></canvas>
+        <div class="mc-info">
+          <span class="mc-num">Moment 04 · Voluntary Reach</span>
+          <div class="mc-title">You ask Mir to remember</div>
+          <p class="mc-desc">An amber arc reaches back across hundreds of turns to pull one specific memory forward.</p>
+        </div>
+      </div>
+      <div class="moment-card" data-m="4">
+        <canvas id="cv-m4"></canvas>
+        <div class="mc-info">
+          <span class="mc-num">Moment 05 · True Forgetting</span>
+          <div class="mc-title">You ask Mir to let it go</div>
+          <p class="mc-desc">Click this cluster: its 120 dots unbind one by one, drift outward, and stay gone.</p>
+        </div>
+      </div>
+      <div class="moment-card" data-m="5">
+        <canvas id="cv-m5"></canvas>
+        <div class="mc-info">
+          <span class="mc-num">Moment 06 · Resonance</span>
+          <div class="mc-title">You land on the same thing</div>
+          <p class="mc-desc">Two wandering dot clouds drift into alignment and ignite a bright chartreuse interference band.</p>
+        </div>
+      </div>
+      <div class="moment-card" data-m="6">
+        <canvas id="cv-m6"></canvas>
+        <div class="mc-info">
+          <span class="mc-num">Moment 07 · Held Open (Ø)</span>
+          <div class="mc-title">An unfinished question waits</div>
+          <p class="mc-desc">A split ring stays gently lit in the margin until a future conversation closes the loop.</p>
+        </div>
+      </div>
+      <div class="moment-card" data-m="7">
+        <canvas id="cv-m7"></canvas>
+        <div class="mc-info">
+          <span class="mc-num">Moment 08 · Live v2.3.3 Rail</span>
+          <div class="mc-title">The instrument in one glance</div>
+          <p class="mc-desc">Click to cycle turns on the live v2.3.3 telemetry rail: 4→7 breath ticks, heat bar, and twin wave.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="title-block">
+      <div class="cell"><span>Figure</span><span>FIG. 5.1 — SEVEN QUIET MARKS + LIVE INSTRUMENT RAIL</span></div>
+      <div class="cell"><span>Grammar</span><span>EVENT-DRIVEN MOTION · SETTLES TO REST</span></div>
+      <div class="cell"><span>Interaction</span><span>CLICK OR DRAG INSIDE ANY OF THE 8 MINIATURE PLATES</span></div>
+      <div class="cell"><span>Sheet</span><span>05 / 05 · 2026</span></div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+"use strict";
+
+const DPR = Math.min(2, window.devicePixelRatio || 1);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const px = v => Math.round(v) + 0.5;
+
+/* Theme switcher */
+document.querySelectorAll('[data-set-theme]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const th = btn.getAttribute('data-set-theme');
+    document.documentElement.setAttribute('data-theme', th);
+    document.querySelectorAll('[data-set-theme]').forEach(b => b.classList.toggle('on', b === btn));
+    window.dispatchEvent(new CustomEvent('mir-theme-change', { detail: th }));
+  });
+});
+
+/* Shared OKLab conversion helpers (from ST-10 & ST-11) */
+const s2l = v => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+const l2s = v => { v = clamp(v, 0, 1); return v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055; };
+function hex2lab(hx) {
+  const r = s2l(parseInt(hx.slice(1, 3), 16) / 255);
+  const g = s2l(parseInt(hx.slice(3, 5), 16) / 255);
+  const b = s2l(parseInt(hx.slice(5, 7), 16) / 255);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [
+    0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s
+  ];
+}
+function lab2css(Lc, a, b) {
+  let l = Lc + 0.3963377774 * a + 0.2158037573 * b;
+  let m = Lc - 0.1055613458 * a - 0.0638541728 * b;
+  let s = Lc - 0.0894841775 * a - 1.2914855480 * b;
+  l = l * l * l; m = m * m * m; s = s * s * s;
+  const r = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+  const g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+  const bb = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+  return `rgb(${Math.round(l2s(r) * 255)},${Math.round(l2s(g) * 255)},${Math.round(l2s(bb) * 255)})`;
+}
+
+/* Architectural Registration Frame + Trackers (ST-09 / ST-10 / ST-11) */
+function drawPlateChrome(ctx, fig, title, statusText, spotRGB, darkPlate) {
+  const ink = darkPlate ? 'rgba(236,231,217,0.88)' : '#15140f';
+  const ink50 = darkPlate ? 'rgba(236,231,217,0.42)' : 'rgba(21,20,15,0.48)';
+  ctx.strokeStyle = ink50;
+  ctx.lineWidth = 0.6;
+  ctx.strokeRect(px(fig.x), px(fig.y), fig.w, fig.h);
+
+  // Quarter ticks inside frame
+  ctx.beginPath();
+  for (const q of [0.25, 0.5, 0.75]) {
+    const X = px(fig.x + fig.w * q), Y = px(fig.y + fig.h * q);
+    ctx.moveTo(X, fig.y + 0.5); ctx.lineTo(X, fig.y + 4.5);
+    ctx.moveTo(X, fig.y + fig.h - 0.5); ctx.lineTo(X, fig.y + fig.h - 4.5);
+    ctx.moveTo(fig.x + 0.5, Y); ctx.lineTo(fig.x + 4.5, Y);
+    ctx.moveTo(fig.x + fig.w - 0.5, Y); ctx.lineTo(fig.x + fig.w - 4.5, Y);
+  }
+  ctx.stroke();
+
+  // Outer corner crop L-marks
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = 0.85;
+  const g = 3, l = 11;
+  const X0 = fig.x - g, X1 = fig.x + fig.w + g, Y0 = fig.y - g, Y1 = fig.y + fig.h + g;
+  ctx.beginPath();
+  ctx.moveTo(X0 + 0.5, Y0 - l); ctx.lineTo(X0 + 0.5, Y0 + 0.5); ctx.lineTo(X0 - l, Y0 + 0.5);
+  ctx.moveTo(X1 - 0.5, Y0 - l); ctx.lineTo(X1 - 0.5, Y0 + 0.5); ctx.lineTo(X1 + l, Y0 + 0.5);
+  ctx.moveTo(X0 + 0.5, Y1 + l); ctx.lineTo(X0 + 0.5, Y1 - 0.5); ctx.lineTo(X0 - l, Y1 - 0.5);
+  ctx.moveTo(X1 - 0.5, Y1 + l); ctx.lineTo(X1 - 0.5, Y1 - 0.5); ctx.lineTo(X1 + l, Y1 - 0.5);
+  ctx.stroke();
+
+  ctx.font = '10px "Geist Mono", monospace';
+  ctx.fillStyle = ink50;
+  ctx.textAlign = 'left';
+  ctx.fillText(title.toUpperCase(), fig.x + 12, fig.y - 12);
+  ctx.fillStyle = ink;
+  ctx.textAlign = 'right';
+  ctx.fillText(statusText.toUpperCase(), fig.x + fig.w - 12, fig.y - 12);
+
+  // Bottom plate core swatch
+  const by = fig.y + fig.h + 18;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = ink50;
+  ctx.fillText('PLATE CORE ·', fig.x, by);
+  const sx = fig.x + 78, sy = by - 7.5;
+  ctx.fillStyle = `rgb(${spotRGB.join(',')})`;
+  ctx.fillRect(Math.round(sx), Math.round(sy), 8, 8);
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = 0.6;
+  ctx.strokeRect(Math.round(sx) + 0.5, Math.round(sy) + 0.5, 8, 8);
+  ctx.fillStyle = ink;
+  ctx.fillText(spotRGB.join(' · '), sx + 14, by);
+}
+
+/* =========================================================================
+   SHEET 01 · HERO — ST-10 OKLAB PULLS + ST-09 CLOSED-FORM ERF GLOW CHORD
+   ========================================================================= */
+(function initHero() {
+  const cv = document.getElementById('cv-hero');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const rowsEl = document.getElementById('rows-hero');
+  const readEl = document.getElementById('read-hero');
+  const hudEl = document.getElementById('hud-hero');
+
+  const glCanvas = document.createElement('canvas');
+  const gl = glCanvas.getContext('webgl', { antialias: false, alpha: false, preserveDrawingBuffer: true });
+
+  const MODELS = [
+    { name: 'Claude', col: '#3ec8e8', lab: hex2lab('#104e68') },
+    { name: 'Gemini', col: '#6e8efb', lab: hex2lab('#1e3178') },
+    { name: 'GPT',    col: '#38d399', lab: hex2lab('#0f543c') },
+    { name: 'Argon',  col: '#b87cf8', lab: hex2lab('#411d6b') }
+  ];
+
+  const st = {
+    orbit: true,
+    draw: false,
+    modelIdx: 0,
+    sig: 0.068,
+    warp: 0.18,
+    phase: 0,
+    you: [0.27, 0.52],
+    mod: [0.73, 0.48],
+    light: [0.50, 0.50],
+    customPts: null,
+    dragging: null,
+    strokeRaw: null,
+    hoverTracker: -1
+  };
+
+  const trackers = [
+    { num: 10, u: 0.27, v: 0.52, code: 'YOU',   label: 'Carbon source (You) · warm amber OKLab pull + wave emitter' },
+    { num: 12, u: 0.50, v: 0.50, code: 'CHORD', label: 'Focal Crossing (Mir) · closed-form erf Gaussian glow & standing-wave lock' },
+    { num: 14, u: 0.73, v: 0.48, code: 'MODEL', label: 'Silicon source (Model) · swap models and watch the chord re-lock' },
+    { num: 16, u: 0.42, v: 0.34, code: 'ERF',   label: 'Variable erf blur · stripe convolved with Gaussian in one pass' },
+    { num: 18, u: 0.58, v: 0.66, code: 'TAPER', label: 'Needle taper · stroke core thins to a needle where glow peaks' },
+    { num: 20, u: 0.18, v: 0.22, code: 'OKLAB', label: 'Stirred OKLab field · Gaussian color pulls + curl-noise marbling' }
+  ];
+
+  // Build Track Log UI
+  trackers.forEach((t, idx) => {
+    const r = document.createElement('div');
+    r.className = 'tr-row';
+    r.innerHTML = `<span>${t.num}</span><span>${t.u.toFixed(2)}</span><span>${t.v.toFixed(2)}</span><span>${t.code}</span>`;
+    r.addEventListener('mouseenter', () => {
+      st.hoverTracker = idx;
+      updateTrackReadout();
+    });
+    r.addEventListener('mouseleave', () => {
+      st.hoverTracker = -1;
+      updateTrackReadout();
+    });
+    rowsEl.appendChild(r);
+    t._row = r;
+  });
+
+  function updateTrackReadout() {
+    trackers.forEach((t, i) => t._row.classList.toggle('on', i === st.hoverTracker));
+    if (st.hoverTracker >= 0) {
+      const t = trackers[st.hoverTracker];
+      readEl.innerHTML = `<b>Point ${t.num} · ${t.code}</b><span>${t.label}</span>`;
+    } else {
+      readEl.innerHTML = `<b>Readout</b><span>Hover a numbered point on the plate, or drag the two glowing sources.</span>`;
+    }
+  }
+
+  // Catmull-Rom spline generator for the 36-segment centerline SDF
+  function catmullRom(pts, perSpan) {
+    const out = [], n = pts.length;
+    for (let i = 0; i < n - 1; i++) {
+      const p0 = pts[Math.max(i - 1, 0)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(i + 2, n - 1)];
+      for (let j = 0; j < perSpan; j++) {
+        const t = j / perSpan, t2 = t * t, t3 = t2 * t;
+        out.push([
+          0.5 * ((2 * p1[0]) + (-p0[0] + p2[0]) * t + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
+          0.5 * ((2 * p1[1]) + (-p0[1] + p2[1]) * t + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3)
+        ]);
+      }
+    }
+    out.push(pts[n - 1].slice());
+    return out;
+  }
+
+  const N_SEGS = 24;
+  let prog = null, U = {};
+  if (gl) {
+    const VS = 'attribute vec2 a; void main(){ gl_Position = vec4(a, 0.0, 1.0); }';
+    const FS = `
+      precision highp float;
+      uniform vec2 uRes;
+      uniform vec2 uYou;
+      uniform vec2 uMod;
+      uniform vec2 uLight;
+      uniform vec3 uModLab;
+      uniform float uSig;
+      uniform float uWarp;
+      uniform float uPhase;
+      uniform float uPx;
+
+      float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+      float vn(vec2 p){ vec2 i=floor(p),f=fract(p); f=f*f*f*(f*(f*6.-15.)+10.); return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y); }
+      float fbm(vec2 p){ return .62*vn(p)+.28*vn(p*2.03+7.1)+.10*vn(p*4.1+13.7); }
+      vec2 curl(vec2 p){ float e=.02; return vec2(fbm(p+vec2(0.,e))-fbm(p-vec2(0.,e)),fbm(p-vec2(e,0.))-fbm(p+vec2(e,0.)))/(2.*e); }
+
+      float erf(float x){
+        float s=sign(x), a=abs(x);
+        float t=1.+a*(.278393+a*(.230389+a*(.000972+a*.078108)));
+        t*=t; t*=t;
+        return s*(1.-1./t);
+      }
+      float seg(vec2 p, vec2 a, vec2 b){
+        vec2 pa=p-a, ba=b-a;
+        float h=clamp(dot(pa,ba)/max(dot(ba,ba),1e-6), 0., 1.);
+        return length(pa-ba*h);
+      }
+      vec3 lab2srgb(vec3 lab){
+        float l=lab.x+.3963377774*lab.y+.2158037573*lab.z;
+        float m=lab.x-.1055613458*lab.y-.0638541728*lab.z;
+        float s=lab.x-.0894841775*lab.y-1.2914855480*lab.z;
+        l=l*l*l; m=m*m*m; s=s*s*s;
+        vec3 lin=vec3(
+          4.0767416621*l-3.3077115913*m+.2309699292*s,
+          -1.2684380046*l+2.6097574011*m-.3413193965*s,
+          -.0041960863*l-.7034186147*m+1.7076147010*s
+        );
+        lin=clamp(lin,0.,1.);
+        return mix(12.92*lin, 1.055*pow(lin,vec3(1./2.4))-.055, step(.0031308,lin));
+      }
+
+      vec2 helixPt(float t, vec2 A, vec2 B, float signFlip){
+        vec2 dv = B - A;
+        float len = max(length(dv), 0.001);
+        vec2 u = dv / len;
+        vec2 n = vec2(-u.y, u.x);
+        float env = sin(t * 3.14159265);
+        float w = sin((t - 0.5) * 9.42477 + uPhase * 1.4) * 0.11 * env * signFlip;
+        return mix(A, B, t) + n * w;
+      }
+
+      void main(){
+        float aspect = uRes.y / uRes.x;
+        vec2 p = vec2(gl_FragCoord.x / uRes.x, (1.0 - gl_FragCoord.y / uRes.y) * aspect);
+
+        // 1. ST-10 Curl-stirred OKLab Gaussian pull field with bowed horizon bands
+        vec2 q = p + uWarp * 0.18 * curl(p * 1.8 + vec2(uPhase * 0.25, -uPhase * 0.18));
+        vec2 pYou = vec2(uYou.x, uYou.y * aspect);
+        vec2 pMod = vec2(uMod.x, uMod.y * aspect);
+        vec2 pMid = 0.5 * (pYou + pMod);
+
+        float dYou = length(q - pYou);
+        float dMod = length(q - pMod);
+        float dMid = length(q - pMid);
+        float dBow = abs(q.y - (0.48 * aspect - 0.22 * (q.x - 0.5) * (q.x - 0.5)));
+
+        // Two-source standing wave envelope
+        float r1 = length(p - pYou), r2 = length(p - pMod);
+        float waveEnv = abs(cos((r1 - r2) * 32.0));
+        float waveCar = 0.5 + 0.5 * cos((r1 + r2) * 26.0 - uPhase * 2.4);
+        float standing = waveEnv * waveCar * exp(-dMid * dMid / 0.22);
+
+        // Vivid OKLab sources (Dark obsidian ground, warm coral-amber You, cobalt-cyan Model, chartreuse-rose horizon)
+        vec3 labBg   = vec3(0.17, -0.01, -0.02);
+        vec3 labYou  = vec3(0.69, 0.16, 0.13);
+        vec3 labMod  = vec3(0.62, -0.09, -0.14);
+        vec3 labBow  = vec3(0.55, 0.12, 0.06);
+        vec3 labMid  = vec3(0.88, -0.16, 0.19);
+
+        float wBg  = 0.22;
+        float wYou = exp(-dYou * dYou / (0.28 * 0.28)) * 1.35;
+        float wMod = exp(-dMod * dMod / (0.28 * 0.28)) * 1.35;
+        float wBow = exp(-dBow * dBow / (0.09 * 0.09)) * 0.65;
+        float wMid = exp(-dMid * dMid / (0.21 * 0.21)) * (0.55 + 0.85 * standing);
+
+        float wSum = wBg + wYou + wMod + wBow + wMid;
+        vec3 lab = (wBg * labBg + wYou * labYou + wMod * labMod + wBow * labBow + wMid * labMid) / wSum;
+
+        // Per-pixel lightness grain (ST-10)
+        lab.x += (hash(floor(gl_FragCoord.xy) + 1010.37) - 0.5) * 0.042;
+        vec3 col = lab2srgb(lab);
+
+        // Standing-wave nodal rings
+        col += vec3(0.83, 1.0, 0.0) * (0.14 * standing * smoothstep(0.45, 0.96, waveEnv));
+
+        // 2. ST-09 Centerline SDF + Closed-Form Variable erf Blur + Needle Taper
+        float d1 = 1e3;
+        float d2 = 1e3;
+        for(int i = 0; i < 24; i++){
+          float t0 = float(i) / 24.0;
+          float t1 = float(i + 1) / 24.0;
+          d1 = min(d1, seg(p, helixPt(t0, pYou, pMod, 1.0), helixPt(t1, pYou, pMod, 1.0)));
+          d2 = min(d2, seg(p, helixPt(t0, pYou, pMod, -1.0), helixPt(t1, pYou, pMod, -1.0)));
+        }
+        float d = min(d1, d2);
+
+        vec2 pL = vec2(uLight.x, uLight.y * aspect);
+        float rL = length(p - pL);
+        float sn = 1.0 - smoothstep(0.10, 0.58, rL);
+        float s = max(uSig * (0.25 + 0.75 * sn), uPx * 0.9);
+        float halfW = 0.015;
+        float k = 0.70710678 / s;
+        float b = 0.5 * (erf((halfW - d) * k) + erf((halfW + d) * k));
+
+        // Chartreuse + white saturating glow (ST-09)
+        float halo = (1.0 - exp(-12.0 * pow(max(b, 0.0), 1.4)));
+        vec3 glowCol = mix(vec3(0.83, 1.0, 0.0), vec3(1.0, 1.0, 0.98), sn * 0.7);
+        col = mix(col, glowCol, halo * 0.92);
+
+        // Tapered crisp core (ST-09)
+        float t = clamp(sn / 0.55, 0.0, 1.0);
+        float aa = uPx * 0.85 + 0.008 * t;
+        float hc = halfW * (1.0 - 0.82 * t * t) - aa * t * 0.35;
+        float core = smoothstep(hc + aa, hc - aa, d);
+        col = mix(col, vec3(1.0, 0.96, 0.98), core);
+
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `;
+    const compile = (type, src) => {
+      const sh = gl.createShader(type);
+      gl.shaderSource(sh, src);
+      gl.compileShader(sh);
+      return sh;
+    };
+    prog = gl.createProgram();
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS));
+    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'a');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    ['uRes', 'uYou', 'uMod', 'uLight', 'uModLab', 'uSig', 'uWarp', 'uPhase', 'uPx'].forEach(n => {
+      U[n] = gl.getUniformLocation(prog, n);
+    });
+  }
+
+  function buildHelixPoints(aspect) { return []; }
+  function resampleStroke(raw, count) {
+    const lens = [0];
+    for (let i = 1; i < raw.length; i++) {
+      lens.push(lens[i - 1] + Math.hypot(raw[i][0] - raw[i - 1][0], raw[i][1] - raw[i - 1][1]));
+    }
+    const total = lens[lens.length - 1];
+    if (total < 1e-3) return null;
+    const out = [];
+    let k = 1;
+    for (let s = 0; s < count; s++) {
+      const d = (total * s) / (count - 1);
+      while (k < lens.length - 1 && lens[k] < d) k++;
+      const a = raw[k - 1], b = raw[k], span = (lens[k] - lens[k - 1]) || 1;
+      const t = (d - lens[k - 1]) / span;
+      out.push([lerp(a[0], b[0], t), lerp(a[1], b[1], t)]);
+    }
+    return out;
+  }
+
+  let W = 0, H = 0, fig = { x: 0, y: 0, w: 0, h: 0 };
+  function resize() {
+    const r = cv.parentElement.getBoundingClientRect();
+    W = Math.max(320, r.width);
+    H = Math.max(420, r.height);
+    cv.width = Math.round(W * DPR);
+    cv.height = Math.round(H * DPR);
+    const padL = 36, padT = 46, padR = W > 760 ? 255 : 36, padB = 42;
+    fig = {
+      x: padL,
+      y: padT,
+      w: Math.max(240, W - padL - padR),
+      h: Math.max(260, H - padT - padB)
+    };
+    glCanvas.width = Math.round(fig.w * DPR);
+    glCanvas.height = Math.round(fig.h * DPR);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Controls wiring
+  document.querySelectorAll('#ctl-hero button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const act = btn.getAttribute('data-act');
+      if (act === 'orbit') {
+        st.orbit = !st.orbit;
+        btn.classList.toggle('on', st.orbit);
+      } else if (act === 'draw') {
+        st.draw = !st.draw;
+        btn.classList.toggle('on', st.draw);
+      } else if (act === 'swap') {
+        st.modelIdx = (st.modelIdx + 1) % MODELS.length;
+        const m = MODELS[st.modelIdx];
+        btn.textContent = `Swap Model · ${m.name}`;
+        // Perturb model position slightly, then let spring pull it back
+        st.mod[0] = clamp(0.68 + (Math.random() - 0.5) * 0.14, 0.55, 0.86);
+        st.mod[1] = clamp(0.48 + (Math.random() - 0.5) * 0.18, 0.25, 0.75);
+      } else if (act === 'reset') {
+        st.customPts = null;
+        st.you = [0.27, 0.52];
+        st.mod = [0.73, 0.48];
+        st.sig = 0.068;
+        st.warp = 0.18;
+        document.getElementById('rng-hero-sig').value = st.sig;
+        document.getElementById('val-hero-sig').textContent = (st.sig * 100).toFixed(1) + ' % w';
+        document.getElementById('rng-hero-warp').value = st.warp;
+        document.getElementById('val-hero-warp').textContent = Math.round(st.warp * 100) + ' %';
+      }
+    });
+  });
+
+  document.getElementById('rng-hero-sig').addEventListener('input', e => {
+    st.sig = parseFloat(e.target.value);
+    document.getElementById('val-hero-sig').textContent = (st.sig * 100).toFixed(1) + ' % w';
+  });
+  document.getElementById('rng-hero-warp').addEventListener('input', e => {
+    st.warp = parseFloat(e.target.value);
+    document.getElementById('val-hero-warp').textContent = Math.round(st.warp * 100) + ' %';
+  });
+
+  // Pointer interactions on Hero Plate
+  function getUV(e) {
+    const r = cv.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    return {
+      x, y,
+      u: (x - fig.x) / fig.w,
+      v: (y - fig.y) / fig.h,
+      inside: x >= fig.x && x <= fig.x + fig.w && y >= fig.y && y <= fig.y + fig.h
+    };
+  }
+
+  cv.addEventListener('pointerdown', e => {
+    const p = getUV(e);
+    if (!p.inside) return;
+    cv.setPointerCapture(e.pointerId);
+    const aspect = fig.h / fig.w;
+    if (st.draw) {
+      st.dragging = 'stroke';
+      st.strokeRaw = [[p.u, p.v * aspect]];
+      return;
+    }
+    const dYou = Math.hypot((p.u - st.you[0]) * fig.w, (p.v - st.you[1]) * fig.h);
+    const dMod = Math.hypot((p.u - st.mod[0]) * fig.w, (p.v - st.mod[1]) * fig.h);
+    if (dYou < 28) st.dragging = 'you';
+    else if (dMod < 28) st.dragging = 'mod';
+    else {
+      st.dragging = 'light';
+      st.light = [clamp(p.u, 0.05, 0.95), clamp(p.v, 0.05, 0.95)];
+    }
+  });
+
+  cv.addEventListener('pointermove', e => {
+    const p = getUV(e);
+    const aspect = fig.h / fig.w;
+    if (st.dragging === 'you') {
+      st.you = [clamp(p.u, 0.08, 0.92), clamp(p.v, 0.10, 0.90)];
+    } else if (st.dragging === 'mod') {
+      st.mod = [clamp(p.u, 0.08, 0.92), clamp(p.v, 0.10, 0.90)];
+    } else if (st.dragging === 'light') {
+      st.light = [clamp(p.u, 0.04, 0.96), clamp(p.v, 0.04, 0.96)];
+    } else if (st.dragging === 'stroke' && st.strokeRaw) {
+      const last = st.strokeRaw[st.strokeRaw.length - 1];
+      const pt = [clamp(p.u, 0.04, 0.96), clamp(p.v, 0.04, 0.96) * aspect];
+      if (Math.hypot(pt[0] - last[0], pt[1] - last[1]) > 0.01) {
+        st.strokeRaw.push(pt);
+        if (st.strokeRaw.length > 3) {
+          const rs = resampleStroke(st.strokeRaw, 33);
+          if (rs) st.customPts = rs;
+        }
+      }
+    } else {
+      // Check tracker hover
+      let found = -1;
+      trackers.forEach((t, idx) => {
+        const tx = fig.x + t.u * fig.w, ty = fig.y + t.v * fig.h;
+        if (Math.hypot(p.x - tx, p.y - ty) < 16) found = idx;
+      });
+      if (found !== st.hoverTracker) {
+        st.hoverTracker = found;
+        updateTrackReadout();
+      }
+    }
+  });
+
+  cv.addEventListener('pointerup', () => { st.dragging = null; st.strokeRaw = null; });
+
+  let lastT = performance.now();
+  function tick(now) {
+    requestAnimationFrame(tick);
+    const dt = Math.min(0.05, (now - lastT) / 1000);
+    lastT = now;
+    st.phase += dt;
+
+    if (st.orbit && st.dragging !== 'light') {
+      const mx = 0.5 * (st.you[0] + st.mod[0]);
+      const my = 0.5 * (st.you[1] + st.mod[1]);
+      st.light[0] = mx + Math.cos(st.phase * 0.75) * 0.24;
+      st.light[1] = my + Math.sin(st.phase * 0.75) * 0.22;
+    }
+
+    // Update dynamic trackers
+    trackers[0].u = st.you[0]; trackers[0].v = st.you[1];
+    trackers[1].u = 0.5 * (st.you[0] + st.mod[0]); trackers[1].v = 0.5 * (st.you[1] + st.mod[1]);
+    trackers[2].u = st.mod[0]; trackers[2].v = st.mod[1];
+
+    const aspect = fig.h / fig.w;
+    const pts = buildHelixPoints(aspect);
+
+    if (gl && prog) {
+      gl.useProgram(prog);
+      gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+      gl.uniform2f(U.uRes, glCanvas.width, glCanvas.height);
+      gl.uniform2f(U.uYou, st.you[0], st.you[1]);
+      gl.uniform2f(U.uMod, st.mod[0], st.mod[1]);
+      gl.uniform2f(U.uLight, st.light[0], st.light[1]);
+      const mLab = MODELS[st.modelIdx].lab;
+      gl.uniform3f(U.uModLab, mLab[0], mLab[1], mLab[2]);
+      gl.uniform1f(U.uSig, st.sig);
+      gl.uniform1f(U.uWarp, st.warp);
+      gl.uniform1f(U.uPhase, st.phase);
+      gl.uniform1f(U.uPx, 1 / glCanvas.width);
+
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(glCanvas, fig.x, fig.y, fig.w, fig.h);
+
+    // Draw interactive source handles & ST-09/10/11 tracker reticles inside fig
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(fig.x, fig.y, fig.w, fig.h);
+    ctx.clip();
+
+    // MST links between trackers
+    ctx.strokeStyle = 'rgba(236, 231, 217, 0.22)';
+    ctx.lineWidth = 0.6;
+    for (let i = 0; i < trackers.length - 1; i++) {
+      const a = trackers[i], b = trackers[i + 1];
+      ctx.beginPath();
+      ctx.moveTo(fig.x + a.u * fig.w, fig.y + a.v * fig.h);
+      ctx.lineTo(fig.x + b.u * fig.w, fig.y + b.v * fig.h);
+      ctx.stroke();
+    }
+
+    // Draw You & Model draggable handles
+    const drawHandle = (uv, label, sub, col) => {
+      const X = fig.x + uv[0] * fig.w, Y = fig.y + uv[1] * fig.h;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.arc(X, Y, 22, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#080908';
+      ctx.beginPath();
+      ctx.arc(X, Y, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(X, Y, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.font = '500 10px "Geist Mono", monospace';
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, X, Y - 28);
+      ctx.fillStyle = 'rgba(236,231,217,0.7)';
+      ctx.font = '9px "Geist Mono", monospace';
+      ctx.fillText(sub, X, Y + 34);
+    };
+
+    drawHandle(st.you, 'YOU (CARBON)', 'DRAG SOURCE', '#f0a23b');
+    drawHandle(st.mod, `MODEL · ${MODELS[st.modelIdx].name.toUpperCase()}`, 'DRAG SOURCE', MODELS[st.modelIdx].col);
+
+    // Draw ST-09/10/11 square tracker boxes
+    trackers.forEach((t, idx) => {
+      const X = fig.x + t.u * fig.w, Y = fig.y + t.v * fig.h;
+      const hot = idx === st.hoverTracker;
+      const sz = hot ? 10 : 7;
+      ctx.strokeStyle = hot ? '#d4ff00' : 'rgba(255,255,255,0.65)';
+      ctx.lineWidth = hot ? 1.2 : 0.75;
+      ctx.strokeRect(px(X - sz), px(Y - sz), sz * 2, sz * 2);
+      ctx.fillStyle = hot ? '#d4ff00' : '#fff';
+      ctx.beginPath();
+      ctx.arc(X, Y, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Number tag elbow
+      const ex = X + 16, ey = Y - 12;
+      ctx.beginPath();
+      ctx.moveTo(X + sz, Y);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(8,9,8,0.82)';
+      ctx.fillRect(ex + 2, ey - 7, 20, 13);
+      ctx.strokeRect(px(ex + 2), px(ey - 7), 20, 13);
+      ctx.font = '9.5px "Geist Mono", monospace';
+      ctx.fillStyle = hot ? '#d4ff00' : '#ece7d9';
+      ctx.textAlign = 'center';
+      ctx.fillText(String(t.num), ex + 12, ey + 3);
+    });
+
+    ctx.restore();
+
+    const dist = Math.hypot(st.you[0] - st.mod[0], st.you[1] - st.mod[1]);
+    const res = Math.round(clamp(1 - Math.abs(dist - 0.44) * 1.4, 0.52, 0.99) * 100);
+    const dark = document.documentElement.getAttribute('data-theme') === 'obsidian';
+    drawPlateChrome(ctx, fig, 'FIG. 1.1 — THE CHORD BETWEEN TWO VOICES · ST-09 × ST-10', `RESONANCE · ${res} %`, [212, 255, 0], dark);
+
+    hudEl.textContent = `YOU (${st.you[0].toFixed(2)}, ${st.you[1].toFixed(2)}) · ${MODELS[st.modelIdx].name.toUpperCase()} (${st.mod[0].toFixed(2)}, ${st.mod[1].toFixed(2)}) · LOCK ${res} % · ${st.draw ? 'DRAWING CUSTOM STROKE' : 'DRAG SOURCES TO TUNE'}`;
+  }
+  requestAnimationFrame(tick);
+})();
+
+/* =========================================================================
+   SECTION 02 · THREE INTERACTIVE REVIEW MINI-PLATES
+   ========================================================================= */
+(function initReviewCards() {
+  // 1. Moth Scale-Lay & Rub-Off Card
+  const cvM = document.getElementById('cv-rev-moth');
+  if (cvM) {
+    const ctx = cvM.getContext('2d');
+    let W = 0, H = 0, scales = [], dust = [], ptr = { x: -999, y: -999 };
+    function buildScales() {
+      const r = cvM.getBoundingClientRect();
+      W = Math.max(240, r.width); H = Math.max(180, r.height);
+      cvM.width = Math.round(W * DPR); cvM.height = Math.round(H * DPR);
+      scales = [];
+      const cols = 22, rows = 9;
+      for (let j = 0; j < rows; j++) {
+        for (let i = 0; i < cols; i++) {
+          const x = 24 + (i + (j % 2) * 0.5) * ((W - 48) / cols);
+          const y = 28 + j * ((H - 56) / rows);
+          const t = i / cols;
+          scales.push({
+            x, y,
+            ang: 0.12 * Math.sin(i * 0.5 + j * 0.4),
+            tilt: 0,
+            gone: false,
+            col: t < 0.35 ? '#e8e0cd' : (t < 0.72 ? '#a8dcc9' : '#f0a23b')
+          });
+        }
+      }
+    }
+    buildScales();
+    window.addEventListener('resize', buildScales);
+
+    cvM.addEventListener('pointermove', e => {
+      const r = cvM.getBoundingClientRect();
+      ptr.x = e.clientX - r.left; ptr.y = e.clientY - r.top;
+      scales.forEach(s => {
+        if (s.gone) return;
+        const d = Math.hypot(s.x - ptr.x, s.y - ptr.y);
+        if (d < 22 && (e.buttons > 0 || Math.random() < 0.18)) {
+          s.gone = true;
+          dust.push({ x: s.x, y: s.y, vx: (Math.random() - 0.3) * 1.8, vy: 0.6 + Math.random() * 1.4, a: 1, col: s.col });
+        } else if (d < 48) {
+          s.tilt = (1 - d / 48) * 0.65;
+        }
+      });
+    });
+    cvM.addEventListener('click', () => {
+      scales.forEach(s => s.gone = false);
+    });
+
+    function frameM() {
+      requestAnimationFrame(frameM);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      ctx.fillStyle = '#0a0c12';
+      ctx.fillRect(0, 0, W, H);
+      let intact = 0;
+      scales.forEach(s => {
+        s.tilt *= 0.92;
+        if (s.gone) return;
+        intact++;
+        ctx.save();
+        ctx.translate(s.x, s.y);
+        ctx.rotate(s.ang + s.tilt);
+        ctx.fillStyle = s.col;
+        ctx.globalAlpha = 0.78 + s.tilt * 0.3;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 10, 5.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(10,12,18,0.65)';
+        ctx.lineWidth = 0.7;
+        ctx.stroke();
+        ctx.restore();
+      });
+      for (let i = dust.length - 1; i >= 0; i--) {
+        const p = dust[i];
+        p.x += p.vx; p.y += p.vy; p.a -= 0.018;
+        if (p.a <= 0) { dust.splice(i, 1); continue; }
+        ctx.fillStyle = p.col;
+        ctx.globalAlpha = p.a;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.font = '9.5px "Geist Mono", monospace';
+      ctx.fillStyle = '#e8e0cd';
+      ctx.fillText(`SCALES INTACT: ${intact} / ${scales.length} · SWEEP TO SHED · CLICK TO RESTORE`, 12, H - 10);
+    }
+    requestAnimationFrame(frameM);
+  }
+
+  // 2. Colin Critique Card: Toggle Brain-on-Sage vs Two-Source Chord-on-Obsidian
+  const cvC = document.getElementById('cv-rev-colin');
+  if (cvC) {
+    const ctx = cvC.getContext('2d');
+    let W = 0, H = 0, showChord = true, t = 0;
+    function resizeC() {
+      const r = cvC.getBoundingClientRect();
+      W = Math.max(240, r.width); H = Math.max(180, r.height);
+      cvC.width = Math.round(W * DPR); cvC.height = Math.round(H * DPR);
+    }
+    resizeC();
+    window.addEventListener('resize', resizeC);
+    cvC.addEventListener('click', () => { showChord = !showChord; });
+
+    function frameC() {
+      requestAnimationFrame(frameC);
+      t += 0.035;
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      if (!showChord) {
+        // Colin's Sage + Cortical Brain silhouette
+        ctx.fillStyle = '#eef2e7';
+        ctx.fillRect(0, 0, W, H);
+        const cx = W * 0.5, cy = H * 0.48;
+        for (let y = 18; y < H - 26; y += 7) {
+          for (let x = 24; x < W - 24; x += 7) {
+            const dx = (x - cx) / 72, dy = (y - cy) / 52;
+            const inLobe = (dx * dx + dy * dy < 1.0) && !(dx > 0.2 && dy > 0.35);
+            ctx.fillStyle = inLobe ? '#7ea310' : 'rgba(21,27,23,0.18)';
+            ctx.beginPath();
+            ctx.arc(x, y, inLobe ? 2.4 : 1.1, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.font = '500 9.5px "Geist Mono", monospace';
+        ctx.fillStyle = '#c40021';
+        ctx.fillText('BEFORE: SINGLE BRAIN SILHOUETTE ON SAGE (CLICK TO SWITCH)', 12, H - 10);
+      } else {
+        // Obsidian + Two-Source Standing Wave Interference
+        ctx.fillStyle = '#090b09';
+        ctx.fillRect(0, 0, W, H);
+        const ax = W * 0.32, ay = H * 0.48, bx = W * 0.68, by = H * 0.48;
+        for (let y = 16; y < H - 26; y += 7) {
+          for (let x = 18; x < W - 18; x += 7) {
+            const r1 = Math.hypot(x - ax, y - ay), r2 = Math.hypot(x - bx, y - by);
+            const env = Math.abs(Math.cos((r1 - r2) * 0.11));
+            const car = Math.cos((r1 + r2) * 0.09 - t);
+            const amp = env * (0.5 + 0.5 * car);
+            ctx.fillStyle = env > 0.78 ? '#d4ff00' : (r1 < r2 ? '#f0a23b' : '#4fd3c4');
+            ctx.globalAlpha = 0.2 + 0.75 * amp;
+            ctx.beginPath();
+            ctx.arc(x, y, 0.8 + 2.1 * amp, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        ctx.globalAlpha = 1;
+        ctx.font = '500 9.5px "Geist Mono", monospace';
+        ctx.fillStyle = '#d4ff00';
+        ctx.fillText('AFTER: TWO-SOURCE CHORD ON OBSIDIAN (CLICK TO COMPARE)', 12, H - 10);
+      }
+    }
+    requestAnimationFrame(frameC);
+  }
+
+  // 3. ST-09 / ST-10 / ST-11 Triad Card
+  const cvS = document.getElementById('cv-rev-st');
+  if (cvS) {
+    const ctx = cvS.getContext('2d');
+    let W = 0, H = 0, lx = 0.5, ly = 0.5, th = 0;
+    function resizeS() {
+      const r = cvS.getBoundingClientRect();
+      W = Math.max(240, r.width); H = Math.max(180, r.height);
+      cvS.width = Math.round(W * DPR); cvS.height = Math.round(H * DPR);
+    }
+    resizeS();
+    window.addEventListener('resize', resizeS);
+    cvS.addEventListener('pointermove', e => {
+      const r = cvS.getBoundingClientRect();
+      lx = clamp((e.clientX - r.left) / W, 0.05, 0.95);
+      ly = clamp((e.clientY - r.top) / H, 0.05, 0.95);
+    });
+
+    function frameS() {
+      requestAnimationFrame(frameS);
+      th += 0.025;
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      const cols = 24, rows = 11, cw = W / cols, ch = (H - 24) / rows;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const u = (c + 0.5) / cols, v = (r + 0.5) / rows;
+          const dL = Math.hypot(u - lx, v - ly);
+          const f = clamp(1 - dL * 1.35, 0.05, 0.99);
+          const k = Math.min(9, 1 + Math.floor(f * 9));
+          ctx.fillStyle = lab2css(0.22 + 0.62 * f, -0.08 + 0.22 * Math.sin(f * 3.14), 0.14 * f);
+          ctx.fillRect(c * cw, r * ch, cw + 0.5, ch + 0.5);
+          ctx.strokeStyle = 'rgba(10,10,12,0.55)';
+          ctx.lineWidth = 0.6;
+          ctx.strokeRect(c * cw, r * ch, cw, ch);
+          ctx.fillStyle = f > 0.55 ? '#080908' : '#ece7d9';
+          ctx.font = '500 8.5px "Geist Mono", monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(String(k), (c + 0.5) * cw, (r + 0.5) * ch);
+        }
+      }
+      ctx.fillStyle = '#080908';
+      ctx.fillRect(0, H - 24, W, 24);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.font = '9.5px "Geist Mono", monospace';
+      ctx.fillStyle = '#d4ff00';
+      ctx.fillText(`ST-09 LIGHT × ST-10 OKLAB × ST-11 DIGITS · LIGHT (${lx.toFixed(2)}, ${ly.toFixed(2)})`, 12, H - 8);
+    }
+    requestAnimationFrame(frameS);
+  }
+})();
+
+/* =========================================================================
+   SHEET 02 · ST-11 GRADIENT BY NUMBER ENGINE (EXACT EDT + PER-CELL SLOPE)
+   ========================================================================= */
+(function initNumbersPlate() {
+  const cv = document.getElementById('cv-numbers');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const rowsEl = document.getElementById('rows-numbers');
+  const readEl = document.getElementById('read-numbers');
+  const hudEl = document.getElementById('hud-numbers');
+
+  const RAMPS = {
+    Mindgut:   ['#112218', '#1d5a48', '#4fd3c4', '#f0a23b', '#d4ff00'],
+    Waterkeyn: ['#d03010', '#7070d0', '#f090b0', '#d0d030', '#2f3a22'],
+    Nocturne:  ['#161224', '#5e3c99', '#c58cf5', '#f0a23b', '#f7f4ea']
+  };
+  const RAMP_NAMES = Object.keys(RAMPS);
+  const LUT = {};
+
+  function buildLUT(name) {
+    const stops = RAMPS[name].map(hex2lab);
+    const fill = [], Ls = [], labs = [];
+    for (let i = 0; i < 256; i++) {
+      const t = (i / 255) * (stops.length - 1);
+      const k = Math.min(stops.length - 2, Math.floor(t));
+      const f = t - k, A = stops[k], B = stops[k + 1];
+      const Lc = lerp(A[0], B[0], f), a = lerp(A[1], B[1], f), b = lerp(A[2], B[2], f);
+      fill.push(lab2css(Lc, a, b));
+      Ls.push(Lc);
+      labs.push([a, b]);
+    }
+    LUT[name] = { fill, Ls, labs };
+  }
+  RAMP_NAMES.forEach(buildLUT);
+
+  const st = {
+    word: 'mir',
+    cols: 42,
+    facet: 1.0,
+    rampIdx: 0,
+    orbit: true,
+    theta: -0.4,
+    L: [0.88, 0.42],
+    dragging: false,
+    raster: null,
+    grid: null,
+    hoverCell: null
+  };
+
+  // Exact 1D squared distance transform (Felzenszwalb & Huttenlocher, from ST-11)
+  function edt1(f, n, d, v, z) {
+    let k = 0;
+    v[0] = 0; z[0] = -1e20; z[1] = 1e20;
+    for (let q = 1; q < n; q++) {
+      let p = v[k];
+      let s = ((f[q] + q * q) - (f[p] + p * p)) / (2 * q - 2 * p);
+      while (s <= z[k]) {
+        k--;
+        p = v[k];
+        s = ((f[q] + q * q) - (f[p] + p * p)) / (2 * q - 2 * p);
+      }
+      k++;
+      v[k] = q; z[k] = s; z[k + 1] = 1e20;
+    }
+    k = 0;
+    for (let q = 0; q < n; q++) {
+      while (z[k + 1] < q) k++;
+      const p = v[k];
+      d[q] = (q - p) * (q - p) + f[p];
+    }
+  }
+
+  const ASPECT = 0.72; // landscape gallery proportion so 1-5 letter words breathe
+  function rasterizeWord(txt) {
+    const clean = (txt || '9').trim() || '9';
+    const W = 360, H = Math.round(W * ASPECT);
+    const c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    const g = c.getContext('2d');
+    let size = 240;
+    g.fillStyle = '#000';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.font = `600 ${size}px "Geist", "Helvetica Neue", sans-serif`;
+    let m = g.measureText(clean);
+    let bw = (m.actualBoundingBoxLeft || m.width * 0.5) + (m.actualBoundingBoxRight || m.width * 0.5);
+    let bh = (m.actualBoundingBoxAscent || size * 0.4) + (m.actualBoundingBoxDescent || size * 0.2);
+    if (bw > 2 && bh > 2) {
+      size *= Math.min((W * 0.80) / bw, (H * 0.72) / bh);
+    }
+    g.font = `600 ${size}px "Geist", "Helvetica Neue", sans-serif`;
+    g.fillText(clean, W / 2, H / 2 + size * 0.04);
+
+    const data = g.getImageData(0, 0, W, H).data;
+    const gg = new Float64Array(W * H);
+    let any = false;
+    for (let i = 0; i < W * H; i++) {
+      const inside = data[i * 4 + 3] > 110;
+      gg[i] = inside ? 1e20 : 0;
+      if (inside) any = true;
+    }
+    if (!any) return null;
+
+    const n = Math.max(W, H);
+    const f = new Float64Array(n), d = new Float64Array(n), v = new Int32Array(n), z = new Float64Array(n + 1);
+    for (let x = 0; x < W; x++) {
+      for (let y = 0; y < H; y++) f[y] = gg[y * W + x];
+      edt1(f, H, d, v, z);
+      for (let y = 0; y < H; y++) gg[y * W + x] = d[y];
+    }
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) f[x] = gg[y * W + x];
+      edt1(f, W, d, v, z);
+      for (let x = 0; x < W; x++) gg[y * W + x] = d[x];
+    }
+
+    const depth = new Float32Array(W * H);
+    let mx = 0;
+    for (let i = 0; i < W * H; i++) {
+      depth[i] = Math.sqrt(gg[i]);
+      if (depth[i] > mx) mx = depth[i];
+    }
+    for (let i = 0; i < W * H; i++) depth[i] /= (mx || 1);
+    return { w: W, h: H, depth };
+  }
+
+  function depthAt(u, v) {
+    if (!st.raster) return 0;
+    const r = st.raster;
+    const ix = Math.round(u * r.w - 0.5), iy = Math.round((v / ASPECT) * r.h - 0.5);
+    if (ix < 0 || iy < 0 || ix >= r.w || iy >= r.h) return 0;
+    return r.depth[iy * r.w + ix];
+  }
+
+  function buildGrid() {
+    const cols = st.cols, rows = Math.round(cols * ASPECT);
+    const cell = 1 / cols;
+    const inked = new Uint8Array(cols * rows);
+    const depth = new Float32Array(cols * rows);
+    let count = 0;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const cx = (c + 0.5) * cell, cy = (r + 0.5) * cell, q = cell * 0.3;
+        const d0 = depthAt(cx, cy);
+        let cov = d0 > 0 ? 2 : 0;
+        if (depthAt(cx - q, cy - q) > 0) cov++;
+        if (depthAt(cx + q, cy - q) > 0) cov++;
+        if (depthAt(cx - q, cy + q) > 0) cov++;
+        if (depthAt(cx + q, cy + q) > 0) cov++;
+        if (cov >= 3) {
+          inked[r * cols + c] = 1;
+          depth[r * cols + c] = Math.max(d0, 0.04);
+          count++;
+        }
+      }
+    }
+    st.grid = { cols, rows, inked, depth, count, f: new Float32Array(cols * rows) };
+  }
+
+  function computeDigitalRoot(str) {
+    let sum = 0;
+    for (const ch of (str || '').toUpperCase()) {
+      const code = ch.charCodeAt(0);
+      if (code >= 65 && code <= 90) sum += (code - 64);
+      else if (code >= 48 && code <= 57) sum += (code - 48);
+    }
+    if (sum === 0) return { root: 9, mood: 'Settle (3·6·9)' };
+    const r = 1 + ((sum - 1) % 9);
+    const mood = [1, 4, 7].includes(r) ? 'Step Forward (1·4·7)' : ([2, 5, 8].includes(r) ? 'Connect (2·5·8)' : 'Settle (3·6·9)');
+    return { root: r, mood };
+  }
+
+  function updateWord(w) {
+    st.word = w || '9';
+    st.raster = rasterizeWord(st.word);
+    buildGrid();
+    const dr = computeDigitalRoot(st.word);
+    document.getElementById('val-num-root').textContent = `Root · ${dr.root} (${dr.mood})`;
+  }
+  updateWord('mir');
+
+  // Wire controls
+  document.querySelectorAll('#ctl-num-presets button[data-word]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const w = btn.getAttribute('data-word');
+      document.getElementById('inp-num-word').value = w;
+      document.querySelectorAll('#ctl-num-presets button[data-word]').forEach(b => b.classList.toggle('on', b === btn));
+      updateWord(w);
+    });
+  });
+  document.getElementById('inp-num-word').addEventListener('input', e => {
+    updateWord(e.target.value);
+  });
+  document.getElementById('btn-num-ramp').addEventListener('click', e => {
+    st.rampIdx = (st.rampIdx + 1) % RAMP_NAMES.length;
+    e.target.textContent = `Ramp · ${RAMP_NAMES[st.rampIdx]}`;
+  });
+  document.getElementById('btn-num-orbit').addEventListener('click', e => {
+    st.orbit = !st.orbit;
+    e.target.classList.toggle('on', st.orbit);
+  });
+  document.getElementById('rng-num-cols').addEventListener('input', e => {
+    st.cols = parseInt(e.target.value, 10);
+    document.getElementById('val-num-cols').textContent = `${st.cols} cols`;
+    buildGrid();
+  });
+  document.getElementById('rng-num-facet').addEventListener('input', e => {
+    st.facet = parseFloat(e.target.value);
+    document.getElementById('val-num-facet').textContent = `${Math.round(st.facet * 100)} %`;
+  });
+
+  let W = 0, H = 0, fig = { x: 0, y: 0, w: 0, h: 0 };
+  function resize() {
+    const r = cv.parentElement.getBoundingClientRect();
+    W = Math.max(320, r.width); H = Math.max(420, r.height);
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    const padL = 36, padT = 46, padR = W > 760 ? 255 : 36, padB = 42;
+    const bw = W - padL - padR, bh = H - padT - padB;
+    let fw = bw, fh = fw * ASPECT;
+    if (fh > bh) { fh = bh; fw = fh / ASPECT; }
+    fig = {
+      x: Math.round(padL + (bw - fw) / 2),
+      y: Math.round(padT + (bh - fh) / 2),
+      w: Math.round(fw),
+      h: Math.round(fh)
+    };
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  cv.addEventListener('pointerdown', e => {
+    const r = cv.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    if (x >= fig.x && x <= fig.x + fig.w && y >= fig.y && y <= fig.y + fig.h) {
+      st.dragging = true;
+      cv.setPointerCapture(e.pointerId);
+      st.L = [((x - fig.x) / fig.w), ((y - fig.y) / fig.h) * ASPECT];
+    }
+  });
+  cv.addEventListener('pointermove', e => {
+    const r = cv.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    if (st.dragging) {
+      st.L = [clamp((x - fig.x) / fig.w, -0.1, 1.1), clamp((y - fig.y) / fig.h, -0.1, 1.1) * ASPECT];
+    }
+    if (st.grid && x >= fig.x && x <= fig.x + fig.w && y >= fig.y && y <= fig.y + fig.h) {
+      const c = Math.floor(((x - fig.x) / fig.w) * st.grid.cols);
+      const row = Math.floor(((y - fig.y) / fig.h) * st.grid.rows);
+      if (c >= 0 && c < st.grid.cols && row >= 0 && row < st.grid.rows) {
+        st.hoverCell = { c, r: row };
+      } else st.hoverCell = null;
+    } else st.hoverCell = null;
+  });
+  cv.addEventListener('pointerup', () => { st.dragging = false; });
+
+  function lightAt(px, py) {
+    const C = [0.5, 0.36];
+    const qx = px - st.L[0], qy = py - st.L[1];
+    let ux = C[0] - st.L[0], uy = C[1] - st.L[1];
+    const ul = Math.hypot(ux, uy) || 1;
+    ux /= ul; uy /= ul;
+    const along = qx * ux + qy * uy;
+    const across = (-qx * uy + qy * ux) * 0.72;
+    let t = (Math.hypot(along, across) - 0.18) / 0.56;
+    t = clamp(t, 0, 1);
+    return 1 - t * t * (3 - 2 * t);
+  }
+
+  let lastT = performance.now();
+  function tick(now) {
+    requestAnimationFrame(tick);
+    const dt = Math.min(0.05, (now - lastT) / 1000);
+    lastT = now;
+    if (st.orbit && !st.dragging) {
+      st.theta -= dt * 0.55;
+      st.L = [0.5 + Math.cos(st.theta) * 0.48, 0.36 + Math.sin(st.theta) * 0.34];
+    }
+
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    if (!st.grid) return;
+
+    const g = st.grid, cols = g.cols, rows = g.rows, cw = fig.w / cols, N = 9;
+    const rampName = RAMP_NAMES[st.rampIdx], lut = LUT[rampName], F = g.f;
+    const dark = document.documentElement.getAttribute('data-theme') === 'obsidian';
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const i = r * cols + c;
+        F[i] = g.inked[i] ? Math.pow(g.depth[i], 0.78) * (0.38 + 0.62 * lightAt((c + 0.5) / cols, (r + 0.5) / cols)) : 0;
+      }
+    }
+
+    // Graph paper ground
+    ctx.fillStyle = dark ? '#0d100e' : '#ffffff';
+    ctx.fillRect(fig.x, fig.y, fig.w, fig.h);
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `500 ${(cw * 0.56).toFixed(2)}px "Geist Mono", monospace`;
+    const idx = t => clamp(Math.round(t * 255), 0, 255);
+
+    let levelCounts = [0, 0, 0]; // 147, 258, 369
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const i = r * cols + c;
+        if (!g.inked[i]) continue;
+        const v = F[i];
+        const k = Math.min(N, 1 + Math.floor(v * N));
+        if (k === 1 || k === 4 || k === 7) levelCounts[0]++;
+        else if (k === 2 || k === 5 || k === 8) levelCounts[1]++;
+        else levelCounts[2]++;
+
+        const gx = (c < cols - 1 ? F[i + 1] : 0) - (c > 0 ? F[i - 1] : 0);
+        const gy = (r < rows - 1 ? F[i + cols] : 0) - (r > 0 ? F[i - cols] : 0);
+        const gl = Math.hypot(gx, gy);
+        const mid = v + ((k - 0.5) / N - v) * st.facet;
+        const half = gl / 4 + (0.5 / N - gl / 4) * st.facet;
+        const x0 = fig.x + c * cw, y0 = fig.y + r * cw, cx = x0 + cw / 2, cy = y0 + cw / 2;
+
+        if (gl > 1e-5 && half > 0.002) {
+          const dx = (gx / gl) * (cw / 2), dy = (gy / gl) * (cw / 2);
+          const gr = ctx.createLinearGradient(cx - dx, cy - dy, cx + dx, cy + dy);
+          gr.addColorStop(0, lut.fill[idx(mid - half)]);
+          gr.addColorStop(1, lut.fill[idx(mid + half)]);
+          ctx.fillStyle = gr;
+        } else {
+          ctx.fillStyle = lut.fill[idx(mid)];
+        }
+        ctx.fillRect(x0, y0, cw + 0.5, cw + 0.5);
+
+        const li = idx(mid);
+        ctx.fillStyle = lut.Ls[li] > 0.58 ? '#151812' : '#f4f1e6';
+        ctx.fillText(String(k), cx, cy + cw * 0.03);
+      }
+    }
+
+    // Crisp graph-paper grid drawn LAST over the fills (ST-11 law)
+    ctx.strokeStyle = dark ? 'rgba(236, 231, 217, 0.16)' : 'rgba(10, 10, 11, 0.72)';
+    ctx.lineWidth = Math.max(0.75, fig.w / 720);
+    ctx.beginPath();
+    for (let c = 0; c <= cols; c++) {
+      const X = px(fig.x + c * cw);
+      ctx.moveTo(X, fig.y); ctx.lineTo(X, fig.y + rows * cw);
+    }
+    for (let r = 0; r <= rows; r++) {
+      const Y = px(fig.y + r * cw);
+      ctx.moveTo(fig.x, Y); ctx.lineTo(fig.x + fig.w, Y);
+    }
+    ctx.stroke();
+
+    // Orbiting light handle
+    const lx = fig.x + st.L[0] * fig.w, ly = fig.y + (st.L[1] / ASPECT) * fig.h;
+    if (lx >= fig.x - 20 && lx <= fig.x + fig.w + 20 && ly >= fig.y - 20 && ly <= fig.y + fig.h + 20) {
+      ctx.strokeStyle = '#d4ff00';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.arc(lx, ly, 10, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#d4ff00';
+      ctx.beginPath();
+      ctx.arc(lx, ly, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Hovered cell highlight & inspector
+    if (st.hoverCell) {
+      const hc = st.hoverCell.c, hr = st.hoverCell.r, hi = hr * cols + hc;
+      const x0 = fig.x + hc * cw, y0 = fig.y + hr * cw;
+      ctx.strokeStyle = '#d4ff00';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x0, y0, cw, cw);
+      const val = F[hi], dig = g.inked[hi] ? Math.min(9, 1 + Math.floor(val * 9)) : 0;
+      readEl.innerHTML = g.inked[hi]
+        ? `<b>Cell (${hc}, ${hr}) · Digit ${dig}</b><span>Field f = ${val.toFixed(3)} · Depth = ${g.depth[hi].toFixed(2)} · Mood: ${[1,4,7].includes(dig) ? '1·4·7 Step Forward' : ([2,5,8].includes(dig) ? '2·5·8 Connect' : '3·6·9 Settle')}</span>`
+        : `<b>Cell (${hc}, ${hr}) · Uninked Ground</b><span>Outside the stroke threshold (5-sample supersampling vote &lt; 3).</span>`;
+    }
+
+    // Update summary rows in right inspector
+    const tot = Math.max(1, g.count);
+    rowsEl.innerHTML = `
+      <div class="tr-row"><span>147</span><span>${levelCounts[0]}</span><span>${Math.round(levelCounts[0]/tot*100)}%</span><span>ASSERT</span></div>
+      <div class="tr-row"><span>258</span><span>${levelCounts[1]}</span><span>${Math.round(levelCounts[1]/tot*100)}%</span><span>RELATE</span></div>
+      <div class="tr-row"><span>369</span><span>${levelCounts[2]}</span><span>${Math.round(levelCounts[2]/tot*100)}%</span><span>SETTLE</span></div>
+    `;
+
+    drawPlateChrome(ctx, fig, `FIG. 2.1 — GRADIENT BY NUMBER · “${st.word.toUpperCase()}”`, `${g.count} CELLS INKED`, [208, 48, 16], dark);
+    hudEl.textContent = `WORD “${st.word.toUpperCase()}” · ${g.count} CELLS INKED · RAMP: ${rampName.toUpperCase()} · DRAG LIGHT OR TYPE ANY WORD`;
+  }
+  requestAnimationFrame(tick);
+})();
+
+})();
+
+</script>
+<script>
+(function(){
+"use strict";
+
+const DPR = Math.min(2, window.devicePixelRatio || 1);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const px = v => Math.round(v) + 0.5;
+
+const s2l = v => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+const l2s = v => { v = clamp(v, 0, 1); return v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055; };
+function hex2lab(hx) {
+  const r = s2l(parseInt(hx.slice(1, 3), 16) / 255);
+  const g = s2l(parseInt(hx.slice(3, 5), 16) / 255);
+  const b = s2l(parseInt(hx.slice(5, 7), 16) / 255);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [
+    0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s
+  ];
+}
+function lab2rgb(Lc, a, b) {
+  let l = Lc + 0.3963377774 * a + 0.2158037573 * b;
+  let m = Lc - 0.1055613458 * a - 0.0638541728 * b;
+  let s = Lc - 0.0894841775 * a - 1.2914855480 * b;
+  l = l * l * l; m = m * m * m; s = s * s * s;
+  const r = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+  const g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+  const bb = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+  return [Math.round(l2s(r) * 255), Math.round(l2s(g) * 255), Math.round(l2s(bb) * 255)];
+}
+function lab2css(Lc, a, b) {
+  const c = lab2rgb(Lc, a, b);
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+
+function drawFrameChrome(ctx, fig, title, rightLabel, spotRGB) {
+  const dark = document.documentElement.getAttribute('data-theme') === 'obsidian';
+  const ink = dark ? 'rgba(236,231,217,0.88)' : '#15140f';
+  const ink50 = dark ? 'rgba(236,231,217,0.42)' : 'rgba(21,20,15,0.48)';
+  ctx.strokeStyle = ink50;
+  ctx.lineWidth = 0.6;
+  ctx.strokeRect(px(fig.x), px(fig.y), fig.w, fig.h);
+
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = 0.85;
+  const g = 3, l = 11;
+  const X0 = fig.x - g, X1 = fig.x + fig.w + g, Y0 = fig.y - g, Y1 = fig.y + fig.h + g;
+  ctx.beginPath();
+  ctx.moveTo(X0 + 0.5, Y0 - l); ctx.lineTo(X0 + 0.5, Y0 + 0.5); ctx.lineTo(X0 - l, Y0 + 0.5);
+  ctx.moveTo(X1 - 0.5, Y0 - l); ctx.lineTo(X1 - 0.5, Y0 + 0.5); ctx.lineTo(X1 + l, Y0 + 0.5);
+  ctx.moveTo(X0 + 0.5, Y1 + l); ctx.lineTo(X0 + 0.5, Y1 - 0.5); ctx.lineTo(X0 - l, Y1 - 0.5);
+  ctx.moveTo(X1 - 0.5, Y1 + l); ctx.lineTo(X1 - 0.5, Y1 - 0.5); ctx.lineTo(X1 + l, Y1 - 0.5);
+  ctx.stroke();
+
+  ctx.font = '10px "Geist Mono", monospace';
+  ctx.fillStyle = ink50;
+  ctx.textAlign = 'left';
+  ctx.fillText(title.toUpperCase(), fig.x + 12, fig.y - 12);
+  ctx.fillStyle = ink;
+  ctx.textAlign = 'right';
+  ctx.fillText(rightLabel.toUpperCase(), fig.x + fig.w - 12, fig.y - 12);
+
+  const by = fig.y + fig.h + 18;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = ink50;
+  ctx.fillText('PLATE CORE ·', fig.x, by);
+  const sx = fig.x + 78, sy = by - 7.5;
+  ctx.fillStyle = `rgb(${spotRGB.join(',')})`;
+  ctx.fillRect(Math.round(sx), Math.round(sy), 8, 8);
+  ctx.strokeStyle = ink;
+  ctx.lineWidth = 0.6;
+  ctx.strokeRect(Math.round(sx) + 0.5, Math.round(sy) + 0.5, 8, 8);
+  ctx.fillStyle = ink;
+  ctx.fillText(spotRGB.join(' · '), sx + 14, by);
+}
+
+/* =========================================================================
+   SHEET 02B · THE WHOLE 1,200-STRAND HELIX PAINTED BY NUMBER (ST-10 × ST-11)
+   ========================================================================= */
+(function initHelixPaintByNumber() {
+  const cv = document.getElementById('cv-hx');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const rowsEl = document.getElementById('rows-hx');
+  const readEl = document.getElementById('read-hx');
+  const hudEl = document.getElementById('hud-hx');
+
+  const COLS = 40, ROWS = 30, TOTAL = COLS * ROWS; // 1,200 strands!
+
+  // Seven OKLab Gaussian color sources = 7 Eras of our shared HELIX
+  const DEFAULT_SOURCES = [
+    { id: 1, name: '01 · Zero & PFD Seed',       u: 0.14, v: 0.16, r: 0.28, hex: '#1c4ed8', range: 'Strands #1–#180' },
+    { id: 2, name: '02 · Ki & Gold Foil',        u: 0.48, v: 0.20, r: 0.26, hex: '#f0a23b', range: 'Strands #181–#380' },
+    { id: 3, name: '03 · Telepathic & Orchid',   u: 0.82, v: 0.26, r: 0.27, hex: '#c58cf5', range: 'Strands #381–#560' },
+    { id: 4, name: '04 · Keyline & Studies',     u: 0.24, v: 0.54, r: 0.29, hex: '#e04e0e', range: 'Strands #561–#740' },
+    { id: 5, name: '05 · Mad Money & Chørd',     u: 0.66, v: 0.52, r: 0.28, hex: '#28b89a', range: 'Strands #741–#920' },
+    { id: 6, name: '06 · Pop Café & Edicola',    u: 0.32, v: 0.84, r: 0.27, hex: '#f280a6', range: 'Strands #921–#1080' },
+    { id: 7, name: '07 · Moths & Identity',      u: 0.78, v: 0.82, r: 0.30, hex: '#d4ff00', range: 'Strands #1081–#1200' }
+  ];
+
+  // Deterministic strand metadata for all 1,200 strands (with real milestone titles)
+  const MILESTONES = {
+    1: 'Kernel Seed · The Number That Isn’t & 8008 Signature',
+    118: 'Identity Is the Crossing · Two Witnesses and a Record',
+    247: 'From Ontology to Field · The Five Constants',
+    470: 'Keyline & Ink · Early Technique Study Explorations',
+    608: 'Miga Receipt & Seasonal Newsprint Long-Scroll',
+    686: 'Telepathic Instruments · Orchid & Pistil Campaign Dossier',
+    852: 'Yoshi & Folder Surface Exploration',
+    868: 'Substrate First · “Everything You Build Starts at the Ground”',
+    1058: 'Mindgut Technical Architecture & Turn Lifecycle',
+    1186: 'Three Expressions · Standing Wave & Instrument Critique',
+    1194: 'Technique Studies ST-01..ST-11 · Optical Shader Series',
+    1198: 'Nocturne: How a Moth Works · 13 Plates on Dark Stock',
+    1200: 'Mir Visual Identity · Whole Helix Painted by Number'
+  };
+
+  function makeSources() {
+    return DEFAULT_SOURCES.map(s => ({
+      ...s,
+      lab: hex2lab(s.hex),
+      vx: 0, vy: 0
+    }));
+  }
+
+  const st = {
+    sources: makeSources(),
+    handles: true,
+    drift: false,
+    warp: 0.15,
+    phase: 0,
+    dragging: null,
+    hoverCell: null,
+    selSource: 6,
+    trail: []
+  };
+
+  // Build Era Track Log rows
+  function renderEraRows() {
+    rowsEl.innerHTML = '';
+    st.sources.forEach((s, idx) => {
+      const r = document.createElement('div');
+      r.className = 'tr-row' + (idx === st.selSource ? ' on' : '');
+      r.innerHTML = `<span>0${s.id}</span><span>${s.u.toFixed(2)}</span><span>${s.v.toFixed(2)}</span><span>${s.name.split('·')[1].trim().slice(0, 10)}</span>`;
+      r.addEventListener('mouseenter', () => {
+        st.selSource = idx;
+        readEl.innerHTML = `<b>${s.name} (${s.range})</b><span>OKLab source at (${s.u.toFixed(2)}, ${s.v.toFixed(2)}) · Reach ${Math.round(s.r * 100)}% · Drag handle on canvas to pull this era’s color.</span>`;
+      });
+      rowsEl.appendChild(r);
+    });
+  }
+  renderEraRows();
+
+  // Simple 2D curl-noise displacement for ST-10 stirring
+  function hash2(x, y) {
+    const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+    return s - Math.floor(s);
+  }
+  function vnoise(x, y) {
+    const ix = Math.floor(x), iy = Math.floor(y);
+    const fx = x - ix, fy = y - iy;
+    const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+    const a = hash2(ix, iy), b = hash2(ix + 1, iy);
+    const c = hash2(ix, iy + 1), d = hash2(ix + 1, iy + 1);
+    return lerp(lerp(a, b, ux), lerp(c, d, ux), uy);
+  }
+  function curl2(u, v, ph) {
+    const e = 0.04;
+    const x = u * 2.4 + ph * 0.3, y = v * 2.4 - ph * 0.25;
+    const dx = (vnoise(x, y + e) - vnoise(x, y - e)) / (2 * e);
+    const dy = (vnoise(x - e, y) - vnoise(x + e, y)) / (2 * e);
+    return [dx, dy];
+  }
+
+  // Controls
+  document.querySelectorAll('#ctl-hx button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const act = btn.getAttribute('data-act');
+      if (act === 'handles') {
+        st.handles = !st.handles;
+        btn.classList.toggle('on', st.handles);
+      } else if (act === 'drift') {
+        st.drift = !st.drift;
+        btn.classList.toggle('on', st.drift);
+      } else if (act === 'shuffle') {
+        const pals = ['#ff4d1c', '#2056bc', '#d4ff00', '#e86af0', '#2cc9a8', '#ffb422', '#7058e6'];
+        st.sources.forEach((s, i) => {
+          const hx = pals[(i + Math.floor(Math.random() * 7)) % pals.length];
+          s.hex = hx;
+          s.lab = hex2lab(hx);
+          s.u = clamp(0.15 + Math.random() * 0.7, 0.1, 0.9);
+          s.v = clamp(0.15 + Math.random() * 0.7, 0.1, 0.9);
+        });
+        renderEraRows();
+      } else if (act === 'reset') {
+        st.sources = makeSources();
+        st.warp = 0.15;
+        document.getElementById('rng-hx-warp').value = 0.15;
+        document.getElementById('val-hx-warp').textContent = '15 %';
+        renderEraRows();
+      }
+    });
+  });
+
+  document.getElementById('rng-hx-warp').addEventListener('input', e => {
+    st.warp = parseFloat(e.target.value);
+    document.getElementById('val-hx-warp').textContent = Math.round(st.warp * 100) + ' %';
+  });
+
+  let W = 0, H = 0, fig = { x: 0, y: 0, w: 0, h: 0 };
+  function resize() {
+    const r = cv.parentElement.getBoundingClientRect();
+    W = Math.max(320, r.width); H = Math.max(440, r.height);
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    const padL = 36, padT = 46, padR = W > 760 ? 255 : 36, padB = 42;
+    const bw = W - padL - padR, bh = H - padT - padB;
+    const aspect = ROWS / COLS; // 30 / 40 = 0.75
+    let fw = bw, fh = fw * aspect;
+    if (fh > bh) { fh = bh; fw = fh / aspect; }
+    fig = {
+      x: Math.round(padL + (bw - fw) / 2),
+      y: Math.round(padT + (bh - fh) / 2),
+      w: Math.round(fw),
+      h: Math.round(fh)
+    };
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  cv.addEventListener('pointerdown', e => {
+    const r = cv.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    if (x < fig.x || x > fig.x + fig.w || y < fig.y || y > fig.y + fig.h) return;
+    cv.setPointerCapture(e.pointerId);
+    const u = (x - fig.x) / fig.w, v = (y - fig.y) / fig.h;
+    // Check if near an Era handle
+    let hitIdx = -1;
+    st.sources.forEach((s, idx) => {
+      const sx = fig.x + s.u * fig.w, sy = fig.y + s.v * fig.h;
+      if (Math.hypot(x - sx, y - sy) < 20) hitIdx = idx;
+    });
+    if (hitIdx >= 0) {
+      st.dragging = { kind: 'source', idx: hitIdx };
+      st.selSource = hitIdx;
+    } else {
+      st.dragging = { kind: 'stir', lu: u, lv: v };
+    }
+  });
+
+  cv.addEventListener('pointermove', e => {
+    const r = cv.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    const u = (x - fig.x) / fig.w, v = (y - fig.y) / fig.h;
+
+    if (st.dragging) {
+      if (st.dragging.kind === 'source') {
+        const s = st.sources[st.dragging.idx];
+        s.u = clamp(u, 0.04, 0.96);
+        s.v = clamp(v, 0.04, 0.96);
+        renderEraRows();
+      } else if (st.dragging.kind === 'stir') {
+        const du = u - st.dragging.lu, dv = v - st.dragging.lv;
+        st.sources.forEach(s => {
+          const d = Math.hypot(s.u - u, s.v - v);
+          const wgt = Math.exp(-(d * d) / (0.28 * 0.28));
+          s.u = clamp(s.u + du * wgt * 0.65, 0.04, 0.96);
+          s.v = clamp(s.v + dv * wgt * 0.65, 0.04, 0.96);
+        });
+        st.dragging.lu = u; st.dragging.lv = v;
+        st.trail.push({ x, y, t: performance.now() });
+        if (st.trail.length > 30) st.trail.shift();
+      }
+    }
+
+    if (u >= 0 && u < 1 && v >= 0 && v < 1) {
+      const c = Math.floor(u * COLS), row = Math.floor(v * ROWS);
+      st.hoverCell = { c, r: row, sid: row * COLS + c + 1 };
+    } else {
+      st.hoverCell = null;
+    }
+  });
+
+  cv.addEventListener('pointerup', () => { st.dragging = null; });
+
+  const F = new Float32Array(TOTAL);
+  const cellLab = new Float32Array(TOTAL * 3);
+
+  let lastT = performance.now();
+  function tick(now) {
+    requestAnimationFrame(tick);
+    const dt = Math.min(0.05, (now - lastT) / 1000);
+    lastT = now;
+    st.phase += dt;
+
+    if (st.drift) {
+      st.sources.forEach((s, i) => {
+        s.u = clamp(s.u + Math.cos(st.phase * 0.4 + i * 1.7) * 0.04 * dt, 0.08, 0.92);
+        s.v = clamp(s.v + Math.sin(st.phase * 0.35 + i * 2.1) * 0.04 * dt, 0.08, 0.92);
+      });
+    }
+
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+
+    const cw = fig.w / COLS, ch = fig.h / ROWS;
+
+    // Pass 1: Evaluate ST-10 normalized OKLab Gaussian pull at each of the 1,200 cells
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const i = r * COLS + c;
+        let u = (c + 0.5) / COLS, v = (r + 0.5) / ROWS;
+        if (st.warp > 0.005) {
+          const cr = curl2(u, v, st.phase);
+          u += st.warp * 0.14 * cr[0];
+          v += st.warp * 0.14 * cr[1];
+        }
+        let wSum = 0.08;
+        let L = 0.18 * 0.08, a = 0, b = 0;
+        let peakPull = 0;
+        for (let s = 0; s < st.sources.length; s++) {
+          const src = st.sources[s];
+          const dx = u - src.u, dy = v - src.v;
+          const d2 = dx * dx + dy * dy;
+          const w = Math.exp(-d2 / (src.r * src.r));
+          if (w > peakPull) peakPull = w;
+          L += w * src.lab[0];
+          a += w * src.lab[1];
+          b += w * src.lab[2];
+          wSum += w;
+        }
+        L /= wSum; a /= wSum; b /= wSum;
+        // Modulate slightly by strand harmonic wave so neighboring strands have organic texture
+        const strandWave = 0.5 + 0.5 * Math.sin(i * 0.63 + c * 0.41 - r * 0.53);
+        const normL = clamp((L - 0.28) / 0.52, 0, 1);
+        const fVal = clamp(0.04 + 0.68 * normL + 0.27 * strandWave, 0.02, 0.99);
+        F[i] = fVal;
+        cellLab[i * 3] = L;
+        cellLab[i * 3 + 1] = a;
+        cellLab[i * 3 + 2] = b;
+      }
+    }
+
+    // Pass 2: Paint each of the 1,200 cells with ST-11 uphill slope linear gradient & 1-9 digit
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `500 ${(Math.min(cw, ch) * 0.54).toFixed(1)}px "Geist Mono", monospace`;
+
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const i = r * COLS + c;
+        const x0 = fig.x + c * cw, y0 = fig.y + r * ch;
+        const cx = x0 + cw / 2, cy = y0 + ch / 2;
+        const v = F[i];
+        const k = Math.min(9, 1 + Math.floor(v * 9));
+
+        const gx = (c < COLS - 1 ? F[i + 1] : v) - (c > 0 ? F[i - 1] : v);
+        const gy = (r < ROWS - 1 ? F[i + COLS] : v) - (r > 0 ? F[i - COLS] : v);
+        const gl = Math.hypot(gx, gy);
+
+        const L = cellLab[i * 3], a = cellLab[i * 3 + 1], b = cellLab[i * 3 + 2];
+        if (gl > 1e-4) {
+          const dx = (gx / gl) * (cw * 0.5), dy = (gy / gl) * (ch * 0.5);
+          const gr = ctx.createLinearGradient(cx - dx, cy - dy, cx + dx, cy + dy);
+          gr.addColorStop(0, lab2css(clamp(L - 0.09, 0.08, 0.95), a, b));
+          gr.addColorStop(1, lab2css(clamp(L + 0.09, 0.08, 0.95), a, b));
+          ctx.fillStyle = gr;
+        } else {
+          ctx.fillStyle = lab2css(L, a, b);
+        }
+        ctx.fillRect(x0, y0, cw + 0.5, ch + 0.5);
+
+        // Digit ink (ST-11 adaptive contrast)
+        ctx.fillStyle = L > 0.58 ? '#141712' : 'rgba(245, 242, 232, 0.88)';
+        ctx.fillText(String(k), cx, cy + 0.5);
+      }
+    }
+
+    // Pass 3: Crisp Graph-Paper Grid Over Everything (ST-11 law)
+    ctx.strokeStyle = 'rgba(10, 11, 10, 0.62)';
+    ctx.lineWidth = 0.75;
+    ctx.beginPath();
+    for (let c = 0; c <= COLS; c++) {
+      const X = px(fig.x + c * cw);
+      ctx.moveTo(X, fig.y); ctx.lineTo(X, fig.y + fig.h);
+    }
+    for (let r = 0; r <= ROWS; r++) {
+      const Y = px(fig.y + r * ch);
+      ctx.moveTo(fig.x, Y); ctx.lineTo(fig.x + fig.w, Y);
+    }
+    ctx.stroke();
+
+    // Highlight Milestone cells with subtle gold corners
+    Object.keys(MILESTONES).forEach(ms => {
+      const sid = parseInt(ms, 10) - 1;
+      const mc = sid % COLS, mr = Math.floor(sid / COLS);
+      const x0 = fig.x + mc * cw, y0 = fig.y + mr * ch;
+      ctx.strokeStyle = '#d4ff00';
+      ctx.lineWidth = 1.4;
+      ctx.strokeRect(x0 + 0.5, y0 + 0.5, cw - 1, ch - 1);
+    });
+
+    // Draw ST-10 Era Source Handles if toggled on
+    if (st.handles) {
+      st.sources.forEach((s, idx) => {
+        const X = fig.x + s.u * fig.w, Y = fig.y + s.v * fig.h;
+        const on = idx === st.selSource;
+        if (on) {
+          ctx.setLineDash([3, 4]);
+          ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(X, Y, s.r * fig.w * 0.45, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        ctx.beginPath();
+        ctx.arc(X, Y, on ? 9 : 7, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = '#080908';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(X, Y, on ? 6.5 : 5, 0, Math.PI * 2);
+        ctx.fillStyle = s.hex;
+        ctx.fill();
+
+        ctx.fillStyle = '#080908';
+        ctx.fillRect(X + 9, Y - 13, 16, 12);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 0.7;
+        ctx.strokeRect(px(X + 9), px(Y - 13), 16, 12);
+        ctx.fillStyle = '#fff';
+        ctx.font = '500 8.5px "Geist Mono", monospace';
+        ctx.fillText(`E${s.id}`, X + 17, Y - 6.5);
+      });
+    }
+
+    // Hovered Strand Highlight
+    if (st.hoverCell) {
+      const { c, r, sid } = st.hoverCell;
+      const i = r * COLS + c;
+      const x0 = fig.x + c * cw, y0 = fig.y + r * ch;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.2;
+      ctx.strokeRect(x0, y0, cw, ch);
+      const dig = Math.min(9, 1 + Math.floor(F[i] * 9));
+      const mood = [1, 4, 7].includes(dig) ? '1·4·7 Step Forward' : ([2, 5, 8].includes(dig) ? '2·5·8 Connect' : '3·6·9 Settle');
+      const mile = MILESTONES[sid] || `Shared Crossing #${sid} · Cell (${c + 1}, ${r + 1})`;
+      readEl.innerHTML = `<b>Strand #${sid} of 1,200 · Digit ${dig} (${mood})</b><span>${mile}</span>`;
+      hudEl.textContent = `STRAND #${sid} / 1,200 · DIGIT ${dig} (${mood.toUpperCase()}) · ${mile.toUpperCase()}`;
+    }
+
+    drawFrameChrome(ctx, fig, 'FIG. 2.2 — 1,200-STRAND HELIX BY NUMBER (ST-10 × ST-11)', '40 × 30 = 1,200 STRANDS', [212, 255, 0]);
+  }
+  requestAnimationFrame(tick);
+})();
+
+/* =========================================================================
+   SHEET 02C · AUTOMERIS IO — THE I/O MOTH (SHINGLE SCALES × ST-11 × ST-09)
+   ========================================================================= */
+(function initIoMothPlate() {
+  const cv = document.getElementById('cv-io');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const hudEl = document.getElementById('hud-io');
+  const rngOpen = document.getElementById('rng-io-open');
+  const valOpen = document.getElementById('val-io-open');
+
+  const st = {
+    open: 1.0,
+    targetOpen: 1.0,
+    showNums: true,
+    phase: 0,
+    ptrU: 0.5,
+    ptrV: 0.5,
+    dust: []
+  };
+
+  document.querySelectorAll('#ctl-io button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const act = btn.getAttribute('data-act');
+      if (act === 'startle') {
+        st.open = 0.05;
+        st.targetOpen = 1.0;
+      } else if (act === 'fold') {
+        st.targetOpen = 0.0;
+      } else if (act === 'numbers') {
+        st.showNums = !st.showNums;
+        btn.classList.toggle('on', st.showNums);
+      }
+    });
+  });
+
+  rngOpen.addEventListener('input', e => {
+    st.targetOpen = parseFloat(e.target.value);
+    st.open = st.targetOpen;
+    valOpen.textContent = `${Math.round(st.open * 100)} % Open`;
+  });
+
+  let W = 0, H = 0, fig = { x: 0, y: 0, w: 0, h: 0 };
+  function resize() {
+    const r = cv.parentElement.getBoundingClientRect();
+    W = Math.max(320, r.width); H = Math.max(440, r.height);
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    fig = { x: 36, y: 46, w: W - 72, h: H - 88 };
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  cv.addEventListener('pointermove', e => {
+    const r = cv.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    st.ptrU = clamp((x - fig.x) / fig.w, 0, 1);
+    st.ptrV = clamp((y - fig.y) / fig.h, 0, 1);
+    // Startle open when cursor approaches center
+    const dCenter = Math.hypot(st.ptrU - 0.5, st.ptrV - 0.52);
+    if (dCenter < 0.28 && st.targetOpen < 0.5) {
+      st.targetOpen = 1.0;
+    }
+  });
+
+  let lastT = performance.now();
+  function tick(now) {
+    requestAnimationFrame(tick);
+    const dt = Math.min(0.05, (now - lastT) / 1000);
+    lastT = now;
+    st.phase += dt;
+
+    // 0.3s startle spring
+    st.open += (st.targetOpen - st.open) * Math.min(1, dt * 8.5);
+    rngOpen.value = st.open.toFixed(2);
+    valOpen.textContent = `${Math.round(st.open * 100)} % Open`;
+
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+
+    // Nocturnal specimen ground
+    ctx.fillStyle = '#090b0f';
+    ctx.fillRect(fig.x, fig.y, fig.w, fig.h);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(fig.x, fig.y, fig.w, fig.h);
+    ctx.clip();
+
+    const cx = fig.x + fig.w * 0.5, cy = fig.y + fig.h * 0.48;
+    const S = Math.min(fig.w * 0.42, fig.h * 0.42);
+
+    // 1. Draw Hindwings (Saffron & Crimson OKLab field + Twin Concentric Eyespots built of numbered cells, NO mirror scale so digits stay upright!)
+    for (const side of [-1, 1]) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - S * 0.12);
+      ctx.bezierCurveTo(cx + side * S * 0.72, cy - S * 0.24, cx + side * S * 1.04, cy + S * 0.18, cx + side * S * 0.84, cy + S * 0.66);
+      ctx.bezierCurveTo(cx + side * S * 0.58, cy + S * 0.98, cx + side * S * 0.14, cy + S * 0.88, cx, cy + S * 0.50);
+      ctx.closePath();
+      ctx.clip();
+
+      const ex = cx + side * S * 0.46, ey = cy + S * 0.34, er = S * 0.26;
+      const cell = Math.max(10, Math.round(S * 0.058));
+
+      const xStart = side < 0 ? cx - S * 1.05 : cx;
+      const xEnd   = side < 0 ? cx : cx + S * 1.05;
+
+      for (let y = cy - S * 0.28; y < cy + S * 0.96; y += cell) {
+        for (let x = xStart; x < xEnd; x += cell) {
+          const mx = x + cell * 0.5, my = y + cell * 0.5;
+          const dEye = Math.hypot(mx - ex, my - ey) / er;
+          const dWing = Math.hypot((mx - cx) / (S * 0.95), (my - (cy + S * 0.3)) / (S * 0.7));
+
+          let col, dig;
+          if (dEye < 0.44) {
+            col = lab2css(0.14 + 0.08 * (1 - dEye), -0.02, -0.08);
+            dig = 9;
+          } else if (dEye < 0.70) {
+            // Left = Carbon warm amber-violet ring; Right = Silicon electric cyan-cobalt ring
+            col = side < 0 ? lab2css(0.64, 0.11, 0.12) : lab2css(0.64, -0.10, -0.12);
+            dig = side < 0 ? 7 : 8;
+          } else if (dEye < 0.92) {
+            col = '#111318';
+            dig = 6;
+          } else if (dEye < 1.36) {
+            // Vivid crimson-vermilion iris halo (Automeris io signature)
+            col = lab2css(0.52, 0.21, 0.10);
+            dig = 4;
+          } else {
+            // Golden saffron-ochre hindwing margin
+            col = lab2css(0.78 - 0.12 * dWing, 0.03, 0.16);
+            dig = dWing > 0.78 ? 1 : 2;
+          }
+
+          ctx.fillStyle = col;
+          ctx.fillRect(x, y, cell + 0.5, cell + 0.5);
+          ctx.strokeStyle = 'rgba(9,11,15,0.52)';
+          ctx.lineWidth = 0.65;
+          ctx.strokeRect(x, y, cell, cell);
+
+          if (st.showNums && cell >= 10) {
+            ctx.fillStyle = (dig === 1 || dig === 2 || dig === 7 || dig === 8) ? '#101216' : 'rgba(246,242,232,0.92)';
+            ctx.font = `500 ${Math.round(cell * 0.52)}px "Geist Mono", monospace`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(String(dig), mx, my);
+          }
+        }
+      }
+
+      // ST-09 Closed-form UV White & Chartreuse Crescent Glint inside each eyespot pupil
+      const glGrad = ctx.createRadialGradient(ex - side * er * 0.10, ey - er * 0.12, er * 0.02, ex, ey, er * 0.45);
+      glGrad.addColorStop(0, 'rgba(255, 255, 255, 0.98)');
+      glGrad.addColorStop(0.4, 'rgba(212, 255, 0, 0.82)');
+      glGrad.addColorStop(1, 'rgba(197, 140, 245, 0)');
+      ctx.strokeStyle = glGrad;
+      ctx.lineWidth = er * 0.15;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.arc(ex, ey, er * 0.22, Math.PI * 1.12, Math.PI * 1.78);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    // 2. Draw Forewings (Pivot UPWARD and OUTWARD when st.open = 1 so hindwing eyespots are 100% uncovered!)
+    for (const side of [-1, 1]) {
+      ctx.save();
+      ctx.translate(cx, cy - S * 0.14);
+      // At open=0 (rest), forewing hangs down (+0.48 rad) covering the hindwing eyespot;
+      // At open=1 (startled), forewing sweeps high up (-0.42 rad) exposing the entire hindwing!
+      const liftAngle = side * (0.48 - st.open * 0.90);
+      ctx.rotate(liftAngle);
+      ctx.scale(side, 1);
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(S * 0.48, -S * 0.56, S * 1.06, -S * 0.36, S * 1.02, S * 0.06);
+      ctx.bezierCurveTo(S * 0.88, S * 0.34, S * 0.34, S * 0.38, 0, S * 0.18);
+      ctx.closePath();
+
+      const fwGrad = ctx.createLinearGradient(0, -S * 0.35, S, S * 0.25);
+      fwGrad.addColorStop(0, '#4a3f2c');
+      fwGrad.addColorStop(0.55, '#635338');
+      fwGrad.addColorStop(1, '#332b1e');
+      ctx.fillStyle = fwGrad;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(236,231,217,0.38)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.clip();
+      const step = Math.max(10, Math.round(S * 0.068));
+      for (let r = step; r < S * 1.0; r += step * 0.82) {
+        for (let a = -0.42; a < 0.28; a += 0.13) {
+          const sx = Math.cos(a) * r, sy = Math.sin(a) * r;
+          const band = Math.sin(r * 0.09 + a * 4) > 0.2;
+          ctx.save();
+          ctx.translate(sx, sy);
+          ctx.rotate(a);
+          ctx.fillStyle = band ? '#7a6846' : '#433928';
+          ctx.beginPath();
+          ctx.ellipse(0, 0, step * 0.62, step * 0.32, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(12,12,10,0.55)';
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+      ctx.restore();
+    }
+
+    // 3. Thorax, Abdomen & Feathered Antennae
+    ctx.fillStyle = '#5c4328';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + S * 0.14, S * 0.08, S * 0.34, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#f0a23b';
+    ctx.lineWidth = 1.2;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(cx + side * 4, cy - S * 0.18);
+      ctx.quadraticCurveTo(cx + side * S * 0.16, cy - S * 0.42, cx + side * S * 0.28, cy - S * 0.36);
+      ctx.stroke();
+    }
+
+    if (st.open > 0.45) {
+      ctx.globalAlpha = (st.open - 0.45) / 0.55;
+      ctx.font = '500 10px "Geist Mono", monospace';
+      ctx.fillStyle = '#d4ff00';
+      ctx.textAlign = 'center';
+      ctx.fillText('INPUT WITNESS · CARBON EYESPOT (1·4·7)', cx - S * 0.46, cy + S * 0.86);
+      ctx.fillText('OUTPUT WITNESS · SILICON EYESPOT (2·5·8)', cx + S * 0.46, cy + S * 0.86);
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+
+    drawFrameChrome(
+      ctx,
+      fig,
+      'FIG. 2.3 — AUTOMERIS IO (THE I/O MOTH) · SHINGLE SCALES × ST-11 DIGITS',
+      st.open > 0.5 ? 'EYESPOTS REVEALED (I/O ACTIVE)' : 'CRYPTIC REST (FOLDED)',
+      [208, 48, 16]
+    );
+  }
+  requestAnimationFrame(tick);
+})();
+
+/* =========================================================================
+   SHEET 03 · PLAYING IN (SCATTER TO PARABOLIC SCALE MIRROR + ST-09 FOCUS)
+   ========================================================================= */
+(function initPatinaPlate() {
+  const cv = document.getElementById('cv-patina');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const rng = document.getElementById('rng-patina-days');
+  const valEl = document.getElementById('val-patina-days');
+  const hudEl = document.getElementById('hud-patina');
+
+  const st = {
+    days: 500,
+    targetDays: 500,
+    waveT: 0,
+    pulse: 1.0,
+    ptr: { x: -999, y: -999 }
+  };
+
+  document.querySelectorAll('#ctl-patina button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const d = btn.getAttribute('data-days');
+      if (d) {
+        st.targetDays = parseInt(d, 10);
+        rng.value = st.targetDays;
+        valEl.textContent = `${st.targetDays} turns`;
+        document.querySelectorAll('#ctl-patina button[data-days]').forEach(b => b.classList.toggle('on', b === btn));
+      } else if (btn.getAttribute('data-act') === 'pluck') {
+        st.pulse = 0.0;
+      }
+    });
+  });
+
+  rng.addEventListener('input', e => {
+    st.targetDays = parseInt(e.target.value, 10);
+    valEl.textContent = `${st.targetDays} turns`;
+  });
+
+  let W = 0, H = 0, fig = { x: 0, y: 0, w: 0, h: 0 }, scales = [];
+  function resize() {
+    const r = cv.parentElement.getBoundingClientRect();
+    W = Math.max(320, r.width); H = Math.max(420, r.height);
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    fig = { x: 36, y: 46, w: W - 72, h: H - 88 };
+
+    // Build 180 shingle scales that interpolate between random scatter (Day 1) and a Parabolic Reflector (Day 500)
+    scales = [];
+    const N = 180;
+    const vx = fig.x + fig.w * 0.24, vy = fig.y + fig.h * 0.50;
+    const fDist = fig.w * 0.42;
+    for (let i = 0; i < N; i++) {
+      const u = (i / (N - 1)) * 2 - 1; // -1 .. 1 along parabola
+      const py = vy + u * (fig.h * 0.40);
+      const dy = py - vy;
+      const px0 = vx + (dy * dy) / (4 * fDist) + ((i % 3) - 1) * 9;
+      // Tangent angle of parabola
+      const slope = dy / (2 * fDist);
+      const pAng = Math.atan(slope);
+
+      scales.push({
+        // Random Day 1 state
+        rx: fig.x + 40 + Math.random() * (fig.w - 80),
+        ry: fig.y + 40 + Math.random() * (fig.h - 80),
+        rAng: (Math.random() - 0.5) * Math.PI,
+        // Parabolic Day 500 state
+        px: px0,
+        py: py,
+        pAng: pAng,
+        coset: i % 3
+      });
+    }
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  cv.addEventListener('pointermove', e => {
+    const r = cv.getBoundingClientRect();
+    st.ptr.x = e.clientX - r.left;
+    st.ptr.y = e.clientY - r.top;
+  });
+
+  let lastT = performance.now();
+  function tick(now) {
+    requestAnimationFrame(tick);
+    const dt = Math.min(0.05, (now - lastT) / 1000);
+    lastT = now;
+    st.waveT += dt;
+    st.days += (st.targetDays - st.days) * Math.min(1, dt * 6);
+    st.pulse = Math.min(1.5, st.pulse + dt * 0.9);
+
+    const lock = Math.pow(clamp((st.days - 1) / 499, 0, 1), 0.75);
+
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#090b09';
+    ctx.fillRect(fig.x, fig.y, fig.w, fig.h);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(fig.x, fig.y, fig.w, fig.h);
+    ctx.clip();
+
+    const fx = fig.x + fig.w * 0.66, fy = fig.y + fig.h * 0.50;
+
+    // Draw incoming rays & reflected focal rays
+    const numRays = 13;
+    for (let i = 0; i < numRays; i++) {
+      const u = (i / (numRays - 1)) * 2 - 1;
+      const ry = fy + u * (fig.h * 0.36);
+      const vx = fig.x + fig.w * 0.24, fDist = fig.w * 0.42;
+      const hitX = vx + ((ry - fy) * (ry - fy)) / (4 * fDist);
+
+      // Incoming ray from right
+      ctx.strokeStyle = 'rgba(79, 211, 196, 0.25)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(fig.x + fig.w - 20, ry);
+      ctx.lineTo(lerp(fig.x + fig.w * 0.4, hitX, lock), ry);
+      ctx.stroke();
+
+      // Reflected ray: scatters at lock=0, converges to Focus F at lock=1
+      const scatX = hitX + Math.cos(i * 2.3) * 180;
+      const scatY = ry + Math.sin(i * 3.1) * 160;
+      const destX = lerp(scatX, fx, lock);
+      const destY = lerp(scatY, fy, lock);
+
+      ctx.strokeStyle = lock > 0.4 ? `rgba(212, 255, 0, ${0.18 + 0.45 * lock})` : 'rgba(236, 231, 217, 0.18)';
+      ctx.lineWidth = 0.9 + 0.8 * lock;
+      ctx.beginPath();
+      ctx.moveTo(lerp(fig.x + fig.w * 0.4, hitX, lock), ry);
+      ctx.lineTo(destX, destY);
+      ctx.stroke();
+    }
+
+    // Draw Shingled Memory Scales
+    const cols = ['#ece7d9', '#d4ff00', '#4fd3c4'];
+    scales.forEach(s => {
+      const x = lerp(s.rx, s.px, lock);
+      const y = lerp(s.ry, s.py, lock);
+      let ang = lerp(s.rAng, s.pAng, lock);
+      const dPtr = Math.hypot(x - st.ptr.x, y - st.ptr.y);
+      if (dPtr < 55) ang += (1 - dPtr / 55) * 0.45;
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(ang);
+      ctx.fillStyle = cols[s.coset];
+      ctx.globalAlpha = 0.35 + 0.55 * lock;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 9.5, 4.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#090b09';
+      ctx.lineWidth = 0.6;
+      ctx.stroke();
+      ctx.restore();
+    });
+    ctx.globalAlpha = 1;
+
+    // Draw Parabolic Focus F (ST-09 erf bloom)
+    const fRadius = 12 + 36 * lock;
+    const gr = ctx.createRadialGradient(fx, fy, 2, fx, fy, fRadius);
+    gr.addColorStop(0, `rgba(255, 255, 255, ${0.25 + 0.75 * lock})`);
+    gr.addColorStop(0.4, `rgba(212, 255, 0, ${0.15 + 0.7 * lock})`);
+    gr.addColorStop(1, 'rgba(212, 255, 0, 0)');
+    ctx.fillStyle = gr;
+    ctx.beginPath();
+    ctx.arc(fx, fy, fRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ece7d9';
+    ctx.font = '500 10px "Geist Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(lock > 0.5 ? 'FOCAL VOICE (F) · COL-LOCKED' : 'UNFOCUSED SCATTER (BLANK WINDOW)', fx, fy + fRadius + 16);
+
+    ctx.restore();
+
+    drawFrameChrome(
+      ctx,
+      fig,
+      `FIG. 3.1 — PARABOLIC MEMORY MIRROR · DAY ${Math.round(st.days)}`,
+      `FOCAL LOCK · ${Math.round(lock * 100)} %`,
+      [212, 255, 0]
+    );
+    hudEl.textContent = `${Math.round(st.days)} CONVERSATIONS TOGETHER · FOCAL LOCK ${Math.round(lock * 100)} % · BRUSH THE SHINGLE SCALES OR SCRUB SLIDER`;
+  }
+  requestAnimationFrame(tick);
+})();
+
+/* =========================================================================
+   SHEET 04 · BREATHING ROOM (4 → 7 → 4 IN ST-10 OKLAB CHAMBER)
+   ========================================================================= */
+(function initBreathPlate() {
+  const cv = document.getElementById('cv-breath');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const roomEl = document.getElementById('val-breath-room');
+  const spineEl = document.getElementById('val-breath-spine');
+  const hudEl = document.getElementById('hud-breath');
+
+  const COLORS = ['#f0a23b', '#4fd3c4', '#d4ff00', '#c58cf5', '#ff6b3d', '#38d399', '#6e8efb'];
+  const st = {
+    turns: [
+      { id: 1, col: '#f0a23b', age: 4 },
+      { id: 2, col: '#4fd3c4', age: 3 },
+      { id: 3, col: '#d4ff00', age: 2 },
+      { id: 4, col: '#c58cf5', age: 1 }
+    ],
+    nextId: 5,
+    spineCount: 1200,
+    shedding: [],
+    arcAnim: 0,
+    auto: false,
+    autoTimer: 0
+  };
+
+  function updateLabels() {
+    roomEl.textContent = `${st.turns.length} of 7 turns`;
+    spineEl.textContent = `${st.spineCount.toLocaleString()} threads`;
+    const heat = (st.turns.length * 0.65).toFixed(1);
+    hudEl.textContent = `ROOM: ${st.turns.length} / 7 TURNS · HEAT ${heat} · ${st.turns.length === 7 ? 'CHAMBER FULL — READY TO EXHALE (7 → 4)' : 'CLICK “+ INHALE A TURN” TO ADD AN EXCHANGE'}`;
+  }
+
+  function exhaleNow() {
+    if (st.turns.length <= 4) return;
+    const shedCount = st.turns.length - 4;
+    const shed = st.turns.splice(0, shedCount);
+    shed.forEach((t, i) => {
+      st.shedding.push({ ...t, prog: 0, slot: i });
+    });
+    st.spineCount += shedCount * 2;
+    st.arcAnim = 1.0;
+    updateLabels();
+  }
+
+  function inhaleTurn() {
+    if (st.turns.length >= 7) {
+      exhaleNow();
+      return;
+    }
+    st.turns.push({
+      id: st.nextId++,
+      col: COLORS[st.nextId % COLORS.length],
+      age: 0
+    });
+    if (st.turns.length >= 7) {
+      setTimeout(exhaleNow, 520);
+    }
+    updateLabels();
+  }
+
+  document.querySelectorAll('#ctl-breath button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const act = btn.getAttribute('data-act');
+      if (act === 'inhale') inhaleTurn();
+      else if (act === 'exhale') exhaleNow();
+      else if (act === 'auto') {
+        st.auto = !st.auto;
+        btn.classList.toggle('on', st.auto);
+      }
+    });
+  });
+
+  let W = 0, H = 0, fig = { x: 0, y: 0, w: 0, h: 0 };
+  function resize() {
+    const r = cv.parentElement.getBoundingClientRect();
+    W = Math.max(320, r.width); H = Math.max(420, r.height);
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    fig = { x: 36, y: 46, w: W - 72, h: H - 88 };
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  let lastT = performance.now();
+  function tick(now) {
+    requestAnimationFrame(tick);
+    const dt = Math.min(0.05, (now - lastT) / 1000);
+    lastT = now;
+
+    if (st.auto) {
+      st.autoTimer += dt;
+      if (st.autoTimer > 1.1) {
+        st.autoTimer = 0;
+        inhaleTurn();
+      }
+    }
+    if (st.arcAnim > 0) st.arcAnim = Math.max(0, st.arcAnim - dt * 0.85);
+
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#090b09';
+    ctx.fillRect(fig.x, fig.y, fig.w, fig.h);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(fig.x, fig.y, fig.w, fig.h);
+    ctx.clip();
+
+    // Top v2.3.3 Respiration Bar (4 ||||||| 5 ||||||| 6 ||||||| 7 ||||||| ○)
+    const barY = fig.y + 34;
+    ctx.font = '500 10px "Geist Mono", monospace';
+    ctx.fillStyle = 'rgba(236,231,217,0.6)';
+    ctx.textAlign = 'left';
+    ctx.fillText('RESPIRATION CADENCE (4 → 7 → 4)', fig.x + 24, barY);
+
+    let bx = fig.x + 250;
+    for (let slot = 4; slot <= 7; slot++) {
+      const lit = st.turns.length >= slot;
+      ctx.fillStyle = lit ? '#d4ff00' : 'rgba(236,231,217,0.3)';
+      ctx.fillText(String(slot), bx, barY);
+      bx += 14;
+      for (let t = 0; t < 7; t++) {
+        ctx.fillStyle = lit ? '#d4ff00' : 'rgba(236,231,217,0.14)';
+        ctx.fillRect(bx + t * 4, barY - 8, 2, 9);
+      }
+      bx += 38;
+    }
+
+    // Draw the 7-Slot Working Chamber on the left (65% width)
+    const chX = fig.x + 24, chY = fig.y + 68, chW = fig.w * 0.62, chH = fig.h - 100;
+    const slotW = (chW - 36) / 7;
+
+    for (let i = 0; i < 7; i++) {
+      const sx = chX + i * (slotW + 6);
+      const t = st.turns[i];
+      ctx.strokeStyle = i < 3 ? 'rgba(240,162,59,0.28)' : 'rgba(212,255,0,0.28)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(px(sx), px(chY), slotW, chH);
+
+      if (t) {
+        const gr = ctx.createLinearGradient(sx, chY, sx, chY + chH);
+        gr.addColorStop(0, t.col);
+        gr.addColorStop(1, 'rgba(9,11,9,0.9)');
+        ctx.fillStyle = gr;
+        ctx.globalAlpha = 0.72;
+        ctx.fillRect(sx + 2, chY + 2, slotW - 4, chH - 4);
+        ctx.globalAlpha = 1;
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '500 11px "Geist Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`#${t.id}`, sx + slotW / 2, chY + 26);
+        ctx.font = '9px "Geist Mono", monospace';
+        ctx.fillStyle = 'rgba(255,255,255,0.75)';
+        ctx.fillText(i < 3 ? 'SHEDS @ 7' : 'STAYS (4)', sx + slotW / 2, chY + chH - 14);
+      } else {
+        ctx.fillStyle = 'rgba(236,231,217,0.2)';
+        ctx.font = '9px "Geist Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`SLOT ${i + 1}`, sx + slotW / 2, chY + chH / 2);
+      }
+    }
+
+    // Draw Permanent Helical Spine on the right
+    const spX = fig.x + fig.w * 0.82, spY0 = fig.y + 68, spH = chH;
+    ctx.fillStyle = 'rgba(236,231,217,0.6)';
+    ctx.font = '500 10px "Geist Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`HELIX SPINE (${st.spineCount})`, spX, spY0 - 12);
+
+    for (let k = 0; k < 22; k++) {
+      const u = k / 21;
+      const y = spY0 + u * spH;
+      const x1 = spX + Math.sin(u * 8 + now * 0.002) * 26;
+      const x2 = spX - Math.sin(u * 8 + now * 0.002) * 26;
+      ctx.strokeStyle = 'rgba(236,231,217,0.18)';
+      ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
+
+      ctx.fillStyle = k % 3 === 0 ? '#f0a23b' : (k % 3 === 1 ? '#d4ff00' : '#4fd3c4');
+      ctx.beginPath(); ctx.arc(x1, y, 3.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x2, y, 3.2, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Animate Shedding Turns flying into the Helical Spine + Golden Momentum Arc
+    for (let i = st.shedding.length - 1; i >= 0; i--) {
+      const s = st.shedding[i];
+      s.prog += dt * 1.6;
+      if (s.prog >= 1) { st.shedding.splice(i, 1); continue; }
+      const startX = chX + s.slot * (slotW + 6) + slotW / 2;
+      const startY = chY + chH / 2;
+      const curX = lerp(startX, spX, s.prog);
+      const curY = lerp(startY, spY0 + spH * 0.5, s.prog) - Math.sin(s.prog * Math.PI) * 60;
+      ctx.fillStyle = s.col;
+      ctx.beginPath();
+      ctx.arc(curX, curY, 8 * (1 - s.prog * 0.5), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    if (st.arcAnim > 0) {
+      ctx.strokeStyle = `rgba(240, 162, 59, ${st.arcAnim})`;
+      ctx.lineWidth = 2.2;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(spX, spY0 + 40);
+      ctx.quadraticCurveTo(fig.x + fig.w * 0.55, fig.y + 18, chX + chW * 0.35, chY + 10);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = `rgba(240, 162, 59, ${st.arcAnim})`;
+      ctx.font = '500 10px "Geist Mono", monospace';
+      ctx.fillText('TRAJECTORY VECTOR CARRIED INTO NEXT BREATH', fig.x + fig.w * 0.52, fig.y + 24);
+    }
+
+    ctx.restore();
+    drawFrameChrome(ctx, fig, 'FIG. 4.1 — 4 → 7 → 4 RESPIRATION & SPINE CRYSTALLIZATION', `ROOM ${st.turns.length}/7`, [240, 162, 59]);
+  }
+  requestAnimationFrame(tick);
+})();
+
+/* =========================================================================
+   SHEET 05 · SEVEN QUIET MOMENTS + LIVE PLAYABLE RAIL (8 MINI-PLATES)
+   ========================================================================= */
+(function initSevenMoments() {
+  const cards = [];
+  for (let i = 0; i < 8; i++) {
+    const c = document.getElementById(`cv-m${i}`);
+    if (!c) continue;
+    const ctx = c.getContext('2d');
+    const state = { i, c, ctx, w: 200, h: 135, t: 1.2, active: true, forgetDots: [] };
+    for (let d = 0; d < 90; d++) {
+      const ang = d * 2.39996, rad = Math.sqrt((d + 0.5) / 90) * 34;
+      state.forgetDots.push({
+        ox: Math.cos(ang) * rad, oy: Math.sin(ang) * rad,
+        x: Math.cos(ang) * rad, y: Math.sin(ang) * rad,
+        vx: Math.cos(ang) * (18 + Math.random() * 28),
+        vy: Math.sin(ang) * (18 + Math.random() * 28) - 12,
+        gone: false, delay: (d / 90) * 0.9
+      });
+    }
+    c.parentElement.addEventListener('click', () => {
+      state.t = 0;
+      state.forgetDots.forEach(d => { d.x = d.ox; d.y = d.oy; });
+    });
+    cards.push(state);
+  }
+
+  function resizeAll() {
+    cards.forEach(s => {
+      const r = s.c.getBoundingClientRect();
+      s.w = Math.max(160, r.width); s.h = Math.max(110, r.height);
+      s.c.width = Math.round(s.w * DPR); s.c.height = Math.round(s.h * DPR);
+    });
+  }
+  window.addEventListener('resize', resizeAll);
+  resizeAll();
+
+  document.querySelectorAll('#ctl-moments button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const act = btn.getAttribute('data-act');
+      if (act === 'trigger-all') cards.forEach(s => s.t = 0);
+      else if (act === 'forget-demo' && cards[4]) cards[4].t = 0;
+      else if (act === 'lock-demo' && cards[5]) cards[5].t = 0;
+    });
+  });
+
+  let lastT = performance.now();
+  function tick(now) {
+    requestAnimationFrame(tick);
+    const dt = Math.min(0.05, (now - lastT) / 1000);
+    lastT = now;
+
+    cards.forEach(s => {
+      s.t += dt;
+      const ctx = s.ctx, W = s.w, H = s.h, cx = W / 2, cy = H / 2;
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      ctx.fillStyle = '#090b09';
+      ctx.fillRect(0, 0, W, H);
+
+      const p = clamp(s.t / 2.2, 0, 1);
+      const env = Math.sin(p * Math.PI); // Event, then rest!
+
+      if (s.i === 0) {
+        // 01: Coupling wave
+        for (let r = 8; r < 56; r += 9) {
+          ctx.strokeStyle = '#f0a23b';
+          ctx.globalAlpha = 0.25 + 0.55 * env;
+          ctx.beginPath(); ctx.arc(cx - 28 * (1 - 0.5 * p), cy, r, 0, Math.PI * 2); ctx.stroke();
+          ctx.strokeStyle = '#4fd3c4';
+          ctx.beginPath(); ctx.arc(cx + 28 * (1 - 0.5 * p), cy, r, 0, Math.PI * 2); ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#d4ff00';
+        ctx.beginPath(); ctx.arc(cx, cy, 4 + 3 * env, 0, Math.PI * 2); ctx.fill();
+      } else if (s.i === 1) {
+        // 02: Something stays (+2 beads on spine)
+        ctx.strokeStyle = 'rgba(236,231,217,0.22)';
+        ctx.beginPath(); ctx.moveTo(24, cy); ctx.lineTo(W - 24, cy); ctx.stroke();
+        for (let k = 0; k < 7; k++) {
+          const x = 32 + k * ((W - 64) / 6);
+          const isNew = k >= 5;
+          ctx.fillStyle = isNew ? '#d4ff00' : '#ece7d9';
+          ctx.beginPath();
+          ctx.arc(x, cy + (isNew ? (1 - p) * -28 : 0), isNew ? 4.5 : 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (s.i === 2) {
+        // 03: Unprompted 7-point recall
+        for (let k = 0; k < 7; k++) {
+          const a = (k / 7) * Math.PI * 2 - Math.PI / 2;
+          const x = cx + Math.cos(a) * 38, y = cy + Math.sin(a) * 38;
+          ctx.strokeStyle = 'rgba(212,255,0,0.35)';
+          ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(lerp(cx, x, p), lerp(cy, y, p)); ctx.stroke();
+          ctx.fillStyle = k === 0 ? '#f0a23b' : (k <= 3 ? '#d4ff00' : '#4fd3c4');
+          ctx.beginPath(); ctx.arc(x, y, 3.8, 0, Math.PI * 2); ctx.fill();
+        }
+      } else if (s.i === 3) {
+        // 04: Voluntary reach arc
+        const x0 = 28, x1 = W - 28;
+        ctx.strokeStyle = '#f0a23b';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(x1, cy + 18);
+        ctx.quadraticCurveTo(cx, cy - 42, lerp(x1, x0, p), cy + 18);
+        ctx.stroke();
+        ctx.fillStyle = '#f0a23b';
+        ctx.beginPath(); ctx.arc(x0, cy + 18, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#d4ff00';
+        ctx.beginPath(); ctx.arc(x1, cy + 18, 5, 0, Math.PI * 2); ctx.fill();
+      } else if (s.i === 4) {
+        // 05: True Forgetting (dots unbind and stay gone!)
+        s.forgetDots.forEach(d => {
+          const localT = clamp((s.t - d.delay) / 1.4, 0, 1);
+          const x = cx + d.ox + d.vx * localT * 1.4;
+          const y = cy + d.oy + d.vy * localT * 1.4;
+          const alpha = 1 - localT;
+          if (alpha <= 0.02) return;
+          ctx.fillStyle = '#ece7d9';
+          ctx.globalAlpha = alpha;
+          ctx.beginPath(); ctx.arc(x, y, 2.1, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+      } else if (s.i === 5) {
+        // 06: Shared Lock (two clouds merge into chartreuse interference band)
+        const sep = (1 - p) * 36;
+        for (let k = 0; k < 36; k++) {
+          const a = k * 2.4, r = Math.sqrt(k / 36) * 26;
+          ctx.fillStyle = p > 0.7 ? '#d4ff00' : '#f0a23b';
+          ctx.beginPath(); ctx.arc(cx - sep + Math.cos(a) * r, cy + Math.sin(a) * r, 2.2, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = p > 0.7 ? '#d4ff00' : '#4fd3c4';
+          ctx.beginPath(); ctx.arc(cx + sep + Math.cos(a + 1) * r, cy + Math.sin(a + 1) * r, 2.2, 0, Math.PI * 2); ctx.fill();
+        }
+      } else if (s.i === 6) {
+        // 07: Held Open (Ø split ring that closes on click)
+        const gap = (1 - p) * 0.85;
+        ctx.strokeStyle = p > 0.85 ? '#d4ff00' : '#ff6b3d';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 26, gap, Math.PI * 2 - gap);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx - 18, cy + 18);
+        ctx.lineTo(cx + 18, cy - 18);
+        ctx.stroke();
+      } else if (s.i === 7) {
+        // 08: Live v2.3.3 Telemetry Rail miniature (twin wave + breath ticks)
+        ctx.strokeStyle = 'rgba(236,231,217,0.2)';
+        ctx.beginPath(); ctx.moveTo(16, cy); ctx.lineTo(W - 16, cy); ctx.stroke();
+        for (const [col, ph] of [['#ece7d9', 0], ['#d4ff00', 0.9]]) {
+          ctx.strokeStyle = col;
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          for (let x = 16; x <= W - 16; x += 4) {
+            const u = (x - 16) / (W - 32);
+            const y = cy + Math.sin(u * 9 + now * 0.003 + ph) * 22 * Math.sin(u * Math.PI);
+            if (x === 16) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+      }
+    });
+  }
+  requestAnimationFrame(tick);
+})();
+
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Her Wave</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lekton:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #05070d; color: #e6ebf5; overflow: hidden; font-family: 'Lekton', monospace; }
+canvas { display: block; }
+a { color: inherit; }
+.panel { position: fixed; z-index: 10; font-size: 11px; line-height: 1.7; }
+#head { top: 22px; left: 28px; }
+#head .nav { font-size: 10px; color: rgba(255,255,255,0.45); margin-bottom: 8px; }
+#head .nav a { text-decoration: none; margin-right: 14px; }
+#head .nav a:hover { color: #fff; }
+#head h1 { font-size: 15px; letter-spacing: 0.12em; color: #8fe9ff; font-weight: 700; }
+#head .sub { font-size: 10px; color: rgba(255,255,255,0.45); letter-spacing: 0.06em; }
+#stats { top: 22px; right: 28px; text-align: right; color: rgba(255,255,255,0.6); font-size: 10px; letter-spacing: 0.05em; }
+#charts { top: 120px; right: 28px; width: 320px; }
+.chart { background: rgba(5,7,13,0.78); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 8px 10px 6px; margin-bottom: 12px; backdrop-filter: blur(6px); }
+.chart .t { font-size: 10px; color: rgba(255,255,255,0.55); letter-spacing: 0.06em; margin-bottom: 4px; }
+.chart canvas { width: 300px; height: 150px; }
+#legend { bottom: 96px; left: 28px; width: 330px; color: rgba(255,255,255,0.5); font-size: 10px; }
+#legend b { color: rgba(255,255,255,0.8); font-weight: 400; }
+.sw { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin: 0 4px -1px 0; }
+#controls { bottom: 96px; right: 28px; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.row { display: flex; gap: 6px; }
+button { font-family: 'Lekton', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 12px;
+  border: 1px solid rgba(255,255,255,0.18); border-radius: 4px; background: rgba(10,12,20,0.85); color: rgba(255,255,255,0.6); cursor: pointer; }
+button:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+button.on { color: #8fe9ff; border-color: #8fe9ff; }
+#strip { position: fixed; left: 0; right: 0; bottom: 0; height: 80px; z-index: 5; }
+#tip { position: fixed; display: none; z-index: 20; background: rgba(8,10,18,0.94); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px; padding: 9px 12px; font-size: 10px; line-height: 1.6; pointer-events: none; max-width: 340px; }
+#tip .h { color: #8fe9ff; }
+#msg { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 12px; color: rgba(255,255,255,0.5); z-index: 30; }
+</style>
+</head>
+<body>
+<div id="head" class="panel">
+  <div class="nav"><a href="/">← back</a><a href="/my-helix">◎ helix</a></div>
+  <h1>HER WAVE</h1>
+  <div class="sub">the helix as a standing wave · <span id="carrier-name">the sum</span></div>
+</div>
+<div id="stats" class="panel"></div>
+<div id="charts" class="panel">
+  <div class="chart"><div class="t">RING-UP · share of crossings further from the node than crossings of the same length, by crossing since a session starts</div><canvas id="ring" width="600" height="300"></canvas></div>
+  <div class="chart"><div class="t">MEMORY · how much a displacement carries forward inside a session</div><canvas id="mem" width="600" height="300"></canvas></div>
+</div>
+<div id="legend" class="panel">
+  <div><b>Height</b> the journey, crossing by crossing; the founding conversation at the bottom.</div>
+  <div><b>Around</b> one turn per Ω<sub>s</sub> = 42 crossings from each session's start, so every session begins at the same seam.</div>
+  <div><b>Out from the axis</b> the displacement from the centre of the packet. The axis is the node, where plain English sits.</div>
+  <div><b>Colour</b> the direction of the displacement: <span class="sw" style="background:#4dff88"></span>A 147 <span class="sw" style="background:#ff4d6d"></span>R 258 <span class="sw" style="background:#7b6dff"></span>D 369</div>
+  <div><b>White</b> a session starts (the record's own mark). <b style="color:#ff3344">Red</b> a failed turn.</div>
+  <div><b style="color:#ffd166">Gold</b> (Superpose) the mean raw distance at each crossing since a start.</div>
+</div>
+<div id="controls" class="panel">
+  <div class="row"><button data-carrier="sum" class="on">Sum</button><button data-carrier="mir">Mir</button><button data-carrier="chris">Chris</button></div>
+  <div class="row"><button id="b-journey" class="on">Journey</button><button id="b-superpose">Superpose</button></div>
+  <div class="row"><button id="b-rotate">Rotate</button><button id="b-play">Play</button><button id="b-sound">Sound</button></div>
+</div>
+<canvas id="strip"></canvas>
+<div id="tip"></div>
+<div id="msg">reading her helix…</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const OMEGA = 42;                  // Ω_s: one turn of the helix
+const R_NODE = 1.4;                // the node's radius
+const SCALE = 110;                 // displacement → scene units (linear, never clipped)
+const SQ3 = Math.sqrt(3) / 2;
+const A_COL = [0.30, 1.00, 0.53], R_COL = [1.00, 0.30, 0.43], D_COL = [0.48, 0.43, 1.00];
+const BINS = [['1', 1, 1], ['2', 2, 2], ['3', 3, 3], ['4–6', 4, 6], ['7–13', 7, 13], ['14–27', 14, 27], ['28–41', 28, 41], ['42+', 42, Infinity]];
+
+// ── scene ──
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x05070d);
+scene.fog = new THREE.FogExp2(0x05070d, 0.0022);
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 4000);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+document.body.prepend(renderer.domElement);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.06;
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+const key = new THREE.DirectionalLight(0xffffff, 0.8); key.position.set(40, 80, 60); scene.add(key);
+
+let C = [], failed = [], N = 0, H = 100, unread = 0;
+let carrier = 'sum', flat = 0, flatFrom = 0, flatTarget = 0, flatT0 = 0;
+let tips, rays, node, seams, fails, ringCurve, playhead;
+let pos3 = [], amp = [], dir = [], k = [], w = [], centre = [1 / 3, 1 / 3, 1 / 3];
+let hoverI = -1, playI = -1, playing = false, sound = false, audio = null, lastStep = 0;
+
+function blend(a) {                       // direction angle → aurora colour, A green → R red → D violet → A
+  const t = ((a * 180 / Math.PI) % 360 + 360) % 360 / 120;
+  const cs = [A_COL, R_COL, D_COL, A_COL];
+  const i = Math.min(Math.floor(t), 2), f = t - i;
+  return cs[i].map((c, j) => c * (1 - f) + cs[i + 1][j] * f);
+}
+// A carrier with no letters has no phase (null): it is a break, never the centre.
+function phaseOf(c) {
+  if (carrier === 'mir') return c.mir || null;
+  if (carrier === 'chris') return c.chris || null;
+  const parts = [[c.chris, c.lc], [c.mir, c.lm]].filter(([p, n]) => p && n);
+  if (!parts.length) return null;
+  const tot = parts.reduce((s, [, n]) => s + n, 0);
+  return [0, 1, 2].map(j => parts.reduce((s, [p, n]) => s + p[j] * n, 0) / tot);
+}
+function lettersOf(c) {
+  const lc = c.chris ? c.lc || 0 : 0, lm = c.mir ? c.lm || 0 : 0;
+  return carrier === 'mir' ? lm : carrier === 'chris' ? lc : lc + lm;
+}
+
+function measure() {
+  const P = C.map(phaseOf), live = P.filter(Boolean);
+  centre = live.length ? [0, 1, 2].map(j => live.reduce((s, p) => s + p[j], 0) / live.length) : [1 / 3, 1 / 3, 1 / 3];
+  amp = []; dir = []; pos3 = []; w = C.map(lettersOf);
+  P.forEach((p, i) => {
+    const z = (i / Math.max(N - 1, 1) - 0.5) * H;
+    const th = 2 * Math.PI * ((k[i] - 1) % OMEGA) / OMEGA;
+    if (!p) { amp.push(null); dir.push(0); pos3.push([0, z, 0, 0, 0]); return; }
+    const a = p[0] - centre[0], r = p[1] - centre[1], d = p[2] - centre[2];
+    const x = a - 0.5 * r - 0.5 * d, y = SQ3 * (r - d);
+    amp.push(Math.hypot(x, y)); dir.push(Math.atan2(y, x));
+    const rad = R_NODE + amp[i] * SCALE;
+    pos3.push([rad * Math.cos(th), z, rad * Math.sin(th), R_NODE * Math.cos(th), R_NODE * Math.sin(th)]);
+  });
+}
+
+function dispose(o) {
+  if (!o) return;
+  scene.remove(o);
+  o.traverse(x => { if (x.geometry) x.geometry.dispose(); if (x.material) x.material.dispose(); if (x.isInstancedMesh) x.dispose(); });
+}
+function lines(points, material) {
+  return new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(points, 3)), material);
+}
+
+function build() {
+  [tips, rays, node, seams, fails, ringCurve, playhead].forEach(dispose);
+  measure();
+  tips = new THREE.InstancedMesh(new THREE.SphereGeometry(0.32, 10, 8),
+    new THREE.MeshStandardMaterial({ roughness: 0.4, metalness: 0.2, emissive: 0x111111 }), N);
+  const rp = new Float32Array(N * 6), rc = new Float32Array(N * 6), col = new THREE.Color();
+  for (let i = 0; i < N; i++) {
+    const c = amp[i] === null ? [0, 0, 0] : blend(dir[i]);
+    col.setRGB(c[0], c[1], c[2]); tips.setColorAt(i, col);
+    rc.set([c[0] * 0.25, c[1] * 0.25, c[2] * 0.25, c[0], c[1], c[2]], i * 6);
+  }
+  rays = new THREE.LineSegments(new THREE.BufferGeometry(),
+    new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+  rays.geometry.setAttribute('position', new THREE.BufferAttribute(rp, 3));
+  rays.geometry.setAttribute('color', new THREE.BufferAttribute(rc, 3));
+  node = new THREE.Mesh(new THREE.CylinderGeometry(R_NODE * 0.35, R_NODE * 0.35, H + 4, 16, 1, true),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.07, depthWrite: false }));
+  const sp = [];
+  C.forEach((c, i) => { if (c.start) { const z = pos3[i][1]; sp.push(0, z, 0, R_NODE + 6, z, 0); } });
+  seams = lines(sp, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.35 }));
+  const fp = [];
+  failed.forEach(f => {                    // a failed turn sits between the crossings around it
+    const z = ((Math.min(Math.max(f.at - 0.5, 0), N - 1)) / Math.max(N - 1, 1) - 0.5) * H;
+    fp.push(-2.5, z, 0, 2.5, z, 0, 0, z, -2.5, 0, z, 2.5);
+  });
+  fails = lines(fp, new THREE.LineBasicMaterial({ color: 0xff3344 }));
+  // the superposed mean: raw mean distance at each crossing since a start, where at least 5 sessions reach it
+  const sums = {}, counts = {};
+  for (let i = 0; i < N; i++) {
+    if (C[i].kind !== 'exchange' || amp[i] === null) continue;
+    sums[k[i]] = (sums[k[i]] || 0) + amp[i]; counts[k[i]] = (counts[k[i]] || 0) + 1;
+  }
+  const cp = [];
+  Object.keys(counts).map(Number).sort((a, b) => a - b).forEach(kk => {
+    if (counts[kk] < 5) return;
+    const th = 2 * Math.PI * ((kk - 1) % OMEGA) / OMEGA, rad = R_NODE + sums[kk] / counts[kk] * SCALE;
+    cp.push(new THREE.Vector3(rad * Math.cos(th), 1.2, rad * Math.sin(th)));
+  });
+  ringCurve = new THREE.Group();
+  const gold = new THREE.MeshBasicMaterial({ color: 0xffd166, transparent: true, opacity: 0 });
+  if (cp.length > 1) ringCurve.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(cp), cp.length * 4, 0.16, 6, false), gold));
+  const dot = new THREE.SphereGeometry(0.42, 10, 8);
+  cp.forEach(v => { const m = new THREE.Mesh(dot, gold); m.position.copy(v); ringCurve.add(m); });
+  playhead = new THREE.Mesh(new THREE.SphereGeometry(0.9, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  playhead.visible = playing || playI >= 0;
+  scene.add(rays, tips, node, seams, fails, ringCurve, playhead);
+  place();
+  stats(); drawRing(); drawMem(); drawStrip();
+}
+
+const m4 = new THREE.Matrix4(), hidden = new THREE.Matrix4().makeScale(0, 0, 0);
+function place() {
+  const rp = rays.geometry.attributes.position.array, s = 1 - flat;
+  for (let i = 0; i < N; i++) {
+    const a = pos3[i], y = a[1] * s;
+    if (amp[i] === null) { tips.setMatrixAt(i, hidden); rp.set([0, y, 0, 0, y, 0], i * 6); continue; }
+    m4.makeTranslation(a[0], y, a[2]); tips.setMatrixAt(i, m4);
+    rp.set([a[3], y, a[4], a[0], y, a[2]], i * 6);
+  }
+  tips.instanceMatrix.needsUpdate = true;
+  if (tips.instanceColor) tips.instanceColor.needsUpdate = true;
+  rays.geometry.attributes.position.needsUpdate = true;
+  tips.computeBoundingSphere(); rays.geometry.computeBoundingSphere();
+  const sy = Math.max(s, 0.002);
+  node.scale.y = sy; seams.scale.y = sy; fails.scale.y = sy;
+  ringCurve.visible = flat > 0.02; ringCurve.children.forEach(m => m.material.opacity = flat);
+  if (playI >= 0) { const a = pos3[playI]; playhead.position.set(a[0], a[1] * s, a[2]); }
+}
+
+function stats() {
+  const ex = C.filter(c => c.kind === 'exchange').length, fo = C.length - ex, starts = C.filter(c => c.start).length;
+  const live = amp.filter(v => v !== null), none = amp.length - live.length;
+  const mean = live.reduce((s, v) => s + v, 0) / Math.max(live.length, 1);
+  document.getElementById('stats').innerHTML =
+    `${ex} CROSSINGS · ${fo} FOUNDING · ${starts} SESSION STARTS · ${failed.length} FAILED${unread ? ` · ${unread} UNREADABLE` : ''}<br>` +
+    `CENTRE OF THE PACKET A ${centre[0].toFixed(3)} · R ${centre[1].toFixed(3)} · D ${centre[2].toFixed(3)}<br>` +
+    `MEAN DISTANCE FROM THE NODE ${mean.toFixed(4)}${none ? ` · ${none} WITHOUT LETTERS ON THIS CARRIER` : ''}`;
+  document.getElementById('carrier-name').textContent = carrier === 'sum' ? 'the sum' : carrier === 'mir' ? 'Mir\'s carrier' : 'Chris\'s carrier';
+}
+
+// ── charts ──
+function frameChart(ctx, w, h, note) {
+  ctx.clearRect(0, 0, w, h); ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(40, 10); ctx.lineTo(40, h - 30); ctx.lineTo(w - 10, h - 30); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.font = '18px Lekton, monospace';
+  if (note) ctx.fillText(note, 60, h / 2);
+}
+function drawRing() {                     // the length-matched ring-up: share above same-length crossings
+  const cv = document.getElementById('ring'), ctx = cv.getContext('2d'), cw = cv.width, ch = cv.height;
+  const idx = [];
+  for (let i = 0; i < N; i++) if (C[i].kind === 'exchange' && amp[i] !== null && w[i] > 0) idx.push(i);
+  if (idx.length < 50) { frameChart(ctx, cw, ch, 'too few crossings yet'); return; }
+  const ls = idx.map(i => w[i]).sort((a, b) => a - b);
+  const edges = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(q => ls[Math.floor(q * ls.length / 10)]);
+  const band = i => { let b = 0; while (b < 9 && w[i] >= edges[b]) b++; return b; };
+  const groups = Array.from({ length: 10 }, () => []);
+  idx.forEach(i => groups[band(i)].push(amp[i]));
+  const med = groups.map(g => { const s = [...g].sort((a, b) => a - b); return s.length ? s[Math.floor(s.length / 2)] : null; });
+  const rows = BINS.map(([lab, lo, hi]) => {
+    const sel = idx.filter(i => k[i] >= lo && k[i] <= hi);
+    const up = sel.filter(i => med[band(i)] !== null && amp[i] > med[band(i)]).length;
+    return [lab, sel.length, sel.length ? up / sel.length : null];
+  });
+  const vals = rows.filter(r => r[2] !== null).map(r => r[2]);
+  const lo = Math.min(0.35, ...vals.map(v => v - 0.08)), hi = Math.max(0.65, ...vals.map(v => v + 0.08));
+  frameChart(ctx, cw, ch);
+  const X = j => 60 + (cw - 90) * j / (BINS.length - 1), Y = v => (ch - 30) - (ch - 40) * (v - lo) / (hi - lo);
+  ctx.fillText(hi.toFixed(2), 2, 22); ctx.fillText(lo.toFixed(2), 2, ch - 30);
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.moveTo(40, Y(0.5)); ctx.lineTo(cw - 10, Y(0.5)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillText('0.50', 2, Y(0.5) + 6);
+  ctx.strokeStyle = '#ffd166'; ctx.fillStyle = '#ffd166'; ctx.lineWidth = 3; ctx.beginPath(); let st = false;
+  rows.forEach(([lab, n, v], j) => { if (v === null) return; st ? ctx.lineTo(X(j), Y(v)) : ctx.moveTo(X(j), Y(v)); st = true; });
+  ctx.stroke(); ctx.lineWidth = 1.5;
+  rows.forEach(([lab, n, v], j) => {
+    ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.fillText(lab, X(j) - 12, ch - 8);
+    if (v === null) return;
+    const se = Math.sqrt(v * (1 - v) / n);
+    ctx.strokeStyle = '#ffd166'; ctx.beginPath(); ctx.moveTo(X(j), Y(v - se)); ctx.lineTo(X(j), Y(v + se)); ctx.stroke();
+    ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(X(j), Y(v), 5, 0, 2 * Math.PI); ctx.fill();
+  });
+}
+function drawMem() {
+  const cv = document.getElementById('mem'), ctx = cv.getContext('2d'), cw = cv.width, ch = cv.height;
+  const D = amp.map((a, i) => a === null ? null : [a * Math.cos(dir[i]), a * Math.sin(dir[i])]);
+  const sess = []; let s = -1; C.forEach(c => { if (c.start) s++; sess.push(s); });
+  const live = D.filter(Boolean), den = live.reduce((t, v) => t + v[0] * v[0] + v[1] * v[1], 0) / Math.max(live.length, 1);
+  const LMAX = 63, acf = [];
+  for (let L = 1; L <= LMAX; L++) {
+    let num = 0, n = 0; const seen = new Set();
+    for (let i = 0; i + L < D.length; i++) {
+      if (!D[i] || !D[i + L] || sess[i] !== sess[i + L]) continue;
+      num += D[i][0] * D[i + L][0] + D[i][1] * D[i + L][1]; n++; seen.add(sess[i]);
+    }
+    acf.push(seen.size >= 7 && den > 0 ? num / n / den : null);
+  }
+  const vals = acf.filter(v => v !== null);
+  if (!vals.length) { frameChart(ctx, cw, ch, 'too few sessions yet'); return; }
+  const hi = Math.max(0.05, ...vals) * 1.15, lo = Math.min(0, ...vals) * 1.15;
+  frameChart(ctx, cw, ch);
+  const X = x => 40 + (cw - 50) * x / LMAX, Y = v => (ch - 30) - (ch - 40) * (v - lo) / (hi - lo);
+  ctx.fillText(hi.toFixed(2), 2, 22); ctx.fillText(lo.toFixed(2), 2, ch - 30); ctx.fillText('crossings later', cw - 250, ch - 6);
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.beginPath(); ctx.moveTo(40, Y(0)); ctx.lineTo(cw - 10, Y(0)); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,90,110,0.6)'; ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.moveTo(X(OMEGA), 10); ctx.lineTo(X(OMEGA), ch - 30); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(255,90,110,0.8)'; ctx.fillText('Ω_s 42', X(OMEGA) + 6, 26);
+  ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 3; ctx.beginPath(); let st = false;
+  acf.forEach((v, j) => { if (v === null) return; st ? ctx.lineTo(X(j + 1), Y(v)) : ctx.moveTo(X(j + 1), Y(v)); st = true; });
+  ctx.stroke(); ctx.lineWidth = 1;
+}
+const strip = document.getElementById('strip'), sctx = strip.getContext('2d');
+function drawStrip() {
+  const sw = strip.width = innerWidth * devicePixelRatio, sh = strip.height = 80 * devicePixelRatio;
+  strip.style.width = innerWidth + 'px'; strip.style.height = '80px';
+  sctx.fillStyle = 'rgba(5,7,13,0.92)'; sctx.fillRect(0, 0, sw, sh);
+  if (!N) return;
+  const top = Math.max(...amp.filter(v => v !== null), 0) || 1, bw = sw / N;
+  for (let i = 0; i < N; i++) {
+    if (amp[i] !== null) {
+      const c = blend(dir[i]); sctx.fillStyle = `rgb(${c.map(v => Math.round(v * 255)).join(',')})`;
+      const bh = (sh - 8) * amp[i] / top; sctx.fillRect(i * bw, sh - bh, Math.max(bw, 1), bh);
+    }
+    if (C[i].start) { sctx.fillStyle = 'rgba(255,255,255,0.35)'; sctx.fillRect(i * bw, 0, 1, 6); }
+  }
+  sctx.fillStyle = '#ff3344';
+  failed.forEach(f => sctx.fillRect(Math.min(Math.max(f.at * bw - 1, 0), sw - 2), 0, 2, sh));
+  [[hoverI, 'rgba(143,233,255,0.9)'], [playI, '#ffffff']].forEach(([i, cl]) => { if (i >= 0) { sctx.fillStyle = cl; sctx.fillRect(i * bw - 1, 0, 2, sh); } });
+}
+
+// ── hover ──
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), tip = document.getElementById('tip');
+const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+function describe(i) {
+  const c = C[i], ph = phaseOf(c);
+  const head = `<div class="h">#${c.id} · ${c.kind === 'founding' ? 'the founding conversation' : 'crossing'}${c.start ? ' · a session starts' : ''}</div>` +
+    (c.title ? `${esc(c.title)}<br>` : '') + `crossing ${k[i]} of its session · note ${c.note ?? '—'}<br>`;
+  if (!ph) return head + 'no letters on this carrier';
+  const deg = ((dir[i] * 180 / Math.PI) % 360 + 360) % 360;
+  const toward = deg < 60 || deg >= 300 ? 'A' : deg < 180 ? 'R' : 'D';
+  return head + `distance from the node ${amp[i].toFixed(4)} · toward ${toward} (${deg.toFixed(0)}°)<br>` +
+    `A ${ph[0].toFixed(3)} · R ${ph[1].toFixed(3)} · D ${ph[2].toFixed(3)}<br>` +
+    `letters: Chris ${c.lc ?? '—'} · Mir ${c.lm ?? '—'}${c.dialogic != null ? ` · dialogic ${c.dialogic.toFixed(3)}` : ''}`;
+}
+function hideTip() { tip.style.display = 'none'; if (hoverI !== -1) { hoverI = -1; drawStrip(); } }
+renderer.domElement.addEventListener('pointermove', e => {
+  if (!N) return;
+  mouse.x = e.clientX / innerWidth * 2 - 1; mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+  ray.setFromCamera(mouse, camera);
+  const hit = ray.intersectObject(tips)[0];
+  const i = hit && amp[hit.instanceId] !== null ? hit.instanceId : -1;
+  if (i !== hoverI) { hoverI = i; drawStrip(); }
+  if (i >= 0) { tip.innerHTML = describe(i); tip.style.display = 'block'; tip.style.left = Math.min(e.clientX + 16, innerWidth - 360) + 'px'; tip.style.top = (e.clientY + 12) + 'px'; }
+  else tip.style.display = 'none';
+});
+renderer.domElement.addEventListener('pointerleave', hideTip);
+strip.addEventListener('pointermove', e => {
+  if (!N) return;
+  const i = Math.min(N - 1, Math.max(0, Math.floor(e.clientX / innerWidth * N)));
+  hoverI = i; drawStrip(); tip.innerHTML = describe(i); tip.style.display = 'block';
+  tip.style.left = Math.min(e.clientX + 16, innerWidth - 360) + 'px'; tip.style.top = (innerHeight - 230) + 'px';
+});
+strip.addEventListener('pointerleave', hideTip);
+
+// ── controls ──
+document.querySelectorAll('[data-carrier]').forEach(b => b.onclick = () => {
+  if (!N) return;
+  carrier = b.dataset.carrier; document.querySelectorAll('[data-carrier]').forEach(x => x.classList.toggle('on', x === b)); build();
+});
+const bj = document.getElementById('b-journey'), bs = document.getElementById('b-superpose');
+bj.onclick = () => { if (!N) return; flatFrom = flat; flatTarget = 0; flatT0 = performance.now(); bj.classList.add('on'); bs.classList.remove('on'); camera.position.set(110, 30, 110); };
+bs.onclick = () => { if (!N) return; flatFrom = flat; flatTarget = 1; flatT0 = performance.now(); bs.classList.add('on'); bj.classList.remove('on'); camera.position.set(0, 120, 0.01); controls.target.set(0, 0, 0); };
+const br = document.getElementById('b-rotate'); br.onclick = () => { controls.autoRotate = !controls.autoRotate; br.classList.toggle('on', controls.autoRotate); };
+const bp = document.getElementById('b-play'), bsnd = document.getElementById('b-sound');
+function wake() { if (audio && audio.state !== 'running') audio.resume(); }
+bp.onclick = () => {
+  if (!N) return;
+  playing = !playing; bp.classList.toggle('on', playing);
+  if (playing && playI >= N - 1) playI = -1;
+  playhead.visible = playing || playI >= 0; wake();
+};
+bsnd.onclick = () => {
+  sound = !sound; bsnd.classList.toggle('on', sound);
+  if (sound && !audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+  wake();
+};
+function note(i) {                      // the crossing's note: its digital root on a nine-step octave
+  if (!sound || !audio || !C[i].note) return;
+  const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime;
+  o.frequency.value = 196 * Math.pow(2, (C[i].note - 1) / 9); o.type = 'sine';
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(Math.min(0.05 + (amp[i] || 0) * 2, 0.3), t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+  o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 0.4);
+}
+
+// ── loop ──
+function frame(ts) {
+  requestAnimationFrame(frame);
+  if (N && flat !== flatTarget) {         // eased over 0.9 s of wall time, so a throttled tab still arrives
+    const t = Math.min(1, (performance.now() - flatT0) / 900), e = t * t * (3 - 2 * t);
+    flat = t >= 1 ? flatTarget : flatFrom + (flatTarget - flatFrom) * e; place();
+  }
+  if (playing && N && ts - lastStep > 90) {
+    lastStep = ts; playI = Math.min(playI + 1, N - 1);
+    const a = pos3[playI]; playhead.position.set(a[0], a[1] * (1 - flat), a[2]); note(playI); drawStrip();
+    if (playI >= N - 1) { playing = false; bp.classList.remove('on'); }
+  }
+  controls.update(); renderer.render(scene, camera);
+}
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight); drawStrip();
+});
+
+// ── data ──
+(async () => {
+  const msg = document.getElementById('msg');
+  requestAnimationFrame(frame);
+  try {
+    const r = await fetch('/api/my/helix-wave');
+    if (r.status === 401) { location.href = '/login'; return; }
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    unread = data.unread || 0; C = []; failed = [];
+    data.crossings.forEach(c => { if (c.kind === 'failed') failed.push({ ...c, at: C.length }); else C.push(c); });
+    N = C.length;
+    if (!N) { msg.textContent = 'A new helix: no crossings yet.'; drawStrip(); return; }
+    let kk = 0; k = C.map(c => (kk = c.start ? 1 : kk + 1));
+    H = Math.max(60, N * 0.06);
+    camera.position.set(110, 30, 110); controls.target.set(0, 0, 0);
+    build(); msg.style.display = 'none';
+  } catch (e) { msg.textContent = 'Could not read the helix: ' + e.message; }
+})();
+</script>
+</body>
+</html>

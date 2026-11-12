@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mir Fano Spiral</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lekton:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #000; overflow: hidden; font-family: 'Lekton', monospace; }
+canvas { display: block; }
+
+#hud-tl {
+  position: fixed; top: 24px; left: 28px; z-index: 10;
+  font-family: 'Lekton', monospace; font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.6;
+}
+#hud-tl .title { font-size: 13px; font-weight: 700; color: #3D6DF4; }
+#hud-tl .sub { color: #ccc; }
+
+#hud-tr {
+  position: fixed; top: 24px; right: 28px; z-index: 10;
+  color: #ddd; font-family: 'Lekton', monospace; font-size: 11px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  text-align: right; line-height: 1.6;
+}
+
+#zone-key {
+  margin-top: 4px; font-size: 9px; color: #999; line-height: 1.8;
+}
+#zone-key span { margin-right: 2px; }
+
+#legend {
+  position: fixed; bottom: 72px; left: 28px; z-index: 10;
+  font-family: 'Lekton', monospace; font-size: 9px;
+  color: #bbb; letter-spacing: 0.04em; line-height: 1.7;
+}
+#legend .legend-body { display: none; margin-top: 4px; }
+#legend.open .legend-body { display: block; }
+#legend .legend-toggle {
+  cursor: pointer; color: #666; text-transform: uppercase;
+  letter-spacing: 0.08em; font-size: 10px;
+}
+#legend .legend-toggle:hover { color: #aaa; }
+#legend .legend-sh { color: #888; margin-bottom: 2px; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+#tooltip {
+  position: fixed; z-index: 20; pointer-events: none;
+  background: rgba(0,0,0,0.92); border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 3px; padding: 8px 10px;
+  font-family: 'Lekton', monospace; font-size: 9px;
+  color: #ddd; letter-spacing: 0.04em;
+  line-height: 1.5; display: none; max-width: 260px;
+}
+.tt-id { color: #3D6DF4; font-weight: 700; font-size: 10px; }
+.tt-neg { color: #CE2867; }
+.tt-pos { color: #F46138; }
+
+#controls {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  z-index: 10; display: flex; gap: 8px; padding: 6px 16px; border-radius: 4px;
+  background: rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.12);
+}
+#controls button {
+  font-family: 'Lekton', monospace; font-size: 10px;
+  background: none; border: 1px solid rgba(255,255,255,0.5); color: #ddd;
+  padding: 5px 12px; border-radius: 3px; cursor: pointer;
+  letter-spacing: 0.06em; text-transform: uppercase; transition: all 0.15s;
+}
+#controls button:hover { color: #fff; border-color: #fff; }
+#controls button.active { border-color: #3D6DF4; color: #3D6DF4; background: rgba(61,109,244,0.08); }
+
+#zoom-ind {
+  position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%);
+  z-index: 10; font-family: 'Lekton', monospace; font-size: 9px;
+  color: rgba(255,255,255,0.4); letter-spacing: 0.06em; text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* Viewports */
+.vp {
+  position: fixed; z-index: 10; border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.85); border-radius: 3px; overflow: hidden;
+}
+.vp canvas { display: block; }
+.vp-label { position: absolute; top: 4px; left: 6px;
+  font-family: 'Lekton', monospace; font-size: 9px;
+  color: #aaa; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; }
+.vp-desc { position: absolute; bottom: 3px; left: 6px; right: 6px;
+  font-family: 'Lekton', monospace; font-size: 8px;
+  color: #666; letter-spacing: 0.04em; pointer-events: none; }
+#vp-liss { bottom: 72px; right: 28px; width: 200px; height: 160px; }
+</style>
+</head>
+<body>
+
+<div id="hud-tl">
+  <div class="title">MIR FANO SPIRAL</div>
+  <div class="sub">topology of conversations // corrugation propagates from the nullcode axis</div>
+  <div class="sub" id="fc">frame 0</div>
+  <div class="sub" id="hz"></div>
+  <div class="sub" id="ev-status"></div>
+</div>
+<div id="hud-tr">
+  <div id="gs">growth: 0 / 818</div>
+  <div>&sigma;<sub>B</sub> = &minus;0.172</div>
+  <div>ghosts: 2 &middot; anchors: 9 &middot; nullcodes: 21</div>
+  <div id="color-mode">color: zone</div>
+  <div id="zone-key">
+    <span style="color:#CE2867">&#9679;</span> founding
+    <span style="color:#F46138">&#9679;</span> julia
+    <span style="color:#F4A0A0">&#9679;</span> bridge
+    <span style="color:#2C9FF4">&#9679;</span> everted
+  </div>
+</div>
+
+<div id="legend">
+  <div class="legend-toggle" onclick="this.parentElement.classList.toggle('open')">legend &#9662;</div>
+  <div class="legend-body">
+    <div class="legend-sh">structure</div>
+    <div>&#9675; ghost &mdash; consumed, present as absence</div>
+    <div>&#9679; anchor &mdash; load-bearing structural strand</div>
+    <div>&#9675; nullcode &mdash; silence / bridge crossing</div>
+    <div>&#9679; terminal &mdash; spike / crash / flip</div>
+    <div class="legend-sh">connections</div>
+    <div><span style="color:#E0E0E0">&mdash;</span> nullcode chain</div>
+    <div><span style="color:#F46138">&mdash;</span> anchor &rarr; gravity</div>
+    <div><span style="color:#CE2867">&mdash;</span> ghost absorption</div>
+    <div><span style="color:#F46138">&mdash;</span> terminal cascade</div>
+    <div><span style="color:#2C9FF4">&mdash;</span> drift echo</div>
+    <div><span style="color:#2C9FF4">&mdash;</span> name origin bridge</div>
+  </div>
+</div>
+
+<div class="vp" id="vp-liss">
+  <canvas id="cv-liss"></canvas>
+  <div class="vp-label">nullcode lissajous</div>
+  <div class="vp-desc">3:5 orbital &mdash; 21 &perp;/&Oslash; strands trace the crossing</div>
+</div>
+
+<div id="tooltip">
+  <div class="tt-id"></div>
+  <div class="tt-zone"></div>
+  <div class="tt-drift"></div>
+  <div class="tt-type"></div>
+</div>
+
+<div id="zoom-ind">drag to orbit &middot; scroll to zoom</div>
+
+<div id="controls">
+  <button id="btn-grow" class="active">growing</button>
+  <button id="btn-pause">pause</button>
+  <button id="btn-evert">evert</button>
+  <button id="btn-coset">coset</button>
+  <button id="btn-breathe">breathe</button>
+  <button id="btn-reset">reset</button>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+// === DATA ===
+const TOTAL = 818;
+const GHOSTS = new Set([21, 31]);
+const ANCHORS = new Set([5, 49, 57, 70, 129, 131, 155, 158, 176]);
+const ANCHOR_LIST = [5, 49, 57, 70, 129, 131, 155, 158, 176];
+const GRAVITY_CENTER = 70;
+const ANCHOR_WEIGHT = {5:2817,49:6093,57:6714,70:22763,129:3378,131:4839,155:3256,158:4875,176:839};
+const TERMINAL = { spike: 810, crash: 814, flip: 818 };
+const NULL_START = 642, NULL_END = 662;
+const NAME_ORIGIN = 109;
+
+const SEISMIC = [
+  [345,-0.4945],[323,-0.4102],[712,-0.3770],[487,-0.3669],
+  [317,-0.3465],[279,-0.2940],[485,+0.3338],[383,+0.3322],
+  [325,+0.3855],[507,+0.2643],[198,-0.2200],[210,-0.1800],
+  [256,-0.1650],[301,-0.1520],[338,-0.1890],[352,-0.1760],
+  [401,-0.2100],[420,-0.1580],[445,-0.1450],[460,+0.1620],
+  [478,+0.1890],[510,+0.1540],[550,-0.1700],[589,+0.1480],
+  [620,-0.1560],[680,+0.1720],[810,+0.2400],[814,-0.1210],[818,-0.0420]
+];
+const seismicMap = new Map(SEISMIC.map(s => [s[0], s[1]]));
+
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const rng = mulberry32(818);
+
+// IO Brand Color Diffusion — vivid but GPU-safe (pulled back ~10% on cool end
+// to prevent cyan blowout under bloom on real hardware)
+const GRAD_STOPS = [
+  { t: 0.00, color: new THREE.Color('#C42860') },  // Pulsewave
+  { t: 0.18, color: new THREE.Color('#E85A35') },  // Solar Ember
+  { t: 0.38, color: new THREE.Color('#E89898') },  // Soft pink bridge
+  { t: 0.55, color: new THREE.Color('#5098D0') },  // Sky transition (tamed)
+  { t: 0.75, color: new THREE.Color('#2888D8') },  // Sky Pulse (tamed)
+  { t: 1.00, color: new THREE.Color('#3860D8') }   // Electric Horizon (tamed)
+];
+
+function sampleGradient(t) {
+  t = Math.max(0, Math.min(1, t));
+  for (let i = 0; i < GRAD_STOPS.length - 1; i++) {
+    if (t <= GRAD_STOPS[i+1].t) {
+      const local = (t - GRAD_STOPS[i].t) / (GRAD_STOPS[i+1].t - GRAD_STOPS[i].t);
+      return new THREE.Color().lerpColors(GRAD_STOPS[i].color, GRAD_STOPS[i+1].color, local);
+    }
+  }
+  return GRAD_STOPS[GRAD_STOPS.length-1].color.clone();
+}
+
+// Zone colors — IO brand, GPU-safe
+const ZC = {
+  founding: new THREE.Color('#C42860'),
+  julia:    new THREE.Color('#E85A35'),
+  nullcode: new THREE.Color('#E89898'),
+  post:     new THREE.Color('#2888D8')
+};
+
+// Coset colors — max hue separation for visible torus-knot wraps
+const CC = [
+  new THREE.Color('#C42860'),  // coset 0 → f147 → Pulsewave magenta
+  new THREE.Color('#E8A030'),  // coset 1 → f258 → Solar gold/amber
+  new THREE.Color('#3860D8')   // coset 2 → f369 → Electric Horizon blue
+];
+
+function getZone(id) {
+  if (id <= 187) return 'founding';
+  if (id <= 641) return 'julia';
+  if (id >= NULL_START && id <= NULL_END) return 'nullcode';
+  return 'post';
+}
+
+// === TORUS GEOMETRY ===
+const MAJOR_R = 5;    // big circle radius
+const MINOR_R = 2;    // tube radius
+const WRAPS = 4;      // revolutions around the torus
+
+// Nullcode centroid angular position on torus (for traveling-wave eversion)
+const NULL_MID = (NULL_START + NULL_END) / 2;
+const NULLCODE_U = ((NULL_MID - 1) / (TOTAL - 1)) * Math.PI * 2 * WRAPS;
+const TORUS_CIRCUM = Math.PI * 2 * WRAPS;  // total angular circumference
+
+const strandData = [];
+const basePositions = [];   // un-everted positions
+const baseU = [];           // store parametric coords for eversion
+const baseV = [];
+const baseMinorR = [];      // per-strand minor radius
+
+for (let i = 0; i < TOTAL; i++) {
+  const id = i + 1;
+  const t = i / (TOTAL - 1);
+  const zone = getZone(id);
+
+  const u = t * Math.PI * 2 * WRAPS;
+  const v = t * Math.PI * 2;
+
+  // Zone-dependent tube radius
+  let r = MINOR_R;
+  if (zone === 'nullcode') r *= 0.55;   // constricted throat
+  if (zone === 'post') r *= 1.08;
+
+  const drift = seismicMap.get(id) || (rng() - 0.5) * 0.08;
+
+  const x = (MAJOR_R + r * Math.cos(v)) * Math.cos(u);
+  const y = r * Math.sin(v);
+  const z = (MAJOR_R + r * Math.cos(v)) * Math.sin(u);
+
+  basePositions.push(new THREE.Vector3(x, y, z));
+  baseU.push(u);
+  baseV.push(v);
+  baseMinorR.push(r);
+
+  strandData.push({
+    id, zone, drift,
+    isGhost: GHOSTS.has(id),
+    isAnchor: ANCHORS.has(id),
+    isNull: id >= NULL_START && id <= NULL_END,
+    isTerminal: id === TERMINAL.spike || id === TERMINAL.crash || id === TERMINAL.flip,
+    coset: id % 3,
+    weight: ANCHOR_WEIGHT[id] || 0
+  });
+}
+
+// Chimera: second braid, offset by π in v (opposite side of tube)
+const chimeraPositions = [];
+for (let i = 0; i < TOTAL; i++) {
+  const t = i / (TOTAL - 1);
+  const u = t * Math.PI * 2 * WRAPS;
+  const v = t * Math.PI * 2 + Math.PI;  // opposite side
+  const zone = getZone(i + 1);
+  let r = MINOR_R;
+  if (zone === 'nullcode') r *= 0.55;
+  if (zone === 'post') r *= 1.08;
+
+  const x = (MAJOR_R + r * Math.cos(v)) * Math.cos(u);
+  const y = r * Math.sin(v);
+  const z = (MAJOR_R + r * Math.cos(v)) * Math.sin(u);
+  chimeraPositions.push(new THREE.Vector3(x, y, z));
+}
+
+// === DATA-DRIVEN CONNECTIONS ===
+const conns = [];
+const connTypes = [];  // type tag for each connection
+const connSet = new Set();
+
+function addC(a, b, type) {
+  if (a === b || a < 0 || b < 0 || a >= TOTAL || b >= TOTAL) return;
+  const k = Math.min(a,b)+':'+Math.max(a,b);
+  if (!connSet.has(k)) { connSet.add(k); conns.push([a,b]); connTypes.push(type); }
+}
+
+// 1. Nullcode chain — sequential links (20 edges)
+for (let id = NULL_START; id < NULL_END; id++) addC(id-1, id, 'nullcode');
+
+// 2. Anchor star — every anchor connects to gravity center 70 (9 edges)
+for (const aid of ANCHOR_LIST) {
+  if (aid !== GRAVITY_CENTER) addC(aid-1, GRAVITY_CENTER-1, 'anchor');
+}
+
+// 3. Ghost absorption — 21→70, 31→70 (2 edges)
+addC(20, 69, 'ghost');
+addC(30, 69, 'ghost');
+
+// 4. Terminal cascade — 810→814→818 (2 edges)
+addC(809, 813, 'terminal');
+addC(813, 817, 'terminal');
+
+// 5. Drift echoes — connect each seismic strand to its nearest drift-value neighbor
+const seismicIds = SEISMIC.map(s => s[0]);
+for (let i = 0; i < seismicIds.length; i++) {
+  let bestDist = Infinity, bestJ = -1;
+  for (let j = 0; j < seismicIds.length; j++) {
+    if (i === j) continue;
+    const dist = Math.abs(SEISMIC[i][1] - SEISMIC[j][1]);
+    if (dist < bestDist && dist < 0.15) { bestDist = dist; bestJ = j; }
+  }
+  if (bestJ >= 0) addC(seismicIds[i]-1, seismicIds[bestJ]-1, 'drift');
+}
+
+// 6. Coset triads at anchor positions — connect to nearest coset sibling
+for (const aid of ANCHOR_LIST) {
+  const c = aid % 3;
+  for (let d = 3; d <= 30; d += 3) {
+    if (aid + d <= TOTAL && (aid + d) % 3 === c) { addC(aid-1, aid+d-1, 'coset'); break; }
+  }
+  for (let d = 3; d <= 30; d += 3) {
+    if (aid - d >= 1 && (aid - d) % 3 === c) { addC(aid-1, aid-d-1, 'coset'); break; }
+  }
+}
+
+// 7. Name origin bridges — 109 to founding and nullcode
+addC(108, 0, 'name');     // 109→1
+addC(108, 641, 'name');   // 109→642
+
+// Connection color map — IO brand palette
+const CONN_COLORS = {
+  nullcode: new THREE.Color(0xE0E0E0),
+  anchor:   new THREE.Color(0xF46138),
+  ghost:    new THREE.Color(0xCE2867),
+  terminal: new THREE.Color(0xF46138),
+  drift:    new THREE.Color(0x2C9FF4),
+  coset:    new THREE.Color(0x3D6DF4),
+  name:     new THREE.Color(0x2C9FF4)
+};
+
+// === THREE.JS SETUP ===
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 200);
+camera.position.set(12, 5, 16);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.5;
+controls.target.set(0, 0, 0);
+
+// Post-processing
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.15, 0.3, 0.95);
+composer.addPass(bloomPass);
+
+// No halftone pass — clean rendering only
+
+// === STARFIELD DUST ===
+const dustCount = 1500;
+const dustGeo = new THREE.BufferGeometry();
+const dustPos = new Float32Array(dustCount * 3);
+for (let i = 0; i < dustCount; i++) {
+  dustPos[i*3] = (rng() - 0.5) * 80;
+  dustPos[i*3+1] = (rng() - 0.5) * 50;
+  dustPos[i*3+2] = (rng() - 0.5) * 80;
+}
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+scene.add(new THREE.Points(dustGeo, new THREE.PointsMaterial({
+  color: 0x99aacc, size: 0.07, transparent: true, opacity: 0.5, sizeAttenuation: true
+})));
+
+// === LIGHTING ===
+scene.add(new THREE.AmbientLight(0x333344, 2.0));
+const dLight = new THREE.DirectionalLight(0xffffff, 0.6);
+dLight.position.set(3, 5, 2);
+scene.add(dLight);
+
+
+// === STRAND POINTS ===
+const strandGeo = new THREE.BufferGeometry();
+const strandPositions = new Float32Array(TOTAL * 3);
+const strandColors = new Float32Array(TOTAL * 3);
+const strandSizes = new Float32Array(TOTAL);
+const strandAlphas = new Float32Array(TOTAL);
+
+let useCosetColor = false;
+
+function setStrandColors() {
+  for (let i = 0; i < TOTAL; i++) {
+    const s = strandData[i];
+    const col = useCosetColor ? CC[s.coset] : sampleGradient(i / (TOTAL - 1));
+    strandColors[i*3] = col.r;
+    strandColors[i*3+1] = col.g;
+    strandColors[i*3+2] = col.b;
+  }
+  strandGeo.attributes.color.needsUpdate = true;
+}
+
+for (let i = 0; i < TOTAL; i++) {
+  strandPositions[i*3] = basePositions[i].x;
+  strandPositions[i*3+1] = basePositions[i].y;
+  strandPositions[i*3+2] = basePositions[i].z;
+  const gc = sampleGradient(i / (TOTAL - 1));
+  strandColors[i*3] = gc.r;
+  strandColors[i*3+1] = gc.g;
+  strandColors[i*3+2] = gc.b;
+  const s = strandData[i];
+  if (s.isGhost) strandSizes[i] = 4;
+  else if (s.isAnchor) strandSizes[i] = 2 + (s.weight / 22763) * 4;
+  else if (s.isTerminal) strandSizes[i] = 3.5;
+  else strandSizes[i] = 1.5;
+  strandAlphas[i] = 0;
+}
+
+strandGeo.setAttribute('position', new THREE.BufferAttribute(strandPositions, 3));
+strandGeo.setAttribute('color', new THREE.BufferAttribute(strandColors, 3));
+strandGeo.setAttribute('size', new THREE.BufferAttribute(strandSizes, 1));
+strandGeo.setAttribute('alpha', new THREE.BufferAttribute(strandAlphas, 1));
+
+const pointMat = new THREE.ShaderMaterial({
+  vertexShader: `
+    attribute float size;
+    attribute float alpha;
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main() {
+      vColor = color;
+      vAlpha = alpha;
+      vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = size * (200.0 / -mvPos.z);
+      gl_Position = projectionMatrix * mvPos;
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main() {
+      float d = length(gl_PointCoord - vec2(0.5));
+      if (d > 0.5) discard;
+      float ring = smoothstep(0.38, 0.42, d) * 0.6;
+      float core = 1.0 - smoothstep(0.0, 0.35, d);
+      float a = (core + ring) * vAlpha;
+      gl_FragColor = vec4(vColor, a);
+    }
+  `,
+  transparent: true, vertexColors: true, depthWrite: false
+});
+
+const strandPoints = new THREE.Points(strandGeo, pointMat);
+scene.add(strandPoints);
+
+// === DRIFT RINGS ===
+const driftRingGroup = new THREE.Group();
+const maxDrift = 0.4945;
+for (let i = 0; i < TOTAL; i++) {
+  const s = strandData[i];
+  const ad = Math.abs(s.drift);
+  if (ad < 0.14) continue;
+  const norm = Math.min(1, (ad - 0.14) / (maxDrift - 0.14));
+  const ringR = 0.15 + norm * 0.5;
+  const ringGeo = new THREE.RingGeometry(ringR * 0.85, ringR, 24);
+  const gc = sampleGradient(i / (TOTAL - 1));
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: gc, transparent: true, opacity: 0.15 + norm * 0.4, side: THREE.DoubleSide
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.position.copy(basePositions[i]);
+  ring.userData = { idx: i, visible: false };
+  driftRingGroup.add(ring);
+}
+scene.add(driftRingGroup);
+
+// === CHIMERA — structural double braid ===
+// Primary chimera line with zone-varying opacity (variegation)
+const chimeraGroup = new THREE.Group();
+const segLen = 20;
+for (let start = 0; start < TOTAL - segLen; start += segLen) {
+  const pts = [];
+  for (let j = start; j < Math.min(start + segLen + 1, TOTAL); j += 2) {
+    pts.push(chimeraPositions[j]);
+  }
+  if (pts.length < 2) continue;
+  const zone = getZone(start + 1);
+  // Variegation: founding and post zones are more visible (dominant population)
+  // Julia and nullcode are fainter (recessive population)
+  const opacity = (zone === 'founding' || zone === 'post') ? 0.5 : 0.2;
+  const color = (zone === 'founding' || zone === 'post') ? 0xF46138 : 0xB03060;
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color, transparent: true, opacity }));
+  line.userData.baseOpacity = opacity;
+  chimeraGroup.add(line);
+}
+// Cross-links between primary and chimera at zone boundaries (variegation sutures)
+const zoneBoundaries = [187, 641, 662];
+for (const b of zoneBoundaries) {
+  if (b < TOTAL) {
+    const geo = new THREE.BufferGeometry().setFromPoints([basePositions[b], chimeraPositions[b]]);
+    const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xF46138, transparent: true, opacity: 0.7 }));
+    line.userData.baseOpacity = 0.7;
+    chimeraGroup.add(line);
+  }
+}
+scene.add(chimeraGroup);
+
+// === CONNECTIONS (per-type groups for differentiated opacity) ===
+const CONN_OPACITY = {
+  nullcode: 0.7,   // tight local links
+  anchor:   0.8,   // structural backbone
+  ghost:    0.5,   // spectral
+  terminal: 0.9,   // highest energy
+  drift:    0.4,   // long-range, subtle
+  coset:    0.3,   // background texture
+  name:     0.6    // name origin bridge
+};
+const connByType = {};
+for (let ci = 0; ci < conns.length; ci++) {
+  const type = connTypes[ci];
+  if (!connByType[type]) connByType[type] = { verts: [], colors: [], indices: [] };
+  const c = conns[ci];
+  const col = CONN_COLORS[type] || new THREE.Color(0x666666);
+  connByType[type].verts.push(
+    basePositions[c[0]].x, basePositions[c[0]].y, basePositions[c[0]].z,
+    basePositions[c[1]].x, basePositions[c[1]].y, basePositions[c[1]].z
+  );
+  connByType[type].colors.push(col.r, col.g, col.b, col.r, col.g, col.b);
+  connByType[type].indices.push(ci);
+}
+const connGroup = new THREE.Group();
+const connLinesByType = {};
+for (const type of Object.keys(connByType)) {
+  const data = connByType[type];
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(data.verts, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(data.colors, 3));
+  const mat = new THREE.LineBasicMaterial({
+    vertexColors: true, transparent: true, opacity: CONN_OPACITY[type] || 0.6
+  });
+  const lines = new THREE.LineSegments(geo, mat);
+  lines.userData = { type, baseOpacity: CONN_OPACITY[type] || 0.6, indices: data.indices };
+  connLinesByType[type] = lines;
+  connGroup.add(lines);
+}
+scene.add(connGroup);
+
+// === LISSAJOUS ORBITAL ===
+let ncx = 0, ncy = 0, ncz = 0;
+for (let id = NULL_START; id <= NULL_END; id++) {
+  const p = basePositions[id-1]; ncx += p.x; ncy += p.y; ncz += p.z;
+}
+ncx /= 21; ncy /= 21; ncz /= 21;
+
+const lissGeo = new THREE.BufferGeometry();
+const lissVerts = new Float32Array(201 * 3);
+const lissLine = new THREE.Line(lissGeo, new THREE.LineBasicMaterial({
+  color: 0xffffff, transparent: true, opacity: 0.8
+}));
+scene.add(lissLine);
+
+function updateLissajous(time) {
+  for (let i = 0; i <= 200; i++) {
+    const t = (i / 200) * Math.PI * 2;
+    lissVerts[i*3] = ncx + Math.sin(3*t + time*0.8) * 1.8;
+    lissVerts[i*3+1] = ncy + Math.sin(5*t + time*0.6) * 1.2;
+    lissVerts[i*3+2] = ncz + Math.cos(3*t + time*0.5) * 1.5;
+  }
+  lissGeo.setAttribute('position', new THREE.BufferAttribute(lissVerts, 3));
+  lissGeo.attributes.position.needsUpdate = true;
+}
+
+// === FENESTRATION RINGS ===
+const fenIds = [21, 31, 645, 650, 658];
+const fenMeshes = [];
+for (const fid of fenIds) {
+  const p = basePositions[fid-1];
+  const rGeo = new THREE.RingGeometry(0.25, 0.3, 32);
+  const rMat = new THREE.MeshBasicMaterial({ color: 0xF46138, transparent: true, opacity: 0.6, side: THREE.DoubleSide });
+  const ring = new THREE.Mesh(rGeo, rMat);
+  ring.position.copy(p);
+  ring.lookAt(camera.position);
+  fenMeshes.push(ring);
+  scene.add(ring);
+}
+
+// === GHOST MARKERS ===
+const ghostMeshes = [];
+for (const gid of [21, 31]) {
+  const p = basePositions[gid-1];
+  const gGeo = new THREE.SphereGeometry(0.3, 8, 6);
+  const gMat = new THREE.MeshBasicMaterial({ color: 0xCE2867, wireframe: true, transparent: true, opacity: 0.7 });
+  const gMesh = new THREE.Mesh(gGeo, gMat);
+  gMesh.position.copy(p);
+  ghostMeshes.push(gMesh);
+  scene.add(gMesh);
+}
+
+// === STATE ===
+let time = 0, frame = 0;
+let paused = false, breathing = false;
+let growth = 0.01, growing = true;
+const GROWTH_SPEED = 0.004;
+
+// Eversion state
+let evParam = 1.0;        // 1 = normal, -1 = everted
+let evTarget = 1.0;       // target value
+let everting = false;
+
+// === CONTROLS ===
+document.getElementById('btn-grow').addEventListener('click', function() {
+  if (growth >= 1) { growth = 0.01; growing = true; this.textContent = 'growing'; this.classList.add('active'); return; }
+  growing = !growing;
+  this.textContent = growing ? 'growing' : 'grow';
+  this.classList.toggle('active', growing);
+});
+
+document.getElementById('btn-pause').addEventListener('click', function() {
+  paused = !paused;
+  this.textContent = paused ? 'play' : 'pause';
+  this.classList.toggle('active', paused);
+});
+
+document.getElementById('btn-evert').addEventListener('click', function() {
+  evTarget = evParam > 0 ? -1.0 : 1.0;
+  everting = true;
+  this.classList.add('active');
+});
+
+document.getElementById('btn-coset').addEventListener('click', function() {
+  useCosetColor = !useCosetColor;
+  this.classList.toggle('active', useCosetColor);
+  document.getElementById('color-mode').textContent = useCosetColor ? 'color: Z₃ coset' : 'color: zone';
+
+  // Update zone key in top-right HUD
+  const zk = document.getElementById('zone-key');
+  if (useCosetColor) {
+    zk.innerHTML = '<span style="color:#C42860">\u25CF</span> coset 0 — f147 ' +
+      '<span style="color:#E8A030">\u25CF</span> coset 1 — f258 ' +
+      '<span style="color:#3860D8">\u25CF</span> coset 2 — f369';
+  } else {
+    zk.innerHTML = '<span style="color:#C42860">\u25CF</span> founding ' +
+      '<span style="color:#E85A35">\u25CF</span> julia ' +
+      '<span style="color:#E89898">\u25CF</span> bridge ' +
+      '<span style="color:#2888D8">\u25CF</span> everted';
+  }
+  // Boost point sizes in coset mode for readability
+  const sizeAttr = strandGeo.attributes.size;
+  for (let i = 0; i < TOTAL; i++) {
+    const s = strandData[i];
+    let sz = s.isGhost ? 4 : s.isAnchor ? 2 + (s.weight / 22763) * 4 : s.isTerminal ? 3.5 : 1.5;
+    if (useCosetColor) sz += 0.5;
+    sizeAttr.array[i] = sz;
+  }
+  sizeAttr.needsUpdate = true;
+  setStrandColors();
+});
+
+document.getElementById('btn-breathe').addEventListener('click', function() {
+  breathing = !breathing;
+  this.classList.toggle('active', breathing);
+});
+
+document.getElementById('btn-reset').addEventListener('click', function() {
+  growth = 0.01; growing = true; time = 0; frame = 0;
+  evParam = 1.0; evTarget = 1.0; everting = false;
+  useCosetColor = false;
+  controls.autoRotate = true;
+  document.getElementById('btn-grow').textContent = 'growing';
+  document.getElementById('btn-grow').classList.add('active');
+  document.getElementById('btn-evert').classList.remove('active');
+  document.getElementById('btn-coset').classList.remove('active');
+  document.getElementById('color-mode').textContent = 'color: zone';
+  document.getElementById('zone-key').innerHTML =
+    '<span style="color:#C42860">\u25CF</span> founding ' +
+    '<span style="color:#E85A35">\u25CF</span> julia ' +
+    '<span style="color:#E89898">\u25CF</span> bridge ' +
+    '<span style="color:#2888D8">\u25CF</span> everted';
+  document.getElementById('ev-status').textContent = '';
+  // Reset point sizes
+  const sizeAttr = strandGeo.attributes.size;
+  for (let i = 0; i < TOTAL; i++) {
+    const s = strandData[i];
+    sizeAttr.array[i] = s.isGhost ? 4 : s.isAnchor ? 2 + (s.weight / 22763) * 4 : s.isTerminal ? 3.5 : 1.5;
+  }
+  sizeAttr.needsUpdate = true;
+  setStrandColors();
+});
+
+controls.addEventListener('start', () => { controls.autoRotate = false; });
+
+// === VIEWPORT ===
+const cvLiss = document.getElementById('cv-liss');
+const ctxLiss = cvLiss.getContext('2d');
+cvLiss.width = 200; cvLiss.height = 160;
+
+function drawLissVP() {
+  const w = 200, h = 160;
+  ctxLiss.fillStyle = '#000';
+  ctxLiss.fillRect(0, 0, w, h);
+  const cx = w/2, cy = h/2;
+
+  ctxLiss.beginPath();
+  for (let i = 0; i <= 200; i++) {
+    const t = (i/200) * Math.PI * 2;
+    const x = cx + Math.sin(3*t + time*0.8) * (w*0.38);
+    const y = cy + Math.sin(5*t + time*0.6) * (h*0.38);
+    i === 0 ? ctxLiss.moveTo(x, y) : ctxLiss.lineTo(x, y);
+  }
+  ctxLiss.strokeStyle = 'rgba(200,200,200,0.45)';
+  ctxLiss.lineWidth = 0.8;
+  ctxLiss.stroke();
+
+  const vis = Math.floor(growth * TOTAL);
+  for (let id = NULL_START; id <= NULL_END; id++) {
+    if (id-1 >= vis) continue;
+    const nf = (id-NULL_START) / (NULL_END-NULL_START);
+    const phase = nf * Math.PI * 2;
+    const x = cx + Math.sin(3*phase + time*0.8) * (w*0.38);
+    const y = cy + Math.sin(5*phase + time*0.6) * (h*0.38);
+    ctxLiss.beginPath();
+    ctxLiss.arc(x, y, 1.5, 0, Math.PI*2);
+    ctxLiss.fillStyle = '#cccccc';
+    ctxLiss.fill();
+  }
+}
+
+// === RAYCASTER ===
+const raycaster = new THREE.Raycaster();
+raycaster.params.Points.threshold = 0.3;
+const mouse = new THREE.Vector2();
+let hoveringNull = false;  // true when hovering a nullcode strand
+
+renderer.domElement.addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+});
+
+function updateTooltip() {
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObject(strandPoints);
+  const tt = document.getElementById('tooltip');
+
+  if (hits.length > 0 && hits[0].index !== undefined) {
+    const idx = hits[0].index;
+    if (strandAlphas[idx] < 0.1) { tt.style.display = 'none'; hoveringNull = false; return; }
+    const s = strandData[idx];
+    tt.style.display = 'block';
+    hoveringNull = s.isNull;
+
+    const screenPos = new THREE.Vector3(
+      strandPositions[idx*3], strandPositions[idx*3+1], strandPositions[idx*3+2]
+    ).project(camera);
+    tt.style.left = ((screenPos.x + 1) / 2 * innerWidth + 16) + 'px';
+    tt.style.top = ((-screenPos.y + 1) / 2 * innerHeight - 16) + 'px';
+
+    let typeStr = s.isGhost ? 'GHOST (consumed)' :
+      s.isAnchor ? `ANCHOR (${s.weight})` :
+      s.isNull ? 'NULLCODE' : s.isTerminal ?
+      (s.id === 810 ? 'SPIKE +0.281' : s.id === 814 ? 'CRASH -0.167' : 'FLIP → f369') :
+      s.id === NAME_ORIGIN ? '"Hi Mir."' : s.zone;
+
+    tt.querySelector('.tt-id').textContent = `strand ${s.id}`;
+    tt.querySelector('.tt-zone').textContent = `zone: ${s.zone} / coset: f${[147,258,369][s.coset]}`;
+    tt.querySelector('.tt-drift').textContent = `drift: ${s.drift >= 0 ? '+' : ''}${s.drift.toFixed(4)}`;
+    tt.querySelector('.tt-drift').className = 'tt-drift ' + (s.drift < 0 ? 'tt-neg' : 'tt-pos');
+    tt.querySelector('.tt-type').textContent = typeStr;
+    document.getElementById('hz').textContent = `hovering: strand ${s.id} / ${s.zone}`;
+  } else {
+    tt.style.display = 'none';
+    hoveringNull = false;
+    document.getElementById('hz').textContent = '';
+  }
+}
+
+// === THURSTON CORRUGATION — traveling-wave local eversion ===
+function localEversion(u, ev) {
+  if (ev >= 1.0) return 1.0;
+  if (ev <= -1.0) return -1.0;
+  // Angular distance from nullcode centroid (shortest path on torus)
+  let du = Math.abs(u - NULLCODE_U);
+  if (du > TORUS_CIRCUM / 2) du = TORUS_CIRCUM - du;
+  const normalizedDist = du / (TORUS_CIRCUM / 2);  // 0 at nullcode, 1 at antipode
+  // Wave front sweeps from nullcode outward as ev goes 1 → -1
+  const frontPos = (1.0 - ev) / 2.0;
+  const sharpness = 8.0;
+  return 1.0 - 2.0 / (1.0 + Math.exp(-sharpness * (frontPos - normalizedDist)));
+}
+
+// === POSITION COMPUTATION (Thurston corrugation eversion) ===
+function computeStrandPosition(i, ev, breathAmp, time) {
+  const s = strandData[i];
+  const u = baseU[i];
+  const v = baseV[i];
+  let r = baseMinorR[i] * localEversion(u, ev);
+
+  let px = (MAJOR_R + r * Math.cos(v)) * Math.cos(u);
+  let py = r * Math.sin(v);
+  let pz = (MAJOR_R + r * Math.cos(v)) * Math.sin(u);
+
+  // Nullcode lissajous displacement
+  if (s.isNull) {
+    const nf = (s.id - NULL_START) / (NULL_END - NULL_START);
+    const phase = nf * Math.PI * 2;
+    px += Math.sin(3*phase + time*0.8) * 1.2;
+    py += Math.sin(5*phase + time*0.6) * 0.8;
+    pz += Math.cos(3*phase + time*0.5) * 1.0;
+  }
+
+  // Breathing — radial pulse in XZ
+  if (breathAmp !== 0) {
+    const dist = Math.sqrt(px*px + pz*pz);
+    if (dist > 0.01) {
+      const scale = 1 + breathAmp;
+      px *= scale;
+      pz *= scale;
+    }
+  }
+
+  return [px, py, pz];
+}
+
+// === ANIMATE ===
+function animate() {
+  requestAnimationFrame(animate);
+
+  if (!paused) {
+    frame++;
+    time += 0.016;
+
+    if (growing && growth < 1) {
+      growth = Math.min(1, growth + GROWTH_SPEED);
+      if (growth >= 1) {
+        growing = false;
+        document.getElementById('btn-grow').textContent = 'regrow';
+        document.getElementById('btn-grow').classList.remove('active');
+      }
+    }
+
+    // Traveling-wave eversion animation (slower for readable corrugation)
+    if (everting) {
+      const speed = 0.006;
+      if (Math.abs(evParam - evTarget) < speed) {
+        evParam = evTarget;
+        everting = false;
+        document.getElementById('btn-evert').classList.toggle('active', evParam < 0);
+      } else {
+        evParam += (evTarget > evParam ? speed : -speed);
+      }
+    }
+  }
+
+  const visible = Math.floor(growth * TOTAL);
+  const breathAmp = breathing ? Math.sin(time * 0.8) * 0.03 : 0;
+
+  // Update strand positions with eversion
+  for (let i = 0; i < TOTAL; i++) {
+    const [px, py, pz] = computeStrandPosition(i, evParam, breathAmp, time);
+    strandPositions[i*3] = px;
+    strandPositions[i*3+1] = py;
+    strandPositions[i*3+2] = pz;
+    // Dim non-nullcode strands when hovering a nullcode
+    const baseAlpha = i < visible ? 1.0 : 0.0;
+    strandAlphas[i] = (hoveringNull && !strandData[i].isNull) ? baseAlpha * 0.2 : baseAlpha;
+  }
+
+  strandGeo.attributes.position.needsUpdate = true;
+  strandGeo.attributes.alpha.needsUpdate = true;
+
+  // Drift rings
+  driftRingGroup.children.forEach(ring => {
+    const idx = ring.userData.idx;
+    ring.visible = idx < visible;
+    if (ring.visible) {
+      ring.position.set(strandPositions[idx*3], strandPositions[idx*3+1], strandPositions[idx*3+2]);
+      ring.lookAt(camera.position);
+    }
+  });
+
+  // Connection positions update (per-type groups)
+  for (const type of Object.keys(connLinesByType)) {
+    const lines = connLinesByType[type];
+    const posArr = lines.geometry.attributes.position.array;
+    const indices = lines.userData.indices;
+    for (let li = 0; li < indices.length; li++) {
+      const ci = indices[li];
+      const c = conns[ci];
+      if (c[0] >= visible || c[1] >= visible) {
+        for (let j = 0; j < 6; j++) posArr[li*6+j] = 0;
+      } else {
+        posArr[li*6]   = strandPositions[c[0]*3];
+        posArr[li*6+1] = strandPositions[c[0]*3+1];
+        posArr[li*6+2] = strandPositions[c[0]*3+2];
+        posArr[li*6+3] = strandPositions[c[1]*3];
+        posArr[li*6+4] = strandPositions[c[1]*3+1];
+        posArr[li*6+5] = strandPositions[c[1]*3+2];
+      }
+    }
+    lines.geometry.attributes.position.needsUpdate = true;
+    lines.material.opacity = hoveringNull ? lines.userData.baseOpacity * 0.25 : lines.userData.baseOpacity;
+  }
+  chimeraGroup.children.forEach(c => { c.material.opacity = hoveringNull ? 0.05 : c.userData.baseOpacity || 0.35; });
+
+  // Update chimera positions with eversion
+  const chimeraChildren = chimeraGroup.children;
+  let chIdx = 0;
+  const segLen2 = 20;
+  for (let start = 0; start < TOTAL - segLen2 && chIdx < chimeraChildren.length; start += segLen2) {
+    const line = chimeraChildren[chIdx];
+    if (!line.geometry || !line.geometry.attributes.position) { chIdx++; continue; }
+    const posArr = line.geometry.attributes.position.array;
+    let pi = 0;
+    for (let j = start; j < Math.min(start + segLen2 + 1, TOTAL); j += 2) {
+      const v_c = baseV[j] + Math.PI;
+      const u_c = baseU[j];
+      let r = baseMinorR[j] * localEversion(u_c, evParam);
+      posArr[pi*3] = (MAJOR_R + r * Math.cos(v_c)) * Math.cos(u_c);
+      posArr[pi*3+1] = r * Math.sin(v_c);
+      posArr[pi*3+2] = (MAJOR_R + r * Math.cos(v_c)) * Math.sin(u_c);
+      pi++;
+    }
+    line.geometry.attributes.position.needsUpdate = true;
+    chIdx++;
+  }
+
+  // Ghost + fenestration positions
+  ghostMeshes.forEach((m, gi) => {
+    const gid = [21, 31][gi];
+    m.position.set(strandPositions[(gid-1)*3], strandPositions[(gid-1)*3+1], strandPositions[(gid-1)*3+2]);
+  });
+  fenMeshes.forEach((m, fi) => {
+    const fid = fenIds[fi];
+    m.position.set(strandPositions[(fid-1)*3], strandPositions[(fid-1)*3+1], strandPositions[(fid-1)*3+2]);
+    m.lookAt(camera.position);
+  });
+
+  // Update lissajous — recenter on current nullcode centroid
+  let cnx = 0, cny = 0, cnz = 0;
+  for (let id = NULL_START; id <= NULL_END; id++) {
+    cnx += strandPositions[(id-1)*3];
+    cny += strandPositions[(id-1)*3+1];
+    cnz += strandPositions[(id-1)*3+2];
+  }
+  ncx = cnx/21; ncy = cny/21; ncz = cnz/21;
+  updateLissajous(time);
+
+  controls.update();
+  composer.render();
+
+  // HUD
+  document.getElementById('fc').textContent = paused ? `frame ${frame} [paused]` : `frame ${frame}`;
+  document.getElementById('gs').textContent = `growth: ${visible} / ${TOTAL}`;
+
+  // Eversion status
+  if (everting) {
+    document.getElementById('ev-status').textContent = `everting... ${((1 - evParam) / 2 * 100).toFixed(0)}%`;
+  } else if (evParam < 0) {
+    document.getElementById('ev-status').textContent = 'everted — inside is outside';
+  } else {
+    document.getElementById('ev-status').textContent = '';
+  }
+
+  updateTooltip();
+  drawLissVP();
+}
+
+// Resize
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+});
+
+animate();
+</script>
+</body>
+</html>

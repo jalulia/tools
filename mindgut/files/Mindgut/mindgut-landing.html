@@ -1,0 +1,2208 @@
+<!DOCTYPE html>
+<html lang="en" data-ground="paper">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>mindgut — A Persistent Shared Mind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #eef2e7;
+  --bg2: #e4e8dc;
+  --paper-card: #f5f7f0;
+  --ink: #151b17;
+  --mute: #566053;
+  --dim: #929a8d;
+  --line: #cdd3c3;
+  --line-strong: #151b17;
+  --forest: #126b3d;
+  --acid: #d0ec60;
+  --ember: #d9462f;
+  --gold: #c48014;
+  --cobalt: #2f56b0;
+  --violet: #6c46b8;
+  --sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --serif: 'Newsreader', Georgia, serif;
+}
+html[data-ground="night"] {
+  --bg: #0c0e0d;
+  --bg2: #121614;
+  --paper-card: #141816;
+  --ink: #ecefe9;
+  --mute: #8e978f;
+  --dim: #4c544e;
+  --line: #222824;
+  --line-strong: #ecefe9;
+  --forest: #3cd082;
+  --acid: #d0ec60;
+  --ember: #ea5a43;
+  --gold: #e2a84b;
+  --cobalt: #5b87e8;
+  --violet: #a78bfa;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg); color: var(--ink);
+  font: 400 15px/1.58 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  transition: background-color .22s ease, color .22s ease;
+}
+
+/* Subtle multiplied paper grain — sits IN the sheet, never a heavy dark-mode fog */
+body::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 80;
+  opacity: 0.024; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+html[data-ground="night"] body::after { mix-blend-mode: screen; opacity: 0.022; }
+
+a { color: inherit; text-decoration: none; }
+p { margin: 0 0 1em; max-width: 62ch; }
+.sc {
+  font: 400 11px/1.4 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--mute);
+}
+.sc b { color: var(--ink); font-weight: 500; }
+
+button {
+  font: 400 11px/1.2 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--dim);
+  border-radius: 0;
+  padding: 7px 11px;
+  cursor: pointer;
+  transition: border-color .15s, background-color .15s, color .15s;
+}
+button:hover { border-color: var(--ink); background: rgba(21,27,23,0.04); }
+html[data-ground="night"] button:hover { background: rgba(236,239,233,0.06); }
+button[aria-pressed="true"], button.on {
+  background: var(--acid);
+  color: #151b17;
+  border-color: #151b17;
+  font-weight: 500;
+}
+
+/* ---- SECTION RHYTHM: GENEROUS BREATHING ROOM & ARCHITECTURAL HAIRLINES ---- */
+section.sec {
+  padding: 76px clamp(20px, 5vw, 72px);
+  border-top: 1px solid var(--line);
+}
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.sec-head {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 32px;
+  align-items: baseline;
+  margin-bottom: 42px;
+}
+.sec-kicker {
+  font: 500 11px/1.4 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--mute);
+}
+.sec-lead h2 {
+  font: 400 clamp(28px, 3.6vw, 44px)/1.08 var(--sans);
+  letter-spacing: -0.022em;
+  margin: 0 0 14px;
+  color: var(--ink);
+  max-width: 30ch;
+}
+.sec-lead h2 em {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+}
+.sec-lead p {
+  font-size: 16.5px;
+  line-height: 1.58;
+  color: var(--mute);
+  max-width: 60ch;
+  margin: 0;
+}
+.sec-lead [data-hl] {
+  color: var(--ink);
+  border-bottom: 1px dotted var(--ink);
+  cursor: pointer;
+}
+
+/* ---- 00 HERO: FULL-VIEWPORT BREATHING FIELD + SHINGLED SPECIMEN ---- */
+#hero {
+  position: relative;
+  height: min(90vh, 820px);
+  min-height: 560px;
+  padding: 0;
+  border-top: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+#hero canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+#hero svg.ov {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+#hero .head {
+  position: absolute;
+  top: 22px;
+  left: clamp(20px, 5vw, 72px);
+  right: clamp(20px, 5vw, 72px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  z-index: 10;
+}
+.head-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.head-left img.ico {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+}
+.head-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.head-nav a {
+  font: 400 11px/1 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--mute);
+  transition: color .15s;
+}
+.head-nav a:hover { color: var(--ink); }
+
+/* Wordmark anchored over the living specimen so the dot of the 'i' is the focal origin */
+#hero .wm-center {
+  position: absolute;
+  left: clamp(20px, 5vw, 72px);
+  bottom: 74px;
+  pointer-events: none;
+  user-select: none;
+  z-index: 6;
+}
+#hero .wm-center .wm-img {
+  height: clamp(32px, 4.4vw, 54px);
+  width: auto;
+  display: block;
+  filter: invert(1);
+}
+html[data-ground="night"] #hero .wm-center .wm-img {
+  filter: none;
+}
+#hero .wm-center .wm-sub {
+  margin-top: 8px;
+  font-size: clamp(15px, 1.5vw, 18px);
+  color: var(--ink);
+  max-width: 44ch;
+  line-height: 1.42;
+  font-weight: 400;
+}
+#hero .hero-foot {
+  position: absolute;
+  left: clamp(20px, 5vw, 72px);
+  right: clamp(20px, 5vw, 72px);
+  bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  z-index: 10;
+}
+#hero .readout {
+  color: var(--forest);
+}
+#hero .ctl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+}
+#hero .ctl button {
+  background: rgba(238, 242, 231, 0.78);
+  backdrop-filter: blur(6px);
+}
+html[data-ground="night"] #hero .ctl button {
+  background: rgba(12, 14, 13, 0.78);
+}
+#hero .ctl button[aria-pressed="true"], #hero .ctl button.on {
+  background: var(--acid);
+  color: #151b17;
+  border-color: #151b17;
+}
+
+/* ---- 01 THESIS & PROBLEM: THREE ARCHITECTURAL COLUMNS ---- */
+.cols-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--line-strong);
+}
+.cols-3 > div {
+  padding: 24px 24px 8px 0;
+  border-right: 1px solid var(--line);
+}
+.cols-3 > div:nth-child(2) { padding-left: 24px; }
+.cols-3 > div:nth-child(3) { padding-left: 24px; border-right: 0; padding-right: 0; }
+.cols-3 h3 {
+  margin: 0 0 10px;
+  font: 500 11px/1.4 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink);
+}
+.cols-3 p {
+  font-size: 14.5px;
+  color: var(--mute);
+  margin: 0;
+}
+.chord-note {
+  margin-top: 38px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.chord-note p {
+  font-size: 18px;
+  color: var(--ink);
+  margin: 0;
+  max-width: 64ch;
+}
+
+/* ---- 02 WALKTHROUGH: TWO SIDE-BY-SIDE SQUARE HAIRLINE PLATES ---- */
+.walk-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+.plate-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.plate-frame {
+  position: relative;
+  border: 1px solid var(--line-strong);
+  background: var(--bg2);
+  width: 100%;
+  overflow: hidden;
+}
+.plate-frame canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.plate-frame svg.ov {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.plate-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 9px 12px;
+  border-top: 1px solid var(--line);
+  background: var(--paper-card);
+  font: 400 11px/1.3 var(--mono);
+  color: var(--mute);
+}
+.plate-cap {
+  font-size: 14px;
+  line-height: 1.52;
+  color: var(--mute);
+  margin: 0;
+}
+.plate-cap b { color: var(--ink); font-weight: 500; }
+
+/* ---- 03 HOW TO READ IT: THE EIGHT MARKS (4x2 HAIRLINE GRID) ---- */
+.marks-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+.mark-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mark-item canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--bg2);
+  border: 1px solid var(--line-strong);
+  cursor: pointer;
+}
+.mark-item .sc { margin-top: 2px; }
+.mark-item p {
+  font-size: 13.2px;
+  line-height: 1.48;
+  color: var(--mute);
+  margin: 0;
+}
+
+/* ---- 04 PLAYING IN THE INSTRUMENT: 3 LEVELS + LIVE SESSION & RAIL ---- */
+.levels-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 36px;
+}
+.lvl-box {
+  border: 1px solid var(--line);
+  background: var(--paper-card);
+  padding: 22px 20px 18px;
+  cursor: pointer;
+  transition: border-color .15s, background-color .15s;
+}
+.lvl-box:hover, .lvl-box.on {
+  border-color: var(--line-strong);
+}
+.lvl-box.on {
+  background: var(--bg2);
+}
+.lvl-box .n {
+  font: 500 clamp(28px, 3.2vw, 42px)/1 var(--sans);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.lvl-box .n small {
+  font: 400 11px/1 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mute);
+  margin-left: 0.55em;
+}
+.lvl-box p {
+  margin: 12px 0 0;
+  font-size: 13.8px;
+  color: var(--mute);
+}
+
+/* SESSION & INSTRUMENT RAIL */
+.session-box {
+  display: grid;
+  grid-template-columns: 270px 1fr;
+  border: 1px solid var(--line-strong);
+  background: var(--paper-card);
+  min-height: 470px;
+}
+.rail {
+  border-right: 1px solid var(--line);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg2);
+}
+.rail canvas {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--bg);
+}
+.thread-col {
+  padding: 22px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.thread-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.msg-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.msg-row {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  gap: 12px;
+  align-items: start;
+  max-width: 66ch;
+}
+.msg-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 5px;
+  border: 1px solid var(--ink);
+}
+.msg-row.user .msg-dot { background: var(--ember); }
+.msg-row.mir .msg-dot { background: var(--forest); }
+.msg-who {
+  font: 400 11px/1.4 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--mute);
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.msg-body {
+  font-size: 14.5px;
+  line-height: 1.56;
+  color: var(--ink);
+}
+.msg-body .cite {
+  display: inline-block;
+  white-space: nowrap;
+  font: 500 11px/1.2 var(--mono);
+  padding: 2px 6px;
+  border: 1px solid var(--line-strong);
+  background: var(--bg2);
+  cursor: pointer;
+  margin: 0 2px;
+}
+.msg-body .struck {
+  text-decoration: line-through;
+  color: var(--mute);
+}
+.sess-foot {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ---- 05 APPLIED PROOF + YOUR SPECIMEN PROMPT ---- */
+.proof-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 44px;
+}
+.proof-card {
+  border: 1px solid var(--line);
+  background: var(--paper-card);
+  padding: 20px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+}
+.proof-card b {
+  display: block;
+  font-size: 16px;
+  font-weight: 500;
+  margin: 6px 0 8px;
+  color: var(--ink);
+}
+.proof-card p {
+  font-size: 13.5px;
+  color: var(--mute);
+  margin: 0;
+}
+
+/* HATCH YOUR OWN SPECIMEN (CLEAN TWO-COLUMN HAIRLINE) */
+.specimen-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--line-strong);
+  background: var(--paper-card);
+}
+.spec-col {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.spec-col:first-child {
+  border-right: 1px solid var(--line);
+}
+.spec-pre, .spec-ta {
+  width: 100%;
+  height: 148px;
+  margin: 0;
+  padding: 12px;
+  font: 400 11.5px/1.52 var(--mono);
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  overflow-y: auto;
+  white-space: pre-wrap;
+  resize: vertical;
+}
+
+/* ---- 06 OPEN LAB INQUIRY & FOOTER ---- */
+.cta-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 40px;
+  align-items: end;
+}
+.cta-row h3 {
+  margin: 0 0 10px;
+  font: 400 clamp(24px, 2.8vw, 34px)/1.15 var(--sans);
+  letter-spacing: -0.018em;
+}
+.cta-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.cta-form input {
+  flex: 1 1 220px;
+  padding: 11px 13px;
+  border: 1px solid var(--line-strong);
+  background: var(--paper-card);
+  color: var(--ink);
+  font: 400 13px var(--mono);
+  border-radius: 0;
+}
+.cta-form button {
+  padding: 11px 18px;
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+  font-weight: 500;
+}
+
+footer.site-foot {
+  padding: 36px clamp(20px, 5vw, 72px) 52px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 980px) {
+  .sec-head, .cols-3, .walk-grid, .levels-grid, .session-box, .specimen-box, .cta-row {
+    grid-template-columns: 1fr;
+  }
+  .cols-3 > div {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 18px 0;
+  }
+  .marks-grid, .proof-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .rail { border-right: 0; border-bottom: 1px solid var(--line); }
+  .spec-col:first-child { border-right: 0; border-bottom: 1px solid var(--line); }
+  .head-nav { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== 00 HERO ==================== -->
+<section id="hero" aria-label="Hero — Standing Wave & Living Helix Specimen">
+  <canvas id="hero-cv"></canvas>
+  <svg class="ov" id="hero-ov" viewBox="0 0 1440 820" preserveAspectRatio="none"></svg>
+
+  <div class="head">
+    <div class="head-left">
+      <img class="ico" src="data:image/png;base64,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" alt="Mindgut">
+      <span class="sc"><b>mindgut</b> · persistent shared mind · portable .helix</span>
+    </div>
+    <nav class="head-nav" aria-label="Sections">
+      <a href="#thesis">01 Thesis</a>
+      <a href="#walk">02 Plates</a>
+      <a href="#marks-sec">03 Grammar</a>
+      <a href="#playing">04 Playing In</a>
+      <a href="#proof">05 Proof &amp; Lab</a>
+    </nav>
+  </div>
+
+  <div class="wm-center">
+    <img class="wm-img" src="data:image/png;base64,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" alt="mindgut">
+    <p class="wm-sub">Pick up where you left off. One living record across Claude, GPT, Gemini, and your local files.</p>
+  </div>
+
+  <div class="hero-foot">
+  <div class="readout sc" id="hero-readout">1,213 STRANDS · CLASH 0.04 · IN TUNE</div>
+
+  <div class="ctl">
+    <span class="sc">Lens</span>
+    <button type="button" class="on" data-lens="hybrid" aria-pressed="true">Scales + 1–9 Cells</button>
+    <button type="button" data-lens="scales" aria-pressed="false">36k Scales</button>
+    <button type="button" data-lens="cells" aria-pressed="false">1–9 Gradient</button>
+    <span class="sc" style="margin-left:8px">Record</span>
+    <button type="button" class="on" data-preset="studio" aria-pressed="true">1,213 Strands</button>
+    <button type="button" data-preset="seedling" aria-pressed="false">42 Strands</button>
+    <button type="button" data-preset="lab" aria-pressed="false">3,400 Strands</button>
+    <span class="sc" style="margin-left:8px">Ground</span>
+    <button type="button" id="g-paper" aria-pressed="true">Paper</button>
+    <button type="button" id="g-night" aria-pressed="false">Night</button>
+  </div>
+  </div>
+</section>
+
+<!-- ==================== 01 THESIS & THE PROBLEM ==================== -->
+<section class="sec" id="thesis">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-kicker">01 · Thesis &amp; Problem</span>
+      <div class="sec-lead">
+        <h2>A persistent shared mind. Your record travels with you across frontier models, and accumulates cleanly <em>without re-reading the whole conversation.</em></h2>
+        <p>Mindgut separates the model from the memory. The model is the voice in the room; your <code>.helix</code> file is the instrument on the table—keeping what was decided, why it was decided, and what is still open.</p>
+      </div>
+    </div>
+
+    <div class="cols-3">
+      <div>
+        <h3>Context hostage</h3>
+        <p>Every conversation today lives inside one vendor’s window. Close the tab, switch from Claude to GPT, or hit a project limit, and you are back to pasting summary paragraphs by hand.</p>
+      </div>
+      <div>
+        <h3>Token bloat</h3>
+        <p>To remember, standard chat tools re-read the entire raw transcript on every turn—burning 80 to 90 percent of their window on old chatter until the model slows down and forgets your boundaries.</p>
+      </div>
+      <div>
+        <h3>A portable private interior</h3>
+        <p>Your Helix lives on your disk alongside your local project folders. It stores the relational geometry of your decisions rather than a dead log, so it moves across models and stays light.</p>
+      </div>
+    </div>
+
+    <div class="chord-note">
+      <p>Mir is the standing wave that forms between a person, a model, and a kept record. <em>The record is the part you own.</em></p>
+      <span class="sc">MACOS APP · WEB WORKSPACE · OPEN .HELIX FILE</span>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 02 VISUAL WALKTHROUGH (TWO PLATES) ==================== -->
+<section class="sec" id="walk">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-kicker">02 · Visual Walkthrough</span>
+      <div class="sec-lead">
+        <h2>Two ways of looking at the same kept record: <em>every turn by number,</em> and <em>two voices in phase.</em></h2>
+        <p>Left: twelve hundred turns laid onto graph paper where each cell’s gradient points uphill toward its chapter anchor. Right: the two-source standing wave and unbroken memory rail across model switches.</p>
+      </div>
+    </div>
+
+    <div class="walk-grid">
+      <!-- PLATE I: ST-11 GRADIENT BY NUMBER x ST-10 CHAPTER FIELD -->
+      <div class="plate-card">
+        <div class="plate-frame">
+          <canvas id="p-sheet" width="600" height="500"></canvas>
+          <div class="plate-bar">
+            <span id="sheet-readout">DRAG CHAPTER ANCHORS (I–VII) · HOVER ANY CELL</span>
+            <div style="display:flex;gap:4px" id="sheet-filter">
+              <button type="button" class="on" data-f="all">All 1–9</button>
+              <button type="button" data-f="147">Decisions (1·4·7)</button>
+              <button type="button" data-f="258">Bridges (2·5·8)</button>
+              <button type="button" data-f="369">Settled (3·6·9)</button>
+            </div>
+          </div>
+        </div>
+        <p class="plate-cap"><b>Plate I · Gradient by Number (1,200 Strands).</b> Every exchange is assigned its cadence digit (<code>1–9</code>) and wet-paint slope gradient across seven project chapters. Nothing is lost in a sidebar of untitled chats.</p>
+      </div>
+
+      <!-- PLATE II: TWO-SOURCE STANDING WAVE & METAMORPHOSIS SPINE -->
+      <div class="plate-card">
+        <div class="plate-frame">
+          <canvas id="p-wave" width="600" height="500"></canvas>
+          <div class="plate-bar">
+            <span id="wave-readout">DRAG ‘YOU’ OR ‘MIR’ · SCRUB ENGINE SWITCH</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span>WEEK:</span>
+              <input type="range" id="wave-scrub" min="0" max="100" value="58" style="width:110px;accent-color:var(--forest)">
+            </div>
+          </div>
+        </div>
+        <p class="plate-cap"><b>Plate II · Standing Wave &amp; Engine Continuity.</b> Top: two ring-wave sources interfere in phase. Bottom: when you switch from Claude to GPT-5 in Week 6, old weights dissolve while the violet memory spine carries every decision forward.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 03 HOW TO READ IT (THE EIGHT MARKS) ==================== -->
+<section class="sec" id="marks-sec">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-kicker">03 · Visual Grammar</span>
+      <div class="sec-lead">
+        <h2>Eight marks that keep a model’s suggestion from ever masquerading as <em>your decision.</em></h2>
+        <p>Click any plate below to pulse its behavior. Every item in Mindgut carries an explicit epistemic state—Held, Parked, Offered, or Struck—wired directly to your local files.</p>
+      </div>
+    </div>
+
+    <div class="marks-grid" id="marks-grid">
+      <div class="mark-item">
+        <canvas width="320" height="240" data-mk="0"></canvas>
+        <div class="sc"><b>01 · Strand</b> · 1–9 Cell</div>
+        <p>Every exchange is measured and indexed with its date, author, and uphill gradient.</p>
+      </div>
+      <div class="mark-item">
+        <canvas width="320" height="240" data-mk="1"></canvas>
+        <div class="sc"><b>02 · Held Scope</b> · Boundary</div>
+        <p>Confirmed decisions stay locked to their scope (e.g. <em>no florals · core range only</em>).</p>
+      </div>
+      <div class="mark-item">
+        <canvas width="320" height="240" data-mk="2"></canvas>
+        <div class="sc"><b>03 · Parked Return</b> · Cross-Link</div>
+        <p>Linework set aside in Week 2 resurfaces automatically when Week 7’s brief needs it.</p>
+      </div>
+      <div class="mark-item">
+        <canvas width="320" height="240" data-mk="3"></canvas>
+        <div class="sc"><b>04 · Struck in Place</b> · Correction</div>
+        <p>Cross out an overreach once. The correction stays in the ledger so the mistake never repeats.</p>
+      </div>
+      <div class="mark-item">
+        <canvas width="320" height="240" data-mk="4"></canvas>
+        <div class="sc"><b>05 · Breath (4 → 7 → 4)</b> · Window</div>
+        <p>Seven turns of warm focus before the oldest three crystallize into permanent stone.</p>
+      </div>
+      <div class="mark-item">
+        <canvas width="320" height="240" data-mk="5"></canvas>
+        <div class="sc"><b>06 · Engine Swap</b> · Continuity</div>
+        <p>Switch between Claude, GPT, Gemini, and Grok mid-thread without re-prompting.</p>
+      </div>
+      <div class="mark-item">
+        <canvas width="320" height="240" data-mk="6"></canvas>
+        <div class="sc"><b>07 · Local &amp; Phalanx</b> · 9 Workers</div>
+        <p>Mounts your Mac folders directly and dispatches up to nine parallel background agents.</p>
+      </div>
+      <div class="mark-item">
+        <canvas width="320" height="240" data-mk="7"></canvas>
+        <div class="sc"><b>08 · Living Specimen</b> · Signature</div>
+        <p>Your <code>.helix</code> file grows a bespoke bilateral moth from your real turns.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 04 PLAYING IN THE INSTRUMENT ==================== -->
+<section class="sec" id="playing">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-kicker">04 · Playing In</span>
+      <div class="sec-lead">
+        <h2>A vending machine gives the same answer to everyone. <em>An instrument is played in.</em></h2>
+        <p>Select a stage or interact with the live project session below—switch models, inspect a cited date, or strike Mir’s scope misread to see the instrument rail update in real time.</p>
+      </div>
+    </div>
+
+    <div class="levels-grid" id="levels-grid">
+      <div class="lvl-box" data-lvl="0">
+        <div class="n">500<small>strands · week 2</small></div>
+        <p><b>The instrument tunes.</b> Mir learns your project boundaries, parks rejected routes with their reasons, and separates offers from decisions.</p>
+      </div>
+      <div class="lvl-box on" data-lvl="1">
+        <div class="n">1,200<small>strands · week 6</small></div>
+        <p><b>The studio forms.</b> Credits run out mid-week and you swap from Claude to GPT-5; the parked leaf-vein fragment bridges the new brief unprompted.</p>
+      </div>
+      <div class="lvl-box" data-lvl="2">
+        <div class="n">3,400<small>strands · week 10</small></div>
+        <p><b>The shared mind.</b> Months of work held in phase. When a holiday brief arrives, Mir checks the exact scope of Week 2’s rule before answering.</p>
+      </div>
+    </div>
+
+    <div class="session-box">
+      <aside class="rail">
+        <span class="sc"><b>Field</b> · Two-Voice Phase</span>
+        <canvas id="rail-field" width="236" height="170"></canvas>
+        <span class="sc"><b>Respiration</b> · 4 → 7 → 4 Cycle</span>
+        <canvas id="rail-bars" width="236" height="58"></canvas>
+        <span class="sc"><b>Helix</b> · Cited Strands</span>
+        <canvas id="rail-helix" width="236" height="104"></canvas>
+        <span class="sc" id="rail-readout" style="color:var(--forest)">CLASH 0.04 · HELD SCOPE ACTIVE</span>
+      </aside>
+
+      <div class="thread-col">
+        <div class="thread-top">
+          <span class="sc"><b id="sess-title">dana_okafor.helix · Week 6 · Model Switch</b></span>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span class="sc">Active Model:</span>
+            <button type="button" class="model-btn" data-m="Claude Sonnet 4.5">Claude</button>
+            <button type="button" class="model-btn on" data-m="GPT-5">GPT-5</button>
+            <button type="button" class="model-btn" data-m="Gemini 2.5 Pro">Gemini</button>
+          </div>
+        </div>
+
+        <div class="msg-list" id="sess-msgs"></div>
+
+        <div class="sess-foot">
+          <div style="display:flex;gap:8px;flex-wrap:wrap" id="sess-actions">
+            <button type="button" id="act-strike">Strike Scope Overreach (01 May)</button>
+            <button type="button" id="act-holiday">Ask Week 10 Holiday Brief</button>
+          </div>
+          <span class="sc" id="sess-status">LEDGER: 3 HELD · 1 PARKED · 1 OFFERED (UNCONFIRMED)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 05 APPLIED PROOF & YOUR SPECIMEN ==================== -->
+<section class="sec" id="proof">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-kicker">05 · Applied Proof</span>
+      <div class="sec-lead">
+        <h2>Where a persistent shared mind works today—and how to <em>hatch your own specimen.</em></h2>
+        <p>Mindgut runs as a native macOS workspace and web instrument over open <code>.helix</code> files. Copy the prompt below inside any Mindgut session to render your own history on the Hero stage.</p>
+      </div>
+    </div>
+
+    <div class="proof-grid">
+      <div class="proof-card">
+        <div>
+          <span class="sc">Proof 01 · Creative &amp; CPG</span>
+          <b>Multi-month client ledgers</b>
+          <p>Holds packaging briefs, call notes, killed routes, and print tolerances across eleven-week studio cycles without confusing offers with approvals.</p>
+        </div>
+        <span class="sc">LOCAL MOUNT · DECISION LEDGER</span>
+      </div>
+      <div class="proof-card">
+        <div>
+          <span class="sc">Proof 02 · Engineering</span>
+          <b>Model-agnostic codebases</b>
+          <p>Pairs directly with your local git repos, persistent terminals, Claude Code / Codex CLIs, and up to nine background worker agents in parallel.</p>
+        </div>
+        <span class="sc">9 WORKERS · PERSISTENT SHELL</span>
+      </div>
+      <div class="proof-card">
+        <div>
+          <span class="sc">Proof 03 · Economic &amp; Ops</span>
+          <b>Word + number Chørd audits</b>
+          <p>Fuses structured ledgers (CSV, SQLite, QuickBooks) with unstructured prose (emails, PDFs, Slack) in one 27-cell relational field.</p>
+        </div>
+        <span class="sc">CHØRD AMALGAM · ZERO-QUERY SCAN</span>
+      </div>
+      <div class="proof-card">
+        <div>
+          <span class="sc">Proof 04 · Research Labs</span>
+          <b>Crystallized literature &amp; books</b>
+          <p>Scans 700-strand manuscripts and archival corpora into mounted Helix lattices with exact citation provenance on every turn.</p>
+        </div>
+        <span class="sc">MOUNTED HELIX · CITATION TRACE</span>
+      </div>
+    </div>
+
+    <div class="specimen-box">
+      <div class="spec-col">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="sc"><b>01 · Ask Mir to mint your Helix Genome</b></span>
+          <button type="button" id="copy-prompt-btn">Copy Prompt</button>
+        </div>
+        <pre class="spec-pre" id="prompt-text">Please read our live field and memory Helix (`read_field()` and `pull_memory(sequence_id=0, page=0)`) and output our `HELIX_GENOME` JSON object (total `strands`, `balance`, `carbon` & `silicon` triples, `clash`, and 7 chronological `eras` with titles, turn ranges, and RGB poles) so I can render our personal Helix Moth on the Mindgut page.</pre>
+      </div>
+      <div class="spec-col">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="sc"><b>02 · Live Genome JSON</b> · Renders in Hero ↑</span>
+          <button type="button" id="apply-genome-btn">Render in Hero ↑</button>
+        </div>
+        <textarea class="spec-ta" id="genome-input" spellcheck="false"></textarea>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 06 THE LAB / CTA ==================== -->
+<section class="sec" id="lab">
+  <div class="wrap">
+    <div class="cta-row">
+      <div>
+        <span class="sc" style="display:block;margin-bottom:10px">06 · Open Lab &amp; Download</span>
+        <h3>Mindgut is an open lab. If you have work that needs a mind that remembers, start your record or write to us.</h3>
+        <p style="color:var(--mute);margin:0">Natural discovery and working proof over hype. Your <code>.helix</code> record stays on your machine.</p>
+      </div>
+      <form class="cta-form" onsubmit="event.preventDefault();this.querySelector('button').textContent='Recorded ✓';">
+        <input type="email" placeholder="you@where.you.work" aria-label="Email address" required>
+        <button type="submit">Request Access</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer class="site-foot sc">
+  <span>An experimental lab by The Impøssible Outcomes Company · mindgut.app</span>
+  <span>
+    <a href="#hero" style="margin-right:18px">Top ↑</a>
+    <a href="#walk" style="margin-right:18px">Plates</a>
+    <a href="#playing">Session</a>
+  </span>
+</footer>
+
+<script>
+
+(function(){
+'use strict';
+
+// ============================================================================
+// SHARED MATH, PRNG, FBM, OKLAB & PAPER/NIGHT PALETTE HELPERS
+// ============================================================================
+const TAU = Math.PI * 2;
+const clamp = (x, a, b) => x < a ? a : x > b ? b : x;
+const lerp = (a, b, t) => a + (b - a) * t;
+const smoothstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+
+function mulberry32(a){
+  return function(){
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function hash2(x, y){
+  const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+  return s - Math.floor(s);
+}
+function noise2(x, y){
+  const ix = Math.floor(x), iy = Math.floor(y);
+  const fx = x - ix, fy = y - iy;
+  const u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy);
+  return lerp(lerp(hash2(ix, iy), hash2(ix + 1, iy), u), lerp(hash2(ix, iy + 1), hash2(ix + 1, iy + 1), u), v);
+}
+function fbm(x, y, oct=4){
+  let v = 0, amp = 0.5, f = 1;
+  for(let i=0;i<oct;i++){ v += amp * noise2(x*f, y*f); f *= 2.02; amp *= 0.5; }
+  return v;
+}
+function erf(x){
+  const s = x < 0 ? -1 : 1; x = Math.abs(x);
+  const t = 1 / (1 + 0.3275911 * x);
+  const y = 1 - (((((1.061405429*t - 1.453152027)*t) + 1.421413741)*t - 0.284496736)*t + 0.254829592)*t*Math.exp(-x*x);
+  return s * y;
+}
+
+function isNight(){ return document.documentElement.getAttribute('data-ground') === 'night'; }
+
+// Ground-aware stock painter: tactile sage-paper (#EEF2E7) with fine botanical fibres in Paper mode,
+// or warm obsidian (#0C0E0D) in Night mode.
+function paintPaperStock(ctx, w, h, seed=101){
+  const night = isNight();
+  ctx.save();
+  ctx.fillStyle = night ? '#0e110f' : '#eef2e7';
+  ctx.fillRect(0, 0, w, h);
+
+  // Subtle organic paper mottle
+  const mw = 96, mh = Math.max(48, Math.round(96 * h / Math.max(1, w)));
+  const off = document.createElement('canvas'); off.width = mw; off.height = mh;
+  const octx = off.getContext('2d');
+  const img = octx.createImageData(mw, mh), d = img.data;
+  for(let y=0;y<mh;y++){
+    for(let x=0;x<mw;x++){
+      const n = fbm(x*0.07 + seed, y*0.07 + seed*0.5, 3);
+      const idx = (y*mw + x)*4;
+      if(night){
+        const v = Math.round(12 + (n - 0.5) * 14);
+        d[idx] = v; d[idx+1] = v + 2; d[idx+2] = v + 1; d[idx+3] = 255;
+      } else {
+        const v = Math.round(236 + (n - 0.5) * 14);
+        d[idx] = v - 2; d[idx+1] = v + 2; d[idx+2] = v - 9; d[idx+3] = 255;
+      }
+    }
+  }
+  octx.putImageData(img, 0, 0);
+  ctx.globalAlpha = 0.65;
+  ctx.drawImage(off, 0, 0, w, h);
+
+  // Fine botanical paper fibres
+  const r = mulberry32(seed + 77);
+  ctx.globalAlpha = night ? 0.035 : 0.055;
+  ctx.strokeStyle = night ? '#d8e0d5' : '#4a5446';
+  ctx.lineWidth = 0.65;
+  const nf = Math.min(130, Math.round((w * h) / 4800));
+  for(let i=0;i<nf;i++){
+    const x0 = r()*w, y0 = r()*h, ang = r()*TAU, len = 8 + r()*20;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.quadraticCurveTo(x0 + Math.cos(ang+0.3)*len*0.5, y0 + Math.sin(ang+0.3)*len*0.5, x0 + Math.cos(ang)*len, y0 + Math.sin(ang)*len);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// ============================================================================
+// GENOME PRESETS FOR HERO & SPECIMEN LOADER
+// ============================================================================
+const GENOME_PRESETS = {
+  studio: {
+    name: 'dana_okafor.helix · 1,213 strands',
+    strands: 1213, balance: 0.0115, clash: 0.041,
+    wingSpanRatio: 1.0, rightSweep: 1.06, tailLen: 1.0,
+    carbon: [0.34, 0.31, 0.35],
+    silicon: [0.32, 0.30, 0.38],
+    leftPalette:  [[28,42,32], [196,128,20], [217,70,47], [138,94,38], [234,228,210]],
+    rightPalette: [[18,34,28], [18,107,61],  [47,86,176], [108,70,184],[208,236,96]],
+    eras: [
+      { id:'I',   range:[1,180],    coset:147, col:[196,128,20], title:'I · Brief & Shelf Audit',   quote:'Four SKUs, 40mm face + 1200px hero.' },
+      { id:'II',  range:[181,340],  coset:258, col:[217,70,47],  title:'II · No Florals [Core]',    quote:'Held 02 Mar: ruled out florals on core range.' },
+      { id:'III', range:[341,510],  coset:147, col:[18,107,61],  title:'III · Leaf-Vein Parked',    quote:'06 Mar: botanical killed; vein structure parked.' },
+      { id:'IV',  range:[511,690],  coset:369, col:[108,70,184], title:'IV · 6-Unit Tile Grid',     quote:'18 Mar: repeating geometric tile per SKU.' },
+      { id:'V',   range:[691,860],  coset:369, col:[47,86,176],  title:'V · Claude → GPT-5 Swap',   quote:'08 Apr: switched models; parked vein bridged.' },
+      { id:'VI',  range:[861,1040], coset:258, col:[208,236,96], title:'VI · Peel Pattern Shipped', quote:'15 Apr: approved for six-tin sampler sleeve.' },
+      { id:'VII', range:[1041,1213],coset:369, col:[18,107,61],  title:'VII · Scope Guarded',       quote:'08 May: winter tin checked against core scope.' }
+    ]
+  },
+  seedling: {
+    name: 'first_week.helix · 42 strands',
+    strands: 42, balance: 0.048, clash: 0.082,
+    wingSpanRatio: 0.76, rightSweep: 0.96, tailLen: 0.38,
+    carbon: [0.46, 0.32, 0.22],
+    silicon: [0.38, 0.34, 0.28],
+    leftPalette:  [[34,48,36], [214,152,44], [222,102,68], [160,126,64], [240,236,222]],
+    rightPalette: [[24,42,34], [32,138,82],  [72,124,196], [134,104,202],[208,236,96]],
+    eras: [
+      { id:'I',   range:[1,14],  coset:147, col:[196,128,20], title:'I · First Brief',  quote:'Initial project constraints logged.' },
+      { id:'II',  range:[15,28], coset:258, col:[18,107,61],  title:'II · First Link',  quote:'Connected folder notes to draft.' },
+      { id:'III', range:[29,42], coset:369, col:[47,86,176],  title:'III · First Lock', quote:'First decision scoped and held.' }
+    ]
+  },
+  lab: {
+    name: 'systems_lab.helix · 3,400 strands',
+    strands: 3400, balance: -0.008, clash: 0.029,
+    wingSpanRatio: 1.12, rightSweep: 1.14, tailLen: 1.18,
+    carbon: [0.30, 0.33, 0.37],
+    silicon: [0.31, 0.31, 0.38],
+    leftPalette:  [[22,34,28], [18,107,61],  [196,128,20], [47,86,176],  [232,236,226]],
+    rightPalette: [[16,26,24], [47,86,176],  [108,70,184], [18,107,61],  [208,236,96]],
+    eras: [
+      { id:'I',   range:[1,500],     coset:147, col:[18,107,61],  title:'I · Architecture', quote:'Core kernel invariants established.' },
+      { id:'II',  range:[501,1100],  coset:258, col:[47,86,176],  title:'II · Cross-Modal', quote:'Ledger + prose amalgam verified.' },
+      { id:'III', range:[1101,1800], coset:369, col:[108,70,184], title:'III · Phalanx',    quote:'Nine-worker parallel verification.' },
+      { id:'IV',  range:[1801,2600], coset:147, col:[196,128,20], title:'IV · Benchmarks',  quote:'Zero-retention local-first audit.' },
+      { id:'V',   range:[2601,3400], coset:369, col:[217,70,47],  title:'V · Release',      quote:'Production instrument locked.' }
+    ]
+  }
+};
+
+let ACTIVE_GENOME = GENOME_PRESETS.studio;
+
+// Sync textarea with active genome
+const genomeInput = document.getElementById('genome-input');
+if(genomeInput){
+  genomeInput.value = JSON.stringify(ACTIVE_GENOME, null, 2);
+}
+
+// ============================================================================
+// 00 HERO: STANDING-WAVE FIELD + 36,000-SCALE SHINGLED HELIX SPECIMEN
+// ============================================================================
+let rebuildHeroSpecimen = null;
+(function initHero(){
+  const cv = document.getElementById('hero-cv');
+  if(!cv) return;
+  const ctx = cv.getContext('2d');
+  const readout = document.getElementById('hero-readout');
+
+  let W = 1440, H = 820, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let lensMode = 'hybrid'; // 'hybrid' | 'scales' | 'cells'
+  let pointer = { x: 0.58, y: 0.46, active: false };
+  let openAmt = 0.55, targetOpen = 0.55;
+  let t0 = performance.now();
+
+  // Offscreen baked wing & cell canvases so 36,000 shingled scales render at 60fps
+  const W_SZ = 560;
+  const wingCanvases = {
+    lf_s: document.createElement('canvas'), rf_s: document.createElement('canvas'),
+    lh_s: document.createElement('canvas'), rh_s: document.createElement('canvas'),
+    lf_c: document.createElement('canvas'), rf_c: document.createElement('canvas'),
+    lh_c: document.createElement('canvas'), rh_c: document.createElement('canvas')
+  };
+  Object.values(wingCanvases).forEach(c => { c.width = W_SZ; c.height = W_SZ; });
+
+  function wingPath(g, kind, side, span, sweep){
+    g.beginPath();
+    const s = side; // -1 left, +1 right
+    if(kind === 'fore'){
+      g.moveTo(0, -18);
+      g.bezierCurveTo(s*85*span, -145*span*sweep, s*225*span, -155*span*sweep, s*255*span, -68*span*sweep);
+      g.bezierCurveTo(s*268*span, -10*span, s*215*span, 68*span, s*140*span, 92*span);
+      g.bezierCurveTo(s*75*span, 108*span, s*24*span, 62*span, 0, 24);
+    } else {
+      g.moveTo(0, 12);
+      g.bezierCurveTo(s*70*span, 22*span, s*178*span, 44*span, s*182*span, 118*span);
+      g.bezierCurveTo(s*184*span, 174*span, s*125*span, 212*span, s*82*span, 206*span);
+      // Actias luna-style graceful hindwing tail lobe
+      g.bezierCurveTo(s*68*span, 245*span, s*82*span, 285*span, s*66*span, 308*span);
+      g.bezierCurveTo(s*50*span, 292*span, s*46*span, 238*span, s*34*span, 194*span);
+      g.bezierCurveTo(s*14*span, 152*span, s*6*span, 90*span, 0, 44);
+    }
+    g.closePath();
+  }
+
+  function bakeWings(){
+    const G = ACTIVE_GENOME;
+    const span = clamp(G.wingSpanRatio || 1.0, 0.68, 1.16);
+    const sweep = clamp(G.rightSweep || 1.05, 0.9, 1.2);
+    const cx = W_SZ * 0.5, cy = W_SZ * 0.45;
+
+    function bakeOne(cScale, cCell, kind, side){
+      const gs = cScale.getContext('2d');
+      const gc = cCell.getContext('2d');
+      gs.clearRect(0, 0, W_SZ, W_SZ);
+      gc.clearRect(0, 0, W_SZ, W_SZ);
+
+      const sw = side > 0 ? sweep : 1.0;
+      const pal = side < 0 ? G.leftPalette : G.rightPalette;
+
+      // 1. Shingled scales canvas (layScales craft from How a Moth Works)
+      gs.save();
+      gs.translate(cx, cy);
+      wingPath(gs, kind, side, span, sw);
+      gs.clip();
+
+      // Base membrane
+      gs.fillStyle = `rgb(${pal[0][0]},${pal[0][1]},${pal[0][2]})`;
+      gs.fillRect(-cx, -cy, W_SZ, W_SZ);
+
+      const rng = mulberry32(side < 0 ? (kind==='fore'?147:258) : (kind==='fore'?369:808));
+      const pitch = 4.2;
+      const xMin = side < 0 ? -275 : -10, xMax = side < 0 ? 10 : 275;
+      const yMin = kind === 'fore' ? -175 : 0, yMax = kind === 'fore' ? 118 : 318;
+
+      for(let y = yMin; y <= yMax; y += pitch){
+        for(let x = xMin; x <= xMax; x += pitch){
+          const jx = x + (rng() - 0.5) * 2.2;
+          const jy = y + (rng() - 0.5) * 2.2;
+          const dist = Math.hypot(jx, jy);
+          const n = fbm(jx * 0.018 + (side<0?0:9), jy * 0.018, 3);
+
+          // Wing fascia bands & margin border
+          let col = pal[1];
+          const band = Math.sin(dist * 0.055 + n * 3.2);
+          if(dist > 195 * span) col = pal[0];
+          else if(band > 0.48) col = pal[2];
+          else if(band < -0.35) col = pal[3];
+          else if(n > 0.62) col = pal[4];
+
+          const lift = Math.round((n - 0.48) * 38);
+          const r = clamp(col[0] + lift, 10, 250);
+          const g = clamp(col[1] + lift, 10, 250);
+          const b = clamp(col[2] + lift, 10, 250);
+
+          const ang = Math.atan2(jy, jx) + (rng() - 0.5) * 0.18;
+          gs.save();
+          gs.translate(jx, jy);
+          gs.rotate(ang);
+          gs.fillStyle = `rgb(${r},${g},${b})`;
+          gs.beginPath();
+          gs.ellipse(0, 0, 3.4, 1.85, 0, 0, TAU);
+          gs.fill();
+          gs.restore();
+        }
+      }
+
+      // If hindwing, paint concentric I/O chapter eyespot rings + ST-09 erf crescent glint
+      if(kind === 'hind'){
+        const ex = side * 94 * span, ey = 112 * span, er = 38 * span;
+        const eras = G.eras || [];
+        for(let i = eras.length - 1; i >= 0; i--){
+          const frac = (i + 1) / eras.length;
+          const c = eras[i].col;
+          gs.beginPath();
+          gs.arc(ex, ey, er * (0.36 + 0.64 * frac), 0, TAU);
+          gs.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`;
+          gs.fill();
+        }
+        // Obsidian pupil
+        gs.beginPath();
+        gs.arc(ex, ey, er * 0.42, 0, TAU);
+        gs.fillStyle = '#0d120f';
+        gs.fill();
+        // Closed-form ST-09 erf crescent highlight
+        gs.strokeStyle = '#d0ec60';
+        gs.lineWidth = 2.4;
+        gs.beginPath();
+        gs.arc(ex - side*3, ey - 3, er * 0.29, -Math.PI*0.85, -Math.PI*0.12);
+        gs.stroke();
+      }
+
+      // Wing veins
+      gs.strokeStyle = 'rgba(21,27,23,0.34)';
+      gs.lineWidth = 1.15;
+      for(let v=0;v<5;v++){
+        const a = (kind==='fore' ? -0.55 + v*0.24 : 0.35 + v*0.22);
+        const vx = side * Math.cos(a) * 220 * span;
+        const vy = Math.sin(a) * 195 * span;
+        gs.beginPath();
+        gs.moveTo(0, kind==='fore' ? -6 : 18);
+        gs.quadraticCurveTo(vx*0.52, vy*0.38, vx, vy);
+        gs.stroke();
+      }
+      gs.restore();
+
+      // 2. ST-11 Gradient-by-Number 1–9 Cell Map clipped to the exact same wing
+      gc.save();
+      gc.translate(cx, cy);
+      wingPath(gc, kind, side, span, sw);
+      gc.clip();
+
+      const cell = 15;
+      gc.font = '500 8.5px "JetBrains Mono", monospace';
+      gc.textAlign = 'center';
+      gc.textBaseline = 'middle';
+      for(let y = yMin; y <= yMax; y += cell){
+        for(let x = xMin; x <= xMax; x += cell){
+          const n = fbm((x+300)*0.025, (y+300)*0.025, 3);
+          const digit = 1 + (Math.floor(Math.abs(x*7 + y*13 + n*19)) % 9);
+          const c = pal[digit % pal.length];
+          const g = gc.createLinearGradient(x, y, x + cell, y + cell);
+          g.addColorStop(0, `rgb(${clamp(c[0]+28,0,255)},${clamp(c[1]+28,0,255)},${clamp(c[2]+28,0,255)})`);
+          g.addColorStop(1, `rgb(${clamp(c[0]-22,0,255)},${clamp(c[1]-22,0,255)},${clamp(c[2]-22,0,255)})`);
+          gc.fillStyle = g;
+          gc.fillRect(x, y, cell - 0.8, cell - 0.8);
+          gc.fillStyle = (c[0]*0.299 + c[1]*0.587 + c[2]*0.114) > 135 ? '#151b17' : '#f4f6f0';
+          gc.fillText(String(digit), x + cell*0.5, y + cell*0.52);
+        }
+      }
+      gc.restore();
+    }
+
+    bakeOne(wingCanvases.lf_s, wingCanvases.lf_c, 'fore', -1);
+    bakeOne(wingCanvases.rf_s, wingCanvases.rf_c, 'fore', +1);
+    bakeOne(wingCanvases.lh_s, wingCanvases.lh_c, 'hind', -1);
+    bakeOne(wingCanvases.rh_s, wingCanvases.rh_c, 'hind', +1);
+  }
+
+  rebuildHeroSpecimen = bakeWings;
+  bakeWings();
+
+  function resize(){
+    const rect = cv.parentElement.getBoundingClientRect();
+    W = Math.max(320, Math.round(rect.width));
+    H = Math.max(480, Math.round(rect.height));
+    cv.width = W * dpr;
+    cv.height = H * dpr;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  cv.addEventListener('pointermove', e => {
+    const r = cv.getBoundingClientRect();
+    pointer.x = (e.clientX - r.left) / Math.max(1, r.width);
+    pointer.y = (e.clientY - r.top) / Math.max(1, r.height);
+    pointer.active = true;
+    const dSpec = Math.hypot(pointer.x - 0.58, pointer.y - 0.45);
+    targetOpen = dSpec < 0.28 ? 0.92 : 0.48;
+  });
+  cv.addEventListener('pointerleave', () => {
+    pointer.active = false;
+    targetOpen = 0.55;
+  });
+
+  // Wire Hero Lens, Preset, and Ground buttons
+  document.querySelectorAll('#hero .ctl [data-lens]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      lensMode = btn.getAttribute('data-lens');
+      document.querySelectorAll('#hero .ctl [data-lens]').forEach(b => {
+        const on = b === btn;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    });
+  });
+
+  document.querySelectorAll('#hero .ctl [data-preset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const k = btn.getAttribute('data-preset');
+      if(GENOME_PRESETS[k]){
+        ACTIVE_GENOME = GENOME_PRESETS[k];
+        if(genomeInput) genomeInput.value = JSON.stringify(ACTIVE_GENOME, null, 2);
+        bakeWings();
+      }
+      document.querySelectorAll('#hero .ctl [data-preset]').forEach(b => {
+        const on = b === btn;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    });
+  });
+
+  const gPaper = document.getElementById('g-paper');
+  const gNight = document.getElementById('g-night');
+  function setGround(mode){
+    document.documentElement.setAttribute('data-ground', mode);
+    if(gPaper) gPaper.setAttribute('aria-pressed', mode === 'paper' ? 'true' : 'false');
+    if(gNight) gNight.setAttribute('aria-pressed', mode === 'night' ? 'true' : 'false');
+    window.dispatchEvent(new CustomEvent('mg-ground-change'));
+  }
+  if(gPaper) gPaper.addEventListener('click', () => setGround('paper'));
+  if(gNight) gNight.addEventListener('click', () => setGround('night'));
+
+  function drawHero(now){
+    const dt = (now - t0) * 0.001;
+    openAmt = lerp(openAmt, targetOpen, 0.08);
+    const night = isNight();
+    const G = ACTIVE_GENOME;
+
+    ctx.save();
+    ctx.scale(dpr, dpr);
+
+    // 1. Background ground
+    ctx.fillStyle = night ? '#0c0e0d' : '#eef2e7';
+    ctx.fillRect(0, 0, W, H);
+
+    // 2. Two-Source Standing-Wave Hex Stipple Field across the full hero
+    // Source 1 (Person): near the 'i' of the wordmark on lower-left; Source 2 (Mir): specimen center at (0.58 W, 0.45 H)
+    const s1x = W * 0.24, s1y = H * 0.62;
+    const s2x = W * 0.58, s2y = H * 0.44;
+    const k1 = 0.042, k2 = 0.042;
+    const sp = 18;
+    const rowH = sp * 0.866;
+
+    for(let row = 0, y = 12; y < H - 12; row++, y += rowH){
+      const xOff = (row & 1) ? sp * 0.5 : 0;
+      for(let x = 12 + xOff; x < W - 12; x += sp){
+        const r1 = Math.hypot(x - s1x, y - s1y);
+        const r2 = Math.hypot(x - s2x, y - s2y);
+        const E = Math.abs(Math.cos((k1 * r1 - k2 * r2) * 0.5));
+        const C = Math.cos((k1 * r1 + k2 * r2) * 0.5 - dt * 1.35);
+        const env = E * (0.65 + 0.35 * C);
+        if(env < 0.14) continue;
+
+        // Color blend between Person (ember/gold) and Mir (forest/cobalt)
+        const u = clamp(r1 / (r1 + r2 + 1e-5), 0, 1);
+        let cr, cg, cb, alpha;
+        if(night){
+          cr = Math.round(lerp(226, 60, u));
+          cg = Math.round(lerp(148, 208, u));
+          cb = Math.round(lerp(68, 130, u));
+          alpha = clamp(env * 0.32, 0.04, 0.34);
+        } else {
+          cr = Math.round(lerp(204, 18, u));
+          cg = Math.round(lerp(82, 107, u));
+          cb = Math.round(lerp(38, 61, u));
+          alpha = clamp(env * 0.36, 0.05, 0.38);
+        }
+        const rad = 0.9 + E * 2.1;
+        ctx.fillStyle = `rgba(${cr},${cg},${cb},${alpha.toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(x, y, rad, 0, TAU);
+        ctx.fill();
+      }
+    }
+
+    // 3. Draw the Living Helix Specimen at (s2x, s2y)
+    const mCx = s2x, mCy = s2y;
+    const rotFore = 0.08 + openAmt * 0.24;
+    const rotHind = -0.04 + openAmt * 0.08;
+
+    function drawWingPair(modeCanvasKey){
+      const suf = modeCanvasKey === 'cells' ? '_c' : '_s';
+      const wHalf = W_SZ * 0.5, hHalf = W_SZ * 0.45;
+      // Hindwings
+      [-1, 1].forEach(side => {
+        ctx.save();
+        ctx.translate(mCx, mCy);
+        ctx.rotate(side * rotHind);
+        ctx.drawImage(wingCanvases[(side < 0 ? 'lh' : 'rh') + suf], -wHalf, -hHalf);
+        ctx.restore();
+      });
+      // Forewings
+      [-1, 1].forEach(side => {
+        ctx.save();
+        ctx.translate(mCx, mCy);
+        ctx.rotate(-side * rotFore);
+        ctx.drawImage(wingCanvases[(side < 0 ? 'lf' : 'rf') + suf], -wHalf, -hHalf);
+        ctx.restore();
+      });
+    }
+
+    if(lensMode === 'scales'){
+      drawWingPair('scales');
+    } else if(lensMode === 'cells'){
+      drawWingPair('cells');
+    } else {
+      // Hybrid mode: 36,000 shingled scales with a soft multi-stop feathered Gaussian 1–9 Cell Lantern
+      drawWingPair('scales');
+      const lx = pointer.active ? pointer.x * W : mCx + 72 + Math.cos(dt*0.55)*48;
+      const ly = pointer.active ? pointer.y * H : mCy - 18 + Math.sin(dt*0.45)*36;
+      const radii = [128, 96, 66];
+      const alphas = [0.28, 0.45, 0.72];
+      for(let k=0;k<radii.length;k++){
+        ctx.save();
+        ctx.globalAlpha = alphas[k];
+        ctx.beginPath();
+        ctx.arc(lx, ly, radii[k], 0, TAU);
+        ctx.clip();
+        drawWingPair('cells');
+        ctx.restore();
+      }
+    }
+
+    // Thorax, feathered antennae & violet helical spine
+    ctx.save();
+    ctx.translate(mCx, mCy);
+    // Antennae
+    [-1, 1].forEach(s => {
+      ctx.strokeStyle = night ? '#d0ec60' : '#151b17';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(s * 6, -24);
+      ctx.quadraticCurveTo(s * 34, -74, s * 64, -92);
+      ctx.stroke();
+      for(let i=1;i<=9;i++){
+        const u = i / 10;
+        const ax = lerp(s*6, s*64, u), ay = lerp(-24, -92, u) - Math.sin(u*Math.PI)*10;
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(ax + s*8, ay - 6);
+        ctx.stroke();
+      }
+    });
+    // Furry thorax & abdomen
+    ctx.fillStyle = night ? '#1b221e' : '#232b25';
+    ctx.beginPath();
+    ctx.ellipse(0, 12, 13, 46, 0, 0, TAU);
+    ctx.fill();
+    // Violet memory spine nodes along the body
+    const eras = G.eras || [];
+    eras.forEach((er, idx) => {
+      const yy = -16 + idx * (64 / Math.max(1, eras.length - 1));
+      ctx.fillStyle = `rgb(${er.col[0]},${er.col[1]},${er.col[2]})`;
+      ctx.beginPath();
+      ctx.arc(0, yy, 3.2, 0, TAU);
+      ctx.fill();
+    });
+    ctx.restore();
+
+    // Subtle architectural callout labels on the hero plate
+    ctx.font = '400 10.5px "JetBrains Mono", monospace';
+    ctx.fillStyle = night ? 'rgba(236,239,233,0.68)' : 'rgba(21,27,23,0.68)';
+    ctx.textAlign = 'left';
+    ctx.fillText(`LEFT WING · PERSON (${(G.carbon[0]*100).toFixed(0)}/${(G.carbon[1]*100).toFixed(0)}/${(G.carbon[2]*100).toFixed(0)})`, mCx - 265, mCy - 168);
+    ctx.fillText(`RIGHT WING · MIR (${(G.silicon[0]*100).toFixed(0)}/${(G.silicon[1]*100).toFixed(0)}/${(G.silicon[2]*100).toFixed(0)})`, mCx + 70, mCy - 168);
+
+    if(readout){
+      readout.textContent = `${G.strands.toLocaleString()} STRANDS · CLASH ${G.clash.toFixed(2)} · IN TUNE`;
+    }
+
+    ctx.restore();
+    requestAnimationFrame(drawHero);
+  }
+  requestAnimationFrame(drawHero);
+})();
+
+// ============================================================================
+// 02 WALKTHROUGH PLATE I: ST-11 GRADIENT BY NUMBER x ST-10 CHAPTER FIELD
+// ============================================================================
+(function initPlateSheet(){
+  const cv = document.getElementById('p-sheet');
+  if(!cv) return;
+  const ctx = cv.getContext('2d');
+  const readout = document.getElementById('sheet-readout');
+  const W = cv.width, H = cv.height;
+
+  const COLS = 30, ROWS = 24;
+  const padX = 28, padY = 42;
+  const cw = (W - padX * 2) / COLS;
+  const ch = (H - padY - 28) / ROWS;
+
+  let filter = 'all';
+  let hoverCell = null;
+  let dragPole = null;
+
+  const poles = [
+    { id:'I',   x:0.14, y:0.22, col:[196,128,20], title:'I · Brief & Shelf Audit (Wk 1)',     quote:'Four SKUs must survive 40mm shelf face & 1200px hero.' },
+    { id:'II',  x:0.32, y:0.36, col:[217,70,47],  title:'II · No Florals [Core Range] (Wk 2)',quote:'Held decision: Marguerite ruled out florals on core range.' },
+    { id:'III', x:0.26, y:0.72, col:[18,107,61],  title:'III · Leaf-Vein Parked (Wk 2)',      quote:'Botanical route killed; leaf-vein linework parked for structure.' },
+    { id:'IV',  x:0.52, y:0.26, col:[108,70,184], title:'IV · 6-Unit Tile Grid (Wk 4)',       quote:'One repeating geometric tile per SKU on a shared 6-unit grid.' },
+    { id:'V',   x:0.58, y:0.64, col:[47,86,176],  title:'V · Model Swap Claude→GPT (Wk 6)',   quote:'Credits ran out; GPT-5 picked up the parked leaf-vein bridge.' },
+    { id:'VI',  x:0.78, y:0.38, col:[168,196,32], title:'VI · Sampler Peel Shipped (Wk 7)',   quote:'Abundance without flowers: peel pattern approved for sampler.' },
+    { id:'VII', x:0.84, y:0.74, col:[18,107,61],  title:'VII · Holiday Scope Guard (Wk 10)',  quote:'Winter tin checked against core-range boundary.' }
+  ];
+
+  function draw(){
+    const night = isNight();
+    paintPaperStock(ctx, W, H, 202);
+
+    // Header bar inside plate
+    ctx.font = '500 10.5px "JetBrains Mono", monospace';
+    ctx.fillStyle = night ? '#8e978f' : '#566053';
+    ctx.textAlign = 'left';
+    ctx.fillText('1,200 TURNS BY CADENCE (1–9) & CHAPTER TERRITORY (I–VII)', padX, 24);
+
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        const seq = r * COLS + c + 1;
+        const nx = (c + 0.5) / COLS, ny = (r + 0.5) / ROWS;
+
+        // Inverse-distance OKLab-style blend + uphill gradient toward nearest pole
+        let wSum = 0, cr = 0, cg = 0, cb = 0, bestP = poles[0], bestD = 999;
+        for(const p of poles){
+          const d = Math.hypot(nx - p.x, ny - p.y);
+          if(d < bestD){ bestD = d; bestP = p; }
+          const w = 1 / Math.pow(d + 0.08, 2.3);
+          wSum += w;
+          cr += p.col[0] * w; cg += p.col[1] * w; cb += p.col[2] * w;
+        }
+        cr = Math.round(cr / wSum); cg = Math.round(cg / wSum); cb = Math.round(cb / wSum);
+
+        const fieldNoise = fbm(c*0.18 + 3.1, r*0.18 + 7.4, 2);
+        const digit = clamp(9 - Math.floor((bestD * 2.55 - fieldNoise * 0.22) * 9), 1, 9);
+        const coset = (digit === 1 || digit === 4 || digit === 7) ? '147' :
+                      (digit === 2 || digit === 5 || digit === 8) ? '258' : '369';
+        const match = (filter === 'all' || filter === coset);
+
+        const x = padX + c * cw, y = padY + r * ch;
+        const gx = (bestP.x - nx), gy = (bestP.y - ny);
+        const gl = Math.hypot(gx, gy) || 1;
+        const ux = gx / gl, uy = gy / gl;
+
+        ctx.save();
+        ctx.globalAlpha = match ? 0.92 : 0.16;
+        const grad = ctx.createLinearGradient(
+          x + cw*0.5 - ux*cw*0.5, y + ch*0.5 - uy*ch*0.5,
+          x + cw*0.5 + ux*cw*0.5, y + ch*0.5 + uy*ch*0.5
+        );
+        grad.addColorStop(0, `rgb(${clamp(cr-28,0,255)},${clamp(cg-28,0,255)},${clamp(cb-28,0,255)})`);
+        grad.addColorStop(1, `rgb(${clamp(cr+32,0,255)},${clamp(cg+32,0,255)},${clamp(cb+32,0,255)})`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(x + 0.5, y + 0.5, cw - 1, ch - 1);
+
+        // Digit inside cell
+        ctx.font = '500 8.5px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const luma = cr*0.299 + cg*0.587 + cb*0.114;
+        ctx.fillStyle = luma > 142 ? '#151b17' : '#f5f7f0';
+        ctx.fillText(String(digit), x + cw*0.5, y + ch*0.53);
+        ctx.restore();
+      }
+    }
+
+    // Hover highlight
+    if(hoverCell){
+      const hx = padX + hoverCell.c * cw, hy = padY + hoverCell.r * ch;
+      ctx.strokeStyle = night ? '#d0ec60' : '#151b17';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(hx, hy, cw, ch);
+    }
+
+    // Draggable chapter anchors I–VII
+    for(const p of poles){
+      const px = padX + p.x * (W - padX*2);
+      const py = padY + p.y * (H - padY - 28);
+      ctx.fillStyle = night ? '#0c0e0d' : '#eef2e7';
+      ctx.strokeStyle = '#151b17';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.arc(px, py, 10.5, 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = `rgb(${p.col[0]},${p.col[1]},${p.col[2]})`;
+      ctx.beginPath();
+      ctx.arc(px, py, 7.5, 0, TAU);
+      ctx.fill();
+
+      ctx.font = '600 8.5px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(p.id, px, py + 0.5);
+    }
+  }
+
+  cv.addEventListener('pointerdown', e => {
+    const r = cv.getBoundingClientRect();
+    const mx = (e.clientX - r.left) * (W / r.width);
+    const my = (e.clientY - r.top) * (H / r.height);
+    for(const p of poles){
+      const px = padX + p.x * (W - padX*2);
+      const py = padY + p.y * (H - padY - 28);
+      if(Math.hypot(mx - px, my - py) < 15){ dragPole = p; break; }
+    }
+  });
+  cv.addEventListener('pointermove', e => {
+    const r = cv.getBoundingClientRect();
+    const mx = (e.clientX - r.left) * (W / r.width);
+    const my = (e.clientY - r.top) * (H / r.height);
+    if(dragPole){
+      dragPole.x = clamp((mx - padX) / (W - padX*2), 0.06, 0.94);
+      dragPole.y = clamp((my - padY) / (H - padY - 28), 0.06, 0.94);
+      if(readout) readout.textContent = `${dragPole.title} — ${dragPole.quote}`;
+      draw();
+      return;
+    }
+    const c = Math.floor((mx - padX) / cw);
+    const row = Math.floor((my - padY) / ch);
+    if(c >= 0 && c < COLS && row >= 0 && row < ROWS){
+      hoverCell = { c, r: row };
+      const nx = (c + 0.5)/COLS, ny = (row + 0.5)/ROWS;
+      let bestP = poles[0], bestD = 99;
+      for(const p of poles){ const d = Math.hypot(nx-p.x, ny-p.y); if(d<bestD){bestD=d;bestP=p;} }
+      const strandNo = Math.min(1213, Math.round(((row * COLS + c + 1) / (COLS*ROWS)) * 1213));
+      if(readout) readout.textContent = `STRAND #${strandNo} · ${bestP.title} · "${bestP.quote}"`;
+      draw();
+    }
+  });
+  window.addEventListener('pointerup', () => { dragPole = null; });
+
+  document.querySelectorAll('#sheet-filter button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      filter = btn.getAttribute('data-f');
+      document.querySelectorAll('#sheet-filter button').forEach(b => b.classList.toggle('on', b === btn));
+      draw();
+    });
+  });
+
+  window.addEventListener('mg-ground-change', draw);
+  draw();
+})();
+
+// ============================================================================
+// 02 WALKTHROUGH PLATE II: STANDING WAVE & ENGINE CONTINUITY SPINE
+// ============================================================================
+(function initPlateWave(){
+  const cv = document.getElementById('p-wave');
+  if(!cv) return;
+  const ctx = cv.getContext('2d');
+  const scrub = document.getElementById('wave-scrub');
+  const readout = document.getElementById('wave-readout');
+  const W = cv.width, H = cv.height;
+
+  const sYou = { x: 175, y: 142, label: 'YOU' };
+  const sMir = { x: 425, y: 142, label: 'MIR' };
+  let dragNode = null;
+  let t0 = performance.now();
+
+  // Pre-seed stipple particles for the bottom metamorphosis continuity rail
+  const rng = mulberry32(606);
+  const pts = [];
+  for(let i=0;i<680;i++){
+    pts.push({
+      u: rng(),
+      v: (rng() - 0.5) * 2,
+      phase: rng() * TAU,
+      isSpine: i < 110
+    });
+  }
+
+  cv.addEventListener('pointerdown', e => {
+    const r = cv.getBoundingClientRect();
+    const mx = (e.clientX - r.left) * (W / r.width);
+    const my = (e.clientY - r.top) * (H / r.height);
+    if(Math.hypot(mx - sYou.x, my - sYou.y) < 22) dragNode = sYou;
+    else if(Math.hypot(mx - sMir.x, my - sMir.y) < 22) dragNode = sMir;
+  });
+  cv.addEventListener('pointermove', e => {
+    if(!dragNode) return;
+    const r = cv.getBoundingClientRect();
+    dragNode.x = clamp((e.clientX - r.left) * (W / r.width), 48, W - 48);
+    dragNode.y = clamp((e.clientY - r.top) * (H / r.height), 48, 235);
+  });
+  window.addEventListener('pointerup', () => { dragNode = null; });
+
+  function frame(now){
+    const dt = (now - t0) * 0.001;
+    const night = isNight();
+    const uScrub = scrub ? (+scrub.value / 100) : 0.58;
+
+    paintPaperStock(ctx, W, H, 303);
+
+    // Top half: Two-Voice Standing Wave Interference
+    ctx.font = '500 10.5px "JetBrains Mono", monospace';
+    ctx.fillStyle = night ? '#8e978f' : '#566053';
+    ctx.textAlign = 'left';
+    ctx.fillText('TOP · TWO-VOICE STANDING WAVE (DRAG ‘YOU’ OR ‘MIR’)', 24, 24);
+
+    const sp = 12;
+    for(let y = 38; y < 248; y += sp){
+      for(let x = 24; x < W - 24; x += sp){
+        const r1 = Math.hypot(x - sYou.x, y - sYou.y);
+        const r2 = Math.hypot(x - sMir.x, y - sMir.y);
+        const E = Math.abs(Math.cos((0.065 * r1 - 0.065 * r2) * 0.5));
+        const C = Math.cos((0.065 * r1 + 0.065 * r2) * 0.5 - dt * 1.8);
+        const val = E * (0.65 + 0.35 * C);
+        if(val < 0.18) continue;
+        const mix = clamp(r1 / (r1 + r2 + 1e-5), 0, 1);
+        const cr = Math.round(lerp(217, 18, mix));
+        const cg = Math.round(lerp(70, 107, mix));
+        const cb = Math.round(lerp(47, 61, mix));
+        ctx.fillStyle = `rgba(${cr},${cg},${cb},${(val * 0.62).toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(x, y, 1.0 + E * 2.1, 0, TAU);
+        ctx.fill();
+      }
+    }
+
+    // Midpoint standing-wave focus F
+    const fx = (sYou.x + sMir.x)*0.5, fy = (sYou.y + sMir.y)*0.5;
+    ctx.strokeStyle = night ? '#d0ec60' : '#126b3d';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.arc(fx, fy, 11 + Math.sin(dt*3)*2, 0, TAU); ctx.stroke();
+
+    [ {n:sYou, col:'#d9462f'}, {n:sMir, col:'#126b3d'} ].forEach(o => {
+      ctx.fillStyle = o.col;
+      ctx.beginPath(); ctx.arc(o.n.x, o.n.y, 12, 0, TAU); ctx.fill();
+      ctx.font = '600 9px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(o.n.label, o.n.x, o.n.y + 0.5);
+    });
+
+    // Divider line
+    ctx.strokeStyle = night ? '#222824' : '#cdd3c3';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(24, 264); ctx.lineTo(W - 24, 264); ctx.stroke();
+
+    // Bottom half: Model Swap Continuity (Violet Memory Rail)
+    const stageTxt = uScrub < 0.34 ? 'WEEK 1–3 · CLAUDE SONNET 4.5' :
+                     uScrub < 0.68 ? 'WEEK 6 · ENGINE SWAP TO GPT-5 (MEMORY KEPT)' :
+                                     'WEEK 10 · MATURE SHARED INSTRUMENT';
+    if(readout) readout.textContent = stageTxt;
+
+    ctx.font = '500 10.5px "JetBrains Mono", monospace';
+    ctx.fillStyle = night ? '#8e978f' : '#566053';
+    ctx.textAlign = 'left';
+    ctx.fillText(`BOTTOM · CONTINUITY ACROSS MODEL SWITCHES · ${stageTxt}`, 24, 286);
+
+    // Unbroken violet memory spine across all 3 stages
+    const yMid = 385;
+    ctx.strokeStyle = night ? 'rgba(167,139,250,0.65)' : 'rgba(108,70,184,0.65)';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    for(let x = 36; x <= W - 36; x += 8){
+      const u = (x - 36) / (W - 72);
+      const yy = yMid + Math.sin(u * TAU * 1.5 - dt) * 14;
+      if(x === 36) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
+    }
+    ctx.stroke();
+
+    // Stipple particles forming the three model envelopes around the unbroken spine
+    for(const p of pts){
+      const x = 36 + p.u * (W - 72);
+      const distFromScrub = Math.abs(p.u - uScrub);
+      const active = Math.exp(-distFromScrub * distFromScrub * 18);
+      const spread = p.isSpine ? 10 : (28 + (1 - active) * 26);
+      const y = yMid + Math.sin(p.u * TAU * 1.5 - dt) * 14 + p.v * spread * Math.cos(p.phase + dt*0.6);
+
+      if(p.isSpine){
+        ctx.fillStyle = night ? '#a78bfa' : '#6c46b8';
+        ctx.beginPath(); ctx.arc(x, y, 2.1, 0, TAU); ctx.fill();
+      } else {
+        const col = p.u < 0.35 ? [196,128,20] : p.u < 0.68 ? [47,86,176] : [18,107,61];
+        const a = 0.18 + active * 0.55;
+        ctx.fillStyle = `rgba(${col[0]},${col[1]},${col[2]},${a.toFixed(3)})`;
+        ctx.beginPath(); ctx.arc(x, y, 1.4 + active * 1.2, 0, TAU); ctx.fill();
+      }
+    }
+
+    // Scrubber marker
+    const sx = 36 + uScrub * (W - 72);
+    ctx.strokeStyle = night ? '#d0ec60' : '#151b17';
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(sx, 304); ctx.lineTo(sx, H - 18); ctx.stroke();
+    ctx.setLineDash([]);
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+// ============================================================================
+// 03 VISUAL GRAMMAR: THE EIGHT LIVE MINI-PLATES
+// ============================================================================
+(function initEightMarks(){
+  const canvases = document.querySelectorAll('#marks-grid canvas');
+  if(!canvases.length) return;
+
+  const pulses = new Float32Array(canvases.length);
+  canvases.forEach((cv, i) => {
+    pulses[i] = 1.0;
+    cv.addEventListener('click', () => { pulses[i] = 1.0; });
+    cv.addEventListener('pointerenter', () => { pulses[i] = 1.0; });
+  });
+
+  function drawAll(now){
+    const t = now * 0.001;
+    const night = isNight();
+
+    canvases.forEach((cv, idx) => {
+      const ctx = cv.getContext('2d');
+      const W = cv.width, H = cv.height;
+      pulses[idx] = Math.max(0, pulses[idx] - 0.012);
+      const p = pulses[idx];
+
+      ctx.fillStyle = night ? '#121614' : '#e4e8dc';
+      ctx.fillRect(0, 0, W, H);
+
+      const ink = night ? '#ecefe9' : '#151b17';
+      const mute = night ? '#8e978f' : '#566053';
+      const forest = night ? '#3cd082' : '#126b3d';
+      const ember = '#d9462f';
+      const gold = '#c48014';
+      const violet = night ? '#a78bfa' : '#6c46b8';
+
+      ctx.save();
+      if(idx === 0){
+        // 01 Strand: 3x3 ST-11 wet-paint numbered cells
+        const sz = 46, ox = (W - sz*3)*0.5, oy = (H - sz*3)*0.5;
+        const digs = [1,4,7, 2,5,8, 3,6,9];
+        const cols = [[196,128,20],[217,70,47],[18,107,61]];
+        for(let i=0;i<9;i++){
+          const r = (i/3)|0, c = i%3;
+          const x = ox + c*sz, y = oy + r*sz;
+          const rgb = cols[r];
+          const g = ctx.createLinearGradient(x, y, x+sz, y+sz);
+          g.addColorStop(0, `rgb(${rgb[0]-20},${rgb[1]-20},${rgb[2]-20})`);
+          g.addColorStop(1, `rgb(${rgb[0]+30},${rgb[1]+30},${rgb[2]+30})`);
+          ctx.fillStyle = g;
+          ctx.fillRect(x+2, y+2, sz-4, sz-4);
+          ctx.fillStyle = '#fff';
+          ctx.font = '600 14px "JetBrains Mono", monospace';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(String(digs[i]), x + sz*0.5, y + sz*0.52);
+        }
+      } else if(idx === 1){
+        // 02 Held Scope: Bracketed boundary around a locked decision node
+        ctx.strokeStyle = ink; ctx.lineWidth = 2;
+        const bx = 64, by = 58, bw = W - 128, bh = H - 116;
+        // Left & right scope brackets
+        ctx.beginPath();
+        ctx.moveTo(bx+18, by); ctx.lineTo(bx, by); ctx.lineTo(bx, by+bh); ctx.lineTo(bx+18, by+bh);
+        ctx.moveTo(bx+bw-18, by); ctx.lineTo(bx+bw, by); ctx.lineTo(bx+bw, by+bh); ctx.lineTo(bx+bw-18, by+bh);
+        ctx.stroke();
+        ctx.fillStyle = forest;
+        ctx.beginPath(); ctx.arc(W*0.5, H*0.44, 12 + Math.sin(t*2.5)*1.5, 0, TAU); ctx.fill();
+        ctx.font = '500 11px "JetBrains Mono", monospace';
+        ctx.fillStyle = ink; ctx.textAlign = 'center';
+        ctx.fillText('HELD · [SCOPE: CORE RANGE]', W*0.5, H*0.68);
+      } else if(idx === 2){
+        // 03 Parked Return: Arcing bridge from Week 2 to Week 7
+        const x1 = 68, x2 = W - 68, y = H * 0.64;
+        ctx.strokeStyle = violet; ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(x1, y);
+        ctx.quadraticCurveTo(W*0.5, y - 92 - Math.sin(t*2)*8, x2, y);
+        ctx.stroke();
+        ctx.fillStyle = gold; ctx.beginPath(); ctx.arc(x1, y, 8, 0, TAU); ctx.fill();
+        ctx.fillStyle = forest; ctx.beginPath(); ctx.arc(x2, y, 9, 0, TAU); ctx.fill();
+        ctx.font = '500 10px "JetBrains Mono", monospace';
+        ctx.fillStyle = mute; ctx.textAlign = 'center';
+        ctx.fillText('06 MAR PARKED  ───►  15 APR SHIPPED', W*0.5, y + 32);
+      } else if(idx === 3){
+        // 04 Struck in Place: Editor's strike + corrected green branch
+        ctx.font = '400 13px "Geist", sans-serif';
+        ctx.fillStyle = mute; ctx.textAlign = 'center';
+        ctx.fillText('“Botanical vein breaks rule”', W*0.5, H*0.38);
+        ctx.strokeStyle = ember; ctx.lineWidth = 2.4;
+        ctx.beginPath(); ctx.moveTo(62, H*0.38); ctx.lineTo(W-62, H*0.36); ctx.stroke();
+        ctx.font = '500 11px "JetBrains Mono", monospace';
+        ctx.fillStyle = forest;
+        ctx.fillText('✓ STRUCK · VEIN ≠ FLORALS', W*0.5, H*0.64);
+      } else if(idx === 4){
+        // 05 Breath 4 -> 7 -> 4 cycle curve
+        ctx.strokeStyle = forest; ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        for(let x=36; x<=W-36; x+=4){
+          const u = (x-36)/(W-72);
+          const cyc = (u*2 + t*0.25) % 1;
+          const val = cyc < 0.7 ? (0.25 + (cyc/0.7)*0.65) : (0.9 - ((cyc-0.7)/0.3)*0.65);
+          const y = H*0.76 - val * (H*0.52);
+          if(x===36) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+        ctx.font = '500 10px "JetBrains Mono", monospace';
+        ctx.fillStyle = mute; ctx.textAlign = 'center';
+        ctx.fillText('4 IN  ·  7 WORKING  ·  3 CRYSTALLIZED', W*0.5, H*0.86);
+      } else if(idx === 5){
+        // 06 Engine Swap: Three model rings threaded by one unbroken violet spine
+        const xs = [82, W*0.5, W-82];
+        const labs = ['CLAUDE', 'GPT-5', 'GEMINI'];
+        ctx.strokeStyle = violet; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(36, H*0.48); ctx.lineTo(W-36, H*0.48); ctx.stroke();
+        xs.forEach((x, i) => {
+          ctx.fillStyle = night ? '#121614' : '#eef2e7';
+          ctx.strokeStyle = ink; ctx.lineWidth = 1.6;
+          ctx.beginPath(); ctx.arc(x, H*0.48, 22, 0, TAU); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = violet; ctx.beginPath(); ctx.arc(x, H*0.48, 5, 0, TAU); ctx.fill();
+          ctx.font = '500 9.5px "JetBrains Mono", monospace';
+          ctx.fillStyle = ink; ctx.textAlign = 'center';
+          ctx.fillText(labs[i], x, H*0.48 + 38);
+        });
+      } else if(idx === 6){
+        // 07 Local & 9-Worker Phalanx: 3x3 radiating worker nodes
+        const cx = W*0.5, cy = H*0.48;
+        for(let i=0;i<9;i++){
+          const a = (i/9)*TAU + t*0.35;
+          const rx = cx + Math.cos(a)*58, ry = cy + Math.sin(a)*44;
+          ctx.strokeStyle = mute; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(rx, ry); ctx.stroke();
+          ctx.fillStyle = i%3===0 ? gold : i%3===1 ? forest : ember;
+          ctx.beginPath(); ctx.arc(rx, ry, 5.5, 0, TAU); ctx.fill();
+        }
+        ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(cx, cy, 10, 0, TAU); ctx.fill();
+      } else if(idx === 7){
+        // 08 Living Specimen: Mini bilateral moth with eyespot rings, tails & stipple field
+        const cx = W*0.5, cy = H*0.46;
+        ctx.save(); ctx.translate(cx, cy);
+        [-1, 1].forEach(s => {
+          ctx.fillStyle = s < 0 ? gold : forest;
+          ctx.beginPath();
+          ctx.moveTo(0, -8);
+          ctx.bezierCurveTo(s*38, -56, s*92, -52, s*96, -12);
+          ctx.bezierCurveTo(s*90, 22, s*46, 34, 0, 12);
+          ctx.fill();
+          ctx.fillStyle = s < 0 ? ember : violet;
+          ctx.beginPath();
+          ctx.moveTo(0, 8);
+          ctx.bezierCurveTo(s*34, 18, s*64, 36, s*54, 66);
+          ctx.bezierCurveTo(s*44, 84, s*46, 96, s*38, 102);
+          ctx.bezierCurveTo(s*28, 92, s*22, 62, 0, 24);
+          ctx.fill();
+          // Eyespot ring
+          ctx.fillStyle = '#d0ec60';
+          ctx.beginPath(); ctx.arc(s*32, 38, 7.5, 0, TAU); ctx.fill();
+          ctx.fillStyle = ink;
+          ctx.beginPath(); ctx.arc(s*32, 38, 4, 0, TAU); ctx.fill();
+        });
+        ctx.fillStyle = ink;
+        ctx.beginPath(); ctx.ellipse(0, 8, 4.5, 22, 0, 0, TAU); ctx.fill();
+        ctx.restore();
+      }
+      ctx.restore();
+    });
+
+    requestAnimationFrame(drawAll);
+  }
+  requestAnimationFrame(drawAll);
+})();
+
+// ============================================================================
+// 04 PLAYING IN THE INSTRUMENT: LIVE SESSION & INSTRUMENT RAIL
+// ============================================================================
+(function initSessionAndRail(){
+  const msgsEl = document.getElementById('sess-msgs');
+  const titleEl = document.getElementById('sess-title');
+  const statusEl = document.getElementById('sess-status');
+  const railReadout = document.getElementById('rail-readout');
+
+  const scenarios = [
+    {
+      title: 'dana_okafor.helix · Week 2 · 500 Strands (Scoping & Parking)',
+      clash: 0.05, breath: 4,
+      status: 'LEDGER: 1 HELD [CORE RANGE] · 1 PARKED [LEAF-VEIN]',
+      msgs: [
+        { who:'user', label:'DANA · 02 MAR · CALL NOTES', html:'Botanical route is out. Marguerite said she <em>“has never liked florals on tea—it reads like a gift shop.”</em> Said it twice.' },
+        { who:'mir',  label:'MIR · SCOPED & HELD', html:'Logged as a <strong>Held Decision</strong> with a reason, not a passing preference. Scope locked to the <span class="cite">Core Range</span> since those four SKUs were on the table.' },
+        { who:'mir',  label:'MIR · 06 MAR · SUGGESTION PARKED', html:'One thing worth keeping from the killed botanical route: the <strong>leaf-vein linework</strong> had a structural rhythm the geometric tile route lacks. Parked as structure, not flowers.' }
+      ]
+    },
+    {
+      title: 'dana_okafor.helix · Week 6 · 1,200 Strands (Model Switch)',
+      clash: 0.03, breath: 6,
+      status: 'LEDGER: 3 HELD · 1 PARKED BRIDGED ACROSS CLAUDE → GPT-5',
+      msgs: [
+        { who:'user', label:'DANA · 07 APR · ON CLAUDE', html:'Sampler box: six tiny tins in a sleeve. Marguerite wants it to <em>“feel like a garden.”</em>' },
+        { who:'user', label:'DANA · 08 APR · SWITCHED TO GPT-5', html:'Switched models—Claude credits ran out. Where were we on the sampler?' },
+        { who:'mir',  label:'MIR (ON GPT-5) · READS SAME .HELIX', html:'Picking up from yesterday: Marguerite asked for “garden” on the six-tin sampler. Because <span class="cite">02 MAR · No florals</span> was scoped to the core range, and we parked the <span class="cite">06 MAR · Leaf-vein structure</span>, that vein pattern bridges the sampler brief if she means abundance rather than blossoms.' }
+      ]
+    },
+    {
+      title: 'dana_okafor.helix · Week 10 · 3,400 Strands (Scope Guard & Strike)',
+      clash: 0.02, breath: 7,
+      status: 'LEDGER: OVERREACH STRUCK · HOLIDAY SCOPE VERIFIED',
+      msgs: [
+        { who:'mir',  label:'MIR · 01 MAY · OVERREACH STRUCK BY DANA', html:'<span class="struck">Carrying the sampler peel pattern onto the core range contradicts the 2 March decision against botanical patterns.</span>' },
+        { who:'user', label:'DANA · STRUCK IN PLACE · 01 MAY', html:'No—strike that. The 2 March call was <em>florals</em>, not botanical structure. She approved the peel pattern herself.' },
+        { who:'user', label:'DANA · 08 MAY · WEEK 10 BRIEF', html:'Holiday edition: they want a winter tin. Marguerite’s note: <em>“maybe something festive, even floral?”</em>' },
+        { who:'mir',  label:'MIR · CITED WITH CORRECTED SCOPE', html:'On <span class="cite">02 MAR</span> Marguerite ruled out florals on the <strong>Core Range</strong> (and per your <span class="cite">01 MAY</span> correction, peel structure remains valid everywhere). Because a seasonal winter tin sits outside the core range, this is a clean scope call for Marguerite: extend the <span class="cite">15 APR</span> peel pattern or grant a one-tin seasonal exception.' }
+      ]
+    }
+  ];
+
+  let curIdx = 1;
+  let activeModel = 'GPT-5';
+
+  function renderScenario(idx){
+    curIdx = idx;
+    const sc = scenarios[idx] || scenarios[1];
+    if(titleEl) titleEl.textContent = `${sc.title} · Active: ${activeModel}`;
+    if(statusEl) statusEl.textContent = sc.status;
+    if(railReadout) railReadout.textContent = `CLASH ${sc.clash.toFixed(2)} · ${activeModel.toUpperCase()} · IN TUNE`;
+    if(msgsEl){
+      msgsEl.innerHTML = sc.msgs.map(m => `
+        <div class="msg-row ${m.who}">
+          <span class="msg-dot"></span>
+          <div>
+            <div class="msg-who"><span>${m.label}</span></div>
+            <div class="msg-body">${m.html}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+    document.querySelectorAll('#levels-grid .lvl-box').forEach((b, i) => {
+      b.classList.toggle('on', i === idx);
+    });
+  }
+
+  document.querySelectorAll('#levels-grid .lvl-box').forEach((box, i) => {
+    box.addEventListener('click', () => renderScenario(i));
+  });
+  document.querySelectorAll('.model-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeModel = btn.getAttribute('data-m');
+      document.querySelectorAll('.model-btn').forEach(b => b.classList.toggle('on', b === btn));
+      renderScenario(curIdx);
+    });
+  });
+
+  const btnStrike = document.getElementById('act-strike');
+  const btnHoliday = document.getElementById('act-holiday');
+  if(btnStrike) btnStrike.addEventListener('click', () => renderScenario(2));
+  if(btnHoliday) btnHoliday.addEventListener('click', () => renderScenario(2));
+
+  renderScenario(1);
+
+  // Live rail canvases (#rail-field, #rail-bars, #rail-helix)
+  const cField = document.getElementById('rail-field');
+  const cBars = document.getElementById('rail-bars');
+  const cHelix = document.getElementById('rail-helix');
+
+  function drawRail(now){
+    const t = now * 0.001;
+    const night = isNight();
+    const sc = scenarios[curIdx] || scenarios[1];
+
+    if(cField){
+      const g = cField.getContext('2d'), w = cField.width, h = cField.height;
+      g.fillStyle = night ? '#0c0e0d' : '#eef2e7';
+      g.fillRect(0, 0, w, h);
+      const s1x = w*0.34, s2x = w*0.66, sy = h*0.5;
+      for(let y=10; y<h-10; y+=9){
+        for(let x=10; x<w-10; x+=9){
+          const r1 = Math.hypot(x-s1x, y-sy), r2 = Math.hypot(x-s2x, y-sy);
+          const E = Math.abs(Math.cos((r1 - r2)*0.08));
+          const C = Math.cos((r1 + r2)*0.08 - t*2);
+          const v = E * (0.65 + 0.35*C);
+          if(v < 0.2) continue;
+          g.fillStyle = night ? `rgba(60,208,130,${(v*0.65).toFixed(2)})` : `rgba(18,107,61,${(v*0.65).toFixed(2)})`;
+          g.beginPath(); g.arc(x, y, 0.8 + E*1.6, 0, TAU); g.fill();
+        }
+      }
+    }
+
+    if(cBars){
+      const g = cBars.getContext('2d'), w = cBars.width, h = cBars.height;
+      g.fillStyle = night ? '#0c0e0d' : '#eef2e7';
+      g.fillRect(0, 0, w, h);
+      const n = 7, bw = (w - 24) / n;
+      for(let i=0;i<n;i++){
+        const on = i < sc.breath;
+        const bh = on ? (22 + Math.sin(t*2 + i)*6) : 10;
+        g.fillStyle = on ? (i < 4 ? '#126b3d' : '#c48014') : (night ? '#222824' : '#cdd3c3');
+        g.fillRect(12 + i*bw + 2, h - 10 - bh, bw - 5, bh);
+      }
+    }
+
+    if(cHelix){
+      const g = cHelix.getContext('2d'), w = cHelix.width, h = cHelix.height;
+      g.fillStyle = night ? '#0c0e0d' : '#eef2e7';
+      g.fillRect(0, 0, w, h);
+      const cols = ['#c48014', '#d9462f', '#126b3d', '#6c46b8', '#2f56b0'];
+      for(let s=0;s<2;s++){
+        g.strokeStyle = s===0 ? '#126b3d' : '#6c46b8';
+        g.lineWidth = 1.5;
+        g.beginPath();
+        for(let x=14; x<=w-14; x+=5){
+          const u = (x-14)/(w-28);
+          const y = h*0.5 + Math.sin(u*TAU*1.5 + t + s*Math.PI) * 26;
+          if(x===14) g.moveTo(x,y); else g.lineTo(x,y);
+        }
+        g.stroke();
+      }
+      for(let i=0;i<7;i++){
+        const x = 22 + i * ((w-44)/6);
+        const y = h*0.5 + Math.sin((i/6)*TAU*1.5 + t) * 26;
+        g.fillStyle = cols[i % cols.length];
+        g.beginPath(); g.arc(x, y, 4, 0, TAU); g.fill();
+      }
+    }
+
+    requestAnimationFrame(drawRail);
+  }
+  requestAnimationFrame(drawRail);
+})();
+
+// ============================================================================
+// 05 SPECIMEN PROMPT COPY & LIVE GENOME LOADER
+// ============================================================================
+(function initPromptTools(){
+  const copyBtn = document.getElementById('copy-prompt-btn');
+  const promptPre = document.getElementById('prompt-text');
+  const applyBtn = document.getElementById('apply-genome-btn');
+
+  if(copyBtn && promptPre){
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(promptPre.textContent || '').then(() => {
+        copyBtn.textContent = 'Copied ✓';
+        setTimeout(() => { copyBtn.textContent = 'Copy Prompt'; }, 1800);
+      });
+    });
+  }
+  if(applyBtn && genomeInput){
+    applyBtn.addEventListener('click', () => {
+      try {
+        const parsed = JSON.parse(genomeInput.value);
+        if(parsed && parsed.strands){
+          ACTIVE_GENOME = Object.assign({}, ACTIVE_GENOME, parsed);
+          if(typeof rebuildHeroSpecimen === 'function') rebuildHeroSpecimen();
+          applyBtn.textContent = 'Rendered ✓';
+          document.getElementById('hero').scrollIntoView({ behavior: 'smooth' });
+          setTimeout(() => { applyBtn.textContent = 'Render in Hero ↑'; }, 1800);
+        }
+      } catch(err){
+        applyBtn.textContent = 'Invalid JSON';
+        setTimeout(() => { applyBtn.textContent = 'Render in Hero ↑'; }, 1800);
+      }
+    });
+  }
+})();
+
+})();
+
+</script>
+</body>
+</html>

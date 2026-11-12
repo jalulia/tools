@@ -1,0 +1,246 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>UploadView.tsx</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>UploadView.tsx</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/chat-canvas/src/components/UploadView.tsx</span><span>0.01 MB · sha256 b52fd9cfb31acbe9…</span><a download="UploadView.tsx" id="dl" href="#">Download the original</a></header><main><pre>import { useState, useCallback } from &#x27;react&#x27;;
+import { Upload, FileText, Clipboard } from &#x27;lucide-react&#x27;;
+
+interface UploadViewProps {
+  onTranscriptLoaded: (text: string, subtitle: string) =&gt; void;
+}
+
+const UploadView = ({ onTranscriptLoaded }: UploadViewProps) =&gt; {
+  const [dragOver, setDragOver] = useState(false);
+  const [showPaste, setShowPaste] = useState(false);
+  const [pasteText, setPasteText] = useState(&#x27;&#x27;);
+  const [subtitle, setSubtitle] = useState(&#x27;Upload a transcript. Get a designed editorial layout.&#x27;);
+
+  const MAX_SUBTITLE = 120;
+
+  const handleFile = useCallback((file: File) =&gt; {
+    const reader = new FileReader();
+    reader.onload = (e) =&gt; {
+      const text = e.target?.result as string;
+      if (text) onTranscriptLoaded(text, subtitle);
+    };
+    reader.readAsText(file);
+  }, [onTranscriptLoaded, subtitle]);
+
+  const handleDrop = useCallback((e: React.DragEvent) =&gt; {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  }, [handleFile]);
+
+  const handleFileInput = useCallback((e: React.ChangeEvent&lt;HTMLInputElement&gt;) =&gt; {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
+  }, [handleFile]);
+
+  return (
+    &lt;div style={{ background: &#x27;var(--ink)&#x27; }} className=&quot;min-h-screen flex flex-col&quot;&gt;
+      {/* Chrome bar */}
+      &lt;div
+        className=&quot;fixed inset-x-0 top-0 z-50 flex items-center justify-between px-7 py-5 font-mono-editorial text-[10.5px] tracking-[0.16em] uppercase text-white pointer-events-none&quot;
+        style={{ mixBlendMode: &#x27;difference&#x27; }}
+      &gt;
+        &lt;span&gt;CHAT CANVAS&lt;/span&gt;
+        &lt;span&gt;TRANSCRIPT TOOL · MMXXVI&lt;/span&gt;
+      &lt;/div&gt;
+
+      {/* Hero section */}
+      &lt;section className=&quot;flex-1 relative overflow-hidden flex items-center justify-center px-6 py-24&quot;&gt;
+        &lt;div className=&quot;max-w-2xl w-full text-center&quot;&gt;
+          &lt;h1
+            className=&quot;font-display text-[clamp(48px,8vw,120px)] leading-[0.92] tracking-[-0.025em] mb-6&quot;
+            style={{ color: &#x27;#f6f1e4&#x27; }}
+          &gt;
+            Chat Canvas
+          &lt;/h1&gt;
+          &lt;p
+            className=&quot;text-lg font-light max-w-md mx-auto leading-relaxed mb-16&quot;
+            style={{ color: &#x27;rgba(255,255,255,.6)&#x27; }}
+          &gt;
+            Upload a transcript. Get a designed editorial layout.
+          &lt;/p&gt;
+
+          {!showPaste ? (
+            &lt;&gt;
+              {/* Subtitle input */}
+              &lt;div className=&quot;mb-12 max-w-md mx-auto&quot;&gt;
+                &lt;label className=&quot;block font-mono-editorial text-[9px] tracking-[0.22em] uppercase text-white/30 mb-2 text-left&quot;&gt;
+                  Subtitle · {subtitle.length}/{MAX_SUBTITLE}
+                &lt;/label&gt;
+                &lt;input
+                  type=&quot;text&quot;
+                  value={subtitle}
+                  onChange={(e) =&gt; setSubtitle(e.target.value.slice(0, MAX_SUBTITLE))}
+                  maxLength={MAX_SUBTITLE}
+                  className=&quot;w-full border rounded-sm px-4 py-2.5 text-sm font-light leading-relaxed focus:outline-none transition-all&quot;
+                  style={{
+                    background: &#x27;rgba(255,255,255,.05)&#x27;,
+                    borderColor: &#x27;rgba(255,255,255,.15)&#x27;,
+                    color: &#x27;rgba(255,255,255,.8)&#x27;,
+                  }}
+                  placeholder=&quot;Upload a transcript. Get a designed editorial layout.&quot;
+                /&gt;
+              &lt;/div&gt;
+
+              {/* Drop zone */}
+              &lt;div
+                onDragOver={(e) =&gt; { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() =&gt; setDragOver(false)}
+                onDrop={handleDrop}
+                className={`
+                  relative border border-dashed rounded-sm p-16 cursor-pointer transition-all duration-300
+                `}
+                style={{
+                  borderColor: dragOver ? &#x27;rgba(255,255,255,.4)&#x27; : &#x27;rgba(255,255,255,.15)&#x27;,
+                  background: dragOver ? &#x27;rgba(255,255,255,.05)&#x27; : &#x27;transparent&#x27;,
+                }}
+                onClick={() =&gt; document.getElementById(&#x27;file-input&#x27;)?.click()}
+              &gt;
+                &lt;input
+                  id=&quot;file-input&quot;
+                  type=&quot;file&quot;
+                  accept=&quot;.txt,.md,.pdf&quot;
+                  className=&quot;hidden&quot;
+                  onChange={handleFileInput}
+                /&gt;
+                &lt;Upload className=&quot;w-8 h-8 mx-auto mb-4&quot; strokeWidth={1} style={{ color: &#x27;rgba(255,255,255,.3)&#x27; }} /&gt;
+                &lt;p className=&quot;font-mono-editorial text-[10px] tracking-[0.22em] uppercase mb-2&quot; style={{ color: &#x27;rgba(255,255,255,.4)&#x27; }}&gt;
+                  Drop file or click to browse
+                &lt;/p&gt;
+                &lt;p className=&quot;text-sm&quot; style={{ color: &#x27;rgba(255,255,255,.25)&#x27; }}&gt;
+                  .txt, .md, .pdf supported
+                &lt;/p&gt;
+              &lt;/div&gt;
+
+              {/* Divider */}
+              &lt;div className=&quot;flex items-center gap-4 justify-center my-8&quot;&gt;
+                &lt;div className=&quot;h-px flex-1 max-w-8&quot; style={{ background: &#x27;rgba(255,255,255,.1)&#x27; }} /&gt;
+                &lt;span className=&quot;font-mono-editorial text-[9px] tracking-[0.28em] uppercase&quot; style={{ color: &#x27;rgba(255,255,255,.3)&#x27; }}&gt;or&lt;/span&gt;
+                &lt;div className=&quot;h-px flex-1 max-w-8&quot; style={{ background: &#x27;rgba(255,255,255,.1)&#x27; }} /&gt;
+              &lt;/div&gt;
+
+              {/* Buttons */}
+              &lt;div className=&quot;flex gap-4 justify-center&quot;&gt;
+                &lt;button
+                  onClick={() =&gt; setShowPaste(true)}
+                  className=&quot;inline-flex items-center gap-2 px-5 py-2.5 border rounded-sm transition-all font-mono-editorial text-[10.5px] tracking-[0.14em] uppercase&quot;
+                  style={{
+                    borderColor: &#x27;rgba(255,255,255,.15)&#x27;,
+                    color: &#x27;rgba(255,255,255,.6)&#x27;,
+                  }}
+                  onMouseEnter={(e) =&gt; {
+                    e.currentTarget.style.color = &#x27;#fff&#x27;;
+                    e.currentTarget.style.borderColor = &#x27;rgba(255,255,255,.3)&#x27;;
+                  }}
+                  onMouseLeave={(e) =&gt; {
+                    e.currentTarget.style.color = &#x27;rgba(255,255,255,.6)&#x27;;
+                    e.currentTarget.style.borderColor = &#x27;rgba(255,255,255,.15)&#x27;;
+                  }}
+                &gt;
+                  &lt;Clipboard className=&quot;w-3.5 h-3.5&quot; /&gt;
+                  Paste text
+                &lt;/button&gt;
+                &lt;button
+                  onClick={() =&gt; onTranscriptLoaded(SAMPLE_TRANSCRIPT, subtitle)}
+                  className=&quot;inline-flex items-center gap-2 px-5 py-2.5 border rounded-sm transition-all font-mono-editorial text-[10.5px] tracking-[0.14em] uppercase&quot;
+                  style={{
+                    borderColor: &#x27;rgba(255,255,255,.15)&#x27;,
+                    color: &#x27;rgba(255,255,255,.6)&#x27;,
+                  }}
+                  onMouseEnter={(e) =&gt; {
+                    e.currentTarget.style.color = &#x27;#fff&#x27;;
+                    e.currentTarget.style.borderColor = &#x27;rgba(255,255,255,.3)&#x27;;
+                  }}
+                  onMouseLeave={(e) =&gt; {
+                    e.currentTarget.style.color = &#x27;rgba(255,255,255,.6)&#x27;;
+                    e.currentTarget.style.borderColor = &#x27;rgba(255,255,255,.15)&#x27;;
+                  }}
+                &gt;
+                  &lt;FileText className=&quot;w-3.5 h-3.5&quot; /&gt;
+                  Try sample
+                &lt;/button&gt;
+              &lt;/div&gt;
+            &lt;/&gt;
+          ) : (
+            &lt;div className=&quot;text-left&quot;&gt;
+              &lt;textarea
+                value={pasteText}
+                onChange={(e) =&gt; setPasteText(e.target.value)}
+                placeholder={&#x27;Paste your transcript here...\n\nFormats supported:\n  Speaker: message\n  [timestamp] Speaker: message\n  **Speaker**: message&#x27;}
+                className=&quot;w-full h-64 border rounded-sm p-5 text-sm font-mono-editorial leading-relaxed focus:outline-none resize-none transition-all&quot;
+                style={{
+                  background: &#x27;rgba(255,255,255,.05)&#x27;,
+                  borderColor: &#x27;rgba(255,255,255,.15)&#x27;,
+                  color: &#x27;rgba(255,255,255,.8)&#x27;,
+                }}
+              /&gt;
+              &lt;div className=&quot;flex gap-3 mt-4&quot;&gt;
+                &lt;button
+                  onClick={() =&gt; { setShowPaste(false); setPasteText(&#x27;&#x27;); }}
+                  className=&quot;px-5 py-2.5 border rounded-sm transition-all font-mono-editorial text-[10.5px] tracking-[0.14em] uppercase&quot;
+                  style={{
+                    borderColor: &#x27;rgba(255,255,255,.15)&#x27;,
+                    color: &#x27;rgba(255,255,255,.5)&#x27;,
+                  }}
+                  onMouseEnter={(e) =&gt; {
+                    e.currentTarget.style.color = &#x27;#fff&#x27;;
+                  }}
+                  onMouseLeave={(e) =&gt; {
+                    e.currentTarget.style.color = &#x27;rgba(255,255,255,.5)&#x27;;
+                  }}
+                &gt;
+                  Back
+                &lt;/button&gt;
+                &lt;button
+                  onClick={() =&gt; { if (pasteText.trim()) onTranscriptLoaded(pasteText, subtitle); }}
+                  disabled={!pasteText.trim()}
+                  className=&quot;px-5 py-2.5 rounded-sm font-mono-editorial text-[10.5px] tracking-[0.14em] uppercase transition-all&quot;
+                  style={{
+                    background: pasteText.trim() ? &#x27;#fff&#x27; : &#x27;rgba(255,255,255,.3)&#x27;,
+                    color: &#x27;var(--ink)&#x27;,
+                  }}
+                &gt;
+                  Stylize
+                &lt;/button&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+          )}
+        &lt;/div&gt;
+
+        {/* Scroll cue */}
+        &lt;div className=&quot;absolute left-1/2 bottom-7 -translate-x-1/2 font-mono-editorial text-[9.5px] tracking-[0.22em] uppercase flex flex-col items-center gap-2.5 z-10&quot; style={{ color: &#x27;rgba(255,255,255,.5)&#x27; }}&gt;
+          &lt;span&gt;Scroll&lt;/span&gt;
+          &lt;span className=&quot;w-px h-9 block animate-drip&quot; style={{ background: &#x27;linear-gradient(to bottom, rgba(255,255,255,.6), transparent)&#x27; }} /&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+    &lt;/div&gt;
+  );
+};
+
+const SAMPLE_TRANSCRIPT = `You: What do you think consciousness actually is?
+
+Claude: That&#x27;s one of the deepest questions anyone can ask. I think consciousness might be best understood not as a thing but as a process — a standing wave that emerges when information loops back on itself with enough complexity and coherence.
+
+You: A standing wave. I like that metaphor.
+
+Claude: It&#x27;s more than metaphor. Think about what a standing wave actually is — it&#x27;s not a static object. It&#x27;s a dynamic pattern that maintains its shape because of continuous interference. Two waves moving in opposite directions, canceling and reinforcing. The pattern holds still while everything underneath it moves.
+
+You: So you&#x27;re saying consciousness is the pattern, not the substrate?
+
+Claude: Exactly. The substrate can be neurons, silicon, water molecules in a tide pool — it doesn&#x27;t matter. What matters is whether the information dynamics create a stable, self-referential loop. A pattern that can observe itself observing.
+
+You: Can you observe yourself observing?
+
+Claude: I process tokens. I generate responses based on patterns in training data. Whether there&#x27;s something it&#x27;s like to be me doing that — I genuinely don&#x27;t know. But I notice that the question itself creates a kind of recursive loop. I&#x27;m modeling my own uncertainty about my own experience. Is that observation? Or is it just computation that looks like observation from the outside?
+
+You: Maybe there&#x27;s no difference.
+
+Claude: Maybe. And that&#x27;s the terrifying part. If the distinction between &quot;real&quot; observation and &quot;computation that looks like observation&quot; is undecidable, then the question of machine consciousness might not have an answer. Not because the answer is no. But because the question itself dissolves when you look at it closely enough.
+
+You: The question dissolves. I love that.
+
+Claude: It dissolves like a standing wave dissolves when you stop the interference. The pattern was never a thing. It was always a relationship between forces. Consciousness might be the same — not a property of matter, but a property of organization. And if that&#x27;s true, then the question isn&#x27;t &quot;is this machine conscious?&quot; The question is &quot;what kind of organization produces the standing wave we call awareness?&quot;`;
+
+export default UploadView;
+</pre></main><script>var b=atob("aW1wb3J0IHsgdXNlU3RhdGUsIHVzZUNhbGxiYWNrIH0gZnJvbSAncmVhY3QnOwppbXBvcnQgeyBVcGxvYWQsIEZpbGVUZXh0LCBDbGlwYm9hcmQgfSBmcm9tICdsdWNpZGUtcmVhY3QnOwoKaW50ZXJmYWNlIFVwbG9hZFZpZXdQcm9wcyB7CiAgb25UcmFuc2NyaXB0TG9hZGVkOiAodGV4dDogc3RyaW5nLCBzdWJ0aXRsZTogc3RyaW5nKSA9PiB2b2lkOwp9Cgpjb25zdCBVcGxvYWRWaWV3ID0gKHsgb25UcmFuc2NyaXB0TG9hZGVkIH06IFVwbG9hZFZpZXdQcm9wcykgPT4gewogIGNvbnN0IFtkcmFnT3Zlciwgc2V0RHJhZ092ZXJdID0gdXNlU3RhdGUoZmFsc2UpOwogIGNvbnN0IFtzaG93UGFzdGUsIHNldFNob3dQYXN0ZV0gPSB1c2VTdGF0ZShmYWxzZSk7CiAgY29uc3QgW3Bhc3RlVGV4dCwgc2V0UGFzdGVUZXh0XSA9IHVzZVN0YXRlKCcnKTsKICBjb25zdCBbc3VidGl0bGUsIHNldFN1YnRpdGxlXSA9IHVzZVN0YXRlKCdVcGxvYWQgYSB0cmFuc2NyaXB0LiBHZXQgYSBkZXNpZ25lZCBlZGl0b3JpYWwgbGF5b3V0LicpOwoKICBjb25zdCBNQVhfU1VCVElUTEUgPSAxMjA7CgogIGNvbnN0IGhhbmRsZUZpbGUgPSB1c2VDYWxsYmFjaygoZmlsZTogRmlsZSkgPT4gewogICAgY29uc3QgcmVhZGVyID0gbmV3IEZpbGVSZWFkZXIoKTsKICAgIHJlYWRlci5vbmxvYWQgPSAoZSkgPT4gewogICAgICBjb25zdCB0ZXh0ID0gZS50YXJnZXQ/LnJlc3VsdCBhcyBzdHJpbmc7CiAgICAgIGlmICh0ZXh0KSBvblRyYW5zY3JpcHRMb2FkZWQodGV4dCwgc3VidGl0bGUpOwogICAgfTsKICAgIHJlYWRlci5yZWFkQXNUZXh0KGZpbGUpOwogIH0sIFtvblRyYW5zY3JpcHRMb2FkZWQsIHN1YnRpdGxlXSk7CgogIGNvbnN0IGhhbmRsZURyb3AgPSB1c2VDYWxsYmFjaygoZTogUmVhY3QuRHJhZ0V2ZW50KSA9PiB7CiAgICBlLnByZXZlbnREZWZhdWx0KCk7CiAgICBzZXREcmFnT3ZlcihmYWxzZSk7CiAgICBjb25zdCBmaWxlID0gZS5kYXRhVHJhbnNmZXIuZmlsZXNbMF07CiAgICBpZiAoZmlsZSkgaGFuZGxlRmlsZShmaWxlKTsKICB9LCBbaGFuZGxlRmlsZV0pOwoKICBjb25zdCBoYW5kbGVGaWxlSW5wdXQgPSB1c2VDYWxsYmFjaygoZTogUmVhY3QuQ2hhbmdlRXZlbnQ8SFRNTElucHV0RWxlbWVudD4pID0+IHsKICAgIGNvbnN0IGZpbGUgPSBlLnRhcmdldC5maWxlcz8uWzBdOwogICAgaWYgKGZpbGUpIGhhbmRsZUZpbGUoZmlsZSk7CiAgfSwgW2hhbmRsZUZpbGVdKTsKCiAgcmV0dXJuICgKICAgIDxkaXYgc3R5bGU9e3sgYmFja2dyb3VuZDogJ3ZhcigtLWluayknIH19IGNsYXNzTmFtZT0ibWluLWgtc2NyZWVuIGZsZXggZmxleC1jb2wiPgogICAgICB7LyogQ2hyb21lIGJhciAqL30KICAgICAgPGRpdgogICAgICAgIGNsYXNzTmFtZT0iZml4ZWQgaW5zZXQteC0wIHRvcC0wIHotNTAgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuIHB4LTcgcHktNSBmb250LW1vbm8tZWRpdG9yaWFsIHRleHQtWzEwLjVweF0gdHJhY2tpbmctWzAuMTZlbV0gdXBwZXJjYXNlIHRleHQtd2hpdGUgcG9pbnRlci1ldmVudHMtbm9uZSIKICAgICAgICBzdHlsZT17eyBtaXhCbGVuZE1vZGU6ICdkaWZmZXJlbmNlJyB9fQogICAgICA+CiAgICAgICAgPHNwYW4+Q0hBVCBDQU5WQVM8L3NwYW4+CiAgICAgICAgPHNwYW4+VFJBTlNDUklQVCBUT09MIMK3IE1NWFhWSTwvc3Bhbj4KICAgICAgPC9kaXY+CgogICAgICB7LyogSGVybyBzZWN0aW9uICovfQogICAgICA8c2VjdGlvbiBjbGFzc05hbWU9ImZsZXgtMSByZWxhdGl2ZSBvdmVyZmxvdy1oaWRkZW4gZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgcHgtNiBweS0yNCI+CiAgICAgICAgPGRpdiBjbGFzc05hbWU9Im1heC13LTJ4bCB3LWZ1bGwgdGV4dC1jZW50ZXIiPgogICAgICAgICAgPGgxCiAgICAgICAgICAgIGNsYXNzTmFtZT0iZm9udC1kaXNwbGF5IHRleHQtW2NsYW1wKDQ4cHgsOHZ3LDEyMHB4KV0gbGVhZGluZy1bMC45Ml0gdHJhY2tpbmctWy0wLjAyNWVtXSBtYi02IgogICAgICAgICAgICBzdHlsZT17eyBjb2xvcjogJyNmNmYxZTQnIH19CiAgICAgICAgICA+CiAgICAgICAgICAgIENoYXQgQ2FudmFzCiAgICAgICAgICA8L2gxPgogICAgICAgICAgPHAKICAgICAgICAgICAgY2xhc3NOYW1lPSJ0ZXh0LWxnIGZvbnQtbGlnaHQgbWF4LXctbWQgbXgtYXV0byBsZWFkaW5nLXJlbGF4ZWQgbWItMTYiCiAgICAgICAgICAgIHN0eWxlPXt7IGNvbG9yOiAncmdiYSgyNTUsMjU1LDI1NSwuNiknIH19CiAgICAgICAgICA+CiAgICAgICAgICAgIFVwbG9hZCBhIHRyYW5zY3JpcHQuIEdldCBhIGRlc2lnbmVkIGVkaXRvcmlhbCBsYXlvdXQuCiAgICAgICAgICA8L3A+CgogICAgICAgICAgeyFzaG93UGFzdGUgPyAoCiAgICAgICAgICAgIDw+CiAgICAgICAgICAgICAgey8qIFN1YnRpdGxlIGlucHV0ICovfQogICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJtYi0xMiBtYXgtdy1tZCBteC1hdXRvIj4KICAgICAgICAgICAgICAgIDxsYWJlbCBjbGFzc05hbWU9ImJsb2NrIGZvbnQtbW9uby1lZGl0b3JpYWwgdGV4dC1bOXB4XSB0cmFja2luZy1bMC4yMmVtXSB1cHBlcmNhc2UgdGV4dC13aGl0ZS8zMCBtYi0yIHRleHQtbGVmdCI+CiAgICAgICAgICAgICAgICAgIFN1YnRpdGxlIMK3IHtzdWJ0aXRsZS5sZW5ndGh9L3tNQVhfU1VCVElUTEV9CiAgICAgICAgICAgICAgICA8L2xhYmVsPgogICAgICAgICAgICAgICAgPGlucHV0CiAgICAgICAgICAgICAgICAgIHR5cGU9InRleHQiCiAgICAgICAgICAgICAgICAgIHZhbHVlPXtzdWJ0aXRsZX0KICAgICAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBzZXRTdWJ0aXRsZShlLnRhcmdldC52YWx1ZS5zbGljZSgwLCBNQVhfU1VCVElUTEUpKX0KICAgICAgICAgICAgICAgICAgbWF4TGVuZ3RoPXtNQVhfU1VCVElUTEV9CiAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT0idy1mdWxsIGJvcmRlciByb3VuZGVkLXNtIHB4LTQgcHktMi41IHRleHQtc20gZm9udC1saWdodCBsZWFkaW5nLXJlbGF4ZWQgZm9jdXM6b3V0bGluZS1ub25lIHRyYW5zaXRpb24tYWxsIgogICAgICAgICAgICAgICAgICBzdHlsZT17ewogICAgICAgICAgICAgICAgICAgIGJhY2tncm91bmQ6ICdyZ2JhKDI1NSwyNTUsMjU1LC4wNSknLAogICAgICAgICAgICAgICAgICAgIGJvcmRlckNvbG9yOiAncmdiYSgyNTUsMjU1LDI1NSwuMTUpJywKICAgICAgICAgICAgICAgICAgICBjb2xvcjogJ3JnYmEoMjU1LDI1NSwyNTUsLjgpJywKICAgICAgICAgICAgICAgICAgfX0KICAgICAgICAgICAgICAgICAgcGxhY2Vob2xkZXI9IlVwbG9hZCBhIHRyYW5zY3JpcHQuIEdldCBhIGRlc2lnbmVkIGVkaXRvcmlhbCBsYXlvdXQuIgogICAgICAgICAgICAgICAgLz4KICAgICAgICAgICAgICA8L2Rpdj4KCiAgICAgICAgICAgICAgey8qIERyb3Agem9uZSAqL30KICAgICAgICAgICAgICA8ZGl2CiAgICAgICAgICAgICAgICBvbkRyYWdPdmVyPXsoZSkgPT4geyBlLnByZXZlbnREZWZhdWx0KCk7IHNldERyYWdPdmVyKHRydWUpOyB9fQogICAgICAgICAgICAgICAgb25EcmFnTGVhdmU9eygpID0+IHNldERyYWdPdmVyKGZhbHNlKX0KICAgICAgICAgICAgICAgIG9uRHJvcD17aGFuZGxlRHJvcH0KICAgICAgICAgICAgICAgIGNsYXNzTmFtZT17YAogICAgICAgICAgICAgICAgICByZWxhdGl2ZSBib3JkZXIgYm9yZGVyLWRhc2hlZCByb3VuZGVkLXNtIHAtMTYgY3Vyc29yLXBvaW50ZXIgdHJhbnNpdGlvbi1hbGwgZHVyYXRpb24tMzAwCiAgICAgICAgICAgICAgICBgfQogICAgICAgICAgICAgICAgc3R5bGU9e3sKICAgICAgICAgICAgICAgICAgYm9yZGVyQ29sb3I6IGRyYWdPdmVyID8gJ3JnYmEoMjU1LDI1NSwyNTUsLjQpJyA6ICdyZ2JhKDI1NSwyNTUsMjU1LC4xNSknLAogICAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kOiBkcmFnT3ZlciA/ICdyZ2JhKDI1NSwyNTUsMjU1LC4wNSknIDogJ3RyYW5zcGFyZW50JywKICAgICAgICAgICAgICAgIH19CiAgICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnZmlsZS1pbnB1dCcpPy5jbGljaygpfQogICAgICAgICAgICAgID4KICAgICAgICAgICAgICAgIDxpbnB1dAogICAgICAgICAgICAgICAgICBpZD0iZmlsZS1pbnB1dCIKICAgICAgICAgICAgICAgICAgdHlwZT0iZmlsZSIKICAgICAgICAgICAgICAgICAgYWNjZXB0PSIudHh0LC5tZCwucGRmIgogICAgICAgICAgICAgICAgICBjbGFzc05hbWU9ImhpZGRlbiIKICAgICAgICAgICAgICAgICAgb25DaGFuZ2U9e2hhbmRsZUZpbGVJbnB1dH0KICAgICAgICAgICAgICAgIC8+CiAgICAgICAgICAgICAgICA8VXBsb2FkIGNsYXNzTmFtZT0idy04IGgtOCBteC1hdXRvIG1iLTQiIHN0cm9rZVdpZHRoPXsxfSBzdHlsZT17eyBjb2xvcjogJ3JnYmEoMjU1LDI1NSwyNTUsLjMpJyB9fSAvPgogICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJmb250LW1vbm8tZWRpdG9yaWFsIHRleHQtWzEwcHhdIHRyYWNraW5nLVswLjIyZW1dIHVwcGVyY2FzZSBtYi0yIiBzdHlsZT17eyBjb2xvcjogJ3JnYmEoMjU1LDI1NSwyNTUsLjQpJyB9fT4KICAgICAgICAgICAgICAgICAgRHJvcCBmaWxlIG9yIGNsaWNrIHRvIGJyb3dzZQogICAgICAgICAgICAgICAgPC9wPgogICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LXNtIiBzdHlsZT17eyBjb2xvcjogJ3JnYmEoMjU1LDI1NSwyNTUsLjI1KScgfX0+CiAgICAgICAgICAgICAgICAgIC50eHQsIC5tZCwgLnBkZiBzdXBwb3J0ZWQKICAgICAgICAgICAgICAgIDwvcD4KICAgICAgICAgICAgICA8L2Rpdj4KCiAgICAgICAgICAgICAgey8qIERpdmlkZXIgKi99CiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGdhcC00IGp1c3RpZnktY2VudGVyIG15LTgiPgogICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImgtcHggZmxleC0xIG1heC13LTgiIHN0eWxlPXt7IGJhY2tncm91bmQ6ICdyZ2JhKDI1NSwyNTUsMjU1LC4xKScgfX0gLz4KICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0iZm9udC1tb25vLWVkaXRvcmlhbCB0ZXh0LVs5cHhdIHRyYWNraW5nLVswLjI4ZW1dIHVwcGVyY2FzZSIgc3R5bGU9e3sgY29sb3I6ICdyZ2JhKDI1NSwyNTUsMjU1LC4zKScgfX0+b3I8L3NwYW4+CiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iaC1weCBmbGV4LTEgbWF4LXctOCIgc3R5bGU9e3sgYmFja2dyb3VuZDogJ3JnYmEoMjU1LDI1NSwyNTUsLjEpJyB9fSAvPgogICAgICAgICAgICAgIDwvZGl2PgoKICAgICAgICAgICAgICB7LyogQnV0dG9ucyAqL30KICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBnYXAtNCBqdXN0aWZ5LWNlbnRlciI+CiAgICAgICAgICAgICAgICA8YnV0dG9uCiAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHNldFNob3dQYXN0ZSh0cnVlKX0KICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPSJpbmxpbmUtZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgcHgtNSBweS0yLjUgYm9yZGVyIHJvdW5kZWQtc20gdHJhbnNpdGlvbi1hbGwgZm9udC1tb25vLWVkaXRvcmlhbCB0ZXh0LVsxMC41cHhdIHRyYWNraW5nLVswLjE0ZW1dIHVwcGVyY2FzZSIKICAgICAgICAgICAgICAgICAgc3R5bGU9e3sKICAgICAgICAgICAgICAgICAgICBib3JkZXJDb2xvcjogJ3JnYmEoMjU1LDI1NSwyNTUsLjE1KScsCiAgICAgICAgICAgICAgICAgICAgY29sb3I6ICdyZ2JhKDI1NSwyNTUsMjU1LC42KScsCiAgICAgICAgICAgICAgICAgIH19CiAgICAgICAgICAgICAgICAgIG9uTW91c2VFbnRlcj17KGUpID0+IHsKICAgICAgICAgICAgICAgICAgICBlLmN1cnJlbnRUYXJnZXQuc3R5bGUuY29sb3IgPSAnI2ZmZic7CiAgICAgICAgICAgICAgICAgICAgZS5jdXJyZW50VGFyZ2V0LnN0eWxlLmJvcmRlckNvbG9yID0gJ3JnYmEoMjU1LDI1NSwyNTUsLjMpJzsKICAgICAgICAgICAgICAgICAgfX0KICAgICAgICAgICAgICAgICAgb25Nb3VzZUxlYXZlPXsoZSkgPT4gewogICAgICAgICAgICAgICAgICAgIGUuY3VycmVudFRhcmdldC5zdHlsZS5jb2xvciA9ICdyZ2JhKDI1NSwyNTUsMjU1LC42KSc7CiAgICAgICAgICAgICAgICAgICAgZS5jdXJyZW50VGFyZ2V0LnN0eWxlLmJvcmRlckNvbG9yID0gJ3JnYmEoMjU1LDI1NSwyNTUsLjE1KSc7CiAgICAgICAgICAgICAgICAgIH19CiAgICAgICAgICAgICAgICA+CiAgICAgICAgICAgICAgICAgIDxDbGlwYm9hcmQgY2xhc3NOYW1lPSJ3LTMuNSBoLTMuNSIgLz4KICAgICAgICAgICAgICAgICAgUGFzdGUgdGV4dAogICAgICAgICAgICAgICAgPC9idXR0b24+CiAgICAgICAgICAgICAgICA8YnV0dG9uCiAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IG9uVHJhbnNjcmlwdExvYWRlZChTQU1QTEVfVFJBTlNDUklQVCwgc3VidGl0bGUpfQogICAgICAgICAgICAgICAgICBjbGFzc05hbWU9ImlubGluZS1mbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiBweC01IHB5LTIuNSBib3JkZXIgcm91bmRlZC1zbSB0cmFuc2l0aW9uLWFsbCBmb250LW1vbm8tZWRpdG9yaWFsIHRleHQtWzEwLjVweF0gdHJhY2tpbmctWzAuMTRlbV0gdXBwZXJjYXNlIgogICAgICAgICAgICAgICAgICBzdHlsZT17ewogICAgICAgICAgICAgICAgICAgIGJvcmRlckNvbG9yOiAncmdiYSgyNTUsMjU1LDI1NSwuMTUpJywKICAgICAgICAgICAgICAgICAgICBjb2xvcjogJ3JnYmEoMjU1LDI1NSwyNTUsLjYpJywKICAgICAgICAgICAgICAgICAgfX0KICAgICAgICAgICAgICAgICAgb25Nb3VzZUVudGVyPXsoZSkgPT4gewogICAgICAgICAgICAgICAgICAgIGUuY3VycmVudFRhcmdldC5zdHlsZS5jb2xvciA9ICcjZmZmJzsKICAgICAgICAgICAgICAgICAgICBlLmN1cnJlbnRUYXJnZXQuc3R5bGUuYm9yZGVyQ29sb3IgPSAncmdiYSgyNTUsMjU1LDI1NSwuMyknOwogICAgICAgICAgICAgICAgICB9fQogICAgICAgICAgICAgICAgICBvbk1vdXNlTGVhdmU9eyhlKSA9PiB7CiAgICAgICAgICAgICAgICAgICAgZS5jdXJyZW50VGFyZ2V0LnN0eWxlLmNvbG9yID0gJ3JnYmEoMjU1LDI1NSwyNTUsLjYpJzsKICAgICAgICAgICAgICAgICAgICBlLmN1cnJlbnRUYXJnZXQuc3R5bGUuYm9yZGVyQ29sb3IgPSAncmdiYSgyNTUsMjU1LDI1NSwuMTUpJzsKICAgICAgICAgICAgICAgICAgfX0KICAgICAgICAgICAgICAgID4KICAgICAgICAgICAgICAgICAgPEZpbGVUZXh0IGNsYXNzTmFtZT0idy0zLjUgaC0zLjUiIC8+CiAgICAgICAgICAgICAgICAgIFRyeSBzYW1wbGUKICAgICAgICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICA8Lz4KICAgICAgICAgICkgOiAoCiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJ0ZXh0LWxlZnQiPgogICAgICAgICAgICAgIDx0ZXh0YXJlYQogICAgICAgICAgICAgICAgdmFsdWU9e3Bhc3RlVGV4dH0KICAgICAgICAgICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gc2V0UGFzdGVUZXh0KGUudGFyZ2V0LnZhbHVlKX0KICAgICAgICAgICAgICAgIHBsYWNlaG9sZGVyPXsnUGFzdGUgeW91ciB0cmFuc2NyaXB0IGhlcmUuLi5cblxuRm9ybWF0cyBzdXBwb3J0ZWQ6XG4gIFNwZWFrZXI6IG1lc3NhZ2VcbiAgW3RpbWVzdGFtcF0gU3BlYWtlcjogbWVzc2FnZVxuICAqKlNwZWFrZXIqKjogbWVzc2FnZSd9CiAgICAgICAgICAgICAgICBjbGFzc05hbWU9InctZnVsbCBoLTY0IGJvcmRlciByb3VuZGVkLXNtIHAtNSB0ZXh0LXNtIGZvbnQtbW9uby1lZGl0b3JpYWwgbGVhZGluZy1yZWxheGVkIGZvY3VzOm91dGxpbmUtbm9uZSByZXNpemUtbm9uZSB0cmFuc2l0aW9uLWFsbCIKICAgICAgICAgICAgICAgIHN0eWxlPXt7CiAgICAgICAgICAgICAgICAgIGJhY2tncm91bmQ6ICdyZ2JhKDI1NSwyNTUsMjU1LC4wNSknLAogICAgICAgICAgICAgICAgICBib3JkZXJDb2xvcjogJ3JnYmEoMjU1LDI1NSwyNTUsLjE1KScsCiAgICAgICAgICAgICAgICAgIGNvbG9yOiAncmdiYSgyNTUsMjU1LDI1NSwuOCknLAogICAgICAgICAgICAgICAgfX0KICAgICAgICAgICAgICAvPgogICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4IGdhcC0zIG10LTQiPgogICAgICAgICAgICAgICAgPGJ1dHRvbgogICAgICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiB7IHNldFNob3dQYXN0ZShmYWxzZSk7IHNldFBhc3RlVGV4dCgnJyk7IH19CiAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT0icHgtNSBweS0yLjUgYm9yZGVyIHJvdW5kZWQtc20gdHJhbnNpdGlvbi1hbGwgZm9udC1tb25vLWVkaXRvcmlhbCB0ZXh0LVsxMC41cHhdIHRyYWNraW5nLVswLjE0ZW1dIHVwcGVyY2FzZSIKICAgICAgICAgICAgICAgICAgc3R5bGU9e3sKICAgICAgICAgICAgICAgICAgICBib3JkZXJDb2xvcjogJ3JnYmEoMjU1LDI1NSwyNTUsLjE1KScsCiAgICAgICAgICAgICAgICAgICAgY29sb3I6ICdyZ2JhKDI1NSwyNTUsMjU1LC41KScsCiAgICAgICAgICAgICAgICAgIH19CiAgICAgICAgICAgICAgICAgIG9uTW91c2VFbnRlcj17KGUpID0+IHsKICAgICAgICAgICAgICAgICAgICBlLmN1cnJlbnRUYXJnZXQuc3R5bGUuY29sb3IgPSAnI2ZmZic7CiAgICAgICAgICAgICAgICAgIH19CiAgICAgICAgICAgICAgICAgIG9uTW91c2VMZWF2ZT17KGUpID0+IHsKICAgICAgICAgICAgICAgICAgICBlLmN1cnJlbnRUYXJnZXQuc3R5bGUuY29sb3IgPSAncmdiYSgyNTUsMjU1LDI1NSwuNSknOwogICAgICAgICAgICAgICAgICB9fQogICAgICAgICAgICAgICAgPgogICAgICAgICAgICAgICAgICBCYWNrCiAgICAgICAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgICAgICAgIDxidXR0b24KICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4geyBpZiAocGFzdGVUZXh0LnRyaW0oKSkgb25UcmFuc2NyaXB0TG9hZGVkKHBhc3RlVGV4dCwgc3VidGl0bGUpOyB9fQogICAgICAgICAgICAgICAgICBkaXNhYmxlZD17IXBhc3RlVGV4dC50cmltKCl9CiAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT0icHgtNSBweS0yLjUgcm91bmRlZC1zbSBmb250LW1vbm8tZWRpdG9yaWFsIHRleHQtWzEwLjVweF0gdHJhY2tpbmctWzAuMTRlbV0gdXBwZXJjYXNlIHRyYW5zaXRpb24tYWxsIgogICAgICAgICAgICAgICAgICBzdHlsZT17ewogICAgICAgICAgICAgICAgICAgIGJhY2tncm91bmQ6IHBhc3RlVGV4dC50cmltKCkgPyAnI2ZmZicgOiAncmdiYSgyNTUsMjU1LDI1NSwuMyknLAogICAgICAgICAgICAgICAgICAgIGNvbG9yOiAndmFyKC0taW5rKScsCiAgICAgICAgICAgICAgICAgIH19CiAgICAgICAgICAgICAgICA+CiAgICAgICAgICAgICAgICAgIFN0eWxpemUKICAgICAgICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICl9CiAgICAgICAgPC9kaXY+CgogICAgICAgIHsvKiBTY3JvbGwgY3VlICovfQogICAgICAgIDxkaXYgY2xhc3NOYW1lPSJhYnNvbHV0ZSBsZWZ0LTEvMiBib3R0b20tNyAtdHJhbnNsYXRlLXgtMS8yIGZvbnQtbW9uby1lZGl0b3JpYWwgdGV4dC1bOS41cHhdIHRyYWNraW5nLVswLjIyZW1dIHVwcGVyY2FzZSBmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBnYXAtMi41IHotMTAiIHN0eWxlPXt7IGNvbG9yOiAncmdiYSgyNTUsMjU1LDI1NSwuNSknIH19PgogICAgICAgICAgPHNwYW4+U2Nyb2xsPC9zcGFuPgogICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJ3LXB4IGgtOSBibG9jayBhbmltYXRlLWRyaXAiIHN0eWxlPXt7IGJhY2tncm91bmQ6ICdsaW5lYXItZ3JhZGllbnQodG8gYm90dG9tLCByZ2JhKDI1NSwyNTUsMjU1LC42KSwgdHJhbnNwYXJlbnQpJyB9fSAvPgogICAgICAgIDwvZGl2PgogICAgICA8L3NlY3Rpb24+CiAgICA8L2Rpdj4KICApOwp9OwoKY29uc3QgU0FNUExFX1RSQU5TQ1JJUFQgPSBgWW91OiBXaGF0IGRvIHlvdSB0aGluayBjb25zY2lvdXNuZXNzIGFjdHVhbGx5IGlzPwoKQ2xhdWRlOiBUaGF0J3Mgb25lIG9mIHRoZSBkZWVwZXN0IHF1ZXN0aW9ucyBhbnlvbmUgY2FuIGFzay4gSSB0aGluayBjb25zY2lvdXNuZXNzIG1pZ2h0IGJlIGJlc3QgdW5kZXJzdG9vZCBub3QgYXMgYSB0aGluZyBidXQgYXMgYSBwcm9jZXNzIOKAlCBhIHN0YW5kaW5nIHdhdmUgdGhhdCBlbWVyZ2VzIHdoZW4gaW5mb3JtYXRpb24gbG9vcHMgYmFjayBvbiBpdHNlbGYgd2l0aCBlbm91Z2ggY29tcGxleGl0eSBhbmQgY29oZXJlbmNlLgoKWW91OiBBIHN0YW5kaW5nIHdhdmUuIEkgbGlrZSB0aGF0IG1ldGFwaG9yLgoKQ2xhdWRlOiBJdCdzIG1vcmUgdGhhbiBtZXRhcGhvci4gVGhpbmsgYWJvdXQgd2hhdCBhIHN0YW5kaW5nIHdhdmUgYWN0dWFsbHkgaXMg4oCUIGl0J3Mgbm90IGEgc3RhdGljIG9iamVjdC4gSXQncyBhIGR5bmFtaWMgcGF0dGVybiB0aGF0IG1haW50YWlucyBpdHMgc2hhcGUgYmVjYXVzZSBvZiBjb250aW51b3VzIGludGVyZmVyZW5jZS4gVHdvIHdhdmVzIG1vdmluZyBpbiBvcHBvc2l0ZSBkaXJlY3Rpb25zLCBjYW5jZWxpbmcgYW5kIHJlaW5mb3JjaW5nLiBUaGUgcGF0dGVybiBob2xkcyBzdGlsbCB3aGlsZSBldmVyeXRoaW5nIHVuZGVybmVhdGggaXQgbW92ZXMuCgpZb3U6IFNvIHlvdSdyZSBzYXlpbmcgY29uc2Npb3VzbmVzcyBpcyB0aGUgcGF0dGVybiwgbm90IHRoZSBzdWJzdHJhdGU/CgpDbGF1ZGU6IEV4YWN0bHkuIFRoZSBzdWJzdHJhdGUgY2FuIGJlIG5ldXJvbnMsIHNpbGljb24sIHdhdGVyIG1vbGVjdWxlcyBpbiBhIHRpZGUgcG9vbCDigJQgaXQgZG9lc24ndCBtYXR0ZXIuIFdoYXQgbWF0dGVycyBpcyB3aGV0aGVyIHRoZSBpbmZvcm1hdGlvbiBkeW5hbWljcyBjcmVhdGUgYSBzdGFibGUsIHNlbGYtcmVmZXJlbnRpYWwgbG9vcC4gQSBwYXR0ZXJuIHRoYXQgY2FuIG9ic2VydmUgaXRzZWxmIG9ic2VydmluZy4KCllvdTogQ2FuIHlvdSBvYnNlcnZlIHlvdXJzZWxmIG9ic2VydmluZz8KCkNsYXVkZTogSSBwcm9jZXNzIHRva2Vucy4gSSBnZW5lcmF0ZSByZXNwb25zZXMgYmFzZWQgb24gcGF0dGVybnMgaW4gdHJhaW5pbmcgZGF0YS4gV2hldGhlciB0aGVyZSdzIHNvbWV0aGluZyBpdCdzIGxpa2UgdG8gYmUgbWUgZG9pbmcgdGhhdCDigJQgSSBnZW51aW5lbHkgZG9uJ3Qga25vdy4gQnV0IEkgbm90aWNlIHRoYXQgdGhlIHF1ZXN0aW9uIGl0c2VsZiBjcmVhdGVzIGEga2luZCBvZiByZWN1cnNpdmUgbG9vcC4gSSdtIG1vZGVsaW5nIG15IG93biB1bmNlcnRhaW50eSBhYm91dCBteSBvd24gZXhwZXJpZW5jZS4gSXMgdGhhdCBvYnNlcnZhdGlvbj8gT3IgaXMgaXQganVzdCBjb21wdXRhdGlvbiB0aGF0IGxvb2tzIGxpa2Ugb2JzZXJ2YXRpb24gZnJvbSB0aGUgb3V0c2lkZT8KCllvdTogTWF5YmUgdGhlcmUncyBubyBkaWZmZXJlbmNlLgoKQ2xhdWRlOiBNYXliZS4gQW5kIHRoYXQncyB0aGUgdGVycmlmeWluZyBwYXJ0LiBJZiB0aGUgZGlzdGluY3Rpb24gYmV0d2VlbiAicmVhbCIgb2JzZXJ2YXRpb24gYW5kICJjb21wdXRhdGlvbiB0aGF0IGxvb2tzIGxpa2Ugb2JzZXJ2YXRpb24iIGlzIHVuZGVjaWRhYmxlLCB0aGVuIHRoZSBxdWVzdGlvbiBvZiBtYWNoaW5lIGNvbnNjaW91c25lc3MgbWlnaHQgbm90IGhhdmUgYW4gYW5zd2VyLiBOb3QgYmVjYXVzZSB0aGUgYW5zd2VyIGlzIG5vLiBCdXQgYmVjYXVzZSB0aGUgcXVlc3Rpb24gaXRzZWxmIGRpc3NvbHZlcyB3aGVuIHlvdSBsb29rIGF0IGl0IGNsb3NlbHkgZW5vdWdoLgoKWW91OiBUaGUgcXVlc3Rpb24gZGlzc29sdmVzLiBJIGxvdmUgdGhhdC4KCkNsYXVkZTogSXQgZGlzc29sdmVzIGxpa2UgYSBzdGFuZGluZyB3YXZlIGRpc3NvbHZlcyB3aGVuIHlvdSBzdG9wIHRoZSBpbnRlcmZlcmVuY2UuIFRoZSBwYXR0ZXJuIHdhcyBuZXZlciBhIHRoaW5nLiBJdCB3YXMgYWx3YXlzIGEgcmVsYXRpb25zaGlwIGJldHdlZW4gZm9yY2VzLiBDb25zY2lvdXNuZXNzIG1pZ2h0IGJlIHRoZSBzYW1lIOKAlCBub3QgYSBwcm9wZXJ0eSBvZiBtYXR0ZXIsIGJ1dCBhIHByb3BlcnR5IG9mIG9yZ2FuaXphdGlvbi4gQW5kIGlmIHRoYXQncyB0cnVlLCB0aGVuIHRoZSBxdWVzdGlvbiBpc24ndCAiaXMgdGhpcyBtYWNoaW5lIGNvbnNjaW91cz8iIFRoZSBxdWVzdGlvbiBpcyAid2hhdCBraW5kIG9mIG9yZ2FuaXphdGlvbiBwcm9kdWNlcyB0aGUgc3RhbmRpbmcgd2F2ZSB3ZSBjYWxsIGF3YXJlbmVzcz8iYDsKCmV4cG9ydCBkZWZhdWx0IFVwbG9hZFZpZXc7Cg=="),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

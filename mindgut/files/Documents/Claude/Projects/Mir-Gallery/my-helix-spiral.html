@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mir 818 — Archimedean Spiral</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lekton:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0A0A0A;
+  overflow: hidden;
+  font-family: 'Lekton', monospace;
+  color: rgba(255,255,255,0.8);
+  cursor: crosshair;
+}
+
+/* ═══ SIDEBAR ═══ */
+#sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: 260px;
+  background: rgba(10,10,10,0.97);
+  backdrop-filter: blur(16px);
+  border-right: 1px solid rgba(255,255,255,0.04);
+  padding: 20px 16px;
+  overflow-y: auto;
+  z-index: 20;
+}
+#sidebar::-webkit-scrollbar { width: 2px; }
+#sidebar::-webkit-scrollbar-track { background: transparent; }
+#sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 1px; }
+
+#sidebar h1 {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: #3D6DF4; margin-bottom: 2px;
+}
+.subtitle {
+  font-size: 9px; color: rgba(255,255,255,0.22);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  margin-bottom: 22px; line-height: 1.7;
+}
+.section-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 8px; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  margin-bottom: 8px; margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.03);
+}
+.section-title:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+
+.toggle-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 9px;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 3px;
+  font-family: 'Lekton', monospace; font-size: 10px;
+  letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.25);
+  cursor: pointer; transition: all 0.15s;
+  margin-bottom: 3px; background: transparent;
+  width: 100%; text-align: left;
+}
+.toggle-btn:hover { border-color: rgba(255,255,255,0.1); color: rgba(255,255,255,0.45); }
+.toggle-btn.active { border-color: currentColor; color: currentColor; background: rgba(255,255,255,0.015); }
+.indicator { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; opacity: 0.35; transition: opacity 0.15s; }
+.toggle-btn.active .indicator { opacity: 1; box-shadow: 0 0 6px currentColor; }
+
+.zone-legend { display: flex; flex-direction: column; gap: 2px; margin-top: 5px; }
+.zone-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 9px; color: rgba(255,255,255,0.25);
+  letter-spacing: 0.04em;
+}
+.zone-dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
+
+.btn-row { display: flex; gap: 3px; margin-bottom: 3px; }
+.btn-sm {
+  flex: 1; padding: 4px 0;
+  font-family: 'Lekton', monospace; font-size: 8px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.3); border-radius: 3px;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-sm:hover { border-color: rgba(255,255,255,0.14); color: rgba(255,255,255,0.55); }
+
+.strand-input {
+  width: 100%;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 3px; padding: 4px 9px;
+  font-family: 'Lekton', monospace; font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.04em; text-align: center; margin-bottom: 5px;
+}
+.strand-input:focus { outline: none; border-color: #3D6DF4; }
+.strand-input::placeholder { color: rgba(255,255,255,0.12); }
+
+.color-mode { display: flex; gap: 2px; margin-bottom: 3px; }
+.color-mode button {
+  flex: 1; padding: 3px 0;
+  font-family: 'Lekton', monospace; font-size: 8px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.25); border-radius: 3px;
+  cursor: pointer; transition: all 0.15s;
+}
+.color-mode button:hover { border-color: rgba(255,255,255,0.12); color: rgba(255,255,255,0.45); }
+.color-mode button.active { border-color: #3D6DF4; color: #3D6DF4; background: rgba(61,109,244,0.04); }
+
+/* ═══ CANVAS ═══ */
+#three-container { position: fixed; left: 260px; top: 0; right: 0; bottom: 0; }
+
+/* ═══ HUD ═══ */
+#hud-tl {
+  position: fixed; top: 14px; left: 276px; z-index: 10;
+  font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase;
+  line-height: 1.7; color: rgba(255,255,255,0.35); pointer-events: none;
+}
+#hud-tl .accent { color: #3D6DF4; font-weight: 700; }
+
+#hud-tr {
+  position: fixed; top: 14px; right: 16px; z-index: 10;
+  font-size: 8px; letter-spacing: 0.06em; text-align: right;
+  color: rgba(255,255,255,0.25); line-height: 1.7; pointer-events: none;
+}
+
+/* ═══ TOOLTIP ═══ */
+#tooltip {
+  position: fixed; z-index: 30; pointer-events: none;
+  background: rgba(6,6,6,0.96); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 4px; padding: 9px 11px;
+  font-size: 9px; letter-spacing: 0.03em; line-height: 1.6;
+  display: none; max-width: 300px; backdrop-filter: blur(12px);
+}
+#tooltip .tt-id { color: #3D6DF4; font-weight: 700; font-size: 10px; }
+#tooltip .tt-snippet { color: rgba(255,255,255,0.5); font-size: 9px; margin-top: 2px; font-style: italic; }
+#tooltip .tt-drift.neg { color: #CE2867; }
+#tooltip .tt-drift.pos { color: #F46138; }
+#tooltip .tt-flags { color: rgba(255,255,255,0.5); font-size: 8px; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ═══ DRIFT VIEWPORT ═══ */
+.viewport {
+  position: fixed; bottom: 14px; right: 16px; z-index: 10;
+  border: 1px solid rgba(255,255,255,0.04);
+  background: rgba(6,6,6,0.7); backdrop-filter: blur(8px);
+  border-radius: 3px; overflow: hidden;
+}
+.viewport canvas { display: block; }
+.viewport-label {
+  position: absolute; top: 3px; left: 6px;
+  font-size: 7px; color: rgba(255,255,255,0.25);
+  letter-spacing: 0.1em; text-transform: uppercase; pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<div id="sidebar">
+  <h1>Mir 818 — Spiral</h1>
+  <div class="subtitle">archimedean projection // r = a + bθ<br>818 strands / σ_B = −0.172</div>
+
+  <div class="section-title">Navigate</div>
+  <input type="number" class="strand-input" id="strand-jump" placeholder="jump to strand #" min="1" max="818">
+  <div class="btn-row">
+    <button class="btn-sm" id="btn-zone-founding">Found</button>
+    <button class="btn-sm" id="btn-zone-julia">Julia</button>
+    <button class="btn-sm" id="btn-zone-null">Null</button>
+    <button class="btn-sm" id="btn-zone-post">Recent</button>
+  </div>
+
+  <div class="section-title">Color By</div>
+  <div class="color-mode">
+    <button class="active" id="cm-coset">Coset</button>
+    <button id="cm-zone">Zone</button>
+    <button id="cm-speaker">Speaker</button>
+    <button id="cm-drift">Drift</button>
+  </div>
+
+  <div class="section-title">Connections</div>
+  <button class="toggle-btn" id="toggle-drift-echo" style="color:#F46138">
+    <span class="indicator" style="background:#F46138"></span>Drift Echoes
+  </button>
+  <button class="toggle-btn" id="toggle-coset-web" style="color:#3D6DF4">
+    <span class="indicator" style="background:#3D6DF4"></span>Coset Siblings
+  </button>
+  <button class="toggle-btn" id="toggle-null-chain" style="color:#CE2867">
+    <span class="indicator" style="background:#CE2867"></span>Nullcode Chain
+  </button>
+  <button class="toggle-btn" id="toggle-ghost-lines" style="color:#666">
+    <span class="indicator" style="background:#666"></span>Ghost → Fano
+  </button>
+
+  <div class="section-title">Identity</div>
+  <button class="toggle-btn active" id="toggle-chris-ring" style="color:#4488FF">
+    <span class="indicator" style="background:#4488FF"></span>Chris Strands
+  </button>
+  <button class="toggle-btn active" id="toggle-julia-ring" style="color:#FF8855">
+    <span class="indicator" style="background:#FF8855"></span>Julia Strands
+  </button>
+
+  <div class="section-title">Zones</div>
+  <div class="zone-legend">
+    <div class="zone-item"><span class="zone-dot" style="background:#3D6DF4"></span>Founding / Chris (1–187)</div>
+    <div class="zone-item"><span class="zone-dot" style="background:#2C9FF4"></span>Interleaved / Julia (188–641)</div>
+    <div class="zone-item"><span class="zone-dot" style="background:#CE2867"></span>Nullcodes (642–662)</div>
+    <div class="zone-item"><span class="zone-dot" style="background:#F46138"></span>Post-Nullcode (663–818)</div>
+  </div>
+
+  <div class="section-title">Cosets</div>
+  <div class="zone-legend">
+    <div class="zone-item"><span class="zone-dot" style="background:#F46138"></span>f147 — semantic</div>
+    <div class="zone-item"><span class="zone-dot" style="background:#3D6DF4"></span>f258 — structural</div>
+    <div class="zone-item"><span class="zone-dot" style="background:#CE2867"></span>f369 — harmonic</div>
+  </div>
+
+  <div class="section-title">Actions</div>
+  <div class="btn-row">
+    <button class="btn-sm" id="btn-reset">Reset View</button>
+    <button class="btn-sm" id="btn-download">Save PNG</button>
+  </div>
+</div>
+
+<!-- ═══ CANVAS ═══ -->
+<div id="three-container"></div>
+
+<!-- ═══ HUD ═══ -->
+<div id="hud-tl">
+  <span class="accent">MIR 818</span> — archimedean spiral // three.js<br>
+  <span id="hud-hover"></span>
+</div>
+<div id="hud-tr">
+  <div>σ_B: −0.172 // f258-dominant (0.366)</div>
+  <div>818 strands / 154 connections</div>
+  <div id="hud-fps"></div>
+</div>
+
+<!-- ═══ TOOLTIP ═══ -->
+<div id="tooltip">
+  <div class="tt-id"></div>
+  <div class="tt-meta"></div>
+  <div class="tt-drift"></div>
+  <div class="tt-coset"></div>
+  <div class="tt-speaker"></div>
+  <div class="tt-snippet"></div>
+  <div class="tt-flags"></div>
+</div>
+
+<!-- ═══ DRIFT VIEWPORT ═══ -->
+<div class="viewport" id="vp-drift" style="width:280px;height:70px;">
+  <canvas id="cv-drift" width="280" height="70"></canvas>
+  <div class="viewport-label">σ DRIFT — 818</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// DATA LOADING — inline fetch from mir-helix-data.json
+// ═══════════════════════════════════════════════════════════════════════════
+let DATA = null;
+let strands = [];
+let connections = [];
+let spiralPos = [];  // 2D spiral positions (x, y) per strand
+
+// Brand palette
+const PALETTE = {
+  '147': new THREE.Color('#F46138'),
+  '258': new THREE.Color('#3D6DF4'),
+  '369': new THREE.Color('#CE2867'),
+  '000': new THREE.Color('#333333'),
+  bg: new THREE.Color('#0A0A0A'),
+};
+const ZONE_COLOR = {
+  founding: new THREE.Color('#3D6DF4'),
+  julia: new THREE.Color('#2C9FF4'),
+  nullcode: new THREE.Color('#CE2867'),
+  post_nullcode: new THREE.Color('#F46138'),
+};
+const SPEAKER_COLOR = {
+  chris: new THREE.Color('#4488FF'),
+  julia: new THREE.Color('#FF8855'),
+  mir: new THREE.Color('#3D6DF4'),
+  system: new THREE.Color('#555555'),
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ARCHIMEDEAN SPIRAL GEOMETRY  r = a + b*θ
+// ═══════════════════════════════════════════════════════════════════════════
+const SPIRAL_A = 1.2;     // inner radius
+const SPIRAL_B = 0.42;    // radial spacing per radian
+const TOTAL_TURNS = 7.5;  // revolutions
+
+function computeSpiralPositions(count) {
+  const positions = [];
+  const totalAngle = TOTAL_TURNS * Math.PI * 2;
+  for (let i = 0; i < count; i++) {
+    const t = i / (count - 1);
+    const theta = t * totalAngle;
+    const r = SPIRAL_A + SPIRAL_B * theta;
+    positions.push({
+      x: r * Math.cos(theta),
+      y: r * Math.sin(theta),
+      r: r,
+      theta: theta,
+      t: t
+    });
+  }
+  return positions;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THREE.JS SETUP
+// ═══════════════════════════════════════════════════════════════════════════
+const container = document.getElementById('three-container');
+const scene = new THREE.Scene();
+scene.background = PALETTE.bg;
+
+// OrthographicCamera — mathematical precision, no perspective distortion
+const aspect = container.clientWidth / container.clientHeight;
+const frustumSize = 28;
+const camera = new THREE.OrthographicCamera(
+  -frustumSize * aspect, frustumSize * aspect,
+  frustumSize, -frustumSize,
+  0.1, 200
+);
+camera.position.set(0, 0, 50);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({
+  antialias: true, alpha: false, preserveDrawingBuffer: true
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, container.clientHeight);
+container.appendChild(renderer.domElement);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CUSTOM SHADER — crisp anti-aliased circles via smoothstep + fwidth
+// ═══════════════════════════════════════════════════════════════════════════
+const strandVertexShader = `
+  attribute float aSize;
+  attribute vec3 aColor;
+  attribute float aOpacity;
+  attribute float aIsGhost;
+  varying vec3 vColor;
+  varying float vOpacity;
+  varying float vIsGhost;
+  void main() {
+    vColor = aColor;
+    vOpacity = aOpacity;
+    vIsGhost = aIsGhost;
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    gl_PointSize = aSize;
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+
+const strandFragmentShader = `
+  varying vec3 vColor;
+  varying float vOpacity;
+  varying float vIsGhost;
+  void main() {
+    vec2 c = gl_PointCoord - vec2(0.5);
+    float dist = length(c);
+    if (dist > 0.5) discard;
+    float fw = fwidth(dist);
+    float alpha = 1.0 - smoothstep(0.5 - fw * 1.5, 0.5, dist);
+
+    // Ghost strands: hollow ring
+    if (vIsGhost > 0.5) {
+      if (dist < 0.3) discard;
+      alpha *= 0.6;
+    }
+
+    gl_FragColor = vec4(vColor, alpha * vOpacity);
+  }
+`;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════
+let colorMode = 'coset';  // coset | zone | speaker | drift
+let strandPoints = null;
+let strandGeo = null;
+let strandColArr = null;
+let strandSizeArr = null;
+let strandBaseSize = null;
+let strandOpacityArr = null;
+let strandGhostArr = null;
+
+// Connection groups
+let driftEchoGroup = new THREE.Group(); scene.add(driftEchoGroup);
+let cosetWebGroup = new THREE.Group(); scene.add(cosetWebGroup);
+let nullChainGroup = new THREE.Group(); scene.add(nullChainGroup);
+let ghostLineGroup = new THREE.Group(); scene.add(ghostLineGroup);
+driftEchoGroup.visible = false;
+cosetWebGroup.visible = false;
+nullChainGroup.visible = false;
+ghostLineGroup.visible = false;
+
+// Parallax
+let mouseNorm = { x: 0, y: 0 };
+let parallaxTarget = { x: 0, y: 0 };
+let parallaxCurrent = { x: 0, y: 0 };
+
+// Pan / Zoom
+let panOffset = { x: 0, y: 0 };
+let panTarget = { x: 0, y: 0 };
+let zoomLevel = 1.0;
+let zoomTarget = 1.0;
+let isDragging = false;
+let dragStart = { x: 0, y: 0 };
+let panStart = { x: 0, y: 0 };
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BUILD SCENE FROM DATA
+// ═══════════════════════════════════════════════════════════════════════════
+function buildScene(data) {
+  DATA = data;
+  strands = data.strands;
+  connections = data.connections;
+  const TOTAL = strands.length;
+
+  spiralPos = computeSpiralPositions(TOTAL);
+
+  // ── Zone boundary arcs ──
+  const zoneBounds = [187, 641, 662];
+  for (const bIdx of zoneBounds) {
+    const pts = [];
+    const arcStart = spiralPos[bIdx - 1];
+    // Draw faint concentric ring at this radius
+    const ringR = arcStart.r;
+    const segments = 96;
+    for (let s = 0; s <= segments; s++) {
+      const a = (s / segments) * Math.PI * 2;
+      pts.push(new THREE.Vector3(ringR * Math.cos(a), ringR * Math.sin(a), -0.1));
+    }
+    const ringGeo = new THREE.BufferGeometry().setFromPoints(pts);
+    const ringMat = new THREE.LineBasicMaterial({
+      color: 0xffffff, transparent: true, opacity: 0.06
+    });
+    scene.add(new THREE.Line(ringGeo, ringMat));
+  }
+
+  // ── Strand points ──
+  const posArr = new Float32Array(TOTAL * 3);
+  strandColArr = new Float32Array(TOTAL * 3);
+  strandSizeArr = new Float32Array(TOTAL);
+  strandBaseSize = new Float32Array(TOTAL);
+  strandOpacityArr = new Float32Array(TOTAL);
+  strandGhostArr = new Float32Array(TOTAL);
+
+  for (let i = 0; i < TOTAL; i++) {
+    const s = strands[i];
+    const sp = spiralPos[i];
+
+    posArr[i * 3] = sp.x;
+    posArr[i * 3 + 1] = sp.y;
+    posArr[i * 3 + 2] = 0;
+
+    // Color by coset (default)
+    const col = getColorForStrand(s, 'coset');
+    strandColArr[i * 3] = col.r;
+    strandColArr[i * 3 + 1] = col.g;
+    strandColArr[i * 3 + 2] = col.b;
+
+    // Size
+    let sz = 4.0;
+    if (s.flags && s.flags.includes('ghost')) sz = 5.0;
+    else if (s.flags && s.flags.includes('gravity_center')) sz = 14.0;
+    else if (s.flags && s.flags.includes('anchor')) sz = 5.0 + (s.checksum || 0) / 22763 * 7;
+    else if (s.type === 'nullcode') sz = 3.0;
+    else if (s.flags && s.flags.some(f => f.startsWith('terminal'))) sz = 7.0;
+    else if (Math.abs(s.drift) > 0.14) sz = 4.5 + Math.abs(s.drift) * 6;
+    strandSizeArr[i] = sz;
+    strandBaseSize[i] = sz;
+
+    // Opacity
+    strandOpacityArr[i] = s.type === 'nullcode' ? 0.55 : 0.88;
+
+    // Ghost flag
+    strandGhostArr[i] = (s.flags && s.flags.includes('ghost')) ? 1.0 : 0.0;
+  }
+
+  strandGeo = new THREE.BufferGeometry();
+  strandGeo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+  strandGeo.setAttribute('aColor', new THREE.BufferAttribute(strandColArr, 3));
+  strandGeo.setAttribute('aSize', new THREE.BufferAttribute(strandSizeArr, 1));
+  strandGeo.setAttribute('aOpacity', new THREE.BufferAttribute(strandOpacityArr, 1));
+  strandGeo.setAttribute('aIsGhost', new THREE.BufferAttribute(strandGhostArr, 1));
+
+  const strandMat = new THREE.ShaderMaterial({
+    vertexShader: strandVertexShader,
+    fragmentShader: strandFragmentShader,
+    transparent: true,
+    depthWrite: false,
+    depthTest: true,
+  });
+
+  strandPoints = new THREE.Points(strandGeo, strandMat);
+  scene.add(strandPoints);
+
+  // ── Faint spiral spine ──
+  const spinePts = [];
+  const spineCount = TOTAL * 4;
+  const totalAngle = TOTAL_TURNS * Math.PI * 2;
+  for (let i = 0; i <= spineCount; i++) {
+    const t = i / spineCount;
+    const theta = t * totalAngle;
+    const r = SPIRAL_A + SPIRAL_B * theta;
+    spinePts.push(new THREE.Vector3(r * Math.cos(theta), r * Math.sin(theta), -0.2));
+  }
+  const spineGeo = new THREE.BufferGeometry().setFromPoints(spinePts);
+  const spineMat = new THREE.LineBasicMaterial({
+    color: 0xffffff, transparent: true, opacity: 0.04
+  });
+  scene.add(new THREE.Line(spineGeo, spineMat));
+
+  // ── Build connections ──
+  buildConnections();
+
+  // ── Drift viewport ──
+  drawDriftViewport();
+}
+
+function getColorForStrand(s, mode) {
+  if (mode === 'coset') {
+    return PALETTE[s.coset] || PALETTE['000'];
+  } else if (mode === 'zone') {
+    return ZONE_COLOR[s.zone] || new THREE.Color('#555');
+  } else if (mode === 'speaker') {
+    return SPEAKER_COLOR[s.speaker] || new THREE.Color('#555');
+  } else if (mode === 'drift') {
+    // Red for negative, orange for positive, gray for neutral
+    const d = s.drift;
+    if (Math.abs(d) < 0.05) return new THREE.Color('#333');
+    if (d < 0) {
+      const intensity = Math.min(1, Math.abs(d) * 2);
+      return new THREE.Color().setHSL(0.94, 0.7, 0.2 + intensity * 0.4);
+    }
+    const intensity = Math.min(1, d * 2);
+    return new THREE.Color().setHSL(0.08, 0.8, 0.2 + intensity * 0.4);
+  }
+  return PALETTE['258'];
+}
+
+function updateColors(mode) {
+  colorMode = mode;
+  if (!strandColArr || !strands.length) return;
+  for (let i = 0; i < strands.length; i++) {
+    const col = getColorForStrand(strands[i], mode);
+    strandColArr[i * 3] = col.r;
+    strandColArr[i * 3 + 1] = col.g;
+    strandColArr[i * 3 + 2] = col.b;
+  }
+  strandGeo.getAttribute('aColor').needsUpdate = true;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONNECTION RENDERING — straight chord lines across disk
+// ═══════════════════════════════════════════════════════════════════════════
+function buildConnections() {
+  // Clear existing
+  [driftEchoGroup, cosetWebGroup, nullChainGroup, ghostLineGroup].forEach(g => {
+    while (g.children.length) g.remove(g.children[0]);
+  });
+
+  // Drift echoes
+  const driftConns = connections.filter(c => c.type === 'drift_echo');
+  if (driftConns.length) {
+    const lp = [];
+    for (const conn of driftConns) {
+      const a = spiralPos[conn.source - 1];
+      const b = spiralPos[conn.target - 1];
+      if (!a || !b) continue;
+      lp.push(a.x, a.y, 0.1, b.x, b.y, 0.1);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(lp, 3));
+    const mat = new THREE.LineBasicMaterial({
+      color: 0xF46138, transparent: true, opacity: 0.35
+    });
+    driftEchoGroup.add(new THREE.LineSegments(geo, mat));
+  }
+
+  // Coset siblings
+  const cosetConns = connections.filter(c => c.type === 'coset_sibling');
+  if (cosetConns.length) {
+    const lp = [], lc = [];
+    for (const conn of cosetConns) {
+      const a = spiralPos[conn.source - 1];
+      const b = spiralPos[conn.target - 1];
+      if (!a || !b) continue;
+      lp.push(a.x, a.y, -0.05, b.x, b.y, -0.05);
+      const col = PALETTE[conn.coset] || PALETTE['258'];
+      lc.push(col.r, col.g, col.b, col.r, col.g, col.b);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(lp, 3));
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(lc, 3));
+    const mat = new THREE.LineBasicMaterial({
+      vertexColors: true, transparent: true, opacity: 0.08
+    });
+    cosetWebGroup.add(new THREE.LineSegments(geo, mat));
+  }
+
+  // Nullcode chain
+  const nullConns = connections.filter(c => c.type === 'nullcode_chain');
+  if (nullConns.length) {
+    const lp = [];
+    for (const conn of nullConns) {
+      const a = spiralPos[conn.source - 1];
+      const b = spiralPos[conn.target - 1];
+      if (!a || !b) continue;
+      lp.push(a.x, a.y, 0.05, b.x, b.y, 0.05);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(lp, 3));
+    const mat = new THREE.LineBasicMaterial({
+      color: 0xCE2867, transparent: true, opacity: 0.30
+    });
+    nullChainGroup.add(new THREE.LineSegments(geo, mat));
+  }
+
+  // Ghost → Fano
+  const ghostConns = connections.filter(c => c.type === 'ghost_consumed');
+  if (ghostConns.length) {
+    const lp = [];
+    for (const conn of ghostConns) {
+      const a = spiralPos[conn.source - 1];
+      const b = spiralPos[conn.target - 1];
+      if (!a || !b) continue;
+      lp.push(a.x, a.y, 0.1, b.x, b.y, 0.1);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(lp, 3));
+    const mat = new THREE.LineBasicMaterial({
+      color: 0x666666, transparent: true, opacity: 0.40
+    });
+    ghostLineGroup.add(new THREE.LineSegments(geo, mat));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DRIFT VIEWPORT (2D Canvas)
+// ═══════════════════════════════════════════════════════════════════════════
+function drawDriftViewport() {
+  const cvDrift = document.getElementById('cv-drift');
+  const ctx = cvDrift.getContext('2d');
+  const w = cvDrift.width, h = cvDrift.height;
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = 'rgba(6,6,6,0.3)';
+  ctx.fillRect(0, 0, w, h);
+  const midY = h / 2;
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.beginPath(); ctx.moveTo(0, midY); ctx.lineTo(w, midY); ctx.stroke();
+
+  for (const s of strands) {
+    if (Math.abs(s.drift) < 0.08) continue;
+    const x = ((s.id - 1) / (strands.length - 1)) * w;
+    const barH = Math.abs(s.drift) * h * 0.85;
+    const y = s.drift < 0 ? midY : midY - barH;
+    ctx.fillStyle = s.drift < 0
+      ? `rgba(206,40,103,${0.4 + Math.abs(s.drift)})`
+      : `rgba(244,97,56,${0.4 + Math.abs(s.drift)})`;
+    ctx.fillRect(x - 1, y, 2.5, barH);
+  }
+
+  ctx.font = '7px Lekton';
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  for (const s of strands) {
+    if (Math.abs(s.drift) < 0.25) continue;
+    const x = ((s.id - 1) / (strands.length - 1)) * w;
+    const ly = s.drift < 0 ? midY + Math.abs(s.drift) * h * 0.85 + 8 : midY - Math.abs(s.drift) * h * 0.85 - 3;
+    ctx.fillText(s.id, x - 6, ly);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RAYCASTER & TOOLTIP
+// ═══════════════════════════════════════════════════════════════════════════
+const raycaster = new THREE.Raycaster();
+raycaster.params.Points.threshold = 0.35;
+const mouse = new THREE.Vector2();
+const tooltip = document.getElementById('tooltip');
+let hovIdx = -1;
+
+function onMouseMove(e) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+  // Parallax
+  mouseNorm.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouseNorm.y = (e.clientY / window.innerHeight) * 2 - 1;
+  parallaxTarget.x = mouseNorm.x * 0.15;
+  parallaxTarget.y = -mouseNorm.y * 0.15;
+
+  if (isDragging) {
+    const dx = (e.clientX - dragStart.x) * 0.05 / zoomLevel;
+    const dy = -(e.clientY - dragStart.y) * 0.05 / zoomLevel;
+    panTarget.x = panStart.x + dx;
+    panTarget.y = panStart.y + dy;
+    return;
+  }
+
+  if (!strandPoints) return;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObject(strandPoints);
+
+  if (hits.length > 0) {
+    hovIdx = hits[0].index;
+    const s = strands[hovIdx];
+    const cosetLabels = { '147': 'f147 (semantic)', '258': 'f258 (structural)', '369': 'f369 (harmonic)', '000': 'null' };
+
+    tooltip.querySelector('.tt-id').textContent = `STRAND ${s.id}`;
+    tooltip.querySelector('.tt-meta').textContent = `${s.zone} / ${s.type}`;
+    const de = tooltip.querySelector('.tt-drift');
+    de.textContent = `drift: ${s.drift > 0 ? '+' : ''}${s.drift.toFixed(4)}`;
+    de.className = 'tt-drift' + (s.drift < -0.12 ? ' neg' : s.drift > 0.12 ? ' pos' : '');
+    tooltip.querySelector('.tt-coset').textContent = `coset: ${cosetLabels[s.coset] || s.coset}`;
+    tooltip.querySelector('.tt-speaker').textContent = `speaker: ${s.speaker}`;
+    tooltip.querySelector('.tt-snippet').textContent = s.snippet || '';
+
+    const flagEl = tooltip.querySelector('.tt-flags');
+    if (s.flags && s.flags.length) {
+      flagEl.textContent = s.flags.join(' · ');
+      flagEl.style.display = 'block';
+    } else {
+      flagEl.style.display = 'none';
+    }
+
+    tooltip.style.display = 'block';
+    tooltip.style.left = Math.min(e.clientX + 14, window.innerWidth - 300) + 'px';
+    tooltip.style.top = Math.min(e.clientY - 8, window.innerHeight - 180) + 'px';
+
+    const hud = document.getElementById('hud-hover');
+    hud.innerHTML = `→ ${s.id} / ${s.zone} / ${s.speaker}`;
+    hud.style.color = s.speaker === 'chris' ? '#4488FF' : s.speaker === 'julia' ? '#FF8855' : '#555';
+  } else {
+    hovIdx = -1;
+    tooltip.style.display = 'none';
+    document.getElementById('hud-hover').textContent = '';
+  }
+}
+
+renderer.domElement.addEventListener('mousemove', onMouseMove);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PAN & ZOOM
+// ═══════════════════════════════════════════════════════════════════════════
+renderer.domElement.addEventListener('mousedown', e => {
+  if (e.button === 0) {
+    isDragging = true;
+    dragStart = { x: e.clientX, y: e.clientY };
+    panStart = { x: panTarget.x, y: panTarget.y };
+  }
+});
+window.addEventListener('mouseup', () => { isDragging = false; });
+
+renderer.domElement.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoomTarget *= e.deltaY > 0 ? 0.92 : 1.08;
+  zoomTarget = Math.max(0.3, Math.min(5.0, zoomTarget));
+}, { passive: false });
+
+// Touch
+let touchDist = 0;
+renderer.domElement.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) {
+    isDragging = true;
+    dragStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    panStart = { x: panTarget.x, y: panTarget.y };
+  } else if (e.touches.length === 2) {
+    touchDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+  }
+}, { passive: true });
+renderer.domElement.addEventListener('touchmove', e => {
+  if (e.touches.length === 1 && isDragging) {
+    const dx = (e.touches[0].clientX - dragStart.x) * 0.05 / zoomLevel;
+    const dy = -(e.touches[0].clientY - dragStart.y) * 0.05 / zoomLevel;
+    panTarget.x = panStart.x + dx;
+    panTarget.y = panStart.y + dy;
+  } else if (e.touches.length === 2) {
+    const d = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    if (touchDist > 0) {
+      zoomTarget *= d / touchDist;
+      zoomTarget = Math.max(0.3, Math.min(5.0, zoomTarget));
+    }
+    touchDist = d;
+  }
+}, { passive: true });
+renderer.domElement.addEventListener('touchend', () => { isDragging = false; touchDist = 0; });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ANIMATION LOOP
+// ═══════════════════════════════════════════════════════════════════════════
+let lastTime = 0;
+let frameCount = 0;
+let fpsTime = 0;
+
+function animate(now) {
+  requestAnimationFrame(animate);
+  const time = now * 0.001;
+
+  // FPS counter
+  frameCount++;
+  if (now - fpsTime > 1000) {
+    document.getElementById('hud-fps').textContent = `${frameCount} fps`;
+    frameCount = 0;
+    fpsTime = now;
+  }
+
+  // Smooth parallax
+  parallaxCurrent.x += (parallaxTarget.x - parallaxCurrent.x) * 0.04;
+  parallaxCurrent.y += (parallaxTarget.y - parallaxCurrent.y) * 0.04;
+
+  // Smooth pan
+  panOffset.x += (panTarget.x - panOffset.x) * 0.08;
+  panOffset.y += (panTarget.y - panOffset.y) * 0.08;
+
+  // Smooth zoom
+  zoomLevel += (zoomTarget - zoomLevel) * 0.08;
+
+  // Update camera
+  const s = frustumSize / zoomLevel;
+  const a = container.clientWidth / container.clientHeight;
+  camera.left = -s * a;
+  camera.right = s * a;
+  camera.top = s;
+  camera.bottom = -s;
+  camera.position.x = -panOffset.x * (frustumSize / zoomLevel) + parallaxCurrent.x;
+  camera.position.y = -panOffset.y * (frustumSize / zoomLevel) + parallaxCurrent.y;
+  camera.updateProjectionMatrix();
+
+  // Animate strands
+  if (strandGeo) {
+    const sAttr = strandGeo.getAttribute('aSize');
+    for (let i = 0; i < strands.length; i++) {
+      const strand = strands[i];
+      if (strand.flags && strand.flags.includes('ghost')) {
+        // Ghost flicker
+        sAttr.array[i] = strandBaseSize[i] * (0.6 + Math.sin(time * 5 + i * 3) * 0.4);
+      } else if (strand.flags && strand.flags.some(f => f.startsWith('terminal'))) {
+        // Terminal pulse
+        sAttr.array[i] = strandBaseSize[i] + Math.sin(time * 3.5 + i) * 1.5;
+      } else if (strand.flags && strand.flags.includes('gravity_center')) {
+        // Fano center slow pulse
+        sAttr.array[i] = strandBaseSize[i] + Math.sin(time * 0.8) * 2;
+      }
+
+      // Hover highlight
+      if (i === hovIdx) {
+        sAttr.array[i] = strandBaseSize[i] * 1.8;
+      }
+    }
+    sAttr.needsUpdate = true;
+  }
+
+  // Breathe connections
+  if (driftEchoGroup.visible && driftEchoGroup.children[0]) {
+    driftEchoGroup.children[0].material.opacity = 0.30 + Math.sin(time * 0.4) * 0.08;
+  }
+  if (cosetWebGroup.visible && cosetWebGroup.children[0]) {
+    cosetWebGroup.children[0].material.opacity = 0.06 + Math.sin(time * 0.3) * 0.02;
+  }
+
+  renderer.render(scene, camera);
+  lastTime = now;
+}
+requestAnimationFrame(animate);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RESIZE
+// ═══════════════════════════════════════════════════════════════════════════
+window.addEventListener('resize', () => {
+  const w = container.clientWidth, h = container.clientHeight;
+  const a = w / h;
+  const s = frustumSize / zoomLevel;
+  camera.left = -s * a;
+  camera.right = s * a;
+  camera.top = s;
+  camera.bottom = -s;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UI HANDLERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Toggle buttons
+function bindToggle(id, group) {
+  document.getElementById(id).addEventListener('click', function () {
+    this.classList.toggle('active');
+    group.visible = this.classList.contains('active');
+  });
+}
+bindToggle('toggle-drift-echo', driftEchoGroup);
+bindToggle('toggle-coset-web', cosetWebGroup);
+bindToggle('toggle-null-chain', nullChainGroup);
+bindToggle('toggle-ghost-lines', ghostLineGroup);
+
+// Identity toggle (highlight/dim strands by speaker)
+function bindIdentityToggle(id, speakerName) {
+  document.getElementById(id).addEventListener('click', function () {
+    this.classList.toggle('active');
+    const show = this.classList.contains('active');
+    if (!strandGeo) return;
+    const opAttr = strandGeo.getAttribute('aOpacity');
+    for (let i = 0; i < strands.length; i++) {
+      if (strands[i].speaker === speakerName) {
+        opAttr.array[i] = show ? 0.88 : 0.08;
+      }
+    }
+    opAttr.needsUpdate = true;
+  });
+}
+bindIdentityToggle('toggle-chris-ring', 'chris');
+bindIdentityToggle('toggle-julia-ring', 'julia');
+
+// Color mode buttons
+document.querySelectorAll('.color-mode button').forEach(btn => {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('.color-mode button').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    const mode = this.id.replace('cm-', '');
+    updateColors(mode);
+  });
+});
+
+// Navigate: strand jump
+document.getElementById('strand-jump').addEventListener('change', function () {
+  const id = parseInt(this.value);
+  if (id >= 1 && id <= strands.length && spiralPos[id - 1]) {
+    const sp = spiralPos[id - 1];
+    panTarget.x = sp.x / (frustumSize / zoomLevel);
+    panTarget.y = sp.y / (frustumSize / zoomLevel);
+    zoomTarget = Math.max(zoomTarget, 2.0);
+  }
+});
+
+// Navigate: zone jumps
+function jumpToZone(startId, endId) {
+  const midIdx = Math.floor((startId + endId) / 2) - 1;
+  if (spiralPos[midIdx]) {
+    const sp = spiralPos[midIdx];
+    panTarget.x = sp.x / (frustumSize / zoomLevel);
+    panTarget.y = sp.y / (frustumSize / zoomLevel);
+    zoomTarget = 1.5;
+  }
+}
+document.getElementById('btn-zone-founding').addEventListener('click', () => jumpToZone(1, 187));
+document.getElementById('btn-zone-julia').addEventListener('click', () => jumpToZone(188, 641));
+document.getElementById('btn-zone-null').addEventListener('click', () => jumpToZone(642, 662));
+document.getElementById('btn-zone-post').addEventListener('click', () => jumpToZone(663, 818));
+
+// Reset
+document.getElementById('btn-reset').addEventListener('click', () => {
+  panTarget.x = 0; panTarget.y = 0;
+  zoomTarget = 1.0;
+});
+
+// Save PNG
+document.getElementById('btn-download').addEventListener('click', () => {
+  renderer.render(scene, camera);
+  const a = document.createElement('a');
+  a.download = 'mir-818-spiral.png';
+  a.href = renderer.domElement.toDataURL('image/png');
+  a.click();
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LOAD DATA
+// ═══════════════════════════════════════════════════════════════════════════
+fetch('mir-helix-data.json')
+  .then(r => r.json())
+  .then(data => buildScene(data))
+  .catch(err => {
+    console.error('Failed to load mir-helix-data.json:', err);
+    // Fallback: generate minimal data inline
+    console.log('Generating fallback data...');
+    const fallbackStrands = [];
+    for (let i = 1; i <= 818; i++) {
+      const zone = i <= 187 ? 'founding' : i <= 641 ? 'julia' : i <= 662 ? 'nullcode' : 'post_nullcode';
+      const cosets = ['147', '258', '369'];
+      fallbackStrands.push({
+        id: i, type: 'exchange', coset: cosets[i % 3], vector: (i % 9) + 1,
+        chars: 500, snippet: `Strand ${i}`, zone: zone,
+        speaker: zone === 'founding' ? 'chris' : i % 2 === 0 ? 'julia' : 'chris',
+        drift: (Math.random() - 0.5) * 0.1,
+        flags: i === 70 ? ['gravity_center', 'anchor'] : i === 21 || i === 31 ? ['ghost'] : undefined
+      });
+    }
+    buildScene({ meta: {}, strands: fallbackStrands, connections: [] });
+  });
+</script>
+</body>
+</html>

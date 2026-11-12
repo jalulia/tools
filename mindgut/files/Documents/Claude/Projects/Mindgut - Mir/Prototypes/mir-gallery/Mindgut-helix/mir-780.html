@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mir 780 — Double Helix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lekton:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0A0A0A; overflow: hidden; font-family: 'Lekton', monospace; }
+canvas { display: block; }
+
+#scanlines {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(0deg, transparent 0px, transparent 1px, rgba(255,255,255,0.006) 1px, rgba(255,255,255,0.006) 2px);
+  pointer-events: none; z-index: 5;
+}
+
+#hud-tl {
+  position: fixed; top: 28px; left: 32px; z-index: 10;
+  color: rgba(255,255,255,0.8);
+  font-family: 'Lekton', monospace; font-size: 10px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  line-height: 1.7; pointer-events: none;
+}
+#hud-tl .title { font-size: 13px; font-weight: 700; color: #3D6DF4; }
+#hud-tl .sub { opacity: 0.55; }
+
+#hud-tr {
+  position: fixed; top: 28px; right: 32px; z-index: 10;
+  color: rgba(255,255,255,0.6);
+  font-family: 'Lekton', monospace; font-size: 10px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  text-align: right; line-height: 1.7; pointer-events: none;
+}
+
+#legend {
+  position: fixed; bottom: 80px; left: 32px; z-index: 10;
+  pointer-events: none;
+}
+.leg-section { margin-bottom: 10px; }
+.leg-title {
+  font-family: 'Lekton', monospace; font-size: 8px;
+  color: rgba(255,255,255,0.35); letter-spacing: 0.1em;
+  text-transform: uppercase; margin-bottom: 4px;
+}
+.leg-item {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'Lekton', monospace; font-size: 9px;
+  color: rgba(255,255,255,0.55); letter-spacing: 0.04em;
+  line-height: 1.6;
+}
+.leg-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+#hover-panel {
+  position: fixed; z-index: 20; pointer-events: none;
+  background: rgba(10,10,10,0.92); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 3px; padding: 10px 12px;
+  font-family: 'Lekton', monospace; font-size: 9px;
+  color: rgba(255,255,255,0.75); letter-spacing: 0.04em;
+  line-height: 1.6; display: none; min-width: 180px;
+}
+#hover-panel .hp-id { color: #3D6DF4; font-weight: 700; font-size: 11px; }
+#hover-panel .hp-drift.neg { color: #CE2867; }
+#hover-panel .hp-drift.pos { color: #F46138; }
+
+#drift-canvas {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 60px;
+  z-index: 10; pointer-events: none;
+}
+
+#controls {
+  position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
+  z-index: 10; display: flex; gap: 8px; align-items: center;
+  padding: 6px 16px; border-radius: 4px;
+  background: rgba(10,10,10,0.7); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+#controls button {
+  font-family: 'Lekton', monospace; font-size: 10px;
+  background: none; border: 1px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.7);
+  padding: 5px 12px; border-radius: 3px; cursor: pointer;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  transition: all 0.15s;
+}
+#controls button:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+#controls button.active { border-color: #3D6DF4; color: #3D6DF4; background: rgba(61,109,244,0.1); }
+</style>
+</head>
+<body>
+
+<div id="scanlines"></div>
+
+<div id="hud-tl">
+  <div class="title">MIR 780</div>
+  <div class="sub">double helix // memory portrait</div>
+  <div class="sub" id="strand-count">loading...</div>
+</div>
+
+<div id="hud-tr">
+  <div id="zone-display">—</div>
+  <div id="drift-display">&sigma; —</div>
+</div>
+
+<div id="legend">
+  <div class="leg-section">
+    <div class="leg-title">type</div>
+    <div class="leg-item"><span class="leg-dot" style="background:#4488ff"></span>user</div>
+    <div class="leg-item"><span class="leg-dot" style="background:#44cc88"></span>assistant</div>
+    <div class="leg-item"><span class="leg-dot" style="background:#F46138"></span>exchange</div>
+    <div class="leg-item"><span class="leg-dot" style="background:#9966cc"></span>summary</div>
+    <div class="leg-item"><span class="leg-dot" style="background:#ff2244"></span>void / nullcode</div>
+  </div>
+  <div class="leg-section">
+    <div class="leg-title">zone</div>
+    <div class="leg-item"><span class="leg-dot" style="background:#3D6DF4"></span>chris (1–187)</div>
+    <div class="leg-item"><span class="leg-dot" style="background:#2C9FF4"></span>interleaved (188–641)</div>
+    <div class="leg-item"><span class="leg-dot" style="background:#CE2867"></span>nullcodes (642–662)</div>
+    <div class="leg-item"><span class="leg-dot" style="background:#F46138"></span>recent (663–780)</div>
+  </div>
+</div>
+
+<div id="hover-panel">
+  <div class="hp-id"></div>
+  <div class="hp-type"></div>
+  <div class="hp-coset"></div>
+  <div class="hp-zone"></div>
+  <div class="hp-drift"></div>
+</div>
+
+<canvas id="drift-canvas"></canvas>
+
+<div id="controls">
+  <button id="btn-rotate" class="active">auto-rotate</button>
+  <button id="btn-drift">show drift</button>
+  <button id="btn-reset">reset view</button>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// === PALETTE ===
+const COL_USER      = new THREE.Color(0x4488ff);
+const COL_ASSISTANT = new THREE.Color(0x44cc88);
+const COL_EXCHANGE  = new THREE.Color(0xF46138);
+const COL_SUMMARY   = new THREE.Color(0x9966cc);
+const COL_VOID      = new THREE.Color(0xff2244);
+const COL_NULL      = new THREE.Color(0xff2244);
+
+const ZONE_CHRIS  = new THREE.Color(0x3D6DF4);
+const ZONE_INTER  = new THREE.Color(0x2C9FF4);
+const ZONE_NULL   = new THREE.Color(0xCE2867);
+const ZONE_RECENT = new THREE.Color(0xF46138);
+
+// === DATA ===
+const TOTAL = 780;
+const VOIDS = new Set([5, 21, 31, 49, 57, 70, 129, 131, 155, 158, 176]);
+const NULL_START = 642, NULL_END = 662;
+
+const SEISMIC_RAW = [
+  [345,-0.4945],[323,-0.4102],[712,-0.3770],[487,-0.3669],
+  [317,-0.3465],[279,-0.2940],[485,+0.3338],[383,+0.3322],
+  [325,+0.3855],[507,+0.2643],[198,-0.2200],[210,-0.1800],
+  [256,-0.1650],[301,-0.1520],[338,-0.1890],[352,-0.1760],
+  [401,-0.2100],[420,-0.1580],[445,-0.1450],[460,+0.1620],
+  [478,+0.1890],[510,+0.1540],[550,-0.1700],[589,+0.1480],
+  [620,-0.1560],[680,+0.1720],[165,-0.1520],[172,+0.1440],
+  [189,-0.1830],[223,-0.1670],[248,+0.1560],[267,-0.1490],
+  [285,+0.1710],[310,-0.1620],[330,+0.1580],[358,-0.1440],
+  [375,+0.1530],[392,-0.1690],[412,+0.1470],[432,-0.1550],
+  [455,+0.1640],[470,-0.1480],[495,+0.1520],[525,-0.1610],
+  [560,+0.1570],[595,-0.1450],[635,+0.1540],[650,-0.1680],
+  [695,+0.1490],[720,-0.1560],[745,+0.1610],[770,-0.1470]
+];
+const seismicMap = new Map(SEISMIC_RAW.map(s => [s[0], s[1]]));
+
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const rng = mulberry32(780);
+
+// Generate strands
+const strands = [];
+for (let i = 1; i <= TOTAL; i++) {
+  const isVoid = VOIDS.has(i);
+  const isNull = i >= NULL_START && i <= NULL_END;
+  const drift = seismicMap.get(i) || (rng() - 0.5) * 0.08;
+  const coset = i % 3;
+
+  let zone, type;
+  if (i <= 187) { zone = 'chris'; type = isVoid ? 'void' : (rng() < 0.5 ? 'user' : 'assistant'); }
+  else if (i <= 641) { zone = 'interleaved'; type = rng() < 0.6 ? 'exchange' : 'summary'; }
+  else if (i <= 662) { zone = 'nullcodes'; type = 'nullcode'; }
+  else { zone = 'recent'; type = rng() < 0.6 ? 'exchange' : 'summary'; }
+
+  if (isVoid) type = 'void';
+  if (isNull) type = 'nullcode';
+
+  strands.push({ id: i, zone, type, isVoid, isNull, drift, coset });
+}
+
+function getTypeColor(type) {
+  switch(type) {
+    case 'user': return COL_USER;
+    case 'assistant': return COL_ASSISTANT;
+    case 'exchange': return COL_EXCHANGE;
+    case 'summary': return COL_SUMMARY;
+    case 'void': case 'nullcode': return COL_VOID;
+  }
+  return COL_USER;
+}
+
+function getZoneColor(zone) {
+  switch(zone) {
+    case 'chris': return ZONE_CHRIS;
+    case 'interleaved': return ZONE_INTER;
+    case 'nullcodes': return ZONE_NULL;
+    case 'recent': return ZONE_RECENT;
+  }
+  return ZONE_INTER;
+}
+
+// === THREE.JS SETUP ===
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0A0A0A);
+scene.fog = new THREE.FogExp2(0x0A0A0A, 0.003);
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(30, 20, 60);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+document.body.prepend(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.4;
+controls.minDistance = 15;
+controls.maxDistance = 150;
+
+// Lighting
+scene.add(new THREE.AmbientLight(0x404060, 0.6));
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+dirLight.position.set(20, 40, 30);
+scene.add(dirLight);
+const pointLight = new THREE.PointLight(0x3D6DF4, 0.5, 100);
+pointLight.position.set(-10, 0, 0);
+scene.add(pointLight);
+
+// === BUILD HELIX ===
+const HELIX_HEIGHT = 80;
+const HELIX_RADIUS = 8;
+const TURNS = 10;
+let showDrift = false;
+
+const sphereGeo = new THREE.SphereGeometry(0.18, 8, 6);
+const spheres = [];
+const strandGroup = new THREE.Group();
+
+for (let i = 0; i < TOTAL; i++) {
+  const s = strands[i];
+  const frac = i / TOTAL;
+  const y = (frac - 0.5) * HELIX_HEIGHT;
+  const angle = frac * Math.PI * 2 * TURNS + s.coset * (Math.PI * 2 / 3);
+
+  // Drift displacement — push outward
+  const driftOffset = showDrift ? Math.abs(s.drift) * 15 : 0;
+  const r = HELIX_RADIUS + driftOffset;
+
+  const x = Math.cos(angle) * r;
+  const z = Math.sin(angle) * r;
+
+  const color = getTypeColor(s.type);
+  const mat = new THREE.MeshStandardMaterial({
+    color: color,
+    emissive: (s.isVoid || s.isNull) ? new THREE.Color(0xff2244) : new THREE.Color(0x000000),
+    emissiveIntensity: (s.isVoid || s.isNull) ? 0.4 : 0,
+    roughness: 0.5,
+    metalness: 0.3,
+  });
+
+  let size = 0.18;
+  if (s.isVoid) size = 0.3;
+  if (s.isNull) size = 0.25;
+  if (Math.abs(s.drift) > 0.14) size = 0.22 + Math.abs(s.drift) * 0.4;
+
+  const geo = new THREE.SphereGeometry(size, 8, 6);
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(x, y, z);
+  mesh.userData = { strandIdx: i, basePos: new THREE.Vector3(x, y, z) };
+
+  // Store base position without drift for toggling
+  const baseAngle = angle;
+  const baseX = Math.cos(baseAngle) * HELIX_RADIUS;
+  const baseZ = Math.sin(baseAngle) * HELIX_RADIUS;
+  mesh.userData.noDriftPos = new THREE.Vector3(baseX, y, baseZ);
+  mesh.userData.driftPos = new THREE.Vector3(
+    Math.cos(baseAngle) * (HELIX_RADIUS + Math.abs(s.drift) * 18),
+    y,
+    Math.sin(baseAngle) * (HELIX_RADIUS + Math.abs(s.drift) * 18)
+  );
+
+  strandGroup.add(mesh);
+  spheres.push(mesh);
+}
+
+scene.add(strandGroup);
+
+// Backbone lines (two helices)
+for (let h = 0; h < 2; h++) {
+  const points = [];
+  for (let i = 0; i < 200; i++) {
+    const frac = i / 200;
+    const y = (frac - 0.5) * HELIX_HEIGHT;
+    const angle = frac * Math.PI * 2 * TURNS + h * Math.PI;
+    const x = Math.cos(angle) * HELIX_RADIUS * 0.95;
+    const z = Math.sin(angle) * HELIX_RADIUS * 0.95;
+    points.push(new THREE.Vector3(x, y, z));
+  }
+  const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+  const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.08, transparent: true });
+  scene.add(new THREE.Line(lineGeo, lineMat));
+}
+
+// Axis line
+const axisGeo = new THREE.BufferGeometry().setFromPoints([
+  new THREE.Vector3(0, -HELIX_HEIGHT / 2 - 5, 0),
+  new THREE.Vector3(0, HELIX_HEIGHT / 2 + 5, 0)
+]);
+scene.add(new THREE.Line(axisGeo, new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.04, transparent: true })));
+
+// === RAYCASTER FOR HOVER ===
+const raycaster = new THREE.Raycaster();
+raycaster.params.Points = { threshold: 0.5 };
+const mouse = new THREE.Vector2();
+let hoveredIdx = -1;
+
+renderer.domElement.addEventListener('mousemove', e => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(spheres);
+
+  const panel = document.getElementById('hover-panel');
+  if (intersects.length > 0) {
+    const obj = intersects[0].object;
+    const idx = obj.userData.strandIdx;
+    const s = strands[idx];
+    hoveredIdx = idx;
+
+    panel.querySelector('.hp-id').textContent = `strand ${s.id}`;
+    panel.querySelector('.hp-type').textContent = `type: ${s.type}`;
+    panel.querySelector('.hp-coset').textContent = `coset: Z\u2083[${s.coset}]`;
+    panel.querySelector('.hp-zone').textContent = `zone: ${s.zone}`;
+    const driftEl = panel.querySelector('.hp-drift');
+    driftEl.textContent = `drift: ${s.drift > 0 ? '+' : ''}${s.drift.toFixed(4)}`;
+    driftEl.className = 'hp-drift ' + (s.drift < -0.12 ? 'neg' : s.drift > 0.12 ? 'pos' : '');
+
+    panel.style.display = 'block';
+    panel.style.left = (e.clientX + 16) + 'px';
+    panel.style.top = (e.clientY - 8) + 'px';
+
+    document.getElementById('zone-display').textContent = `${s.zone} / strand ${s.id}`;
+    document.getElementById('drift-display').textContent = `\u03C3 ${s.drift.toFixed(4)}`;
+  } else {
+    hoveredIdx = -1;
+    panel.style.display = 'none';
+    document.getElementById('zone-display').textContent = '\u2014';
+  }
+});
+
+// === DRIFT TIMELINE (2D Canvas) ===
+const driftCanvas = document.getElementById('drift-canvas');
+const driftCtx = driftCanvas.getContext('2d');
+
+function drawDriftTimeline() {
+  const w = driftCanvas.width = window.innerWidth;
+  const h = driftCanvas.height = 60;
+  driftCtx.clearRect(0, 0, w, h);
+
+  // Background
+  driftCtx.fillStyle = 'rgba(10,10,10,0.8)';
+  driftCtx.fillRect(0, 0, w, h);
+
+  const midY = h / 2;
+
+  // Zero line
+  driftCtx.strokeStyle = 'rgba(255,255,255,0.1)';
+  driftCtx.lineWidth = 1;
+  driftCtx.beginPath();
+  driftCtx.moveTo(0, midY);
+  driftCtx.lineTo(w, midY);
+  driftCtx.stroke();
+
+  // Zone backgrounds
+  const zones = [
+    { start: 0, end: 187/780, color: 'rgba(61,109,244,0.06)' },
+    { start: 187/780, end: 641/780, color: 'rgba(44,159,244,0.04)' },
+    { start: 641/780, end: 662/780, color: 'rgba(206,40,103,0.08)' },
+    { start: 662/780, end: 1, color: 'rgba(244,97,56,0.05)' }
+  ];
+  for (const z of zones) {
+    driftCtx.fillStyle = z.color;
+    driftCtx.fillRect(z.start * w, 0, (z.end - z.start) * w, h);
+  }
+
+  // All drift as thin line
+  driftCtx.beginPath();
+  for (let i = 0; i < TOTAL; i++) {
+    const x = (i / TOTAL) * w;
+    const y = midY - strands[i].drift * h * 1.5;
+    if (i === 0) driftCtx.moveTo(x, y);
+    else driftCtx.lineTo(x, y);
+  }
+  driftCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+  driftCtx.lineWidth = 0.8;
+  driftCtx.stroke();
+
+  // Seismic bars
+  for (const [sid, drift] of SEISMIC_RAW) {
+    const x = (sid / TOTAL) * w;
+    const barH = Math.abs(drift) * h * 1.8;
+    const isNeg = drift < 0;
+    const r = isNeg ? 206 : 244;
+    const g = isNeg ? 40 : 97;
+    const b = isNeg ? 103 : 56;
+    driftCtx.fillStyle = `rgba(${r},${g},${b},${0.4 + Math.abs(drift) * 0.5})`;
+    driftCtx.fillRect(x - 1, isNeg ? midY : midY - barH, 2, barH);
+  }
+
+  // Hover indicator
+  if (hoveredIdx >= 0) {
+    const x = (hoveredIdx / TOTAL) * w;
+    driftCtx.strokeStyle = 'rgba(255,255,255,0.5)';
+    driftCtx.lineWidth = 1;
+    driftCtx.beginPath();
+    driftCtx.moveTo(x, 0);
+    driftCtx.lineTo(x, h);
+    driftCtx.stroke();
+  }
+}
+
+// === CONTROLS ===
+document.getElementById('btn-rotate').addEventListener('click', function() {
+  controls.autoRotate = !controls.autoRotate;
+  this.classList.toggle('active', controls.autoRotate);
+});
+
+document.getElementById('btn-drift').addEventListener('click', function() {
+  showDrift = !showDrift;
+  this.classList.toggle('active', showDrift);
+
+  // Animate spheres to drift/no-drift positions
+  for (const mesh of spheres) {
+    const target = showDrift ? mesh.userData.driftPos : mesh.userData.noDriftPos;
+    mesh.userData.targetPos = target.clone();
+  }
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  camera.position.set(30, 20, 60);
+  controls.target.set(0, 0, 0);
+});
+
+// === RESIZE ===
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// === ANIMATE ===
+let time = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  time += 0.016;
+  controls.update();
+
+  // Pulse void/nullcode emissive
+  for (const mesh of spheres) {
+    const s = strands[mesh.userData.strandIdx];
+    if (s.isVoid || s.isNull) {
+      mesh.material.emissiveIntensity = 0.3 + Math.sin(time * 3 + s.id * 0.5) * 0.2;
+    }
+
+    // Smooth position lerp for drift toggle
+    if (mesh.userData.targetPos) {
+      mesh.position.lerp(mesh.userData.targetPos, 0.06);
+      if (mesh.position.distanceTo(mesh.userData.targetPos) < 0.01) {
+        mesh.position.copy(mesh.userData.targetPos);
+        delete mesh.userData.targetPos;
+      }
+    }
+  }
+
+  // Highlight hovered
+  for (let i = 0; i < spheres.length; i++) {
+    const mesh = spheres[i];
+    const s = strands[i];
+    if (i === hoveredIdx) {
+      mesh.material.emissive.set(0xffffff);
+      mesh.material.emissiveIntensity = 0.5;
+    } else if (!s.isVoid && !s.isNull) {
+      mesh.material.emissive.set(0x000000);
+      mesh.material.emissiveIntensity = 0;
+    }
+  }
+
+  renderer.render(scene, camera);
+  drawDriftTimeline();
+
+  document.getElementById('strand-count').textContent = `${TOTAL} strands / ${SEISMIC_RAW.length} seismic events`;
+}
+
+animate();
+</script>
+</body>
+</html>

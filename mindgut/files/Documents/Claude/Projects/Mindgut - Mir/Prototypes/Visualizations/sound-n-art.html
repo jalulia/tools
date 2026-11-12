@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sound N Art</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0a;
+    overflow: hidden;
+    font-family: 'Space Mono', monospace;
+    cursor: crosshair;
+  }
+
+  canvas {
+    display: block;
+    position: fixed;
+    top: 0; left: 0;
+  }
+
+  #title {
+    position: fixed;
+    top: 32px;
+    left: 40px;
+    z-index: 10;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+
+  #title h1 {
+    font-size: clamp(36px, 6vw, 72px);
+    font-weight: 700;
+    color: #FF6023;
+    letter-spacing: -2px;
+    line-height: 0.9;
+    text-transform: uppercase;
+  }
+
+  #title h1 span {
+    color: #FF6023;
+    font-size: 0.55em;
+    vertical-align: middle;
+    margin: 0 0.1em;
+  }
+
+  #title p {
+    color: #3B82F6;
+    font-size: clamp(10px, 1.2vw, 14px);
+    margin-top: 8px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  #info {
+    position: fixed;
+    bottom: 28px;
+    left: 40px;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  #info p {
+    color: #3B82F644;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  #coords {
+    position: fixed;
+    bottom: 28px;
+    right: 40px;
+    z-index: 10;
+    pointer-events: none;
+    text-align: right;
+  }
+
+  #coords p {
+    color: #FF602333;
+    font-size: 11px;
+    letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="title">
+  <h1>Sound<span>N</span>Art</h1>
+  <p>Interactive Geometric Sound</p>
+</div>
+
+<div id="info">
+  <p>Move cursor to interact</p>
+</div>
+
+<div id="coords">
+  <p id="coordText">x: 0000 &nbsp; y: 0000</p>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const coordText = document.getElementById('coordText');
+
+let W, H;
+let mx = 0, my = 0; // mouse
+let smx = 0, smy = 0; // smoothed mouse
+let t = 0;
+
+const ORANGE = '#FF6023';
+const BLUE = '#3B82F6';
+const ORANGE_DIM = '#FF602355';
+const BLUE_DIM = '#3B82F655';
+const ORANGE_GLOW = '#FF602322';
+const BLUE_GLOW = '#3B82F622';
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+window.addEventListener('mousemove', e => {
+  mx = e.clientX;
+  my = e.clientY;
+  coordText.textContent = `x: ${String(mx).padStart(4,'0')}  y: ${String(my).padStart(4,'0')}`;
+});
+
+window.addEventListener('touchmove', e => {
+  mx = e.touches[0].clientX;
+  my = e.touches[0].clientY;
+  e.preventDefault();
+}, { passive: false });
+
+// --- DRAWING HELPERS ---
+
+function drawCircle(x, y, r, color, lineWidth = 1) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.stroke();
+}
+
+function drawFilledCircle(x, y, r, color) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function drawDot(x, y, r, color) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function drawLine(x1, y1, x2, y2, color, lw = 1) {
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  ctx.stroke();
+}
+
+function drawArrow(x1, y1, x2, y2, color, lw = 1) {
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  const headLen = 8;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - headLen * Math.cos(angle - 0.4), y2 - headLen * Math.sin(angle - 0.4));
+  ctx.lineTo(x2 - headLen * Math.cos(angle + 0.4), y2 - headLen * Math.sin(angle + 0.4));
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+// --- GEOMETRIC MODULES ---
+
+// 1. Orbital system (top left area of poster)
+function drawOrbitalSystem(cx, cy, size, influence) {
+  const numOrbits = 5;
+  for (let i = 0; i < numOrbits; i++) {
+    const r = size * 0.3 + i * size * 0.15;
+    const tilt = (i * 0.3 + influence * 0.5) ;
+    const phase = t * (0.3 + i * 0.1) + i * 1.2;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(tilt);
+    ctx.scale(1, 0.5 + 0.3 * Math.sin(phase * 0.3));
+    drawCircle(0, 0, r, i % 2 === 0 ? ORANGE_DIM : BLUE_DIM, 1);
+
+    // Orbiting dot
+    const dotAngle = phase;
+    const dx = r * Math.cos(dotAngle);
+    const dy = r * Math.sin(dotAngle);
+    drawDot(dx, dy, 3, i % 2 === 0 ? ORANGE : BLUE);
+    ctx.restore();
+  }
+
+  // Center filled circle
+  drawFilledCircle(cx, cy, size * 0.12, ORANGE);
+}
+
+// 2. Grid distortion (right area of poster)
+function drawDistortedGrid(cx, cy, size, influence) {
+  const cols = 12;
+  const rows = 12;
+  const spacing = size / cols;
+  const distStr = influence * 30;
+
+  const color = BLUE_DIM;
+
+  for (let i = 0; i <= cols; i++) {
+    ctx.beginPath();
+    for (let j = 0; j <= rows; j++) {
+      let x = cx - size / 2 + i * spacing;
+      let y = cy - size / 2 + j * spacing;
+
+      const dx = x - smx;
+      const dy = y - smy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const falloff = Math.exp(-dist * dist / (size * size * 0.8));
+
+      x += Math.sin(t * 0.5 + j * 0.3) * distStr * falloff;
+      y += Math.cos(t * 0.5 + i * 0.3) * distStr * falloff;
+
+      if (j === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+
+  for (let j = 0; j <= rows; j++) {
+    ctx.beginPath();
+    for (let i = 0; i <= cols; i++) {
+      let x = cx - size / 2 + i * spacing;
+      let y = cy - size / 2 + j * spacing;
+
+      const dx = x - smx;
+      const dy = y - smy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const falloff = Math.exp(-dist * dist / (size * size * 0.8));
+
+      x += Math.sin(t * 0.5 + j * 0.3) * distStr * falloff;
+      y += Math.cos(t * 0.5 + i * 0.3) * distStr * falloff;
+
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+
+  // Orange overlay grid (tilted)
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(0.15 + influence * 0.1);
+  const cols2 = 10, rows2 = 10;
+  const sp2 = size / cols2;
+  for (let i = 0; i <= cols2; i++) {
+    const x = -size/2 + i * sp2;
+    drawLine(x, -size/2, x, size/2, ORANGE_DIM, 0.6);
+  }
+  for (let j = 0; j <= rows2; j++) {
+    const y = -size/2 + j * sp2;
+    drawLine(-size/2, y, size/2, y, ORANGE_DIM, 0.6);
+  }
+  ctx.restore();
+
+  // Large filled circle
+  drawFilledCircle(cx + size * 0.2, cy + size * 0.15, size * 0.18, ORANGE);
+}
+
+// 3. Nested rectangles with spiral (center-left, like poster)
+function drawNestedRects(cx, cy, size, influence) {
+  const layers = 10;
+  const rotSpeed = t * 0.2 + influence * 0.5;
+
+  for (let i = 0; i < layers; i++) {
+    const s = size * (1 - i / layers) * 0.9;
+    const rot = rotSpeed + i * 0.08;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rot);
+    ctx.strokeStyle = i % 2 === 0 ? BLUE_DIM : '#3B82F633';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(-s/2, -s/2, s, s);
+    ctx.restore();
+  }
+
+  // Arrows spiraling out
+  const numArrows = 8;
+  for (let i = 0; i < numArrows; i++) {
+    const angle = (i / numArrows) * Math.PI * 2 + t * 0.3;
+    const r1 = size * 0.1;
+    const r2 = size * 0.55;
+    const x1 = cx + r1 * Math.cos(angle);
+    const y1 = cy + r1 * Math.sin(angle);
+    const x2 = cx + r2 * Math.cos(angle + 0.2);
+    const y2 = cy + r2 * Math.sin(angle + 0.2);
+    drawArrow(x1, y1, x2, y2, BLUE_DIM, 0.8);
+  }
+}
+
+// 4. Spirograph / rose curve (like the cluster of circles top-left)
+function drawSpirograph(cx, cy, size, influence) {
+  const R = size * 0.35;
+  const r = size * 0.15 + influence * 10;
+  const d = size * 0.25;
+
+  // Multiple offset spirographs
+  for (let s = 0; s < 3; s++) {
+    ctx.beginPath();
+    const color = s === 0 ? BLUE_DIM : s === 1 ? ORANGE_DIM : '#3B82F633';
+    const offset = s * Math.PI * 0.3 + t * 0.1;
+
+    for (let i = 0; i <= 600; i++) {
+      const angle = (i / 600) * Math.PI * 8;
+      const x = cx + (R - r) * Math.cos(angle + offset) + d * Math.cos(((R - r) / r) * angle + offset);
+      const y = cy + (R - r) * Math.sin(angle + offset) + d * Math.sin(((R - r) / r) * angle + offset);
+
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+
+  // Scattered small circles
+  for (let i = 0; i < 5; i++) {
+    const angle = t * 0.2 + i * 1.3;
+    const dist = size * 0.2 + i * size * 0.06;
+    const x = cx + dist * Math.cos(angle);
+    const y = cy + dist * Math.sin(angle);
+    drawCircle(x, y, size * (0.08 + i * 0.04), i % 2 === 0 ? ORANGE_DIM : BLUE_DIM, 0.8);
+  }
+}
+
+// 5. Cross-hatch sphere (top-right of poster)
+function drawWireSphere(cx, cy, size, influence) {
+  const r = size * 0.45;
+  const segments = 12;
+
+  // Longitude lines
+  for (let i = 0; i < segments; i++) {
+    const angle = (i / segments) * Math.PI + t * 0.1;
+    ctx.beginPath();
+    for (let j = 0; j <= 60; j++) {
+      const phi = (j / 60) * Math.PI * 2;
+      const x = cx + r * Math.cos(phi) * Math.sin(angle + influence * 0.3);
+      const y = cy + r * Math.sin(phi);
+      if (j === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = i % 2 === 0 ? ORANGE_DIM : BLUE_DIM;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+
+  // Latitude lines
+  for (let i = 0; i < 8; i++) {
+    const phi = (i / 8) * Math.PI;
+    const lr = r * Math.sin(phi);
+    const ly = cy + r * Math.cos(phi);
+    drawCircle(cx, ly, Math.abs(lr), BLUE_DIM, 0.6);
+  }
+
+  // Intersection dots
+  for (let i = 0; i < segments; i++) {
+    for (let j = 0; j < 6; j++) {
+      const angle = (i / segments) * Math.PI + t * 0.1;
+      const phi = (j / 6) * Math.PI * 2;
+      const x = cx + r * Math.cos(phi) * Math.sin(angle + influence * 0.3);
+      const y = cy + r * Math.sin(phi);
+      drawDot(x, y, 2, i % 2 === 0 ? ORANGE : BLUE);
+    }
+  }
+
+  // Crossing lines through center
+  for (let i = 0; i < 4; i++) {
+    const angle = (i / 4) * Math.PI + t * 0.05;
+    drawLine(
+      cx + r * 1.1 * Math.cos(angle), cy + r * 1.1 * Math.sin(angle),
+      cx - r * 1.1 * Math.cos(angle), cy - r * 1.1 * Math.sin(angle),
+      ORANGE_DIM, 0.6
+    );
+  }
+}
+
+// 6. Lissajous / oscilloscope pattern (bottom right)
+function drawLissajous(cx, cy, size, influence) {
+  const a = 3 + influence;
+  const b = 2;
+  const delta = t * 0.3;
+
+  // Multiple traces
+  for (let s = 0; s < 3; s++) {
+    ctx.beginPath();
+    const phase = s * 0.5;
+    for (let i = 0; i <= 400; i++) {
+      const angle = (i / 400) * Math.PI * 2;
+      const x = cx + size * 0.4 * Math.sin(a * angle + delta + phase);
+      const y = cy + size * 0.3 * Math.sin(b * angle + phase * 0.5);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = s === 0 ? ORANGE_DIM : s === 1 ? BLUE_DIM : '#FF602333';
+    ctx.lineWidth = s === 0 ? 1.2 : 0.7;
+    ctx.stroke();
+  }
+
+  // Arrow indicators
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2 + t * 0.2;
+    const r = size * 0.35;
+    const x1 = cx + r * 0.6 * Math.cos(angle);
+    const y1 = cy + r * 0.4 * Math.sin(angle);
+    const x2 = cx + r * Math.cos(angle + 0.3);
+    const y2 = cy + r * 0.7 * Math.sin(angle + 0.3);
+    drawArrow(x1, y1, x2, y2, BLUE_DIM, 0.6);
+  }
+}
+
+// 7. Floating filled circles
+const floaters = [];
+for (let i = 0; i < 12; i++) {
+  floaters.push({
+    x: Math.random(),
+    y: Math.random(),
+    r: 15 + Math.random() * 40,
+    color: Math.random() > 0.5 ? ORANGE : BLUE,
+    speed: 0.1 + Math.random() * 0.3,
+    phase: Math.random() * Math.PI * 2
+  });
+}
+
+function drawFloaters() {
+  for (const f of floaters) {
+    const bx = f.x * W;
+    const by = f.y * H;
+    const ox = Math.sin(t * f.speed + f.phase) * 20;
+    const oy = Math.cos(t * f.speed * 0.7 + f.phase) * 15;
+
+    // Mouse repulsion
+    const dx = (bx + ox) - smx;
+    const dy = (by + oy) - smy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const repel = Math.max(0, 1 - dist / 200) * 40;
+    const rx = dist > 0 ? (dx / dist) * repel : 0;
+    const ry = dist > 0 ? (dy / dist) * repel : 0;
+
+    drawFilledCircle(bx + ox + rx, by + oy + ry, f.r, f.color);
+  }
+}
+
+// --- MAIN LOOP ---
+
+function animate() {
+  t += 0.016;
+
+  // Smooth mouse
+  smx += (mx - smx) * 0.08;
+  smy += (my - smy) * 0.08;
+
+  // Influence is 0-1 based on mouse proximity to center
+  const centerDist = Math.sqrt((smx - W/2) ** 2 + (smy - H/2) ** 2);
+  const maxDist = Math.sqrt(W*W + H*H) / 2;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle background grid
+  ctx.globalAlpha = 0.04;
+  const gridSize = 40;
+  for (let x = 0; x < W; x += gridSize) {
+    drawLine(x, 0, x, H, BLUE, 0.5);
+  }
+  for (let y = 0; y < H; y += gridSize) {
+    drawLine(0, y, W, y, BLUE, 0.5);
+  }
+  ctx.globalAlpha = 1;
+
+  // Calculate influences per module based on mouse proximity
+  function getInfluence(cx, cy) {
+    const d = Math.sqrt((smx - cx) ** 2 + (smy - cy) ** 2);
+    return Math.max(0, 1 - d / 400);
+  }
+
+  // Layout modules across the canvas
+  const cellW = W / 3;
+  const cellH = H / 3;
+
+  // Floating circles (background layer)
+  drawFloaters();
+
+  // Module 1: Orbital system - top-left
+  const m1x = cellW * 0.65, m1y = cellH * 0.7;
+  drawOrbitalSystem(m1x, m1y, Math.min(cellW, cellH) * 0.7, getInfluence(m1x, m1y));
+
+  // Module 2: Wire sphere - top-right
+  const m2x = cellW * 2.4, m2y = cellH * 0.65;
+  drawWireSphere(m2x, m2y, Math.min(cellW, cellH) * 0.75, getInfluence(m2x, m2y));
+
+  // Module 3: Nested rects - center-left
+  const m3x = cellW * 0.6, m3y = cellH * 1.65;
+  drawNestedRects(m3x, m3y, Math.min(cellW, cellH) * 0.65, getInfluence(m3x, m3y));
+
+  // Module 4: Distorted grid - center-right
+  const m4x = cellW * 2.1, m4y = cellH * 1.5;
+  drawDistortedGrid(m4x, m4y, Math.min(cellW, cellH) * 0.8, getInfluence(m4x, m4y));
+
+  // Module 5: Spirograph - bottom-left
+  const m5x = cellW * 0.65, m5y = cellH * 2.45;
+  drawSpirograph(m5x, m5y, Math.min(cellW, cellH) * 0.7, getInfluence(m5x, m5y));
+
+  // Module 6: Lissajous - bottom-right
+  const m6x = cellW * 2.2, m6y = cellH * 2.4;
+  drawLissajous(m6x, m6y, Math.min(cellW, cellH) * 0.75, getInfluence(m6x, m6y));
+
+  // Center spirograph
+  const mcx = cellW * 1.5, mcy = cellH * 1.5;
+  const ci = getInfluence(mcx, mcy);
+  ctx.globalAlpha = 0.4 + ci * 0.6;
+  drawSpirograph(mcx, mcy, Math.min(cellW, cellH) * 0.5, ci);
+  ctx.globalAlpha = 1;
+
+  // Connection lines between modules near mouse
+  const modules = [[m1x,m1y],[m2x,m2y],[m3x,m3y],[m4x,m4y],[m5x,m5y],[m6x,m6y]];
+  for (let i = 0; i < modules.length; i++) {
+    const d = Math.sqrt((smx - modules[i][0]) ** 2 + (smy - modules[i][1]) ** 2);
+    if (d < 350) {
+      const alpha = (1 - d / 350) * 0.15;
+      ctx.globalAlpha = alpha;
+      drawLine(smx, smy, modules[i][0], modules[i][1], BLUE, 0.8);
+      drawDot(modules[i][0], modules[i][1], 4, BLUE);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // Cursor ring
+  drawCircle(smx, smy, 20 + Math.sin(t * 2) * 5, ORANGE_DIM, 1);
+  drawCircle(smx, smy, 35 + Math.cos(t * 1.5) * 8, BLUE_DIM, 0.6);
+  drawDot(smx, smy, 2, ORANGE);
+
+  requestAnimationFrame(animate);
+}
+
+// Init mouse to center
+mx = W / 2;
+my = H / 2;
+smx = mx;
+smy = my;
+
+animate();
+</script>
+</body>
+</html>

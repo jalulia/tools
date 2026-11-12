@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yingangaxial Trirefringence</title>
+<style>
+  :root{
+    --paper:#0d0f12; --plate:#14171c; --line:#232830;
+    --ink:#d8dde4; --dim:#6b7480;
+    --ice:#7fd4ff; --laminar:#7dff9a; --signal:#ffb35c;
+    --serif:Georgia,'Times New Roman',serif;
+    --mono:'SF Mono',Menlo,Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);font-family:var(--serif);
+    display:flex;flex-direction:column;align-items:center;padding:2.5rem 1rem 4rem}
+  header{max-width:920px;width:100%;margin-bottom:1.6rem}
+  h1{font-size:1.9rem;font-weight:normal;letter-spacing:.02em}
+  h1 .tri{color:var(--dim)}
+  .sub{color:var(--dim);font-style:italic;margin-top:.4rem;line-height:1.5}
+  .sub b{color:var(--ink);font-weight:normal}
+  .plate{background:var(--plate);border:1px solid var(--line);border-radius:6px;
+    max-width:920px;width:100%;padding:1rem;margin-bottom:1rem}
+  canvas{display:block;width:100%;height:auto;border-radius:4px;background:#0a0c0f}
+  .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:1rem 1.4rem;font-family:var(--mono);font-size:.72rem}
+  .ctl label{display:flex;justify-content:space-between;color:var(--dim);
+    margin-bottom:.35rem;letter-spacing:.05em}
+  .ctl label span.val{color:var(--ink)}
+  input[type=range]{width:100%;accent-color:var(--ice);background:transparent}
+  .toggle{display:flex;align-items:center;gap:.5rem;color:var(--dim);cursor:pointer;
+    user-select:none;padding-top:1rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>Yingangaxial <span class="tri">Trirefringence</span></h1>
+  <div class="sub">A hypothetical optical medium with <b>three</b> principal refractive axes —
+  yin, yang, and the axial third that keeps them from collapsing into each other.
+  One ray enters; three emerge, each polarized along its own axis.
+  Drag the sliders. Watch what the third axis does.</div>
+</header>
+
+<div class="plate">
+  <canvas id="cv" width="1760" height="880"></canvas>
+</div>
+
+<div class="plate controls">
+  <div class="ctl">
+    <label>incidence angle <span class="val" id="v_angle">28°</span></label>
+    <input type="range" id="s_angle" min="-60" max="60" value="28">
+  </div>
+  <div class="ctl">
+    <label>n · yin axis <span class="val" id="v_nyin">1.32</span></label>
+    <input type="range" id="s_nyin" min="100" max="260" value="132">
+  </div>
+  <div class="ctl">
+    <label>n · yang axis <span class="val" id="v_nyang">1.78</span></label>
+    <input type="range" id="s_nyang" min="100" max="260" value="178">
+  </div>
+  <div class="ctl">
+    <label>n · axial (relation) <span class="val" id="v_nax">1.55</span></label>
+    <input type="range" id="s_nax" min="100" max="260" value="155">
+  </div>
+  <div class="ctl">
+    <label>crystal rotation <span class="val" id="v_rot">0°</span></label>
+    <input type="range" id="s_rot" min="0" max="360" value="0">
+  </div>
+  <div class="ctl">
+    <label class="toggle" style="padding-top:0"><input type="checkbox" id="c_anim" checked> animate wavefronts</label>
+    <label class="toggle"><input type="checkbox" id="c_lock"> lock axial = √(yin·yang)</label>
+  </div>
+</div>
+
+<div class="plate" style="font-size:.92rem;line-height:1.65;color:var(--dim);padding:1.3rem 1.5rem">
+  <p style="margin-bottom:.8rem">Ordinary crystals are at most <i>birefringent</i> — two axes, two rays,
+  calcite's famous double image. Trirefringence is the invented third case: a medium whose symmetry is so
+  low that <span style="color:var(--ice)">yin</span> (slow, dense, accepting) and
+  <span style="color:var(--signal)">yang</span> (fast, sparse, asserting) cannot account for the light
+  between them, and a <span style="color:var(--laminar)">third axial ray</span> carries the remainder.</p>
+  <p style="margin-bottom:.8rem">Snell's law applies per axis: <span style="font-family:var(--mono);font-size:.8rem">
+  sin θ₁ = n sin θ₂</span> — a larger index bends the ray harder toward the normal. The axial ray sits between
+  the poles; when you <b style="color:var(--ink);font-weight:normal">lock</b> it to the geometric mean
+  √(n<sub>yin</sub>·n<sub>yang</sub>), it becomes the exact refractive midpoint — the relation that holds
+  the two poles apart. Unlock it and it is free to be its own thing.</p>
+  <p>Past ±41° the steepest axis hits total internal reflection first and its ray dies at the boundary —
+  the poles fail one at a time, the relation last.</p>
+</div>
+
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const W=1760,H=880,BX=W*0.42;
+const S={angle:28,nyin:1.32,nyang:1.78,nax:1.55,rot:0,anim:true,lock:false};
+let t=0;
+
+function bind(id,key,fmt,scale){
+  const el=document.getElementById('s_'+id),vl=document.getElementById('v_'+id);
+  el.addEventListener('input',()=>{S[key]=el.value/(scale||1);vl.textContent=fmt(S[key]);draw();});
+}
+bind('angle','angle',v=>v+'°');
+bind('nyin','nyin',v=>v.toFixed(2),100);
+bind('nyang','nyang',v=>v.toFixed(2),100);
+bind('nax','nax',v=>v.toFixed(2),100);
+bind('rot','rot',v=>v+'°');
+document.getElementById('c_anim').addEventListener('change',e=>{S.anim=e.target.checked;if(S.anim)loop();});
+document.getElementById('c_lock').addEventListener('change',e=>{S.lock=e.target.checked;syncLock();draw();});
+function syncLock(){
+  if(S.lock){S.nax=Math.sqrt(S.nyin*S.nyang);
+    document.getElementById('s_nax').value=Math.round(S.nax*100);
+    document.getElementById('v_nax').textContent=S.nax.toFixed(2);
+    document.getElementById('s_nax').disabled=true;
+  } else document.getElementById('s_nax').disabled=false;
+}
+['s_nyin','s_nyang'].forEach(id=>document.getElementById(id).addEventListener('input',syncLock));
+
+function refract(th1,n){ // from vacuum (n=1) into medium
+  const s=Math.sin(th1)/n;
+  if(Math.abs(s)>1)return null; // TIR
+  return Math.asin(s);
+}
+
+function ray(x0,y0,dx,dy,len,color,width,dash,phase,n){
+  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;
+  if(dash)ctx.setLineDash(dash);
+  ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x0+dx*len,y0+dy*len);ctx.stroke();
+  ctx.setLineDash([]);
+  if(S.anim&&n){ // wavefront ticks perpendicular to ray, spacing ∝ 1/n
+    const spacing=64/n,count=Math.floor(len/spacing);
+    const px=-dy,py=dx,off=(phase*spacing)%spacing;
+    ctx.lineWidth=1;ctx.globalAlpha=.55;
+    for(let i=0;i<count;i++){
+      const d=off+i*spacing;if(d>len)break;
+      const x=x0+dx*d,y=y0+dy*d;
+      ctx.beginPath();ctx.moveTo(x-px*13,y-py*13);ctx.lineTo(x+px*13,y+py*13);ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+function label(txt,x,y,color){
+  ctx.save();ctx.font='24px Menlo,monospace';ctx.fillStyle=color;
+  ctx.fillText(txt,x,y);ctx.restore();
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  const cy=H/2;
+  // crystal body with subtle rotated lattice
+  ctx.save();
+  ctx.fillStyle='#10141a';ctx.fillRect(BX,0,W-BX,H);
+  ctx.beginPath();ctx.rect(BX,0,W-BX,H);ctx.clip();
+  ctx.translate((BX+W)/2,cy);ctx.rotate(S.rot*Math.PI/180);
+  ctx.strokeStyle='rgba(127,212,255,0.06)';ctx.lineWidth=1;
+  for(let i=-30;i<=30;i++){
+    ctx.beginPath();ctx.moveTo(i*46,-1200);ctx.lineTo(i*46,1200);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-1200,i*46);ctx.lineTo(1200,i*46);ctx.stroke();
+  }
+  ctx.restore();
+  // boundary + normal
+  ctx.strokeStyle='#2a313c';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(BX,0);ctx.lineTo(BX,H);ctx.stroke();
+  ctx.strokeStyle='#39424f';ctx.setLineDash([6,8]);ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(60,cy);ctx.lineTo(W-40,cy);ctx.stroke();ctx.setLineDash([]);
+  label('normal',W-150,cy-14,'#39424f');
+  label('vacuum  n=1.00',80,64,'#4a5462');
+  label('yingangaxial crystal',BX+40,64,'#4a5462');
+
+  // incident ray: arrives at (BX,cy) at angle th1 from normal (normal = +x)
+  const th1=S.angle*Math.PI/180;
+  const idx=Math.cos(th1),idy=Math.sin(th1);
+  const inLen=Math.min(BX-70,(cy-40)/Math.max(Math.abs(idy),.001));
+  ray(BX-idx*inLen,cy-idy*inLen,idx,idy,inLen,'#d8dde4',3.5,null,t,1);
+  label('incident',BX-idx*inLen+8,cy-idy*inLen-14,'#d8dde4');
+  // reflected ray (always present, faint)
+  ray(BX,cy,-idx,idy,240,'rgba(216,221,228,0.22)',1.5,[4,6],t,1);
+
+  const axes=[
+    {n:S.nyin, c:'#7fd4ff', name:'yin'},
+    {n:S.nax,  c:'#7dff9a', name:'axial'},
+    {n:S.nyang,c:'#ffb35c', name:'yang'}
+  ];
+  const rot=S.rot*Math.PI/180;
+  let yoff=110;
+  for(const a of axes){
+    const th2=refract(th1,a.n);
+    if(th2===null){
+      label(a.name+' — total internal reflection',BX+40,yoff,a.c);yoff+=36;continue;
+    }
+    // crystal rotation shears each axis's ray by a small axis-dependent tilt
+    const tilt=Math.sin(rot)*(a.n-1)*0.22;
+    const dx=Math.cos(th2+tilt),dy=Math.sin(th2+tilt);
+    const L=(W-BX-60)/Math.max(dx,.25);
+    ray(BX,cy,dx,dy,Math.min(L,900),a.c,3,null,t/a.n,a.n);
+    label(a.name+'  n='+a.n.toFixed(2)+'  θ='+(th2*180/Math.PI).toFixed(1)+'°',
+      BX+Math.min(L,900)*dx-230,cy+Math.min(L,900)*dy-12,a.c);
+  }
+}
+
+function loop(){
+  if(!S.anim)return;
+  t+=0.02;draw();requestAnimationFrame(loop);
+}
+syncLock();draw();loop();
+</script>
+</body>
+</html>

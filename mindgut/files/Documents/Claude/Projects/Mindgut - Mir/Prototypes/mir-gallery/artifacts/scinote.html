@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synthentific Sampler</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lekton:wght@400;700&family=Inter:wght@300&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0A0A0A;
+    overflow: hidden;
+    font-family: 'Lekton', monospace;
+    cursor: crosshair;
+  }
+  canvas { display: block; position: fixed; top: 0; left: 0; }
+  #hud {
+    position: fixed; top: 24px; left: 32px; z-index: 10;
+    pointer-events: none;
+  }
+  #hud h1 {
+    font-family: 'Lekton', monospace;
+    font-size: 11px; font-weight: 700;
+    color: #3D6DF4; letter-spacing: 0.14em;
+    text-transform: uppercase; margin-bottom: 4px;
+  }
+  #hud p {
+    font-size: 10px; color: #ffffff15;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  #cell-id {
+    position: fixed; bottom: 24px; right: 32px; z-index: 10;
+    pointer-events: none; text-align: right;
+  }
+  #cell-id p {
+    font-family: 'Lekton', monospace;
+    font-size: 10px; color: #3D6DF430;
+    letter-spacing: 0.06em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- Sampler UI --- */
+  #cellMenu {
+    display: none; position: fixed; z-index: 50;
+    background: #121218; border: 1px solid #3D6DF430;
+    border-radius: 4px; overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  }
+  #cellMenu button {
+    display: block; width: 100%; padding: 8px 16px;
+    background: none; border: none; border-bottom: 1px solid #ffffff08;
+    color: #ffffffaa; font-family: 'Lekton', monospace; font-size: 11px;
+    letter-spacing: 0.06em; text-transform: uppercase; text-align: left;
+    cursor: pointer;
+  }
+  #cellMenu button:last-child { border-bottom: none; }
+  #cellMenu button:hover { background: #3D6DF418; color: #fff; }
+
+  #inspector {
+    display: none; position: fixed; top: 0; right: 0; bottom: 0;
+    width: 380px; background: #0e0e16; z-index: 60;
+    border-left: 1px solid #3D6DF420;
+    overflow-y: auto; padding: 24px;
+    box-shadow: -8px 0 40px rgba(0,0,0,0.5);
+  }
+  #inspector h2 {
+    font-family: 'Lekton', monospace; font-size: 12px; font-weight: 700;
+    color: #3D6DF4; letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  #inspector .close-btn {
+    position: absolute; top: 16px; right: 16px;
+    background: none; border: none; color: #ffffff40;
+    font-size: 18px; cursor: pointer; font-family: 'Lekton', monospace;
+  }
+  #inspector .close-btn:hover { color: #fff; }
+  #inspWaveCanvas {
+    width: 100%; height: 80px; background: #0c0c14;
+    border: 1px solid #ffffff0a; border-radius: 2px;
+    margin-bottom: 16px; cursor: crosshair;
+  }
+  .insp-row {
+    display: flex; gap: 12px; margin-bottom: 12px; align-items: center;
+  }
+  .insp-row label {
+    font-size: 10px; color: #ffffff50; letter-spacing: 0.06em;
+    text-transform: uppercase; min-width: 70px;
+  }
+  .insp-row input[type="number"] {
+    background: #16161e; border: 1px solid #ffffff10; color: #ffffffcc;
+    font-family: 'Lekton', monospace; font-size: 11px;
+    padding: 4px 8px; width: 80px; border-radius: 2px;
+  }
+  .insp-btn {
+    padding: 6px 14px; background: #3D6DF418; border: 1px solid #3D6DF430;
+    color: #ffffffaa; font-family: 'Lekton', monospace; font-size: 10px;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    cursor: pointer; border-radius: 2px; margin-right: 8px;
+  }
+  .insp-btn:hover { background: #3D6DF430; color: #fff; }
+  .insp-btn.danger { border-color: #CE286740; background: #CE286710; }
+  .insp-btn.danger:hover { background: #CE286730; }
+
+  #library {
+    display: none; position: fixed; left: 0; right: 0; bottom: 0;
+    height: 200px; background: #0e0e16; z-index: 40;
+    border-top: 1px solid #3D6DF420;
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
+  }
+  #libHeader {
+    padding: 12px 24px; border-bottom: 1px solid #ffffff08;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  #libHeader span {
+    font-size: 10px; color: #ffffff30; letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  #libHeader button {
+    background: none; border: none; color: #ffffff30; cursor: pointer;
+    font-family: 'Lekton', monospace; font-size: 14px;
+  }
+  #libHeader button:hover { color: #fff; }
+  #libItems {
+    display: flex; gap: 12px; padding: 12px 24px;
+    overflow-x: auto; height: calc(100% - 44px);
+    align-items: flex-start;
+  }
+  .lib-item {
+    flex: 0 0 auto; width: 140px; background: #16161e;
+    border: 1px solid #ffffff0a; border-radius: 4px;
+    padding: 10px; cursor: grab;
+  }
+  .lib-item canvas { width: 100%; height: 40px; margin-bottom: 6px; }
+  .lib-item .lib-name {
+    font-size: 9px; color: #ffffff60; letter-spacing: 0.04em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .lib-item .lib-dur {
+    font-size: 9px; color: #ffffff30; margin-top: 2px;
+  }
+  .lib-item .lib-actions { display: flex; gap: 6px; margin-top: 6px; }
+  .lib-item .lib-actions button {
+    background: none; border: 1px solid #ffffff10; color: #ffffff40;
+    font-family: 'Lekton', monospace; font-size: 9px; padding: 2px 6px;
+    cursor: pointer; border-radius: 2px;
+  }
+  .lib-item .lib-actions button:hover { color: #fff; border-color: #ffffff30; }
+  #libDrop {
+    flex: 0 0 auto; width: 140px; height: 100%;
+    border: 1px dashed #ffffff15; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  #libDrop span {
+    font-size: 9px; color: #ffffff20; text-align: center;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+
+  #toolbar {
+    position: fixed; bottom: 24px; left: 32px; z-index: 30;
+    display: flex; gap: 8px;
+  }
+  .tool-btn {
+    padding: 6px 12px; background: #12121890;
+    border: 1px solid #3D6DF420; border-radius: 3px;
+    color: #ffffff50; font-family: 'Lekton', monospace;
+    font-size: 10px; letter-spacing: 0.06em;
+    text-transform: uppercase; cursor: pointer;
+    backdrop-filter: blur(4px);
+  }
+  .tool-btn:hover { color: #fff; border-color: #3D6DF460; }
+  .tool-btn.active { color: #3D6DF4; border-color: #3D6DF4; }
+
+  .rec-dot {
+    display: inline-block; width: 6px; height: 6px;
+    background: #CE2867; border-radius: 50%;
+    animation: recPulse 0.6s ease-in-out infinite alternate;
+    margin-right: 4px; vertical-align: middle;
+  }
+  @keyframes recPulse { from { opacity: 0.4; } to { opacity: 1; } }
+
+  #fileInput { display: none; }
+  #libFileInput { display: none; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <h1>ø co. / synthentific sampler</h1>
+  <p>48-pad sampling machine · click · play · layer</p>
+</div>
+<div id="cell-id">
+  <p id="cellText">cell: --</p>
+</div>
+
+<!-- Sampler UI elements -->
+<div id="cellMenu">
+  <button id="menuUpload">upload audio</button>
+  <button id="menuRecord">record mic</button>
+  <button id="menuLibrary">from library</button>
+</div>
+
+<div id="inspector">
+  <button class="close-btn" id="inspClose">&times;</button>
+  <h2 id="inspTitle">cell 00</h2>
+  <canvas id="inspWaveCanvas" width="332" height="80"></canvas>
+  <div class="insp-row">
+    <label>trim start</label>
+    <input type="number" id="inspTrimStart" min="0" step="10" value="0"> <span style="font-size:10px;color:#ffffff30">ms</span>
+  </div>
+  <div class="insp-row">
+    <label>trim end</label>
+    <input type="number" id="inspTrimEnd" min="0" step="10" value="0"> <span style="font-size:10px;color:#ffffff30">ms</span>
+  </div>
+  <div style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px;">
+    <button class="insp-btn" id="inspPreview">preview</button>
+    <button class="insp-btn" id="inspReplace">replace</button>
+    <button class="insp-btn danger" id="inspRemove">remove</button>
+    <button class="insp-btn" id="inspApply" style="margin-left:auto">apply</button>
+  </div>
+</div>
+
+<div id="library">
+  <div id="libHeader">
+    <span>sample library &mdash; drag to cell or click to assign</span>
+    <button id="libClose">&times;</button>
+  </div>
+  <div id="libItems">
+    <div id="libDrop"><span>drop files<br>or click<br>to import</span></div>
+  </div>
+</div>
+
+<div id="toolbar">
+  <button class="tool-btn" id="btnLibrary">library</button>
+  <button class="tool-btn" id="btnStopAll">stop all</button>
+</div>
+
+<input type="file" id="fileInput" accept="audio/*">
+<input type="file" id="libFileInput" accept="audio/*" multiple>
+
+<script>
+// ============================================================
+// ORIGINAL GENERATIVE GRID CODE
+// ============================================================
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const cellText = document.getElementById('cellText');
+let W, H;
+let mx = 0, my = 0, smx = 0, smy = 0;
+let t = 0;
+
+const EH = '#3D6DF4';
+const SE = '#F46138';
+const PW = '#CE2867';
+const SP = '#2C9FF4';
+const DIM = 0.35;
+const GLOW = 0.12;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+window.addEventListener('touchmove', e => {
+  mx = e.touches[0].clientX; my = e.touches[0].clientY;
+  e.preventDefault();
+}, { passive: false });
+
+const COLS = 8;
+const ROWS = 6;
+const PAD = 2;
+
+function seededRandom(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+function line(x1, y1, x2, y2, color, lw) {
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+  ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.stroke();
+}
+function circle(x, y, r, color, lw) {
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.stroke();
+}
+function dot(x, y, r, color) {
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = color; ctx.fill();
+}
+function rect(x, y, w, h, color, lw) {
+  ctx.strokeStyle = color; ctx.lineWidth = lw;
+  ctx.strokeRect(x, y, w, h);
+}
+
+// 48 generative cell drawing functions
+const cellDrawers = [
+  // 0: Radial burst
+  (cx, cy, s, inf, rng) => {
+    const n = 24;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + t * 0.1 * inf;
+      const r = s * 0.42;
+      const c = i % 3 === 0 ? EH : `rgba(255,255,255,${0.08 + inf * 0.12})`;
+      line(cx, cy, cx + Math.cos(a) * r, cy + Math.sin(a) * r, c, 0.6 + inf * 0.4);
+    }
+    dot(cx, cy, 2 + inf * 2, EH);
+  },
+  // 1: Concentric circles
+  (cx, cy, s, inf, rng) => {
+    const n = 7;
+    for (let i = 1; i <= n; i++) {
+      const r = (i / n) * s * 0.42 + Math.sin(t * 0.5 + i) * inf * 4;
+      circle(cx, cy, r, i === n ? EH : `rgba(255,255,255,${0.06 + inf * 0.08})`, 0.6);
+    }
+  },
+  // 2: Horizontal hatching
+  (cx, cy, s, inf, rng) => {
+    const n = 14; const half = s * 0.4;
+    for (let i = 0; i < n; i++) {
+      const y = cy - half + (i / (n - 1)) * half * 2;
+      const wobble = Math.sin(t * 0.8 + i * 0.5) * inf * 8;
+      line(cx - half, y + wobble, cx + half, y - wobble, `rgba(255,255,255,${0.06 + inf * 0.1})`, 0.6);
+    }
+  },
+  // 3: Venn diagram
+  (cx, cy, s, inf, rng) => {
+    const r = s * 0.25;
+    const offset = s * 0.15 + Math.sin(t * 0.3) * inf * 10;
+    circle(cx - offset, cy, r, EH, 0.8);
+    circle(cx + offset, cy, r, SE, 0.8);
+    dot(cx, cy, 2, '#fff');
+  },
+  // 4: Dot grid
+  (cx, cy, s, inf, rng) => {
+    const n = 6; const half = s * 0.35;
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+      const x = cx - half + (i / (n - 1)) * half * 2;
+      const y = cy - half + (j / (n - 1)) * half * 2;
+      const dx = x - smx, dy = y - smy;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      const pull = Math.max(0, 1 - d / (s * 1.5)) * inf * 6;
+      dot(x + (dx / (d || 1)) * pull, y + (dy / (d || 1)) * pull, 1.5 + inf * 1, `rgba(61,109,244,${0.2 + inf * 0.5})`);
+    }
+  },
+  // 5: Sine wave
+  (cx, cy, s, inf, rng) => {
+    const half = s * 0.4;
+    ctx.beginPath();
+    for (let i = 0; i <= 60; i++) {
+      const x = cx - half + (i / 60) * half * 2;
+      const y = cy + Math.sin(i * 0.2 + t * 1.5) * s * 0.15 * (0.5 + inf * 0.8);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = EH; ctx.lineWidth = 0.8 + inf * 0.6; ctx.stroke();
+    ctx.beginPath();
+    for (let i = 0; i <= 60; i++) {
+      const x = cx - half + (i / 60) * half * 2;
+      const y = cy + Math.sin(i * 0.4 + t * 1.2 + 1) * s * 0.1 * (0.5 + inf);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = `rgba(244,97,56,${0.3 + inf * 0.4})`; ctx.lineWidth = 0.6; ctx.stroke();
+  },
+  // 6: Bar chart
+  (cx, cy, s, inf, rng) => {
+    const n = 8; const half = s * 0.35; const barW = (half * 2) / n * 0.7;
+    for (let i = 0; i < n; i++) {
+      const x = cx - half + (i / n) * half * 2 + barW * 0.3;
+      const h = (rng() * 0.5 + 0.2 + Math.sin(t * 0.5 + i) * inf * 0.15) * half * 1.5;
+      const c = i % 3 === 0 ? EH : i % 3 === 1 ? `rgba(255,255,255,${0.1 + inf * 0.15})` : SE;
+      ctx.fillStyle = c; ctx.globalAlpha = 0.3 + inf * 0.5;
+      ctx.fillRect(x, cy + half * 0.5 - h, barW, h); ctx.globalAlpha = 1;
+    }
+    line(cx - half, cy + half * 0.5, cx + half, cy + half * 0.5, `rgba(255,255,255,0.08)`, 0.5);
+  },
+  // 7: Crosshatch
+  (cx, cy, s, inf, rng) => {
+    const half = s * 0.38; const n = 10;
+    for (let i = 0; i < n; i++) {
+      const offset = (i / n) * half * 2 - half; const ang = 0.3 + inf * 0.2;
+      line(cx + offset, cy - half, cx + offset + Math.tan(ang) * half * 2, cy + half, `rgba(255,255,255,${0.04 + inf * 0.06})`, 0.5);
+      line(cx - half, cy + offset, cx + half, cy + offset - Math.tan(ang) * half, `rgba(61,109,244,${0.04 + inf * 0.06})`, 0.5);
+    }
+  },
+  // 8: Starburst dots
+  (cx, cy, s, inf, rng) => {
+    const n = 36;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      const r = s * (0.1 + rng() * 0.3) + Math.sin(t + i * 0.3) * inf * 5;
+      dot(cx + Math.cos(a) * r, cy + Math.sin(a) * r, 1 + inf * 1.5, i % 4 === 0 ? EH : `rgba(255,255,255,${0.1 + inf * 0.2})`);
+    }
+  },
+  // 9: Nested squares
+  (cx, cy, s, inf, rng) => {
+    const n = 6;
+    for (let i = 0; i < n; i++) {
+      const sz = s * 0.1 + (i / n) * s * 0.35;
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(i * 0.05 + t * 0.05 * inf);
+      rect(-sz, -sz, sz * 2, sz * 2, i % 2 === 0 ? `rgba(61,109,244,${0.1 + inf * 0.2})` : `rgba(255,255,255,${0.04 + inf * 0.08})`, 0.6);
+      ctx.restore();
+    }
+  },
+  // 10: Scatter plot
+  (cx, cy, s, inf, rng) => {
+    const half = s * 0.38;
+    line(cx - half, cy + half, cx + half, cy + half, `rgba(255,255,255,0.06)`, 0.5);
+    line(cx - half, cy - half, cx - half, cy + half, `rgba(255,255,255,0.06)`, 0.5);
+    for (let i = 0; i < 20; i++) {
+      const x = cx - half + rng() * half * 2; const y = cy + half - (rng() * 0.8 + 0.1) * half * 2;
+      const jitter = Math.sin(t + i) * inf * 3;
+      dot(x + jitter, y + jitter * 0.5, 1.5, i % 5 === 0 ? SE : `rgba(61,109,244,${0.3 + inf * 0.4})`);
+    }
+  },
+  // 11: Rose curve
+  (cx, cy, s, inf, rng) => {
+    const k = 3 + Math.floor(inf * 2); const r = s * 0.38;
+    ctx.beginPath();
+    for (let i = 0; i <= 360; i++) {
+      const a = (i / 360) * Math.PI * 2; const rr = r * Math.cos(k * a + t * 0.2);
+      const x = cx + rr * Math.cos(a); const y = cy + rr * Math.sin(a);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = PW; ctx.lineWidth = 0.7 + inf * 0.4; ctx.stroke();
+  },
+  // 12: Spiral
+  (cx, cy, s, inf, rng) => {
+    ctx.beginPath();
+    for (let i = 0; i <= 200; i++) {
+      const a = (i / 200) * Math.PI * 6 + t * 0.2; const r = (i / 200) * s * 0.4;
+      if (i === 0) ctx.moveTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+      else ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+    }
+    ctx.strokeStyle = `rgba(61,109,244,${0.2 + inf * 0.5})`; ctx.lineWidth = 0.7; ctx.stroke();
+  },
+  // 13: Target
+  (cx, cy, s, inf, rng) => {
+    for (let i = 5; i >= 0; i--) {
+      const r = (i + 1) / 6 * s * 0.4 + Math.sin(t * 0.3 + i) * inf * 3;
+      if (i % 2 === 0) { ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = `rgba(244,97,56,${0.05 + inf * 0.08})`; ctx.fill(); }
+      circle(cx, cy, r, `rgba(255,255,255,${0.06 + inf * 0.08})`, 0.5);
+    }
+    line(cx - s * 0.42, cy, cx + s * 0.42, cy, `rgba(255,255,255,0.04)`, 0.5);
+    line(cx, cy - s * 0.42, cx, cy + s * 0.42, `rgba(255,255,255,0.04)`, 0.5);
+  },
+  // 14: Lissajous
+  (cx, cy, s, inf, rng) => {
+    ctx.beginPath();
+    for (let i = 0; i <= 300; i++) {
+      const angle = (i / 300) * Math.PI * 2;
+      const x = cx + s * 0.35 * Math.sin(3 * angle + t * 0.4);
+      const y = cy + s * 0.25 * Math.sin(2 * angle);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = SP; ctx.lineWidth = 0.6 + inf * 0.5; ctx.stroke();
+  },
+  // 15: Topographic curves
+  (cx, cy, s, inf, rng) => {
+    for (let i = 0; i < 8; i++) {
+      ctx.beginPath(); const offset = (i - 4) * s * 0.08;
+      for (let j = 0; j <= 40; j++) {
+        const x = cx - s * 0.38 + (j / 40) * s * 0.76;
+        const y = cy + offset + Math.sin(j * 0.3 + i * 0.5 + t * 0.4) * s * 0.06 * (1 + inf);
+        if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = `rgba(61,109,244,${0.06 + inf * 0.12 + (i === 4 ? 0.15 : 0)})`;
+      ctx.lineWidth = i === 4 ? 1 : 0.5; ctx.stroke();
+    }
+  },
+  // 16: Fan lines
+  (cx, cy, s, inf, rng) => {
+    const n = 16; const r = s * 0.42;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI - Math.PI / 2;
+      const len = r * (0.5 + rng() * 0.5 + inf * 0.2);
+      line(cx, cy + s * 0.3, cx + Math.cos(a) * len, cy + s * 0.3 + Math.sin(a) * len,
+        `rgba(255,255,255,${0.04 + inf * 0.08 + (i % 4 === 0 ? 0.06 : 0)})`, 0.6);
+    }
+  },
+  // 17: Trefoil
+  (cx, cy, s, inf, rng) => {
+    for (let p = 0; p < 3; p++) {
+      const angle = (p / 3) * Math.PI * 2 + t * 0.1;
+      circle(cx + Math.cos(angle) * s * 0.15, cy + Math.sin(angle) * s * 0.15, s * 0.18 + inf * 4, p === 0 ? EH : p === 1 ? SE : PW, 0.7);
+    }
+  },
+  // 18: Arrow field
+  (cx, cy, s, inf, rng) => {
+    const n = 4; const half = s * 0.32;
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+      const x = cx - half + (i / (n - 1)) * half * 2; const y = cy - half + (j / (n - 1)) * half * 2;
+      const a = Math.atan2(smy - y, smx - x); const len = 6 + inf * 8;
+      line(x, y, x + Math.cos(a) * len, y + Math.sin(a) * len, `rgba(61,109,244,${0.15 + inf * 0.3})`, 0.6);
+      dot(x + Math.cos(a) * len, y + Math.sin(a) * len, 1, EH);
+    }
+  },
+  // 19: Ellipse cluster
+  (cx, cy, s, inf, rng) => {
+    for (let i = 0; i < 5; i++) {
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(i * Math.PI / 5 + t * 0.05); ctx.scale(1, 0.4 + i * 0.1);
+      circle(0, 0, s * 0.3 + inf * 5, `rgba(61,109,244,${0.08 + inf * 0.1})`, 0.5);
+      ctx.restore();
+    }
+  },
+  // 20: Vertical spectrum
+  (cx, cy, s, inf, rng) => {
+    const n = 16; const half = s * 0.38;
+    for (let i = 0; i < n; i++) {
+      const x = cx - half + (i / n) * half * 2;
+      const h = (Math.sin(i * 0.6 + t * 0.8) * 0.3 + 0.5 + inf * 0.2) * half;
+      const hue = i / n; const c = hue < 0.33 ? EH : hue < 0.66 ? SP : SE;
+      ctx.globalAlpha = 0.15 + inf * 0.3; ctx.fillStyle = c;
+      ctx.fillRect(x, cy - h / 2, half * 2 / n * 0.6, h); ctx.globalAlpha = 1;
+    }
+  },
+  // 21: Hexagon
+  (cx, cy, s, inf, rng) => {
+    for (let h = 0; h < 3; h++) {
+      const r = s * (0.15 + h * 0.1) + Math.sin(t * 0.3 + h) * inf * 4;
+      ctx.beginPath();
+      for (let i = 0; i <= 6; i++) {
+        const a = (i / 6) * Math.PI * 2 - Math.PI / 6 + t * 0.02 * h;
+        const x = cx + r * Math.cos(a); const y = cy + r * Math.sin(a);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = h === 0 ? EH : `rgba(255,255,255,${0.06 + inf * 0.1})`; ctx.lineWidth = 0.6; ctx.stroke();
+    }
+  },
+  // 22: Dashed circle
+  (cx, cy, s, inf, rng) => {
+    const r = s * 0.35; const n = 24;
+    for (let i = 0; i < n; i++) {
+      const a1 = (i / n) * Math.PI * 2 + t * 0.1; const a2 = a1 + (0.7 / n) * Math.PI * 2;
+      ctx.beginPath(); ctx.arc(cx, cy, r, a1, a2);
+      ctx.strokeStyle = i % 6 === 0 ? SE : `rgba(255,255,255,${0.08 + inf * 0.12})`;
+      ctx.lineWidth = 1 + inf * 0.5; ctx.stroke();
+    }
+    dot(cx, cy, 1.5, EH);
+  },
+  // 23: Perspective grid
+  (cx, cy, s, inf, rng) => {
+    const half = s * 0.4; const vanish = cy - half * 0.8;
+    for (let i = 0; i <= 8; i++) {
+      const x = cx - half + (i / 8) * half * 2;
+      line(x, cy + half * 0.6, cx + (x - cx) * 0.3, vanish, `rgba(255,255,255,${0.04 + inf * 0.06})`, 0.5);
+    }
+    for (let i = 0; i < 5; i++) {
+      const y = cy + half * 0.6 - (i / 5) * half * 1.2; const spread = 1 - (i / 5) * 0.7;
+      line(cx - half * spread, y, cx + half * spread, y, `rgba(61,109,244,${0.04 + inf * 0.08})`, 0.5);
+    }
+  },
+  // 24: Noise dots
+  (cx, cy, s, inf, rng) => {
+    for (let i = 0; i < 40; i++) {
+      const x = cx + (rng() - 0.5) * s * 0.8; const y = cy + (rng() - 0.5) * s * 0.8;
+      const phase = Math.sin(t * 0.5 + rng() * 10) * inf * 4;
+      dot(x + phase, y + phase * 0.7, 0.8 + rng() * 1.5, `rgba(61,109,244,${0.1 + inf * 0.3})`);
+    }
+  },
+  // 25: Parabola
+  (cx, cy, s, inf, rng) => {
+    const half = s * 0.38;
+    ctx.beginPath();
+    for (let i = 0; i <= 50; i++) {
+      const xt = (i / 50) * 2 - 1; const x = cx + xt * half;
+      const y = cy + half * 0.3 - xt * xt * half * 0.8 * (1 + inf * 0.3);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = SE; ctx.lineWidth = 0.7 + inf * 0.4; ctx.stroke();
+    line(cx - half, cy + half * 0.3, cx + half, cy + half * 0.3, `rgba(255,255,255,0.04)`, 0.5);
+    line(cx, cy - half, cx, cy + half, `rgba(255,255,255,0.04)`, 0.5);
+  },
+  // 26: Moire circles
+  (cx, cy, s, inf, rng) => {
+    const ox = Math.sin(t * 0.2) * inf * 8;
+    for (let i = 1; i <= 8; i++) {
+      circle(cx, cy, i * s * 0.05, `rgba(255,255,255,0.05)`, 0.4);
+      circle(cx + ox, cy + ox * 0.5, i * s * 0.05, `rgba(61,109,244,${0.04 + inf * 0.05})`, 0.4);
+    }
+  },
+  // 27: Cross
+  (cx, cy, s, inf, rng) => {
+    const r = s * 0.38; const w = s * 0.08 + inf * 4;
+    ctx.fillStyle = `rgba(61,109,244,${0.1 + inf * 0.2})`;
+    ctx.fillRect(cx - w / 2, cy - r, w, r * 2); ctx.fillRect(cx - r, cy - w / 2, r * 2, w);
+    circle(cx, cy, s * 0.12, `rgba(244,97,56,${0.2 + inf * 0.3})`, 0.6);
+  },
+  // 28: Diamond lattice
+  (cx, cy, s, inf, rng) => {
+    const n = 4; const sp = s * 0.2;
+    for (let i = -n; i <= n; i++) for (let j = -n; j <= n; j++) {
+      if (Math.abs(i) + Math.abs(j) > n) continue;
+      const x = cx + i * sp * 0.7 + j * sp * 0.7; const y = cy + i * sp * 0.4 - j * sp * 0.4;
+      dot(x, y, 1 + inf * 1.2, (i + j) % 2 === 0 ? `rgba(61,109,244,${0.2 + inf * 0.4})` : `rgba(255,255,255,${0.06 + inf * 0.1})`);
+    }
+  },
+  // 29: Oscillating rectangles
+  (cx, cy, s, inf, rng) => {
+    for (let i = 0; i < 5; i++) {
+      const w = s * 0.6 * (1 - i * 0.15); const h = s * 0.05 + Math.sin(t * 0.6 + i * 0.8) * inf * s * 0.05;
+      const y = cy - s * 0.3 + i * s * 0.13;
+      ctx.strokeStyle = `rgba(61,109,244,${0.08 + inf * 0.12})`; ctx.lineWidth = 0.5;
+      ctx.strokeRect(cx - w / 2, y, w, h + s * 0.04);
+    }
+  },
+  // 30: Tangent lines
+  (cx, cy, s, inf, rng) => {
+    const r = s * 0.25; circle(cx, cy, r, `rgba(255,255,255,${0.08 + inf * 0.12})`, 0.6);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + t * 0.15;
+      const px = cx + r * Math.cos(a); const py = cy + r * Math.sin(a);
+      const ta = a + Math.PI / 2; const len = s * 0.25;
+      line(px - Math.cos(ta) * len, py - Math.sin(ta) * len, px + Math.cos(ta) * len, py + Math.sin(ta) * len,
+        `rgba(61,109,244,${0.06 + inf * 0.1})`, 0.5);
+    }
+  },
+  // 31: Half-tone gradient
+  (cx, cy, s, inf, rng) => {
+    const half = s * 0.38;
+    for (let i = 0; i < 10; i++) for (let j = 0; j < 10; j++) {
+      const x = cx - half + (i / 9) * half * 2; const y = cy - half + (j / 9) * half * 2;
+      dot(x, y, (i / 10) * 2.5 + 0.5 + Math.sin(t + i + j) * inf * 0.5, `rgba(61,109,244,${0.1 + inf * 0.2})`);
+    }
+  },
+  // 32: Sawtooth
+  (cx, cy, s, inf, rng) => {
+    const half = s * 0.38; ctx.beginPath();
+    for (let i = 0; i <= 16; i++) {
+      const x = cx - half + (i / 16) * half * 2;
+      const y = (i % 2 === 0) ? cy - s * 0.15 * (1 + inf * 0.5) : cy + s * 0.15 * (1 + inf * 0.5);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = SE; ctx.lineWidth = 0.7; ctx.stroke();
+  },
+  // 33: Atom orbits
+  (cx, cy, s, inf, rng) => {
+    for (let i = 0; i < 3; i++) {
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(i * Math.PI / 3 + t * 0.08); ctx.scale(1, 0.35);
+      circle(0, 0, s * 0.35, `rgba(61,109,244,${0.1 + inf * 0.15})`, 0.6);
+      const a = t * (0.5 + i * 0.2);
+      dot(s * 0.35 * Math.cos(a), s * 0.35 * Math.sin(a), 2, EH);
+      ctx.restore();
+    }
+    dot(cx, cy, 3 + inf * 2, SE);
+  },
+  // 34: Triangle
+  (cx, cy, s, inf, rng) => {
+    const r = s * 0.35;
+    for (let h = 0; h < 3; h++) {
+      ctx.beginPath(); const rr = r * (0.5 + h * 0.25) + Math.sin(t * 0.3) * inf * 3;
+      for (let i = 0; i <= 3; i++) {
+        const a = (i / 3) * Math.PI * 2 - Math.PI / 2 + h * 0.05;
+        const x = cx + rr * Math.cos(a); const y = cy + rr * Math.sin(a) + s * 0.05;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = h === 0 ? EH : `rgba(255,255,255,${0.05 + inf * 0.08})`; ctx.lineWidth = 0.6; ctx.stroke();
+    }
+  },
+  // 35: Dumbbell
+  (cx, cy, s, inf, rng) => {
+    const spread = s * 0.28 + Math.sin(t * 0.4) * inf * 8;
+    dot(cx - spread, cy, 8 + inf * 4, `rgba(61,109,244,${0.15 + inf * 0.25})`);
+    dot(cx + spread, cy, 8 + inf * 4, `rgba(244,97,56,${0.15 + inf * 0.25})`);
+    line(cx - spread, cy, cx + spread, cy, `rgba(255,255,255,${0.06 + inf * 0.1})`, 0.8);
+    dot(cx, cy, 2, '#fff');
+  },
+  // 36: Step function
+  (cx, cy, s, inf, rng) => {
+    const half = s * 0.38; ctx.beginPath(); const steps = 6;
+    for (let i = 0; i <= steps; i++) {
+      const x1 = cx - half + (i / steps) * half * 2; const x2 = cx - half + ((i + 1) / steps) * half * 2;
+      const y = cy + (rng() - 0.5) * half * 0.8 + Math.sin(t * 0.3 + i) * inf * 6;
+      if (i === 0) ctx.moveTo(x1, y); else ctx.lineTo(x1, y);
+      if (i < steps) ctx.lineTo(x2, y);
+    }
+    ctx.strokeStyle = EH; ctx.lineWidth = 0.8; ctx.stroke();
+  },
+  // 37: Sunburst sectors
+  (cx, cy, s, inf, rng) => {
+    const n = 12; const r = s * 0.4;
+    for (let i = 0; i < n; i++) {
+      if (i % 2 === 0) continue;
+      const a1 = (i / n) * Math.PI * 2 + t * 0.05; const a2 = ((i + 1) / n) * Math.PI * 2 + t * 0.05;
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, a1, a2); ctx.closePath();
+      ctx.fillStyle = `rgba(61,109,244,${0.04 + inf * 0.08})`; ctx.fill();
+    }
+    circle(cx, cy, r * 0.3, `rgba(255,255,255,${0.06 + inf * 0.1})`, 0.5);
+  },
+  // 38: Network graph
+  (cx, cy, s, inf, rng) => {
+    const nodes = [];
+    for (let i = 0; i < 7; i++) nodes.push({ x: cx + (rng() - 0.5) * s * 0.7, y: cy + (rng() - 0.5) * s * 0.7 });
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        if (rng() > 0.5) continue;
+        line(nodes[i].x, nodes[i].y, nodes[j].x, nodes[j].y, `rgba(61,109,244,${0.06 + inf * 0.1})`, 0.4);
+      }
+      dot(nodes[i].x, nodes[i].y, 2 + inf * 1.5, i === 0 ? SE : EH);
+    }
+  },
+  // 39: Frequency comb
+  (cx, cy, s, inf, rng) => {
+    const n = 20; const half = s * 0.38;
+    for (let i = 0; i < n; i++) {
+      const x = cx - half + (i / n) * half * 2;
+      const h = (Math.sin(i * 0.8 + t * 0.6) * 0.5 + 0.5) * half * 0.8 * (0.5 + inf * 0.8);
+      line(x, cy, x, cy - h, `rgba(61,109,244,${0.1 + inf * 0.2})`, 0.8); dot(x, cy - h, 1, EH);
+    }
+    line(cx - half, cy, cx + half, cy, `rgba(255,255,255,0.04)`, 0.5);
+  },
+  // 40: Cardioid
+  (cx, cy, s, inf, rng) => {
+    const a = s * 0.15; ctx.beginPath();
+    for (let i = 0; i <= 200; i++) {
+      const angle = (i / 200) * Math.PI * 2; const r = a * (1 + Math.cos(angle)) * (1 + inf * 0.3);
+      const x = cx + r * Math.cos(angle + t * 0.1); const y = cy + r * Math.sin(angle + t * 0.1);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = PW; ctx.lineWidth = 0.7; ctx.stroke();
+  },
+  // 41: Checkerboard
+  (cx, cy, s, inf, rng) => {
+    const n = 6; const half = s * 0.36; const cell = (half * 2) / n;
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+      if ((i + j) % 2 === 0) {
+        ctx.fillStyle = `rgba(61,109,244,${0.03 + inf * 0.06})`;
+        ctx.fillRect(cx - half + i * cell, cy - half + j * cell, cell, cell);
+      }
+    }
+    rect(cx - half, cy - half, half * 2, half * 2, `rgba(255,255,255,0.04)`, 0.5);
+  },
+  // 42: Zigzag
+  (cx, cy, s, inf, rng) => {
+    const half = s * 0.38;
+    for (let w = 0; w < 3; w++) {
+      ctx.beginPath(); const yoff = (w - 1) * s * 0.12;
+      for (let i = 0; i <= 12; i++) {
+        const x = cx - half + (i / 12) * half * 2;
+        const y = cy + yoff + (i % 2 === 0 ? -1 : 1) * s * 0.08 * (1 + inf * 0.5);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = w === 1 ? EH : `rgba(255,255,255,${0.05 + inf * 0.08})`; ctx.lineWidth = 0.6; ctx.stroke();
+    }
+  },
+  // 43: Pie chart
+  (cx, cy, s, inf, rng) => {
+    const slices = [0.3, 0.25, 0.2, 0.15, 0.1];
+    const colors = [EH, SE, PW, SP, `rgba(255,255,255,0.15)`];
+    let start = t * 0.1; const r = s * 0.35;
+    for (let i = 0; i < slices.length; i++) {
+      const end = start + slices[i] * Math.PI * 2;
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r + (i === 0 ? inf * 4 : 0), start, end); ctx.closePath();
+      ctx.fillStyle = colors[i]; ctx.globalAlpha = 0.1 + inf * 0.15; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = `rgba(10,10,10,0.5)`; ctx.lineWidth = 1; ctx.stroke();
+      start = end;
+    }
+  },
+  // 44: Fibonacci dots
+  (cx, cy, s, inf, rng) => {
+    const golden = 2.399963;
+    for (let i = 0; i < 60; i++) {
+      const a = i * golden + t * 0.05; const r = Math.sqrt(i) * s * 0.05;
+      dot(cx + r * Math.cos(a), cy + r * Math.sin(a), 1 + inf * 1 + (i % 8 === 0 ? 1 : 0), i % 8 === 0 ? SE : `rgba(61,109,244,${0.15 + inf * 0.25})`);
+    }
+  },
+  // 45: Bracket / brace
+  (cx, cy, s, inf, rng) => {
+    const h = s * 0.35;
+    ctx.beginPath(); ctx.moveTo(cx - s * 0.1, cy - h);
+    ctx.quadraticCurveTo(cx - s * 0.2 - inf * 5, cy, cx - s * 0.1, cy + h);
+    ctx.strokeStyle = EH; ctx.lineWidth = 0.8; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + s * 0.1, cy - h);
+    ctx.quadraticCurveTo(cx + s * 0.2 + inf * 5, cy, cx + s * 0.1, cy + h);
+    ctx.strokeStyle = SE; ctx.lineWidth = 0.8; ctx.stroke();
+    dot(cx, cy, 2, '#fff');
+  },
+  // 46: Gaussian
+  (cx, cy, s, inf, rng) => {
+    const half = s * 0.38; ctx.beginPath();
+    for (let i = 0; i <= 60; i++) {
+      const xt = (i / 60) * 2 - 1; const x = cx + xt * half;
+      const y = cy + half * 0.3 - Math.exp(-xt * xt * (3 + inf * 2)) * half * 0.6;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = SP; ctx.lineWidth = 0.8 + inf * 0.4; ctx.stroke();
+    ctx.globalAlpha = 0.03 + inf * 0.05; ctx.fillStyle = SP;
+    ctx.lineTo(cx + half, cy + half * 0.3); ctx.lineTo(cx - half, cy + half * 0.3); ctx.fill(); ctx.globalAlpha = 1;
+  },
+  // 47: Double helix
+  (cx, cy, s, inf, rng) => {
+    const half = s * 0.38;
+    for (let strand = 0; strand < 2; strand++) {
+      ctx.beginPath();
+      for (let i = 0; i <= 50; i++) {
+        const y = cy - half + (i / 50) * half * 2; const phase = strand * Math.PI + t * 0.5;
+        const x = cx + Math.sin(i * 0.3 + phase) * s * 0.15 * (1 + inf * 0.5);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = strand === 0 ? EH : SE; ctx.lineWidth = 0.7 + inf * 0.3; ctx.stroke();
+    }
+    for (let i = 0; i < 8; i++) {
+      const y = cy - half + (i / 8 + 0.06) * half * 2; const idx = i * 50 / 8;
+      const x1 = cx + Math.sin(idx * 0.3 + t * 0.5) * s * 0.15;
+      const x2 = cx + Math.sin(idx * 0.3 + Math.PI + t * 0.5) * s * 0.15;
+      line(x1, y, x2, y, `rgba(255,255,255,${0.04 + inf * 0.06})`, 0.4);
+    }
+  },
+];
+
+// ============================================================
+// SAMPLER ENGINE
+// ============================================================
+
+// Cell state
+const cells = Array.from({length: 48}, () => ({
+  audioBuffer: null,
+  fileName: '',
+  trimStart: 0,
+  trimEnd: 0,
+  name: '',
+  waveformData: null,
+  color: '',
+  _flash: 0,
+  _playStart: 0,
+  _playDuration: 0,
+}));
+
+// Library with unique IDs
+let libIdCounter = 0;
+const library = new Map();
+
+// Audio engine
+let audioCtx = null;
+let activeSource = null;
+let activeSourceCell = -1;
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  audioCtx.resume();
+  return audioCtx;
+}
+
+// IO brand colors for cells
+const IO_COLORS = [EH, SE, PW, SP];
+function cellColor(idx) { return IO_COLORS[idx % 4]; }
+
+// UI state
+let menuCellIdx = -1;
+let inspCellIdx = -1;
+let libraryOpen = false;
+let pickingFromLibrary = false;
+let pickingForCell = -1;
+let activeRecorder = null;
+let recordingCellIdx = -1;
+let draggingLibId = null;
+
+// DOM refs
+const cellMenu = document.getElementById('cellMenu');
+const menuUpload = document.getElementById('menuUpload');
+const menuRecord = document.getElementById('menuRecord');
+const menuLibrary = document.getElementById('menuLibrary');
+const inspector = document.getElementById('inspector');
+const inspTitle = document.getElementById('inspTitle');
+const inspWaveCanvas = document.getElementById('inspWaveCanvas');
+const inspTrimStart = document.getElementById('inspTrimStart');
+const inspTrimEnd = document.getElementById('inspTrimEnd');
+const inspClose = document.getElementById('inspClose');
+const inspPreview = document.getElementById('inspPreview');
+const inspReplace = document.getElementById('inspReplace');
+const inspRemove = document.getElementById('inspRemove');
+const inspApply = document.getElementById('inspApply');
+const libraryPanel = document.getElementById('library');
+const libItems = document.getElementById('libItems');
+const libDrop = document.getElementById('libDrop');
+const libClose = document.getElementById('libClose');
+const btnLibrary = document.getElementById('btnLibrary');
+const btnStopAll = document.getElementById('btnStopAll');
+const fileInput = document.getElementById('fileInput');
+const libFileInput = document.getElementById('libFileInput');
+
+// Waveform utilities
+function downsampleWaveform(audioBuffer, points = 60) {
+  const data = audioBuffer.getChannelData(0);
+  const blockSize = Math.floor(data.length / points);
+  const result = new Float32Array(points);
+  for (let i = 0; i < points; i++) {
+    let sum = 0;
+    for (let j = 0; j < blockSize; j++) sum += Math.abs(data[i * blockSize + j]);
+    result[i] = sum / blockSize;
+  }
+  return result;
+}
+
+function drawWaveform(c, x, y, w, h, data, color, trimStart01, trimEnd01) {
+  c.fillStyle = '#0c0c14';
+  c.fillRect(x, y, w, h);
+  const barW = w / data.length;
+  for (let i = 0; i < data.length; i++) {
+    const t01 = i / data.length;
+    const inTrim = t01 >= trimStart01 && t01 <= trimEnd01;
+    const barH = data[i] * h * 0.8;
+    c.fillStyle = color;
+    c.globalAlpha = inTrim ? 0.6 : 0.15;
+    c.fillRect(x + i * barW, y + (h - barH) / 2, barW - 1, barH);
+  }
+  c.globalAlpha = 1;
+}
+
+// Assign audio to a cell
+function assignToCell(idx, audioBuffer, fileName) {
+  const cell = cells[idx];
+  cell.audioBuffer = audioBuffer;
+  cell.fileName = fileName;
+  cell.name = fileName;
+  cell.trimStart = 0;
+  cell.trimEnd = Math.round(audioBuffer.duration * 1000);
+  cell.waveformData = downsampleWaveform(audioBuffer);
+  cell.color = cellColor(idx);
+}
+
+// Trigger cell playback
+function triggerCell(idx) {
+  const cell = cells[idx];
+  if (!cell.audioBuffer) return;
+  const c = ensureAudio();
+  if (activeSource) { try { activeSource.stop(); } catch(e) {} }
+  const source = c.createBufferSource();
+  source.buffer = cell.audioBuffer;
+  source.connect(c.destination);
+  const startSec = cell.trimStart / 1000;
+  const endSec = cell.trimEnd / 1000;
+  source.loop = true;
+  source.loopStart = startSec;
+  source.loopEnd = endSec;
+  source.start(0, startSec);
+  activeSource = source;
+  activeSourceCell = idx;
+  source.onended = () => { if (activeSource === source) { activeSource = null; activeSourceCell = -1; } };
+  cell._flash = 1;
+  cell._playStart = performance.now();
+  cell._playDuration = (endSec - startSec) * 1000;
+}
+
+function stopAll() {
+  if (activeSource) { try { activeSource.stop(); } catch(e) {} activeSource = null; activeSourceCell = -1; }
+  if (activeRecorder && activeRecorder.state === 'recording') activeRecorder.stop();
+}
+
+// Grid cell geometry helper
+function getCellGeometry() {
+  const cellW = (W - PAD * 2) / COLS;
+  const cellH = (H - PAD * 2) / ROWS;
+  return { cellW, cellH };
+}
+
+function cellAtPoint(px, py) {
+  const { cellW, cellH } = getCellGeometry();
+  const col = Math.floor((px - PAD) / cellW);
+  const row = Math.floor((py - PAD) / cellH);
+  if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return -1;
+  return row * COLS + col;
+}
+
+function cellCenter(idx) {
+  const { cellW, cellH } = getCellGeometry();
+  const col = idx % COLS;
+  const row = Math.floor(idx / COLS);
+  return { x: PAD + (col + 0.5) * cellW, y: PAD + (row + 0.5) * cellH };
+}
+
+// Close all overlays
+function closeMenu() { cellMenu.style.display = 'none'; menuCellIdx = -1; }
+function closeInspector() { inspector.style.display = 'none'; inspCellIdx = -1; }
+function closeLibrary() { libraryPanel.style.display = 'none'; libraryOpen = false; btnLibrary.classList.remove('active'); pickingFromLibrary = false; pickingForCell = -1; }
+
+// File loading
+function loadAudioFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const buf = await ensureAudio().decodeAudioData(reader.result);
+        resolve(buf);
+      } catch(e) { reject(e); }
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// Cell menu actions
+menuUpload.addEventListener('click', () => {
+  const idx = menuCellIdx; closeMenu();
+  fileInput.onchange = async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    const buf = await loadAudioFile(file);
+    assignToCell(idx, buf, file.name);
+    fileInput.value = '';
+  };
+  fileInput.click();
+});
+
+menuRecord.addEventListener('click', async () => {
+  const idx = menuCellIdx; closeMenu();
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const recorder = new MediaRecorder(stream);
+    const chunks = [];
+    recorder.ondataavailable = e => chunks.push(e.data);
+    recorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      activeRecorder = null; recordingCellIdx = -1;
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const arrayBuf = await blob.arrayBuffer();
+      const audioBuf = await ensureAudio().decodeAudioData(arrayBuf);
+      assignToCell(idx, audioBuf, `Rec ${new Date().toLocaleTimeString()}`);
+    };
+    recorder.start();
+    activeRecorder = recorder;
+    recordingCellIdx = idx;
+    setTimeout(() => { if (recorder.state === 'recording') recorder.stop(); }, 10000);
+  } catch(e) { console.warn('Mic access denied', e); }
+});
+
+menuLibrary.addEventListener('click', () => {
+  const idx = menuCellIdx; closeMenu();
+  pickingFromLibrary = true;
+  pickingForCell = idx;
+  if (!libraryOpen) { libraryPanel.style.display = 'block'; libraryOpen = true; btnLibrary.classList.add('active'); }
+});
+
+// Canvas click handling
+canvas.addEventListener('click', (e) => {
+  if (inspector.style.display === 'block' || pickingFromLibrary) return;
+  closeMenu();
+  const idx = cellAtPoint(e.clientX, e.clientY);
+  if (idx < 0 || idx >= 48) return;
+
+  if (cells[idx].audioBuffer) {
+    triggerCell(idx);
+  } else {
+    menuCellIdx = idx;
+    const pos = cellCenter(idx);
+    cellMenu.style.left = pos.x - 60 + 'px';
+    cellMenu.style.top = pos.y - 40 + 'px';
+    cellMenu.style.display = 'block';
+  }
+});
+
+canvas.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  const idx = cellAtPoint(e.clientX, e.clientY);
+  if (idx < 0 || idx >= 48 || !cells[idx].audioBuffer) return;
+  closeMenu();
+  openInspector(idx);
+});
+
+// Inspector
+function openInspector(idx) {
+  inspCellIdx = idx;
+  const cell = cells[idx];
+  inspTitle.textContent = `cell ${String(idx).padStart(2, '0')} — ${cell.fileName}`;
+  inspTrimStart.value = cell.trimStart;
+  inspTrimEnd.value = cell.trimEnd;
+  inspector.style.display = 'block';
+  drawInspectorWaveform();
+}
+
+function drawInspectorWaveform() {
+  if (inspCellIdx < 0) return;
+  const cell = cells[inspCellIdx];
+  if (!cell.audioBuffer || !cell.waveformData) return;
+  const c = inspWaveCanvas.getContext('2d');
+  const w = inspWaveCanvas.width;
+  const h = inspWaveCanvas.height;
+  const dur = cell.audioBuffer.duration * 1000;
+  const ts = cell.trimStart / dur;
+  const te = cell.trimEnd / dur;
+  drawWaveform(c, 0, 0, w, h, cell.waveformData, cell.color, ts, te);
+  // Trim markers
+  c.strokeStyle = '#fff';
+  c.lineWidth = 1;
+  c.setLineDash([3, 3]);
+  const sx = ts * w;
+  const ex = te * w;
+  c.beginPath(); c.moveTo(sx, 0); c.lineTo(sx, h); c.stroke();
+  c.beginPath(); c.moveTo(ex, 0); c.lineTo(ex, h); c.stroke();
+  c.setLineDash([]);
+}
+
+// Inspector waveform click-drag for trim markers
+let inspDragging = null;
+inspWaveCanvas.addEventListener('mousedown', (e) => {
+  if (inspCellIdx < 0) return;
+  const cell = cells[inspCellIdx];
+  const dur = cell.audioBuffer.duration * 1000;
+  const rect = inspWaveCanvas.getBoundingClientRect();
+  const x01 = (e.clientX - rect.left) / rect.width;
+  const xMs = x01 * dur;
+  // Determine which marker is closer
+  if (Math.abs(xMs - cell.trimStart) < Math.abs(xMs - cell.trimEnd)) {
+    inspDragging = 'start';
+  } else {
+    inspDragging = 'end';
+  }
+});
+window.addEventListener('mousemove', (e) => {
+  if (!inspDragging || inspCellIdx < 0) return;
+  const cell = cells[inspCellIdx];
+  const dur = cell.audioBuffer.duration * 1000;
+  const rect = inspWaveCanvas.getBoundingClientRect();
+  const x01 = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  const xMs = Math.round(x01 * dur);
+  if (inspDragging === 'start') {
+    cell.trimStart = Math.min(xMs, cell.trimEnd - 10);
+    inspTrimStart.value = cell.trimStart;
+  } else {
+    cell.trimEnd = Math.max(xMs, cell.trimStart + 10);
+    inspTrimEnd.value = cell.trimEnd;
+  }
+  drawInspectorWaveform();
+});
+window.addEventListener('mouseup', () => { inspDragging = null; });
+
+inspTrimStart.addEventListener('change', () => {
+  if (inspCellIdx < 0) return;
+  cells[inspCellIdx].trimStart = Math.max(0, +inspTrimStart.value);
+  drawInspectorWaveform();
+});
+inspTrimEnd.addEventListener('change', () => {
+  if (inspCellIdx < 0) return;
+  cells[inspCellIdx].trimEnd = Math.max(0, +inspTrimEnd.value);
+  drawInspectorWaveform();
+});
+
+inspPreview.addEventListener('click', () => { if (inspCellIdx >= 0) triggerCell(inspCellIdx); });
+inspClose.addEventListener('click', closeInspector);
+inspApply.addEventListener('click', closeInspector);
+
+inspReplace.addEventListener('click', () => {
+  const idx = inspCellIdx;
+  fileInput.onchange = async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    const buf = await loadAudioFile(file);
+    assignToCell(idx, buf, file.name);
+    fileInput.value = '';
+    if (inspCellIdx === idx) openInspector(idx);
+  };
+  fileInput.click();
+});
+
+inspRemove.addEventListener('click', () => {
+  if (inspCellIdx < 0) return;
+  const cell = cells[inspCellIdx];
+  cell.audioBuffer = null; cell.fileName = ''; cell.name = '';
+  cell.waveformData = null; cell.trimStart = 0; cell.trimEnd = 0;
+  closeInspector();
+});
+
+// Library panel
+btnLibrary.addEventListener('click', () => {
+  if (libraryOpen) closeLibrary();
+  else { libraryPanel.style.display = 'block'; libraryOpen = true; btnLibrary.classList.add('active'); }
+});
+libClose.addEventListener('click', closeLibrary);
+btnStopAll.addEventListener('click', stopAll);
+
+function addToLibrary(audioBuffer, fileName) {
+  const id = ++libIdCounter;
+  const item = { id, fileName, audioBuffer, duration: audioBuffer.duration, waveformData: downsampleWaveform(audioBuffer, 40) };
+  library.set(id, item);
+  renderLibrary();
+  return id;
+}
+
+function renderLibrary() {
+  // Clear items except drop zone
+  while (libItems.children.length > 1) libItems.removeChild(libItems.lastChild);
+  // Re-insert drop zone first, then items after
+  for (const [id, item] of library) {
+    const el = document.createElement('div');
+    el.className = 'lib-item';
+    el.draggable = true;
+    el.dataset.libId = id;
+    const cv = document.createElement('canvas');
+    cv.width = 120; cv.height = 40;
+    const c2 = cv.getContext('2d');
+    drawWaveform(c2, 0, 0, 120, 40, item.waveformData, EH, 0, 1);
+    el.appendChild(cv);
+    const nameEl = document.createElement('div');
+    nameEl.className = 'lib-name'; nameEl.textContent = item.fileName;
+    el.appendChild(nameEl);
+    const durEl = document.createElement('div');
+    durEl.className = 'lib-dur'; durEl.textContent = item.duration.toFixed(2) + 's';
+    el.appendChild(durEl);
+    const acts = document.createElement('div');
+    acts.className = 'lib-actions';
+    const playBtn = document.createElement('button');
+    playBtn.textContent = 'play';
+    playBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const it = library.get(id); if (!it) return;
+      const ctx = ensureAudio();
+      if (activeSource) { try { activeSource.stop(); } catch(e) {} }
+      const src = ctx.createBufferSource(); src.buffer = it.audioBuffer; src.connect(ctx.destination); src.start();
+      activeSource = src; src.onended = () => { if (activeSource === src) activeSource = null; };
+    });
+    acts.appendChild(playBtn);
+    const delBtn = document.createElement('button');
+    delBtn.textContent = 'del';
+    delBtn.addEventListener('click', (e) => { e.stopPropagation(); library.delete(id); renderLibrary(); });
+    acts.appendChild(delBtn);
+    el.appendChild(acts);
+
+    // Click to assign if picking
+    el.addEventListener('click', () => {
+      if (pickingFromLibrary && pickingForCell >= 0) {
+        const it = library.get(id); if (!it) return;
+        assignToCell(pickingForCell, it.audioBuffer, it.fileName);
+        pickingFromLibrary = false; pickingForCell = -1;
+      }
+    });
+
+    // Drag support
+    el.addEventListener('dragstart', (e) => {
+      draggingLibId = id;
+      e.dataTransfer.setData('text/plain', String(id));
+    });
+
+    libItems.appendChild(el);
+  }
+}
+
+// Drop zone and library file import
+libDrop.addEventListener('click', () => libFileInput.click());
+libFileInput.addEventListener('change', async (e) => {
+  for (const file of e.target.files) {
+    const buf = await loadAudioFile(file);
+    addToLibrary(buf, file.name);
+  }
+  libFileInput.value = '';
+});
+
+// Drag-drop from library onto canvas cells
+canvas.addEventListener('dragover', (e) => { e.preventDefault(); });
+canvas.addEventListener('drop', async (e) => {
+  e.preventDefault();
+  const idx = cellAtPoint(e.clientX, e.clientY);
+  if (idx < 0 || idx >= 48) return;
+  if (draggingLibId !== null) {
+    const item = library.get(draggingLibId);
+    if (item) assignToCell(idx, item.audioBuffer, item.fileName);
+    draggingLibId = null;
+  }
+});
+
+// Drop audio files directly onto library panel
+libraryPanel.addEventListener('dragover', (e) => { e.preventDefault(); });
+libraryPanel.addEventListener('drop', async (e) => {
+  e.preventDefault();
+  if (e.dataTransfer.files.length > 0) {
+    for (const file of e.dataTransfer.files) {
+      if (file.type.startsWith('audio/')) {
+        const buf = await loadAudioFile(file);
+        addToLibrary(buf, file.name);
+      }
+    }
+  }
+});
+
+// Keyboard shortcuts
+const KEY_MAP = {
+  '1':0,'2':1,'3':2,'4':3,'5':4,'6':5,'7':6,'8':7,
+  'q':8,'w':9,'e':10,'r':11,'t':12,'y':13,'u':14,'i':15,
+  'a':16,'s':17,'d':18,'f':19,'g':20,'h':21,'j':22,'k':23,
+  'z':24,'x':25,'c':26,'v':27,'b':28,'n':29,'m':30,',':31,
+};
+
+window.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  const key = e.key.toLowerCase();
+  if (key === 'escape') { closeMenu(); closeInspector(); closeLibrary(); return; }
+  if (key === ' ') { e.preventDefault(); stopAll(); return; }
+  if (key in KEY_MAP) {
+    const idx = KEY_MAP[key];
+    if (cells[idx].audioBuffer) triggerCell(idx);
+  }
+});
+
+// Stop recording on second click of recording cell
+canvas.addEventListener('click', (e) => {
+  if (activeRecorder && activeRecorder.state === 'recording') {
+    const idx = cellAtPoint(e.clientX, e.clientY);
+    if (idx === recordingCellIdx) {
+      activeRecorder.stop();
+    }
+  }
+}, true); // capture phase so it fires before the main click handler
+
+// Click outside menu closes it
+window.addEventListener('click', (e) => {
+  if (cellMenu.style.display === 'block' && !cellMenu.contains(e.target) && e.target !== canvas) {
+    closeMenu();
+  }
+});
+
+// ============================================================
+// MODIFIED ANIMATION LOOP
+// ============================================================
+function animate() {
+  t += 0.016;
+  smx += (mx - smx) * 0.08;
+  smy += (my - smy) * 0.08;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0A0A0A';
+  ctx.fillRect(0, 0, W, H);
+
+  const cellW = (W - PAD * 2) / COLS;
+  const cellH = (H - PAD * 2) / ROWS;
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= COLS; i++) {
+    const x = PAD + i * cellW;
+    ctx.beginPath(); ctx.moveTo(x, PAD); ctx.lineTo(x, H - PAD); ctx.stroke();
+  }
+  for (let j = 0; j <= ROWS; j++) {
+    const y = PAD + j * cellH;
+    ctx.beginPath(); ctx.moveTo(PAD, y); ctx.lineTo(W - PAD, y); ctx.stroke();
+  }
+
+  // Draw cells
+  let hoveredCell = -1;
+  const now = performance.now();
+
+  for (let j = 0; j < ROWS; j++) {
+    for (let i = 0; i < COLS; i++) {
+      const idx = j * COLS + i;
+      if (idx >= 48) continue;
+
+      const cx = PAD + (i + 0.5) * cellW;
+      const cy = PAD + (j + 0.5) * cellH;
+      const s = Math.min(cellW, cellH);
+      const cellX = PAD + i * cellW;
+      const cellY = PAD + j * cellH;
+
+      // Mouse influence
+      const dx = smx - cx;
+      const dy = smy - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const inf = Math.max(0, 1 - dist / (s * 1.8));
+
+      if (Math.abs(mx - cx) < cellW / 2 && Math.abs(my - cy) < cellH / 2) hoveredCell = idx;
+
+      const cell = cells[idx];
+
+      if (cell.audioBuffer && cell.waveformData) {
+        // --- LOADED CELL: draw generative pattern with rhythmic pulse ---
+
+        // Cell glow on hover
+        if (inf > 0.2) {
+          ctx.fillStyle = cell.color;
+          ctx.globalAlpha = (inf - 0.2) * 0.06;
+          ctx.fillRect(cellX, cellY, cellW, cellH);
+          ctx.globalAlpha = 1;
+        }
+
+        // Flash on trigger
+        if (cell._flash > 0) {
+          ctx.fillStyle = '#ffffff';
+          ctx.globalAlpha = cell._flash * 0.15;
+          ctx.fillRect(cellX, cellY, cellW, cellH);
+          ctx.globalAlpha = 1;
+          cell._flash *= 0.9;
+          if (cell._flash < 0.01) cell._flash = 0;
+        }
+
+        // Rhythmic pulse: if this cell is actively looping, pulse the influence
+        const isPlaying = activeSourceCell === idx;
+        let rhythmInf = inf;
+        if (isPlaying && cell._playDuration > 0) {
+          const loopPos = ((now - cell._playStart) % cell._playDuration) / cell._playDuration;
+          rhythmInf = Math.max(inf, 0.3 + 0.5 * Math.abs(Math.sin(loopPos * Math.PI * 2)));
+        }
+
+        // Draw the generative SVG pattern (same as empty cells)
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(cellX, cellY, cellW, cellH);
+        ctx.clip();
+        const rng = seededRandom(idx * 7919 + 42);
+        cellDrawers[idx](cx, cy, s, rhythmInf, rng);
+        ctx.restore();
+
+        // Subtle border in cell color to mark as loaded
+        ctx.strokeStyle = cell.color;
+        ctx.globalAlpha = 0.3 + rhythmInf * 0.3;
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(cellX + 0.5, cellY + 0.5, cellW - 1, cellH - 1);
+        ctx.globalAlpha = 1;
+
+        // Playback loop indicator — small dot that orbits
+        if (isPlaying && cell._playDuration > 0) {
+          const loopPos = ((now - cell._playStart) % cell._playDuration) / cell._playDuration;
+          const indicX = cellX + 4 + loopPos * (cellW - 8);
+          ctx.fillStyle = cell.color;
+          ctx.globalAlpha = 0.7;
+          ctx.beginPath(); ctx.arc(indicX, cellY + cellH - 5, 2, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+
+        // Filename label (bottom-left)
+        ctx.font = '8px Lekton';
+        ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = 0.4;
+        ctx.textAlign = 'left';
+        const dispName = cell.fileName.length > 14 ? cell.fileName.substring(0, 14) + '..' : cell.fileName;
+        ctx.fillText(dispName, cellX + pad, cellY + cellH - 4);
+
+        // Duration (top-right)
+        const durSec = ((cell.trimEnd - cell.trimStart) / 1000).toFixed(1) + 's';
+        ctx.textAlign = 'right';
+        ctx.fillText(durSec, cellX + cellW - pad, cellY + 12);
+        ctx.globalAlpha = 1;
+        ctx.textAlign = 'left';
+
+        // Border in IO color
+        ctx.strokeStyle = cell.color;
+        ctx.globalAlpha = 0.2 + inf * 0.3;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(cellX + 0.5, cellY + 0.5, cellW - 1, cellH - 1);
+        ctx.globalAlpha = 1;
+
+      } else {
+        // --- EMPTY CELL: draw generative pattern ---
+
+        // Background glow
+        if (inf > 0.3) {
+          ctx.fillStyle = `rgba(61,109,244,${(inf - 0.3) * 0.03})`;
+          ctx.fillRect(cellX, cellY, cellW, cellH);
+        }
+
+        // Recording indicator
+        if (recordingCellIdx === idx && activeRecorder && activeRecorder.state === 'recording') {
+          ctx.fillStyle = PW;
+          ctx.globalAlpha = 0.15 + Math.sin(now * 0.005) * 0.1;
+          ctx.fillRect(cellX, cellY, cellW, cellH);
+          ctx.globalAlpha = 1;
+          ctx.font = '10px Lekton';
+          ctx.fillStyle = PW;
+          ctx.textAlign = 'center';
+          ctx.fillText('REC', cx, cy);
+          ctx.textAlign = 'left';
+        } else {
+          const rng = seededRandom(idx * 7919 + 42);
+          cellDrawers[idx](cx, cy, s, inf, rng);
+        }
+      }
+    }
+  }
+
+  // HUD update
+  if (hoveredCell >= 0) {
+    const col = hoveredCell % COLS;
+    const row = Math.floor(hoveredCell / COLS);
+    const label = cells[hoveredCell].audioBuffer ? cells[hoveredCell].fileName : '--';
+    cellText.textContent = `cell: ${String(row).padStart(2, '0')}.${String(col).padStart(2, '0')} / ${String(hoveredCell).padStart(2, '0')} ${cells[hoveredCell].audioBuffer ? '| ' + label : ''}`;
+  } else {
+    cellText.textContent = 'cell: --';
+  }
+
+  requestAnimationFrame(animate);
+}
+
+mx = W / 2; my = H / 2; smx = mx; smy = my;
+animate();
+</script>
+</body>
+</html>

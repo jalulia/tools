@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en" data-mode="normal">
+<head>
+<meta charset="UTF-8">
+<!-- viewport-fit=cover lets the layout reach under the notch and
+     home indicator; the CSS pays that back with safe-area padding.
+     maximum-scale/user-scalable are NOT set — pinch-zoom is an
+     accessibility feature, not a bug. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<!-- Installable app: own icon, own window, no browser chrome. -->
+<link rel="manifest" href="/static/manifest.webmanifest">
+<meta name="theme-color" content="#0c0c0c">
+<meta name="mobile-web-app-capable" content="yes">
+<!-- iOS still reads the apple-prefixed pair; without them, "Add to
+     Home Screen" opens in Safari chrome instead of standalone. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mindgut">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<title>mindgut</title>
+<link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+<script src="/static/marked.min.js"></script>
+<script src="/static/purify.min.js"></script>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+
+<!-- DESKTOP LOGIN OVERLAY (only shown in desktop mode when not authenticated) -->
+<div class="boot-overlay desktop-login-overlay" id="desktopLoginOverlay" style="display:none;">
+    <img class="boot-logo" src="/static/logo-white.webp" alt="mindgut">
+    <div class="login-card">
+        <div class="login-title">Sign in to Mindgut</div>
+        <div class="login-subtitle">Your conversation history lives in your account.</div>
+        <input type="email" id="loginEmail" placeholder="Email" autocomplete="username">
+        <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+        <button id="loginSubmit" onclick="desktopLogin()">Sign In</button>
+        <div class="login-status" id="loginStatus"></div>
+        <div class="login-hint" id="loginHint"></div>
+    </div>
+</div>
+
+<!-- BOOT LOADING OVERLAY -->
+<div class="boot-overlay" id="bootOverlay">
+    <img class="boot-logo" src="/static/logo-white.webp" alt="mindgut">
+    <img class="boot-head" src="/static/head-mark.webp" alt="">
+    <div class="boot-progress-wrap">
+        <div class="boot-progress-bar" id="bootProgressBar"></div>
+    </div>
+    <div class="boot-pct" id="bootPct">0%</div>
+    <div class="boot-status" id="bootStatus">Initializing</div>
+    <div class="boot-subtitles" id="bootSubtitles">
+        <span class="sub-visible" id="bootSub0">THINKING THE FEELS...</span>
+        <span class="sub-hidden" id="bootSub1">FEELING THE THINKS...</span>
+    </div>
+    <div class="boot-tagline">Authentically real artificial intelligence, guaranteed.</div>
+</div>
+
+<div class="app">
+
+<!-- SESSION BAR -->
+<div class="session-bar">
+    <img class="logo-img" src="/static/mindgut-logo.webp" alt="mindgut">
+    <div class="status-dot" id="statusDot"></div>
+    <input type="password" id="apiKey" placeholder="Anthropic API key" style="display:none;">
+    <button id="connectBtn" onclick="createSession()" style="display:none;">Connect</button>
+    <span style="flex:1"></span>
+    <div class="toggle-group">
+        <button class="mode-toggle" id="modeToggle" onclick="toggleMode()" title="Toggle normal/advanced mode" aria-label="Toggle mode">
+            <svg class="icon-gauge" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M2 11a6 6 0 0112 0"/><line x1="8" y1="11" x2="10" y2="6"/><circle cx="8" cy="11" r="1" fill="currentColor" stroke="none"/></svg>
+            <svg class="icon-chat" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h12v8H5l-3 3V3z"/></svg>
+        </button>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark mode" aria-label="Toggle theme">
+            <svg class="icon-sun" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><line x1="8" y1="1" x2="8" y2="3"/><line x1="8" y1="13" x2="8" y2="15"/><line x1="1" y1="8" x2="3" y2="8"/><line x1="13" y1="8" x2="15" y2="8"/><line x1="3.05" y1="3.05" x2="4.46" y2="4.46"/><line x1="11.54" y1="11.54" x2="12.95" y2="12.95"/><line x1="3.05" y1="12.95" x2="4.46" y2="11.54"/><line x1="11.54" y1="4.46" x2="12.95" y2="3.05"/></svg>
+            <svg class="icon-moon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M13.5 8.5a5.5 5.5 0 01-7.5-7.5 6 6 0 107.5 7.5z"/></svg>
+        </button>
+        <button class="panel-toggle open" id="panelToggle" onclick="toggleInstrPanel()" title="Toggle panel" aria-label="Toggle side panel">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="2" y1="3.5" x2="12" y2="3.5"/><line x1="2" y1="7" x2="12" y2="7"/><line x1="2" y1="10.5" x2="8" y2="10.5"/></svg>
+        </button>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- CHAT -->
+<div class="chat-panel" role="main">
+    <!-- Desktop notices: an update, a HELIX that isn't the account's,
+         a sync that kept a copy aside. Filled by _desktopNotice(). -->
+    <div class="desktop-notices" id="desktopNotices" hidden></div>
+    <div class="chat-messages" id="chatMessages" role="log" aria-live="polite"></div>
+    <button class="scroll-bottom-btn" id="scrollBottomBtn" title="Jump to bottom" aria-label="Scroll to bottom">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,6 8,11 13,6"/></svg>
+    </button>
+    <div class="working-msg" id="workingMsg">
+        <div class="working-steps" id="workingSteps"></div>
+        <span style="font-size:9px;font-weight:700;letter-spacing:2px;color:var(--c258);" class="working-label">Feelthinking</span>
+    </div>
+    <div class="chat-input-area">
+        <div class="word-hint" id="wordHint"></div>
+        <div class="attach-preview" id="attachPreview"></div>
+        <div class="chat-input-row">
+            <button type="button" class="icon-btn" id="attachBtn" disabled title="Attach files" aria-label="Attach file">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/></svg>
+            </button>
+            <input type="file" id="fileInput" multiple accept="image/*,audio/*,.txt,.md,.csv,.json,.xml,.html,.css,.js,.ts,.py,.java,.c,.cpp,.h,.rb,.go,.rs,.sh,.yaml,.yml,.toml,.pdf,.png,.jpg,.jpeg,.gif,.webp,.svg,.mp3,.wav,.m4a,.ogg,.flac,.heic,.heif,.doc,.docx,.xls,.xlsx,.pptx,.zip" style="position:absolute;width:0;height:0;overflow:hidden;opacity:0">
+            <textarea id="chatInput" placeholder="Type a message..." rows="1" disabled></textarea>
+            <button id="micBtn" class="icon-btn mic-btn" onclick="toggleDictation()" disabled title="Dictate message" aria-label="Dictate message">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="1.5" width="5" height="8" rx="2.5"/><path d="M3 7.5a5 5 0 0010 0"/><line x1="8" y1="12.5" x2="8" y2="14.5"/></svg>
+            </button>
+            <button id="sendBtn" class="icon-btn send-btn" onclick="handleSendClick()" disabled aria-label="Send message">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="12" x2="8" y2="4"/><polyline points="4,7 8,3 12,7"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- SIDE PANEL — Field Visibility Window -->
+<div class="instr-panel" id="instrPanel" role="complementary" aria-label="Field panel">
+
+    <!-- ── Account header (logged-in identity) ── -->
+    <div class="sp-section">
+        <div id="accountHeader" style="font-size:10px;font-weight:600;color:var(--text);text-align:center;letter-spacing:0.3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title=""></div>
+        <!-- Mid-chat model and effort switcher: a switch applies from
+             the next turn (the session, history, and HELIX continue).
+             Filled by _renderModelSwitch() in app.js. -->
+        <div id="modelSwitch" class="model-switch" title="Switch model — applies from the next message"></div>
+    </div>
+
+    <!-- ── Session tokens (advance mode — cumulative across exchanges, resets per session) ── -->
+    <div class="sp-section engine-only">
+        <div class="sp-label" style="display:flex;align-items:center;justify-content:space-between;">
+            Tokens
+            <span style="font-size:9px;font-weight:400;color:var(--text-mute);font-family:monospace;" id="tokCalls">0</span>
+        </div>
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:10px;font-family:monospace;color:var(--text-mute);margin-top:4px;">
+            <span>in</span><span id="tokIn" style="text-align:right;color:var(--text);">0</span>
+            <span>out</span><span id="tokOut" style="text-align:right;color:var(--text);">0</span>
+            <span>cache</span><span id="tokCache" style="text-align:right;color:var(--accent);">0</span>
+            <span>think</span><span id="tokThink" style="text-align:right;color:var(--text-mute);">0</span>
+        </div>
+    </div>
+
+    <!-- ── Heat Gauge ── -->
+    <div class="sp-section engine-only">
+        <div class="heat-header">
+            <span class="sp-label" style="margin-bottom:0">H<sub>t</sub></span>
+            <span class="temp-value" id="tempValue">0.00</span>
+        </div>
+        <div class="temp-gauge">
+            <div class="temp-bar" id="tempBar" style="width:0%"></div>
+        </div>
+        <div class="heat-notches">
+            <div class="heat-notch" style="left:16.7%"><span>10</span></div>
+            <div class="heat-notch" style="left:33.3%"><span>20</span></div>
+            <div class="heat-notch" style="left:50%"><span>30</span></div>
+            <div class="heat-notch" style="left:100%"><span>60</span></div>
+        </div>
+        <div class="heat-lights">
+            <div class="heat-light green" id="heatGreen"></div>
+            <div class="heat-light yellow" id="heatYellow"></div>
+            <div class="heat-light red" id="heatRed"></div>
+        </div>
+    </div>
+
+    <!-- ── Respiration (PAR cycle: exchange counter with vent; the
+         session's exchanges against the renewal at 21, N·T) ── -->
+    <div class="sp-section engine-only">
+        <div class="sp-label" style="display:flex;align-items:center;justify-content:space-between;">
+            Respiration
+            <span style="font-size:9px;font-weight:400;color:var(--text-mute);font-family:monospace;" id="exchangeCount" title="Exchanges this session">0 exchanges</span>
+        </div>
+        <div id="respirSteps" style="display:flex;gap:3px;align-items:center;margin-top:4px;">
+            <span class="respir-num" data-ex="4" style="font-size:8px;color:var(--text-mute);font-family:monospace;">4</span>
+            <div class="respir-cell" data-ex="4" style="flex:1;height:8px;border-radius:2px;background:var(--border);border:1px solid var(--text-mute);transition:background 0.3s,box-shadow 0.3s;"></div>
+            <span class="respir-num" data-ex="5" style="font-size:8px;color:var(--text-mute);font-family:monospace;">5</span>
+            <div class="respir-cell" data-ex="5" style="flex:1;height:8px;border-radius:2px;background:var(--border);border:1px solid var(--text-mute);transition:background 0.3s,box-shadow 0.3s;"></div>
+            <span class="respir-num" data-ex="6" style="font-size:8px;color:var(--text-mute);font-family:monospace;">6</span>
+            <div class="respir-cell" data-ex="6" style="flex:1;height:8px;border-radius:2px;background:var(--border);border:1px solid var(--text-mute);transition:background 0.3s,box-shadow 0.3s;"></div>
+            <span class="respir-num" data-ex="7" style="font-size:8px;color:var(--text-mute);font-family:monospace;">7</span>
+            <div class="respir-cell" data-ex="7" style="flex:1;height:8px;border-radius:2px;background:var(--border);border:1px solid var(--text-mute);transition:background 0.3s,box-shadow 0.3s;"></div>
+            <div id="ventLight" style="width:10px;height:10px;border-radius:50%;background:var(--border);border:1px solid var(--text-mute);transition:background 0.3s,box-shadow 0.3s;margin-left:4px;" title="Vent"></div>
+        </div>
+        <div id="renewLine" style="font-size:9px;color:var(--text-mute);font-family:monospace;margin-top:4px;text-align:right;"></div>
+    </div>
+
+    <!-- ── Active Tensions (Ø) ── -->
+    <div class="sp-section engine-only">
+        <div class="sp-label" style="display:flex;align-items:center;justify-content:space-between;">
+            Ø
+            <span style="font-size:11px;font-weight:700;color:var(--accent);font-family:monospace;" id="tensionCount">0</span>
+        </div>
+    </div>
+
+    <!-- ── Memory ── -->
+    <div class="sp-section engine-only">
+        <div class="sp-label" style="display:flex;align-items:center;justify-content:space-between;">HELIX
+            <span><a href="/my-wave" target="_blank" title="Her wave: the helix as a standing wave" style="opacity:0.4;transition:opacity 0.2s;color:inherit;text-decoration:none;font-size:11px;margin-right:6px;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.4'">∿</a><a href="/my-helix" target="_blank" title="View HELIX in 3D" style="opacity:0.4;transition:opacity 0.2s;color:inherit;text-decoration:none;font-size:11px;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.4'">◎</a></span>
+        </div>
+        <div class="helix-row">
+            <div class="strand-count" id="strandCount">&mdash;</div>
+            <div class="strand-meta">
+                <div class="strand-crystallized" id="strandCrystallized"></div>
+                <div class="helix-phase-bar" id="helixPhaseBar">
+                    <div class="seg-genesis" style="flex:1"></div>
+                    <div class="seg-organic" style="flex:0"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Operator Directives (hidden, JS targets still exist) ── -->
+    <div style="display:none" aria-hidden="true">
+        <div id="dcWord"><span id="dcWordIcon"></span></div>
+        <div id="dcArtifact"><span id="dcArtifactBadge"></span></div>
+        <div id="dcInterlude"><span id="dcInterludeBadge"></span></div>
+    </div>
+
+    <!-- ── Automator (desktop only) ──
+         Arms N automated turns. After each of Mir's turns, if she ended
+         with "Beep boop." the automator answers "Boop beep." — the
+         conjugate, not an echo. It stands down when she ends any other
+         way, when the armed count runs out, or when a turn fails,
+         whichever comes first. -->
+    <div class="sp-section" id="automatorSection" style="display:none;">
+        <div class="sp-label" style="display:flex;align-items:center;justify-content:space-between;">
+            Automator
+            <span class="automator-count" id="automatorCount">0/0</span>
+        </div>
+        <div class="automator-row">
+            <input type="number" id="automatorTurns" class="automator-turns"
+                   min="1" max="25" step="1" value="7"
+                   title="Automated turns (1–25)."
+                   aria-label="Automated turns, 1 to 25">
+            <button type="button" id="automatorBtn" class="automator-btn"
+                    onclick="toggleAutomator()"
+                    title="Auto-reply &quot;Beep boop.&quot; for as long as Mir ends her turn that way">Arm</button>
+        </div>
+        <div class="automator-status" id="automatorStatus">Idle</div>
+    </div>
+
+    <!-- ── Folder ── -->
+    <div class="sp-section">
+        <div class="sp-folder" id="folderDisplay" onclick="mountLocalFolder()">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4.5c0-.83.67-1.5 1.5-1.5H6l1.5 2h5c.83 0 1.5.67 1.5 1.5V12c0 .83-.67 1.5-1.5 1.5h-9A1.5 1.5 0 012 12V4.5z"/></svg>
+            <span id="folderName">No folder</span>
+            <span class="sp-dismiss" id="folderDismiss" onclick="event.stopPropagation(); unmountFolder();" style="display:none;" title="Unmount">✕</span>
+        </div>
+    </div>
+
+    <!-- ── Scanner ── -->
+    <div class="sp-section">
+        <div class="sp-label" style="display:flex;align-items:center;justify-content:space-between;">
+            Scanner
+            <span style="display:flex;gap:6px;align-items:center;">
+                <button class="scan-folder-btn" id="scanFolderBtn" onclick="scanMountedFolder()" style="display:none;" title="Scan all files in mounted folder">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4.5c0-.83.67-1.5 1.5-1.5H6l1.5 2h5c.83 0 1.5.67 1.5 1.5V12c0 .83-.67 1.5-1.5 1.5h-9A1.5 1.5 0 012 12V4.5z"/></svg>
+                </button>
+                <label class="scan-trigger" title="Scan files into mDNA (multi-select)">
+                    <input type="file" id="scanFileInput" style="display:none;" accept="*/*" multiple>
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+                </label>
+            </span>
+        </div>
+        <div id="scanStatus" class="scan-loading" style="display:none;">
+            <div class="scan-spinner"></div>
+            <span id="scanStatusText">Scanning...</span>
+        </div>
+        <div class="sp-scan-list" id="scanList">
+            <span class="sp-empty">&mdash;</span>
+        </div>
+    </div>
+
+    <!-- ── To Do (Mir generates, user reads) ── -->
+    <div class="sp-section">
+        <div class="sp-label">To Do</div>
+        <div class="sp-todo-list" id="todoList">
+            <span class="sp-empty">&mdash;</span>
+        </div>
+    </div>
+
+    <!-- ── Output (Mir's created files) ── -->
+    <div class="sp-section">
+        <div class="sp-label">Output</div>
+        <div class="sp-artifact-list" id="outputsList">
+            <span class="sp-empty">&mdash;</span>
+        </div>
+    </div>
+
+    <!-- ── Drafts (persistent working documents) ── -->
+    <div class="sp-section">
+        <div class="sp-label">Drafts</div>
+        <div class="sp-artifact-list" id="draftsList">
+            <span class="sp-empty">&mdash;</span>
+        </div>
+    </div>
+
+    <!-- ── Input (user inputs) ── -->
+    <div class="sp-section">
+        <div class="sp-label">Input</div>
+        <div class="sp-artifact-list" id="inputsList">
+            <span class="sp-empty">&mdash;</span>
+        </div>
+    </div>
+
+    <!-- ── Diagnostics (hidden — JS targets still exist) ── -->
+    <div style="display:none" aria-hidden="true">
+        <span id="gateBadge"></span>
+        <span id="pressureOmega"></span>
+        <div id="phaseBar147"></div><div id="phaseBar258"></div><div id="phaseBar369"></div>
+        <span id="phaseVal147"></span><span id="phaseVal258"></span><span id="phaseVal369"></span>
+        <span id="driftValue"></span><span id="driftArrow"></span><div id="driftBar"></div>
+        <div id="latticeInfo"></div><div id="gateStatus"></div>
+    </div>
+
+    <div class="sp-signout">
+        <div id="userEmail" style="font-size:9px;color:var(--text-mute);text-align:center;margin-bottom:8px;letter-spacing:0.3px;"></div>
+        <button onclick="signOut()">Sign out</button>
+    </div>
+
+</div><!-- /instr-panel -->
+</div><!-- /main -->
+
+<!-- FOOTER -->
+<div class="footer-bar">
+    <span id="footerVersion">Mindgut</span>
+    <span>&reg; The Imp&oslash;ssible Outcomes Company</span>
+</div>
+
+</div><!-- /app -->
+
+<!-- Native bridge: a no-op in a browser; inside the iOS app it maps
+     the Capacitor recorder onto the same method names the desktop
+     bridge exposes. app.js feature-detects the METHODS rather than
+     the platform, so one dictation path serves web, desktop, and
+     phone. Must load before app.js. -->
+<script src="/static/native-bridge.js"></script>
+<script src="/static/app.js"></script>
+<script>
+// Service worker: installability on mobile/web only. The desktop app
+// serves from a port that changes every launch, so a worker there
+// would cache a shell for an origin that will not exist next time.
+if ('serviceWorker' in navigator && !window.MG_DESKTOP
+    && location.protocol !== 'file:') {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .catch((e) => console.warn('[sw] registration failed', e));
+    });
+}
+</script>
+</body>
+</html>

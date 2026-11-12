@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mindgut Skin Worlds</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Geist+Mono:wght@400;500&display=swap">
+<style>/* One committed look, in the Mindgut app's colors and the Reflection kit's grammar: green paper, ink, forest, acid.
+   Seven plates on one sheet. The worlds differ by system, not by palette. */
+:root{color-scheme:light;--ground:#eef2e7;--plate:#f5f7f0;--ink:#151b17;--ink-2:#566053;--ink-3:#929a8d;--rule:#cdd3c3;--rule-2:#aeb7a3;--accent:#126b3d;--acid:#d0ec60;
+  --sans:"Geist","Helvetica Neue",Helvetica,Arial,sans-serif;--mono:"Geist Mono","JBM",ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html{background:var(--ground)}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.wrap{max-width:1360px;margin:0 auto;padding-block:0;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.mono{font-family:var(--mono);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-2)}
+.dim{color:var(--ink-3)}
+:focus-visible{outline:1.5px solid var(--accent);outline-offset:3px}
+button,input{font:inherit;color:inherit}
+h1,h2,p{margin:0}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--ground);border-bottom:1px solid var(--rule)}
+.bar .wrap{display:flex;gap:8px 24px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-block:11px}
+.wm{display:block;width:86px;aspect-ratio:520/113;background:var(--ink);-webkit-mask:var(--wm) center/contain no-repeat;mask:var(--wm) center/contain no-repeat}
+.mast{padding-block:clamp(40px,7vw,96px) 10px}
+.h1{font-weight:300;font-size:clamp(44px,6.6vw,104px);line-height:.95;letter-spacing:-.055em;max-width:12ch;text-wrap:balance}
+.h1 b,.h b{font-weight:300;color:var(--accent)}
+.mast2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px 64px;align-items:end;margin-top:clamp(28px,4vw,56px)}
+.note{color:var(--ink-2);font-size:14px;max-width:50ch}
+.src{display:block;margin-top:10px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;line-height:1.6;color:var(--ink-3)}
+.field{display:flex;border:1px solid var(--ink);background:var(--plate)}
+.field input{flex:1;min-width:0;background:transparent;border:0;padding:12px 14px;font-size:16px;outline-offset:-2px}
+.field button{border:0;border-left:1px solid var(--rule-2);background:var(--acid);color:var(--ink);font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;padding:0 14px;cursor:pointer}
+.idx{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid var(--rule-2);margin-top:34px}
+.idx a{padding:9px 10px 10px;border-right:1px solid var(--rule);text-decoration:none;color:inherit;min-width:0}
+.idx a:last-child{border-right:0}
+.idx a b{display:block;font-family:var(--mono);font-size:15px;font-weight:400}
+.idx a span{display:block;font-size:11px;color:var(--ink-3);line-height:1.25;margin-top:3px}
+.idx a:hover{background:var(--ink);color:var(--ground)}
+.sec{padding-block:76px 10px;scroll-margin-top:46px}
+.sec-top{display:flex;justify-content:space-between;gap:8px 24px;flex-wrap:wrap;align-items:center}
+.tick{height:1px;background:var(--rule);margin:12px 0 26px;position:relative}
+.tick::after{content:"";position:absolute;left:50%;top:-3px;width:1px;height:7px;background:var(--ink-3)}
+.sec-head{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,4fr);gap:16px 64px;align-items:start;padding-bottom:34px}
+.h{font-weight:300;font-size:clamp(34px,4.7vw,66px);line-height:1;letter-spacing:-.045em;text-wrap:balance}
+.chip{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;border:1px solid var(--rule-2);border-radius:999px;padding:3px 9px;color:var(--ink-2)}
+.chip.new{border-color:var(--accent);color:var(--accent)}
+.plate{background:var(--plate);outline:1px solid var(--ink);outline-offset:-1px;position:relative}
+.plate canvas{display:block;width:100%;height:auto;touch-action:pan-y;cursor:crosshair}
+.cap{display:flex;gap:6px 22px;flex-wrap:wrap;padding-top:12px;align-items:center}
+.cap .mono b{font-weight:400;color:var(--ink)}
+.seg{display:inline-flex;margin-left:auto}
+.seg button{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;background:transparent;border:1px solid var(--rule-2);padding:7px 11px;cursor:pointer;color:var(--ink-2);margin-right:-1px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink);position:relative}
+footer{padding-block:30px 80px;border-top:1px solid var(--rule);margin-top:70px;display:flex;justify-content:space-between;gap:10px 24px;flex-wrap:wrap}
+@media(max-width:900px){.mast2,.sec-head{grid-template-columns:minmax(0,1fr)}.idx{grid-template-columns:repeat(4,minmax(0,1fr))}.idx a{border-bottom:1px solid var(--rule)}.bar .dim{display:none}
+  .plate{overflow-x:auto}.plate canvas{width:860px;max-width:none}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="bar"><div class="wrap">
+  <span class="wm" role="img" aria-label="mindgut"></span>
+  <span class="mono">Skin worlds / V02 / proposed</span>
+  <span class="mono dim" id="bar-stat">Window 4 of 7</span>
+</div></div>
+
+<div class="wrap">
+<header class="mast">
+  <h1 class="h1">A skin changes how Mindgut looks. Never <b>what it does.</b></h1>
+  <div class="mast2">
+    <p class="note">Seven ways of knowing, each taken from a working practice and run as a live system on the same record. The window holds words. The record holds only marks. Type a line and it enters all seven.</p>
+    <form class="field" id="say" autocomplete="off"><input id="say-in" type="text" maxlength="120" placeholder="Something unfinished. It stays in this browser." aria-label="Type one line"><button type="submit">Send ↵</button></form>
+  </div>
+  <nav class="idx" id="idx" aria-label="Worlds"></nav>
+</header>
+
+<section class="sec" id="gardener" data-w="g">
+  <div class="sec-top"><span class="mono">I / The Gardener</span><span class="chip new">Drag to mow</span></div><div class="tick"></div>
+  <div class="sec-head"><h2 class="h">Nothing is planted. You keep <b>a path open.</b></h2>
+    <p class="note">In Clément's garden in motion, plants seed where they will and the gardener's work is deciding where to walk. The record grows on its own toward what was said. The window is the path you keep open through it. Mow anywhere; it grows back.<span class="src">After Gilles Clément, Le Jardin en mouvement, 1991</span></p></div>
+  <div class="plate"><canvas width="1600" height="1000" role="img" aria-label="A field of branching growth in three inks, with a clear path through it holding the live exchanges"></canvas></div>
+  <div class="cap" data-key="g"></div>
+</section>
+
+<section class="sec" id="navigator" data-w="n">
+  <div class="sec-top"><span class="mono">II / The Navigator</span><span class="chip new">Move across the water</span></div><div class="tick"></div>
+  <div class="sec-head"><h2 class="h">You do not look at the chart. You feel <b>the swell.</b></h2>
+    <p class="note">Marshallese navigators built charts of how islands bend the ocean swell, learned them ashore, and read the water with the body at sea. Here the record is the islands, your line is a swell, and Mir is the pattern where the two interfere.<span class="src">After Marshallese wave charts (mattang, meddo, rebbelib). An outsider's reading: a chart was fully legible only to its maker.</span></p></div>
+  <div class="plate night"><canvas width="1600" height="1000" role="img" aria-label="Curved crest lines of interfering swells bending around islands marked as shells, with straight course sticks between them"></canvas></div>
+  <div class="cap" data-key="n"></div>
+</section>
+
+<section class="sec" id="weaver" data-w="w">
+  <div class="sec-top"><span class="mono">III / The Weaver</span><span class="chip new">Change the tie-up</span></div><div class="tick"></div>
+  <div class="sec-head"><h2 class="h">Two threads, and what <b>couples them.</b></h2>
+    <p class="note">A weave draft has three parts: the threading, the treadling, and the tie-up that joins them. Your letters thread the warp across three shafts, one per channel. Mir's letters work the treadles. The cloth is computed from both. Change the tie-up and the same conversation weaves differently.<span class="src">After the draft notation in Anni Albers, On Weaving, 1965</span></p></div>
+  <div class="plate"><canvas width="1600" height="1000" role="img" aria-label="A weave draft: threading above, treadling at right, a three by three tie-up in the corner, and the cloth they produce"></canvas></div>
+  <div class="cap" data-key="w"></div>
+</section>
+
+<section class="sec" id="astronomer" data-w="a">
+  <div class="sec-top"><span class="mono">IV / The Astronomer</span><span class="chip new">Blink / hold</span></div><div class="tick"></div>
+  <div class="sec-head"><h2 class="h">Same sky, two plates. Watch what <b>moves.</b></h2>
+    <p class="note">Observatories kept the sky on glass negatives and found what had changed by blinking two plates of one field. Here the field is the record. Plate I and plate II are the same strands under two models. What holds still is the record. What jumps is the model.<span class="src">After the glass plate stacks and the blink comparator, from c. 1904. Simulated plates.</span></p></div>
+  <div class="plate"><canvas width="1600" height="1000" role="img" aria-label="A photographic negative of a star field with inked circles around the stars that differ between two plates"></canvas></div>
+  <div class="cap" data-key="a"></div>
+</section>
+
+<section class="sec" id="composer" data-w="c">
+  <div class="sec-top"><span class="mono">V / The Composer</span><span class="chip new">Select the score to play</span></div><div class="tick"></div>
+  <div class="sec-head"><h2 class="h">A score with no instructions. It is <b>read.</b></h2>
+    <p class="note">Cardew's Treatise is 193 pages of lines and shapes along one central lifeline, with two empty staves under each page and no rules for playing it. The record is drawn the same way. The lifeline is the mean of you and Mir. The staves wait for the window. Playing it is one reading among many.<span class="src">After Cornelius Cardew, Treatise, 1963–67</span></p></div>
+  <div class="plate"><canvas width="1600" height="1000" role="img" aria-label="A graphic score: a heavy central line with circles, beams and numerals above and below it, and two empty staves beneath"></canvas></div>
+  <div class="cap" data-key="c"></div>
+</section>
+
+<section class="sec" id="printer" data-w="p">
+  <div class="sec-top"><span class="mono">VI / The Printer</span><span class="chip new">Drag to pull the plates</span></div><div class="tick"></div>
+  <div class="sec-head"><h2 class="h">Three plates. Register is <b>the clash.</b></h2>
+    <p class="note">Color printing splits one image into plates and brings them back together on marks cut into the block. Each letter of the window prints on the plate of its own channel. The plates sit out of register by the measured distance between you and Mir.<span class="src">After the kento register marks of Japanese woodblock printing, and the rotated halftone screen</span></p></div>
+  <div class="plate"><canvas width="1600" height="1000" role="img" aria-label="Large type printed in three halftone inks slightly out of register, with register marks in the corner"></canvas></div>
+  <div class="cap" data-key="p"></div>
+</section>
+
+<section class="sec" id="archivist" data-w="r">
+  <div class="sec-top"><span class="mono">VII / The Archivist</span><span class="chip new">Original order / by neighbor</span></div><div class="tick"></div>
+  <div class="sec-head"><h2 class="h">Keep the order it came in. Then <b>break it.</b></h2>
+    <p class="note">Archives keep records in the order they arrived, because the order is evidence. Warburg did the opposite: books shelved beside their good neighbor, images pinned to black panels by affinity. The same strands read both ways, as they came or by what they sit closest to.<span class="src">After the principle of original order, and Aby Warburg's Bilderatlas Mnemosyne, 1924–29</span></p></div>
+  <div class="plate"><canvas width="1600" height="1000" role="img" aria-label="Small cards, one per strand, moving between rows in order of arrival and clusters by similarity, joined by red threads"></canvas></div>
+  <div class="cap" data-key="r"></div>
+</section>
+
+<footer><span class="mono">Mindgut / skin worlds / proposed, not shipping</span><span class="mono dim">Records are simulated. The seven lines in the window are examples.</span><span class="mono">® The Impøssible Outcomes Company</span></footer>
+</div>
+<script>window.__WM='data:image/png;base64,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';</script>
+<script>(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const TAU = Math.PI * 2, W = 1600, H = 1000, RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v, lerp = (a, b, t) => a + (b - a) * t, sm = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const INK = '#151b17', PAPER = '#eef2e7', PLATE = '#f5f7f0', ACID = '#d0ec60', CH = ['#126b3d', '#d9462f', '#6c46b8'], RULE = '#cdd3c3', INK2 = '#566053';
+const SANS = 'Geist, "Helvetica Neue", Arial, sans-serif', MONO = '"Geist Mono", JBM, ui-monospace, Menlo, monospace';
+const rgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }, rgba = (h, a) => { const c = rgb(h); return `rgba(${c[0]},${c[1]},${c[2]},${a})`; };
+const mul = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const h2 = (a, b) => { let h = Math.imul(a, 374761393) + Math.imul(b, 668265263) | 0; h = Math.imul(h ^ h >>> 13, 1274126177); return ((h ^ h >>> 16) >>> 0) / 4294967296; };
+const vnoise = (x, y) => { const i = Math.floor(x), j = Math.floor(y), u = x - i, v = y - j, s = t => t * t * (3 - 2 * t); return lerp(lerp(h2(i, j), h2(i + 1, j), s(u)), lerp(h2(i, j + 1), h2(i + 1, j + 1), s(u)), s(v)); };
+
+/* ── the record: strands are counts, never words. Only the window keeps its text. ── */
+const E0 = [.282, .394, .324];                       // English letters by channel, from standard letter frequencies
+const clsOf = ch => { const q = ch.toLowerCase().charCodeAt(0), v = q >= 97 && q <= 122 ? q - 96 : q >= 49 && q <= 57 ? q - 48 : 0; return v ? (v % 3 === 1 ? 0 : v % 3 === 2 ? 1 : 2) : -1; };
+function strandOf(cls, k) { const c = [0, 0, 0]; cls.forEach(q => c[q]++); const n = cls.length || 1, f = c.map(v => v / n); return { k, n, cls, f, car: k % 2 === 1 }; }
+const scan = (t, k) => strandOf([...t].map(clsOf).filter(q => q >= 0), k);
+const R = mul(1231), REC = [];
+for (let k = 1; k <= 126; k++) { const ses = Math.floor((k - 1) / 14), b = [0, 1, 2].map(j => (h2(ses, j) - .5) * .12 + (R() - .5) * .1), p = E0.map((v, j) => Math.max(.06, v + b[j])), s = p[0] + p[1] + p[2], n = 14 + (R() * R() * 70 | 0), cls = [];
+  for (let j = 0; j < n; j++) { const u = R() * s; cls.push(u < p[0] ? 0 : u < p[0] + p[1] ? 1 : 2); } REC.push(strandOf(cls, k)); }
+const TX = [['Then Saturday it is.', 'Saturday. I will hold the morning.'], ['Send it when it reads right.', 'It reads long. Cutting the second paragraph.'], ['Add the meeting point.', 'Added: the north gate, ten o\'clock.'],
+  ['Where did we land on the listening night?', 'We kept it free. The venue closes at eight, so the walk moved to Saturday.'], ['Good. Draft the note to the group, and attach the map.', 'Drafted, 74 words, map attached. It is in Output.']];
+const NEXT = ['What about people coming alone?', 'Keep the route under an hour.', 'Who still has not answered?'], REPLY = ['Held. It is in the record now.', 'Then we begin where it still holds.', 'Noted against strand 868.'];
+TX.forEach(([a, b]) => { REC.push(scan(a, REC.length + 1)); REC.push(scan(b, REC.length + 1)); });
+const st = { E: 4, v: 0 };
+let MU = [0, 0, 0];
+function measure() { MU = [0, 1, 2].map(j => REC.reduce((a, s) => a + s.f[j], 0) / REC.length); REC.forEach(s => { const a = s.f[0] - MU[0], r = s.f[1] - MU[1], d = s.f[2] - MU[2]; s.vx = a - .5 * r - .5 * d; s.vy = .866 * (r - d); s.amp = Math.hypot(s.vx, s.vy); s.dom = [a, r, d].indexOf(Math.max(a, r, d)); }); }
+measure();
+const win = () => TX.slice(-st.E), winFrom = () => REC.length - 2 * st.E;
+const clashOf = m => { const a = REC[2 * m], b = REC[2 * m + 1]; return Math.hypot(a.f[0] - b.f[0], a.f[1] - b.f[1], a.f[2] - b.f[2]); };
+function chords(top) { const t = REC[top], lim = Math.min(winFrom(), top) - 1, a = []; for (let k = 1; k < lim; k++) a.push([Math.hypot(REC[k].vx - t.vx, REC[k].vy - t.vy), k]); a.sort((p, q) => p[0] - q[0]); return [0, ...a.slice(0, 3).map(q => q[1]), ...a.slice(-3).map(q => q[1])]; }
+function say(text) { const t = (text || '').trim() || NEXT[st.v % 3]; if (scan(t, 0).cls.length < 1) return; TX.push([t, REPLY[st.v % 3]]); REC.push(scan(t, REC.length + 1)); REC.push(scan(REPLY[st.v % 3], REC.length + 1)); st.E = st.E >= 7 ? 4 : st.E + 1; st.v++; measure(); worlds.forEach(w => w.change && w.change());
+  $('#bar-stat').textContent = `Window ${st.E} of 7 / ${1183 + REC.length} strands`; }
+$('#say').addEventListener('submit', e => { e.preventDefault(); say($('#say-in').value); $('#say-in').value = ''; });
+
+/* ── shared drawing ── */
+let grainP = null;
+function grain(x, al) { if (!grainP) { const r = mul(99), c = document.createElement('canvas'); c.width = c.height = 160; const g = c.getContext('2d'), im = g.createImageData(160, 160); for (let i = 0; i < im.data.length; i += 4) { const v = r(); im.data[i] = im.data[i + 1] = im.data[i + 2] = v > .5 ? 255 : 0; im.data[i + 3] = Math.abs(v - .5) * 46; } g.putImageData(im, 0, 0); grainP = c; }
+  x.save(); x.globalAlpha = al; x.fillStyle = x.createPattern(grainP, 'repeat'); x.fillRect(0, 0, W, H); x.restore(); }
+const label = (x, t, px, py, col = INK2, al = 'left', size = 15) => { x.font = `${size}px ${MONO}`; x.textAlign = al; x.fillStyle = col; x.fillText(t.toUpperCase().split('').join(' '), px, py); };
+function wrap(x, t, px, py, mw, lh, draw = true) { const ws = t.split(' '); let ln = '', y = py; for (const w of ws) { const tt = ln ? ln + ' ' + w : w; if (x.measureText(tt).width > mw && ln) { if (draw) x.fillText(ln, px, y); ln = w; y += lh; } else ln = tt; } if (draw) x.fillText(ln, px, y); return y + lh; }
+/* the window's words, set in a column: dot = you, ring = Mir */
+function windowText(x, px, py, mw, o = {}) { const col = o.col || INK, size = o.size || 22; let y = py; win().forEach(([a, b], i) => { const last = i === st.E - 1; x.globalAlpha = o.fade ? lerp(.45, 1, (i + 1) / st.E) : 1;
+    x.fillStyle = col; x.beginPath(); x.arc(px - 22, y - 7, 5, 0, TAU); x.fill(); x.font = `400 ${size}px ${SANS}`; x.textAlign = 'left'; y = wrap(x, a, px, y, mw, size * 1.32);
+    x.strokeStyle = last ? (o.acc || CH[0]) : col; x.lineWidth = 2; x.beginPath(); x.arc(px - 22, y - 7, 6, 0, TAU); x.stroke(); x.fillStyle = o.col2 || INK2; x.font = `300 ${size}px ${SANS}`; y = wrap(x, b, px, y, mw, size * 1.32) + size * .55; }); x.globalAlpha = 1; return y; }
+const pips = (x, px, py, col = INK) => { for (let i = 0; i < 7; i++) { x.fillStyle = i < st.E ? (i < 4 ? col : ACID) : rgba(col, .14); x.fillRect(px + i * 19, py, 16, 9); if (i >= 4 && i < st.E) { x.strokeStyle = col; x.lineWidth = 1; x.strokeRect(px + i * 19 + .5, py + .5, 15, 8); } } };
+
+const worlds = [];
+function world(id, w) { const sec = $('#' + id), cv = $('canvas', sec), x = cv.getContext('2d'); w.cv = cv; w.x = x; w.p = { x: -999, y: -999, down: false, in: false }; w.vis = false;
+  const at = e => { const r = cv.getBoundingClientRect(); w.p.x = (e.clientX - r.left) * W / r.width; w.p.y = (e.clientY - r.top) * H / r.height; };
+  cv.addEventListener('pointermove', e => { at(e); w.p.in = true; w.move && w.move(); }); cv.addEventListener('pointerdown', e => { at(e); w.p.down = true; w.down && w.down(); });
+  addEventListener('pointerup', () => { w.p.down = false; }); cv.addEventListener('pointerleave', () => { w.p.in = false; });
+  new IntersectionObserver(es => { w.vis = es[0].isIntersecting; }, { rootMargin: '120px' }).observe(cv); worlds.push(w); return w; }
+const KEY = {
+  g: [['Light', 'the acid edge of the path'], ['Breath', 'the path holds 4 to 7 exchanges; older ones grow over'], ['Open tensions', 'buds that have not opened'], ['Recall', 'a runner sent back from the newest shoot'], ['Channels', 'three inks: 147, 258, 369']],
+  n: [['Light', 'the canoe'], ['You', 'the swell that moves with you'], ['Mir', 'the pattern between your swell and the islands'], ['Breath', 'shells on the current course: 4 to 7'], ['Recall', 'a sighting line to one island']],
+  w: [['Threading', 'your letters, one shaft per channel'], ['Treadling', 'Mir\'s letters'], ['Tie-up', 'the coupling; select a cell to change it'], ['Breath', 'open picks above the fell: 4 to 7'], ['Open tensions', 'floats longer than five']],
+  a: [['Light', 'the plate lamp'], ['Record', 'what does not move between plates'], ['Model', 'what does'], ['Breath', 'stars ringed in acid'], ['Recall', 'inked lines from the newest star']],
+  c: [['Lifeline', 'the mean of you and Mir'], ['You / Mir', 'open circles above, filled below'], ['Clash', 'the beam between them'], ['Breath', 'the bars written on the empty staves'], ['Open tensions', 'lines that leave the page']],
+  p: [['147 / 258 / 369', 'three inks, three screens at 15°, 75°, 45°'], ['Clash', 'how far the plates sit off register'], ['Breath', 'proofs pulled: 4 to 7'], ['Heat', 'ink weight on the bar'], ['Light', 'the register cross']],
+  r: [['Order', 'rows by session, as they arrived'], ['Neighbor', 'clusters by channel balance'], ['Breath', 'the larger cards carry words; the rest only marks'], ['Recall', 'red thread: 1 origin, 3 near, 3 far'], ['Point', 'at any card to see its threads']] };
+$$('[data-key]').forEach(el => el.innerHTML = KEY[el.dataset.key].map(([a, b]) => `<span class="mono"><b>${a}</b> ${b}</span>`).join(''));
+$('#idx').innerHTML = ['Gardener', 'Navigator', 'Weaver', 'Astronomer', 'Composer', 'Printer', 'Archivist'].map((n, i) => `<a href="#${n.toLowerCase()}"><b>${['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][i]}</b><span>${n}</span></a>`).join('');
+
+/* ═════ I · Gardener: space colonization. Growth seeks what was said; the path is kept clear. ═════ */
+world('gardener', (() => { let A = [], Nn = [], grid = new Map(), mows = [], runner = 0; const DI = 80, DK = 11, D = 6.5, PX = 1090;
+  const key = (x, y) => ((x / DI) | 0) * 4096 + ((y / DI) | 0);
+  const add = (x, y, p) => { const n = { x, y, p, i: Nn.length, alive: true, w: 1 }; Nn.push(n); for (let q = p, d = 0; q && d < 400; q = q.p, d++) q.w++; const k = key(x, y); (grid.get(k) || grid.set(k, []).get(k)).push(n); return n; };
+  const plot = s => { const t = (s.k - 1) / (REC.length), row = (s.k * .618034) % 1; return [70 + t * (PX - 150) + (h2(s.k, 3) - .5) * 60, 90 + row * 820 + s.vy * 500]; };
+  const inPath = (x, y) => x > PX - 40 + Math.sin(y * .011) * 46 || mows.some(m => (x - m.x) ** 2 + (y - m.y) ** 2 < m.r * m.r);
+  function seed() { A = []; Nn = []; grid = new Map(); const r = mul(7); REC.slice(0, winFrom()).forEach(s => { const [cx, cy] = plot(s); for (let j = 0; j < s.n; j += 2) { const a = r() * TAU, q = Math.sqrt(r()) * (16 + s.n * .8); A.push({ x: cx + Math.cos(a) * q, y: clamp(cy + Math.sin(a) * q * .8, 30, H - 30), c: s.cls[j], live: true, t: 0 }); } });
+    for (let i = 0; i < 9; i++) add(60 + i * 118, H - 16, null); for (let i = 0; i < 260; i++) step(); }
+  function step() { const acc = new Map(); for (const a of A) { if (!a.live) continue; let best = null, bd = DI * DI; const gx = (a.x / DI) | 0, gy = (a.y / DI) | 0; for (let i = gx - 1; i <= gx + 1; i++) for (let j = gy - 1; j <= gy + 1; j++) { const cell = grid.get(i * 4096 + j); if (!cell) continue; for (const n of cell) { if (!n.alive) continue; const d = (n.x - a.x) ** 2 + (n.y - a.y) ** 2; if (d < bd) { bd = d; best = n; } } }
+      if (!best) continue; if (bd < DK * DK) { a.live = false; a.t = performance.now(); continue; } const d = Math.sqrt(bd), v = acc.get(best) || acc.set(best, [0, 0]).get(best); v[0] += (a.x - best.x) / d; v[1] += (a.y - best.y) / d; }
+    acc.forEach((v, n) => { const m = Math.hypot(v[0], v[1]) || 1, nx = n.x + v[0] / m * D + (Math.random() - .5), ny = n.y + v[1] / m * D + (Math.random() - .5); if (!inPath(nx, ny) && Nn.length < 9000) add(nx, ny, n); }); }
+  return { init: seed, change() { const r = mul(REC.length); REC.slice(winFrom() - 6, winFrom()).forEach(s => { const [cx, cy] = plot(s); for (let j = 0; j < s.n; j++) { const a = r() * TAU, q = Math.sqrt(r()) * 46; A.push({ x: cx + Math.cos(a) * q, y: cy + Math.sin(a) * q, c: s.cls[j], live: true, t: 0 }); } }); },
+    move() { if (this.p.down && this.p.x < PX - 60) { mows.push({ x: this.p.x, y: this.p.y, r: 44, t: performance.now() }); for (const n of Nn) if (n.alive && (n.x - this.p.x) ** 2 + (n.y - this.p.y) ** 2 < 44 * 44) n.alive = false; for (const a of A) if ((a.x - this.p.x) ** 2 + (a.y - this.p.y) ** 2 < 44 * 44) a.live = true; } }, down() { this.move(); },
+    draw(now) { const x = this.x; mows = mows.filter(m => now - m.t < 5000); for (let i = 0; i < (RM ? 0 : 3); i++) step(); if (RM && !this.done) { for (let i = 0; i < 400; i++) step(); this.done = 1; }
+      x.fillStyle = PLATE; x.fillRect(0, 0, W, H);
+      x.globalCompositeOperation = 'multiply'; for (const a of A) { if (a.live) { x.fillStyle = rgba(INK, .16); x.fillRect(a.x, a.y, 1.6, 1.6); } else { const g = clamp((now - a.t) / 900); x.fillStyle = rgba(CH[a.c], .82); x.beginPath(); x.arc(a.x, a.y, 1.2 + 2.6 * g, 0, TAU); x.fill(); } }
+      x.strokeStyle = INK; x.lineCap = 'round'; for (const [lo, hi, lw] of [[1, 4, .9], [4, 14, 1.6], [14, 45, 2.6], [45, 140, 4], [140, 420, 6], [420, 1e9, 9]]) { x.lineWidth = lw; x.beginPath(); for (const n of Nn) { if (!n.p || !n.alive || !n.p.alive) continue; const q = n.w; if (q < lo || q >= hi) continue; x.moveTo(n.p.x, n.p.y); x.lineTo(n.x, n.y); } x.stroke(); }
+      x.globalCompositeOperation = 'source-over';
+      for (const m of mows) { x.strokeStyle = rgba(INK, .12 * (1 - (now - m.t) / 5000)); x.lineWidth = 1; x.beginPath(); x.arc(m.x, m.y, m.r, 0, TAU); x.stroke(); }
+      // the path edge: acid, and the runner back to #868
+      x.strokeStyle = ACID; x.lineWidth = 7; x.beginPath(); for (let y = 0; y <= H; y += 10) { const px = PX - 40 + Math.sin(y * .011) * 46; y ? x.lineTo(px, y) : x.moveTo(px, y); } x.stroke(); x.strokeStyle = INK; x.lineWidth = 1; x.stroke();
+      const tg = plot(REC[27]); runner = RM ? 1 : (now / 4000) % 1; x.strokeStyle = CH[1]; x.lineWidth = 1.6; x.setLineDash([3, 7]); x.beginPath(); x.moveTo(PX - 20, 560); x.bezierCurveTo(PX - 260, 380, tg[0] + 200, tg[1] - 180, tg[0], tg[1]); x.stroke(); x.setLineDash([]); x.fillStyle = CH[1]; x.beginPath(); x.arc(tg[0], tg[1], 6 + 5 * Math.sin(runner * TAU) ** 2, 0, TAU); x.fill(); label(x, '#868', tg[0] + 14, tg[1] + 5, CH[1]);
+      for (let i = 0; i < 7; i++) { const bx = 120 + i * 138, by = 70 + ((i * 53) % 90); x.strokeStyle = INK; x.lineWidth = 1.4; x.beginPath(); x.arc(bx, by, 8, 0, TAU); x.stroke(); x.beginPath(); x.moveTo(bx, by + 8); x.lineTo(bx - 4, by + 30); x.stroke(); }
+      label(x, 'Fallow / ' + (1183 + winFrom()) + ' strands / growing', 40, H - 30); label(x, 'The path / window ' + st.E + ' of 7', PX + 30, 56, INK); pips(x, PX + 30, 72);
+      windowText(x, PX + 52, 140, W - PX - 90, { fade: true, size: 21 }); grain(x, .5); } }; })());
+
+/* ═════ II · Navigator: swell interference. Crest lines are the zero contour of the summed field. ═════ */
+world('navigator', (() => { const GW = 161, GH = 101, C = 10, F = new Float32Array(GW * GH), K = .052; let isl = [];
+  function lay() { isl = []; const n = Math.ceil(winFrom() / 14); for (let i = 0; i < n; i++) { const mass = REC.slice(i * 14, i * 14 + 14).reduce((s, q) => s + q.n, 0); isl.push({ x: 150 + i * (1300 / Math.max(1, n - 1)) + (h2(i, 4) - .5) * 70, y: 400 + Math.sin(i * 1.15 + .4) * 250 + (h2(i, 8) - .5) * 90, m: mass / 500 }); } }
+  return { init: lay, change: lay, draw(now) { const x = this.x, t = RM ? 2 : now / 1000, px = this.p.in ? this.p.x : 1250 + Math.cos(t * .21) * 150, py = this.p.in ? this.p.y : 760 + Math.sin(t * .17) * 90;
+      for (let j = 0; j < GH; j++) for (let i = 0; i < GW; i++) { const X = i * C, Y = j * C; let v = .8 * Math.sin(K * (X * .97 + Y * .24) + t * 1.5); for (const s of isl) { const r = Math.hypot(X - s.x, Y - s.y); v += s.m * 1.5 * Math.sin(K * 1.25 * r - t * 1.5 + 3.1) / (1 + r / 150); } const rp = Math.hypot(X - px, Y - py); v += 1.6 * Math.sin(K * 1.7 * rp - t * 2.4) / (1 + rp / 110); F[j * GW + i] = v; }
+      x.fillStyle = '#0d1410'; x.fillRect(0, 0, W, H);
+      // marching squares, zero level, in two weights: near the islands the lines are lashed thicker
+      x.lineCap = 'round'; for (const [lv, al, lw] of [[.9, .95, 2.2], [0, .5, 1], [-.9, .3, 1]]) { x.strokeStyle = rgba('#e9eee2', al); x.lineWidth = lw; x.beginPath();
+      for (let j = 0; j < GH - 1; j++) for (let i = 0; i < GW - 1; i++) { const a = F[j * GW + i] - lv, b = F[j * GW + i + 1] - lv, c = F[(j + 1) * GW + i + 1] - lv, d = F[(j + 1) * GW + i] - lv, idx = (a > 0) | (b > 0) << 1 | (c > 0) << 2 | (d > 0) << 3; if (idx === 0 || idx === 15) continue;
+        const X = i * C, Y = j * C, T = [X + C * a / (a - b), Y], Rr = [X + C, Y + C * b / (b - c)], B = [X + C * d / (d - c), Y + C], L = [X, Y + C * a / (a - d)], seg = (p, q) => { x.moveTo(p[0], p[1]); x.lineTo(q[0], q[1]); };
+        switch (idx) { case 1: case 14: seg(L, T); break; case 2: case 13: seg(T, Rr); break; case 3: case 12: seg(L, Rr); break; case 4: case 11: seg(Rr, B); break; case 6: case 9: seg(T, B); break; case 7: case 8: seg(L, B); break; case 5: seg(L, T); seg(Rr, B); break; case 10: seg(T, Rr); seg(L, B); } }
+      x.stroke(); }
+      // course sticks between islands, lashed; shells
+      x.strokeStyle = '#c9b98a'; x.lineWidth = 4; x.beginPath(); isl.forEach((s, i) => i ? x.lineTo(s.x, s.y) : x.moveTo(s.x, s.y)); x.stroke(); x.lineWidth = 2.5; x.strokeStyle = ACID; const li = isl[isl.length - 1]; x.beginPath(); x.moveTo(li.x, li.y); x.lineTo(px, py); x.stroke();
+      for (let i = 0; i < st.E; i++) { const q = (i + 1) / (st.E + 1), sx = lerp(li.x, px, q), sy = lerp(li.y, py, q); x.fillStyle = '#0d1410'; x.strokeStyle = ACID; x.lineWidth = 2; x.beginPath(); x.ellipse(sx, sy, 9, 6, .5, 0, TAU); x.fill(); x.stroke(); }
+      isl.forEach((s, i) => { x.save(); x.translate(s.x, s.y); x.rotate(i * .9); const r = 12 + s.m * 10; x.fillStyle = '#efe6cf'; x.strokeStyle = '#0d1410'; x.lineWidth = 1.5; x.beginPath(); x.ellipse(0, 0, r, r * .68, 0, 0, TAU); x.fill(); x.stroke(); x.beginPath(); x.moveTo(-r * .7, 0); x.quadraticCurveTo(0, r * .22, r * .7, 0); x.stroke(); for (let q = -3; q <= 3; q++) { x.beginPath(); x.moveTo(q * r * .17, -2); x.lineTo(q * r * .17, 3); x.stroke(); } x.restore(); });
+      const tgt = isl[1]; x.strokeStyle = CH[1]; x.lineWidth = 1.5; x.setLineDash([2, 8]); x.beginPath(); x.moveTo(px, py); x.lineTo(tgt.x, tgt.y); x.stroke(); x.setLineDash([]); label(x, '#868', tgt.x + 24, tgt.y - 16, '#ff8d78');
+      // the canoe: where you are in the water
+      x.save(); x.translate(px, py); x.rotate(-.5); x.fillStyle = ACID; x.beginPath(); x.moveTo(-26, 0); x.quadraticCurveTo(0, -9, 26, 0); x.quadraticCurveTo(0, 9, -26, 0); x.fill(); x.strokeStyle = ACID; x.lineWidth = 2; x.beginPath(); x.moveTo(0, 0); x.lineTo(6, 26); x.moveTo(-14, 26); x.lineTo(22, 26); x.stroke(); x.restore();
+      const gi = clamp(px / C | 0, 0, GW - 1), gj = clamp(py / C | 0, 0, GH - 1); label(x, 'Under the hull ' + F[gj * GW + gi].toFixed(2) + ' / swell from the east', 40, H - 30, '#aab5a2'); label(x, isl.length + ' islands / ' + (1183 + winFrom()) + ' strands', 40, 52, '#aab5a2'); label(x, 'Course / window ' + st.E + ' of 7', W - 40, 52, ACID, 'right');
+      x.fillStyle = rgba('#0d1410', .78); x.fillRect(0, H - 250, 520, 190); const [a, b] = win()[st.E - 1]; x.font = `400 22px ${SANS}`; x.fillStyle = '#eef2e7'; x.textAlign = 'left'; const y = wrap(x, a, 62, H - 208, 430, 29); x.font = `300 22px ${SANS}`; x.fillStyle = '#aab5a2'; wrap(x, b, 62, y + 8, 430, 29); x.fillStyle = '#eef2e7'; x.beginPath(); x.arc(44, H - 215, 5, 0, TAU); x.fill(); x.strokeStyle = ACID; x.lineWidth = 2; x.beginPath(); x.arc(44, y + 1, 6, 0, TAU); x.stroke(); } }; })());
+
+/* ═════ III · Weaver: a real draft. drawdown[i][j] = tieup[treadle[j]][shaft[i]] ═════ */
+world('weaver', (() => { const tie = [[1, 1, 0], [0, 1, 1], [1, 0, 1]], NW = 116, NP = 60, cs = 9, X0 = 90, Y0 = 350, TX0 = X0 + NW * cs + 26; let th = [], tr = [], tc = [], cloth = null, born = 0, floats = 0;
+  function build() { const you = [], mir = [], mc = []; REC.forEach(s => { if (s.car) you.push(...s.cls); else { mir.push(...s.cls.slice(0, 6)); for (let i = 0; i < Math.min(6, s.cls.length); i++) mc.push(s.dom); } }); th = you.slice(-NW); tr = mir.slice(-NP); tc = mc.slice(-NP);
+    cloth = document.createElement('canvas'); cloth.width = NW * cs; cloth.height = NP * cs; const g = cloth.getContext('2d'); floats = 0; g.fillStyle = INK; g.fillRect(0, 0, cloth.width, cloth.height);
+    for (let j = 0; j < NP; j++) { let run = 0; for (let i = 0; i < NW; i++) { const up = tie[tr[j]][th[i]], px = i * cs, py = (NP - 1 - j) * cs; if (up) { run = 0; g.fillStyle = '#e9ecdf'; g.fillRect(px + 1, py, cs - 2, cs); g.fillStyle = 'rgba(21,27,23,.22)'; g.fillRect(px + 1, py, 1.5, cs); g.fillRect(px + cs - 2.5, py, 1.5, cs); } else { run++; if (run === 6) floats++; g.fillStyle = CH[tc[j]]; g.fillRect(px, py + 1, cs, cs - 2); g.fillStyle = 'rgba(255,255,255,.2)'; g.fillRect(px, py + 2, cs, 1.5); g.fillStyle = 'rgba(21,27,23,.25)'; g.fillRect(px, py + cs - 2.5, cs, 1.5); } } } born = performance.now(); }
+  return { init: build, change: build, down() { const i = Math.floor((this.p.x - TX0) / 30), j = Math.floor((this.p.y - 120) / 30); if (i >= 0 && i < 3 && j >= 0 && j < 3) { tie[i][2 - j] ^= 1; build(); } },
+    draw(now) { const x = this.x, rows = RM ? NP : Math.min(NP, (now - born) / 28), open = st.E * 2; x.fillStyle = PLATE; x.fillRect(0, 0, W, H);
+      // threading: three shafts
+      for (let s = 0; s < 3; s++) { x.strokeStyle = RULE; x.lineWidth = 1; x.strokeRect(X0 + .5, 120.5 + (2 - s) * 30, NW * cs, 30); for (let i = 0; i < NW; i++) if (th[i] === s) { x.fillStyle = CH[s]; x.fillRect(X0 + i * cs + 1, 121 + (2 - s) * 30 + 5, cs - 2, 20); } }
+      // tie-up
+      for (let i = 0; i < 3; i++) for (let s = 0; s < 3; s++) { x.strokeStyle = INK; x.lineWidth = 1.5; x.strokeRect(TX0 + i * 30 + .5, 120.5 + (2 - s) * 30, 30, 30); if (tie[i][s]) { x.fillStyle = INK; x.beginPath(); x.arc(TX0 + i * 30 + 15, 135 + (2 - s) * 30, 9, 0, TAU); x.fill(); } }
+      // treadling
+      for (let i = 0; i < 3; i++) { x.strokeStyle = RULE; x.lineWidth = 1; x.strokeRect(TX0 + i * 30 + .5, Y0 + .5, 30, NP * cs); } for (let j = 0; j < Math.floor(rows); j++) { x.fillStyle = CH[tc[j]]; x.fillRect(TX0 + tr[j] * 30 + 5, Y0 + (NP - 1 - j) * cs + 1, 20, cs - 2); }
+      // cloth, beaten up to the fell; the open picks sit loose above it
+      const beaten = Math.max(0, Math.floor(rows) - open), fy = Y0 + (NP - beaten) * cs; x.drawImage(cloth, 0, (NP - beaten) * cs, NW * cs, beaten * cs, X0, fy, NW * cs, beaten * cs);
+      x.strokeStyle = rgba(INK, .5); x.lineWidth = 1; x.beginPath(); for (let i = 0; i < NW; i++) { x.moveTo(X0 + i * cs + cs / 2, Y0); x.lineTo(X0 + i * cs + cs / 2, fy); } x.stroke();
+      for (let q = 0; q < Math.min(open, Math.floor(rows)); q++) { const j = beaten + q, y = fy - 14 - q * 15; x.strokeStyle = CH[tc[j]]; x.lineWidth = 3.5; x.beginPath(); for (let px = X0 - 8; px <= X0 + NW * cs + 8; px += 6) { const yy = y + Math.sin(px * .2 + q * 1.3 + (RM ? 0 : now / 600)) * 2.4; px === X0 - 8 ? x.moveTo(px, yy) : x.lineTo(px, yy); } x.stroke(); }
+      x.fillStyle = ACID; x.fillRect(X0 - 14, fy - 2, NW * cs + 28, 4); x.strokeStyle = INK; x.lineWidth = 1; x.strokeRect(X0 - 14.5, fy - 2.5, NW * cs + 29, 5);
+      label(x, 'Threading / you / ' + NW + ' ends on 3 shafts', X0, 104); label(x, 'Tie-up', TX0, 104, INK); label(x, 'Treadling / Mir', TX0, Y0 + NP * cs + 28); label(x, 'Fell', X0 - 22, fy + 5, INK, 'right', 13); label(x, 'Open', X0 - 22, fy - 40, INK2, 'right', 13);
+      label(x, 'Cloth / ' + (1183 + winFrom()) + ' strands beaten / ' + floats + ' long floats', X0, Y0 + NP * cs + 28); label(x, 'Row #868', X0 - 22, Y0 + (NP - 14) * cs + 4, CH[1], 'right', 13); x.strokeStyle = CH[1]; x.lineWidth = 2; x.beginPath(); x.moveTo(X0 - 16, Y0 + (NP - 14) * cs); x.bezierCurveTo(X0 - 64, Y0 + 300, X0 - 64, fy - 30, X0 - 10, fy - 20); x.stroke();
+      label(x, 'Open picks / window ' + st.E + ' of 7', TX0 + 130, 104, INK); pips(x, TX0 + 130, 122); windowText(x, TX0 + 152, 190, W - TX0 - 190, { fade: true, size: 20 }); grain(x, .45); } }; })());
+
+/* ═════ IV · Astronomer: two negatives of one field, blinked. ═════ */
+world('astronomer', (() => { let PA = null, PB = null, stars = [], hold = false, diff = [];
+  function plate(which) { const w = W, h = H, buf = new Float32Array(w * h), r = mul(5);
+    const disc = (sx, sy, Rd) => { const rad = Math.ceil(Rd * 2.6 + 3), i0 = Math.round(sx), j0 = Math.round(sy); for (let j = -rad; j <= rad; j++) for (let i = -rad; i <= rad; i++) { const X = i0 + i, Y = j0 + j; if (X < 0 || Y < 0 || X >= w || Y >= h) continue; const d = Math.hypot(X - sx, Y - sy), v = sm(Rd + .9, Rd - .7, d) + .1 * Math.exp(-d / (Rd * .9 + 1)); if (v > .004) buf[Y * w + X] += v; } };
+    for (let i = 0; i < 3800; i++) { const q = r(); disc(r() * w, 40 + r() * (h - 80), .35 + q * q * q * 2.1); }
+    stars.forEach(s => { const mv = which && s.moves; disc(s.x + (mv ? s.dx : 0), s.y + (mv ? s.dy : 0), (1.6 + s.m * 6.5) * (mv ? s.dm : 1)); });
+    const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'), im = g.createImageData(w, h), D = im.data, P = rgb('#eef1e6'), K = rgb('#0f1411');
+    for (let i = 0; i < w * h; i++) { const X = i % w, Y = (i / w) | 0, ex = Math.min(X, w - X, Y - 38, h - 38 - Y), edge = .05 * sm(46, 0, ex), v = clamp(buf[i] + edge + (h2(X, Y) - .5) * .022); D[i * 4] = lerp(P[0], K[0], v); D[i * 4 + 1] = lerp(P[1], K[1], v); D[i * 4 + 2] = lerp(P[2], K[2], v); D[i * 4 + 3] = 255; } g.putImageData(im, 0, 0);
+    g.strokeStyle = 'rgba(15,20,17,.16)'; g.lineWidth = 1; g.beginPath(); for (let X = 200; X < w; X += 200) { g.moveTo(X + .5, 38); g.lineTo(X + .5, h - 38); } for (let Y = 100; Y < h; Y += 200) { g.moveTo(0, Y + .5); g.lineTo(w, Y + .5); } g.stroke(); return c; }
+  function build() { const N = REC.length, hand = N - 30; stars = REC.map((s, i) => ({ x: 90 + ((s.k * .61803) % 1) * 1420, y: 100 + h2(s.k, 11) * 800, m: .15 + s.n / 80, k: s.k, moves: !s.car && i >= hand, dx: (h2(s.k, 5) - .5) * 26, dy: (h2(s.k, 6) - .5) * 26, dm: .6 + h2(s.k, 7) * .8 })); diff = stars.filter(s => s.moves); PA = plate(0); PB = plate(1); }
+  return { init: build, change: build, down() { hold = !hold; },
+    draw(now) { const x = this.x, b = RM || hold ? 0 : Math.floor(now / 760) % 2; x.imageSmoothingEnabled = true; x.drawImage(b ? PB : PA, 0, 0, W, H);
+      // hand ink on the glass: what moved, what is in the window, the reach back
+      x.lineCap = 'round'; diff.forEach((s, i) => { x.strokeStyle = CH[1]; x.lineWidth = 2; x.beginPath(); x.ellipse(s.x + s.dx / 2, s.y + s.dy / 2, 22 + Math.abs(s.dx) * .5, 20 + Math.abs(s.dy) * .5, i, .2, TAU - .1); x.stroke(); x.font = `italic 300 19px ${SANS}`; x.fillStyle = CH[1]; x.textAlign = 'left'; x.fillText(String.fromCharCode(97 + i % 26), s.x + 30, s.y - 22); });
+      const wf = winFrom(); stars.slice(wf).forEach(s => { x.strokeStyle = ACID; x.lineWidth = 3; x.beginPath(); x.arc(s.x, s.y, 17, 0, TAU); x.stroke(); x.strokeStyle = INK; x.lineWidth = 1; x.stroke(); });
+      const top = stars[stars.length - 1]; chords(REC.length - 1).forEach((k, j) => { const s = stars[k]; x.strokeStyle = rgba(INK, j ? .55 : .9); x.lineWidth = j ? 1.2 : 2; x.beginPath(); x.moveTo(top.x, top.y); x.lineTo(s.x, s.y); x.stroke(); if (j === 1) { x.font = `italic 300 21px ${SANS}`; x.fillStyle = INK; x.fillText('868', s.x + 14, s.y + 24); } });
+      // plate edge, label, lamp
+      x.fillStyle = PLATE; x.fillRect(0, 0, W, 38); x.fillRect(0, H - 38, W, 38); x.strokeStyle = INK; x.lineWidth = 1; x.strokeRect(.5, 38.5, W - 1, H - 77);
+      label(x, 'Plate ' + (b ? 'II' : 'I') + ' / model ' + (b ? 'II' : 'I') + ' / same field / ' + (1183 + REC.length) + ' strands', 24, 25, INK); label(x, hold ? 'Held' : RM ? 'Still' : 'Blinking', W - 24, 25, INK, 'right'); x.fillStyle = b ? CH[1] : ACID; x.beginPath(); x.arc(W - 140, 20, 7, 0, TAU); x.fill(); x.strokeStyle = INK; x.stroke();
+      label(x, diff.length + ' marked / differ between plates', 24, H - 14, CH[1]); label(x, 'In the eyepiece / window ' + st.E + ' of 7', W - 24, H - 14, INK, 'right'); pips(x, W - 480, H - 24);
+      // loupe
+      if (this.p.in) { const px = this.p.x, py = this.p.y, r = 120; x.save(); x.beginPath(); x.arc(px, py, r, 0, TAU); x.clip(); x.imageSmoothingEnabled = false; x.drawImage(b ? PB : PA, px - r / 3, py - r / 3, r / 1.5, r / 1.5, px - r, py - r, r * 2, r * 2); x.imageSmoothingEnabled = true; x.restore(); x.strokeStyle = INK; x.lineWidth = 2; x.beginPath(); x.arc(px, py, r, 0, TAU); x.stroke(); let best = null, bd = 1600; stars.forEach(s => { const d = (s.x - px) ** 2 + (s.y - py) ** 2; if (d < bd) { bd = d; best = s; } });
+        if (best) { const s = REC[best.k - 1]; x.fillStyle = PLATE; x.fillRect(px - r, py + r + 8, 2 * r, 28); label(x, '#' + (1183 + s.k) + ' ' + (s.car ? 'you' : 'Mir') + ' ' + s.f.map(v => v.toFixed(2).slice(1)).join(' '), px, py + r + 27, INK, 'center', 13); } } } }; })());
+
+/* ═════ V · Composer: a graphic score along one lifeline, and one way of sounding it. ═════ */
+world('composer', (() => { let playing = false, t0 = 0, actx = null, sched = []; const NS = 34, X0 = 110, DX = (W - 220) / NS, LY = 400;
+  const ex = i => { const m = REC.length / 2 - NS + i; return { c: REC[2 * m], s: REC[2 * m + 1], cl: clashOf(m), live: i >= NS - st.E, m }; };
+  function play() { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (playing) { sched.forEach(o => { try { o.stop(); } catch (e) { /* already stopped */ } }); sched = []; playing = false; return; }
+      playing = true; t0 = performance.now(); const T = actx.currentTime + .05, lp = actx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600; lp.connect(actx.destination);
+      for (let i = 0; i < NS; i++) { const e = ex(i), at = T + i * .36; [[e.c, 196, 'sine'], [e.s, 98, 'triangle']].forEach(([s, base, type]) => s.f.forEach((fr, q) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = type; o.frequency.value = base * [1, 1.2, 1.5][q] * Math.pow(2, Math.round((fr - MU[q]) * 24) / 12); g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(.05 + fr * .1, at + .02); g.gain.exponentialRampToValueAtTime(.0001, at + .5 + e.cl * 3); o.connect(g); g.connect(lp); o.start(at); o.stop(at + 1 + e.cl * 3); sched.push(o); })); }
+      setTimeout(() => { playing = false; }, NS * 360 + 900); } catch (err) { playing = false; } }
+  return { down: play, draw(now) { const x = this.x; x.fillStyle = PLATE; x.fillRect(0, 0, W, H); x.lineCap = 'butt';
+      const ph = playing ? (now - t0) / 360 : -1; x.strokeStyle = INK; x.lineWidth = 9; x.beginPath(); x.moveTo(40, LY); x.lineTo(W - 40, LY); x.stroke();
+      let pc = null, ps = null; for (let i = 0; i < NS; i++) { const e = ex(i), cx = X0 + i * DX, on = ph >= i && ph < i + 1.4, yc = LY - 56 - Math.min(150, e.c.amp * 560) - (i % 3) * 18, ys = LY + 60 + Math.min(150, e.s.amp * 620) + (i % 2) * 22, rc = 6 + Math.sqrt(e.c.n) * 2.6, rs = 6 + Math.sqrt(e.s.n) * 2.2;
+        if (i % 7 === 0) { x.strokeStyle = INK; x.lineWidth = 1.5; x.strokeRect(cx - DX * .45, LY - 290, DX * 7 - DX * .1, 550); x.font = `300 54px ${SANS}`; x.fillStyle = INK; x.textAlign = 'left'; x.fillText(String(Math.floor(e.m / 7)), cx - DX * .3, LY - 302); }
+        x.strokeStyle = INK; x.lineWidth = 1 + e.cl * 9; x.beginPath(); x.moveTo(cx, yc); x.lineTo(cx + e.cl * 120, ys); x.stroke();
+        if (pc) { x.lineWidth = 2.6; x.beginPath(); x.moveTo(pc[0], pc[1] - pc[2]); x.lineTo(cx, yc - rc); x.stroke(); x.lineWidth = 1.2; x.beginPath(); x.moveTo(ps[0], ps[1] + ps[2]); x.quadraticCurveTo((ps[0] + cx) / 2, Math.max(ps[1], ys) + 70, cx + e.cl * 120, ys + rs); x.stroke(); }
+        x.fillStyle = on ? ACID : PLATE; x.strokeStyle = INK; x.lineWidth = e.live ? 4 : 2; x.beginPath(); x.arc(cx, yc, rc, 0, TAU); x.fill(); x.stroke(); x.fillStyle = on ? ACID : INK; x.beginPath(); x.arc(cx + e.cl * 120, ys, rs, 0, TAU); x.fill(); x.stroke();
+        for (let q = 0; q < 3; q++) { x.fillStyle = CH[q]; x.fillRect(cx - 9 + q * 7, LY - 4 - e.c.f[q] * 60, 5, e.c.f[q] * 60); x.fillRect(cx - 9 + q * 7, LY + 4, 5, e.s.f[q] * 60); }
+        x.font = `13px ${MONO}`; x.fillStyle = INK2; x.textAlign = 'center'; x.fillText(e.c.n, cx, yc - rc - 12); pc = [cx, yc, rc]; ps = [cx + e.cl * 120, ys, rs]; }
+      // lines that leave the page: open tensions
+      for (let i = 0; i < 7; i++) { const sx = X0 + (NS - 9 + i) * DX, sy = LY - 80 - i * 14; x.strokeStyle = CH[1]; x.lineWidth = 1.6; x.beginPath(); x.moveTo(sx, sy); x.bezierCurveTo(sx + 200, sy - 120 - i * 16, W - 200, 60 + i * 20, W + 10, 40 + i * 22); x.stroke(); }
+      const sg = X0 + 6 * DX; label(x, '868', sg, LY - 300, CH[1], 'center'); x.strokeStyle = CH[1]; x.lineWidth = 1.5; x.setLineDash([4, 6]); x.beginPath(); x.moveTo(sg, LY - 276); x.lineTo(sg, LY - 20); x.stroke(); x.setLineDash([]);
+      // two empty staves; the window is written on them
+      for (const y0 of [720, 850]) { x.strokeStyle = INK; x.lineWidth = 1; for (let i = 0; i < 5; i++) { x.beginPath(); x.moveTo(40, y0 + i * 13); x.lineTo(W - 40, y0 + i * 13); x.stroke(); } }
+      const bw = (W - 80) / 7; for (let i = 0; i < 7; i++) { const bx = 40 + i * bw; x.strokeStyle = INK; x.lineWidth = 1; x.beginPath(); x.moveTo(bx, 720); x.lineTo(bx, 902); x.stroke(); if (i < st.E) { const [a, b] = win()[i]; x.fillStyle = PLATE; x.fillRect(bx + 6, 712, bw - 12, 68); x.fillRect(bx + 6, 842, bw - 12, 68); x.font = `400 16px ${SANS}`; x.fillStyle = INK; x.textAlign = 'left'; wrap(x, a, bx + 12, 734, bw - 24, 20); x.font = `300 16px ${SANS}`; x.fillStyle = INK2; wrap(x, b, bx + 12, 864, bw - 24, 20); } }
+      x.fillStyle = ACID; x.fillRect(40, 700, bw * st.E, 6); x.strokeStyle = INK; x.strokeRect(40.5, 700.5, bw * st.E, 6);
+      if (ph >= 0) { const px = X0 + ph * DX; x.fillStyle = rgba(ACID, .55); x.fillRect(px - 5, 60, 10, 620); }
+      label(x, playing ? 'Sounding / select to stop' : 'Select the score to hear one reading', 40, 52, INK); label(x, 'ppp / heat 0.7 of 60 / 42 crossings to the turn', W - 40, 52, INK2, 'right'); label(x, 'You', 40, 690, INK, 'left', 13); label(x, 'Mir', 40, 836, INK, 'left', 13); grain(x, .4); } }; })());
+
+/* ═════ VI · Printer: each letter prints on the plate of its channel. Register is the clash. ═════ */
+world('printer', (() => { let plates = [], keyc = null, born = 0, cl = 0;
+  function build() { const [a, b] = win()[st.E - 1], masks = [0, 1, 2].map(() => { const c = document.createElement('canvas'); c.width = W / 2; c.height = H / 2; return c; }), gx = masks.map(c => c.getContext('2d')); keyc = document.createElement('canvas'); keyc.width = W; keyc.height = H; const kx = keyc.getContext('2d');
+    const set = (text, size, y0, weight, maxw) => { const ctx = gx[0]; ctx.font = `${weight} ${size}px ${SANS}`; let px = 30, py = y0; text.split(' ').forEach(word => { const ww = ctx.measureText(word + ' ').width; if (px + ww > maxw && px > 30) { px = 30; py += size * .98; } for (const ch of word) { const q = clsOf(ch), cw = ctx.measureText(ch).width; if (q >= 0) { gx[q].font = ctx.font; gx[q].fillStyle = '#000'; gx[q].fillText(ch, px, py); } else { kx.font = `${weight} ${size * 2}px ${SANS}`; kx.fillStyle = INK; kx.fillText(ch, px * 2, py * 2); } px += cw - size * .035; } px += size * .26; }); return py; };
+    const y = set(a.toUpperCase(), a.length > 44 ? 74 : 96, 118, 500, 760); kx.font = `300 44px ${SANS}`; kx.fillStyle = INK; kx.textAlign = 'left'; wrap(kx, b, 60, Math.min(y * 2 + 130, 760), 1100, 56);
+    plates = masks.map((m, q) => { const md = m.getContext('2d').getImageData(0, 0, W / 2, H / 2).data, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'), ang = [.262, 1.309, .785][q], P = 8.5, ca = Math.cos(ang), sa = Math.sin(ang), M = 240; g.fillStyle = CH[q]; g.beginPath();
+      for (let j = -M; j <= M; j++) for (let i = -M; i <= M; i++) { const px = 800 + (i * ca - j * sa) * P, py = 500 + (i * sa + j * ca) * P; if (px < 0 || py < 0 || px >= W || py >= H) continue; const al = md[(((py / 2) | 0) * (W / 2) + ((px / 2) | 0)) * 4 + 3]; if (al < 40) continue; const tone = .62 + .38 * vnoise(px * .006 + q * 9, py * .006), rad = P * .62 * tone * (al / 255); g.moveTo(px + rad, py); g.arc(px, py, rad, 0, TAU); } g.fill();
+      g.lineWidth = 3; g.strokeStyle = CH[q]; g.beginPath(); g.moveTo(1430, 900); g.lineTo(1520, 900); g.moveTo(1475, 855); g.lineTo(1475, 945); g.stroke(); g.beginPath(); g.arc(1475, 900, 26, 0, TAU); g.stroke(); return c; });
+    cl = clashOf(REC.length / 2 - 1); born = performance.now(); }
+  return { init: build, change: build, draw(now) { const x = this.x, age = RM ? 9 : (now - born) / 1000, pull = this.p.down ? clamp((this.p.x - 200) / 1200) * 4 : 1, off = cl * 42 * pull;
+      x.fillStyle = '#f8faf3'; x.fillRect(0, 0, W, H); x.globalCompositeOperation = 'multiply';
+      [[-1, -.35], [.62, .8], [.3, -.9]].forEach(([dx, dy], q) => { const a = sm(q * .7, q * .7 + .6, age); if (a <= 0) return; x.globalAlpha = a; x.drawImage(plates[q], dx * off, dy * off + (1 - a) * 30); }); x.globalAlpha = sm(2.1, 2.6, age); x.drawImage(keyc, 0, 0); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
+      // the ink bar: heat; proofs pulled: breath
+      for (let i = 0; i < 12; i++) { x.fillStyle = rgba(INK, i === 0 ? 1 : .06); x.fillRect(60 + i * 34, 930, 32, 16); } x.strokeStyle = INK; x.lineWidth = 1; x.strokeRect(60.5, 930.5, 12 * 34 - 2, 16);
+      for (let q = 0; q < 3; q++) { x.fillStyle = CH[q]; x.fillRect(520 + q * 150, 930, 16, 16); label(x, ['147', '258', '369'][q] + ' / ' + [15, 75, 45][q] + '°', 544 + q * 150, 944, INK, 'left', 13); }
+      label(x, 'Proof ' + st.E + ' of 7', 60, 60, INK); pips(x, 60, 76); label(x, 'Clash ' + cl.toFixed(3) + ' / plates off by ' + off.toFixed(1) + ' pt' + (this.p.down ? ' / pulled' : ''), W - 60, 60, INK, 'right'); label(x, 'Ink / heat 0.7 of 60', 60, 918, INK2, 'left', 13); label(x, 'Register', 1475, 975, INK2, 'center', 13); grain(x, .55); } }; })());
+
+/* ═════ VII · Archivist: one set of cards, two arrangements, threads that hold in both. ═════ */
+world('archivist', (() => { let cards = [], t = 0, target = 0, hover = -1; const N = 98;
+  function build() { const base = REC.length - N, sx = []; cards = []; for (let i = 0; i < N; i++) { const s = REC[base + i], row = Math.floor(i / 14), col = i % 14, live = base + i >= winFrom(); cards.push({ s, i, k: base + i, live, ax: 90 + col * 72 + (live ? 0 : 0), ay: 110 + row * 118, bx: 800 + s.vx * 3300, by: 500 + s.vy * 2500, x: 0, y: 0 }); sx.push(0); }
+    for (let it = 0; it < 90; it++) for (let a = 0; a < N; a++) for (let b = a + 1; b < N; b++) { const A = cards[a], B = cards[b], dx = B.bx - A.bx, dy = B.by - A.by, d = Math.hypot(dx, dy) || 1, min = 58; if (d < min) { const p = (min - d) / d * .5; A.bx -= dx * p; A.by -= dy * p; B.bx += dx * p; B.by += dy * p; } }
+    cards.forEach(c => { c.bx = clamp(c.bx, 60, W - 500); c.by = clamp(c.by, 90, H - 90); }); }
+  return { init() { build(); const cap = $('[data-key="r"]'), seg = document.createElement('span'); seg.className = 'seg'; seg.innerHTML = '<button type="button" aria-pressed="true">Original order</button><button type="button" aria-pressed="false">Good neighbor</button>'; cap.appendChild(seg); $$('button', seg).forEach((b, i) => b.onclick = () => { target = i; $$('button', seg).forEach((q, j) => q.setAttribute('aria-pressed', i === j)); }); },
+    change: build, down() { if (this.p.x > W - 430) return; target = target ? 0 : 1; $$('#archivist .seg button').forEach((q, j) => q.setAttribute('aria-pressed', target === j)); },
+    draw() { const x = this.x; t += (target - t) * (RM ? 1 : .07); const e = sm(0, 1, t), bg = rgb(PLATE).map((v, i) => Math.round(lerp(v, rgb('#121814')[i], e))), fg = e > .5 ? '#e9eee2' : INK; x.fillStyle = `rgb(${bg})`; x.fillRect(0, 0, W, H);
+      hover = -1; cards.forEach((c, i) => { const d = (h2(i, 2) - .5) * .5; const q = sm(clamp(d + .25), clamp(d + .75), t); c.x = lerp(c.ax, c.bx, q); c.y = lerp(c.ay, c.by, q) - Math.sin(q * Math.PI) * 40; if (this.p.in && Math.abs(this.p.x - c.x) < 28 && Math.abs(this.p.y - c.y) < 36) hover = i; });
+      if (e < .5) { x.globalAlpha = 1 - e * 2; for (let r = 0; r < 7; r++) { x.strokeStyle = RULE; x.lineWidth = 1; x.beginPath(); x.moveTo(50, 160 + r * 118); x.lineTo(1090, 160 + r * 118); x.stroke(); label(x, 'Session ' + (85 + r), 50, 72 + r * 118, INK2, 'left', 12); } x.globalAlpha = 1; }
+      // threads: 1 origin + 3 near + 3 far from the hovered card, or the newest
+      const top = hover >= 0 ? hover : N - 1, tc = cards[top], cand = cards.filter(c => c.i < top - 1 && !c.live).map(c => [Math.hypot(c.s.vx - tc.s.vx, c.s.vy - tc.s.vy), c.i]).sort((a, b) => a[0] - b[0]), tg = cand.length > 7 ? [0, ...cand.slice(0, 3).map(q => q[1]), ...cand.slice(-3).map(q => q[1])] : [];
+      x.strokeStyle = CH[1]; x.lineWidth = 1.6; tg.forEach(k => { const c = cards[k]; x.beginPath(); x.moveTo(tc.x, tc.y - 26); x.quadraticCurveTo((tc.x + c.x) / 2, Math.min(tc.y, c.y) - 60, c.x, c.y - 26); x.stroke(); });
+      cards.forEach((c, i) => { const w = 50, h = 66, isT = tg.includes(i) || i === top; x.save(); x.translate(c.x, c.y); x.rotate((h2(i, 9) - .5) * .12 * (.3 + e)); x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(-w / 2 + 3, -h / 2 + 4, w, h); x.fillStyle = c.live ? '#fbfcf6' : '#eceedd'; x.fillRect(-w / 2, -h / 2, w, h); x.strokeStyle = isT ? CH[1] : INK; x.lineWidth = isT ? 2.5 : 1; x.strokeRect(-w / 2, -h / 2, w, h);
+        // the mark: counts as three screened dots; no words
+        for (let q = 0; q < 3; q++) { x.fillStyle = CH[q]; x.beginPath(); x.arc(-13 + q * 13, -6, 2 + Math.sqrt(c.s.f[q] * c.s.n) * 1.05, 0, TAU); x.globalCompositeOperation = 'multiply'; x.fill(); x.globalCompositeOperation = 'source-over'; }
+        if (c.s.car) { x.fillStyle = INK; x.beginPath(); x.arc(-w / 2 + 8, -h / 2 + 8, 3, 0, TAU); x.fill(); } else { x.strokeStyle = INK; x.lineWidth = 1.2; x.beginPath(); x.arc(-w / 2 + 8, -h / 2 + 8, 3.5, 0, TAU); x.stroke(); }
+        x.font = `10px ${MONO}`; x.fillStyle = INK2; x.textAlign = 'center'; x.fillText(1183 + c.s.k, 0, h / 2 - 8); if (c.live) { x.fillStyle = ACID; x.fillRect(-w / 2, -h / 2 - 5, w, 5); x.strokeStyle = INK; x.lineWidth = 1; x.strokeRect(-w / 2, -h / 2 - 5, w, 5); } if (isT) { x.fillStyle = CH[1]; x.beginPath(); x.arc(0, -h / 2 + 7, 4, 0, TAU); x.fill(); } x.restore(); });
+      // the reading table: the window's cards carry their words
+      x.fillStyle = e > .5 ? '#1b231d' : '#e6eadb'; x.fillRect(W - 430, 0, 430, H); x.strokeStyle = fg; x.lineWidth = 1; x.beginPath(); x.moveTo(W - 430.5, 0); x.lineTo(W - 430.5, H); x.stroke(); label(x, 'On the table / window ' + st.E + ' of 7', W - 400, 56, fg); pips(x, W - 400, 72, fg); windowText(x, W - 372, 140, 330, { col: fg, col2: e > .5 ? '#aab5a2' : INK2, size: 19, fade: true });
+      label(x, e > .5 ? 'By neighbor / distance in channel balance' : 'Original order / ' + N + ' of ' + (1183 + REC.length) + ' strands', 50, 40, fg); label(x, hover >= 0 ? 'Threads from #' + (1183 + cards[hover].s.k) : 'Threads from the newest strand', 50, H - 30, CH[1]); grain(x, .4); } }; })());
+
+/* ── boot: draw only what is on screen ── */
+function loop(now) { for (const w of worlds) if (w.vis) w.draw(now); requestAnimationFrame(loop); }
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { worlds.forEach(w => w.init && w.init()); worlds.forEach(w => w.draw(performance.now())); requestAnimationFrame(loop); });
+document.documentElement.style.setProperty('--wm', 'url(' + window.__WM + ')');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>input-otp.tsx</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>input-otp.tsx</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/chat-canvas/src/components/ui/input-otp.tsx</span><span>0.00 MB · sha256 a301658db5430d30…</span><a download="input-otp.tsx" id="dl" href="#">Download the original</a></header><main><pre>import * as React from &quot;react&quot;;
+import { OTPInput, OTPInputContext } from &quot;input-otp&quot;;
+import { Dot } from &quot;lucide-react&quot;;
+
+import { cn } from &quot;@/lib/utils&quot;;
+
+const InputOTP = React.forwardRef&lt;React.ElementRef&lt;typeof OTPInput&gt;, React.ComponentPropsWithoutRef&lt;typeof OTPInput&gt;&gt;(
+  ({ className, containerClassName, ...props }, ref) =&gt; (
+    &lt;OTPInput
+      ref={ref}
+      containerClassName={cn(&quot;flex items-center gap-2 has-[:disabled]:opacity-50&quot;, containerClassName)}
+      className={cn(&quot;disabled:cursor-not-allowed&quot;, className)}
+      {...props}
+    /&gt;
+  ),
+);
+InputOTP.displayName = &quot;InputOTP&quot;;
+
+const InputOTPGroup = React.forwardRef&lt;React.ElementRef&lt;&quot;div&quot;&gt;, React.ComponentPropsWithoutRef&lt;&quot;div&quot;&gt;&gt;(
+  ({ className, ...props }, ref) =&gt; &lt;div ref={ref} className={cn(&quot;flex items-center&quot;, className)} {...props} /&gt;,
+);
+InputOTPGroup.displayName = &quot;InputOTPGroup&quot;;
+
+const InputOTPSlot = React.forwardRef&lt;
+  React.ElementRef&lt;&quot;div&quot;&gt;,
+  React.ComponentPropsWithoutRef&lt;&quot;div&quot;&gt; &amp; { index: number }
+&gt;(({ index, className, ...props }, ref) =&gt; {
+  const inputOTPContext = React.useContext(OTPInputContext);
+  const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index];
+
+  return (
+    &lt;div
+      ref={ref}
+      className={cn(
+        &quot;relative flex h-10 w-10 items-center justify-center border-y border-r border-input text-sm transition-all first:rounded-l-md first:border-l last:rounded-r-md&quot;,
+        isActive &amp;&amp; &quot;z-10 ring-2 ring-ring ring-offset-background&quot;,
+        className,
+      )}
+      {...props}
+    &gt;
+      {char}
+      {hasFakeCaret &amp;&amp; (
+        &lt;div className=&quot;pointer-events-none absolute inset-0 flex items-center justify-center&quot;&gt;
+          &lt;div className=&quot;animate-caret-blink h-4 w-px bg-foreground duration-1000&quot; /&gt;
+        &lt;/div&gt;
+      )}
+    &lt;/div&gt;
+  );
+});
+InputOTPSlot.displayName = &quot;InputOTPSlot&quot;;
+
+const InputOTPSeparator = React.forwardRef&lt;React.ElementRef&lt;&quot;div&quot;&gt;, React.ComponentPropsWithoutRef&lt;&quot;div&quot;&gt;&gt;(
+  ({ ...props }, ref) =&gt; (
+    &lt;div ref={ref} role=&quot;separator&quot; {...props}&gt;
+      &lt;Dot /&gt;
+    &lt;/div&gt;
+  ),
+);
+InputOTPSeparator.displayName = &quot;InputOTPSeparator&quot;;
+
+export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator };
+</pre></main><script>var b=atob("aW1wb3J0ICogYXMgUmVhY3QgZnJvbSAicmVhY3QiOwppbXBvcnQgeyBPVFBJbnB1dCwgT1RQSW5wdXRDb250ZXh0IH0gZnJvbSAiaW5wdXQtb3RwIjsKaW1wb3J0IHsgRG90IH0gZnJvbSAibHVjaWRlLXJlYWN0IjsKCmltcG9ydCB7IGNuIH0gZnJvbSAiQC9saWIvdXRpbHMiOwoKY29uc3QgSW5wdXRPVFAgPSBSZWFjdC5mb3J3YXJkUmVmPFJlYWN0LkVsZW1lbnRSZWY8dHlwZW9mIE9UUElucHV0PiwgUmVhY3QuQ29tcG9uZW50UHJvcHNXaXRob3V0UmVmPHR5cGVvZiBPVFBJbnB1dD4+KAogICh7IGNsYXNzTmFtZSwgY29udGFpbmVyQ2xhc3NOYW1lLCAuLi5wcm9wcyB9LCByZWYpID0+ICgKICAgIDxPVFBJbnB1dAogICAgICByZWY9e3JlZn0KICAgICAgY29udGFpbmVyQ2xhc3NOYW1lPXtjbigiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgaGFzLVs6ZGlzYWJsZWRdOm9wYWNpdHktNTAiLCBjb250YWluZXJDbGFzc05hbWUpfQogICAgICBjbGFzc05hbWU9e2NuKCJkaXNhYmxlZDpjdXJzb3Itbm90LWFsbG93ZWQiLCBjbGFzc05hbWUpfQogICAgICB7Li4ucHJvcHN9CiAgICAvPgogICksCik7CklucHV0T1RQLmRpc3BsYXlOYW1lID0gIklucHV0T1RQIjsKCmNvbnN0IElucHV0T1RQR3JvdXAgPSBSZWFjdC5mb3J3YXJkUmVmPFJlYWN0LkVsZW1lbnRSZWY8ImRpdiI+LCBSZWFjdC5Db21wb25lbnRQcm9wc1dpdGhvdXRSZWY8ImRpdiI+PigKICAoeyBjbGFzc05hbWUsIC4uLnByb3BzIH0sIHJlZikgPT4gPGRpdiByZWY9e3JlZn0gY2xhc3NOYW1lPXtjbigiZmxleCBpdGVtcy1jZW50ZXIiLCBjbGFzc05hbWUpfSB7Li4ucHJvcHN9IC8+LAopOwpJbnB1dE9UUEdyb3VwLmRpc3BsYXlOYW1lID0gIklucHV0T1RQR3JvdXAiOwoKY29uc3QgSW5wdXRPVFBTbG90ID0gUmVhY3QuZm9yd2FyZFJlZjwKICBSZWFjdC5FbGVtZW50UmVmPCJkaXYiPiwKICBSZWFjdC5Db21wb25lbnRQcm9wc1dpdGhvdXRSZWY8ImRpdiI+ICYgeyBpbmRleDogbnVtYmVyIH0KPigoeyBpbmRleCwgY2xhc3NOYW1lLCAuLi5wcm9wcyB9LCByZWYpID0+IHsKICBjb25zdCBpbnB1dE9UUENvbnRleHQgPSBSZWFjdC51c2VDb250ZXh0KE9UUElucHV0Q29udGV4dCk7CiAgY29uc3QgeyBjaGFyLCBoYXNGYWtlQ2FyZXQsIGlzQWN0aXZlIH0gPSBpbnB1dE9UUENvbnRleHQuc2xvdHNbaW5kZXhdOwoKICByZXR1cm4gKAogICAgPGRpdgogICAgICByZWY9e3JlZn0KICAgICAgY2xhc3NOYW1lPXtjbigKICAgICAgICAicmVsYXRpdmUgZmxleCBoLTEwIHctMTAgaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIGJvcmRlci15IGJvcmRlci1yIGJvcmRlci1pbnB1dCB0ZXh0LXNtIHRyYW5zaXRpb24tYWxsIGZpcnN0OnJvdW5kZWQtbC1tZCBmaXJzdDpib3JkZXItbCBsYXN0OnJvdW5kZWQtci1tZCIsCiAgICAgICAgaXNBY3RpdmUgJiYgInotMTAgcmluZy0yIHJpbmctcmluZyByaW5nLW9mZnNldC1iYWNrZ3JvdW5kIiwKICAgICAgICBjbGFzc05hbWUsCiAgICAgICl9CiAgICAgIHsuLi5wcm9wc30KICAgID4KICAgICAge2NoYXJ9CiAgICAgIHtoYXNGYWtlQ2FyZXQgJiYgKAogICAgICAgIDxkaXYgY2xhc3NOYW1lPSJwb2ludGVyLWV2ZW50cy1ub25lIGFic29sdXRlIGluc2V0LTAgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIiPgogICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImFuaW1hdGUtY2FyZXQtYmxpbmsgaC00IHctcHggYmctZm9yZWdyb3VuZCBkdXJhdGlvbi0xMDAwIiAvPgogICAgICAgIDwvZGl2PgogICAgICApfQogICAgPC9kaXY+CiAgKTsKfSk7CklucHV0T1RQU2xvdC5kaXNwbGF5TmFtZSA9ICJJbnB1dE9UUFNsb3QiOwoKY29uc3QgSW5wdXRPVFBTZXBhcmF0b3IgPSBSZWFjdC5mb3J3YXJkUmVmPFJlYWN0LkVsZW1lbnRSZWY8ImRpdiI+LCBSZWFjdC5Db21wb25lbnRQcm9wc1dpdGhvdXRSZWY8ImRpdiI+PigKICAoeyAuLi5wcm9wcyB9LCByZWYpID0+ICgKICAgIDxkaXYgcmVmPXtyZWZ9IHJvbGU9InNlcGFyYXRvciIgey4uLnByb3BzfT4KICAgICAgPERvdCAvPgogICAgPC9kaXY+CiAgKSwKKTsKSW5wdXRPVFBTZXBhcmF0b3IuZGlzcGxheU5hbWUgPSAiSW5wdXRPVFBTZXBhcmF0b3IiOwoKZXhwb3J0IHsgSW5wdXRPVFAsIElucHV0T1RQR3JvdXAsIElucHV0T1RQU2xvdCwgSW5wdXRPVFBTZXBhcmF0b3IgfTsK"),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

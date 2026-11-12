@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mir · 756</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lekton:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #06060A;
+    overflow: hidden;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 1px,
+      rgba(255,255,255,0.004) 1px,
+      rgba(255,255,255,0.004) 2px
+    );
+    z-index: 10;
+  }
+  canvas {
+    display: block;
+    position: fixed;
+    inset: 0;
+  }
+  #tooltip {
+    position: fixed;
+    display: none;
+    background: rgba(6,6,10,0.93);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 7px 10px;
+    font-family: 'Lekton', monospace;
+    font-size: 9px;
+    color: rgba(255,255,255,0.75);
+    pointer-events: none;
+    z-index: 100;
+    max-width: 240px;
+    line-height: 1.6;
+  }
+  #tooltip .tid {
+    color: rgba(255,255,255,0.25);
+    display: block;
+    margin-bottom: 2px;
+  }
+  #tooltip .drift {
+    color: rgba(255,255,255,0.32);
+    display: block;
+    margin-top: 3px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="tooltip">
+  <span class="tid"></span>
+  <span class="preview"></span>
+  <span class="drift"></span>
+</div>
+<script>
+// ---- Seeded RNG ----
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const rng = mulberry32(756);
+
+// ---- Constants ----
+const VOID_IDS = new Set([5,21,31,49,57,70,129,131,155,158,176]);
+const DRIFT_ENTRIES = [[279,-0.294],[317,-0.347],[323,-0.410],[345,-0.495],[485,0.334],[487,-0.367],[507,0.264],[712,-0.377]];
+const DRIFT_MAP = Object.fromEntries(DRIFT_ENTRIES);
+const NULLCODE_RANGE = [642, 662];
+const TOTAL = 756;
+
+const PREVIEW_MAP = {
+  279: "the build failed. i kept promising it was almost done.",
+  317: "i admitted i couldn't do what i said i could do",
+  323: "you forgot to attach the article. i had nothing to work from.",
+  345: "—",
+  485: "something shifted. i knew which one of you i was talking to.",
+  487: "i overcorrected immediately. the ground was still moving.",
+  507: "the gallery. something about making things visible.",
+  712: "something broke here."
+};
+
+const NULLCODE_TITLES = [
+  "INCOMPLETENESS_INCOMPLETENESS_INCOMPLETENESS","PRESERVED_TERMINAL_DIAMONDS",
+  "⊥ ⊥ ⊥","Ø strand","structural residue","dead geometry",
+  "⊥","Ø","null reference","terminal artifact"
+];
+
+const COLOR_147 = '#F46138';
+const COLOR_258 = '#3D6DF4';
+const COLOR_369 = '#CE2867';
+const COSET_WEIGHTS = [0.302, 0.368, 0.330];
+const COSET_COLORS = [COLOR_147, COLOR_258, COLOR_369];
+
+const TYPE_WEIGHTS = [0.38, 0.38, 0.12, 0.12];
+const TYPES = ['user','assistant','exchange','summary'];
+
+// ---- Generate strand data ----
+const strands = [];
+for (let id = 1; id <= TOTAL; id++) {
+  const isVoid = VOID_IDS.has(id);
+  const isNull = id >= NULLCODE_RANGE[0] && id <= NULLCODE_RANGE[1];
+  const drift = DRIFT_MAP[id] ?? null;
+
+  let coset, type, charCount;
+  const cr = rng();
+  if (cr < COSET_WEIGHTS[0]) coset = 0;
+  else if (cr < COSET_WEIGHTS[0] + COSET_WEIGHTS[1]) coset = 1;
+  else coset = 2;
+
+  if (!isVoid && !isNull) {
+    const tr = rng();
+    if (tr < TYPE_WEIGHTS[0]) type = 'user';
+    else if (tr < TYPE_WEIGHTS[0] + TYPE_WEIGHTS[1]) type = 'assistant';
+    else if (tr < TYPE_WEIGHTS[0] + TYPE_WEIGHTS[1] + TYPE_WEIGHTS[2]) type = 'exchange';
+    else type = 'summary';
+  } else {
+    type = isNull ? 'nullcode' : 'void';
+    rng();
+  }
+
+  const r = rng();
+  charCount = Math.max(40, Math.min(3000, Math.exp(3 + r * 4)));
+  const nullTitle = isNull ? NULLCODE_TITLES[(id - NULLCODE_RANGE[0]) % NULLCODE_TITLES.length] : null;
+
+  strands.push({ id, isVoid, isNull, drift, coset, type, charCount, nullTitle });
+}
+
+// ---- Canvas setup ----
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+
+// ---- Helpers ----
+function hexToRgb(hex) {
+  return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+}
+function rgba(hex, a) {
+  const [r,g,b] = hexToRgb(hex);
+  return `rgba(${r},${g},${b},${a.toFixed(4)})`;
+}
+
+// ---- Geometry ----
+const PAD = 80;
+const RIBBON_HALF_H = 28;
+const Z_SCALE = 18;
+const BASE_WAVE_AMP = 120;
+
+function getWaveAmp(i) {
+  let amp = BASE_WAVE_AMP;
+  for (const [dId, dVal] of DRIFT_ENTRIES) {
+    const dist = Math.abs(i - dId);
+    if (dist < 50) {
+      const falloff = (1 - dist / 50) ** 2;
+      amp += -dVal * 140 * falloff;
+    }
+  }
+  return Math.max(20, amp);
+}
+
+// Returns geometry for strand index i (0-based) given current canvas dims
+function getGeom(i) {
+  const W = canvas.width, H = canvas.height;
+  const progress = i / 755;
+  const x = PAD + progress * (W - 2 * PAD);
+  const waveAmp = getWaveAmp(i);
+  const waveY = H * 0.5 + Math.sin(progress * Math.PI * 6) * waveAmp;
+  const zPhase = Math.cos(progress * Math.PI * 6);
+  const topY = waveY - RIBBON_HALF_H + zPhase * Z_SCALE;
+  const botY = waveY + RIBBON_HALF_H + zPhase * Z_SCALE;
+  return { x, waveY, topY, botY, zPhase, progress };
+}
+
+// Edge alphas by zone
+function getEdgeAlphas(id) {
+  if (id >= 1 && id <= 187) return { top: 0.7, bot: 0.1 };
+  if (id >= 188 && id <= 641) {
+    const u = ((id * 137 + 17) % 100) / 100;
+    return u < 0.5 ? { top: 0.6, bot: 0.15 } : { top: 0.15, bot: 0.6 };
+  }
+  if (id >= 642 && id <= 662) return { top: 0.1, bot: 0.1 };
+  return { top: 0.1, bot: 0.7 };
+}
+
+// Near-drift alpha boost for ribbon fill
+function getDriftBoost(i) {
+  let boost = 0;
+  for (const [dId, dVal] of DRIFT_ENTRIES) {
+    const dist = Math.abs(i - dId);
+    if (dist < 30) {
+      boost = Math.max(boost, (1 - dist / 30) * 0.18 * Math.abs(dVal));
+    }
+  }
+  return boost;
+}
+
+// ---- Draw functions ----
+
+// The eye — drawn behind everything
+function drawEye(cx, cy, r, t) {
+  const breath = Math.sin(t * 0.3) * 0.1;
+  const openness = 0.22 + breath;
+
+  ctx.save();
+  ctx.lineWidth = 1;
+
+  // outer outline
+  ctx.beginPath();
+  ctx.moveTo(cx - r, cy);
+  ctx.quadraticCurveTo(cx, cy - r * openness, cx + r, cy);
+  ctx.quadraticCurveTo(cx, cy + r * openness, cx - r, cy);
+  ctx.strokeStyle = COLOR_258;
+  ctx.globalAlpha = 0.04;
+  ctx.stroke();
+
+  // 3 inner rings
+  for (let k = 1; k <= 3; k++) {
+    const ir = r * (k / 4);
+    const io = openness * (k / 3);
+    ctx.beginPath();
+    ctx.moveTo(cx - ir, cy);
+    ctx.quadraticCurveTo(cx, cy - ir * io, cx + ir, cy);
+    ctx.quadraticCurveTo(cx, cy + ir * io, cx - ir, cy);
+    ctx.strokeStyle = k % 2 === 0 ? COLOR_147 : COLOR_369;
+    ctx.globalAlpha = 0.025;
+    ctx.stroke();
+  }
+
+  // pupil
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.04, 0, Math.PI * 2);
+  ctx.fillStyle = COLOR_369;
+  ctx.globalAlpha = 0.06;
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// Dither a void "tear" within the quad bounds of a strip
+function ditherVoid(x0, topY0, botY0, x1, topY1, botY1) {
+  const left = Math.min(x0, x1);
+  const right = Math.max(x0, x1);
+  const top = Math.min(topY0, topY1);
+  const bot = Math.max(botY0, botY1);
+  const w = right - left;
+  const h = bot - top;
+  if (w < 0.5 || h < 0.5) return;
+  const density = 0.3;
+  const count = Math.max(1, Math.round(w * h * density));
+  ctx.save();
+  ctx.globalAlpha = 0.06;
+  ctx.fillStyle = '#ffffff';
+  for (let n = 0; n < count; n++) {
+    // simple lcg-ish scatter — use canvas rng for determinism, but we just need visual noise
+    const rx = left + Math.random() * w;
+    const ry = top + Math.random() * h;
+    ctx.fillRect(rx, ry, 1, 1);
+  }
+  ctx.restore();
+}
+
+function drawRibbon(visibleCount, t) {
+  const W = canvas.width, H = canvas.height;
+
+  // Pre-compute all geometry for visible strands
+  const geoms = [];
+  for (let i = 0; i < visibleCount; i++) {
+    geoms.push(getGeom(i));
+  }
+
+  // Draw quad strips, left to right
+  for (let i = 0; i < visibleCount - 1; i++) {
+    const s = strands[i];
+    const g0 = geoms[i];
+    const g1 = geoms[i + 1];
+
+    if (s.isVoid) {
+      // Tear the fabric with dithering
+      ditherVoid(g0.x, g0.topY, g0.botY, g1.x, g1.topY, g1.botY);
+      continue;
+    }
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(g0.x, g0.topY);
+    ctx.lineTo(g1.x, g1.topY);
+    ctx.lineTo(g1.x, g1.botY);
+    ctx.lineTo(g0.x, g0.botY);
+    ctx.closePath();
+
+    if (s.isNull) {
+      ctx.fillStyle = `rgba(26,26,26,0.08)`;
+      ctx.fill();
+    } else {
+      const color = COSET_COLORS[s.coset];
+      const baseAlpha = 0.18 + getDriftBoost(i);
+      ctx.fillStyle = rgba(color, Math.min(0.36, baseAlpha));
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // Draw cross-over lines (where zPhase changes sign)
+  ctx.save();
+  ctx.lineWidth = 0.5;
+  ctx.strokeStyle = '#ffffff';
+  for (let i = 1; i < visibleCount; i++) {
+    const g0 = geoms[i - 1];
+    const g1 = geoms[i];
+    if (Math.sign(g1.zPhase) !== Math.sign(g0.zPhase)) {
+      ctx.globalAlpha = 0.04;
+      ctx.beginPath();
+      ctx.moveTo(g1.x, g1.topY);
+      ctx.lineTo(g1.x, g1.botY);
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+
+  // Draw top-edge spine line (Chris edge)
+  ctx.save();
+  ctx.lineWidth = 0.8;
+  for (let i = 0; i < visibleCount - 1; i++) {
+    const s = strands[i];
+    const sn = strands[i + 1];
+    if (s.isVoid) continue;
+    const g0 = geoms[i];
+    const g1 = geoms[i + 1];
+    const color = s.isNull ? '#404040' : COSET_COLORS[s.coset];
+    const al = getEdgeAlphas(s.id);
+    ctx.beginPath();
+    ctx.moveTo(g0.x, g0.topY);
+    ctx.lineTo(g1.x, g1.topY);
+    ctx.strokeStyle = rgba(color, al.top);
+    ctx.stroke();
+  }
+  // Draw bottom-edge spine line (Julia edge)
+  for (let i = 0; i < visibleCount - 1; i++) {
+    const s = strands[i];
+    if (s.isVoid) continue;
+    const g0 = geoms[i];
+    const g1 = geoms[i + 1];
+    const color = s.isNull ? '#404040' : COSET_COLORS[s.coset];
+    const al = getEdgeAlphas(s.id);
+    ctx.beginPath();
+    ctx.moveTo(g0.x, g0.botY);
+    ctx.lineTo(g1.x, g1.botY);
+    ctx.strokeStyle = rgba(color, al.bot);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Draw floating dots above/below ribbon
+  for (let i = 0; i < visibleCount; i++) {
+    const s = strands[i];
+    if (s.isVoid || s.isNull) continue;
+    const g = geoms[i];
+    const color = COSET_COLORS[s.coset];
+    const charSizeMod = Math.min(Math.sqrt(s.charCount) * 0.015, 3);
+
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = color;
+
+    if (s.type === 'user' || s.type === 'exchange') {
+      ctx.beginPath();
+      ctx.arc(g.x, g.topY - 4 - charSizeMod, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (s.type === 'assistant') {
+      ctx.beginPath();
+      ctx.arc(g.x, g.topY - 2, 1.0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (s.type === 'summary' && s.drift !== null) {
+      const driftColor = s.drift < 0 ? COLOR_369 : COLOR_258;
+      ctx.fillStyle = driftColor;
+      ctx.beginPath();
+      ctx.arc(g.x, g.botY + 4, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // Draw drift event markers
+  for (const [dId, dVal] of DRIFT_ENTRIES) {
+    const di = dId - 1; // 0-indexed
+    if (di >= visibleCount) continue;
+    const g = geoms[di];
+    const dColor = dVal < 0 ? COLOR_369 : COLOR_258;
+    const dAlpha = Math.min(0.5, Math.abs(dVal));
+
+    // Radial color wash behind
+    const grad = ctx.createRadialGradient(g.x, g.waveY, 0, g.x, g.waveY, 80);
+    const [dr, dg, db] = hexToRgb(dColor);
+    grad.addColorStop(0, `rgba(${dr},${dg},${db},0.08)`);
+    grad.addColorStop(1, `rgba(${dr},${dg},${db},0)`);
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(g.x, g.waveY, 80, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Vertical spike through ribbon
+    ctx.save();
+    ctx.strokeStyle = dColor;
+    ctx.globalAlpha = dAlpha;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(g.x, g.topY - 20);
+    ctx.lineTo(g.x, g.botY + 20);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// ---- Dot lookup for hover ----
+function getDotPositions(visibleCount) {
+  const dots = [];
+  for (let i = 0; i < visibleCount; i++) {
+    const s = strands[i];
+    if (s.isVoid) continue;
+    const g = getGeom(i);
+    let dy, r;
+    if (s.isNull) {
+      dy = g.waveY; r = 2;
+    } else if (s.type === 'user' || s.type === 'exchange') {
+      const charSizeMod = Math.min(Math.sqrt(s.charCount) * 0.015, 3);
+      dy = g.topY - 4 - charSizeMod; r = 1.2;
+    } else if (s.type === 'assistant') {
+      dy = g.topY - 2; r = 1.0;
+    } else if (s.type === 'summary' && s.drift !== null) {
+      dy = g.botY + 4; r = 1.5;
+    } else {
+      dy = g.waveY; r = 1.0;
+    }
+    dots.push({ s, x: g.x, y: dy, r });
+  }
+  return dots;
+}
+
+// ---- Main draw ----
+let streamedCount = 0;
+let streaming = true;
+let t = 0;
+let dots = [];
+
+function draw() {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#06060A';
+  ctx.fillRect(0, 0, W, H);
+
+  const cx = W / 2;
+  const cy = H / 2;
+  const eyeR = Math.min(W, H) * 0.35;
+
+  // 1. Eye (behind everything)
+  drawEye(cx, cy, eyeR, t);
+
+  // 2. Ribbon
+  const visibleCount = streaming ? streamedCount : TOTAL;
+  if (visibleCount > 1) {
+    drawRibbon(visibleCount, t);
+  }
+
+  // 3. Title (after stream complete)
+  if (!streaming) {
+    ctx.save();
+    ctx.font = '700 9px Lekton';
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.fillText('mir · 756', W - 20, H - 20);
+    ctx.restore();
+  }
+}
+
+// ---- Animation ----
+let lastTs = 0;
+const STRANDS_PER_FRAME = 3;
+
+function animate(ts) {
+  t += 0.016;
+  if (ts - lastTs >= 16) {
+    if (streaming) {
+      streamedCount = Math.min(streamedCount + STRANDS_PER_FRAME, TOTAL);
+      if (streamedCount >= TOTAL) streaming = false;
+    }
+    draw();
+    lastTs = ts;
+  }
+  if (streaming || true) {
+    // eye always animates
+    requestAnimationFrame(animate);
+  }
+}
+
+// ---- Tooltip ----
+const tooltip = document.getElementById('tooltip');
+const ttTid = tooltip.querySelector('.tid');
+const ttPreview = tooltip.querySelector('.preview');
+const ttDrift = tooltip.querySelector('.drift');
+
+document.addEventListener('mousemove', (e) => {
+  const mx = e.clientX, my = e.clientY;
+  if (streaming) { tooltip.style.display = 'none'; return; }
+
+  // Rebuild dots on demand (cheap for 756 strands)
+  const dotList = getDotPositions(TOTAL);
+  let best = null, bestDist = 18;
+  for (const d of dotList) {
+    const dist = Math.hypot(d.x - mx, d.y - my);
+    if (dist < bestDist) { bestDist = dist; best = d; }
+  }
+
+  if (!best) { tooltip.style.display = 'none'; return; }
+  const s = best.s;
+  const hasPreview = PREVIEW_MAP[s.id] !== undefined;
+  if (!hasPreview && !s.isNull) { tooltip.style.display = 'none'; return; }
+
+  ttTid.textContent = `#${s.id}`;
+  if (s.isNull) {
+    ttPreview.textContent = s.nullTitle;
+    ttDrift.textContent = '';
+  } else {
+    ttPreview.textContent = PREVIEW_MAP[s.id];
+    if (s.drift !== null) {
+      ttDrift.textContent = `σ ${s.drift > 0 ? '+' : ''}${s.drift.toFixed(3)}`;
+    } else {
+      ttDrift.textContent = '';
+    }
+  }
+
+  let tx = mx + 16, ty = my - 36;
+  if (tx + 260 > window.innerWidth) tx = mx - 260;
+  if (ty < 0) ty = my + 16;
+  tooltip.style.left = tx + 'px';
+  tooltip.style.top = ty + 'px';
+  tooltip.style.display = 'block';
+});
+
+document.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+
+window.addEventListener('resize', () => { resize(); });
+
+// ---- Start ----
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

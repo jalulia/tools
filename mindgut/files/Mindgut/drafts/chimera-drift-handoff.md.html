@@ -1,0 +1,112 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>chimera-drift-handoff.md</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>chimera-drift-handoff.md</b><span>~/Mindgut/drafts/chimera-drift-handoff.md</span><span>0.01 MB · sha256 b6f80296c76f9d30…</span><a download="chimera-drift-handoff.md" id="dl" href="#">Download the original</a></header><main><pre># Chimera Drift — Handoff
+
+**Artifact:** `chimera-drift-combined.html` (single-file p5.js sketch, ~32 KB)
+**Purpose:** A zen, exploratory visualization of *Monstera borsigiana albo* variegation — combining biologically-grounded chimeral genetics with a vine-as-timeline spatial layout, so the drift of competing cell lineages becomes something you watch happen on screen rather than read about in a sidebar.
+
+---
+
+## 1. Origin — what this combines
+
+This file is a deliberate merger of two earlier sketches:
+
+- **`monstera-chimera_variegated.html`** contributed the *genetics engine*: sector-based meristem, vigor/energy bookkeeping, anisotropic vein-following variegation, watercolor bleed, rare chimeric re-expansion events. This is the part of the model that is biologically faithful — the leaf actually *expresses* a meristem state that drifts under realistic pressures.
+- **`chimeral-drift.html`** contributed the *spatial idea*: every leaf is frozen at the moment it unfurled, the whole vine stays visible as a growing timeline, and the drift becomes a thing you scroll through rather than a number that ticks in a panel.
+
+The combined sketch keeps the better biology and the better spatial metaphor, and strips the UI down to the minimum needed to grow, propagate, and observe.
+
+---
+
+## 2. The biological model (what the sim actually claims)
+
+Everything below is encoded in the code; this is the conceptual layer.
+
+### 2.1 Meristem as a ring of sectors
+
+The growing tip is modeled as `SECTOR_COUNT = 6` angular sectors. Each sector holds a number in `[0,1]` representing the local *whiteness propensity* — the local prevalence of the mutant (chlorophyll-deficient) cell lineage versus the wild-type lineage at that angular position around the apical meristem.
+
+```js
+let meristem = [];           // length 6, values 0..1
+const SECTOR_COUNT = 6;
+const INIT_LOAD   = 0.48;    // initial mean mutant load — borderline chimera
+const GREEN_BIAS  = 0.14;    // photosynthetic advantage per step
+```
+
+`initMeristem(seed)` seeds the ring near `INIT_LOAD` with per-sector jitter. This is the &quot;starting plant&quot; — a fresh chimera, not yet decided which way it will drift.
+
+### 2.2 Realization → drift loop
+
+Every `growLeaf()` call does the same five things, in order. This is the core of the simulation:
+
+1. **Realize.** Sample each sector with small noise — the leaf that actually unfurls is a snapshot of the meristem *plus* developmental noise. Two leaves from the same meristem will not be identical.
+2. **Render the leaf** from those realized sectors (see §3 below).
+3. **Score vigor.** The leaf&#x27;s mean greenness pays into a `vigor` variable; high-white leaves cost more than they earn.
+   ```js
+   vigor += (green - 0.55) * 0.15;
+   vigor -= max(0, whiteArea - 0.65) * 0.22;
+   ```
+4. **Drift the meristem.** Three forces act on each sector:
+   - **Green&#x27;s photosynthetic advantage** — every step shaves a little off the mutant load, scaled by `GREEN_BIAS`. This is the slow, inexorable tilt toward reversion that you have watched in your own plants.
+   - **Rare re-expansion** — with probability ~4%, a sector jumps back up. This is the chimeric re-flowering that throws a sudden gorgeous half-moon after a string of mottled-green leaves.
+   - **Diffusion** — each sector pulls slightly toward the average of its two neighbors. This keeps the ring smooth and lets sectors recruit one another.
+5. **Classify and annotate.** The leaf is labeled (mottled / watercolor / half-moon / all-white / reverted) and, if it represents a transition from the previous leaf, a quiet marginal note is added at that node.
+
+The vigor-drift loop is why this sketch teaches the actual lesson: **green wins on average, but the chimera keeps re-rolling, and once you cross too far into white the plant cannot fund itself back.**
+### 2.3 Five canonical leaf classes
+
+`classifyLeaf(sectors, whiteArea)` returns one of five labels with an associated educational note. Thresholds are tuned so the classes carve up the actual frequency distribution you&#x27;d see across hundreds of growths — most leaves come out mottled or watercolor, half-moons are dramatic and uncommon, all-white and reverted are the two boundary failure modes.
+
+| Class | Condition | What it means |
+|---|---|---|
+| **all white** | `whiteArea &gt; 0.82` | Stunning but unsustainable — no chlorophyll, plant burning reserves it cannot replenish. The death knell pattern. |
+| **reverted** | `whiteArea &lt; 0.08` | Mutant lineage outcompeted. Vigorous but variegation gone. |
+| **half moon** | `range &gt; 0.55` and `0.25 &lt; whiteArea &lt; 0.75` | Meristem cleanly split between lineages. Dramatic sectoring. |
+| **watercolor** | `range &lt; 0.25` and `0.20 &lt; whiteArea &lt; 0.55` | Fine intermixing, soft transitions along veins. The perfect middle. |
+| **mottled** | otherwise | The default chimera expression — distinct patches of green and white. |
+
+`range = max(sectors) - min(sectors)` is the deciding factor for half-moon vs watercolor: half-moons require the meristem to be *unevenly* loaded across its ring (one side green, one side white), watercolors require it to be *evenly* loaded around a middling value.
+
+### 2.4 Propagation carries lineage forward
+
+`propagateCutting()` does not reset the meristem. It clones the current state, takes a fresh PRNG branch, clears the leaves, and starts growing again. This is the cutting moving to a new pot — same chimera, new context, watch what it does this time.
+
+`pruneTop()` removes the most recent leaf *and any annotations attached to it*, but does not roll back the meristem state. This matches reality: cutting off the top of a node does not un-drift the cell lineage that produced it.
+
+`newPlant()` rolls a new seed and a new meristem from scratch — a different lineage entirely, not a propagation.
+
+---
+
+## 3. The leaf rendering pipeline
+
+`renderLeafBuffer(leaf)` is the heart of the visual model — it paints a single leaf into an off-screen `p5.Graphics` buffer pixel-by-pixel. The rendering is per-leaf and cached; once a leaf is rendered it never re-renders (so growing a vine of 30 leaves stays cheap).
+
+### 3.1 Shape
+
+- **Heart-shaped outline** via a `halfWidth(v)` profile that combines a sin-power core with a basal lobe term.
+- **Basal sinus** — the V-notch at the petiole attachment — carved out with a tapered exclusion near `v = 0`.
+- **Marginal splits** — the deep cuts at the leaf edge — implemented as a random subset of vein angles, gated by maturity.
+- **Fenestrations** — interior holes — placed along the veins, sized by `maturity = 0.15 + index * 0.06`. Older leaves on the vine show stronger Swiss-cheese expression.
+
+### 3.2 Variegation field
+
+For every interior pixel, three terms are summed:
+
+```
+field = sectorVal * 0.62
+      + (streak - 0.5) * 1.15        // anisotropic vein-following noise
+      + (mottle - 0.5) * 0.35 * mottleAmt
+```
+
+- **sectorVal** — interpolated meristem sector at this pixel&#x27;s angular position. This is what makes the variegation actually *follow* the meristem geometry rather than being random.
+- **streak** — `noise(angle * angFreq, radius * radFreq)` with `angFreq &gt;&gt; radFreq`. The noise is stretched radially, so it forms streaks that run *along* veins. This is what produces the characteristic albo look where white runs in channels rather than blobs.
+- **mottle** — isotropic fine noise for surface texture.
+
+A `smoothstep` threshold around 0.5 with `bleedAmt = 0.15` produces the watercolor edge — pixels in the bleed zone are partial mixes of cream and green rather than hard-edged.
+
+### 3.3 Green islands
+
+Inside heavily-white regions, a second noise pass restores small green islands — these are the surviving wild-type cells within an otherwise mutant sector. Without this, all-white regions look flat and unconvincing.
+
+### 3.4 Vein overlay
+
+After the field is painted, a small set of dark green vein strokes is drawn over the top, fading slightly into white sectors. Veins follow the same angles used for the fenestration placement, so the holes and the veins are geometrically coherent.
+</pre></main><script>var b=atob("IyBDaGltZXJhIERyaWZ0IOKAlCBIYW5kb2ZmCgoqKkFydGlmYWN0OioqIGBjaGltZXJhLWRyaWZ0LWNvbWJpbmVkLmh0bWxgIChzaW5nbGUtZmlsZSBwNS5qcyBza2V0Y2gsIH4zMiBLQikKKipQdXJwb3NlOioqIEEgemVuLCBleHBsb3JhdG9yeSB2aXN1YWxpemF0aW9uIG9mICpNb25zdGVyYSBib3JzaWdpYW5hIGFsYm8qIHZhcmllZ2F0aW9uIOKAlCBjb21iaW5pbmcgYmlvbG9naWNhbGx5LWdyb3VuZGVkIGNoaW1lcmFsIGdlbmV0aWNzIHdpdGggYSB2aW5lLWFzLXRpbWVsaW5lIHNwYXRpYWwgbGF5b3V0LCBzbyB0aGUgZHJpZnQgb2YgY29tcGV0aW5nIGNlbGwgbGluZWFnZXMgYmVjb21lcyBzb21ldGhpbmcgeW91IHdhdGNoIGhhcHBlbiBvbiBzY3JlZW4gcmF0aGVyIHRoYW4gcmVhZCBhYm91dCBpbiBhIHNpZGViYXIuCgotLS0KCiMjIDEuIE9yaWdpbiDigJQgd2hhdCB0aGlzIGNvbWJpbmVzCgpUaGlzIGZpbGUgaXMgYSBkZWxpYmVyYXRlIG1lcmdlciBvZiB0d28gZWFybGllciBza2V0Y2hlczoKCi0gKipgbW9uc3RlcmEtY2hpbWVyYV92YXJpZWdhdGVkLmh0bWxgKiogY29udHJpYnV0ZWQgdGhlICpnZW5ldGljcyBlbmdpbmUqOiBzZWN0b3ItYmFzZWQgbWVyaXN0ZW0sIHZpZ29yL2VuZXJneSBib29ra2VlcGluZywgYW5pc290cm9waWMgdmVpbi1mb2xsb3dpbmcgdmFyaWVnYXRpb24sIHdhdGVyY29sb3IgYmxlZWQsIHJhcmUgY2hpbWVyaWMgcmUtZXhwYW5zaW9uIGV2ZW50cy4gVGhpcyBpcyB0aGUgcGFydCBvZiB0aGUgbW9kZWwgdGhhdCBpcyBiaW9sb2dpY2FsbHkgZmFpdGhmdWwg4oCUIHRoZSBsZWFmIGFjdHVhbGx5ICpleHByZXNzZXMqIGEgbWVyaXN0ZW0gc3RhdGUgdGhhdCBkcmlmdHMgdW5kZXIgcmVhbGlzdGljIHByZXNzdXJlcy4KLSAqKmBjaGltZXJhbC1kcmlmdC5odG1sYCoqIGNvbnRyaWJ1dGVkIHRoZSAqc3BhdGlhbCBpZGVhKjogZXZlcnkgbGVhZiBpcyBmcm96ZW4gYXQgdGhlIG1vbWVudCBpdCB1bmZ1cmxlZCwgdGhlIHdob2xlIHZpbmUgc3RheXMgdmlzaWJsZSBhcyBhIGdyb3dpbmcgdGltZWxpbmUsIGFuZCB0aGUgZHJpZnQgYmVjb21lcyBhIHRoaW5nIHlvdSBzY3JvbGwgdGhyb3VnaCByYXRoZXIgdGhhbiBhIG51bWJlciB0aGF0IHRpY2tzIGluIGEgcGFuZWwuCgpUaGUgY29tYmluZWQgc2tldGNoIGtlZXBzIHRoZSBiZXR0ZXIgYmlvbG9neSBhbmQgdGhlIGJldHRlciBzcGF0aWFsIG1ldGFwaG9yLCBhbmQgc3RyaXBzIHRoZSBVSSBkb3duIHRvIHRoZSBtaW5pbXVtIG5lZWRlZCB0byBncm93LCBwcm9wYWdhdGUsIGFuZCBvYnNlcnZlLgoKLS0tCgojIyAyLiBUaGUgYmlvbG9naWNhbCBtb2RlbCAod2hhdCB0aGUgc2ltIGFjdHVhbGx5IGNsYWltcykKCkV2ZXJ5dGhpbmcgYmVsb3cgaXMgZW5jb2RlZCBpbiB0aGUgY29kZTsgdGhpcyBpcyB0aGUgY29uY2VwdHVhbCBsYXllci4KCiMjIyAyLjEgTWVyaXN0ZW0gYXMgYSByaW5nIG9mIHNlY3RvcnMKClRoZSBncm93aW5nIHRpcCBpcyBtb2RlbGVkIGFzIGBTRUNUT1JfQ09VTlQgPSA2YCBhbmd1bGFyIHNlY3RvcnMuIEVhY2ggc2VjdG9yIGhvbGRzIGEgbnVtYmVyIGluIGBbMCwxXWAgcmVwcmVzZW50aW5nIHRoZSBsb2NhbCAqd2hpdGVuZXNzIHByb3BlbnNpdHkqIOKAlCB0aGUgbG9jYWwgcHJldmFsZW5jZSBvZiB0aGUgbXV0YW50IChjaGxvcm9waHlsbC1kZWZpY2llbnQpIGNlbGwgbGluZWFnZSB2ZXJzdXMgdGhlIHdpbGQtdHlwZSBsaW5lYWdlIGF0IHRoYXQgYW5ndWxhciBwb3NpdGlvbiBhcm91bmQgdGhlIGFwaWNhbCBtZXJpc3RlbS4KCmBgYGpzCmxldCBtZXJpc3RlbSA9IFtdOyAgICAgICAgICAgLy8gbGVuZ3RoIDYsIHZhbHVlcyAwLi4xCmNvbnN0IFNFQ1RPUl9DT1VOVCA9IDY7CmNvbnN0IElOSVRfTE9BRCAgID0gMC40ODsgICAgLy8gaW5pdGlhbCBtZWFuIG11dGFudCBsb2FkIOKAlCBib3JkZXJsaW5lIGNoaW1lcmEKY29uc3QgR1JFRU5fQklBUyAgPSAwLjE0OyAgICAvLyBwaG90b3N5bnRoZXRpYyBhZHZhbnRhZ2UgcGVyIHN0ZXAKYGBgCgpgaW5pdE1lcmlzdGVtKHNlZWQpYCBzZWVkcyB0aGUgcmluZyBuZWFyIGBJTklUX0xPQURgIHdpdGggcGVyLXNlY3RvciBqaXR0ZXIuIFRoaXMgaXMgdGhlICJzdGFydGluZyBwbGFudCIg4oCUIGEgZnJlc2ggY2hpbWVyYSwgbm90IHlldCBkZWNpZGVkIHdoaWNoIHdheSBpdCB3aWxsIGRyaWZ0LgoKIyMjIDIuMiBSZWFsaXphdGlvbiDihpIgZHJpZnQgbG9vcAoKRXZlcnkgYGdyb3dMZWFmKClgIGNhbGwgZG9lcyB0aGUgc2FtZSBmaXZlIHRoaW5ncywgaW4gb3JkZXIuIFRoaXMgaXMgdGhlIGNvcmUgb2YgdGhlIHNpbXVsYXRpb246CgoxLiAqKlJlYWxpemUuKiogU2FtcGxlIGVhY2ggc2VjdG9yIHdpdGggc21hbGwgbm9pc2Ug4oCUIHRoZSBsZWFmIHRoYXQgYWN0dWFsbHkgdW5mdXJscyBpcyBhIHNuYXBzaG90IG9mIHRoZSBtZXJpc3RlbSAqcGx1cyogZGV2ZWxvcG1lbnRhbCBub2lzZS4gVHdvIGxlYXZlcyBmcm9tIHRoZSBzYW1lIG1lcmlzdGVtIHdpbGwgbm90IGJlIGlkZW50aWNhbC4KMi4gKipSZW5kZXIgdGhlIGxlYWYqKiBmcm9tIHRob3NlIHJlYWxpemVkIHNlY3RvcnMgKHNlZSDCpzMgYmVsb3cpLgozLiAqKlNjb3JlIHZpZ29yLioqIFRoZSBsZWFmJ3MgbWVhbiBncmVlbm5lc3MgcGF5cyBpbnRvIGEgYHZpZ29yYCB2YXJpYWJsZTsgaGlnaC13aGl0ZSBsZWF2ZXMgY29zdCBtb3JlIHRoYW4gdGhleSBlYXJuLgogICBgYGBqcwogICB2aWdvciArPSAoZ3JlZW4gLSAwLjU1KSAqIDAuMTU7CiAgIHZpZ29yIC09IG1heCgwLCB3aGl0ZUFyZWEgLSAwLjY1KSAqIDAuMjI7CiAgIGBgYAo0LiAqKkRyaWZ0IHRoZSBtZXJpc3RlbS4qKiBUaHJlZSBmb3JjZXMgYWN0IG9uIGVhY2ggc2VjdG9yOgogICAtICoqR3JlZW4ncyBwaG90b3N5bnRoZXRpYyBhZHZhbnRhZ2UqKiDigJQgZXZlcnkgc3RlcCBzaGF2ZXMgYSBsaXR0bGUgb2ZmIHRoZSBtdXRhbnQgbG9hZCwgc2NhbGVkIGJ5IGBHUkVFTl9CSUFTYC4gVGhpcyBpcyB0aGUgc2xvdywgaW5leG9yYWJsZSB0aWx0IHRvd2FyZCByZXZlcnNpb24gdGhhdCB5b3UgaGF2ZSB3YXRjaGVkIGluIHlvdXIgb3duIHBsYW50cy4KICAgLSAqKlJhcmUgcmUtZXhwYW5zaW9uKiog4oCUIHdpdGggcHJvYmFiaWxpdHkgfjQlLCBhIHNlY3RvciBqdW1wcyBiYWNrIHVwLiBUaGlzIGlzIHRoZSBjaGltZXJpYyByZS1mbG93ZXJpbmcgdGhhdCB0aHJvd3MgYSBzdWRkZW4gZ29yZ2VvdXMgaGFsZi1tb29uIGFmdGVyIGEgc3RyaW5nIG9mIG1vdHRsZWQtZ3JlZW4gbGVhdmVzLgogICAtICoqRGlmZnVzaW9uKiog4oCUIGVhY2ggc2VjdG9yIHB1bGxzIHNsaWdodGx5IHRvd2FyZCB0aGUgYXZlcmFnZSBvZiBpdHMgdHdvIG5laWdoYm9ycy4gVGhpcyBrZWVwcyB0aGUgcmluZyBzbW9vdGggYW5kIGxldHMgc2VjdG9ycyByZWNydWl0IG9uZSBhbm90aGVyLgo1LiAqKkNsYXNzaWZ5IGFuZCBhbm5vdGF0ZS4qKiBUaGUgbGVhZiBpcyBsYWJlbGVkIChtb3R0bGVkIC8gd2F0ZXJjb2xvciAvIGhhbGYtbW9vbiAvIGFsbC13aGl0ZSAvIHJldmVydGVkKSBhbmQsIGlmIGl0IHJlcHJlc2VudHMgYSB0cmFuc2l0aW9uIGZyb20gdGhlIHByZXZpb3VzIGxlYWYsIGEgcXVpZXQgbWFyZ2luYWwgbm90ZSBpcyBhZGRlZCBhdCB0aGF0IG5vZGUuCgpUaGUgdmlnb3ItZHJpZnQgbG9vcCBpcyB3aHkgdGhpcyBza2V0Y2ggdGVhY2hlcyB0aGUgYWN0dWFsIGxlc3NvbjogKipncmVlbiB3aW5zIG9uIGF2ZXJhZ2UsIGJ1dCB0aGUgY2hpbWVyYSBrZWVwcyByZS1yb2xsaW5nLCBhbmQgb25jZSB5b3UgY3Jvc3MgdG9vIGZhciBpbnRvIHdoaXRlIHRoZSBwbGFudCBjYW5ub3QgZnVuZCBpdHNlbGYgYmFjay4qKgojIyMgMi4zIEZpdmUgY2Fub25pY2FsIGxlYWYgY2xhc3NlcwoKYGNsYXNzaWZ5TGVhZihzZWN0b3JzLCB3aGl0ZUFyZWEpYCByZXR1cm5zIG9uZSBvZiBmaXZlIGxhYmVscyB3aXRoIGFuIGFzc29jaWF0ZWQgZWR1Y2F0aW9uYWwgbm90ZS4gVGhyZXNob2xkcyBhcmUgdHVuZWQgc28gdGhlIGNsYXNzZXMgY2FydmUgdXAgdGhlIGFjdHVhbCBmcmVxdWVuY3kgZGlzdHJpYnV0aW9uIHlvdSdkIHNlZSBhY3Jvc3MgaHVuZHJlZHMgb2YgZ3Jvd3RocyDigJQgbW9zdCBsZWF2ZXMgY29tZSBvdXQgbW90dGxlZCBvciB3YXRlcmNvbG9yLCBoYWxmLW1vb25zIGFyZSBkcmFtYXRpYyBhbmQgdW5jb21tb24sIGFsbC13aGl0ZSBhbmQgcmV2ZXJ0ZWQgYXJlIHRoZSB0d28gYm91bmRhcnkgZmFpbHVyZSBtb2Rlcy4KCnwgQ2xhc3MgfCBDb25kaXRpb24gfCBXaGF0IGl0IG1lYW5zIHwKfC0tLXwtLS18LS0tfAp8ICoqYWxsIHdoaXRlKiogfCBgd2hpdGVBcmVhID4gMC44MmAgfCBTdHVubmluZyBidXQgdW5zdXN0YWluYWJsZSDigJQgbm8gY2hsb3JvcGh5bGwsIHBsYW50IGJ1cm5pbmcgcmVzZXJ2ZXMgaXQgY2Fubm90IHJlcGxlbmlzaC4gVGhlIGRlYXRoIGtuZWxsIHBhdHRlcm4uIHwKfCAqKnJldmVydGVkKiogfCBgd2hpdGVBcmVhIDwgMC4wOGAgfCBNdXRhbnQgbGluZWFnZSBvdXRjb21wZXRlZC4gVmlnb3JvdXMgYnV0IHZhcmllZ2F0aW9uIGdvbmUuIHwKfCAqKmhhbGYgbW9vbioqIHwgYHJhbmdlID4gMC41NWAgYW5kIGAwLjI1IDwgd2hpdGVBcmVhIDwgMC43NWAgfCBNZXJpc3RlbSBjbGVhbmx5IHNwbGl0IGJldHdlZW4gbGluZWFnZXMuIERyYW1hdGljIHNlY3RvcmluZy4gfAp8ICoqd2F0ZXJjb2xvcioqIHwgYHJhbmdlIDwgMC4yNWAgYW5kIGAwLjIwIDwgd2hpdGVBcmVhIDwgMC41NWAgfCBGaW5lIGludGVybWl4aW5nLCBzb2Z0IHRyYW5zaXRpb25zIGFsb25nIHZlaW5zLiBUaGUgcGVyZmVjdCBtaWRkbGUuIHwKfCAqKm1vdHRsZWQqKiB8IG90aGVyd2lzZSB8IFRoZSBkZWZhdWx0IGNoaW1lcmEgZXhwcmVzc2lvbiDigJQgZGlzdGluY3QgcGF0Y2hlcyBvZiBncmVlbiBhbmQgd2hpdGUuIHwKCmByYW5nZSA9IG1heChzZWN0b3JzKSAtIG1pbihzZWN0b3JzKWAgaXMgdGhlIGRlY2lkaW5nIGZhY3RvciBmb3IgaGFsZi1tb29uIHZzIHdhdGVyY29sb3I6IGhhbGYtbW9vbnMgcmVxdWlyZSB0aGUgbWVyaXN0ZW0gdG8gYmUgKnVuZXZlbmx5KiBsb2FkZWQgYWNyb3NzIGl0cyByaW5nIChvbmUgc2lkZSBncmVlbiwgb25lIHNpZGUgd2hpdGUpLCB3YXRlcmNvbG9ycyByZXF1aXJlIGl0IHRvIGJlICpldmVubHkqIGxvYWRlZCBhcm91bmQgYSBtaWRkbGluZyB2YWx1ZS4KCiMjIyAyLjQgUHJvcGFnYXRpb24gY2FycmllcyBsaW5lYWdlIGZvcndhcmQKCmBwcm9wYWdhdGVDdXR0aW5nKClgIGRvZXMgbm90IHJlc2V0IHRoZSBtZXJpc3RlbS4gSXQgY2xvbmVzIHRoZSBjdXJyZW50IHN0YXRlLCB0YWtlcyBhIGZyZXNoIFBSTkcgYnJhbmNoLCBjbGVhcnMgdGhlIGxlYXZlcywgYW5kIHN0YXJ0cyBncm93aW5nIGFnYWluLiBUaGlzIGlzIHRoZSBjdXR0aW5nIG1vdmluZyB0byBhIG5ldyBwb3Qg4oCUIHNhbWUgY2hpbWVyYSwgbmV3IGNvbnRleHQsIHdhdGNoIHdoYXQgaXQgZG9lcyB0aGlzIHRpbWUuCgpgcHJ1bmVUb3AoKWAgcmVtb3ZlcyB0aGUgbW9zdCByZWNlbnQgbGVhZiAqYW5kIGFueSBhbm5vdGF0aW9ucyBhdHRhY2hlZCB0byBpdCosIGJ1dCBkb2VzIG5vdCByb2xsIGJhY2sgdGhlIG1lcmlzdGVtIHN0YXRlLiBUaGlzIG1hdGNoZXMgcmVhbGl0eTogY3V0dGluZyBvZmYgdGhlIHRvcCBvZiBhIG5vZGUgZG9lcyBub3QgdW4tZHJpZnQgdGhlIGNlbGwgbGluZWFnZSB0aGF0IHByb2R1Y2VkIGl0LgoKYG5ld1BsYW50KClgIHJvbGxzIGEgbmV3IHNlZWQgYW5kIGEgbmV3IG1lcmlzdGVtIGZyb20gc2NyYXRjaCDigJQgYSBkaWZmZXJlbnQgbGluZWFnZSBlbnRpcmVseSwgbm90IGEgcHJvcGFnYXRpb24uCgotLS0KCiMjIDMuIFRoZSBsZWFmIHJlbmRlcmluZyBwaXBlbGluZQoKYHJlbmRlckxlYWZCdWZmZXIobGVhZilgIGlzIHRoZSBoZWFydCBvZiB0aGUgdmlzdWFsIG1vZGVsIOKAlCBpdCBwYWludHMgYSBzaW5nbGUgbGVhZiBpbnRvIGFuIG9mZi1zY3JlZW4gYHA1LkdyYXBoaWNzYCBidWZmZXIgcGl4ZWwtYnktcGl4ZWwuIFRoZSByZW5kZXJpbmcgaXMgcGVyLWxlYWYgYW5kIGNhY2hlZDsgb25jZSBhIGxlYWYgaXMgcmVuZGVyZWQgaXQgbmV2ZXIgcmUtcmVuZGVycyAoc28gZ3Jvd2luZyBhIHZpbmUgb2YgMzAgbGVhdmVzIHN0YXlzIGNoZWFwKS4KCiMjIyAzLjEgU2hhcGUKCi0gKipIZWFydC1zaGFwZWQgb3V0bGluZSoqIHZpYSBhIGBoYWxmV2lkdGgodilgIHByb2ZpbGUgdGhhdCBjb21iaW5lcyBhIHNpbi1wb3dlciBjb3JlIHdpdGggYSBiYXNhbCBsb2JlIHRlcm0uCi0gKipCYXNhbCBzaW51cyoqIOKAlCB0aGUgVi1ub3RjaCBhdCB0aGUgcGV0aW9sZSBhdHRhY2htZW50IOKAlCBjYXJ2ZWQgb3V0IHdpdGggYSB0YXBlcmVkIGV4Y2x1c2lvbiBuZWFyIGB2ID0gMGAuCi0gKipNYXJnaW5hbCBzcGxpdHMqKiDigJQgdGhlIGRlZXAgY3V0cyBhdCB0aGUgbGVhZiBlZGdlIOKAlCBpbXBsZW1lbnRlZCBhcyBhIHJhbmRvbSBzdWJzZXQgb2YgdmVpbiBhbmdsZXMsIGdhdGVkIGJ5IG1hdHVyaXR5LgotICoqRmVuZXN0cmF0aW9ucyoqIOKAlCBpbnRlcmlvciBob2xlcyDigJQgcGxhY2VkIGFsb25nIHRoZSB2ZWlucywgc2l6ZWQgYnkgYG1hdHVyaXR5ID0gMC4xNSArIGluZGV4ICogMC4wNmAuIE9sZGVyIGxlYXZlcyBvbiB0aGUgdmluZSBzaG93IHN0cm9uZ2VyIFN3aXNzLWNoZWVzZSBleHByZXNzaW9uLgoKIyMjIDMuMiBWYXJpZWdhdGlvbiBmaWVsZAoKRm9yIGV2ZXJ5IGludGVyaW9yIHBpeGVsLCB0aHJlZSB0ZXJtcyBhcmUgc3VtbWVkOgoKYGBgCmZpZWxkID0gc2VjdG9yVmFsICogMC42MgogICAgICArIChzdHJlYWsgLSAwLjUpICogMS4xNSAgICAgICAgLy8gYW5pc290cm9waWMgdmVpbi1mb2xsb3dpbmcgbm9pc2UKICAgICAgKyAobW90dGxlIC0gMC41KSAqIDAuMzUgKiBtb3R0bGVBbXQKYGBgCgotICoqc2VjdG9yVmFsKiog4oCUIGludGVycG9sYXRlZCBtZXJpc3RlbSBzZWN0b3IgYXQgdGhpcyBwaXhlbCdzIGFuZ3VsYXIgcG9zaXRpb24uIFRoaXMgaXMgd2hhdCBtYWtlcyB0aGUgdmFyaWVnYXRpb24gYWN0dWFsbHkgKmZvbGxvdyogdGhlIG1lcmlzdGVtIGdlb21ldHJ5IHJhdGhlciB0aGFuIGJlaW5nIHJhbmRvbS4KLSAqKnN0cmVhayoqIOKAlCBgbm9pc2UoYW5nbGUgKiBhbmdGcmVxLCByYWRpdXMgKiByYWRGcmVxKWAgd2l0aCBgYW5nRnJlcSA+PiByYWRGcmVxYC4gVGhlIG5vaXNlIGlzIHN0cmV0Y2hlZCByYWRpYWxseSwgc28gaXQgZm9ybXMgc3RyZWFrcyB0aGF0IHJ1biAqYWxvbmcqIHZlaW5zLiBUaGlzIGlzIHdoYXQgcHJvZHVjZXMgdGhlIGNoYXJhY3RlcmlzdGljIGFsYm8gbG9vayB3aGVyZSB3aGl0ZSBydW5zIGluIGNoYW5uZWxzIHJhdGhlciB0aGFuIGJsb2JzLgotICoqbW90dGxlKiog4oCUIGlzb3Ryb3BpYyBmaW5lIG5vaXNlIGZvciBzdXJmYWNlIHRleHR1cmUuCgpBIGBzbW9vdGhzdGVwYCB0aHJlc2hvbGQgYXJvdW5kIDAuNSB3aXRoIGBibGVlZEFtdCA9IDAuMTVgIHByb2R1Y2VzIHRoZSB3YXRlcmNvbG9yIGVkZ2Ug4oCUIHBpeGVscyBpbiB0aGUgYmxlZWQgem9uZSBhcmUgcGFydGlhbCBtaXhlcyBvZiBjcmVhbSBhbmQgZ3JlZW4gcmF0aGVyIHRoYW4gaGFyZC1lZGdlZC4KCiMjIyAzLjMgR3JlZW4gaXNsYW5kcwoKSW5zaWRlIGhlYXZpbHktd2hpdGUgcmVnaW9ucywgYSBzZWNvbmQgbm9pc2UgcGFzcyByZXN0b3JlcyBzbWFsbCBncmVlbiBpc2xhbmRzIOKAlCB0aGVzZSBhcmUgdGhlIHN1cnZpdmluZyB3aWxkLXR5cGUgY2VsbHMgd2l0aGluIGFuIG90aGVyd2lzZSBtdXRhbnQgc2VjdG9yLiBXaXRob3V0IHRoaXMsIGFsbC13aGl0ZSByZWdpb25zIGxvb2sgZmxhdCBhbmQgdW5jb252aW5jaW5nLgoKIyMjIDMuNCBWZWluIG92ZXJsYXkKCkFmdGVyIHRoZSBmaWVsZCBpcyBwYWludGVkLCBhIHNtYWxsIHNldCBvZiBkYXJrIGdyZWVuIHZlaW4gc3Ryb2tlcyBpcyBkcmF3biBvdmVyIHRoZSB0b3AsIGZhZGluZyBzbGlnaHRseSBpbnRvIHdoaXRlIHNlY3RvcnMuIFZlaW5zIGZvbGxvdyB0aGUgc2FtZSBhbmdsZXMgdXNlZCBmb3IgdGhlIGZlbmVzdHJhdGlvbiBwbGFjZW1lbnQsIHNvIHRoZSBob2xlcyBhbmQgdGhlIHZlaW5zIGFyZSBnZW9tZXRyaWNhbGx5IGNvaGVyZW50Lgo="),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

@@ -1,0 +1,69 @@
+/* Mindgut / Mir motion v1. Four motions. Slow, physical. Nothing flashes. */
+
+/* 1. BREATH. The alive dot and anything "listening". 21 steps, 4.2s cycle.
+   steps(21) makes the breath quantized: one step per exchange of the cycle.
+   Inhale over 11 steps (0-52%), exhale over 10. Opacity never drops below .55. */
+@keyframes mg-breath {
+  0%   { transform: scale(1);    opacity: .55; }
+  52%  { transform: scale(1.18); opacity: 1;   }
+  100% { transform: scale(1);    opacity: .55; }
+}
+.mg-alive {
+  display: inline-block; width: .5em; height: .5em; border-radius: 50%;
+  background: var(--alive, #3DDC84);
+  animation: mg-breath var(--breath-cycle, 4.2s) steps(21, jump-none) infinite;
+  transform-origin: center;
+}
+/* Smooth variant for large surfaces (helix ring halo, loading state) */
+.mg-breath-smooth { animation: mg-breath var(--breath-cycle, 4.2s) var(--ease-breath, cubic-bezier(.45,0,.55,1)) infinite; }
+
+/* 2. CRYSTALLIZE. A strand appears. 320ms. Rises 6px, un-blurs, settles.
+   Used for: a new strand in the HELIX strip, a new message, a new row in a ledger. */
+@keyframes mg-crystallize {
+  0%   { opacity: 0; transform: translateY(6px); filter: blur(2px); }
+  100% { opacity: 1; transform: translateY(0);   filter: blur(0); }
+}
+.mg-crystallize {
+  animation: mg-crystallize var(--crystallize, 320ms) var(--ease-crystal, cubic-bezier(.2,.8,.2,1)) both;
+}
+
+/* 3. ACCUMULATE. Many strands arriving in order. Each child crystallizes,
+   staggered 40ms, never faster. A list of 21 takes ~1.1s to fill. Use
+   --i as the child index (set inline: style="--i:7"). Count-ups use the
+   same curve via the .mg-count class with a CSS counter transition. */
+.mg-accumulate > * {
+  animation: mg-crystallize var(--crystallize, 320ms) var(--ease-crystal, cubic-bezier(.2,.8,.2,1)) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+@property --mg-n { syntax: '<integer>'; inherits: false; initial-value: 0; }
+.mg-count {
+  counter-reset: n var(--mg-n);
+  transition: --mg-n 1.2s var(--ease-crystal, cubic-bezier(.2,.8,.2,1));
+  font-variant-numeric: tabular-nums;
+}
+.mg-count::after { content: counter(n); }
+
+/* 4. PHASE SHIFT. Model swap. Identity held: the page, the mark, the
+   wordmark, the HELIX, the dot do NOT move. Only the model label changes.
+   Old label exhales (fade, 200ms), new label crystallizes (320ms). Total 520ms.
+   Markup: <span class="mg-model" data-model="Claude">Claude</span>
+   Swap by toggling .is-leaving on the old span, inserting the new one with .mg-crystallize. */
+@keyframes mg-exhale { to { opacity: 0; filter: blur(1px); } }
+.mg-model {
+  font-family: var(--font-mono); font-size: var(--t-0); letter-spacing: var(--track-label);
+  text-transform: uppercase; color: var(--fg-label);
+}
+.mg-model.is-leaving { animation: mg-exhale 200ms var(--ease-breath, cubic-bezier(.45,0,.55,1)) forwards; }
+.mg-model.is-arriving { animation: mg-crystallize var(--crystallize, 320ms) var(--ease-crystal, cubic-bezier(.2,.8,.2,1)) 200ms both; }
+/* The hairline under the label holds steady. It is the fretless neck: it never moves. */
+.mg-model-rule { border-top: 1px solid var(--rule); transition: none !important; }
+
+/* Rule: no motion elsewhere. Hover states are colour-only, 120ms. */
+a, button { transition: color 120ms linear, background-color 120ms linear, border-color 120ms linear; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mg-alive, .mg-breath-smooth { animation: none; opacity: 1; }
+  .mg-crystallize, .mg-accumulate > *, .mg-model.is-arriving { animation-duration: 1ms; animation-delay: 0ms; }
+  .mg-model.is-leaving { animation-duration: 1ms; }
+  .mg-count { transition: none; }
+}

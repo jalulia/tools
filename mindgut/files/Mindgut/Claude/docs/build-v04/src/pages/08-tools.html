@@ -1,0 +1,44 @@
+<section class="page" id="page-tools" data-title="Tools" data-num="08" hidden>
+<aside class="notes">
+<div class="note-id">Chapter / 08</div>
+<h1>Tools</h1>
+<div class="intro"><p>What a model can call, grouped by the surface it touches. 29 tools in the public source <span class="tag">SOURCE</span>; 45 in the 2.2.58 bundle <span class="tag o">OBSERVED</span>.</p></div>
+<nav class="page-links" aria-label="In Tools"><a href="#tools/map"><span>01</span>Surfaces</a><a href="#tools/table"><span>02</span>The table</a><a href="#tools/window-rules"><span>03</span>What stays in context</a><a href="#tools/writing"><span>04</span>Writing files safely</a></nav>
+<div class="takeaways"><h4>Key takeaways</h4><ol><li>A HELIX read is stubbed after the turn: the context never re-absorbs what the record holds.</li><li>Stale tool results over 3,000 characters are cut to 1,500 after two rounds.</li><li>Large single-parameter writes are the one documented way to lose work; open + append is the designed path.</li></ol></div>
+<div class="release"><span class="mono">BUILD 2.2.58 · SOURCE cbf4e42</span><br><a href="#evidence/what-was-read">Evidence register ↗</a><a href="#glossary">Glossary ↗</a></div>
+</aside>
+<div class="main"><article class="article">
+<h2 id="tools/map"><a class="section-anchor" href="#tools/map">Surfaces</a></h2>
+<figure class="plate" id="fig-17"><figcaption><span class="fig-id">FIG. 17</span><h3>Where each tool family runs and what it touches</h3></figcaption><div class="figure-body" id="fig-tools"></div><div class="figure-note">Five surfaces: the record, the session, the sandbox, the user's machine, the web. Tools that read the record are stubbed; tools that run on the machine are desktop-only or bridged with a 30 s wait. <span class="cite">tool_defs.py · session_manager.py:717, 1765, 2044</span></div></figure>
+<h2 id="tools/table"><a class="section-anchor" href="#tools/table">The table</a></h2>
+<div class="table-scroll"><table><thead><tr><th>Tool</th><th>Purpose</th><th>Runs</th><th>Window rule</th><th>In source?</th></tr></thead><tbody>
+<tr><td><span class="mono">pull_memory</span></td><td><span class="mono">reach=</span> geometric · <span class="mono">sequence_id=N[,count≤10]</span> · <span class="mono">sequence_id=0,page=</span> index · <span class="mono">grep=</span> literal with a/b counts</td><td>server</td><td>stubbed</td><td>partial</td></tr>
+<tr><td><span class="mono">pull_strand</span></td><td>One strand from the PFD book</td><td>server</td><td>stubbed</td><td>yes</td></tr>
+<tr><td><span class="mono">mount_helix</span> · <span class="mono">pull_mounted</span></td><td>Mount a HELIX from inputs as a second lattice; page it; recall goes axial</td><td>server</td><td>stubbed</td><td>yes</td></tr>
+<tr><td><span class="mono">quick_scan</span> · <span class="mono">full_scan</span> · <span class="mono">scan_and_mount</span></td><td><span style="white-space:nowrap">σ<sub>B</sub></span> on text; scan to a HELIX; scan + mount</td><td>server</td><td>—</td><td>yes</td></tr>
+<tr><td><span class="mono">read_field</span></td><td>Live carbon/silicon phase, clash, breath, <span style="white-space:nowrap">σ<sub>B</sub></span>, balance, heat</td><td>server</td><td>—</td><td>no</td></tr>
+<tr><td><span class="mono">read_input</span></td><td>A file in inputs: PDF pages, text lines, images as vision</td><td>server</td><td>truncated if stale; images stripped</td><td>yes</td></tr>
+<tr><td><span class="mono">browse_archive</span> · <span class="mono">manage_display</span></td><td>Account archive; session display lists</td><td>server</td><td>stubbed</td><td>yes</td></tr>
+<tr><td><span class="mono">web_fetch</span> · <span class="mono">web_search</span> · <span class="mono">browser</span></td><td>URL as text; search; a driven browser with its own profile</td><td>server</td><td>truncated if stale</td><td>partial</td></tr>
+<tr><td><span class="mono">todo</span> · <span class="mono">draft</span></td><td>Task board; drafts promoted to outputs, .docx/.pdf from markdown</td><td>server</td><td>—</td><td>yes</td></tr>
+<tr><td><span class="mono">grep</span> · <span class="mono">glob</span> · <span class="mono">edit</span></td><td>Search, list, in-place replace across surfaces</td><td>server</td><td>—</td><td>yes</td></tr>
+<tr><td><span class="mono">generate_image</span></td><td>Generation and editing; shown as vision</td><td>server</td><td>image stripped</td><td>yes</td></tr>
+<tr><td><span class="mono">sandbox_*</span> · <span class="mono">terminal_*</span></td><td>Persistent workspace with a venv (30/120 s, 100 KB); up to 4 shells</td><td>server</td><td>—</td><td>no</td></tr>
+<tr><td><span class="mono">local_*</span> · <span class="mono">local_exec</span> · <span class="mono">read_path</span></td><td>Mounted folder (2 MB reads; no overwrite); shell, desktop only; any path with a prompt</td><td>desktop / browser</td><td>—</td><td>partial</td></tr>
+<tr><td><span class="mono">agent_*</span></td><td>Background workers, ≤ 9, each in its own sandbox directory; reports scanned to a HELIX</td><td>server (own sandbox)</td><td>stubbed</td><td>no</td></tr>
+</tbody></table></div>
+<h2 id="tools/window-rules"><a class="section-anchor" href="#tools/window-rules">What stays in context</a></h2>
+<div class="table-scroll"><table><thead><tr><th>Rule</th><th>Value</th><th>Source</th></tr></thead><tbody>
+<tr><td>HELIX result kept</td><td class="num">≤ 200 chars, else stub</td><td><span class="cite">session_manager.py:729</span></td></tr>
+<tr><td>Stale result truncation</td><td class="num">&gt; 3000 chars, 2+ rounds → 1500</td><td><span class="cite">:1765</span></td></tr>
+<tr><td>Tool rounds per turn</td><td class="num">15 → wrap-up · 45 s each</td><td><span class="cite">:1871–1903</span></td></tr>
+<tr><td>Spent image</td><td>Re-readable only by another call; the model is told so by a marker</td><td><span class="tag o">OBSERVED</span></td></tr>
+<tr><td>Client tool wait, web</td><td class="num">30 s</td><td><span class="cite">:2044</span></td></tr>
+</tbody></table></div>
+<h2 id="tools/writing"><a class="section-anchor" href="#tools/writing">Writing files safely</a></h2>
+<p>The tool descriptions say it directly: do not emit whole files as a single parameter. A mid-generation truncation of a multi-kilobyte string destroys the write silently; a partial draft on disk can be resumed. The designed path is <span class="mono">open</span> then <span class="mono">append</span> in ~1–2 KB chunks, then <span class="mono">finalize</span> for drafts. The sandbox's home directory is the app's account directory, not the machine user's. <span class="tag o">OBSERVED</span></p>
+<pre><code>draft(action="open",     filename="spec.md")
+draft(action="append",   content="…≤ 2 KB…")   # repeat
+draft(action="finalize", filename="spec.md")   # → outputs/spec.md</code></pre>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#components"><small>Previous</small>Component reference</a><a href="#limits"><small>Next</small>Limits and open questions →</a></nav>
+</article></div></section>

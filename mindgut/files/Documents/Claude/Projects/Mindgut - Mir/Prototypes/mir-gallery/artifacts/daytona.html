@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daytona</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lekton:wght@400;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0A0A0A; overflow: hidden; font-family: 'Lekton', monospace; cursor: crosshair; }
+  canvas { display: block; position: fixed; top: 0; left: 0; }
+  #hud { position: fixed; top: 24px; left: 32px; z-index: 10; pointer-events: none; }
+  #hud h1 { font-size: 11px; font-weight: 700; color: #3D6DF4; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 4px; }
+  #hud p { font-size: 10px; color: #ffffff15; letter-spacing: 0.08em; text-transform: uppercase; }
+  #telemetry { position: fixed; bottom: 24px; left: 32px; z-index: 10; pointer-events: none; }
+  #telemetry p { font-size: 10px; color: #F4613830; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
+  #speed { position: fixed; top: 24px; right: 32px; z-index: 10; pointer-events: none; text-align: right; }
+  #speed p { font-size: 10px; color: #3D6DF420; letter-spacing: 0.06em; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <h1>ø co. / daytona</h1>
+  <p>orbital wave trajectories</p>
+</div>
+<div id="telemetry">
+  <p id="telText">bodies: 00 · phase: 0.000</p>
+</div>
+<div id="speed">
+  <p id="speedText">v: 0.00</p>
+</div>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const telText = document.getElementById('telText');
+const speedText = document.getElementById('speedText');
+let W, H, mx, my, smx, smy, t = 0;
+
+const EH = '#3D6DF4';
+const SE = '#F46138';
+const PW = '#CE2867';
+const SP = '#2C9FF4';
+
+function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+addEventListener('resize', resize); resize();
+mx = W/2; my = H/2; smx = mx; smy = my;
+addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+addEventListener('touchmove', e => { mx = e.touches[0].clientX; my = e.touches[0].clientY; e.preventDefault(); }, { passive: false });
+
+// --- ORBITAL BODIES ---
+class Body {
+  constructor(i, total) {
+    this.i = i;
+    this.total = total;
+    this.orbitR = 80 + i * 28;
+    this.speed = 0.3 + (total - i) * 0.06;
+    this.phase = (i / total) * Math.PI * 2;
+    this.size = 2 + Math.random() * 3;
+    this.color = i % 3 === 0 ? SE : i % 3 === 1 ? EH : SP;
+    this.trail = [];
+    this.trailMax = 120 + i * 8;
+    this.tilt = 0.3 + i * 0.08;
+    this.wobble = 0.5 + Math.random() * 0.5;
+  }
+
+  update(cx, cy, influence) {
+    const a = t * this.speed + this.phase;
+    const r = this.orbitR * (0.8 + influence * 0.4);
+
+    // Helical motion — x travels forward, y/z orbit
+    const helixX = cx + Math.cos(a) * r * Math.cos(this.tilt);
+    const helixY = cy + Math.sin(a) * r * 0.5;
+    const wave = Math.sin(a * 2 + this.phase) * 15 * this.wobble * (1 + influence);
+
+    this.x = helixX + wave;
+    this.y = helixY + Math.cos(a) * r * Math.sin(this.tilt) * 0.3;
+
+    this.trail.push({ x: this.x, y: this.y, a: 1 });
+    if (this.trail.length > this.trailMax) this.trail.shift();
+  }
+
+  draw() {
+    // Trail
+    if (this.trail.length > 1) {
+      for (let i = 1; i < this.trail.length; i++) {
+        const p = this.trail[i - 1];
+        const c = this.trail[i];
+        const alpha = (i / this.trail.length) * 0.4;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(c.x, c.y);
+        ctx.strokeStyle = this.color;
+        ctx.globalAlpha = alpha;
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // Body
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+
+    // Glow
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.globalAlpha = 0.06;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+
+// --- WAVE SYSTEM ---
+class Wave {
+  constructor(i) {
+    this.i = i;
+    this.freq = 1.5 + i * 0.8;
+    this.amp = 40 + i * 15;
+    this.phase = i * 1.2;
+    this.color = i === 0 ? SE : i === 1 ? EH : PW;
+    this.lw = i === 0 ? 1.5 : 1;
+  }
+
+  draw(cx, cy, w, influence) {
+    ctx.beginPath();
+    const segments = 200;
+    for (let j = 0; j <= segments; j++) {
+      const x = cx - w / 2 + (j / segments) * w;
+      const phase = t * (1.5 + this.i * 0.3) + this.phase;
+      const envelope = Math.sin((j / segments) * Math.PI);
+      const y = cy + Math.sin(j * this.freq * 0.03 + phase) * this.amp * envelope * (0.6 + influence * 0.6);
+      if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = this.lw + influence * 0.5;
+    ctx.globalAlpha = 0.35 + influence * 0.4;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+}
+
+// --- VERTICAL INTERFERENCE LINES ---
+function drawInterference(cx, cy, w, h, influence) {
+  const n = 40;
+  for (let i = 0; i < n; i++) {
+    const x = cx - w / 2 + (i / n) * w;
+    const wave1 = Math.sin(i * 0.15 + t * 1.5) * 0.5 + 0.5;
+    const wave2 = Math.sin(i * 0.25 + t * 1.2 + 1) * 0.5 + 0.5;
+    const combined = wave1 * wave2;
+    const lineH = combined * h * 0.4 * (0.5 + influence * 0.8);
+
+    ctx.beginPath();
+    ctx.moveTo(x, cy - lineH);
+    ctx.lineTo(x, cy + lineH);
+    ctx.strokeStyle = EH;
+    ctx.globalAlpha = combined * 0.15 + influence * 0.1;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// --- RADIAL BURST (convergence point) ---
+function drawConvergence(x, y, influence) {
+  const n = 16;
+  const r = 80 + influence * 40;
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + t * 0.05;
+    const len = r * (0.5 + Math.sin(t * 0.8 + i * 0.5) * 0.3);
+    ctx.beginPath();
+    ctx.moveTo(x + Math.cos(a) * 8, y + Math.sin(a) * 8);
+    ctx.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len);
+    ctx.strokeStyle = i % 4 === 0 ? SE : `rgba(255,255,255,${0.03 + influence * 0.04})`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+
+  // Central dot
+  ctx.beginPath();
+  ctx.arc(x, y, 3 + influence * 3, 0, Math.PI * 2);
+  ctx.fillStyle = SE;
+  ctx.globalAlpha = 0.6 + influence * 0.4;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+// --- STARS ---
+const stars = [];
+for (let i = 0; i < 80; i++) {
+  stars.push({ x: Math.random() * 2, y: Math.random(), s: 0.3 + Math.random() * 1.2, b: Math.random() });
+}
+
+function drawStars() {
+  for (const s of stars) {
+    const x = s.x * W;
+    const y = s.y * H;
+    const flicker = 0.3 + Math.sin(t * 2 + s.b * 10) * 0.2;
+    ctx.beginPath();
+    ctx.arc(x, y, s.s, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.globalAlpha = flicker * 0.15;
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// --- INIT ---
+const NUM_BODIES = 9;
+const bodies = [];
+for (let i = 0; i < NUM_BODIES; i++) bodies.push(new Body(i, NUM_BODIES));
+
+const waves = [new Wave(0), new Wave(1), new Wave(2)];
+
+// --- SUN ---
+function drawSun(x, y, influence) {
+  // Glow
+  const grad = ctx.createRadialGradient(x, y, 0, x, y, 40 + influence * 20);
+  grad.addColorStop(0, 'rgba(244,97,56,0.4)');
+  grad.addColorStop(0.5, 'rgba(244,97,56,0.08)');
+  grad.addColorStop(1, 'rgba(244,97,56,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(x - 80, y - 80, 160, 160);
+
+  // Core
+  ctx.beginPath();
+  ctx.arc(x, y, 8 + influence * 3, 0, Math.PI * 2);
+  ctx.fillStyle = SE;
+  ctx.fill();
+
+  // Corona ring
+  ctx.beginPath();
+  ctx.arc(x, y, 14 + Math.sin(t) * 2 + influence * 4, 0, Math.PI * 2);
+  ctx.strokeStyle = SE;
+  ctx.globalAlpha = 0.2;
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+// --- FORWARD BEAM ---
+function drawBeam(sx, sy, influence) {
+  const grad = ctx.createLinearGradient(sx, sy, W, sy);
+  grad.addColorStop(0, 'rgba(244,161,56,0.25)');
+  grad.addColorStop(0.4, 'rgba(244,161,56,0.06)');
+  grad.addColorStop(1, 'rgba(244,161,56,0)');
+  ctx.fillStyle = grad;
+  ctx.globalAlpha = 0.3 + influence * 0.3;
+  ctx.fillRect(sx, sy - 1, W - sx, 2);
+  ctx.globalAlpha = 1;
+}
+
+// --- MAIN LOOP ---
+function animate() {
+  t += 0.016;
+  smx += (mx - smx) * 0.06;
+  smy += (my - smy) * 0.06;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0A0A0A';
+  ctx.fillRect(0, 0, W, H);
+
+  // Influence
+  const sunX = W * 0.22;
+  const sunY = H * 0.48;
+  const convX = W * 0.82;
+  const convY = H * 0.48;
+  const waveY = H * 0.48;
+
+  function getInf(cx, cy) {
+    const d = Math.sqrt((smx - cx) ** 2 + (smy - cy) ** 2);
+    return Math.max(0, 1 - d / 500);
+  }
+
+  const sunInf = getInf(sunX, sunY);
+  const convInf = getInf(convX, convY);
+  const midInf = getInf(W * 0.5, H * 0.5);
+
+  // Background stars
+  drawStars();
+
+  // Forward beam (sun → convergence)
+  drawBeam(sunX + 10, sunY, sunInf);
+
+  // Interference lines
+  drawInterference(W * 0.55, waveY, W * 0.45, H * 0.6, midInf);
+
+  // Waves
+  for (const wave of waves) {
+    wave.draw(W * 0.5, waveY, W * 0.65, midInf);
+  }
+
+  // Orbital bodies
+  for (const body of bodies) {
+    body.update(sunX, sunY, sunInf);
+    body.draw();
+  }
+
+  // Sun
+  drawSun(sunX, sunY, sunInf);
+
+  // Convergence point
+  drawConvergence(convX, convY, convInf);
+
+  // Cursor rings
+  ctx.beginPath();
+  ctx.arc(smx, smy, 16 + Math.sin(t * 2) * 3, 0, Math.PI * 2);
+  ctx.strokeStyle = EH; ctx.lineWidth = 0.6; ctx.globalAlpha = 0.3; ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.beginPath();
+  ctx.arc(smx, smy, 1.5, 0, Math.PI * 2);
+  ctx.fillStyle = SE; ctx.fill();
+
+  // HUD
+  const vel = Math.sqrt((mx - smx) ** 2 + (my - smy) ** 2);
+  telText.textContent = `bodies: ${String(NUM_BODIES).padStart(2, '0')} · phase: ${(t % (Math.PI * 2)).toFixed(3)}`;
+  speedText.textContent = `v: ${vel.toFixed(2)}`;
+
+  requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+</body>
+</html>

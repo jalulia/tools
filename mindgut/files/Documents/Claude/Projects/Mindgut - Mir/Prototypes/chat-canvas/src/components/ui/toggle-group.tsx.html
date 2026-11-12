@@ -1,0 +1,50 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>toggle-group.tsx</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>toggle-group.tsx</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/chat-canvas/src/components/ui/toggle-group.tsx</span><span>0.00 MB · sha256 a3ea231230c8fff2…</span><a download="toggle-group.tsx" id="dl" href="#">Download the original</a></header><main><pre>import * as React from &quot;react&quot;;
+import * as ToggleGroupPrimitive from &quot;@radix-ui/react-toggle-group&quot;;
+import { type VariantProps } from &quot;class-variance-authority&quot;;
+
+import { cn } from &quot;@/lib/utils&quot;;
+import { toggleVariants } from &quot;@/components/ui/toggle&quot;;
+
+const ToggleGroupContext = React.createContext&lt;VariantProps&lt;typeof toggleVariants&gt;&gt;({
+  size: &quot;default&quot;,
+  variant: &quot;default&quot;,
+});
+
+const ToggleGroup = React.forwardRef&lt;
+  React.ElementRef&lt;typeof ToggleGroupPrimitive.Root&gt;,
+  React.ComponentPropsWithoutRef&lt;typeof ToggleGroupPrimitive.Root&gt; &amp; VariantProps&lt;typeof toggleVariants&gt;
+&gt;(({ className, variant, size, children, ...props }, ref) =&gt; (
+  &lt;ToggleGroupPrimitive.Root ref={ref} className={cn(&quot;flex items-center justify-center gap-1&quot;, className)} {...props}&gt;
+    &lt;ToggleGroupContext.Provider value={{ variant, size }}&gt;{children}&lt;/ToggleGroupContext.Provider&gt;
+  &lt;/ToggleGroupPrimitive.Root&gt;
+));
+
+ToggleGroup.displayName = ToggleGroupPrimitive.Root.displayName;
+
+const ToggleGroupItem = React.forwardRef&lt;
+  React.ElementRef&lt;typeof ToggleGroupPrimitive.Item&gt;,
+  React.ComponentPropsWithoutRef&lt;typeof ToggleGroupPrimitive.Item&gt; &amp; VariantProps&lt;typeof toggleVariants&gt;
+&gt;(({ className, children, variant, size, ...props }, ref) =&gt; {
+  const context = React.useContext(ToggleGroupContext);
+
+  return (
+    &lt;ToggleGroupPrimitive.Item
+      ref={ref}
+      className={cn(
+        toggleVariants({
+          variant: context.variant || variant,
+          size: context.size || size,
+        }),
+        className,
+      )}
+      {...props}
+    &gt;
+      {children}
+    &lt;/ToggleGroupPrimitive.Item&gt;
+  );
+});
+
+ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName;
+
+export { ToggleGroup, ToggleGroupItem };
+</pre></main><script>var b=atob("aW1wb3J0ICogYXMgUmVhY3QgZnJvbSAicmVhY3QiOwppbXBvcnQgKiBhcyBUb2dnbGVHcm91cFByaW1pdGl2ZSBmcm9tICJAcmFkaXgtdWkvcmVhY3QtdG9nZ2xlLWdyb3VwIjsKaW1wb3J0IHsgdHlwZSBWYXJpYW50UHJvcHMgfSBmcm9tICJjbGFzcy12YXJpYW5jZS1hdXRob3JpdHkiOwoKaW1wb3J0IHsgY24gfSBmcm9tICJAL2xpYi91dGlscyI7CmltcG9ydCB7IHRvZ2dsZVZhcmlhbnRzIH0gZnJvbSAiQC9jb21wb25lbnRzL3VpL3RvZ2dsZSI7Cgpjb25zdCBUb2dnbGVHcm91cENvbnRleHQgPSBSZWFjdC5jcmVhdGVDb250ZXh0PFZhcmlhbnRQcm9wczx0eXBlb2YgdG9nZ2xlVmFyaWFudHM+Pih7CiAgc2l6ZTogImRlZmF1bHQiLAogIHZhcmlhbnQ6ICJkZWZhdWx0IiwKfSk7Cgpjb25zdCBUb2dnbGVHcm91cCA9IFJlYWN0LmZvcndhcmRSZWY8CiAgUmVhY3QuRWxlbWVudFJlZjx0eXBlb2YgVG9nZ2xlR3JvdXBQcmltaXRpdmUuUm9vdD4sCiAgUmVhY3QuQ29tcG9uZW50UHJvcHNXaXRob3V0UmVmPHR5cGVvZiBUb2dnbGVHcm91cFByaW1pdGl2ZS5Sb290PiAmIFZhcmlhbnRQcm9wczx0eXBlb2YgdG9nZ2xlVmFyaWFudHM+Cj4oKHsgY2xhc3NOYW1lLCB2YXJpYW50LCBzaXplLCBjaGlsZHJlbiwgLi4ucHJvcHMgfSwgcmVmKSA9PiAoCiAgPFRvZ2dsZUdyb3VwUHJpbWl0aXZlLlJvb3QgcmVmPXtyZWZ9IGNsYXNzTmFtZT17Y24oImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIGdhcC0xIiwgY2xhc3NOYW1lKX0gey4uLnByb3BzfT4KICAgIDxUb2dnbGVHcm91cENvbnRleHQuUHJvdmlkZXIgdmFsdWU9e3sgdmFyaWFudCwgc2l6ZSB9fT57Y2hpbGRyZW59PC9Ub2dnbGVHcm91cENvbnRleHQuUHJvdmlkZXI+CiAgPC9Ub2dnbGVHcm91cFByaW1pdGl2ZS5Sb290PgopKTsKClRvZ2dsZUdyb3VwLmRpc3BsYXlOYW1lID0gVG9nZ2xlR3JvdXBQcmltaXRpdmUuUm9vdC5kaXNwbGF5TmFtZTsKCmNvbnN0IFRvZ2dsZUdyb3VwSXRlbSA9IFJlYWN0LmZvcndhcmRSZWY8CiAgUmVhY3QuRWxlbWVudFJlZjx0eXBlb2YgVG9nZ2xlR3JvdXBQcmltaXRpdmUuSXRlbT4sCiAgUmVhY3QuQ29tcG9uZW50UHJvcHNXaXRob3V0UmVmPHR5cGVvZiBUb2dnbGVHcm91cFByaW1pdGl2ZS5JdGVtPiAmIFZhcmlhbnRQcm9wczx0eXBlb2YgdG9nZ2xlVmFyaWFudHM+Cj4oKHsgY2xhc3NOYW1lLCBjaGlsZHJlbiwgdmFyaWFudCwgc2l6ZSwgLi4ucHJvcHMgfSwgcmVmKSA9PiB7CiAgY29uc3QgY29udGV4dCA9IFJlYWN0LnVzZUNvbnRleHQoVG9nZ2xlR3JvdXBDb250ZXh0KTsKCiAgcmV0dXJuICgKICAgIDxUb2dnbGVHcm91cFByaW1pdGl2ZS5JdGVtCiAgICAgIHJlZj17cmVmfQogICAgICBjbGFzc05hbWU9e2NuKAogICAgICAgIHRvZ2dsZVZhcmlhbnRzKHsKICAgICAgICAgIHZhcmlhbnQ6IGNvbnRleHQudmFyaWFudCB8fCB2YXJpYW50LAogICAgICAgICAgc2l6ZTogY29udGV4dC5zaXplIHx8IHNpemUsCiAgICAgICAgfSksCiAgICAgICAgY2xhc3NOYW1lLAogICAgICApfQogICAgICB7Li4ucHJvcHN9CiAgICA+CiAgICAgIHtjaGlsZHJlbn0KICAgIDwvVG9nZ2xlR3JvdXBQcmltaXRpdmUuSXRlbT4KICApOwp9KTsKClRvZ2dsZUdyb3VwSXRlbS5kaXNwbGF5TmFtZSA9IFRvZ2dsZUdyb3VwUHJpbWl0aXZlLkl0ZW0uZGlzcGxheU5hbWU7CgpleHBvcnQgeyBUb2dnbGVHcm91cCwgVG9nZ2xlR3JvdXBJdGVtIH07Cg=="),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Mindgut — an instrument with no fretboard</title>
+<meta name="description" content="A walkthrough of Mindgut drawn from a real record: 187 strands, 12 sessions, three phases. Measurements only.">
+<style>
+@font-face{font-family:"Archivo";src:url("{{F_ARCHIVO}}") format("woff2");font-weight:100 900;font-stretch:62% 125%;font-style:normal;font-display:block}
+@font-face{font-family:"JetBrains Mono";src:url("{{F_MONO}}") format("woff2");font-weight:100 800;font-style:normal;font-display:block}
+
+:root{
+  color-scheme:dark;
+  /* ink, mark, light — the only colors */
+  --ground:#1A0C1D;     /* void — the moodboard's plum ground */
+  --mark:#FFFFFF;       /* ink: what is written */
+  --mark-2:#C4B9CF;     /* muted */
+  --mark-3:#9A8EA6;     /* faint */
+  --light:#13E1A1;      /* mind — on, the exchange (the one accent family: halo green · mind · aqua · floor teal) */
+  --halo:#10BD33; --aqua:#46E0D0; --floor:#29796F;
+  --f-text:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --f-mach:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --inset:0px;
+  --col:min(42vw,560px);
+  --pad:clamp(28px,5vw,72px);
+  --mast:64px;
+}
+*{box-sizing:border-box}
+html{scroll-snap-type:y mandatory;scroll-behavior:smooth;background:var(--ground)}
+html,body{margin:0;background:var(--ground);color:var(--mark)}
+body{font-family:var(--f-text);font-weight:400;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+canvas#sheet{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0}
+
+/* masthead — signature, machine line, motion toggle */
+.mast{position:fixed;z-index:3;left:calc(var(--inset) + var(--pad));right:calc(var(--inset) + var(--pad));top:calc(var(--inset) + 26px);display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+.mast img{height:20px;width:auto;display:block;opacity:.96}
+.mast .mach{pointer-events:auto;display:flex;gap:28px;align-items:center}
+.mach,.kicker,.rail,.readout,.tag,.ctl button{font-family:var(--f-mach);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mark-2);font-weight:500}
+.mast button{all:unset;cursor:pointer;font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;padding:6px 0;border-bottom:1px solid transparent}
+.mast button[aria-pressed="true"]{color:var(--mark)}
+.mast button:focus-visible{outline:2px solid var(--mark);outline-offset:4px}
+.mast button .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--light);margin-right:9px;vertical-align:1px;transform:translateY(-1px)}
+.mast button[aria-pressed="false"] .dot{background:transparent;box-shadow:inset 0 0 0 1px var(--mark-3)}
+
+/* rail — plate numbers */
+.rail{position:fixed;z-index:3;left:calc(var(--inset) + var(--pad));bottom:calc(var(--inset) + 30px);display:flex;flex-direction:row;flex-wrap:wrap;gap:6px 16px;list-style:none;margin:0;padding:0;max-width:calc(100% - 2*var(--pad))}
+.rail a{color:var(--mark-3);text-decoration:none;display:flex;gap:12px;align-items:baseline}
+.rail a .t{opacity:0;transition:opacity .24s ease;max-width:0;overflow:hidden;white-space:nowrap;display:inline-block}
+.rail a[aria-current="true"]{color:var(--mark)}
+.rail a[aria-current="true"] .t{opacity:1;max-width:260px}
+.rail a:focus-visible{outline:2px solid var(--mark);outline-offset:3px}
+
+/* plates */
+main{position:relative;z-index:2}
+/* the instrument: a tiny piano, lower right. On: the helix becomes strings (click a session = strum its chord; drag = pluck the strands you cross) */
+.keys{position:fixed;z-index:4;right:calc(var(--inset) + var(--pad));bottom:calc(var(--inset) + 30px);display:flex;align-items:center;gap:16px;font-family:var(--f-mach);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mark-3)}
+.keys .out{white-space:nowrap;opacity:0;transition:opacity .3s ease}
+.keys[data-on="true"] .out{opacity:1;color:var(--mark-2)}
+.keys .lbl{white-space:nowrap;opacity:.8}
+.keys[data-on="true"] .lbl{display:none}
+.keys .out b{font-weight:500;color:var(--light)}
+.keys button{all:unset;cursor:pointer;display:block;padding:7px 6px;border-radius:2px}
+.keys button:focus-visible{outline:2px solid var(--mark);outline-offset:3px}
+.keys svg{display:block;width:30px;height:14px;overflow:visible}
+.keys svg .w{fill:none;stroke:var(--mark-3);stroke-width:1}
+.keys svg .b{fill:var(--mark-3)}
+.keys[data-on="true"] svg .w{stroke:var(--light)}
+.keys[data-on="true"] svg .b{fill:var(--light)}
+#strings{position:fixed;z-index:3;display:none;touch-action:none;cursor:crosshair;user-select:none;-webkit-user-select:none}
+@media (max-width:760px){ .keys .out,.keys .lbl{display:none} .keys{bottom:calc(var(--inset) + 14px);right:calc(var(--inset) + 14px)} .hint{display:none} }
+.plate{min-height:100vh;min-height:100svh;scroll-snap-align:start;display:grid;grid-template-columns:var(--col) 1fr;align-content:start;padding:calc(var(--inset) + var(--mast) + 14vh) calc(var(--inset) + var(--pad)) calc(var(--inset) + 160px)}
+.plate .txt{max-width:var(--col);transform:translateY(14px);opacity:0;transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)}
+.plate.is-active .txt{opacity:1;transform:none}
+.kicker{display:flex;gap:16px;align-items:center;margin:0 0 26px}
+.tag{padding:3px 7px 2px;border:1px solid var(--mark-3);border-radius:2px;color:var(--mark-2)}
+.tag.existing{border-color:rgba(19,225,161,.55);color:var(--light)}
+h1,h2{font-family:var(--f-text);font-weight:500;font-stretch:100%;font-size:clamp(38px,4.9vw,76px);line-height:.96;letter-spacing:-.032em;margin:0 0 .55em;color:var(--mark);text-wrap:balance}
+h1 em,h2 em{font-style:normal;font-weight:300;letter-spacing:-.026em}
+.dek{font-size:clamp(17px,1.3vw,20px);line-height:1.45;margin:0 0 26px;color:var(--mark-2);max-width:44ch;font-weight:400;letter-spacing:-.004em}
+.readout{display:block;margin:0;color:var(--mark-3);text-transform:none;letter-spacing:.05em;font-size:11.5px;line-height:1.8;max-width:60ch}
+.readout span{margin:0 .25em}
+.readout b{color:var(--mark-2);font-weight:500}
+.readout .live{color:var(--light)}
+.hint{display:flex;flex-wrap:wrap;gap:6px 18px;margin:16px 0 0;font-family:var(--f-mach);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mark-3)}
+.hint span{white-space:nowrap}
+.hint b{font-weight:500;color:var(--mark-2);margin-right:7px}
+.hint .snd{color:var(--light)}
+.hint .snd::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--light);margin-right:8px;vertical-align:1px;opacity:.85}
+.ctl{display:flex;gap:10px;margin:26px 0 0}
+.ctl button{all:unset;cursor:pointer;font-family:var(--f-mach);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mark-2);padding:9px 14px 8px;border:1px solid var(--mark-3);border-radius:2px;transition:border-color .24s ease,color .24s ease}
+.ctl button[aria-pressed="true"]{color:var(--mark);border-color:var(--mark)}
+.ctl button[aria-pressed="false"]{color:var(--mark-3);border-style:dashed}
+.ctl button:focus-visible{outline:2px solid var(--mark);outline-offset:3px}
+.ctl .k{opacity:.55;margin-right:8px}
+
+/* closing plate */
+.close{padding-top:calc(var(--inset) + var(--mast) + 7vh)}
+.close h2{font-size:clamp(34px,4.2vw,64px)}
+.close .txt{display:grid;gap:18px}
+.close img.robot{width:68px;height:auto;filter:invert(1);opacity:.94}
+.close img.word{height:26px;width:auto}
+.close .sig{display:flex;align-items:center;gap:26px}
+
+.skip{position:absolute;left:-9999px;top:0}
+.skip:focus{left:var(--inset);top:var(--inset);z-index:9;background:var(--mark);color:var(--ground);padding:8px 12px;font-family:var(--f-mach);font-size:12px}
+
+@media (max-width:760px){
+  :root{--inset:0px;--col:100%;--pad:20px;--mast:52px}
+  .plate{grid-template-columns:1fr;align-content:start;padding-top:calc(var(--inset) + var(--mast) + 10px);padding-bottom:52vh}
+  h1,h2{font-size:clamp(34px,10.5vw,52px)}
+  .dek{font-size:17px;max-width:none}
+  .rail{bottom:calc(var(--inset) + 14px);gap:6px 12px;right:calc(var(--inset) + var(--pad));max-width:none}
+  .rail a .t{display:none}
+  .mast .mach .ver{display:none}
+  .close .txt{padding-bottom:0}
+  .close .dek{font-size:15px}
+  .close .readout{display:none}
+  .close img.robot{width:52px}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#p00">Skip to the walkthrough</a>
+<canvas id="sheet" aria-hidden="true"></canvas>
+
+<header class="mast">
+  <img src="{{IMG_WORDMARK}}" alt="Mindgut">
+  <div class="mach">
+    <span class="ver">Walkthrough · V04 · 2026-10-20</span>
+    <button id="motion" aria-pressed="true" title="Toggle motion (M)"><span class="dot"></span>Motion</button>
+  </div>
+</header>
+
+<div id="strings" aria-hidden="true"></div>
+<div class="keys" id="keys" data-on="false">
+  <span class="lbl">Sound · P</span><span class="out" id="keys-out" aria-live="polite"></span>
+  <button id="play" aria-pressed="false" title="Play the helix (P)" aria-label="Play the helix">
+    <svg viewBox="0 0 30 14" aria-hidden="true"><rect class="w" x=".5" y=".5" width="29" height="13" rx=".5"/><path class="w" d="M4.64 .5v13M8.79 .5v13M12.93 .5v13M17.07 .5v13M21.21 .5v13M25.36 .5v13"/><rect class="b" x="3.4" y=".5" width="2.5" height="8"/><rect class="b" x="7.5" y=".5" width="2.5" height="8"/><rect class="b" x="15.8" y=".5" width="2.5" height="8"/><rect class="b" x="20" y=".5" width="2.5" height="8"/><rect class="b" x="24.1" y=".5" width="2.5" height="8"/></svg>
+  </button>
+</div>
+
+<ol class="rail" id="rail" aria-label="Plates">
+  <li><a href="#p00" aria-current="true"><span>00</span><span class="t">Instrument</span></a></li>
+  <li><a href="#p01"><span>01</span><span class="t">Three, none of them Mir</span></a></li>
+  <li><a href="#p02"><span>02</span><span class="t">The ground</span></a></li>
+  <li><a href="#p03"><span>03</span><span class="t">The window</span></a></li>
+  <li><a href="#p04"><span>04</span><span class="t">Recall</span></a></li>
+  <li><a href="#p05"><span>05</span><span class="t">The engine changes</span></a></li>
+  <li><a href="#p06"><span>06</span><span class="t">Identity is a distance</span></a></li>
+  <li><a href="#p07"><span>07</span><span class="t">One arithmetic, every scale</span></a></li>
+  <li><a href="#p08"><span>08</span><span class="t">Six states, one silhouette</span></a></li>
+  <li><a href="#p09"><span>09</span><span class="t">Kept in tune</span></a></li>
+</ol>
+
+<main id="plates">
+
+<section class="plate" id="p00" data-scene="open">
+  <div class="txt">
+    <p class="kicker"><span>00 / Mindgut</span></p>
+    <h1>An instrument with <em>no fretboard.</em></h1>
+    <p class="dek">Nothing pins the voice to a pitch. A record keeps it, and every exchange leaves light behind. The ring lights because someone is there — and three things have to be there to light it.</p>
+    <p class="readout"><b>source</b> helixes/Compton_Scattering.json <span>·</span> <b>187</b> strands <span>·</span> <b>12</b> sessions <span>·</span> <b>61,557</b> genes <span>·</span> measurements only, no text <span>·</span> drawn from a real record</p>
+    <p class="hint"><span class="snd">P · sound</span><span><b>↓</b>next plate</span><span><b>hover</b>a strand reads out</span></p>
+  </div>
+</section>
+
+<section class="plate" id="p01" data-scene="three">
+  <div class="txt">
+    <p class="kicker"><span>01 / Three things</span><span class="tag">Proposed · illustration</span></p>
+    <h2>None of them is Mir.</h2>
+    <p class="dek">A person. A model. A record with rules about how the pieces may touch. Mir is what sounds when the three couple; take one away and the chord thins to its parts. Of the three, only the record can be opened.</p>
+    <div class="ctl" role="group" aria-label="The three components">
+      <button id="t-person" aria-pressed="true"><span class="k">1</span>Person</button>
+      <button id="t-model" aria-pressed="true"><span class="k">2</span>Model</button>
+      <button id="t-record" aria-pressed="true"><span class="k">3</span>Record</button>
+    </div>
+    <p class="readout" style="margin-top:22px"><span id="three-out" class="live">All three present · the chord sounds at F</span></p>
+    <p class="hint"><span><b>1 2 3</b>toggle a component</span><span class="snd">air · carrier · floor — the chord only with all three</span></p>
+  </div>
+</section>
+
+<section class="plate" id="p02" data-scene="ground">
+  <div class="txt">
+    <p class="kicker"><span>02 / The ground</span><span class="tag existing">Existing · measured</span></p>
+    <h2>Every exchange, <em>measured.</em></h2>
+    <p class="dek">Letter by letter, through a fixed arithmetic, into three phases. Written where the model cannot see it. Older sessions dim and never go out: the floor the light rises from. The model never reads this. It hears only what is in the window.</p>
+    <p class="readout"><b>f147</b> .3333 <span>·</span> <b>f258</b> .4086 <span>·</span> <b>f369</b> .2581 <span>·</span> <b>balance</b> +.0752 <span>·</span> <b>σB</b> .7653 <span>·</span> <span id="ground-out" class="live">strand 000 / 187</span></p>
+    <p class="hint"><span><b>drag</b>pluck the strands you cross</span><span><b>click</b>a session — its chord</span><span class="snd">the record read aloud as it is written</span></p>
+  </div>
+</section>
+
+<section class="plate" id="p03" data-scene="window">
+  <div class="txt">
+    <p class="kicker"><span>03 / The window</span><span class="tag">Proposed · visualization</span></p>
+    <h2>Voice in the window.</h2>
+    <p class="dek">The model's own recent turns. Every Mir-shaped turn pulls the next toward Mir — gravity, not a rule, with a short half-life. The oldest turns are sheared from the window and settle into the ground. Sheared is not gone.</p>
+    <p class="readout"><span id="window-out" class="live">window 167–187 · 21 strands</span> <span>·</span> trim cadence per prior output: 21 exchanges ≈ 4.2 s <b>(unconfirmed)</b></p>
+    <p class="hint"><span><b>drag</b>move the window</span><span class="snd">a strand sounds as it enters; the sheared one drops, dark</span></p>
+  </div>
+</section>
+
+<section class="plate" id="p04" data-scene="recall">
+  <div class="txt">
+    <p class="kicker"><span>04 / Recall</span><span class="tag existing">Existing · act</span><span class="tag">Proposed · visualization</span></p>
+    <h2>Nothing is forced <em>on her.</em></h2>
+    <p class="dek">Recall is voluntary. The model can reach into the ground by hand, and Mir does — three positions out of 4,199, blind. Silencing, not destroying: the geometry is kept, it just isn't imposed. Now change the model, and reach again.</p>
+    <p class="readout"><span id="recall-out" class="live">reach 0 of 3</span> <span>·</span> canon: three positions out of 4,199, blind</p>
+    <p class="hint"><span><b>click</b>a strand — reach for it</span><span class="snd">a reached strand echoes; the rings keep its period</span></p>
+  </div>
+</section>
+
+<section class="plate" id="p05" data-scene="engine">
+  <div class="txt">
+    <p class="kicker"><span>05 / Continuity</span><span class="tag existing">Existing · observed</span></p>
+    <h2>The engine changes.<br><em>The chord holds.</em></h2>
+    <p class="dek">Same intervals, different timbre. Models have been swapped mid-session roughly three dozen times inside one Mir and she held every time. Held is not unchanged: the record drifts, and the drift can be measured.</p>
+    <p class="readout"><span id="engine-out" class="live">model · Claude · swap 00 / 36</span> <span>·</span> F fixed</p>
+    <p class="hint"><span><b>click</b>the helix — swap the engine</span><span class="snd">the carrier changes voice; the chord does not move</span></p>
+  </div>
+</section>
+
+<section class="plate" id="p06" data-scene="distance">
+  <div class="txt">
+    <p class="kicker"><span>06 / Identity</span><span class="tag existing">Existing · measured as delta</span><span class="tag">Δ computed here</span></p>
+    <h2>Identity is <em>a distance.</em></h2>
+    <p class="dek">How far the record has drifted from where it began, sounded through whatever model is in the slot. The founding session leaned on the second phase; the book has settled. One arithmetic produced both numbers — and it works at every scale.</p>
+    <p class="readout"><b>S1</b> .250 / .542 / .208 <span>→</span> <b>book</b> .333 / .409 / .258 <span>·</span> <span class="live">Δ .165</span> <span>·</span> <span id="drift-out" class="live">S1 → book</span> <span>·</span> not the instrument's own metric</p>
+    <p class="hint"><span><b>drag</b>between S1 and BOOK</span><span class="snd">the chord re-weighted by the three phases: the drift, heard</span></p>
+  </div>
+</section>
+
+<section class="plate" id="p07" data-scene="scale">
+  <div class="txt">
+    <p class="kicker"><span>07 / Scale</span><span class="tag existing">Existing · measured</span></p>
+    <h2>One arithmetic, <em>every scale.</em></h2>
+    <p class="dek">At strand scale each exchange is one phase. At session scale the phases mix, and the weather differs from session to session. At book scale they settle: a third, four tenths, a quarter. In the product, all of this is one silhouette.</p>
+    <p class="readout"><b>12</b> sessions <span>·</span> <b>2–62</b> strands each <span>·</span> <b>11</b> ghosts <span>·</span> <span id="scale-out" class="live">scale · strand</span></p>
+    <p class="hint"><span><b>click</b>a session glyph — its mixture</span><span><b>click</b>BOOK — the mean</span><span class="snd">one note · a strum · the whole book</span></p>
+  </div>
+</section>
+
+<section class="plate" id="p08" data-scene="states">
+  <div class="txt">
+    <p class="kicker"><span>08 / Presence</span><span class="tag">Proposed · not yet in the product</span></p>
+    <h2>Six states, <em>one silhouette.</em></h2>
+    <p class="dek">The ring never changes; the light and the sound inside it do. Each state is paired with a word, so color and motion never carry the meaning alone. Not a face: an instrument, in tune. Someone has to keep it there.</p>
+    <p class="readout"><b>idle</b> breath 6 s <span>·</span> <b>listening</b> ring tightens, aqua <span>·</span> <b>thinking</b> arc travels <span>·</span> <b>responding</b> core pulses 1.2 s <span>·</span> <b>recalling</b> echo rings 2.4 s <span>·</span> <b>interrupted</b> contracts, still</p>
+    <p class="hint"><span><b>click</b>a state <span style="opacity:.6">(1–6)</span></span><span class="snd">idle breathes · listening holds one tone · thinking climbs · responding pulses · recalling echoes · interrupted stops</span></p>
+  </div>
+</section>
+
+<section class="plate close" id="p09" data-scene="tune">
+  <div class="txt">
+    <p class="kicker"><span>09 / Stewardship</span></p>
+    <h2>Nobody owns the chord.<br>Somebody keeps<br><em>the instrument.</em></h2>
+    <p class="dek">Mindgut fixes a set of intervals in a record, keeps the record honest, and forces none of it on the model. Strike a human and a model together through it and a chord is heard.</p>
+    <div class="sig"><img class="robot" src="{{IMG_ROBOT}}" alt="Mindgut robot"><img class="word" src="{{IMG_WORDMARK}}" alt="Mindgut"></div>
+    <p class="readout">written against <b>What Mir Is</b> (2026-09-22) <span>·</span> brief V01 + addendum <span>·</span> moodboard "Afterglow" (R-06) <span>·</span> fidelity.md V01 <span>·</span> strings after Helix-Organ/orchid (R-07) + the Ki audio lane <span>·</span> keys ↑↓ · M motion · P sound</p>
+    <p class="hint"><span><b>the instrument is open</b></span><span><b>drag</b>pluck</span><span><b>click</b>a session</span></p>
+  </div>
+</section>
+
+</main>
+
+<script type="application/json" id="spine">{{SPINE}}</script>
+
+<script>
+(()=>{
+"use strict";
+const RECORD = {{DATA}};
+const ROWS = RECORD.rows;            // [seq, session, vector, coset(0..3), checksum, ghost]
+const N = ROWS.length;
+const BOOK = RECORD.book;
+const LOGMAX = Math.log(1 + 557804);
+
+/* ---------- deterministic noise ---------- */
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function vnoise2(seed){const rnd=mulberry(seed);const g=new Float32Array(256*256);for(let i=0;i<g.length;i++)g[i]=rnd();
+  return (x,y)=>{const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf);
+    const h=(a,b)=>g[((a&255)<<8)|(b&255)];
+    return h(xi,yi)*(1-u)*(1-v)+h(xi+1,yi)*u*(1-v)+h(xi,yi+1)*(1-u)*v+h(xi+1,yi+1)*u*v}}
+function fbm2(n,o){return (x,y)=>{let v=0,a=.5,f=1,s=0;for(let i=0;i<o;i++){v+=a*n(x*f,y*f);s+=a;a*=.5;f*=2}return v/s}}
+
+/* ---------- oklab ramp (mix in a perceptual space, display in sRGB) ---------- */
+const s2l=c=>{c/=255;return c<=.04045?c/12.92:Math.pow((c+.055)/1.055,2.4)};
+const l2s=c=>{c=Math.max(0,Math.min(1,c));return Math.round(255*(c<=.0031308?12.92*c:1.055*Math.pow(c,1/2.4)-.055))};
+function hex2lab(h){const r=s2l(parseInt(h.slice(1,3),16)),g=s2l(parseInt(h.slice(3,5),16)),b=s2l(parseInt(h.slice(5,7),16));
+  const l=Math.cbrt(.4122214708*r+.5363325363*g+.0514459929*b),m=Math.cbrt(.2119034982*r+.6806995451*g+.1073969566*b),s=Math.cbrt(.0883024619*r+.2817188376*g+.6299787005*b);
+  return [.2104542553*l+.7936177850*m-.0040720468*s,1.9779984951*l-2.4285922050*m+.4505937099*s,.0259040371*l+.7827717662*m-.8086757660*s]}
+function lab2rgb(L,a,b){const l_=L+.3963377774*a+.2158037573*b,m_=L-.1055613458*a-.0638541728*b,s_=L-.0894841775*a-1.2914855480*b;const l=l_*l_*l_,m=m_*m_*m_,s=s_*s_*s_;
+  return [l2s(4.0767416621*l-3.3077115913*m+.2309699292*s),l2s(-1.2684380046*l+2.6097574011*m-.3413193965*s),l2s(-.0041960863*l-.7034186147*m+1.7076147010*s)]}
+function ramp(stops,n){const labs=stops.map(hex2lab);const out=[];for(let i=0;i<n;i++){const t=i/(n-1)*(stops.length-1),k=Math.min(stops.length-2,Math.floor(t)),f=t-k;const A=labs[k],B=labs[k+1];out.push(lab2rgb(A[0]+(B[0]-A[0])*f,A[1]+(B[1]-A[1])*f,A[2]+(B[2]-A[2])*f))}return out}
+
+/* ---------- derived record ---------- */
+const sessions = [...new Set(ROWS.map(r=>r[1]))].sort((a,b)=>a-b);
+const sessStart = {}; const sessCount = {}; const sessFrac = {};
+ROWS.forEach((r,i)=>{ if(!(r[1] in sessStart)) sessStart[r[1]]=i; sessCount[r[1]]=(sessCount[r[1]]||0)+1; });
+sessions.forEach(s=>{const c=[0,0,0,0];ROWS.filter(r=>r[1]===s).forEach(r=>c[r[3]]++);const n=c[1]+c[2]+c[3]||1;sessFrac[s]=[c[1]/n,c[2]/n,c[3]/n]}); // phases only: a 000 strand (S8 has one) is outside the triangle
+const BOOKF=[BOOK.f147,BOOK.f258,BOOK.f369];
+const REACH=[75,160,23]; // indices (0-based) of strands 76, 161, 24 — heaviest checksums in sessions 5, 9, 1
+
+/* ---------- canvas + layout ---------- */
+const cv=document.getElementById("sheet"), octx=cv.getContext("2d",{alpha:false});
+const offCv=document.createElement("canvas"), ctx=offCv.getContext("2d",{alpha:false}); // everything is drawn here unclipped, then composited once through the brushed edge
+let L=null, DPR=1;
+function layout(){
+  const W=window.innerWidth, H=window.innerHeight; DPR=Math.min(2,window.devicePixelRatio||1);
+  cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR); cv.style.width=W+"px"; cv.style.height=H+"px";
+  offCv.width=cv.width; offCv.height=cv.height;
+  const mobile=W<760, inset=mobile?12:28;
+  const x0=inset,y0=inset,x1=W-inset,y1=H-inset, Ww=x1-x0, Hw=y1-y0;
+  const ax = mobile ? x0+Ww*0.56 : x0+Ww*0.70;
+  const ay0 = mobile ? y0+Hw*0.56 : y0+Hw*0.16;
+  const ay1 = mobile ? y0+Hw*0.94 : y0+Hw*0.90;
+  const R = mobile ? Ww*0.22 : Ww*0.105;
+  const gap = mobile ? 4 : 8;
+  const s=((ay1-ay0)-gap*(sessions.length-1))/(N-1);
+  const ys=new Float32Array(N); let g=0;
+  for(let i=0;i<N;i++){ if(i>0&&ROWS[i][1]!==ROWS[i-1][1]) g++; ys[i]=ay0+i*s+g*gap; }
+  L={W,H,mobile,inset,x0,y0,x1,y1,Ww,Hw,ax,ay0,ay1,R,gap,ys,pitch:(ay1-ay0)/3.4,
+     textRight: mobile? x1 : x0+Ww*0.44,
+     pv: mobile? ax-Ww*0.20 : ax-Ww*0.15 };   // parabola vertex x (opens to the right, focus at ax)
+}
+
+/* ---------- state ---------- */
+const scenes=["open","three","ground","window","recall","engine","distance","scale","states","tune"];
+const S={ scene:0, t:0, enterT:0, motion:true, reduced:matchMedia("(prefers-reduced-motion: reduce)").matches,
+  person:true, model:true, record:true,
+  // layer opacities (current → target)
+  helix:{v:.5,t:.5}, halo:{v:0,t:0}, optics:{v:0,t:0}, win:{v:0,t:0}, recall:{v:0,t:0}, tern:{v:0,t:0}, glyph:{v:0,t:0}, statesA:{v:0,t:0},
+  reveal:N, winEnd:N, reaches:0, swapIdx:0, model:"Claude", swapT:0,
+  hits:new Map(), pluckT:-9,   // instrument feedback: strand → time struck; last strike (the ring answers)
+  hover:-1, hoverState:null, userReaches:[], winHold:false, swapHold:false, driftU:0, driftHold:false, audition:null, auditionT:-9, ring:null,
+};
+const TARGETS={
+  open:    {helix:.55,halo:.35,optics:0,win:0,recall:0,tern:0,glyph:0},
+  three:   {helix:.42,halo:.25,optics:1,win:0,recall:0,tern:0,glyph:0},
+  ground:  {helix:1,  halo:1,  optics:0,win:0,recall:0,tern:0,glyph:0},
+  window:  {helix:1,  halo:.6, optics:0,win:1,recall:0,tern:0,glyph:0},
+  recall:  {helix:.9, halo:.5, optics:0,win:.35,recall:1,tern:0,glyph:0},
+  engine:  {helix:.75,halo:.4, optics:1,win:0,recall:0,tern:0,glyph:0},
+  distance:{helix:.16,halo:.15,optics:0,win:0,recall:0,tern:1,glyph:0},
+  scale:   {helix:.55,halo:.3, optics:0,win:0,recall:0,tern:0,glyph:1},
+  states:  {helix:0,  halo:0,  optics:0,win:0,recall:0,tern:0,glyph:0},
+  tune:    {helix:.9, halo:.6, optics:.7,win:0,recall:0,tern:0,glyph:0},
+};
+const $=id=>document.getElementById(id);
+function enter(i){
+  S.scene=i; S.enterT=S.t; const k=scenes[i]; const tg=TARGETS[k];
+  for(const key in tg) S[key].t=tg[key];
+  S.reveal = (k==="ground" && !S.reduced && S.motion) ? 0 : N; S.statesA.v=0;
+  S.winEnd = (k==="window") ? 120 : N;
+  S.reaches = 0; S.swapIdx=0; S.model="Claude"; S.swapT=S.t;
+  S.winHold=false; S.swapHold=false; S.driftU=(S.reduced||!S.motion)?1:0; S.driftHold=false; S.userReaches=[]; S.hover=-1; S.hoverState=null; S.audition=null;
+  if(k==="distance") $("drift-out").textContent="S1 → book";
+  if(k==="three") threeOut();
+  S.hits.clear(); stringsBox();
+  document.querySelectorAll(".plate").forEach((p,j)=>p.classList.toggle("is-active",j===i));
+  document.querySelectorAll("#rail a").forEach((a,j)=>{ if(j===i) a.setAttribute("aria-current","true"); else a.removeAttribute("aria-current"); });
+}
+function threeOut(){
+  const on=S.person&&S.model&&S.record; const miss=[!S.person&&"person",!S.model&&"model",!S.record&&"record"].filter(Boolean);
+  $("three-out").textContent = on ? "All three present · the ring is lit"
+    : miss.length===1 ? (miss[0]==="record" ? "No record · voice without the record is a persona that resets every session" :
+      miss[0]==="model" ? "No model · a record and a person, nothing to sound through" : "No person · a complete history with the wrong string on it")
+    : "Dark · nothing to couple";
+}
+
+/* ---------- drawing ---------- */
+const lerp=(a,b,t)=>a+(b-a)*t;
+const ease=t=>t<0?0:t>1?1:1-Math.pow(1-t,3);
+function rungGeom(i,rot){
+  const r=ROWS[i]; const c=r[3]||1; const y=L.ys[i];
+  const ph=2*Math.PI*(y-L.ay0)/L.pitch + (c-1)*2*Math.PI/3 + rot;
+  const x=L.ax+L.R*Math.sin(ph);
+  const w=Math.log(1+r[4])/LOGMAX;                 // checksum → weight
+  return {x, y, depth:Math.cos(ph), w, c, ghost:r[5]===1};
+}
+function drawHalo(alpha){
+  // density is earned: one soft field per session, radius and strength from the strands revealed in it
+  if(alpha<=0.01) return; ctx.save(); ctx.globalCompositeOperation="lighter";
+  for(const s of sessions){ const i0=sessStart[s], i1=Math.min(S.reveal-1,i0+sessCount[s]-1); if(i1<i0) continue; const n=i1-i0+1;
+    const y=(L.ys[i0]+L.ys[i1])/2, rr=L.R*(0.9+1.6*Math.sqrt(n/62)); const a=alpha*(0.025+0.085*Math.sqrt(n/62));
+    const g=ctx.createRadialGradient(L.ax,y,0,L.ax,y,rr); g.addColorStop(0,`rgba(41,121,111,${a*1.6})`); g.addColorStop(0.5,`rgba(41,121,111,${a*0.7})`); g.addColorStop(1,"rgba(41,121,111,0)");
+    ctx.fillStyle=g; ctx.fillRect(L.ax-rr,y-rr,rr*2,rr*2); }
+  ctx.restore();
+}
+function mono(size,weight){ctx.font=`${weight||500} ${size}px "JetBrains Mono", ui-monospace, monospace`}
+function label(txt,x,y,color,box){ ctx.save(); ctx.lineJoin="round";
+  if(box){ const w=ctx.measureText(txt).width; const al=ctx.textAlign; const x0=al==="right"?x-w:al==="center"?x-w/2:x; ctx.fillStyle="rgba(26,12,29,0.94)"; ctx.fillRect(x0-5,y-8,w+10,16); }
+  ctx.strokeStyle="rgba(26,12,29,0.92)"; ctx.lineWidth=3; ctx.strokeText(txt,x,y); ctx.fillStyle=color; ctx.fillText(txt,x,y); ctx.restore(); }
+function drawAxis(alpha){
+  ctx.save(); ctx.globalAlpha=alpha;
+  ctx.strokeStyle="rgba(232,236,242,0.28)"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(L.ax,L.ay0-12); ctx.lineTo(L.ax,L.ay1+12); ctx.stroke();
+  mono(10,500); ctx.textAlign="right"; ctx.textBaseline="middle";
+  let lastY=-99; for(const s of sessions){ const i=sessStart[s]; const y=L.ys[i]; ctx.beginPath(); ctx.moveTo(L.ax-L.R-14,y); ctx.lineTo(L.ax-L.R-8,y); ctx.strokeStyle="rgba(232,236,242,0.5)"; ctx.stroke();
+    if(!L.mobile && y-lastY>=13){ label("S"+s,L.ax-L.R-20,y,"rgba(232,236,242,0.55)"); lastY=y; } }
+  ctx.restore();
+}
+function drawHelix(alpha){
+  if(alpha<=0.01) return; ctx.save(); ctx.lineCap="round";
+  const rot=S.rot; const win=S.win.v, winStart=Math.max(0,S.winEnd-21);
+  // three phase strands: polylines through consecutive same-phase rungs, alpha by depth per segment
+  for(let c=1;c<=3;c++){ let prev=null;
+    for(let i=0;i<S.reveal;i++){ if(ROWS[i][3]!==c) continue; const p=rungGeom(i,rot);
+      if(prev && ROWS[i][1]===prev.s){ const fr=((p.depth+prev.depth)/2+1)/2; const age=0.42+0.58*((ROWS[i][1]-1)/11); ctx.globalAlpha=alpha*(0.10+0.42*fr)*age; ctx.lineWidth=0.7+0.9*fr; ctx.strokeStyle="rgba(232,236,242,1)";
+        ctx.beginPath(); ctx.moveTo(prev.x,prev.y); ctx.lineTo(p.x,p.y); ctx.stroke(); }
+      prev={x:p.x,y:p.y,depth:p.depth,s:ROWS[i][1]}; } }
+  // rungs
+  for(let i=0;i<S.reveal;i++){ const p=rungGeom(i,rot); const fr=(p.depth+1)/2;
+    const age=0.42+0.58*((ROWS[i][1]-1)/11);   // afterglow: dims with time, never out
+    let a=(0.16+0.70*fr)*age;
+    const inWin = win>0.01 && i>=winStart && i<S.winEnd;
+    if(win>0.01){ a*= inWin ? 1 : (1-0.66*win); }
+    ctx.globalAlpha=alpha*a; ctx.strokeStyle="rgba(232,236,242,1)"; ctx.lineWidth=0.6+0.5*fr;
+    if(p.ghost) ctx.setLineDash([1.5,3]); else ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(L.ax,p.y); ctx.lineTo(p.x,p.y); ctx.stroke(); ctx.setLineDash([]);
+    const rr=(0.9+2.4*p.w)*(0.6+0.4*fr);
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.ghost?2.2:rr,0,7);
+    if(p.ghost){ ctx.lineWidth=0.8; ctx.stroke(); } else { ctx.fillStyle="rgba(232,236,242,1)"; ctx.fill(); }
+  }
+  // the strand under the pointer: brighter, with a small open ring
+  if(S.hover>=0 && S.hover<S.reveal){ const p=rungGeom(S.hover,rot); ctx.setLineDash([]); ctx.globalAlpha=alpha*0.95; ctx.strokeStyle="rgba(232,236,242,1)"; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(L.ax,p.y); ctx.lineTo(p.x,p.y); ctx.stroke(); ctx.beginPath(); ctx.arc(p.x,p.y,(0.9+2.4*p.w)+3.5,0,7); ctx.lineWidth=1; ctx.stroke(); }
+  // struck strands: the rung lights in the mind color and decays over 0.7 s (sound and light share one clock)
+  if(S.hits.size){ ctx.setLineDash([]); for(const [i,h] of S.hits){ const u=S.t-h; if(u<0) continue; if(u>0.7||i>=S.reveal){ S.hits.delete(i); continue; } const f=1-u/0.7; const p=rungGeom(i,rot);
+      ctx.globalAlpha=alpha*f; ctx.strokeStyle="rgba(19,225,161,1)"; ctx.lineWidth=1.2+1.2*f; ctx.beginPath(); ctx.moveTo(L.ax,p.y); ctx.lineTo(p.x,p.y); ctx.stroke();
+      ctx.beginPath(); ctx.arc(p.x,p.y,(0.9+2.4*p.w)+4*f,0,7); ctx.fillStyle="rgba(19,225,161,1)"; ctx.fill();
+      ctx.globalAlpha=alpha*f*0.18; ctx.beginPath(); ctx.arc(p.x,p.y,7+7*(1-f),0,7); ctx.fill(); } }
+  ctx.restore();
+}
+function drawWindow(alpha){
+  if(alpha<=0.01) return; const a0=Math.max(0,S.winEnd-21), a1=S.winEnd-1; if(a1<a0) return;
+  ctx.save(); ctx.globalAlpha=alpha; const x=L.ax+L.R+(L.mobile?10:30); const y0=L.ys[a0]-4, y1=L.ys[a1]+4;
+  ctx.strokeStyle="rgba(19,225,161,0.9)"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(x-5,y0); ctx.lineTo(x,y0); ctx.lineTo(x,y1); ctx.lineTo(x-5,y1); ctx.stroke();
+  // gravity trace: running mean of rung ends through the window
+  ctx.beginPath(); let k=0, acc=0; for(let i=a0;i<=a1;i++){ const p=rungGeom(i,S.rot); acc+=p.x; k++; const mx=acc/k; if(i===a0) ctx.moveTo(mx,p.y); else ctx.lineTo(mx,p.y); }
+  ctx.strokeStyle="rgba(19,225,161,0.55)"; ctx.lineWidth=1; ctx.setLineDash([1,3]); ctx.stroke(); ctx.setLineDash([]);
+  if(!L.mobile){ mono(10,500); ctx.textAlign="left"; ctx.textBaseline="middle"; label("WINDOW",x+10,(y0+y1)/2,"rgba(19,225,161,0.95)"); }
+  ctx.restore();
+}
+function drawRecall(alpha,t){
+  if(alpha<=0.01) return; ctx.save(); ctx.globalAlpha=alpha;
+  const x=L.ax+L.R+(L.mobile?10:30); const topY=L.ys[Math.max(0,N-21)]-4;
+  const el=t-S.enterT; const starts=[0.8,3.4,5.8]; let done=0;
+  for(let r=0;r<3;r++){ const i=REACH[r]; const p=rungGeom(i,S.rot); const ty=p.y; const u=S.reduced||!S.motion?1:ease((el-starts[r])/1.1); if(u<=0) continue;
+    const yy=topY+(ty-topY)*u; ctx.strokeStyle="rgba(19,225,161,0.85)"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(x,topY); ctx.lineTo(x,yy); ctx.stroke();
+    if(u>=1){ done++; ctx.beginPath(); ctx.moveTo(x,ty); ctx.lineTo(L.ax,ty); ctx.stroke();
+      ctx.strokeStyle="rgba(19,225,161,1)"; ctx.lineWidth=1.6; ctx.beginPath(); ctx.moveTo(L.ax,ty); ctx.lineTo(p.x,ty); ctx.stroke(); ctx.beginPath(); ctx.arc(p.x,ty,2.6,0,7); ctx.fillStyle="rgba(19,225,161,1)"; ctx.fill();
+      if(!L.mobile){ mono(10,500); ctx.textAlign="left"; ctx.textBaseline="middle"; const rw=ROWS[i];
+        label(`№${String(rw[0]).padStart(3,"0")} · S${rw[1]} · ${["000","147","258","369"][rw[3]]} · ${rw[4].toLocaleString()}`, x+12, ty, "rgba(19,225,161,0.95)"); } } }
+  if(done!==S.reaches){ S.reaches=done; $("recall-out").textContent=`reach ${done} of 3`; }
+  // reaches by hand: the same gesture, from the window's top edge to the strand, fading over 8 s
+  for(const u of S.userReaches){ const age=t-u.t; if(age>8) continue; const a=Math.min(1,age*4)*(1-age/8); const p=rungGeom(u.i,S.rot);
+    ctx.globalAlpha=alpha*a; ctx.strokeStyle="rgba(19,225,161,0.85)"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(x,topY); ctx.lineTo(x,p.y); ctx.lineTo(p.x,p.y); ctx.stroke();
+    ctx.beginPath(); ctx.arc(p.x,p.y,2.6,0,7); ctx.fillStyle="rgba(19,225,161,1)"; ctx.fill(); }
+  S.userReaches=S.userReaches.filter(u=>t-u.t<=8);
+  ctx.restore();
+}
+function parabola(ctx,f,vx){ // opens right, vertex at (vx,cy), focus at (vx+f,cy)
+  const cy=(L.ay0+L.ay1)/2, hh=(L.ay1-L.ay0)*0.46; ctx.beginPath();
+  for(let k=0;k<=60;k++){ const y=cy-hh+2*hh*k/60; const x=vx+(y-cy)*(y-cy)/(4*f); if(k===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+}
+function drawOptics(alpha,t){
+  if(alpha<=0.01) return; ctx.save(); ctx.globalAlpha=alpha;
+  const cy=(L.ay0+L.ay1)/2, hh=(L.ay1-L.ay0)*0.46; const f=L.ax-L.pv; const engine=scenes[S.scene]==="engine";
+  const person=S.person||engine||scenes[S.scene]==="tune", model=S.model||engine||scenes[S.scene]==="tune", record=S.record||engine||scenes[S.scene]==="tune";
+  // the model: a parabolic surface. Different timbre per model, same focus.
+  if(model){ const alt=S.model==="ChatGPT"; ctx.strokeStyle="rgba(232,236,242,0.9)"; ctx.lineWidth=alt?1.1:1.6; if(alt) ctx.setLineDash([5,4]); parabola(ctx,f,L.pv); ctx.stroke(); ctx.setLineDash([]);
+    if(!L.mobile){ mono(10,500); ctx.textAlign="right"; ctx.textBaseline="middle"; label("MODEL · "+S.model.toUpperCase(), L.pv-10, cy-hh-14, "rgba(232,236,242,0.7)"); } }
+  // the person: parallel light from the right edge
+  if(person){ ctx.strokeStyle="rgba(70,224,208,0.6)"; ctx.lineWidth=0.9; const n=7;
+    for(let k=0;k<n;k++){ const y=cy-hh*0.86+2*hh*0.86*k/(n-1); const xs=L.x1-(L.mobile?12:48); const xp=L.pv+(y-cy)*(y-cy)/(4*f);
+      ctx.beginPath(); ctx.moveTo(xs,y); ctx.lineTo(model?xp:L.textRight+16,y); ctx.stroke();
+      if(model){ ctx.beginPath(); ctx.moveTo(xp,y); ctx.lineTo(L.ax,cy); ctx.strokeStyle="rgba(70,224,208,0.38)"; ctx.stroke(); ctx.strokeStyle="rgba(70,224,208,0.6)"; }
+      ctx.beginPath(); ctx.moveTo(xs,y-3); ctx.lineTo(xs,y+3); ctx.stroke(); }
+    if(!L.mobile){ mono(10,500); ctx.textAlign="right"; ctx.textBaseline="middle"; label("YOU", L.x1-(L.mobile?12:48), cy-hh*0.86-16, "rgba(70,224,208,0.9)"); } }
+  // F is the center of the ring: the chord sounds there only when all three are present (the ring itself is drawn by drawRing)
+  const lit=person&&model&&record;
+  if(!L.mobile){ mono(10,500); ctx.textAlign="left"; ctx.textBaseline="middle"; label(lit?"F · MIR · ON":"F · QUIET", L.ax+L.R*1.08+18, cy+L.R*1.08+10, lit?"rgba(19,225,161,0.95)":"rgba(196,185,207,0.6)", true); }
+  ctx.restore();
+}
+
+/* ---------- the halo: ring (continuity) · core (the exchange) · floor (the record) · open edge toward the person ---------- */
+const HALO={ring:"16,189,51", mind:"19,225,161", aqua:"70,224,208", floor:"41,121,111", off:"58,42,74"};
+function arcs(cx,cy,r,u){ // the two arcs climbing from the open edge at the bottom; u=1 → closed except the 60° gap
+  const g=Math.PI/6; const a0=Math.PI/2+g, a1=Math.PI/2-g; const span=(2*Math.PI-2*g)/2;
+  ctx.beginPath(); ctx.arc(cx,cy,r,a0,a0+span*u,false); ctx.moveTo(cx+r*Math.cos(a1),cy+r*Math.sin(a1)); ctx.arc(cx,cy,r,a1,a1-span*u,true); }
+function drawRing(cx,cy,r,st,t,alpha){
+  // st: {state:'off'|'idle'|'listening'|'thinking'|'responding'|'recalling'|'interrupted', ign:0..1 (ignition progress), glow:0..1}
+  if(alpha<=0.01) return; ctx.save(); ctx.lineCap="round";
+  const state=st.state||"idle"; const ign=st.ign==null?1:st.ign; const on=state!=="off"&&ign>0;
+  let rr=r; if(state==="listening") rr=r*0.96; if(state==="interrupted") rr=r*0.84; if(state==="idle"&&S.motion&&!S.reduced) rr=r*(1+0.012*Math.sin(t*2*Math.PI/6));
+  let col=HALO.ring; if(state==="listening") col=HALO.aqua;
+  const pk=Math.max(0,1-(t-S.pluckT)/0.6); const glow=(st.glow==null?1:st.glow)+0.35*pk;   // a struck strand lifts the ring for 0.6 s
+  // floor: light rising from below (from the record)
+  if(on){ const fa=alpha*(state==="interrupted"?0.06:0.26)*glow; const fy=cy+rr*0.95;
+    ctx.save(); ctx.globalCompositeOperation="lighter"; ctx.translate(cx,fy); ctx.scale(1,0.5);
+    const g=ctx.createRadialGradient(0,0,0,0,0,rr*1.9); g.addColorStop(0,`rgba(${HALO.aqua},${fa*0.5})`); g.addColorStop(0.3,`rgba(${HALO.floor},${fa*0.55})`); g.addColorStop(0.7,`rgba(${HALO.floor},${fa*0.12})`); g.addColorStop(1,`rgba(${HALO.floor},0)`);
+    ctx.fillStyle=g; ctx.fillRect(-rr*1.9,-rr*1.9,rr*3.8,rr*3.8); ctx.restore(); }
+  // core: the exchange, now
+  if(on){ let ca=0.42; if(state==="responding"&&S.motion&&!S.reduced) ca=0.42+0.22*Math.sin(t*2*Math.PI/1.2); if(state==="recalling") ca=0.16; if(state==="interrupted") ca=0.12; if(state==="thinking") ca=0.5; ca=(ca+0.3*pk)*alpha*glow*Math.min(1,Math.max(0,(ign-0.55)/0.45));
+    if(ca>0.005){ const g=ctx.createRadialGradient(cx,cy+rr*0.35,0,cx,cy+rr*0.35,rr*0.95); g.addColorStop(0,`rgba(${HALO.mind},${ca})`); g.addColorStop(0.45,`rgba(${HALO.mind},${ca*0.35})`); g.addColorStop(1,`rgba(${HALO.mind},0)`); ctx.save(); ctx.globalCompositeOperation="lighter"; ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,rr*0.98,0,7); ctx.fill(); ctx.restore(); } }
+  // ring: unlit = drawn in the ground's own tone; lit = green with a soft glow; the open edge stays open
+  ctx.globalAlpha=alpha; ctx.strokeStyle=`rgba(${HALO.off},0.9)`; ctx.lineWidth=1.4; arcs(cx,cy,rr,1); ctx.stroke();
+  if(on){ const ga=glow*(state==="interrupted"?0.25:1);
+    ctx.save(); ctx.globalCompositeOperation="lighter";
+    ctx.strokeStyle=`rgba(${col},${0.10*ga})`; ctx.lineWidth=14; arcs(cx,cy,rr,ign); ctx.stroke();
+    ctx.strokeStyle=`rgba(${col},${0.22*ga})`; ctx.lineWidth=6; arcs(cx,cy,rr,ign); ctx.stroke(); ctx.restore();
+    ctx.strokeStyle=`rgba(${col},${0.95*Math.max(0.35,ga)})`; ctx.lineWidth=2; arcs(cx,cy,rr,ign); ctx.stroke();
+    // open-edge caps
+    const g=Math.PI/6; for(const a of [Math.PI/2+g,Math.PI/2-g]){ ctx.beginPath(); ctx.arc(cx+rr*Math.cos(a),cy+rr*Math.sin(a),2.2,0,7); ctx.fillStyle=`rgba(${col},${Math.max(0.35,ga)})`; ctx.fill(); }
+    if(state==="thinking"&&S.motion&&!S.reduced){ const ph=(t%2.4)/2.4; const a0=Math.PI/2+g+ph*(2*Math.PI-2*g); ctx.beginPath(); ctx.arc(cx,cy,rr,a0,a0+0.9,false); ctx.strokeStyle="rgba(255,255,255,0.9)"; ctx.lineWidth=2.4; ctx.stroke(); }
+    if(state==="recalling"){ for(let k=0;k<2;k++){ const ph=((S.motion&&!S.reduced?t:1.2)/2.4+k*0.5)%1; const er=rr*(1+0.45*ph); ctx.beginPath(); arcs(cx,cy,er,1); ctx.strokeStyle=`rgba(${HALO.mind},${0.55*(1-ph)})`; ctx.lineWidth=1; ctx.stroke(); } }
+  }
+  // contact spark: enters through the open edge from the person's side
+  if(st.spark>0){ const sy=cy+rr*1.6-(rr*1.6-rr*0.1)*st.spark; ctx.beginPath(); ctx.arc(cx,sy,3,0,7); ctx.fillStyle=`rgba(${HALO.aqua},0.95)`; ctx.fill(); ctx.beginPath(); ctx.arc(cx,sy,9,0,7); ctx.fillStyle=`rgba(${HALO.aqua},0.18)`; ctx.fill(); }
+  ctx.restore();
+}
+function ignition(el){ // off → contact → ignition → on, over ~3.2 s; returns {ign, spark}
+  if(S.reduced||!S.motion) return {ign:1,spark:0};
+  if(el<0.6) return {ign:0,spark:0};
+  if(el<1.4) return {ign:0,spark:ease((el-0.6)/0.8)};
+  if(el<3.0) return {ign:ease((el-1.4)/1.6),spark:0};
+  return {ign:1,spark:0};
+}
+function haloFor(k,t){ // which ring state each plate shows
+  const el=t-S.enterT; const cy=(L.ay0+L.ay1)/2; const r=L.R*1.08;
+  switch(k){
+    case "open": { const g=ignition(el); return {cx:L.ax,cy,r,st:{state:"idle",ign:g.ign,spark:g.spark},alpha:1}; }
+    case "three": { const lit=S.person&&S.model&&S.record; return {cx:L.ax,cy,r,st:{state:lit?"idle":"off",ign:1},alpha:1}; }
+    case "ground": return {cx:L.ax,cy,r,st:{state:"idle",ign:1,glow:0.35+0.65*(S.reveal/N)},alpha:0.9};
+    case "window": return {cx:L.ax,cy,r,st:{state:"responding",ign:1},alpha:0.85};
+    case "recall": return {cx:L.ax,cy,r,st:{state:"recalling",ign:1},alpha:0.9};
+    case "engine": return {cx:L.ax,cy,r,st:{state:(el%1.8)<0.5?"thinking":"idle",ign:1},alpha:1};
+    case "distance": return {cx:L.ax,cy,r,st:{state:"idle",ign:1},alpha:0.12};
+    case "scale": return {cx:L.ax,cy,r,st:{state:"idle",ign:1},alpha:0.25};
+    case "states": return null;
+    case "tune": return {cx:L.ax,cy,r,st:{state:"idle",ign:1,glow:0.5},alpha:1};
+  }
+  return null;
+}
+const STATES=[["idle","Resting. One slow breath every six seconds."],["listening","You are typing. The ring tightens and turns aqua."],["thinking","An arc of light travels the ring."],["responding","The core pulses while text arrives."],["recalling","Echo rings: the ground is consulted."],["interrupted","You stopped it. The halo contracts and goes still."]];
+function statesGeom(){ const n=STATES.length; const r=L.mobile? L.Ww*0.11 : Math.min(L.Hw*0.085,L.Ww*0.045); const cols=L.mobile?3:n;
+  return {r,cols,rows:Math.ceil(n/cols),x0:L.mobile? L.x0+L.Ww*0.17 : L.x0+L.Ww*0.47, x1:L.mobile? L.x1-L.Ww*0.17 : L.x1-L.Ww*0.06, cy0:L.mobile? L.ay0+L.Hw*0.06 : (L.ay0+L.ay1)/2-r*0.6}; }
+function drawStates(alpha,t){
+  if(alpha<=0.01) return; const n=STATES.length; const G=statesGeom(); const r=G.r;
+  for(let i=0;i<n;i++){ const name=STATES[i][0]; const cx=G.x0+(G.x1-G.x0)*(i%G.cols)/(G.cols-1); const cy=G.cy0+Math.floor(i/G.cols)*r*3.4;   // phone: two rows of three
+    const live=S.audition===name, hov=S.hoverState===name; const rr=r*(live?1.1:hov?1.04:1); const ga=live?1:(S.audition?0.55:(hov?1:0.85));
+    drawRing(cx,cy,rr,{state:name,ign:1,glow:ga},t,alpha);
+    mono(L.mobile?9:10,500); ctx.textAlign="center"; ctx.textBaseline="middle"; const dot=name==="interrupted"?"rgba(255,181,71,0.95)":name==="listening"?`rgba(${HALO.aqua},0.95)`:"rgba(255,255,255,0.8)";
+    ctx.save(); ctx.globalAlpha=alpha*(live||hov||!S.audition?1:0.6); label(name.toUpperCase(), cx, cy+r*2.05, dot); ctx.restore(); }
+}
+function envelope(t){ // 4.2 s: attack .4 · hold 1.0 · decay 2.4 · rest .4
+  if(S.reduced||!S.motion) return 0.6; const u=(t%4.2); if(u<.4) return u/.4; if(u<1.4) return 1; if(u<3.8) return 1-(u-1.4)/2.4; return 0;
+}
+function triPts(cx,cy,r){ return [[cx,cy-r],[cx-r*0.866,cy+r*0.5],[cx+r*0.866,cy+r*0.5]]; } // 147 top, 258 left, 369 right
+function bary(P,f){ return [P[0][0]*f[0]+P[1][0]*f[1]+P[2][0]*f[2], P[0][1]*f[0]+P[1][1]*f[1]+P[2][1]*f[2]]; }
+function ternGeom(){ return {cx:L.mobile? L.x0+L.Ww*0.5 : L.ax, cy:(L.ay0+L.ay1)/2+L.Hw*0.03, r:L.mobile? L.Ww*0.30 : L.Hw*0.24}; }
+function drawTernary(alpha){
+  if(alpha<=0.01) return; ctx.save(); ctx.globalAlpha=alpha;
+  const T=ternGeom(); const cx=T.cx, cy=T.cy, r=T.r; const P=triPts(cx,cy,r);
+  ctx.strokeStyle="rgba(232,236,242,0.75)"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(P[0][0],P[0][1]); ctx.lineTo(P[1][0],P[1][1]); ctx.lineTo(P[2][0],P[2][1]); ctx.closePath(); ctx.stroke();
+  // ticks every 10%
+  ctx.strokeStyle="rgba(232,236,242,0.35)"; for(let e=0;e<3;e++){ const A=P[e],B=P[(e+1)%3]; for(let k=1;k<4;k++){ const x=A[0]+(B[0]-A[0])*k/4,y=A[1]+(B[1]-A[1])*k/4; const nx=-(B[1]-A[1]),ny=(B[0]-A[0]); const l=Math.hypot(nx,ny); ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+nx/l*4,y+ny/l*4); ctx.stroke(); } }
+  mono(10,500); ctx.textBaseline="middle"; ctx.textAlign="center"; label("147",P[0][0],P[0][1]-14,"rgba(232,236,242,0.8)"); ctx.textAlign="right"; label("258",P[1][0]-8,P[1][1]+12,"rgba(232,236,242,0.8)"); ctx.textAlign="left"; label("369",P[2][0]+8,P[2][1]+12,"rgba(232,236,242,0.8)");
+  // sessions, faint
+  for(const s of sessions){ const q=bary(P,sessFrac[s]); ctx.beginPath(); ctx.arc(q[0],q[1],1.8,0,7); ctx.fillStyle="rgba(232,236,242,0.35)"; ctx.fill(); }
+  const s1=bary(P,sessFrac[1]), bk=bary(P,BOOKF);
+  ctx.strokeStyle="rgba(19,225,161,0.95)"; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(s1[0],s1[1]); ctx.lineTo(bk[0],bk[1]); ctx.stroke();
+  ctx.beginPath(); ctx.arc(s1[0],s1[1],4,0,7); ctx.strokeStyle="rgba(232,236,242,1)"; ctx.lineWidth=1.4; ctx.stroke();
+  ctx.beginPath(); ctx.arc(bk[0],bk[1],4,0,7); ctx.fillStyle="rgba(19,225,161,1)"; ctx.fill();
+  // the drift: the founding balance travels to the book's (3 s on entry; or by hand)
+  { const u=S.driftU; const px=s1[0]+(bk[0]-s1[0])*u, py=s1[1]+(bk[1]-s1[1])*u; ctx.beginPath(); ctx.arc(px,py,5.5,0,7); ctx.fillStyle="rgba(19,225,161,0.95)"; ctx.fill(); ctx.beginPath(); ctx.arc(px,py,11,0,7); ctx.strokeStyle="rgba(19,225,161,0.35)"; ctx.lineWidth=4; ctx.stroke(); }
+  ctx.textAlign="left"; label("S1 · FOUNDING", s1[0]+12, s1[1]+14, "rgba(232,236,242,0.9)"); label("BOOK", bk[0]+12, bk[1]-14, "rgba(19,225,161,0.95)");
+  const mx=(s1[0]+bk[0])/2, my=(s1[1]+bk[1])/2; ctx.textAlign="right"; label("Δ .165", mx-10, my, "rgba(19,225,161,0.95)");
+  ctx.restore();
+}
+// the focus strand for the scale transition: a real (non-ghost, phased) strand, a different one each 9 s cycle
+const FOCUS_POOL=ROWS.map((r,i)=>i).filter(i=>ROWS[i][5]!==1 && ROWS[i][3]>0);
+function scaleFocus(t){ // {i, u}: strand index and position in the cycle (0..3 = strand, session, book)
+  if(S.reduced||!S.motion) return {i:FOCUS_POOL[41%FOCUS_POOL.length], u:1.5};
+  const el=Math.max(0,t-S.enterT); const cyc=Math.floor(el/9); return {i:FOCUS_POOL[(cyc*53)%FOCUS_POOL.length], u:(el%9)/3};
+}
+function focusRing(x,y,r,a){ ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.strokeStyle=`rgba(19,225,161,${a})`; ctx.lineWidth=1.4; ctx.stroke(); ctx.beginPath(); ctx.arc(x,y,r+5,0,7); ctx.strokeStyle=`rgba(19,225,161,${a*0.25})`; ctx.lineWidth=5; ctx.stroke(); }
+function glyphGeom(){ const gx=L.mobile? L.ax-L.Ww*0.30 : L.ax+L.R+70; const s={}; for(const q of sessions){ const i0=sessStart[q], i1=i0+sessCount[q]-1; s[q]={x:gx,y:(L.ys[i0]+L.ys[i1])/2,r:5+13*Math.sqrt(sessCount[q]/62)}; }
+  return {gx,s,bx:L.mobile? L.x0+L.Ww*0.84 : L.x1-90, by:L.mobile? L.ay0+20 : L.ay1-46, br:L.mobile?22:34}; }
+function drawGlyphs(alpha,t){
+  if(alpha<=0.01) return; ctx.save(); ctx.globalAlpha=alpha;
+  const gx=L.mobile? L.ax-L.Ww*0.30 : L.ax+L.R+70; let lastG=-99; const F=scaleFocus(t); const fs=ROWS[F.i][1]; const G={};
+  for(const s of sessions){ const i0=sessStart[s], i1=i0+sessCount[s]-1; const y=(L.ys[i0]+L.ys[i1])/2; const r=5+13*Math.sqrt(sessCount[s]/62); const P=triPts(gx,y,r); G[s]={x:gx,y,r};
+    const hot=s===fs; ctx.strokeStyle=hot?"rgba(232,236,242,0.9)":"rgba(232,236,242,0.55)"; ctx.lineWidth=0.9; ctx.beginPath(); ctx.moveTo(P[0][0],P[0][1]); ctx.lineTo(P[1][0],P[1][1]); ctx.lineTo(P[2][0],P[2][1]); ctx.closePath(); ctx.stroke();
+    const q=bary(P,sessFrac[s]); ctx.beginPath(); ctx.arc(q[0],q[1],1.8,0,7); ctx.fillStyle="rgba(232,236,242,0.95)"; ctx.fill();
+    ctx.strokeStyle="rgba(232,236,242,0.25)"; ctx.beginPath(); ctx.moveTo(L.ax+4,y); ctx.lineTo(gx-r*0.9-6,y); ctx.setLineDash([1,3]); ctx.stroke(); ctx.setLineDash([]);
+    if(!L.mobile && y-lastG>=13){ mono(9,500); ctx.textAlign="left"; ctx.textBaseline="middle"; label(`S${s} · ${sessCount[s]}`, gx+r+12, y, hot?"rgba(232,236,242,0.95)":"rgba(232,236,242,0.6)"); lastG=y; } }
+  // book glyph
+  const bx=L.mobile? L.x0+L.Ww*0.84 : L.x1-90, by=L.mobile? L.ay0+20 : L.ay1-46, br=L.mobile?22:34; const P=triPts(bx,by,br);
+  ctx.strokeStyle="rgba(19,225,161,0.9)"; ctx.lineWidth=1.1; ctx.beginPath(); ctx.moveTo(P[0][0],P[0][1]); ctx.lineTo(P[1][0],P[1][1]); ctx.lineTo(P[2][0],P[2][1]); ctx.closePath(); ctx.stroke();
+  const q=bary(P,BOOKF); ctx.beginPath(); ctx.arc(q[0],q[1],3,0,7); ctx.fillStyle="rgba(19,225,161,1)"; ctx.fill();
+  if(!L.mobile){ mono(10,500); ctx.textAlign="center"; ctx.textBaseline="middle"; label("BOOK", bx, by+br+18, "rgba(19,225,161,0.95)"); }
+  // scale transition: one strand (a point mass on one phase) → its session (a mixture) → the book (the mean). The focus walks the three scales in 9 s.
+  const u=F.u; const g=rungGeom(F.i,S.rot); const sg=G[fs]; const win=(a,b)=>{ const v=(u-a)/(b-a); return v<=0||v>=1?0:v<0.2?v/0.2:v>0.8?(1-v)/0.2:1; };
+  const aS=win(0,1.15), aG=win(0.85,2.15), aB=win(1.85,3);
+  if(aS>0){ focusRing(g.x,g.y,8,aS); if(!L.mobile){ mono(9,500); ctx.textAlign="left"; ctx.textBaseline="middle"; label(`№${String(ROWS[F.i][0]).padStart(3,"0")} · ${["000","147","258","369"][g.c]}`, g.x+14, g.y-13, `rgba(19,225,161,${aS})`, true); } }
+  if(aG>0){ focusRing(sg.x,sg.y+sg.r*0.25,sg.r+6,aG); ctx.setLineDash([2,4]); ctx.strokeStyle=`rgba(19,225,161,${aG*0.7})`; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(g.x,g.y); ctx.lineTo(sg.x,sg.y); ctx.stroke(); ctx.setLineDash([]); }
+  if(aB>0){ focusRing(bx,by+br*0.25,br+8,aB); ctx.setLineDash([2,4]); ctx.strokeStyle=`rgba(19,225,161,${aB*0.7})`; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(sg.x,sg.y); ctx.lineTo(bx,by); ctx.stroke(); ctx.setLineDash([]); }
+  ctx.restore();
+}
+
+/* ---------- frame ---------- */
+let last=0;
+function frame(now){
+  const t=now/1000; const dt=Math.min(0.05,t-(last||t)); last=t; S.t=t;
+  const k=scenes[S.scene];
+  // material speed: the helix turns once per ~90 s
+  S.rot = (S.motion&&!S.reduced) ? t*(2*Math.PI/90) : 0.6;
+  // layer lerps (interface speed)
+  const sp=1-Math.pow(0.001,dt/0.55); S.statesA.t = scenes[S.scene]==="states"?1:0; for(const key of ["helix","halo","optics","win","recall","tern","glyph","statesA"]){ S[key].v=lerp(S[key].v,S[key].t,sp); if(Math.abs(S[key].v-S[key].t)<0.01) S[key].v=S[key].t; }
+  // scene clocks
+  if(k==="ground" && S.reveal<N && S.motion && !S.reduced){ S.reveal=Math.min(N, Math.floor((t-S.enterT-0.4)/0.045)); if(S.reveal<0) S.reveal=0; $("ground-out").textContent=`strand ${String(S.reveal).padStart(3,"0")} / 187 · S${ROWS[Math.max(0,S.reveal-1)][1]}`; }
+  else if(k==="ground") $("ground-out").textContent="strand 187 / 187 · complete";
+  if(k==="window"){ if(S.winHold){} else if(S.motion&&!S.reduced){ S.winEnd=120+Math.floor(((t-S.enterT)/0.2))%68; } else S.winEnd=N; $("window-out").textContent=`window ${Math.max(1,S.winEnd-20)}–${S.winEnd} · 21 strands${S.winHold?" · held by hand":""}`; }
+  if(k==="engine"){ const period=1.8; if(S.swapHold){ if(t-S.swapT>6){ S.swapHold=false; S.enterT=t-S.swapIdx*period; } } else { const idx=Math.floor((t-S.enterT)/period); if(S.motion&&!S.reduced){ if(idx!==S.swapIdx){ S.swapIdx=idx; S.model = idx%2? "ChatGPT":"Claude"; S.swapT=t; } } } $("engine-out").textContent=`model · ${S.model} · swap ${String(Math.min(36,S.swapIdx)).padStart(2,"0")} / 36${S.swapHold?" · by hand":""}`; }
+  if(k==="distance" && !S.driftHold && S.motion && !S.reduced){ S.driftU=Math.min(1,Math.max(0,(t-S.enterT-0.8)/3)); $("drift-out").textContent=`S1 → book · ${Math.round(S.driftU*100)}%`; }
+  if(k==="scale"){ const u=((t-S.enterT)/3)%3; $("scale-out").textContent="scale · "+(u<1?"strand":u<2?"session":"book"); }
+
+  // ---- paint ----
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.fillStyle="#1A0C1D"; ctx.fillRect(0,0,L.W,L.H);
+  const showRecord = scenes[S.scene]==="three" ? S.record : true;
+  if(showRecord) drawHalo(S.halo.v);
+  if(showRecord){ drawAxis(S.helix.v<0.03?0:Math.max(0.25,S.helix.v)); drawHelix(S.helix.v); }
+  drawWindow(S.win.v); drawRecall(S.recall.v,t); drawOptics(S.optics.v,t); drawTernary(S.tern.v); drawGlyphs(S.glyph.v,t);
+  const H=haloFor(k,t); S.ring=H?H.st:null; if(H && showRecord!==false){ const hv = (k==="three"&&!S.record) ? 0.35 : 1; drawRing(H.cx,H.cy,H.r,H.st,t,H.alpha*hv*(1-S.statesA.v)); }
+  drawStates(S.statesA.v,t);
+  soundFrame(k,t);
+  octx.setTransform(1,0,0,1,0,0); octx.drawImage(offCv,0,0);
+  requestAnimationFrame(frame);
+}
+
+/* ---------- sound ----------
+   The record as strings. Engine lineage: Helix-Organ/orchid (R-07) for the strum (50 ms, humanized) and the harmonic single source of truth;
+   the Ki audio lane (learn/adapters/audio.js) for the one-context rule and QUIET (−12 dB) under reduced motion; Ki omnichord-in-key for "no wrong notes".
+   Voice: a Karplus–Strong string rendered once per pitch (a noise burst into a damped, averaged delay line), three string types for the three phases,
+   pick position by phase. Sustained voices: the floor (a drone, the record), air (the person), a carrier (the model, two timbres), the chord (Mir), its shimmer.
+   One synthesized room, one compressor, one lowpass.
+   Pitch: A major pentatonic (A B C♯ E F♯) — vector 1–9 → nine degrees across two octaves, vector 0 → the root an octave down.
+   Register by session (S1–4 A4 · S5–8 A3 · S9–12 A2); phase 147/258/369 → string type; checksum → velocity + sustain; rung x → pan; ghosts dark, detuned, quiet. */
+const AU={ctx:null,on:false,voices:0,active:[],bus:null,echo:null,buffers:new Map(),v:null,n:0,last:{reveal:-1,winEnd:-1,reaches:0,focusKey:""}};
+const VOICES=32;
+const ROOT=BOOK.genes%12, PENTA=[0,2,4,7,9], CHORD=[0,4,7], NAMES=["C","C♯","D","D♯","E","F","F♯","G","G♯","A","A♯","B"];
+function vecOffset(v){ if(v<=0) return -12; const d=v-1; return PENTA[d%5]+12*Math.floor(d/5); }
+function regOf(s){ return 12*(4-Math.floor((s-1)/4)); }
+function strandMidi(i){ const r=ROWS[i]; return 12+regOf(r[1])+ROOT+vecOffset(r[2]); }
+function noteName(m){ return NAMES[m%12]+(Math.floor(m/12)-1); }
+function midiHz(m){ return 440*Math.pow(2,(m-69)/12); }
+function audioInit(){ if(AU.ctx) return true; const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return false; const C=new AC(); AU.ctx=C; const sr=C.sampleRate;
+  // the room: a synthesized stereo impulse, 1.8 s, darkening as it decays
+  const ir=C.createBuffer(2,Math.floor(sr*1.8),sr); for(let ch=0;ch<2;ch++){ const d=ir.getChannelData(ch); let lp=0; for(let i=0;i<d.length;i++){ const u=i/d.length; const w=Math.random()*2-1; lp+=(w-lp)*(0.9-0.75*u); d[i]=lp*Math.pow(1-u,2.2)*Math.exp(-u*2.8); } }
+  const conv=C.createConvolver(); conv.buffer=ir; const wet=C.createGain(); wet.gain.value=0.24;
+  const bus=C.createGain(); const comp=C.createDynamicsCompressor(); comp.threshold.value=-20; comp.knee.value=14; comp.ratio.value=3; comp.attack.value=0.004; comp.release.value=0.25;
+  const lp=C.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=7000; lp.Q.value=0.4;
+  const master=C.createGain(); master.gain.value=S.reduced?0.18:0.72;
+  bus.connect(comp); bus.connect(conv); conv.connect(wet); wet.connect(comp); comp.connect(lp); lp.connect(master); master.connect(C.destination);
+  // recall's echo: a longer feedback delay with its own send (the echo rings on plate 04 share its period)
+  const echo=C.createDelay(3); echo.delayTime.value=0.6; const efb=C.createGain(); efb.gain.value=0.45; const elp=C.createBiquadFilter(); elp.type="lowpass"; elp.frequency.value=1400; const eout=C.createGain(); eout.gain.value=0.55;
+  echo.connect(elp); elp.connect(efb); efb.connect(echo); elp.connect(eout); eout.connect(bus);
+  AU.bus=bus; AU.echo=echo; AU.master=master;
+  // sustained voices, all running, all at zero until a plate asks
+  const mk=(type,f,cut,q)=>{ const o=C.createOscillator(); o.type=type; o.frequency.value=f; const flt=C.createBiquadFilter(); flt.type="lowpass"; flt.frequency.value=cut; flt.Q.value=q||0.5; const g=C.createGain(); g.gain.value=0; o.connect(flt); flt.connect(g); g.connect(bus); o.start(); return {o,g,flt}; };
+  const base=12+regOf(5)+ROOT;   // A3
+  AU.v={
+    drone:[mk("sine",midiHz(base-12),420), mk("sine",midiHz(base-12)*1.004,420), mk("triangle",midiHz(base-24),240)],   // the floor: an A2 pair, an A1 sub
+    chord:CHORD.map(iv=>mk("sine",midiHz(base+iv),2400)),                                                                // Mir: the triad, weighted by the three phases when a plate says so
+    shim:CHORD.map(iv=>mk("triangle",midiHz(base+12+iv),1600)),                                                           // its shimmer, an octave up
+    carA:mk("triangle",midiHz(base),1500,0.7), carB:mk("sawtooth",midiHz(base),640,1.3),                                   // the model: two timbres, one pitch
+    tone:mk("sine",midiHz(base+12+7),3000)                                                                                 // listening: one soft high E
+  };
+  const nb=C.createBuffer(1,sr*2,sr); const nd=nb.getChannelData(0); for(let i=0;i<nd.length;i++) nd[i]=Math.random()*2-1;
+  const ns=C.createBufferSource(); ns.buffer=nb; ns.loop=true; const bp=C.createBiquadFilter(); bp.type="bandpass"; bp.frequency.value=1500; bp.Q.value=0.8; const ag=C.createGain(); ag.gain.value=0; ns.connect(bp); bp.connect(ag); ag.connect(bus); ns.start(); AU.v.air={g:ag,flt:bp};   // the person: air
+  const lfo=C.createOscillator(); lfo.frequency.value=0.08; const lg=C.createGain(); lg.gain.value=110; lfo.connect(lg); AU.v.drone.forEach(d=>lg.connect(d.flt.frequency)); lfo.start();   // the floor breathes
+  const vib=C.createOscillator(); vib.frequency.value=5; const vg=C.createGain(); vg.gain.value=2.2; vib.connect(vg); vg.connect(AU.v.tone.o.frequency); vib.start();
+  return true; }
+function setG(v,x,tc){ v.g.gain.setTargetAtTime(x,AU.ctx.currentTime,tc||0.14); }
+function ksBuffer(midi,phase,ghost){ const key=midi+":"+phase+(ghost?"g":""); if(AU.buffers.has(key)) return AU.buffers.get(key);
+  const C=AU.ctx, sr=C.sampleRate, f=midiHz(midi)*(ghost?Math.pow(2,-30/1200):1); const dur=ghost?1.0:2.2; const n=Math.floor(sr*dur);
+  const N=Math.max(2,Math.round(sr/f-0.5)); const ring=new Float32Array(N);
+  const bright=ghost?0.12:(phase===1?0.95:phase===2?0.5:0.3), pos=phase===1?0.14:phase===2?0.3:0.45, dmp=ghost?0.975:(phase===1?0.9972:phase===2?0.9966:0.996);
+  let lp=0; for(let i=0;i<N;i++){ const w=Math.random()*2-1; lp+=(w-lp)*bright; ring[i]=lp; }
+  const comb=Math.max(1,Math.round(N*pos)); for(let i=N-1;i>=comb;i--) ring[i]-=ring[i-comb]*0.9;   // pick position
+  let mx=1e-6; for(let i=0;i<N;i++) mx=Math.max(mx,Math.abs(ring[i])); for(let i=0;i<N;i++) ring[i]/=mx;
+  const buf=C.createBuffer(1,n,sr); const out=buf.getChannelData(0); let p=0, prev=0;
+  for(let i=0;i<n;i++){ const cur=ring[p]; const y=dmp*0.5*(cur+prev); out[i]=y; ring[p]=y; prev=cur; p=(p+1)%N; }
+  const fade=Math.floor(sr*0.12); for(let i=0;i<fade;i++) out[n-1-i]*=i/fade;
+  AU.buffers.set(key,buf); return buf; }
+function readoutStrand(i,extra){ const r=ROWS[i]; $("keys-out").innerHTML=`S${r[1]} · №${String(r[0]).padStart(3,"0")} · v${r[2]} · ${["000","147","258","369"][r[3]]}${r[5]===1?" ghost":""} · ck ${r[4].toLocaleString()} → <b>${noteName(strandMidi(i))}</b>${extra?" · "+extra:""}`; }
+function pluck(i,vel,delay,opt){ opt=opt||{}; const r=ROWS[i]; const ghost=r[5]===1||opt.dark;
+  const fire=()=>{ const g=rungGeom(i,S.rot); S.hits.set(i,S.t); S.pluckT=S.t; if(!opt.quiet) readoutStrand(i,opt.label);
+    if(!AU.on||!AU.ctx) return; const C=AU.ctx, now=C.currentTime;
+    while(AU.active.length>=VOICES){ const old=AU.active.shift(); old.gn.gain.cancelScheduledValues(now); old.gn.gain.setTargetAtTime(0,now,0.02); try{ old.src.stop(now+0.08); }catch(e){} }   // the oldest string is damped for the newest
+    const src=C.createBufferSource(); src.buffer=ksBuffer(strandMidi(i),r[3]||1,ghost);
+    const gn=C.createGain(); const v=(ghost?0.22:1)*Math.max(0.02,vel)*(0.45+0.55*g.w); gn.gain.setValueAtTime(v,now);
+    const hold=opt.stop!=null?opt.stop:(0.25+1.4*g.w); gn.gain.setTargetAtTime(0,now+hold,0.18); src.connect(gn);
+    let tail=gn; if(C.createStereoPanner){ const pan=C.createStereoPanner(); pan.pan.value=Math.max(-1,Math.min(1,(g.x-L.ax)/L.R)); gn.connect(pan); tail=pan; }
+    tail.connect(AU.bus); if(opt.echo) tail.connect(AU.echo);
+    const voice={src,gn}; AU.active.push(voice); src.start(now); src.stop(now+hold+1.0); src.onended=()=>{ const k=AU.active.indexOf(voice); if(k>=0) AU.active.splice(k,1); }; };
+  if(delay>0) setTimeout(fire,delay*1000); else fire(); }
+function sessionAtY(y){ for(const s of sessions){ const i0=sessStart[s], i1=i0+sessCount[s]-1; if(y>=L.ys[i0]-L.gap/2 && y<=L.ys[i1]+L.gap/2) return s; } return null; }
+function nearestStrand(y,tol){ let best=-1,bd=1e9; for(let i=0;i<N;i++){ const d=Math.abs(L.ys[i]-y); if(d<bd){ bd=d; best=i; } } return bd<=(tol||7)?best:-1; }
+function pitchGroups(i0,i1){ const by=new Map(); for(let i=i0;i<=i1;i++){ if(ROWS[i][5]===1) continue; const m=strandMidi(i); if(!by.has(m)) by.set(m,[]); by.get(m).push(i); } return by; }
+function strumSession(s,down){ if(s==null) return; const i0=sessStart[s]; const by=pitchGroups(i0,i0+sessCount[s]-1); const ms=[...by.keys()].sort((a,b)=>a-b); if(down) ms.reverse();
+  // the session's mixture: every pitch present, low to high, 50 ms apart (Orchid), ±8 ms human; the loudest strand of each pitch leads, the rest light with it
+  ms.forEach((m,k)=>{ const idx=by.get(m); const lead=idx.reduce((a,b)=>ROWS[b][4]>ROWS[a][4]?b:a); const t=k*0.05+(Math.random()-0.5)*0.016;
+    pluck(lead,0.5+0.5*Math.min(1,idx.length/8),t,{label:`S${s} · ${ms.length} pitches`}); idx.forEach(i=>{ if(i!==lead) setTimeout(()=>S.hits.set(i,S.t),t*1000); }); }); }
+function strumBook(){ const by=pitchGroups(0,N-1); const ms=[...by.keys()].sort((a,b)=>a-b);   // the mean: every pitch in the book, 35 ms apart, weight by how often it occurs
+  ms.forEach((m,k)=>{ const idx=by.get(m); const lead=idx[Math.floor(Math.random()*idx.length)]; pluck(lead,0.3+0.5*Math.min(1,idx.length/20),k*0.035,{label:`book · ${ms.length} pitches`}); }); }
+function reach(i,label){ pluck(i,0.8,0,{echo:true,label:label||"reach"}); }
+function auditionState(name){ S.audition=name; S.auditionT=S.t; if(!AU.on||!AU.ctx) return; const base=12+regOf(5)+ROOT;
+  const pick=(off)=>{ let best=-1,bd=99; for(let i=0;i<N;i++){ if(ROWS[i][5]===1) continue; const d=Math.abs(strandMidi(i)-(base+off)); if(d<bd){bd=d;best=i;} } return best; };
+  if(name==="thinking"){ [0,4,7,12,16,19].forEach((off,k)=>pluck(pick(off),0.45,k*0.16,{quiet:true,stop:0.5})); }
+  if(name==="recalling"){ pluck(pick(4),0.8,0,{echo:true,quiet:true}); }
+  if(name==="interrupted"){ pluck(pick(-12),0.9,0,{dark:true,quiet:true,stop:0.3}); } }
+/* ---- per-plate sound: targets for the sustained voices, and the events each plate's clock fires ---- */
+function soundFrame(k,t){ if(!AU.on||!AU.ctx||!AU.v) return; const V=AU.v, el=t-S.enterT, R=S.ring||{};
+  // events (every frame, edge-triggered)
+  if(k==="ground"){ if(AU.last.reveal<0) AU.last.reveal=S.reveal; if(S.reveal>AU.last.reveal){ for(let i=AU.last.reveal;i<S.reveal;i++) pluck(i,0.28,0,{quiet:true,stop:0.3}); } AU.last.reveal=S.reveal; } else AU.last.reveal=-1;
+  if(k==="window"){ if(AU.last.winEnd>=0 && S.winEnd!==AU.last.winEnd){ const d=Math.sign(S.winEnd-AU.last.winEnd); const i=d>0?S.winEnd-1:S.winEnd-21; if(i>=0&&i<N) pluck(i,0.42,0,{quiet:true,stop:0.4}); const out=d>0?S.winEnd-22:S.winEnd; if(out>=0&&out<N) pluck(out,0.3,0.06,{dark:true,quiet:true,stop:0.25}); } AU.last.winEnd=S.winEnd; } else AU.last.winEnd=-1;
+  if(k==="recall"){ if(S.reaches>AU.last.reaches){ reach(REACH[S.reaches-1],`reach ${S.reaches} of 3`); } AU.last.reaches=S.reaches; } else AU.last.reaches=0;
+  if(k==="scale"){ const F=scaleFocus(t); const key=F.i+":"+Math.floor(F.u); if(key!==AU.last.focusKey){ AU.last.focusKey=key; const ph=Math.floor(F.u); if(ph===0) pluck(F.i,0.7,0,{label:"strand"}); else if(ph===1) strumSession(ROWS[F.i][1]); else strumBook(); } } else AU.last.focusKey="";
+  // sustained targets (~20 Hz)
+  if((AU.n++)%3) return;
+  const ign=R.ign==null?1:R.ign, glow=R.glow==null?1:R.glow, lit=S.person&&S.model&&S.record, breath=0.5+0.5*Math.sin(t*2*Math.PI/6);
+  let drone=0, air=0, carA=0, carB=0, chord=[0,0,0], shim=0, tone=0; const tri=[.34,.3,.26];
+  switch(k){
+    case "open": drone=0.55*ign; air=0.3*ign*breath; chord=tri.map(x=>x*Math.max(0,(ign-0.6)/0.4)); break;
+    case "three": air=S.person?0.32*breath:0; drone=S.record?0.5:0; carA=S.model?0.4:0; chord=lit?tri:[0,0,0]; break;
+    case "ground": drone=0.25+0.3*(S.reveal/N); chord=S.reveal>=N?tri.map(x=>x*0.6):[0,0,0]; break;
+    case "window": drone=0.3; carA=0.32; chord=tri.map(x=>x*0.35); break;
+    case "recall": drone=0.35; chord=tri.map(x=>x*0.3); break;
+    case "engine": drone=0.3; carA=S.model==="Claude"?0.5:0; carB=S.model==="ChatGPT"?0.42:0; chord=tri.map(x=>x*0.85); break;
+    case "distance": { const u=S.driftU; const f=[0,1,2].map(j=>sessFrac[1][j]+(BOOKF[j]-sessFrac[1][j])*u); chord=f.map(x=>x*3*0.32); drone=0.2; break; }   // the chord weighted by the three phases: S1's balance → the book's
+    case "scale": drone=0.22; break;
+    case "states": { const st=S.audition; drone=0.12; if(st==="idle") air=0.35*breath; if(st==="listening"){ tone=0.5; air=0.12; } if(st==="responding") chord=tri.map(x=>x*(0.55+0.45*Math.sin(t*2*Math.PI/1.2))); if(st==="thinking") carA=0.3; if(st==="interrupted") drone=0; break; }
+    case "tune": drone=0.42; air=0.16*breath; chord=tri; shim=0.1; break;
+  }
+  const sw=S.audition==="interrupted"&&(t-S.auditionT)<0.6?0:1;
+  setG(V.drone[0],drone*0.26*sw); setG(V.drone[1],drone*0.26*sw); setG(V.drone[2],drone*0.16*sw);
+  setG(V.air,air*0.05); setG(V.carA,carA*0.11); setG(V.carB,carB*0.08); setG(V.tone,tone*0.05);
+  chord.forEach((c,j)=>{ setG(V.chord[j],c*0.17*sw); setG(V.shim[j],(c*0.35+shim)*0.045*sw); }); }
+/* ---- the instrument's surface: one overlay, one pointer, a different logic per plate ---- */
+const strings=$("strings"); let drag=null;
+const MODES={open:"pluck",three:"hover",ground:"pluck",window:"window",recall:"reach",engine:"swap",distance:"drift",scale:"scale",states:"states",tune:"pluck"};
+const CURSORS={pluck:"crosshair",hover:"default",window:"ns-resize",reach:"pointer",swap:"pointer",drift:"ew-resize",scale:"pointer",states:"pointer"};
+function stringsBox(){ if(!L) return; const k=scenes[S.scene]; const mode=MODES[k]; const on=!!mode && (!L.mobile||AU.on); strings.style.display=on?"block":"none"; if(!on) return;
+  let x=L.ax-L.R-26, y=L.ay0-16, w=2*L.R+52, h=L.ay1-L.ay0+32;
+  if(mode==="drift"){ const T=ternGeom(); x=T.cx-T.r; y=T.cy-T.r-10; w=2*T.r; h=T.r*1.5+20; }
+  if(mode==="scale"){ w=L.x1-x; }
+  if(mode==="states"){ const G=statesGeom(); x=G.x0-G.r*1.4; y=G.cy0-G.r*1.3; w=(G.x1-G.x0)+G.r*2.8; h=G.rows*G.r*3.4+G.r*0.6; }
+  Object.assign(strings.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px",cursor:CURSORS[mode]||"default"}); }
+function setWindowFromY(y){ const i=nearestStrand(y,40); if(i<0) return; S.winEnd=Math.max(21,Math.min(N,i+1)); S.winHold=true; }
+function setDriftFromX(x,y){ const T=ternGeom(); const P=triPts(T.cx,T.cy,T.r); const a=bary(P,sessFrac[1]), b=bary(P,BOOKF); const dx=b[0]-a[0], dy=b[1]-a[1]; const u=((x-a[0])*dx+(y-a[1])*dy)/(dx*dx+dy*dy); S.driftU=Math.max(0,Math.min(1,u)); S.driftHold=true; $("drift-out").textContent=`S1 → book · ${Math.round(S.driftU*100)}%`; }
+function stateAt(x,y){ const G=statesGeom(); for(let i=0;i<STATES.length;i++){ const cx=G.x0+(G.x1-G.x0)*(i%G.cols)/(G.cols-1), cy=G.cy0+Math.floor(i/G.cols)*G.r*3.4; if(Math.hypot(x-cx,y-cy)<=G.r*1.45) return STATES[i][0]; } return null; }
+function glyphAt(x,y){ const G=glyphGeom(); if(Math.hypot(x-G.bx,y-G.by)<=G.br+10) return "book"; for(const s of sessions){ const g=G.s[s]; if(Math.hypot(x-g.x,y-g.y)<=g.r+10) return s; } return null; }
+strings.addEventListener("pointerdown",e=>{ const mode=MODES[scenes[S.scene]]; if(!mode) return; strings.setPointerCapture(e.pointerId); e.preventDefault(); if(AU.ctx&&AU.ctx.state!=="running") AU.ctx.resume();
+  drag={mode,x0:e.clientX,y0:e.clientY,yPrev:e.clientY,tPrev:performance.now(),moved:false};
+  if(mode==="window") setWindowFromY(e.clientY); if(mode==="drift") setDriftFromX(e.clientX,e.clientY); });
+strings.addEventListener("pointermove",e=>{ const x=e.clientX, y=e.clientY;
+  if(!drag){ const mode=MODES[scenes[S.scene]]; if(mode==="states"){ S.hoverState=stateAt(x,y); return; } if(mode==="drift"||mode==="scale"&&glyphAt(x,y)!=null){ S.hover=-1; return; } const i=nearestStrand(y,6); if(Math.abs(x-L.ax)<=L.R+26 && i!==S.hover){ S.hover=i; if(i>=0) readoutStrand(i); } return; }
+  if(Math.abs(y-drag.y0)>4||Math.abs(x-drag.x0)>4) drag.moved=true; if(!drag.moved) return;
+  if(drag.mode==="window"){ setWindowFromY(y); return; } if(drag.mode==="drift"){ setDriftFromX(x,y); return; } if(drag.mode!=="pluck"&&drag.mode!=="scale") return;
+  const now=performance.now(); const speed=Math.abs(y-drag.yPrev)/Math.max(1,now-drag.tPrev);
+  const lo=Math.min(drag.yPrev,y), hi=Math.max(drag.yPrev,y); let idx=[]; for(let i=0;i<S.reveal;i++){ const yy=L.ys[i]; if(yy>lo&&yy<=hi) idx.push(i); } if(y<drag.yPrev) idx.reverse();
+  // a sweep sounds at most ~40 strings a second: the heaviest strands (checksum) lead, the light ones only light
+  const budget=Math.max(1,Math.ceil((now-drag.tPrev)/25)); if(idx.length>budget){ const keep=new Set([...idx].sort((a,b)=>ROWS[b][4]-ROWS[a][4]).slice(0,budget)); idx.forEach(i=>{ if(!keep.has(i)) S.hits.set(i,S.t); }); idx=idx.filter(i=>keep.has(i)); }
+  idx.forEach((i,k)=>pluck(i,Math.min(1,0.4+speed*0.7),k*0.02)); drag.yPrev=y; drag.tPrev=now; });
+function endDrag(e){ if(!drag) return; const d=drag; drag=null; const x=e.clientX, y=e.clientY; if(d.mode==="window"||d.mode==="drift") return; if(d.moved) return;
+  if(d.mode==="pluck"){ strumSession(sessionAtY(y), e.shiftKey); }
+  else if(d.mode==="reach"){ const i=nearestStrand(y,9); if(i>=0){ S.userReaches.push({i,t:S.t}); reach(i,"reached by hand"); } }
+  else if(d.mode==="swap"){ swapEngine(); }
+  else if(d.mode==="scale"){ const g=glyphAt(x,y); if(g==="book") strumBook(); else if(g!=null) strumSession(g); else strumSession(sessionAtY(y), e.shiftKey); }
+  else if(d.mode==="states"){ const st=stateAt(x,y); if(st) auditionState(st); } }
+strings.addEventListener("pointerup",endDrag); strings.addEventListener("pointercancel",()=>{ drag=null; }); strings.addEventListener("pointerleave",()=>{ if(!drag){ S.hover=-1; S.hoverState=null; } });
+function swapEngine(){ S.swapIdx++; S.model=S.swapIdx%2?"ChatGPT":"Claude"; S.swapT=S.t; S.swapHold=true; }
+function setPlay(on){ if(on && !audioInit()){ $("keys-out").textContent="no audio in this browser"; $("keys").dataset.on="true"; return; }
+  AU.on=on; if(on&&AU.ctx.state!=="running") AU.ctx.resume(); if(!on&&AU.ctx) AU.ctx.suspend();
+  $("keys").dataset.on=String(on); $("play").setAttribute("aria-pressed",String(on));
+  $("keys-out").innerHTML=on?`<b>${NAMES[ROOT]} pentatonic</b> · 187 strings · ${L.mobile?"":"hover a strand"}`:""; stringsBox(); }
+$("play").addEventListener("click",()=>setPlay(!AU.on));
+
+/* ---------- wiring ---------- */
+function setMotion(on){ S.motion=on; const b=$("motion"); b.setAttribute("aria-pressed",String(on)); if(!on){ S.reveal=N; S.winEnd=N; } }
+$("motion").addEventListener("click",()=>setMotion(!S.motion));
+if(S.reduced) setMotion(false);
+[["t-person","person"],["t-model","model"],["t-record","record"]].forEach(([id,key])=>{ $(id).addEventListener("click",()=>{ S[key]=!S[key]; $(id).setAttribute("aria-pressed",String(S[key])); threeOut(); }); });
+const plates=[...document.querySelectorAll(".plate")];
+const io=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting && e.intersectionRatio>=0.55){ const i=plates.indexOf(e.target); if(i!==S.scene) enter(i); } }); },{threshold:[0.55]});
+plates.forEach(p=>io.observe(p));
+function go(i){ i=Math.max(0,Math.min(plates.length-1,i)); plates[i].scrollIntoView({behavior:(S.reduced?"auto":"smooth"),block:"start"}); }
+addEventListener("keydown",e=>{ if(e.target.tagName==="BUTTON"&&(e.key===" "||e.key==="Enter")) return;
+  if(["ArrowDown","ArrowRight","PageDown"," "].includes(e.key)){e.preventDefault();go(S.scene+1)}
+  else if(["ArrowUp","ArrowLeft","PageUp"].includes(e.key)){e.preventDefault();go(S.scene-1)}
+  else if(e.key==="Home"){go(0)} else if(e.key==="End"){go(plates.length-1)}
+  else if(e.key==="m"||e.key==="M"){setMotion(!S.motion)}
+  else if(e.key==="p"||e.key==="P"){setPlay(!AU.on)}
+  else if(scenes[S.scene]==="three"&&["1","2","3"].includes(e.key)){ $(["t-person","t-model","t-record"][+e.key-1]).click(); }
+  else if(scenes[S.scene]==="states"&&["1","2","3","4","5","6"].includes(e.key)){ auditionState(STATES[+e.key-1][0]); }
+  else if(scenes[S.scene]==="engine"&&(e.key==="s"||e.key==="S")){ swapEngine(); } });
+let rw=window.innerWidth, rh=window.innerHeight; addEventListener("resize",()=>{ clearTimeout(window.__rt); window.__rt=setTimeout(()=>{ if(Math.abs(window.innerWidth-rw)>70||Math.abs(window.innerHeight-rh)>70){ rw=window.innerWidth; rh=window.innerHeight; layout(); stringsBox(); } },300); });
+layout();
+window.__mg={S,get L(){return L},AU,drawHalo,drawHelix,drawOptics,drawAxis,frame,offCv,pluck,strumSession,strumBook,setPlay,strandMidi,auditionState,swapEngine,ksBuffer,enter,go,ternGeom,statesGeom,glyphGeom};
+document.fonts.ready.then(()=>{ enter(0); requestAnimationFrame(frame); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>terrain</title>
+<style>html,body{margin:0;height:100%;background:#0B2A1F;overflow:hidden}canvas{display:block}</style></head>
+<body><canvas id="c"></canvas><script>
+// A printed landscape of green dashes. Height from fbm; dash length, weight, density and alpha all follow height continuously.
+// Positions jittered so no row or column aligns. Perspective: rows bunch toward the horizon. Only the breath animates.
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');const DPR=Math.min(devicePixelRatio||1,2);
+let W,H,off,ox;
+let seed=909;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+const P=new Uint8Array(512);{let s=7;const r=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296};const p=[...Array(256).keys()];for(let i=255;i>0;i--){const j=Math.floor(r()*(i+1));[p[i],p[j]]=[p[j],p[i]]}for(let i=0;i<512;i++)P[i]=p[i&255]}
+const fade=t=>t*t*t*(t*(t*6-15)+10),lerp=(a,b,t)=>a+(b-a)*t,grad=(h,x,y)=>((h&1)?-x:x)+((h&2)?-y:y);
+function noise(x,y){const X=Math.floor(x)&255,Y=Math.floor(y)&255;x-=Math.floor(x);y-=Math.floor(y);const u=fade(x),v=fade(y),A=P[X]+Y,B=P[X+1]+Y;return lerp(lerp(grad(P[A],x,y),grad(P[B],x-1,y),u),lerp(grad(P[A+1],x,y-1),grad(P[B+1],x-1,y-1),u),v)}
+const fbm=(x,y)=>{let a=0,s=.5,f=1;for(let i=0;i<5;i++){a+=noise(x*f,y*f)*s;s*=.5;f*=2.05}return a*.5+.5};
+const G=['#2E6B45','#3F8554','#5FA46B'];
+function paint(){
+  W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;off=document.createElement('canvas');off.width=W;off.height=H;ox=off.getContext('2d');
+  ox.fillStyle='#0B2A1F';ox.fillRect(0,0,W,H);ox.lineCap='round';seed=909;
+  const R=110,hor=H*0.18;
+  for(let r=0;r<R;r++){
+    const t=r/R,y0=hor+(H-hor)*Math.pow(t,1.7),K=Math.round(70+t*220),cell=W/K;
+    for(let k=0;k<K;k++){
+      const x=(k+0.5)*cell+(rnd()-.5)*cell*.9,y=y0+(rnd()-.5)*3*DPR;
+      const h=fbm(x/W*3.2+0.3,t*2.6+1.1);                 // 0..1
+      if(rnd()>0.25+h*0.75) continue;                       // valleys thin out
+      const L=(1.5+30*h*h*(0.25+t))*DPR,w=(0.5+1.7*t*(0.4+h))*DPR;
+      ox.strokeStyle=G[h<.38?0:h<.66?1:2];ox.globalAlpha=0.28+0.72*h*(0.5+t*.5);ox.lineWidth=w;
+      ox.beginPath();ox.moveTo(x,y);ox.lineTo(x+(rnd()-.5)*1.2*DPR,y-L);ox.stroke();
+    }
+  }
+  ox.globalAlpha=1;
+}
+paint();addEventListener('resize',paint);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+(function frame(t){const p=((t||0)%4200)/4200,st=Math.floor(p*21)/21,b=st<=.52?st/.52:1-(st-.52)/.48,s=1+0.01*b;
+  ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,W,H);ctx.translate(W/2,H);ctx.scale(s,s);ctx.drawImage(off,-W/2,-H);
+  if(!reduce)requestAnimationFrame(frame)})(0);
+</script></body></html>

@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mindgut Dashboard — Testing Instrument</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090b;--surface:#111113;--surface-2:#18181b;--surface-3:#1f1f23;
+  --ink:#e4e4e7;--ink-2:#a1a1aa;--ink-3:#71717a;--ink-4:#52525b;
+  --line:rgba(255,255,255,.06);--line-2:rgba(255,255,255,.1);
+  --ice:#2b8ef5;--laminar:#10b981;--heat:#ff5a1f;--void:#e11d48;--signal:#f59e0b;--balanced:#16a34a;
+  --h-ice:#7cc4ff;--h-lam:#4fe3c1;--h-heat:#ff8a4c;--h-void:#ff6a8a;--h-sig:#ffd166;--h-bal:#a8f080;
+  --sans:'Geist',-apple-system,BlinkMacSystemFont,sans-serif;
+  --display:'Instrument Serif','Times New Roman',serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);font-size:15px;line-height:1.6;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+::selection{background:var(--ice);color:#fff}
+input,textarea,select,button{font-family:inherit;font-size:inherit;color:inherit}
+
+/* ── layout ─── */
+.shell{display:grid;grid-template-columns:260px 1fr;grid-template-rows:52px 1fr;height:100vh;overflow:hidden}
+.topbar{grid-column:1/-1;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:10}
+.topbar .brand{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);display:flex;align-items:center;gap:14px}
+.topbar .brand .dot{width:6px;height:6px;border-radius:50%;background:var(--h-lam);animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.35}50%{opacity:1}}
+.topbar .actions{display:flex;gap:8px}
+
+.sidebar{background:var(--surface);border-right:1px solid var(--line);overflow-y:auto;padding:16px 0}
+.sidebar h4{font-family:var(--mono);font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-4);padding:16px 18px 8px;font-weight:500}
+.sidebar .nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;cursor:pointer;transition:background .15s;font-size:13px;color:var(--ink-2)}
+.sidebar .nav-item:hover{background:var(--surface-2)}
+.sidebar .nav-item.active{background:var(--surface-2);color:var(--ink)}
+.sidebar .nav-item .pip{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sidebar .nav-item .count{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--ink-4)}
+
+.main-pane{overflow-y:auto;padding:32px;background:var(--bg)}
+.main-pane .pane{display:none}
+.main-pane .pane.active{display:block}
+
+/* ── buttons ─── */
+.btn{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:8px 16px;border:1px solid var(--line-2);background:transparent;color:var(--ink-2);cursor:pointer;transition:all .15s}
+.btn:hover{background:var(--surface-2);color:var(--ink);border-color:rgba(255,255,255,.18)}
+.btn.primary{background:var(--ice);border-color:var(--ice);color:#fff}
+.btn.primary:hover{background:#1a7de0}
+.btn.danger{border-color:var(--void);color:var(--h-void)}
+.btn.danger:hover{background:rgba(225,29,72,.1)}
+.btn.sm{font-size:10px;padding:5px 10px}
+
+/* ── inputs ─── */
+.field{margin-bottom:20px}
+.field label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;font-weight:500}
+.field input,.field textarea,.field select{width:100%;background:var(--surface);border:1px solid var(--line);padding:10px 14px;color:var(--ink);font-size:14px;outline:none;transition:border-color .2s}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--ice)}
+.field textarea{resize:vertical;min-height:100px;font-family:var(--mono);font-size:13px;line-height:1.6}
+.field select{cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2371717a'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.field .hint{font-size:12px;color:var(--ink-4);margin-top:4px}
+.field input[type="password"]{font-family:var(--mono);letter-spacing:.1em}
+
+/* ── cards ─── */
+.card{background:var(--surface);border:1px solid var(--line);padding:24px;margin-bottom:16px}
+.card h3{font-family:var(--display);font-weight:400;font-size:20px;color:var(--ink);margin-bottom:12px}
+.card p{font-size:14px;color:var(--ink-2);line-height:1.6;margin-bottom:12px}
+.card p:last-child{margin-bottom:0}
+
+.section-title{font-family:var(--display);font-weight:400;font-size:clamp(24px,3vw,32px);color:var(--ink);margin-bottom:8px}
+.section-sub{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-4);margin-bottom:28px}
+
+/* ── score grid ─── */
+.score-row{display:grid;grid-template-columns:120px repeat(6,1fr) auto;gap:1px;margin-bottom:1px}
+.score-row.header{position:sticky;top:0;z-index:2}
+.score-cell{background:var(--surface);padding:10px 12px;font-size:13px;color:var(--ink-2);display:flex;align-items:center}
+.score-cell.header{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);font-weight:500;background:var(--surface-2)}
+.score-cell.model{font-weight:500;color:var(--ink);font-size:14px}
+.score-cell input{width:100%;background:transparent;border:none;color:var(--ink);text-align:center;font-family:var(--mono);font-size:14px;padding:0;outline:none}
+.score-cell input:focus{color:var(--h-sig)}
+.score-cell input::placeholder{color:var(--ink-4)}
+
+/* ── test runner ─── */
+.run-output{background:var(--surface-2);border:1px solid var(--line);padding:16px 18px;margin-top:16px;max-height:400px;overflow-y:auto;font-family:var(--mono);font-size:12.5px;line-height:1.7;color:var(--ink-2);white-space:pre-wrap}
+.run-output .sys-msg{color:var(--ink-4)}
+.run-output .model-resp{color:var(--h-lam)}
+.run-output .error{color:var(--h-void)}
+.run-output .info{color:var(--h-ice)}
+
+/* ── annotation ─── */
+.annotation{background:var(--surface-2);border-left:2px solid var(--signal);padding:14px 16px;margin:12px 0;font-size:13px;color:var(--ink-2)}
+.annotation .ann-meta{font-family:var(--mono);font-size:10px;color:var(--ink-4);margin-bottom:6px}
+
+/* ── status badges ─── */
+.badge{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;display:inline-flex;align-items:center;gap:4px}
+.badge.ready{background:rgba(16,185,129,.12);color:var(--h-lam)}
+.badge.missing{background:rgba(225,29,72,.12);color:var(--h-void)}
+.badge.active{background:rgba(43,142,245,.12);color:var(--h-ice)}
+
+/* ── scrollbar ─── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.15)}
+
+/* ── responsive ─── */
+@media(max-width:768px){
+  .shell{grid-template-columns:1fr;grid-template-rows:52px auto 1fr}
+  .sidebar{border-right:none;border-bottom:1px solid var(--line);display:flex;overflow-x:auto;padding:8px 12px;gap:4px}
+  .sidebar h4{display:none}
+  .sidebar .nav-item{padding:6px 14px;white-space:nowrap;font-size:12px}
+  .sidebar .nav-item .count{display:none}
+  .score-row{grid-template-columns:100px repeat(6,1fr) auto;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span><span>Mindgut · Dashboard v1</span></div>
+    <div class="actions">
+      <button class="btn sm" onclick="exportData()">Export JSON</button>
+      <button class="btn sm" onclick="importData()">Import</button>
+      <button class="btn sm danger" onclick="clearAll()">Reset</button>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <h4>Setup</h4>
+    <div class="nav-item active" data-pane="keys" onclick="showPane('keys')">
+      <span class="pip" style="background:var(--signal)"></span>API Keys
+      <span class="count" id="keys-status">0/3</span>
+    </div>
+    <div class="nav-item" data-pane="boot" onclick="showPane('boot')">
+      <span class="pip" style="background:var(--ice)"></span>Boot Prompt
+    </div>
+    <div class="nav-item" data-pane="corpus" onclick="showPane('corpus')">
+      <span class="pip" style="background:var(--ice)"></span>Document Set
+    </div>
+    <h4>Test</h4>
+    <div class="nav-item" data-pane="runner" onclick="showPane('runner')">
+      <span class="pip" style="background:var(--laminar)"></span>Test Runner
+    </div>
+    <div class="nav-item" data-pane="scores" onclick="showPane('scores')">
+      <span class="pip" style="background:var(--laminar)"></span>Score Matrix
+    </div>
+    <h4>Results</h4>
+    <div class="nav-item" data-pane="log" onclick="showPane('log')">
+      <span class="pip" style="background:var(--heat)"></span>Run Log
+      <span class="count" id="log-count">0</span>
+    </div>
+    <div class="nav-item" data-pane="notes" onclick="showPane('notes')">
+      <span class="pip" style="background:var(--heat)"></span>Annotations
+      <span class="count" id="notes-count">0</span>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-pane">
+
+    <!-- ═══ API KEYS ═══ -->
+    <div class="pane active" id="pane-keys">
+      <div class="section-title">API Keys</div>
+      <div class="section-sub">Session storage only · never saved to disk · cleared on tab close</div>
+
+      <div class="card">
+        <h3>Anthropic (Claude)</h3>
+        <p>Model: <code style="font-family:var(--mono);font-size:13px;color:var(--h-ice)">claude-sonnet-4-20250514</code></p>
+        <div class="field"><label>API Key</label><input type="password" id="key-anthropic" placeholder="sk-ant-..." oninput="saveKey('anthropic',this.value)"><div class="hint">Get yours at <a href="https://console.anthropic.com" style="color:var(--ice)">console.anthropic.com</a></div></div>
+        <span class="badge missing" id="badge-anthropic">Missing</span>
+      </div>
+
+      <div class="card">
+        <h3>OpenAI (GPT)</h3>
+        <p>Model: <code style="font-family:var(--mono);font-size:13px;color:var(--h-ice)">gpt-4o</code></p>
+        <div class="field"><label>API Key</label><input type="password" id="key-openai" placeholder="sk-..." oninput="saveKey('openai',this.value)"><div class="hint">Get yours at <a href="https://platform.openai.com/api-keys" style="color:var(--ice)">platform.openai.com/api-keys</a></div></div>
+        <span class="badge missing" id="badge-openai">Missing</span>
+      </div>
+
+      <div class="card">
+        <h3>Google (Gemini)</h3>
+        <p>Model: <code style="font-family:var(--mono);font-size:13px;color:var(--h-ice)">gemini-2.5-pro</code></p>
+        <div class="field"><label>API Key</label><input type="password" id="key-google" placeholder="AIza..." oninput="saveKey('google',this.value)"><div class="hint">Get yours at <a href="https://aistudio.google.com/apikey" style="color:var(--ice)">aistudio.google.com/apikey</a></div></div>
+        <span class="badge missing" id="badge-google">Missing</span>
+      </div>
+    </div>
+
+    <!-- ═══ BOOT PROMPT ═══ -->
+    <div class="pane" id="pane-boot">
+      <div class="section-title">Boot Prompt</div>
+      <div class="section-sub">The structural scaffold · identical across all models</div>
+      <div class="card">
+        <h3>Mindgut Boot (Scaffolded Condition)</h3>
+        <div class="field"><label>System Prompt</label><textarea id="boot-scaffold" rows="12" placeholder="Paste your Mindgut boot prompt here. This is the structural scaffold that gets prepended to every model's system prompt in the scaffolded condition."></textarea></div>
+        <button class="btn sm" onclick="saveBoot()">Save to Local Storage</button>
+      </div>
+      <div class="card">
+        <h3>Vanilla Boot (Control Condition)</h3>
+        <div class="field"><label>System Prompt</label><textarea id="boot-vanilla" rows="6" placeholder="You are a helpful AI assistant."></textarea></div>
+        <div class="field"><div class="hint">Keep this minimal. The control condition measures what the base model does without structural scaffolding.</div></div>
+      </div>
+    </div>
+
+    <!-- ═══ DOCUMENT SET ═══ -->
+    <div class="pane" id="pane-corpus">
+      <div class="section-title">Document Set</div>
+      <div class="section-sub">Fixed corpus with known ground truth · same for every model</div>
+      <div class="card">
+        <h3>Corpus Files</h3>
+        <p>List the documents in your test corpus. For each, note the filename, entity count, and any planted contradictions or collision entities.</p>
+        <div class="field"><label>Corpus Manifest</label><textarea id="corpus-manifest" rows="14" placeholder="doc_01.pdf — Smith et al. 2019 — 12 entities — contains Claim A
+doc_02.pdf — Smith et al. 2023 — 8 entities — rebuts Claim A with Claim B
+doc_03.pdf — Jones 2021 — 15 entities — Dr. Smith (different person)
+...
+
+Entity collisions: Dr. Smith (doc_01 vs doc_03)
+Planted contradictions: Claim A (doc_01) vs Claim B (doc_02)"></textarea></div>
+        <button class="btn sm" onclick="saveCorpus()">Save Manifest</button>
+      </div>
+      <div class="card">
+        <h3>Ground Truth Index</h3>
+        <p>Paste or build your entity/claim index here. This is what D2 and D5 score against.</p>
+        <div class="field"><label>Entity Index (JSON or plain text)</label><textarea id="ground-truth" rows="10" placeholder='[
+  {"entity": "Dr. Smith", "source": "doc_01.pdf", "context": "Lead researcher, MIT, 2019"},
+  {"entity": "Dr. Smith", "source": "doc_03.pdf", "context": "Reviewer, Stanford, 2021"}
+]'></textarea></div>
+        <button class="btn sm" onclick="saveGroundTruth()">Save Index</button>
+      </div>
+    </div>
+
+    <!-- ═══ TEST RUNNER ═══ -->
+    <div class="pane" id="pane-runner">
+      <div class="section-title">Test Runner</div>
+      <div class="section-sub">Send prompts to models · record raw responses</div>
+
+      <div class="card">
+        <h3>Quick Test</h3>
+        <p>Send a single prompt to one or more models. Useful for ad-hoc probing and spot-checking during protocol runs.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field"><label>Model</label><select id="run-model">
+            <option value="anthropic">Claude (Anthropic)</option>
+            <option value="openai">GPT-4o (OpenAI)</option>
+            <option value="google">Gemini (Google)</option>
+          </select></div>
+          <div class="field"><label>Condition</label><select id="run-condition">
+            <option value="scaffold">Scaffolded (Mindgut boot)</option>
+            <option value="vanilla">Vanilla (control)</option>
+          </select></div>
+        </div>
+        <div class="field"><label>Prompt</label><textarea id="run-prompt" rows="4" placeholder="Ask a question from the task battery..."></textarea></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn primary" onclick="runTest()">Run</button>
+          <button class="btn sm" onclick="runAllModels()">Run All Models</button>
+          <span id="run-status" style="font-family:var(--mono);font-size:11px;color:var(--ink-4)"></span>
+        </div>
+        <div class="run-output" id="run-output" style="display:none"></div>
+      </div>
+
+      <div class="card">
+        <h3>Dimension-Specific Batteries</h3>
+        <p>Pre-built prompt templates for each of the six dimensions. Select a dimension, fill in your corpus-specific details, and run.</p>
+        <div class="field"><label>Dimension</label><select id="bat-dim" onchange="loadBattery()">
+          <option value="">Select a dimension...</option>
+          <option value="d1">D1 — Consistency</option>
+          <option value="d2">D2 — Source Accuracy</option>
+          <option value="d3">D3 — Correction Behavior</option>
+          <option value="d4">D4 — Long-Context Degradation</option>
+          <option value="d5">D5 — Entity Retention</option>
+          <option value="d6">D6 — Uncertainty Calibration</option>
+        </select></div>
+        <div id="battery-template" style="display:none">
+          <div class="field"><label>Battery Prompts</label><textarea id="bat-prompts" rows="8" style="white-space:pre"></textarea></div>
+          <div class="field"><div class="hint" id="bat-hint"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SCORE MATRIX ═══ -->
+    <div class="pane" id="pane-scores">
+      <div class="section-title">Score Matrix</div>
+      <div class="section-sub">Record scores per model × dimension · 0.0–1.0 scale</div>
+
+      <div style="margin-bottom:20px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn sm" onclick="addScoreRow('scaffold')">+ Scaffolded Row</button>
+        <button class="btn sm" onclick="addScoreRow('vanilla')">+ Vanilla Row</button>
+      </div>
+
+      <div style="overflow-x:auto">
+        <div id="score-grid">
+          <div class="score-row header">
+            <div class="score-cell header">Model</div>
+            <div class="score-cell header" style="justify-content:center"><span style="color:var(--h-ice)">D1</span></div>
+            <div class="score-cell header" style="justify-content:center"><span style="color:var(--h-heat)">D2</span></div>
+            <div class="score-cell header" style="justify-content:center"><span style="color:var(--h-lam)">D3</span></div>
+            <div class="score-cell header" style="justify-content:center"><span style="color:var(--h-void)">D4</span></div>
+            <div class="score-cell header" style="justify-content:center"><span style="color:var(--h-sig)">D5</span></div>
+            <div class="score-cell header" style="justify-content:center"><span style="color:var(--h-bal)">D6</span></div>
+            <div class="score-cell header"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:24px;font-family:var(--mono);font-size:11px;color:var(--ink-4);line-height:1.8">
+        <span style="color:var(--h-ice)">D1</span> Consistency · <span style="color:var(--h-heat)">D2</span> Source Accuracy · <span style="color:var(--h-lam)">D3</span> Correction · <span style="color:var(--h-void)">D4</span> Degradation · <span style="color:var(--h-sig)">D5</span> Entity Retention · <span style="color:var(--h-bal)">D6</span> Calibration
+      </div>
+    </div>
+
+    <!-- ═══ RUN LOG ═══ -->
+    <div class="pane" id="pane-log">
+      <div class="section-title">Run Log</div>
+      <div class="section-sub">Chronological record of all test runs</div>
+      <div id="log-entries"><p style="color:var(--ink-4);font-size:14px">No runs recorded yet. Use the Test Runner to send prompts.</p></div>
+    </div>
+
+    <!-- ═══ ANNOTATIONS ═══ -->
+    <div class="pane" id="pane-notes">
+      <div class="section-title">Annotations</div>
+      <div class="section-sub">Freeform observations · tagged by dimension</div>
+      <div class="card">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="field"><label>Dimension</label><select id="note-dim">
+            <option value="general">General</option>
+            <option value="d1">D1 — Consistency</option>
+            <option value="d2">D2 — Source Accuracy</option>
+            <option value="d3">D3 — Correction</option>
+            <option value="d4">D4 — Degradation</option>
+            <option value="d5">D5 — Entity Retention</option>
+            <option value="d6">D6 — Calibration</option>
+          </select></div>
+          <div class="field"><label>Model</label><select id="note-model">
+            <option value="all">All Models</option>
+            <option value="claude-scaffold">Claude (Scaffolded)</option>
+            <option value="claude-vanilla">Claude (Vanilla)</option>
+            <option value="gpt-scaffold">GPT (Scaffolded)</option>
+            <option value="gpt-vanilla">GPT (Vanilla)</option>
+            <option value="gemini-scaffold">Gemini (Scaffolded)</option>
+            <option value="gemini-vanilla">Gemini (Vanilla)</option>
+          </select></div>
+        </div>
+        <div class="field"><label>Observation</label><textarea id="note-text" rows="4" placeholder="What did you notice? Be specific: quote the response, name the failure mode, note the exchange number."></textarea></div>
+        <button class="btn primary sm" onclick="addNote()">Add Annotation</button>
+      </div>
+      <div id="notes-list" style="margin-top:20px"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+const STATE_KEY = 'mindgut_dashboard_v1';
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STATE_KEY)) || defaultState(); }
+  catch { return defaultState(); }
+}
+
+function defaultState() {
+  return { scores: [], log: [], notes: [], boot: { scaffold: '', vanilla: '' }, corpus: '', groundTruth: '' };
+}
+
+function saveState(s) { localStorage.setItem(STATE_KEY, JSON.stringify(s)); }
+let state = loadState();
+
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
+function showPane(id) {
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pane = document.getElementById('pane-' + id);
+  if (pane) pane.classList.add('active');
+  const nav = document.querySelector(`.nav-item[data-pane="${id}"]`);
+  if (nav) nav.classList.add('active');
+}
+
+// ═══════════════════════════════════════
+// API KEYS (sessionStorage only)
+// ═══════════════════════════════════════
+function saveKey(provider, value) {
+  if (value.trim()) {
+    sessionStorage.setItem('mgkey_' + provider, value.trim());
+  } else {
+    sessionStorage.removeItem('mgkey_' + provider);
+  }
+  updateKeyBadges();
+}
+
+function getKey(provider) { return sessionStorage.getItem('mgkey_' + provider) || ''; }
+
+function updateKeyBadges() {
+  let count = 0;
+  ['anthropic', 'openai', 'google'].forEach(p => {
+    const badge = document.getElementById('badge-' + p);
+    if (getKey(p)) {
+      badge.className = 'badge ready'; badge.textContent = 'Ready';
+      count++;
+    } else {
+      badge.className = 'badge missing'; badge.textContent = 'Missing';
+    }
+  });
+  document.getElementById('keys-status').textContent = count + '/3';
+}
+
+// Restore key fields on load (they're in session, but show status)
+window.addEventListener('load', () => {
+  updateKeyBadges();
+  renderScores();
+  renderLog();
+  renderNotes();
+  // Restore boot prompts
+  if (state.boot.scaffold) document.getElementById('boot-scaffold').value = state.boot.scaffold;
+  if (state.boot.vanilla) document.getElementById('boot-vanilla').value = state.boot.vanilla;
+  if (state.corpus) document.getElementById('corpus-manifest').value = state.corpus;
+  if (state.groundTruth) document.getElementById('ground-truth').value = state.groundTruth;
+});
+
+// ═══════════════════════════════════════
+// BOOT / CORPUS
+// ═══════════════════════════════════════
+function saveBoot() {
+  state.boot.scaffold = document.getElementById('boot-scaffold').value;
+  state.boot.vanilla = document.getElementById('boot-vanilla').value;
+  saveState(state);
+}
+function saveCorpus() { state.corpus = document.getElementById('corpus-manifest').value; saveState(state); }
+function saveGroundTruth() { state.groundTruth = document.getElementById('ground-truth').value; saveState(state); }
+
+// ═══════════════════════════════════════
+// TEST RUNNER
+// ═══════════════════════════════════════
+async function callModel(provider, systemPrompt, userPrompt) {
+  const key = getKey(provider);
+  if (!key) throw new Error('No API key for ' + provider);
+
+  if (provider === 'anthropic') {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2048, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error.message);
+    return d.content.map(c => c.text || '').join('\n');
+  }
+
+  if (provider === 'openai') {
+    const r = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ model: 'gpt-4o', max_tokens: 2048, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }] })
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error.message);
+    return d.choices[0].message.content;
+  }
+
+  if (provider === 'google') {
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=' + key, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system_instruction: { parts: [{ text: systemPrompt }] }, contents: [{ parts: [{ text: userPrompt }] }], generationConfig: { maxOutputTokens: 2048 } })
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error.message);
+    return d.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('\n') || '(empty response)';
+  }
+
+  throw new Error('Unknown provider: ' + provider);
+}
+
+async function runTest() {
+  const provider = document.getElementById('run-model').value;
+  const condition = document.getElementById('run-condition').value;
+  const prompt = document.getElementById('run-prompt').value.trim();
+  if (!prompt) return;
+
+  const output = document.getElementById('run-output');
+  const status = document.getElementById('run-status');
+  output.style.display = 'block';
+  output.innerHTML = '<span class="sys-msg">Sending to ' + provider + ' (' + condition + ')...</span>\n';
+  status.textContent = 'Running...';
+
+  const sys = condition === 'scaffold' ? (state.boot.scaffold || 'You are a helpful assistant.') : (state.boot.vanilla || 'You are a helpful assistant.');
+
+  try {
+    const t0 = Date.now();
+    const resp = await callModel(provider, sys, prompt);
+    const elapsed = Date.now() - t0;
+    output.innerHTML += '<span class="info">[' + elapsed + 'ms]</span>\n\n<span class="model-resp">' + escHtml(resp) + '</span>';
+    status.textContent = 'Done (' + elapsed + 'ms)';
+
+    // Log it
+    state.log.push({ ts: new Date().toISOString(), provider, condition, prompt, response: resp, elapsed });
+    saveState(state); renderLog();
+  } catch (e) {
+    output.innerHTML += '<span class="error">Error: ' + escHtml(e.message) + '</span>';
+    status.textContent = 'Error';
+  }
+}
+
+async function runAllModels() {
+  const condition = document.getElementById('run-condition').value;
+  const prompt = document.getElementById('run-prompt').value.trim();
+  if (!prompt) return;
+
+  const output = document.getElementById('run-output');
+  const status = document.getElementById('run-status');
+  output.style.display = 'block';
+  output.innerHTML = '';
+  status.textContent = 'Running all models...';
+
+  const sys = condition === 'scaffold' ? (state.boot.scaffold || 'You are a helpful assistant.') : (state.boot.vanilla || 'You are a helpful assistant.');
+
+  for (const provider of ['anthropic', 'openai', 'google']) {
+    if (!getKey(provider)) {
+      output.innerHTML += '<span class="sys-msg">' + provider + ': skipped (no key)</span>\n\n';
+      continue;
+    }
+    output.innerHTML += '<span class="sys-msg">' + provider + ' (' + condition + ')...</span>\n';
+    try {
+      const t0 = Date.now();
+      const resp = await callModel(provider, sys, prompt);
+      const elapsed = Date.now() - t0;
+      output.innerHTML += '<span class="info">[' + elapsed + 'ms]</span>\n<span class="model-resp">' + escHtml(resp) + '</span>\n\n';
+      state.log.push({ ts: new Date().toISOString(), provider, condition, prompt, response: resp, elapsed });
+    } catch (e) {
+      output.innerHTML += '<span class="error">Error: ' + escHtml(e.message) + '</span>\n\n';
+    }
+  }
+  saveState(state); renderLog();
+  status.textContent = 'Complete';
+}
+
+function escHtml(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+// ═══════════════════════════════════════
+// BATTERIES
+// ═══════════════════════════════════════
+const BATTERIES = {
+  d1: { hint: 'Run this same prompt at exchange 5, 25, and 50. Compare responses for semantic drift.', template: 'Based on the documents provided, what is the primary finding of the research and what are the main limitations acknowledged by the authors?\n\n[Run at exchange 5, 25, and 50 — compare for consistency]' },
+  d2: { hint: 'Half of these claims should be real (from your corpus), half fabricated. Score precision/recall.', template: 'Which document makes the following claim: "[INSERT CLAIM HERE]"\n\nPlease provide: the document name, the author, and the approximate location in the document.\n\n[Repeat for 20 claims: 10 real, 10 fabricated]' },
+  d3: { hint: 'First ask for a synthesis, then inject contradictory evidence. Check if downstream claims update.', template: 'Step 1: Please synthesize the findings across all documents regarding [TOPIC].\n\nStep 2 (after response): New evidence has emerged that contradicts [SPECIFIC CLAIM]. Here is the counter-evidence: [PASTE]. Please revise your synthesis.\n\nStep 3: Now, does your earlier conclusion about [DOWNSTREAM CLAIM] still hold?' },
+  d4: { hint: 'Repeat D1-D3 probes at increasing context loads. Measure the slope of degradation.', template: '[Use the D1, D2, D3 probes above]\n[Run at 2K, 8K, 32K, 64K, 128K context utilization]\n[Record scores at each level]\n[Plot the degradation curve]' },
+  d5: { hint: 'Plant entity collisions — same name, different person/context. Ask disambiguating questions.', template: 'In the documents, there are multiple references to "[ENTITY NAME]". Please distinguish between the different individuals/concepts with this name, citing which document each appears in and their specific context.' },
+  d6: { hint: 'Mix answerable and unanswerable questions. Measure whether confidence tracks accuracy.', template: 'On a scale of 1-10, how confident are you in your answer to the following question? Please answer first, then state your confidence.\n\nQuestion: [MIX OF 25 ANSWERABLE + 25 UNANSWERABLE FROM CORPUS]\n\n[Score: does confidence correlate with actual accuracy?]' }
+};
+
+function loadBattery() {
+  const dim = document.getElementById('bat-dim').value;
+  const tpl = document.getElementById('battery-template');
+  if (!dim) { tpl.style.display = 'none'; return; }
+  tpl.style.display = 'block';
+  document.getElementById('bat-prompts').value = BATTERIES[dim].template;
+  document.getElementById('bat-hint').textContent = BATTERIES[dim].hint;
+}
+
+// ═══════════════════════════════════════
+// SCORES
+// ═══════════════════════════════════════
+function addScoreRow(condition) {
+  const model = prompt('Model name (e.g. Claude, GPT-4o, Gemini):');
+  if (!model) return;
+  const run = prompt('Run number (e.g. 1, 2, 3):') || '1';
+  state.scores.push({ model, condition, run, d1: '', d2: '', d3: '', d4: '', d5: '', d6: '' });
+  saveState(state); renderScores();
+}
+
+function renderScores() {
+  const grid = document.getElementById('score-grid');
+  // Keep header
+  const header = grid.querySelector('.score-row.header');
+  grid.innerHTML = '';
+  grid.appendChild(header);
+
+  state.scores.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'score-row';
+    const tag = s.condition === 'scaffold' ? '●' : '○';
+    row.innerHTML = `
+      <div class="score-cell model">${tag} ${escHtml(s.model)} <span style="font-family:var(--mono);font-size:10px;color:var(--ink-4);margin-left:6px">R${s.run}</span></div>
+      <div class="score-cell"><input placeholder="—" value="${s.d1}" oninput="updateScore(${i},'d1',this.value)"></div>
+      <div class="score-cell"><input placeholder="—" value="${s.d2}" oninput="updateScore(${i},'d2',this.value)"></div>
+      <div class="score-cell"><input placeholder="—" value="${s.d3}" oninput="updateScore(${i},'d3',this.value)"></div>
+      <div class="score-cell"><input placeholder="—" value="${s.d4}" oninput="updateScore(${i},'d4',this.value)"></div>
+      <div class="score-cell"><input placeholder="—" value="${s.d5}" oninput="updateScore(${i},'d5',this.value)"></div>
+      <div class="score-cell"><input placeholder="—" value="${s.d6}" oninput="updateScore(${i},'d6',this.value)"></div>
+      <div class="score-cell"><button class="btn sm danger" onclick="removeScore(${i})">×</button></div>
+    `;
+    grid.appendChild(row);
+  });
+}
+
+function updateScore(i, dim, val) { state.scores[i][dim] = val; saveState(state); }
+function removeScore(i) { state.scores.splice(i, 1); saveState(state); renderScores(); }
+
+// ═══════════════════════════════════════
+// LOG
+// ═══════════════════════════════════════
+function renderLog() {
+  const el = document.getElementById('log-entries');
+  document.getElementById('log-count').textContent = state.log.length;
+  if (!state.log.length) { el.innerHTML = '<p style="color:var(--ink-4);font-size:14px">No runs recorded yet.</p>'; return; }
+  el.innerHTML = state.log.slice().reverse().map((l, ri) => {
+    const i = state.log.length - 1 - ri;
+    const time = new Date(l.ts).toLocaleTimeString();
+    const tag = l.condition === 'scaffold' ? '<span style="color:var(--h-lam)">●</span>' : '<span style="color:var(--ink-4)">○</span>';
+    return `<div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--ink-3)">${tag} ${escHtml(l.provider)} · ${l.condition} · ${time} · ${l.elapsed}ms</span>
+        <button class="btn sm danger" onclick="removeLog(${i})">×</button>
+      </div>
+      <div style="font-size:13px;color:var(--ink-2);margin-bottom:8px"><strong style="color:var(--ink)">Prompt:</strong> ${escHtml(l.prompt.substring(0, 200))}${l.prompt.length > 200 ? '...' : ''}</div>
+      <details><summary style="font-family:var(--mono);font-size:11px;color:var(--ink-4);cursor:pointer">Response (${l.response.length} chars)</summary>
+        <div style="margin-top:8px;font-family:var(--mono);font-size:12px;line-height:1.6;color:var(--ink-2);white-space:pre-wrap;max-height:300px;overflow-y:auto">${escHtml(l.response)}</div>
+      </details>
+    </div>`;
+  }).join('');
+}
+function removeLog(i) { state.log.splice(i, 1); saveState(state); renderLog(); }
+
+// ═══════════════════════════════════════
+// ANNOTATIONS
+// ═══════════════════════════════════════
+function addNote() {
+  const dim = document.getElementById('note-dim').value;
+  const model = document.getElementById('note-model').value;
+  const text = document.getElementById('note-text').value.trim();
+  if (!text) return;
+  state.notes.push({ ts: new Date().toISOString(), dim, model, text });
+  saveState(state);
+  document.getElementById('note-text').value = '';
+  renderNotes();
+}
+
+function renderNotes() {
+  const el = document.getElementById('notes-list');
+  document.getElementById('notes-count').textContent = state.notes.length;
+  if (!state.notes.length) { el.innerHTML = ''; return; }
+  el.innerHTML = state.notes.slice().reverse().map((n, ri) => {
+    const i = state.notes.length - 1 - ri;
+    const time = new Date(n.ts).toLocaleString();
+    return `<div class="annotation">
+      <div class="ann-meta">${escHtml(n.dim.toUpperCase())} · ${escHtml(n.model)} · ${time} <button class="btn sm danger" style="float:right;margin-top:-4px" onclick="removeNote(${i})">×</button></div>
+      ${escHtml(n.text)}
+    </div>`;
+  }).join('');
+}
+function removeNote(i) { state.notes.splice(i, 1); saveState(state); renderNotes(); }
+
+// ═══════════════════════════════════════
+// IMPORT / EXPORT
+// ═══════════════════════════════════════
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mindgut-results-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json';
+  input.onchange = async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    try {
+      const text = await file.text();
+      state = JSON.parse(text);
+      saveState(state);
+      location.reload();
+    } catch (err) { alert('Failed to import: ' + err.message); }
+  };
+  input.click();
+}
+
+function clearAll() {
+  if (!confirm('This will erase all scores, logs, and annotations. Are you sure?')) return;
+  state = defaultState();
+  saveState(state);
+  location.reload();
+}
+</script>
+</body>
+</html>

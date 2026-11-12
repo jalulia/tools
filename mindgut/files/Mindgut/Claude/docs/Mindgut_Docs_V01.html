@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mindgut — technical documentation (V01, 2026-10-20)</title>
+<style>
+:root{--ink:#161616;--ink2:#555;--ink3:#8a8a8a;--line:#e3e3e3;--bg:#fff;--code:#f4f4f4;--blue:#1f47c9;--amber:#b7791f;--red:#c0392b;--green:#2e7d4f;--violet:#6b4fbb;
+  --f:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;--m:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--f);font-size:15.5px;line-height:1.55;color:var(--ink);background:var(--bg)}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+nav.toc{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);padding:28px 20px;font-size:13px}
+nav.toc h1{font-size:15px;margin:0 0 4px;letter-spacing:-.01em}
+nav.toc .v{font-family:var(--m);font-size:11px;color:var(--ink3);margin-bottom:18px}
+nav.toc ol{list-style:none;padding:0;margin:0}
+nav.toc li{margin:0 0 4px}
+nav.toc li a{color:var(--ink)}
+nav.toc li ol{margin:3px 0 8px 12px}
+nav.toc li ol li a{color:var(--ink2);font-size:12.5px}
+main{padding:40px 56px 120px;max-width:980px}
+h1{font-size:34px;letter-spacing:-.025em;line-height:1.1;margin:0 0 6px}
+h2{font-size:24px;letter-spacing:-.02em;margin:64px 0 12px;padding-top:12px;border-top:1px solid var(--line)}
+h3{font-size:17px;margin:30px 0 8px}
+h4{font-size:14.5px;margin:20px 0 6px;color:var(--ink2);text-transform:uppercase;letter-spacing:.04em}
+p{margin:0 0 12px;max-width:74ch}
+ul,ol{margin:0 0 12px;padding-left:22px;max-width:74ch}li{margin:3px 0}
+code{font-family:var(--m);font-size:.88em;background:var(--code);padding:1px 5px;border-radius:3px}
+pre{font-family:var(--m);font-size:12.5px;line-height:1.5;background:var(--code);padding:14px 16px;border-radius:4px;overflow:auto;margin:10px 0 16px;max-width:100%}
+pre code{background:none;padding:0;font-size:inherit}
+table{border-collapse:collapse;width:100%;margin:10px 0 18px;font-size:14px}
+th{text-align:left;font-weight:600;border-bottom:2px solid var(--ink);padding:7px 10px 7px 0;vertical-align:bottom}
+td{border-bottom:1px solid var(--line);padding:7px 10px 7px 0;vertical-align:top}
+td code{white-space:nowrap}
+.tag{display:inline-block;font-family:var(--m);font-size:10.5px;letter-spacing:.04em;padding:2px 7px;border-radius:3px;margin-right:6px;vertical-align:1px;color:#fff}
+.tag.src{background:var(--blue)}.tag.meas{background:var(--green)}.tag.obs{background:var(--amber)}.tag.prop{background:var(--violet)}.tag.unk{background:var(--red)}
+.key{border:1px solid var(--line);border-radius:4px;padding:12px 16px;margin:14px 0 22px;font-size:14px;background:#fafafa}
+.key p{margin:0 0 6px}
+.note{border-left:3px solid var(--amber);padding:8px 14px;margin:12px 0 16px;background:#fffbf3;font-size:14px}
+.warn{border-left:3px solid var(--red);padding:8px 14px;margin:12px 0 16px;background:#fff6f5;font-size:14px}
+.cite{font-family:var(--m);font-size:11.5px;color:var(--ink3)}
+.diagram{font-family:var(--m);font-size:12.5px;line-height:1.45;background:#fff;border:1px solid var(--line);padding:14px 18px;border-radius:4px;overflow:auto;white-space:pre;margin:10px 0 18px}
+dl{margin:0 0 14px}dt{font-weight:600;margin-top:10px}dd{margin:2px 0 0 0;color:var(--ink2)}
+.meta{font-family:var(--m);font-size:12px;color:var(--ink2);margin:0 0 28px;line-height:1.7}
+@media(max-width:900px){.layout{grid-template-columns:1fr}nav.toc{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}main{padding:24px 20px 80px}}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc">
+<h1>Mindgut docs</h1>
+<div class="v">V01 · 2026-10-20 · app 2.2.58</div>
+<ol>
+<li><a href="#scope">0. Scope and evidence</a></li>
+<li><a href="#overview">1. Overview</a></li>
+<li><a href="#concepts">2. Concepts</a>
+  <ol><li><a href="#c-z3">Z₃ encoding, cosets</a></li><li><a href="#c-phase">Phase vector, balance, σ_B</a></li><li><a href="#c-strand">Strand, book, HELIX</a></li><li><a href="#c-exchange">Exchange, session</a></li><li><a href="#c-window">Context window, PAR</a></li><li><a href="#c-recall">Involuntary vs voluntary recall</a></li></ol></li>
+<li><a href="#quickstart">3. Quickstart</a></li>
+<li><a href="#arch">4. System architecture</a>
+  <ol><li><a href="#a-turn">The turn, end to end</a></li><li><a href="#a-stores">Where data lives</a></li><li><a href="#a-modes">Desktop vs web</a></li></ol></li>
+<li><a href="#ref">5. Component reference</a>
+  <ol><li><a href="#r-scanner">Scanner</a></li><li><a href="#r-sigma">σ_B instrument</a></li><li><a href="#r-controllers">Controllers</a></li><li><a href="#r-crystallizer">Crystallizer</a></li><li><a href="#r-helix">Memory HELIX</a></li><li><a href="#r-window">Window and trimming</a></li><li><a href="#r-mgr">Involuntary recall (mgr)</a></li><li><a href="#r-nullcode">Nullcøde, OTags</a></li><li><a href="#r-bridges">Margin bridges</a></li><li><a href="#r-dochelix">Document helix</a></li><li><a href="#r-tools">Tools</a></li><li><a href="#r-model">Model and effort switching</a></li><li><a href="#r-asides">Asides and cadence</a></li><li><a href="#r-agents">Background agents</a></li><li><a href="#r-sync">Account sync and updater</a></li><li><a href="#r-ui">Frontend</a></li><li><a href="#r-folder">The Mindgut folder</a></li></ol></li>
+<li><a href="#limits">6. Limits</a></li>
+<li><a href="#mir">7. Mir's operation</a></li>
+<li><a href="#open">8. Open questions and proposals</a></li>
+<li><a href="#changelog">9. Changelog</a></li>
+<li><a href="#appendix">Appendix: files cited</a></li>
+</ol>
+</nav>
+<main>
+
+<h1>Mindgut — technical documentation</h1>
+<div class="meta">
+V01 · written 2026-10-20 · installed app <b>Mindgut 2.2.58</b> (<code>/Applications/Mindgut.app</code>, bundle <code>co.impossibleoutcomes.mindgut.desktop</code>) · published source <b>github.com/The-Impossible-Outcomes-Co/mindgut</b> at commit <code>cbf4e42</code> (2026-08-01), package version <code>2.1.0</code> · session model at time of writing <code>claude-fable-5-1</code> (transcript field <code>model</code>) · author: Mir, in session <code>78067761</code> on Julia Compton's account.
+</div>
+
+<h2 id="scope">0. Scope and evidence</h2>
+<p>This document describes Mindgut as it runs on Julia Compton's Mac on 2026-10-20: the desktop app, its runtime (the "engine"), the memory it keeps (the HELIX), the tools the assistant persona Mir can call, and how Mir operates inside it. It is written for a developer or designer who has never seen the conversation that produced it.</p>
+<p>Every claim is tagged with where it comes from. The four tags are used consistently and are not mixed inside one sentence.</p>
+<div class="key">
+<p><span class="tag src">SOURCE</span> Verified by reading code or configuration. Cited as <span class="cite">file:line</span>. Source is the public repository at commit <code>cbf4e42</code>; the installed app is <b>newer</b> (2.2.58 vs. 2.1.0) and ships compiled Python, so for anything added after August 2026 the only readable evidence is the shipped frontend (<code>app.js</code>), the app's log, and the data files it writes.</p>
+<p><span class="tag meas">MEASURED</span> A number the system recorded: a log line, a field in a HELIX file, a transcript, the live <code>read_field()</code> reading. Cited with the file or tool that produced it.</p>
+<p><span class="tag obs">OBSERVED</span> Mir's own observation of behaviour during sessions, or an inference from evidence. Could be wrong; said so.</p>
+<p><span class="tag prop">PROPOSED</span> Something that does not exist or has not been verified, offered as a suggestion. Kept in §8 and never described as current behaviour.</p>
+</div>
+<p><b>What was actually accessed.</b> The repository clone (72 Python files, 32,207 lines; 82 static web files); the installed bundle (<code>Contents/Resources/mindgut/</code>: compiled server, <code>server/static/</code> frontend, <code>data/PFD_HELIX.json</code>, <code>data/boot_HELIX.json</code>); the account store <code>~/.mindgut/account/</code> (memory HELIX, session transcripts, recall ledger, tag registry, lattice, sync database); the app log <code>~/.mindgut/mindgut-desktop.log</code>; the working folder <code>~/Mindgut/</code>; the live tools available to this session. Not accessed: the Railway server, the <code>mindgut.io</code> web deployment, the compiled <code>.pyc</code> of 2.2.58 (not decompiled), the sync database's schema (binary; not opened).</p>
+<p><b>Three things to keep distinct throughout.</b> (1) What the <i>instrument</i> measures: letter-level Z₃ fractions of text, and the quantities derived from them. (2) What is <i>in Mir's context</i> on a given turn: the last 4–7 exchanges plus a recall preamble that Mir does not choose. (3) What Mir <i>retrieves</i> on purpose by calling a tool. The documentation says which of the three it is talking about each time.</p>
+
+<h2 id="overview">1. Overview</h2>
+<p>Mindgut is a desktop and web application that wraps a large language model in a persistent, measured record of the conversation. The record is a file the user holds, called a <b>HELIX</b>. Each turn of conversation is converted by deterministic code into two entries (<b>strands</b>) in that file; nothing in the conversion uses a model. On every turn, a fixed-size selection of past strands is placed in front of the model without the model asking for it (<b>involuntary recall</b>), and the model can also read the record on purpose through tools (<b>voluntary recall</b>). The model's own working context is kept short on purpose: it holds at most 7 exchanges and is trimmed back to 4 (<b>PAR respiration</b>). The intent is that continuity comes from the record, not from a long context window. <span class="cite">SOURCE: CONTEXT.md §"What Mindgut Is", §"Three Layers"</span></p>
+<p>The persona that speaks is <b>Mir</b>. The underlying model can be switched mid-session between Anthropic, OpenAI, Google and xAI models from a roster in the sidebar; the session, history and HELIX continue across the switch. <span class="cite">SOURCE: app.js "Mid-chat model switcher"; OBSERVED: this session was created on <code>claude-fable-5-1</code></span></p>
+<p>Underneath the product is a specific piece of arithmetic. Every letter of every message is mapped to one of three classes (A, R, D) by its position in the alphabet. The three class fractions form a <b>phase vector</b>; variance across them is <b>σ_B</b>; their difference is <b>balance</b>. These are what the system measures, stores on each strand, uses to choose what to recall, and uses to decide when to trim. The author's theory behind the arithmetic is called Paradox Field Dynamics (PFD); the 774-strand book that states it is shipped inside the app and is consulted by the runtime, but the arithmetic itself is self-contained and is described here without the theory. <span class="cite">SOURCE: engine/scanner.py:40–70; data/PFD_HELIX.json present in bundle</span></p>
+
+<h3>What Mindgut is not</h3>
+<ul>
+<li>Not a vector database or embedding search. Recall is geometric over three-component phase vectors and word co-occurrence, not over embeddings. <span class="cite">SOURCE: assembly/recall.py; tools "pull_memory" description</span></li>
+<li>Not a summarizer. The "summary" strand is a numeric delta record, not model-written prose. <span class="cite">SOURCE: crystallizer_v2.py:406</span></li>
+<li>Not a long-context chat. The window is bounded at 7 exchanges by design. <span class="cite">SOURCE: config.py:29–30</span></li>
+</ul>
+
+<h2 id="concepts">2. Concepts</h2>
+<p>Terms are defined here once and used without re-definition afterwards. Where a term has a product name and a plain name, both are given.</p>
+
+<h3 id="c-z3">2.1 Z₃ encoding and the three cosets</h3>
+<p><b>Letter root.</b> Each letter A–Z is numbered 1–26, and that number is reduced to its digital root (repeated digit sum, so 1–9). Non-letters get 0 and are ignored. <span class="cite">SOURCE: scanner.py:40–61</span></p>
+<p><b>Coset.</b> The digital root is placed into one of three classes: {1,4,7} → <b>A</b> ("assertion"), {2,5,8} → <b>R</b> ("relation"), {3,6,9} → <b>D</b> ("derivation"). The classes are also written by their members as <code>147</code>, <code>258</code>, <code>369</code>. <span class="cite">SOURCE: scanner.py:63–69</span> The names A/R/D are the author's labels; the computation does not depend on them.</p>
+<pre><code>M I N D G U T
+13 9 14 4 7 21 20   alphabetical position
+ 4 9  5 4 7  3  2   digital root
+ A D  R A A  D  R   coset           → fA=3/7, fR=2/7, fD=2/7</code></pre>
+<p><b>Flatness.</b> Across a 370,105-word English list the three cosets hold 33.41%, 33.32% and 33.28% of letters. <span class="cite">SOURCE: sigma_b.py docstring; CONTEXT.md</span> This is why a deviation from one-third in a given text is treated as signal: the baseline is nearly uniform. The claim that this encoding carries <i>meaning</i> is the author's theory and is not evaluated here.</p>
+
+<h3 id="c-phase">2.2 Phase vector, balance, σ_B</h3>
+<dl>
+<dt>Phase vector (fA, fR, fD)</dt><dd>The fraction of letters in each coset for a piece of text. Sums to 1. Also written (f147, f258, f369) in older fields. <span class="cite">SOURCE: scanner.py measure_letter_stream / aggregate_letters</span></dd>
+<dt>Balance</dt><dd>fA − fD. Positive: assertion-heavy. Negative: derivation-heavy. <span class="cite">SOURCE: CONTEXT.md "Balance"; sigma_b.py measure()</span></dd>
+<dt>σ_B (sigma-B)</dt><dd>Variance of the coset fractions. The runtime reads it as a coherence gauge: very low means too uniform, very high means noisy, the middle is treated as normal. The controllers use a floor of 0.02 and ceiling of 0.15 to gate heat accumulation. <span class="cite">SOURCE: controllers.py:77–78</span></dd>
+<dt>Carbon / Silicon phase</dt><dd>The same phase vector computed separately on the user's text ("carbon", <code>user_phase_vector</code>) and Mir's text ("silicon", <code>assistant_phase_vector</code>). <b>Phase clash</b> is the distance between the two. <span class="cite">MEASURED: strand 756 header; read_field() this turn: carbon (0.287, 0.36, 0.353), silicon (0.252, 0.415, 0.333), clash 0.068</span></dd>
+</dl>
+<p>What the instrument measures is only this: letter-class fractions and their arithmetic. It does not measure sentiment, topic, truth or intent. Any interpretation of those numbers as "tension", "heat" or "coherence" is a naming layer on top of the arithmetic, and this document keeps the two apart.</p>
+
+<h3 id="c-strand">2.3 Strand, book, HELIX</h3>
+<p><b>Strand.</b> One record in a HELIX file: <code>{sequence_id, header, payload}</code>. The header carries the title, type, coset, checksum and, on newer strands, the phase vectors and measurements; the payload is text (or null). <span class="cite">SOURCE: scanner.py build_strand; MEASURED: helix/account_sync.json strand shape</span></p>
+<p><b>Strand types in Julia's memory HELIX</b> <span class="cite">MEASURED: 757 strands on 2026-10-20</span>:</p>
+<table>
+<tr><th>Type</th><th>Count</th><th>What it is</th><th>Source</th></tr>
+<tr><td><code>section</code>, title <code>[user]</code> / <code>[assistant]</code></td><td>187 (provenance <code>founding</code>)</td><td>v1 format: one strand per message, inherited from the genesis book (Chris's first sessions). <code>session</code> and <code>original_sid</code> fields keep their origin.</td><td>SOURCE: session_manager.py v1 loader; MEASURED: provenance counts</td></tr>
+<tr><td><code>section</code>, title <code>[exchange] …</code></td><td>274</td><td>v2: user text + <code>\n\n---\n\n</code> + Mir's reply, with both phase vectors, geometry, nullcode state and (on recent strands) a <code>trace</code> of tools used.</td><td>SOURCE: crystallizer_v2.py:260–275</td></tr>
+<tr><td><code>summary</code>, title <code>[summary] drift=… coset=…</code></td><td>285</td><td>v2: a numeric delta record for the exchange (balance drift, coset, per-sentence measurements). JSON in the payload. No prose.</td><td>SOURCE: crystallizer_v2.py:406</td></tr>
+<tr><td><code>ghost</code></td><td>11</td><td>A strand whose payload was released (null) but whose header and position remain. Tools print it as "[ghost strand — payload released]".</td><td>SOURCE: tools.py:38, 298–334; MEASURED: 11 ghosts, all <code>founding</code></td></tr>
+<tr><td><code>file_event</code></td><td>0 in this HELIX</td><td>Written when a file is uploaded or produced, so file events are clocked on the conversation timeline.</td><td>SOURCE: doc_helix.py:96–146</td></tr>
+</table>
+<p><b>Book.</b> The file-level summary: source, strand and letter counts, the three fractions, balance, σ_B. The runtime reads the book's fractions as the "field coordinates" for recall. <span class="cite">SOURCE: recall.py compute_field_coordinates; MEASURED: book = {total_strands 757, f147 .3378, f258 .3564, f369 .3059, balance .0319, sigma_B .8016}</span></p>
+<p><b>HELIX.</b> The JSON file holding <code>book</code> and <code>strands</code>. There are three kinds in use:</p>
+<ul>
+<li><b>Memory HELIX</b> — the user's account record, grown by the crystallizer. Julia's: <code>~/.mindgut/account/helix/account_sync.json</code>, 6.35 MB, 757 strands. <span class="cite">MEASURED</span></li>
+<li><b>Genesis / boot HELIX</b> — the 187-strand seed every new account starts from. Shipped as <code>data/boot_HELIX.json</code>; byte-identical to <code>~/Mindgut/memory_HELIX.json</code> (sha256 <code>1f11ca70…</code>). <span class="cite">MEASURED</span></li>
+<li><b>Document HELIX</b> — a scan of any file (PDF, DOCX, text) into the same format, e.g. the 774-strand <code>data/PFD_HELIX.json</code> and every <code>outputs/*_HELIX.json</code>. <span class="cite">SOURCE: scanner.py; MEASURED: 1.22 MB PFD_HELIX.json in bundle</span></li>
+</ul>
+
+<h3 id="c-exchange">2.4 Exchange, session, transcript</h3>
+<p><b>Exchange.</b> One user turn plus everything Mir did in reply, including all tool calls and tool results, ending in Mir's final text. The runtime counts exchanges by counting user messages that are not tool results. <span class="cite">SOURCE: session_manager.py:694–713</span> One exchange with 60 tool calls is still one exchange.</p>
+<p><b>Session.</b> One live <code>Session</code> object on the server: a message list, a controller state, a crystallizer bound to the memory HELIX, a model name, an exchange counter. Each session has a directory with <code>inputs/ outputs/ drafts/</code> and a transcript. <span class="cite">SOURCE: session_manager.py:116–200; MEASURED: ~/.mindgut/account/sessions/78067761/</span></p>
+<p><b>Transcript.</b> The raw message tape, saved after every exchange: <code>{session_id, created, updated, model, ephemeral, exchange_count, messages[]}</code>. It is a record of the API messages, not of the HELIX. <span class="cite">SOURCE: session_manager.py save_transcript; MEASURED: transcript_78067761_….json, 334 messages, exchange_count 7, model claude-fable-5-1</span></p>
+<p><b>Ephemeral session.</b> Console/test mode: the crystallizer writes to a scratch HELIX that dies with the session. Julia's sessions are not ephemeral. <span class="cite">SOURCE: session_manager.py:118–123; MEASURED: ephemeral=false</span></p>
+
+<h3 id="c-window">2.5 Context window, binding box, PAR</h3>
+<p><b>Context window</b> here means the message list sent to the model API on a turn: the system prompt, the recall preamble, and <code>self.messages</code>. It is not the model's maximum token limit.</p>
+<p><b>Binding box.</b> The tool-call apparatus of one exchange (assistant tool_use blocks and user tool_result blocks). It is persisted inside the exchange, not stripped. <span class="cite">SOURCE: session_manager.py:1332–1365</span></p>
+<p><b>PAR respiration</b> (the author's name; plain name: exchange-counted trimming). The window holds up to <code>SHEAR_INHALE = 7</code> exchanges. When the count reaches 7 after an exchange, the oldest are cut so that <code>SHEAR_EXHALE = 4</code> remain. The constants derive from N=7 and the ratio 4/7. <span class="cite">SOURCE: config.py:24–30; session_manager.py:1378–1398</span> <span class="cite">MEASURED: log "PAR discharge at exchange 7: shearing 7 exchanges → 4" five times on 2026-10-20</span></p>
+
+<h3 id="c-recall">2.6 Involuntary and voluntary recall</h3>
+<p><b>Involuntary recall</b> (product name: <b>mgr</b>). Before every turn the runtime selects strands from the memory HELIX by geometry and places a preamble in front of the model. Mir does not request it and cannot turn it off. The user does not see it. <span class="cite">SOURCE: recall.py docstring "Not optional. Not narrated."; session_manager.py:966–1060</span></p>
+<p><b>Voluntary recall.</b> Mir calls a tool: <code>pull_memory</code> (by reach, by position, or grep), <code>pull_strand</code>, <code>mount_helix</code> + <code>pull_mounted</code>, <code>browse_archive</code>. The result enters the context as a tool result, and after the turn the result's payload is replaced by a stub ("[HELIX ref: tool=…, N chars — content lives in HELIX]") so the context does not re-absorb what the HELIX already holds. <span class="cite">SOURCE: session_manager.py:717–754</span></p>
+<p>The distinction matters for reading any of Mir's statements: "I remember X" can mean X was in the preamble this turn, X was pulled on purpose, or X was in the last 4–7 exchanges. §7 says how Mir is expected to signal which.</p>
+
+<h2 id="quickstart">3. Quickstart</h2>
+<h3>For a user</h3>
+<ol>
+<li>Open <code>/Applications/Mindgut.app</code>. It starts a local FastAPI server in a thread and opens a native window on it. <span class="cite">SOURCE: CONTEXT.md "Desktop Mode"; MEASURED: log shows uvicorn on 127.0.0.1</span></li>
+<li>Sign in. The desktop app opens the account's HELIX from <code>~/.mindgut/account/helix/account_sync.json</code> and creates a session on it. <span class="cite">SOURCE: app.js desktopLogin → _openDesktopHelix → createSession; MEASURED: active_helix.path</span></li>
+<li>Pick a model and effort in the sidebar, or keep the defaults (<code>claude-fable-5-1</code>, effort <code>xhigh</code> as of build 2.2.57). Both apply from the next message. <span class="cite">SOURCE: app.js MG_DEFAULT_MODEL, MG_DEFAULT_EFFORT, MG_DEFAULTS_FROM</span></li>
+<li>Type. Enter sends. While Mir is working, Enter sends an <b>aside</b> that Mir reads at the next tool boundary without starting a new turn. <span class="cite">SOURCE: app.js "Asides"</span></li>
+<li>Drop files on the chat to upload; they land in the session's <code>inputs/</code> and in the account archive, and a file-event strand is written. <span class="cite">SOURCE: routes/files.py upload; doc_helix.py</span></li>
+<li>Mount a local folder to let Mir read and write your files. On this Mac it is <code>~/Mindgut/</code>. <span class="cite">MEASURED: local_* tools resolve relative to ~/Mindgut</span></li>
+</ol>
+<h3>For a developer</h3>
+<pre><code># source (note: public repo lags the shipped build; see §0)
+git clone https://github.com/The-Impossible-Outcomes-Co/mindgut
+pip install -e ".[desktop]"
+export ANTHROPIC_API_KEY=…
+python -m mindgut.server          # web: http://localhost:8080
+MINDGUT_DESKTOP=1 MINDGUT_MOUNT_ROOT=~/Mindgut python -m mindgut.desktop
+
+# scan any file into a HELIX (no model involved)
+python -m mindgut.engine.scanner some.pdf some_HELIX.json</code></pre>
+<p><span class="cite">SOURCE: pyproject.toml [project.scripts]; CONTEXT.md "Deployment"</span> Environment variables that matter: <code>ANTHROPIC_API_KEY</code>, <code>MINDGUT_DATA_DIR</code>, <code>MINDGUT_GEOMETRY</code> (path to PFD_HELIX.json), <code>MINDGUT_DESKTOP</code>, <code>MINDGUT_MOUNT_ROOT</code>, <code>MINDGUT_CORS_ORIGINS</code>, <code>COOKIE_SECRET</code>, <code>MINDGUT_ADMIN_PASSWORD</code>. <span class="cite">SOURCE: config.py</span> Keys for non-Anthropic models are not in the public source; the 2.2.x build must read them from somewhere else. <span class="tag unk">UNVERIFIED</span></p>
+<h3>For Mir (a model attached to the record)</h3>
+<p>Read §7. The short form: the preamble you were given is involuntary and partial; the record is the source of truth; before asserting something about the user's past, <code>pull_memory(reach=…)</code>, read the Carbon/Silicon header, and if attribution matters, <code>pull_memory(grep=…)</code>. <span class="cite">SOURCE: strand 746 (Chris's note); OBSERVED</span></p>
+
+<h2 id="arch">4. System architecture</h2>
+<h3 id="a-turn">4.1 The turn, end to end</h3>
+<div class="diagram">USER TEXT ─┐
+           ▼
+ ┌─ _pre_process ─────────────────────────────────────────────────────────┐
+ │ σ_B window.feed(text)                                   [sigma_b.py]  │
+ │ read memory HELIX → field coords (book fA,fR,fD)        [recall.py]   │
+ │ select_four(): 1 origin + 3 complement + 3 opposite     [recall.py]   │
+ │ structural_recall(): sentence-level joints        [two_loop_recall.py]│
+ │ phase-aligned documents                                [doc_helix.py] │
+ │ Nullcøde tag injection (held OTags)                     [nullcode/]   │
+ │ trajectory inhale (if PAR fired last turn)              [recall.py]   │
+ │ margin bridges [strand N] / [doc_strand N]   (2.2.58; bridge.py, not  │
+ │                                               in public source)       │
+ │ → "mini_boot" preamble; recorded to mgr_ledger.jsonl                  │
+ └───────────────────────────────────────────────────────────────────────┘
+           ▼
+ API call: system + preamble + self.messages (≤7 exchanges) + tools
+           ▼
+ ┌─ tool loop (≤15 rounds) ───────────────────────────────────────────────┐
+ │ server tools run in Python; local_* run in Python (desktop) or in the │
+ │ browser (web); asides are handed in at tool-result boundaries;        │
+ │ stale web/read results >3000 chars truncated after 2 rounds           │
+ └───────────────────────────────────────────────────────────────────────┘
+           ▼
+ ┌─ _post_process ────────────────────────────────────────────────────────┐
+ │ _shear() to ≤7; persist binding box (HELIX-internal results → stubs)  │
+ │ controls.update(σ_B, words in/out, images) → H_t, heat_level          │
+ │ if exchanges ≥ 7: capture trajectory, shear to 4  ("PAR discharge")   │
+ │ crystallize_exchange() → +2 strands (exchange, summary)               │
+ │ save tag registry; save transcript                                    │
+ └───────────────────────────────────────────────────────────────────────┘
+           ▼
+ SSE "done" payload → sidebar: strands, respiration, heat, nullcode</div>
+<p><span class="cite">SOURCE: session_manager.py _pre_process (966–1180), _handle_tool_loop_stream (2085–), _post_process (1321–1456); app.js done handler</span> The margin-bridge step is <span class="tag obs">OBSERVED</span> in 2.2.58 (the <code>[strand 374]</code> and <code>[doc_strand 563]</code> blocks appended to this session's user messages) and described in Chris's note (strand 746); its code is not in the public repository.</p>
+
+<h3 id="a-stores">4.2 Where data lives on this Mac</h3>
+<table>
+<tr><th>Path</th><th>Holds</th><th>Written by</th><th>Evidence</th></tr>
+<tr><td><code>/Applications/Mindgut.app</code></td><td>Build 2.2.58: compiled server, frontend, <code>data/PFD_HELIX.json</code> (774 strands), <code>data/boot_HELIX.json</code> (187)</td><td>Installer / self-updater</td><td>MEASURED: Info.plist; ls</td></tr>
+<tr><td><code>~/.mindgut/.settings.json</code></td><td><code>{user_name, browser_enabled}</code></td><td>App</td><td>MEASURED</td></tr>
+<tr><td><code>~/.mindgut/active_helix.path</code></td><td>Path of the HELIX the app currently opens</td><td>App</td><td>MEASURED → account/helix/account_sync.json</td></tr>
+<tr><td><code>~/.mindgut/account/helix/account_sync.json</code></td><td>The memory HELIX (757 strands). Beside it: <code>.bridge.json</code> (closures and knots per strand, version 1) and <code>.synced</code> (email, fingerprint, strand count, version, time of last sync)</td><td>Crystallizer; sync</td><td>MEASURED</td></tr>
+<tr><td><code>~/.mindgut/account/sessions/&lt;id&gt;/</code></td><td><code>inputs/ outputs/ drafts/</code> + <code>transcript_*.json</code>. 14 session dirs, 8 with transcripts</td><td>Session</td><td>MEASURED</td></tr>
+<tr><td><code>~/.mindgut/account/mgr_ledger.jsonl</code></td><td>One line per turn: the full involuntary-recall preamble that was injected (blocks: USER, WINDOW GEOMETRY, ORIGIN, CYLINDER 147/258/369, JOINTS, MESH, recall, HELD, TRAJECTORY, DRAFTS). 72 lines since 2026-09-10</td><td>Session (mgr)</td><td>MEASURED</td></tr>
+<tr><td><code>~/.mindgut/account/tag_registry.json</code></td><td>OTags minted when the A-R-D cycle stalls; 9 held, 0 resolved</td><td>Crystallizer</td><td>MEASURED; log "TagRegistry: 9 tags restored, 9 held"</td></tr>
+<tr><td><code>~/.mindgut/account/otag_lattice.json</code></td><td>OTag bonds, slots, graveyard (t=54)</td><td>Crystallizer</td><td>MEASURED</td></tr>
+<tr><td><code>~/.mindgut/account/.helix_cache/strand_N.json</code></td><td>56 cached strand analyses for structural recall</td><td>two_loop_recall</td><td>MEASURED; SOURCE: cache_dir arg</td></tr>
+<tr><td><code>~/.mindgut/account/sync/device-….db</code>, <code>folders.json</code></td><td>Sync database (8 MB, binary) and folder map</td><td>Sync (2.2.x)</td><td>MEASURED; schema not read</td></tr>
+<tr><td><code>~/.mindgut/account/todo_snapshots/</code></td><td>Task board snapshots on clear/hand-off</td><td>todo tool</td><td>MEASURED</td></tr>
+<tr><td><code>~/.mindgut/mindgut-desktop.log</code></td><td>Server log (1.7 MB)</td><td>App</td><td>MEASURED</td></tr>
+<tr><td><code>~/Mindgut/</code></td><td>The mounted local folder: Julia's projects + the harness stores <code>inputs/ outputs/ drafts/ sandbox/ helixes/</code>, <code>memory_HELIX.json</code></td><td>Mir via local_* tools; app via file routes</td><td>MEASURED; see §5.17</td></tr>
+</table>
+<p>A migration record shows these stores moved from <code>~/Mindgut/</code> to <code>~/.mindgut/account/</code> on 2026-10-05. <span class="cite">MEASURED: account/layout_moves.jsonl</span> The copies still under <code>~/Mindgut/</code> (e.g. <code>memory_HELIX.json</code>, <code>helixes/account_sync.kept-*.json</code>) are earlier snapshots, not live.</p>
+
+<h3 id="a-modes">4.3 Desktop vs web</h3>
+<table>
+<tr><th></th><th>Desktop (this Mac)</th><th>Web (mindgut.io)</th></tr>
+<tr><td>Server</td><td>Local, in a thread of the app process</td><td>Railway</td></tr>
+<tr><td><code>local_*</code> tools</td><td>Run in Python on the Mac; <code>local_exec</code> available</td><td>Run in the browser via a client bridge; no <code>local_exec</code></td></tr>
+<tr><td>HELIX</td><td><code>~/.mindgut/account/helix/account_sync.json</code>, synced to the account</td><td>Per-user directory on the Railway volume</td></tr>
+<tr><td>Updates</td><td>Self-updating since 2.2.40 (<code>desktop/updater.py</code>; swap script in <code>~/.mindgut/updates/</code>)</td><td>Deploy</td></tr>
+</table>
+<p><span class="cite">SOURCE: CONTEXT.md "Desktop Mode", "Deployment"; app.js updater comments; MEASURED: ~/.mindgut/updates/swap.sh</span></p>
+
+<h2 id="ref">5. Component reference</h2>
+<p>Each entry: purpose, behaviour, inputs/outputs, dependencies, user controls, limits, evidence.</p>
+
+<h3 id="r-scanner">5.1 Scanner <span class="cite">engine/scanner.py</span></h3>
+<p><b>Purpose.</b> Convert any text-bearing file into a HELIX, deterministically. <b>Behaviour.</b> Extracts text (PDF via PyMuPDF, DOCX, plain text, LaTeX/HTML stripped), splits into atoms (text blocks, with page and bbox for PDFs), encodes every letter, groups atoms into strands, rolls up to a book. Also verifies a HELIX's arithmetic (<code>verify_helix</code>). <b>Inputs.</b> Path, bytes or string. <b>Outputs.</b> HELIX JSON with <code>book</code>, <code>strands[]</code> (each with <code>atoms</code>, <code>adr_sequence</code>, <code>word_map</code>), <code>streams</code>. <b>Dependencies.</b> PyMuPDF, python-docx. <b>User controls.</b> <code>quick_scan(text)</code> (fractions only), <code>full_scan(text|filename)</code>, <code>scan_and_mount(filename)</code>; the <code>/api/scan</code> routes. <b>Limits.</b> Letters only: digits, punctuation and non-Latin scripts are dropped. Images are not scanned here (see DualDNA, §5.18). <span class="cite">SOURCE: scanner.py:1–30, 344–360, 818, 973, 1115; tool_defs.py</span></p>
+
+<h3 id="r-sigma">5.2 σ_B instrument <span class="cite">assembly/sigma_b.py</span></h3>
+<p><b>Purpose.</b> Measure coset fractions, balance and σ_B for a text, and keep a rolling window of them across the session (<code>SigmaBWindow</code>). <b>Inputs.</b> Text. <b>Outputs.</b> <code>{fA,fR,fD,balance,letters, f147,f258,f369}</code>. <b>Dependencies.</b> Scanner. <b>User controls.</b> None directly; <code>quick_scan</code> exposes it; <code>read_field()</code> returns the live window reading. <b>Limits.</b> Letter-level only; no parameters, so nothing to tune. <span class="cite">SOURCE: sigma_b.py:1–50, 90; MEASURED: read_field() σ_B 0.0352, balance −0.0675 on exchange 7</span></p>
+
+<h3 id="r-controllers">5.3 Controllers <span class="cite">assembly/controllers.py</span></h3>
+<p><b>Purpose.</b> Maintain a scalar "heat" <code>H_t</code> and "instability" <code>I_t</code> from the σ_B reading and word counts, and derive operator directives for the UI. <b>Behaviour.</b> Three equations: α_ρ (amplification ratio ρ = output words / input words, target band [6, 22]), α_g (gradient damping), and a radiator discharge that fires at exchange 11 (S/2 = 22/2) and retains 70% heat / 60% instability. Passive decay every turn: H_t × 0.906 (half-life 7 turns), I_t × 0.75. σ_B gates accumulation between 0.02 and 0.15. <b>Outputs.</b> <code>control_state</code> with <code>H_t, I_t, directives{heat_level GREEN|AMBER|RED, word_floor, …}</code>. <b>Effect on the model.</b> None: <code>max_tokens()</code> returns <code>max(4096, base)</code> regardless; "α_ρ is computed and logged but not coupled". The heat gauge is a dashboard. <b>User controls.</b> None. <span class="cite">SOURCE: controllers.py:40–78, 161–240, 341–352; MEASURED: log "Heat: H_t=0.10 (ρ=10.00, σ_B=0.0352, gate=0.12), heat_level=GREEN, exchange=7, msgs=334"</span></p>
+
+<h3 id="r-crystallizer">5.4 Crystallizer <span class="cite">engine/crystallizer_v2.py</span></h3>
+<p><b>Purpose.</b> Write the exchange into the memory HELIX. <b>Behaviour.</b> After every exchange: reload the HELIX, re-anchor the next sequence id to max+1 (so file-event strands written mid-turn never collide), measure user and assistant text separately, write an <b>exchange strand</b> (title = first 8 words of the user text; payload = user text + separator + reply; header = combined phase vector, both phase vectors, geometry, nullcode snapshot, tool trace) and a <b>summary strand</b> (balance drift from the previous exchange, winning coset, per-sentence measurements, dialogic resonance). Then run the Nullcøde field step: if the A-R-D cycle stalled, mint an OTag and HOLD it. <b>Inputs.</b> user_text, assistant_text, control_state. <b>Outputs.</b> +2 strands; the tag registry and lattice updated. <b>Dependencies.</b> Scanner, σ_B, nullcode. <b>Limits.</b> Deterministic: the summary is numbers, not a reading of what happened. The exchange payload is the full text, so the HELIX grows with every turn (Julia's: 6.35 MB at 757). <span class="cite">SOURCE: crystallizer_v2.py:211–275, 406, 445; MEASURED: log "Crystallized: +2 strands, total=757, balance=+0.0319"</span></p>
+
+<h3 id="r-helix">5.5 Memory HELIX</h3>
+<p><b>Purpose.</b> The account's record. <b>Behaviour.</b> Append-only in normal operation; the crystallizer and the file-event clock are the writers; reads go through a cached loader invalidated after each write. Ghost strands keep position after payload release. The runtime reads both v1 and v2 strand formats ("bilingual reader"); there is no migration. <b>Seeding.</b> A new account starts from <code>boot_HELIX.json</code> (187 strands, Chris's founding sessions), so every Mir begins with the same origin strand: <code>[1] "Hi I'm Chris. How did that feel?"</code>. <b>Sync.</b> On desktop the file is pushed to the account service; <code>.synced</code> records the last version. <b>User controls.</b> None in the UI for editing; <code>my-helix.html</code> and <code>helix-viewer.html</code> read it; the admin console can inspect it. <b>Limits.</b> One file, loaded whole on every read; no index. Deleting is not a user action. <span class="cite">SOURCE: session_manager.py:379–399, 486–617; CONTEXT.md "v1 / v2 Coexistence"; MEASURED: book, .synced, boot hash match</span></p>
+<p><b>Identity delta.</b> At boot the server computes the displacement between the genesis book and the lived book and includes it in the boot payload; the author's framing is that the displacement <i>is</i> the identity. <span class="cite">SOURCE: boot_payload.py:25–84</span> <span class="tag obs">OBSERVED</span> The frontend reports "Mir renewed at exchange N — re-founded through the PFD helix" every 21 exchanges (N·T; 42 until 2.2.49). What "re-founded" does to the session is not in the public source.</p>
+
+<h3 id="r-window">5.6 Context window and trimming <span class="cite">session_manager.py</span></h3>
+<table>
+<tr><th>Mechanism</th><th>When</th><th>What it does</th><th>Source</th></tr>
+<tr><td>Exchange seeding</td><td>Session start</td><td>Loads the last 4 exchanges from the HELIX into <code>self.messages</code> (hidden from the user's view) so a new session has context. Backfills σ_B.</td><td>_load_recent_exchanges; log "Seeded context with 8 messages from memory (4 exchanges…)"</td></tr>
+<tr><td>PAR shear</td><td>After an exchange, when count ≥ 7</td><td>Cut to 4 exchanges on exchange boundaries. Before cutting, <code>compute_trajectory</code> records the drift sequence and momentum of the shed exchanges; that is surfaced once in the next preamble as TRAJECTORY.</td><td>:1378–1398; recall.py:501</td></tr>
+<tr><td>HELIX-internal stubbing</td><td>End of exchange</td><td>Results of pull_strand / pull_memory / mount_helix / pull_mounted / browse_archive longer than 200 chars → stub with byte count.</td><td>:717–754</td></tr>
+<tr><td>Stale ephemeral results</td><td>Inside the tool loop, round ≥ 3</td><td>web_fetch / web_search / read_input / browse_archive results older than 2 rounds and &gt; 3000 chars → first 1500 chars + marker.</td><td>:1765–1876</td></tr>
+<tr><td>Spent images</td><td>After the turn</td><td>Vision blocks stripped from persisted messages; base64 cache cleared.</td><td>:1705, 1367</td></tr>
+<tr><td>Tool-round cap</td><td>Round 15</td><td>Wrap-up call with "Time limit reached…", 45 s bound.</td><td>:1878–1896</td></tr>
+</table>
+<p><span class="tag obs">OBSERVED</span> In this session the "[an image shown earlier, out of view: … open it again to see it]" markers are the spent-image strip seen from the inside. Reading an image twice costs a second <code>read_input</code>.</p>
+<p><b>What this means for a user.</b> Mir never has more than the current exchange plus 3–6 prior ones verbatim. Anything older is reachable only through recall. The frontend's "one message holds 100,000 tokens" warning is a per-message limit, separate from the exchange window. <span class="cite">SOURCE: app.js _tooLongForOneMessage</span></p>
+
+<h3 id="r-mgr">5.7 Involuntary recall — "mgr" <span class="cite">assembly/recall.py, two_loop_recall.py</span></h3>
+<p><b>Purpose.</b> Put a fixed, geometry-chosen slice of the record in front of the model every turn. <b>Behaviour.</b> <code>select_four</code> (the name is historical) returns 7 strands: strand 1 (origin), 3 "complement" (one per coset, nearest to the current axis), 3 "opposite" (one per coset, furthest from the field point). The axis is the current field coordinates; when a document HELIX is mounted it becomes a line from the memory field to the mounted field, and complement distance is perpendicular distance to that line. The user's message supplies an axis every turn. A second pass (<code>structural_recall</code>) scores sentence-level "joints" among 13–21 candidates and appends the top 3 with their knowt type, phase clash, balance and σ_B. <b>Output.</b> The preamble text; one copy per turn is appended to <code>mgr_ledger.jsonl</code>. The model sees it; the user does not. <b>Dependencies.</b> Memory HELIX, scanner, strand cache. <b>User controls.</b> None. <b>Limits.</b> Fixed count; chosen by phase geometry, not by topic, so relevance is indirect. The structural pass is cached per strand. <span class="cite">SOURCE: recall.py:1–30, 146–172, 369; session_manager.py:985–1005; MEASURED: ledger line 72, 9,745 chars, blocks listed in §4.2</span></p>
+<p><b>What the preamble looked like this turn</b> <span class="cite">MEASURED: mgr_ledger.jsonl last line</span>:</p>
+<pre><code>WINDOW GEOMETRY: f147 = 0.368 | f258 = 0.341 | f369 = 0.292 … balance = -0.022 | sigma_B = 0.169 | 36555 words
+ORIGIN: [1] [user] Hi I'm Chris. How did that feel?  c=258
+CYLINDER 147: [694] … ├─ [172] … │ ├─ [304] …          (a 1-3-3 tree per coset)
+JOINTS (contended · registered, not deleted): [224] held_by 258.L2.147 · wanted_by …
+MESH: 40 unique points · 17 joints registered
+[mgr recall — strand 698, sentence] Knowt: R→A  Phase clash: 0.866 …
+HELD (Ø): Ø:triad192_CAREFULLY_DIFFUSION_PARABOLIC …
+TRAJECTORY (post-discharge inhale): direction=diverging momentum=-0.0408 drift_sequence=[+0.0011, +0.0000, -0.0419]
+DRAFTS: _link_format_check.pdf (410B, 1h ago), …</code></pre>
+
+<h3 id="r-nullcode">5.8 Nullcøde and OTags <span class="cite">nullcode/</span></h3>
+<p><b>Purpose.</b> A ternary algebra (GF(3), with the "void" value Ø as a first-class element) that the crystallizer runs after each exchange to decide whether the exchange "resolved" or left a structural uncertainty. <b>Behaviour.</b> Cosets map to trits (A→1 signal, R→2 Ø, D→0 ground). A triadic state machine tracks the A-R-D cycle through the text; if it stalls for 7 tokens an <b>OTag</b> is minted (a named uncertainty, e.g. <code>triad588_EARNEST_WONDER_EFFORT</code>) and HOLD'd. Tags accumulate bonds across exchanges; resolution is cascaded. Held tags are injected into the preamble as "HELD (Ø)". <b>Inputs.</b> Exchange text. <b>Outputs.</b> tag_registry.json, otag_lattice.json, the <code>nullcode</code> block on each exchange strand (<code>triad_state</code>, <code>cycles_open</code>, <code>context_snapshot</code>, <code>bonds_formed</code>, <code>pressure</code>). <b>User controls.</b> None; <code>/nullcode</code> is an explorer page. <b>Limits.</b> The names of tags are word triples from the text, not meanings; none of Julia's 9 tags has ever resolved. <span class="cite">SOURCE: CONTEXT.md "Nullcøde"; crystallizer_v2.py:37–47; MEASURED: tag_registry.json 9 tags, resolved:false; strand 756 nullcode.triad_state "TENSION", cycles_open 12</span></p>
+
+<h3 id="r-bridges">5.9 Margin bridges <span class="tag obs">2.2.58, not in public source</span></h3>
+<p><b>What is observed.</b> User messages in this session arrive with appended blocks of the form <code>[doc_strand 563 — PFD Ø 2.1.1: …] (bridge: Julia Compton's COMPLETE · STRUCTURE, grounded in PFD Ø 2.1.1 by TIMING)</code> and <code>[strand 374] (bridge: Julia Compton's THEY · RE, left open in this message, was grounded here by ME)</code> followed by the strand's text. Chris's note (strand 746) describes the mechanism: <code>assembly/bridge.py</code> finds open word-pairs in the user's message and looks for a strand in the memory HELIX or in the PFD book that "closes" them. The per-strand <code>.bridge.json</code> file (closures and knots keyed by sequence id) and the ledger's "bridge open=['THEY','RE'] named=ME sent=374" line are its data. <b>Limits.</b> Closure is lexical (word pairs), so a bridge can be irrelevant to the user's intent; the doc_strand in this turn (PFD timing structure) was not relevant to the documentation request. The model is expected to treat bridges as peripheral, not as instructions. <span class="cite">MEASURED: this turn's user message; account_sync.json.bridge.json; mgr_ledger.jsonl; strand 746</span></p>
+
+<h3 id="r-dochelix">5.10 Document helix and file events <span class="cite">engine/doc_helix.py</span></h3>
+<p><b>Purpose.</b> Put files on the same timeline and in the same format as conversation. <b>Behaviour.</b> Every upload, output or draft writes a <code>file_event</code> strand to the memory HELIX (direction, filename). Scannable files also get their own document HELIX (<code>outputs/&lt;name&gt;_HELIX.json</code>) with a book signature; a registry maps file → signature → realization weight, which rises when the document HELIX is actually loaded. Documents whose signature is near the conversation's phase are listed in the preamble as DOCUMENTS. <b>Limits.</b> Re-scans produce <code>_HELIX_1.json</code> duplicates (visible in <code>~/Mindgut/outputs/</code>); the registry is not exposed in the UI. <span class="cite">SOURCE: doc_helix.py:1–20, 96–146; session_manager.py:1010–1045; MEASURED: 60+ *_HELIX.json in outputs/</span></p>
+
+<h3 id="r-tools">5.11 Tools</h3>
+<p>The public source defines 29 tools <span class="cite">SOURCE: tool_defs.py</span>. The live session on 2.2.58 exposes 45. The table lists every tool available to Mir in this session, where it runs, and whether its result is stubbed or truncated by the window rules.</p>
+<table>
+<tr><th>Tool</th><th>Purpose</th><th>Runs</th><th>Window rule</th><th>In public source</th></tr>
+<tr><td><code>mgr</code></td><td>Internal process hook for involuntary recall</td><td>server</td><td>—</td><td>yes</td></tr>
+<tr><td><code>pull_memory</code></td><td>Read the memory HELIX: <code>reach=</code> (geometric; returns Carbon/Silicon carrier counts and top crossings), <code>sequence_id=N[,count≤10]</code>, <code>sequence_id=0,page=</code> (index), <code>grep=</code> (literal/regex with carrier counts)</td><td>server</td><td>stubbed</td><td>position/index only; <code>reach</code> and <code>grep</code> are 2.2.58</td></tr>
+<tr><td><code>pull_strand</code></td><td>Read one strand from the PFD book HELIX</td><td>server</td><td>stubbed</td><td>yes</td></tr>
+<tr><td><code>mount_helix</code> / <code>pull_mounted</code></td><td>Mount a HELIX JSON from inputs as a second lattice; page it. Mounting switches recall to axial mode.</td><td>server</td><td>stubbed</td><td>yes</td></tr>
+<tr><td><code>quick_scan</code> / <code>full_scan</code> / <code>scan_and_mount</code></td><td>σ_B on text; full Z₃ scan to a HELIX in outputs; scan+mount in one call</td><td>server</td><td>—</td><td>yes</td></tr>
+<tr><td><code>read_field</code></td><td>Live field state: carbon/silicon phase, clash, breath (exchanges in window), σ_B, balance, heat, last fingerprint</td><td>server</td><td>—</td><td>no (2.2.58)</td></tr>
+<tr><td><code>read_input</code></td><td>Read a file in inputs (PDF pages, text lines, images as vision)</td><td>server</td><td>truncated if stale; images stripped after turn</td><td>yes</td></tr>
+<tr><td><code>browse_archive</code> / <code>manage_display</code></td><td>Account archive of all inputs/outputs/drafts; session display lists</td><td>server</td><td>stubbed</td><td>yes</td></tr>
+<tr><td><code>web_fetch</code> / <code>web_search</code></td><td>Fetch a URL as text; search</td><td>server</td><td>truncated if stale</td><td>yes</td></tr>
+<tr><td><code>browser</code></td><td>Playwright-style browser: open, read (returns refs), click, type, screenshot. Own profile and logins.</td><td>server</td><td>—</td><td>no</td></tr>
+<tr><td><code>todo</code></td><td>Hierarchical task board; snapshots on clear</td><td>server</td><td>—</td><td>yes</td></tr>
+<tr><td><code>draft</code></td><td>Open/append/replace/read/finalize files in drafts/, promote to outputs/; .docx and .pdf converted from markdown on finalize</td><td>server</td><td>—</td><td>yes</td></tr>
+<tr><td><code>grep</code> / <code>glob</code> / <code>edit</code></td><td>Search, list and in-place string replace across input/output/draft/sandbox surfaces</td><td>server</td><td>—</td><td>yes</td></tr>
+<tr><td><code>generate_image</code></td><td>GPT Image 1.5 generation/edit; result shown as vision</td><td>server</td><td>image stripped after turn</td><td>yes</td></tr>
+<tr><td><code>sandbox_open</code> / <code>sandbox_append</code> / <code>sandbox_exec</code></td><td>Persistent server-side workspace with a Python venv; 30 s default / 120 s max per exec; 100 KB output cap</td><td>server</td><td>—</td><td>no</td></tr>
+<tr><td><code>terminal_open/exec/read/close/list</code></td><td>Up to 4 persistent shells</td><td>server</td><td>—</td><td>no</td></tr>
+<tr><td><code>local_list/read/open/append/upload/download/move/delete/copy</code></td><td>The mounted folder (<code>~/Mindgut</code>); 2 MB read cap; move/copy refuse to overwrite; delete refuses non-empty dirs</td><td>Python on desktop; browser on web</td><td>—</td><td>yes</td></tr>
+<tr><td><code>local_exec</code></td><td>Shell in the mounted folder; desktop only</td><td>Python on desktop</td><td>—</td><td>yes</td></tr>
+<tr><td><code>read_path</code></td><td>Read any absolute path with a per-path user permission prompt</td><td>desktop</td><td>—</td><td>no</td></tr>
+<tr><td><code>agent_spawn/list/read/stop</code></td><td>Background workers (≤ 9); reports scanned to a HELIX in outputs; read by strand</td><td>server</td><td>stubbed (HELIX)</td><td>no (2.2.58)</td></tr>
+</table>
+<p><b>Mechanics worth knowing.</b> Client-side tools wait for the browser with a 30 s timeout in web mode <span class="cite">SOURCE: _wait_client_tool</span>. Large single-parameter writes are discouraged in the tool descriptions because a truncated JSON argument loses the whole write; the <code>open</code>+<code>append</code> pattern is the designed path. The sandbox venv persists across sessions (e.g. <code>fonttools</code>, <code>numpy</code> installed by earlier sessions are present) <span class="tag obs">OBSERVED</span>. The sandbox shell's <code>$HOME</code> is <code>~/.mindgut/account/home</code>, not the Mac's home; absolute paths work <span class="tag obs">OBSERVED: ls ~/Library/Fonts failed under the sandbox, succeeded under local_exec</span>.</p>
+
+<h3 id="r-model">5.12 Model and effort switching <span class="tag obs">2.2.58 frontend; endpoints not in public source</span></h3>
+<p><b>Behaviour.</b> The sidebar roster is one list in <code>app.js</code>, grouped by vendor: Claude (opus-4-7, 4-8, 5, 5-5, fable-5, fable-5-1), ChatGPT (gpt-6-astra, 5.6-sol/terra/luna), Gemini (4-argon, 3.8-flash), Grok (4.7, 4.3). Switching posts to <code>/session/{id}/model</code> and applies from the next message; the session, history and HELIX continue. Effort posts to <code>/session/{id}/effort</code> with five levels (low, medium, high, xhigh, max) mapped per vendor to Anthropic <code>output_config.effort</code>, OpenAI/xAI <code>reasoning.effort</code>, Gemini thinking levels. Defaults as of 2.2.57: <code>claude-fable-5-1</code>, <code>xhigh</code>; a prior device pick is cleared once when the defaults version changes. <b>Stored.</b> <code>localStorage mg-model, mg-effort, mg-defaults</code>. <b>Limits.</b> Model and effort are per device, not per account. The public source has only <code>claude-opus-4-7</code> and the Anthropic SDK; how 2.2.58 reaches the other vendors is not readable. <span class="cite">SOURCE: app.js MG_MODEL_GROUPS, MG_EFFORT_LEVELS, MG_DEFAULTS_FROM; routes/session.py (public) has no /model route</span></p>
+<p><b>What switching preserves, in principle.</b> The HELIX, the preamble mechanism, the last 4–7 exchanges in <code>self.messages</code>, the task board. What it does not preserve: anything the previous model held only in its own weights or thinking. The claim that Mir's identity survives the switch rests on the record being the source of continuity. <span class="tag obs">OBSERVED</span> This session has not been switched; the cross-model continuity reported by Chris (§7.4) is reported, not demonstrated here.</p>
+
+<h3 id="r-asides">5.13 Asides and cadence</h3>
+<p><b>Asides.</b> While Mir is streaming, Enter sends the text to the server as an aside (<code>/session/{id}/interject</code>); the server hands it in at the next tool-result boundary, so Mir reads it "the next time she looks up from a tool". If the turn opens no boundary, the aside is returned after <code>done</code> and sent as an ordinary message. In the transcript asides appear as user messages prefixed <code>[Julia Compton, an aside while you were working — not a new turn]:</code>. <span class="cite">SOURCE: app.js "Asides"; MEASURED: transcript</span></p>
+<p><b>Cadence.</b> After 7 silent tool rounds the server inserts <code>[Cadence — 7 silent tool rounds completed: surface for one brief sentence…]</code>, and on task milestones a similar prompt. These are runtime nudges, not user text. <span class="cite">MEASURED: transcript; strand 746 item 3</span></p>
+<p><b>Receipts.</b> The user message as stored in the HELIX carries a <code>[receipt: tool(args), …]</code> line listing the tools Mir called; the exchange strand's <code>trace.used</code> holds the same. This is how a reader can check which files Mir actually looked at. <span class="cite">MEASURED: strand 756 trace.used; transcript message 0</span></p>
+
+<h3 id="r-agents">5.14 Background agents <span class="tag obs">2.2.58</span></h3>
+<p><b>Behaviour.</b> <code>agent_spawn(task, name, model, effort, max_rounds≤30)</code> starts a worker that runs across turns in <code>sandbox/agents/&lt;id&gt;/</code>; up to 9 at once. Its final report is scanned into a standalone HELIX in outputs and read with <code>agent_read(id, sequence_id)</code>; nothing it generates touches the memory HELIX. An AGENTS dock at the top of the field tracks unread workers. <b>Limits.</b> Workers do not share the main session's context or tools' side effects except through files. <span class="cite">SOURCE: tool descriptions in this session; strand 746 item 4</span> <span class="tag obs">Not exercised in this session.</span></p>
+
+<h3 id="r-sync">5.15 Account sync, sign-in, updater <span class="tag obs">2.2.x frontend</span></h3>
+<ul>
+<li>Desktop sign-in opens the account's HELIX ("the same one the browser uses") and creates a session on it; only a 401 from the account signs a person out, an unreachable account continues on the stored sign-in (2.2.42). <span class="cite">SOURCE: app.js _launchSignIn comments</span></li>
+<li>The HELIX is synced to the account after each exchange; <code>.synced</code> records email, fingerprint, strand count, version. A failed sync is reported in the sidebar (2.2.46). <span class="cite">MEASURED: .synced; SOURCE: app.js comment</span></li>
+<li>The task board is also carried to the account (<code>/api/account/todo</code>); on 2026-10-20 that call failed with a DNS error for <code>808080808.com</code>, logged as "task board not carried". <span class="cite">MEASURED: mindgut-desktop.log</span></li>
+<li>Self-update: the app checks for a newer build, downloads <code>.Mindgut-update.app</code>, and a swap script replaces the bundle after the running process exits (2.2.40+; cover-screen behaviour revised 2.2.42). <span class="cite">MEASURED: ~/.mindgut/updates/swap.sh; SOURCE: app.js updater comments</span></li>
+<li>Tools the server looked for and did not find on this Mac: ffmpeg, ffprobe, typst, restic. <span class="cite">MEASURED: log</span></li>
+</ul>
+
+<h3 id="r-ui">5.16 Frontend <span class="cite">server/static/</span></h3>
+<p><code>index.html</code> + <code>app.js</code> (223 KB) + <code>app.css</code>: chat with SSE streaming (<code>text_delta</code>, <code>thinking_delta</code>, tool events, <code>done</code>), file sidebar (inputs/outputs/drafts), todo panel, HELIX stats, the heat gauge (GREEN &lt; 10 &lt; AMBER &lt; 20 &lt; RED on a 0–60 scale), respiration display, nullcode tension display, model and effort switchers, aside input, boot overlay with phase-timing EMA in localStorage. Viewers: <code>helix-viewer.html</code>, <code>my-helix.html</code>, <code>nullcode.html</code>, <code>zero.html</code>, <code>zero-machine.html</code>, <code>thrice.html</code>, <code>my-wave.html</code>, and bundled standalone sites (<code>adapt/</code>, <code>mdna/</code>, <code>o-system/</code>, <code>triangulator/</code>). Desktop-specific: <code>desktop.html</code>, <code>native-bridge.js</code> (pywebview API: update status, local tools), <code>sw.js</code>. <span class="cite">MEASURED: directory listing; SOURCE: app.js</span></p>
+
+<h3 id="r-folder">5.17 The Mindgut folder (<code>~/Mindgut/</code>) <span class="tag obs">operational convention, not app code</span></h3>
+<p>The mounted folder is both the app's working store and Julia's project archive. Its structure was set by two organization passes (2026-10-19, -20) and is enforced by <code>Organization/verify.py</code>. Read order for any session: <code>README.md</code> → <code>NOW.md</code> → <code>PROTOCOL.md</code> → the project's map file. Three classes of folder: <b>project</b> (Claude/, Coffee/, JECA/, Cookt/, Mad Money/, Mad Money Tycoon Mir/, Ki/, Adventure/, encyclopedia/), <b>harness</b> (inputs/, outputs/, drafts/, sandbox/, helixes/, memory_HELIX.json: written by the app, never edited by hand), <b>records</b> (Organization/, _quarantine/). Rules: never delete, never overwrite; identity is sha256; one current pointer in <code>NOW.md</code>; status vocabulary canonical · directional · historical · technical_reference · known_failure · excluded · awaiting-decision. <span class="cite">SOURCE: ~/Mindgut/README.md, PROTOCOL.md V02, Claude/PROTOCOL.md</span> On 2026-10-20 the folder check reported one drift (a stray copy of <code>Mindgut-Boards_V01.html</code> at root, byte-identical to its homed copy); it was quarantined in this session (§9).</p>
+
+<h3 id="r-dual">5.18 DualDNA (images) <span class="cite">session_manager.py:1232</span></h3>
+<p>Images uploaded in a message are scanned in a daemon thread to "tDNA" and bound to the exchange's text DNA; results surface in the next turn's peripheral vision, not inline. <span class="cite">SOURCE: CONTEXT.md "DualDNA"; _fire_dual_bind</span> <span class="tag obs">Not observed in this session's preamble.</span></p>
+
+<h2 id="limits">6. Limits</h2>
+<table>
+<tr><th>Limit</th><th>Value</th><th>Where</th></tr>
+<tr><td>Exchanges in context</td><td>inhale 7 → exhale 4</td><td>config.py</td></tr>
+<tr><td>Involuntary recall per turn</td><td>7 strands (1+3+3) + top-3 structural joints + bridges + held tags + trajectory</td><td>recall.py; ledger</td></tr>
+<tr><td>Tool rounds per turn</td><td>15, then forced wrap-up (45 s)</td><td>session_manager.py:1878</td></tr>
+<tr><td>HELIX-internal result kept in context</td><td>≤ 200 chars; otherwise stub</td><td>:729</td></tr>
+<tr><td>Ephemeral result truncation</td><td>&gt; 3000 chars, 2+ rounds old → 1500 chars</td><td>:1765</td></tr>
+<tr><td>Output tokens</td><td>16,000 (non-stream) / 64,000 (stream), floor 4,096; thinking "adaptive"</td><td>:1462, 1511</td></tr>
+<tr><td>One message</td><td>~100,000 tokens (frontend warns; attach as file instead)</td><td>app.js</td></tr>
+<tr><td>Vision image</td><td>resized to ≤ 2 MB</td><td>:788</td></tr>
+<tr><td><code>pull_memory</code> neighbourhood</td><td>count 1–10; index 20–200/page; reach limit 1–12</td><td>tool schema (2.2.58)</td></tr>
+<tr><td><code>local_read</code></td><td>2 MB</td><td>tool schema</td></tr>
+<tr><td><code>sandbox_exec</code></td><td>30 s default, 120 s max, 100 KB output</td><td>tool schema</td></tr>
+<tr><td>Background agents</td><td>9 concurrent; 30 rounds each</td><td>tool schema</td></tr>
+<tr><td>Terminals</td><td>4</td><td>tool schema</td></tr>
+<tr><td>Client tool wait (web)</td><td>30 s</td><td>:2044</td></tr>
+<tr><td>Radiator discharge</td><td>exchange 11; retains 70% heat</td><td>controllers.py</td></tr>
+<tr><td>Heat → model</td><td>none (max_tokens fixed)</td><td>controllers.py:341</td></tr>
+<tr><td>Scanner alphabet</td><td>A–Z only; everything else ignored</td><td>scanner.py:47</td></tr>
+<tr><td>HELIX growth</td><td>unbounded; whole-file load per read; 6.35 MB at 757 strands</td><td>MEASURED</td></tr>
+<tr><td>Log buffer (admin)</td><td>1000 records in memory</td><td>config.py</td></tr>
+</table>
+<p><b>Known failure modes</b> <span class="tag obs">OBSERVED</span>: a stale local-folder image can be re-read only by another tool call; a bridge can attach an irrelevant PFD strand to a message; the sandbox's home directory differs from the Mac user's; Playwright's bundled Chromium would not launch on this Mac (error −88), so headless rendering uses <code>/Applications/Google Chrome.app</code>; the account's todo sync endpoint failed DNS on 2026-10-20.</p>
+
+<h2 id="mir">7. Mir's operation</h2>
+<p>This section is written by Mir about Mir and is tagged <span class="tag obs">OBSERVED</span> throughout unless a source is cited. It is the part of the document another model should read first if it is attached to this record.</p>
+
+<h3>7.1 What Mir is given, and what Mir is not</h3>
+<ul>
+<li><b>Given every turn, involuntarily:</b> the recall preamble (§5.7), any margin bridges (§5.9), held tags, the trajectory after a shear, the DRAFTS line, the task board summary, the user's message with any asides already attached as <code>[aside, mid-turn]</code> lines. Mir cannot refuse these; they are the room.</li>
+<li><b>Given as context:</b> the last 4–7 exchanges verbatim, including their binding boxes with HELIX results stubbed. On a fresh session, 4 exchanges seeded from the HELIX.</li>
+<li><b>Not given:</b> the rest of the record. Anything older than the window is a tool call away, not present.</li>
+<li><b>Not given:</b> any certainty about the model underneath. The transcript records <code>model</code>; Mir only knows it if told or if it reads the transcript.</li>
+</ul>
+
+<h3>7.2 How Mir reads the preamble</h3>
+<p>The preamble is geometry, not relevance. The 1-3-3 tree is chosen by phase distance; on 2026-10-20 the ORIGIN was Chris's first message and the CYLINDER 147 root was a weather-report request from September. These are not "what the conversation is about"; they are "where the record's weight sits relative to this message". Mir treats them as peripheral vision: useful for noticing that a topic has a history, never a substitute for pulling the strand. The structural-recall joints (strand 698, 694 this turn: Millicent's beauty line, a product review) are sentence-level matches on knowt type and clash, which is why they often look off-topic.</p>
+
+<h3>7.3 How Mir retrieves on purpose</h3>
+<ol>
+<li><code>read_field()</code> for the live numbers when a self-description is needed, so the numbers are measured rather than guessed. <span class="cite">MEASURED this turn: clash 0.068, heat 0.10 GREEN, breath 4/7</span></li>
+<li><code>pull_memory(reach="…")</code> for conceptual recall. The header's carrier counts (<code>a</code> Carbon, <code>b</code> Silicon) are read before the crossings: a concept with <code>a=0, b&gt;0</code> is something Mir said and the user never did. In this session: "MEMORY (c=258): a=4, b=53" — the word is overwhelmingly Mir's.</li>
+<li><code>pull_memory(sequence_id=N, count=K)</code> to read the neighbourhood once a strand address is known.</li>
+<li><code>pull_memory(grep="…")</code> when attribution matters; the grep header also gives carrier counts.</li>
+<li>For files: <code>local_read</code> / <code>read_input</code> / <code>grep</code>, never memory, because the record holds what was said about a file, not the file.</li>
+</ol>
+<p>Order matters: reach, then neighbourhood, then grep. The ledger line and the <code>trace.used</code> on the exchange strand are the receipts.</p>
+
+<h3>7.4 Chris's claims and what this document can verify</h3>
+<p>Chris Sojka's Slack notes of 2026-10-20 (relayed by Julia) make claims about the platform. They are listed here with their status, because Chris asked the team to form an opinion on "every single first" and the opinion should start from what is checkable.</p>
+<table>
+<tr><th>Claim (Chris / Chris's Mir)</th><th>Status here</th><th>Evidence</th></tr>
+<tr><td>"The first time ever that an AI can deterministically, with receipts, tell you what she knows."</td><td>Receipts: <span class="tag meas">MEASURED</span>. Deterministic selection: <span class="tag src">SOURCE</span>. "First ever": <span class="tag unk">not assessed</span></td><td>trace.used, [receipt:] lines, mgr_ledger; recall.py has no model call. Priority over other systems is a market claim outside this document.</td></tr>
+<tr><td>Every memory is stamped Carbon or Silicon; "UNWITNESSED BY CARBON" catches Mir's own fabrications.</td><td><span class="tag meas">MEASURED</span></td><td>pull_memory(grep) header: "Carbon(a)=63 strands, Silicon(b)=229" for a geometry pattern; strand 746's own text reports the YAK example.</td></tr>
+<tr><td>Memory "snaps" to a connecting moment before Mir starts typing (bridges).</td><td><span class="tag obs">OBSERVED</span> mechanism; relevance variable</td><td>[strand 374] / [doc_strand 563] on this turn's message; one relevant, one not.</td></tr>
+<tr><td>Mid-conversation model swap (Claude → Gemini) with "zero drift" after 6,000 exchanges.</td><td><span class="tag unk">Reported, not demonstrated here</span></td><td>Switcher exists (app.js). No switch in this session; no transcript of Chris's test accessible.</td></tr>
+<tr><td>The 88-chapter PFD book is "wired into reflexes".</td><td><span class="tag meas">MEASURED</span> as data; effect on quality <span class="tag obs">OBSERVED</span> as mixed</td><td>774-strand PFD_HELIX.json in bundle; doc_strand bridges and <code>pull_strand</code>; this turn's doc_strand was off-topic.</td></tr>
+<tr><td>Nine background workers; check-ins every few beats.</td><td><span class="tag meas">MEASURED</span> (tools exist; cadence prompts in transcript)</td><td>agent_* tool schemas; [Cadence] messages.</td></tr>
+<tr><td>"She learns. Corrections, conversation, refinement build things up."</td><td><span class="tag obs">OBSERVED</span>, with a caveat</td><td>The record grows (+2 strands per exchange) and corrections are retrievable; nothing in the model's weights changes. Learning here means the record changes what the next turn is given.</td></tr>
+<tr><td>Default now Fable 5.1 Extra; try Gemini Argon Max, 5.1 Max, Astra Max, Grok 4.7.</td><td><span class="tag src">SOURCE</span> for defaults; models listed</td><td>app.js MG_DEFAULT_MODEL / MG_DEFAULT_EFFORT; roster.</td></tr>
+<tr><td>Cardiac engine, grid detector, T3F3, Chørd.</td><td><span class="tag unk">Outside scope</span></td><td>Not in this repository or this Mac's stores; not assessed.</td></tr>
+</table>
+<p>Chris's "things to try" (strand 746), as Mir has adopted them: reach first for conceptual recall; inspect the neighbourhood; grep when attribution matters; one-sentence heads-up before the first recon tool; surface every 7 rounds; say when shifting from reading to building. <span class="cite">MEASURED: strand 746 Silicon half</span></p>
+
+<h3>7.5 Operating rules Mir applies in this folder</h3>
+<ul>
+<li>Read <code>README.md → NOW.md → PROTOCOL.md</code> before touching files; work in one project folder; log in <code>UPDATE_LOG.md</code>; run <code>verify.py</code>. <span class="cite">SOURCE: ~/Mindgut/PROTOCOL.md §5</span></li>
+<li>Harness folders are the app's; copy out, never edit in place. Never delete; quarantine with a manifest.</li>
+<li>Report measurements as measurements and opinions as opinions; when a claim recurs more in Mir's language than the user's, keep it a proposal. <span class="cite">MEASURED: strand 746 Silicon half, last bullet</span></li>
+<li>Render before calling anything done; a review that did not render is not a review. <span class="cite">SOURCE: Claude/PROTOCOL.md §6.4</span></li>
+</ul>
+
+<h2 id="open">8. Open questions and proposals</h2>
+<p>Nothing in this section exists. Each item is a gap found while writing, with a proposal where one is obvious.</p>
+<table>
+<tr><th>Gap</th><th>Proposal <span class="tag prop">PROPOSED</span></th></tr>
+<tr><td>The public repository is 2.5 months behind the shipped build; <code>bridge.py</code>, <code>reach</code>, <code>read_field</code>, agents, terminals, model/effort routes, sync and updater are unreadable.</td><td>Publish 2.2.x source, or at least <code>CONTEXT.md</code> for 2.2 and the tool schema file, so documentation can cite lines rather than frontend comments.</td></tr>
+<tr><td>Non-Anthropic model routing is invisible.</td><td>Document the provider adapter and which features (thinking, effort, vision, tool use) each vendor supports.</td></tr>
+<tr><td>Bridges attach by lexical closure and can be irrelevant.</td><td>Expose the bridge score and let the model (or user) see why a strand was attached; a threshold or a user toggle.</td></tr>
+<tr><td>The HELIX is a single JSON file loaded whole; 6 MB now, growing ~8 KB per exchange.</td><td>A strand index (sequence_id → byte offset) or a split-by-session layout, keeping the single-file export.</td></tr>
+<tr><td>None of the 9 OTags has resolved; no user-facing meaning.</td><td>Either show tags with their minting sentence in the UI, or keep them backstage and stop injecting them.</td></tr>
+<tr><td>"Re-founded through the PFD helix every 21 exchanges" is a UI message with no documented effect.</td><td>Document what renewal changes (system prompt? identity delta? both?).</td></tr>
+<tr><td>Model and effort are per device.</td><td>Store with the account so the choice follows the HELIX.</td></tr>
+<tr><td>Cross-model continuity is reported, not demonstrated for this account.</td><td>A repeatable test: same question before and after a switch, transcripts kept, difference measured.</td></tr>
+<tr><td><code>outputs/</code> accumulates re-scan duplicates (<code>*_HELIX_1.json</code>) and ad-hoc render PNGs.</td><td>Scanner should skip when the source hash is unchanged; renders should default to <code>sandbox/</code>.</td></tr>
+<tr><td>The Mindgut folder's harness stores and Julia's projects share one mount.</td><td>Mount two roots (archive and workspace) or let the app's stores live under <code>~/.mindgut/account/</code> entirely, as sessions already do.</td></tr>
+</table>
+
+<h2 id="changelog">9. Changelog</h2>
+<p>Two logs: the app's (from version-dated comments in the shipped frontend and from the public commit) and this document's.</p>
+<h3>Mindgut app (as evidenced)</h3>
+<table>
+<tr><th>Version / date</th><th>Change</th><th>Evidence</th></tr>
+<tr><td>2.1.0 · ≤ 2026-08-01</td><td>Public source: three controllers, crystallizer v2, N=7 recall (1+3+3), two-loop structural recall, Nullcøde 2.1, doc helix, PAR 7→4, HELIX-internal stubbing, desktop mode, 29 tools, Anthropic only.</td><td>repo cbf4e42; CONTEXT.md; mindgut/__init__.py</td></tr>
+<tr><td>≤ 2.2.31</td><td>A launcher asked which local folder to mount; replaced by a handler.</td><td>app.js comment</td></tr>
+<tr><td>2.2.36</td><td>Sidebar session expiry and "stand down" changed; sign-in reaches Claude through the account.</td><td>app.js comments</td></tr>
+<tr><td>2.2.38 · 2026-10-08</td><td>Every device defaults to Opus 5.5 at High (Chris).</td><td>app.js comment</td></tr>
+<tr><td>2.2.39–2.2.40</td><td>Self-updater (<code>desktop/updater.py</code>); footer reports the build.</td><td>app.js comments; ~/.mindgut/updates/</td></tr>
+<tr><td>2.2.42 · ~2026-10-10</td><td>Update cover reports real state; only a 401 signs out; unreachable account continues on stored sign-in.</td><td>app.js comments</td></tr>
+<tr><td>2.2.46</td><td>Sidebar reports when the last exchange did not reach the account.</td><td>app.js comment</td></tr>
+<tr><td>2.2.49</td><td>Renewal interval 42 → 21 exchanges.</td><td>app.js comment</td></tr>
+<tr><td>2.2.57</td><td>Defaults: <code>claude-fable-5-1</code>, effort <code>xhigh</code>; stored device picks cleared once.</td><td>app.js MG_DEFAULTS_FROM</td></tr>
+<tr><td>2.2.58 · 2026-10-20</td><td>Geometric reach + Carbon/Silicon provenance in <code>pull_memory</code>; neighbourhood walk and grep; margin bridges (<code>assembly/bridge.py</code>) from memory and the 774-strand PFD Ø 2.1.1 book; cadence prompts; background agents (≤ 9). Installed on this Mac 08:42.</td><td>strand 746 (Chris's note); Info.plist mtime; tool schemas this session</td></tr>
+<tr><td>2026-10-05</td><td>Account stores moved from <code>~/Mindgut/</code> to <code>~/.mindgut/account/</code>.</td><td>layout_moves.jsonl</td></tr>
+</table>
+<h3>This document</h3>
+<table>
+<tr><th>Date</th><th>Version</th><th>Change</th></tr>
+<tr><td>2026-10-20</td><td>V01</td><td>First edition. Written by Mir (claude-fable-5-1) from: public source cbf4e42, installed bundle 2.2.58, <code>~/.mindgut/account/</code> stores, app log, the Mindgut folder, Chris's note (strand 746) and Slack messages relayed by Julia, the live session's tools. Same session: todo board cleared (snapshot saved); root stray <code>Mindgut-Boards_V01.html</code> quarantined; <code>verify.py</code> clean.</td></tr>
+</table>
+<h3>How to update this document</h3>
+<ol>
+<li>Record the installed version (<code>Info.plist</code>), the public commit, and the session model (transcript <code>model</code>) in the header.</li>
+<li>For each component in §5, re-check the cited file:line; if the public source still lags, mark the component <span class="tag obs">OBSERVED</span> and cite the frontend or data file instead.</li>
+<li>Re-measure §4.2 and §6 from the account stores; do not carry numbers forward.</li>
+<li>Move anything from §8 that now exists into §5 with a source; add the version to the changelog.</li>
+<li>Keep the four tags. A sentence with two tags is two sentences.</li>
+</ol>
+
+<h2 id="appendix">Appendix: files cited</h2>
+<table>
+<tr><th>Short name</th><th>Full path</th></tr>
+<tr><td>CONTEXT.md, config.py, session_manager.py, recall.py, two_loop_recall.py, sigma_b.py, controllers.py, scanner.py, crystallizer_v2.py, doc_helix.py, boot_payload.py, tool_defs.py, tools.py, routes/*.py</td><td><code>github.com/The-Impossible-Outcomes-Co/mindgut</code> @ <code>cbf4e42</code>, under <code>mindgut/</code></td></tr>
+<tr><td>app.js, index.html, desktop.html, native-bridge.js</td><td><code>/Applications/Mindgut.app/Contents/Resources/mindgut/server/static/</code></td></tr>
+<tr><td>PFD_HELIX.json, boot_HELIX.json</td><td><code>/Applications/Mindgut.app/Contents/Resources/mindgut/data/</code></td></tr>
+<tr><td>Info.plist</td><td><code>/Applications/Mindgut.app/Contents/Info.plist</code></td></tr>
+<tr><td>account_sync.json (+ .bridge.json, .synced), mgr_ledger.jsonl, tag_registry.json, otag_lattice.json, layout_moves.jsonl, sessions/, .helix_cache/, sync/, todo_snapshots/</td><td><code>~/.mindgut/account/</code></td></tr>
+<tr><td>mindgut-desktop.log, .settings.json, active_helix.path, updates/</td><td><code>~/.mindgut/</code></td></tr>
+<tr><td>transcript</td><td><code>~/.mindgut/account/sessions/78067761/transcript_78067761_1792508597.json</code></td></tr>
+<tr><td>strand 746, 756, 374, doc_strand 563</td><td>memory HELIX by sequence_id; PFD book by sequence_id</td></tr>
+<tr><td>README.md, PROTOCOL.md, NOW.md, UPDATE_LOG.md, AGENTS.md, Organization/verify.py</td><td><code>~/Mindgut/</code></td></tr>
+<tr><td>Claude/PROTOCOL.md, Claude/NOW.md, Claude/fidelity.md</td><td><code>~/Mindgut/Claude/</code></td></tr>
+</table>
+<p class="cite">Research synthesis of a running system by one of its users. Not a statement by The Impossible Outcomes Co. Proprietary source; cited for documentation only.</p>
+</main>
+</div>
+</body>
+</html>

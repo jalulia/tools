@@ -1,0 +1,790 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Mir Library 01</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a specimen book. One measure for reading, a 12-column plate grid for the pieces, everything left-aligned to one edge. */
+:root{
+  --ground:#ffffff; --sheet:#fafafa; --ink:#15181d; --soft:#5d636b; --hair:#d9dbdd; --accent:#c8102e; --chip:#eceeef;
+  --display:"Geist","Helvetica Neue",Arial,sans-serif; --mono:"Geist Mono",ui-monospace,Menlo,monospace;
+  --measure:64ch; --wide:1280px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --ground:#0f0c0c; --sheet:#171313; --ink:#efefef; --soft:#9a9594; --hair:#2b2525; --accent:#ff3b4f; --chip:#211b1b; color-scheme:dark } }
+:root[data-theme="dark"]{ --ground:#0f0c0c; --sheet:#171313; --ink:#efefef; --soft:#9a9594; --hair:#2b2525; --accent:#ff3b4f; --chip:#211b1b; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font:400 16px/1.55 var(--display);-webkit-font-smoothing:antialiased}
+.wrap{max-width:var(--wide);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+.lab{font:500 11px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
+a{color:inherit;text-underline-offset:3px;text-decoration-thickness:1px}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* masthead + hero */
+.mast{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding-block:20px 14px;border-bottom:1px solid var(--hair)}
+.mast{align-items:center}.mast .wm{display:block;line-height:0}.mast .wm canvas{display:block}
+.heroband{padding-top:clamp(16px,2vw,24px)}
+.heroband .cv{position:relative;max-width:100%;border-radius:2px;overflow:hidden;background:#0f0c0c}
+.heroband .cv canvas{display:block}
+.hero{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,6fr);gap:clamp(20px,4vw,56px);align-items:start;padding-block:clamp(24px,4vw,48px) clamp(28px,5vw,64px)}
+.tunerwrap{display:flex;flex-direction:column;gap:10px;min-width:0;padding-top:4px}
+.hero h1{font-weight:700;font-size:clamp(40px,6.2vw,90px);line-height:.95;letter-spacing:-.045em}
+.hero p{font-size:clamp(17px,1.6vw,20px);max-width:34ch;margin:18px 0 0;color:var(--ink)}
+.hero .lede-n{margin-top:18px;display:flex;gap:0 18px;flex-wrap:wrap}
+.heroband .state{position:absolute;left:14px;bottom:12px;font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#efefef}
+.heroband .state b{font-weight:500;color:#ff3b4f}
+@media (max-width:760px){ .hero{grid-template-columns:1fr} }
+
+/* sections */
+section{padding-block:clamp(40px,6vw,80px);border-top:1px solid var(--hair)}
+.sh{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,9fr);gap:24px;margin-bottom:28px}
+.sh h2{font-size:clamp(28px,3.4vw,44px);font-weight:800;letter-spacing:-.025em;line-height:1}
+.sh .dek{max-width:var(--measure);color:var(--soft);margin:0}
+@media (max-width:760px){ .sh{grid-template-columns:1fr;gap:10px} }
+
+/* pillars */
+.pillars{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;border-top:2px solid var(--ink)}
+.pil{padding:16px 16px 20px 0;border-right:1px solid var(--hair);display:flex;flex-direction:column;gap:10px;min-width:0}
+.pil+.pil{padding-left:16px}.pil:last-child{border-right:0}
+.pil canvas{display:block;max-width:100%;background:var(--sheet)}
+.pil h3{font-size:21px;font-weight:600;letter-spacing:-.01em;line-height:1.1}
+.pil .claim{margin:0;font-size:15px;line-height:1.45}
+.pil ul{margin:0;padding:0;list-style:none;font-size:13.5px;line-height:1.45;color:var(--soft);display:grid;gap:4px}
+.pil ul li::before{content:"·  ";color:var(--ink)}
+.pil .no{font-size:13px;color:var(--soft);border-top:1px solid var(--hair);padding-top:8px}
+.pil .no b{font:500 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:5px}
+.pil .pre{font:400 13.5px/1.45 var(--display);color:var(--ink);padding-left:10px;border-left:1px solid var(--accent)}
+@media (max-width:1100px){ .pillars{grid-template-columns:repeat(2,minmax(0,1fr))} .pil{padding:16px 16px 20px 0!important;border-right:0;border-bottom:1px solid var(--hair)} .pil:nth-child(odd){padding-right:20px!important} .pil:nth-child(even){padding-left:20px!important;border-left:1px solid var(--hair)} }
+@media (max-width:560px){ .pillars{grid-template-columns:1fr} .pil:nth-child(even){padding-left:0!important;border-left:0} }
+.rule{margin-top:28px;display:grid;grid-template-columns:minmax(0,3fr) minmax(0,9fr);gap:24px;padding:18px 0 0;border-top:2px solid var(--ink)}
+.rule h3{font-size:21px;font-weight:600}.rule p{margin:0;max-width:var(--measure)}
+.grounds{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.gr{display:flex;align-items:center;gap:8px;font:500 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+.gr canvas{width:40px;height:40px;display:block}
+@media (max-width:760px){ .rule{grid-template-columns:1fr} }
+
+/* ontology */
+.onto{width:100%;border-collapse:collapse;font-size:14.5px}
+.onto th{font:500 10.5px/1.3 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-align:left;padding:8px 12px 8px 0;border-bottom:2px solid var(--ink)}
+.onto td{padding:10px 12px 10px 0;border-bottom:1px solid var(--hair);vertical-align:top}
+.onto td:first-child{width:76px}.onto td:first-child canvas{display:block;width:56px;height:56px}
+.onto td.k{font:500 12px/1.3 var(--mono);letter-spacing:.06em;white-space:nowrap}
+.tw{overflow-x:auto}
+.onto2{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:28px}
+.onto2 h3{font:500 10.5px/1.3 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--soft);padding-bottom:8px;border-bottom:2px solid var(--ink);margin-bottom:8px}
+.onto2 ol{margin:0;padding:0;list-style:none;display:grid;gap:6px;font-size:14px}.onto2 li b{font:500 12px/1 var(--mono);letter-spacing:.06em;margin-right:6px}
+@media (max-width:760px){ .onto2{grid-template-columns:1fr} }
+details.json{margin-top:24px;border-top:1px solid var(--hair);padding-top:12px}
+details.json summary{cursor:pointer;font:500 11px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+details.json pre{font:400 12px/1.5 var(--mono);background:var(--sheet);border:1px solid var(--hair);padding:14px;overflow:auto;max-height:420px;margin:10px 0 0}
+.copy{font:500 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;background:transparent;color:var(--ink);border:1px solid var(--ink);padding:8px 10px;margin-top:10px;cursor:pointer}
+
+/* outline matrix */
+.mx{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
+.mx th{font:500 10.5px/1.3 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--soft);text-align:left;padding:8px 10px 8px 0;border-bottom:2px solid var(--ink)}
+.mx td{padding:10px 10px 10px 0;border-bottom:1px solid var(--hair);vertical-align:top}
+.mx td.id{font:500 12px/1.3 var(--mono);white-space:nowrap}.mx td.id a{text-decoration:none}
+.mx td.t{font-weight:600}
+.mx .dotc{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ink)}
+.mx td.c{text-align:center;width:72px}
+.mx td.j{color:var(--soft);max-width:48ch}
+
+/* the library */
+.lib{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:56px 28px}
+.pc{grid-column:span 12;min-width:0;display:flex;flex-direction:column;gap:12px}
+.pc.s6{grid-column:span 6}
+@media (max-width:900px){ .pc.s6{grid-column:span 12} }
+.pc .cvw{width:100%;max-width:100%}
+.pc canvas{display:block;max-width:100%}
+.pc .meta{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline}
+.pc .meta .n{font:500 12px/1 var(--mono);letter-spacing:.1em;color:var(--accent)}
+.pc h3{font-size:22px;font-weight:600;letter-spacing:-.01em}
+.pc .cap{margin:0;max-width:var(--measure);font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 10.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;background:var(--chip);padding:5px 7px;border-radius:2px}
+.pc .why{font-size:13.5px;color:var(--soft);margin:0;max-width:var(--measure)}
+.pc .pending{aspect-ratio:16/9;display:grid;place-items:center;background:var(--sheet);border:1px dashed var(--hair);color:var(--soft);font:500 11px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+
+/* colin */
+.notes{display:grid;gap:0;border-top:2px solid var(--ink)}
+.nt{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,4fr) minmax(0,4fr);gap:24px;padding:20px 0;border-bottom:1px solid var(--hair)}
+.nt h3{font-size:19px;font-weight:600;line-height:1.2}
+.nt p{margin:0;font-size:15px}.nt .take b,.nt .push b{font:500 10.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:8px;color:var(--soft)}
+.nt .push b{color:var(--accent)}
+.nt .ref{font-size:12.5px;color:var(--soft);margin-top:8px}
+@media (max-width:900px){ .nt{grid-template-columns:1fr;gap:10px} }
+blockquote.colin{margin:0 0 28px;padding:0 0 0 18px;border-left:2px solid var(--accent);max-width:var(--measure);font:300 clamp(20px,2.1vw,26px)/1.35 var(--display);letter-spacing:-.01em}
+blockquote.colin cite{display:block;font:500 11px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-top:10px}
+.qs{margin-top:28px;display:grid;grid-template-columns:minmax(0,3fr) minmax(0,9fr);gap:24px}
+.qs ol{margin:0;padding-left:1.2em;display:grid;gap:8px;max-width:var(--measure)}
+@media (max-width:760px){ .qs{grid-template-columns:1fr} }
+.src ol{margin:0;padding-left:1.2em;display:grid;gap:6px;font-size:14px;max-width:80ch}
+footer{border-top:1px solid var(--hair);padding-block:20px 40px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+/* controls: one quiet instrument row per piece; every control has a keyboard path */
+.herofig{display:flex;flex-direction:column;gap:12px;min-width:0}
+.tuner,.ctl{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;padding:10px 0;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+.tuner label,.ctl label{display:flex;align-items:center;gap:8px;font:500 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--soft);min-height:36px}
+.tuner input[type=range],.ctl input[type=range]{width:132px;accent-color:var(--accent);height:28px;margin:0}
+.tuner output,.ctl output{font:500 11px/1 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums;min-width:5ch}
+.ctl select{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;background:var(--ground);color:var(--ink);border:1px solid var(--hair);padding:8px 6px;min-height:36px}
+.btn{font:500 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;background:transparent;color:var(--ink);border:1px solid var(--ink);padding:0 12px;min-height:36px;cursor:pointer;border-radius:0}
+.btn:hover{background:var(--ink);color:var(--ground)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--ground)}
+.btn.quiet{border-color:var(--hair);color:var(--soft)}
+.sw{width:30px;height:30px;padding:0;border:1px solid var(--hair);cursor:pointer;border-radius:50%;display:inline-grid;place-items:center}
+.sw[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:2px}
+.sws{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ctl .note{font:500 10.5px/1.3 var(--mono);letter-spacing:.08em;color:var(--soft);text-transform:uppercase}
+.pc canvas.int{cursor:crosshair}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.pc .meta .t{font:600 15px/1.2 var(--display);letter-spacing:-.005em}
+.mx .fm{display:none}
+@media (max-width:640px){
+  .tuner input[type=range],.ctl input[type=range]{width:110px}
+  .onto thead{display:none}
+  .onto tr{display:grid;grid-template-columns:64px minmax(0,1fr);gap:4px 12px;padding:12px 0;border-bottom:1px solid var(--hair)}
+  .onto td{border:0;padding:0}
+  .onto td:first-child{grid-row:span 3;width:auto}
+  .mx{min-width:0}
+  .mx thead{display:none}
+  .mx tr{display:grid;grid-template-columns:52px minmax(0,1fr);gap:3px 10px;padding:12px 0;border-bottom:1px solid var(--hair)}
+  .mx td{border:0;padding:0}
+  .mx td.c{display:none}
+  .mx td.j,.mx td.pl{grid-column:2}
+  .mx .fm{display:inline;font:500 10.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin-left:8px}
+}
+
+/* roots: computed positions, years before now on a log scale */
+.rootax canvas{display:block;width:100%}
+.roots{list-style:none;margin:18px 0 0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:18px 0;border-top:2px solid var(--ink)}
+.roots li{padding:12px 14px 4px 0;display:flex;flex-direction:column;gap:6px;min-width:0}
+.roots li+li{padding-left:14px;border-left:1px solid var(--hair)}
+.roots li:nth-child(6n+1){padding-left:0;border-left:0}
+.roots .y{font:500 11px/1 var(--mono);letter-spacing:.1em;color:var(--accent);font-variant-numeric:tabular-nums}
+.roots .w{font:600 15px/1.2 var(--display);letter-spacing:-.005em}
+.roots .d{font-size:13px;line-height:1.45;color:var(--soft);margin:0}
+.roots .k{font-size:13px;line-height:1.4;margin:0}
+.roots .r{font:500 10.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+@media (max-width:1100px){ .roots{grid-template-columns:repeat(3,minmax(0,1fr))} .roots li:nth-child(6n+1){padding-left:14px;border-left:1px solid var(--hair)} .roots li:nth-child(3n+1){border-left:0;padding-left:0} }
+@media (max-width:640px){ .roots{grid-template-columns:1fr} .roots li,.roots li+li{border-left:0;padding-left:0;border-bottom:1px solid var(--hair);padding-bottom:12px} }
+.tuner{gap:4px 22px}
+.tuner .row2{flex-basis:100%;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.tuner output,.ctl output{white-space:nowrap}
+footer .flogo canvas{display:block}
+
+/* touch: every target at least 36 px on coarse pointers */
+.hero .lede-n a{display:inline-flex;align-items:center;min-height:36px}
+.mx td.id a{display:inline-flex;align-items:center;min-height:36px;min-width:36px}
+.copy{min-height:36px}
+@media (pointer:coarse){ .sw{width:36px;height:36px} .tuner input[type=range],.ctl input[type=range]{height:36px} .btn{min-height:40px} }
+@media (max-width:640px){ .mast .dt{display:none} }
+
+.libbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 0;margin-bottom:28px;background:var(--ground);border-bottom:1px solid var(--hair)}
+.libbar .btn{min-height:34px}
+.libbar .n{font:500 10.5px/1 var(--mono);color:var(--soft);margin-left:6px}
+.libbar .btn[aria-pressed="true"] .n{color:inherit;opacity:.7}
+.libbar .count{margin-left:auto;font:500 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--soft)}
+.pc[hidden]{display:none!important}
+.pc .cvw{min-height:120px}
+@media (max-width:640px){ .libbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-inline:max(16px,env(safe-area-inset-left,0px))} .libbar::-webkit-scrollbar{display:none} .libbar .btn{flex:0 0 auto} .libbar .count{display:none} }
+.pc .pair{margin:0;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;font:500 11px/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+.pc .pair b{font-weight:500;color:var(--accent)}
+
+.rcpw{border-top:1px solid var(--hair);padding-top:8px;max-width:var(--measure)}
+.rcpw summary{cursor:pointer;font:500 10.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--soft);min-height:32px;display:flex;align-items:center}
+.rcpw[open] summary{color:var(--ink)}
+.rcp{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 16px;margin:8px 0 12px;font-size:13.5px;line-height:1.45}
+.rcp dt{font:500 10.5px/1.6 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+.rcp dd{margin:0;min-width:0}
+@media (max-width:480px){ .rcp{grid-template-columns:1fr;gap:2px} .rcp dd{margin-bottom:6px} }
+
+.conv{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:2px solid var(--ink)}
+.conv li{padding:14px 18px 16px 0;border-bottom:1px solid var(--hair);font-size:14.5px;line-height:1.5;min-width:0}
+.conv li:not(:nth-child(3n+1)){padding-left:18px;border-left:1px solid var(--hair)}
+.conv b{display:block;font-weight:600;margin-bottom:4px}
+@media (max-width:900px){ .conv{grid-template-columns:1fr} .conv li:not(:nth-child(3n+1)){padding-left:0;border-left:0} }
+.eng td.k{white-space:nowrap}
+.rbtn{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+@media (pointer:coarse){ .src li a{display:inline-block;padding-block:9px} }
+@media (prefers-reduced-motion: reduce){ *{scroll-behavior:auto} }
+
+/* sound: one switch in three places (masthead, sticky library bar, Listen). Words carry the state; nine dots carry the level. */
+.mast .mr{display:flex;align-items:center;gap:14px;min-width:0}
+.snd{display:inline-flex;align-items:center;gap:9px;flex:0 0 auto;font:500 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;background:var(--ground);color:var(--soft);border:1px solid var(--hair);padding:0 11px 0 9px;min-height:36px;cursor:pointer;border-radius:0;white-space:nowrap}
+.snd:hover,.snd[aria-pressed="true"]{color:var(--ink);border-color:var(--ink)}
+.snd:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.snd:disabled{cursor:default;opacity:.55}
+.snd canvas{display:block;flex:0 0 auto}
+.snd .st{min-width:9.2ch}
+.libbar .libf{display:flex;flex-wrap:wrap;gap:8px;align-items:center;flex:1 1 auto;min-width:0}
+.libbar .snd{min-height:34px}
+.lsw{margin-top:16px}
+.conv li.wide{grid-column:1/-1;padding-left:0!important;border-left:0!important;max-width:none}.conv li.wide b,.conv li.wide{max-width:none}
+#listenBody{min-width:0}
+#listenBody .pending{padding:28px 0;color:var(--soft);font:500 11px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase;border-top:1px dashed var(--hair)}
+@media (pointer:coarse){ .snd{min-height:40px} .libbar .snd{min-height:40px} }
+@media (max-width:640px){ .libbar .libf{flex:0 0 auto;flex-wrap:nowrap} .libbar .snd{position:sticky;right:0;margin-left:4px;box-shadow:-10px 0 0 var(--ground),calc(max(16px,env(safe-area-inset-right,0px)) + 1px) 0 0 var(--ground)} .mast .mr{gap:10px} }
+
+/* two layers: Read (default) and Build. Build-only nodes carry [data-build], Read-only nodes [data-read]; both use [hidden]. */
+[hidden]{display:none!important}
+.mast{flex-wrap:wrap;row-gap:10px}
+.mast .mlab{margin-left:auto;min-width:0}
+.vb{display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;font:500 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;background:var(--ground);color:var(--soft);border:1px solid var(--hair);padding:0 11px 0 10px;min-height:36px;cursor:pointer;border-radius:0;white-space:nowrap}
+.vb::before{content:"";width:7px;height:7px;border-radius:50%;box-sizing:border-box;border:1px solid currentColor}
+.vb:hover,.vb[aria-pressed="true"]{color:var(--ink);border-color:var(--ink)}
+.vb[aria-pressed="true"]::before{background:var(--accent);border-color:var(--accent)}
+.vb:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.bmark{flex-basis:100%;margin:0;display:flex;justify-content:flex-end;font:500 10.5px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.hero .lede2{font-size:14.5px;line-height:1.5;color:var(--soft);max-width:44ch;margin-top:12px}
+.who{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:2px solid var(--ink)}
+.who li{padding:16px 22px 18px 0;min-width:0}
+.who li+li{padding-left:22px;border-left:1px solid var(--hair)}
+.who b{display:block;font:500 11px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-bottom:8px}
+.who p{margin:0;font-size:clamp(17px,1.45vw,19px);line-height:1.45;max-width:34ch}
+.wholine{margin:28px 0 0;max-width:40ch;font:300 clamp(20px,2.1vw,26px)/1.35 var(--display);letter-spacing:-.01em}
+.key{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));column-gap:20px;border-top:2px solid var(--ink)}
+.key li{display:grid;grid-template-columns:56px minmax(0,1fr);gap:4px 12px;padding:14px 0 16px;border-bottom:1px solid var(--hair);min-width:0;align-content:start}
+.key canvas{grid-row:span 2;width:56px;height:56px;display:block}
+.key b{font:500 11.5px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;align-self:end}
+.key span{font-size:14px;line-height:1.4;color:var(--soft)}
+.keystates{margin:22px 0 0;max-width:var(--measure);font-size:15.5px}.keystates b{font-weight:600}
+.abt a{color:var(--ink)}
+@media (max-width:1100px){ .key{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:760px){ .who{grid-template-columns:1fr} .who li+li{padding-left:0;border-left:0;border-top:1px solid var(--hair)} }
+@media (max-width:560px){ .key{grid-template-columns:1fr} }
+@media (pointer:coarse){ .vb{min-height:40px} }
+@media (max-width:640px){ .mast .wm{order:1} .mast .mlab{order:2;flex-basis:100%;margin-left:0} .mast .mr{order:3;flex-basis:100%;gap:8px} .mast .mr>*{flex:1 1 0;justify-content:center;min-width:0} .bmark{order:4;justify-content:flex-start} }
+</style>
+
+<!-- For models and builders: this page is the Mir library, a design exploration of how Mir (Mindgut) could look and sound.
+     The full machine-readable spec (about, pillars, ontology, roots, conventions, and all 40 pieces with captions and recipes)
+     is in <script type="application/json" id="mir-spec">, regenerated at load from window.MIR_SPEC plus each piece's recipe.
+     Every piece is a <figure> with data-piece, data-form and data-pillars. "Build view" in the masthead shows codes, recipes,
+     conventions, the outline, the full ontology, engine primitives (Rebuild) and studio notes. Values are illustrative unless a recipe lists them as computed. -->
+<div class="wrap">
+  <header class="mast"><span class="wm" role="img" aria-label="mindgut"><canvas id="mastLogo" aria-hidden="true"></canvas></span><span class="lab mlab">Mir · a visual and sound language<span class="dt"> · 27 Oct 2026</span></span><span class="mr"><button type="button" class="vb" id="viewBtn" aria-pressed="false">Build view</button><span id="sndMast"></span></span><p class="bmark" id="bmark" data-build hidden>Build view · for the team and for models</p></header>
+  <p class="sr" id="sndLive" aria-live="polite"></p>
+
+  <div class="heroband"><div class="cv" id="hero"><canvas aria-label="The mindgut wordmark; a stippled ring field radiates from the dot on its i and settles from loose to in tune"></canvas><div class="state" id="heroState" aria-live="polite">clash · <b>loose</b></div></div></div>
+  <div class="hero">
+    <div>
+      <div class="lab">Mindgut · Mir</div>
+      <h1>Many small marks, agreeing.</h1>
+      <p id="heroLead">Mindgut keeps a measured record of every exchange between a person and a language model. Mir is what appears when the three work together: a conversation that continues instead of starting over. This page explores how Mir could look and sound.</p>
+      <p class="lede2">An exploration, not the shipped product. Numbers on this page are illustrative. Sound is off until you turn it on.</p>
+      <nav class="lede-n" aria-label="On this page"><a class="lab" href="#about-mir">What this is ↓</a><a class="lab" href="#key">How to read it ↓</a><a class="lab" href="#pillars">Five ideas ↓</a><a class="lab" href="#library">Library ↓</a><a class="lab" href="#listen">Listen ↓</a><a class="lab" href="#roots">Influences ↓</a><a class="lab" href="#conventions" data-build hidden>Conventions ↓</a><a class="lab" href="#outline" data-build hidden>Outline ↓</a><a class="lab" href="#ontology" data-build hidden>Ontology ↓</a><a class="lab" href="#rebuild" data-build hidden>Rebuild ↓</a><a class="lab" href="#colin" data-build hidden>Studio notes ↓</a></nav>
+    </div>
+    <div class="tunerwrap"><div class="lab">Field tuner</div><div class="tuner" id="tuner" role="group" aria-label="Field tuner"></div></div>
+  </div>
+
+  <section id="about-mir">
+    <div class="sh"><h2>What this is</h2></div>
+    <ol class="who" id="who"></ol>
+    <p class="wholine" id="whoLine"></p>
+  </section>
+
+  <section id="key">
+    <div class="sh"><h2>How to read it</h2><p class="dek">Every picture here is made of dots. Each dot is one exchange. These are the shapes they make.</p></div>
+    <ol class="key" id="keyList"></ol>
+    <p class="keystates"><b>Loose → settling → in tune.</b> A field that has found its rings is in tune. That is how Mir shows a conversation going well, with a picture and no score.</p>
+  </section>
+
+  <section data-build hidden id="ontology">
+    <div class="sh"><h2>Ontology</h2><p class="dek">What each mark means. A mark appears in a piece only when it carries this meaning.</p></div>
+    <div class="tw"><table class="onto" id="ontoMarks"><thead><tr><th></th><th>Mark</th><th>Stands for</th><th>How Mir uses it</th></tr></thead><tbody></tbody></table></div>
+    <div class="onto2"><div><h3>States</h3><ol id="ontoStates"></ol></div><div><h3>Readings</h3><ol id="ontoReadings"></ol></div><div><h3>Relations</h3><ol id="ontoRel"></ol></div></div>
+  </section>
+
+  <section data-build hidden id="conventions">
+    <div class="sh"><h2>Conventions</h2><p class="dek">These hold for every piece. A piece mentions one only when it bends it.</p></div>
+    <ol class="conv">
+      <li><b>Dots only.</b> Every figure is made of placed dots. No lines in figures, no fills, no gradients. Tone comes from dot spacing and size.</li>
+      <li><b>One accent.</b> Each frame has one saturated color, and it marks where you and Mir meet.</li>
+      <li><b>Neutral grounds.</b> Night, olive, paper (#fafafa), cobalt, sky and plum. The figure reads the same on each. No cream or warm off-white.</li>
+      <li><b>The wordmark as drawn.</b> One flat color, clear space of one tittle height, never stippled or altered.</li>
+      <li><b>Placeholder by default.</b> Every value is invented unless the piece’s recipe lists it as computed.</li>
+      <li><b>Live.</b> Pieces draw at your screen’s resolution. Each has controls, Reset and a recipe. With reduced motion, each shows its final frame.</li>
+      <li class="wide"><b>Sound.</b> Off until you turn it on; M toggles it. When several pieces are on screen, the piece you see most of leads and the others play 18 dB under it. Every sound is synthesized live, with no samples and no quoted melodies, and anything you hear is also shown.</li>
+    </ol>
+  </section>
+
+  <section id="pillars">
+    <div class="sh"><h2>Five ideas</h2><p class="dek">The ideas every piece is built on.</p></div>
+    <div class="pillars" id="pillarGrid"></div>
+    <div class="rule" id="ruleG"></div>
+  </section>
+
+  <section data-build hidden id="outline">
+    <div class="sh"><h2>Outline</h2><p class="dek">Forty pieces in four deliveries of ten. Deliveries three and four pair each Mir behavior with an analog machine that does the same job.</p></div>
+    <div class="tw"><table class="mx" id="mx"></table></div>
+  </section>
+
+  <section id="library">
+    <div class="sh"><h2>The library</h2><div><p class="dek" data-read>Forty studies: brand, interface, editorial, concepts, and pairings of an old machine with something Mir does. Press play, drag, or change a setting.</p><p class="dek" data-build hidden>Filter by form. Open a piece’s recipe to see how it is built.</p></div></div>
+    <div class="libbar" id="libbar"><div class="libf" id="libf" role="group" aria-label="Filter the library by form"></div></div>
+    <div class="lib" id="lib"></div>
+  </section>
+
+  <section data-build hidden id="rebuild">
+    <div class="sh"><h2>Rebuild</h2><p class="dek">Every piece has a recipe: its idea, marks, ground, accent, motion, controls, what is computed, what is placeholder, and the engine calls it uses. To rebuild a piece by hand or with a model, start from three things: the conventions, the recipe and the engine primitives below.</p></div>
+    <div class="tw"><table class="onto eng"><thead><tr><th>Primitive</th><th>What it does</th></tr></thead><tbody>
+      <tr><td class="k">M.blue</td><td>Blue-noise stipple: an even Poisson-disc dot set, thinned by a density function, with dot size following value.</td></tr>
+      <tr><td class="k">M.ring</td><td>An engraved ring: dots spread across a band, dense at the core and smaller at the edges, with a slight swell along the ring.</td></tr>
+      <tr><td class="k">M.mirField</td><td>The Mir field: concentric rings, blades and a center at coherence k, from loose (0) to in tune (1).</td></tr>
+      <tr><td class="k">M.atmos</td><td>Fine dots that fall off from a center and gather into rays.</td></tr>
+      <tr><td class="k">M.logo · logoGeo · logoMask</td><td>The wordmark in one flat color, its geometry (tittle position, clear space) and a mask for knocking stipple out around it.</td></tr>
+      <tr><td class="k">M.Buf</td><td>A dot buffer that batches dots by color and can skip dots inside a mask.</td></tr>
+      <tr><td class="k">M.PAL · M.TOK</td><td>The grounds, and the product’s interface tokens.</td></tr>
+    </tbody></table></div>
+    <div class="rbtn"><button class="btn" id="copyRecipes" type="button">Copy all recipes · JSON</button><button class="btn quiet" id="copySpec" type="button">Copy library spec · JSON</button></div>
+    <details class="json"><summary>Library spec · JSON</summary><pre id="specJson"></pre></details>
+  </section>
+
+  <section id="listen">
+    <div class="sh"><h2>Listen</h2><div><p class="dek">The instruments the pieces play, synthesized live in your browser with no samples. Their timbres and methods come from Yellow Magic Orchestra, Mamman Sani, Raymond Scott, Bernie Worrell with Parliament-Funkadelic, and Frankie Reyes. Two phrases also take their feel from Koji Kondo’s Zora’s Domain and Susumu Hirasawa’s parade music for <i>Paprika</i>. Every phrase is new, and every chord is tuned pure.</p><div class="lsw" id="sndListen"></div></div></div>
+    <div id="listenBody"></div>
+  </section>
+
+  <section id="roots">
+    <div class="sh"><h2>Influences</h2><p class="dek">The ideas behind the system are old. Twelve sources, from about 1300 to now.</p></div>
+    <div class="rootax"><canvas id="rootAxis" aria-label="Timeline of twelve sources, from about 1300 to 2026"></canvas></div>
+    <ol class="roots" id="rootList"></ol>
+  </section>
+
+  <section id="about">
+    <div class="sh"><h2>About this page</h2><p class="dek abt">This is a design exploration by the Mindgut design team. It began from a moodboard pairing Oskar Fischinger’s films with stipple drawing. Everything here is drawn and sounded live in your browser. Values are illustrative unless a piece says it computes them.<span data-build hidden> Each piece has a recipe for rebuilding it by hand or with a model. See <a href="#rebuild">Rebuild</a>.</span></p></div>
+  </section>
+
+  <section data-build hidden id="colin">
+    <div class="sh"><h2>Studio notes</h2><p class="dek">Notes on the moodboard and the direction, and what is still open.</p></div>
+    <blockquote class="colin">“I think it’s important that there is some type of soft, handmade, inviting feel and it’s not too digital or cold instrument. After all, we’re asking people to share a lot of personal information in order to build a real relationship with this technology.”<cite>Colin · Slack · on the CVM × stipple moodboard</cite></blockquote>
+    <div class="notes">
+      <div class="nt"><h3>Fischinger is the right ancestor</h3>
+        <p class="take"><b>What we take</b>Allegretto’s color came from a divisionist method that changed colors frame to frame. That is pointillism in time: many small marks agreeing across frames, as stipple dots agree across a plane. The merge works because the method is shared.<span class="ref">Visual Music Archive [1]</span></p>
+        <p class="push"><b>Where we push</b>Keep his abstraction as well as his look. Fischinger left Disney’s Toccata and Fugue sequence when his designs were made more representational. For Mir that means no face, no orb and no character. The CVM frames stay as reference; nothing shipped quotes them.<span class="ref">Center for Visual Music [2] · P1</span></p></div>
+      <div class="nt"><h3>Soft stipple has a history</h3>
+        <p class="take"><b>What we take</b>The softness is right. Stipple builds tone from many dots, so no single mark carries the image, and it reads as made by hand.</p>
+        <p class="push"><b>Where we push</b>Stipple began as a way to reproduce the hand. Demarteau’s crayon manner (1756) etched dots to pass for chalk drawings, and stipple plates printed many more copies than mezzotint. In a product that asks for personal information, each dot should stand for a real exchange. No grain is added for warmth.<span class="ref">Stipple engraving [3] · P5 · L-02, L-08</span></p></div>
+      <div class="nt"><h3>Tuning, between two players</h3>
+        <p class="take"><b>What we take</b>The moodboard keeps devices out: no bezel, no knob, no meter. Coherence shows as a picture resolving, with the number underneath.</p>
+        <p class="push"><b>Where we push</b>A tuner is something you read. Two players tuning adjust toward each other. In Mir, your pitch is the reference and Mir tunes to you. Chladni’s plates (1787) show it: sand moves to where the plate is still. Instruments stay behind Advanced.<span class="ref">APS News [4] · P2 · L-05, L-09, L-29</span></p></div>
+      <div class="nt"><h3>Visual music has more than one record</h3>
+        <p class="take"><b>What we take</b>The Center for Visual Music is the right archive for abstract film: Fischinger and his circle.</p>
+        <p class="push"><b>Where we push</b>Ragamala painting, made in court workshops of the Deccan, the Pahari hills, Rajasthan and elsewhere from the 16th century, pictured each raga as a person with a temperament, described in a verse. A mode became a mood without becoming a mascot. L-10 borrows that structure, credits it, and leaves the painting style alone.<span class="ref">Indica [5] · UMMA [6] · L-10</span></p></div>
+      <div class="nt"><h3>Where the hand shows</h3>
+        <p class="take"><b>What we take</b>Soft and handmade on top, exact underneath. The moodboard puts it as flat construction with stipple as the surface.</p>
+        <p class="push"><b>Where we push</b>The hand shows in three places: the strays, a slight wobble in each ring, and the count. Everything else is exact: whole dots at device resolution, real type, a real grid. If softness is everywhere, it stops meaning anything.<span class="ref">P1, P5</span></p></div>
+    </div>
+    <div class="qs"><div class="lab">To settle with Colin</div><ol>
+      <li><b>Signals.</b> Product and engineering need to name what drives density, strays, settling and crossings. Until then the values are placeholders.</li>
+      <li><b>Accent.</b> Red is the strongest; ochre is the gentlest. Red against teal is hard to tell apart for red-green color blindness, so state is always written out as well.</li>
+      <li><b>Motion.</b> How fast do dots settle, and can settling reverse on screen?</li>
+      <li><b>Low-resolution screens.</b> Dots are at least about one device pixel. This needs testing on real 1× displays.</li>
+      <li><b>Grounds.</b> Which ground is the default for long sessions: night or olive?</li>
+</ol></div>
+  </section>
+
+  <section id="sources" class="src">
+    <div class="sh"><h2>Sources</h2><p class="dek">Historical facts come from these sources. Readings and proposals are ours.</p></div>
+    <ol>
+      <li><a href="https://visualmusicarchive.org/works/w/allegretto.html">Visual Music Archive · Oskar Fischinger, Allegretto (1936)</a></li>
+      <li><a href="https://www.centerforvisualmusic.org/Fischinger/OFBio.htm">Center for Visual Music · Oskar Fischinger biography</a></li>
+      <li><a href="https://en.wikipedia.org/wiki/Stipple_engraving">Wikipedia · Stipple engraving</a></li>
+      <li><a href="https://www.aps.org/apsnews/2017/07/first-experiments-chladni-figures">APS News · First experiments with Chladni figures</a></li>
+      <li><a href="https://changemakers.indica.in/?p=1309">Indica · Ragamala: where raga meets image, poetry, living tradition</a></li>
+      <li><a href="https://umma.umich.edu/objects/ragamala-asavari-ragini-1981-2-47">University of Michigan Museum of Art · Ragamala, Asavari Ragini</a></li>
+      <li>Mindgut moodboard v0.3 · CVM × stipple · 23 Oct 2026 (internal)</li>
+      <li><a href="https://runemadsen.com/blog/karl-gerstner-designing-programmes/">Rune Madsen · Karl Gerstner, Designing Programmes (1964)</a></li>
+      <li><a href="https://en.wikipedia.org/wiki/John_Whitney_(animator)">Wikipedia · John Whitney, Digital Harmony (1980)</a></li>
+      <li><a href="https://bigthink.com/thinking/truth-machine/">Big Think · Ramon Llull’s truth machine (and the zairja)</a> · <a href="https://dspace.ut.ee/items/56b006d0-8941-4dad-86b3-5d476d6671b3">Combinatorial wheels and movable alphabets: from Llull to Alberti</a></li>
+      <li><a href="https://history.computer.org/pioneers/jacquard.html">IEEE Computer Society · Joseph-Marie Jacquard</a></li>
+      <li><a href="https://www.history.com/articles/louis-braille-reading-writing-system-blind">History · Louis Braille and Barbier’s night writing</a> · <a href="https://duxburysystems.org/downloads/library/history/lb_1829/nfb_intro.htm">Braille’s 1829 method (introduction)</a></li>
+      <li><a href="https://mathshistory.st-andrews.ac.uk/Biographies/Lissajous/">MacTutor · Jules Antoine Lissajous</a></li>
+      <li><a href="https://en.wikipedia.org/wiki/Split-flap_display">Wikipedia · Split-flap display (Solari, Cifra 3)</a></li>
+      <li>Delivery 4 roots: <a href="https://en.wikipedia.org/wiki/Planchette">planchette</a>, <a href="https://en.wikipedia.org/wiki/Fuji_(planchette_writing)">fuji writing</a>, <a href="https://en.wikipedia.org/wiki/Ideomotor_phenomenon">ideomotor effect</a> · <a href="https://en.wikipedia.org/wiki/Etak_(navigation)">etak navigation</a> · <a href="https://en.wikipedia.org/wiki/Quipu">khipu</a> · <a href="https://en.wikipedia.org/wiki/Camera_obscura">camera obscura</a>, <a href="https://arxiv.org/pdf/1107.0820">pinhole optics</a> · <a href="https://en.wikipedia.org/wiki/Piano_roll">piano roll</a> · <a href="https://en.wikipedia.org/wiki/Luca_Ghini">Luca Ghini</a> · <a href="https://gutenberg.org/cache/epub/78991/pg78991-images.html">Moxon, Mechanick Exercises (1683)</a> · <a href="https://en.wikipedia.org/wiki/History_of_timekeeping_devices_in_Egypt">Egyptian timekeeping</a>, <a href="https://subsites.chinadaily.com.cn/shanxi/2024-11/29/c_1049230.htm">Taosi gnomon</a> · <a href="https://www.victorian-cinema.net/marey">Marey</a> · <a href="https://www.35mmc.com/02/02/2024/f-stop-printing-in-the-darkroom/">f-stop printing</a></li>
+      <li><a href="https://daily.redbullmusicacademy.com/2014/11/yellow-magic-orchestra-gear">Red Bull Music Academy Daily · Yellow Magic Orchestra’s gear</a></li>
+      <li><a href="https://sahelsounds.com/products/mammane-sani-et-son-orgue-la-musique-electronique-du-niger">Sahel Sounds · Mammane Sani et son orgue: La musique électronique du Niger</a></li>
+      <li><a href="https://www.raymondscott.net/?p=1763">raymondscott.net · Manhattan Research Inc.</a> · <a href="https://en.wikipedia.org/wiki/Manhattan_Research,_Inc.">Wikipedia · Manhattan Research, Inc.</a></li>
+      <li><a href="https://en.wikipedia.org/wiki/Flash_Light_(song)">Wikipedia · Flash Light (Parliament, 1977)</a></li>
+      <li><a href="https://remezcla.com/features/music/frankie-reyes-the-refresh-video/">Remezcla · Frankie Reyes</a> · <a href="https://www.stonesthrow.com/news/frankie-reyes-boleros-valses-y-mas/">Stones Throw · Frankie Reyes, Boleros Valses y Más</a> · <a href="https://www.npr.org/2016/08/24/491233462/simple-idea-spooky-result-latin-american-ballads-get-a-ghostly-makeover">NPR · Frankie Reyes</a></li>
+      <li><a href="https://en.wikipedia.org/wiki/Paprika_(soundtrack)">Wikipedia · Paprika (soundtrack), Susumu Hirasawa</a> · <a href="https://zeldauniverse.net/2024/01/15/medlis-melodies-the-tranquility-of-zoras-domain/">Zelda Universe · Zora’s Domain</a></li>
+    </ol>
+  </section>
+
+  <footer><span class="flogo" role="img" aria-label="mindgut"><canvas id="footLogo" aria-hidden="true"></canvas></span><span class="lab">Mindgut · Mir · design exploration</span><span class="lab">Delivery 05 · Oct 2026</span></footer>
+  <script type="application/json" id="mir-spec">{}</script>
+</div>
+
+<script src="mir.js"></script>
+<script src="mir-audio.js"></script><script src="mir-music.js"></script>
+<script src="spec.js"></script>
+<script src="pieces-a.js"></script>
+<script src="pieces-b.js"></script>
+<script src="pieces-c.js"></script>
+<script src="pieces-d.js"></script>
+<script src="pieces-e.js"></script>
+<script src="pieces-f.js"></script>
+<script src="pieces-g.js"></script>
+<script src="pieces-h.js"></script><script src="pieces-i.js"></script>
+<script src="listen.js"></script>
+<script>
+(function(){
+const M=window.MIR, S=window.MIR_SPEC, $=s=>document.querySelector(s), h=(t,a={},...k)=>{ const e=document.createElement(t); for(const [n,v] of Object.entries(a)){ if(n==='html') e.innerHTML=v; else e.setAttribute(n,v); } for(const c of k) e.append(c); return e; };
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* view: Read (default) or Build. Remembered per viewer. Build only reveals structure; canvases draw the same in both. */
+let BUILD=false; try{ BUILD=localStorage.getItem('mir.view')==='build'; }catch(_){}
+const B={'data-build':'',hidden:''};
+
+/* small stippled glyphs for pillars, grounds and ontology rows */
+function glyph(cv,size,kind,palName){ const P=M.PAL[palName||'paper'], g=M.canvas(cv,size,size), B=new M.Buf(g), R=M.rng(kind.length*97+size); M.fill(g,P.ground); const c=size/2, s=size;
+  const ring=(Rr,n,col,sp=.7)=>M.along(B,{rng:R,curve:M.curve.ring(c,c,Rr),n,spread:sp,r:s>80?.85:.7,color:col});
+  if(kind==='ground'){ ring(s*.3,70,P.ring); ring(s*.12,26,P.center); }
+  else if(kind==='P1'||kind==='dot'){ for(let i=1;i<=5;i++) ring(s*.08*i,Math.round(i*s*.34),P.ring,.45); ring(s*.05,Math.round(s*.3),P.center,.4); if(kind==='dot'){ B.by.clear(); B.flush(); M.dotMark(g,c,c,s*.13,P.center,{seed:3,strays:4}); } }
+  else if(kind==='P2'){ for(let i=1;i<=5;i++) M.along(B,{rng:R,curve:M.curve.ring(c,c,s*.085*i,{wobble:.12*(5-i)/5,seed:i}),n:Math.round(i*s*.34),spread:.45+(5-i)*.8,r:.75,color:P.ring}); ring(s*.05,Math.round(s*.3),P.center,.4+.9); }
+  else if(kind==='P3'){ const f1=M.shape.disc(c-s*.12,c,s*.26,2), f2=M.shape.disc(c+s*.12,c,s*.26,2); const pit=s*.058, bw=s*.012, band=(x,y,cx)=>{ const d=Math.hypot(x-cx,y-c); if(d>s*.36) return 0; const u=(d/pit)%1; return Math.min(u,1-u)*pit<bw?1:0; }; M.blue(B,{box:[0,0,s,s],sp:Math.max(1.1,s*.0075),seed:31,density:(x,y)=>Math.max(band(x,y,c-s*.11),band(x,y,c+s*.11)),rOf:(d,R)=>.55+.3*R(),color:(x,y)=>band(x,y,c-s*.11)&&band(x,y,c+s*.11)?P.center:P.ring}); }
+  else if(kind==='P4'||kind==='bar'){ for(let i=0;i<7;i++){ const f=M.shape.bar(s*.17+i*s*.11,c,s*.46,s*.055,Math.PI/2-.32); M.blue(B,{box:[0,0,s,s],sp:Math.max(1.1,s*.0075),seed:40+i,density:f,rOf:(d,R)=>.58+.32*R(),color:i<4?P.center:P.soft}); } }
+  else if(kind==='P5'||kind==='diamond'){ [[.3,.62,1],[.5,.42,1],[.72,.6,0]].forEach(([x,y,full],i)=>M.along(B,{rng:R,curve:M.curve.diamond(s*x,s*y,s*.1,s*.15),n:Math.round(s*.9),spread:.5,r:.8,color:full?P.ink:P.soft,even:true})); if(kind==='P5') M.strays(B,{rng:R,box:[s*.05,s*.05,s*.95,s*.95],n:14,r:.8,color:P.ink}); }
+  else if(kind==='stray'){ ring(s*.3,40,P.soft,.6); M.strays(B,{rng:R,box:[s*.05,s*.05,s*.95,s*.95],n:9,r:1,color:P.ink,avoid:(x,y)=>Math.hypot(x-c,y-c)<s*.38}); }
+  else if(kind==='ring'){ ring(s*.36,110,P.ink,.6); ring(s*.24,74,P.ink,.6); }
+  else if(kind==='center'){ ring(s*.3,40,P.soft,.6); ring(s*.14,46,P.center,.5); }
+  else if(kind==='blade'){ M.blue(B,{box:[0,0,s,s],sp:1.3,seed:7,density:M.shape.blade(c,c,-.6,s*.04,s*.46,s*.18),rOf:(d,R)=>.55+.3*R(),color:P.blade}); }
+  else if(kind==='confetti'){ for(let i=0;i<9;i++){ const x=s*(.15+R()*.7), y=s*(.15+R()*.7), z=s*.05; M.field(B,{rng:R,box:[x-z,y-z,x+z,y+z],cell:1.3,r:.7,density:M.shape.rect(x-z/2,y-z/2,x+z/2,y+z/2,.5),color:i%3?P.ink:P.center}); } }
+  else if(kind==='hollow'){ M.blue(B,{box:[0,0,s,s],sp:Math.max(1.4,s*.024),seed:9,density:(x,y)=>{ const d=Math.hypot(x-c,y-c); return d<s*.44 && Math.hypot(x-c*1.15,y-c*.9)>s*.15 ? .85:0; },rOf:(d,R)=>.55+.35*R(),color:P.ink}); }
+  B.flush(); }
+
+/* pillars */
+const pg=$('#pillarGrid'); S.pillars.forEach(p=>{ const cv=h('canvas',{'aria-hidden':'true'}); const el=h('div',{class:'pil'},h('span',{class:'lab',...B},p.id),cv,h('h3',{},p.name),h('p',{class:'claim'},p.claim),h('ul',{},...p.means.map(m=>h('li',{},m))),h('div',{class:'no',...B,html:'<b>Rules out</b>'+p.rulesOut.join(' · ')}),h('div',{class:'pre',...B},p.precedent)); pg.append(el); el._g=[cv,p.id]; });
+const G0=S.rule; $('#ruleG').append(h('div',{},h('span',{class:'lab',...B},'Rule '+G0.id),h('h3',{},G0.name)),h('div',{},h('p',{},G0.claim),h('div',{class:'grounds',id:'grounds'}),h('p',{class:'lab',style:'margin-top:12px',...B},G0.limits.join(' · '))));
+
+/* ontology */
+const tb=$('#ontoMarks tbody'); S.ontology.marks.forEach(m=>{ const cv=h('canvas',{'aria-hidden':'true'}); const tr=h('tr',{},h('td',{},cv),h('td',{class:'k'},m.id),h('td',{},m.stands),h('td',{},m.mir)); tb.append(tr); tr._g=[cv,m.id]; });
+S.ontology.states.forEach(s=>$('#ontoStates').append(h('li',{html:`<b>${s.id}</b>${s.reads}`})));
+S.ontology.readings.forEach(s=>$('#ontoReadings').append(h('li',{html:`<b>${s.id}</b>${s.value} · ${s.marks.join(', ')}`})));
+S.ontology.relations.forEach(s=>$('#ontoRel').append(h('li',{html:`<b>${s.id}</b>${s.from} → ${s.to}`})));
+const json=JSON.stringify(S,null,2); $('#specJson').textContent=json;
+
+/* What this is: rendered from MIR_SPEC.about */
+const AB=S.about||{}; [['A person','person'],['A model','model'],['A record','record']].forEach(([l,k])=>{ if(AB[k]) $('#who').append(h('li',{},h('b',{},l),h('p',{},AB[k]))); });
+$('#whoLine').textContent=AB.line||''; if(AB.lead) $('#heroLead').textContent=AB.lead;
+/* How to read it: a visual key, same glyphs as the ontology */
+const KEY=[['dot','Dot','One exchange.'],['stray','Stray','Something said that hasn’t found its place yet.'],['ring','Ring','What the two of you hold in common.'],['center','Center','Where you and Mir meet. It is the one red mark.'],['blade','Blade','A question or intent, reaching outward.'],['bar','Bar','A breath. Twenty-one make a cycle.'],['diamond','Diamond','Something arriving.'],['confetti','Confetti','A cycle renewing.'],['hollow','Hollow','Something forgotten on request.'],['ground','Ground','The background color. It sets a mood and never changes the meaning.']];
+KEY.forEach(([id,name,line])=>{ const cv=h('canvas',{'aria-hidden':'true'}); const li=h('li',{},cv,h('b',{},name),h('span',{},line)); li._g=[cv,id]; $('#keyList').append(li); });
+$('#copyRecipes').addEventListener('click',e=>{ const b=e.currentTarget, byId=Object.fromEntries(M.pieces.map(p=>[p.id,p])); const all={conventions:[...document.querySelectorAll('.conv li')].map(li=>li.textContent.replace(/\s+/g,' ').trim()), pieces:S.pieces.map(o=>Object.assign({id:o.id,title:o.title,form:o.form,pillars:o.pillars,pair:o.pair,job:o.job},(byId[o.id]||{}).recipe||{}))}; const j=JSON.stringify(all,null,2);
+  (navigator.clipboard?navigator.clipboard.writeText(j):Promise.reject()).then(()=>{ b.textContent='Copied'; setTimeout(()=>b.textContent='Copy all recipes · JSON',1400); },()=>{ b.textContent='Copy failed'; setTimeout(()=>b.textContent='Copy all recipes · JSON',1400); }); });
+$('#copySpec').addEventListener('click',e=>{ const b=e.currentTarget; (navigator.clipboard?navigator.clipboard.writeText(json):Promise.reject()).then(()=>{ b.textContent='Copied'; },()=>{ const r=document.createRange(); r.selectNodeContents($('#specJson')); const s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent='Selected · copy with ⌘C'; }); });
+
+/* outline matrix */
+const mx=$('#mx'); const hd=h('tr',{},h('th',{},'#'),h('th',{},'Piece'),...S.forms.map(f=>h('th',{style:'text-align:center'},f)),h('th',{},'Pillars'),h('th',{},'Job'));
+mx.append(h('thead',{},hd)); const mb=h('tbody'); S.pieces.forEach(p=>{ mb.append(h('tr',{},h('td',{class:'id',html:`<a href="#${p.id}">${p.id}</a>`}),h('td',{class:'t',html:p.title+'<span class="fm">'+p.form+'</span>'}),...S.forms.map(f=>h('td',{class:'c',html:p.form===f?'<span class="dotc" aria-label="'+f+'"></span>':''})),h('td',{class:'id pl'},p.pillars.join(' ')),h('td',{class:'j'},p.job))); }); mx.append(mb);
+
+/* the library: frame each registered piece by the outline order.
+   Piece contract (all optional beyond render):
+     state:{…}                 defaults; copied per frame, reset restores them
+     controls:[{id,type:'range'|'select'|'toggle'|'button',label,min,max,step,options:[{value,label}],fmt:v=>str,run:st=>void,play:bool}]
+     render(g,w,h,M,st)        the settled, complete still (also the reduced-motion frame)
+     animate(g,w,h,M,st,t)     draw frame at t ms; return true to continue. autoplay:false to wait for Play.
+     loop:true                 animation restarts until paused or off screen
+     pointer(st,e)             e={type:'down'|'move'|'up', x,y,w,h}; return true to redraw. touchAction default 'pan-y'. */
+const lib=$('#lib'), pieceById=Object.fromEntries(M.pieces.map(p=>[p.id,p])), frames=[];
+const clone=o=>JSON.parse(JSON.stringify(o||{}));
+const dec=st=>{ const s=String(st||1); return s.includes('.')?s.split('.')[1].length:0; };
+const fmt=(c,v)=>c.fmt?c.fmt(v):(c.type==='range'?(+v).toFixed(dec(c.step)):String(v));
+
+/* sound. The frame owns the mix: one bus per piece (M.audio.bus(id)), gain set from visibility.
+   Off by default; turning it on is the unlock gesture; the most-visible sounding piece leads at 0 dB, the rest sit at −18 dB.
+   Everything is guarded: with no M.audio the page behaves exactly as before. See SOUND-UX.md. */
+const AU=()=>{ const a=M.audio; return a&&a.supported!==false?a:null; };
+const SK='mir.sound', SKM='mir.soundMute', DUCK=Math.pow(10,-18/20), RAMP=300, VFULL=.35, NOOP={stop(){},set(){},setBpm(){}};
+const snd={on:false,pending:false,lead:null,sw:[],muted:new Set()};
+try{ snd.on=localStorage.getItem(SK)==='1'; }catch(_){}
+try{ snd.muted=new Set(JSON.parse(localStorage.getItem(SKM)||'[]')); }catch(_){}
+const ready=()=>{ const a=AU(); return !!(a&&a.unlocked); };
+const live=()=>snd.on&&ready();
+function saveMuted(){ try{ localStorage.setItem(SKM,JSON.stringify([...snd.muted])); }catch(_){} }
+function say(t){ const el=$('#sndLive'); if(!el) return; el.textContent=''; setTimeout(()=>{ el.textContent=t; },40); }
+/* M.audio scoped to one piece's bus; silent no-ops while sound is off or the piece is muted */
+function scoped(f){ const a=AU(); if(!a) return null; if(f.A) return f.A; const id=f.p.id;
+  f.A=Object.assign(Object.create(a),{ id, bus:()=>busOf(f), play:(name,o)=>live()&&!f.muted?a.play(id,name,o)||NOOP:NOOP, seq:o=>live()&&!f.muted?a.seq(id,o)||NOOP:NOOP }); return f.A; }
+function busOf(f){ const a=AU(); if(!a||!a.unlocked) return null; if(!f.bus){ try{ f.bus=a.bus(f.p.id); }catch(e){ console.error('bus '+f.p.id,e); } } return f.bus||null; }
+function sndStart(f,why){ const p=f.p; if(!p.sound||!live()||f.muted||!(f.ratio>0)) return; clearTimeout(f.offT); f.offT=0; const A=scoped(f); f.sndOn=true;
+  if(why==='play'&&p.sound.onPlay){ try{ p.sound.onPlay(A,f.st); }catch(e){ console.error('piece '+p.id+' sound.onPlay',e); } }
+  if(p.sound.ambient&&!f.amb){ try{ f.amb=p.sound.ambient(A,f.st)||null; }catch(e){ console.error('piece '+p.id+' sound.ambient',e); } }
+  mix(); }
+function sndStop(f){ clearTimeout(f.offT); f.offT=0; const p=f.p;
+  if(f.amb){ try{ f.amb.stop&&f.amb.stop(); }catch(_){} f.amb=null; }
+  if(f.sndOn&&p.sound&&p.sound.onStop){ try{ p.sound.onStop(scoped(f),f.st); }catch(e){ console.error('piece '+p.id+' sound.onStop',e); } }
+  if(f.msh){ try{ f.msh.stop(.12); }catch(_){} f.msh=null; f.A0n=null; }
+  f.sndOn=false; f.engaged=false; const b=f.bus; if(b){ try{ b.stopAll(); }catch(_){} } }
+/* a control moved: the piece's own musical answer (p.musicParam), else the default ladder or option chord in the piece's mode */
+function musParam(f,c,oldV,newV){ if(!M.music||!live()||f.muted||!(f.ratio>0)) return; const p=f.p, A=scoped(f); if(!A) return;
+  try{ if(p.musicParam&&p.musicParam(A,f.st,c.id,oldV,newV)) return; if(!p.music&&!p.sound) return;
+    M.music.param(A,p.id,c,oldV,newV,{st:f.st,mode:M.music.groundMode(f.st.ground),ins:p.musicIns||'mallet'}); }catch(e){ console.error('piece '+p.id+' musicParam',e); } }
+/* first interaction with a piece (pointer or control) starts its bed, if it has one */
+function engage(f){ f.engaged=true; if(f.p.sound&&live()&&!f.amb) sndStart(f,'engage'); }
+let mixPend=0; function mixSoon(){ if(!mixPend) mixPend=requestAnimationFrame(()=>{ mixPend=0; mix(); }); }
+/* lead = the sounding piece with the most visible canvas area; it keeps the lead until another has 15% more. With nobody sounding, every bus is open. */
+function mix(){ const a=AU(); if(!a||!a.unlocked) return; let lead=null; const cand=[];
+  if(snd.on) frames.forEach(f=>{ if(!(f.ratio>0)||f.muted) return; const b=f.bus; if(f.sndOn||f.amb||(b&&b.active&&b.active())) cand.push(f); });
+  cand.forEach(f=>{ if(!lead||f.area>lead.area+1||(Math.abs(f.area-lead.area)<=1&&f.ratio>lead.ratio)) lead=f; });
+  const prev=snd.lead; if(lead&&prev&&prev!==lead&&cand.includes(prev)&&prev.area*1.15>=lead.area) lead=prev;
+  snd.lead=lead;
+  frames.forEach(f=>{ if(!(f.ratio>0)&&!f.bus) return; const b=busOf(f); if(!b) return;
+    const v=Math.min(1,(f.ratio||0)/VFULL), vis=v*v*(3-2*v), g=snd.on&&!f.muted&&f.ratio>0?(!lead||f===lead?1:DUCK)*vis:0;
+    if(f.g0===undefined||Math.abs(g-f.g0)>.002){ f.g0=g; try{ b.gain(g,RAMP); }catch(e){ console.error('bus '+f.p.id,e); } }
+    if(!(f.ratio>0)&&!f.offT&&(f.sndOn||f.amb||(b.active&&b.active()))) f.offT=setTimeout(()=>{ f.offT=0; if(!(f.ratio>0)) sndStop(f); },RAMP+60); }); }
+let tickT=0; function tick(){ if(tickT) return; tickT=setInterval(()=>{ if(!live()){ clearInterval(tickT); tickT=0; return; } mix(); },400); }
+function wake(){ frames.forEach(f=>{ if(f.p.sound&&f.ratio>0&&!f.muted&&(f.running||f.engaged)) sndStart(f,'resume'); }); mix(); tick(); meterRun(); }
+function hush(){ setTimeout(()=>{ if(snd.on) return; frames.forEach(f=>{ if(f.sndOn||f.amb) sndStop(f); }); mix(); },160); }
+function setSound(v,o={}){ v=!!v; const a=AU(); if(!a) return; if(v===snd.on&&(!v||(ready()&&a.enabled))){ paint(); return; }
+  snd.on=v; try{ localStorage.setItem(SK,v?'1':'0'); }catch(_){}
+  if(v){ let pr; snd.pending=true; try{ pr=a.unlock(); }catch(e){ console.error('audio unlock',e); }
+    Promise.resolve(pr).then(()=>{ snd.pending=false; if(!snd.on) return; try{ a.setEnabled(true); }catch(e){ console.error(e); } paint(); wake(); },e=>{ snd.pending=false; snd.on=false; console.error('audio unlock',e); paint(); say('Sound is not available'); }); }
+  else { try{ a.setEnabled(false); }catch(_){} hush(); }
+  paint(); if(o.announce!==false) say(v?'Sound on':'Sound off'); }
+/* the switch: a real button; state in words, level in nine dots that grow left to right */
+const MN=9, MW=MN*5+1, MH=11;
+function makeSwitch(where){ const cv=h('canvas',{'aria-hidden':'true'}), st=h('span',{class:'st'},'Sound off');
+  const b=h('button',{type:'button',class:'snd',id:'snd-'+where,'aria-pressed':'false','aria-label':'Sound','aria-keyshortcuts':'M',title:'Sound (M)'},cv,st);
+  b.addEventListener('click',()=>setSound(!snd.on)); const s={b,cv,st,last:''}; snd.sw.push(s); return b; }
+function meterDraw(s,lit,pk,force){ const key=lit+'|'+pk+'|'+snd.on+'|'+ready(); if(!force&&key===s.last) return; s.last=key;
+  if(!s.g) s.g=M.canvas(s.cv,MW,MH); const g=s.g; g.setTransform(g.dpr,0,0,g.dpr,0,0); g.clearRect(0,0,MW,MH);
+  const cs=getComputedStyle(s.b), ink=cs.color, hair=cs.getPropertyValue('--hair').trim(), soft=cs.getPropertyValue('--soft').trim(), acc=cs.getPropertyValue('--accent').trim();
+  for(let i=0;i<MN;i++){ const r=.8+i*.12, x=2.5+i*5, y=MH/2; let col=snd.on?soft:hair, rr=.75;
+    if(i<lit){ col=ink; rr=r; } else if(pk&&i===pk-1){ col=acc; rr=r; } else if(snd.on&&ready()) rr=.85;
+    g.beginPath(); g.arc(x,y,rr,0,M.TAU); g.fillStyle=col; g.fill(); } }
+function drawMeters(lit,pk,force){ snd.sw.forEach(s=>meterDraw(s,lit,pk,force)); }
+let mraf=0, pkH=0, pkT=0;
+function meterRun(){ if(mraf) return; const lv=x=>Math.max(0,Math.min(1,(20*Math.log10((x||0)+1e-9)+54)/48));
+  const loop=t=>{ mraf=0; const a=AU(); if(!live()){ pkH=0; drawMeters(0,0); return; } let m=null; try{ m=a.meter(); }catch(_){} m=m||{rms:0,peak:0};
+    const lit=Math.round(lv(m.rms)*MN), pk=Math.ceil(lv(m.peak)*MN); if(pk>=pkH){ pkH=pk; pkT=t; } else if(t-pkT>650){ pkH=Math.max(pk,pkH-1); pkT=t-500; }
+    drawMeters(lit,pkH>lit?pkH:0); mraf=requestAnimationFrame(loop); };
+  mraf=requestAnimationFrame(loop); }
+function paint(){ const a=AU(), armed=snd.on&&!ready();
+  snd.sw.forEach(s=>{ s.b.setAttribute('aria-pressed',String(snd.on)); s.st.textContent=snd.on?'Sound on':'Sound off'; s.b.disabled=!a; s.b.classList.toggle('armed',armed);
+    s.b.title=!a?'Sound is not available in this browser':armed?'Sound on: starts at your first click or key':'Sound (M)'; });
+  drawMeters(0,0,true); frames.forEach(f=>{ if(f.sndBtn) f.sndBtn.setAttribute('aria-pressed',String(snd.on&&!f.muted)); }); }
+
+function buildControls(f,o){ const p=f.p; if(!p.controls&&!p.animate&&!p.sound) return null;
+  const row=h('div',{class:'ctl',role:'group','aria-label':o.title+' · controls'});
+  if(p.animate){ const b=h('button',{type:'button',class:'btn',id:p.id+'-play'},'Play'); b.addEventListener('click',()=>{ if(f.running){ f.stop(); sndStop(f); } else f.play(true); }); f.playBtn=b; row.append(b); }
+  if(p.sound){ const b=h('button',{type:'button',class:'btn',id:p.id+'-sound','aria-pressed':String(snd.on&&!f.muted)},'Sound');
+    b.addEventListener('click',()=>{ if(!snd.on){ f.muted=false; snd.muted.delete(p.id); saveMuted(); f.engaged=true; setSound(true,{announce:false}); say('Sound on · '+o.title); return; }
+      f.muted=!f.muted; f.muted?snd.muted.add(p.id):snd.muted.delete(p.id); saveMuted(); paint(); mix();
+      if(f.muted) setTimeout(()=>{ if(f.muted) sndStop(f); },RAMP+40); else engage(f); say((f.muted?'Muted · ':'Sound on · ')+o.title); });
+    f.sndBtn=b; row.append(b); }
+  (p.controls||[]).forEach(c=>{ const id=p.id+'-'+c.id;
+    if(c.type==='range'){ const inp=h('input',{type:'range',id,min:c.min,max:c.max,step:c.step||'any',value:f.st[c.id]}); const out=h('output',{for:id},fmt(c,f.st[c.id]));
+      inp.addEventListener('input',()=>{ engage(f); const ov=f.st[c.id]; f.st[c.id]=+inp.value; out.textContent=fmt(c,f.st[c.id]); f.stop(); f.redraw(); musParam(f,c,ov,f.st[c.id]); }); f.sync.push(()=>{ inp.value=f.st[c.id]; out.textContent=fmt(c,f.st[c.id]); });
+      row.append(h('label',{for:id},h('span',{},c.label),inp,out)); }
+    else if(c.type==='select'){ const sel=h('select',{id},...c.options.map(op=>{ const e=h('option',{value:op.value},op.label); if(String(op.value)===String(f.st[c.id])) e.selected=true; return e; }));
+      sel.addEventListener('change',()=>{ engage(f); const v=sel.value, ov=f.st[c.id]; f.st[c.id]=isNaN(+v)||v===''?v:+v; f.stop(); f.redraw(); if(c.play) f.play(true); else musParam(f,c,ov,f.st[c.id]); }); f.sync.push(()=>{ sel.value=f.st[c.id]; });
+      row.append(h('label',{for:id},h('span',{},c.label),sel)); }
+    else if(c.type==='toggle'){ const b=h('button',{type:'button',class:'btn',id,'aria-pressed':String(!!f.st[c.id])},c.label); b.addEventListener('click',()=>{ engage(f); f.st[c.id]=!f.st[c.id]; b.setAttribute('aria-pressed',String(!!f.st[c.id])); f.stop(); f.redraw(); if(c.play) f.play(true); }); f.sync.push(()=>b.setAttribute('aria-pressed',String(!!f.st[c.id]))); row.append(b); }
+    else if(c.type==='button'){ const b=h('button',{type:'button',class:'btn',id},c.label); b.addEventListener('click',()=>{ engage(f); f.stop(); if(c.run) c.run(f.st); f.sync.forEach(x=>x()); f.redraw(); if(c.play) f.play(true); }); row.append(b); }
+    else if(c.type==='note'){ row.append(h('span',{class:'note',id},c.label)); } });
+  if(p.controls&&p.controls.some(c=>c.type!=='note')){
+    const rs=h('button',{type:'button',class:'btn quiet',id:p.id+'-reset'},'Reset'); rs.addEventListener('click',()=>{ f.st=clone(p.state); f.sync.forEach(x=>x()); f.stop(); sndStop(f); f.redraw(); }); row.append(rs);
+    const cp=h('button',{type:'button',class:'btn quiet',id:p.id+'-copy',...B},'Copy settings'); cp.addEventListener('click',()=>{ const j=JSON.stringify({piece:p.id,settings:f.st}); (navigator.clipboard?navigator.clipboard.writeText(j):Promise.reject()).then(()=>{ cp.textContent='Copied'; setTimeout(()=>cp.textContent='Copy settings',1400); },()=>{ cp.textContent='Copy failed'; setTimeout(()=>cp.textContent='Copy settings',1400); }); }); row.append(cp); }
+  return row; }
+
+S.pieces.forEach(o=>{ const p=pieceById[o.id]; const cvw=h('div',{class:'cvw'}); const fig=h('figure',{class:'pc'+(o.span===6?' s6':''),id:o.id,style:'margin:0','data-piece':o.id,'data-form':o.form,'data-pillars':o.pillars.join(' ')});
+  const meta=h('div',{class:'meta'},h('span',{class:'n',...B},o.id),h('span',{class:'t'},o.title),h('span',{class:'lab'},o.form),h('div',{class:'chips',...B},...o.pillars.map(x=>h('span',{class:'chip'},x+' · '+((S.pillars.find(q=>q.id===x)||S.rule).name)))));
+  fig.append(cvw);
+  if(p){ const cv=h('canvas',{role:'img','aria-label':o.title+'. '+(p.alt||o.job)}); cvw.append(cv);
+    const f={p,o,cv,cvw,w:0,H:0,g:null,st:clone(p.state),sync:[],running:false,raf:0,visible:false,played:false,ratio:0,area:0,muted:snd.muted.has(p.id)}; cvw._f=f;
+    f.size=()=>{ const w=Math.floor(cvw.clientWidth); const ar=typeof p.aspect==='function'?p.aspect(w):(p.aspect||16/9); return [w,Math.round(w/ar)]; };
+    f.draw=(force)=>{ const [w,H]=f.size(); if(!w) return; if(!force&&w===f.w&&!f.dirty) return; const resized=w!==f.w||H!==f.H; f.w=w; f.H=H; f.dirty=false;
+      if(resized||!f.g) f.g=M.canvas(cv,w,H); else f.g.setTransform(f.g.dpr,0,0,f.g.dpr,0,0);
+      try{ p.render(f.g,w,H,M,f.st); }catch(e){ console.error('piece '+p.id,e); } };
+    f.redraw=()=>{ if(f.pend) return; f.pend=requestAnimationFrame(()=>{ f.pend=0; f.draw(true); }); };
+    f.setBtn=()=>{ if(f.playBtn) f.playBtn.textContent=f.running?'Pause':(f.played?'Replay':'Play'); };
+    f.stop=(keep)=>{ if(f.raf) cancelAnimationFrame(f.raf); f.raf=0; if(f.running){ f.running=false; f.setBtn(); } if(!keep&&f.msh){ try{ f.msh.stop(.12); }catch(_){} f.msh=null; f.A0n=null; } };
+    f.play=(user)=>{ if(!p.animate) return; if(reduced&&!user){ f.draw(true); return; } f.stop(!!f._loop); f.draw(true); f.running=true; f.played=true; f.setBtn(); const t0=performance.now();
+      /* music: the piece composes a score from its state; it plays on the piece's bus and, while sound is live, the audio clock drives t */
+      let clock=null; if(p.music&&M.music){ let sc=null; try{ sc=p.music(f.st,f.w,f.H,M); }catch(e){ console.error('piece '+p.id+' music',e); }
+        if(sc){ M.music.attach(f.st,sc); if(live()&&!f.muted&&(f.ratio>0||f.visible)){ const a=AU(); busOf(f); const A0=(f._loop&&f.A0n&&f.A0n>a.now()+.02)?f.A0n:a.now()+.12; f.A0=A0; f.A0n=A0+sc.dur/1000;
+          try{ f.msh=a.score(p.id,sc.events,{when:A0}); }catch(e){ console.error('piece '+p.id+' score',e); } clock=()=>live()&&!f.muted?(M.music.heard()-A0)*1000:null; mix(); } } }
+      let off=t0; const step=now=>{ if(!f.running) return; if(!f.visible&&!user){ f.stop(); return; } let more=false, t=now-off; if(clock){ const c=clock(); if(c!=null){ t=Math.max(0,c); off=now-t; } }
+        f.g.setTransform(f.g.dpr,0,0,f.g.dpr,0,0);
+        try{ more=p.animate(f.g,f.w,f.H,M,f.st,t); }catch(e){ console.error('piece '+p.id+' animate',e); more=false; }
+        if(more) f.raf=requestAnimationFrame(step); else if(p.loop&&f.visible){ f._loop=true; f.play(user); f._loop=false; } else { f.running=false; f.raf=0; f.setBtn(); } };
+      f.raf=requestAnimationFrame(step); if(!f._loop) sndStart(f,'play'); };
+    if(p.pointer){ cv.classList.add('int'); cv.style.touchAction=p.touchAction||'pan-y'; let down=false;
+      const pos=e=>{ const r=cv.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top,w:f.w,h:f.H}; };
+      cv.addEventListener('pointerdown',e=>{ down=true; engage(f); try{ cv.setPointerCapture(e.pointerId); }catch(_){} f.stop(); if(p.pointer(f.st,Object.assign(pos(e),{type:'down'}))) f.redraw(); f.sync.forEach(x=>x()); });
+      cv.addEventListener('pointermove',e=>{ if(p.pointer(f.st,Object.assign(pos(e),{type:'move',down}))) f.redraw(); });
+      const up=e=>{ if(!down) return; down=false; if(p.pointer(f.st,Object.assign(pos(e),{type:'up'}))) f.redraw(); f.sync.forEach(x=>x()); };
+      cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',up); }
+    else if(p.sound) cv.addEventListener('pointerdown',()=>engage(f));
+    const row=buildControls(f,o); if(row) fig.append(row);
+    frames.push(f); }
+  else cvw.append(h('div',{class:'pending'},'In progress'));
+  fig.append(meta); if(o.pair) fig.append(h('p',{class:'pair'},h('span',{},o.pair.analog),h('b',{'aria-label':'paired with'},'↔'),h('span',{},o.pair.digital))); fig.append(h('p',{class:'cap'},p&&p.caption||o.job));
+  if(p&&p.recipe){ const R=p.recipe, KEYS=[['idea','Idea'],['marks','Marks'],['ground','Ground'],['accent','Accent'],['composition','Composition'],['motion','Motion'],['sound','Sound'],['controls','Controls'],['computed','Computed'],['placeholder','Placeholder'],['root','Root'],['rules','Rules'],['engine','Engine']];
+    const dl=h('dl',{class:'rcp'}); KEYS.forEach(([k,l])=>{ const v=R[k]; if(v==null||v===''||(Array.isArray(v)&&!v.length)) return; dl.append(h('dt',{},l),h('dd',{},Array.isArray(v)?v.join(' · '):String(v))); });
+    const full=Object.assign({id:o.id,title:o.title,form:o.form,pillars:o.pillars,pair:o.pair},R);
+    const cp=h('button',{type:'button',class:'btn quiet',id:o.id+'-recipe'},'Copy recipe'); cp.addEventListener('click',()=>{ const j=JSON.stringify(full,null,2); (navigator.clipboard?navigator.clipboard.writeText(j):Promise.reject()).then(()=>{ cp.textContent='Copied'; setTimeout(()=>cp.textContent='Copy recipe',1400); },()=>{ cp.textContent='Copy failed'; setTimeout(()=>cp.textContent='Copy recipe',1400); }); });
+    fig.append(h('details',{class:'rcpw',...B},h('summary',{},'Recipe'),dl,cp)); }
+  else if(p&&p.why) fig.append(h('p',{class:'why'},p.why));
+  lib.append(fig); });
+
+/* play when a piece comes into view (once); stop when it leaves */
+/* visible = 35% of the canvas in view, or (for tall plates) at least 45% of the viewport filled by it */
+const io=new IntersectionObserver(es=>es.forEach(e=>{ const f=frames.find(x=>x.cvw===e.target); if(!f) return; const v=e.isIntersecting&&(e.intersectionRatio>=.35||e.intersectionRect.height>=innerHeight*.45); f.visible=v;
+  if(v&&f.p.animate&&!f.played&&f.p.autoplay!==false&&!reduced&&f.w) f.play(false);
+  if(!v&&f.running) f.stop(); }),{threshold:[0,.1,.2,.35,.5,.75]});
+
+/* sound wiring: visibility for the mix, the three switches, M, the armed state, and sync with the engine */
+const mixIO=new IntersectionObserver(es=>{ es.forEach(e=>{ const f=e.target._f; if(!f) return; f.ratio=e.isIntersecting?e.intersectionRatio:0; const r=e.intersectionRect; f.area=f.ratio?r.width*r.height:0;
+  if(f.ratio>0&&f.running&&f.p.sound&&!f.sndOn&&live()&&!f.muted) sndStart(f,'resume'); }); mixSoon(); },{threshold:[...Array(21)].map((_,i)=>i/20)});
+frames.forEach(f=>mixIO.observe(f.cvw));
+$('#sndMast').replaceWith(makeSwitch('mast')); $('#libbar').append(makeSwitch('lib')); $('#sndListen').append(makeSwitch('listen'));
+paint();
+addEventListener('keydown',e=>{ if((e.key!=='m'&&e.key!=='M')||e.ctrlKey||e.metaKey||e.altKey||e.repeat) return; const t=e.target;
+  if(t&&t.closest&&t.closest('input,select,textarea,[contenteditable]:not([contenteditable="false"])')) return; if(!AU()) return; e.preventDefault(); setSound(!snd.on); });
+/* remembered "on": nothing sounds at load. The first click, tap or key (other than the switch or M) unlocks and starts. */
+function arm(e){ if(!snd.on||!AU()||ready()) return disarm(); if(e.target&&e.target.closest&&e.target.closest('.snd,[id$="-sound"]')) return;
+  if(e.type==='keydown'&&(e.key==='m'||e.key==='M'||e.key==='Escape'||e.key==='Tab'||e.key==='Shift')) return; setSound(true,{announce:false}); disarm(); }
+function disarm(){ ['pointerup','keydown'].forEach(t=>document.removeEventListener(t,arm,true)); }
+if(snd.on) ['pointerup','keydown'].forEach(t=>document.addEventListener(t,arm,true));
+addEventListener('mir:sound',e=>{ if(snd.pending) return; const a=AU(), d=e.detail; const en=d&&typeof d.enabled==='boolean'?d.enabled:!!(a&&a.enabled);
+  if(en===snd.on){ paint(); return; } snd.on=en; try{ localStorage.setItem(SK,en?'1':'0'); }catch(_){} paint(); say(en?'Sound on':'Sound off'); if(en&&ready()) wake(); else if(!en) hush(); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>drawMeters(0,0,true));
+/* Listen: the palette, rendered by listen.js */
+(function(){ const el=$('#listenBody'), L=window.MIR_LISTEN; if(L&&typeof L.render==='function'){ try{ L.render(el); }catch(e){ console.error('listen',e); } } else el.append(h('p',{class:'pending'},'The palette appears here when the sound engine loads.')); })();
+
+function drawGlyphs(){ const pils=$$('.pil'); const inner=el=>el.clientWidth-parseFloat(getComputedStyle(el).paddingLeft)-parseFloat(getComputedStyle(el).paddingRight); const s=Math.floor(Math.min(innerWidth<760?200:1e9,...pils.map(inner))); pils.forEach(el=>{ const [cv,id]=el._g; if(s>0) glyph(cv,s,id,'paper'); });
+  $$('#ontoMarks tbody tr').forEach(tr=>glyph(tr._g[0],56,tr._g[1],'paper')); $$('#keyList li').forEach(li=>glyph(li._g[0],56,li._g[1],'paper'));
+  const gr=$('#grounds'); gr.innerHTML=''; ['night','olive','cobalt','ultra','paper','sky','plum','current'].forEach(k=>{ const cv=h('canvas',{'aria-hidden':'true'}); gr.append(h('span',{class:'gr'},cv,M.PAL[k].name)); glyph(cv,40,'ground',k); }); }
+function $$(s){ return [...document.querySelectorAll(s)]; }
+
+/* hero: the tuner. Coherence, ground, density, rings and seed are live parameters of one computed field.
+   The settle animation is the one orchestrated moment; everything else waits for the reader. */
+const hero=$('#hero canvas'), hs=$('#heroState'), HDEF={k:1,ground:'night',dens:1.05,rings:9,seed:3}; let HS=clone(HDEF), hraf=0, hg=null, hw=0;
+const GROUNDS=['night','olive','cobalt','ultra','paper','sky','plum','current'];
+function drawHero(k){ const w=Math.floor(hero.parentElement.clientWidth); if(!w) return; const ph=w<640, H=Math.round(ph?w*1.2:w*.5);
+  if(w!==hw||!hg||hg.canvas.height!==Math.round(H*hg.dpr)){ hg=M.canvas(hero,w,H); hw=w; hero._geo=null; } else hg.setTransform(hg.dpr,0,0,hg.dpr,0,0);
+  const P=M.PAL[HS.ground]; M.fill(hg,P.ground);
+  /* the real wordmark, untouched. The field radiates from the i's tittle; rings knock out around the letters. */
+  const xh=ph?w*.105:w*.083, lx=ph?w*.085:w*.06, base=ph?H*.42:H*.64, geo=M.logoGeo(lx,base,xh);
+  if(!hero._geo||hero._geo.k!==w+'|'+H){ hero._geo={k:w+'|'+H, mask:M.logoMask(geo,xh*.16)}; }
+  const mask=hero._geo.mask, lab=[0,H-34,Math.min(w,440),H], cx=geo.tittle.cx, cy=geo.tittle.cy;
+  const B=new M.Buf(hg,(x,y)=>mask(x,y)||(x<lab[2]&&y>lab[1])); const Rmax=Math.hypot(Math.max(cx,w-cx),Math.max(cy,H-cy))*.99, nr=Math.round(HS.rings*1.9), step=Rmax/nr;
+  /* light first: fine dots gathered into rays from the tittle, then the engraved rings over them */
+  M.atmos(B,{box:[0,0,w,H],cx,cy,R:Rmax*.85,amount:.16*HS.dens,rays:12,rayPow:5,rayPhase:Math.PI/12,sp:w>900?2.1:1.9,seed:HS.seed+3,r:w>900?.5:.45,color:P.soft});
+  M.mirField(B,{cx,cy,R:Rmax,k,seed:HS.seed,pal:P,rings:nr,dens:HS.dens*.95,r:w>900?.95:.8,center:false,blades:false,strays:Math.round(80*(1-k))+12});
+  const R2=M.rng(HS.seed*13+1), loose=1-k; for(let b=0;b<8;b++){ const a=b/8*M.TAU+Math.PI/8+loose*(R2()-.5)*.6, f=M.shape.blade(cx,cy,a,step*(1.6+loose*.6),step*(3.6+loose*.8),step*.42);
+    M.blue(B,{box:[cx-step*4.6,cy-step*4.6,cx+step*4.6,cy+step*4.6],sp:w>900?1.6:1.45,seed:HS.seed+b,density:(x,y)=>f(x,y)*(.55+.45*k),rOf:(d,R)=>.6+.34*R(),color:P.blade}); }
+  /* where the two of you meet: the one accent, a ring around the tittle, loose to locked */
+  const cR=Math.max(geo.tittle.w,geo.tittle.h)*1.05; M.along(B,{rng:M.rng(HS.seed+77),curve:t=>{ const p=M.curve.ring(cx,cy,cR,{ex:1+loose*.7,ey:1-loose*.3,rot:.7})(t); return p; },n:Math.round(cR*M.TAU*2.2),spread:.55+loose*cR*.3,r:w>900?1:.85,color:P.center});
+  B.flush();
+  M.logo(hg,lx,base,xh,{color:P.ring});
+  hs.style.color=P.ring; const st=k<.34?'loose':k<.8?'settling':'in tune', clash=(0.71*(1-k)+0.06*k).toFixed(2); hs.innerHTML=BUILD?`clash ${clash} · <b style="color:${P.center}">${st}</b> · placeholder`:`<b style="color:${P.center}">${st}</b>`; $('#hero').style.background=P.ground; }
+/* the hero's music. Each ring is a partial of D (the person); detuned while loose, they glide pure as the field settles.
+   The motif 5 ↑ 1 ↑ 4 waits on its suspension and resolves to the third (Mir) exactly when the field reads 'in tune'.
+   Density sets how many blades reach out (a mallet figure); Ground sets the mode. 92 BPM: the settle is one bar. */
+const HBPM=92, HBAR=4*60000/HBPM, D2=73.416;
+function heroScore(k0){ const mu=M.music, S=mu.score({bpm:HBPM,ground:HS.ground}), md=S.mode, B=S.beat, R=M.rng(HS.seed*31+7), n=Math.max(5,Math.min(13,HS.rings|0));
+  const third=mu.deg(md,2,4), sus=mu.deg(md,3,4), home=md==='dorian'||md==='aeolian'?'Dm':'D';
+  S.harm([[0,'Dsus4'],[B*2.9,home]]);
+  for(let j=1;j<=n;j++){ const f=D2*j, c=(1-k0)*(R()<.5?-1:1)*(10+R()*20), t=(j-1)*B*.12, id='p'+j;
+    S.note(t,'glide',{hz:f*Math.pow(2,c/1200)},HBAR*1.35-t,{id,attack:.25,release:1.4,vel:.5-.018*j,vibrato:0,wow:2,tone:2400,pan:((j%2)?-1:1)*Math.min(.6,j*.05)},['ring'+j,.6]);
+    S.set(t+40,id,'freq',f,HBAR*.55); }
+  S.note(0,'pluck','D2',360,{cutoff:360,vel:.62});
+  const nb=Math.round(4+HS.dens*5); for(let i=0;i<nb;i++){ const m=mu.ct(home,'D4',i%5+Math.floor(i/5)*0); S.note(B*.5+i*B*2/nb,'mallet',mu.inMode(md,m),900,{vel:.32+.02*i,trem:5,pan:Math.cos(i/nb*6.283)*.5},['blade'+i,.7]); }
+  S.note(0,'glide',mu.deg(md,-3,4),B*.95,{vel:.6,vibrato:6,attack:.04,release:.4,tone:3200,over:'Dsus4'},['m0',1]);
+  S.note(B,'glide',mu.deg(md,0,4),B*.95,{vel:.62,vibrato:7,attack:.04,release:.4,tone:3200,over:'Dsus4'},['m1',1]);
+  S.note(B*2,'glide',sus,B*1.8,{id:'m2',vel:.64,vibrato:10,attack:.05,release:1.6,tone:3200,over:'Dsus4'},['m2',1]);
+  S.glide(B*2.9,'m2',third,160);
+  S.note(B*2.9,'meet',mu.deg(md,2,5),1800,{spread:30,vel:.6},['lock',1]); S.note(B*2.9,'bass','D2',700,{from:'A1',glide:90,vel:.6,env:2.6,decay:.4});
+  S.end(HBAR*1.5); return S.out(); }
+let hsh=null; const hA=()=>{ const a=M.audio; return snd.on&&a&&a.unlocked&&M.music?a:null; };
+function settle(from){ cancelAnimationFrame(hraf); if(reduced){ HS.k=1; syncT(); drawHero(1); return; } const T=60000/HBPM*2.9/.684, k0=from??0, t0=performance.now();
+  let clock=null; if(hsh){ try{ hsh.stop(.1); }catch(_){} hsh=null; } const a=hA(); if(a){ try{ const sc=heroScore(k0), A0=a.now()+.1; hsh=a.score('hero',sc.events,{when:A0}); clock=()=>hA()?(M.music.heard()-A0)*1000:null; }catch(e){ console.error('hero music',e); } }
+  let off=t0; const step=now=>{ let t=now-off; if(clock){ const c=clock(); if(c!=null){ t=Math.max(0,c); off=now-t; } } const u=Math.min(1,t/T), e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2; HS.k=k0+(1-k0)*e; syncT(); drawHero(HS.k); if(u<1) hraf=requestAnimationFrame(step); }; hraf=requestAnimationFrame(step); }
+/* the tuner as an instrument: Settled holds the field's fifth and Mir's voice, which slides from the suspension down to the third as you settle it */
+const hl={dr:null,v:null,t:0,locked:false};
+function heroLive(key){ const a=hA(); if(!a) return; const mu=M.music, md=mu.groundMode(HS.ground), third=a.tune(mu.name(mu.deg(md,2,4)),'D'), sus=a.tune(mu.name(mu.deg(md,3,4)),'D'), k=HS.k;
+  if(key==='k'){ if(!hl.dr||!hl.dr.alive){ hl.dr=a.play('hero','drone',{freq:a.tune('D3','D'),ratio:3/2,level:.5,fade:.25}); hl.v=a.play('hero','glide',{freq:third,dur:30,vel:.6,vibrato:8,attack:.08,tone:3000}); hl.locked=false; }
+    hl.dr.set('detune',(1-k)*28,60); hl.v.set('freq',third*Math.pow(sus/third,Math.pow(1-k,.8)),50);
+    if(k>.995&&!hl.locked){ hl.locked=true; a.play('hero','meet',{freq:third*2,spread:24,vel:.55}); } if(k<.95) hl.locked=false; }
+  else if(key==='dens'){ const nb=Math.round(4+HS.dens*5); a.play('hero','mallet',{freq:a.tune(mu.name(mu.inMode(md,mu.ct('D','D4',nb%8))),'D'),dur:.8,vel:.45,trem:5}); }
+  else if(key==='rings'){ const n=HS.rings|0; a.play('hero','glide',{freq:D2*n,dur:.7,vel:.5,vibrato:0,attack:.02,release:.5,tone:2600}); }
+  clearTimeout(hl.t); hl.t=setTimeout(()=>{ if(hl.dr){ hl.dr.stop(null,1); hl.dr=null; } if(hl.v){ hl.v.stop(null,.9); hl.v=null; } },700); }
+const T=$('#tuner'), tsync=[]; function syncT(){ tsync.forEach(x=>x()); }
+function trange(id,label,min,max,step,key,f){ const inp=h('input',{type:'range',id:'h-'+id,min,max,step,value:HS[key]}), out=h('output',{for:'h-'+id},f(HS[key]));
+  inp.addEventListener('input',()=>{ cancelAnimationFrame(hraf); HS[key]=+inp.value; out.textContent=f(HS[key]); drawHero(HS.k); heroLive(key); }); tsync.push(()=>{ inp.value=HS[key]; out.textContent=f(HS[key]); }); T.append(h('label',{for:'h-'+id},h('span',{},label),inp,out)); }
+trange('k','Settled',0,1,.01,'k',v=>Math.round(v*100)+'%');
+trange('d','Density',.5,1.6,.05,'dens',v=>(+v).toFixed(2)+'×');
+trange('r','Rings',5,13,1,'rings',v=>String(v));
+const sws=h('div',{class:'sws',role:'group','aria-label':'Ground'}); GROUNDS.forEach(k=>{ const P=M.PAL[k]; const b=h('button',{type:'button',class:'sw','aria-label':'Ground: '+P.name,'aria-pressed':String(HS.ground===k),title:P.name,style:`background:${P.ground}`}); b.innerHTML=`<span style="width:8px;height:8px;border-radius:50%;background:${P.center};display:block"></span>`;
+  b.addEventListener('click',()=>{ HS.ground=k; [...sws.children].forEach(x=>x.setAttribute('aria-pressed',String(x===b))); drawHero(HS.k); const a=hA(); if(a) try{ M.music.param(a.scope('hero'),'hero',{type:'select',id:'ground'},null,k,{st:HS}); }catch(e){ console.error(e); } }); sws.append(b); });
+tsync.push(()=>[...sws.children].forEach((x,i)=>x.setAttribute('aria-pressed',String(GROUNDS[i]===HS.ground))));
+const row2=h('div',{class:'row2'}); row2.append(h('label',{},h('span',{},'Ground'),sws)); T.append(row2);
+const bS=h('button',{type:'button',class:'btn',id:'h-settle'},'Settle'); bS.addEventListener('click',()=>settle(0));
+const bN=h('button',{type:'button',class:'btn quiet',id:'h-seed'},'New seed'); bN.addEventListener('click',()=>{ HS.seed=(HS.seed*7919+13)%100003; drawHero(HS.k); });
+const bR=h('button',{type:'button',class:'btn quiet',id:'h-reset'},'Reset'); bR.addEventListener('click',()=>{ cancelAnimationFrame(hraf); HS=clone(HDEF); syncT(); drawHero(HS.k); });
+const bC=h('button',{type:'button',class:'btn quiet',id:'h-copy',...B},'Copy settings'); bC.addEventListener('click',()=>{ const j=JSON.stringify({piece:'hero',settings:HS}); (navigator.clipboard?navigator.clipboard.writeText(j):Promise.reject()).then(()=>{ bC.textContent='Copied'; setTimeout(()=>bC.textContent='Copy settings',1400); },()=>{ bC.textContent='Copy failed'; setTimeout(()=>bC.textContent='Copy settings',1400); }); });
+row2.append(bS,bN,bR,bC);
+
+
+/* roots */
+const RL=$('#rootList'); (S.roots||[]).forEach(r=>RL.append(h('li',{},h('span',{class:'y'},String(r.n).padStart(2,'0')+' · '+r.when),h('span',{class:'w'},r.who),h('p',{class:'d'},r.what),h('p',{class:'k'},r.take),r.ref?h('span',{class:'r',...B},'→ '+r.ref+(r.src?' · source ['+r.src+']':'')):h('span',{class:'r',...B},'now'))));
+function drawRoots(){ const cv=$('#rootAxis'); const w=Math.floor(cv.parentElement.clientWidth); if(!w) return; const H=w<640?140:170, g=M.canvas(cv,w,H), cs=getComputedStyle(document.body), ink=cs.color, soft=cs.getPropertyValue('--soft').trim(), acc=cs.getPropertyValue('--accent').trim(), B=new M.Buf(g), R=M.rng(41);
+  g.clearRect(0,0,w,H); const now=2026, y0min=1250, xL=8, xR=w-18, y0=H*.7;
+  /* linear in years (computed), so the clustered 19th-century records spread apart */
+  const X=yr=>xL+(yr-y0min)/(now-y0min)*(xR-xL);
+  M.along(B,{rng:R,curve:M.curve.seg(xL,y0,xR,y0),n:Math.round((xR-xL)/2.2),spread:.25,r:.7,color:soft,even:true});
+  [1300,1400,1500,1600,1700,1800,1900,2000].forEach(t=>{ const x=X(t); M.along(B,{rng:R,curve:M.curve.seg(x,y0+5,x,y0+11),n:4,spread:0,r:.6,color:soft,even:true}); if(w>=640||t%200===0) M.text(g,String(t),x,y0+26,{font:'mono',size:9.5,track:.08,color:soft,align:'center'}); });
+  const lastX=[-1e9,-1e9,-1e9,-1e9];
+  (S.roots||[]).forEach((r,i)=>{ const x=X(r.year); let tier=lastX.findIndex(v=>x-v>28); if(tier<0) tier=lastX.indexOf(Math.min(...lastX)); lastX[tier]=x; const len=H*(.16+tier*.13), top=y0-len, last=i===S.roots.length-1; M.along(B,{rng:R,curve:M.curve.seg(x,y0-4,x,top+8),n:Math.round(len/2.6),spread:.2,r:.65,color:soft,even:true});
+    M.dotMark(g,x,y0,(last?6.5:4.5)*(w<640?.62:1),last?acc:ink,{seed:i+3,strays:w<640?1:3});
+    M.text(g,String(r.n).padStart(2,'0'),x,top+2,{font:'mono',size:10.5,weight:500,track:.06,color:last?acc:ink,align:'center'}); });
+  B.flush(); M.text(g,'years, c. 1300 to 2026 · linear · computed',w<640?xL:xR,w<640?10:H-6,{font:'mono',size:9.5,track:.08,color:soft,align:w<640?'left':'right'}); }
+function drawFoot(){ const cv=$('#footLogo'), cs=getComputedStyle(document.body), xh=9, sc=xh/M.LOGO.xh, w=Math.ceil((M.LOGO.w-M.LOGO.x0)*sc+2), hh=Math.ceil((M.LOGO.desc-M.LOGO.asc)*sc+2), g=M.canvas(cv,w,hh); g.clearRect(0,0,w,hh); M.logo(g,1,1+(M.LOGO.base-M.LOGO.asc)*sc,xh,{color:cs.color}); }
+let rz; function redrawAll(){ drawRoots(); drawGlyphs(); frames.forEach(f=>{ f.stop(); f.draw(false); }); }
+function drawMast(){ const cv=$('#mastLogo'), cs=getComputedStyle(document.body), xh=11.5, sc=xh/M.LOGO.xh, w=Math.ceil((M.LOGO.w-M.LOGO.x0)*sc+2), hh=Math.ceil((M.LOGO.desc-M.LOGO.asc)*sc+2), g=M.canvas(cv,w,hh); g.clearRect(0,0,w,hh); M.logo(g,1,1+(M.LOGO.base-M.LOGO.asc)*sc,xh,{color:cs.color}); }
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{ drawMast(); drawFoot(); drawRoots(); drawGlyphs(); });
+/* lazy: a piece is drawn when it comes within ~1.5 screens; placeholders hold its height so the page does not jump */
+function reserve(f){ const [w,H]=f.size(); if(w&&!f.w) f.cvw.style.minHeight=H+'px'; }
+const near=new IntersectionObserver(es=>es.forEach(e=>{ if(!e.isIntersecting) return; const f=frames.find(x=>x.cvw===e.target); if(f&&!f.w){ f.draw(true); f.cvw.style.minHeight=''; io.observe(f.cvw); } near.unobserve(e.target); }),{rootMargin:'1400px 0px'});
+function drawAll(){ frames.forEach(f=>{ if(!f.w){ f.draw(true); f.cvw.style.minHeight=''; io.observe(f.cvw); near.unobserve(f.cvw); } }); }
+M.fontsReady().then(()=>{ drawMast(); drawFoot(); drawRoots(); HS.k=0; drawHero(0); drawGlyphs(); frames.forEach(f=>{ reserve(f); near.observe(f.cvw); }); settle(0); booted=true; if(pendingScroll) requestAnimationFrame(()=>pendingScroll.scrollIntoView()); });
+let booted=false;
+/* library filter by form */
+(function(){ const bar=$('#libf'), forms=['All',...S.forms], cnt=f=>f==='All'?S.pieces.length:S.pieces.filter(p=>p.form===f).length, out=h('span',{class:'count',id:'libcount','aria-live':'polite'},'');
+  let cur='All'; try{ cur=localStorage.getItem('mir.libForm')||'All'; }catch(_){} if(!forms.includes(cur)) cur='All';
+  const apply=()=>{ let n=0; S.pieces.forEach(o=>{ const el=document.getElementById(o.id), on=cur==='All'||o.form===cur; el.hidden=!on; if(on) n++; }); [...bar.querySelectorAll('.btn')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.f===cur))); out.textContent=n+' of '+S.pieces.length+' shown'; try{ localStorage.setItem('mir.libForm',cur); }catch(_){} };
+  forms.forEach(f=>{ const b=h('button',{type:'button',class:'btn','data-f':f,'aria-pressed':'false'},f); b.append(h('span',{class:'n'},String(cnt(f)))); b.addEventListener('click',()=>{ cur=f; apply(); }); bar.append(b); });
+  bar.append(out); apply(); })();
+
+addEventListener('resize',()=>{ clearTimeout(rz); rz=setTimeout(()=>{ drawHero(HS.k); redrawAll(); },180); });
+/* the two layers */
+const viewBtn=$('#viewBtn'); let pendingScroll=null;
+function applyView(){ document.documentElement.dataset.view=BUILD?'build':'read'; $$('[data-build]').forEach(e=>{ e.hidden=!BUILD; }); $$('[data-read]').forEach(e=>{ e.hidden=BUILD; }); viewBtn.setAttribute('aria-pressed',String(BUILD)); }
+function setView(v,o={}){ v=!!v; if(v===BUILD) return; BUILD=v; try{ localStorage.setItem('mir.view',v?'build':'read'); }catch(_){} applyView(); if(booted) drawHero(HS.k);
+  if(o.announce!==false) say(v?'Build view: codes, recipes and team sections shown':'Read view'); }
+viewBtn.addEventListener('click',()=>setView(!BUILD));
+const hashEl=hs=>{ if(!hs||hs.length<2) return null; try{ return document.getElementById(decodeURIComponent(hs.slice(1))); }catch(_){ return null; } };
+const buildOnly=el=>!!(el&&el.closest('[data-build]'));
+/* a link or hash into a Build-only section switches to Build view first */
+document.addEventListener('click',e=>{ const a=e.target.closest&&e.target.closest('a[href^="#"]'); if(a&&!BUILD&&buildOnly(hashEl(a.getAttribute('href')))) setView(true); },true);
+addEventListener('hashchange',()=>{ const el=hashEl(location.hash); if(!BUILD&&buildOnly(el)){ setView(true); requestAnimationFrame(()=>el.scrollIntoView()); } });
+applyView(); { const el=hashEl(location.hash); if(el){ if(!BUILD&&buildOnly(el)) setView(true,{announce:false}); pendingScroll=el; requestAnimationFrame(()=>el.scrollIntoView()); } }
+/* for models: the spec, the recipes and the conventions as one JSON block, regenerated at load */
+(function(){ const conv=$$('.conv li').map(li=>li.textContent.replace(/\s+/g,' ').trim());
+  const out=Object.assign({},S,{page:{title:document.title,views:{read:'default; for anyone',build:'masthead toggle "Build view"; adds piece codes, pillar chips, recipes, Copy settings and Copy recipe, Conventions, Outline, full Ontology, Rebuild and Studio notes'},
+      key:KEY.map(([mark,name,line])=>({mark,name,line})),states:'Loose → settling → in tune.',figures:'each piece is <figure data-piece data-form data-pillars>'},
+    conventions:conv,
+    pieces:S.pieces.map(o=>{ const p=pieceById[o.id]||{}; return Object.assign({},o,{caption:p.caption||null,alt:p.alt||null,sound:!!p.sound,recipe:p.recipe||null}); })});
+  $('#mir-spec').textContent=JSON.stringify(out).replace(/</g,'\\u003c'); })();
+window.__mir={ready:()=>booted, drawAll, frames, hero:HS, heroScore:k=>heroScore(k),
+  sound:{ get on(){ return snd.on; }, armed:()=>snd.on&&!ready(), set:v=>setSound(v), mix, lead:()=>snd.lead&&snd.lead.p.id,
+    gains:()=>Object.fromEntries(frames.filter(f=>f.g0!==undefined).map(f=>[f.p.id,+f.g0.toFixed(4)])), DUCK, RAMP }};
+
+})();
+</script>
+
+</body></html>

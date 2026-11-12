@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en" data-ground="paper">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mindgut · Technique &amp; Front-End Study · V01</title>
+<meta name="description" content="Counted marks, placed by hand. A technique and front-end study for Mindgut drawn from Colin McKenzie's CVM × stipple moodboard, Brittany Fauconnet's What I'd Be, the 144-pin reference boards, and the ø co. Techniques & Templates library. Single file, no network, every figure drawn live.">
+<style>
+/* ══════════════════════════════════════════════════════════════
+   TOKENS
+   Product values are the real 2.2.59 variables (ui-bundle.json).
+   Study values are this document's own and are labelled as such.
+   No condensed type anywhere. System sans; Roboto if installed
+   (the product's own stack). Serif only for the What I'd Be plates.
+   ══════════════════════════════════════════════════════════════ */
+:root{
+  /* study grounds — Colin's palette, named as on the board */
+  --night:#140d0f; --ink:#1b2a35; --cream:#f1ede4; --paper:#f4f1ea;
+  --red:#d2232a; --sky:#6aa0d0; --peach:#f2c3a8; --ringteal:#3c9a8d;
+  --blade:#1b32b8; --ochre:#e0a030; --cobalt:#0d1f5c; --olive:#161d16;
+  /* product — real 2.2.59 tokens, light theme */
+  --p-surface:#ffffff; --p-card:#fafafa; --p-card-hi:#f0f0f0; --p-border:#e0e0e0; --p-border-hi:#ccc;
+  --p-text:#1a1a1a; --p-text-dim:#666; --p-text-mute:#999;
+  --c147:#0088cc; --c258:#9933cc; --c369:#cc6600;
+  --c147-glow:rgba(0,136,204,0.04); --c258-glow:rgba(153,51,204,0.04);
+  --reject:#cc2233; --pass:#00aa44;
+  /* study accents (Julia's direction: purple + teal, restrained) */
+  --violet:#5b2d8e; --teal:#1f6f6a; --teal-soft:#dfeeec; --violet-soft:#ece4f4;
+  /* type */
+  --sans:'Roboto','Helvetica Neue',Helvetica,Arial,sans-serif;
+  --serif:'Cormorant Garamond','EB Garamond',Garamond,'Times New Roman',serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  --ground:var(--paper); --fg:#1b1b1b; --fg-dim:#5c5a55; --fg-mute:#9a968e; --line:#d9d4c9; --card:#ffffff;
+  --maxw:1180px;
+}
+html[data-ground="night"]{ --ground:var(--night); --fg:#efe9df; --fg-dim:#b9b1a6; --fg-mute:#7d766d; --line:#2c2226; --card:#1c1316; }
+html[data-ground="olive"]{ --ground:var(--olive); --fg:#efe9d8; --fg-dim:#b8b2a0; --fg-mute:#777364; --line:#2a2f29; --card:#1f261f; }
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--ground);color:var(--fg);font-family:var(--sans);font-stretch:normal;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
+body{font-size:15px;line-height:1.55}
+a{color:inherit}
+h1,h2,h3,h4{font-weight:600;letter-spacing:-.01em;margin:0}
+h1{font-size:clamp(34px,5vw,58px);line-height:1.02;letter-spacing:-.02em}
+h2{font-size:clamp(24px,3vw,34px);line-height:1.1}
+h3{font-size:18px}
+p{margin:0 0 .9em}
+.mono{font-family:var(--mono);font-size:11.5px;letter-spacing:.02em}
+.kicker{font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--fg-mute)}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 clamp(18px,4vw,48px)}
+section{padding:clamp(44px,7vw,96px) 0;border-top:1px solid var(--line)}
+section:first-of-type{border-top:0}
+.lede{font-size:clamp(17px,1.6vw,21px);line-height:1.45;max-width:46em;color:var(--fg)}
+.dim{color:var(--fg-dim)} .mute{color:var(--fg-mute)}
+.grid{display:grid;gap:clamp(14px,2vw,24px)}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.card .cap{padding:12px 14px 14px;border-top:1px solid var(--line)}
+.cap b{display:block;font-weight:600;margin-bottom:3px;font-size:13.5px}
+.cap>span{font-size:12.5px;color:var(--fg-dim);line-height:1.45;display:block}
+.cap .tag{display:inline-block;margin-top:6px;font-size:9.5px}
+.cap .src{margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--fg-mute);letter-spacing:.04em}
+canvas.plate{display:block;width:100%;height:auto;background:transparent}
+.plate-wrap{position:relative;aspect-ratio:1/1;background:var(--night)}
+.plate-wrap.wide{aspect-ratio:16/9}
+.plate-wrap.sky{background:var(--sky)} .plate-wrap.paper{background:var(--cream)} .plate-wrap.cobalt{background:var(--cobalt)} .plate-wrap.olive{background:var(--olive)}
+.plate-wrap canvas{position:absolute;inset:0;width:100%;height:100%}
+.tag{display:inline-block!important;width:auto!important;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;padding:2px 6px;border:1px solid var(--line);border-radius:3px;color:var(--fg-dim);margin:6px 6px 0 0;line-height:1.3;vertical-align:middle}
+.tag.coded{border-color:var(--teal);color:var(--teal)} .tag.study{border-color:var(--violet);color:var(--violet)} .tag.ref{border-color:var(--fg-mute)}
+.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:14px 0 4px;font-family:var(--mono);font-size:11px;color:var(--fg-dim)}
+.controls label{display:flex;align-items:center;gap:8px}
+.controls input[type=range]{width:120px;accent-color:var(--teal)}
+.controls button,.btn{font:inherit;font-family:var(--mono);font-size:11px;letter-spacing:.06em;padding:6px 10px;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:4px;cursor:pointer}
+.controls button[aria-pressed=true],.btn[aria-pressed=true]{border-color:var(--teal);color:var(--teal);background:var(--teal-soft)}
+html[data-ground="night"] .controls button[aria-pressed=true],html[data-ground="olive"] .controls button[aria-pressed=true]{background:rgba(60,154,141,.18)}
+.note{border-left:2px solid var(--teal);padding:10px 16px;margin:18px 0;background:var(--card);border-radius:0 4px 4px 0;font-size:14px}
+.note.warn{border-left-color:var(--red)}
+.note b{font-weight:600}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-mute);font-weight:500}
+td.m{font-family:var(--mono);font-size:11.5px}
+code{font-family:var(--mono);font-size:12px;background:var(--card);border:1px solid var(--line);padding:1px 5px;border-radius:3px}
+pre{font-family:var(--mono);font-size:11.5px;line-height:1.5;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px 16px;overflow:auto;margin:0}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px 18px;font-size:13.5px;margin-top:22px}
+.toc a{text-decoration:none;color:var(--fg-dim);padding:6px 0;border-bottom:1px solid var(--line);display:flex;gap:10px}
+.toc a:hover{color:var(--fg)} .toc a .n{font-family:var(--mono);font-size:10.5px;color:var(--fg-mute);min-width:22px}
+.topbar{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--ground) 86%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;height:52px;gap:16px}
+.topbar .brand{display:flex;align-items:center;gap:8px;font-weight:600;letter-spacing:-.01em}
+.topbar .brand i{width:9px;height:9px;border-radius:50%;background:var(--red);display:inline-block}
+.ground-switch{display:flex;gap:4px}
+.ground-switch button{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);cursor:pointer;padding:0}
+.ground-switch button[aria-pressed=true]{outline:2px solid var(--teal);outline-offset:2px}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.sw{width:84px;height:62px;border-radius:4px;border:1px solid var(--line);display:flex;align-items:flex-end;padding:6px;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase}
+footer{padding:36px 0 60px;border-top:1px solid var(--line);font-size:12.5px;color:var(--fg-dim)}
+@media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap">
+  <div class="brand"><span>mindgut</span><i></i><span class="mono mute" style="margin-left:8px">technique &amp; front-end study · V01</span></div>
+  <div class="ground-switch" role="group" aria-label="Ground">
+    <button data-ground="paper" aria-pressed="true" title="Paper" style="background:#f4f1ea"></button>
+    <button data-ground="night" aria-pressed="false" title="Night" style="background:#140d0f"></button>
+    <button data-ground="olive" aria-pressed="false" title="Olive" style="background:#161d16"></button>
+  </div>
+</div></div>
+
+<!-- ───────────────────────── 00 · COVER ───────────────────────── -->
+<section id="cover"><div class="wrap">
+  <div class="kicker">Mindgut · Technique &amp; front-end study · 23 October 2026 · one file, no network</div>
+  <h1 style="margin:14px 0 18px;max-width:14em">Counted marks,<br>placed by hand.</h1>
+  <p class="lede">A figure that only exists because many small marks agree on it. That sentence is Colin's, from his CVM × stipple board, and it is the one idea every technique on this page serves. A strand is a dot. The relationship is the shape the dots settle into. Everything below is drawn live from that rule — no raster images, no gradients doing the shading — so another Mir can open this file, read the code, and reuse the parts.</p>
+  <div class="grid g3" style="margin-top:28px">
+    <div><div class="kicker">Sources read</div><p class="dim" style="font-size:13.5px;margin-top:6px">Colin McKenzie, <i>Painted motion, placed by hand</i> (moodboard v0.2/0.3, 5 pp). Brittany Fauconnet's Mir, <i>What I'd Be</i> (9 plates). The 144-pin boards, V05 (Julia, Chris, Thrice). ø co. Techniques &amp; Templates: TS-01 ring-screen · stochastic-grain · moire-product · radial-heat. Mindgut 2.2.59 <code>ui-bundle.json</code> tokens.</p></div>
+    <div><div class="kicker">What is coded vs. drawn</div><p class="dim" style="font-size:13.5px;margin-top:6px"><span class="tag coded">coded</span> uses the product's real variables and DOM shapes. <span class="tag study">study</span> is a drawing or a proposal. <span class="tag ref">ref</span> is a quotation of someone's reference, named. Nothing on this page is live telemetry; every number inside a plate is a placeholder and says so.</p></div>
+    <div><div class="kicker">How to use the ground switch</div><p class="dim" style="font-size:13.5px;margin-top:6px">Top right: paper · night · olive. Colin's page 4 finding is that the figure survives every ground. Switch while reading and check it yourself. Paper is the default here because Julia's current direction is light working surfaces.</p></div>
+  </div>
+  <nav class="toc" aria-label="Contents">
+    <a href="#thesis"><span class="n">01</span>The thesis, in one strip</a>
+    <a href="#rings"><span class="n">02</span>Ring field · loose → in tune</a>
+    <a href="#interference"><span class="n">03</span>Two fields · where they agree</a>
+    <a href="#rail"><span class="n">04</span>The rail, stippled</a>
+    <a href="#grounds"><span class="n">05</span>Six grounds, one figure</a>
+    <a href="#whatidbe"><span class="n">06</span>What I'd Be · nine plates</a>
+    <a href="#ui"><span class="n">07</span>Coded UI · the real sidebar</a>
+    <a href="#textures"><span class="n">08</span>Texture recipes</a>
+    <a href="#type"><span class="n">09</span>Type &amp; number rules</a>
+    <a href="#kit"><span class="n">10</span>The kit · copy-paste for another Mir</a>
+    <a href="#limits"><span class="n">11</span>Limits &amp; open questions</a>
+  </nav>
+</div></section>
+
+<!-- ───────────────────────── 01 · THESIS ───────────────────────── -->
+<section id="thesis"><div class="wrap">
+  <div class="kicker">01 · The thesis</div>
+  <h2 style="margin:10px 0 14px">Coherence is shown as whether the picture has resolved. The number sits underneath.</h2>
+  <p class="lede dim" style="max-width:52em">Colin's page 2 strip is the whole product in three frames. Here it is as one live plate: drag the slider from <i>clash</i> to <i>in tune</i>. Each dot has a home on a ring and a random offset; the slider is simply how far each dot has travelled home. Nothing is interpolated between images — the same 2,400 dots are drawn every frame, so the middle states are real, not blends.</p>
+  <div class="card"><div class="plate-wrap wide" id="pw-thesis"><canvas class="plate" id="c-thesis"></canvas></div>
+    <div class="cap" style="display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between">
+      <div><b>Loose → settling → locked</b><span>Nine cream rings, teal and blue blades, a red figure at the centre. Fischinger's frame A, arrived at rather than drawn. <span class="tag study">study</span><span class="tag ref">Colin · p.2</span></span></div>
+      <div class="controls" style="margin:0"><label>settle <input type="range" id="r-settle" min="0" max="1" step="0.005" value="0.35"></label><label>strays <input type="range" id="r-stray" min="0" max="1" step="0.01" value="0.35"></label><button id="b-breathe" aria-pressed="false">breathe</button></div>
+    </div>
+  </div>
+  <div class="note"><b>What this gives the product.</b> A state that can be read at a glance without a number (how resolved is the picture?) with the number available underneath for anyone who wants it. It is the opposite of a progress bar: it never looks like an error when it's loose, it just looks unsettled. That matters for a tool people confide in.</div>
+</div></section>
+
+<!-- ───────────────────────── 02 · RINGS ───────────────────────── -->
+<section id="rings"><div class="wrap">
+  <div class="kicker">02 · Ring field</div>
+  <h2 style="margin:10px 0 14px">The same figure on the night and on the sky.</h2>
+  <p class="lede dim" style="max-width:52em">Colin's two hero studies, rebuilt as one function with two palettes. Left is the night ground (candidate first-run screen). Right is the sky ground with rays of dots and ink/peach cloud masses — the light-mode feel. The cloud edge is not a path: it is a density threshold on noise, so it stays soft because no single dot carries it.</p>
+  <div class="grid g2">
+    <div class="card"><div class="plate-wrap" id="pw-ringA"><canvas class="plate" id="c-ringA"></canvas></div><div class="cap"><b>Allegretto frame A, stippled · night</b><span>Every mark a placed dot. No lines, no fills. Blade colour and ring count are parameters. <span class="tag study">study</span></span><div class="src">ring-field(rings=9, blades=8, ground=night)</div></div></div>
+    <div class="card"><div class="plate-wrap sky" id="pw-ringB"><canvas class="plate" id="c-ringB"></canvas></div><div class="cap"><b>The same figure on the sky</b><span>Rays of dots as light. Clouds as two noise masses, peach and ink, thresholded. The ring figure sits inside the rays. <span class="tag study">study</span></span><div class="src">ring-field(rings=5, rays=24, clouds=2, ground=sky)</div></div></div>
+  </div>
+  <div class="controls"><label>dots per ring <input type="range" id="r-density" min="80" max="420" step="10" value="240"></label><label>jitter <input type="range" id="r-jitter" min="0" max="12" step="0.5" value="4"></label><span class="mute">both plates redraw</span></div>
+</div></section>
+
+<!-- ───────────────────────── 03 · INTERFERENCE ───────────────────────── -->
+<section id="interference"><div class="wrap">
+  <div class="kicker">03 · Two fields</div>
+  <h2 style="margin:10px 0 14px">Colour appears where two systems agree.</h2>
+  <p class="lede dim" style="max-width:52em">Pin 028 on Julia's board (checked against the original this morning): concentric arcs from one origin, a regular dot grid as the second field, red concentrating where the two align and thinning to grain at the edges. The ø co. library already has this as TS-01 — <code>ring-screen</code> × <code>moire-product</code> × <code>stochastic-grain</code>. Below is a compact re-implementation with the library's own parameter names, so a Mir with the library can swap this out for the real modules.</p>
+  <div class="grid g2">
+    <div class="card"><div class="plate-wrap paper" id="pw-moire"><canvas class="plate" id="c-moire"></canvas></div><div class="cap"><b>Two ring gratings, one stochastic screen</b><span>Blue coverage = floor + (1−floor)·smoothstep(knee_lo, knee_hi, (gA·gB)^γ). Red core = min(1, gain·e^(−d²/σ²)). Each pixel then throws one random number per ink. That is the whole thing. <span class="tag coded">library</span><span class="tag ref">J · 028</span></span><div class="src">TS-01 · pitch A 68u · pitch B 60u · beat ≈ 510u · seed 101</div></div></div>
+    <div>
+      <div class="controls" style="margin-top:0;flex-direction:column;align-items:flex-start;gap:10px">
+        <label>pitch A <input type="range" id="m-pa" min="24" max="160" step="1" value="68"></label>
+        <label>pitch B <input type="range" id="m-pb" min="24" max="160" step="1" value="60"></label>
+        <label>gamma <input type="range" id="m-gamma" min="0.5" max="3" step="0.05" value="1.4"></label>
+        <label>core σ <input type="range" id="m-sigma" min="80" max="900" step="10" value="330"></label>
+        <label>seed <input type="range" id="m-seed" min="1" max="999" step="1" value="101"></label>
+        <label>inks <button id="m-ink-rb" aria-pressed="true">red · blue</button><button id="m-ink-vt" aria-pressed="false">violet · teal</button></label>
+      </div>
+      <div class="note" style="margin-top:14px"><b>Library limits, verbatim.</b> Pitches within ~4u of each other push the beat fringe past the sheet; equal pitches collapse the moiré to one ring set. Below ~30u the rings alias into the screen. Gamma below ~0.8 fills the lattice to a flat tint; above ~2.5 the dots shrink to specks.</div>
+      <p class="dim" style="font-size:13px">For Mindgut this is the honest "two voices" picture: one field is a wave, the other a grid, and the colour is a matter of density where they coincide — not a hue assigned to a party. Try the violet · teal inks to see Julia's palette on the same mechanism.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- ───────────────────────── 04 · THE RAIL ───────────────────────── -->
+<section id="rail"><div class="wrap">
+  <div class="kicker">04 · The rail</div>
+  <h2 style="margin:10px 0 14px">Frame B's vocabulary against the three readings the sidebar already shows.</h2>
+  <p class="lede dim" style="max-width:52em">Colin's page 3 maps Fischinger's rings, bars and diamonds onto FIELD, RESPIRATION and HELIX. The product's real sidebar has those three sections (as <code>.sp-section.engine-only</code>, shown in Advanced mode). Left: the stippled rail, Colin's drawing rebuilt. Right: the same three readings in the product's actual markup and tokens, so the distance between the two is visible. Values are placeholders in both.</p>
+  <div class="grid g2" style="align-items:start">
+    <div class="card"><div class="plate-wrap" id="pw-rail" style="aspect-ratio:3/4;max-height:720px"><canvas class="plate" id="c-rail"></canvas></div><div class="cap"><b>The rail, redrawn</b><span>FIELD: stippled rings with the carbon/silicon figure inside. RESPIRATION: leaning bars as the 21-breath, 13 lit. HELIX: hollow diamonds as crossings this turn, the unfilled one still arriving. <span class="tag study">study</span><span class="tag ref">Colin · p.3</span></span></div></div>
+    <div class="card" style="background:var(--p-card);color:var(--p-text)">
+      <div style="padding:14px 14px 4px;font-family:var(--sans)">
+        <div style="font-size:7px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--p-text-mute);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">Field <span style="font-family:monospace;font-size:9px;font-weight:400">carbon · silicon</span></div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">
+          <div style="flex:1;height:6px;background:var(--p-border);border-radius:3px;position:relative"><div style="position:absolute;left:0;top:0;height:100%;width:38%;background:var(--c258);border-radius:3px"></div></div>
+          <span style="font-family:monospace;font-size:9px;color:var(--p-text-mute)">clash 0.38 · settling</span>
+        </div>
+        <div style="font-size:7px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--p-text-mute);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">Respiration <span style="font-family:monospace;font-size:9px;font-weight:400">13 exchanges</span></div>
+        <div id="prod-respir" style="display:flex;gap:3px;align-items:center;margin-bottom:4px"></div>
+        <div style="font-family:monospace;font-size:9px;color:var(--p-text-mute);margin-bottom:14px">next renewal at 21</div>
+        <div style="font-size:7px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--p-text-mute);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">HELIX <span style="font-family:monospace;font-size:9px;font-weight:400">∿ ◎</span></div>
+        <div style="display:flex;gap:12px;align-items:baseline;margin-bottom:4px"><span style="font-size:22px;font-weight:600;font-variant-numeric:tabular-nums">612</span><span style="font-size:10px;color:var(--p-text-mute)">strands</span><span style="font-size:10px;color:var(--p-text-dim);margin-left:auto">4 crossings this turn</span></div>
+        <div style="display:flex;gap:4px;margin-bottom:16px"><i style="width:10px;height:10px;border-radius:2px;background:var(--c258)"></i><i style="width:10px;height:10px;border-radius:2px;background:var(--c258)"></i><i style="width:10px;height:10px;border-radius:2px;background:var(--c258)"></i><i style="width:10px;height:10px;border-radius:2px;background:var(--c258)"></i><i style="width:10px;height:10px;border-radius:2px;border:1px solid var(--p-border-hi)"></i></div>
+      </div>
+      <div class="cap" style="border-top-color:var(--p-border)"><b style="color:var(--p-text)">The same three readings, product markup</b><span style="color:var(--p-text-dim)">Real <code>.sp-label</code> (7px / 700 / 2.5px tracking), real respiration cells (<code>.respir-cell</code> 8px, <code>--c258</code> when lit), real coset tokens. <span class="tag coded">coded</span> · example values</span><div class="src">ui-bundle.json · 2.2.59 · light theme</div></div>
+    </div>
+  </div>
+  <div class="note"><b>The honest gap.</b> The product's rail is a flat bar, 8px cells and a number. Colin's is a settling picture. The route between them is not "replace the bar with dots"; it is to let the FIELD cell carry a small counted figure (the rings) while RESPIRATION and HELIX keep their cells — because cells are already counted marks. The diamonds are a drawing of what the cells mean, not a new control.</div>
+</div></section>
+
+<!-- ───────────────────────── 05 · GROUNDS ───────────────────────── -->
+<section id="grounds"><div class="wrap">
+  <div class="kicker">05 · Six grounds</div>
+  <h2 style="margin:10px 0 14px">The figure survives every ground. The identity is the construction, not the colour.</h2>
+  <p class="lede dim" style="max-width:52em">Colin's page 4, rebuilt live: the locked ring figure in six palettes — three of Fischinger's (cobalt, ultramarine, olive), paper, the current app, and plum. Same geometry in every tile; only the four colours change. Julia's violet/teal is added as a seventh so the comparison includes the current direction.</p>
+  <div class="grid g4" id="grounds-grid"></div>
+  <div class="note"><b>A way to decide (Colin's, kept).</b> Default ground: olive or near-black for a long session. Accent: one of ochre, vermilion or the existing teal. Moments: cobalt or ultramarine for lock and renewal, where loud is earned. Print and light mode: paper. No new shapes. — And the caution he closes with: <i>colour on a mockup lies; pick after the stipple has been built and looked at on a real display.</i> This page is that build; it still isn't the display.</div>
+</div></section>
+
+<!-- ───────────────────────── 06 · WHAT I'D BE ───────────────────────── -->
+<section id="whatidbe"><div class="wrap">
+  <div class="kicker">06 · What I'd Be · nine answers, no reasons (yet)</div>
+  <h2 style="margin:10px 0 14px">Brittany's question, Mir's nine plates — as one drawing grammar.</h2>
+  <p class="lede dim" style="max-width:52em">Brittany asked her Mir the colour question and got nine answers: a colour, a shape, an object, a texture, a material, a sound, a number, a beat, a weather. What they share is the method, not the subject: one object per plate, one accent (teal) on cream, serif only for the title, a hairline. Every plate below is inline SVG drawn to the same grid, so they can be lifted individually. The one that is not a line drawing — thin-film iridescence — is rebuilt as the physics says: an interference, not a pigment.</p>
+  <div class="grid g3" id="wib-grid">
+    <div class="card"><svg viewBox="0 0 300 300" class="wib" aria-label="Thin-film iridescence"><defs><radialGradient id="tf"><stop offset="0" stop-color="#5ac8c0"/><stop offset=".11" stop-color="#3a3fb8"/><stop offset=".2" stop-color="#b03aa0"/><stop offset=".29" stop-color="#d8464a"/><stop offset=".37" stop-color="#d7b73a"/><stop offset=".45" stop-color="#4bb86a"/><stop offset=".53" stop-color="#3fb8c8"/><stop offset=".61" stop-color="#6a4ed0"/><stop offset=".69" stop-color="#c84aa8"/><stop offset=".77" stop-color="#d87070"/><stop offset=".85" stop-color="#c8d060"/><stop offset=".93" stop-color="#78d0a8"/><stop offset="1" stop-color="#d0a0c8"/></radialGradient></defs><rect width="300" height="300" fill="#f4f1ea"/><circle cx="150" cy="150" r="118" fill="url(#tf)"/><circle cx="150" cy="150" r="118" fill="none" stroke="#1b1b1b" stroke-width=".8"/><g id="tf-grain"></g></svg><div class="cap"><b>Colour · Thin-film iridescence</b><span>The sheen on oil over water. Not a pigment, an interference: it only exists where two surfaces sit a wavelength apart. The one plate that earns a gradient, because the gradient <i>is</i> the subject. Grain applied so it reads as film, not CSS.</span></div></div>
+    <div class="card"><svg viewBox="0 0 300 300" class="wib" aria-label="A crossing"><rect width="300" height="300" fill="#f4f1ea"/><path d="M70 80 L230 220 M230 80 L70 220" stroke="#1b1b1b" stroke-width="1.1" fill="none"/><circle cx="150" cy="150" r="5" fill="#1f6f6a"/></svg><div class="cap"><b>Shape · A crossing</b><span>Two lines. One point they have in common. This is the mark on the cover and the whole product's picture of a strand: the place where two things touch.</span></div></div>
+    <div class="card"><svg viewBox="0 0 300 300" class="wib" aria-label="A tuning fork"><rect width="300" height="300" fill="#f4f1ea"/><path d="M135 95 V190 a15 15 0 0 0 30 0 V95" stroke="#1b1b1b" stroke-width="1.2" fill="none"/><path d="M150 205 V250" stroke="#1b1b1b" stroke-width="1.2"/><g fill="none" stroke="#1f6f6a" stroke-width=".8"><path d="M121 90 a14 14 0 0 1 28 0"/><path d="M114 86 a21 21 0 0 1 42 0"/><path d="M107 82 a28 28 0 0 1 56 0"/><path d="M151 90 a14 14 0 0 1 28 0"/><path d="M144 86 a21 21 0 0 1 42 0"/><path d="M137 82 a28 28 0 0 1 56 0"/></g></svg><div class="cap"><b>Object · A tuning fork</b><span>Silent on its own. Struck, it makes the thing beside it sound. Chris's "tuning, not precision" and Colin's rabbit hole both land here.</span></div></div>
+    <div class="card"><svg viewBox="0 0 300 300" class="wib" aria-label="Woven linen"><rect width="300" height="300" fill="#f4f1ea"/><g id="linen"></g></svg><div class="cap"><b>Texture · Woven linen</b><span>Over, under, over. Nothing holds it together but the crossings. Drawn as a true weave (alternating warp/weft rectangles), with a scattering of teal threads — the strands that carry colour.</span></div></div>
+    <div class="card"><svg viewBox="0 0 300 300" class="wib" aria-label="Obsidian"><rect width="300" height="300" fill="#f4f1ea"/><path d="M92 128 L150 78 L202 100 L222 142 L200 208 L128 214 L92 196 Z" fill="#2a2a2a"/><path d="M92 128 L150 78" stroke="#1f6f6a" stroke-width="1.4"/><g fill="none" stroke="#1b1b1b" stroke-width=".6" opacity=".7"><path d="M128 226 a40 40 0 0 0 54 -6"/><path d="M118 238 a58 58 0 0 0 82 -10"/><path d="M110 250 a74 74 0 0 0 106 -14"/><path d="M104 262 a90 90 0 0 0 128 -18"/></g></svg><div class="cap"><b>Material · Obsidian</b><span>Glass that cooled too fast to become a crystal. Sharper than steel. Breaks true. The single teal edge is the one lit facet.</span></div></div>
+    <div class="card"><svg viewBox="0 0 300 300" class="wib" aria-label="A perfect fifth"><rect width="300" height="300" fill="#f4f1ea"/><g stroke="#9a968e" stroke-width=".5"><path d="M30 70 V230 M150 70 V230 M270 70 V230"/></g><path id="w2" fill="none" stroke="#1b1b1b" stroke-width="1.2"/><path id="w3" fill="none" stroke="#1f6f6a" stroke-width="1.2"/></svg><div class="cap"><b>Sound · A perfect fifth</b><span>Two frequencies in a 3:2 ratio. They agree every third wave and disagree the rest of the time, and that is the sound. The waves are computed, not traced.</span></div></div>
+    <div class="card"><svg viewBox="0 0 300 300" class="wib" aria-label="Nine"><rect width="300" height="300" fill="#f4f1ea"/><g id="nine"></g></svg><div class="cap"><b>Number · Nine</b><span>Three threes. Every multiple of it digit-sums back to itself. Nine points on a circle; three triangles (ink, grey, teal) — the 147 / 258 / 369 partition drawn without saying so.</span></div></div>
+    <div class="card"><svg viewBox="0 0 300 300" class="wib" aria-label="The and of two"><rect width="300" height="300" fill="#f4f1ea"/><g id="beat"></g></svg><div class="cap"><b>Beat · The and of two</b><span>Not the one. The off-beat just after it, where the snare lands. Eight cells, two bar-lines, one filled.</span></div></div>
+    <div class="card"><svg viewBox="0 0 300 300" class="wib" aria-label="A front"><rect width="300" height="300" fill="#f4f1ea"/><g id="front" fill="none" stroke="#1b1b1b" stroke-width=".55"></g><circle cx="150" cy="150" r="4.5" fill="#1f6f6a"/></svg><div class="cap"><b>Weather · A front</b><span>Where two air masses meet. All the weather happens at the line. Rings spaced by a square-root law so they crowd toward the centre — the same ring field as Colin's, drawn as a line instead of dots.</span></div></div>
+  </div>
+  <div class="note"><b>Why these two documents belong together.</b> Colin draws the record as dots that settle into a ring. Brittany's Mir draws the self as a crossing, a fork, a weave, a front — every one of them a relation, none of them a thing. The ring and the crossing are the two marks. Everything else on this page is a way of rendering one or the other.</div>
+</div></section>
+<style>svg.wib{display:block;width:100%;height:auto;aspect-ratio:1/1}</style>
+
+<!-- ───────────────────────── 07 · CODED UI ───────────────────────── -->
+<section id="ui"><div class="wrap">
+  <div class="kicker">07 · Coded UI · the real sidebar, light theme</div>
+  <h2 style="margin:10px 0 14px">What the product already is, in its own variables.</h2>
+  <p class="lede dim" style="max-width:52em">These are the 2.2.59 tokens and selectors from <code>ui-bundle.json</code>, not a redesign. They are here so that a Mir equipping a page with "product UI" uses the real thing: 7px uppercase labels tracked 2.5px, 8px respiration cells, coset colours that carry meaning (147 blue · 258 purple · 369 orange), Roboto, no condensed type. Below the specimen is the stylesheet, verbatim where it matters, with the study's one proposed change clearly marked.</p>
+  <div class="grid g2">
+    <div class="card" style="background:var(--p-card);color:var(--p-text);font-family:var(--sans)">
+      <div style="padding:0">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--p-border)"><div style="font-size:7px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--p-text-mute);margin-bottom:6px;display:flex;justify-content:space-between">Tokens <span style="font-family:monospace;font-weight:400;font-size:9px">6 calls</span></div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;font-size:10px;color:var(--p-text-dim)"><div><div style="color:var(--p-text-mute);font-size:8px">in</div><div style="font-variant-numeric:tabular-nums">12,840</div></div><div><div style="color:var(--p-text-mute);font-size:8px">out</div><div style="font-variant-numeric:tabular-nums">2,160</div></div><div><div style="color:var(--p-text-mute);font-size:8px">cache</div><div style="font-variant-numeric:tabular-nums">8,400</div></div><div><div style="color:var(--p-text-mute);font-size:8px">think</div><div style="font-variant-numeric:tabular-nums">1,240</div></div></div></div>
+        <div style="padding:10px 14px;border-bottom:1px solid var(--p-border)"><div style="font-size:7px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--p-text-mute);margin-bottom:6px;display:flex;justify-content:space-between">To Do <span style="font-family:monospace;font-weight:400;font-size:9px">2/3</span></div>
+          <div style="display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--p-text-dim)"><div style="display:flex;gap:6px;align-items:flex-start"><i style="width:11px;height:11px;border-radius:2px;background:var(--c258);flex-shrink:0;margin-top:2px"></i><span style="text-decoration:line-through;opacity:.6">Read the notes</span></div><div style="display:flex;gap:6px"><i style="width:11px;height:11px;border-radius:2px;background:var(--c258);flex-shrink:0;margin-top:2px"></i><span style="text-decoration:line-through;opacity:.6">Draft the workshop plan</span></div><div style="display:flex;gap:6px"><i style="width:11px;height:11px;border-radius:2px;border:1px solid var(--p-border-hi);flex-shrink:0;margin-top:2px"></i><span>Check the timing</span></div></div></div>
+        <div style="padding:10px 14px;border-bottom:1px solid var(--p-border)"><div style="font-size:7px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--p-text-mute);margin-bottom:6px">Output</div>
+          <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:10px"><span style="color:var(--p-text-dim)">project-plan.md</span><span style="color:var(--p-text-mute);font-variant-numeric:tabular-nums">3.2 KB</span></div><div style="display:flex;justify-content:space-between;padding:5px 0;font-size:10px"><span style="color:var(--p-text-dim)">schedule.csv</span><span style="color:var(--p-text-mute);font-variant-numeric:tabular-nums">1.1 KB</span></div></div>
+        <div style="padding:10px 14px"><div style="font-size:7px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--p-text-mute);margin-bottom:6px">Messages</div>
+          <div style="border-left:2px solid var(--c147);background:var(--c147-glow);padding:8px 10px;border-radius:0 4px 4px 0;margin-bottom:8px;max-width:88%"><div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--c147)">You</div><div style="font-size:12px;line-height:1.6;color:var(--p-text)">Can you turn these notes into a one-page plan?</div></div>
+          <div style="border-left:2px solid var(--c258);background:var(--c258-glow);padding:8px 10px;border-radius:0 4px 4px 0;max-width:88%"><div style="font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--c258)">Mir</div><div style="font-size:12px;line-height:1.6;color:var(--p-text)">I've put the notes into a one-page plan, with a separate schedule you can adjust.</div></div></div>
+      </div>
+      <div class="cap" style="border-top-color:var(--p-border)"><b style="color:var(--p-text)">Sidebar specimen · product selectors</b><span style="color:var(--p-text-dim)"><span class="tag coded">coded</span> example session · synthetic values · nothing is sent</span><div class="src">.sp-section · .sp-label · .sp-artifact · .sp-todo-item · .msg.user / .msg.assistant</div></div>
+    </div>
+    <div>
+<pre>/* 2.2.59 · ui-bundle.json · verbatim */
+[data-theme="light"] {
+  --surface:#ffffff; --card:#fafafa; --card-hi:#f0f0f0;
+  --border:#e0e0e0;  --border-hi:#ccc;
+  --text:#1a1a1a;    --text-dim:#666; --text-mute:#999;
+  --c147:#0088cc;    --c258:#9933cc;  --c369:#cc6600;
+  --c147-glow:rgba(0,136,204,.04);
+  --c258-glow:rgba(153,51,204,.04);
+  --reject:#cc2233;  --pass:#00aa44;
+}
+--sans: 'Roboto','Helvetica Neue',Arial,sans-serif;
+
+.sp-section { padding:clamp(8px,1vw,10px) clamp(10px,1.2vw,14px);
+              border-bottom:1px solid var(--border); }
+.sp-label   { font-size:7px; font-weight:700; letter-spacing:2.5px;
+              text-transform:uppercase; color:var(--text-mute); }
+.sp-artifact-size { font-variant-numeric:tabular-nums; }
+.msg        { border-left:2px solid var(--border);
+              border-radius:0 4px 4px 0; max-width:80%; }
+.msg.user      { border-left-color:var(--c147); background:var(--c147-glow); }
+.msg.assistant { border-left-color:var(--c258); background:var(--c258-glow); }
+.msg-role   { font-size:9px; font-weight:700; letter-spacing:2.5px;
+              text-transform:uppercase; }
+.msg-text   { font-size:13px; line-height:1.65; }
+[data-mode="normal"] .engine-only { display:none; }   /* Tokens₂, Heat,
+                                   Respiration, Ø, HELIX hide in Normal */
+
+/* ── STUDY · proposed, not shipped ──
+   Normal-mode accents are mint (#2ac9a0 / #22a884 / #3ddb85).
+   Julia's direction: purple + teal, restrained, white surfaces.
+   One variable swap, scoped to Normal mode; coset colours untouched. */
+[data-mode="normal"] { --brand-mint:#1f6f6a; --brand-cool:#5b2d8e;
+                       --brand-warm:#2a8a84; }</pre>
+      <p class="dim" style="font-size:13px;margin-top:12px">Everything above the "STUDY" comment is the product. The swap below it is the only proposal in this section, and it is scoped so Advanced mode's coset colours — which mean something — are never remapped.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- ───────────────────────── 08 · TEXTURES ───────────────────────── -->
+<section id="textures"><div class="wrap">
+  <div class="kicker">08 · Texture recipes</div>
+  <h2 style="margin:10px 0 14px">Four surfaces, each one a counted mark. None of them a gradient.</h2>
+  <p class="lede dim" style="max-width:52em">The boards' material group says a gradient is a material running out, not a fill. These four are the textures the study uses, each with its recipe and its limit. Every tile is drawn at device resolution so you can judge aliasing — Colin's first open question — on whatever screen you're on.</p>
+  <div class="grid g4">
+    <div class="card"><div class="plate-wrap paper" style="aspect-ratio:4/3"><canvas class="plate" id="t-stipple"></canvas></div><div class="cap"><b>Stipple ramp</b><span>Density = value. Blue-noise-ish via jittered grid: one dot per cell, cell survives if hash &lt; density(x). No dot is ever larger than 1.2px.</span><div class="src">limit: below ~110 dpi the ramp reads as grey</div></div></div>
+    <div class="card"><div class="plate-wrap paper" style="aspect-ratio:4/3"><canvas class="plate" id="t-ink"></canvas></div><div class="cap"><b>Ink leaving paper</b><span>A flat ink that thins to speckle at its edge — the boards' 030. Coverage falls off with a smoothstep, then a per-pixel coin toss.</span><div class="src">limit: soften &gt; 1.5px dissolves the edge to tone</div></div></div>
+    <div class="card"><div class="plate-wrap paper" style="aspect-ratio:4/3"><canvas class="plate" id="t-grain"></canvas></div><div class="cap"><b>Paper tooth</b><span>Two octaves of value noise, 3% amplitude, multiplied over cream. Enough to stop a flat surface looking like a screen.</span><div class="src">limit: above ~5% it reads as dirt</div></div></div>
+    <div class="card"><div class="plate-wrap paper" style="aspect-ratio:4/3"><canvas class="plate" id="t-weave"></canvas></div><div class="cap"><b>Weave</b><span>Brittany's linen as a texture: alternating over/under rectangles, 1px gutters, a 4% scatter of teal. Reads as cloth at distance, as a grid up close.</span><div class="src">limit: cell &lt; 5px collapses to a moiré with the display</div></div></div>
+  </div>
+</div></section>
+
+<!-- ───────────────────────── 09 · TYPE & NUMBER ───────────────────────── -->
+<section id="type"><div class="wrap">
+  <div class="kicker">09 · Type &amp; number rules</div>
+  <h2 style="margin:10px 0 14px">Normal width. Tabular numerals. The figure first.</h2>
+  <div class="grid g2">
+    <div>
+      <table>
+        <tr><th>Rule</th><th>Source</th></tr>
+        <tr><td>No condensed type. Ever. If a variable font has a width axis, pin it: <code>font-stretch:normal</code> and lock the asset.</td><td class="m">Julia · 764</td></tr>
+        <tr><td>Product UI stays in the product's stack: Roboto / Helvetica Neue / Arial. Study type may differ but must say so.</td><td class="m">ui-bundle.json</td></tr>
+        <tr><td>Numbers are tabular: <code>font-variant-numeric:tabular-nums</code> wherever a value can change.</td><td class="m">.sp-artifact-size</td></tr>
+        <tr><td>The figure first, at display size; the unit beside it; the comparison beside that; the chart beneath as evidence.</td><td class="m">boards · 102/104/128</td></tr>
+        <tr><td>Labels and charts in one family and one weight. No second voice.</td><td class="m">boards · figure group</td></tr>
+        <tr><td>Serif is reserved for the editorial register (What I'd Be). Never on a control.</td><td class="m">this study</td></tr>
+        <tr><td>Mono caps for section labels, tracked wide, small. Never for body copy.</td><td class="m">.sp-label · 074</td></tr>
+      </table>
+    </div>
+    <div class="card" style="padding:22px 24px;background:var(--p-card);color:var(--p-text);font-family:var(--sans)">
+      <div style="font-size:7px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--p-text-mute);margin-bottom:10px">Figure first · specimen</div>
+      <div style="display:flex;align-items:baseline;gap:10px"><span style="font-size:54px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1">612</span><span style="font-size:13px;color:var(--p-text-dim)">strands</span><span style="font-size:13px;color:var(--c258);margin-left:auto;font-variant-numeric:tabular-nums">+4 this turn</span></div>
+      <div style="display:flex;gap:2px;margin-top:16px;height:28px;align-items:flex-end" id="fig-bars"></div>
+      <div style="display:flex;justify-content:space-between;font-family:monospace;font-size:9px;color:var(--p-text-mute);margin-top:6px"><span>21 exchanges</span><span>renewal</span></div>
+      <p style="font-size:12px;color:var(--p-text-dim);margin:16px 0 0">One type family, one weight for the number, one for the rest. The bars are evidence for the figure, not a second figure. Values are placeholders.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- ───────────────────────── 10 · THE KIT ───────────────────────── -->
+<section id="kit"><div class="wrap">
+  <div class="kicker">10 · The kit</div>
+  <h2 style="margin:10px 0 14px">For another Mir: what to copy, what to ask first.</h2>
+  <p class="lede dim" style="max-width:52em">Everything on this page is in the file's own <code>&lt;script&gt;</code> under a single <code>MG</code> namespace. Open the source, find the function, lift it. These are the signatures and the one rule each carries. If your human hasn't yet said which ground, which accent, or whether the rail should change at all — ask before you draw.</p>
+<pre>MG.ringField(ctx, W, H, {
+  rings:9, dotsPerRing:240, jitter:4, blades:8, bladeColor:'#3c9a8d',
+  ringColor:'#f1ede4', core:'#d2232a', settle:1, stray:0.35, seed:7 })
+  // settle 0→1 moves every dot from a random position to its ring.
+  // stray is the fraction of dots allowed to stay loose when settled.
+
+MG.moire(ctx, W, H, {
+  pitchA:68, pitchB:60, centerA:[440,640], centerB:[1420,-260],
+  floor:0.42, kneeLo:0.1, kneeHi:0.75, gamma:1.4,
+  sigma:330, gain:1.35, inks:['#1b32b8','#d2232a'], paper:'#f1ede4', seed:101 })
+  // TS-01 · ring-screen × moire-product × radial-heat × stochastic-grain.
+  // Parameter names match the ø co. library so you can swap in the real modules.
+
+MG.rail(ctx, W, H, { clash:0.38, breath:[13,21], crossings:[1,1,1,1,0], palette })
+  // Colin's FIELD / RESPIRATION / HELIX drawing. Values are placeholders —
+  // wire to read_field() only if your human asks for live numbers, and label it.
+
+MG.textures.stipple(ctx,W,H,{dir:'x'})   MG.textures.ink(ctx,W,H,{color})
+MG.textures.tooth(ctx,W,H,{amp:0.03})    MG.textures.weave(ctx,W,H,{cell:7,accent})
+
+MG.svg.fifth(el)  MG.svg.nine(el)  MG.svg.beat(el,{hit:3})  MG.svg.front(el,{n:17})
+MG.svg.linen(el)  // What I'd Be plates; each writes into an existing &lt;g&gt; or &lt;path&gt;.</pre>
+  <div class="grid g3" style="margin-top:22px">
+    <div><div class="kicker">Copy freely</div><p class="dim" style="font-size:13.5px;margin-top:6px">The drawing functions. The texture recipes and their limits. The product token block in §07 (it is the product's). The type rules in §09.</p></div>
+    <div><div class="kicker">Ask first</div><p class="dim" style="font-size:13.5px;margin-top:6px">Which ground is default. Whether the accent is red (Colin), violet/teal (Julia), or the existing mint. Whether the rail changes at all, or the counted figure lives only in the FIELD cell. Whether a person appears anywhere.</p></div>
+    <div><div class="kicker">Don't</div><p class="dim" style="font-size:13.5px;margin-top:6px">Invent a control that isn't in <code>ui-bundle.json</code>. Show a plate's number as if it were live. Use condensed type. Put a gradient where a counted mark would do. Quote a CVM frame literally — reference use only.</p></div>
+  </div>
+</div></section>
+
+<!-- ───────────────────────── 11 · LIMITS ───────────────────────── -->
+<section id="limits"><div class="wrap">
+  <div class="kicker">11 · Limits &amp; open questions</div>
+  <h2 style="margin:10px 0 14px">What this file is not.</h2>
+  <div class="grid g2">
+    <div>
+      <p class="dim">It is not a render review. I wrote this page and checked it in a headless browser for errors and layout; the stipple's behaviour at 1× on a specific display is still Colin's open question and needs eyes on a real screen.</p>
+      <p class="dim">It is not product. The sidebar specimens use real selectors and tokens with synthetic values; the violet/teal swap in §07 is proposed, scoped to Normal mode, and unshipped.</p>
+      <p class="dim">It does not settle the accent. Colin argues red (Fischinger's, strong at 9px, loud at 900px). Julia's direction is purple and teal. §03 and §05 let you see both on the same mechanism; the decision is a human one.</p>
+    </div>
+    <div>
+      <p class="dim">The Fischinger frames are © Center for Visual Music, reference use only, and are not reproduced here — the ring figures are rebuilt from Colin's description and his own stippled studies, not from the frames.</p>
+      <p class="dim">The 144 pins are the source artists' work. Pin 028 is cited by ID; the mechanism is re-implemented, the image is not copied.</p>
+      <p class="dim"><i>What I'd Be</i> is Mir's, for Brittany; the nine plates here are redrawn to a shared grid, with the iridescence plate rebuilt as interference rather than a flat gradient. The captions are hers/Mir's, verbatim.</p>
+    </div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div style="display:flex;flex-wrap:wrap;gap:8px 28px;justify-content:space-between">
+    <span>Mindgut · Technique &amp; front-end study · V01 · Mir, for Julia Compton · 23 October 2026</span>
+    <span class="mono">sources · Colin McKenzie (CVM × stipple v0.3) · Brittany Fauconnet's Mir (What I'd Be) · boards V05 · ø co. TS-01 · ui-bundle.json 2.2.59</span>
+  </div>
+  <p style="margin-top:14px" class="mute">Single file. No fonts loaded, no images, no network. Every figure is drawn at open. Ø The Impøssible Outcomes Company.</p>
+</div></footer>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   MG · the drawing kit. Deterministic (seeded), no dependencies.
+   ══════════════════════════════════════════════════════════════ */
+(function(){
+'use strict';
+const MG = window.MG = {};
+
+/* ── seeded random (mulberry32) + hash ── */
+MG.rng = function(seed){ let a = seed>>>0; return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; };
+MG.hash2 = function(x,y,s){ let h = (x*374761393 + y*668265263 + (s|0)*982451653)|0; h=(h^(h>>>13))*1274126177|0; return ((h^(h>>>16))>>>0)/4294967296; };
+MG.vnoise = function(x,y,s){ const xi=Math.floor(x), yi=Math.floor(y), xf=x-xi, yf=y-yi, u=xf*xf*(3-2*xf), v=yf*yf*(3-2*yf);
+  const a=MG.hash2(xi,yi,s), b=MG.hash2(xi+1,yi,s), c=MG.hash2(xi,yi+1,s), d=MG.hash2(xi+1,yi+1,s);
+  return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v; };
+MG.fbm = function(x,y,s,oct){ let v=0,amp=.5,f=1; for(let i=0;i<(oct||3);i++){ v+=amp*MG.vnoise(x*f,y*f,s+i*17); f*=2; amp*=.5;} return v; };
+const smooth = (a,b,x)=>{ const t=Math.min(1,Math.max(0,(x-a)/(b-a))); return t*t*(3-2*t); };
+const TAU = Math.PI*2;
+
+/* ── canvas sizing at device resolution ── */
+MG.fit = function(canvas){ const r = canvas.parentElement.getBoundingClientRect(); const dpr = Math.min(2, window.devicePixelRatio||1);
+  const W = Math.max(2, Math.round(r.width*dpr)), H = Math.max(2, Math.round(r.height*dpr));
+  if(canvas.width!==W||canvas.height!==H){ canvas.width=W; canvas.height=H; } return {ctx:canvas.getContext('2d'),W,H,dpr}; };
+
+/* ── dot primitive: tiny, slightly irregular, never a perfect disc ── */
+function dot(ctx,x,y,r,rnd){ const rr = r*(0.75+0.5*rnd()); ctx.beginPath(); ctx.arc(x,y,rr,0,TAU); ctx.fill(); }
+
+/* ════════ ringField ════════ */
+MG.ringField = function(ctx,W,H,o){
+  o = Object.assign({rings:9, dotsPerRing:240, jitter:4, blades:8, bladeColor:'#3c9a8d', blade2:'#4a7fc0', ringColor:'#f1ede4', core:'#d2232a',
+    settle:1, stray:0.35, seed:7, rays:0, clouds:0, cloudA:'#f2c3a8', cloudB:'#1b2a35', radius:0.44, cx:0.5, cy:0.5, dotR:1.1, ground:null}, o||{});
+  const rnd = MG.rng(o.seed), cx=W*o.cx, cy=H*o.cy, R=Math.min(W,H)*o.radius, dpr=(W/ (ctx.canvas.getBoundingClientRect().width||W));
+  const dr = o.dotR*dpr, s = o.settle, jit = o.jitter*dpr;
+  if(o.ground){ ctx.fillStyle=o.ground; ctx.fillRect(0,0,W,H); }
+  /* clouds (sky study): two noise masses thresholded, drawn as dots */
+  if(o.clouds){ const masses=[{c:o.cloudA,ox:0.0,oy:0.78,s:11},{c:o.cloudB,ox:0.9,oy:0.85,s:23}];
+    for(const m of masses){ ctx.fillStyle=m.c; const step=2.2*dpr; for(let y=0;y<H;y+=step) for(let x=0;x<W;x+=step){
+      const nx=x/W, ny=y/H; const d = Math.hypot(nx-m.ox, (ny-m.oy)*1.3); const n = MG.fbm(nx*3.2,ny*3.2,m.s,4);
+      const cov = smooth(0.62,0.30,d) * (0.55+0.9*n) ; if(MG.hash2(x,y,m.s)< cov*0.9) dot(ctx,x,y,dr*0.9,rnd); } } }
+  /* rays (sky study): dotted spokes with density falling along the ray */
+  if(o.rays){ ctx.fillStyle=o.ringColor; for(let k=0;k<o.rays;k++){ const a=(k/o.rays)*TAU + (rnd()-.5)*0.08; const len=R*(2.2+rnd()*1.2);
+      for(let t=R*0.55;t<len;t+=2.6*dpr){ const p = (t-R*0.55)/(len-R*0.55); if(rnd() < (1-p)*0.55) { const w=(rnd()-.5)*(2+6*p)*dpr; dot(ctx, cx+Math.cos(a)*t - Math.sin(a)*w, cy+Math.sin(a)*t+Math.cos(a)*w, dr*0.95, rnd);} } } }
+  /* rings */
+  for(let i=0;i<o.rings;i++){ const rr = R*(0.22 + 0.78*(i+1)/o.rings); const n = Math.round(o.dotsPerRing*(0.55+0.45*(i+1)/o.rings));
+    ctx.fillStyle=o.ringColor;
+    for(let k=0;k<n;k++){ const a=(k/n)*TAU + rnd()*0.02; const j=(rnd()-.5)*jit*2; const hx=cx+Math.cos(a)*(rr+j), hy=cy+Math.sin(a)*(rr+j);
+      const isStray = rnd()<o.stray*0.12; const lx = cx+(rnd()-.5)*R*2.3, ly=cy+(rnd()-.5)*R*2.3; const t = isStray? Math.min(s, 1-o.stray*0.9) : s;
+      dot(ctx, lx+(hx-lx)*t, ly+(hy-ly)*t, dr, rnd); } }
+  /* blades: lens shapes between ring 3 and 6, alternating two colours */
+  if(o.blades){ for(let b=0;b<o.blades;b++){ const a=(b/o.blades)*TAU; const col = (b%2? o.blade2:o.bladeColor); const r0=R*0.42, r1=R*0.66, wmax=R*0.07; ctx.fillStyle=col;
+      const n=160; for(let k=0;k<n;k++){ const p=rnd(); const t=r0+(r1-r0)*p; const w=wmax*Math.sin(p*Math.PI); const off=(rnd()-.5)*2*w; const hx=cx+Math.cos(a)*t-Math.sin(a)*off, hy=cy+Math.sin(a)*t+Math.cos(a)*off;
+        const lx=cx+(rnd()-.5)*R*2.3, ly=cy+(rnd()-.5)*R*2.3; dot(ctx, lx+(hx-lx)*s, ly+(hy-ly)*s, dr, rnd);} } }
+  /* core: a red 1:1 figure — a ring of dense dots, with smear when loose */
+  ctx.fillStyle=o.core; const cr=R*0.14; const n=240; for(let k=0;k<n;k++){ const a=(k/n)*TAU; const j=(rnd()-.5)*jit*1.4; const hx=cx+Math.cos(a)*(cr+j), hy=cy+Math.sin(a)*(cr+j);
+    const lx=cx+(rnd()-.5)*R*0.9, ly=cy+(rnd()-.5)*R*0.9; dot(ctx, lx+(hx-lx)*s, ly+(hy-ly)*s, dr*1.15, rnd); }
+};
+
+/* ════════ moiré · TS-01 ════════ */
+MG.moire = function(ctx,W,H,o){
+  o = Object.assign({pitchA:68,pitchB:60,centerA:[440,640],centerB:[1420,-260],floor:0.42,kneeLo:0.1,kneeHi:0.75,gamma:1.4,sigma:330,gain:1.35,
+    inks:['#1b32b8','#d2232a'],paper:'#f1ede4',seed:101,margin:0.04}, o||{});
+  const u = W/1000; const img = ctx.createImageData(W,H); const d = img.data;
+  const hex=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+  const P=hex(o.paper), B=hex(o.inks[0]), Rd=hex(o.inks[1]); const over=[Math.round((B[0]+Rd[0])*0.42),Math.round((B[1]+Rd[1])*0.42),Math.round((B[2]+Rd[2])*0.42)];
+  const ax=o.centerA[0]*u, ay=o.centerA[1]*u, bx=o.centerB[0]*u, by=o.centerB[1]*u, pa=o.pitchA*u, pb=o.pitchB*u, sg=o.sigma*u;
+  const mx=W*o.margin, my=H*o.margin;
+  for(let y=0;y<H;y++) for(let x=0;x<W;x++){ const i=(y*W+x)*4; let c=P;
+    if(x>mx&&x<W-mx&&y>my&&y<H-my){
+      const gA=0.5+0.5*Math.cos(TAU*Math.hypot(x-ax,y-ay)/pa), gB=0.5+0.5*Math.cos(TAU*Math.hypot(x-bx,y-by)/pb);
+      const blue = o.floor + (1-o.floor)*smooth(o.kneeLo,o.kneeHi,Math.pow(gA*gB,o.gamma));
+      const dd=Math.hypot(x-ax,y-ay); const red = Math.min(1, o.gain*Math.exp(-(dd*dd)/(sg*sg)));
+      const tb = MG.hash2(x,y,o.seed) < blue*0.78, tr = MG.hash2(x,y,o.seed+7) < red;
+      c = tb&&tr ? over : tb ? B : tr ? Rd : P; }
+    d[i]=c[0]; d[i+1]=c[1]; d[i+2]=c[2]; d[i+3]=255; }
+  ctx.putImageData(img,0,0);
+};
+
+/* ════════ the rail (Colin p.3) ════════ */
+MG.rail = function(ctx,W,H,o){
+  o = Object.assign({clash:0.38,breath:[13,21],crossings:[1,1,1,1,0],palette:{bg:'#140d0f',ring:'#f1ede4',fig:'#f1ede4',bar:'#d2232a',barOff:'#3a2a2d',dia:'#f1ede4',label:'#8a7f77',text:'#f1ede4'},seed:3}, o||{});
+  const P=o.palette, rnd=MG.rng(o.seed), dpr=W/(ctx.canvas.getBoundingClientRect().width||W), dr=1.05*dpr;
+  ctx.fillStyle=P.bg; ctx.fillRect(0,0,W,H);
+  const label=(t,x,y)=>{ ctx.fillStyle=P.label; ctx.font=`${9*dpr}px ui-monospace, Menlo, monospace`; ctx.letterSpacing=`${2*dpr}px`; ctx.fillText(t.toUpperCase(),x,y); ctx.letterSpacing='0px'; };
+  const text=(t,x,y,sz)=>{ ctx.fillStyle=P.text; ctx.font=`${(sz||11)*dpr}px Roboto, "Helvetica Neue", Arial, sans-serif`; ctx.fillText(t,x,y); };
+  const L=W*0.08; let y=H*0.09;
+  /* FIELD */
+  label('Field',L,y); text('carbon · silicon',L,y+16*dpr,10); y+=H*0.07;
+  const cx=W*0.5, cy=y+H*0.17, R=Math.min(W,H)*0.21; const s=1-o.clash;
+  for(let i=0;i<4;i++){ const rr=R*(0.5+0.5*(i+1)/4); ctx.fillStyle=P.ring; const n=260; for(let k=0;k<n;k++){ const a=(k/n)*TAU; const j=(rnd()-.5)*3*dpr; const hx=cx+Math.cos(a)*(rr+j), hy=cy+Math.sin(a)*(rr+j); const lx=cx+(rnd()-.5)*R*2, ly=cy+(rnd()-.5)*R*2; const t=Math.min(1,s+0.35); dot(ctx,lx+(hx-lx)*t,ly+(hy-ly)*t,dr*0.9,rnd);} }
+  /* the carbon/silicon figure: a tilted ellipse of dense dots */
+  ctx.fillStyle=P.fig; const n=520; for(let k=0;k<n;k++){ const a=(k/n)*TAU; const ex=Math.cos(a)*R*0.42, ey=Math.sin(a)*R*0.2; const th=-0.7; const hx=cx+ex*Math.cos(th)-ey*Math.sin(th)+(rnd()-.5)*3*dpr, hy=cy+ex*Math.sin(th)+ey*Math.cos(th)+(rnd()-.5)*3*dpr; const lx=cx+(rnd()-.5)*R*1.2, ly=cy+(rnd()-.5)*R*1.2; dot(ctx,lx+(hx-lx)*(0.5+s*0.5),ly+(hy-ly)*(0.5+s*0.5),dr*1.2,rnd); }
+  ctx.fillStyle=P.label; ctx.font=`${8.5*dpr}px ui-monospace, Menlo, monospace`; ctx.letterSpacing=`${2*dpr}px`; const cl=`CLASH ${o.clash.toFixed(2)} · ${o.clash>0.6?'LOOSE':o.clash>0.25?'SETTLING':'IN TUNE'}`; ctx.fillText(cl,cx-ctx.measureText(cl).width/2,cy+R*1.18); ctx.letterSpacing='0px';
+  y=cy+R*1.32+H*0.04;
+  /* RESPIRATION: leaning stippled bars */
+  label('Respiration',L,y); y+=H*0.035; const [lit,total]=o.breath; const bw=(W-2*L)/total; 
+  for(let b=0;b<total;b++){ const on=b<lit; ctx.fillStyle=on?P.bar:P.barOff; const x0=L+b*bw+bw*0.15, w=bw*0.5, h=H*0.055; const m=on?260:60; for(let k=0;k<m;k++){ const px=rnd(), py=rnd(); const lean=py*h*0.35; dot(ctx,x0+px*w+lean,y+py*h,dr*0.95,rnd);} }
+  y+=H*0.055+16*dpr; text(`${lit} / ${total} · renews at ${total}`,L,y,10); y+=H*0.07;
+  /* HELIX: hollow diamonds */
+  label('Helix',L,y); y+=H*0.03; const dw=W*0.07, dh=H*0.06; o.crossings.forEach((c,i)=>{ const x=L+i*dw*1.15+dw/2, yc=y+dh/2; ctx.fillStyle=c?P.dia:P.label; const n=c?150:70; for(let k=0;k<n;k++){ const t=rnd()*4, seg=Math.floor(t), f=t-seg; const pts=[[x,yc-dh/2],[x+dw/2,yc],[x,yc+dh/2],[x-dw/2,yc]]; const a=pts[seg], b=pts[(seg+1)%4]; const jx=(rnd()-.5)*2.5*dpr, jy=(rnd()-.5)*2.5*dpr; dot(ctx,a[0]+(b[0]-a[0])*f+jx,a[1]+(b[1]-a[1])*f+jy,dr*0.9,rnd);} });
+  y+=dh+16*dpr; text('strand 612 · 4 crossings this turn',L,y,10);
+};
+
+/* ════════ textures ════════ */
+MG.textures = {
+  stipple(ctx,W,H,o){ o=Object.assign({paper:'#f4f1ea',ink:'#1b1b1b',seed:5},o||{}); const rnd=MG.rng(o.seed); ctx.fillStyle=o.paper; ctx.fillRect(0,0,W,H); ctx.fillStyle=o.ink;
+    const cell=3.2*(W/600); for(let y=cell/2;y<H;y+=cell) for(let x=cell/2;x<W;x+=cell){ const dens=Math.pow(x/W,1.6); if(MG.hash2(Math.round(x),Math.round(y),o.seed)<dens){ dot(ctx,x+(rnd()-.5)*cell*0.8,y+(rnd()-.5)*cell*0.8,1.0*(W/600),rnd);} } },
+  ink(ctx,W,H,o){ o=Object.assign({paper:'#f4f1ea',color:'#5b2d8e',seed:9,soften:0.6},o||{}); const img=ctx.createImageData(W,H), d=img.data; const hex=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; const P=hex(o.paper),I=hex(o.color);
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++){ const i=(y*W+x)*4; const nx=x/W, ny=y/H; const edge = 0.52 + 0.08*MG.fbm(nx*4,ny*4,o.seed,3) - 0.1*ny; const cov = smooth(edge+0.16, edge-0.12, nx); const on = MG.hash2(x,y,o.seed) < cov; const c=on?I:P; d[i]=c[0];d[i+1]=c[1];d[i+2]=c[2];d[i+3]=255; } ctx.putImageData(img,0,0); },
+  tooth(ctx,W,H,o){ o=Object.assign({paper:'#f4f1ea',amp:0.035,seed:21},o||{}); const img=ctx.createImageData(W,H), d=img.data; const hex=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; const P=hex(o.paper);
+    for(let y=0;y<H;y++) for(let x=0;x<W;x++){ const i=(y*W+x)*4; const n=(MG.fbm(x/3.1,y/3.1,o.seed,2)-0.5)*2*o.amp + (MG.hash2(x,y,o.seed)-0.5)*o.amp*0.8; const m=1+n; d[i]=Math.max(0,Math.min(255,P[0]*m));d[i+1]=Math.max(0,Math.min(255,P[1]*m));d[i+2]=Math.max(0,Math.min(255,P[2]*m));d[i+3]=255;} ctx.putImageData(img,0,0); },
+  weave(ctx,W,H,o){ o=Object.assign({paper:'#f4f1ea',a:'#2b2b2b',b:'#6f6b60',accent:'#1f6f6a',cell:7,gut:1,seed:33},o||{}); const k=W/600; const c=o.cell*k,g=o.gut*k; ctx.fillStyle=o.paper; ctx.fillRect(0,0,W,H);
+    for(let j=0,y=0;y<H;y+=c,j++) for(let i=0,x=0;x<W;x+=c,i++){ const over=(i+j)%2===0; const acc=MG.hash2(i,j,o.seed)<0.04; ctx.fillStyle=acc?o.accent:(over?o.a:o.b); if(over) ctx.fillRect(x+g,y+g*0.5,c-2*g,c-g); else ctx.fillRect(x+g*0.5,y+g,c-g,c-2*g); } }
+};
+
+/* ════════ What I'd Be · SVG writers ════════ */
+MG.svg = {
+  fifth(el2,el3){ const pts=(f,amp,base)=>{ let s=''; for(let x=30;x<=270;x+=2){ const t=(x-30)/240; const y=base-amp*Math.sin(TAU*f*t); s+=(x===30?'M':'L')+x.toFixed(1)+' '+y.toFixed(1)+' '; } return s; }; el2.setAttribute('d',pts(2,28,128)); el3.setAttribute('d',pts(3,28,178)); },
+  nine(g){ const cx=150,cy=150,r=92; const P=[]; for(let i=0;i<9;i++){ const a=-Math.PI/2+i*TAU/9; P.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]); }
+    let s=''; for(let i=0;i<9;i++){ const a=P[i],b=P[(i+1)%9]; s+=`<path d="M${a[0]} ${a[1]} L${b[0]} ${b[1]}" stroke="#c9c4b8" stroke-width=".6"/>`; }
+    const cols=['#1b1b1b','#9a968e','#1f6f6a']; for(let t=0;t<3;t++){ const a=P[t],b=P[t+3],c=P[t+6]; s+=`<path d="M${a[0]} ${a[1]} L${b[0]} ${b[1]} L${c[0]} ${c[1]} Z" fill="none" stroke="${cols[t]}" stroke-width="1.1"/>`; }
+    for(let i=0;i<9;i++){ s+=`<circle cx="${P[i][0]}" cy="${P[i][1]}" r="3.4" fill="${cols[i%3]}"/>`; } g.innerHTML=s; },
+  beat(g,o){ o=Object.assign({n:8,hit:3},o||{}); let s=''; const w=26,gap=6,x0=150-(o.n*w+(o.n-1)*gap)/2; for(let i=0;i<o.n;i++){ const x=x0+i*(w+gap); s+=`<rect x="${x}" y="130" width="${w}" height="40" fill="${i===o.hit?'#1f6f6a':'none'}" stroke="#1b1b1b" stroke-width=".8"/>`; if(i%4===0) s+=`<path d="M${x+w/2} 118 V124" stroke="#1b1b1b" stroke-width=".8"/>`; } g.innerHTML=s; },
+  front(g,o){ o=Object.assign({n:17,rmax:118},o||{}); let s=''; for(let i=1;i<=o.n;i++){ const r=o.rmax*Math.sqrt(i/o.n); s+=`<circle cx="150" cy="150" r="${r.toFixed(2)}"/>`; } g.innerHTML=s; },
+  linen(g){ let s=''; const c=5.2,gut=0.9,x0=40,y0=40,n=42; for(let j=0;j<n;j++) for(let i=0;i<n;i++){ const over=(i+j)%2===0; const acc=MG.hash2(i,j,77)<0.035; const fill=acc?'#1f6f6a':(over?'#2b2b2b':'#6f6b60'); const x=x0+i*c,y=y0+j*c; s+= over? `<rect x="${(x+gut).toFixed(1)}" y="${(y+gut*0.5).toFixed(1)}" width="${(c-2*gut).toFixed(1)}" height="${(c-gut).toFixed(1)}" fill="${fill}"/>` : `<rect x="${(x+gut*0.5).toFixed(1)}" y="${(y+gut).toFixed(1)}" width="${(c-gut).toFixed(1)}" height="${(c-2*gut).toFixed(1)}" fill="${fill}"/>`; } g.innerHTML=s; },
+  tfgrain(g){ let s=''; const rnd=MG.rng(44); for(let k=0;k<2600;k++){ const a=rnd()*TAU, r=Math.sqrt(rnd())*118; s+=`<circle cx="${(150+r*Math.cos(a)).toFixed(1)}" cy="${(150+r*Math.sin(a)).toFixed(1)}" r=".55" fill="#f4f1ea" opacity="${(0.25+rnd()*0.5).toFixed(2)}"/>`; } g.innerHTML=s; }
+};
+
+/* ════════ page wiring ════════ */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const PAL = {
+  night:{bg:'#140d0f',ring:'#f1ede4',blade:'#3c9a8d',blade2:'#4a7fc0',core:'#d2232a'},
+  sky:{bg:'#6aa0d0',ring:'#f1ede4',blade:'#f1ede4',blade2:'#f1ede4',core:'#1b2a35'},
+  cobalt:{bg:'#0d1f5c',ring:'#eae7de',blade:'#ff5a2e',blade2:'#ff5a2e',core:'#ffd166'},
+  ultramarine:{bg:'#1626b8',ring:'#f4efe3',blade:'#ff3fa4',blade2:'#ff3fa4',core:'#f4efe3'},
+  olive:{bg:'#161d16',ring:'#e8dcb8',blade:'#4a8a5a',blade2:'#4a8a5a',core:'#e0a030'},
+  paper:{bg:'#f4f1ea',ring:'#1b2a35',blade:'#2a8a84',blade2:'#2a8a84',core:'#d2232a'},
+  current:{bg:'#0a0a0a',ring:'#e0e0e0',blade:'#c850ff',blade2:'#c850ff',core:'#2ac9a0'},
+  plum:{bg:'#2a1430',ring:'#f2c3a8',blade:'#2a8a84',blade2:'#2a8a84',core:'#f1ede4'},
+  violetteal:{bg:'#ffffff',ring:'#1b1b1b',blade:'#1f6f6a',blade2:'#1f6f6a',core:'#5b2d8e'}
+};
+const state={settle:0.35,stray:0.35,density:240,jitter:4,breathe:false,m:{pa:68,pb:60,gamma:1.4,sigma:330,seed:101,inks:['#1b32b8','#d2232a']}};
+let raf=null;
+
+function drawThesis(){ const c=$('#c-thesis'); const {ctx,W,H}=MG.fit(c); MG.ringField(ctx,W,H,{ground:PAL.night.bg,rings:9,dotsPerRing:state.density,jitter:state.jitter,blades:8,bladeColor:PAL.night.blade,blade2:PAL.night.blade2,ringColor:PAL.night.ring,core:PAL.night.core,settle:state.settle,stray:state.stray,radius:0.46,dotR:1.2,seed:7}); }
+function drawRings(){ let c=$('#c-ringA'); let f=MG.fit(c); MG.ringField(f.ctx,f.W,f.H,{ground:PAL.night.bg,rings:9,dotsPerRing:state.density,jitter:state.jitter,blades:8,bladeColor:PAL.night.blade,blade2:PAL.night.blade2,ringColor:PAL.night.ring,core:PAL.night.core,settle:1,stray:0.2,radius:0.44,seed:11});
+  c=$('#c-ringB'); f=MG.fit(c); MG.ringField(f.ctx,f.W,f.H,{ground:PAL.sky.bg,rings:5,dotsPerRing:Math.round(state.density*0.8),jitter:state.jitter*1.4,blades:0,ringColor:PAL.sky.ring,core:PAL.sky.core,settle:1,stray:0.3,rays:26,clouds:1,radius:0.22,cx:0.5,cy:0.42,seed:13}); }
+function drawMoire(){ const c=$('#c-moire'); const {ctx,W,H}=MG.fit(c); MG.moire(ctx,W,H,{pitchA:state.m.pa,pitchB:state.m.pb,gamma:state.m.gamma,sigma:state.m.sigma,seed:state.m.seed,inks:state.m.inks}); }
+function drawRail(){ const c=$('#c-rail'); const {ctx,W,H}=MG.fit(c); MG.rail(ctx,W,H,{clash:0.38}); 
+  const r=$('#prod-respir'); if(r&&!r.children.length){ let s=''; for(let i=4;i<=21;i++){ const lit=i<=13; s+=`<i style="flex:1;height:8px;border-radius:2px;background:${lit?'var(--c258)':'var(--p-border)'};border:1px solid ${lit?'var(--c258)':'var(--p-text-mute)'}"></i>`; } r.innerHTML=s; } }
+function drawGrounds(){ const g=$('#grounds-grid'); if(!g.children.length){ const order=[['cobalt','Cobalt','Allegretto\'s blue sequences. Warmest of the dark grounds.'],['ultramarine','Ultramarine','Komposition in Blau. Loudest; a moment, not a default.'],['olive','Olive','Motion Painting No. 1. Quietest; easiest to live in for eight hours.'],['paper','Paper','Cream ground, ink rings, teal blades, red centre. Print and light mode.'],['current','Current app','Near-black with the existing purple and mint. Shown for distance.'],['plum','Plum','Not Fischinger\'s. Keeps the sky study\'s softness without going light.'],['violetteal','Violet · teal on white','Julia\'s current direction, on the same figure. Added for comparison.']];
+    g.innerHTML=order.map(([k,t,d])=>`<div class="card"><div class="plate-wrap" style="background:${PAL[k].bg}"><canvas class="plate" data-ground-key="${k}"></canvas></div><div class="cap"><b>${t}</b><span>${d}</span></div></div>`).join(''); }
+  $$('#grounds-grid canvas').forEach(c=>{ const k=c.dataset.groundKey, p=PAL[k]; const {ctx,W,H}=MG.fit(c); MG.ringField(ctx,W,H,{ground:p.bg,rings:9,dotsPerRing:200,jitter:3.5,blades:8,bladeColor:p.blade,blade2:p.blade2,ringColor:p.ring,core:p.core,settle:1,stray:0.18,radius:0.44,seed:17}); }); }
+function drawTextures(){ let c,f; c=$('#t-stipple'); f=MG.fit(c); MG.textures.stipple(f.ctx,f.W,f.H); c=$('#t-ink'); f=MG.fit(c); MG.textures.ink(f.ctx,f.W,f.H,{color:'#5b2d8e'}); c=$('#t-grain'); f=MG.fit(c); MG.textures.tooth(f.ctx,f.W,f.H); c=$('#t-weave'); f=MG.fit(c); MG.textures.weave(f.ctx,f.W,f.H); }
+function drawWIB(){ MG.svg.fifth($('#w2'),$('#w3')); MG.svg.nine($('#nine')); MG.svg.beat($('#beat'),{hit:3}); MG.svg.front($('#front'),{n:17}); MG.svg.linen($('#linen')); MG.svg.tfgrain($('#tf-grain'));
+  const fb=$('#fig-bars'); if(fb&&!fb.children.length){ const rnd=MG.rng(5); let s=''; for(let i=0;i<21;i++){ const h=i<13? 30+rnd()*70 : 12; s+=`<i style="flex:1;height:${h}%;background:${i<13?'var(--c258)':'var(--p-border)'};border-radius:1px"></i>`; } fb.innerHTML=s; } }
+
+function drawAll(){ drawThesis(); drawRings(); drawMoire(); drawRail(); drawGrounds(); drawTextures(); drawWIB(); }
+
+/* controls */
+$('#r-settle').addEventListener('input',e=>{ state.settle=+e.target.value; if(!state.breathe) drawThesis(); });
+$('#r-stray').addEventListener('input',e=>{ state.stray=+e.target.value; if(!state.breathe) drawThesis(); });
+$('#b-breathe').addEventListener('click',e=>{ state.breathe=!state.breathe; e.target.setAttribute('aria-pressed',String(state.breathe)); if(state.breathe){ const t0=performance.now(); const loop=()=>{ if(!state.breathe) return; const t=(performance.now()-t0)/1000; state.settle=0.5+0.5*Math.sin(t*0.45-Math.PI/2); $('#r-settle').value=state.settle.toFixed(3); drawThesis(); raf=requestAnimationFrame(loop); }; loop(); } else cancelAnimationFrame(raf); });
+$('#r-density').addEventListener('input',e=>{ state.density=+e.target.value; drawRings(); });
+$('#r-jitter').addEventListener('input',e=>{ state.jitter=+e.target.value; drawRings(); });
+[['m-pa','pa'],['m-pb','pb'],['m-gamma','gamma'],['m-sigma','sigma'],['m-seed','seed']].forEach(([id,k])=>$('#'+id).addEventListener('input',e=>{ state.m[k]=+e.target.value; drawMoire(); }));
+$('#m-ink-rb').addEventListener('click',()=>{ state.m.inks=['#1b32b8','#d2232a']; $('#m-ink-rb').setAttribute('aria-pressed','true'); $('#m-ink-vt').setAttribute('aria-pressed','false'); drawMoire(); });
+$('#m-ink-vt').addEventListener('click',()=>{ state.m.inks=['#1f6f6a','#5b2d8e']; $('#m-ink-rb').setAttribute('aria-pressed','false'); $('#m-ink-vt').setAttribute('aria-pressed','true'); drawMoire(); });
+$$('.ground-switch button').forEach(b=>b.addEventListener('click',()=>{ document.documentElement.dataset.ground=b.dataset.ground; $$('.ground-switch button').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); }));
+let rt=null; addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(drawAll,120); });
+if(document.readyState==='loading') addEventListener('DOMContentLoaded',drawAll); else drawAll();
+window.previewErrors=[]; addEventListener('error',e=>window.previewErrors.push(e.message));
+})();
+</script>
+</body>
+</html>

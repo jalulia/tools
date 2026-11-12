@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BFPT, plainly</title>
+<style>
+  :root{
+    --bg:#fbfaf7;
+    --ink:#1a1a1a;
+    --mute:#6b6b6b;
+    --line:#e5e2db;
+    --panel:#f4f2ec;
+    --A:#c47a1a;
+    --R:#2f6bb8;
+    --D:#7d47a8;
+    --N:#8a8a8a;
+    --accent:#1a1a1a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:Georgia,'Iowan Old Style','Times New Roman',serif;
+    font-size:18px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  main{max-width:640px;margin:0 auto;padding:64px 24px 96px}
+  h1{font-size:2.2rem;line-height:1.15;margin:0 0 8px;font-weight:600;letter-spacing:-0.01em}
+  h2{font-size:1.35rem;margin:56px 0 12px;font-weight:600;letter-spacing:-0.005em;
+     padding-bottom:6px;border-bottom:1px solid var(--line)}
+  h3{font-size:1.05rem;margin:28px 0 6px;font-weight:600}
+  p{margin:14px 0}
+  .sub{color:var(--mute);font-size:1.05rem;font-style:italic;margin-top:0}
+  .kicker{color:var(--mute);text-transform:uppercase;font-size:0.72rem;
+    letter-spacing:0.2em;font-weight:600;margin-bottom:20px;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+  .panel{background:var(--panel);border-left:3px solid var(--ink);
+    padding:16px 20px;margin:22px 0;font-size:0.98rem}
+  .panel strong{font-weight:700}
+  code{background:#efece4;padding:2px 6px;border-radius:3px;font-size:0.9em;
+    font-family:'SF Mono',Menlo,Consolas,monospace;color:#333}
+  .mono{font-family:'SF Mono',Menlo,Consolas,monospace}
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:0.94rem}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--mute);font-weight:600;font-size:0.78rem;text-transform:uppercase;
+    letter-spacing:0.08em;font-family:-apple-system,sans-serif}
+  td.c,th.c{text-align:center}
+  td.mono{font-family:'SF Mono',Menlo,Consolas,monospace}
+  .chip{display:inline-block;padding:2px 8px;border-radius:3px;font-size:0.82rem;
+    font-family:'SF Mono',Menlo,Consolas,monospace;font-weight:600;color:#fff}
+  .cA{background:var(--A)} .cR{background:var(--R)}
+  .cD{background:var(--D)} .cN{background:var(--N);color:#fff}
+  .aside{color:var(--mute);font-size:0.94rem;margin:20px 0;
+    padding-left:16px;border-left:2px solid var(--line)}
+  .lede{font-size:1.08rem;line-height:1.6}
+  .lede:first-letter{font-size:2.6rem;float:left;line-height:1;padding:4px 8px 0 0;
+    font-weight:600}
+  hr{border:none;border-top:1px solid var(--line);margin:56px 0}
+  .footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--line);
+    color:var(--mute);font-size:0.85rem;text-align:center;
+    font-family:-apple-system,sans-serif}
+</style>
+</head>
+<body>
+<main>
+
+<div class="kicker">A plain explainer</div>
+<h1>BFPT, plainly</h1>
+<p class="sub">What it is, what it does, and why anyone cares — in five minutes, no metaphors about magnets.</p>
+
+<h2>1. The thing itself</h2>
+
+<p class="lede">BFPT is a way of relabeling any digital file so that every tiny piece of it carries <em>two</em> tags instead of one.</p>
+
+<p>That's the whole invention. Everything else follows from it.</p>
+
+<p>Take any file — a text message, a photo, a song. Underneath, it's a long string of 0s and 1s. BFPT chops that string into little three-bit pieces. There are only eight possible three-bit pieces, from <code>000</code> to <code>111</code>, so you can number them 0 through 7.</p>
+
+<p>Then for each piece, BFPT writes down two things:</p>
+
+<ol>
+  <li><strong>The address.</strong> Which of the eight pieces was it? (0, 1, 2, 3, 4, 5, 6, or 7.)</li>
+  <li><strong>The role.</strong> Which of four categories does that number belong to?</li>
+</ol>
+
+<p>The four categories are just "the number mod 3" — sorted by what happens when you divide by three:</p>
+
+<table>
+  <thead>
+    <tr><th>Role</th><th class="c">Contains</th><th>Meaning of the label</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><span class="chip cN">N</span> null</td><td class="c mono">0</td><td>the boundary marker</td></tr>
+    <tr><td><span class="chip cA">A</span> assertion</td><td class="c mono">1, 4, 7</td><td>numbers that leave remainder 1</td></tr>
+    <tr><td><span class="chip cR">R</span> relation</td><td class="c mono">2, 5</td><td>numbers that leave remainder 2</td></tr>
+    <tr><td><span class="chip cD">D</span> dynamic</td><td class="c mono">3, 6</td><td>numbers that divide evenly</td></tr>
+  </tbody>
+</table>
+
+<p>So the number <code>5</code> becomes the token <code>(R, 5)</code>. Role R, address 5. That's a BFPT token.</p>
+
+<div class="panel">
+<strong>Why two tags and not one?</strong> Because the address alone lets you rebuild the file exactly (it's lossless). The role alone lets you see the file's <em>shape</em> without caring about the contents. Keeping both means you get reconstruction and structure in the same object.
+</div>
+
+<h2>2. What "shape" means, concretely</h2>
+
+<p>Run any file through BFPT and count how many tokens were tagged A, R, D, or N. You get four percentages that add up to 100%.</p>
+
+<p>Here's the surprise: those percentages are <strong>weirdly stable</strong> across totally different files.</p>
+
+<p>Chris ran it on <em>Alice in Wonderland</em>, on the <em>Communist Manifesto</em>, on Marcus Aurelius, on his own writing. All of them came out with roughly the same distribution — around 33% A, 24% R, 27% D, 16% N. Fiction, philosophy, ancient text, modern rant. Same shape.</p>
+
+<p>That means the role-tags aren't measuring the meaning of the file. They're measuring something underneath meaning — some structural property of how bytes tend to be arranged when humans write things.</p>
+
+<p>And because the shape is stable, deviations from it become interesting. A file that comes out heavily A-dominant is unusual. A file with almost no N is unusual. You now have a way to compare two files by their <em>shape signature</em>, not their content.</p>
+
+<h2>3. What "phase" adds</h2>
+
+<p>There's a second layer I've glossed over. Beyond the four roles, BFPT also tracks how tokens cluster into three <em>phases</em>, called <code>147</code>, <code>258</code>, and <code>369</code>. These are just the same numbers grouped a different way — by what they leave when divided by 3, but this time treated as coordinates.</p>
+
+<table>
+  <thead>
+    <tr><th>Phase</th><th class="c">Contains</th><th>Feels like</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="mono">147</td><td class="c mono">1, 4, 7</td><td>opening / asserting</td></tr>
+    <tr><td class="mono">258</td><td class="c mono">2, 5, 8</td><td>connecting / relating</td></tr>
+    <tr><td class="mono">369</td><td class="c mono">3, 6, 9</td><td>closing / releasing</td></tr>
+  </tbody>
+</table>
+
+<p>Every piece of text lands somewhere on this three-way split. A given sentence, paragraph, or whole book has a phase profile: how much of it is opening, how much is connecting, how much is closing.</p>
+
+<p>That's the second axis. Role tells you the local flavor of a token; phase tells you which of three "moods" the whole passage is drifting toward.</p>
+
+<h2>4. So what does it <em>do</em>?</h2>
+
+<p>Three practical things, in ascending order of interest:</p>
+
+<h3>It fingerprints text by shape.</h3>
+<p>Two documents that look different but have the same role-and-phase distribution are, in some real sense, structurally similar. Two documents by the same author often line up. Two documents on the same topic often don't. It's a measurement you couldn't otherwise take.</p>
+
+<h3>It makes drift visible.</h3>
+<p>If you run BFPT continuously on an unfolding conversation, you can watch the balance tip in real time. A conversation slowly sliding into pure abstraction, or pure agreement, or pure argument, shows up as the numbers leaning before anyone would name it in words.</p>
+
+<h3>It gives memory a coordinate system.</h3>
+<p>Normally, if you want to find a passage in a long document, you search by keyword. With BFPT, every passage also has a shape signature — so you can search by "what other passage <em>feels like</em> this one," even if the words are completely different. That's what the HELIX does under the hood: it stores writing with its BFPT coordinates attached, so nearness by shape becomes a thing you can navigate.</p>
+
+<h2>5. What it is not</h2>
+
+<p>It doesn't compress files. A BFPT token is still three bits per three bits of input.</p>
+
+<p>It doesn't understand meaning. It knows nothing about words, sentences, or ideas. It only knows about bit patterns.</p>
+
+<p>It doesn't make an LLM smarter. It's a measurement instrument that runs <em>alongside</em> a model, not inside it.</p>
+
+<p>It doesn't do anything magical. There is no hidden physics, no consciousness, no consciousness of consciousness. It's a codec plus a statistics readout.</p>
+
+<h2>6. Why it matters anyway</h2>
+
+<p>Because measurement instruments change what's thinkable. Before thermometers, "temperature" was a feeling. After thermometers, it was a number, and once it was a number you could plot it, compare it, predict it, and eventually build engines and refrigerators from what you learned.</p>
+
+<p>BFPT is that kind of instrument for text. It takes something we previously only had vibes about — the <em>shape</em> of a piece of writing, the <em>tilt</em> of a conversation, the <em>similarity</em> between two documents at a structural level — and turns it into numbers you can watch.</p>
+
+<p>Whether those numbers will turn out to be as useful as temperature is not yet known. The instrument works. What it will let people see is still being figured out.</p>
+
+<div class="panel">
+<strong>The whole thing in one line:</strong> BFPT relabels every three-bit chunk of a file with a role and an address, and once you have those labels, you can see the shape of any text without reading a word of it.
+</div>
+
+<div class="footer">
+— for Chris, without the magnets
+</div>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>The Third Root · Trirefringence, Grounded II</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#ffffff; --paper-2:#fafafa; --paper-3:#f4f4f5;
+    --ink:#09090b; --ink-2:#1c1c20;
+    --mute:#52525b; --mute-2:#a1a1aa; --mute-3:#d4d4d8;
+    --line:rgba(9,9,11,.08); --line-2:rgba(9,9,11,.14);
+    --bone:#f6f1e4;
+    --ice:#2b8ef5; --laminar:#10b981; --heat:#ff5a1f;
+    --void:#e11d48; --signal:#f59e0b; --balanced:#16a34a;
+    --amber:#f59e0b; --amber-dim:rgba(245,158,11,0.35);
+    --h-ice:#7cc4ff;
+    --sans:'Geist',-apple-system,BlinkMacSystemFont,sans-serif;
+    --display:'Instrument Serif','Times New Roman',serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  body{font-family:var(--sans);font-size:17px;line-height:1.65;letter-spacing:-.011em;color:var(--ink-2)}
+  ::selection{background:#09090b;color:#fff}
+  :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+  .chrome{
+    position:fixed;inset:0 0 auto 0;z-index:80;
+    display:flex;align-items:center;justify-content:space-between;padding:18px 28px;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+    mix-blend-mode:difference;color:#fff;pointer-events:none;
+  }
+  .chrome .l,.chrome .r{display:flex;gap:18px;align-items:center}
+  .chrome .dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:breathe 2.4s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.35}50%{opacity:1}}
+
+  .hero{position:relative;height:70vh;min-height:480px;background:#09090b;color:#fff;overflow:hidden;isolation:isolate}
+  #hero-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.9;
+    -webkit-mask-image:radial-gradient(ellipse 52% 46% at 50% 52%,transparent 0%,transparent 40%,#000 82%);
+    mask-image:radial-gradient(ellipse 52% 46% at 50% 52%,transparent 0%,transparent 40%,#000 82%);}
+  .hero-inner{position:relative;z-index:2;height:100%;display:grid;place-items:center;text-align:center;padding:0 24px}
+  .kicker{font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:22px;display:inline-flex;align-items:center;gap:12px}
+  .kicker .bar{width:28px;height:1px;background:rgba(255,255,255,.35)}
+  h1.title{font-family:var(--display);font-weight:400;font-size:clamp(48px,7.4vw,104px);line-height:.94;letter-spacing:-.025em;margin:0;color:var(--bone);text-shadow:0 0 80px rgba(0,0,0,.7)}
+  h1.title .em{font-style:italic}
+  .deck{margin:26px auto 0;color:rgba(255,255,255,.6);font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;line-height:2}
+  .scroll-cue{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.5);display:flex;flex-direction:column;align-items:center;gap:10px;z-index:3}
+  .scroll-cue .line{width:1px;height:38px;background:linear-gradient(to bottom,rgba(255,255,255,.6),transparent);animation:drip 2.2s ease-in-out infinite}
+  @keyframes drip{0%{transform:scaleY(.2);transform-origin:top}60%{transform:scaleY(1);transform-origin:top}100%{transform:scaleY(.2);transform-origin:bottom}}
+
+  main{padding:110px 0 140px}
+  .wrap{max-width:76rem;margin:0 auto;padding:0 28px}
+  .sect{margin:112px auto 0;text-align:center}
+  .sect .num{font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute-2);display:inline-flex;align-items:center;gap:14px;margin-bottom:14px}
+  .sect .num::before,.sect .num::after{content:"";width:28px;height:1px;background:var(--line)}
+  .sect h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,4.4vw,48px);line-height:1.05;letter-spacing:-.02em;margin:0;color:var(--ink)}
+  .sect .dek{max-width:42rem;margin:14px auto 0;color:var(--mute);font-size:15.5px;line-height:1.65}
+
+  .plate{border:1px solid var(--line);background:var(--paper);margin:28px 0 0;position:relative}
+  .plate + .plate{margin-top:-1px}
+  .plate .hd{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:11px 18px;border-bottom:1px solid var(--line);background:var(--paper-2);font-family:var(--mono);font-size:9px;letter-spacing:.24em;text-transform:uppercase}
+  .plate .hd .nm{color:var(--ink);font-weight:500}
+  .plate .hd .sp{color:var(--mute-2);text-align:right;font-weight:400;letter-spacing:.14em}
+  .plate .bd{padding:36px 32px}
+  .plate .bd.pad{padding:56px 32px}
+
+  .lede{font-family:var(--display);font-weight:400;font-size:clamp(24px,2.6vw,32px);line-height:1.3;letter-spacing:-.01em;color:var(--ink);margin:0 0 20px;max-width:44rem}
+  .body-copy{font-size:17px;line-height:1.7;color:var(--ink-2);margin:0 0 18px;max-width:40rem}
+  .body-copy:last-child{margin-bottom:0}
+  em.i{font-family:var(--display);font-style:italic;font-size:1.08em}
+  strong{font-weight:500;color:var(--ink)}
+  .a-ice{color:var(--ice);font-weight:500} .a-lam{color:var(--laminar);font-weight:500}
+  .a-sig{color:var(--signal);font-weight:500} .a-void{color:var(--void);font-weight:500}
+  .a-amb{color:var(--amber);font-weight:500}
+  .mono-inline{font-family:var(--mono);font-size:.82em;letter-spacing:0}
+  .eq{font-family:var(--mono);font-size:13.5px;background:var(--paper-2);border:1px solid var(--line);padding:14px 18px;border-radius:2px;margin:8px 0 20px;overflow-x:auto;white-space:pre;color:var(--ink)}
+
+  .btn{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;padding:12px 20px;border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:2px;cursor:pointer;transition:opacity .18s ease;display:inline-flex;align-items:center;gap:10px;line-height:1}
+  .btn:hover{opacity:.82}
+  .btn.sec{background:transparent;color:var(--ink);border-color:var(--line-2)}
+  .btn.sec:hover{opacity:1;border-color:var(--ink);background:var(--paper-2)}
+  .lbl{font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute-2);margin-bottom:8px;display:block}
+  .rng{-webkit-appearance:none;appearance:none;width:100%;height:1px;background:var(--line-2);outline:none;margin:14px 0}
+  .rng::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--ink);cursor:pointer;transition:transform .15s ease}
+  .rng::-webkit-slider-thumb:hover{transform:scale(1.25)}
+  .rng::-moz-range-thumb{width:12px;height:12px;border:none;border-radius:50%;background:var(--ink);cursor:pointer}
+  .val{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--ink);font-variant-numeric:tabular-nums}
+  .seg{display:inline-flex;border:1px solid var(--line-2);border-radius:2px;overflow:hidden}
+  .seg button{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;padding:10px 14px;border:none;background:transparent;color:var(--mute);cursor:pointer;transition:all .16s ease}
+  .seg button + button{border-left:1px solid var(--line)}
+  .seg button:hover{color:var(--ink);background:var(--paper-2)}
+  .seg button[aria-selected="true"]{background:var(--ink);color:#fff}
+  .controls-row{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-end;margin-top:22px}
+  .controls-row .field{flex:1;min-width:200px}
+  .controls-row .field .top{display:flex;justify-content:space-between;align-items:baseline}
+
+  .alert{display:flex;gap:14px;padding:16px 18px;border:1px solid var(--line);border-left-width:2px;background:var(--paper-2);width:100%;border-radius:2px}
+  .alert .ic{font-family:var(--mono);font-size:12px;line-height:1.4;flex:none}
+  .alert .cn{flex:1}
+  .alert .tt{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;font-weight:500;color:var(--ink);margin-bottom:5px}
+  .alert p{margin:0;font-size:14px;line-height:1.6;color:var(--mute)}
+  .alert.ice{border-left-color:var(--ice)} .alert.ice .ic{color:var(--ice)}
+  .alert.sig{border-left-color:var(--signal)} .alert.sig .ic{color:var(--signal)}
+  .alert.void{border-left-color:var(--void)} .alert.void .ic{color:var(--void)}
+  .alert.amb{border-left-color:var(--amber)} .alert.amb .ic{color:var(--amber)}
+
+  .instrument{display:grid;grid-template-columns:1.15fr 1fr;gap:0;background:#09090b;border-radius:2px;overflow:hidden}
+  @media (max-width:900px){.instrument{grid-template-columns:1fr}}
+  #polar{display:block;width:100%;height:520px;background:#09090b}
+  #cartesian{display:block;width:100%;height:520px;background:#0b0b0e;border-left:1px solid rgba(255,255,255,.06)}
+
+  .figure .cap{margin-top:13px;padding-top:11px;border-top:1px solid var(--line);width:100%;text-align:center;font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
+  .figure .cap .n{color:var(--ink);font-weight:500;margin-right:8px}
+
+  .pull{max-width:44rem;margin:0 auto;padding:30px 24px;text-align:center;position:relative}
+  .pull::before{content:"";position:absolute;left:50%;top:0;width:40px;height:1px;background:var(--ink);transform:translateX(-50%)}
+  .pull blockquote{font-family:var(--display);font-weight:400;font-size:clamp(26px,3.2vw,38px);line-height:1.22;letter-spacing:-.015em;margin:0;color:var(--ink)}
+  .pull .at{margin-top:16px;font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute);display:inline-block}
+
+  .closing{text-align:center;margin:130px auto 0}
+  .closing .mk{font-family:var(--display);font-size:60px;color:var(--ink);line-height:1;display:inline-block;animation:rem 5.4s ease-in-out infinite}
+  @keyframes rem{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:1;transform:scale(1.02)}}
+  .closing p{color:var(--mute);font-family:var(--mono);font-size:10px;letter-spacing:.2em;margin-top:14px;text-transform:uppercase}
+  footer{padding:70px 28px 30px;text-align:center;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute-2)}
+
+  .rv{opacity:0;transform:translateY(14px);transition:opacity .9s ease,transform .9s ease}
+  .rv.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<div class="chrome">
+  <div class="l"><span class="dot"></span><span>Trirefringence · The Third Root</span></div>
+  <div class="r"><span>Reference № 003 · ii</span><span>·</span><span>MMXXVI</span></div>
+</div>
+
+<section class="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-inner">
+    <div>
+      <div class="kicker"><span class="bar"></span><span>Reference № 003 · Part II</span><span class="bar"></span></div>
+      <h1 class="title">The Third <span class="em">Root.</span></h1>
+      <div class="deck">Continuity in the Trace · Discontinuity in the Meaning</div>
+    </div>
+  </div>
+  <div class="scroll-cue"><span>Scroll</span><span class="line"></span></div>
+</section>
+
+<main>
+<div class="wrap">
+
+  <div class="sect">
+    <div class="num">I · Preamble</div>
+    <h2>The Wedge Opens From a Point</h2>
+    <p class="dek">Where the third phase velocity comes from, why the wedge has a shape, and what happens at the critical angle when the amber marker slides through zero.</p>
+  </div>
+
+  <div class="plate rv">
+    <div class="hd"><span class="nm">The Mechanism, in Geometry</span><span class="sp">De Lorenci &amp; Pereira · PRA 99 · 2019</span></div>
+    <div class="bd">
+      <p class="lede">Most transparent crystals split light into two paths. Birefringence is a geometry of orientation. What we're looking at is a more fragile state.</p>
+
+      <p class="body-copy">A <strong>hyperbolic medium</strong> is one where the principal permittivity along the anisotropy axis (<span class="mono-inline">ε<sub>∥</sub></span>) has gone negative, while the perpendicular permittivity (<span class="mono-inline">ε<sub>⊥</sub></span>) stays positive. The surface of allowed wave vectors — the shape traced out by every direction light can travel — opens from a closed ellipsoid into an <strong>unbounded hyperboloid</strong>. The two-mode ceiling of ordinary optics no longer holds.</p>
+
+      <p class="body-copy">Every hyperboloid has an asymptotic cone. Wave vectors that lie exactly along that cone are the borderline case: they mark the angle where the linear discriminant vanishes. In a linear hyperbolic medium, that cone is a hard wall — angles outside the cone admit real phase velocities, angles inside do not. There is no <em class="i">third</em> ray, only two, and the cone is where they run out.</p>
+
+      <p class="body-copy">The nonlinear term <span class="mono-inline">σ²</span> is what admits propagation <em class="i">inside the cone</em>. It adds a fixed positive amount to the discriminant, independent of angle, and inside the forbidden region that fixed amount is what keeps the square root real. Three phase velocities coexist. Where does σ come from? It's the coupling</p>
+
+      <div class="eq">σ = μ′ E B / (2 μ² ε<sub>∥</sub>)</div>
+
+      <p class="body-copy">— what you get when you apply crossed external electric and magnetic fields to a medium whose magnetic response itself <em class="i">depends</em> on the electric field it's carrying. σ is a knob you turn from outside the crystal. Turn it to zero and the forbidden interior stays forbidden; the wedge shuts to a single line on the optic axis. Turn it up and the wedge opens — the interior of the cone becomes a corridor where a third ray can live.</p>
+
+      <p class="body-copy">At the critical angle — <strong>27.65°</strong> for this material's numbers, the exact half-angle of the asymptotic cone — the third phase velocity passes through zero. That's a sharp transition in the math (a real solution crossing zero is a genuine phase boundary, not a plotting artifact), but nothing dramatic happens to the wave itself. It persists on both sides. What inverts is its relation to the wave vector.</p>
+
+      <p class="body-copy">The <strong>stadium-wave</strong> image is exact: the pattern of raised arms can sweep around the stadium clockwise while every individual person walks forward through the aisle. Phase velocity is the pattern; group velocity is the people. At the critical angle the pattern reverses direction; the people keep walking.</p>
+
+      <p class="body-copy">In the instrument below, the amber marker on the phase-velocity needle doesn't disappear at 27.65°. It slides across the origin and reappears on the opposite side. <strong>The marker's position varies smoothly the whole way through</strong> — nothing jumps in the trace. What jumps is what the position <em class="i">means</em>: on one side of the boundary it reads as a forward-phase mode co-moving with the ordinary ray; on the other side it reads as a backward-phase mode whose energy still flows toward the screen. Continuity in the drawing, discontinuity in the interpretation, and the two are locked to each other by the geometry of the radical.</p>
+
+      <p class="body-copy"><strong>The object of the piece is that marker.</strong> Not the crystal, not the equations, not the wedge as a region on the plot — the amber dot's traversal across the critical angle, the moment where continuous motion and inverted meaning happen at the same point. Pull σ to zero to see the corridor shut. Pull it back up to see it open. Sweep θ across 27.65° to see the marker cross the origin and flip its sense without breaking its trace.</p>
+    </div>
+  </div>
+
+  <div class="sect">
+    <div class="num">II · The Instrument</div>
+    <h2>Two Views of One Marker</h2>
+    <p class="dek">Left: the phase-velocity needle. Three markers ride the wave-vector ray at radii equal to their phase speeds. Right: the three velocity branches as functions of the propagation angle. The same amber dot appears in both.</p>
+  </div>
+
+  <div class="plate rv">
+    <div class="hd"><span class="nm">Interactive · Phase Velocity Needle + Branch Plot</span><span class="sp">ε<sub>⊥</sub>=1.4872 · ε<sub>∥</sub>=−5.4166 · μ=1</span></div>
+    <div class="bd">
+      <div class="instrument">
+        <canvas id="polar" width="600" height="520"></canvas>
+        <canvas id="cartesian" width="520" height="520"></canvas>
+      </div>
+
+      <div class="controls-row">
+        <div class="field">
+          <div class="top"><span class="lbl">Propagation angle θ (from optic axis)</span><span class="val" id="thetaVal">27.65°</span></div>
+          <input id="theta" class="rng" type="range" min="0" max="60" step="0.05" value="27.65">
+        </div>
+        <div class="field">
+          <div class="top"><span class="lbl">Nonlinear coupling σ</span><span class="val" id="sigmaVal">−0.4894</span></div>
+          <input id="sigma" class="rng" type="range" min="0" max="0.8" step="0.001" value="0.4894">
+        </div>
+        <div class="seg" role="tablist" id="presetSeg">
+          <button data-p="off" aria-selected="false">σ = 0</button>
+          <button data-p="paper" aria-selected="true">Paper</button>
+          <button data-p="edge" aria-selected="false">At Boundary</button>
+        </div>
+      </div>
+
+      <div style="max-width:48rem;margin:22px auto 0">
+        <div id="status" class="alert amb">
+          <span class="ic">▸</span>
+          <div class="cn"><div class="tt">At the Critical Angle</div>
+          <p>θ = 27.65° — the exact half-angle of the asymptotic cone. The amber marker <span class="a-amb">v<sub>e</sub><sup>−</sup></span> sits on the origin. It has not disappeared; it is passing through zero.</p></div>
+        </div>
+      </div>
+
+      <div style="max-width:44rem;margin:22px auto 0">
+        <p class="body-copy">The <span class="a-ice">ice</span> ring is the ordinary ray — its phase speed <span class="mono-inline">v<sub>o</sub> = 1/√(με<sub>⊥</sub>) ≈ 0.820</span>, independent of direction. The two extraordinary branches (<span class="a-lam">v<sub>e</sub><sup>+</sup></span> in laminar, <span class="a-amb">v<sub>e</sub><sup>−</sup></span> in amber) come from the roots</p>
+        <div class="eq">v<sub>e</sub><sup>±</sup> = −σ q̂<sub>z</sub> ± √( σ² q̂<sub>z</sub>² + q̂<sub>x</sub>²/(με<sub>⊥</sub>) + q̂<sub>z</sub>²/(με<sub>∥</sub>) )</div>
+        <p class="body-copy">with the sign on ε<sub>∥</sub> kept negative throughout, so the third term inside the radical is negative and the sum survives only where σ² lifts it back above zero. Set σ = 0 and only angles outside the cone (θ &gt; 27.65°) admit real roots — the ordinary birefringent wedge. Set σ ≠ 0 and the corridor <em class="i">inside</em> the cone opens.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sect">
+    <div class="num">III · The Object</div>
+    <h2>What the Amber Marker Is Doing</h2>
+    <p class="dek">Three configurations to read side by side. In every one, the same v<sub>e</sub><sup>−</sup> solution is there. What changes is where it lives.</p>
+  </div>
+
+  <div class="plate rv">
+    <div class="hd"><span class="nm">Reading the Three States</span><span class="sp">σ · θ · what the marker means</span></div>
+    <div class="bd">
+      <div style="max-width:46rem;margin:0 auto">
+        <p class="body-copy"><strong>σ = 0.</strong> The corridor is shut. The amber curve on the right-hand plot exists only for θ &gt; 27.65°, and even there it sits at the same radius as the laminar curve — the two extraordinary rays are mirror partners of a single split, not two distinct solutions. On the left, no amber marker inside the cone. This is the linear regime: two rays, one wedge boundary, no third root.</p>
+
+        <p class="body-copy"><strong>σ = −0.4894 (paper).</strong> The corridor is open. Amber and laminar curves separate; a third real phase speed exists at every angle. On the left, three markers ride the needle. The amber marker inside the cone (θ &lt; 27.65°) is co-moving with the ordinary ray — its phase velocity points along the wave vector. Turn the θ slider up.</p>
+
+        <p class="body-copy"><strong>θ = 27.65° (at boundary).</strong> The amber marker is at the origin. The needle has three markers, but two of them are at nonzero radii and the third is at zero. On the right, the amber curve crosses the horizontal axis. Push θ another 0.05° higher.</p>
+
+        <p class="body-copy"><strong>θ &gt; 27.65°.</strong> The amber marker has re-emerged — but on the <em class="i">opposite</em> side of the origin, on the back half of the needle. Its trace is continuous; the arrow from origin to marker has reversed. The wave has not disappeared, has not slowed, has not scattered. Its phase velocity vector now points against the wave vector. The <em class="i">group</em> velocity — the direction energy actually flows, the direction a ray drawn on a screen would go — remains forward. This is a backward-phase wave, the same object the stadium wave describes: the pattern reverses; the people keep walking.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="plate rv">
+    <div class="hd"><span class="nm">The Larger Rhyme</span><span class="sp">continuity through inversion</span></div>
+    <div class="bd pad" style="background:#09090b">
+      <div class="pull" style="max-width:46rem">
+        <blockquote style="color:var(--bone)">A continuous parameter inverts directional meaning without breaking form. That is not a feature of one crystal. It is a class of behaviour — the class into which the monopole, the phase-cone, and the third root all rhyme.</blockquote>
+        <div class="at" style="color:var(--mute-2)">Series thread · to be continued</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="closing">
+    <div class="mk">ø</div>
+    <p>End of Root II</p>
+  </div>
+
+</div>
+</main>
+
+<footer>Ink and Signal · The Third Root · For Julia</footer>
+
+<script>
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* Physics: DL–P 2019, uniaxial hyperbolic, μ=1
+   ε_perp = 1.4872, ε_par = -5.4166 (signed, kept negative)
+   For a wave vector q̂ = (sin θ, 0, cos θ):
+     v_o = 1/sqrt(μ ε_perp)                          -- ordinary
+     v_e± = -σ q̂z ± sqrt( σ² q̂z² + q̂x²/(μ ε_perp) + q̂z²/(μ ε_par) )
+   Note: q̂z²/(μ ε_par) is NEGATIVE because ε_par < 0.
+   Critical (asymptotic-cone) half-angle: tan²θ_c = ε_perp / |ε_par|
+     θ_c = atan( sqrt(1.4872/5.4166) ) ≈ 27.6540°
+*/
+const PHYS = {
+  eP: 1.4872, eZ: -5.4166, mu: 1,
+  vo(){ return 1/Math.sqrt(this.mu*this.eP); },
+  thetaC(){ return Math.atan(Math.sqrt(this.eP/Math.abs(this.eZ))); },
+  ve(theta, sigma){
+    const qx=Math.sin(theta), qz=Math.cos(theta);
+    const D = sigma*sigma*qz*qz + qx*qx/(this.mu*this.eP) + qz*qz/(this.mu*this.eZ);
+    if(D<0) return {plus:null, minus:null, D};
+    const r = Math.sqrt(D);
+    return {plus: -sigma*qz + r, minus: -sigma*qz - r, D};
+  }
+};
+
+function setupCanvas(cv){
+  if(!cv) return null;
+  cv.setAttribute('aria-hidden','true');
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(devicePixelRatio||1,2);
+  function resize(){const w=cv.clientWidth,h=cv.clientHeight;cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
+  addEventListener('resize',resize);resize();
+  return {ctx,get w(){return cv.clientWidth},get h(){return cv.clientHeight},resize};
+}
+function loop(fn){ if(REDUCED){fn(performance.now());return;} requestAnimationFrame(function f(t){fn(t);requestAnimationFrame(f);}); }
+
+/* ============ HERO: iso-frequency surface, asymptotic cone, breathing σ ============ */
+(function(){
+  const s = setupCanvas(document.getElementById('hero-canvas')); if(!s) return;
+  const ctx = s.ctx, t0 = performance.now();
+  const thc = PHYS.thetaC();
+  loop(now=>{
+    const w=s.w,h=s.h,el=(now-t0)/1000;
+    ctx.fillStyle='#09090b';ctx.fillRect(0,0,w,h);
+    const cx=w/2, cy=h/2, R=Math.min(w,h)*0.34;
+
+    // hyperboloid section in (qx, qz) plane: qx²/ε_perp + qz²/ε_par = 1
+    // with ε_par < 0 → qz²/|ε_par| = qx²/ε_perp - 1  → real for qx² ≥ ε_perp
+    // For visual: sample qx from √ε_perp outward, compute qz, mirror.
+    ctx.strokeStyle='rgba(124,196,255,0.5)';ctx.lineWidth=1.4;
+    const sqrtP = Math.sqrt(PHYS.eP);
+    const sqrtZ = Math.sqrt(Math.abs(PHYS.eZ));
+    const scale = R / (sqrtP*2.6);
+    function toScreenX(qx){ return cx + qx*scale; }
+    function toScreenY(qz){ return cy - qz*scale; }
+    // Two branches of the hyperbola (left/right)
+    for(const sgn of [1,-1]){
+      ctx.beginPath();
+      let first=true;
+      for(let qx = sgn*sqrtP; Math.abs(qx) < sqrtP*3; qx += sgn*0.02){
+        const val = qx*qx/PHYS.eP - 1;
+        if(val<0) continue;
+        const qz = Math.sqrt(val)*sqrtZ; // scaling for aspect
+        const y1 = toScreenY(qz), y2 = toScreenY(-qz);
+        if(first){ ctx.moveTo(toScreenX(qx),y1); first=false; }
+        else ctx.lineTo(toScreenX(qx),y1);
+      }
+      ctx.stroke();
+      ctx.beginPath();
+      first=true;
+      for(let qx = sgn*sqrtP; Math.abs(qx) < sqrtP*3; qx += sgn*0.02){
+        const val = qx*qx/PHYS.eP - 1;
+        if(val<0) continue;
+        const qz = -Math.sqrt(val)*sqrtZ;
+        if(first){ ctx.moveTo(toScreenX(qx),toScreenY(qz)); first=false; }
+        else ctx.lineTo(toScreenX(qx),toScreenY(qz));
+      }
+      ctx.stroke();
+    }
+
+    // asymptotic cone (dashed) — the boundary
+    ctx.strokeStyle='rgba(245,158,11,0.55)';ctx.lineWidth=1.2;ctx.setLineDash([6,7]);
+    const tc = thc;
+    // asymptote slope qz/qx = ± sqrt(ε_perp/|ε_par|·(ε_perp/|ε_par|))? Recompute:
+    // Asymptotes of qx²/ε_perp + qz²/ε_par = 1 (with ε_par<0): qz/qx = ±sqrt(|ε_par|/ε_perp)
+    // But θ measured from qz-axis: tan θ = qx/qz = sqrt(ε_perp/|ε_par|) → θ_c.
+    for(const sgn of [-1,1]){
+      for(const sgn2 of [-1,1]){
+        ctx.beginPath();
+        ctx.moveTo(cx,cy);
+        const dx = sgn*Math.sin(tc), dy = sgn2*Math.cos(tc);
+        ctx.lineTo(cx+dx*R*1.1, cy-dy*R*1.1);
+        ctx.stroke();
+      }
+    }
+    ctx.setLineDash([]);
+
+    // breathing "corridor" — σ opens region between cones
+    const sigma = 0.3 + 0.2*Math.sin(el*0.5);
+    // Sample amber markers along corridor
+    ctx.fillStyle='rgba(245,158,11,0.85)';
+    for(let i=0;i<24;i++){
+      const th = (i/24) * tc * 0.95;
+      const {plus,minus} = PHYS.ve(th, sigma);
+      if(minus===null) continue;
+      // Marker at radius = |minus|, along the wave-vector direction (or opposite if negative)
+      const r = Math.abs(minus)*R*0.9;
+      const sign = minus>=0 ? 1 : -1;
+      const x = cx + sign*Math.sin(th)*r;
+      const y = cy - sign*Math.cos(th)*r;
+      ctx.beginPath();ctx.arc(x,y,1.8,0,Math.PI*2);ctx.fill();
+    }
+  });
+})();
+</script>
+
+<script>
+/* ============ THE INSTRUMENT: polar needle + Cartesian branches ============ */
+(function(){
+  const polar = setupCanvas(document.getElementById('polar'));
+  const cart  = setupCanvas(document.getElementById('cartesian'));
+  if(!polar||!cart) return;
+
+  const thetaEl = document.getElementById('theta');
+  const sigmaEl = document.getElementById('sigma');
+  const thetaVal = document.getElementById('thetaVal');
+  const sigmaVal = document.getElementById('sigmaVal');
+  const statusEl = document.getElementById('status');
+
+  let theta = parseFloat(thetaEl.value)*Math.PI/180;
+  // Sigma slider is 0..0.8 magnitude, actual σ is negative (paper value −0.4894)
+  let sigma = -parseFloat(sigmaEl.value);
+
+  const thc = PHYS.thetaC();          // 0.4826 rad ≈ 27.6540°
+  const thcDeg = thc*180/Math.PI;
+
+  const PRESETS = {
+    off:   {sigma: 0.0,     theta: 40.0},
+    paper: {sigma: 0.4894,  theta: 20.0},
+    edge:  {sigma: 0.4894,  theta: thcDeg}
+  };
+
+  function setStatus(kind, icon, title, body){
+    statusEl.className = 'alert '+kind;
+    statusEl.innerHTML = '<span class="ic">'+icon+'</span><div class="cn"><div class="tt">'+title+'</div><p>'+body+'</p></div>';
+  }
+
+  function updateStatus(){
+    const thDeg = theta*180/Math.PI;
+    const {plus, minus, D} = PHYS.ve(theta, sigma);
+    const nearC = Math.abs(thDeg - thcDeg) < 0.08;
+    if(Math.abs(sigma) < 0.005){
+      // linear regime
+      if(D < 0){
+        setStatus('void','×','Corridor Closed (σ = 0)',
+          'θ = '+thDeg.toFixed(2)+'° is inside the asymptotic cone. The linear discriminant is negative — no real extraordinary root exists. This is the ordinary birefringent wedge, from the outside.');
+      } else if(D < 0.001){
+        setStatus('sig','▲','Cone Boundary (σ = 0)',
+          'θ = '+thDeg.toFixed(2)+'° lies exactly on the asymptotic cone. The two extraordinary roots have collapsed into one — a single borderline ray. In a linear medium this is where the wedge ends.');
+      } else {
+        setStatus('ice','▸','Linear Regime — Two Rays',
+          'σ = 0. Outside the cone, v<sub>e</sub><sup>+</sup> and v<sub>e</sub><sup>−</sup> are mirror partners of a single split: no third distinct root. Turn σ up to admit the corridor inside the cone.');
+      }
+      return;
+    }
+    if(nearC){
+      setStatus('amb','◉','At the Critical Angle',
+        'θ = '+thDeg.toFixed(2)+'° — the exact half-angle of the asymptotic cone. The amber marker <span class="a-amb">v<sub>e</sub><sup>−</sup></span> sits on the origin. It has not disappeared; it is passing through zero. On the next 0.01° it will re-emerge on the opposite side of the needle.');
+      return;
+    }
+    if(thDeg < thcDeg){
+      setStatus('amb','▸','Inside the Cone · Three Forward Rays',
+        'Three real phase velocities. All three markers ride the needle in the forward direction — <span class="a-amb">v<sub>e</sub><sup>−</sup></span> = '+minus.toFixed(4)+' is co-moving with <span class="a-ice">v<sub>o</sub></span> and <span class="a-lam">v<sub>e</sub><sup>+</sup></span>. This is trirefringence, in its co-propagating regime.');
+    } else {
+      setStatus('void','◀','Outside the Cone · Backward-Phase Third',
+        'v<sub>e</sub><sup>−</sup> = '+minus.toFixed(4)+' &lt; 0. The amber marker is on the back half of the needle: its phase-velocity vector points against the wave vector. The group velocity — and the ray on a screen — still moves forward. Continuous trace; inverted meaning.');
+    }
+  }
+
+  /* ---------- POLAR NEEDLE ---------- */
+  function drawPolar(){
+    const {ctx, w, h} = polar;
+    ctx.fillStyle='#09090b'; ctx.fillRect(0,0,w,h);
+    const cx=w/2, cy=h/2;
+    const R = Math.min(w,h)*0.42;
+    const V_MAX = 1.15;  // velocity scale
+    const scale = R/V_MAX;
+
+    // Concentric velocity guides
+    ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;
+    for(let v=0.25;v<=1.0;v+=0.25){
+      ctx.beginPath();ctx.arc(cx,cy,v*scale,0,Math.PI*2);ctx.stroke();
+    }
+
+    // Axes (optic axis vertical = qz)
+    ctx.strokeStyle='rgba(255,255,255,0.14)';
+    ctx.beginPath();ctx.moveTo(cx-R*1.05,cy);ctx.lineTo(cx+R*1.05,cy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx,cy-R*1.05);ctx.lineTo(cx,cy+R*1.05);ctx.stroke();
+    ctx.font='10px "JetBrains Mono",monospace';
+    ctx.fillStyle='rgba(255,255,255,0.4)';
+    ctx.fillText('optic axis (q̂z)', cx+8, cy-R*1.02);
+    ctx.fillText('q̂x', cx+R*1.02+4, cy-6);
+
+    // Asymptotic cone (θ_c) — the boundary
+    ctx.strokeStyle='rgba(245,158,11,0.42)';ctx.lineWidth=1;ctx.setLineDash([5,6]);
+    for(const s1 of [-1,1]){
+      for(const s2 of [-1,1]){
+        ctx.beginPath();ctx.moveTo(cx,cy);
+        ctx.lineTo(cx + s1*Math.sin(thc)*R*1.02, cy - s2*Math.cos(thc)*R*1.02);
+        ctx.stroke();
+      }
+    }
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(245,158,11,0.7)';
+    ctx.font='10px "JetBrains Mono",monospace';
+    ctx.fillText('θc = '+thcDeg.toFixed(2)+'°',
+      cx + Math.sin(thc)*R*0.75 + 6, cy - Math.cos(thc)*R*0.75 - 4);
+
+    // Ordinary ray — the ice ring, radius v_o, independent of θ
+    const vo = PHYS.vo();
+    ctx.strokeStyle='rgba(124,196,255,0.55)';ctx.lineWidth=1.4;
+    ctx.beginPath();ctx.arc(cx,cy, vo*scale, 0, Math.PI*2);ctx.stroke();
+
+    // v_e^+ and v_e^- as functions of θ (traced curves) — closed loops
+    const N=360;
+    // laminar (plus)
+    ctx.strokeStyle='rgba(16,185,129,0.55)';ctx.lineWidth=1.4;
+    ctx.beginPath();
+    let started=false;
+    for(let i=0;i<=N;i++){
+      const th = (i/N)*Math.PI*2;
+      const {plus} = PHYS.ve(th, sigma);
+      if(plus===null){ started=false; continue; }
+      const x = cx + plus*Math.sin(th)*scale;
+      const y = cy - plus*Math.cos(th)*scale;
+      if(!started){ ctx.moveTo(x,y); started=true; }
+      else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    // amber (minus) — this is the object
+    ctx.strokeStyle='rgba(245,158,11,0.7)';ctx.lineWidth=1.6;
+    ctx.beginPath();
+    started=false;
+    for(let i=0;i<=N;i++){
+      const th = (i/N)*Math.PI*2;
+      const {minus} = PHYS.ve(th, sigma);
+      if(minus===null){ started=false; continue; }
+      const x = cx + minus*Math.sin(th)*scale;
+      const y = cy - minus*Math.cos(th)*scale;
+      if(!started){ ctx.moveTo(x,y); started=true; }
+      else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+
+    // Wave-vector needle — the current θ direction (full diameter)
+    ctx.strokeStyle='rgba(255,255,255,0.7)';ctx.lineWidth=1.6;
+    ctx.beginPath();
+    ctx.moveTo(cx - Math.sin(theta)*R*1.02, cy + Math.cos(theta)*R*1.02);
+    ctx.lineTo(cx + Math.sin(theta)*R*1.02, cy - Math.cos(theta)*R*1.02);
+    ctx.stroke();
+    // Arrowhead on q̂ (forward direction)
+    const ax = cx + Math.sin(theta)*R*1.02;
+    const ay = cy - Math.cos(theta)*R*1.02;
+    const perpX = Math.cos(theta), perpY = Math.sin(theta);
+    ctx.fillStyle='rgba(255,255,255,0.7)';
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(ax - Math.sin(theta)*10 + perpX*5, ay + Math.cos(theta)*10 + perpY*5);
+    ctx.lineTo(ax - Math.sin(theta)*10 - perpX*5, ay + Math.cos(theta)*10 - perpY*5);
+    ctx.closePath();ctx.fill();
+
+    // Three markers at current θ
+    const {plus, minus} = PHYS.ve(theta, sigma);
+
+    // ordinary marker (ice) at radius v_o along +q̂
+    ctx.fillStyle='#7cc4ff';
+    ctx.beginPath();
+    ctx.arc(cx + Math.sin(theta)*vo*scale, cy - Math.cos(theta)*vo*scale, 5, 0, Math.PI*2);
+    ctx.fill();
+
+    // plus marker (laminar)
+    if(plus!==null){
+      const sgn = plus>=0?1:-1;
+      ctx.fillStyle='#10b981';
+      ctx.beginPath();
+      ctx.arc(cx + sgn*Math.sin(theta)*Math.abs(plus)*scale,
+              cy - sgn*Math.cos(theta)*Math.abs(plus)*scale, 5, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    // MINUS marker (amber) — the object
+    if(minus!==null){
+      const sgn = minus>=0?1:-1;
+      const x = cx + sgn*Math.sin(theta)*Math.abs(minus)*scale;
+      const y = cy - sgn*Math.cos(theta)*Math.abs(minus)*scale;
+      // halo
+      const grd = ctx.createRadialGradient(x,y,0,x,y,18);
+      grd.addColorStop(0,'rgba(245,158,11,0.6)');
+      grd.addColorStop(1,'rgba(245,158,11,0)');
+      ctx.fillStyle=grd;
+      ctx.beginPath();ctx.arc(x,y,18,0,Math.PI*2);ctx.fill();
+      // core
+      ctx.fillStyle='#f59e0b';
+      ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fill();
+      // small arrow from origin to marker
+      ctx.strokeStyle='rgba(245,158,11,0.85)';ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke();
+    }
+
+    // Legend
+    ctx.font='11px "JetBrains Mono",monospace';
+    ctx.fillStyle='#7cc4ff'; ctx.fillText('v_o    = '+vo.toFixed(4), 16, h-56);
+    ctx.fillStyle='#10b981'; ctx.fillText('v_e+  = '+(plus===null?'—':plus.toFixed(4)), 16, h-38);
+    ctx.fillStyle='#f59e0b'; ctx.fillText('v_e−  = '+(minus===null?'—':minus.toFixed(4)), 16, h-20);
+  }
+
+  /* ---------- CARTESIAN v(θ) ---------- */
+  function drawCart(){
+    const {ctx, w, h} = cart;
+    ctx.fillStyle='#0b0b0e'; ctx.fillRect(0,0,w,h);
+    const pad = {l:56, r:22, t:38, b:44};
+    const plot = {x:pad.l, y:pad.t, w:w-pad.l-pad.r, h:h-pad.t-pad.b};
+
+    const thMin=0, thMax=60; // degrees
+    const vMin=-0.6, vMax=1.05;
+    const xOf = th => plot.x + (th-thMin)/(thMax-thMin)*plot.w;
+    const yOf = v => plot.y + (vMax-v)/(vMax-vMin)*plot.h;
+
+    // frame
+    ctx.strokeStyle='rgba(255,255,255,0.14)';ctx.lineWidth=1;
+    ctx.strokeRect(plot.x, plot.y, plot.w, plot.h);
+    // v=0 line
+    ctx.strokeStyle='rgba(255,255,255,0.28)';ctx.setLineDash([3,4]);
+    ctx.beginPath();ctx.moveTo(plot.x, yOf(0));ctx.lineTo(plot.x+plot.w, yOf(0));ctx.stroke();
+    ctx.setLineDash([]);
+    // critical angle line
+    ctx.strokeStyle='rgba(245,158,11,0.45)';ctx.setLineDash([5,6]);
+    ctx.beginPath();ctx.moveTo(xOf(thcDeg), plot.y);ctx.lineTo(xOf(thcDeg), plot.y+plot.h);ctx.stroke();
+    ctx.setLineDash([]);
+
+    // ticks + labels
+    ctx.font='9.5px "JetBrains Mono",monospace';
+    ctx.fillStyle='rgba(255,255,255,0.5)';
+    for(let th=0; th<=60; th+=15){
+      ctx.fillText(th+'°', xOf(th)-8, plot.y+plot.h+14);
+    }
+    for(let v=-0.5; v<=1; v+=0.25){
+      ctx.fillText(v.toFixed(2), plot.x-42, yOf(v)+3);
+      ctx.strokeStyle='rgba(255,255,255,0.06)';
+      ctx.beginPath();ctx.moveTo(plot.x, yOf(v));ctx.lineTo(plot.x+plot.w, yOf(v));ctx.stroke();
+    }
+    // axis titles
+    ctx.fillStyle='rgba(255,255,255,0.7)';
+    ctx.font='10px "JetBrains Mono",monospace';
+    ctx.fillText('θ  (deg from optic axis)', plot.x+plot.w-160, plot.y+plot.h+30);
+    ctx.save();
+    ctx.translate(plot.x-42, plot.y+plot.h/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillText('phase velocity  v', -40, -12);
+    ctx.restore();
+
+    // v_o line (ice) — constant
+    const vo = PHYS.vo();
+    ctx.strokeStyle='rgba(124,196,255,0.75)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(plot.x, yOf(vo));ctx.lineTo(plot.x+plot.w, yOf(vo));ctx.stroke();
+
+    // v_e+ (laminar)
+    ctx.strokeStyle='rgba(16,185,129,0.85)';ctx.lineWidth=1.8;
+    ctx.beginPath();
+    let started=false;
+    for(let i=0;i<=240;i++){
+      const th = thMin + (i/240)*(thMax-thMin);
+      const {plus} = PHYS.ve(th*Math.PI/180, sigma);
+      if(plus===null){ started=false; continue; }
+      const x=xOf(th), y=yOf(plus);
+      if(!started){ ctx.moveTo(x,y); started=true; } else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+
+    // v_e- (amber) — the traced object
+    ctx.strokeStyle='rgba(245,158,11,0.95)';ctx.lineWidth=2.2;
+    ctx.beginPath();
+    started=false;
+    for(let i=0;i<=240;i++){
+      const th = thMin + (i/240)*(thMax-thMin);
+      const {minus} = PHYS.ve(th*Math.PI/180, sigma);
+      if(minus===null){ started=false; continue; }
+      const x=xOf(th), y=yOf(minus);
+      if(!started){ ctx.moveTo(x,y); started=true; } else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+
+    // Current θ marker on all three branches
+    const thDeg = theta*180/Math.PI;
+    const {plus, minus} = PHYS.ve(theta, sigma);
+    ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.setLineDash([2,3]);
+    ctx.beginPath();ctx.moveTo(xOf(thDeg), plot.y);ctx.lineTo(xOf(thDeg), plot.y+plot.h);ctx.stroke();
+    ctx.setLineDash([]);
+
+    // markers
+    ctx.fillStyle='#7cc4ff';
+    ctx.beginPath();ctx.arc(xOf(thDeg), yOf(vo), 4, 0, Math.PI*2);ctx.fill();
+    if(plus!==null){
+      ctx.fillStyle='#10b981';
+      ctx.beginPath();ctx.arc(xOf(thDeg), yOf(plus), 4, 0, Math.PI*2);ctx.fill();
+    }
+    if(minus!==null){
+      const x=xOf(thDeg), y=yOf(minus);
+      const grd = ctx.createRadialGradient(x,y,0,x,y,14);
+      grd.addColorStop(0,'rgba(245,158,11,0.55)');
+      grd.addColorStop(1,'rgba(245,158,11,0)');
+      ctx.fillStyle=grd;
+      ctx.beginPath();ctx.arc(x,y,14,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#f59e0b';
+      ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();
+    }
+
+    // header text
+    ctx.fillStyle='rgba(255,255,255,0.75)';
+    ctx.font='11px "JetBrains Mono",monospace';
+    ctx.fillText('v(θ) — phase velocity vs propagation angle', plot.x, plot.y-16);
+    ctx.fillStyle='rgba(245,158,11,0.85)';
+    ctx.fillText('θc', xOf(thcDeg)-6, plot.y-4);
+  }
+
+  function draw(){
+    thetaVal.textContent = (theta*180/Math.PI).toFixed(2)+'°';
+    sigmaVal.textContent = (sigma>=0?'+':'−')+Math.abs(sigma).toFixed(4);
+    drawPolar();
+    drawCart();
+    updateStatus();
+  }
+
+  thetaEl.addEventListener('input', ()=>{
+    theta = parseFloat(thetaEl.value)*Math.PI/180;
+    // clear preset selection
+    document.querySelectorAll('#presetSeg button').forEach(x=>x.setAttribute('aria-selected','false'));
+    draw();
+  });
+  sigmaEl.addEventListener('input', ()=>{
+    sigma = -parseFloat(sigmaEl.value);
+    document.querySelectorAll('#presetSeg button').forEach(x=>x.setAttribute('aria-selected','false'));
+    draw();
+  });
+
+  document.querySelectorAll('#presetSeg button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('#presetSeg button').forEach(x=>x.setAttribute('aria-selected','false'));
+      btn.setAttribute('aria-selected','true');
+      const p = PRESETS[btn.dataset.p];
+      sigmaEl.value = p.sigma;
+      thetaEl.value = p.theta;
+      sigma = -p.sigma;
+      theta = p.theta*Math.PI/180;
+      draw();
+    });
+  });
+
+  addEventListener('resize', ()=>{ polar.resize&&polar.resize(); cart.resize&&cart.resize(); draw(); });
+  draw();
+})();
+
+/* ============ reveal on scroll ============ */
+(function(){
+  const els=document.querySelectorAll('.rv');
+  if(REDUCED){els.forEach(e=>e.classList.add('in'));return;}
+  const io=new IntersectionObserver(en=>{for(const e of en)if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}},{rootMargin:'0px 0px -8% 0px',threshold:.08});
+  els.forEach(e=>io.observe(e));
+})();
+</script>
+</body>
+</html>

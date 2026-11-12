@@ -1,0 +1,301 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark">
+<title>Mindgut · ST-04 · Identity is a distance · V01</title>
+<style>
+@font-face{font-family:"Archivo";src:url({{ARCHIVO}}) format("woff2");font-weight:100 900;font-stretch:62% 125%;font-display:block}
+@font-face{font-family:"JetBrains Mono";src:url({{MONO}}) format("woff2");font-weight:100 800;font-display:block}
+:root{color-scheme:dark;--bg:#111010;--ink:#F3EFE8;--ink-2:#B9B3AA;--ink-3:#7A746C;--line:#2A2724;--pane:#1a1816;--f:"Archivo","Helvetica Neue",Arial,sans-serif;--m:"JetBrains Mono",ui-monospace,Menlo,monospace;--pad:clamp(24px,4vw,64px);--w:1360px}
+*{box-sizing:border-box}html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:var(--w);margin:0 auto;padding:0 var(--pad)}
+header{padding:calc(var(--pad) + 16px) 0 0}
+.kicker{font-family:var(--m);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 18px}
+header h1{font-size:clamp(34px,4.4vw,64px);font-weight:500;letter-spacing:-.03em;line-height:1;margin:0 0 20px}
+header h1 em{font-style:normal;font-weight:300;color:var(--ink-2)}
+.lede{margin:0;color:var(--ink-2);font-size:clamp(16px,1.25vw,19px);line-height:1.45;max-width:66ch;font-weight:300}
+.lede b{color:var(--ink);font-weight:500}
+.meta{font-family:var(--m);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:22px 0 0;line-height:1.9}
+.meta b{color:var(--ink-2);font-weight:500}
+nav.idx{display:grid;grid-template-columns:repeat(5,1fr);gap:10px 28px;margin:34px 0 0;padding:20px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-family:var(--m);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+nav.idx a{display:block;padding:3px 0}nav.idx a:hover{color:var(--ink)}nav.idx a b{color:var(--ink-3);font-weight:400;margin-right:8px}
+section{padding:72px 0 8px}
+.head{display:grid;grid-template-columns:72px 1fr 1fr;gap:16px 40px;align-items:start;margin:0 0 22px}
+.head .n{font-family:var(--m);font-size:12px;letter-spacing:.14em;color:var(--ink-3);padding-top:10px}
+.head h2{font-size:clamp(28px,3.2vw,44px);font-weight:500;letter-spacing:-.028em;line-height:1;margin:0;grid-column:2}
+.head h2 small{display:block;font-family:var(--m);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:400;margin-top:10px}
+.head .read{grid-column:2;margin:14px 0 0;color:var(--ink-2);font-size:clamp(15px,1.15vw,18px);line-height:1.45;font-weight:300}
+.head .read b{color:var(--ink);font-weight:500}
+.head .side{grid-column:3;grid-row:1 / span 2;margin:8px 0 0;border-left:1px solid var(--line);padding-left:22px;font-size:14px;line-height:1.5;color:var(--ink-2);font-weight:300}
+.head .side .k{display:block;font-family:var(--m);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 8px}
+.head .side p{margin:0 0 14px}
+.head .side ol,.head .side ul{margin:0;padding:0 0 0 24px}.head .side li{margin:0 0 4px}.head .side li b{color:var(--ink);font-weight:500;margin-right:6px;font-family:var(--m);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+/* panes */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+.pair.one{grid-template-columns:minmax(0,822px)}
+.single{display:grid;grid-template-columns:minmax(0,1fr)}
+.pane{position:relative;background:var(--pane);overflow:hidden}
+.pane canvas{display:block;width:100%;height:auto}
+.pane svg.over{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.pane .tagp{position:absolute;left:10px;bottom:10px;font-family:var(--m);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:rgba(17,16,16,.78);padding:4px 7px;pointer-events:none}
+.pane .marks i{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;border:1px solid rgba(243,239,232,.9);background:rgba(17,16,16,.55);color:var(--ink);font:500 10px/18px var(--m);text-align:center;font-style:normal;pointer-events:none;transition:background .12s,transform .12s}
+.pane .marks i.hot{background:var(--ink);color:var(--bg);transform:scale(1.25)}
+.ctl{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:10px 0 0;font-family:var(--m);font-size:11px;letter-spacing:.08em;color:var(--ink-2)}
+.ctl button{font:inherit;color:var(--ink-2);background:transparent;border:1px solid var(--line);padding:6px 10px;cursor:pointer;letter-spacing:.08em;text-transform:uppercase;font-size:10px}
+.ctl button:hover{color:var(--ink);border-color:var(--ink-3)}.ctl button.on{color:var(--bg);background:var(--ink);border-color:var(--ink)}
+.ctl button kbd{font:inherit;opacity:.6;margin-right:6px}
+.ctl .ms{margin-left:auto;color:var(--ink-3)}
+.ctl label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;text-transform:uppercase;font-size:10px}
+.ctl input[type=checkbox]{accent-color:var(--ink);margin:0}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);margin:14px 0 0;border:1px solid var(--line)}
+.readout div{background:var(--bg);padding:12px 14px}
+.readout .k{display:block;font-family:var(--m);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.readout .v{font-size:22px;font-weight:300;letter-spacing:-.02em;overflow-wrap:anywhere}.readout .v small{font-size:12px;color:var(--ink-3);margin-left:6px;font-family:var(--m)}
+/* phase bodies */
+.t{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin:26px 0 0;padding-top:22px;border-top:1px solid var(--line)}
+.t3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px;margin:26px 0 0;padding-top:22px;border-top:1px solid var(--line)}
+.k{display:block;font-family:var(--m);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 12px}
+.prose{font-size:15px;line-height:1.5;color:var(--ink-2);font-weight:300;margin:0 0 14px;max-width:62ch}.prose b{color:var(--ink);font-weight:500}
+.big{font-size:clamp(20px,2vw,28px);font-weight:300;line-height:1.3;letter-spacing:-.015em;color:var(--ink);margin:0 0 22px;max-width:40ch}
+ul.list{list-style:none;margin:0;padding:0;font-size:14px;line-height:1.5;color:var(--ink-2);font-weight:300}
+ul.list li{padding:8px 0 8px 16px;border-bottom:1px solid var(--line);text-indent:-16px}ul.list li::before{content:"— ";color:var(--ink-3)}ul.list li b{color:var(--ink);font-weight:500}
+ol.reads{list-style:none;margin:0;padding:0;font-size:14px;line-height:1.45;color:var(--ink-2)}
+ol.reads li{display:grid;grid-template-columns:28px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}ol.reads.wide li{grid-template-columns:64px 1fr}
+ol.reads li em{font-style:normal;font-family:var(--m);font-size:11px;color:var(--ink-3)}
+ol.reads li b{color:var(--ink);font-weight:500}ol.reads li .d{color:var(--ink-3)}
+.boards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 0}
+.boards .b{background:var(--pane);position:relative}.boards .b canvas{display:block;width:100%;height:auto}
+.boards .b .cap{padding:10px 0 0;font-size:13px;line-height:1.45;color:var(--ink-2);font-weight:300}.boards .b .cap b{display:block;color:var(--ink);font-weight:500;font-family:var(--m);font-size:11px;letter-spacing:.1em;margin-bottom:4px}
+.boards .b.on .cap b::after{content:" · chosen";color:var(--ink-3);font-weight:400}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin:0 0 18px}
+.chipc{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:center;padding:8px 10px 8px 8px;border:1px solid var(--line);font-family:var(--m);font-size:10.5px;line-height:1.35;letter-spacing:.04em}
+.chipc i{display:block;width:34px;height:34px;border:1px solid rgba(255,255,255,.08)}.chipc b{display:block;color:var(--ink);font-weight:500}.chipc span{color:var(--ink-3)}
+.passes{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 0}
+.passes .p{position:relative}.passes .p canvas{display:block;width:100%;height:auto;background:var(--pane)}
+.passes .p .cap{padding:8px 0 0;font-size:12.5px;line-height:1.45;color:var(--ink-2);font-weight:300}.passes .p .cap b{color:var(--ink);font-weight:500;font-family:var(--m);font-size:11px;letter-spacing:.1em;margin-right:6px}
+.ledger .sub{display:grid;grid-template-columns:72px 1fr;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.ledger .sub b.short{font-family:var(--m);font-size:11px;letter-spacing:.12em;color:var(--ink);font-weight:500;padding-top:3px}
+.ledger .nm{font-size:15px;font-weight:500;margin:0 0 6px}.ledger .nm span{display:block;font-family:var(--m);font-size:10.5px;color:var(--ink-3);font-weight:400;letter-spacing:.06em;margin-top:3px}
+table.params{border-collapse:collapse;font-family:var(--m);font-size:11px;color:var(--ink-2);margin:6px 0 8px;width:100%}
+table.params th{text-align:left;font-weight:400;color:var(--ink-3);padding:3px 10px 3px 0;letter-spacing:.06em;white-space:nowrap}
+table.params td{padding:3px 10px 3px 0;color:var(--ink);overflow-wrap:anywhere}table.params thead td{color:var(--ink-3)}
+.ledger .im{font-size:13.5px;line-height:1.5;color:var(--ink-2);font-weight:300}.ledger .im b{color:var(--ink);font-weight:500}.ledger .lim{font-size:12.5px;line-height:1.5;color:var(--ink-3);margin-top:6px}.ledger .lim::before{content:"Limits · ";color:var(--ink-3)}
+table.q{border-collapse:collapse;width:100%;font-family:var(--m);font-size:11.5px;margin:0}
+table.q th{text-align:left;font-weight:400;color:var(--ink-3);padding:8px 12px 8px 0;border-bottom:1px solid var(--line);letter-spacing:.08em;text-transform:uppercase;font-size:10px}
+table.q td{padding:9px 12px 9px 0;border-bottom:1px solid var(--line);color:var(--ink-2);vertical-align:top;overflow-wrap:anywhere}table.q td.n{color:var(--ink)}table.q td.f{font-family:var(--f);font-size:13.5px;line-height:1.45;font-weight:300;color:var(--ink-2)}
+.loop{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:14px 0 0}
+.loop .r img,.loop .r canvas{display:block;width:100%;height:auto;background:var(--pane)}
+.loop .r .cap{padding:10px 0 0;font-size:13px;line-height:1.45;color:var(--ink-2);font-weight:300}.loop .r .cap b{display:block;color:var(--ink);font-weight:500;font-family:var(--m);font-size:11px;letter-spacing:.1em;margin-bottom:4px}.loop .r .cap em{display:block;font-style:normal;color:var(--ink-3);margin-top:6px}.loop .r .cap em::before{content:"patched · ";color:var(--ink-3)}
+.wrong{columns:2;column-gap:40px;list-style:none;margin:0;padding:0;color:var(--ink-2);font-size:14px;line-height:1.5;font-weight:300}
+.wrong li{break-inside:avoid;padding:0 0 8px 16px;text-indent:-16px}.wrong li::before{content:"— ";color:var(--ink-3)}
+pre.spec{font-family:var(--m);font-size:11px;line-height:1.5;color:var(--ink-2);background:var(--pane);padding:18px;overflow:auto;max-height:420px;margin:0;border:1px solid var(--line)}
+details summary{cursor:pointer;font-family:var(--m);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);padding:10px 0}
+footer{padding:64px 0 var(--pad);color:var(--ink-3);font-family:var(--m);font-size:11px;letter-spacing:.06em;line-height:1.9;border-top:1px solid var(--line);margin-top:72px}
+footer b{color:var(--ink-2);font-weight:500}
+.loupe{position:fixed;z-index:9;pointer-events:none;display:none;grid-template-columns:1fr 1fr;gap:2px;background:var(--line);padding:2px;box-shadow:0 1px 0 rgba(255,255,255,.08) inset,2px 3px 5px rgba(0,0,0,.62),8px 14px 30px rgba(0,0,0,.36)}
+.loupe.one{grid-template-columns:1fr}.loupe.one > div:first-child{display:none}
+.loupe canvas{display:block;width:160px;height:160px;background:var(--pane)}
+.loupe.on{display:grid}
+.loupe span{position:absolute;left:4px;top:4px;font-family:var(--m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:rgba(17,16,16,.7);padding:2px 5px}
+.loupe span.r{left:auto;right:4px}
+@media (max-width:900px){nav.idx{grid-template-columns:1fr 1fr}.head{grid-template-columns:1fr}.head h2,.head .read,.head .side{grid-column:1;grid-row:auto}.head .side{border-left:0;padding-left:0;margin-top:14px}.pair{grid-template-columns:1fr}.t,.t3{grid-template-columns:1fr}.boards,.passes{grid-template-columns:1fr 1fr}.loop{grid-template-columns:1fr}.wrong{columns:1}.ctl .ms{margin-left:0;width:100%}.loupe{display:none!important}}
+</style></head><body>
+<div class="wrap">
+<header>
+  <p class="kicker" id="kicker"></p>
+  <h1>Identity is a distance<em> · built from the concept end</em></h1>
+  <p class="lede" id="lede"></p>
+  <p class="meta" id="meta"></p>
+  <nav class="idx" id="idx"></nav>
+</header>
+<main id="main"></main>
+<footer id="foot"></footer>
+</div>
+<div class="loupe" id="loupe"><div style="position:relative"><canvas width="480" height="480"></canvas><span>Pin 048</span></div><div style="position:relative"><canvas width="480" height="480"></canvas><span class="r">ST-04</span></div></div>
+<img id="refimg" alt="" src="{{REF}}" style="display:none">
+<script type="application/json" id="spec-st-04">{{SPEC}}</script>
+<script>{{PLATE_JS}}</script>
+<script>
+(() => {
+const SPEC = JSON.parse(document.getElementById('spec-st-04').textContent);
+const REF = document.getElementById('refimg');
+const LOOP_IMGS = { 'pass 1': '{{P01}}', 'pass 2': '{{P02}}' };
+const $ = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h !== undefined) e.innerHTML = h; return e; };
+const dpr = () => Math.min(window.devicePixelRatio || 1, 2);
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const fmt = v => Array.isArray(v) ? v.join(' – ') : (v === '' || v == null ? '' : v);
+const LAYERS = ['mottle', 'wood', 'marks', 'shadow', 'person', 'key', 'press', 'grain'];
+
+/* ---------- header ---------- */
+document.getElementById('kicker').textContent = `Mindgut · studies · ST-04 · ${SPEC.subtitle} · ${SPEC.version} · ${SPEC.date}`;
+document.getElementById('lede').innerHTML = `<b>${esc(SPEC.primary_read)}</b>`;
+document.getElementById('lede').insertAdjacentHTML('afterend', `<p class="lede" style="margin-top:14px;font-size:15px">${esc(SPEC.what_this_tests)}</p>`);
+document.getElementById('meta').innerHTML = `Lands in <b>${esc(SPEC.lands)}</b><br>Units <b>${esc(SPEC.units)}</b><br>Inherited <b>the B-10 grammar as ST-02 measured it · nothing else</b>`;
+const idx = document.getElementById('idx');
+[['00', 'The plate', 'plate'], ...SPEC.phases.map(p => [p[0], p[1], 'ph-' + p[2]]), ['07', 'Quality pass', 'quality'], ['08', 'Spec', 'spec']].forEach(([n, t, id]) => { const a = $('a', '', `<b>${n}</b>${esc(t)}`); a.href = '#' + id; idx.appendChild(a); });
+
+/* ---------- helpers ---------- */
+const refCanvas = (W, H, view, nearest) => { const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d'); x.imageSmoothingEnabled = !nearest; x.imageSmoothingQuality = 'high'; x.drawImage(REF, view.x0, view.y0, view.x1 - view.x0, view.y1 - view.y0, 0, 0, W, H); return c; };
+const CL = { green: (r, g, b, l) => g > r + 20 && g > b + 5 && g > 60 && l < 150, cream: (r, g, b) => r > 200 && g > 190 && b > 160, brown: (r, g, b, l) => r > g + 30 && r > b + 50 && r < 200 && l > 45 && l < 130, yellow: (r, g, b) => r > 200 && g > 170 && b < 130, red: (r, g, b) => r > 180 && g < 120 && b < 100, blue: (r, g, b) => b > 150 && b > r + 60 && b > g + 20, ink: (r, g, b, l) => l < 40 };
+function stats(c) { // one canvas → mean L, dark share, colour-class shares
+  const W = c.width, H = c.height, A = c.getContext('2d').getImageData(0, 0, W, H).data; let la = 0, da = 0; const n = W * H; const sh = {}; for (const k in CL) sh[k] = 0;
+  for (let i = 0; i < A.length; i += 4) { const l = A[i] * .299 + A[i + 1] * .587 + A[i + 2] * .114; la += l; if (l < 40) da++; for (const k in CL) if (CL[k](A[i], A[i + 1], A[i + 2], l)) sh[k]++; }
+  for (const k in CL) sh[k] /= n; return { L: la / n, dark: da / n, share: sh };
+}
+const pct = v => (v * 100).toFixed(1) + '%';
+
+/* ---------- a single pane: the plate or a crop of it ---------- */
+function makePane(view, layers, opts = {}) {
+  const wrap = $('div', opts.single === false ? 'pair' : 'single'); const pb = $('div', 'pane'); const cb = document.createElement('canvas'); pb.appendChild(cb);
+  const marks = $('div', 'marks'); pb.appendChild(marks); const tag = $('span', 'tagp', opts.tag || 'ST-04 · live'); pb.appendChild(tag); wrap.appendChild(pb);
+  const st = { pair: wrap, pb, cb, marks, tag, view, layers: Object.assign({}, layers || {}), seed: 1, m: null };
+  st.draw = () => { const cssW = pb.clientWidth || 600; const d = dpr(); const vw = view.x1 - view.x0, vh = view.y1 - view.y0; const W = Math.round(cssW * d), H = Math.round(W * vh / vw); st.scale = W / vw;
+    const t0 = performance.now(); PLATE.render(cb, W, H, view, st.layers, st.seed); const ms = Math.round(performance.now() - t0);
+    st.m = stats(cb); tag.textContent = `${opts.tag || 'ST-04 · live'} · ${W} × ${H} · ${ms} ms · ${(st.scale / d).toFixed(2)}× of the sheet`; if (opts.onDraw) opts.onDraw(st); if (window.__fillQuality) window.__fillQuality(); };
+  return st;
+}
+function controls(st, withLayers) {
+  const c = $('div', 'ctl'); const bS = $('button', '', '<kbd>S</kbd> re-seed'); bS.onclick = () => { st.seed++; st.draw(); }; c.appendChild(bS);
+  if (withLayers) LAYERS.forEach(k => { const l = $('label'); const i = document.createElement('input'); i.type = 'checkbox'; i.checked = st.layers[k] !== false; i.onchange = () => { st.layers[k] = i.checked; st.draw(); }; l.appendChild(i); l.appendChild(document.createTextNode(k)); c.appendChild(l); });
+  if (st.oneToOne) { const b = $('button', '', '<kbd>1</kbd> 1:1'); b.title = 'the pane at the sheet\'s size (822 CSS px when the window allows)'; b.onclick = () => { st.one = !st.one; b.classList.toggle('on', st.one); st.pair.classList.toggle('one', st.one); st.pair.classList.toggle('single', !st.one); st.pair.classList.toggle('pair', st.one); st.draw(); }; c.appendChild(b); }
+  if (st.without) { const b = $('button', '', '<kbd>W</kbd> without the grammar'); b.onclick = () => { st.off = !st.off; b.classList.toggle('on', st.off); st.layers = st.off ? { mottle: false, wood: false, key: false, press: false, grain: false, shadow: false } : {}; c.querySelectorAll('input').forEach(i => i.checked = st.layers[i.nextSibling.textContent] !== false); st.draw(); }; c.appendChild(b); }
+  const ms = $('span', 'ms', 'hover the pane for the 3× loupe'); c.appendChild(ms);
+  st.pair.parentElement.addEventListener('keydown', e => { const k = e.key.toLowerCase(); if (k === 's') bS.click(); if (k === '1' && st.oneToOne) c.querySelector('button:nth-of-type(2)').click(); if (k === 'w' && st.without) c.querySelector('button:nth-of-type(3)').click(); });
+  st.pair.parentElement.tabIndex = 0; return c;
+}
+function readout(st, pinStats) {
+  const r = $('div', 'readout'); const cells = {};
+  [['L', 'mean luminance', 'pin 048 · ST-04'], ['dark', 'dark pixels (L < 40)', 'pin 048 · ST-04'], ['ink', 'ink shares green · cream · brown', 'pin 048 / ST-04'], ['ink2', 'ink shares yellow · red · blue', 'pin 048 / ST-04']].forEach(([k, label, unit]) => { const d = $('div', '', `<span class="k">${label}</span><span class="v">—<small>${unit}</small></span>`); cells[k] = d.querySelector('.v'); r.appendChild(d); });
+  st.fill = () => { const m = st.m, p = pinStats(); if (!m || !p) return; cells.L.innerHTML = `${p.L.toFixed(1)} · ${m.L.toFixed(1)}<small>pin 048 · ST-04</small>`; cells.dark.innerHTML = `${pct(p.dark)} · ${pct(m.dark)}<small>pin 048 · ST-04</small>`;
+    cells.ink.innerHTML = `<span style="font-size:15px">${['green', 'cream', 'brown'].map(k => `${pct(p.share[k])} / ${pct(m.share[k])}`).join(' · ')}</span><small>green · cream · brown</small>`; cells.ink2.innerHTML = `<span style="font-size:15px">${['yellow', 'red', 'blue'].map(k => `${pct(p.share[k])} / ${pct(m.share[k])}`).join(' · ')}</span><small>yellow · red · blue</small>`; };
+  return r;
+}
+/* ---------- loupe ---------- */
+const loupe = document.getElementById('loupe'); const [lr, lb] = loupe.querySelectorAll('canvas');
+function wireLoupe(st, refOf) {
+  const move = e => { const src = e.currentTarget === st.pr ? st.cr : st.cb; const rect = src.getBoundingClientRect(); const fx = (e.clientX - rect.left) / rect.width, fy = (e.clientY - rect.top) / rect.height;
+    if (fx < 0 || fy < 0 || fx > 1 || fy > 1) { loupe.classList.remove('on'); return; }
+    const W = src.width, H = src.height; const z = 3, s = 160 * dpr() / z; const sx = fx * W - s / 2, sy = fy * H - s / 2;
+    const pairSrc = st.cr ? [[lr, st.cr], [lb, st.cb]] : [[lb, st.cb]]; loupe.classList.toggle('one', !st.cr);
+    pairSrc.forEach(([c, srcc]) => { const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.clearRect(0, 0, 480, 480); x.drawImage(srcc, sx, sy, s, s, 0, 0, 480, 480); });
+    loupe.classList.add('on'); const lx = Math.min(window.innerWidth - (st.cr ? 340 : 180), e.clientX + 18), ly = Math.min(window.innerHeight - 180, e.clientY + 18); loupe.style.left = lx + 'px'; loupe.style.top = ly + 'px'; };
+  [st.pr, st.pb].filter(Boolean).forEach(p => { p.addEventListener('pointermove', move); p.addEventListener('pointerleave', () => loupe.classList.remove('on')); });
+}
+
+/* ---------- sections ---------- */
+const main = document.getElementById('main'); const panes = []; let PIN = null; const pinStats = () => PIN;
+function section(id, n, title, small, read, sideHtml) { const s = $('section'); s.id = id; s.innerHTML = `<div class="head"><div class="n">${n}</div><div><h2>${esc(title)}<small>${esc(small)}</small></h2><p class="read">${read}</p></div>${sideHtml ? `<div class="side">${sideHtml}</div>` : ''}</div>`; main.appendChild(s); return s; }
+
+// 00 · the plate
+{
+  const side = `<span class="k">Pass order</span><ol>${SPEC.pass_order.map(([k, v]) => `<li><b>${k}</b>${esc(v)}</li>`).join('')}</ol><span class="k">Why this order</span><p>${esc(SPEC.why_this_order)}</p>`;
+  const s = section('plate', '00', 'The plate', '822 × 810 · the same sheet as pin 048 · drawn live in canvas', `The finished drawing, at the pane's size, from the same code as every crop below. The checkboxes remove a pass (the removal test), <b>S</b> re-rolls the stochastic passes, <b>1</b> shows it at the sheet's own size, <b>W</b> shows the same drawing with the grammar taken away. The readouts put it beside pin 048 — not to match it, but to see that it sits in the pin's regime.`, side);
+  const st = makePane({ x0: 0, y0: 0, x1: PLATE.REF_W, y1: PLATE.REF_H }, {}, { onDraw: st => st.fill && st.fill() }); st.oneToOne = true; st.without = true; st.label = '00 · the plate';
+  s.appendChild(st.pair); s.appendChild(controls(st, true)); s.appendChild(readout(st, pinStats)); wireLoupe(st); panes.push(st);
+}
+// 01 · concept
+{
+  const C = SPEC.concept;
+  const s = section('ph-concept', '01', 'Concept', 'from canon · R-04 · the walkthrough spine · the brief', `Nothing here is drawn yet. The phase ends with one sentence, the place it lands, the things it must not be, and the concepts it beat.`);
+  const t = $('div', 't');
+  const l = $('div'); l.innerHTML = `<span class="k">Canon it comes from</span><ul class="list">${C.canon.map(x => `<li>${esc(x)}</li>`).join('')}</ul><span class="k" style="margin-top:24px">Must not</span><ul class="list">${C.must_not.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
+  const r = $('div'); r.innerHTML = `<span class="k">The sentence</span><p class="big">${esc(C.sentence)}</p><span class="k">Why this object</span><p class="prose">${esc(C.why_this_object)}</p><span class="k">The substitution</span><p class="prose">${esc(C.the_substitution)}</p><span class="k">Lands in</span><p class="prose">${esc(C.lands_in)}</p><span class="k" style="margin-top:10px">Rejected on the way</span><ol class="reads">${C.rejected.map((x, i) => `<li><em>${String(i + 1).padStart(2, '0')}</em><span><b>${esc(x[0])}</b> — ${esc(x[1])} <span class="d">· ${esc(x[2])}</span></span></li>`).join('')}</ol>`;
+  t.appendChild(l); t.appendChild(r); s.appendChild(t);
+}
+// 02 · words
+{
+  const Wd = SPEC.words;
+  const s = section('ph-words', '02', 'Words', 'the reads · the nouns · four storyboards in prose', `Before any line: what the picture is called, what it says in one second and in three, which nouns are allowed on the sheet, and four storyboards written out so the choice is made in words. <b>${esc(Wd.choice)}</b>`);
+  const t = $('div', 't3');
+  const a = $('div'); a.innerHTML = `<span class="k">Title</span><p class="big" style="font-size:clamp(24px,2.6vw,36px)">${esc(Wd.title)}</p><span class="k">One second</span><p class="prose">${esc(Wd.one_second)}</p><span class="k">Three seconds</span><p class="prose">${esc(Wd.three_seconds)}</p><span class="k">Caption</span><p class="prose">${esc(Wd.caption)}</p>`;
+  const b = $('div'); b.innerHTML = `<span class="k">Nouns on the sheet</span><div class="vocab" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px">${Wd.nouns.map(n => `<span class="chip" style="display:inline-block;padding:7px 10px;border:1px solid var(--line);font-family:var(--m);font-size:11px;letter-spacing:.08em;color:var(--ink)">${esc(n)}</span>`).join('')}</div><span class="k">Verbs</span><p class="prose">${Wd.verbs.map(esc).join(' · ')}</p><span class="k">Not words</span><p class="prose" style="color:var(--ink-3)">${Wd.not_words.map(esc).join(' · ')}</p>`;
+  const c = $('div'); c.innerHTML = `<span class="k">Storyboards</span><ol class="reads">${Wd.storyboards.map(x => `<li><em>${esc(x[0])}</em><span><b>${esc(x[1])}</b> <span class="d">· ${esc(x[2])}</span></span></li>`).join('')}</ol>`;
+  t.appendChild(a); t.appendChild(b); t.appendChild(c); s.appendChild(t);
+}
+// 03 · form
+{
+  const F = SPEC.form;
+  const s = section('ph-form', '03', 'Form', 'four block roughs drawn live · the chosen skeleton measured', `The storyboards as blocks: same inks, no detail, no grammar — the composition has to work as four rectangles and a figure. Then the chosen one is measured: thirds, axes, the floor, the figure's height, the focal event, the eye path.`);
+  const boards = $('div', 'boards'); const thumbs = [];
+  Object.entries(PLATE.THUMBS).forEach(([k, th]) => { const b = $('div', 'b' + (k === 'a' ? ' on' : '')); const cv = document.createElement('canvas'); b.appendChild(cv); const sb = SPEC.words.storyboards.find(x => x[0].toLowerCase() === k); b.appendChild($('div', 'cap', `<b>${esc(th.title)}</b>${esc(sb ? sb[2] : '')}`)); boards.appendChild(b); thumbs.push({ cv, k, b }); });
+  s.appendChild(boards);
+  const drawThumbs = () => thumbs.forEach(t => { const w = Math.round((t.b.clientWidth || 300) * dpr()); PLATE.renderThumb(t.cv, w, Math.round(w * 810 / 822), t.k); });
+  panes.push({ draw: drawThumbs });
+  // the skeleton: the plate with an SVG overlay of the measured lines
+  const st = makePane({ x0: 0, y0: 0, x1: PLATE.REF_W, y1: PLATE.REF_H }, { grain: false, press: false }, { tag: 'ST-04 · the skeleton over the plate · grain and press off' }); st.label = '03 · skeleton';
+  const G = PLATE.geometry, P = PLATE.PERSON; const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('viewBox', '0 0 822 810'); svg.setAttribute('class', 'over'); svg.setAttribute('preserveAspectRatio', 'none');
+  const ln = (x1, y1, x2, y2, c = '#F3EFE8', d = '') => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="1.2" vector-effect="non-scaling-stroke" ${d ? `stroke-dasharray="${d}"` : ''} opacity=".9"/>`;
+  const tx = (x, y, t, a = 'start') => `<text x="${x}" y="${y}" fill="#F3EFE8" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="${a}" style="paint-order:stroke" stroke="#111010" stroke-width="3">${t}</text>`;
+  svg.innerHTML = [ln(G.WALL_R, 0, G.WALL_R, 810, '#F3EFE8', '4 4'), ln(G.DOOR_X, 0, G.DOOR_X, 810, '#F3EFE8', '4 4'), ln(0, G.FLOOR_Y, 822, G.FLOOR_Y, '#F3EFE8', '4 4'), ln(822 / 3, 0, 822 / 3, 810, '#7A746C', '2 6'), ln(822 * 2 / 3, 0, 822 * 2 / 3, 810, '#7A746C', '2 6'),
+    ln(P.armUp[0][0], P.armUp[0][1], P.hand[0], P.hand[1], '#e6452f'), `<circle cx="${P.pencil[1][0] + 8}" cy="${P.pencil[1][1]}" r="16" fill="none" stroke="#e6452f" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`,
+    ln(P.headC[0], 371, P.headC[0], G.FLOOR_Y, '#8db7f4'), ...[1, 2, 3, 4, 5, 6, 7].map(i => ln(P.headC[0] - 6, 371 + i * 46, P.headC[0] + 6, 371 + i * 46, '#8db7f4')),
+    tx(G.WALL_R - 8, 24, 'x 262 · the fixed thing', 'end'), tx(G.DOOR_X + 8, 24, 'x 382 · the door'), tx(8, G.FLOOR_Y - 8, 'y 712 · the floor (.88)'), tx(P.headC[0] + 10, 540, '7.4 heads'), tx(P.pencil[1][0] - 22, P.pencil[1][1] - 22, 'focal event', 'end'), tx(G.DELTA_X - 30, 320, 'Δ · S1 → BOOK', 'end')].join('');
+  st.pb.insertBefore(svg, st.marks); s.appendChild($('span', 'k', 'The skeleton · measured lines over the plate')); s.appendChild(st.pair); panes.push(st);
+  const t = $('div', 't'); const l = $('div'); l.innerHTML = `<span class="k">Measured</span><ol class="reads">${['thirds', 'axes', 'floor', 'figure', 'focal_event', 'marks', 'dimension', 'light'].map((k, i) => `<li><em>${String(i + 1).padStart(2, '0')}</em><span><b>${esc(k.replace('_', ' '))}</b> <span class="d">· ${esc(F[k])}</span></span></li>`).join('')}</ol>`;
+  const r = $('div'); r.innerHTML = `<span class="k">Eye path</span><p class="big" style="font-size:clamp(18px,1.6vw,22px)">${esc(F.eye_path)}</p><span class="k">Thumbnails</span><p class="prose">${esc(F.thumbnails)}</p>`;
+  t.appendChild(l); t.appendChild(r); s.appendChild(t);
+}
+// 04 · style
+{
+  const S = SPEC.style;
+  const s = section('ph-style', '04', 'Style', 'the grammar inherited from ST-02 · the palette as a subset of the pin\'s · four grammar pairs at zoom', `<b>${esc(S.palette_rule)}</b> Below, each ink of the drawing with the pin-048 ink it is; then four pairs — a crop of pin 048 on the left, a crop of this drawing on the right, at the same zoom — so the material can be checked edge against edge, not by impression.`);
+  s.appendChild($('p', 'prose', esc(S.grammar)));
+  const chips = $('div', 'chips'); S.inks.forEach(([use, hex, pin, fam]) => { chips.appendChild($('div', 'chipc', `<i style="background:${hex}"></i><div><b>${esc(use)}</b><span>${hex} · pin: ${esc(pin)} · ${esc(fam)}</span></div>`)); }); s.appendChild($('span', 'k', 'Inks · use · value · the pin-048 ink it is')); s.appendChild(chips);
+  S.pairs.forEach(([title, read, rv, bv, z]) => {
+    s.appendChild($('span', 'k', `${esc(title)} · ${z}× · ${esc(read)}`));
+    const pair = $('div', 'pair'); const pr = $('div', 'pane'), pb = $('div', 'pane'); const cr = document.createElement('canvas'), cb = document.createElement('canvas'); pr.appendChild(cr); pr.appendChild($('span', 'tagp', `Pin 048 · ${rv.join(' · ')}`)); pb.appendChild(cb); const tag = $('span', 'tagp', ''); pb.appendChild(tag); pair.appendChild(pr); pair.appendChild(pb);
+    const st = { pair, pr, pb, cr, cb, seed: 1, label: '04 · ' + title }; const view = { x0: bv[0], y0: bv[1], x1: bv[2], y1: bv[3] }, rview = { x0: rv[0], y0: rv[1], x1: rv[2], y1: rv[3] };
+    st.draw = () => { const cssW = pb.clientWidth || 500; const d = dpr(); const W = Math.round(cssW * d), H = Math.round(W * (bv[3] - bv[1]) / (bv[2] - bv[0])); const sc = W / (bv[2] - bv[0]); const t0 = performance.now(); PLATE.render(cb, W, H, view, {}, st.seed); const ms = Math.round(performance.now() - t0);
+      const rc = refCanvas(W, H, rview, sc / d >= 2); cr.width = W; cr.height = H; cr.getContext('2d').drawImage(rc, 0, 0); tag.textContent = `ST-04 · ${bv.join(' · ')} · ${ms} ms · ${(sc / d).toFixed(2)}×`; };
+    s.appendChild(pair); wireLoupe(st); panes.push(st);
+  });
+  s.appendChild($('span', 'k', 'Without the grammar · W on the plate above')); s.appendChild($('p', 'prose', esc(S.without)));
+  const st = makePane({ x0: 180, y0: 280, x1: 640, y1: 740 }, { mottle: false, wood: false, key: false, press: false, grain: false, shadow: false }, { tag: 'ST-04 · the grammar removed' }); st.label = '04 · without'; s.appendChild(st.pair); panes.push(st);
+}
+// 05 · materials
+{
+  const s = section('ph-materials', '05', 'Materials', 'the passes, cumulative · each with its driver, its collapse and its limits', `The crop around the focal event, built up one pass at a time from the same code — stock, then the jamb's grain, then pencil, shadows, the figure, the keys, the press, the grain. Under each, what drives it and what collapses without it. The ledger carries value · range · unit.`);
+  const grid = $('div', 'passes'); const cum = []; const view = { x0: 230, y0: 300, x1: 560, y1: 640 };
+  const steps = [['stock', {}], ['+ wood', { wood: true }], ['+ pencil', { marks: true }], ['+ shadows', { shadow: true }], ['+ figure', { person: true }], ['+ keys', { key: true }], ['+ press', { press: true }], ['+ grain', { grain: true }]];
+  let acc = { mottle: true, wood: false, marks: false, shadow: false, person: false, key: false, press: false, grain: false };
+  steps.forEach(([name, add], i) => { acc = Object.assign({}, acc, add); const layers = Object.assign({}, acc); const p = $('div', 'p'); const cv = document.createElement('canvas'); p.appendChild(cv); const mat = SPEC.materials[i] || {}; p.appendChild($('div', 'cap', `<b>${String(i + 1).padStart(2, '0')} ${esc(name)}</b>${esc(mat.collapses ? 'without it: ' + mat.collapses : '')}`)); grid.appendChild(p); cum.push({ cv, p, layers }); });
+  s.appendChild(grid);
+  panes.push({ draw: () => cum.forEach(c => { const w = Math.round((c.p.clientWidth || 300) * dpr()); PLATE.render(c.cv, w, Math.round(w * 340 / 330), view, c.layers, 1); }) });
+  const led = $('div'); led.innerHTML = `<span class="k" style="margin-top:28px">Operators · driver · what collapses · params · limits</span><div class="ledger">${SPEC.materials.map(u => `<div class="sub"><b class="short">${esc(u.short)}</b><div><div class="nm">${esc(u.name)}<span>${esc(u.id)} · ${u.atoms.map(esc).join(' · ')} · layer: ${esc(u.layer)}</span></div><div class="im"><b>Driver</b> ${esc(u.driver)} · <b>Collapses</b> ${esc(u.collapses)}</div>${Object.keys(u.params || {}).length ? `<table class="params"><thead><tr><th></th><td>value</td><td>range</td><td>unit</td></tr></thead>${Object.entries(u.params).map(([k, p]) => `<tr><th>${esc(k)}</th><td>${esc(fmt(p.value))}</td><td>${esc(fmt(p.range))}</td><td>${esc(p.unit || '')}</td></tr>`).join('')}</table>` : ''}${u.limits ? `<div class="lim">${esc(u.limits)}</div>` : ''}</div></div>`).join('')}</div>`;
+  s.appendChild(led);
+}
+// 06 · gestalt
+{
+  const Gs = SPEC.gestalt;
+  const s = section('ph-gestalt', '06', 'Gestalt', 'the critique loop · the removal matrix · the composition read', `Three passes from the first render to the plate above: each pass rendered, read for faults at 1× and 3×, patched in the source, rendered again. The faults are listed as they were seen, not tidied.`);
+  const loop = $('div', 'loop');
+  Gs.loop.forEach(([n, faults, patch], i) => { const r = $('div', 'r'); if (LOOP_IMGS[n]) { const im = document.createElement('img'); im.src = LOOP_IMGS[n]; im.alt = n; r.appendChild(im); } else { const cv = document.createElement('canvas'); r.appendChild(cv); r.cv = cv; } r.appendChild($('div', 'cap', `<b>${esc(n)}</b>${esc(faults)}<em>${esc(patch)}</em>`)); loop.appendChild(r); if (r.cv) panes.push({ draw: () => { const w = Math.round((r.clientWidth || 400) * dpr()); PLATE.render(r.cv, w, Math.round(w * 810 / 822), null, {}, 1); } }); });
+  s.appendChild(loop);
+  const t = $('div', 't'); const l = $('div'); l.innerHTML = `<span class="k">Removal matrix · what goes when a layer goes</span><ol class="reads wide">${Gs.removal.map((x, i) => `<li><em>${esc(x[0])}</em><span>${esc(x[1])}</span></li>`).join('')}</ol>`;
+  const r = $('div'); r.innerHTML = `<span class="k">Composition</span><p class="prose">${esc(Gs.composition)}</p>`; t.appendChild(l); t.appendChild(r); s.appendChild(t);
+}
+// 07 · quality
+{
+  const Qp = SPEC.quality_pass;
+  const s = section('quality', '07', 'Quality pass', 'the tests the grammar sets · the family numbers, computed live · what remains', `A rebuild is graded against its pin. A drawing built from the concept end is graded against the grammar: can it be recognised, does it need its caption, does a logo-swap change it, does every layer have a collapse, does it sit in the family, can it be rebuilt from the spec. Then the numbers, computed in this page from the plate above and from pin 048 at the same device size.`);
+  const tbl = $('table', 'q'); tbl.innerHTML = `<thead><tr><th>test</th><th>verdict</th></tr></thead><tbody>${Qp.tests.map(([t, v]) => `<tr><td class="n">${esc(t)}</td><td class="f">${esc(v)}</td></tr>`).join('')}</tbody>`; const w1 = $('div'); w1.style.cssText = 'overflow-x:auto;max-width:100%'; w1.appendChild(tbl); s.appendChild(w1);
+  s.appendChild($('span', 'k', 'Family numbers · pin 048 · ST-04 · recomputed on every redraw')).style.marginTop = '28px';
+  const tb2 = $('table', 'q'); tb2.innerHTML = `<thead><tr><th>pane</th><th>mean L</th><th>dark px</th><th>green</th><th>cream</th><th>brown</th><th>yellow</th><th>red</th><th>blue</th></tr></thead><tbody></tbody>`; const w2 = $('div'); w2.style.cssText = 'overflow-x:auto;max-width:100%'; w2.appendChild(tb2); s.appendChild(w2);
+  const row = (name, m) => `<tr><td class="n">${esc(name)}</td><td>${m.L.toFixed(1)}</td><td>${pct(m.dark)}</td>${['green', 'cream', 'brown', 'yellow', 'red', 'blue'].map(k => `<td>${pct(m.share[k])}</td>`).join('')}</tr>`;
+  window.__fillQuality = () => { const tb = tb2.querySelector('tbody'); const plate = panes.find(p => p.label === '00 · the plate'); if (!PIN || !plate || !plate.m) return; tb.innerHTML = row('pin 048 · the book of ribbons', PIN) + row('ST-04 · the plate', plate.m); };
+  const rem = $('div'); rem.innerHTML = `<span class="k" style="margin-top:28px">What remains · V01</span><ul class="wrong">${Qp.remains.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`; s.appendChild(rem);
+}
+// 08 · spec
+{
+  const s = section('spec', '08', 'Spec', 'machine-readable · the same JSON is embedded as #spec-st-04', 'The concept, the words, the measured form, the palette map, the pass order, every operator with value · range · unit, the critique loop, the tests. Read it with <b>JSON.parse(document.getElementById(\'spec-st-04\').textContent)</b>; the renderer is <b>PLATE</b> (render · renderThumb · geometry · PAL · KEY · MARKS · PERSON).');
+  const d = $('details'); d.innerHTML = `<summary>show the JSON</summary><pre class="spec">${esc(JSON.stringify(SPEC, null, 2))}</pre>`; s.appendChild(d);
+  const lib = $('p', 'meta'); lib.innerHTML = `Library <b>${SPEC.library.map(esc).join(' · ')}</b><br>Lands in Mindgut <b>${esc(SPEC.lands)}</b><br>Gates <b>${esc(SPEC.gates)}</b>`; s.appendChild(lib);
+}
+document.getElementById('foot').innerHTML = `<b>ST-04 · ${esc(SPEC.title)} · ${SPEC.version}</b> · ${SPEC.date} · Mindgut/Claude/studies/ST-04-distance/ · single file, fonts and pin 048 embedded, no requests · the grammar is ST-02's, measured off pin 048; the drawing is new · every pass is a function of the constants in the spec and a seed.`;
+
+/* ---------- draw everything, rebuild on resize ---------- */
+function drawAll() { const d = dpr(); const W = Math.round(822 * Math.min(1, (document.querySelector('#plate .pane')?.clientWidth || 822) / 822) * d); PIN = stats(refCanvas(W, Math.round(W * 810 / 822), { x0: 0, y0: 0, x1: 822, y1: 810 }, false)); panes.forEach(st => { st.draw(); if (st.fill) st.fill(); }); if (window.__fillQuality) window.__fillQuality(); window.READY = true; }
+const start = () => { drawAll(); let last = window.innerWidth, t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => { if (Math.abs(window.innerWidth - last) > 70) { last = window.innerWidth; drawAll(); } }, 300); }); };
+if (REF.complete && REF.naturalWidth) start(); else REF.addEventListener('load', start);
+})();
+</script>
+</body></html>

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My HELIX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lekton:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0A0A0A; overflow: hidden; font-family: 'Lekton', monospace; }
+canvas { display: block; }
+
+#scanlines {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(0deg, transparent 0px, transparent 1px, rgba(255,255,255,0.006) 1px, rgba(255,255,255,0.006) 2px);
+  pointer-events: none; z-index: 5;
+}
+
+#hud-tl {
+  position: fixed; top: 28px; left: 32px; z-index: 10;
+  color: rgba(255,255,255,0.8);
+  font-family: 'Lekton', monospace; font-size: 10px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  line-height: 1.7; pointer-events: none;
+}
+#hud-tl .title { font-size: 13px; font-weight: 700; color: #00c8ff; }
+#hud-tl .sub { opacity: 0.55; }
+
+#hud-tr {
+  position: fixed; top: 28px; right: 32px; z-index: 10;
+  color: rgba(255,255,255,0.6);
+  font-family: 'Lekton', monospace; font-size: 10px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  text-align: right; line-height: 1.7; pointer-events: none;
+}
+
+#legend {
+  position: fixed; bottom: 80px; left: 32px; z-index: 10;
+}
+.leg-section { margin-bottom: 10px; }
+.leg-title { font-size: 8px; color: rgba(255,255,255,0.35); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+.leg-item { display: flex; align-items: center; gap: 6px; font-size: 9px; color: rgba(255,255,255,0.5); line-height: 1.8; cursor: pointer; transition: opacity 0.2s; }
+.leg-item.dimmed { opacity: 0.2; }
+.leg-item:hover { opacity: 1; }
+.leg-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+#hover-panel {
+  position: fixed; display: none; z-index: 20;
+  background: rgba(10,10,16,0.92); border: 1px solid rgba(0,200,255,0.2);
+  border-radius: 6px; padding: 10px 14px; pointer-events: none;
+  font-family: 'Lekton', monospace; font-size: 10px; color: rgba(255,255,255,0.7);
+  line-height: 1.6; min-width: 160px; backdrop-filter: blur(8px);
+}
+.hp-id { font-weight: 700; color: #00c8ff; font-size: 11px; }
+.hp-drift.neg { color: #ff3344; }
+.hp-drift.pos { color: #4ade80; }
+.hp-title { color: rgba(255,255,255,0.4); font-size: 9px; margin-top: 4px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+#controls {
+  position: fixed; bottom: 80px; right: 32px; z-index: 10;
+  display: flex; gap: 6px;
+}
+#controls button {
+  font-family: 'Lekton', monospace; font-size: 9px; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 6px 12px; border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 4px; background: rgba(10,10,10,0.8); color: rgba(255,255,255,0.5);
+  cursor: pointer; transition: all 0.2s;
+}
+#controls button:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.8); }
+#controls button.active { border-color: #00c8ff; color: #00c8ff; }
+
+/* user-select removed — user version auto-loads */
+
+#back-link {
+  position: fixed; top: 8px; left: 32px; z-index: 15;
+  font-family: 'Lekton', monospace; font-size: 10px;
+  color: rgba(255,255,255,0.4); text-decoration: none;
+}
+#back-link:hover { color: #3D6DF4; }
+
+#loading {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  z-index: 30; color: rgba(255,255,255,0.5); font-family: 'Lekton', monospace;
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+<div id="scanlines"></div>
+<a id="back-link" href="/">&larr; back</a>
+
+<div id="hud-tl">
+  <div class="title" id="helix-title">HELIX VIEWER</div>
+  <div class="sub" id="helix-sub">Select a user to visualize</div>
+  <div id="zone-display" style="margin-top:8px;">&mdash;</div>
+  <div id="drift-display" style="opacity:0.6;"></div>
+</div>
+
+<div id="hud-tr">
+  <div id="strand-count">&mdash;</div>
+  <div id="balance-display">&mdash;</div>
+  <div id="coset-display">&mdash;</div>
+</div>
+
+<div id="legend">
+  <div class="leg-section">
+    <div class="leg-title">Type</div>
+    <div class="leg-item" data-filter="user" onclick="toggleFilter(this)"><div class="leg-dot" style="background:#00c8ff;"></div>user</div>
+    <div class="leg-item" data-filter="assistant" onclick="toggleFilter(this)"><div class="leg-dot" style="background:#4ade80;"></div>assistant</div>
+    <div class="leg-item" data-filter="exchange" onclick="toggleFilter(this)"><div class="leg-dot" style="background:#ff8800;"></div>exchange</div>
+    <div class="leg-item" data-filter="summary" onclick="toggleFilter(this)"><div class="leg-dot" style="background:#c850ff;"></div>summary</div>
+    <div class="leg-item" data-filter="nullcode" onclick="toggleFilter(this)"><div class="leg-dot" style="background:#ff3344;"></div>nullcode / void</div>
+    <div class="leg-item" data-filter="founding" onclick="toggleFilter(this)"><div class="leg-dot" style="background:#3a3a4a;border:1px solid #666;"></div>founding</div>
+  </div>
+  <div class="leg-section">
+    <div class="leg-title">Zone</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#3a3a4a;border:1px solid #666;"></div>founding</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#00c8ff;"></div>organic</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#ff3344;"></div>nullcode</div>
+  </div>
+</div>
+
+<div id="hover-panel">
+  <div class="hp-id"></div>
+  <div class="hp-type"></div>
+  <div class="hp-coset"></div>
+  <div class="hp-zone"></div>
+  <div class="hp-drift"></div>
+  <div class="hp-title"></div>
+</div>
+
+<canvas id="drift-canvas" style="position:fixed;bottom:0;left:0;width:100%;height:60px;z-index:4;"></canvas>
+
+<div id="controls">
+  <button id="btn-rotate" class="active">Rotate</button>
+  <button id="btn-drift">Drift</button>
+  <button id="btn-reset">Reset</button>
+</div>
+
+<div id="loading">Loading...</div>
+
+<script>
+// Legend filter — toggles strand visibility by type
+const hiddenTypes = new Set();
+function toggleFilter(el) {
+  const type = el.dataset.filter;
+  if (hiddenTypes.has(type)) {
+    hiddenTypes.delete(type);
+    el.classList.remove('dimmed');
+  } else {
+    hiddenTypes.add(type);
+    el.classList.add('dimmed');
+  }
+  // Dispatch to the module
+  window.dispatchEvent(new CustomEvent('filter-changed'));
+}
+</script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// Colors
+// Colors matched to advanced mode palette
+const COL_USER      = new THREE.Color(0x00c8ff);  // c147 cyan
+const COL_ASSISTANT = new THREE.Color(0x4ade80);  // accent green
+const COL_EXCHANGE  = new THREE.Color(0xff8800);  // c369 orange
+const COL_SUMMARY   = new THREE.Color(0xc850ff);  // c258 purple
+const COL_VOID      = new THREE.Color(0xff3344);  // reject red
+const COL_FOUNDING  = new THREE.Color(0x3a3a4a);  // dim but visible
+const COL_SECTION   = new THREE.Color(0x5a5a6a);  // slightly brighter
+
+function getTypeColor(type) {
+  switch(type) {
+    case 'user': return COL_USER;
+    case 'assistant': return COL_ASSISTANT;
+    case 'exchange': return COL_EXCHANGE;
+    case 'summary': return COL_SUMMARY;
+    case 'nullcode': case 'void': return COL_VOID;
+    case 'founding': return COL_FOUNDING;
+  }
+  return COL_SECTION;
+}
+
+// Scene
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x080810);
+scene.fog = new THREE.FogExp2(0x080810, 0.0015);  // Halved fog — see deeper
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(30, 20, 60);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+document.body.prepend(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.4;
+controls.minDistance = 15;
+controls.maxDistance = 150;
+
+scene.add(new THREE.AmbientLight(0x606080, 1.0));  // Brighter ambient
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);  // Stronger direct
+dirLight.position.set(20, 40, 30);
+scene.add(dirLight);
+const pointLight = new THREE.PointLight(0x00c8ff, 0.6, 120);  // c147 cyan glow
+pointLight.position.set(-10, 0, 0);
+scene.add(pointLight);
+const pointLight2 = new THREE.PointLight(0xc850ff, 0.4, 120);  // c258 purple counter
+pointLight2.position.set(10, -10, 10);
+scene.add(pointLight2);
+
+// State
+let strands = [];
+let spheres = [];
+let strandGroup = null;
+let showDrift = false;
+let hoveredIdx = -1;
+let time = 0;
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+async function loadMyHelix() {
+  document.getElementById('loading').style.display = 'block';
+  try {
+    const r = await fetch('/api/my/helix-viz');
+    if (r.status === 401) { window.location.href = '/login'; return; }
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    buildHelix(data);
+    document.getElementById('loading').style.display = 'none';
+  } catch(e) {
+    document.getElementById('loading').textContent = 'Error: ' + e.message;
+    console.error(e);
+  }
+}
+
+function buildHelix(data) {
+  // Clear previous
+  if (strandGroup) scene.remove(strandGroup);
+  spheres = [];
+  strands = data.strands;
+
+  const TOTAL = strands.length;
+  const HELIX_HEIGHT = Math.max(40, Math.min(120, TOTAL * 0.1));
+  const HELIX_RADIUS = 8;
+  const TURNS = Math.max(5, Math.floor(TOTAL / 80));
+
+  strandGroup = new THREE.Group();
+
+  for (let i = 0; i < TOTAL; i++) {
+    const s = strands[i];
+    const frac = i / TOTAL;
+    const y = (frac - 0.5) * HELIX_HEIGHT;
+    const angle = frac * Math.PI * 2 * TURNS + s.coset * (Math.PI * 2 / 3);
+
+    const driftOffset = showDrift ? Math.abs(s.drift) * 15 : 0;
+    const r = HELIX_RADIUS + driftOffset;
+
+    const x = Math.cos(angle) * r;
+    const z = Math.sin(angle) * r;
+
+    const color = getTypeColor(s.type);
+    const isSpecial = s.isVoid || s.isNull;
+    const isFounding = s.type === 'founding';
+    const mat = new THREE.MeshStandardMaterial({
+      color: color,
+      emissive: isSpecial ? new THREE.Color(0xff3344) : color.clone().multiplyScalar(0.15),
+      emissiveIntensity: isSpecial ? 0.6 : (isFounding ? 0.05 : 0.2),
+      roughness: 0.35,
+      metalness: 0.4,
+    });
+
+    let size = 0.25;  // Bigger base
+    if (s.isVoid) size = 0.4;
+    if (s.isNull) size = 0.35;
+    if (s.type === 'exchange') size = 0.28;
+    if (Math.abs(s.drift) > 0.14) size = 0.28 + Math.abs(s.drift) * 0.5;
+
+    const geo = new THREE.SphereGeometry(size, 8, 6);
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, y, z);
+
+    const baseX = Math.cos(angle) * HELIX_RADIUS;
+    const baseZ = Math.sin(angle) * HELIX_RADIUS;
+    mesh.userData = {
+      strandIdx: i,
+      noDriftPos: new THREE.Vector3(baseX, y, baseZ),
+      driftPos: new THREE.Vector3(
+        Math.cos(angle) * (HELIX_RADIUS + Math.abs(s.drift) * 18),
+        y,
+        Math.sin(angle) * (HELIX_RADIUS + Math.abs(s.drift) * 18)
+      ),
+    };
+
+    strandGroup.add(mesh);
+    spheres.push(mesh);
+  }
+
+  // Backbone lines
+  for (let h = 0; h < 2; h++) {
+    const points = [];
+    for (let i = 0; i < 200; i++) {
+      const frac = i / 200;
+      const y = (frac - 0.5) * HELIX_HEIGHT;
+      const angle = frac * Math.PI * 2 * TURNS + h * Math.PI;
+      points.push(new THREE.Vector3(Math.cos(angle) * HELIX_RADIUS * 0.95, y, Math.sin(angle) * HELIX_RADIUS * 0.95));
+    }
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+    strandGroup.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.12, transparent: true })));
+  }
+
+  // Axis
+  const axisGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, -HELIX_HEIGHT / 2 - 5, 0),
+    new THREE.Vector3(0, HELIX_HEIGHT / 2 + 5, 0)
+  ]);
+  strandGroup.add(new THREE.Line(axisGeo, new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0.04, transparent: true })));
+
+  scene.add(strandGroup);
+
+  // Update HUD
+  const nc = strands.filter(s => s.isNull);
+  const ncUnresolved = nc.filter(s => !s.nullResolved);
+  document.getElementById('helix-title').textContent = `mDNA HELIX — ${data.name || 'Memory'}`;
+  document.getElementById('helix-sub').textContent = `${TOTAL} strands · ${nc.length} nullcode · ${ncUnresolved.length} Ø active`;
+  document.getElementById('strand-count').textContent = `${TOTAL} strands`;
+  document.getElementById('balance-display').textContent = `balance: ${data.book.balance > 0 ? '+' : ''}${data.book.balance.toFixed(4)}`;
+  document.getElementById('coset-display').textContent = `A:${(data.book.f147*100).toFixed(1)}% R:${(data.book.f258*100).toFixed(1)}% D:${(data.book.f369*100).toFixed(1)}%`;
+
+  drawDriftTimeline();
+  camera.position.set(30, 20, 60);
+  controls.target.set(0, 0, 0);
+}
+
+// Hover
+renderer.domElement.addEventListener('mousemove', e => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(spheres);
+  const panel = document.getElementById('hover-panel');
+
+  if (intersects.length > 0) {
+    const idx = intersects[0].object.userData.strandIdx;
+    const s = strands[idx];
+    hoveredIdx = idx;
+
+    panel.querySelector('.hp-id').textContent = `strand ${s.id}`;
+    panel.querySelector('.hp-type').textContent = `type: ${s.type}`;
+    panel.querySelector('.hp-coset').textContent = `coset: ${s.cosetLabel || 'Z₃[' + s.coset + ']'}`;
+    panel.querySelector('.hp-zone').textContent = `zone: ${s.zone}`;
+    const driftEl = panel.querySelector('.hp-drift');
+    driftEl.textContent = `drift: ${s.drift > 0 ? '+' : ''}${s.drift.toFixed(4)}`;
+    driftEl.className = 'hp-drift ' + (s.drift < -0.12 ? 'neg' : s.drift > 0.12 ? 'pos' : '');
+    panel.querySelector('.hp-title').textContent = s.title;
+
+    panel.style.display = 'block';
+    panel.style.left = (e.clientX + 16) + 'px';
+    panel.style.top = (e.clientY - 8) + 'px';
+
+    document.getElementById('zone-display').textContent = `${s.zone} / strand ${s.id}`;
+    document.getElementById('drift-display').textContent = `σ ${s.drift.toFixed(4)}`;
+  } else {
+    hoveredIdx = -1;
+    panel.style.display = 'none';
+    document.getElementById('zone-display').textContent = '—';
+    document.getElementById('drift-display').textContent = '';
+  }
+});
+
+// Drift timeline
+const driftCanvas = document.getElementById('drift-canvas');
+const driftCtx = driftCanvas.getContext('2d');
+
+function drawDriftTimeline() {
+  const w = driftCanvas.width = window.innerWidth;
+  const h = driftCanvas.height = 60;
+  const TOTAL = strands.length;
+  if (!TOTAL) return;
+
+  driftCtx.clearRect(0, 0, w, h);
+  driftCtx.fillStyle = 'rgba(10,10,10,0.8)';
+  driftCtx.fillRect(0, 0, w, h);
+
+  const midY = h / 2;
+  driftCtx.strokeStyle = 'rgba(255,255,255,0.1)';
+  driftCtx.lineWidth = 1;
+  driftCtx.beginPath();
+  driftCtx.moveTo(0, midY);
+  driftCtx.lineTo(w, midY);
+  driftCtx.stroke();
+
+  // Drift waveform
+  driftCtx.beginPath();
+  for (let i = 0; i < TOTAL; i++) {
+    const x = (i / TOTAL) * w;
+    const y = midY - strands[i].drift * h * 1.5;
+    if (i === 0) driftCtx.moveTo(x, y); else driftCtx.lineTo(x, y);
+  }
+  driftCtx.strokeStyle = 'rgba(255,255,255,0.15)';
+  driftCtx.lineWidth = 0.8;
+  driftCtx.stroke();
+
+  // Seismic bars for high-drift strands
+  for (let i = 0; i < TOTAL; i++) {
+    const s = strands[i];
+    if (Math.abs(s.drift) < 0.1) continue;
+    const x = (i / TOTAL) * w;
+    const barH = Math.abs(s.drift) * h * 1.8;
+    const isNeg = s.drift < 0;
+    driftCtx.fillStyle = isNeg ? `rgba(255,51,68,${0.3 + Math.abs(s.drift)})` : `rgba(74,222,128,${0.3 + Math.abs(s.drift)})`;
+    driftCtx.fillRect(x - 1, isNeg ? midY : midY - barH, 2, barH);
+  }
+
+  // Nullcode region highlight
+  for (let i = 0; i < TOTAL; i++) {
+    if (strands[i].isNull) {
+      const x = (i / TOTAL) * w;
+      driftCtx.fillStyle = 'rgba(255,51,68,0.12)';
+      driftCtx.fillRect(x, 0, Math.max(2, w / TOTAL), h);
+    }
+  }
+
+  // Hover indicator
+  if (hoveredIdx >= 0) {
+    const x = (hoveredIdx / TOTAL) * w;
+    driftCtx.strokeStyle = 'rgba(255,255,255,0.5)';
+    driftCtx.lineWidth = 1;
+    driftCtx.beginPath();
+    driftCtx.moveTo(x, 0);
+    driftCtx.lineTo(x, h);
+    driftCtx.stroke();
+  }
+}
+
+// Controls
+document.getElementById('btn-rotate').addEventListener('click', function() {
+  controls.autoRotate = !controls.autoRotate;
+  this.classList.toggle('active', controls.autoRotate);
+});
+
+document.getElementById('btn-drift').addEventListener('click', function() {
+  showDrift = !showDrift;
+  this.classList.toggle('active', showDrift);
+  for (const mesh of spheres) {
+    mesh.userData.targetPos = (showDrift ? mesh.userData.driftPos : mesh.userData.noDriftPos).clone();
+  }
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  camera.position.set(30, 20, 60);
+  controls.target.set(0, 0, 0);
+});
+
+// Legend filter handler
+window.addEventListener('filter-changed', () => {
+  for (const mesh of spheres) {
+    const s = strands[mesh.userData.strandIdx];
+    if (!s) continue;
+    const hidden = hiddenTypes.has(s.type) || (s.type === 'void' && hiddenTypes.has('nullcode'));
+    mesh.visible = !hidden;
+  }
+});
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  drawDriftTimeline();
+});
+
+// Animate
+function animate() {
+  requestAnimationFrame(animate);
+  time += 0.016;
+  controls.update();
+
+  for (const mesh of spheres) {
+    const s = strands[mesh.userData.strandIdx];
+    if (s && (s.isVoid || s.isNull)) {
+      mesh.material.emissiveIntensity = 0.3 + Math.sin(time * 3 + s.id * 0.5) * 0.2;
+    }
+    // Animate drift toggle
+    if (mesh.userData.targetPos) {
+      mesh.position.lerp(mesh.userData.targetPos, 0.08);
+      if (mesh.position.distanceTo(mesh.userData.targetPos) < 0.01) {
+        mesh.position.copy(mesh.userData.targetPos);
+        delete mesh.userData.targetPos;
+      }
+    }
+  }
+
+  drawDriftTimeline();
+  renderer.render(scene, camera);
+}
+
+// Init — load the user's own HELIX immediately
+loadMyHelix();
+animate();
+</script>
+</body>
+</html>

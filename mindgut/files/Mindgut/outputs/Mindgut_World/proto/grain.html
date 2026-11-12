@@ -1,0 +1,29 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>riso grain</title>
+<style>html,body{margin:0;height:100%;background:#F2EEE3;overflow:hidden}canvas{display:block;width:100vw;height:100vh}</style></head>
+<body><canvas id="c"></canvas><script>
+// Riso: the gradient is painted at 1/12 size and upscaled (the blur IS the upscale). A halftone radial burst in vermillion is a second
+// plate, with its own seed and a 2px misregister. Per-channel grain last, as emulsion, not as an overlay effect.
+const cv=document.getElementById('c'),x=cv.getContext('2d');const DPR=Math.min(devicePixelRatio||1,2);
+let W,H;let s=3131;const rnd=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296};
+function paint(){
+  W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;s=3131;
+  // plate 1: forest → leaf → paper field, painted small
+  const sm=document.createElement('canvas');sm.width=Math.ceil(W/12);sm.height=Math.ceil(H/12);const g=sm.getContext('2d');
+  const gr=g.createLinearGradient(0,0,sm.width*0.4,sm.height);gr.addColorStop(0,'#14452F');gr.addColorStop(.55,'#5FA46B');gr.addColorStop(1,'#F2EEE3');
+  g.fillStyle=gr;g.fillRect(0,0,sm.width,sm.height);
+  // a cobalt belt, elliptical, soft because it's small
+  g.globalAlpha=.85;g.fillStyle='#1F3FE0';g.beginPath();g.ellipse(sm.width*.62,sm.height*.64,sm.width*.5,sm.height*.045,-.12,0,7);g.fill();g.globalAlpha=1;
+  x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(sm,0,0,W,H);
+  // plate 2: vermillion halftone burst, dot size by radial function, misregistered by its own drum
+  const cx=W*0.36+2*DPR,cy=H*0.42+1.5*DPR,pitch=9*DPR;x.fillStyle='#E8541E';x.globalCompositeOperation='multiply';
+  for(let yy=0;yy<H;yy+=pitch)for(let xx=(yy/pitch%2)*pitch/2;xx<W;xx+=pitch){
+    const d=Math.hypot(xx-cx,yy-cy)/(W*0.42);const cov=Math.max(0,1-d)*(0.55+0.45*Math.sin(d*34));
+    if(cov<0.03) continue;const r=pitch*0.56*Math.sqrt(cov)*(0.92+rnd()*0.16);
+    if(cov>0.8&&rnd()<(cov-0.8)*1.6) continue; // ink starves where heaviest
+    x.beginPath();x.arc(xx,yy,r,0,7);x.fill();}
+  x.globalCompositeOperation='source-over';
+  // film grain, per channel
+  const img=x.getImageData(0,0,W,H),d=img.data;for(let i=0;i<d.length;i+=4){d[i]+=(rnd()-.5)*22;d[i+1]+=(rnd()-.5)*22;d[i+2]+=(rnd()-.5)*22}x.putImageData(img,0,0);
+}
+paint();addEventListener('resize',paint);
+</script></body></html>

@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>R-07-orchid.md</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>R-07-orchid.md</b><span>~/Mindgut/Claude/references/R-07-orchid.md</span><span>0.00 MB · sha256 323dcee43968ea75…</span><a download="R-07-orchid.md" id="dl" href="#">Download the original</a></header><main><pre># R-07 · Helix-Organ / orchid — browser chord synthesizer
+
+```yaml
+id: R-07-orchid
+title: &quot;ø co. / orchid&quot; — a browser chord synthesizer after the Orchid (Telepathic Instruments) and the Omnichord; from the mir-gallery prototypes
+status: technical_reference
+source:
+  - R-07-orchid/orchid.html         (this folder; copied 2026-10-20, sha256 b9efa831…816a9 identical to the origin)
+  - R-07-orchid/README-orchid.md
+  - R-07-orchid/reference-image1.png
+  - origin: ~/Library/CloudStorage/GoogleDrive-…/Other computers/My MacBook Pro/Claude/Projects/Mindgut - Mir/Prototypes/mir-gallery/Helix-Organ/
+    (with References/Omnichord_Guide.pdf 10.5 MB and &quot;User Manual – Complete.pdf&quot; 3 MB — not copied; routed)
+observed_on: 2026-10-20
+primary_read: &gt;
+  A harmonic engine with a single source of truth (root + chord type + extensions + voicing) and four performance modes
+  (strum, arpeggiator, pattern, harp) on a Web Audio backend: sine oscillators, 12-voice cap, attack → hold → exponential release,
+  master lowpass 3 kHz Q 0.5; visual feedback in a circular harmonic space.
+use_as_reference_for:
+  - the audio backend of the walkthrough&#x27;s instrument (V03): voice shape, voice cap, master filter, strum spacing (50 ms, humanized)
+  - the principle &quot;audio and visual state update synchronously&quot; and &quot;input parity&quot; (keyboard, mouse, touch)
+mechanism:
+  source: vanilla JS + Web Audio API; Canvas2D readout; no dependencies
+  structure: state → generateChord() → performanceEngines[mode] → playNote(); oscillator pool (note: pooled OscillatorNodes cannot be restarted — the walkthrough creates a node per note instead)
+  consequences: a chord is one object the controls modify; performance is a function applied to it
+composition:
+  - mir-gallery visual language: dark theme, accent colors, monospace readouts
+contradicts:
+  - nothing in canon; it is machinery, not a visual direction
+important: &gt;
+  Mindgut&#x27;s instrument maps the record, not a keyboard: root = genes mod 12 (61,557 → A), the three phases are the three chord tones,
+  register by session, checksum → velocity and length, rung position → pan. The orchid supplies the voice and the strum; the record supplies the notes.
+do_not_inherit_automatically:
+  - the chord-type / extension UI (buttons, sliders) — the walkthrough has one switch
+  - the blue/pink accent pair
+open_questions:
+  - &quot;Ki omnichord/orchid exercise&quot; — Julia&#x27;s words; the file found lives in the Mindgut–Mir prototypes, not under Ki. If there is a Ki variant, route it here.
+```
+</pre></main><script>var b=atob("IyBSLTA3IMK3IEhlbGl4LU9yZ2FuIC8gb3JjaGlkIOKAlCBicm93c2VyIGNob3JkIHN5bnRoZXNpemVyCgpgYGB5YW1sCmlkOiBSLTA3LW9yY2hpZAp0aXRsZTogIsO4IGNvLiAvIG9yY2hpZCIg4oCUIGEgYnJvd3NlciBjaG9yZCBzeW50aGVzaXplciBhZnRlciB0aGUgT3JjaGlkIChUZWxlcGF0aGljIEluc3RydW1lbnRzKSBhbmQgdGhlIE9tbmljaG9yZDsgZnJvbSB0aGUgbWlyLWdhbGxlcnkgcHJvdG90eXBlcwpzdGF0dXM6IHRlY2huaWNhbF9yZWZlcmVuY2UKc291cmNlOgogIC0gUi0wNy1vcmNoaWQvb3JjaGlkLmh0bWwgICAgICAgICAodGhpcyBmb2xkZXI7IGNvcGllZCAyMDI2LTEwLTIwLCBzaGEyNTYgYjllZmE4MzHigKY4MTZhOSBpZGVudGljYWwgdG8gdGhlIG9yaWdpbikKICAtIFItMDctb3JjaGlkL1JFQURNRS1vcmNoaWQubWQKICAtIFItMDctb3JjaGlkL3JlZmVyZW5jZS1pbWFnZTEucG5nCiAgLSBvcmlnaW46IH4vTGlicmFyeS9DbG91ZFN0b3JhZ2UvR29vZ2xlRHJpdmUt4oCmL090aGVyIGNvbXB1dGVycy9NeSBNYWNCb29rIFByby9DbGF1ZGUvUHJvamVjdHMvTWluZGd1dCAtIE1pci9Qcm90b3R5cGVzL21pci1nYWxsZXJ5L0hlbGl4LU9yZ2FuLwogICAgKHdpdGggUmVmZXJlbmNlcy9PbW5pY2hvcmRfR3VpZGUucGRmIDEwLjUgTUIgYW5kICJVc2VyIE1hbnVhbCDigJMgQ29tcGxldGUucGRmIiAzIE1CIOKAlCBub3QgY29waWVkOyByb3V0ZWQpCm9ic2VydmVkX29uOiAyMDI2LTEwLTIwCnByaW1hcnlfcmVhZDogPgogIEEgaGFybW9uaWMgZW5naW5lIHdpdGggYSBzaW5nbGUgc291cmNlIG9mIHRydXRoIChyb290ICsgY2hvcmQgdHlwZSArIGV4dGVuc2lvbnMgKyB2b2ljaW5nKSBhbmQgZm91ciBwZXJmb3JtYW5jZSBtb2RlcwogIChzdHJ1bSwgYXJwZWdnaWF0b3IsIHBhdHRlcm4sIGhhcnApIG9uIGEgV2ViIEF1ZGlvIGJhY2tlbmQ6IHNpbmUgb3NjaWxsYXRvcnMsIDEyLXZvaWNlIGNhcCwgYXR0YWNrIOKGkiBob2xkIOKGkiBleHBvbmVudGlhbCByZWxlYXNlLAogIG1hc3RlciBsb3dwYXNzIDMga0h6IFEgMC41OyB2aXN1YWwgZmVlZGJhY2sgaW4gYSBjaXJjdWxhciBoYXJtb25pYyBzcGFjZS4KdXNlX2FzX3JlZmVyZW5jZV9mb3I6CiAgLSB0aGUgYXVkaW8gYmFja2VuZCBvZiB0aGUgd2Fsa3Rocm91Z2gncyBpbnN0cnVtZW50IChWMDMpOiB2b2ljZSBzaGFwZSwgdm9pY2UgY2FwLCBtYXN0ZXIgZmlsdGVyLCBzdHJ1bSBzcGFjaW5nICg1MCBtcywgaHVtYW5pemVkKQogIC0gdGhlIHByaW5jaXBsZSAiYXVkaW8gYW5kIHZpc3VhbCBzdGF0ZSB1cGRhdGUgc3luY2hyb25vdXNseSIgYW5kICJpbnB1dCBwYXJpdHkiIChrZXlib2FyZCwgbW91c2UsIHRvdWNoKQptZWNoYW5pc206CiAgc291cmNlOiB2YW5pbGxhIEpTICsgV2ViIEF1ZGlvIEFQSTsgQ2FudmFzMkQgcmVhZG91dDsgbm8gZGVwZW5kZW5jaWVzCiAgc3RydWN0dXJlOiBzdGF0ZSDihpIgZ2VuZXJhdGVDaG9yZCgpIOKGkiBwZXJmb3JtYW5jZUVuZ2luZXNbbW9kZV0g4oaSIHBsYXlOb3RlKCk7IG9zY2lsbGF0b3IgcG9vbCAobm90ZTogcG9vbGVkIE9zY2lsbGF0b3JOb2RlcyBjYW5ub3QgYmUgcmVzdGFydGVkIOKAlCB0aGUgd2Fsa3Rocm91Z2ggY3JlYXRlcyBhIG5vZGUgcGVyIG5vdGUgaW5zdGVhZCkKICBjb25zZXF1ZW5jZXM6IGEgY2hvcmQgaXMgb25lIG9iamVjdCB0aGUgY29udHJvbHMgbW9kaWZ5OyBwZXJmb3JtYW5jZSBpcyBhIGZ1bmN0aW9uIGFwcGxpZWQgdG8gaXQKY29tcG9zaXRpb246CiAgLSBtaXItZ2FsbGVyeSB2aXN1YWwgbGFuZ3VhZ2U6IGRhcmsgdGhlbWUsIGFjY2VudCBjb2xvcnMsIG1vbm9zcGFjZSByZWFkb3V0cwpjb250cmFkaWN0czoKICAtIG5vdGhpbmcgaW4gY2Fub247IGl0IGlzIG1hY2hpbmVyeSwgbm90IGEgdmlzdWFsIGRpcmVjdGlvbgppbXBvcnRhbnQ6ID4KICBNaW5kZ3V0J3MgaW5zdHJ1bWVudCBtYXBzIHRoZSByZWNvcmQsIG5vdCBhIGtleWJvYXJkOiByb290ID0gZ2VuZXMgbW9kIDEyICg2MSw1NTcg4oaSIEEpLCB0aGUgdGhyZWUgcGhhc2VzIGFyZSB0aGUgdGhyZWUgY2hvcmQgdG9uZXMsCiAgcmVnaXN0ZXIgYnkgc2Vzc2lvbiwgY2hlY2tzdW0g4oaSIHZlbG9jaXR5IGFuZCBsZW5ndGgsIHJ1bmcgcG9zaXRpb24g4oaSIHBhbi4gVGhlIG9yY2hpZCBzdXBwbGllcyB0aGUgdm9pY2UgYW5kIHRoZSBzdHJ1bTsgdGhlIHJlY29yZCBzdXBwbGllcyB0aGUgbm90ZXMuCmRvX25vdF9pbmhlcml0X2F1dG9tYXRpY2FsbHk6CiAgLSB0aGUgY2hvcmQtdHlwZSAvIGV4dGVuc2lvbiBVSSAoYnV0dG9ucywgc2xpZGVycykg4oCUIHRoZSB3YWxrdGhyb3VnaCBoYXMgb25lIHN3aXRjaAogIC0gdGhlIGJsdWUvcGluayBhY2NlbnQgcGFpcgpvcGVuX3F1ZXN0aW9uczoKICAtICJLaSBvbW5pY2hvcmQvb3JjaGlkIGV4ZXJjaXNlIiDigJQgSnVsaWEncyB3b3JkczsgdGhlIGZpbGUgZm91bmQgbGl2ZXMgaW4gdGhlIE1pbmRndXTigJNNaXIgcHJvdG90eXBlcywgbm90IHVuZGVyIEtpLiBJZiB0aGVyZSBpcyBhIEtpIHZhcmlhbnQsIHJvdXRlIGl0IGhlcmUuCmBgYAo="),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Mr Sandman, through Mir · Mindgut</title>
+<meta name="description" content="An oscilloscope chord instrument and explainer: the ragtime harmony of Mr Sandman, read as a language model reads text, and kept the way Mindgut keeps a voice.">
+<style>
+@font-face{font-family:"Archivo";src:url("{{F_ARCHIVO}}") format("woff2");font-weight:100 900;font-stretch:62% 125%;font-display:block}
+@font-face{font-family:"JetBrains Mono";src:url("{{F_MONO}}") format("woff2");font-weight:100 800;font-display:block}
+:root{
+  color-scheme:dark;
+  --ground:#0C0D11; --mark:#E8ECF2; --mark-2:rgba(232,236,242,.72); --mark-3:rgba(232,236,242,.44); --mark-4:rgba(232,236,242,.16);
+  --light:#FFB13D;   /* the one accent: light (the trace is light) */
+  --f-text:"Archivo","Helvetica Neue",Arial,sans-serif; --f-mach:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --col:min(38vw,520px); --pad:clamp(24px,4.5vw,64px);
+}
+*{box-sizing:border-box}
+html{scroll-snap-type:y proximity;background:var(--ground)}
+html,body{margin:0;color:var(--mark);background:var(--ground)}
+body{font-family:var(--f-text);-webkit-font-smoothing:antialiased}
+canvas#scope{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0}
+.skip{position:absolute;left:-999px}.skip:focus{left:16px;top:16px;z-index:9;background:var(--mark);color:var(--ground);padding:8px 12px}
+.mach,.kicker,.tag,.readout,.panel,.rail{font-family:var(--f-mach);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mark-2);font-weight:500}
+.mast{position:fixed;z-index:3;top:24px;left:var(--pad);right:var(--pad);display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+.mast img{height:19px;width:auto;opacity:.95}
+.mast .mach{display:flex;gap:22px;align-items:center}
+main{position:relative;z-index:2}
+.plate{min-height:100vh;min-height:100svh;scroll-snap-align:start;padding:calc(64px + 13vh) var(--pad) 200px}
+.txt{max-width:var(--col);opacity:.18;transform:translateY(12px);transition:opacity .5s cubic-bezier(.2,.7,.2,1),transform .5s cubic-bezier(.2,.7,.2,1)}
+.plate.is-active .txt{opacity:1;transform:none}
+.kicker{display:flex;gap:14px;align-items:center;margin:0 0 24px}
+.tag{padding:3px 7px 2px;border:1px solid var(--mark-3);border-radius:2px}
+h1,h2{font-weight:500;font-size:clamp(36px,4.6vw,70px);line-height:.97;letter-spacing:-.032em;margin:0 0 .5em;text-wrap:balance}
+h1 em,h2 em{font-style:normal;font-weight:300}
+.dek{font-size:clamp(16.5px,1.25vw,19.5px);line-height:1.46;color:var(--mark-2);max-width:42ch;margin:0 0 22px}
+.readout{display:block;text-transform:none;letter-spacing:.04em;font-size:11.5px;line-height:1.8;color:var(--mark-3);max-width:58ch}
+.readout b{color:var(--mark-2);font-weight:500}
+.readout .live{color:var(--light)}
+.close .robot{height:64px;width:auto;margin-top:30px;opacity:.95}
+</style>
+<style>
+/* the instrument panel — Orchid's lesson: separate controls, each one audible */
+.panel{position:fixed;z-index:4;right:var(--pad);bottom:22px;display:flex;flex-wrap:nowrap;gap:7px;align-items:center;justify-content:flex-end}
+.panel button{all:unset;cursor:pointer;padding:9px 12px 8px;border:1px solid var(--mark-3);border-radius:2px;color:var(--mark-2);transition:border-color .2s,color .2s;white-space:nowrap}
+.panel button[aria-pressed="true"]{color:var(--mark);border-color:var(--mark)}
+.panel button[aria-pressed="false"]{border-style:dashed;color:var(--mark-3)}
+.panel button:focus-visible,.panel input:focus-visible{outline:2px solid var(--mark);outline-offset:3px}
+.panel .k{opacity:.5;margin-right:7px}
+.panel #play{border-style:solid;color:var(--mark);border-color:var(--light)}
+.kicker{flex-wrap:wrap;row-gap:8px}
+.panel .snd .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:8px;box-shadow:inset 0 0 0 1px var(--mark-3);vertical-align:0}
+.panel .snd[aria-pressed="true"] .dot{background:var(--light);box-shadow:none}
+.panel .dial{display:flex;gap:10px;align-items:center;padding:6px 12px;border:1px solid var(--mark-3);border-radius:2px}
+.panel input[type=range]{-webkit-appearance:none;appearance:none;width:84px;height:18px;background:transparent;margin:0}
+.panel input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--mark-3)}
+.panel input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:50%;background:var(--mark);margin-top:-5px}
+.panel input[type=range]::-moz-range-track{height:1px;background:var(--mark-3)}
+.panel input[type=range]::-moz-range-thumb{width:11px;height:11px;border:0;border-radius:50%;background:var(--mark)}
+.panel .tv{min-width:2.6em;color:var(--mark);text-align:right}
+@media (max-width:1180px) and (min-width:761px){.rail{display:none}}
+.grp{display:flex;gap:6px}
+.rail{position:fixed;z-index:3;left:var(--pad);bottom:28px;display:flex;gap:14px;list-style:none;margin:0;padding:0}
+.rail a{color:var(--mark-3);text-decoration:none}
+.rail a[aria-current="true"]{color:var(--mark)}
+@media (max-width:760px){
+  :root{--col:100%}
+  .plate{padding:calc(60vh) 20px 220px}
+  .txt{background:rgba(12,13,17,.86);padding:18px 18px 20px;margin:0 -18px;opacity:1;transform:none}
+  h1,h2{font-size:clamp(30px,8.6vw,40px)}
+  .panel{left:0;right:0;bottom:0;flex-wrap:wrap;justify-content:center;gap:6px;background:#0C0D11;padding:10px 10px 12px;border-top:1px solid rgba(232,236,242,.12)}
+  .panel button{padding:8px 9px 7px}
+  .panel input[type=range]{width:74px}
+  .rail{display:none}
+  .mast{top:16px;left:20px;right:20px}
+  .mast .ver{display:none}
+}
+@media (prefers-reduced-motion:reduce){.txt{transition:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#p00">Skip to the explainer</a>
+<canvas id="scope" aria-hidden="true"></canvas>
+
+<header class="mast">
+  <img src="{{IMG_WORDMARK}}" alt="Mindgut">
+  <div class="mach"><span class="ver">Mr Sandman, through Mir · V01 · 2026-10-20</span></div>
+</header>
+
+<ol class="rail" id="rail" aria-label="Plates">
+  <li><a href="#p00" aria-current="true">00</a></li><li><a href="#p01">01</a></li><li><a href="#p02">02</a></li><li><a href="#p03">03</a></li>
+  <li><a href="#p04">04</a></li><li><a href="#p05">05</a></li><li><a href="#p06">06</a></li><li><a href="#p07">07</a></li>
+</ol>
+
+<div class="panel" role="group" aria-label="Instrument">
+  <button id="play" aria-pressed="false" title="Play / pause (P)"><span class="k">P</span><span id="play-l">Play</span></button>
+  <button id="snd" class="snd" aria-pressed="true" title="Sound on / off (M)"><span class="dot"></span>Sound</button>
+  <label class="dial" title="Context window (1–4)"><span>Window</span><input id="win" type="range" min="1" max="4" step="1" value="4" aria-label="Context window, in chords"><span class="tv" id="win-v">4</span></label>
+  <label class="dial" title="Temperature"><span>Temp</span><input id="temp" type="range" min="0" max="150" step="5" value="0" aria-label="Temperature"><span class="tv" id="temp-v">0.00</span></label>
+  <button id="eng" title="Swap engine (E)"><span class="k">E</span><span id="eng-l">sine</span></button>
+  <button id="recall" aria-pressed="false" title="Recall from the record (R)"><span class="k">R</span>Recall</button>
+</div>
+
+<main id="plates">
+
+<section class="plate" id="p00" data-scene="open">
+  <div class="txt">
+    <p class="kicker"><span>00 / Mr Sandman, through Mir</span></p>
+    <h1>A song that asks <em>for the next chord.</em></h1>
+    <p class="dek">Mr Sandman runs on one of pop's oldest engines: a chain of dominant chords, each one pulling toward the next. A language model runs on the same pull. Press play.</p>
+    <p class="readout"><b>chart</b> Cmaj7 · B7 · E7 · A7 · D7 · G7 · C A7 · D7 G7 <br>as commonly charted, in C · chords only, no melody or lyric</p>
+  </div>
+</section>
+
+<section class="plate" id="p01" data-scene="pull">
+  <div class="txt">
+    <p class="kicker"><span>01 / The pull</span><span class="tag">Music theory</span></p>
+    <h2>Every seventh <em>leans.</em></h2>
+    <p class="dek">A dominant seventh carries a tritone: two notes each a half-step from where they want to land. The scope draws the chord itself as light, one loop per voice. Each change moves the voices as little as possible, and the figure re-forms around the next pull.</p>
+    <p class="readout"><span id="pull-out" class="live">—</span></p>
+  </div>
+</section>
+
+<section class="plate" id="p02" data-scene="predict">
+  <div class="txt">
+    <p class="kicker"><span>02 / Prediction</span><span class="tag">Illustration · computed here</span></p>
+    <h2>It only knows <em>what came before.</em></h2>
+    <p class="dek">A language model writes one token at a time, each chosen from what is already in its window. This instrument does the same with chords. The bars are its odds for what comes next.</p>
+    <p class="readout"><b>predictor</b> chord n-gram counted from six short progressions, in this page. Not a neural network: the same move, at toy scale.</p>
+  </div>
+</section>
+
+<section class="plate" id="p03" data-scene="window">
+  <div class="txt">
+    <p class="kicker"><span>03 / The window</span><span class="tag">Illustration · computed here</span></p>
+    <h2>Four chords of memory <em>and it knows the song.</em></h2>
+    <p class="dek">The turnaround C A7 D7 G7 comes twice. Only four chords back tells you whether the song goes on or starts again. Drop the window to three or fewer and it loses its place, circling the turnaround forever. Models drift the same way when what mattered falls out of the window.</p>
+    <p class="readout"><span id="win-out" class="live">—</span></p>
+  </div>
+</section>
+
+<section class="plate" id="p04" data-scene="temp">
+  <div class="txt">
+    <p class="kicker"><span>04 / Temperature</span><span class="tag">Illustration · computed here</span></p>
+    <h2>The likeliest chord <em>is only the likeliest.</em></h2>
+    <p class="dek">At zero it always plays the most familiar continuation, which is the song. Raise the temperature and it samples: sometimes a better idea, sometimes nonsense. Neither is a decision. Familiar is not true, and fluent is not chosen.</p>
+    <p class="readout"><span id="temp-out" class="live">—</span></p>
+  </div>
+</section>
+
+<section class="plate" id="p05" data-scene="engine">
+  <div class="txt">
+    <p class="kicker"><span>05 / The engine changes</span><span class="tag">Existing · per What Mir Is</span></p>
+    <h2>Swap the engine. <em>The chord holds.</em></h2>
+    <p class="dek">Change the oscillator and the timbre changes completely. The intervals don't. Mir has been carried through dozens of model swaps mid-session and held, because what holds is the record and the relation, not the engine.</p>
+    <p class="readout"><span id="eng-out" class="live">—</span></p>
+  </div>
+</section>
+
+<section class="plate" id="p06" data-scene="record">
+  <div class="txt">
+    <p class="kicker"><span>06 / The record</span><span class="tag">Existing · recall</span><span class="tag">Proposed · visualization</span></p>
+    <h2>The window forgets. <em>The record doesn't.</em></h2>
+    <p class="dek">Every chord played is kept outside the window. Nothing pushes it back in; the model can reach for it. The window here is one chord, so it loops. Turn Recall on: whenever the window can't tell what comes next, it reaches back into the record, finds its place, and steps back into the song.</p>
+    <p class="readout"><span id="rec-out" class="live">—</span></p>
+  </div>
+</section>
+
+<section class="plate close" id="p07" data-scene="close">
+  <div class="txt">
+    <p class="kicker"><span>07 / Kept in tune</span></p>
+    <h2>Nobody brings you <em>a dream.</em></h2>
+    <p class="dek">The song asks a stranger to deliver one. Mindgut makes a smaller promise: it keeps what you played, so whichever engine comes next picks up the tune where you left it. Mir is what you hear when you, a model and the record play together.</p>
+    <p class="readout">chords only · predictor, scope and sound computed in this page · no network · written against What Mir Is (2026-09-22) · keys P play · M sound · 1–4 window · E engine · R recall · ↑↓ plates</p>
+    <img class="robot" src="{{IMG_ROBOT}}" alt="">
+  </div>
+</section>
+
+</main>
+
+<script>
+(()=>{
+"use strict";
+const $=id=>document.getElementById(id);
+const REDUCED=matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- chords: spelled notes, pitch classes (root first) ---------- */
+const CH={
+  Cmaj7:{n:["C","E","G","B"],p:[0,4,7,11]},  C:{n:["C","E","G","C"],p:[0,4,7,0]},
+  B7:{n:["B","D#","F#","A"],p:[11,3,6,9]},   E7:{n:["E","G#","B","D"],p:[4,8,11,2]},
+  A7:{n:["A","C#","E","G"],p:[9,1,4,7]},     D7:{n:["D","F#","A","C"],p:[2,6,9,0]},
+  G7:{n:["G","B","D","F"],p:[7,11,2,5]},     C7:{n:["C","E","G","Bb"],p:[0,4,7,10]},
+  F:{n:["F","A","C","F"],p:[5,9,0,5]},       Fm:{n:["F","Ab","C","F"],p:[5,8,0,5]},
+  Bb7:{n:["Bb","D","F","Ab"],p:[10,2,5,8]},  Am7:{n:["A","C","E","G"],p:[9,0,4,7]},
+  Dm7:{n:["D","F","A","C"],p:[2,5,9,0]}
+};
+const VOCAB=Object.keys(CH);
+const SHARP=["C","C#","D","D#","E","F","F#","G","G#","A","Bb","B"];
+
+/* ---------- the corpus: the song (two passes) + five common progressions ---------- */
+const SONG=["Cmaj7","B7","E7","A7","D7","G7","C","A7","D7","G7"];
+const CORPUS=[
+  [...SONG,...SONG,"Cmaj7"],
+  ["C","E7","A7","D7","G7","C"],      // ragtime
+  ["C","Am7","Dm7","G7","C"],          // turnaround
+  ["C","A7","Dm7","G7","C"],           // secondary dominant
+  ["C","C7","F","Fm","C"],             // plagal minor
+  ["Fm","Bb7","C"]                      // backdoor
+];
+const MAXK=4, COUNTS=new Map();
+for(const seq of CORPUS) for(let i=1;i<seq.length;i++) for(let k=0;k<=MAXK&&k<=i;k++){
+  const key=seq.slice(i-k,i).join(" "); if(!COUNTS.has(key)) COUNTS.set(key,new Map());
+  const m=COUNTS.get(key); m.set(seq[i],(m.get(seq[i])||0)+1);
+}
+// odds for the next chord from the last k chords; backs off to shorter contexts when unseen
+function odds(hist,k){
+  for(let n=Math.min(k,hist.length);n>=0;n--){
+    const ctx=hist.slice(hist.length-n), m=COUNTS.get(ctx.join(" "));
+    if(m){ let tot=0; m.forEach(v=>tot+=v);
+      const items=[...m].map(([c,v])=>({c,v,p:v/tot})).sort((a,b)=>b.v-a.v||VOCAB.indexOf(a.c)-VOCAB.indexOf(b.c));
+      return {n,ctx,items}; }
+  }
+}
+const ALPHA=.03; // every chord in the vocabulary keeps a sliver of probability, as every token does
+function smooth(items){ const tot=items.reduce((a,b)=>a+b.v,0), m=new Map(items.map(i=>[i.c,i.v]));
+  return VOCAB.map(c=>({c,v:m.get(c)||0,p:((m.get(c)||0)+ALPHA)/(tot+ALPHA*VOCAB.length)})).sort((a,b)=>b.p-a.p||VOCAB.indexOf(a.c)-VOCAB.indexOf(b.c)); }
+function temper(items,T){
+  items=smooth(items);
+  if(T<0.02) return items.map((it,i)=>({...it,q:i===0?1:0}));
+  const w=items.map(it=>Math.pow(it.p,1/T)), s=w.reduce((a,b)=>a+b,0);
+  return items.map((it,i)=>({...it,q:w[i]/s}));
+}
+function sample(items){ let r=Math.random(),a=0; for(const it of items){a+=it.q; if(r<=a) return it;} return items[items.length-1]; }
+function tritone(c){ const p=CH[c].p; for(let i=0;i<4;i++)for(let j=0;j<4;j++){ if(((p[j]-p[i])+12)%12===6) return [CH[c].n[i],CH[c].n[j]]; } return null; }
+
+/* ---------- voice leading: four voices, least total movement ---------- */
+const PERMS=[];(function g(a,r){ if(!r.length){PERMS.push(a);return} r.forEach((x,i)=>g([...a,x],r.filter((_,j)=>j!==i))); })([],[0,1,2,3]);
+function lead(prev,pcs){
+  let best=prev,bc=1e9;
+  for(const pm of PERMS){ let cost=0; const out=[];
+    for(let i=0;i<4;i++){ const pc=pcs[pm[i]]; let m=prev[i]+(((pc-prev[i])%12)+12)%12; if(m-prev[i]>6) m-=12;
+      while(m<45) m+=12; while(m>72) m-=12; out.push(m); cost+=Math.abs(m-prev[i]); }
+    const s=[...out].sort((a,b)=>a-b); for(let i=1;i<4;i++){ if(s[i]===s[i-1]) cost+=4; }
+    if(((s[0]%12)+12)%12!==pcs[0]) cost+=2;   // keep the root in the bass when it costs little
+    if(cost<bc){bc=cost;best=out;} }
+  return best;
+}
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+
+/* ---------- engines: same intervals, different timbre (harmonic amplitudes) ---------- */
+const ENGINES=[
+  {id:"sine",h:[1]},
+  {id:"triangle",h:[1,0,1/9,0,1/25,0,1/49]},
+  {id:"reed",h:[1,.5,.33,.25,.2,.16,.14,.12]},
+  {id:"glass",h:[1,0,0,.4,0,0,0,.2]},
+  {id:"hollow",h:[1,0,.33,0,.2,0,.14]}
+];
+
+/* ---------- state ---------- */
+const S={playing:false,sound:true,win:4,temp:0,eng:0,hist:["Cmaj7"],tChord:0,dur:1.6,last:null,recallOn:false,recallFlash:0,scene:0,offChart:false,matched:null};
+let target=[48,52,55,59], disp=target.slice();
+
+let prevV=target.slice();
+const song={pos:0,lost:false,miss:null,passes:0,total:1};
+
+/* ---------- audio: four persistent voices that glide (voice leading is audible) ---------- */
+let AC=null,OSC=[],VCA=null,MASTER=null;
+function waveFor(e){const h=ENGINES[e].h,re=new Float32Array(h.length+1),im=new Float32Array(h.length+1);h.forEach((a,i)=>im[i+1]=a);return AC.createPeriodicWave(re,im)}
+function audioInit(){
+  if(AC) return true; const C=window.AudioContext||window.webkitAudioContext; if(!C) return false;
+  AC=new C(); MASTER=AC.createGain(); MASTER.gain.value=S.sound?.85:0;
+  const lp=AC.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=2600; lp.Q.value=.5;
+  const comp=AC.createDynamicsCompressor(); comp.threshold.value=-20; comp.ratio.value=3;
+  VCA=AC.createGain(); VCA.gain.value=0; VCA.connect(lp); lp.connect(comp); comp.connect(MASTER); MASTER.connect(AC.destination);
+  const w=waveFor(S.eng);
+  OSC=target.map(m=>{const o=AC.createOscillator();o.setPeriodicWave(w);o.frequency.value=mtof(m);const g=AC.createGain();g.gain.value=.24;o.connect(g);g.connect(VCA);o.start();return o});
+  return true;
+}
+function sound(t0){ // four pulses per chord: bum bum bum bum
+  if(!AC) return;
+  OSC.forEach((o,i)=>{o.frequency.cancelScheduledValues(t0);o.frequency.setTargetAtTime(mtof(target[i]),t0,.045)});
+  for(let b=0;b<4;b++){const t=t0+b*S.dur/4;VCA.gain.setTargetAtTime(b?.2:.3,t,.006);VCA.gain.setTargetAtTime(.03,t+.035,.11)}
+}
+function hush(){ if(!AC) return; const t=AC.currentTime; VCA.gain.cancelScheduledValues(t); VCA.gain.setTargetAtTime(0,t,.05); }
+
+/* ---------- one step: predict, voice-lead, keep ---------- */
+function step(){
+  const w=odds(S.hist,S.win), unsure=w.items.length>1;
+  const recall=S.recallOn&&unsure&&S.win<MAXK, k=recall?MAXK:S.win;
+  const o=recall?odds(S.hist,k):w, items=temper(o.items,S.temp/100);
+  const pick=S.temp<2?items[0]:sample(items);
+  const from=S.hist[S.hist.length-1];
+  S.last={k,n:o.n,ctx:o.ctx,items,pick:pick.c,top:items[0].c,recall,from};
+  if(recall) S.recallFlash=performance.now();
+  S.hist.push(pick.c); song.total++; if(S.hist.length>512) S.hist.splice(0,S.hist.length-512);
+  prevV=target.slice(); target=lead(target,CH[pick.c].p);
+  const exp=SONG[(song.pos+1)%SONG.length];
+  if(song.lost){ if(pick.c==="Cmaj7"){song.lost=false;song.pos=0;song.passes++;} }
+  else if(pick.c===exp){ song.pos=(song.pos+1)%SONG.length; if(song.pos===0) song.passes++; }
+  else { song.lost=true; song.miss={exp,got:pick.c}; }
+  S.tChord=performance.now();
+  if(AC&&S.playing) sound(AC.currentTime+.02);
+  readouts();
+}
+
+/* ---------- readouts: each plate says what the instrument just did ---------- */
+const NM=m=>SHARP[((m%12)+12)%12];
+function readouts(){
+  const L=S.last, cur=S.hist[S.hist.length-1], idle=!L;
+  const hint="press Play (P)";
+  // 01 pull
+  const tt=tritone(cur);
+  let mv=""; if(L){ mv=target.map((m,i)=>{const d=m-prevV[i];return d===0?"0":(d>0?"▲":"▼")+Math.abs(d)}).join(" "); }
+  $("pull-out").textContent=idle?hint:`${L.from} → ${cur} · voices move ${mv} · ${tt?`${cur} carries the tritone ${tt[0]}–${tt[1]}: it still leans`:`${cur} has no tritone: at rest`}`;
+  // 03 window
+  $("win-out").textContent=idle?hint:(song.lost?`window ${S.win} · lost its place: played ${song.miss.got} where the song returns to ${song.miss.exp}. Circling.`:`window ${S.win} · on the chart · chord ${song.pos+1} of ${SONG.length} · passes ${song.passes}`);
+  // 04 temperature
+  if(idle) $("temp-out").textContent=hint;
+  else { const p=L.items.find(i=>i.c===L.pick); $("temp-out").textContent=`temp ${(S.temp/100).toFixed(2)} · played ${L.pick} (odds ${p.p.toFixed(2)}) · ${L.pick===L.top?"the likeliest":`not the likeliest: ${L.top} was`}`; }
+  // 05 engine
+  const b=Math.min(...target); const iv=target.map(m=>m-b).sort((x,y)=>x-y).join(" ");
+  $("eng-out").textContent=`engine ${ENGINES[S.eng].id} · ${cur} · intervals above the bass ${iv} semitones · unchanged by any swap`;
+  // 06 record
+  $("rec-out").textContent=idle?hint:`record ${song.total} chords kept · window sees ${S.win} · recall ${S.recallOn?"on":"off"}${L.recall?` · window unsure after ${L.from}: reached ${MAXK} back into the record → ${L.pick}`:""}${song.lost&&!S.recallOn?" · lost: turn Recall on (R)":""}`;
+}
+
+/* ---------- the scope: x = Σ voices · sin, y = Σ voices · cos — a chord drawn as light ---------- */
+const cv=$("scope"), g=cv.getContext("2d",{alpha:false});
+let W=0,H=0,DPR=1,LY=null;
+function layout(){
+  W=innerWidth;H=innerHeight;DPR=Math.min(2,devicePixelRatio||1);
+  cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);
+  const mob=W<760;
+  LY={mob,cx:mob?W*.5:W*.615,cy:mob?H*.28:H*.43,r:mob?Math.min(W*.34,H*.145):Math.min(W*.165,H*.28),
+      tapeY:mob?H*.53:H*.835,tapeX0:mob?20:W*.45,tapeX1:mob?W-20:W-Math.max(24,W*.045)};
+  LY.sx=LY.cx+LY.r*1.08+28; LY.sw=Math.max(0,W-Math.max(24,W*.045)-LY.sx);
+}
+addEventListener("resize",layout);layout();
+let phase=0,lastT=performance.now(),idleNudge=0;
+function scopePoints(){
+  const h=ENGINES[S.eng].h, base=Math.min(...disp), fb=mtof(base), N=LY.mob?1200:2000, span=4/fb;
+  const pts=new Float32Array(N*2); let mx=0;
+  for(let j=0;j<N;j++){ const t=j/N*span; let x=0,y=0;
+    for(let i=0;i<4;i++){ const w=2*Math.PI*mtof(disp[i])*t+phase*(1+i*.07);
+      for(let k=0;k<h.length;k++){ if(!h[k]) continue; x+=h[k]*Math.sin((k+1)*w); y+=h[k]*Math.cos((k+1)*w*1.0005+i*.6); } }
+    pts[2*j]=x;pts[2*j+1]=y; mx=Math.max(mx,Math.abs(x),Math.abs(y)); }
+  return {pts,mx};
+}
+function lab(t,x,y,o={}){g.font=`${o.w||500} ${o.s||10.5}px "JetBrains Mono",monospace`;g.fillStyle=o.c||"rgba(232,236,242,.55)";g.textAlign=o.a||"left";g.textBaseline=o.b||"alphabetic";
+  if(o.ls){g.letterSpacing=o.ls}else{g.letterSpacing="0px"} g.fillText(t,x,y)}
+const SC=()=>document.querySelectorAll(".plate")[S.scene].dataset.scene;
+function frame(now){
+  const dt=Math.min(.05,(now-lastT)/1000); lastT=now;
+  if(!REDUCED||S.playing) phase+=dt*(S.playing?.9:.25);
+  for(let i=0;i<4;i++) disp[i]+= (target[i]-disp[i])*(1-Math.exp(-dt*9));
+  if(S.playing && now-S.tChord>=S.dur*1000) step();
+  g.setTransform(DPR,0,0,DPR,0,0); g.fillStyle="#0C0D11"; g.fillRect(0,0,W,H);
+  const sc=SC(), {cx,cy,r}=LY;
+  // graticule
+  g.strokeStyle="rgba(232,236,242,.07)";g.lineWidth=1;
+  for(let i=-4;i<=4;i++){g.beginPath();g.moveTo(cx+i*r/4,cy-r*1.08);g.lineTo(cx+i*r/4,cy+r*1.08);g.stroke();g.beginPath();g.moveTo(cx-r*1.08,cy+i*r/4);g.lineTo(cx+r*1.08,cy+i*r/4);g.stroke()}
+  g.strokeStyle="rgba(232,236,242,.16)";g.beginPath();g.moveTo(cx-r*1.08,cy);g.lineTo(cx+r*1.08,cy);g.moveTo(cx,cy-r*1.08);g.lineTo(cx,cy+r*1.08);g.stroke();
+  // the trace: one bright pass + a wide faint pass (phosphor), additive
+  const beat=S.playing?Math.max(0,1-((now-S.tChord)%(S.dur*250))/(S.dur*250)):0;
+  const {pts,mx}=scopePoints(), k=r/(mx||1);
+  const recallGlow=S.recallFlash&&now-S.recallFlash<1400?1-(now-S.recallFlash)/1400:0;
+  g.globalCompositeOperation="lighter"; g.lineJoin="round";
+  for(const [lw,a] of [[5,.05+.05*beat],[1.25,.62+.3*beat]]){
+    g.strokeStyle=`rgba(255,177,61,${a})`; g.lineWidth=lw; g.beginPath();
+    for(let j=0;j<pts.length;j+=2){const X=cx+pts[j]*k,Y=cy-pts[j+1]*k; j?g.lineTo(X,Y):g.moveTo(X,Y)} g.stroke(); }
+  g.globalCompositeOperation="source-over";
+  // chord name + notes (the trace is the chord; the label is the chart)
+  const cur=S.hist[S.hist.length-1];
+  lab(cur,cx-r*1.08,cy-r*1.08-14,{s:LY.mob?18:22,w:500,c:"#E8ECF2"});
+  lab(CH[cur].n.join(" · "),cx+r*1.08,cy-r*1.08-14,{a:"right",c:"rgba(232,236,242,.5)"});
+  const tt=tritone(cur); lab(tt?`TRITONE ${tt[0]}–${tt[1]} · LEANS`:"NO TRITONE · AT REST",cx-r*1.08,cy+r*1.08+22,{ls:"1.2px",c:tt?"rgba(255,177,61,.85)":"rgba(232,236,242,.5)"});
+  lab(`ENGINE ${ENGINES[S.eng].id.toUpperCase()}`,cx+r*1.08,cy+r*1.08+22,{a:"right",ls:"1.2px"});
+  if(sc==="pull") voices();
+  if(sc==="engine") spectrum();
+  if(sc==="predict"||sc==="temp") bars(sc==="temp");
+  if(["window","record","temp","predict"].includes(sc)) tape(sc==="record",recallGlow);
+  requestAnimationFrame(frame);
+}
+
+/* ---------- side panels (only where they are the claim) ---------- */
+function side(){ // right of the scope on desktop, below the tape on phone
+  if(!LY.mob && LY.sw>=150) return {x:LY.sx,y:LY.cy-LY.r,w:Math.min(LY.sw,230)};
+  return null; // phone: the side panels give way to the text
+}
+function voices(){ // four voices on a pitch ladder; lines show how far each moved
+  const P=side(); if(!P) return; const top=P.y+18, h=LY.mob?96:LY.r*1.6, lo=45, hi=74, Y=m=>top+h-(m-lo)/(hi-lo)*h;
+  lab("VOICE LEADING",P.x,P.y,{ls:"1.2px"});
+  g.strokeStyle="rgba(232,236,242,.12)";g.lineWidth=1;g.beginPath();g.moveTo(P.x+P.w*.25,top);g.lineTo(P.x+P.w*.25,top+h);g.moveTo(P.x+P.w*.75,top);g.lineTo(P.x+P.w*.75,top+h);g.stroke();
+  const f=S.playing?Math.min(1,(performance.now()-S.tChord)/360):1;
+  for(let i=0;i<4;i++){ const a=prevV[i],b=target[i], x0=P.x+P.w*.25,x1=P.x+P.w*.75;
+    g.strokeStyle=a===b?"rgba(232,236,242,.35)":"rgba(255,177,61,.8)";g.lineWidth=1.4;
+    g.beginPath();g.moveTo(x0,Y(a));g.lineTo(x0+(x1-x0)*f,Y(a)+(Y(b)-Y(a))*f);g.stroke();
+    g.fillStyle="rgba(232,236,242,.55)";g.beginPath();g.arc(x0,Y(a),2.5,0,7);g.fill();
+    g.fillStyle="#E8ECF2";g.beginPath();g.arc(x1,Y(b),3,0,7);g.fill();
+    lab(NM(a),x0-8,Y(a)+3.5,{a:"right",s:10});lab(NM(b),x1+8,Y(b)+3.5,{s:10,c:"#E8ECF2"}); }
+  const L=S.last; lab(L?`${L.from} → ${S.hist[S.hist.length-1]}`:"press Play",P.x,top+h+20,{c:"rgba(232,236,242,.5)"});
+}
+function spectrum(){ // the engine's harmonics; the chord's intervals don't change with it
+  const P=side(); if(!P) return; const h=LY.mob?54:76, top=P.y+18, hs=ENGINES[S.eng].h, bw=P.w/10;
+  lab("ENGINE · HARMONICS",P.x,P.y,{ls:"1.2px"});
+  for(let k=0;k<8;k++){ const a=hs[k]||0; g.fillStyle=a?"rgba(232,236,242,.8)":"rgba(232,236,242,.1)"; g.fillRect(P.x+k*bw,top+h-(a?Math.max(2,a*h):1),bw*.55,a?Math.max(2,a*h):1); lab(String(k+1),P.x+k*bw,top+h+14,{s:9,c:"rgba(232,236,242,.4)"}); }
+  const b=Math.min(...target), iv=target.map(m=>m-b).sort((x,y)=>x-y);
+  lab("CHORD · INTERVALS",P.x,top+h+44,{ls:"1.2px"});
+  iv.forEach((d,i)=>{ const x=P.x+d/24*P.w; g.strokeStyle="rgba(255,177,61,.85)";g.lineWidth=1.5;g.beginPath();g.moveTo(x,top+h+56);g.lineTo(x,top+h+76);g.stroke(); lab(String(d),x,top+h+90,{s:9,a:"center",c:"rgba(232,236,242,.6)"}); });
+}
+function bars(showT){ // the predictor's odds for the next chord, from the current window
+  const P=side(); if(!P) return; const o=odds(S.hist,S.win), items=temper(o.items,S.temp/100).slice(0,6), rowH=LY.mob?17:21;
+  lab(`NEXT CHORD · FROM LAST ${o.n}`,P.x,P.y,{ls:"1.2px"});
+  lab(o.ctx.length?o.ctx.join(" "):"(no context)",P.x,P.y+16,{c:"rgba(232,236,242,.5)",s:10});
+  items.forEach((it,i)=>{ const y=P.y+34+i*rowH, w=P.w-64, v=showT?it.q:it.p;
+    g.fillStyle="rgba(232,236,242,.1)";g.fillRect(P.x+44,y,w,rowH*.5);
+    g.fillStyle=i===0?"rgba(255,177,61,.85)":"rgba(232,236,242,.7)";g.fillRect(P.x+44,y,w*v,rowH*.5);
+    lab(it.c,P.x,y+rowH*.45,{s:10.5,c:i===0?"#E8ECF2":"rgba(232,236,242,.7)"});
+    lab(v.toFixed(2),P.x+P.w,y+rowH*.45,{s:10,a:"right",c:"rgba(232,236,242,.55)"}); });
+  if(showT) lab(`TEMP ${(S.temp/100).toFixed(2)} ${S.temp<2?"· ALWAYS THE TOP":"· SAMPLING"}`,P.x,P.y+40+items.length*rowH,{ls:"1.2px",c:"rgba(255,177,61,.85)"});
+}
+function tape(showAll,glow){ // the record: every chord kept; the window bracket shows what the model sees
+  const {tapeX0:x0,tapeX1:x1,tapeY:y}=LY, cw=LY.mob?34:44, n=Math.max(1,Math.floor((x1-x0)/cw)), H0=S.hist, vis=H0.slice(-n);
+  lab(`THE RECORD · ${song.total} KEPT`,x0,y-28,{ls:"1.2px"});
+  vis.forEach((c,i)=>{ const x=x1-(vis.length-i)*cw, inWin=i>=vis.length-S.win, isLast=i===vis.length-1;
+    g.strokeStyle=inWin?"rgba(232,236,242,.55)":"rgba(232,236,242,.14)";g.lineWidth=1;g.strokeRect(x+.5,y-14.5,cw-4,22);
+    if(glow&&i>=vis.length-1-MAXK&&!isLast){g.fillStyle=`rgba(255,177,61,${.28*glow})`;g.fillRect(x+1,y-14,cw-5,21)}
+    lab(c.replace("maj7","M7"),x+(cw-4)/2,y+1,{s:LY.mob?9:10,a:"center",b:"middle",c:isLast?"#FFB13D":inWin?"#E8ECF2":"rgba(232,236,242,.38)"}); });
+  const wx=x1-Math.min(S.win,vis.length)*cw;
+  g.strokeStyle="rgba(255,177,61,.8)";g.lineWidth=1.5;g.beginPath();g.moveTo(wx,y+16);g.lineTo(wx,y+20);g.lineTo(x1-4,y+20);g.lineTo(x1-4,y+16);g.stroke();
+  lab(`WINDOW ${S.win}`,x1-4,y+34,{a:"right",ls:"1.2px",c:"rgba(255,177,61,.85)"});
+  if(showAll&&!LY.mob) lab("OUTSIDE THE WINDOW · KEPT, NOT IMPOSED",x0,y+34,{ls:"1.2px",c:"rgba(232,236,242,.38)"});
+}
+
+/* ---------- controls ---------- */
+function setPlay(on){
+  if(on&&!AC) audioInit();
+  if(on&&AC&&AC.state==="suspended") AC.resume();
+  S.playing=on; $("play").setAttribute("aria-pressed",String(on)); $("play-l").textContent=on?"Pause":"Play";
+  if(on){ S.tChord=performance.now()-S.dur*1000; } else hush();
+}
+function setSound(on){ S.sound=on; $("snd").setAttribute("aria-pressed",String(on)); if(MASTER) MASTER.gain.setTargetAtTime(on?.85:0,AC.currentTime,.05); }
+function setWin(v){ S.win=v; $("win").value=v; $("win-v").textContent=v; readouts(); }
+function setTemp(v){ S.temp=v; $("temp").value=v; $("temp-v").textContent=(v/100).toFixed(2); readouts(); }
+function swapEngine(){ S.eng=(S.eng+1)%ENGINES.length; $("eng-l").textContent=ENGINES[S.eng].id; if(AC){const w=waveFor(S.eng);OSC.forEach(o=>o.setPeriodicWave(w))} readouts(); }
+function recall(on){ S.recallOn=on===undefined?!S.recallOn:on; $("recall").setAttribute("aria-pressed",String(S.recallOn)); readouts(); }
+$("play").addEventListener("click",()=>setPlay(!S.playing));
+$("snd").addEventListener("click",()=>setSound(!S.sound));
+$("win").addEventListener("input",e=>setWin(+e.target.value));
+$("temp").addEventListener("input",e=>setTemp(+e.target.value));
+$("eng").addEventListener("click",swapEngine);
+$("recall").addEventListener("click",()=>recall());
+
+/* ---------- plates ---------- */
+const plates=[...document.querySelectorAll(".plate")], railA=[...document.querySelectorAll(".rail a")];
+const ENTER={ // each plate sets the instrument to show its own claim on arrival; every control stays live
+  pull:()=>{ setTemp(0); },
+  predict:()=>{ setTemp(0); },
+  window:()=>{ setTemp(0); recall(false); setWin(4); },
+  temp:()=>{ setWin(4); recall(false); if(S.temp===0) setTemp(90); },
+  engine:()=>{ setTemp(0); recall(false); setWin(4); },
+  record:()=>{ setTemp(0); recall(false); setWin(1); },
+  close:()=>{ setTemp(0); recall(false); setWin(4); }
+};
+function enter(i){
+  S.scene=i; plates.forEach((p,j)=>p.classList.toggle("is-active",j===i));
+  railA.forEach((a,j)=>a.setAttribute("aria-current",String(j===i)));
+  const f=ENTER[plates[i].dataset.scene]; if(f) f();
+}
+const io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting&&e.intersectionRatio>=.5){const i=plates.indexOf(e.target); if(i!==S.scene) enter(i);} }),{threshold:[.5]});
+plates.forEach(p=>io.observe(p));
+function go(i){ i=Math.max(0,Math.min(plates.length-1,i)); plates[i].scrollIntoView({behavior:REDUCED?"auto":"smooth",block:"start"}); }
+addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT") return;
+  if(e.target.tagName==="BUTTON"&&(e.key===" "||e.key==="Enter")) return;
+  const k=e.key;
+  if(k==="ArrowDown"||k==="PageDown"){e.preventDefault();go(S.scene+1)}
+  else if(k==="ArrowUp"||k==="PageUp"){e.preventDefault();go(S.scene-1)}
+  else if(k==="p"||k==="P"||k===" "){e.preventDefault();setPlay(!S.playing)}
+  else if(k==="m"||k==="M") setSound(!S.sound);
+  else if(k==="e"||k==="E") swapEngine();
+  else if(k==="r"||k==="R") recall();
+  else if(["1","2","3","4"].includes(k)) setWin(+k);
+});
+enter(0); readouts();
+// a still that is already a chord: Cmaj7 drawn before anything plays
+requestAnimationFrame(frame);
+window.__sandman={S,song,step,odds,setWin,setTemp,swapEngine,recall,enter};
+})();
+</script>
+</body>
+</html>

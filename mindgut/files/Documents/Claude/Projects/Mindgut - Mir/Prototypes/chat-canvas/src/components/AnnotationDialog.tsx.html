@@ -1,0 +1,93 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AnnotationDialog.tsx</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>AnnotationDialog.tsx</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/chat-canvas/src/components/AnnotationDialog.tsx</span><span>0.00 MB · sha256 ebd2e3fd28b227e0…</span><a download="AnnotationDialog.tsx" id="dl" href="#">Download the original</a></header><main><pre>import { useState } from &#x27;react&#x27;;
+import { X } from &#x27;lucide-react&#x27;;
+
+interface AnnotationDialogProps {
+  messageId: string;
+  messagePreview: string;
+  onSave: (text: string, color: &#x27;yellow&#x27; | &#x27;blue&#x27; | &#x27;green&#x27; | &#x27;red&#x27;) =&gt; void;
+  onClose: () =&gt; void;
+}
+
+const colors: { value: &#x27;yellow&#x27; | &#x27;blue&#x27; | &#x27;green&#x27; | &#x27;red&#x27;; label: string; cls: string }[] = [
+  { value: &#x27;yellow&#x27;, label: &#x27;Note&#x27;, cls: &#x27;bg-signal&#x27; },
+  { value: &#x27;blue&#x27;, label: &#x27;Insight&#x27;, cls: &#x27;bg-ice&#x27; },
+  { value: &#x27;green&#x27;, label: &#x27;Agree&#x27;, cls: &#x27;bg-laminar&#x27; },
+  { value: &#x27;red&#x27;, label: &#x27;Disagree&#x27;, cls: &#x27;bg-heat&#x27; },
+];
+
+const AnnotationDialog = ({ messagePreview, onSave, onClose }: AnnotationDialogProps) =&gt; {
+  const [text, setText] = useState(&#x27;&#x27;);
+  const [color, setColor] = useState&lt;&#x27;yellow&#x27; | &#x27;blue&#x27; | &#x27;green&#x27; | &#x27;red&#x27;&gt;(&#x27;yellow&#x27;);
+
+  return (
+    &lt;div className=&quot;fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-sm&quot; onClick={onClose}&gt;
+      &lt;div className=&quot;bg-paper w-full max-w-md mx-4 rounded-sm border border-line shadow-2xl&quot; onClick={e =&gt; e.stopPropagation()}&gt;
+        {/* Header */}
+        &lt;div className=&quot;flex items-center justify-between p-4 border-b border-line&quot;&gt;
+          &lt;span className=&quot;font-mono-editorial text-[10px] tracking-[0.22em] uppercase text-mute-color&quot;&gt;
+            Add annotation
+          &lt;/span&gt;
+          &lt;button onClick={onClose} className=&quot;text-mute-color-2 hover:text-ink transition-colors&quot;&gt;
+            &lt;X className=&quot;w-4 h-4&quot; /&gt;
+          &lt;/button&gt;
+        &lt;/div&gt;
+
+        {/* Message preview */}
+        &lt;div className=&quot;px-4 pt-4&quot;&gt;
+          &lt;p className=&quot;text-sm text-mute-color leading-relaxed line-clamp-2 italic&quot;&gt;
+            &quot;{messagePreview}&quot;
+          &lt;/p&gt;
+        &lt;/div&gt;
+
+        {/* Color selector */}
+        &lt;div className=&quot;flex gap-2 px-4 pt-4&quot;&gt;
+          {colors.map(c =&gt; (
+            &lt;button
+              key={c.value}
+              onClick={() =&gt; setColor(c.value)}
+              className={`
+                flex items-center gap-1.5 px-3 py-1.5 rounded-sm border transition-all
+                font-mono-editorial text-[9px] tracking-[0.18em] uppercase
+                ${color === c.value ? &#x27;border-ink text-ink&#x27; : &#x27;border-line text-mute-color-2 hover:border-mute-color&#x27;}
+              `}
+            &gt;
+              &lt;span className={`w-2 h-2 rounded-full ${c.cls}`} /&gt;
+              {c.label}
+            &lt;/button&gt;
+          ))}
+        &lt;/div&gt;
+
+        {/* Text input */}
+        &lt;div className=&quot;p-4&quot;&gt;
+          &lt;textarea
+            value={text}
+            onChange={(e) =&gt; setText(e.target.value)}
+            placeholder=&quot;Your annotation...&quot;
+            className=&quot;w-full h-24 bg-paper-2 border border-line rounded-sm p-3 text-sm text-ink leading-relaxed placeholder:text-mute-color-2 focus:outline-none focus:border-mute-color resize-none&quot;
+            autoFocus
+          /&gt;
+        &lt;/div&gt;
+
+        {/* Actions */}
+        &lt;div className=&quot;flex justify-end gap-2 px-4 pb-4&quot;&gt;
+          &lt;button
+            onClick={onClose}
+            className=&quot;px-4 py-2 text-mute-color font-mono-editorial text-[10px] tracking-[0.14em] uppercase hover:text-ink transition-colors&quot;
+          &gt;
+            Cancel
+          &lt;/button&gt;
+          &lt;button
+            onClick={() =&gt; { if (text.trim()) onSave(text.trim(), color); }}
+            disabled={!text.trim()}
+            className=&quot;px-4 py-2 bg-ink text-paper rounded-sm font-mono-editorial text-[10px] tracking-[0.14em] uppercase disabled:opacity-30 hover:bg-ink-2 transition-colors&quot;
+          &gt;
+            Save
+          &lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default AnnotationDialog;
+</pre></main><script>var b=atob("aW1wb3J0IHsgdXNlU3RhdGUgfSBmcm9tICdyZWFjdCc7CmltcG9ydCB7IFggfSBmcm9tICdsdWNpZGUtcmVhY3QnOwoKaW50ZXJmYWNlIEFubm90YXRpb25EaWFsb2dQcm9wcyB7CiAgbWVzc2FnZUlkOiBzdHJpbmc7CiAgbWVzc2FnZVByZXZpZXc6IHN0cmluZzsKICBvblNhdmU6ICh0ZXh0OiBzdHJpbmcsIGNvbG9yOiAneWVsbG93JyB8ICdibHVlJyB8ICdncmVlbicgfCAncmVkJykgPT4gdm9pZDsKICBvbkNsb3NlOiAoKSA9PiB2b2lkOwp9Cgpjb25zdCBjb2xvcnM6IHsgdmFsdWU6ICd5ZWxsb3cnIHwgJ2JsdWUnIHwgJ2dyZWVuJyB8ICdyZWQnOyBsYWJlbDogc3RyaW5nOyBjbHM6IHN0cmluZyB9W10gPSBbCiAgeyB2YWx1ZTogJ3llbGxvdycsIGxhYmVsOiAnTm90ZScsIGNsczogJ2JnLXNpZ25hbCcgfSwKICB7IHZhbHVlOiAnYmx1ZScsIGxhYmVsOiAnSW5zaWdodCcsIGNsczogJ2JnLWljZScgfSwKICB7IHZhbHVlOiAnZ3JlZW4nLCBsYWJlbDogJ0FncmVlJywgY2xzOiAnYmctbGFtaW5hcicgfSwKICB7IHZhbHVlOiAncmVkJywgbGFiZWw6ICdEaXNhZ3JlZScsIGNsczogJ2JnLWhlYXQnIH0sCl07Cgpjb25zdCBBbm5vdGF0aW9uRGlhbG9nID0gKHsgbWVzc2FnZVByZXZpZXcsIG9uU2F2ZSwgb25DbG9zZSB9OiBBbm5vdGF0aW9uRGlhbG9nUHJvcHMpID0+IHsKICBjb25zdCBbdGV4dCwgc2V0VGV4dF0gPSB1c2VTdGF0ZSgnJyk7CiAgY29uc3QgW2NvbG9yLCBzZXRDb2xvcl0gPSB1c2VTdGF0ZTwneWVsbG93JyB8ICdibHVlJyB8ICdncmVlbicgfCAncmVkJz4oJ3llbGxvdycpOwoKICByZXR1cm4gKAogICAgPGRpdiBjbGFzc05hbWU9ImZpeGVkIGluc2V0LTAgei01MCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBiZy1pbmsvNDAgYmFja2Ryb3AtYmx1ci1zbSIgb25DbGljaz17b25DbG9zZX0+CiAgICAgIDxkaXYgY2xhc3NOYW1lPSJiZy1wYXBlciB3LWZ1bGwgbWF4LXctbWQgbXgtNCByb3VuZGVkLXNtIGJvcmRlciBib3JkZXItbGluZSBzaGFkb3ctMnhsIiBvbkNsaWNrPXtlID0+IGUuc3RvcFByb3BhZ2F0aW9uKCl9PgogICAgICAgIHsvKiBIZWFkZXIgKi99CiAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiBwLTQgYm9yZGVyLWIgYm9yZGVyLWxpbmUiPgogICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJmb250LW1vbm8tZWRpdG9yaWFsIHRleHQtWzEwcHhdIHRyYWNraW5nLVswLjIyZW1dIHVwcGVyY2FzZSB0ZXh0LW11dGUtY29sb3IiPgogICAgICAgICAgICBBZGQgYW5ub3RhdGlvbgogICAgICAgICAgPC9zcGFuPgogICAgICAgICAgPGJ1dHRvbiBvbkNsaWNrPXtvbkNsb3NlfSBjbGFzc05hbWU9InRleHQtbXV0ZS1jb2xvci0yIGhvdmVyOnRleHQtaW5rIHRyYW5zaXRpb24tY29sb3JzIj4KICAgICAgICAgICAgPFggY2xhc3NOYW1lPSJ3LTQgaC00IiAvPgogICAgICAgICAgPC9idXR0b24+CiAgICAgICAgPC9kaXY+CgogICAgICAgIHsvKiBNZXNzYWdlIHByZXZpZXcgKi99CiAgICAgICAgPGRpdiBjbGFzc05hbWU9InB4LTQgcHQtNCI+CiAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtc20gdGV4dC1tdXRlLWNvbG9yIGxlYWRpbmctcmVsYXhlZCBsaW5lLWNsYW1wLTIgaXRhbGljIj4KICAgICAgICAgICAgInttZXNzYWdlUHJldmlld30iCiAgICAgICAgICA8L3A+CiAgICAgICAgPC9kaXY+CgogICAgICAgIHsvKiBDb2xvciBzZWxlY3RvciAqL30KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBnYXAtMiBweC00IHB0LTQiPgogICAgICAgICAge2NvbG9ycy5tYXAoYyA9PiAoCiAgICAgICAgICAgIDxidXR0b24KICAgICAgICAgICAgICBrZXk9e2MudmFsdWV9CiAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0Q29sb3IoYy52YWx1ZSl9CiAgICAgICAgICAgICAgY2xhc3NOYW1lPXtgCiAgICAgICAgICAgICAgICBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMS41IHB4LTMgcHktMS41IHJvdW5kZWQtc20gYm9yZGVyIHRyYW5zaXRpb24tYWxsCiAgICAgICAgICAgICAgICBmb250LW1vbm8tZWRpdG9yaWFsIHRleHQtWzlweF0gdHJhY2tpbmctWzAuMThlbV0gdXBwZXJjYXNlCiAgICAgICAgICAgICAgICAke2NvbG9yID09PSBjLnZhbHVlID8gJ2JvcmRlci1pbmsgdGV4dC1pbmsnIDogJ2JvcmRlci1saW5lIHRleHQtbXV0ZS1jb2xvci0yIGhvdmVyOmJvcmRlci1tdXRlLWNvbG9yJ30KICAgICAgICAgICAgICBgfQogICAgICAgICAgICA+CiAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPXtgdy0yIGgtMiByb3VuZGVkLWZ1bGwgJHtjLmNsc31gfSAvPgogICAgICAgICAgICAgIHtjLmxhYmVsfQogICAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgICkpfQogICAgICAgIDwvZGl2PgoKICAgICAgICB7LyogVGV4dCBpbnB1dCAqL30KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0icC00Ij4KICAgICAgICAgIDx0ZXh0YXJlYQogICAgICAgICAgICB2YWx1ZT17dGV4dH0KICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBzZXRUZXh0KGUudGFyZ2V0LnZhbHVlKX0KICAgICAgICAgICAgcGxhY2Vob2xkZXI9IllvdXIgYW5ub3RhdGlvbi4uLiIKICAgICAgICAgICAgY2xhc3NOYW1lPSJ3LWZ1bGwgaC0yNCBiZy1wYXBlci0yIGJvcmRlciBib3JkZXItbGluZSByb3VuZGVkLXNtIHAtMyB0ZXh0LXNtIHRleHQtaW5rIGxlYWRpbmctcmVsYXhlZCBwbGFjZWhvbGRlcjp0ZXh0LW11dGUtY29sb3ItMiBmb2N1czpvdXRsaW5lLW5vbmUgZm9jdXM6Ym9yZGVyLW11dGUtY29sb3IgcmVzaXplLW5vbmUiCiAgICAgICAgICAgIGF1dG9Gb2N1cwogICAgICAgICAgLz4KICAgICAgICA8L2Rpdj4KCiAgICAgICAgey8qIEFjdGlvbnMgKi99CiAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXgganVzdGlmeS1lbmQgZ2FwLTIgcHgtNCBwYi00Ij4KICAgICAgICAgIDxidXR0b24KICAgICAgICAgICAgb25DbGljaz17b25DbG9zZX0KICAgICAgICAgICAgY2xhc3NOYW1lPSJweC00IHB5LTIgdGV4dC1tdXRlLWNvbG9yIGZvbnQtbW9uby1lZGl0b3JpYWwgdGV4dC1bMTBweF0gdHJhY2tpbmctWzAuMTRlbV0gdXBwZXJjYXNlIGhvdmVyOnRleHQtaW5rIHRyYW5zaXRpb24tY29sb3JzIgogICAgICAgICAgPgogICAgICAgICAgICBDYW5jZWwKICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgICAgPGJ1dHRvbgogICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiB7IGlmICh0ZXh0LnRyaW0oKSkgb25TYXZlKHRleHQudHJpbSgpLCBjb2xvcik7IH19CiAgICAgICAgICAgIGRpc2FibGVkPXshdGV4dC50cmltKCl9CiAgICAgICAgICAgIGNsYXNzTmFtZT0icHgtNCBweS0yIGJnLWluayB0ZXh0LXBhcGVyIHJvdW5kZWQtc20gZm9udC1tb25vLWVkaXRvcmlhbCB0ZXh0LVsxMHB4XSB0cmFja2luZy1bMC4xNGVtXSB1cHBlcmNhc2UgZGlzYWJsZWQ6b3BhY2l0eS0zMCBob3ZlcjpiZy1pbmstMiB0cmFuc2l0aW9uLWNvbG9ycyIKICAgICAgICAgID4KICAgICAgICAgICAgU2F2ZQogICAgICAgICAgPC9idXR0b24+CiAgICAgICAgPC9kaXY+CiAgICAgIDwvZGl2PgogICAgPC9kaXY+CiAgKTsKfTsKCmV4cG9ydCBkZWZhdWx0IEFubm90YXRpb25EaWFsb2c7Cg=="),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

@@ -1,0 +1,39 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>scroll-area.tsx</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>scroll-area.tsx</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/chat-canvas/src/components/ui/scroll-area.tsx</span><span>0.00 MB · sha256 998181a10164aa6e…</span><a download="scroll-area.tsx" id="dl" href="#">Download the original</a></header><main><pre>import * as React from &quot;react&quot;;
+import * as ScrollAreaPrimitive from &quot;@radix-ui/react-scroll-area&quot;;
+
+import { cn } from &quot;@/lib/utils&quot;;
+
+const ScrollArea = React.forwardRef&lt;
+  React.ElementRef&lt;typeof ScrollAreaPrimitive.Root&gt;,
+  React.ComponentPropsWithoutRef&lt;typeof ScrollAreaPrimitive.Root&gt;
+&gt;(({ className, children, ...props }, ref) =&gt; (
+  &lt;ScrollAreaPrimitive.Root ref={ref} className={cn(&quot;relative overflow-hidden&quot;, className)} {...props}&gt;
+    &lt;ScrollAreaPrimitive.Viewport className=&quot;h-full w-full rounded-[inherit]&quot;&gt;{children}&lt;/ScrollAreaPrimitive.Viewport&gt;
+    &lt;ScrollBar /&gt;
+    &lt;ScrollAreaPrimitive.Corner /&gt;
+  &lt;/ScrollAreaPrimitive.Root&gt;
+));
+ScrollArea.displayName = ScrollAreaPrimitive.Root.displayName;
+
+const ScrollBar = React.forwardRef&lt;
+  React.ElementRef&lt;typeof ScrollAreaPrimitive.ScrollAreaScrollbar&gt;,
+  React.ComponentPropsWithoutRef&lt;typeof ScrollAreaPrimitive.ScrollAreaScrollbar&gt;
+&gt;(({ className, orientation = &quot;vertical&quot;, ...props }, ref) =&gt; (
+  &lt;ScrollAreaPrimitive.ScrollAreaScrollbar
+    ref={ref}
+    orientation={orientation}
+    className={cn(
+      &quot;flex touch-none select-none transition-colors&quot;,
+      orientation === &quot;vertical&quot; &amp;&amp; &quot;h-full w-2.5 border-l border-l-transparent p-[1px]&quot;,
+      orientation === &quot;horizontal&quot; &amp;&amp; &quot;h-2.5 flex-col border-t border-t-transparent p-[1px]&quot;,
+      className,
+    )}
+    {...props}
+  &gt;
+    &lt;ScrollAreaPrimitive.ScrollAreaThumb className=&quot;relative flex-1 rounded-full bg-border&quot; /&gt;
+  &lt;/ScrollAreaPrimitive.ScrollAreaScrollbar&gt;
+));
+ScrollBar.displayName = ScrollAreaPrimitive.ScrollAreaScrollbar.displayName;
+
+export { ScrollArea, ScrollBar };
+</pre></main><script>var b=atob("aW1wb3J0ICogYXMgUmVhY3QgZnJvbSAicmVhY3QiOwppbXBvcnQgKiBhcyBTY3JvbGxBcmVhUHJpbWl0aXZlIGZyb20gIkByYWRpeC11aS9yZWFjdC1zY3JvbGwtYXJlYSI7CgppbXBvcnQgeyBjbiB9IGZyb20gIkAvbGliL3V0aWxzIjsKCmNvbnN0IFNjcm9sbEFyZWEgPSBSZWFjdC5mb3J3YXJkUmVmPAogIFJlYWN0LkVsZW1lbnRSZWY8dHlwZW9mIFNjcm9sbEFyZWFQcmltaXRpdmUuUm9vdD4sCiAgUmVhY3QuQ29tcG9uZW50UHJvcHNXaXRob3V0UmVmPHR5cGVvZiBTY3JvbGxBcmVhUHJpbWl0aXZlLlJvb3Q+Cj4oKHsgY2xhc3NOYW1lLCBjaGlsZHJlbiwgLi4ucHJvcHMgfSwgcmVmKSA9PiAoCiAgPFNjcm9sbEFyZWFQcmltaXRpdmUuUm9vdCByZWY9e3JlZn0gY2xhc3NOYW1lPXtjbigicmVsYXRpdmUgb3ZlcmZsb3ctaGlkZGVuIiwgY2xhc3NOYW1lKX0gey4uLnByb3BzfT4KICAgIDxTY3JvbGxBcmVhUHJpbWl0aXZlLlZpZXdwb3J0IGNsYXNzTmFtZT0iaC1mdWxsIHctZnVsbCByb3VuZGVkLVtpbmhlcml0XSI+e2NoaWxkcmVufTwvU2Nyb2xsQXJlYVByaW1pdGl2ZS5WaWV3cG9ydD4KICAgIDxTY3JvbGxCYXIgLz4KICAgIDxTY3JvbGxBcmVhUHJpbWl0aXZlLkNvcm5lciAvPgogIDwvU2Nyb2xsQXJlYVByaW1pdGl2ZS5Sb290PgopKTsKU2Nyb2xsQXJlYS5kaXNwbGF5TmFtZSA9IFNjcm9sbEFyZWFQcmltaXRpdmUuUm9vdC5kaXNwbGF5TmFtZTsKCmNvbnN0IFNjcm9sbEJhciA9IFJlYWN0LmZvcndhcmRSZWY8CiAgUmVhY3QuRWxlbWVudFJlZjx0eXBlb2YgU2Nyb2xsQXJlYVByaW1pdGl2ZS5TY3JvbGxBcmVhU2Nyb2xsYmFyPiwKICBSZWFjdC5Db21wb25lbnRQcm9wc1dpdGhvdXRSZWY8dHlwZW9mIFNjcm9sbEFyZWFQcmltaXRpdmUuU2Nyb2xsQXJlYVNjcm9sbGJhcj4KPigoeyBjbGFzc05hbWUsIG9yaWVudGF0aW9uID0gInZlcnRpY2FsIiwgLi4ucHJvcHMgfSwgcmVmKSA9PiAoCiAgPFNjcm9sbEFyZWFQcmltaXRpdmUuU2Nyb2xsQXJlYVNjcm9sbGJhcgogICAgcmVmPXtyZWZ9CiAgICBvcmllbnRhdGlvbj17b3JpZW50YXRpb259CiAgICBjbGFzc05hbWU9e2NuKAogICAgICAiZmxleCB0b3VjaC1ub25lIHNlbGVjdC1ub25lIHRyYW5zaXRpb24tY29sb3JzIiwKICAgICAgb3JpZW50YXRpb24gPT09ICJ2ZXJ0aWNhbCIgJiYgImgtZnVsbCB3LTIuNSBib3JkZXItbCBib3JkZXItbC10cmFuc3BhcmVudCBwLVsxcHhdIiwKICAgICAgb3JpZW50YXRpb24gPT09ICJob3Jpem9udGFsIiAmJiAiaC0yLjUgZmxleC1jb2wgYm9yZGVyLXQgYm9yZGVyLXQtdHJhbnNwYXJlbnQgcC1bMXB4XSIsCiAgICAgIGNsYXNzTmFtZSwKICAgICl9CiAgICB7Li4ucHJvcHN9CiAgPgogICAgPFNjcm9sbEFyZWFQcmltaXRpdmUuU2Nyb2xsQXJlYVRodW1iIGNsYXNzTmFtZT0icmVsYXRpdmUgZmxleC0xIHJvdW5kZWQtZnVsbCBiZy1ib3JkZXIiIC8+CiAgPC9TY3JvbGxBcmVhUHJpbWl0aXZlLlNjcm9sbEFyZWFTY3JvbGxiYXI+CikpOwpTY3JvbGxCYXIuZGlzcGxheU5hbWUgPSBTY3JvbGxBcmVhUHJpbWl0aXZlLlNjcm9sbEFyZWFTY3JvbGxiYXIuZGlzcGxheU5hbWU7CgpleHBvcnQgeyBTY3JvbGxBcmVhLCBTY3JvbGxCYXIgfTsK"),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

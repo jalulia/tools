@@ -1,0 +1,73 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>table.tsx</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>table.tsx</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/chat-canvas/src/components/ui/table.tsx</span><span>0.00 MB · sha256 fab18d9eeb84781f…</span><a download="table.tsx" id="dl" href="#">Download the original</a></header><main><pre>import * as React from &quot;react&quot;;
+
+import { cn } from &quot;@/lib/utils&quot;;
+
+const Table = React.forwardRef&lt;HTMLTableElement, React.HTMLAttributes&lt;HTMLTableElement&gt;&gt;(
+  ({ className, ...props }, ref) =&gt; (
+    &lt;div className=&quot;relative w-full overflow-auto&quot;&gt;
+      &lt;table ref={ref} className={cn(&quot;w-full caption-bottom text-sm&quot;, className)} {...props} /&gt;
+    &lt;/div&gt;
+  ),
+);
+Table.displayName = &quot;Table&quot;;
+
+const TableHeader = React.forwardRef&lt;HTMLTableSectionElement, React.HTMLAttributes&lt;HTMLTableSectionElement&gt;&gt;(
+  ({ className, ...props }, ref) =&gt; &lt;thead ref={ref} className={cn(&quot;[&amp;_tr]:border-b&quot;, className)} {...props} /&gt;,
+);
+TableHeader.displayName = &quot;TableHeader&quot;;
+
+const TableBody = React.forwardRef&lt;HTMLTableSectionElement, React.HTMLAttributes&lt;HTMLTableSectionElement&gt;&gt;(
+  ({ className, ...props }, ref) =&gt; (
+    &lt;tbody ref={ref} className={cn(&quot;[&amp;_tr:last-child]:border-0&quot;, className)} {...props} /&gt;
+  ),
+);
+TableBody.displayName = &quot;TableBody&quot;;
+
+const TableFooter = React.forwardRef&lt;HTMLTableSectionElement, React.HTMLAttributes&lt;HTMLTableSectionElement&gt;&gt;(
+  ({ className, ...props }, ref) =&gt; (
+    &lt;tfoot ref={ref} className={cn(&quot;border-t bg-muted/50 font-medium [&amp;&gt;tr]:last:border-b-0&quot;, className)} {...props} /&gt;
+  ),
+);
+TableFooter.displayName = &quot;TableFooter&quot;;
+
+const TableRow = React.forwardRef&lt;HTMLTableRowElement, React.HTMLAttributes&lt;HTMLTableRowElement&gt;&gt;(
+  ({ className, ...props }, ref) =&gt; (
+    &lt;tr
+      ref={ref}
+      className={cn(&quot;border-b transition-colors data-[state=selected]:bg-muted hover:bg-muted/50&quot;, className)}
+      {...props}
+    /&gt;
+  ),
+);
+TableRow.displayName = &quot;TableRow&quot;;
+
+const TableHead = React.forwardRef&lt;HTMLTableCellElement, React.ThHTMLAttributes&lt;HTMLTableCellElement&gt;&gt;(
+  ({ className, ...props }, ref) =&gt; (
+    &lt;th
+      ref={ref}
+      className={cn(
+        &quot;h-12 px-4 text-left align-middle font-medium text-muted-foreground [&amp;:has([role=checkbox])]:pr-0&quot;,
+        className,
+      )}
+      {...props}
+    /&gt;
+  ),
+);
+TableHead.displayName = &quot;TableHead&quot;;
+
+const TableCell = React.forwardRef&lt;HTMLTableCellElement, React.TdHTMLAttributes&lt;HTMLTableCellElement&gt;&gt;(
+  ({ className, ...props }, ref) =&gt; (
+    &lt;td ref={ref} className={cn(&quot;p-4 align-middle [&amp;:has([role=checkbox])]:pr-0&quot;, className)} {...props} /&gt;
+  ),
+);
+TableCell.displayName = &quot;TableCell&quot;;
+
+const TableCaption = React.forwardRef&lt;HTMLTableCaptionElement, React.HTMLAttributes&lt;HTMLTableCaptionElement&gt;&gt;(
+  ({ className, ...props }, ref) =&gt; (
+    &lt;caption ref={ref} className={cn(&quot;mt-4 text-sm text-muted-foreground&quot;, className)} {...props} /&gt;
+  ),
+);
+TableCaption.displayName = &quot;TableCaption&quot;;
+
+export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption };
+</pre></main><script>var b=atob("aW1wb3J0ICogYXMgUmVhY3QgZnJvbSAicmVhY3QiOwoKaW1wb3J0IHsgY24gfSBmcm9tICJAL2xpYi91dGlscyI7Cgpjb25zdCBUYWJsZSA9IFJlYWN0LmZvcndhcmRSZWY8SFRNTFRhYmxlRWxlbWVudCwgUmVhY3QuSFRNTEF0dHJpYnV0ZXM8SFRNTFRhYmxlRWxlbWVudD4+KAogICh7IGNsYXNzTmFtZSwgLi4ucHJvcHMgfSwgcmVmKSA9PiAoCiAgICA8ZGl2IGNsYXNzTmFtZT0icmVsYXRpdmUgdy1mdWxsIG92ZXJmbG93LWF1dG8iPgogICAgICA8dGFibGUgcmVmPXtyZWZ9IGNsYXNzTmFtZT17Y24oInctZnVsbCBjYXB0aW9uLWJvdHRvbSB0ZXh0LXNtIiwgY2xhc3NOYW1lKX0gey4uLnByb3BzfSAvPgogICAgPC9kaXY+CiAgKSwKKTsKVGFibGUuZGlzcGxheU5hbWUgPSAiVGFibGUiOwoKY29uc3QgVGFibGVIZWFkZXIgPSBSZWFjdC5mb3J3YXJkUmVmPEhUTUxUYWJsZVNlY3Rpb25FbGVtZW50LCBSZWFjdC5IVE1MQXR0cmlidXRlczxIVE1MVGFibGVTZWN0aW9uRWxlbWVudD4+KAogICh7IGNsYXNzTmFtZSwgLi4ucHJvcHMgfSwgcmVmKSA9PiA8dGhlYWQgcmVmPXtyZWZ9IGNsYXNzTmFtZT17Y24oIlsmX3RyXTpib3JkZXItYiIsIGNsYXNzTmFtZSl9IHsuLi5wcm9wc30gLz4sCik7ClRhYmxlSGVhZGVyLmRpc3BsYXlOYW1lID0gIlRhYmxlSGVhZGVyIjsKCmNvbnN0IFRhYmxlQm9keSA9IFJlYWN0LmZvcndhcmRSZWY8SFRNTFRhYmxlU2VjdGlvbkVsZW1lbnQsIFJlYWN0LkhUTUxBdHRyaWJ1dGVzPEhUTUxUYWJsZVNlY3Rpb25FbGVtZW50Pj4oCiAgKHsgY2xhc3NOYW1lLCAuLi5wcm9wcyB9LCByZWYpID0+ICgKICAgIDx0Ym9keSByZWY9e3JlZn0gY2xhc3NOYW1lPXtjbigiWyZfdHI6bGFzdC1jaGlsZF06Ym9yZGVyLTAiLCBjbGFzc05hbWUpfSB7Li4ucHJvcHN9IC8+CiAgKSwKKTsKVGFibGVCb2R5LmRpc3BsYXlOYW1lID0gIlRhYmxlQm9keSI7Cgpjb25zdCBUYWJsZUZvb3RlciA9IFJlYWN0LmZvcndhcmRSZWY8SFRNTFRhYmxlU2VjdGlvbkVsZW1lbnQsIFJlYWN0LkhUTUxBdHRyaWJ1dGVzPEhUTUxUYWJsZVNlY3Rpb25FbGVtZW50Pj4oCiAgKHsgY2xhc3NOYW1lLCAuLi5wcm9wcyB9LCByZWYpID0+ICgKICAgIDx0Zm9vdCByZWY9e3JlZn0gY2xhc3NOYW1lPXtjbigiYm9yZGVyLXQgYmctbXV0ZWQvNTAgZm9udC1tZWRpdW0gWyY+dHJdOmxhc3Q6Ym9yZGVyLWItMCIsIGNsYXNzTmFtZSl9IHsuLi5wcm9wc30gLz4KICApLAopOwpUYWJsZUZvb3Rlci5kaXNwbGF5TmFtZSA9ICJUYWJsZUZvb3RlciI7Cgpjb25zdCBUYWJsZVJvdyA9IFJlYWN0LmZvcndhcmRSZWY8SFRNTFRhYmxlUm93RWxlbWVudCwgUmVhY3QuSFRNTEF0dHJpYnV0ZXM8SFRNTFRhYmxlUm93RWxlbWVudD4+KAogICh7IGNsYXNzTmFtZSwgLi4ucHJvcHMgfSwgcmVmKSA9PiAoCiAgICA8dHIKICAgICAgcmVmPXtyZWZ9CiAgICAgIGNsYXNzTmFtZT17Y24oImJvcmRlci1iIHRyYW5zaXRpb24tY29sb3JzIGRhdGEtW3N0YXRlPXNlbGVjdGVkXTpiZy1tdXRlZCBob3ZlcjpiZy1tdXRlZC81MCIsIGNsYXNzTmFtZSl9CiAgICAgIHsuLi5wcm9wc30KICAgIC8+CiAgKSwKKTsKVGFibGVSb3cuZGlzcGxheU5hbWUgPSAiVGFibGVSb3ciOwoKY29uc3QgVGFibGVIZWFkID0gUmVhY3QuZm9yd2FyZFJlZjxIVE1MVGFibGVDZWxsRWxlbWVudCwgUmVhY3QuVGhIVE1MQXR0cmlidXRlczxIVE1MVGFibGVDZWxsRWxlbWVudD4+KAogICh7IGNsYXNzTmFtZSwgLi4ucHJvcHMgfSwgcmVmKSA9PiAoCiAgICA8dGgKICAgICAgcmVmPXtyZWZ9CiAgICAgIGNsYXNzTmFtZT17Y24oCiAgICAgICAgImgtMTIgcHgtNCB0ZXh0LWxlZnQgYWxpZ24tbWlkZGxlIGZvbnQtbWVkaXVtIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBbJjpoYXMoW3JvbGU9Y2hlY2tib3hdKV06cHItMCIsCiAgICAgICAgY2xhc3NOYW1lLAogICAgICApfQogICAgICB7Li4ucHJvcHN9CiAgICAvPgogICksCik7ClRhYmxlSGVhZC5kaXNwbGF5TmFtZSA9ICJUYWJsZUhlYWQiOwoKY29uc3QgVGFibGVDZWxsID0gUmVhY3QuZm9yd2FyZFJlZjxIVE1MVGFibGVDZWxsRWxlbWVudCwgUmVhY3QuVGRIVE1MQXR0cmlidXRlczxIVE1MVGFibGVDZWxsRWxlbWVudD4+KAogICh7IGNsYXNzTmFtZSwgLi4ucHJvcHMgfSwgcmVmKSA9PiAoCiAgICA8dGQgcmVmPXtyZWZ9IGNsYXNzTmFtZT17Y24oInAtNCBhbGlnbi1taWRkbGUgWyY6aGFzKFtyb2xlPWNoZWNrYm94XSldOnByLTAiLCBjbGFzc05hbWUpfSB7Li4ucHJvcHN9IC8+CiAgKSwKKTsKVGFibGVDZWxsLmRpc3BsYXlOYW1lID0gIlRhYmxlQ2VsbCI7Cgpjb25zdCBUYWJsZUNhcHRpb24gPSBSZWFjdC5mb3J3YXJkUmVmPEhUTUxUYWJsZUNhcHRpb25FbGVtZW50LCBSZWFjdC5IVE1MQXR0cmlidXRlczxIVE1MVGFibGVDYXB0aW9uRWxlbWVudD4+KAogICh7IGNsYXNzTmFtZSwgLi4ucHJvcHMgfSwgcmVmKSA9PiAoCiAgICA8Y2FwdGlvbiByZWY9e3JlZn0gY2xhc3NOYW1lPXtjbigibXQtNCB0ZXh0LXNtIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCIsIGNsYXNzTmFtZSl9IHsuLi5wcm9wc30gLz4KICApLAopOwpUYWJsZUNhcHRpb24uZGlzcGxheU5hbWUgPSAiVGFibGVDYXB0aW9uIjsKCmV4cG9ydCB7IFRhYmxlLCBUYWJsZUhlYWRlciwgVGFibGVCb2R5LCBUYWJsZUZvb3RlciwgVGFibGVIZWFkLCBUYWJsZVJvdywgVGFibGVDZWxsLCBUYWJsZUNhcHRpb24gfTsK"),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

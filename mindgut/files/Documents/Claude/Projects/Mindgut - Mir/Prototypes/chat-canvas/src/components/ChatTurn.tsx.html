@@ -1,0 +1,96 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ChatTurn.tsx</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>ChatTurn.tsx</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/chat-canvas/src/components/ChatTurn.tsx</span><span>0.00 MB · sha256 4ec4bda2a06821fa…</span><a download="ChatTurn.tsx" id="dl" href="#">Download the original</a></header><main><pre>import { useEffect, useRef } from &#x27;react&#x27;;
+import type { ChatMessage } from &#x27;@/lib/parseTranscript&#x27;;
+
+interface ChatTurnProps {
+  message: ChatMessage;
+}
+
+const ChatTurn = ({ message }: ChatTurnProps) =&gt; {
+  const ref = useRef&lt;HTMLDivElement&gt;(null);
+
+  useEffect(() =&gt; {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) =&gt; {
+        if (entry.isIntersecting) {
+          el.classList.add(&#x27;in&#x27;);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+    obs.observe(el);
+    return () =&gt; obs.disconnect();
+  }, []);
+
+  const isMir = !message.isUser;
+
+  return (
+    &lt;div
+      ref={ref}
+      className={`turn ${isMir ? &#x27;mir&#x27; : &#x27;you&#x27;}`}
+      style={{
+        position: &#x27;relative&#x27;,
+        margin: &#x27;34px 0&#x27;,
+        opacity: 0,
+        transform: &#x27;translateY(14px)&#x27;,
+        transition: &#x27;opacity 0.9s ease, transform 0.9s ease&#x27;,
+        maxWidth: isMir ? &#x27;32rem&#x27; : &#x27;26rem&#x27;,
+        marginRight: isMir ? &#x27;auto&#x27; : undefined,
+        marginLeft: isMir ? undefined : &#x27;auto&#x27;,
+        textAlign: isMir ? &#x27;left&#x27; : &#x27;right&#x27;,
+      }}
+    &gt;
+      {/* Meta label */}
+      &lt;div
+        className=&quot;meta&quot;
+        style={{
+          fontFamily: &#x27;JetBrains Mono, ui-monospace, monospace&#x27;,
+          fontSize: &#x27;11px&#x27;,
+          letterSpacing: &#x27;0.14em&#x27;,
+          textTransform: &#x27;uppercase&#x27;,
+          fontWeight: 500,
+          color: &#x27;var(--ink)&#x27;,
+          marginBottom: &#x27;10px&#x27;,
+          textAlign: isMir ? &#x27;left&#x27; : &#x27;right&#x27;,
+        }}
+      &gt;
+        &lt;span&gt;{message.speaker}&lt;/span&gt;
+        {message.timestamp &amp;&amp; (
+          &lt;span
+            className=&quot;time&quot;
+            style={{
+              color: &#x27;var(--mute-2)&#x27;,
+              marginLeft: &#x27;10px&#x27;,
+              fontWeight: 400,
+            }}
+          &gt;
+            {message.timestamp}
+          &lt;/span&gt;
+        )}
+      &lt;/div&gt;
+
+      {/* Message text */}
+      &lt;div
+        className=&quot;text&quot;
+        style={{
+          fontFamily: &#x27;Geist, -apple-system, BlinkMacSystemFont, sans-serif&#x27;,
+          fontSize: &#x27;18px&#x27;,
+          lineHeight: &#x27;1.6&#x27;,
+          fontWeight: 400,
+          color: &#x27;var(--ink)&#x27;,
+        }}
+      &gt;
+        {message.text.split(&#x27;\n&#x27;).map((line, i) =&gt; (
+          &lt;span key={i}&gt;
+            {line}
+            {i &lt; message.text.split(&#x27;\n&#x27;).length - 1 &amp;&amp; &lt;br /&gt;}
+          &lt;/span&gt;
+        ))}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default ChatTurn;</pre></main><script>var b=atob("aW1wb3J0IHsgdXNlRWZmZWN0LCB1c2VSZWYgfSBmcm9tICdyZWFjdCc7CmltcG9ydCB0eXBlIHsgQ2hhdE1lc3NhZ2UgfSBmcm9tICdAL2xpYi9wYXJzZVRyYW5zY3JpcHQnOwoKaW50ZXJmYWNlIENoYXRUdXJuUHJvcHMgewogIG1lc3NhZ2U6IENoYXRNZXNzYWdlOwp9Cgpjb25zdCBDaGF0VHVybiA9ICh7IG1lc3NhZ2UgfTogQ2hhdFR1cm5Qcm9wcykgPT4gewogIGNvbnN0IHJlZiA9IHVzZVJlZjxIVE1MRGl2RWxlbWVudD4obnVsbCk7CgogIHVzZUVmZmVjdCgoKSA9PiB7CiAgICBjb25zdCBlbCA9IHJlZi5jdXJyZW50OwogICAgaWYgKCFlbCkgcmV0dXJuOwogICAgY29uc3Qgb2JzID0gbmV3IEludGVyc2VjdGlvbk9ic2VydmVyKAogICAgICAoW2VudHJ5XSkgPT4gewogICAgICAgIGlmIChlbnRyeS5pc0ludGVyc2VjdGluZykgewogICAgICAgICAgZWwuY2xhc3NMaXN0LmFkZCgnaW4nKTsKICAgICAgICAgIG9icy5kaXNjb25uZWN0KCk7CiAgICAgICAgfQogICAgICB9LAogICAgICB7IHRocmVzaG9sZDogMC4xNSB9CiAgICApOwogICAgb2JzLm9ic2VydmUoZWwpOwogICAgcmV0dXJuICgpID0+IG9icy5kaXNjb25uZWN0KCk7CiAgfSwgW10pOwoKICBjb25zdCBpc01pciA9ICFtZXNzYWdlLmlzVXNlcjsKCiAgcmV0dXJuICgKICAgIDxkaXYKICAgICAgcmVmPXtyZWZ9CiAgICAgIGNsYXNzTmFtZT17YHR1cm4gJHtpc01pciA/ICdtaXInIDogJ3lvdSd9YH0KICAgICAgc3R5bGU9e3sKICAgICAgICBwb3NpdGlvbjogJ3JlbGF0aXZlJywKICAgICAgICBtYXJnaW46ICczNHB4IDAnLAogICAgICAgIG9wYWNpdHk6IDAsCiAgICAgICAgdHJhbnNmb3JtOiAndHJhbnNsYXRlWSgxNHB4KScsCiAgICAgICAgdHJhbnNpdGlvbjogJ29wYWNpdHkgMC45cyBlYXNlLCB0cmFuc2Zvcm0gMC45cyBlYXNlJywKICAgICAgICBtYXhXaWR0aDogaXNNaXIgPyAnMzJyZW0nIDogJzI2cmVtJywKICAgICAgICBtYXJnaW5SaWdodDogaXNNaXIgPyAnYXV0bycgOiB1bmRlZmluZWQsCiAgICAgICAgbWFyZ2luTGVmdDogaXNNaXIgPyB1bmRlZmluZWQgOiAnYXV0bycsCiAgICAgICAgdGV4dEFsaWduOiBpc01pciA/ICdsZWZ0JyA6ICdyaWdodCcsCiAgICAgIH19CiAgICA+CiAgICAgIHsvKiBNZXRhIGxhYmVsICovfQogICAgICA8ZGl2CiAgICAgICAgY2xhc3NOYW1lPSJtZXRhIgogICAgICAgIHN0eWxlPXt7CiAgICAgICAgICBmb250RmFtaWx5OiAnSmV0QnJhaW5zIE1vbm8sIHVpLW1vbm9zcGFjZSwgbW9ub3NwYWNlJywKICAgICAgICAgIGZvbnRTaXplOiAnMTFweCcsCiAgICAgICAgICBsZXR0ZXJTcGFjaW5nOiAnMC4xNGVtJywKICAgICAgICAgIHRleHRUcmFuc2Zvcm06ICd1cHBlcmNhc2UnLAogICAgICAgICAgZm9udFdlaWdodDogNTAwLAogICAgICAgICAgY29sb3I6ICd2YXIoLS1pbmspJywKICAgICAgICAgIG1hcmdpbkJvdHRvbTogJzEwcHgnLAogICAgICAgICAgdGV4dEFsaWduOiBpc01pciA/ICdsZWZ0JyA6ICdyaWdodCcsCiAgICAgICAgfX0KICAgICAgPgogICAgICAgIDxzcGFuPnttZXNzYWdlLnNwZWFrZXJ9PC9zcGFuPgogICAgICAgIHttZXNzYWdlLnRpbWVzdGFtcCAmJiAoCiAgICAgICAgICA8c3BhbgogICAgICAgICAgICBjbGFzc05hbWU9InRpbWUiCiAgICAgICAgICAgIHN0eWxlPXt7CiAgICAgICAgICAgICAgY29sb3I6ICd2YXIoLS1tdXRlLTIpJywKICAgICAgICAgICAgICBtYXJnaW5MZWZ0OiAnMTBweCcsCiAgICAgICAgICAgICAgZm9udFdlaWdodDogNDAwLAogICAgICAgICAgICB9fQogICAgICAgICAgPgogICAgICAgICAgICB7bWVzc2FnZS50aW1lc3RhbXB9CiAgICAgICAgICA8L3NwYW4+CiAgICAgICAgKX0KICAgICAgPC9kaXY+CgogICAgICB7LyogTWVzc2FnZSB0ZXh0ICovfQogICAgICA8ZGl2CiAgICAgICAgY2xhc3NOYW1lPSJ0ZXh0IgogICAgICAgIHN0eWxlPXt7CiAgICAgICAgICBmb250RmFtaWx5OiAnR2Vpc3QsIC1hcHBsZS1zeXN0ZW0sIEJsaW5rTWFjU3lzdGVtRm9udCwgc2Fucy1zZXJpZicsCiAgICAgICAgICBmb250U2l6ZTogJzE4cHgnLAogICAgICAgICAgbGluZUhlaWdodDogJzEuNicsCiAgICAgICAgICBmb250V2VpZ2h0OiA0MDAsCiAgICAgICAgICBjb2xvcjogJ3ZhcigtLWluayknLAogICAgICAgIH19CiAgICAgID4KICAgICAgICB7bWVzc2FnZS50ZXh0LnNwbGl0KCdcbicpLm1hcCgobGluZSwgaSkgPT4gKAogICAgICAgICAgPHNwYW4ga2V5PXtpfT4KICAgICAgICAgICAge2xpbmV9CiAgICAgICAgICAgIHtpIDwgbWVzc2FnZS50ZXh0LnNwbGl0KCdcbicpLmxlbmd0aCAtIDEgJiYgPGJyIC8+fQogICAgICAgICAgPC9zcGFuPgogICAgICAgICkpfQogICAgICA8L2Rpdj4KICAgIDwvZGl2PgogICk7Cn07CgpleHBvcnQgZGVmYXVsdCBDaGF0VHVybjs="),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

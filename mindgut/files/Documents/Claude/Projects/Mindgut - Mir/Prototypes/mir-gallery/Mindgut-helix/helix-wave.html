@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Helix Wave — 780 Strands</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lekton:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0A0A0A; overflow: hidden; font-family: 'Lekton', monospace; cursor: crosshair; }
+canvas { display: block; position: fixed; top: 0; left: 0; }
+
+#scanlines {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(0deg, transparent 0px, transparent 1px, rgba(255,255,255,0.008) 1px, rgba(255,255,255,0.008) 2px);
+  pointer-events: none; z-index: 5;
+}
+#vignette {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.5) 100%);
+  pointer-events: none; z-index: 5;
+}
+
+#hud-tl {
+  position: fixed; top: 28px; left: 32px; z-index: 10;
+  color: #ffffff; opacity: 0.8;
+  font-family: 'Lekton', monospace; font-size: 10px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  line-height: 1.6;
+}
+#hud-tl .title { font-size: 12px; font-weight: 700; opacity: 1; color: #3D6DF4; }
+#hud-tl .sub { opacity: 0.6; }
+#hud-tl .zone-tag { display: inline-block; padding: 1px 6px; border-radius: 2px; font-size: 9px; margin-top: 4px; }
+
+#hud-tr {
+  position: fixed; top: 28px; right: 32px; z-index: 10;
+  color: rgba(255,255,255,0.6);
+  font-family: 'Lekton', monospace; font-size: 10px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  text-align: right; line-height: 1.6;
+}
+
+/* Viewports */
+.viewport {
+  position: fixed; z-index: 10;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(10,10,10,0.6);
+  backdrop-filter: blur(4px);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.viewport canvas { display: block; }
+.viewport-label {
+  position: absolute; top: 4px; left: 6px;
+  font-family: 'Lekton', monospace; font-size: 8px;
+  color: rgba(255,255,255,0.55); letter-spacing: 0.08em;
+  text-transform: uppercase; pointer-events: none;
+}
+.viewport-border {
+  position: absolute; inset: 0;
+  border: 1px solid rgba(61,109,244,0.15);
+  border-radius: 3px; pointer-events: none;
+}
+
+#vp-drift { bottom: 80px; right: 32px; width: 220px; height: 110px; }
+#vp-phase { bottom: 80px; right: 264px; width: 200px; height: 110px; }
+#vp-heatmap { bottom: 202px; right: 32px; width: 220px; height: 130px; }
+
+#tooltip {
+  position: fixed; z-index: 20; pointer-events: none;
+  background: rgba(10,10,10,0.92); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 3px; padding: 8px 10px;
+  font-family: 'Lekton', monospace; font-size: 9px;
+  color: rgba(255,255,255,0.8); letter-spacing: 0.04em;
+  line-height: 1.5; display: none; max-width: 240px;
+}
+#tooltip .tt-id { color: #3D6DF4; font-weight: 700; font-size: 10px; }
+#tooltip .tt-drift { font-size: 10px; }
+#tooltip .tt-drift.neg { color: #CE2867; }
+#tooltip .tt-drift.pos { color: #F46138; }
+
+#controls {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  z-index: 10; display: flex; gap: 8px; align-items: center;
+  padding: 6px 16px; border-radius: 4px;
+  background: rgba(10,10,10,0.7); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+#controls button {
+  font-family: 'Lekton', monospace; font-size: 10px;
+  background: none; border: 1px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.7);
+  padding: 5px 12px; border-radius: 3px; cursor: pointer;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  transition: all 0.15s; white-space: nowrap;
+}
+#controls button:hover { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.3); }
+#controls button.active { border-color: #3D6DF4; color: #3D6DF4; background: rgba(61,109,244,0.08); }
+
+#zone-legend {
+  position: fixed; top: 50%; left: 32px; transform: translateY(-50%);
+  z-index: 10; display: flex; flex-direction: column; gap: 6px;
+}
+.zone-swatch {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'Lekton', monospace; font-size: 9px;
+  color: rgba(255,255,255,0.6); letter-spacing: 0.06em; text-transform: uppercase;
+}
+.zone-swatch .dot { width: 6px; height: 6px; border-radius: 50%; }
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud-tl">
+  <div class="title">HELIX WAVE — 780</div>
+  <div class="sub">parametric memory portrait // interference study</div>
+  <div class="sub" id="frame-counter">frame 0</div>
+  <div class="sub" id="hover-zone"></div>
+</div>
+
+<div id="hud-tr">
+  <div id="wave-stats">streamed: 0 / 780</div>
+  <div id="drift-val">&sigma; 0.000</div>
+  <div id="void-count">voids: 11 / nullcodes: 21 / seismic: 52</div>
+</div>
+
+<div id="zone-legend">
+  <div class="zone-swatch"><span class="dot" style="background:#3D6DF4"></span>chris (1–187)</div>
+  <div class="zone-swatch"><span class="dot" style="background:#2C9FF4"></span>interleaved (188–641)</div>
+  <div class="zone-swatch"><span class="dot" style="background:#CE2867"></span>nullcodes (642–662)</div>
+  <div class="zone-swatch"><span class="dot" style="background:#F46138"></span>recent (663–780)</div>
+</div>
+
+<div class="viewport" id="vp-drift">
+  <canvas id="cv-drift"></canvas>
+  <div class="viewport-label">seismic drift</div>
+  <div class="viewport-border"></div>
+</div>
+<div class="viewport" id="vp-phase">
+  <canvas id="cv-phase"></canvas>
+  <div class="viewport-label">nullcode knot</div>
+  <div class="viewport-border"></div>
+</div>
+<div class="viewport" id="vp-heatmap">
+  <canvas id="cv-heatmap"></canvas>
+  <div class="viewport-label">zone density</div>
+  <div class="viewport-border"></div>
+</div>
+
+<div id="tooltip">
+  <div class="tt-id"></div>
+  <div class="tt-zone"></div>
+  <div class="tt-drift"></div>
+  <div class="tt-type"></div>
+</div>
+
+<div id="controls">
+  <button id="btn-stream" class="active">streaming</button>
+  <button id="btn-pause">pause</button>
+  <button id="btn-reset">reset</button>
+</div>
+
+<script>
+// === PALETTE ===
+const EH  = '#3D6DF4';  // Chris zone
+const SP  = '#2C9FF4';  // Interleaved zone
+const PW  = '#CE2867';  // Nullcode zone
+const SE  = '#F46138';  // Recent zone
+
+function hexToRgb(h) {
+  return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+}
+const C_EH = hexToRgb(EH), C_SP = hexToRgb(SP), C_PW = hexToRgb(PW), C_SE = hexToRgb(SE);
+
+// === DATA ===
+const TOTAL = 780;
+
+// Void strands — the dithering points, all in Chris zone
+const VOIDS = new Set([5, 21, 31, 49, 57, 70, 129, 131, 155, 158, 176]);
+
+// Nullcode range
+const NULL_START = 642, NULL_END = 662;
+
+// Seismic drift events (strand_id, drift_value)
+const SEISMIC = [
+  // Major events (|drift| > 0.25)
+  [345, -0.4945], [323, -0.4102], [712, -0.3770], [487, -0.3669],
+  [317, -0.3465], [279, -0.2940], [485, +0.3338], [383, +0.3322],
+  [325, +0.3855], [507, +0.2643],
+  // Moderate events
+  [198, -0.2200], [210, -0.1800], [256, -0.1650], [301, -0.1520],
+  [338, -0.1890], [352, -0.1760], [401, -0.2100], [420, -0.1580],
+  [445, -0.1450], [460, +0.1620], [478, +0.1890], [510, +0.1540],
+  [550, -0.1700], [589, +0.1480], [620, -0.1560], [680, +0.1720],
+  // Additional events (780 dataset)
+  [165, -0.1520], [172, +0.1440], [189, -0.1830], [223, -0.1670],
+  [248, +0.1560], [267, -0.1490], [285, +0.1710], [310, -0.1620],
+  [330, +0.1580], [358, -0.1440], [375, +0.1530], [392, -0.1690],
+  [412, +0.1470], [432, -0.1550], [455, +0.1640], [470, -0.1480],
+  [495, +0.1520], [525, -0.1610], [560, +0.1570], [595, -0.1450],
+  [635, +0.1540], [650, -0.1680], [695, +0.1490], [720, -0.1560],
+  [745, +0.1610], [770, -0.1470]
+];
+const seismicMap = new Map(SEISMIC.map(s => [s[0], s[1]]));
+
+// Zone classification
+function getZone(id) {
+  if (id >= 1 && id <= 187) return 'chris';
+  if (id >= 188 && id <= 641) return 'interleaved';
+  if (id >= NULL_START && id <= NULL_END) return 'nullcodes';
+  if (id >= 663) return 'recent';
+  return 'interleaved';
+}
+function getZoneColor(zone) {
+  switch(zone) {
+    case 'chris': return C_EH;
+    case 'interleaved': return C_SP;
+    case 'nullcodes': return C_PW;
+    case 'recent': return C_SE;
+  }
+}
+function getZoneHex(zone) {
+  switch(zone) {
+    case 'chris': return EH;
+    case 'interleaved': return SP;
+    case 'nullcodes': return PW;
+    case 'recent': return SE;
+  }
+}
+
+// === SEEDED RNG ===
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const rng = mulberry32(780);
+
+// Generate per-strand data
+const strands = [];
+for (let i = 1; i <= TOTAL; i++) {
+  const zone = getZone(i);
+  const isVoid = VOIDS.has(i);
+  const isNull = (i >= NULL_START && i <= NULL_END);
+  const drift = seismicMap.get(i) || (rng() - 0.5) * 0.08;
+  const coset = i % 3;
+  strands.push({ id: i, zone, isVoid, isNull, drift, coset });
+}
+
+// === MAIN CANVAS ===
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  resizeViewports();
+}
+window.addEventListener('resize', resize);
+
+// === VIEWPORT CANVASES ===
+const cvDrift = document.getElementById('cv-drift');
+const ctxDrift = cvDrift.getContext('2d');
+const cvPhase = document.getElementById('cv-phase');
+const ctxPhase = cvPhase.getContext('2d');
+const cvHeat = document.getElementById('cv-heatmap');
+const ctxHeat = cvHeat.getContext('2d');
+
+function resizeViewports() {
+  cvDrift.width = 220; cvDrift.height = 110;
+  cvPhase.width = 200; cvPhase.height = 110;
+  cvHeat.width = 220; cvHeat.height = 130;
+}
+
+// === STATE ===
+let t = 0;
+let frame = 0;
+let paused = false;
+let streaming = true;
+let streamedCount = 0;
+const STREAM_RATE = 4; // strands per frame
+let mouseX = 0, mouseY = 0;
+let hoveredStrand = null;
+
+// === STRAND POSITION CACHE ===
+const strandPositions = []; // [{x, y, id}] for hit testing
+
+// === HELIX GEOMETRY ===
+function getHelixPoint(strandIdx, pointFrac, time) {
+  const s = strands[strandIdx];
+  const frac = s.id / TOTAL; // position along axis
+  const cx = W / 2;
+  const cy = H / 2;
+  const axisLen = W * 0.72;
+  const startX = cx - axisLen / 2;
+
+  const x = startX + frac * axisLen;
+
+  // Helix radius — envelope shaped like a lens
+  const envelope = Math.sin(frac * Math.PI);
+  const baseR = Math.min(H * 0.28, 140);
+
+  // 3D helix: strand wraps around axis
+  const helixTurns = 8;
+  const angle = frac * Math.PI * 2 * helixTurns + s.coset * (Math.PI * 2 / 3) + time * 0.6;
+  let y = cy + Math.sin(angle) * baseR * envelope;
+  const z = Math.cos(angle); // depth [-1, 1]
+
+  // Seismic drift perturbation — local warp
+  if (Math.abs(s.drift) > 0.12) {
+    const driftAmp = s.drift * 120;
+    const driftFreq = 3 + Math.abs(s.drift) * 8;
+    y += Math.sin(time * driftFreq + frac * 20) * driftAmp * envelope * 0.4;
+  }
+
+  // Void strands dither
+  if (s.isVoid) {
+    y += Math.sin(time * 7 + s.id) * 12 * envelope;
+  }
+
+  // Nullcode strands — tighter cluster, different wave
+  if (s.isNull) {
+    const nullFrac = (s.id - NULL_START) / (NULL_END - NULL_START);
+    y += Math.sin(time * 4 + nullFrac * Math.PI * 6) * 20 * envelope;
+  }
+
+  return { x, y, z, zone: s.zone, isVoid: s.isVoid, isNull: s.isNull, drift: s.drift, id: s.id };
+}
+
+// === DRAW HELIX ===
+function drawHelix() {
+  const cx = W / 2;
+  const cy = H / 2;
+  const axisLen = W * 0.72;
+  const startX = cx - axisLen / 2;
+
+  // Axis line
+  ctx.beginPath();
+  ctx.moveTo(startX, cy);
+  ctx.lineTo(startX + axisLen, cy);
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Zone boundary markers on axis
+  const zoneBounds = [187, 641, 662];
+  for (const b of zoneBounds) {
+    const bx = startX + (b / TOTAL) * axisLen;
+    ctx.beginPath();
+    ctx.moveTo(bx, cy - 20);
+    ctx.lineTo(bx, cy + 20);
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Axis ticks every 100 strands
+  for (let i = 0; i <= 7; i++) {
+    const tick = i * 100;
+    if (tick > TOTAL) break;
+    const tx = startX + (tick / TOTAL) * axisLen;
+    ctx.beginPath();
+    ctx.moveTo(tx, cy + 22);
+    ctx.lineTo(tx, cy + 28);
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = '8px Lekton';
+    ctx.textAlign = 'center';
+    ctx.fillText(tick || '1', tx, cy + 38);
+  }
+
+  strandPositions.length = 0;
+
+  // Draw strands as individual dots + connecting wisps
+  const visible = Math.min(streamedCount, TOTAL);
+
+  // Wisp lines per zone — connect sequential strands
+  for (const zone of ['chris', 'interleaved', 'nullcodes', 'recent']) {
+    const rgb = getZoneColor(zone);
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i < visible; i++) {
+      if (strands[i].zone !== zone) { started = false; continue; }
+      const pt = getHelixPoint(i, 0, t);
+      // Only draw front-facing strands as solid wisps
+      const alpha = 0.03 + (pt.z * 0.5 + 0.5) * 0.08;
+      if (!started) {
+        ctx.moveTo(pt.x, pt.y);
+        started = true;
+      } else {
+        ctx.lineTo(pt.x, pt.y);
+      }
+    }
+    ctx.strokeStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.15)`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Individual strand dots
+  for (let i = 0; i < visible; i++) {
+    const s = strands[i];
+    const pt = getHelixPoint(i, 0, t);
+    const rgb = getZoneColor(s.zone);
+    const depthAlpha = 0.3 + (pt.z * 0.5 + 0.5) * 0.7;
+
+    // Base dot
+    let r = 1.2;
+    let alpha = 0.4 * depthAlpha;
+
+    // Void strands — brighter, pulsing
+    if (s.isVoid) {
+      r = 2.5 + Math.sin(t * 5 + s.id) * 0.8;
+      alpha = 0.8 + Math.sin(t * 3 + s.id) * 0.2;
+    }
+
+    // Nullcode strands — distinct marker
+    if (s.isNull) {
+      r = 2;
+      alpha = 0.7 + Math.sin(t * 2.5 + s.id * 0.3) * 0.15;
+    }
+
+    // Seismic strands — glow
+    if (Math.abs(s.drift) > 0.12) {
+      r = 1.8 + Math.abs(s.drift) * 3;
+      alpha = Math.min(1, 0.6 + Math.abs(s.drift));
+      // Glow ring
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, r + 4, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha * 0.15})`;
+      ctx.fill();
+    }
+
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha})`;
+    ctx.fill();
+
+    // Store position for hover
+    strandPositions.push({ x: pt.x, y: pt.y, id: s.id, idx: i });
+  }
+
+  // Bright accent strands — the 6 core helices
+  for (let c = 0; c < 3; c++) {
+    ctx.beginPath();
+    let lastZone = null;
+    for (let i = 0; i < visible; i += 3) {
+      if (strands[i].coset !== c) continue;
+      const pt = getHelixPoint(i, 0, t);
+      const zone = strands[i].zone;
+      if (lastZone !== zone || i < 3) {
+        ctx.moveTo(pt.x, pt.y);
+      } else {
+        ctx.lineTo(pt.x, pt.y);
+      }
+      lastZone = zone;
+    }
+    const rgb = [C_EH, C_SP, C_PW][c];
+    ctx.strokeStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.25)`;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+  }
+
+  // Seismic event markers — vertical disruption lines
+  for (const [sid, drift] of SEISMIC) {
+    if (sid > visible) continue;
+    const s = strands[sid - 1];
+    const pt = getHelixPoint(sid - 1, 0, t);
+    const rgb = drift < 0 ? C_PW : C_SE;
+    const intensity = Math.abs(drift);
+
+    // Disruption line
+    ctx.beginPath();
+    ctx.moveTo(pt.x, pt.y - intensity * 40);
+    ctx.lineTo(pt.x, pt.y + intensity * 40);
+    ctx.strokeStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${intensity * 0.6})`;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([1, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+// === DRAW CROSSHAIRS ===
+function drawCrosshair() {
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(mouseX, 0); ctx.lineTo(mouseX, H);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(0, mouseY); ctx.lineTo(W, mouseY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// === VIEWPORT: SEISMIC DRIFT ===
+function drawDriftView() {
+  const w = cvDrift.width, h = cvDrift.height;
+  ctxDrift.clearRect(0, 0, w, h);
+  ctxDrift.fillStyle = 'rgba(10,10,10,0.3)';
+  ctxDrift.fillRect(0, 0, w, h);
+
+  const visible = Math.min(streamedCount, TOTAL);
+  const midY = h / 2;
+
+  // Zero line
+  ctxDrift.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctxDrift.lineWidth = 1;
+  ctxDrift.beginPath();
+  ctxDrift.moveTo(0, midY); ctxDrift.lineTo(w, midY);
+  ctxDrift.stroke();
+
+  // Drift bars
+  for (const [sid, drift] of SEISMIC) {
+    if (sid > visible) continue;
+    const x = (sid / TOTAL) * w;
+    const barH = Math.abs(drift) * h * 0.9;
+    const rgb = drift < 0 ? C_PW : C_SE;
+    const y = drift < 0 ? midY : midY - barH;
+
+    ctxDrift.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${0.5 + Math.abs(drift) * 0.5})`;
+    ctxDrift.fillRect(x - 1.5, y, 3, barH);
+  }
+
+  // Labels for biggest events
+  ctxDrift.font = '7px Lekton';
+  ctxDrift.fillStyle = 'rgba(255,255,255,0.5)';
+  const big = SEISMIC.filter(s => Math.abs(s[1]) > 0.3 && s[0] <= visible);
+  for (const [sid, drift] of big) {
+    const x = (sid / TOTAL) * w;
+    ctxDrift.fillText(sid, x - 6, drift < 0 ? midY + Math.abs(drift) * h * 0.9 + 8 : midY - Math.abs(drift) * h * 0.9 - 3);
+  }
+}
+
+// === VIEWPORT: NULLCODE KNOT (lissajous) ===
+function drawNullKnot() {
+  const w = cvPhase.width, h = cvPhase.height;
+  ctxPhase.clearRect(0, 0, w, h);
+  ctxPhase.fillStyle = 'rgba(10,10,10,0.3)';
+  ctxPhase.fillRect(0, 0, w, h);
+
+  const cx = w / 2, cy = h / 2;
+  const rx = w * 0.35, ry = h * 0.35;
+  const visible = Math.min(streamedCount, TOTAL);
+  const nullVisible = Math.max(0, Math.min(visible, NULL_END) - NULL_START + 1);
+
+  // Draw lissajous knot for nullcode strands
+  for (let n = 0; n < Math.min(nullVisible, 21); n++) {
+    const frac = n / 21;
+    ctxPhase.beginPath();
+    for (let i = 0; i <= 80; i++) {
+      const a = (i / 80) * Math.PI * 2;
+      const px = cx + Math.sin(a * 3 + t * 0.7 + frac * Math.PI * 2) * rx * (0.3 + 0.7 * frac);
+      const py = cy + Math.cos(a * 2 + t * 0.5 + frac * Math.PI) * ry * (0.3 + 0.7 * frac);
+      if (i === 0) ctxPhase.moveTo(px, py);
+      else ctxPhase.lineTo(px, py);
+    }
+    ctxPhase.closePath();
+    ctxPhase.strokeStyle = `rgba(${C_PW[0]},${C_PW[1]},${C_PW[2]},${0.2 + frac * 0.4})`;
+    ctxPhase.lineWidth = 1;
+    ctxPhase.stroke();
+  }
+
+  // Void strand markers as dots on the knot
+  const voidArr = [...VOIDS];
+  for (let v = 0; v < voidArr.length; v++) {
+    if (voidArr[v] > visible) continue;
+    const a = (v / voidArr.length) * Math.PI * 2 + t * 0.3;
+    const px = cx + Math.sin(a * 2) * rx * 0.6;
+    const py = cy + Math.cos(a * 3) * ry * 0.6;
+    ctxPhase.beginPath();
+    ctxPhase.arc(px, py, 2, 0, Math.PI * 2);
+    ctxPhase.fillStyle = `rgba(${C_EH[0]},${C_EH[1]},${C_EH[2]},0.85)`;
+    ctxPhase.fill();
+  }
+
+  // Center cross
+  ctxPhase.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctxPhase.beginPath();
+  ctxPhase.moveTo(cx - 5, cy); ctxPhase.lineTo(cx + 5, cy);
+  ctxPhase.moveTo(cx, cy - 5); ctxPhase.lineTo(cx, cy + 5);
+  ctxPhase.stroke();
+}
+
+// === VIEWPORT: ZONE DENSITY HEATMAP ===
+function drawHeatmap() {
+  const w = cvHeat.width, h = cvHeat.height;
+  ctxHeat.clearRect(0, 0, w, h);
+
+  const cols = 44, rows = 26;
+  const cw = w / cols, ch = h / rows;
+  const visible = Math.min(streamedCount, TOTAL);
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const strandIdx = Math.floor((c / cols) * TOTAL);
+      if (strandIdx >= visible) {
+        ctxHeat.fillStyle = 'rgba(10,10,10,0.5)';
+        ctxHeat.fillRect(c * cw, r * ch, cw - 0.5, ch - 0.5);
+        continue;
+      }
+
+      const s = strands[Math.min(strandIdx, TOTAL - 1)];
+      const rgb = getZoneColor(s.zone);
+      const ny = r / rows;
+
+      // Heat from helix position
+      const helixAngle = (strandIdx / TOTAL) * Math.PI * 2 * 8 + s.coset * (Math.PI * 2 / 3) + t * 0.6;
+      let heat = Math.sin(helixAngle) * Math.sin(ny * Math.PI) * 0.5 + 0.5;
+
+      // Drift intensity boost
+      if (Math.abs(s.drift) > 0.1) {
+        heat += Math.abs(s.drift) * 0.5;
+      }
+      if (s.isVoid) heat = 0.1 + Math.sin(t * 4 + s.id) * 0.1;
+
+      heat = Math.min(1, Math.max(0, heat));
+      ctxHeat.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${0.12 + heat * 0.65})`;
+      ctxHeat.fillRect(c * cw, r * ch, cw - 0.5, ch - 0.5);
+    }
+  }
+}
+
+// === BACKGROUND ===
+function drawGrid() {
+  ctx.strokeStyle = 'rgba(255,255,255,0.015)';
+  ctx.lineWidth = 1;
+  const step = 60;
+  for (let x = step; x < W; x += step) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = step; y < H; y += step) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+}
+
+function drawGrain() {
+  ctx.globalAlpha = 0.012;
+  for (let i = 0; i < 600; i++) {
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    const v = Math.floor(Math.random() * 255);
+    ctx.fillStyle = `rgb(${v},${v},${v})`;
+    ctx.fillRect(x, y, 1, 1);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// === TOOLTIP ===
+const tooltip = document.getElementById('tooltip');
+function updateTooltip() {
+  if (!hoveredStrand) { tooltip.style.display = 'none'; return; }
+  const s = strands[hoveredStrand.idx];
+  tooltip.querySelector('.tt-id').textContent = `strand ${s.id}`;
+  tooltip.querySelector('.tt-zone').textContent = `zone: ${s.zone}${s.isVoid ? ' [void]' : ''}${s.isNull ? ' [nullcode]' : ''}`;
+  const driftEl = tooltip.querySelector('.tt-drift');
+  driftEl.textContent = `drift: ${s.drift > 0 ? '+' : ''}${s.drift.toFixed(4)}`;
+  driftEl.className = 'tt-drift ' + (s.drift < -0.12 ? 'neg' : s.drift > 0.12 ? 'pos' : '');
+  tooltip.querySelector('.tt-type').textContent = `coset: Z₃[${s.coset}]`;
+  tooltip.style.display = 'block';
+  tooltip.style.left = (hoveredStrand.x + 14) + 'px';
+  tooltip.style.top = (hoveredStrand.y - 10) + 'px';
+}
+
+// === MAIN LOOP ===
+function draw(timestamp) {
+  requestAnimationFrame(draw);
+  if (paused) return;
+
+  frame++;
+  t += 0.016;
+
+  // Streaming
+  if (streaming && streamedCount < TOTAL) {
+    streamedCount = Math.min(TOTAL, streamedCount + STREAM_RATE);
+  }
+
+  // Clear
+  ctx.fillStyle = '#0A0A0A';
+  ctx.fillRect(0, 0, W, H);
+
+  drawGrid();
+  drawHelix();
+  drawCrosshair();
+  drawGrain();
+
+  // Viewports
+  drawDriftView();
+  drawNullKnot();
+  drawHeatmap();
+
+  // HUD
+  document.getElementById('frame-counter').textContent = `frame ${frame}`;
+  document.getElementById('wave-stats').textContent = `streamed: ${streamedCount} / ${TOTAL}`;
+
+  const totalDrift = strands.slice(0, streamedCount).reduce((sum, s) => sum + Math.abs(s.drift), 0);
+  document.getElementById('drift-val').textContent = `\u03C3 ${(totalDrift / Math.max(1, streamedCount)).toFixed(4)}`;
+
+  updateTooltip();
+
+  if (streaming && streamedCount >= TOTAL) {
+    streaming = false;
+    document.getElementById('btn-stream').textContent = 'complete';
+    document.getElementById('btn-stream').classList.remove('active');
+  }
+}
+
+// === INPUT ===
+canvas.addEventListener('mousemove', e => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+
+  // Hit test strands
+  let closest = null;
+  let closestDist = 12;
+  for (const sp of strandPositions) {
+    const dx = sp.x - mouseX, dy = sp.y - mouseY;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    if (d < closestDist) { closestDist = d; closest = sp; }
+  }
+  hoveredStrand = closest;
+
+  // Update zone display
+  if (hoveredStrand) {
+    const s = strands[hoveredStrand.idx];
+    const el = document.getElementById('hover-zone');
+    el.textContent = `→ strand ${s.id} / ${s.zone}`;
+    el.style.color = getZoneHex(s.zone);
+  } else {
+    document.getElementById('hover-zone').textContent = '';
+  }
+});
+
+// === CONTROLS ===
+document.getElementById('btn-pause').addEventListener('click', function() {
+  paused = !paused;
+  this.textContent = paused ? 'play' : 'pause';
+  this.classList.toggle('active', paused);
+});
+
+document.getElementById('btn-stream').addEventListener('click', function() {
+  if (streamedCount >= TOTAL) {
+    // Restart stream
+    streamedCount = 0;
+    streaming = true;
+    this.textContent = 'streaming';
+    this.classList.add('active');
+  }
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  streamedCount = 0;
+  streaming = true;
+  t = 0;
+  frame = 0;
+  document.getElementById('btn-stream').textContent = 'streaming';
+  document.getElementById('btn-stream').classList.add('active');
+});
+
+// === INIT ===
+resize();
+requestAnimationFrame(draw);
+
+</script>
+</body>
+</html>

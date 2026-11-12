@@ -1,0 +1,26 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#1F3FE0;overflow:hidden}canvas{display:block}</style></head>
+<body><canvas id="c"></canvas><script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d'),DPR=Math.min(devicePixelRatio||1,2);
+let W,H;const fit=()=>{W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR;};addEventListener('resize',fit);fit();
+const N=1400,GA=2.39996323,STEPS=21,CYCLE=21000; // golden angle; 21-step breath over 21s
+const m=Array.from({length:N},(_,i)=>({u:(i+0.5)/N,o:(Math.sin(i*12.9898)*43758.5453)%1}));
+function frame(t){
+ ctx.fillStyle='#1F3FE0';ctx.fillRect(0,0,W,H);
+ const cx=W/2,cy=H/2,R=Math.min(W,H)*0.46;
+ // breath: smooth sine, then quantised to 21 steps so it ticks like a count
+ const ph=(t%CYCLE)/CYCLE, breath=0.5-0.5*Math.cos(ph*Math.PI*2);
+ const step=Math.floor(breath*STEPS)/(STEPS-1), scale=0.92+0.14*step;
+ const rot=t*0.00005, pitch=0.55; // spiral tightness
+ ctx.strokeStyle='#F2EEE3';ctx.lineCap='round';
+ for(const k of m){
+  k.u-=0.00004; if(k.u<0.004)k.u+=1;          // slow inward drift, respawn at rim
+  const r=Math.sqrt(k.u)*R*scale, th=k.u*N*GA*0.02+rot+Math.log(1+r*0.02)*2.2;
+  const x=cx+Math.cos(th)*r, y=cy+Math.sin(th)*r;
+  const len=(3+22*k.u)*DPR*(0.7+0.6*k.o), a=th+Math.PI/2+pitch;
+  ctx.globalAlpha=0.25+0.75*Math.min(1,k.u*1.6)*(0.6+0.4*k.o);
+  ctx.lineWidth=(0.8+1.6*k.u)*DPR;
+  ctx.beginPath();ctx.moveTo(x-Math.cos(a)*len/2,y-Math.sin(a)*len/2);ctx.lineTo(x+Math.cos(a)*len/2,y+Math.sin(a)*len/2);ctx.stroke();
+ }
+ ctx.globalAlpha=1;requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+</script></body></html>

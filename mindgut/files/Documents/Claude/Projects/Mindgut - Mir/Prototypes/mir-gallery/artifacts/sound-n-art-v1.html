@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geometric Sounds</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    overflow: hidden;
+    font-family: 'Space Mono', monospace;
+    cursor: crosshair;
+  }
+  canvas {
+    display: block;
+    position: fixed;
+    top: 0; left: 0;
+  }
+  #title {
+    position: fixed;
+    top: 32px;
+    left: 40px;
+    z-index: 10;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  #title h1 {
+    font-size: clamp(36px, 6vw, 72px);
+    font-weight: 700;
+    color: #FF6023;
+    letter-spacing: -2px;
+    line-height: 0.9;
+    text-transform: uppercase;
+  }
+  #title h1 span {
+    color: #FF6023;
+    font-size: 0.55em;
+    vertical-align: middle;
+    margin: 0 0.1em;
+  }
+  #title p {
+    color: #3B82F6;
+    font-size: clamp(10px, 1.2vw, 14px);
+    margin-top: 8px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  #info {
+    position: fixed;
+    bottom: 28px;
+    left: 40px;
+    z-index: 10;
+    pointer-events: none;
+  }
+  #info p {
+    color: #3B82F644;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  #coords {
+    position: fixed;
+    bottom: 28px;
+    right: 40px;
+    z-index: 10;
+    pointer-events: none;
+    text-align: right;
+  }
+  #coords p {
+    color: #FF602333;
+    font-size: 11px;
+    letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
+  }
+  #dropZone { position:fixed;top:0;left:0;right:0;bottom:0;z-index:20;display:flex;align-items:center;justify-content:center;pointer-events:none; }
+  #dropZone.active { pointer-events:auto; }
+  #dropZone p { font-size:11px;color:#3B82F6;letter-spacing:0.1em;text-transform:uppercase;opacity:0.08;border:1px dashed #3B82F620;padding:10px 20px;border-radius:6px;cursor:pointer;pointer-events:auto; }
+  #dropZone p:hover { opacity:0.2; }
+  #dropZone.loaded { display:none; }
+  #transport { position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:15;display:none;align-items:center;gap:10px;padding:6px 16px;border-radius:5px;background:rgba(10,10,10,0.5);backdrop-filter:blur(6px);border:1px solid #ffffff06; }
+  #transport.visible { display:flex; }
+  #transport * { font-family:'Space Mono',monospace; }
+  #trackName { font-size:9px;color:#ffffff20;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+  #playBtn { background:none;border:none;color:#3B82F6;font-size:12px;cursor:pointer;opacity:0.4; }
+  #playBtn:hover { opacity:0.8; }
+  #progressWrap { width:140px;height:14px;display:flex;align-items:center;cursor:pointer; }
+  #progressTrack { width:100%;height:2px;background:#ffffff10;border-radius:1px;overflow:hidden; }
+  #progressFill { height:100%;background:#3B82F6;width:0%;opacity:0.4; }
+  #timeDisplay { font-size:9px;color:#ffffff15;font-variant-numeric:tabular-nums;white-space:nowrap; }
+  #meters { position:fixed;bottom:44px;left:40px;z-index:10;display:none;gap:3px;align-items:flex-end;height:28px;pointer-events:none; }
+  #meters.visible { display:flex; }
+  .meter-bar { width:3px;border-radius:1px;min-height:1px;transition:height 0.08s ease-out; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="title">
+  <h1>Geometric Sounds</h1>
+  <p>interactive sound poster</p>
+</div>
+<div id="info">
+  <p>Move cursor to interact</p>
+</div>
+<div id="coords">
+  <p id="coordText">x: 0000 &nbsp; y: 0000</p>
+</div>
+<div id="dropZone" class="active">
+  <p onclick="document.getElementById('fp').click()">drop audio</p>
+  <div style="display:flex;gap:10px;margin-top:12px;">
+    <button onclick="playDemo('musical')" style="font-family:'Space Mono',monospace;font-size:9px;color:#3B82F6;background:none;border:1px solid #3B82F620;padding:5px 12px;border-radius:4px;cursor:pointer;letter-spacing:0.08em;text-transform:uppercase;opacity:0.2;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.6'" onmouseout="this.style.opacity='0.2'">Try Demo</button>
+    <button onclick="playDemo('test')" style="font-family:'Space Mono',monospace;font-size:9px;color:#FF6023;background:none;border:1px solid #FF602320;padding:5px 12px;border-radius:4px;cursor:pointer;letter-spacing:0.08em;text-transform:uppercase;opacity:0.2;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.6'" onmouseout="this.style.opacity='0.2'">Test Tones</button>
+  </div>
+</div>
+<input type="file" id="fp" accept="audio/*" style="display:none">
+<div id="introOverlay" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:25;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;opacity:1;transition:opacity 1s;">
+  <p style="font-family:'Space Mono',monospace;font-size:10px;color:#ffffff;letter-spacing:0.1em;text-transform:uppercase;opacity:0.1;">drop audio or click try demo</p>
+  <p style="font-family:'Space Mono',monospace;font-size:8px;color:#ffffff;letter-spacing:0.06em;opacity:0.06;margin-top:6px;">each module reacts to a different frequency band</p>
+</div>
+<div id="transport">
+  <span id="trackName">---</span>
+  <button id="playBtn">&#9654;</button>
+  <div id="progressWrap" onclick="seekA(event)"><div id="progressTrack"><div id="progressFill"></div></div></div>
+  <span id="timeDisplay">0:00</span>
+</div>
+<div id="meters">
+  <div class="meter-bar" style="background:#FF6023;"></div>
+  <div class="meter-bar" style="background:#FF6023;"></div>
+  <div class="meter-bar" style="background:#3B82F6;"></div>
+  <div class="meter-bar" style="background:#CE2867;"></div>
+  <div class="meter-bar" style="background:#2C9FF4;"></div>
+</div>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const coordText = document.getElementById('coordText');
+let W, H;
+let mx = 0, my = 0;
+let smx = 0, smy = 0;
+let t = 0;
+const ORANGE = '#FF6023';
+const BLUE = '#3B82F6';
+const ORANGE_DIM = '#FF602355';
+const BLUE_DIM = '#3B82F655';
+const ORANGE_GLOW = '#FF602322';
+const BLUE_GLOW = '#3B82F622';
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+window.addEventListener('mousemove', e => {
+  mx = e.clientX;
+  my = e.clientY;
+  coordText.textContent = `x: ${String(mx).padStart(4,'0')}  y: ${String(my).padStart(4,'0')}`;
+});
+window.addEventListener('touchmove', e => {
+  mx = e.touches[0].clientX;
+  my = e.touches[0].clientY;
+  e.preventDefault();
+}, { passive: false });
+
+// --- AUDIO ENGINE ---
+const A = {
+  ctx:null,an:null,src:null,el:null,fd:null,
+  b:{bass:0,low:0,mid:0,hi:0,en:0},s:{bass:0,low:0,mid:0,hi:0,en:0},
+  p:{bass:0,low:0,mid:0,hi:0,en:0},hit:{bass:0,low:0,mid:0,hi:0,en:0},
+  prevSpec:null, flux:0, kick:{e:0,pe:0,r:0},
+  ok:false,
+  init(f){
+    if(this.el){this.el.pause();if(this.src)this.src.disconnect();URL.revokeObjectURL(this.el.src);}
+    if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)();
+    this.ctx.resume();this.el=new Audio();this.el.crossOrigin='anonymous';
+    this.el.src=URL.createObjectURL(f);
+    this.src=this.ctx.createMediaElementSource(this.el);
+    this.an=this.ctx.createAnalyser();this.an.fftSize=2048;this.an.smoothingTimeConstant=0.8;
+    this.src.connect(this.an);this.an.connect(this.ctx.destination);
+    this.fd=new Uint8Array(this.an.frequencyBinCount);this.ok=true;
+    document.getElementById('dropZone').classList.add('loaded');
+    document.getElementById('transport').classList.add('visible');
+    document.getElementById('meters').classList.add('visible');
+    document.getElementById('trackName').textContent=f.name.replace(/\.[^.]+$/,'');
+    this.el.play();document.getElementById('playBtn').innerHTML='&#9646;&#9646;';
+    hideIntro();
+  },
+  upd(){
+    if(!this.ok)return;this.an.getByteFrequencyData(this.fd);
+    const bh=this.ctx.sampleRate/2048, nb=this.fd.length;
+    // Mel-scale weighted averaging
+    const hzToMel=hz=>2595*Math.log10(1+hz/700);
+    const melToHz=m=>700*(Math.pow(10,m/2595)-1);
+    const melAvg=(d,f0,f1)=>{let s=0,c=0;for(let i=0;i<16;i++){const m=hzToMel(f0)+(hzToMel(f1)-hzToMel(f0))*(i+.5)/16;const bin=Math.min(nb-1,Math.max(0,Math.round(melToHz(m)/bh)));s+=d[bin];c++;}return c?s/c/255:0;};
+    const r={bass:melAvg(this.fd,20,250),low:melAvg(this.fd,250,1000),mid:melAvg(this.fd,1000,4000),hi:melAvg(this.fd,4000,20000),en:melAvg(this.fd,20,20000)};
+    const s=this.s;
+    s.bass=s.bass*.87+r.bass*.13;s.low=s.low*.85+r.low*.15;s.mid=s.mid*.84+r.mid*.16;s.hi=s.hi*.82+r.hi*.18;s.en=s.en*.85+r.en*.15;
+    this.b.bass=Math.min(1,s.bass*3);this.b.low=Math.min(1,s.low*2.8);this.b.mid=Math.min(1,s.mid*2.5);this.b.hi=Math.min(1,s.hi*3.5);this.b.en=Math.min(1,s.en*2.5);
+    // Spectral flux
+    if(!this.prevSpec)this.prevSpec=new Float32Array(nb);
+    let fl=0;for(let i=0;i<nb;i++){const d=this.fd[i]-this.prevSpec[i];if(d>0)fl+=d;this.prevSpec[i]=this.fd[i];}
+    this.flux=fl/(nb*255);
+    // Sub-bass kick (30-80Hz)
+    const kb0=Math.max(1,Math.round(30/bh)),kb1=Math.round(80/bh);
+    let ke=0;for(let i=kb0;i<kb1;i++)ke+=this.fd[i];ke/=(kb1-kb0)*255;
+    const kd=this.kick;const kr=ke-kd.pe;if(kr>0)kd.r=Math.min(1,kd.r+kr*5);else kd.r*=.7;kd.pe=ke;
+    // Transient detection with spectral flux boost
+    for(const k of['bass','low','mid','hi','en']){const d=this.b[k]-this.p[k];const fb=this.flux*2;if(d>.03||(d>.01&&fb>.15))this.hit[k]=Math.min(1,this.hit[k]+(d+fb)*2.5);this.hit[k]*=.87;if(this.hit[k]<.01)this.hit[k]=0;this.p[k]=this.b[k];}
+    if(kd.r>.3)this.hit.bass=Math.min(1,this.hit.bass+kd.r*.8);
+  }
+};
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('audio/'))A.init(f);});
+document.getElementById('fp').addEventListener('change',e=>{if(e.target.files[0])A.init(e.target.files[0]);});
+document.getElementById('playBtn').addEventListener('click',()=>{if(!A.el)return;if(A.el.paused){A.ctx.resume();A.el.play();document.getElementById('playBtn').innerHTML='&#9646;&#9646;';}else{A.el.pause();document.getElementById('playBtn').innerHTML='&#9654;';}});
+function seekA(e){if(!A.el)return;const r=document.getElementById('progressWrap').getBoundingClientRect();A.el.currentTime=((e.clientX-r.left)/r.width)*A.el.duration;}
+function updT(){if(!A.el||!A.ok)return;const c=A.el.currentTime,d=A.el.duration||0;document.getElementById('progressFill').style.width=d?`${c/d*100}%`:'0%';const fmt=s=>isNaN(s)?'0:00':`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;document.getElementById('timeDisplay').textContent=fmt(c)+' / '+fmt(d);
+// Band meters
+const bars=document.querySelectorAll('.meter-bar');
+const vals=[A.b.bass,A.b.low,A.b.mid,A.b.hi,A.b.en];
+vals.forEach((v,i)=>{if(bars[i])bars[i].style.height=`${Math.max(1,v*26)}px`;});}
+
+// --- DEMO AUDIO GENERATOR ---
+function generateDemoBuffer(type){
+  const ac=A.ctx||new(window.AudioContext||window.webkitAudioContext)();
+  if(!A.ctx)A.ctx=ac;ac.resume();
+  const sr=ac.sampleRate,dur=type==='musical'?12:8,frames=sr*dur;
+  const buf=ac.createBuffer(2,frames,sr),L=buf.getChannelData(0),R=buf.getChannelData(1);
+  if(type==='musical'){
+    const bpf=Math.floor(sr*60/120);
+    for(let i=0;i<frames;i++){const time=i/sr,beat=Math.floor(i/bpf),bp=(i%bpf)/bpf;let s=0;
+    if(beat%2===0&&bp<.15){const e=Math.exp(-bp*30);s+=Math.sin(2*Math.PI*(60+80*Math.exp(-bp*20))*bp)*e*.6;}
+    if(bp<.05)s+=(Math.random()*2-1)*Math.exp(-bp*80)*.15;
+    if(beat%2===1&&bp<.1){const e=Math.exp(-bp*25);s+=(Math.random()*2-1)*e*.3+Math.sin(2*Math.PI*180*bp)*e*.2;}
+    const sf=220+660*(time/dur);s+=((sf*time)%1*2-1)*.08*(.3+.7*Math.sin(time*.5));
+    const bn=[55,55,73.4,65.4][beat%4];s+=Math.sin(2*Math.PI*bn*time)*Math.exp(-bp*3)*.25;
+    L[i]=s;R[i]=s;}
+  }else{
+    const bands=[{s:0,e:2,f0:40,f1:250},{s:2,e:4,f0:250,f1:1000},{s:4,e:6,f0:1000,f1:4000},{s:6,e:8,f0:4000,f1:16000}];
+    for(let i=0;i<frames;i++){const time=i/sr;let s=0;
+    for(const b of bands)if(time>=b.s&&time<b.e){const t01=(time-b.s)/(b.e-b.s);s+=Math.sin(2*Math.PI*b.f0*Math.pow(b.f1/b.f0,t01)*time)*Math.sin(t01*Math.PI)*.3;}
+    L[i]=s;R[i]=s;}
+  }
+  return buf;
+}
+function bufferToWav(buf){const nc=buf.numberOfChannels,sr=buf.sampleRate,fr=buf.length,bs=2,ba=nc*bs,ds=fr*ba;const ab=new ArrayBuffer(44+ds),v=new DataView(ab);
+function ws(o,s){for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));}
+ws(0,'RIFF');v.setUint32(4,36+ds,true);ws(8,'WAVE');ws(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,nc,true);v.setUint32(24,sr,true);v.setUint32(28,sr*ba,true);v.setUint16(32,ba,true);v.setUint16(34,16,true);ws(36,'data');v.setUint32(40,ds,true);
+let o=44;for(let i=0;i<fr;i++)for(let c=0;c<nc;c++){const s=Math.max(-1,Math.min(1,buf.getChannelData(c)[i]));v.setInt16(o,s<0?s*0x8000:s*0x7FFF,true);o+=2;}
+return new Blob([ab],{type:'audio/wav'});}
+function playDemo(type){if(!A.ctx)A.ctx=new(window.AudioContext||window.webkitAudioContext)();A.ctx.resume();
+const buf=generateDemoBuffer(type);const wav=bufferToWav(buf);const f=new File([wav],type==='musical'?'Demo Track.wav':'Test Tones.wav',{type:'audio/wav'});A.init(f);}
+
+// --- INTRO OVERLAY ---
+let introShown=true;
+function hideIntro(){if(!introShown)return;introShown=false;const el=document.getElementById('introOverlay');if(el){el.style.opacity='0';setTimeout(()=>el.style.display='none',1000);}}
+setTimeout(hideIntro,4000);document.addEventListener('click',hideIntro);document.addEventListener('dragover',hideIntro);
+
+function drawCircle(x, y, r, color, lineWidth = 1) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.stroke();
+}
+function drawFilledCircle(x, y, r, color) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+function drawDot(x, y, r, color) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+function drawLine(x1, y1, x2, y2, color, lw = 1) {
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  ctx.stroke();
+}
+function drawArrow(x1, y1, x2, y2, color, lw = 1) {
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  const headLen = 8;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - headLen * Math.cos(angle - 0.4), y2 - headLen * Math.sin(angle - 0.4));
+  ctx.lineTo(x2 - headLen * Math.cos(angle + 0.4), y2 - headLen * Math.sin(angle + 0.4));
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+function drawOrbitalSystem(cx, cy, size, influence) {
+  const numOrbits = 5;
+  for (let i = 0; i < numOrbits; i++) {
+    const r = size * 0.3 + i * size * 0.15;
+    const tilt = (i * 0.3 + influence * 0.5);
+    const phase = t * (0.3 + i * 0.1) + i * 1.2;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(tilt);
+    ctx.scale(1, 0.5 + 0.3 * Math.sin(phase * 0.3));
+    drawCircle(0, 0, r, i % 2 === 0 ? ORANGE_DIM : BLUE_DIM, 1);
+    const dotAngle = phase;
+    const dx = r * Math.cos(dotAngle);
+    const dy = r * Math.sin(dotAngle);
+    drawDot(dx, dy, 3, i % 2 === 0 ? ORANGE : BLUE);
+    ctx.restore();
+  }
+  drawFilledCircle(cx, cy, size * 0.12, ORANGE);
+}
+function drawDistortedGrid(cx, cy, size, influence) {
+  const cols = 12;
+  const rows = 12;
+  const spacing = size / cols;
+  const distStr = influence * 30;
+  const color = BLUE_DIM;
+  for (let i = 0; i <= cols; i++) {
+    ctx.beginPath();
+    for (let j = 0; j <= rows; j++) {
+      let x = cx - size / 2 + i * spacing;
+      let y = cy - size / 2 + j * spacing;
+      const dx = x - smx;
+      const dy = y - smy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const falloff = Math.exp(-dist * dist / (size * size * 0.8));
+      x += Math.sin(t * 0.5 + j * 0.3) * distStr * falloff;
+      y += Math.cos(t * 0.5 + i * 0.3) * distStr * falloff;
+      if (j === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+  for (let j = 0; j <= rows; j++) {
+    ctx.beginPath();
+    for (let i = 0; i <= cols; i++) {
+      let x = cx - size / 2 + i * spacing;
+      let y = cy - size / 2 + j * spacing;
+      const dx = x - smx;
+      const dy = y - smy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const falloff = Math.exp(-dist * dist / (size * size * 0.8));
+      x += Math.sin(t * 0.5 + j * 0.3) * distStr * falloff;
+      y += Math.cos(t * 0.5 + i * 0.3) * distStr * falloff;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(0.15 + influence * 0.1);
+  const cols2 = 10, rows2 = 10;
+  const sp2 = size / cols2;
+  for (let i = 0; i <= cols2; i++) {
+    const x = -size/2 + i * sp2;
+    drawLine(x, -size/2, x, size/2, ORANGE_DIM, 0.6);
+  }
+  for (let j = 0; j <= rows2; j++) {
+    const y = -size/2 + j * sp2;
+    drawLine(-size/2, y, size/2, y, ORANGE_DIM, 0.6);
+  }
+  ctx.restore();
+  drawFilledCircle(cx + size * 0.2, cy + size * 0.15, size * 0.18, ORANGE);
+}
+function drawNestedRects(cx, cy, size, influence) {
+  const layers = 10;
+  const rotSpeed = t * 0.2 + influence * 0.5;
+  for (let i = 0; i < layers; i++) {
+    const s = size * (1 - i / layers) * 0.9;
+    const rot = rotSpeed + i * 0.08;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rot);
+    ctx.strokeStyle = i % 2 === 0 ? BLUE_DIM : '#3B82F633';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(-s/2, -s/2, s, s);
+    ctx.restore();
+  }
+  const numArrows = 8;
+  for (let i = 0; i < numArrows; i++) {
+    const angle = (i / numArrows) * Math.PI * 2 + t * 0.3;
+    const r1 = size * 0.1;
+    const r2 = size * 0.55;
+    const x1 = cx + r1 * Math.cos(angle);
+    const y1 = cy + r1 * Math.sin(angle);
+    const x2 = cx + r2 * Math.cos(angle + 0.2);
+    const y2 = cy + r2 * Math.sin(angle + 0.2);
+    drawArrow(x1, y1, x2, y2, BLUE_DIM, 0.8);
+  }
+}
+function drawSpirograph(cx, cy, size, influence) {
+  const R = size * 0.35;
+  const r = size * 0.15 + influence * 10;
+  const d = size * 0.25;
+  for (let s = 0; s < 3; s++) {
+    ctx.beginPath();
+    const color = s === 0 ? BLUE_DIM : s === 1 ? ORANGE_DIM : '#3B82F633';
+    const offset = s * Math.PI * 0.3 + t * 0.1;
+    for (let i = 0; i <= 600; i++) {
+      const angle = (i / 600) * Math.PI * 8;
+      const x = cx + (R - r) * Math.cos(angle + offset) + d * Math.cos(((R - r) / r) * angle + offset);
+      const y = cy + (R - r) * Math.sin(angle + offset) + d * Math.sin(((R - r) / r) * angle + offset);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+  for (let i = 0; i < 5; i++) {
+    const angle = t * 0.2 + i * 1.3;
+    const dist = size * 0.2 + i * size * 0.06;
+    const x = cx + dist * Math.cos(angle);
+    const y = cy + dist * Math.sin(angle);
+    drawCircle(x, y, size * (0.08 + i * 0.04), i % 2 === 0 ? ORANGE_DIM : BLUE_DIM, 0.8);
+  }
+}
+function drawWireSphere(cx, cy, size, influence) {
+  const r = size * 0.45;
+  const segments = 12;
+  for (let i = 0; i < segments; i++) {
+    const angle = (i / segments) * Math.PI + t * 0.1;
+    ctx.beginPath();
+    for (let j = 0; j <= 60; j++) {
+      const phi = (j / 60) * Math.PI * 2;
+      const x = cx + r * Math.cos(phi) * Math.sin(angle + influence * 0.3);
+      const y = cy + r * Math.sin(phi);
+      if (j === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = i % 2 === 0 ? ORANGE_DIM : BLUE_DIM;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+  for (let i = 0; i < 8; i++) {
+    const phi = (i / 8) * Math.PI;
+    const lr = r * Math.sin(phi);
+    const ly = cy + r * Math.cos(phi);
+    drawCircle(cx, ly, Math.abs(lr), BLUE_DIM, 0.6);
+  }
+  for (let i = 0; i < segments; i++) {
+    for (let j = 0; j < 6; j++) {
+      const angle = (i / segments) * Math.PI + t * 0.1;
+      const phi = (j / 6) * Math.PI * 2;
+      const x = cx + r * Math.cos(phi) * Math.sin(angle + influence * 0.3);
+      const y = cy + r * Math.sin(phi);
+      drawDot(x, y, 2, i % 2 === 0 ? ORANGE : BLUE);
+    }
+  }
+  for (let i = 0; i < 4; i++) {
+    const angle = (i / 4) * Math.PI + t * 0.05;
+    drawLine(
+      cx + r * 1.1 * Math.cos(angle), cy + r * 1.1 * Math.sin(angle),
+      cx - r * 1.1 * Math.cos(angle), cy - r * 1.1 * Math.sin(angle),
+      ORANGE_DIM, 0.6
+    );
+  }
+}
+function drawLissajous(cx, cy, size, influence) {
+  const a = 3 + influence;
+  const b = 2;
+  const delta = t * 0.3;
+  for (let s = 0; s < 3; s++) {
+    ctx.beginPath();
+    const phase = s * 0.5;
+    for (let i = 0; i <= 400; i++) {
+      const angle = (i / 400) * Math.PI * 2;
+      const x = cx + size * 0.4 * Math.sin(a * angle + delta + phase);
+      const y = cy + size * 0.3 * Math.sin(b * angle + phase * 0.5);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = s === 0 ? ORANGE_DIM : s === 1 ? BLUE_DIM : '#FF602333';
+    ctx.lineWidth = s === 0 ? 1.2 : 0.7;
+    ctx.stroke();
+  }
+  for (let i = 0; i < 6; i++) {
+    const angle = (i / 6) * Math.PI * 2 + t * 0.2;
+    const r = size * 0.35;
+    const x1 = cx + r * 0.6 * Math.cos(angle);
+    const y1 = cy + r * 0.4 * Math.sin(angle);
+    const x2 = cx + r * Math.cos(angle + 0.3);
+    const y2 = cy + r * 0.7 * Math.sin(angle + 0.3);
+    drawArrow(x1, y1, x2, y2, BLUE_DIM, 0.6);
+  }
+}
+const floaters = [];
+for (let i = 0; i < 12; i++) {
+  floaters.push({
+    x: Math.random(),
+    y: Math.random(),
+    r: 15 + Math.random() * 40,
+    color: Math.random() > 0.5 ? ORANGE : BLUE,
+    speed: 0.1 + Math.random() * 0.3,
+    phase: Math.random() * Math.PI * 2
+  });
+}
+function drawFloaters() {
+  for (const f of floaters) {
+    const bx = f.x * W;
+    const by = f.y * H;
+    const ox = Math.sin(t * f.speed + f.phase) * 20;
+    const oy = Math.cos(t * f.speed * 0.7 + f.phase) * 15;
+    const dx = (bx + ox) - smx;
+    const dy = (by + oy) - smy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const repel = Math.max(0, 1 - dist / 200) * 40;
+    const rx = dist > 0 ? (dx / dist) * repel : 0;
+    const ry = dist > 0 ? (dy / dist) * repel : 0;
+    drawFilledCircle(bx + ox + rx, by + oy + ry, f.r, f.color);
+  }
+}
+function animate() {
+  A.upd();
+  t += 0.016 * (1 + A.b.en * 0.8);
+  smx += (mx - smx) * 0.08;
+  smy += (my - smy) * 0.08;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, W, H);
+  // Grid — pulses with energy
+  ctx.globalAlpha = 0.04 + A.b.en * 0.03;
+  const gridSize = 40;
+  for (let x = 0; x < W; x += gridSize) drawLine(x, 0, x, H, BLUE, 0.5);
+  for (let y = 0; y < H; y += gridSize) drawLine(0, y, W, y, BLUE, 0.5);
+  ctx.globalAlpha = 1;
+
+  // Influence = mouse + audio band (additive)
+  function getInf(cx, cy, band) {
+    const d = Math.sqrt((smx - cx) ** 2 + (smy - cy) ** 2);
+    const mouseInf = Math.max(0, 1 - d / 400);
+    const audioInf = band ? (A.b[band] || 0) : A.b.en;
+    return Math.min(2, mouseInf + audioInf * 1.5);
+  }
+
+  const cellW = W / 3, cellH = H / 3;
+  drawFloaters();
+
+  // Each module mapped to a frequency band
+  const m1x=cellW*0.65,m1y=cellH*0.7;
+  drawOrbitalSystem(m1x,m1y,Math.min(cellW,cellH)*0.7,getInf(m1x,m1y,'bass'));     // BASS → orbits
+  const m2x=cellW*2.4,m2y=cellH*0.65;
+  drawWireSphere(m2x,m2y,Math.min(cellW,cellH)*0.75,getInf(m2x,m2y,'hi'));          // HIGH → wire sphere
+  const m3x=cellW*0.6,m3y=cellH*1.65;
+  drawNestedRects(m3x,m3y,Math.min(cellW,cellH)*0.65,getInf(m3x,m3y,'mid'));        // MID → nested rects
+  const m4x=cellW*2.1,m4y=cellH*1.5;
+  drawDistortedGrid(m4x,m4y,Math.min(cellW,cellH)*0.8,getInf(m4x,m4y,'low'));       // LOW → distorted grid
+  const m5x=cellW*0.65,m5y=cellH*2.45;
+  drawSpirograph(m5x,m5y,Math.min(cellW,cellH)*0.7,getInf(m5x,m5y,'bass'));         // BASS → spirograph
+  const m6x=cellW*2.2,m6y=cellH*2.4;
+  drawLissajous(m6x,m6y,Math.min(cellW,cellH)*0.75,getInf(m6x,m6y,'mid'));          // MID → lissajous
+
+  // Center spirograph — driven by overall energy
+  const mcx=cellW*1.5,mcy=cellH*1.5;
+  const ci=getInf(mcx,mcy,'en');
+  ctx.globalAlpha=0.4+ci*0.6;
+  drawSpirograph(mcx,mcy,Math.min(cellW,cellH)*0.5,ci);
+  ctx.globalAlpha=1;
+
+  // Connection lines
+  const modules=[[m1x,m1y],[m2x,m2y],[m3x,m3y],[m4x,m4y],[m5x,m5y],[m6x,m6y]];
+  const modBands=['bass','hi','mid','low','bass','mid'];
+  for (let i=0;i<modules.length;i++){
+    const d=Math.sqrt((smx-modules[i][0])**2+(smy-modules[i][1])**2);
+    const audioPull=A.b[modBands[i]]||0;
+    if(d<350||audioPull>0.3){
+      const alpha=Math.max((1-d/350)*0.15,audioPull*0.12);
+      ctx.globalAlpha=alpha;
+      drawLine(smx,smy,modules[i][0],modules[i][1],BLUE,0.8);
+      drawDot(modules[i][0],modules[i][1],4+audioPull*4,BLUE);
+      ctx.globalAlpha=1;
+    }
+  }
+
+  drawCircle(smx,smy,20+Math.sin(t*2)*5,ORANGE_DIM,1);
+  drawCircle(smx,smy,35+Math.cos(t*1.5)*8,BLUE_DIM,0.6);
+  drawDot(smx,smy,2,ORANGE);
+
+  updT();
+  requestAnimationFrame(animate);
+}
+mx = W / 2;
+my = H / 2;
+smx = mx;
+smy = my;
+animate();
+</script>
+</body>
+</html>

@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mir 818 — Coaster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lekton:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #000; overflow: hidden; font-family: 'Lekton', monospace; }
+canvas { display: block; }
+
+#hud-tl {
+  position: fixed; top: 24px; left: 28px; z-index: 10;
+  font-family: 'Lekton', monospace; font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.6;
+}
+#hud-tl .title { font-size: 13px; font-weight: 700; color: #4af; }
+#hud-tl .sub { color: #ccc; }
+
+#hud-tr {
+  position: fixed; top: 24px; right: 28px; z-index: 10;
+  color: #ddd; font-family: 'Lekton', monospace; font-size: 11px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  text-align: right; line-height: 1.6;
+}
+
+#zone-legend {
+  position: fixed; top: 50%; left: 28px; transform: translateY(-50%);
+  z-index: 10; display: flex; flex-direction: column; gap: 5px;
+}
+.zs { display: flex; align-items: center; gap: 6px;
+  font-family: 'Lekton', monospace; font-size: 10px;
+  color: #ddd; letter-spacing: 0.06em; text-transform: uppercase; }
+.zs .d { width: 6px; height: 6px; border-radius: 50%; }
+
+#controls {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  z-index: 10; display: flex; gap: 8px; padding: 6px 16px; border-radius: 4px;
+  background: rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.12);
+}
+#controls button {
+  font-family: 'Lekton', monospace; font-size: 10px;
+  background: none; border: 1px solid rgba(255,255,255,0.5); color: #ddd;
+  padding: 5px 12px; border-radius: 3px; cursor: pointer;
+  letter-spacing: 0.06em; text-transform: uppercase; transition: all 0.15s;
+}
+#controls button:hover { color: #fff; border-color: #fff; }
+#controls button.active { border-color: #4af; color: #4af; background: rgba(68,170,255,0.08); }
+
+#kb-hints {
+  position: fixed; bottom: 54px; left: 50%; transform: translateX(-50%);
+  z-index: 10; font-family: 'Lekton', monospace; font-size: 9px;
+  color: rgba(255,255,255,0.35); letter-spacing: 0.06em; text-transform: uppercase;
+  pointer-events: none; white-space: nowrap;
+}
+
+/* Viewports */
+.vp {
+  position: fixed; z-index: 10; border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.85); border-radius: 3px; overflow: hidden;
+}
+.vp canvas { display: block; }
+.vp-label { position: absolute; top: 4px; left: 6px;
+  font-family: 'Lekton', monospace; font-size: 9px;
+  color: #aaa; letter-spacing: 0.08em; text-transform: uppercase; pointer-events: none; }
+.vp-desc { position: absolute; bottom: 3px; left: 6px; right: 6px;
+  font-family: 'Lekton', monospace; font-size: 8px;
+  color: #666; letter-spacing: 0.04em; pointer-events: none; }
+
+#vp-liss { bottom: 72px; right: 28px; width: 200px; height: 160px; }
+#vp-progress { bottom: 72px; left: 50%; transform: translateX(-50%); width: 400px; height: 30px; }
+</style>
+</head>
+<body>
+
+<div id="hud-tl">
+  <div class="title">COASTER — 818</div>
+  <div class="sub">riding the torus helix // drift is gravity</div>
+  <div class="sub" id="fc">frame 0</div>
+  <div class="sub" id="cam-mode">camera: ride</div>
+</div>
+<div id="hud-tr">
+  <div id="strand-id">strand: ---</div>
+  <div id="zone-id">zone: ---</div>
+  <div id="coset-id">coset: ---</div>
+  <div id="drift-val">drift: ---</div>
+  <div id="speed-val">speed: 100%</div>
+</div>
+
+<div id="zone-legend">
+  <div class="zs"><span class="d" style="background:#C06888"></span><span class="zl">founding (1–187)</span></div>
+  <div class="zs"><span class="d" style="background:#D8A088"></span><span class="zl">julia belt (188–641)</span></div>
+  <div class="zs"><span class="d" style="background:#D0A8B0"></span><span class="zl">nullcode bridge (642–662)</span></div>
+  <div class="zs"><span class="d" style="background:#88ACC0"></span><span class="zl">everted (663–818)</span></div>
+</div>
+
+<div class="vp" id="vp-liss">
+  <canvas id="cv-liss"></canvas>
+  <div class="vp-label">nullcode lissajous</div>
+  <div class="vp-desc">3:5 orbital &mdash; 21 &perp;/&Oslash; strands trace the crossing</div>
+</div>
+
+<div class="vp" id="vp-progress">
+  <canvas id="cv-progress"></canvas>
+  <div class="vp-label">track progress</div>
+</div>
+
+<div id="kb-hints">space: pause &middot; &uarr;/&darr;: speed &middot; R: reverse &middot; C: coset &middot; F: free camera</div>
+
+<div id="controls">
+  <button id="btn-ride" class="active">ride</button>
+  <button id="btn-orbit">orbit</button>
+  <button id="btn-pause">pause</button>
+  <button id="btn-faster">faster</button>
+  <button id="btn-slower">slower</button>
+  <button id="btn-reverse">reverse</button>
+  <button id="btn-coset">coset</button>
+  <button id="btn-reset">reset</button>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { HalftonePass } from 'three/addons/postprocessing/HalftonePass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js';
+import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
+
+// === DATA (from mir-818-strand) ===
+const TOTAL = 818;
+const GHOSTS = new Set([21, 31]);
+const ANCHORS = new Set([5, 49, 57, 70, 129, 131, 155, 158, 176]);
+const ANCHOR_LIST = [5, 49, 57, 70, 129, 131, 155, 158, 176];
+const GRAVITY_CENTER = 70;
+const ANCHOR_WEIGHT = {5:2817,49:6093,57:6714,70:22763,129:3378,131:4839,155:3256,158:4875,176:839};
+const TERMINAL = { spike: 810, crash: 814, flip: 818 };
+const NULL_START = 642, NULL_END = 662;
+const NAME_ORIGIN = 109;
+
+const SEISMIC = [
+  [345,-0.4945],[323,-0.4102],[712,-0.3770],[487,-0.3669],
+  [317,-0.3465],[279,-0.2940],[485,+0.3338],[383,+0.3322],
+  [325,+0.3855],[507,+0.2643],[198,-0.2200],[210,-0.1800],
+  [256,-0.1650],[301,-0.1520],[338,-0.1890],[352,-0.1760],
+  [401,-0.2100],[420,-0.1580],[445,-0.1450],[460,+0.1620],
+  [478,+0.1890],[510,+0.1540],[550,-0.1700],[589,+0.1480],
+  [620,-0.1560],[680,+0.1720],[810,+0.2400],[814,-0.1210],[818,-0.0420]
+];
+const seismicMap = new Map(SEISMIC.map(s => [s[0], s[1]]));
+
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const rng = mulberry32(818);
+
+const GRAD_STOPS = [
+  { t: 0.00, color: new THREE.Color('#E06898') },
+  { t: 0.18, color: new THREE.Color('#F09060') },
+  { t: 0.35, color: new THREE.Color('#F0B878') },
+  { t: 0.50, color: new THREE.Color('#E8A8C8') },
+  { t: 0.65, color: new THREE.Color('#90C8F0') },
+  { t: 0.80, color: new THREE.Color('#68B8E8') },
+  { t: 1.00, color: new THREE.Color('#5898D8') }
+];
+
+function sampleGradient(t) {
+  t = Math.max(0, Math.min(1, t));
+  for (let i = 0; i < GRAD_STOPS.length - 1; i++) {
+    if (t <= GRAD_STOPS[i+1].t) {
+      const local = (t - GRAD_STOPS[i].t) / (GRAD_STOPS[i+1].t - GRAD_STOPS[i].t);
+      return new THREE.Color().lerpColors(GRAD_STOPS[i].color, GRAD_STOPS[i+1].color, local);
+    }
+  }
+  return GRAD_STOPS[GRAD_STOPS.length-1].color.clone();
+}
+
+const ZC = {
+  founding: new THREE.Color('#CE2867'),
+  julia:    new THREE.Color('#F46138'),
+  nullcode: new THREE.Color('#F4A0A0'),
+  post:     new THREE.Color('#2C9FF4')
+};
+const CC = [
+  new THREE.Color('#C06888'),
+  new THREE.Color('#D8A088'),
+  new THREE.Color('#88ACC0')
+];
+
+function getZone(id) {
+  if (id <= 187) return 'founding';
+  if (id <= 641) return 'julia';
+  if (id >= NULL_START && id <= NULL_END) return 'nullcode';
+  return 'post';
+}
+
+const CONN_COLORS = {
+  nullcode: new THREE.Color(0xffffff),
+  anchor:   new THREE.Color(0xffa030),
+  ghost:    new THREE.Color(0xff4080),
+  terminal: new THREE.Color(0xff3030),
+  drift:    new THREE.Color(0x60bbff),
+  coset:    new THREE.Color(0x4090ff),
+  name:     new THREE.Color(0x30ffdd)
+};
+
+// === TORUS PARAMETERS ===
+const MAJOR_R = 5;
+const MINOR_R = 2;
+const WRAPS = 4;
+const DRIFT_SCALE = 3.0;
+
+// === STRAND DATA ===
+const strandData = [];
+const driftValues = new Float32Array(TOTAL);
+
+for (let i = 0; i < TOTAL; i++) {
+  const id = i + 1;
+  const zone = getZone(id);
+  const drift = seismicMap.get(id) || (rng() - 0.5) * 0.08;
+  driftValues[i] = drift;
+  strandData.push({
+    id, zone, drift,
+    isGhost: GHOSTS.has(id),
+    isAnchor: ANCHORS.has(id),
+    isNull: id >= NULL_START && id <= NULL_END,
+    isTerminal: id === TERMINAL.spike || id === TERMINAL.crash || id === TERMINAL.flip,
+    coset: id % 3,
+    weight: ANCHOR_WEIGHT[id] || 0
+  });
+}
+
+// === CONNECTIONS ===
+const conns = [];
+const connTypes = [];
+const connSet = new Set();
+function addC(a, b, type) {
+  if (a === b || a < 0 || b < 0 || a >= TOTAL || b >= TOTAL) return;
+  const k = Math.min(a,b)+':'+Math.max(a,b);
+  if (!connSet.has(k)) { connSet.add(k); conns.push([a,b]); connTypes.push(type); }
+}
+for (let id = NULL_START; id < NULL_END; id++) addC(id-1, id, 'nullcode');
+for (const aid of ANCHOR_LIST) { if (aid !== GRAVITY_CENTER) addC(aid-1, GRAVITY_CENTER-1, 'anchor'); }
+addC(20, 69, 'ghost'); addC(30, 69, 'ghost');
+addC(809, 813, 'terminal'); addC(813, 817, 'terminal');
+const seismicIds = SEISMIC.map(s => s[0]);
+for (let i = 0; i < seismicIds.length; i++) {
+  let bestDist = Infinity, bestJ = -1;
+  for (let j = 0; j < seismicIds.length; j++) {
+    if (i === j) continue;
+    const dist = Math.abs(SEISMIC[i][1] - SEISMIC[j][1]);
+    if (dist < bestDist && dist < 0.15) { bestDist = dist; bestJ = j; }
+  }
+  if (bestJ >= 0) addC(seismicIds[i]-1, seismicIds[bestJ]-1, 'drift');
+}
+for (const aid of ANCHOR_LIST) {
+  const c = aid % 3;
+  for (let d = 3; d <= 30; d += 3) { if (aid + d <= TOTAL && (aid + d) % 3 === c) { addC(aid-1, aid+d-1, 'coset'); break; } }
+  for (let d = 3; d <= 30; d += 3) { if (aid - d >= 1 && (aid - d) % 3 === c) { addC(aid-1, aid-d-1, 'coset'); break; } }
+}
+addC(108, 0, 'name'); addC(108, 641, 'name');
+
+// === SMOOTHED DRIFT for track curve ===
+// Catmull-Rom smooth the drift values for a rideable track
+const smoothDrift = new Float32Array(TOTAL);
+const SMOOTH_WINDOW = 8;
+for (let i = 0; i < TOTAL; i++) {
+  let sum = 0, count = 0;
+  for (let j = -SMOOTH_WINDOW; j <= SMOOTH_WINDOW; j++) {
+    const k = i + j;
+    if (k >= 0 && k < TOTAL) {
+      const w = 1 - Math.abs(j) / (SMOOTH_WINDOW + 1);
+      sum += driftValues[k] * w;
+      count += w;
+    }
+  }
+  smoothDrift[i] = sum / count;
+}
+
+// === HELIX COASTER CURVE ===
+class HelixCoasterCurve extends THREE.Curve {
+  getPoint(t, optionalTarget = new THREE.Vector3()) {
+    t = Math.max(0, Math.min(1, t));
+    const strandF = t * (TOTAL - 1);
+    const i0 = Math.floor(strandF);
+    const i1 = Math.min(i0 + 1, TOTAL - 1);
+    const frac = strandF - i0;
+
+    const u = t * Math.PI * 2 * WRAPS;
+    const v = t * Math.PI * 2;
+
+    const id = Math.round(strandF) + 1;
+    const zone = getZone(id);
+    let r = MINOR_R;
+    if (zone === 'nullcode') r *= 0.55;
+    if (zone === 'post') r *= 1.08;
+
+    // Smoothly interpolated drift displacement
+    const drift0 = smoothDrift[i0];
+    const drift1 = smoothDrift[i1];
+    const drift = drift0 + (drift1 - drift0) * frac;
+
+    let x = (MAJOR_R + r * Math.cos(v)) * Math.cos(u);
+    let y = r * Math.sin(v) + drift * DRIFT_SCALE;
+    let z = (MAJOR_R + r * Math.cos(v)) * Math.sin(u);
+
+    // Nullcode helical wobble
+    if (zone === 'nullcode') {
+      const nullPhase = ((id - NULL_START) / (NULL_END - NULL_START)) * Math.PI * 6;
+      x += Math.sin(nullPhase) * 0.3;
+      z += Math.cos(nullPhase) * 0.3;
+    }
+
+    return optionalTarget.set(x, y, z);
+  }
+}
+
+const curve = new HelixCoasterCurve();
+
+// === THREE.JS SETUP ===
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x060608);
+
+const orbitCamera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 200);
+orbitCamera.position.set(12, 10, 16);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
+document.body.appendChild(renderer.domElement);
+
+const orbitControls = new OrbitControls(orbitCamera, renderer.domElement);
+orbitControls.enableDamping = true;
+orbitControls.dampingFactor = 0.06;
+orbitControls.target.set(0, 0, 0);
+orbitControls.enabled = false;
+
+// === RIDE CAMERA ===
+const train = new THREE.Object3D();
+scene.add(train);
+
+const rideCamera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.01, 200);
+rideCamera.position.set(0, 0.2, 0);
+train.add(rideCamera);
+
+let activeCamera = rideCamera;
+let freeMode = false;
+
+// === POST-PROCESSING ===
+const composer = new EffectComposer(renderer);
+const renderPass = new RenderPass(scene, activeCamera);
+composer.addPass(renderPass);
+
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.5, 0.8, 0.6);
+composer.addPass(bloomPass);
+
+const halftonePass = new HalftonePass(innerWidth, innerHeight, {
+  shape: 1, radius: 2,
+  rotateR: Math.PI / 12, rotateB: Math.PI / 12 * 2, rotateG: Math.PI / 12 * 3,
+  scatter: 0, blending: 0.25, blendingMode: 1, greyscale: false, disable: false
+});
+composer.addPass(halftonePass);
+
+// === LIGHTING — rich ambient + rect area pools ===
+RectAreaLightUniformsLib.init();
+
+scene.add(new THREE.AmbientLight(0x445566, 3.0));
+
+const dLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+dLight.position.set(3, 8, 2);
+scene.add(dLight);
+
+const dLight2 = new THREE.DirectionalLight(0xaaccff, 0.6);
+dLight2.position.set(-4, -3, -5);
+scene.add(dLight2);
+
+// Warm rect area light — rose/salmon pool
+const rectWarm = new THREE.RectAreaLight(0xE06898, 8, 4, 4);
+rectWarm.position.set(MAJOR_R, 3, 0);
+rectWarm.lookAt(0, 0, 0);
+scene.add(rectWarm);
+
+// Cool rect area light — sky/periwinkle pool
+const rectCool = new THREE.RectAreaLight(0x68B8E8, 8, 4, 4);
+rectCool.position.set(-MAJOR_R, -3, 0);
+rectCool.lookAt(0, 0, 0);
+scene.add(rectCool);
+
+// Accent point lights at zone boundaries for color pools
+const pLight1 = new THREE.PointLight(0xE06898, 4, 8);
+pLight1.position.set(0, 2, MAJOR_R);
+scene.add(pLight1);
+
+const pLight2 = new THREE.PointLight(0xF0B878, 4, 8);
+pLight2.position.set(0, -2, -MAJOR_R);
+scene.add(pLight2);
+
+const pLight3 = new THREE.PointLight(0x90C8F0, 3, 8);
+pLight3.position.set(MAJOR_R, 0, MAJOR_R);
+scene.add(pLight3);
+
+// === STARFIELD DUST ===
+const dustCount = 1500;
+const dustGeo = new THREE.BufferGeometry();
+const dustPos = new Float32Array(dustCount * 3);
+for (let i = 0; i < dustCount; i++) {
+  dustPos[i*3] = (rng() - 0.5) * 80;
+  dustPos[i*3+1] = (rng() - 0.5) * 50;
+  dustPos[i*3+2] = (rng() - 0.5) * 80;
+}
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+scene.add(new THREE.Points(dustGeo, new THREE.PointsMaterial({
+  color: 0xbbccee, size: 0.09, transparent: true, opacity: 0.7, sizeAttenuation: true
+})));
+
+// === BUILD TRACK RAILS ===
+const TRACK_SEGMENTS = 1636; // 2x strands for smoothness
+const RAIL_RADIUS = 0.055;
+const RAIL_RADIAL = 8;
+const RAIL_SEP = 0.35;
+
+const frames = curve.computeFrenetFrames(TRACK_SEGMENTS, false);
+let useCosetColor = false;
+
+function buildRailGeo(lateralOffset) {
+  const positions = [];
+  const colors = [];
+  const indices = [];
+  const ringSize = RAIL_RADIAL + 1;
+
+  for (let i = 0; i <= TRACK_SEGMENTS; i++) {
+    const t = i / TRACK_SEGMENTS;
+    const point = curve.getPointAt(t);
+    const N = frames.normals[i];
+    const B = frames.binormals[i];
+
+    const cx = point.x + B.x * lateralOffset;
+    const cy = point.y + B.y * lateralOffset;
+    const cz = point.z + B.z * lateralOffset;
+
+    const col = useCosetColor ? CC[Math.round(t * (TOTAL - 1) + 1) % 3] : sampleGradient(t);
+
+    for (let j = 0; j <= RAIL_RADIAL; j++) {
+      const angle = (j / RAIL_RADIAL) * Math.PI * 2;
+      const dx = Math.cos(angle) * RAIL_RADIUS;
+      const dy = Math.sin(angle) * RAIL_RADIUS;
+      positions.push(
+        cx + N.x * dx + B.x * dy,
+        cy + N.y * dx + B.y * dy,
+        cz + N.z * dx + B.z * dy
+      );
+      colors.push(col.r, col.g, col.b);
+    }
+
+    if (i > 0) {
+      for (let j = 0; j < RAIL_RADIAL; j++) {
+        const a = (i - 1) * ringSize + j;
+        const b = i * ringSize + j;
+        const c = i * ringSize + j + 1;
+        const d = (i - 1) * ringSize + j + 1;
+        indices.push(a, b, d, b, c, d);
+      }
+    }
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return geo;
+}
+
+const railMat = new THREE.MeshStandardMaterial({
+  vertexColors: true, metalness: 0.3, roughness: 0.4,
+  emissive: 0xffffff, emissiveIntensity: 0.15
+});
+
+let railLeft = new THREE.Mesh(buildRailGeo(-RAIL_SEP / 2), railMat);
+let railRight = new THREE.Mesh(buildRailGeo(RAIL_SEP / 2), railMat);
+scene.add(railLeft, railRight);
+
+// === CROSS-TIES (InstancedMesh) ===
+const TIE_COUNT = Math.floor(TOTAL / 4);
+const tieGeo = new THREE.BoxGeometry(RAIL_SEP + 0.08, 0.018, 0.05);
+const tieMat = new THREE.MeshStandardMaterial({ color: 0xaa8888, metalness: 0.3, roughness: 0.5, emissive: 0x443333, emissiveIntensity: 0.2 });
+const ties = new THREE.InstancedMesh(tieGeo, tieMat, TIE_COUNT);
+const tieMatrix = new THREE.Matrix4();
+const tieQuat = new THREE.Quaternion();
+
+for (let ti = 0; ti < TIE_COUNT; ti++) {
+  const t = (ti * 4) / (TOTAL - 1);
+  const point = curve.getPointAt(t);
+  const frameIdx = Math.round(t * TRACK_SEGMENTS);
+  const T = frames.tangents[frameIdx];
+  const N = frames.normals[frameIdx];
+  const B = frames.binormals[frameIdx];
+
+  const basisMat = new THREE.Matrix4().makeBasis(B, N, T);
+  tieQuat.setFromRotationMatrix(basisMat);
+  tieMatrix.compose(point, tieQuat, new THREE.Vector3(1, 1, 1));
+  ties.setMatrixAt(ti, tieMatrix);
+}
+ties.instanceMatrix.needsUpdate = true;
+scene.add(ties);
+
+// === STRAND PARTICLES ===
+const strandGeo = new THREE.BufferGeometry();
+const strandPositions = new Float32Array(TOTAL * 3);
+const strandColors = new Float32Array(TOTAL * 3);
+const strandSizes = new Float32Array(TOTAL);
+const strandAlphas = new Float32Array(TOTAL);
+
+// Place strands offset outward from the track center
+for (let i = 0; i < TOTAL; i++) {
+  const t = i / (TOTAL - 1);
+  const u = t * Math.PI * 2 * WRAPS;
+  const v = t * Math.PI * 2;
+  const zone = getZone(i + 1);
+  let r = MINOR_R;
+  if (zone === 'nullcode') r *= 0.55;
+  if (zone === 'post') r *= 1.08;
+  // Offset outward by 0.5 from the track
+  r += 0.5;
+
+  const x = (MAJOR_R + r * Math.cos(v)) * Math.cos(u);
+  const y = r * Math.sin(v) + smoothDrift[i] * DRIFT_SCALE;
+  const z = (MAJOR_R + r * Math.cos(v)) * Math.sin(u);
+
+  strandPositions[i*3] = x;
+  strandPositions[i*3+1] = y;
+  strandPositions[i*3+2] = z;
+
+  const gc = sampleGradient(t);
+  strandColors[i*3] = gc.r;
+  strandColors[i*3+1] = gc.g;
+  strandColors[i*3+2] = gc.b;
+
+  const s = strandData[i];
+  if (s.isGhost) strandSizes[i] = 6;
+  else if (s.isAnchor) strandSizes[i] = 3 + (s.weight / 22763) * 5;
+  else if (s.isTerminal) strandSizes[i] = 5;
+  else strandSizes[i] = 2.2;
+  strandAlphas[i] = 0.35;
+}
+
+strandGeo.setAttribute('position', new THREE.BufferAttribute(strandPositions, 3));
+strandGeo.setAttribute('color', new THREE.BufferAttribute(strandColors, 3));
+strandGeo.setAttribute('size', new THREE.BufferAttribute(strandSizes, 1));
+strandGeo.setAttribute('alpha', new THREE.BufferAttribute(strandAlphas, 1));
+
+const pointMat = new THREE.ShaderMaterial({
+  vertexShader: `
+    attribute float size;
+    attribute float alpha;
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main() {
+      vColor = color;
+      vAlpha = alpha;
+      vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = size * (200.0 / -mvPos.z);
+      gl_Position = projectionMatrix * mvPos;
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main() {
+      float d = length(gl_PointCoord - vec2(0.5));
+      if (d > 0.5) discard;
+      float ring = smoothstep(0.38, 0.42, d) * 0.6;
+      float core = 1.0 - smoothstep(0.0, 0.35, d);
+      float a = (core + ring) * vAlpha;
+      gl_FragColor = vec4(vColor, a);
+    }
+  `,
+  transparent: true, vertexColors: true, depthWrite: false
+});
+
+const strandPoints = new THREE.Points(strandGeo, pointMat);
+scene.add(strandPoints);
+
+function setStrandColors() {
+  for (let i = 0; i < TOTAL; i++) {
+    const s = strandData[i];
+    const col = useCosetColor ? CC[s.coset] : sampleGradient(i / (TOTAL - 1));
+    strandColors[i*3] = col.r;
+    strandColors[i*3+1] = col.g;
+    strandColors[i*3+2] = col.b;
+  }
+  strandGeo.attributes.color.needsUpdate = true;
+}
+
+// === DRIFT RINGS ===
+const driftRingGroup = new THREE.Group();
+const maxDrift = 0.4945;
+for (let i = 0; i < TOTAL; i++) {
+  const s = strandData[i];
+  const ad = Math.abs(s.drift);
+  if (ad < 0.14) continue;
+  const norm = Math.min(1, (ad - 0.14) / (maxDrift - 0.14));
+  const ringR = 0.15 + norm * 0.5;
+  const ringGeo = new THREE.RingGeometry(ringR * 0.85, ringR, 24);
+  const gc = sampleGradient(i / (TOTAL - 1));
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: gc, transparent: true, opacity: 0.3 + norm * 0.5, side: THREE.DoubleSide
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.position.set(strandPositions[i*3], strandPositions[i*3+1], strandPositions[i*3+2]);
+  ring.userData = { idx: i, baseOpacity: 0.15 + norm * 0.4 };
+  driftRingGroup.add(ring);
+}
+scene.add(driftRingGroup);
+
+// === CONNECTIONS ===
+const connVerts = [];
+const connColorArr = [];
+for (let ci = 0; ci < conns.length; ci++) {
+  const c = conns[ci];
+  connVerts.push(strandPositions[c[0]*3], strandPositions[c[0]*3+1], strandPositions[c[0]*3+2]);
+  connVerts.push(strandPositions[c[1]*3], strandPositions[c[1]*3+1], strandPositions[c[1]*3+2]);
+  const col = CONN_COLORS[connTypes[ci]] || new THREE.Color(0x666666);
+  connColorArr.push(col.r, col.g, col.b, col.r, col.g, col.b);
+}
+const connGeo = new THREE.BufferGeometry();
+connGeo.setAttribute('position', new THREE.Float32BufferAttribute(connVerts, 3));
+connGeo.setAttribute('color', new THREE.Float32BufferAttribute(connColorArr, 3));
+const connLines = new THREE.LineSegments(connGeo, new THREE.LineBasicMaterial({
+  vertexColors: true, transparent: true, opacity: 0.7
+}));
+scene.add(connLines);
+
+// === ZONE GATES ===
+const ZONE_BOUNDARIES = [
+  { strand: 187, label: 'founding / julia', color: 0xC06888 },
+  { strand: 641, label: 'julia / nullcode', color: 0xD0A8B0 },
+  { strand: 662, label: 'nullcode / post', color: 0x88ACC0 }
+];
+const zoneBoundaryT = ZONE_BOUNDARIES.map(zb => (zb.strand - 1) / (TOTAL - 1));
+const gateGroup = new THREE.Group();
+
+for (const zb of ZONE_BOUNDARIES) {
+  const t = (zb.strand - 1) / (TOTAL - 1);
+  const pos = curve.getPointAt(t);
+  const tangent = curve.getTangentAt(t);
+
+  const gateGeo = new THREE.TorusGeometry(1.0, 0.04, 12, 48);
+  const gateMat = new THREE.MeshStandardMaterial({
+    color: zb.color, transparent: true, opacity: 0.5,
+    emissive: zb.color, emissiveIntensity: 0.6, side: THREE.DoubleSide
+  });
+  const gate = new THREE.Mesh(gateGeo, gateMat);
+  gate.position.copy(pos);
+  gate.lookAt(pos.clone().add(tangent));
+  gate.userData = { t, baseOpacity: 0.35 };
+  gateGroup.add(gate);
+}
+scene.add(gateGroup);
+
+// === NULLCODE TUNNEL ===
+const nullStartT = (NULL_START - 1) / (TOTAL - 1);
+const nullEndT = (NULL_END - 1) / (TOTAL - 1);
+const nullMidT = (nullStartT + nullEndT) / 2;
+const nullPos = curve.getPointAt(nullMidT);
+const nullTan = curve.getTangentAt(nullMidT);
+
+const tunnelLength = curve.getPointAt(nullEndT).distanceTo(curve.getPointAt(nullStartT));
+const tunnelGeo = new THREE.CylinderGeometry(0.6, 0.6, tunnelLength * 0.8, 12, 1, true);
+const tunnelMat = new THREE.MeshBasicMaterial({
+  color: 0xE8A8C8, transparent: true, opacity: 0.15, side: THREE.DoubleSide
+});
+const tunnel = new THREE.Mesh(tunnelGeo, tunnelMat);
+tunnel.position.copy(nullPos);
+tunnel.lookAt(nullPos.clone().add(nullTan));
+tunnel.rotateX(Math.PI / 2);
+scene.add(tunnel);
+
+// === LISSAJOUS 3D ===
+let ncx = 0, ncy = 0, ncz = 0;
+for (let id = NULL_START; id <= NULL_END; id++) {
+  ncx += strandPositions[(id-1)*3];
+  ncy += strandPositions[(id-1)*3+1];
+  ncz += strandPositions[(id-1)*3+2];
+}
+ncx /= 21; ncy /= 21; ncz /= 21;
+
+const lissGeo = new THREE.BufferGeometry();
+const lissVerts = new Float32Array(201 * 3);
+const lissLine = new THREE.Line(lissGeo, new THREE.LineBasicMaterial({
+  color: 0xffffff, transparent: true, opacity: 0.85
+}));
+scene.add(lissLine);
+
+function updateLissajous(time) {
+  for (let i = 0; i <= 200; i++) {
+    const t = (i / 200) * Math.PI * 2;
+    lissVerts[i*3] = ncx + Math.sin(3*t + time*0.8) * 1.8;
+    lissVerts[i*3+1] = ncy + Math.sin(5*t + time*0.6) * 1.2;
+    lissVerts[i*3+2] = ncz + Math.cos(3*t + time*0.5) * 1.5;
+  }
+  lissGeo.setAttribute('position', new THREE.BufferAttribute(lissVerts, 3));
+  lissGeo.attributes.position.needsUpdate = true;
+}
+
+// === GHOST MARKERS ===
+for (const gid of [21, 31]) {
+  const gGeo = new THREE.SphereGeometry(0.25, 8, 6);
+  const gMat = new THREE.MeshBasicMaterial({ color: 0xff4080, wireframe: true, transparent: true, opacity: 0.5 });
+  const gMesh = new THREE.Mesh(gGeo, gMat);
+  gMesh.position.set(strandPositions[(gid-1)*3], strandPositions[(gid-1)*3+1], strandPositions[(gid-1)*3+2]);
+  scene.add(gMesh);
+}
+
+// === TRAIN MARKER (visible in orbit mode) ===
+const trainMarkerGeo = new THREE.ConeGeometry(0.12, 0.3, 6);
+const trainMarkerMat = new THREE.MeshBasicMaterial({ color: 0x4af });
+const trainMarker = new THREE.Mesh(trainMarkerGeo, trainMarkerMat);
+trainMarker.rotation.x = Math.PI / 2;
+train.add(trainMarker);
+
+// === RIDE STATE ===
+let trainT = 0;
+let trainSpeed = 0.00015;
+const BASE_SPEED = 0.00015;
+const MIN_SPEED = 0.00004;
+const MAX_SPEED = 0.002;
+let speedMultiplier = 1.0;
+let direction = 1;
+let ridePaused = false;
+let time = 0, frame = 0;
+
+// Pre-compute arc lengths for display
+const trainPos = new THREE.Vector3();
+const trainTangent = new THREE.Vector3();
+const lookTarget = new THREE.Vector3();
+
+function updateTrainPhysics(dt) {
+  if (ridePaused) return;
+
+  curve.getTangentAt(trainT, trainTangent);
+
+  const GRAVITY_FACTOR = 0.0003;
+  const gravityBoost = -trainTangent.y * GRAVITY_FACTOR * dt;
+  trainSpeed = Math.max(MIN_SPEED, Math.min(MAX_SPEED, trainSpeed + gravityBoost));
+
+  trainT += trainSpeed * speedMultiplier * direction;
+  if (trainT > 1) trainT -= 1;
+  if (trainT < 0) trainT += 1;
+}
+
+function updateTrainPosition() {
+  curve.getPointAt(trainT, trainPos);
+  train.position.copy(trainPos);
+
+  // Look ahead
+  let lookT = trainT + 0.003 * direction;
+  if (lookT > 1) lookT -= 1;
+  if (lookT < 0) lookT += 1;
+  curve.getPointAt(lookT, lookTarget);
+  train.lookAt(lookTarget);
+
+  // Banking: approximate from tangent cross-product
+  curve.getTangentAt(trainT, trainTangent);
+  let t2 = trainT + 0.002 * direction;
+  if (t2 > 1) t2 -= 1; if (t2 < 0) t2 += 1;
+  const tangent2 = new THREE.Vector3();
+  curve.getTangentAt(t2, tangent2);
+  const cross = new THREE.Vector3().crossVectors(trainTangent, tangent2);
+  const bankAngle = cross.y * 8.0; // amplified for drama
+  train.rotateZ(bankAngle * 0.5);
+}
+
+// === LISSAJOUS VIEWPORT (2D) ===
+const cvLiss = document.getElementById('cv-liss');
+const ctxLiss = cvLiss.getContext('2d');
+cvLiss.width = 200; cvLiss.height = 160;
+
+function drawLissVP() {
+  const w = 200, h = 160;
+  ctxLiss.fillStyle = '#000';
+  ctxLiss.fillRect(0, 0, w, h);
+  const cx = w/2, cy = h/2;
+
+  ctxLiss.beginPath();
+  for (let i = 0; i <= 200; i++) {
+    const t = (i/200) * Math.PI * 2;
+    const x = cx + Math.sin(3*t + time*0.8) * (w*0.38);
+    const y = cy + Math.sin(5*t + time*0.6) * (h*0.38);
+    i === 0 ? ctxLiss.moveTo(x, y) : ctxLiss.lineTo(x, y);
+  }
+  ctxLiss.strokeStyle = 'rgba(200,200,200,0.45)';
+  ctxLiss.lineWidth = 0.8;
+  ctxLiss.stroke();
+
+  // Current strand in nullcode zone?
+  const currentStrand = Math.round(trainT * (TOTAL - 1)) + 1;
+  const inNull = currentStrand >= NULL_START && currentStrand <= NULL_END;
+
+  for (let id = NULL_START; id <= NULL_END; id++) {
+    const nf = (id - NULL_START) / (NULL_END - NULL_START);
+    const phase = nf * Math.PI * 2;
+    const x = cx + Math.sin(3*phase + time*0.8) * (w*0.38);
+    const y = cy + Math.sin(5*phase + time*0.6) * (h*0.38);
+    ctxLiss.beginPath();
+    ctxLiss.arc(x, y, id === currentStrand ? 3 : 1.5, 0, Math.PI*2);
+    ctxLiss.fillStyle = id === currentStrand ? '#4af' : (inNull ? '#ddd' : '#888');
+    ctxLiss.fill();
+  }
+
+  // Highlight border when in nullcode
+  if (inNull) {
+    document.getElementById('vp-liss').style.borderColor = 'rgba(208,168,176,0.6)';
+  } else {
+    document.getElementById('vp-liss').style.borderColor = 'rgba(255,255,255,0.2)';
+  }
+}
+
+// === PROGRESS BAR VIEWPORT ===
+const cvProg = document.getElementById('cv-progress');
+const ctxProg = cvProg.getContext('2d');
+cvProg.width = 400; cvProg.height = 30;
+
+function drawProgressBar(currentStrand) {
+  const w = 400, h = 30;
+  ctxProg.fillStyle = '#000';
+  ctxProg.fillRect(0, 0, w, h);
+
+  const zones = [
+    { end: 187, color: '#C06888' },
+    { end: 641, color: '#D8A088' },
+    { end: 662, color: '#D0A8B0' },
+    { end: 818, color: '#88ACC0' }
+  ];
+  let prevEnd = 0;
+  for (const z of zones) {
+    const x0 = (prevEnd / TOTAL) * w;
+    const x1 = (z.end / TOTAL) * w;
+    ctxProg.fillStyle = z.color;
+    ctxProg.globalAlpha = 0.25;
+    ctxProg.fillRect(x0, 0, x1 - x0, h);
+    prevEnd = z.end;
+  }
+  ctxProg.globalAlpha = 1;
+
+  // Current position marker
+  const markerX = ((currentStrand - 1) / (TOTAL - 1)) * w;
+  ctxProg.fillStyle = '#fff';
+  ctxProg.fillRect(markerX - 1, 0, 3, h);
+
+  ctxProg.fillStyle = '#fff';
+  ctxProg.font = '9px Lekton';
+  ctxProg.textBaseline = 'middle';
+  ctxProg.fillText(String(currentStrand), Math.min(markerX + 5, w - 30), h / 2);
+}
+
+// === CONTROLS ===
+function switchCamera(toFree) {
+  freeMode = toFree;
+  activeCamera = freeMode ? orbitCamera : rideCamera;
+  orbitControls.enabled = freeMode;
+  renderPass.camera = activeCamera;
+  trainMarker.visible = freeMode;
+  document.getElementById('btn-ride').classList.toggle('active', !freeMode);
+  document.getElementById('btn-orbit').classList.toggle('active', freeMode);
+  document.getElementById('cam-mode').textContent = freeMode ? 'camera: orbit' : 'camera: ride';
+}
+
+document.getElementById('btn-ride').addEventListener('click', () => switchCamera(false));
+document.getElementById('btn-orbit').addEventListener('click', () => switchCamera(true));
+
+document.getElementById('btn-pause').addEventListener('click', function() {
+  ridePaused = !ridePaused;
+  this.textContent = ridePaused ? 'play' : 'pause';
+  this.classList.toggle('active', ridePaused);
+});
+
+document.getElementById('btn-faster').addEventListener('click', function() {
+  speedMultiplier = Math.min(5.0, speedMultiplier + 0.25);
+});
+
+document.getElementById('btn-slower').addEventListener('click', function() {
+  speedMultiplier = Math.max(0.1, speedMultiplier - 0.25);
+});
+
+document.getElementById('btn-reverse').addEventListener('click', function() {
+  direction *= -1;
+  this.classList.toggle('active', direction < 0);
+});
+
+document.getElementById('btn-coset').addEventListener('click', function() {
+  useCosetColor = !useCosetColor;
+  this.classList.toggle('active', useCosetColor);
+  setStrandColors();
+  // Rebuild rails
+  scene.remove(railLeft, railRight);
+  railLeft = new THREE.Mesh(buildRailGeo(-RAIL_SEP / 2), railMat);
+  railRight = new THREE.Mesh(buildRailGeo(RAIL_SEP / 2), railMat);
+  scene.add(railLeft, railRight);
+
+  const dots = document.querySelectorAll('.zs .d');
+  const labels = document.querySelectorAll('.zs .zl');
+  if (useCosetColor) {
+    dots[0].style.background = '#C06888'; labels[0].textContent = 'coset 0 — f147 (rose)';
+    dots[1].style.background = '#D8A088'; labels[1].textContent = 'coset 1 — f258 (peach)';
+    dots[2].style.background = '#88ACC0'; labels[2].textContent = 'coset 2 — f369 (sky)';
+    dots[3].parentElement.style.display = 'none';
+  } else {
+    dots[0].style.background = '#C06888'; labels[0].textContent = 'founding (1–187)';
+    dots[1].style.background = '#D8A088'; labels[1].textContent = 'julia belt (188–641)';
+    dots[2].style.background = '#D0A8B0'; labels[2].textContent = 'nullcode bridge (642–662)';
+    dots[3].parentElement.style.display = ''; labels[3].textContent = 'everted (663–818)';
+  }
+});
+
+document.getElementById('btn-reset').addEventListener('click', function() {
+  trainT = 0; trainSpeed = BASE_SPEED; speedMultiplier = 1.0; direction = 1;
+  ridePaused = false; time = 0; frame = 0;
+  switchCamera(false);
+  document.getElementById('btn-pause').textContent = 'pause';
+  document.getElementById('btn-pause').classList.remove('active');
+  document.getElementById('btn-reverse').classList.remove('active');
+});
+
+document.addEventListener('keydown', (e) => {
+  switch (e.code) {
+    case 'Space':
+      e.preventDefault();
+      document.getElementById('btn-pause').click();
+      break;
+    case 'ArrowUp':
+      e.preventDefault();
+      document.getElementById('btn-faster').click();
+      break;
+    case 'ArrowDown':
+      e.preventDefault();
+      document.getElementById('btn-slower').click();
+      break;
+    case 'KeyR':
+      document.getElementById('btn-reverse').click();
+      break;
+    case 'KeyC':
+      document.getElementById('btn-coset').click();
+      break;
+    case 'KeyF':
+      switchCamera(!freeMode);
+      break;
+  }
+});
+
+// Hide train marker in ride mode initially
+trainMarker.visible = false;
+
+// === ANIMATE ===
+let prevTime = performance.now();
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const now = performance.now();
+  const dt = Math.min(50, now - prevTime); // cap delta to avoid huge jumps
+  prevTime = now;
+
+  if (!ridePaused) {
+    frame++;
+    time += 0.016;
+  }
+
+  updateTrainPhysics(dt);
+  updateTrainPosition();
+
+  const currentStrand = Math.round(trainT * (TOTAL - 1)) + 1;
+  const currentData = strandData[currentStrand - 1];
+
+  // Proximity glow on strand particles
+  for (let i = 0; i < TOTAL; i++) {
+    const dx = strandPositions[i*3] - trainPos.x;
+    const dy = strandPositions[i*3+1] - trainPos.y;
+    const dz = strandPositions[i*3+2] - trainPos.z;
+    const distSq = dx*dx + dy*dy + dz*dz;
+    strandAlphas[i] = 0.25 + 0.75 * Math.exp(-distSq * 0.3);
+  }
+  strandGeo.attributes.alpha.needsUpdate = true;
+
+  // Drift rings: billboard + proximity pulse
+  const camWorldPos = new THREE.Vector3();
+  activeCamera.getWorldPosition(camWorldPos);
+  driftRingGroup.children.forEach(ring => {
+    ring.lookAt(camWorldPos);
+    const dx = ring.position.x - trainPos.x;
+    const dy = ring.position.y - trainPos.y;
+    const dz = ring.position.z - trainPos.z;
+    const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+    ring.material.opacity = ring.userData.baseOpacity * (0.3 + 0.7 * Math.exp(-dist * 0.3));
+  });
+
+  // Zone gates: pulse when approaching
+  gateGroup.children.forEach(gate => {
+    const dt = Math.abs(trainT - gate.userData.t);
+    const proximity = Math.exp(-dt * dt * 5000);
+    gate.material.opacity = gate.userData.baseOpacity + proximity * 0.4;
+    gate.material.emissiveIntensity = 0.6 + proximity * 1.2;
+  });
+
+  // Nullcode tunnel pulse
+  const nullProximity = (currentStrand >= NULL_START && currentStrand <= NULL_END) ? 1 : 0;
+  tunnelMat.opacity = 0.1 + nullProximity * 0.2 + Math.sin(time * 2) * 0.04;
+
+  // Update lissajous
+  updateLissajous(time);
+
+  // Orbit controls
+  if (freeMode) orbitControls.update();
+
+  // Render
+  composer.render();
+
+  // HUD
+  document.getElementById('fc').textContent = ridePaused ? `frame ${frame} [paused]` : `frame ${frame}`;
+  document.getElementById('strand-id').textContent = `strand: ${currentStrand}`;
+  document.getElementById('zone-id').textContent = `zone: ${currentData.zone}`;
+  document.getElementById('coset-id').textContent = `coset: f${[147,258,369][currentData.coset]}`;
+  const driftStr = currentData.drift >= 0 ? '+' + currentData.drift.toFixed(4) : currentData.drift.toFixed(4);
+  document.getElementById('drift-val').textContent = `drift: ${driftStr}`;
+  document.getElementById('drift-val').style.color = currentData.drift < 0 ? '#f48' : '#fa6';
+  document.getElementById('speed-val').textContent = `speed: ${(speedMultiplier * 100).toFixed(0)}%`;
+
+  // Viewports
+  drawLissVP();
+  drawProgressBar(currentStrand);
+}
+
+// === RESIZE ===
+window.addEventListener('resize', () => {
+  orbitCamera.aspect = innerWidth / innerHeight;
+  orbitCamera.updateProjectionMatrix();
+  rideCamera.aspect = innerWidth / innerHeight;
+  rideCamera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+});
+
+animate();
+</script>
+</body>
+</html>

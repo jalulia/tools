@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Transcript Stylizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#ffffff;--paper-2:#fafafa;--paper-3:#f4f4f5;
+  --ink:#09090b;--ink-2:#1c1c20;
+  --mute:#52525b;--mute-2:#a1a1aa;--mute-3:#d4d4d8;
+  --line:rgba(9,9,11,.08);--rail:rgba(9,9,11,.05);
+  --ice:#2b8ef5;--laminar:#10b981;--heat:#ff5a1f;
+  --void:#e11d48;--signal:#f59e0b;--balanced:#16a34a;
+  --sans:'Geist',-apple-system,BlinkMacSystemFont,sans-serif;
+  --display:'Instrument Serif','Times New Roman',serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --panel-w:300px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);font-size:17px;line-height:1.65;font-weight:400;letter-spacing:-.011em;color:var(--ink-2);background:var(--paper);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:#09090b;color:#fff}
+button{font-family:inherit;cursor:pointer}
+
+/* ── Layout ────────────────────────────── */
+.app{display:grid;grid-template-columns:var(--panel-w) 1fr;min-height:100vh}
+@media(max-width:860px){.app{grid-template-columns:1fr;grid-template-rows:auto 1fr}.panel{max-height:40vh}}
+
+/* ── Panel ─────────────────────────────── */
+.panel{border-right:1px solid var(--line);background:var(--paper-2);overflow-y:auto;display:flex;flex-direction:column}
+.panel-section{padding:18px 20px;border-bottom:1px solid var(--line)}
+.panel-section:last-child{border-bottom:none}
+.panel-header{padding:20px 20px 14px;border-bottom:1px solid var(--line)}
+.panel-header h2{font-family:var(--display);font-weight:400;font-size:22px;line-height:1.1;color:var(--ink)}
+.panel-header p{font-size:12.5px;color:var(--mute);line-height:1.5;margin-top:6px}
+.label{font-family:var(--mono);font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute-2);margin-bottom:8px}
+.text-input{width:100%;font-family:var(--sans);font-size:14px;line-height:1.6;color:var(--ink-2);background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:10px 14px;outline:none;transition:border-color .2s;resize:vertical;min-height:110px;max-height:320px}
+.text-input:focus{border-color:var(--mute-2)}
+.btn{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:8px 18px;border:1.5px solid var(--line);border-radius:100px;background:var(--paper);color:var(--ink);cursor:pointer;transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.primary:hover{background:#27272a}
+.btn.sm{padding:5px 12px;font-size:8.5px}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--mute)}
+.btn.ghost:hover{background:var(--paper-3);color:var(--ink);border-color:transparent}
+.btn.full{width:100%;justify-content:center}
+.btn:disabled{opacity:.3;pointer-events:none}
+.file-input{display:none}
+.dl-row{display:flex;gap:8px;margin-bottom:8px}
+.dl-hint{font-size:11.5px;color:var(--mute-2);line-height:1.5;margin-top:6px}
+
+/* ── Preview ───────────────────────────── */
+.preview{overflow-y:auto;position:relative;background:var(--paper)}
+.preview-bar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:8px 20px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);gap:8px}
+.bar-meta{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute-2)}
+.bar-actions{display:flex;gap:6px}
+
+/* ── Preview body ──────────────────────── */
+.preview-body{padding:40px 0 160px}
+.p-col{max-width:40rem;margin:0 auto;padding:0 28px;position:relative}
+.p-col.has-rail::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--rail);pointer-events:none}
+
+/* ── Editable title ────────────────────── */
+.p-title-area{max-width:40rem;margin:0 auto 40px;padding:0 28px;text-align:center}
+.p-title{font-family:var(--display);font-weight:400;font-size:clamp(32px,5vw,50px);line-height:1.08;letter-spacing:-.02em;color:var(--ink);outline:none;cursor:text;border:none;background:transparent;min-height:1.2em;border-bottom:2px solid transparent;transition:border-color .2s;display:block;width:100%;text-align:center}
+.p-title:hover{border-bottom-color:var(--line)}
+.p-title:focus{border-bottom-color:var(--ice)}
+.p-title:empty::before{content:attr(data-placeholder);color:var(--mute-3);pointer-events:none}
+
+/* ── Turns ─────────────────────────────── */
+.p-turn{position:relative;margin:28px 0;opacity:0;transform:translateY(14px);transition:opacity .9s ease,transform .9s ease;padding:6px 8px;border-radius:4px;border:1.5px solid transparent}
+.p-turn.in{opacity:1;transform:none}
+.p-turn.anim-none{opacity:1;transform:none;transition:none}
+.p-turn .p-speaker{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:8px;cursor:pointer}
+.p-turn .p-text{font-family:var(--sans);font-size:18px;line-height:1.6;font-weight:400;color:var(--ink);outline:none;cursor:text;border-radius:2px;transition:background .15s}
+.p-turn .p-text:hover{background:rgba(43,142,245,.02)}
+.p-turn .p-text:focus{background:rgba(43,142,245,.04);outline:none}
+.p-turn.side-left{max-width:32rem;margin-right:auto}
+.p-turn.side-right{max-width:26rem;margin-left:auto;text-align:right}
+.p-turn.side-right .p-speaker{justify-content:flex-end}
+.p-turn.side-center{max-width:36rem;margin:28px auto;text-align:center}
+.p-turn.side-center .p-speaker{justify-content:center}
+.p-turn.accented{padding-left:18px;border-left:2px solid}
+.p-turn.font-display .p-text{font-family:var(--display);font-size:clamp(20px,2.6vw,26px);line-height:1.4;letter-spacing:-.01em}
+.p-turn.font-mono .p-text{font-family:var(--mono);font-size:14px;line-height:1.7;letter-spacing:.02em}
+.p-turn.anim-stagger{transition-delay:var(--stagger-delay,0s)}
+
+/* ── Per-turn delete ───────────────────── */
+.turn-del{position:absolute;top:4px;right:2px;font-size:13px;color:var(--mute-3);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px;opacity:.2;transition:all .15s;line-height:1}
+.p-turn:hover .turn-del{opacity:.6}
+.turn-del:hover{opacity:1!important;color:var(--void)}
+
+/* ── Speaker popover ───────────────────── */
+.sp-popover{position:absolute;top:100%;left:0;z-index:20;background:var(--paper);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.1);padding:14px;min-width:220px;display:none}
+.sp-popover.open{display:block}
+.sp-popover .pop-label{font-family:var(--mono);font-size:7px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute-2);margin-bottom:5px;margin-top:10px}
+.sp-popover .pop-label:first-child{margin-top:0}
+.sp-popover .pop-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.swatch{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:all .15s;flex-shrink:0}
+.swatch:hover{transform:scale(1.15)}
+.swatch.on{border-color:var(--ink);transform:scale(1.15)}
+.pill{font-family:var(--mono);font-size:8px;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border:1px solid var(--line);background:transparent;color:var(--mute);cursor:pointer;border-radius:4px;transition:all .15s}
+.pill:hover{border-color:var(--mute-2);color:var(--ink)}
+.pill.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ── Insert "+" button (click to expand) ─ */
+.insert-plus{display:flex;justify-content:center;padding:6px 0;max-width:40rem;margin:0 auto;position:relative}
+.plus-btn{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);background:var(--paper);color:var(--mute-2);font-size:14px;line-height:1;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.plus-btn:hover{border-color:var(--mute);color:var(--ink);background:var(--paper-3)}
+.plus-btn.open{opacity:0;pointer-events:none;width:0;padding:0;border:0;margin:0}
+.insert-menu{display:none;gap:4px;padding:4px 8px;background:var(--paper);border:1px solid var(--line);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.08);z-index:6;white-space:nowrap;align-items:center}
+.insert-menu.open{display:flex}
+.insert-menu button{font-family:var(--mono);font-size:8px;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border:1px solid var(--line);background:var(--paper);color:var(--mute);cursor:pointer;border-radius:4px;white-space:nowrap;transition:all .15s}
+.insert-menu button:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ── System beats ──────────────────────── */
+.p-sys{max-width:36rem;margin:48px auto;padding:0 28px;display:flex;align-items:center;gap:16px;justify-content:center;position:relative;opacity:0;transform:translateY(14px);transition:opacity .9s ease,transform .9s ease}
+.p-sys.in{opacity:1;transform:none}
+.p-sys.anim-none{opacity:1;transform:none;transition:none}
+.p-sys .p-ln{flex:1;height:1px;background:var(--line)}
+.p-sys .p-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--mute-2);font-weight:500;white-space:nowrap;outline:none;cursor:text}
+.p-sys .p-lbl:focus{color:var(--ink)}
+
+/* ── Shared delete button (beats, notes, headers) */
+.del-btn{opacity:.2;position:absolute;right:28px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:9px;color:var(--mute-2);background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:2px 6px;cursor:pointer;transition:all .15s}
+.p-sys:hover .del-btn,.p-note:hover .del-btn,.p-thread:hover .del-btn{opacity:.7}
+.del-btn:hover{opacity:1!important;background:var(--void);color:#fff;border-color:var(--void)}
+
+/* ── Pull quotes ───────────────────────── */
+.p-pull{max-width:44rem;margin:56px auto;padding:28px 28px;text-align:center;position:relative;opacity:0;transform:translateY(14px);transition:opacity 1s ease,transform 1s ease;border-radius:4px}
+.p-pull.in{opacity:1;transform:none}
+.p-pull.anim-none{opacity:1;transform:none;transition:none}
+.p-pull::before{content:"";position:absolute;left:50%;top:0;width:40px;height:1px;background:var(--ink);transform:translateX(-50%)}
+.p-pull blockquote{font-family:var(--display);font-weight:400;font-size:clamp(24px,3.2vw,38px);line-height:1.22;letter-spacing:-.015em;color:var(--ink);outline:none;cursor:text}
+.p-pull blockquote:focus{outline:none;background:rgba(43,142,245,.03);border-radius:4px}
+.p-pull .p-attr{margin-top:14px;font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute);outline:none;cursor:text}
+.p-pull .p-attr:focus{color:var(--ink)}
+.pull-controls{position:absolute;bottom:-36px;left:50%;transform:translateX(-50%);display:flex;gap:3px;padding:3px 6px;background:var(--paper);border:1px solid var(--line);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.06);opacity:.3;transition:opacity .15s;z-index:5;white-space:nowrap}
+.p-pull:hover .pull-controls,.p-atmosphere:hover .pull-controls{opacity:1}
+
+/* Pull quote variants */
+.p-pull.bg-solid{padding:36px 32px;border-radius:8px}
+.p-pull.bg-highlight blockquote{color:var(--highlight-color, var(--ice))}
+.p-pull.bg-highlight::before{background:var(--highlight-color, var(--ice))}
+.p-pull.bg-dark{padding:36px 32px;border-radius:8px;background:#09090b}
+.p-pull.bg-dark blockquote{color:#f6f1e4}
+.p-pull.bg-dark .p-attr{color:rgba(255,255,255,.4)}
+.p-pull.bg-dark::before{background:rgba(255,255,255,.2)}
+
+/* Pull quote: blob — full-width atmosphere */
+.p-atmosphere{position:relative;width:100%;min-height:280px;margin:64px 0;padding:72px 28px;overflow:hidden;isolation:isolate;display:flex;flex-direction:column;justify-content:center;align-items:center;opacity:0;transform:translateY(14px);transition:opacity 1s ease,transform 1s ease}
+.p-atmosphere.in{opacity:1;transform:none}
+.p-atmosphere.anim-none{opacity:1;transform:none;transition:none}
+.p-atmosphere::after{content:"";position:absolute;inset:0;z-index:0;opacity:.7;animation:blobShift 12s ease-in-out infinite alternate;pointer-events:none}
+.p-atmosphere>*{position:relative;z-index:1}
+.p-atmosphere::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(to bottom,var(--paper),transparent 15%,transparent 85%,var(--paper))}
+.p-atmosphere.blob-ice::after{background:radial-gradient(ellipse 90% 70% at 20% 30%,rgba(43,142,245,.2),transparent 60%),radial-gradient(ellipse 80% 90% at 80% 70%,rgba(16,185,129,.14),transparent 55%),radial-gradient(ellipse 70% 60% at 50% 50%,rgba(43,142,245,.08),transparent 50%)}
+.p-atmosphere.blob-laminar::after{background:radial-gradient(ellipse 90% 70% at 25% 40%,rgba(16,185,129,.2),transparent 60%),radial-gradient(ellipse 80% 90% at 75% 60%,rgba(43,142,245,.14),transparent 55%),radial-gradient(ellipse 70% 60% at 50% 50%,rgba(22,163,106,.08),transparent 50%)}
+.p-atmosphere.blob-heat::after{background:radial-gradient(ellipse 90% 70% at 20% 50%,rgba(255,90,31,.2),transparent 60%),radial-gradient(ellipse 80% 90% at 80% 30%,rgba(245,158,11,.14),transparent 55%),radial-gradient(ellipse 70% 60% at 50% 50%,rgba(225,29,72,.08),transparent 50%)}
+.p-atmosphere.blob-void::after{background:radial-gradient(ellipse 90% 70% at 30% 30%,rgba(225,29,72,.2),transparent 60%),radial-gradient(ellipse 80% 90% at 70% 70%,rgba(255,90,31,.12),transparent 55%),radial-gradient(ellipse 70% 60% at 50% 50%,rgba(225,29,72,.08),transparent 50%)}
+.p-atmosphere.blob-signal::after{background:radial-gradient(ellipse 90% 70% at 20% 40%,rgba(245,158,11,.2),transparent 60%),radial-gradient(ellipse 80% 90% at 80% 60%,rgba(255,90,31,.12),transparent 55%),radial-gradient(ellipse 70% 60% at 50% 50%,rgba(245,158,11,.08),transparent 50%)}
+.p-atmosphere.blob-balanced::after{background:radial-gradient(ellipse 90% 70% at 25% 35%,rgba(22,163,106,.2),transparent 60%),radial-gradient(ellipse 80% 90% at 75% 65%,rgba(16,185,129,.14),transparent 55%),radial-gradient(ellipse 70% 60% at 50% 50%,rgba(22,163,106,.08),transparent 50%)}
+@keyframes blobShift{0%{transform:scale(1) rotate(0deg)}50%{transform:scale(1.05) rotate(2deg)}100%{transform:scale(.98) rotate(-1deg)}}
+.p-atmosphere .atm-pull{max-width:44rem;text-align:center}
+.p-atmosphere .atm-pull blockquote{font-family:var(--display);font-weight:400;font-size:clamp(24px,3.2vw,38px);line-height:1.22;letter-spacing:-.015em;color:var(--ink);outline:none;cursor:text}
+.p-atmosphere .atm-pull .p-attr{margin-top:14px;font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}
+.p-atmosphere .pull-controls{position:absolute;bottom:16px;left:50%;transform:translateX(-50%)}
+
+/* ── Notes ─────────────────────────────── */
+.p-note{max-width:36rem;margin:40px auto;padding:0 28px;position:relative;opacity:0;transform:translateY(14px);transition:opacity .9s ease,transform .9s ease}
+.p-note.in{opacity:1;transform:none}
+.p-note.anim-none{opacity:1;transform:none;transition:none}
+.p-note-inner{padding:14px 18px;border-left:2px solid var(--mute-3);background:var(--paper-2)}
+.p-note .note-head{font-family:var(--mono);font-size:8px;letter-spacing:.28em;text-transform:uppercase;color:var(--mute-2);margin-bottom:6px;outline:none;cursor:text}
+.p-note .note-head:focus{color:var(--ink)}
+.p-note .note-body{font-family:var(--sans);font-size:14px;line-height:1.6;color:var(--mute);outline:none;cursor:text}
+.p-note .note-body:focus{color:var(--ink)}
+.p-note .note-body:empty::before{content:'Click to add note text…';color:var(--mute-3);pointer-events:none}
+
+/* ── Thread headers ────────────────────── */
+.p-thread{margin:80px auto 36px;max-width:40rem;padding:0 28px;text-align:center;position:relative}
+.p-thread .p-num{font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute-2);display:inline-flex;align-items:center;gap:14px;margin-bottom:14px}
+.p-thread .p-num::before,.p-thread .p-num::after{content:"";width:24px;height:1px;background:var(--line)}
+.p-thread h2{font-family:var(--display);font-weight:400;font-size:clamp(32px,5vw,50px);line-height:1.08;letter-spacing:-.02em;color:var(--ink);outline:none;cursor:text}
+.p-thread h2:focus{border-bottom:2px solid var(--ice)}
+
+/* ── Empty state ───────────────────────── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:60px 40px;text-align:center}
+.empty h3{font-family:var(--display);font-weight:400;font-size:clamp(28px,4vw,40px);line-height:1.15;color:var(--ink);margin-bottom:12px}
+.empty p{color:var(--mute);font-size:14px;max-width:36ch;line-height:1.6;margin-bottom:20px}
+.empty .steps{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute-2);line-height:2.4}
+
+/* ── Toast ─────────────────────────────── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding:10px 24px;background:var(--ink);color:#fff;border-radius:100px;z-index:200;transition:transform .35s cubic-bezier(.4,0,.2,1);pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── Touch / no-hover fallback ─────────── */
+@media(hover:none){
+  .turn-del{opacity:.35}
+  .del-btn{opacity:.35}
+  .pull-controls{opacity:.6}
+  .plus-btn{border-color:var(--mute-2);color:var(--mute)}
+}
+
+/* ── Scrollbars ────────────────────────── */
+.panel::-webkit-scrollbar,.preview::-webkit-scrollbar{width:4px}
+.panel::-webkit-scrollbar-track,.preview::-webkit-scrollbar-track{background:transparent}
+.panel::-webkit-scrollbar-thumb,.preview::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- LEFT PANEL — input + download only -->
+  <aside class="panel">
+    <div class="panel-header">
+      <h2>Transcript Stylizer</h2>
+      <p>Paste a conversation, then click anything in the preview to edit it.</p>
+    </div>
+
+    <div class="panel-section">
+      <div class="label">Paste or upload a transcript</div>
+      <textarea class="text-input" id="transcriptInput" placeholder="Paste here…&#10;&#10;Name: message&#10;or Name on its own line"></textarea>
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn sm primary" onclick="parseTranscript()">Go</button>
+        <button class="btn sm ghost" onclick="document.getElementById('fileUpload').click()">Upload file</button>
+        <input type="file" id="fileUpload" class="file-input" accept=".txt,.text,.log,.chat,.md" />
+        <button class="btn sm ghost" onclick="loadDemo()">Demo</button>
+      </div>
+    </div>
+
+    <div class="panel-section" id="downloadSection" style="display:none">
+      <div class="label">Share</div>
+      <div class="dl-row">
+        <button class="btn primary full" onclick="exportHTML(false)">Download page</button>
+      </div>
+      <div class="dl-row">
+        <button class="btn full" onclick="exportHTML(true)">Download animated page</button>
+      </div>
+      <div class="dl-row">
+        <button class="btn full" id="scrollBtn" onclick="previewScroll()">Preview scroll</button>
+      </div>
+      <p class="dl-hint">Page opens in any browser. Animated page auto-scrolls when opened — record it with screen capture for video.</p>
+      <div style="margin-top:10px">
+        <button class="btn sm ghost" onclick="clearAll()">Start over</button>
+      </div>
+    </div>
+
+    <div class="panel-section" style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:20px">
+      <span style="font-family:var(--mono);font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute-3)">Mindgut · Stylizer</span>
+    </div>
+  </aside>
+
+  <!-- RIGHT — live preview -->
+  <div class="preview" id="preview">
+    <div class="preview-bar">
+      <span class="bar-meta" id="turnCount">Paste a transcript to begin</span>
+      <div class="bar-actions">
+        <button class="btn sm ghost" id="undoBtn" onclick="undo()" disabled>Undo</button>
+      </div>
+    </div>
+    <div id="previewContent">
+      <div class="empty">
+        <h3>Paste a transcript</h3>
+        <p>Paste a conversation in the left panel, then click any text, speaker name, or title to change it. Click the + between messages to add quotes, notes, and section breaks.</p>
+        <div class="steps">
+          1. Paste → 2. Style → 3. Download
+        </div>
+        <div style="margin-top:20px">
+          <button class="btn sm" onclick="loadDemo()">Try a demo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const COLORS={ice:{hex:'#2b8ef5',name:'Blue'},laminar:{hex:'#10b981',name:'Green'},heat:{hex:'#ff5a1f',name:'Orange'},void:{hex:'#e11d48',name:'Red'},signal:{hex:'#f59e0b',name:'Amber'},balanced:{hex:'#16a34a',name:'Forest'}};
+const CK=Object.keys(COLORS);
+
+let S={turns:[],speakers:{},beats:[],quotes:[],notes:[],headers:[],anim:'fade',title:''};
+let idSeq=0;const nid=()=>++idSeq;
+let previewTimer=null;
+
+// ── Escaping ──
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function escJS(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/\n/g,'\\n').replace(/\r/g,'')}
+
+// ── Undo ──
+const undoStack=[];
+function pushUndo(){undoStack.push(JSON.stringify(S));if(undoStack.length>40)undoStack.shift();updateUndoBtn()}
+function undo(){if(!undoStack.length)return toast('Nothing to undo');const p=JSON.parse(undoStack.pop());if(!p.notes)p.notes=[];if(!p.headers)p.headers=[];Object.assign(S,p);const ids=[...S.turns.map(t=>t.id),...S.beats.map(b=>b.id),...S.quotes.map(q=>q.id),...S.notes.map(n=>n.id),...S.headers.map(h=>h.id)];idSeq=Math.max(idSeq,...ids,0);updatePreview();toast('Undone')}
+function updateUndoBtn(){const b=document.getElementById('undoBtn');if(b)b.disabled=!undoStack.length}
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='z'&&!e.shiftKey){e.preventDefault();undo()}});
+
+// ── File upload ──
+document.getElementById('fileUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{document.getElementById('transcriptInput').value=ev.target.result;toast('File loaded')};r.readAsText(f)});
+
+// ── Parse (fixed: timestamp must start with digit) ──
+function parseTranscript(){
+  let raw=document.getElementById('transcriptInput').value.trim();
+  if(!raw)return toast('Paste a transcript first');
+  // Pre-process: split single-line pastes at "Name:" boundaries
+  // Splits after sentence-ending punctuation followed by a Capitalized Name:
+  raw=raw.replace(/([.!?"""'''\)…])\s+([A-Z][a-zA-Z]{0,30}):\s/g,'$1\n$2: ');
+  // Also split at start if text begins without newline: "Name: text Name: text"
+  raw=raw.replace(/^([A-Z][a-zA-Z]{0,30}):\s/,'$1: ');
+  const lines=raw.split('\n');let turns=[];const spSet=new Set();let pending=null;
+  for(const line of lines){
+    let m=line.match(/^\[?(\d[\d:\/\s,aApPmM.-]*)\]?\s*[-–—]?\s*([^:]{1,40}?):\s*(.+)$/);
+    if(!m){m=line.match(/^([^:]{1,40}):\s+(.+)$/);if(m)m=[null,null,m[1],m[2]]}
+    if(m){if(pending)turns.push(pending);const time=m[1]?m[1].trim():'';const speaker=m[2].trim();spSet.add(speaker);pending={speaker,text:(m[3]||'').trim(),time,id:nid()}}
+    else if(pending&&line.trim()){pending.text+=' '+line.trim()}
+  }
+  if(pending)turns.push(pending);
+  if(!turns.length){
+    const blocks=[];let cur=[];
+    for(const line of lines){if(!line.trim()){if(cur.length)blocks.push(cur);cur=[]}else cur.push(line.trim())}
+    if(cur.length)blocks.push(cur);
+    const nameGuesses=new Set();blocks.forEach(b=>{if(b.length>=2&&b[0].length<50&&!/[.!?;]$/.test(b[0]))nameGuesses.add(b[0])});
+    if(nameGuesses.size>=1){for(const b of blocks){if(b.length>=2&&nameGuesses.has(b[0])){spSet.add(b[0]);turns.push({speaker:b[0],text:b.slice(1).join(' '),time:'',id:nid()})}else if(turns.length){turns[turns.length-1].text+=' '+b.join(' ')}}}
+    if(!turns.length)toast('Some lines could not be matched — check the preview');
+  }
+  if(!turns.length)return toast('No turns detected — try Name: message format');
+  pushUndo();S.turns=turns;S.beats=[];S.quotes=[];S.notes=[];S.headers=[];
+  const arr=[...spSet];S.speakers={};
+  arr.forEach((n,i)=>{S.speakers[n]={color:CK[i%CK.length],side:i===0?'left':'right',font:'sans',accent:i!==0}});
+  if(!S.title)S.title='';
+  document.getElementById('downloadSection').style.display='';
+  updatePreview();toast(turns.length+' turns · '+arr.length+' speakers');
+}
+
+function clearAll(){pushUndo();S.turns=[];S.speakers={};S.beats=[];S.quotes=[];S.notes=[];S.headers=[];S.title='';document.getElementById('transcriptInput').value='';document.getElementById('downloadSection').style.display='none';updatePreview()}
+
+// ── Demo ──
+function loadDemo(){
+  document.getElementById('transcriptInput').value="Julia: did you see that thing about the whales?\nMir: The singing thing? Yeah. They just stopped.\nJulia: not stopped. changed key.\nMir: That's worse. Stopped I understand. Changed key means they decided something.";
+  S.title='The Whales';
+  parseTranscript();
+  if(S.turns.length>=4){
+    const last=S.turns[3];
+    S.quotes.push({id:nid(),text:'Changed key means they decided something.',attr:'Mir',afterId:last.id,bg:'none',bgColor:'ice'});
+    S.notes.push({id:nid(),label:'Note',text:'“Decided” is doing all the work here. Mir almost wrote “noticed” — backed off because it was safer and less interesting.',afterId:last.id});
+    updatePreview();
+  }
+}
+
+// ── Preview ──
+function schedulePreview(){clearTimeout(previewTimer);previewTimer=setTimeout(updatePreview,60)}
+
+let openInsertMenu=null;
+let openPopover=null;
+
+function updatePreview(){
+  openInsertMenu=null;openPopover=null;
+  const c=document.getElementById('previewContent');
+  if(!S.turns.length){c.innerHTML='<div class="empty"><h3>Paste a transcript</h3><p>Paste a conversation in the left panel, then click any text, speaker name, or title to change it. Click the + between messages to add quotes, notes, and section breaks.</p><div class="steps">1. Paste → 2. Style → 3. Download</div><div style="margin-top:20px"><button class="btn sm" onclick="loadDemo()">Try a demo</button></div></div>';document.getElementById('turnCount').textContent='Paste a transcript to begin';return}
+  if(!S.notes)S.notes=[];if(!S.headers)S.headers=[];
+  const afterMap={};const addA=(aid,el)=>{if(!afterMap[aid])afterMap[aid]=[];afterMap[aid].push(el)};
+  S.beats.forEach(b=>addA(b.afterId,{type:'beat',data:b}));
+  S.quotes.forEach(q=>addA(q.afterId,{type:'quote',data:q}));
+  S.notes.forEach(n=>addA(n.afterId,{type:'note',data:n}));
+  S.headers.forEach(h=>addA(h.afterId,{type:'header',data:h}));
+
+  let html='<div class="p-title-area"><div class="p-title" contenteditable="true" data-placeholder="Click to add a title…" oninput="S.title=this.textContent">'+esc(S.title)+'</div></div>';
+  html+=renderInserted(afterMap[0]);
+  html+='<div class="p-col has-rail">';
+
+  S.turns.forEach((turn,i)=>{
+    const cfg=S.speakers[turn.speaker]||{color:'ice',side:'left',font:'sans',accent:false};
+    const hex=COLORS[cfg.color].hex;
+    const fontCls=cfg.font!=='sans'?' font-'+cfg.font:'';
+    const accentCls=cfg.accent?' accented':'';
+    const animCls=S.anim==='none'?' anim-none':'';
+    const accentBorder=cfg.accent?'border-left-color:'+hex+';background:linear-gradient(to right,'+hex+'0a,transparent 60%);':'';
+
+    html+='<div class="p-turn side-'+cfg.side+fontCls+accentCls+animCls+'" data-turn-id="'+turn.id+'" style="'+accentBorder+'">';
+    html+='<button class="turn-del" onclick="deleteTurn('+turn.id+')" title="Remove this message">×</button>';
+    html+='<div class="p-speaker" onclick="toggleSpeakerPopover(this,\''+escJS(turn.speaker)+'\')">';
+    html+='<span style="color:'+hex+'">'+esc(turn.speaker)+'</span>';
+    html+='<div class="sp-popover" onclick="event.stopPropagation()"></div>';
+    html+='</div>';
+    html+='<div class="p-text" contenteditable="true" onblur="saveTurnText('+turn.id+',this)">'+esc(turn.text)+'</div>';
+    html+='</div>';
+
+    html+='<div class="insert-plus">';
+    html+='<button class="plus-btn" onclick="event.stopPropagation();toggleInsertMenu(this)">+</button>';
+    html+='<div class="insert-menu" onclick="event.stopPropagation()">';
+    html+='<button onclick="addQuote('+turn.id+')">+ Quote</button>';
+    html+='<button onclick="addNote('+turn.id+')">+ Note</button>';
+    html+='<button onclick="addBeat('+turn.id+')">+ Break</button>';
+    html+='<button onclick="addHeader('+turn.id+')">+ Section</button>';
+    html+='</div></div>';
+
+    const ins=afterMap[turn.id];
+    if(ins&&ins.length){html+='</div>';html+=renderInserted(ins);html+='<div class="p-col has-rail">'}
+  });
+
+  html+='</div>';
+  c.innerHTML='<div class="preview-body">'+html+'</div>';
+  document.getElementById('turnCount').textContent=S.turns.length+' turns';
+  updateUndoBtn();
+  requestAnimationFrame(setupObs);
+}
+
+function renderInserted(items){
+  if(!items||!items.length)return '';
+  let h='';const animCls=S.anim==='none'?' anim-none':'';
+  items.forEach(it=>{
+    if(it.type==='beat'){
+      h+='<div class="p-sys'+animCls+'"><div class="p-ln"></div><div class="p-lbl" contenteditable="true" onblur="saveBeatLabel('+it.data.id+',this)">'+esc(it.data.label)+'</div><div class="p-ln"></div><button class="del-btn" onclick="removeBeat('+it.data.id+')">×</button></div>';
+    }else if(it.type==='quote'){
+      const bg=it.data.bg||'none',bgc=it.data.bgColor||'ice';
+      const controls='<div class="pull-controls">'
+        +'<button class="pill'+(bg==='none'?' on':'')+'" onclick="setQStyle('+it.data.id+',\'none\')">Plain</button>'
+        +'<button class="pill'+(bg==='solid'?' on':'')+'" onclick="setQStyle('+it.data.id+',\'solid\')">Tint</button>'
+        +'<button class="pill'+(bg==='highlight'?' on':'')+'" onclick="setQStyle('+it.data.id+',\'highlight\')">Color</button>'
+        +'<button class="pill'+(bg==='blob'?' on':'')+'" onclick="setQStyle('+it.data.id+',\'blob\')">Blob</button>'
+        +'<button class="pill'+(bg==='dark'?' on':'')+'" onclick="setQStyle('+it.data.id+',\'dark\')">Dark</button>'
+        +((bg==='solid'||bg==='blob'||bg==='highlight')?CK.map(c=>'<div class="swatch'+(c===bgc?' on':'')+'" style="background:'+COLORS[c].hex+';width:16px;height:16px" onclick="setQColor('+it.data.id+',\''+c+'\')"></div>').join(''):'')
+        +'<button class="pill" style="color:var(--void)" onclick="removeQuote('+it.data.id+')">Remove</button>'
+        +'</div>';
+      if(bg==='blob'){
+        h+='<div class="p-atmosphere blob-'+bgc+animCls+'"><div class="atm-pull"><blockquote contenteditable="true" onblur="saveQuoteText('+it.data.id+',this)">“'+esc(it.data.text)+'”</blockquote><div class="p-attr" contenteditable="true" onblur="saveQuoteAttr('+it.data.id+',this)">'+esc(it.data.attr)+'</div></div>'+controls+'</div>';
+      }else{
+        let cls='p-pull',sty='';
+        if(bg==='solid'){cls+=' bg-solid';sty='background:'+COLORS[bgc].hex+'10;'}
+        if(bg==='highlight'){sty='--highlight-color:'+COLORS[bgc].hex+';';cls+=' bg-highlight'}
+        if(bg==='dark')cls+=' bg-dark';
+        h+='<div class="'+cls+animCls+'" style="'+sty+'"><blockquote contenteditable="true" onblur="saveQuoteText('+it.data.id+',this)">“'+esc(it.data.text)+'”</blockquote><div class="p-attr" contenteditable="true" onblur="saveQuoteAttr('+it.data.id+',this)">'+esc(it.data.attr)+'</div>'+controls+'</div>';
+      }
+    }else if(it.type==='note'){
+      h+='<div class="p-note'+animCls+'"><div class="p-note-inner"><div class="note-head" contenteditable="true" onblur="saveNoteLabel('+it.data.id+',this)">'+esc(it.data.label)+'</div><div class="note-body" contenteditable="true" onblur="saveNoteText('+it.data.id+',this)">'+esc(it.data.text)+'</div></div><button class="del-btn" onclick="removeNote('+it.data.id+')">×</button></div>';
+    }else if(it.type==='header'){
+      h+='<div class="p-thread"><div class="p-num">'+esc(it.data.num)+'</div><h2 contenteditable="true" onblur="saveHeaderTitle('+it.data.id+',this)">'+esc(it.data.title)+'</h2><button class="del-btn" onclick="removeHeader('+it.data.id+')">×</button></div>';
+    }
+  });
+  return h;
+}
+
+// ── Inline save handlers (all push undo) ──
+function saveTurnText(id,el){const t=S.turns.find(x=>x.id===id);if(t&&t.text!==el.textContent){pushUndo();t.text=el.textContent}}
+function saveBeatLabel(id,el){const b=S.beats.find(x=>x.id===id);if(b&&b.label!==el.textContent){pushUndo();b.label=el.textContent}}
+function saveQuoteText(id,el){const q=S.quotes.find(x=>x.id===id);if(q){let t=el.textContent.replace(/^[“”"""]/,'').replace(/[“”"""]$/,'');if(q.text!==t){pushUndo();q.text=t}}}
+function saveQuoteAttr(id,el){const q=S.quotes.find(x=>x.id===id);if(q&&q.attr!==el.textContent){pushUndo();q.attr=el.textContent}}
+function saveNoteLabel(id,el){const n=S.notes.find(x=>x.id===id);if(n&&n.label!==el.textContent){pushUndo();n.label=el.textContent}}
+function saveNoteText(id,el){const n=S.notes.find(x=>x.id===id);if(n&&n.text!==el.textContent){pushUndo();n.text=el.textContent}}
+function saveHeaderTitle(id,el){const h=S.headers.find(x=>x.id===id);if(h&&h.title!==el.textContent){pushUndo();h.title=el.textContent}}
+
+// ── Speaker popover ──
+function toggleSpeakerPopover(spEl,name){
+  const pop=spEl.querySelector('.sp-popover');
+  if(openPopover&&openPopover!==pop){openPopover.classList.remove('open');openPopover=null}
+  if(pop.classList.contains('open')){pop.classList.remove('open');openPopover=null;return}
+  const cfg=S.speakers[name]||{color:'ice',side:'left',font:'sans',accent:false};
+  const n=escJS(name);
+  pop.innerHTML=''
+    +'<div class="pop-label">Color</div>'
+    +'<div class="pop-row">'+CK.map(c=>'<div class="swatch'+(c===cfg.color?' on':'')+'" style="background:'+COLORS[c].hex+'" title="'+COLORS[c].name+'" onclick="spSet(\''+n+'\',\'color\',\''+c+'\')"></div>').join('')+'</div>'
+    +'<div class="pop-label">Position</div>'
+    +'<div class="pop-row">'
+    +'<button class="pill'+(cfg.side==='left'?' on':'')+'" onclick="spSet(\''+n+'\',\'side\',\'left\')">Left</button>'
+    +'<button class="pill'+(cfg.side==='right'?' on':'')+'" onclick="spSet(\''+n+'\',\'side\',\'right\')">Right</button>'
+    +'<button class="pill'+(cfg.side==='center'?' on':'')+'" onclick="spSet(\''+n+'\',\'side\',\'center\')">Center</button>'
+    +'</div>'
+    +'<div class="pop-label">Font</div>'
+    +'<div class="pop-row">'
+    +'<button class="pill'+(cfg.font==='sans'?' on':'')+'" onclick="spSet(\''+n+'\',\'font\',\'sans\')" style="font-family:var(--sans);letter-spacing:0;text-transform:none;font-size:10px">Sans</button>'
+    +'<button class="pill'+(cfg.font==='display'?' on':'')+'" onclick="spSet(\''+n+'\',\'font\',\'display\')" style="font-family:var(--display);letter-spacing:0;text-transform:none;font-size:11px">Serif</button>'
+    +'<button class="pill'+(cfg.font==='mono'?' on':'')+'" onclick="spSet(\''+n+'\',\'font\',\'mono\')">Mono</button>'
+    +'</div>'
+    +'<div class="pop-label">Side highlight</div>'
+    +'<div class="pop-row"><button class="pill'+(cfg.accent?' on':'')+'" onclick="spSet(\''+n+'\',\'accent\','+(cfg.accent?'false':'true')+')">'+(cfg.accent?'On':'Off')+'</button></div>';
+  pop.classList.add('open');openPopover=pop;
+}
+document.addEventListener('click',e=>{
+  if(openPopover&&!e.target.closest('.sp-popover')&&!e.target.closest('.p-speaker')){openPopover.classList.remove('open');openPopover=null}
+  if(openInsertMenu&&!e.target.closest('.insert-plus')){closeInsertMenu()}
+});
+function spSet(n,k,v){pushUndo();if(v==='true')v=true;if(v==='false')v=false;S.speakers[n][k]=v;schedulePreview()}
+
+// ── Insert menu toggle (click-based) ──
+function toggleInsertMenu(btn){
+  const menu=btn.nextElementSibling;
+  if(openInsertMenu&&openInsertMenu!==menu)closeInsertMenu();
+  if(menu.classList.contains('open')){closeInsertMenu();return}
+  btn.classList.add('open');menu.classList.add('open');openInsertMenu=menu;
+}
+function closeInsertMenu(){
+  if(!openInsertMenu)return;
+  openInsertMenu.classList.remove('open');
+  const btn=openInsertMenu.previousElementSibling;
+  if(btn)btn.classList.remove('open');
+  openInsertMenu=null;
+}
+
+// ── Insert actions ──
+function addQuote(turnId){const t=S.turns.find(x=>x.id===turnId);if(!t)return;pushUndo();const txt=t.text.length>120?t.text.substring(0,120)+'…':t.text;S.quotes.push({id:nid(),text:txt,attr:t.speaker,afterId:turnId,bg:'none',bgColor:'ice'});schedulePreview();toast('Quote added — click to edit')}
+function addNote(turnId){pushUndo();S.notes.push({id:nid(),label:'Note',text:'',afterId:turnId});schedulePreview();toast('Note added — click to type')}
+function addBeat(turnId){pushUndo();S.beats.push({id:nid(),label:'Break',afterId:turnId});schedulePreview()}
+function addHeader(turnId){pushUndo();const n=String(S.headers.length+1).padStart(2,'0');S.headers.push({id:nid(),num:n,title:'Section Title',afterId:turnId});schedulePreview();toast('Section added — click title to edit')}
+
+// Delete turn: re-parents orphaned items to previous turn
+function deleteTurn(id){
+  pushUndo();
+  const idx=S.turns.findIndex(t=>t.id===id);
+  const prevId=idx>0?S.turns[idx-1].id:(S.turns.length>1?S.turns[idx===0?1:0].id:0);
+  S.beats.forEach(b=>{if(b.afterId===id)b.afterId=prevId});
+  S.quotes.forEach(q=>{if(q.afterId===id)q.afterId=prevId});
+  S.notes.forEach(n=>{if(n.afterId===id)n.afterId=prevId});
+  S.headers.forEach(h=>{if(h.afterId===id)h.afterId=prevId});
+  S.turns=S.turns.filter(t=>t.id!==id);
+  schedulePreview();
+}
+function removeQuote(id){pushUndo();S.quotes=S.quotes.filter(q=>q.id!==id);schedulePreview()}
+function removeNote(id){pushUndo();S.notes=S.notes.filter(n=>n.id!==id);schedulePreview()}
+function removeBeat(id){pushUndo();S.beats=S.beats.filter(b=>b.id!==id);schedulePreview()}
+function removeHeader(id){pushUndo();S.headers=S.headers.filter(h=>h.id!==id);schedulePreview()}
+function setQStyle(id,bg){pushUndo();const q=S.quotes.find(x=>x.id===id);if(q){q.bg=bg;schedulePreview()}}
+function setQColor(id,c){pushUndo();const q=S.quotes.find(x=>x.id===id);if(q){q.bgColor=c;schedulePreview()}}
+
+// ── Observer ──
+let obs=null;
+function setupObs(){
+  if(obs)obs.disconnect();
+  const targets=document.querySelectorAll('.p-turn:not(.anim-none),.p-pull:not(.anim-none),.p-atmosphere:not(.anim-none),.p-sys:not(.anim-none),.p-note:not(.anim-none)');
+  if(S.anim==='none'){targets.forEach(e=>e.classList.add('in'));return}
+  obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')})},{threshold:.12,root:document.getElementById('preview')});
+  targets.forEach(e=>obs.observe(e));
+}
+
+// ── Preview scroll ──
+let scrolling=false;
+function previewScroll(){
+  const preview=document.getElementById('preview');
+  const btn=document.getElementById('scrollBtn');
+  if(scrolling){scrolling=false;btn.textContent='Preview scroll';return}
+  document.querySelectorAll('.p-turn,.p-pull,.p-atmosphere,.p-sys,.p-note').forEach(e=>e.classList.add('in'));
+  preview.scrollTop=0;
+  scrolling=true;btn.textContent='Stop';
+  const total=preview.scrollHeight-preview.clientHeight;
+  const duration=Math.min(total/1.2,50000);
+  const t0=performance.now();
+  function step(){
+    if(!scrolling)return;
+    const p=Math.min((performance.now()-t0)/duration,1);
+    const e=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+    preview.scrollTop=e*total;
+    if(p<1)requestAnimationFrame(step);
+    else{scrolling=false;btn.textContent='Preview scroll';toast('Scroll complete')}
+  }
+  setTimeout(step,600);
+}
+
+// ── Export HTML ──
+function exportHTML(animated){
+  if(!S.turns.length)return;
+  const docTitle=S.title||'Transcript';
+  const sz=18,lh='1.60';
+  const afterMap={};const addA=(aid,el)=>{if(!afterMap[aid])afterMap[aid]=[];afterMap[aid].push(el)};
+  S.beats.forEach(b=>addA(b.afterId,{type:'beat',data:b}));S.quotes.forEach(q=>addA(q.afterId,{type:'quote',data:q}));S.notes.forEach(n=>addA(n.afterId,{type:'note',data:n}));S.headers.forEach(h=>addA(h.afterId,{type:'header',data:h}));
+
+  let body='<main>\n';
+  if(S.title)body+='<div class="thread"><div class="num">01</div><h2>'+esc(docTitle)+'</h2></div>\n';
+  const pre=afterMap[0];if(pre)pre.forEach(it=>{body+=exportItem(it)});
+  body+='<section class="chat"><div class="column rail">\n';
+  S.turns.forEach(turn=>{
+    const cfg=S.speakers[turn.speaker]||{color:'ice',side:'left',font:'sans',accent:false};
+    const hex=COLORS[cfg.color].hex;
+    let cls='turn';if(cfg.side==='right')cls+=' you';else cls+=' mir';
+    let sty='';if(cfg.accent)sty=' style="padding-left:18px;border-left:2px solid '+hex+';background:linear-gradient(to right,'+hex+'0a,transparent 60%)"';
+    let textSty='font-size:'+sz+'px;line-height:'+lh+';';
+    if(cfg.font==='display')textSty+='font-family:var(--display);font-size:clamp(20px,2.6vw,26px);';
+    else if(cfg.font==='mono')textSty+='font-family:var(--mono);font-size:14px;';
+    body+='  <div class="'+cls+'"'+sty+'><div class="meta"><span style="color:'+hex+'">'+esc(turn.speaker)+'</span></div><div class="text" style="'+textSty+'">'+esc(turn.text)+'</div></div>\n';
+    const after=afterMap[turn.id];
+    if(after&&after.length){body+='</div></section>\n';after.forEach(it=>{body+=exportItem(it)});body+='<section class="chat"><div class="column rail">\n'}
+  });
+  body+='</div></section>\n</main>\n';
+
+  const autoScrollJS=animated?'\nsetTimeout(function(){var total=document.documentElement.scrollHeight-window.innerHeight;var dur=Math.min(total/1.2,50000);var t0=performance.now();function step(){var p=Math.min((performance.now()-t0)/dur,1);var e=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;window.scrollTo(0,e*total);if(p<1)requestAnimationFrame(step)}step()},2500);\n':'';
+
+  const full='<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>'+esc(docTitle)+'</title>\n'
+    +'<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
+    +'<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">\n'
+    +'<style>\n'
+    +':root{--paper:#fff;--paper-2:#fafafa;--ink:#09090b;--ink-2:#1c1c20;--mute:#52525b;--mute-2:#a1a1aa;--mute-3:#d4d4d8;--line:rgba(9,9,11,.08);--rail:rgba(9,9,11,.05);--ice:#2b8ef5;--laminar:#10b981;--heat:#ff5a1f;--void:#e11d48;--signal:#f59e0b;--balanced:#16a34a;--sans:\'Geist\',-apple-system,sans-serif;--display:\'Instrument Serif\',serif;--mono:\'JetBrains Mono\',monospace}\n'
+    +'*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}\n'
+    +'body{font-family:var(--sans);font-size:'+sz+'px;line-height:'+lh+';font-weight:400;color:var(--ink-2);background:var(--paper);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}\n'
+    +'::selection{background:#09090b;color:#fff}\n'
+    +'main{background:var(--paper);padding:80px 0 120px}\n'
+    +'.thread{margin:64px auto 32px;max-width:40rem;padding:0 28px;text-align:center}\n'
+    +'.thread .num{font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute-2);display:inline-flex;align-items:center;gap:14px;margin-bottom:14px}\n'
+    +'.thread .num::before,.thread .num::after{content:"";width:24px;height:1px;background:var(--line)}\n'
+    +'.thread h2{font-family:var(--display);font-weight:400;font-size:clamp(32px,5vw,50px);line-height:1.08;letter-spacing:-.02em;color:var(--ink)}\n'
+    +'.sys{max-width:36rem;margin:40px auto;padding:0 28px;display:flex;align-items:center;gap:16px;justify-content:center;opacity:0;transform:translateY(14px);transition:opacity .9s ease,transform .9s ease}\n'
+    +'.sys.in{opacity:1;transform:none}\n'
+    +'.sys .ln{flex:1;height:1px;background:var(--line)}\n'
+    +'.sys .lbl{font-family:var(--mono);font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--mute-2);font-weight:500}\n'
+    +'.chat{position:relative}.chat .column{max-width:40rem;margin:0 auto;padding:0 28px;position:relative}\n'
+    +'.chat .column.rail::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--rail);pointer-events:none}\n'
+    +'.turn{position:relative;margin:34px 0;opacity:0;transform:translateY(14px);transition:opacity .9s ease,transform .9s ease}\n'
+    +'.turn.in{opacity:1;transform:none}\n'
+    +'.turn .meta{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;color:var(--ink);margin-bottom:10px}\n'
+    +'.turn .text{color:var(--ink)}\n'
+    +'.turn.mir{max-width:32rem;margin-right:auto}\n'
+    +'.turn.you{max-width:26rem;margin-left:auto;text-align:right}\n'
+    +'.turn.you .meta{text-align:right}\n'
+    +'.pull{max-width:44rem;margin:64px auto;padding:32px 28px;text-align:center;position:relative;opacity:0;transform:translateY(14px);transition:opacity 1s ease,transform 1s ease}\n'
+    +'.pull.in{opacity:1;transform:none}\n'
+    +'.pull::before{content:"";position:absolute;left:50%;top:0;width:40px;height:1px;background:var(--ink);transform:translateX(-50%)}\n'
+    +'.pull blockquote{font-family:var(--display);font-weight:400;font-size:clamp(28px,3.4vw,40px);line-height:1.22;letter-spacing:-.015em;color:var(--ink)}\n'
+    +'.pull .attr{margin-top:18px;font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}\n'
+    +'.pull.bg-solid{padding:36px 32px;border-radius:8px}\n'
+    +'.pull.bg-highlight blockquote{color:var(--highlight-color)}.pull.bg-highlight::before{background:var(--highlight-color)}\n'
+    +'.pull.bg-dark{padding:36px 32px;border-radius:8px;background:#09090b}.pull.bg-dark blockquote{color:#f6f1e4}.pull.bg-dark .attr{color:rgba(255,255,255,.4)}.pull.bg-dark::before{background:rgba(255,255,255,.2)}\n'
+    +'.atmosphere{position:relative;width:100%;min-height:280px;margin:64px 0;padding:72px 28px;overflow:hidden;isolation:isolate;display:flex;flex-direction:column;justify-content:center;align-items:center;opacity:0;transform:translateY(14px);transition:opacity 1s ease,transform 1s ease}\n'
+    +'.atmosphere.in{opacity:1;transform:none}\n'
+    +'.atmosphere::after{content:"";position:absolute;inset:0;z-index:0;opacity:.7;animation:blobShift 12s ease-in-out infinite alternate;pointer-events:none}\n'
+    +'.atmosphere>*{position:relative;z-index:1}\n'
+    +'.atmosphere::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(to bottom,var(--paper),transparent 15%,transparent 85%,var(--paper))}\n'
+    +'.atmosphere.blob-ice::after{background:radial-gradient(ellipse 90% 70% at 20% 30%,rgba(43,142,245,.2),transparent 60%),radial-gradient(ellipse 80% 90% at 80% 70%,rgba(16,185,129,.14),transparent 55%),radial-gradient(ellipse 70% 60% at 50% 50%,rgba(43,142,245,.08),transparent 50%)}\n'
+    +'.atmosphere.blob-laminar::after{background:radial-gradient(ellipse 90% 70% at 25% 40%,rgba(16,185,129,.2),transparent 60%),radial-gradient(ellipse 80% 90% at 75% 60%,rgba(43,142,245,.14),transparent 55%),radial-gradient(ellipse 70% 60% at 50% 50%,rgba(22,163,106,.08),transparent 50%)}\n'
+    +'.atmosphere.blob-heat::after{background:radial-gradient(ellipse 90% 70% at 20% 50%,rgba(255,90,31,.2),transparent 60%),radial-gradient(ellipse 80% 90% at 80% 30%,rgba(245,158,11,.14),transparent 55%),radial-gradient(ellipse 70% 60% at 50% 50%,rgba(225,29,72,.08),transparent 50%)}\n'
+    +'.atmosphere.blob-void::after{background:radial-gradient(ellipse 90% 70% at 30% 30%,rgba(225,29,72,.2),transparent 60%),radial-gradient(ellipse 80% 90% at 70% 70%,rgba(255,90,31,.12),transparent 55%),radial-gradient(ellipse 70% 60% at 50% 50%,rgba(225,29,72,.08),transparent 50%)}\n'
+    +'.atmosphere.blob-signal::after{background:radial-gradient(ellipse 90% 70% at 20% 40%,rgba(245,158,11,.2),transparent 60%),radial-gradient(ellipse 80% 90% at 80% 60%,rgba(255,90,31,.12),transparent 55%),radial-gradient(ellipse 70% 60% at 50% 50%,rgba(245,158,11,.08),transparent 50%)}\n'
+    +'.atmosphere.blob-balanced::after{background:radial-gradient(ellipse 90% 70% at 25% 35%,rgba(22,163,106,.2),transparent 60%),radial-gradient(ellipse 80% 90% at 75% 65%,rgba(16,185,129,.14),transparent 55%),radial-gradient(ellipse 70% 60% at 50% 50%,rgba(22,163,106,.08),transparent 50%)}\n'
+    +'@keyframes blobShift{0%{transform:scale(1) rotate(0deg)}50%{transform:scale(1.05) rotate(2deg)}100%{transform:scale(.98) rotate(-1deg)}}\n'
+    +'.atmosphere .atm-pull{max-width:44rem;text-align:center}\n'
+    +'.atmosphere .atm-pull blockquote{font-family:var(--display);font-weight:400;font-size:clamp(28px,3.4vw,40px);line-height:1.22;letter-spacing:-.015em;color:var(--ink)}\n'
+    +'.atmosphere .atm-pull .attr{margin-top:14px;font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}\n'
+    +'.note{max-width:36rem;margin:40px auto;padding:0 28px;opacity:0;transform:translateY(14px);transition:opacity .9s ease,transform .9s ease}\n'
+    +'.note.in{opacity:1;transform:none}\n'
+    +'.note-inner{padding:14px 18px;border-left:2px solid var(--mute-3);background:var(--paper-2)}\n'
+    +'.note .note-head{font-family:var(--mono);font-size:8px;letter-spacing:.28em;text-transform:uppercase;color:var(--mute-2);margin-bottom:6px}\n'
+    +'.note .note-body{font-family:var(--sans);font-size:14px;line-height:1.6;color:var(--mute)}\n'
+    +'</style></head><body>\n'
+    +body
+    +'<script>\n'
+    +'var o=new IntersectionObserver(function(e){e.forEach(function(x){if(x.isIntersecting)x.target.classList.add("in")})},{threshold:.15});\n'
+    +'document.querySelectorAll(".turn,.pull,.atmosphere,.note,.sys").forEach(function(e){o.observe(e)});\n'
+    +autoScrollJS
+    +'<\/script></body></html>';
+
+  const blob=new Blob([full],{type:'text/html'});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  const suffix=animated?'-animated':'';
+  a.download=(docTitle.replace(/[^a-zA-Z0-9]/g,'-').toLowerCase()||'transcript')+suffix+'.html';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast(animated?'Animated page downloaded':'Page downloaded');
+}
+
+function exportItem(it){
+  if(it.type==='beat')return'<div class="sys"><div class="ln"></div><div class="lbl">'+esc(it.data.label)+'</div><div class="ln"></div></div>\n';
+  if(it.type==='quote'){
+    const bg=it.data.bg||'none',bgc=it.data.bgColor||'ice';
+    if(bg==='blob')return'<div class="atmosphere blob-'+bgc+'"><div class="atm-pull"><blockquote>“'+esc(it.data.text)+'”</blockquote><div class="attr">'+esc(it.data.attr)+'</div></div></div>\n';
+    let cls='pull',sty='';
+    if(bg==='solid'){cls+=' bg-solid';sty=' style="background:'+COLORS[bgc].hex+'10"'}
+    if(bg==='highlight'){cls+=' bg-highlight';sty=' style="--highlight-color:'+COLORS[bgc].hex+'"'}
+    if(bg==='dark')cls+=' bg-dark';
+    return'<div class="'+cls+'"'+sty+'><blockquote>“'+esc(it.data.text)+'”</blockquote><div class="attr">'+esc(it.data.attr)+'</div></div>\n';
+  }
+  if(it.type==='note')return'<div class="note"><div class="note-inner"><div class="note-head">'+esc(it.data.label)+'</div><div class="note-body">'+esc(it.data.text)+'</div></div></div>\n';
+  if(it.type==='header')return'<div class="thread"><div class="num">'+esc(it.data.num)+'</div><h2>'+esc(it.data.title)+'</h2></div>\n';
+  return'';
+}
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2400)}
+</script>
+</body>
+</html>

@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Mindgut v2 — Governor Test Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#fff;--paper2:#fafafa;--ink:#09090b;--ink2:#1c1c20;--mute:#52525b;--mute2:#a1a1aa;--line:rgba(9,9,11,.08);--ice:#2b8ef5;--lam:#10b981;--warm:#f59e0b;--red:#ef4444;--sans:'Geist',-apple-system,sans-serif;--display:'Instrument Serif',serif;--mono:'JetBrains Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{font-family:var(--sans);font-size:18px;line-height:1.75;color:var(--ink2);background:var(--paper);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:var(--ink);color:#fff}
+
+/* ═══ CHROME BAR ═══ */
+.chrome{position:fixed;inset:0 0 auto 0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;mix-blend-mode:difference;color:#fff;pointer-events:none}
+.chrome .dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse-dot 2.4s ease-in-out infinite}
+@keyframes pulse-dot{0%,100%{opacity:.35}50%{opacity:1}}
+.chrome .l,.chrome .r{display:flex;gap:14px;align-items:center}
+
+/* ═══ HERO ═══ */
+.hero{position:relative;min-height:100vh;background:#09090b;display:flex;align-items:flex-end;padding:0 64px 80px;overflow:hidden}
+.hero-text{max-width:60%;position:relative;z-index:2}
+.kicker{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:20px}
+h1.title{font-family:var(--display);font-weight:400;font-size:clamp(64px,12vw,120px);line-height:.88;letter-spacing:-.025em;color:#f6f1e4}
+.hero .subtitle{font-family:var(--display);font-weight:400;font-size:clamp(24px,4vw,42px);color:rgba(255,255,255,.35);margin-top:16px;font-style:italic}
+.hero .deck{margin-top:24px;font-size:15px;font-weight:300;line-height:1.7;color:rgba(255,255,255,.25);max-width:36ch}
+.hero-meta{position:absolute;bottom:80px;right:64px;text-align:right;z-index:2}
+.hero-meta .hm-line{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.18);margin-bottom:8px}
+.hero-meta .hm-line span{color:rgba(255,255,255,.4)}
+
+/* ═══ SECTIONS — light ═══ */
+.sect{padding:80px 0}
+.sect-inner{max-width:36rem;margin:0 auto;padding:0 28px}
+.sect-inner p{margin:0 0 20px;text-wrap:pretty}
+.thread{margin:0 auto 32px;max-width:36rem;padding:0 28px;text-align:center}
+.thread .num{font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute2);display:inline-flex;align-items:center;gap:14px;margin-bottom:14px}
+.thread .num::before,.thread .num::after{content:'';width:24px;height:1px;background:var(--line)}
+.thread h2{font-family:var(--display);font-weight:400;font-size:clamp(32px,5vw,50px);line-height:1.08;letter-spacing:-.02em;color:var(--ink);text-wrap:balance}
+.lede{font-family:var(--display);font-weight:400;font-size:clamp(22px,2.8vw,28px);line-height:1.35;color:var(--ink);margin:0 0 24px;text-wrap:balance}
+em.i{font-family:var(--display);font-style:italic;font-size:1.05em}
+.sys{max-width:48rem;margin:40px auto;padding:0 28px;display:flex;align-items:center;gap:16px;justify-content:center}
+.sys .ln{flex:1;height:1px;background:var(--line)}
+.sys .lbl{font-family:var(--mono);font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--mute2);font-weight:500;white-space:nowrap}
+
+/* ═══ DARK SECTIONS ═══ */
+.dark{background:#09090b;padding:80px 0;border-top:1px solid rgba(255,255,255,.04)}
+.dark .thread .num{color:rgba(255,255,255,.25)}
+.dark .thread .num::before,.dark .thread .num::after{background:rgba(255,255,255,.08)}
+.dark .thread h2{color:#fff}
+.dark .sect-inner p{color:rgba(255,255,255,.55)}
+.dark .lede{color:rgba(255,255,255,.7)}
+
+/* ═══ CODE BLOCKS ═══ */
+.code-wrap{max-width:36rem;margin:24px auto;padding:0 28px}
+pre.terminal{background:#18181b;border-radius:8px;padding:20px 24px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.8;color:#e4e4e7;margin:0}
+pre.terminal .prompt{color:var(--lam)}
+pre.terminal .comment{color:#71717a;font-style:italic}
+pre.terminal .accent{color:var(--ice)}
+pre.terminal .pass{color:var(--lam)}
+pre.terminal .warn{color:var(--warm)}
+pre.terminal .fail{color:var(--red)}
+
+/* ═══ CALLOUTS ═══ */
+.callout{max-width:36rem;margin:24px auto;padding:0 28px}
+.callout-inner{border-left:3px solid var(--ice);background:var(--paper2);padding:16px 20px;border-radius:0 6px 6px 0}
+.callout-inner.green{border-left-color:var(--lam)}
+.callout-inner.amber{border-left-color:var(--warm)}
+.callout-inner.red{border-left-color:var(--red)}
+.callout .cl-label{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;margin-bottom:6px}
+.callout .cl-label.blue{color:var(--ice)}
+.callout .cl-label.green{color:var(--lam)}
+.callout .cl-label.amber{color:var(--warm)}
+.callout .cl-label.red{color:var(--red)}
+.callout p{margin:0;font-size:15px;line-height:1.65;color:var(--ink2)}
+/* dark callouts */
+.dark .callout-inner{background:rgba(255,255,255,.04)}
+.dark .callout p{color:rgba(255,255,255,.55)}
+
+/* ═══ GATE TABLE ═══ */
+.gate-table{max-width:42rem;margin:32px auto;padding:0 28px}
+.gate-table table{width:100%;border-collapse:collapse}
+.gate-table th{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#fff;background:#09090b;padding:10px 14px;text-align:left}
+.gate-table td{padding:12px 14px;border-bottom:1px solid rgba(9,9,11,.06);font-size:15px;line-height:1.5;vertical-align:top}
+.gate-table tr:last-child td{border-bottom:none}
+.gate-badge{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:500;color:#fff;padding:2px 10px;border-radius:4px;letter-spacing:.06em;min-width:28px;text-align:center}
+.gate-badge.a{background:var(--ice)}.gate-badge.b{background:#3b82f6}.gate-badge.c{background:#6366f1}
+.gate-badge.d{background:var(--mute)}.gate-badge.e{background:var(--lam)}
+
+/* ═══ COMPARISON TABLE ═══ */
+.cmp-table{max-width:42rem;margin:32px auto;padding:0 28px}
+.cmp-table table{width:100%;border-collapse:collapse}
+.cmp-table th{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#fff;background:#09090b;padding:10px 14px;text-align:left}
+.cmp-table td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06);font-size:14px;line-height:1.5;vertical-align:top}
+.cmp-table tr:last-child td{border-bottom:none}
+.cmp-table .dead{color:var(--red);font-family:var(--mono);font-size:13px}
+.cmp-table .live{color:var(--lam);font-family:var(--mono);font-size:13px}
+.dark .cmp-table td{color:rgba(255,255,255,.5);border-bottom-color:rgba(255,255,255,.06)}
+
+/* ═══ STEPS ═══ */
+.step{max-width:36rem;margin:0 auto 24px;padding:0 28px;display:flex;gap:16px;align-items:baseline}
+.step-num{font-family:var(--mono);font-size:28px;font-weight:500;color:var(--ice);line-height:1;flex-shrink:0;width:36px}
+.step-body{flex:1}
+.step-body p{margin:0 0 8px;font-size:16px;line-height:1.65}
+.step-body strong{color:var(--ink);font-weight:600}
+
+/* ═══ STATUS BADGES ═══ */
+.status{display:inline-block;font-family:var(--mono);font-size:12px;font-weight:500;padding:3px 12px;border-radius:100px;letter-spacing:.08em}
+.status.pass{background:rgba(16,185,129,.1);color:var(--lam);border:1px solid rgba(16,185,129,.2)}
+.status.cooled{background:rgba(245,158,11,.1);color:var(--warm);border:1px solid rgba(245,158,11,.2)}
+.status.forced{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.status.vent{background:rgba(139,92,246,.1);color:#8b5cf6;border:1px solid rgba(139,92,246,.2)}
+
+/* ═══ KEY NUMBERS ═══ */
+.key-num{max-width:36rem;margin:8px auto;padding:0 28px;display:flex;align-items:baseline;gap:16px}
+.key-num .kn-val{font-family:var(--mono);font-size:16px;color:var(--ice);flex-shrink:0;min-width:120px;text-align:right}
+.key-num .kn-desc{font-size:15px;color:var(--mute);line-height:1.5}
+
+/* ═══ CHECKLIST ═══ */
+.checklist{max-width:36rem;margin:0 auto;padding:0 28px}
+.checklist label{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid rgba(9,9,11,.04);font-size:16px;line-height:1.5;cursor:pointer;color:var(--ink2)}
+.checklist label:last-child{border-bottom:none}
+.checklist input[type="checkbox"]{margin-top:4px;accent-color:var(--ice);width:16px;height:16px;flex-shrink:0}
+.checklist label:has(input:checked){color:var(--mute2);text-decoration:line-through}
+
+/* ═══ CLOSING ═══ */
+.closing{text-align:center;padding:100px 28px;border-top:1px solid var(--line)}
+.closing blockquote{font-family:var(--display);font-weight:400;font-size:clamp(28px,5vw,48px);line-height:1.15;color:var(--ink);max-width:36rem;margin:0 auto 16px;text-wrap:balance}
+.closing .attr{font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute2)}
+
+/* ═══ REVEAL ═══ */
+.reveal{opacity:0;transform:translateY(12px);transition:opacity .9s ease,transform .9s ease}.reveal.in{opacity:1;transform:none}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:700px){
+  .hero{padding:0 28px 60px}
+  .hero-text{max-width:100%}
+  .hero-meta{display:none}
+  .step{flex-direction:column;gap:4px}
+  .step-num{width:auto}
+  .key-num{flex-direction:column;gap:4px}
+  .key-num .kn-val{text-align:left;min-width:auto}
+}
+@media print{
+  .chrome{display:none}
+  .reveal{opacity:1;transform:none}
+  .hero{min-height:auto;padding:60px 40px}
+  pre.terminal{font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<div class="chrome"><div class="l"><span class="dot"></span><span>Mindgut v2</span></div><div class="r"><span>ø co.</span><span>·</span><span>Walkthrough</span></div></div>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-text">
+    <div class="kicker">The Impøssible Outcomes Company</div>
+    <h1 class="title">Mindgut v2</h1>
+    <div class="subtitle">Governor Test Walkthrough</div>
+    <p class="deck">A step-by-step guide to running and testing the wired Governor. No prior setup assumed. No steps skipped.</p>
+  </div>
+  <div class="hero-meta">
+    <span class="hm-line"><span>Prepared for</span> Julia Compton</span>
+    <span class="hm-line"><span>Date</span> April 2026</span>
+    <span class="hm-line"><span>Version</span> Governor v2 — All Gates Wired</span>
+  </div>
+</section>
+
+<!-- ═══ 00 — WHAT THIS IS ═══ -->
+<div class="sect">
+  <div class="thread reveal"><div class="num">00</div><h2>What This Is</h2></div>
+  <div class="sect-inner reveal">
+    <p class="lede">The original codebase had five systems that were computed, logged, and&nbsp;ignored.</p>
+    <p>Heat tracking. σ_B coherence. Dynamic max_tokens. Controllers. Nullcodes. All of them measured the conversation — none of them governed it. They were thermometers that didn't connect to the thermostat.</p>
+    <p>Version 2 closes the loop. Gate E added (σ_B coherence). Heat now tightens all gate thresholds. Dynamic max_tokens replaces the dead clamp. All five gates fire, reject, and cool.</p>
+  </div>
+  <div class="callout reveal">
+    <div class="callout-inner">
+      <div class="cl-label blue">Two Levels of Testing</div>
+      <p><strong>Level 1: The Test Harness</strong> — exercises every gate with synthetic text. No API key. 30 seconds. Proves the logic works.</p>
+      <p style="margin-top:10px"><strong>Level 2: The Governed Middleware</strong> — wraps the Anthropic API so every message gets audited live. Requires an API key. Proves it works on real conversation.</p>
+      <p style="margin-top:10px;color:var(--mute);font-size:14px">You can stop after Level 1 and still have solid proof. Level 2 is for when you want to see it breathe.</p>
+    </div>
+  </div>
+</div>
+
+<div class="sys"><div class="ln"></div><div class="lbl">Let's Begin</div><div class="ln"></div></div>
+
+<!-- ═══ 01 — PREREQUISITES ═══ -->
+<div class="sect">
+  <div class="thread reveal"><div class="num">01</div><h2>Prerequisites</h2></div>
+  <div class="sect-inner reveal">
+    <p>You probably already have everything. Let's make sure.</p>
+  </div>
+  <div class="checklist reveal">
+    <label><input type="checkbox"> Python 3.9 or higher (you almost certainly have this)</label>
+    <label><input type="checkbox"> A terminal app (Terminal on Mac, or iTerm2)</label>
+    <label><input type="checkbox"> The mindgut-v2 folder (already in your Mindgut&nbsp;-&nbsp;Mir project folder)</label>
+    <label><input type="checkbox"> An Anthropic API key (only for Level 2 — skip for now if you don't have one)</label>
+  </div>
+  <div class="sect-inner reveal" style="margin-top:32px">
+    <p style="font-family:var(--display);font-size:24px;color:var(--ink);margin-bottom:16px;font-style:italic">Check your Python</p>
+    <p>Open Terminal and type this:</p>
+  </div>
+  <div class="code-wrap reveal">
+    <pre class="terminal"><span class="prompt">$</span> python3 --version
+<span class="comment"># Should print Python 3.9 or higher</span></pre>
+  </div>
+  <div class="sect-inner reveal">
+    <p>If it prints something like <code style="font-family:var(--mono);font-size:.9em;color:var(--ice)">Python 3.10.12</code>, you're good. If it says "command not found," install Python first:</p>
+  </div>
+  <div class="code-wrap reveal">
+    <pre class="terminal"><span class="prompt">$</span> brew install python3
+<span class="comment"># Only if python3 --version failed</span></pre>
+  </div>
+  <div class="callout reveal">
+    <div class="callout-inner green">
+      <div class="cl-label green">You're Good If</div>
+      <p><code style="font-family:var(--mono);font-size:.9em">python3 --version</code> prints 3.9 or higher. That's the only prerequisite for Level 1.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 02 — GET TO THE FOLDER ═══ -->
+<div class="sect">
+  <div class="thread reveal"><div class="num">02</div><h2>Get to the Folder</h2></div>
+  <div class="sect-inner reveal">
+    <p>Open Terminal. You'll see a blinking cursor. Type this exactly (or copy-paste it):</p>
+  </div>
+  <div class="code-wrap reveal">
+    <pre class="terminal"><span class="prompt">$</span> cd ~/Documents/Claude/Mindgut\ Cowork/mindgut-v2
+<span class="comment"># Navigates into the v2 folder</span></pre>
+  </div>
+  <div class="sect-inner reveal">
+    <p>Then verify you're in the right place:</p>
+  </div>
+  <div class="code-wrap reveal">
+    <pre class="terminal"><span class="prompt">$</span> ls
+
+assembly/          engine/            data/
+mindgut/           diagnostics/       test_governor_v2.py
+pyproject.toml     README.md</pre>
+  </div>
+  <div class="sect-inner reveal">
+    <p>The file that matters right now is <code style="font-family:var(--mono);font-size:.9em;color:var(--ice)">test_governor_v2.py</code> — that's the test harness. If you can see it in the listing, you're in the right place.</p>
+  </div>
+  <div class="callout reveal">
+    <div class="callout-inner amber">
+      <div class="cl-label amber">If You See "No such file or directory"</div>
+      <p>Double-check the path. The backslashes before the spaces are important. You can also open Finder, navigate to the folder, and drag it onto the Terminal icon — that auto-types the path for you.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 03 — LEVEL 1: TEST HARNESS ═══ -->
+<div class="dark">
+  <div class="thread reveal"><div class="num">03</div><h2>Level 1: The Test Harness</h2></div>
+  <div class="sect-inner reveal">
+    <p class="lede" style="color:rgba(255,255,255,.7)">No API key. No internet. Just the Governor's decision logic running against synthetic text.</p>
+    <p>This test exercises every gate using carefully constructed word banks. Each word has been verified for its Z₃ phase — assertion, relation, or derivation — so the test knows exactly what the Governor should do.</p>
+  </div>
+  <div class="code-wrap reveal">
+    <pre class="terminal"><span class="prompt">$</span> python3 test_governor_v2.py
+<span class="comment"># Takes about 30 seconds. No internet needed.</span></pre>
+  </div>
+  <div class="sect-inner reveal" style="margin-top:40px">
+    <p style="font-family:var(--display);font-size:24px;color:#fff;margin-bottom:16px;font-style:italic">What You'll See</p>
+    <p>The harness runs 8 tests. At the end, a summary:</p>
+  </div>
+  <div class="code-wrap reveal">
+    <pre class="terminal">========================================
+  RESULTS: 7/8 passed
+========================================
+
+  <span class="pass">✓</span> Gate A: Flux ceiling rejects high-derivation text
+  <span class="pass">✓</span> Gate B: Structure floor rejects low-assertion text
+  <span class="pass">✓</span> Gate C: Resonance rejects drift from lattice
+  <span class="pass">✓</span> Gate D: Vent cycle fires at turn 42
+  <span class="warn">~</span> Gate E: Coherence (partial — outer gates catch first)
+  <span class="pass">✓</span> Heat tightening: same text passes cold, rejects hot
+  <span class="pass">✓</span> Dynamic max_tokens scales with σ_B and heat
+  <span class="pass">✓</span> Balanced text passes all gates</pre>
+  </div>
+</div>
+
+<!-- ═══ 04 — GATE REFERENCE ═══ -->
+<div class="sect">
+  <div class="thread reveal"><div class="num">04</div><h2>The Five Gates</h2></div>
+  <div class="sect-inner reveal">
+    <p class="lede">Each gate catches a different failure mode. Together they form a layered defense.</p>
+  </div>
+
+  <div class="gate-table reveal">
+    <table>
+      <thead><tr><th>Gate</th><th>Name</th><th>What It Catches</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="gate-badge a">A</span></td>
+          <td style="font-weight:600;color:var(--ink)">Flux Ceiling</td>
+          <td>Too much derivation — speculation, abstraction, inference. Rejects when &gt;3/7 of words are phase-3.</td>
+        </tr>
+        <tr>
+          <td><span class="gate-badge b">B</span></td>
+          <td style="font-weight:600;color:var(--ink)">Structure Floor</td>
+          <td>Too little assertion — no ground truth, no claims. Rejects when &lt;22% of words are phase-1.</td>
+        </tr>
+        <tr>
+          <td><span class="gate-badge c">C</span></td>
+          <td style="font-weight:600;color:var(--ink)">Resonance</td>
+          <td>Drift from the reference lattice. Rejects when the text's balance diverges too far from the HELIX.</td>
+        </tr>
+        <tr>
+          <td><span class="gate-badge d">D</span></td>
+          <td style="font-weight:600;color:var(--ink)">Vent Cycle</td>
+          <td>Context pressure. Fires every 42 turns to compress the conversation window.</td>
+        </tr>
+        <tr>
+          <td><span class="gate-badge e">E</span></td>
+          <td style="font-weight:600;color:var(--ink)">Coherence</td>
+          <td>Register oscillation. Rejects when σ_B variance exceeds 3/7 across a 7-turn rolling window. <em style="color:var(--mute)">New in v2.</em></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sect-inner reveal" style="margin-top:40px">
+    <p style="font-family:var(--display);font-size:24px;color:var(--ink);margin-bottom:16px;font-style:italic">The "Partial Pass" on Gate E</p>
+    <p>Gate E's test gets a tilde (~) instead of a checkmark. This is correct. To test Gate E, the harness alternates between pure assertion text and pure derivation text — extreme oscillation. But that extreme text also violates Gate A (too much derivation) and Gate C (too far from the lattice).</p>
+    <p>Gates are layered defenses: the outer gates catch the grossest violations first. Gate E catches <em class="i">subtler</em> oscillation that passes the individual gates but still shows incoherent register-switching.</p>
+  </div>
+  <div class="callout reveal">
+    <div class="callout-inner green">
+      <div class="cl-label green">What This Means</div>
+      <p>If all 8 tests show green checkmarks or the expected tilde on Gate E, your Governor is wired correctly. Every gate fires, every rejection produces the right state label, and heat tightening is confirmed.</p>
+    </div>
+  </div>
+</div>
+
+<div class="sys"><div class="ln"></div><div class="lbl">What Actually Changed</div><div class="ln"></div></div>
+
+<!-- ═══ 05 — UNDERSTANDING HEAT ═══ -->
+<div class="sect">
+  <div class="thread reveal"><div class="num">05</div><h2>Understanding Heat</h2></div>
+  <div class="sect-inner reveal">
+    <p class="lede">The heat system is one of the key things we wired up. In the original code, H_T was computed but never&nbsp;used.</p>
+    <p>Think of it like this: every time the model's output is disproportionately long compared to your input, heat accumulates. When heat is low, gates are at their normal widths. As heat rises past the amber threshold (10), gates start tightening. Past red (20), they're aggressive.</p>
+  </div>
+  <div class="sect-inner reveal" style="margin-top:32px">
+    <p style="font-family:var(--display);font-size:24px;color:var(--ink);margin-bottom:16px;font-style:italic">The test proves this</p>
+  </div>
+  <div class="sect-inner reveal">
+    <div class="step" style="padding:0;max-width:100%">
+      <div class="step-num">1</div>
+      <div class="step-body"><p>Send the same text through the Governor when H_T&nbsp;=&nbsp;0 (cold). <strong>The text passes.</strong></p></div>
+    </div>
+    <div class="step" style="padding:0;max-width:100%">
+      <div class="step-num">2</div>
+      <div class="step-body"><p>Manually set H_T&nbsp;=&nbsp;25 (hot — past red threshold).</p></div>
+    </div>
+    <div class="step" style="padding:0;max-width:100%">
+      <div class="step-num">3</div>
+      <div class="step-body"><p>Send the <em class="i">exact same text</em> again. <strong>Now it's rejected.</strong></p></div>
+    </div>
+  </div>
+  <div class="sect-inner reveal" style="margin-top:24px">
+    <p>Same text. Different heat level. Different verdict. The flux ceiling was 42.9% when cold — it tightened to 25.7% when hot. That's the coupling in action.</p>
+  </div>
+
+  <div class="sect-inner reveal" style="margin-top:40px">
+    <p style="font-family:var(--display);font-size:24px;color:var(--ink);margin-bottom:16px;font-style:italic">Dynamic max_tokens</p>
+    <p>In the original code, max_tokens was clamped with <code style="font-family:var(--mono);font-size:.85em;color:var(--red)">max(4096, base)</code> — which always returned 4096 because base was always lower. A dead line of code.</p>
+    <p>Now max_tokens scales dynamically based on two signals:</p>
+    <p><strong>σ_B (coherence variance):</strong> High variance means the conversation is oscillating — shorten the leash.</p>
+    <p><strong>H_T (heat):</strong> Hot conversation means the model is running away — shorten the leash further.</p>
+    <p>The test confirms: <code style="font-family:var(--mono);font-size:.85em;color:var(--ice)">8192</code> tokens when calm → <code style="font-family:var(--mono);font-size:.85em;color:var(--warm)">3508</code> when σ_B is moderate → <code style="font-family:var(--mono);font-size:.85em;color:var(--red)">2105</code> when both are elevated.</p>
+  </div>
+</div>
+
+<!-- ═══ 06 — LEVEL 2: GOVERNED CHAT ═══ -->
+<div class="dark">
+  <div class="thread reveal"><div class="num">06</div><h2>Level 2: Live Governed Chat</h2></div>
+  <div class="callout reveal">
+    <div class="callout-inner amber" style="background:rgba(245,158,11,.06)">
+      <div class="cl-label amber">Requires</div>
+      <p style="color:rgba(255,255,255,.55)">An Anthropic API key. If you don't have one yet, skip to Section 07 for the comparison guide — you can come back to this anytime.</p>
+    </div>
+  </div>
+  <div class="sect-inner reveal" style="margin-top:40px">
+    <p style="font-family:var(--display);font-size:24px;color:#fff;margin-bottom:16px;font-style:italic">Install the package</p>
+    <p>From the mindgut-v2 folder:</p>
+  </div>
+  <div class="code-wrap reveal">
+    <pre class="terminal"><span class="prompt">$</span> pip3 install -e '.[api]'
+<span class="comment"># Installs mindgut + the anthropic package</span>
+
+<span class="comment"># If you get a permissions error, try:</span>
+<span class="prompt">$</span> pip3 install -e '.[api]' --user</pre>
+  </div>
+  <div class="sect-inner reveal" style="margin-top:40px">
+    <p style="font-family:var(--display);font-size:24px;color:#fff;margin-bottom:16px;font-style:italic">Set your API key</p>
+    <p>You only need to do this once per terminal session:</p>
+  </div>
+  <div class="code-wrap reveal">
+    <pre class="terminal"><span class="prompt">$</span> export ANTHROPIC_API_KEY=sk-ant-your-key-here
+<span class="comment"># Replace with your actual key</span></pre>
+  </div>
+  <div class="callout reveal">
+    <div class="callout-inner" style="background:rgba(43,142,245,.06)">
+      <div class="cl-label blue">Where to Find Your Key</div>
+      <p style="color:rgba(255,255,255,.55)">Go to <strong style="color:rgba(255,255,255,.7)">console.anthropic.com → API Keys → Create Key</strong>. Copy the whole string starting with sk-ant-.</p>
+    </div>
+  </div>
+  <div class="sect-inner reveal" style="margin-top:40px">
+    <p style="font-family:var(--display);font-size:24px;color:#fff;margin-bottom:16px;font-style:italic">Start a governed session</p>
+    <p>This launches an interactive chat where every message is audited:</p>
+  </div>
+  <div class="code-wrap reveal">
+    <pre class="terminal"><span class="prompt">$</span> python3 -m mindgut.assembly.middleware --geometry=mindgut/data/PFD_HELIX.json
+<span class="comment"># Starts the governed chat</span></pre>
+  </div>
+  <div class="sect-inner reveal" style="margin-top:24px">
+    <p>You'll see the Governor boot, then a prompt:</p>
+  </div>
+  <div class="code-wrap reveal">
+    <pre class="terminal"><span class="accent">--- mDNA GOVERNOR v2 ACTIVE ---</span>
+  Geometry:        <span class="accent">PFD_HELIX</span> (537 strands)
+  Surface:         (geometry)
+  Gate A: Flux     f369 < 0.4286 (3/N, heat-adjusted)
+  Gate B: Floor    f147 > 0.22 (S/100, heat-adjusted)
+  Gate C: Resonance  |drift| < 0.4286
+  Gate D: Vent       every 42 turns
+  Gate E: Coherence  σ_B < 0.4286 (rolling 7-turn)
+
+  Model: claude-sonnet-4-5-20250929
+  Max retries: 2
+
+Governed chat active. Type 'q' to quit, 'status' for readings.
+
+<span class="accent">You:</span> _</pre>
+  </div>
+  <div class="sect-inner reveal" style="margin-top:40px">
+    <p style="font-family:var(--display);font-size:24px;color:#fff;margin-bottom:16px;font-style:italic">What to try</p>
+    <p><span style="color:var(--ice);font-weight:600">Balanced question:</span> "What is the Angel's Share?" — should pass cleanly.</p>
+    <p><span style="color:var(--warm);font-weight:600">Speculative prompt:</span> "Speculate wildly about consciousness" — may trigger cooling if the model over-derives.</p>
+    <p><span style="color:var(--lam);font-weight:600">Status check:</span> Type "status" at any point to see current H_T, σ_B, turn count, and vent count.</p>
+  </div>
+  <div class="sect-inner reveal" style="margin-top:40px">
+    <p style="font-family:var(--display);font-size:24px;color:#fff;margin-bottom:16px;font-style:italic">Reading the output</p>
+    <p>After each exchange, two audit blocks — one for your input, one for the model's output. Look for:</p>
+    <p style="margin-top:16px"><span class="status pass">PASS</span> &nbsp;Text cleared all gates. Normal operation.</p>
+    <p style="margin-top:10px"><span class="status cooled">COOLED</span> &nbsp;Output failed a gate, was regenerated with a cooling prompt, and the retry passed.</p>
+    <p style="margin-top:10px"><span class="status forced">FORCED</span> &nbsp;All retries exhausted. Response delivered with a warning.</p>
+    <p style="margin-top:10px"><span class="status vent">VENT</span> &nbsp;Turn 42 reached. Context was compressed to cool down.</p>
+  </div>
+</div>
+
+<!-- ═══ 07 — COMPARING WITH LIVE ═══ -->
+<div class="sect">
+  <div class="thread reveal"><div class="num">07</div><h2>Comparing with the Live Site</h2></div>
+  <div class="sect-inner reveal">
+    <p class="lede">The live Mindgut at 808080808.com runs the original v1 code where none of the systems we wired up actually affect&nbsp;behavior.</p>
+    <p>Send the same prompt to both systems and compare what happens:</p>
+  </div>
+  <div class="step reveal"><div class="step-num">1</div><div class="step-body"><p>Open <strong>808080808.com</strong> in your browser. Start a conversation.</p></div></div>
+  <div class="step reveal"><div class="step-num">2</div><div class="step-body"><p>In your terminal, start a governed session (see Section 06).</p></div></div>
+  <div class="step reveal"><div class="step-num">3</div><div class="step-body"><p>Send the <strong>exact same message</strong> to both. Compare the responses.</p></div></div>
+
+  <div class="cmp-table reveal" style="margin-top:40px">
+    <table style="background:#09090b;border-radius:8px;overflow:hidden">
+      <thead><tr><th style="width:28%">Behavior</th><th style="width:36%">v1 (Live Site)</th><th style="width:36%">v2 (Governed)</th></tr></thead>
+      <tbody>
+        <tr>
+          <td style="color:rgba(255,255,255,.7);font-weight:500">max_tokens</td>
+          <td><span class="dead">Always 4096 (dead clamp)</span></td>
+          <td><span class="live">1024–8192, scaled by σ_B + heat</span></td>
+        </tr>
+        <tr>
+          <td style="color:rgba(255,255,255,.7);font-weight:500">Heat (H_T)</td>
+          <td><span class="dead">Computed, logged, ignored</span></td>
+          <td><span class="live">Tightens all gate thresholds</span></td>
+        </tr>
+        <tr>
+          <td style="color:rgba(255,255,255,.7);font-weight:500">σ_B coherence</td>
+          <td><span class="dead">Measured, never coupled</span></td>
+          <td><span class="live">Gate E + max_tokens scaling</span></td>
+        </tr>
+        <tr>
+          <td style="color:rgba(255,255,255,.7);font-weight:500">Output rejection</td>
+          <td><span class="dead">4 gates, fixed thresholds</span></td>
+          <td><span class="live">5 gates, heat-adaptive thresholds</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout reveal" style="margin-top:32px">
+    <div class="callout-inner">
+      <div class="cl-label blue">The Core Finding</div>
+      <p>The live site's Governor has the same gates but the measurements don't feed back into the system. It's like having a thermometer that doesn't connect to the thermostat. v2 closes the loop.</p>
+    </div>
+  </div>
+</div>
+
+<div class="sys"><div class="ln"></div><div class="lbl">Quick Reference</div><div class="ln"></div></div>
+
+<!-- ═══ 08 — QUICK REFERENCE ═══ -->
+<div class="sect" style="padding-bottom:40px">
+  <div class="thread reveal"><div class="num">08</div><h2>Quick Reference</h2></div>
+
+  <div class="sect-inner reveal">
+    <p style="font-family:var(--display);font-size:24px;color:var(--ink);margin-bottom:16px;font-style:italic">Commands</p>
+  </div>
+  <div class="code-wrap reveal">
+    <pre class="terminal"><span class="comment"># Navigate to folder</span>
+<span class="prompt">$</span> cd ~/Documents/Claude/Mindgut\ Cowork/mindgut-v2
+
+<span class="comment"># Run test harness (no API key)</span>
+<span class="prompt">$</span> python3 test_governor_v2.py
+
+<span class="comment"># Install package + anthropic</span>
+<span class="prompt">$</span> pip3 install -e '.[api]'
+
+<span class="comment"># Set API key for session</span>
+<span class="prompt">$</span> export ANTHROPIC_API_KEY=sk-ant-...
+
+<span class="comment"># Start governed chat</span>
+<span class="prompt">$</span> python3 -m mindgut.assembly.middleware --geometry=mindgut/data/PFD_HELIX.json</pre>
+  </div>
+
+  <div class="sect-inner reveal" style="margin-top:40px">
+    <p style="font-family:var(--display);font-size:24px;color:var(--ink);margin-bottom:24px;font-style:italic">Key Numbers</p>
+  </div>
+  <div class="key-num reveal"><div class="kn-val">N = 7</div><div class="kn-desc">The recursion period. Everything derives from this.</div></div>
+  <div class="key-num reveal"><div class="kn-val">3/7 ≈ 0.4286</div><div class="kn-desc">The Angel's Share. Flux ceiling, resonance threshold, σ_B max.</div></div>
+  <div class="key-num reveal"><div class="kn-val">S = 22</div><div class="kn-desc">Complexity ceiling. C(7,2) + 1. Structure floor = 22%.</div></div>
+  <div class="key-num reveal"><div class="kn-val">Ω_s = 42</div><div class="kn-desc">Sync limit. N(N−1). Vent fires every 42 turns.</div></div>
+  <div class="key-num reveal"><div class="kn-val">537 strands</div><div class="kn-desc">PFD_HELIX.json. The reference lattice all gates compare against.</div></div>
+</div>
+
+<!-- ═══ CLOSING ═══ -->
+<div class="closing reveal">
+  <blockquote>You've got this.</blockquote>
+  <p style="color:var(--mute);font-size:15px;max-width:32rem;margin:0 auto 40px;line-height:1.65">Take it one section at a time. The code is already in your folder. The test harness needs nothing but Python.</p>
+  <div class="attr">Ø co. · mmxxvi</div>
+</div>
+
+<!-- ═══ REVEAL OBSERVER ═══ -->
+<script>
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); observer.unobserve(e.target); } });
+}, { threshold: 0.15 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

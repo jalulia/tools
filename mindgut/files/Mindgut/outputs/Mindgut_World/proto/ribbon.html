@@ -1,0 +1,42 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>moss ribbon</title>
+<style>html,body{margin:0;height:100%;background:#F2EEE3;overflow:hidden}canvas{display:block}</style></head>
+<body><canvas id="c"></canvas><script>
+// One wide ribbon on a slow S-curve, twisting once along its length. 260 fibres across its width, each a hairline with its own
+// lightness. Shading by the ribbon's normal against one light, so the twist reads as a fold. Only the twist phase animates.
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');const DPR=Math.min(devicePixelRatio||1,2);
+let W,H;const fit=()=>{W=cv.width=innerWidth*DPR;H=cv.height=innerHeight*DPR};addEventListener('resize',fit);fit();
+const FIB=260,SEG=160;let s=11;const rnd=()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296};
+const fib=[];for(let i=0;i<FIB;i++)fib.push({l:(rnd()-.5)*0.34,w:0.6+rnd()*0.9,gap:rnd()<0.06,ph:rnd()*6.28});
+const mix=(a,b,t)=>a+(b-a)*t;
+function col(L){ // L in 0..1: deep forest → leaf → pale moss highlight
+  const stops=[[0,[11,42,31]],[.35,[20,69,47]],[.68,[46,107,69]],[.88,[95,164,107]],[1,[168,206,160]]];
+  for(let i=1;i<stops.length;i++)if(L<=stops[i][0]){const t=(L-stops[i-1][0])/(stops[i][0]-stops[i-1][0]);const a=stops[i-1][1],b=stops[i][1];return `rgb(${mix(a[0],b[0],t)|0},${mix(a[1],b[1],t)|0},${mix(a[2],b[2],t)|0})`}
+  return 'rgb(168,206,160)'}
+function frame(t){
+  const T=t*0.00012;ctx.fillStyle='#F2EEE3';ctx.fillRect(0,0,W,H);ctx.lineCap='round';
+  const width=Math.min(W,H)*0.26;
+  // centerline: a big S across the frame
+  const P=[];for(let i=0;i<=SEG;i++){const u=i/SEG;const x=W*(-0.1+1.2*u);const y=H*0.5+Math.sin(u*Math.PI*1.4+0.3)*H*0.22+Math.sin(u*7+T*3)*H*0.01;P.push([x,y])}
+  // frame vectors + twist angle along length
+  const Fr=[];for(let i=0;i<=SEG;i++){const a=P[Math.max(0,i-1)],b=P[Math.min(SEG,i+1)];const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1;
+    const u=i/SEG;const tw=u*Math.PI*1.15+T*2.0;                    // one full twist-ish
+    Fr.push({nx:-dy/L,ny:dx/L,tw,u})}
+  // draw fibres back-to-front by apparent depth so the fold overlaps correctly
+  const order=[...Array(FIB).keys()];
+  for(const pass of [0,1]){
+    for(let f=0;f<FIB;f++){const v=(f/(FIB-1)-0.5);const fb=fib[f];if(fb.gap)continue;
+      ctx.beginPath();let on=false;
+      for(let i=0;i<=SEG;i++){const F=Fr[i];const c=Math.cos(F.tw),sn=Math.sin(F.tw);
+        const depth=v*sn;                                            // >0 toward viewer
+        if((pass===0)!==(depth<0)) {if(on){ctx.stroke();ctx.beginPath();on=false}continue}
+        const off=v*c*width;const x=P[i][0]+F.nx*off,y=P[i][1]+F.ny*off;
+        if(!on){ctx.moveTo(x,y);on=true}else ctx.lineTo(x,y)}
+      // shading from normal: facing light when cos(tw) large; add fibre lightness
+      const sh=0.5+0.5*Math.cos(Fr[SEG>>1].tw);                         // approximate per fibre by mid-segment
+      ctx.strokeStyle=col(Math.max(0,Math.min(1,0.25+0.55*(pass?1:0.35)*(0.6+0.4*Math.cos(v*3.1))+fb.l*0.6)));
+      ctx.globalAlpha=pass?0.9:0.55;ctx.lineWidth=fb.w*DPR;if(on)ctx.stroke()}
+  }
+  ctx.globalAlpha=1;
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches)requestAnimationFrame(frame)}
+frame(0);
+</script></body></html>

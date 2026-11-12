@@ -1,0 +1,38 @@
+<section class="page" id="page-overview" data-title="Overview" data-num="01" hidden>
+<aside class="notes">
+<div class="note-id">Chapter / 01</div>
+<h1>Overview</h1>
+<div class="intro"><p>A desktop and web application that keeps a persistent, measured record of a conversation and puts a fixed slice of it in front of the model on every turn.</p></div>
+<nav class="page-links" aria-label="In Overview"><a href="#overview/what-it-is"><span>01</span>What it is</a><a href="#overview/what-it-is-not"><span>02</span>What it is not</a><a href="#overview/the-arithmetic"><span>03</span>The arithmetic underneath</a><a href="#overview/four-numbers"><span>04</span>Six numbers to keep</a></nav>
+<div class="takeaways"><h4>Key takeaways</h4><ol><li>The record is a file the user holds. Writing to it is deterministic code; no model is involved.</li><li>The model's context is seven exchanges, trimmed to four. Everything older is reached through the record, not remembered.</li><li>Models can be switched mid-session; the record is what continues.</li></ol></div>
+<div class="release">USER · DEVELOPER · MODEL<br><a href="#quickstart">Skip to Quickstart ↗</a></div>
+</aside>
+<div class="main"><article class="article">
+<h2 id="overview/what-it-is"><a class="section-anchor" href="#overview/what-it-is">What it is</a></h2>
+<p class="lede">The user talks to a persona called Mir: the name the runtime gives whichever language model is active, from one of four vendors. An <em>effort</em> level (low to max) sets how much work that model puts into each reply. Around it is a runtime that measures every turn, writes it into a file called the HELIX, and on the next turn selects part of that file to show the model, chosen by geometry rather than by topic.</p>
+<figure class="plate" id="fig-01"><figcaption><span class="fig-id">FIG. 01</span><h3>One turn, from keystroke to record</h3></figcaption><div class="figure-body" id="fig-turn-overview"></div><div class="figure-note">The five stages in order. Solid boxes are in the public source; the dashed box (margin bridges) is observed in 2.2.58 only. The record is written after the reply, by code, in the same process. <a href="#architecture/the-turn">FIG. 08</a> opens each stage. <span class="tag">SOURCE</span> <span class="cite">session_manager.py 966–1456</span></div></figure>
+<p>Three things follow from that drawing and shape the rest of this document:</p>
+<ul><li><b>Two kinds of recall.</b> A preamble is placed in front of the model every turn without being asked for (<em>involuntary</em>). The model can also read the record on purpose through tools (<em>voluntary</em>). <a href="#memory/preamble">Chapter 06</a> covers both.</li><li><b>A short, breathing context.</b> The model sees the last seven exchanges verbatim; at seven, the oldest three are cut and it continues with four. This is called PAR respiration and is exchange-counted, not token-counted. <span class="cite">config.py:24–30</span></li><li><b>One record, many models.</b> The sidebar switches the underlying model and the effort level from the next message on. Session, history and HELIX continue. <span class="tag o">OBSERVED</span> <span class="cite">app.js · MG_MODEL_GROUPS</span></li></ul>
+<h2 id="overview/what-it-is-not"><a class="section-anchor" href="#overview/what-it-is-not">What it is not</a></h2>
+<div class="table-scroll"><table><thead><tr><th>Not</th><th>Because</th><th>Where to check</th></tr></thead><tbody>
+<tr><td>A vector database</td><td>Recall is geometric over three-component phase vectors and word co-occurrence. There is no embedding model.</td><td><span class="cite">recall.py</span></td></tr>
+<tr><td>A summariser</td><td>The summary strand written after each exchange is numbers, never model prose.</td><td><span class="cite">crystallizer_v2.py:406</span></td></tr>
+<tr><td>A long-context chat</td><td>Seven exchanges, by design. The record is the long memory; the context is not.</td><td><span class="cite">config.py:29</span></td></tr>
+<tr><td>A fine-tuned model</td><td>No weights change. "Learning" means the record changes what the next turn is given.</td><td><a href="#memory">Chapter 06</a></td></tr>
+<tr><td>A statement by the company</td><td>Written from inside the runtime, against the evidence listed in the register. Market claims are tabled in chapter 06, not repeated.</td><td><a href="#evidence">Evidence</a></td></tr>
+</tbody></table></div>
+<h2 id="overview/the-arithmetic"><a class="section-anchor" href="#overview/the-arithmetic">The arithmetic underneath</a></h2>
+<p>Every letter A–Z is numbered 1–26 and reduced to its digital root. The root falls into one of three classes: <b>A</b> {1, 4, 7}, <b>R</b> {2, 5, 8}, <b>D</b> {3, 6, 9}. Non-letters are ignored. For any text, the three fractions of letters per class form a <em>phase vector</em>; their standard deviation across a window is <em style="white-space:nowrap"><span style="white-space:nowrap">σ<sub>B</sub></span></em>; A minus D is <em>balance</em>. These are what the runtime measures, stores, recalls by, and trims by. <span class="tag">SOURCE</span> <span class="cite">scanner.py:40–70 · sigma_b.py:41–160</span></p>
+<p>Across a 370,105-word list the three classes hold 33.41 / 33.32 / 33.28 % of letters, so a deviation from one third is signal and not an artefact of the alphabet. Whether the encoding carries <em>meaning</em> is the author's theory (Paradox Field Dynamics), which ships as a 774-strand book inside the app. This document describes the arithmetic and leaves the theory to that book. <span class="cite">sigma_b.py:18–21</span></p>
+<figure class="plate" id="fig-02"><figcaption><span class="fig-id">FIG. 02</span><h3>The alphabet, as the runtime reads it</h3></figcaption><div class="figure-body" id="fig-alphabet"></div><div class="figure-note">Twenty-six letters, their digital roots, and the class each falls into. <span class="tag">SOURCE</span> <span class="cite">scanner.py:40–69</span></div></figure>
+<h2 id="overview/four-numbers"><a class="section-anchor" href="#overview/four-numbers">Six numbers to keep</a></h2>
+<div class="stat-grid">
+<dl class="stat"><dt>Context</dt><dd><b>7 → 4</b>exchanges, inhale to exhale <span class="cite">config.py:24–30</span></dd></dl>
+<dl class="stat"><dt>Per exchange</dt><dd><b>+2</b>strands written: exchange and summary <span class="cite">crystallizer_v2.py</span></dd></dl>
+<dl class="stat"><dt>Involuntary recall</dt><dd><b>1 + 3 + 3</b>strands placed every turn, plus joints and bridges <span class="cite">recall.py:146</span></dd></dl>
+<dl class="stat"><dt>Roster</dt><dd><b>14</b>models on the roster, four vendors <span class="tag o">OBSERVED</span></dd></dl>
+<dl class="stat"><dt>Renewal</dt><dd><b>21</b>exchanges per session renewal, shown in the sidebar <span class="tag o">OBSERVED</span></dd></dl>
+<dl class="stat"><dt>Genesis</dt><dd><b>187</b>founding strands every account starts from <span class="tag m">MEASURED</span></dd></dl>
+</div>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#contents"><small>Previous</small>Contents</a><a href="#concepts"><small>Next</small>Concepts →</a></nav>
+</article></div></section>

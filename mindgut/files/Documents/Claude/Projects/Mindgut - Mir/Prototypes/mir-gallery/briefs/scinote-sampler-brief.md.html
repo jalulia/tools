@@ -1,0 +1,136 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>scinote-sampler-brief.md</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>scinote-sampler-brief.md</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/mir-gallery/briefs/scinote-sampler-brief.md</span><span>0.01 MB · sha256 adc0dccf2b84d5b1…</span><a download="scinote-sampler-brief.md" id="dl" href="#">Download the original</a></header><main><pre>---
+
+## Execution Report
+
+**Status**: ✅ Complete — 2026-03-25
+**Artifact**: `artifacts/scinote.html` → Synthentific Sampler
+**Lines**: ~830 → ~620 (full rewrite)
+
+### What was built
+- **48-pad sample machine** on the existing 8×6 grid with dark bg, IO Brand Kit colors, Lekton mono
+- **Empty cells** show dimmed generative patterns (12 cycling patterns: burst, circles, sine, dots, squares, scatter, bars, spiral, hex, cross, rose, lissajous) with &quot;drop audio&quot; hint on hover
+- **Load flow**: Click empty cell → mini menu with Upload Audio, Record Mic, From Library options
+- **Loaded cells**: Mini waveform thumbnail (60-sample downsample), name label bottom-left, duration top-right, IO brand border glow cycling EH/SE/PW/SP by index
+- **Trigger**: Click loaded cell → plays clipped region with white flash + playback sweep animation
+- **Inspector**: Right-click loaded cell → slide-in panel from right with full waveform display, draggable trim start/end markers on waveform, ms input fields, preview playback, replace, remove
+- **Library drawer**: Bottom panel with horizontal scroll, import multiple files, per-item waveform + play + delete, drag from library onto any cell to assign
+- **Recording**: MediaRecorder API mic capture with visual REC indicator, click-to-stop, auto-stop at 10s
+- **Drag &amp; drop**: Files onto grid cells or library zone, library items onto cells
+- **Keyboard shortcuts**: 1-8 = row 0, Q-I = row 1, A-K = row 2, Z-, = row 3, Space = stop all, Escape = close panels
+- **Audio engine**: Web Audio API with `decodeAudioData()`, `AudioBufferSourceNode`, trim via `source.start(0, startSec, duration)`
+
+### What was NOT built (per brief)
+- No groups/categories, no export ZIP, no auto-versioning, no bulk edit, no search, no event tokens, no complex routing, no localStorage persistence (samples are session-only)
+
+### Files modified
+- `artifacts/scinote.html` — full rewrite
+- `index.html` — ARTIFACTS entry updated: title → &quot;Synthentific Sampler&quot;, desc updated, tags → `[&quot;terminal&quot;, &quot;waveform&quot;, &quot;schematic&quot;, &quot;generative&quot;]`, status → &quot;wip&quot;
+
+---
+
+# Artifact Brief: Scinote → Sample Machine
+
+## What
+Convert `artifacts/scinote.html` (48-cell generative grid) into an audio sampling machine. Each cell becomes a sample pad — click to trigger, hold to preview, right-click to assign/edit.
+
+## Reference
+- **Massive SFX Log** (sfx-spark-organizer.lovable.app) — Julia&#x27;s full SFX organizer with groups, inspector panel, waveform preview, trim start/end, versioning, export ZIP. The sample machine should be a **drastically simpler** version of this — think MPC pad meets specimen grid.
+- **Screenshot reference**: Inspector panel shows waveform preview, play/skip controls, Trim Start (ms) / Trim End (ms) inputs, original filename, event token, version, group dropdown, notes field.
+
+## Architecture
+Keep the existing scinote shell: 8×6 grid, dark bg (#0A0A0A), IO Brand Kit colors, Lekton monospace font, cell hover influence.
+
+### Core Flow
+1. **Empty state**: Each cell shows its generative viz (current behavior) — cells are &quot;unloaded&quot;
+2. **Load a sample**: Click empty cell → opens a mini panel:
+   - Upload audio (wav/mp3/ogg via file input)
+   - Record audio (MediaRecorder API, mic input)
+   - Paste from library (if samples already imported)
+3. **Loaded state**: Cell shows a mini waveform thumbnail (canvas-drawn) + short label. Cell border color = IO brand palette (rotate through EH/SE/PW/SP based on index).
+4. **Trigger**: Click loaded cell → plays the sample (clipped region). Visual flash on trigger.
+5. **Edit/Clip**: Right-click or long-press loaded cell → opens Inspector overlay:
+   - Waveform display (full audio, zoomable)
+   - Trim Start / Trim End markers (draggable on waveform, or ms input fields)
+   - Play preview (plays only clipped region)
+   - Name field (auto-populated from filename, editable)
+   - Remove button (clears cell)
+6. **Library**: Side drawer or bottom panel listing all imported audio files (not yet assigned to cells). Drag from library to cell to assign.
+
+### Minimal Library
+- Import multiple files at once (multi-file input or drag-drop zone)
+- Each entry: filename, duration, tiny waveform, play button
+- Drag to a cell to assign
+- Delete from library
+- Persists in localStorage (store as base64 or just re-upload per session)
+
+### Audio Engine
+- Web Audio API: `AudioContext`, `AudioBufferSourceNode`
+- Decode uploaded files via `decodeAudioData()`
+- Clip playback: `source.start(0, trimStartSec, trimEndSec - trimStartSec)`
+- Record: `navigator.mediaDevices.getUserMedia({audio:true})` → `MediaRecorder` → Blob → decode
+- No effects chain needed (pure sample playback)
+
+### Waveform Drawing
+- Draw `AudioBuffer.getChannelData(0)` downsampled to cell width
+- Full waveform in inspector (zoomable via scroll)
+- Trim region shown as highlighted overlay on waveform
+- Use canvas for all waveform rendering (consistent with existing scinote approach)
+
+### Visual Design
+- **Empty cell**: Current generative viz, dimmed. Label &quot;drop audio&quot; at low opacity.
+- **Loaded cell**: Mini waveform fills cell, IO brand border glow, name label bottom-left (8px Lekton), duration top-right.
+- **Playing cell**: Brief flash (white border pulse, fast decay), waveform highlight sweeps across during playback.
+- **Inspector overlay**: Dark panel (charcoal #1A1A1A), slides in from right or appears as modal. Waveform takes top half, controls below. Matches the Massive SFX inspector layout but simplified.
+
+### What NOT to Build (keep it simple)
+- No groups/categories sidebar (just the 48-cell grid)
+- No export ZIP
+- No auto-versioning
+- No bulk edit
+- No search
+- No event tokens
+- No complex routing
+
+### Data Model
+```javascript
+// Per cell
+{
+  id: 0-47,
+  audioBuffer: AudioBuffer | null,
+  fileName: string,
+  trimStart: number (ms),
+  trimEnd: number (ms),
+  name: string,
+  color: string (IO brand color)
+}
+
+// Library
+[
+  { fileName, audioBuffer, duration, waveformData }
+]
+```
+
+### Keyboard Shortcuts (stretch)
+- Number keys 1-8 trigger row 1 cells
+- Q-I trigger row 2
+- A-K trigger row 3
+- Space = stop all
+
+## Files
+- **Modify**: `artifacts/scinote.html` (829 lines → replace generative cell drawers with sample pad logic, keep grid/layout/HUD)
+- **Register**: Update `index.html` ARTIFACTS array — change title to &quot;Sample Machine&quot; or &quot;Synthentific Sampler&quot;, update desc/tags
+
+## Tags
+`[&quot;terminal&quot;, &quot;waveform&quot;, &quot;schematic&quot;, &quot;generative&quot;]`
+
+## IO Brand Kit Colors
+- EH: #3D6DF4 (primary cell borders, UI elements)
+- SE: #F46138 (alternate cells, trim markers)
+- PW: #CE2867 (accent)
+- SP: #2C9FF4 (secondary)
+- Dark: #0A0A0A bg, #1A1A1A panels
+- Chrome: #E0E0E0 text, #B0B0B0 secondary text
+
+## Priority
+High — this is the most interactive/utility artifact in the gallery. Transforms scinote from a visual curiosity into a creative tool.
+</pre></main><script>var b=atob("LS0tCgojIyBFeGVjdXRpb24gUmVwb3J0CgoqKlN0YXR1cyoqOiDinIUgQ29tcGxldGUg4oCUIDIwMjYtMDMtMjUKKipBcnRpZmFjdCoqOiBgYXJ0aWZhY3RzL3NjaW5vdGUuaHRtbGAg4oaSIFN5bnRoZW50aWZpYyBTYW1wbGVyCioqTGluZXMqKjogfjgzMCDihpIgfjYyMCAoZnVsbCByZXdyaXRlKQoKIyMjIFdoYXQgd2FzIGJ1aWx0Ci0gKio0OC1wYWQgc2FtcGxlIG1hY2hpbmUqKiBvbiB0aGUgZXhpc3RpbmcgOMOXNiBncmlkIHdpdGggZGFyayBiZywgSU8gQnJhbmQgS2l0IGNvbG9ycywgTGVrdG9uIG1vbm8KLSAqKkVtcHR5IGNlbGxzKiogc2hvdyBkaW1tZWQgZ2VuZXJhdGl2ZSBwYXR0ZXJucyAoMTIgY3ljbGluZyBwYXR0ZXJuczogYnVyc3QsIGNpcmNsZXMsIHNpbmUsIGRvdHMsIHNxdWFyZXMsIHNjYXR0ZXIsIGJhcnMsIHNwaXJhbCwgaGV4LCBjcm9zcywgcm9zZSwgbGlzc2Fqb3VzKSB3aXRoICJkcm9wIGF1ZGlvIiBoaW50IG9uIGhvdmVyCi0gKipMb2FkIGZsb3cqKjogQ2xpY2sgZW1wdHkgY2VsbCDihpIgbWluaSBtZW51IHdpdGggVXBsb2FkIEF1ZGlvLCBSZWNvcmQgTWljLCBGcm9tIExpYnJhcnkgb3B0aW9ucwotICoqTG9hZGVkIGNlbGxzKio6IE1pbmkgd2F2ZWZvcm0gdGh1bWJuYWlsICg2MC1zYW1wbGUgZG93bnNhbXBsZSksIG5hbWUgbGFiZWwgYm90dG9tLWxlZnQsIGR1cmF0aW9uIHRvcC1yaWdodCwgSU8gYnJhbmQgYm9yZGVyIGdsb3cgY3ljbGluZyBFSC9TRS9QVy9TUCBieSBpbmRleAotICoqVHJpZ2dlcioqOiBDbGljayBsb2FkZWQgY2VsbCDihpIgcGxheXMgY2xpcHBlZCByZWdpb24gd2l0aCB3aGl0ZSBmbGFzaCArIHBsYXliYWNrIHN3ZWVwIGFuaW1hdGlvbgotICoqSW5zcGVjdG9yKio6IFJpZ2h0LWNsaWNrIGxvYWRlZCBjZWxsIOKGkiBzbGlkZS1pbiBwYW5lbCBmcm9tIHJpZ2h0IHdpdGggZnVsbCB3YXZlZm9ybSBkaXNwbGF5LCBkcmFnZ2FibGUgdHJpbSBzdGFydC9lbmQgbWFya2VycyBvbiB3YXZlZm9ybSwgbXMgaW5wdXQgZmllbGRzLCBwcmV2aWV3IHBsYXliYWNrLCByZXBsYWNlLCByZW1vdmUKLSAqKkxpYnJhcnkgZHJhd2VyKio6IEJvdHRvbSBwYW5lbCB3aXRoIGhvcml6b250YWwgc2Nyb2xsLCBpbXBvcnQgbXVsdGlwbGUgZmlsZXMsIHBlci1pdGVtIHdhdmVmb3JtICsgcGxheSArIGRlbGV0ZSwgZHJhZyBmcm9tIGxpYnJhcnkgb250byBhbnkgY2VsbCB0byBhc3NpZ24KLSAqKlJlY29yZGluZyoqOiBNZWRpYVJlY29yZGVyIEFQSSBtaWMgY2FwdHVyZSB3aXRoIHZpc3VhbCBSRUMgaW5kaWNhdG9yLCBjbGljay10by1zdG9wLCBhdXRvLXN0b3AgYXQgMTBzCi0gKipEcmFnICYgZHJvcCoqOiBGaWxlcyBvbnRvIGdyaWQgY2VsbHMgb3IgbGlicmFyeSB6b25lLCBsaWJyYXJ5IGl0ZW1zIG9udG8gY2VsbHMKLSAqKktleWJvYXJkIHNob3J0Y3V0cyoqOiAxLTggPSByb3cgMCwgUS1JID0gcm93IDEsIEEtSyA9IHJvdyAyLCBaLSwgPSByb3cgMywgU3BhY2UgPSBzdG9wIGFsbCwgRXNjYXBlID0gY2xvc2UgcGFuZWxzCi0gKipBdWRpbyBlbmdpbmUqKjogV2ViIEF1ZGlvIEFQSSB3aXRoIGBkZWNvZGVBdWRpb0RhdGEoKWAsIGBBdWRpb0J1ZmZlclNvdXJjZU5vZGVgLCB0cmltIHZpYSBgc291cmNlLnN0YXJ0KDAsIHN0YXJ0U2VjLCBkdXJhdGlvbilgCgojIyMgV2hhdCB3YXMgTk9UIGJ1aWx0IChwZXIgYnJpZWYpCi0gTm8gZ3JvdXBzL2NhdGVnb3JpZXMsIG5vIGV4cG9ydCBaSVAsIG5vIGF1dG8tdmVyc2lvbmluZywgbm8gYnVsayBlZGl0LCBubyBzZWFyY2gsIG5vIGV2ZW50IHRva2Vucywgbm8gY29tcGxleCByb3V0aW5nLCBubyBsb2NhbFN0b3JhZ2UgcGVyc2lzdGVuY2UgKHNhbXBsZXMgYXJlIHNlc3Npb24tb25seSkKCiMjIyBGaWxlcyBtb2RpZmllZAotIGBhcnRpZmFjdHMvc2Npbm90ZS5odG1sYCDigJQgZnVsbCByZXdyaXRlCi0gYGluZGV4Lmh0bWxgIOKAlCBBUlRJRkFDVFMgZW50cnkgdXBkYXRlZDogdGl0bGUg4oaSICJTeW50aGVudGlmaWMgU2FtcGxlciIsIGRlc2MgdXBkYXRlZCwgdGFncyDihpIgYFsidGVybWluYWwiLCAid2F2ZWZvcm0iLCAic2NoZW1hdGljIiwgImdlbmVyYXRpdmUiXWAsIHN0YXR1cyDihpIgIndpcCIKCi0tLQoKIyBBcnRpZmFjdCBCcmllZjogU2Npbm90ZSDihpIgU2FtcGxlIE1hY2hpbmUKCiMjIFdoYXQKQ29udmVydCBgYXJ0aWZhY3RzL3NjaW5vdGUuaHRtbGAgKDQ4LWNlbGwgZ2VuZXJhdGl2ZSBncmlkKSBpbnRvIGFuIGF1ZGlvIHNhbXBsaW5nIG1hY2hpbmUuIEVhY2ggY2VsbCBiZWNvbWVzIGEgc2FtcGxlIHBhZCDigJQgY2xpY2sgdG8gdHJpZ2dlciwgaG9sZCB0byBwcmV2aWV3LCByaWdodC1jbGljayB0byBhc3NpZ24vZWRpdC4KCiMjIFJlZmVyZW5jZQotICoqTWFzc2l2ZSBTRlggTG9nKiogKHNmeC1zcGFyay1vcmdhbml6ZXIubG92YWJsZS5hcHApIOKAlCBKdWxpYSdzIGZ1bGwgU0ZYIG9yZ2FuaXplciB3aXRoIGdyb3VwcywgaW5zcGVjdG9yIHBhbmVsLCB3YXZlZm9ybSBwcmV2aWV3LCB0cmltIHN0YXJ0L2VuZCwgdmVyc2lvbmluZywgZXhwb3J0IFpJUC4gVGhlIHNhbXBsZSBtYWNoaW5lIHNob3VsZCBiZSBhICoqZHJhc3RpY2FsbHkgc2ltcGxlcioqIHZlcnNpb24gb2YgdGhpcyDigJQgdGhpbmsgTVBDIHBhZCBtZWV0cyBzcGVjaW1lbiBncmlkLgotICoqU2NyZWVuc2hvdCByZWZlcmVuY2UqKjogSW5zcGVjdG9yIHBhbmVsIHNob3dzIHdhdmVmb3JtIHByZXZpZXcsIHBsYXkvc2tpcCBjb250cm9scywgVHJpbSBTdGFydCAobXMpIC8gVHJpbSBFbmQgKG1zKSBpbnB1dHMsIG9yaWdpbmFsIGZpbGVuYW1lLCBldmVudCB0b2tlbiwgdmVyc2lvbiwgZ3JvdXAgZHJvcGRvd24sIG5vdGVzIGZpZWxkLgoKIyMgQXJjaGl0ZWN0dXJlCktlZXAgdGhlIGV4aXN0aW5nIHNjaW5vdGUgc2hlbGw6IDjDlzYgZ3JpZCwgZGFyayBiZyAoIzBBMEEwQSksIElPIEJyYW5kIEtpdCBjb2xvcnMsIExla3RvbiBtb25vc3BhY2UgZm9udCwgY2VsbCBob3ZlciBpbmZsdWVuY2UuCgojIyMgQ29yZSBGbG93CjEuICoqRW1wdHkgc3RhdGUqKjogRWFjaCBjZWxsIHNob3dzIGl0cyBnZW5lcmF0aXZlIHZpeiAoY3VycmVudCBiZWhhdmlvcikg4oCUIGNlbGxzIGFyZSAidW5sb2FkZWQiCjIuICoqTG9hZCBhIHNhbXBsZSoqOiBDbGljayBlbXB0eSBjZWxsIOKGkiBvcGVucyBhIG1pbmkgcGFuZWw6CiAgIC0gVXBsb2FkIGF1ZGlvICh3YXYvbXAzL29nZyB2aWEgZmlsZSBpbnB1dCkKICAgLSBSZWNvcmQgYXVkaW8gKE1lZGlhUmVjb3JkZXIgQVBJLCBtaWMgaW5wdXQpCiAgIC0gUGFzdGUgZnJvbSBsaWJyYXJ5IChpZiBzYW1wbGVzIGFscmVhZHkgaW1wb3J0ZWQpCjMuICoqTG9hZGVkIHN0YXRlKio6IENlbGwgc2hvd3MgYSBtaW5pIHdhdmVmb3JtIHRodW1ibmFpbCAoY2FudmFzLWRyYXduKSArIHNob3J0IGxhYmVsLiBDZWxsIGJvcmRlciBjb2xvciA9IElPIGJyYW5kIHBhbGV0dGUgKHJvdGF0ZSB0aHJvdWdoIEVIL1NFL1BXL1NQIGJhc2VkIG9uIGluZGV4KS4KNC4gKipUcmlnZ2VyKio6IENsaWNrIGxvYWRlZCBjZWxsIOKGkiBwbGF5cyB0aGUgc2FtcGxlIChjbGlwcGVkIHJlZ2lvbikuIFZpc3VhbCBmbGFzaCBvbiB0cmlnZ2VyLgo1LiAqKkVkaXQvQ2xpcCoqOiBSaWdodC1jbGljayBvciBsb25nLXByZXNzIGxvYWRlZCBjZWxsIOKGkiBvcGVucyBJbnNwZWN0b3Igb3ZlcmxheToKICAgLSBXYXZlZm9ybSBkaXNwbGF5IChmdWxsIGF1ZGlvLCB6b29tYWJsZSkKICAgLSBUcmltIFN0YXJ0IC8gVHJpbSBFbmQgbWFya2VycyAoZHJhZ2dhYmxlIG9uIHdhdmVmb3JtLCBvciBtcyBpbnB1dCBmaWVsZHMpCiAgIC0gUGxheSBwcmV2aWV3IChwbGF5cyBvbmx5IGNsaXBwZWQgcmVnaW9uKQogICAtIE5hbWUgZmllbGQgKGF1dG8tcG9wdWxhdGVkIGZyb20gZmlsZW5hbWUsIGVkaXRhYmxlKQogICAtIFJlbW92ZSBidXR0b24gKGNsZWFycyBjZWxsKQo2LiAqKkxpYnJhcnkqKjogU2lkZSBkcmF3ZXIgb3IgYm90dG9tIHBhbmVsIGxpc3RpbmcgYWxsIGltcG9ydGVkIGF1ZGlvIGZpbGVzIChub3QgeWV0IGFzc2lnbmVkIHRvIGNlbGxzKS4gRHJhZyBmcm9tIGxpYnJhcnkgdG8gY2VsbCB0byBhc3NpZ24uCgojIyMgTWluaW1hbCBMaWJyYXJ5Ci0gSW1wb3J0IG11bHRpcGxlIGZpbGVzIGF0IG9uY2UgKG11bHRpLWZpbGUgaW5wdXQgb3IgZHJhZy1kcm9wIHpvbmUpCi0gRWFjaCBlbnRyeTogZmlsZW5hbWUsIGR1cmF0aW9uLCB0aW55IHdhdmVmb3JtLCBwbGF5IGJ1dHRvbgotIERyYWcgdG8gYSBjZWxsIHRvIGFzc2lnbgotIERlbGV0ZSBmcm9tIGxpYnJhcnkKLSBQZXJzaXN0cyBpbiBsb2NhbFN0b3JhZ2UgKHN0b3JlIGFzIGJhc2U2NCBvciBqdXN0IHJlLXVwbG9hZCBwZXIgc2Vzc2lvbikKCiMjIyBBdWRpbyBFbmdpbmUKLSBXZWIgQXVkaW8gQVBJOiBgQXVkaW9Db250ZXh0YCwgYEF1ZGlvQnVmZmVyU291cmNlTm9kZWAKLSBEZWNvZGUgdXBsb2FkZWQgZmlsZXMgdmlhIGBkZWNvZGVBdWRpb0RhdGEoKWAKLSBDbGlwIHBsYXliYWNrOiBgc291cmNlLnN0YXJ0KDAsIHRyaW1TdGFydFNlYywgdHJpbUVuZFNlYyAtIHRyaW1TdGFydFNlYylgCi0gUmVjb3JkOiBgbmF2aWdhdG9yLm1lZGlhRGV2aWNlcy5nZXRVc2VyTWVkaWEoe2F1ZGlvOnRydWV9KWAg4oaSIGBNZWRpYVJlY29yZGVyYCDihpIgQmxvYiDihpIgZGVjb2RlCi0gTm8gZWZmZWN0cyBjaGFpbiBuZWVkZWQgKHB1cmUgc2FtcGxlIHBsYXliYWNrKQoKIyMjIFdhdmVmb3JtIERyYXdpbmcKLSBEcmF3IGBBdWRpb0J1ZmZlci5nZXRDaGFubmVsRGF0YSgwKWAgZG93bnNhbXBsZWQgdG8gY2VsbCB3aWR0aAotIEZ1bGwgd2F2ZWZvcm0gaW4gaW5zcGVjdG9yICh6b29tYWJsZSB2aWEgc2Nyb2xsKQotIFRyaW0gcmVnaW9uIHNob3duIGFzIGhpZ2hsaWdodGVkIG92ZXJsYXkgb24gd2F2ZWZvcm0KLSBVc2UgY2FudmFzIGZvciBhbGwgd2F2ZWZvcm0gcmVuZGVyaW5nIChjb25zaXN0ZW50IHdpdGggZXhpc3Rpbmcgc2Npbm90ZSBhcHByb2FjaCkKCiMjIyBWaXN1YWwgRGVzaWduCi0gKipFbXB0eSBjZWxsKio6IEN1cnJlbnQgZ2VuZXJhdGl2ZSB2aXosIGRpbW1lZC4gTGFiZWwgImRyb3AgYXVkaW8iIGF0IGxvdyBvcGFjaXR5LgotICoqTG9hZGVkIGNlbGwqKjogTWluaSB3YXZlZm9ybSBmaWxscyBjZWxsLCBJTyBicmFuZCBib3JkZXIgZ2xvdywgbmFtZSBsYWJlbCBib3R0b20tbGVmdCAoOHB4IExla3RvbiksIGR1cmF0aW9uIHRvcC1yaWdodC4KLSAqKlBsYXlpbmcgY2VsbCoqOiBCcmllZiBmbGFzaCAod2hpdGUgYm9yZGVyIHB1bHNlLCBmYXN0IGRlY2F5KSwgd2F2ZWZvcm0gaGlnaGxpZ2h0IHN3ZWVwcyBhY3Jvc3MgZHVyaW5nIHBsYXliYWNrLgotICoqSW5zcGVjdG9yIG92ZXJsYXkqKjogRGFyayBwYW5lbCAoY2hhcmNvYWwgIzFBMUExQSksIHNsaWRlcyBpbiBmcm9tIHJpZ2h0IG9yIGFwcGVhcnMgYXMgbW9kYWwuIFdhdmVmb3JtIHRha2VzIHRvcCBoYWxmLCBjb250cm9scyBiZWxvdy4gTWF0Y2hlcyB0aGUgTWFzc2l2ZSBTRlggaW5zcGVjdG9yIGxheW91dCBidXQgc2ltcGxpZmllZC4KCiMjIyBXaGF0IE5PVCB0byBCdWlsZCAoa2VlcCBpdCBzaW1wbGUpCi0gTm8gZ3JvdXBzL2NhdGVnb3JpZXMgc2lkZWJhciAoanVzdCB0aGUgNDgtY2VsbCBncmlkKQotIE5vIGV4cG9ydCBaSVAKLSBObyBhdXRvLXZlcnNpb25pbmcKLSBObyBidWxrIGVkaXQKLSBObyBzZWFyY2gKLSBObyBldmVudCB0b2tlbnMKLSBObyBjb21wbGV4IHJvdXRpbmcKCiMjIyBEYXRhIE1vZGVsCmBgYGphdmFzY3JpcHQKLy8gUGVyIGNlbGwKewogIGlkOiAwLTQ3LAogIGF1ZGlvQnVmZmVyOiBBdWRpb0J1ZmZlciB8IG51bGwsCiAgZmlsZU5hbWU6IHN0cmluZywKICB0cmltU3RhcnQ6IG51bWJlciAobXMpLAogIHRyaW1FbmQ6IG51bWJlciAobXMpLAogIG5hbWU6IHN0cmluZywKICBjb2xvcjogc3RyaW5nIChJTyBicmFuZCBjb2xvcikKfQoKLy8gTGlicmFyeQpbCiAgeyBmaWxlTmFtZSwgYXVkaW9CdWZmZXIsIGR1cmF0aW9uLCB3YXZlZm9ybURhdGEgfQpdCmBgYAoKIyMjIEtleWJvYXJkIFNob3J0Y3V0cyAoc3RyZXRjaCkKLSBOdW1iZXIga2V5cyAxLTggdHJpZ2dlciByb3cgMSBjZWxscwotIFEtSSB0cmlnZ2VyIHJvdyAyCi0gQS1LIHRyaWdnZXIgcm93IDMKLSBTcGFjZSA9IHN0b3AgYWxsCgojIyBGaWxlcwotICoqTW9kaWZ5Kio6IGBhcnRpZmFjdHMvc2Npbm90ZS5odG1sYCAoODI5IGxpbmVzIOKGkiByZXBsYWNlIGdlbmVyYXRpdmUgY2VsbCBkcmF3ZXJzIHdpdGggc2FtcGxlIHBhZCBsb2dpYywga2VlcCBncmlkL2xheW91dC9IVUQpCi0gKipSZWdpc3RlcioqOiBVcGRhdGUgYGluZGV4Lmh0bWxgIEFSVElGQUNUUyBhcnJheSDigJQgY2hhbmdlIHRpdGxlIHRvICJTYW1wbGUgTWFjaGluZSIgb3IgIlN5bnRoZW50aWZpYyBTYW1wbGVyIiwgdXBkYXRlIGRlc2MvdGFncwoKIyMgVGFncwpgWyJ0ZXJtaW5hbCIsICJ3YXZlZm9ybSIsICJzY2hlbWF0aWMiLCAiZ2VuZXJhdGl2ZSJdYAoKIyMgSU8gQnJhbmQgS2l0IENvbG9ycwotIEVIOiAjM0Q2REY0IChwcmltYXJ5IGNlbGwgYm9yZGVycywgVUkgZWxlbWVudHMpCi0gU0U6ICNGNDYxMzggKGFsdGVybmF0ZSBjZWxscywgdHJpbSBtYXJrZXJzKQotIFBXOiAjQ0UyODY3IChhY2NlbnQpCi0gU1A6ICMyQzlGRjQgKHNlY29uZGFyeSkKLSBEYXJrOiAjMEEwQTBBIGJnLCAjMUExQTFBIHBhbmVscwotIENocm9tZTogI0UwRTBFMCB0ZXh0LCAjQjBCMEIwIHNlY29uZGFyeSB0ZXh0CgojIyBQcmlvcml0eQpIaWdoIOKAlCB0aGlzIGlzIHRoZSBtb3N0IGludGVyYWN0aXZlL3V0aWxpdHkgYXJ0aWZhY3QgaW4gdGhlIGdhbGxlcnkuIFRyYW5zZm9ybXMgc2Npbm90ZSBmcm9tIGEgdmlzdWFsIGN1cmlvc2l0eSBpbnRvIGEgY3JlYXRpdmUgdG9vbC4K"),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

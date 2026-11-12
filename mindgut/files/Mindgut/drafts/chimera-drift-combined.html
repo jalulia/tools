@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chimera Drift — Monstera Borsigiana Albo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: #0a0f08;
+  color: #d8d0bc;
+  font-family: 'DM Mono', monospace;
+  overflow: hidden;
+  height: 100vh;
+  user-select: none;
+}
+#canvas-container { position:absolute; inset:0; }
+
+/* ── Minimal panel ── */
+.panel {
+  position:absolute; right:20px; top:20px;
+  width:240px;
+  background: rgba(10,15,8,0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(216,208,188,0.06);
+  border-radius: 10px;
+  padding: 18px;
+  font-size: 11px;
+  z-index: 10;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+.panel::-webkit-scrollbar { width:3px; }
+.panel::-webkit-scrollbar-thumb { background:rgba(216,208,188,0.15); border-radius:2px; }
+.panel h1 {
+  font-family:'Cormorant Garamond',serif;
+  font-size:20px; font-weight:400;
+  color:#e8e0cc; margin-bottom:2px;
+}
+.panel .sub {
+  font-size:9px; color:#4a4540;
+  letter-spacing:0.12em; margin-bottom:14px;
+}
+.panel hr {
+  border:none;
+  border-top:1px solid rgba(216,208,188,0.06);
+  margin:12px 0;
+}
+.panel label {
+  display:block; font-size:9px;
+  color:#6a6555; letter-spacing:0.06em;
+  margin-bottom:3px; text-transform:uppercase;
+}
+.panel .val {
+  color:#b8b0a0; font-size:12px; margin-bottom:8px;
+}
+</style>
+<style>
+/* ── Meristem strip ── */
+.meristem-wrap { margin-top:6px; }
+.meristem-label { font-size:9px; color:#4a4540; margin-bottom:4px; letter-spacing:0.04em; }
+#meristem-strip {
+  width:100%; height:18px; border-radius:4px;
+  display:block; border:1px solid rgba(216,208,188,0.08);
+}
+
+/* ── Status bar ── */
+.vigor-bar {
+  height:5px; border-radius:3px;
+  background: rgba(216,208,188,0.08);
+  overflow:hidden; margin-bottom:3px;
+}
+.vigor-bar > div {
+  height:100%; border-radius:3px;
+  transition: width .4s ease, background .4s ease;
+}
+
+/* ── Buttons ── */
+.btn {
+  display:block; width:100%; padding:7px;
+  background: rgba(216,208,188,0.05);
+  border:1px solid rgba(216,208,188,0.1);
+  border-radius:5px; color:#a8a090;
+  font-family:'DM Mono',monospace;
+  font-size:10px; cursor:pointer;
+  margin-bottom:5px; letter-spacing:0.04em;
+  transition: all 0.2s;
+}
+.btn:hover { background:rgba(216,208,188,0.12); color:#e8e0cc; }
+
+/* ── Node count ── */
+.node-count {
+  font-family:'Cormorant Garamond',serif;
+  font-size:26px; color:#c9a84c; font-weight:400;
+}
+
+/* ── Annotations on canvas ── */
+.annotation {
+  position:absolute;
+  font-family:'Cormorant Garamond',serif;
+  font-size:13px; font-style:italic;
+  color:rgba(216,208,188,0.45);
+  pointer-events:none;
+  white-space:nowrap;
+  transition: opacity 0.6s;
+}
+
+/* ── Legend ── */
+.legend {
+  position:absolute; left:20px; bottom:20px;
+  font-size:9px; color:#2a2520;
+  z-index:10; letter-spacing:0.06em;
+}
+
+/* ── Seed input ── */
+.seed-row {
+  display:flex; gap:4px; margin-bottom:6px;
+}
+.seed-row input {
+  flex:1; background:rgba(216,208,188,0.05);
+  border:1px solid rgba(216,208,188,0.08);
+  border-radius:4px; padding:4px 6px;
+  color:#b8b0a0; font-family:'DM Mono',monospace;
+  font-size:10px;
+}
+.seed-row .btn { width:auto; margin:0; }
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+
+<div class="panel" id="panel">
+  <h1>Chimera Drift</h1>
+  <div class="sub">MONSTERA BORSIGIANA ALBO</div>
+  <hr>
+  <label>VIGOR</label>
+  <div class="vigor-bar"><div id="vigorBar" style="width:85%;background:#5a8a4a"></div></div>
+  <div class="val" id="vigorLabel" style="font-size:10px;color:#5a8a4a">healthy</div>
+
+  <label>MERISTEM</label>
+  <div class="meristem-wrap">
+    <canvas id="meristem-strip" width="200" height="18"></canvas>
+    <div class="meristem-label">competing cell lineages across the growth axis</div>
+  </div>
+  <div style="display:flex;justify-content:space-between;margin-top:2px;margin-bottom:8px">
+    <span style="font-size:9px;color:#3a6a38">chloroplast</span>
+    <span id="merPct" style="font-size:9px;color:#6a6555">—</span>
+    <span style="font-size:9px;color:#b8a878">mutant</span>
+  </div>
+
+  <label>LAST LEAF WHITE</label>
+  <div class="vigor-bar"><div id="whiteBar" style="width:0%;background:#c8c0a8"></div></div>
+
+  <hr>
+  <label>LEAVES</label>
+  <div class="node-count" id="nodeCount">0</div>
+  <hr>
+
+  <button class="btn" onclick="growNext()">GROW NEXT LEAF</button>
+  <button class="btn" id="btnAuto" onclick="toggleAuto()">AUTO-GROW: OFF</button>
+  <button class="btn" onclick="propagateCutting()">✂ PROPAGATE CUTTING</button>
+  <button class="btn" onclick="pruneTop()">PRUNE TOP LEAF</button>
+  <button class="btn" onclick="newPlant()">NEW LINEAGE</button>
+  <hr>
+
+  <label>SEED</label>
+  <div class="seed-row">
+    <input type="number" id="seedInput" value="42">
+    <button class="btn" onclick="setSeed()">SET</button>
+  </div>
+
+  <div id="hint" style="font-size:9px;color:#3a3530;line-height:1.5;margin-top:6px">
+    Each leaf is one roll of the chimeral dice. Green quietly wins over time — the marbled middle is the thing you tend to keep.
+  </div>
+</div>
+
+<div class="legend">CHIMERA DRIFT · SCROLL TO TRAVEL · DRAG TO PAN</div>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  CHIMERA DRIFT — combined sim
+//  Sector-based chimeral genetics (from monstera-chimera_variegated)
+//  Vine-as-timeline spatial layout (from chimeral-drift)
+//  Zen observation interface
+// ═══════════════════════════════════════════════════════════════════
+
+// ── Deterministic PRNG (mulberry32) ──
+function mulberry32(a){
+  return function(){
+    a|=0; a=a+0x6D2B79F5|0;
+    let t=Math.imul(a^a>>>15,1|a);
+    t=t+Math.imul(t^t>>>7,61|t)^t;
+    return ((t^t>>>14)>>>0)/4294967296;
+  };
+}
+let _rng = mulberry32(42);
+function rnd(){ return _rng(); }
+function rrange(a,b){ return a+(b-a)*_rng(); }
+
+// ── Config ──
+const SECTOR_COUNT = 6;
+const GREEN_BIAS = 0.14;
+const INIT_LOAD = 0.48;
+const LEAF_RES = 240;
+const NODE_SPACING = 110;
+const MAX_LEAVES = 30;
+
+// ── Colors ──
+const COL = {
+  green: [55, 120, 62],
+  cream: [240, 234, 215],
+  halo:  [195, 195, 135],
+  vein:  [38, 82, 42],
+  stem:  [76, 108, 65],
+  stemWhite: [170, 165, 148]
+};
+
+// ── Plant state ──
+let meristem = [];
+let leaves = [];
+let vigor = 0.85;
+let history = [];
+let annotations = [];
+let autoOn = false;
+let autoTimer = 0;
+
+// ── Camera ──
+let cam = { x:0, y:0, zoom:1 };
+let dragging = false;
+let dragStart = { x:0, y:0 };
+let camStart = { x:0, y:0 };
+
+// ═══════════════════════════════════════════════════════════════════
+//  MERISTEM — array of angular sectors, each with independent
+//  whiteness propensity. This is the heritable state.
+// ═══════════════════════════════════════════════════════════════════
+function initMeristem(seed){
+  _rng = mulberry32(seed);
+  meristem = new Array(SECTOR_COUNT);
+  let walk = INIT_LOAD + rrange(-0.15, 0.15);
+  for(let i=0; i<SECTOR_COUNT; i++){
+    walk += rrange(-0.25, 0.25);
+    walk = constrain(walk, 0, 1);
+    meristem[i] = constrain(
+      lerp(walk, INIT_LOAD, 0.35) + rrange(-0.1, 0.1),
+      0, 1
+    );
+  }
+  vigor = 0.85;
+  leaves = [];
+  history = [];
+  annotations = [];
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  CLASSIFY — name what's happening at this meristem state
+// ═══════════════════════════════════════════════════════════════════
+function classifyLeaf(sectors, whiteArea){
+  const mean = sectors.reduce((a,b)=>a+b,0)/sectors.length;
+  const range = Math.max(...sectors) - Math.min(...sectors);
+  if(whiteArea > 0.82) return { name:'all white', color:'#d9665a',
+    note:'All white — stunning but unsustainable. No chlorophyll, no photosynthesis. The plant is burning reserves it cannot replenish.' };
+  if(whiteArea < 0.08) return { name:'reverted', color:'#3a6a38',
+    note:'Reverted to green. The mutant cell line has been outcompeted. Vigorous, but the variegation may be gone.' };
+  if(range > 0.55 && whiteArea > 0.25 && whiteArea < 0.75)
+    return { name:'half moon', color:'#c9a84c',
+      note:'Half moon — one side green, one side white. Dramatic sectoring from a meristem split cleanly between lineages.' };
+  if(range < 0.25 && whiteArea > 0.2 && whiteArea < 0.55)
+    return { name:'watercolor', color:'#7ab89a',
+      note:'Watercolor marbling. The perfect middle — fine intermixing of both cell lines, soft transitions along the veins.' };
+  return { name:'mottled', color:'#6aaa5e',
+    note:'Mottled variegation. Distinct patches of green and white, the chimera expressing its mosaic nature.' };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  GROW — push one leaf. Realize from meristem, then drift.
+// ═══════════════════════════════════════════════════════════════════
+function growLeaf(silent){
+  if(leaves.length >= MAX_LEAVES){
+    if(!silent) setHint("Vine is full — propagate a cutting to continue the lineage.");
+    return;
+  }
+
+  // 1. Realize: sample each sector with noise
+  const realized = meristem.map(m => constrain(m + rrange(-0.12, 0.12), 0, 1));
+
+  // 2. Leaf-specific seed
+  const leafSeed = Math.floor(_rng() * 1e9);
+
+  // 3. Vigor → size
+  const meanWhite = realized.reduce((a,b)=>a+b,0)/realized.length;
+  const sizeFactor = lerp(0.6, 1.0, vigor) * lerp(1.0, 0.8, meanWhite);
+
+  // 4. Maturity (fenestration increases with age)
+  const maturity = constrain(0.15 + leaves.length * 0.06, 0, 0.85);
+
+  const leaf = {
+    index: leaves.length,
+    sectors: realized,
+    seed: leafSeed,
+    size: LEAF_RES * sizeFactor,
+    side: leaves.length % 2 === 0 ? -1 : 1,
+    tilt: rrange(-0.1, 0.1),
+    maturity: maturity,
+    buf: null,
+    whiteArea: 0,
+    growProgress: silent ? 1 : 0,
+    classification: null,
+    meristemSnapshot: meristem.slice(),
+    vigorSnapshot: vigor,
+    hasAerialRoot: _rng() > 0.5 && leaves.length > 1
+  };
+
+  // Render
+  renderLeafBuffer(leaf);
+
+  // Classify
+  leaf.classification = classifyLeaf(leaf.sectors, leaf.whiteArea);
+
+  leaves.push(leaf);
+
+  // 5. Energy bookkeeping
+  const green = 1 - leaf.whiteArea;
+  vigor += (green - 0.55) * 0.15;
+  vigor -= Math.max(0, leaf.whiteArea - 0.65) * 0.22;
+  vigor = constrain(vigor, 0.05, 1);
+
+  // 6. Drift the meristem
+  for(let i=0; i<meristem.length; i++){
+    let m = meristem[i];
+    // Green's photosynthetic advantage
+    m -= GREEN_BIAS * m * rrange(0.4, 1.2) * lerp(0.6, 1.4, 1-vigor);
+    // Rare chimeric re-expansion
+    if(_rng() < 0.04) m += rrange(0.05, 0.30);
+    // Diffusion from neighbors
+    const L = meristem[(i-1+meristem.length)%meristem.length];
+    const R = meristem[(i+1)%meristem.length];
+    m = lerp(m, (L+R)/2, 0.08);
+    meristem[i] = constrain(m, 0, 1);
+  }
+
+  history.push({ meristem: meristem.slice(), vigor });
+
+  // 7. Annotation — check for transitions
+  checkAnnotation(leaf);
+
+  // 8. UI
+  if(!silent) updatePanel();
+
+  // Auto-scroll camera to newest leaf
+  if(!silent){
+    cam.y = -(leaves.length - 2) * NODE_SPACING;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  ANNOTATIONS — quiet marginalia when something interesting happens
+// ═══════════════════════════════════════════════════════════════════
+function checkAnnotation(leaf){
+  const prev = leaves.length >= 2 ? leaves[leaves.length-2] : null;
+
+  // Transition detection
+  if(prev && prev.classification.name !== leaf.classification.name){
+    annotations.push({
+      nodeIndex: leaf.index,
+      text: leaf.classification.note,
+      side: leaf.side * -1, // opposite side from the leaf
+      opacity: 1
+    });
+  }
+
+  // First leaf always gets a note
+  if(leaf.index === 0){
+    annotations.push({
+      nodeIndex: 0,
+      text: 'The first unfurling. Every leaf from here is one roll of the chimeral dice.',
+      side: leaf.side * -1,
+      opacity: 1
+    });
+  }
+
+  // Vigor warnings
+  if(vigor < 0.3 && (!prev || prev.vigorSnapshot >= 0.3)){
+    annotations.push({
+      nodeIndex: leaf.index,
+      text: 'Vigor falling. Too much white tissue — the plant is starving for light it cannot harvest.',
+      side: leaf.side * -1,
+      opacity: 1
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  LEAF RENDERING — per-pixel variegation following venation
+//  Ported from monstera-chimera_variegated's sector-based model
+// ═══════════════════════════════════════════════════════════════════
+function renderLeafBuffer(leaf){
+  const D = Math.round(leaf.size);
+  if(D < 20) { leaf.buf = createGraphics(20,20); return; }
+  const g = createGraphics(D, D);
+  g.pixelDensity(1);
+  g.noiseSeed(leaf.seed);
+  let lr = mulberry32(leaf.seed ^ 0x9e3779b9);
+
+  const cx = D/2;
+  const yBase = D*0.92, yTip = D*0.08;
+  const wmax = D*0.44;
+  const nSect = leaf.sectors.length;
+
+  // ── Vein geometry ──
+  const nVeins = 7;
+  const veinAngles = [];
+  for(let s=-1; s<=1; s+=2){
+    for(let k=1; k<=nVeins; k++){
+      let frac = k/(nVeins+1);
+      let ang = s * lerp(0.18, 1.02, frac) * (0.9 + 0.2*(lr()-0.5));
+      veinAngles.push(ang);
+    }
+  }
+  const originX = cx, originY = yBase - 2;
+
+  // ── Fenestrations ──
+  const fen = leaf.maturity;
+  const holes = [];
+  const nHoles = Math.floor(lerp(0, 7, fen) + lr()*2);
+  for(let h=0; h<nHoles; h++){
+    let vv = lerp(0.2, 0.78, lr());
+    let yy = lerp(yBase, yTip, vv);
+    let side = lr()<0.5 ? -1 : 1;
+    let off = side * lerp(0.08, 0.32, lr()) * wmax * 1.5;
+    holes.push({
+      x: cx+off, y: yy,
+      rx: lerp(5, 16, lr())*(0.5+fen),
+      ry: lerp(10, 30, lr())*(0.5+fen)
+    });
+  }
+
+  // ── Marginal splits ──
+  const splitVeins = veinAngles.filter(()=> lr() < (0.15 + 0.45*fen));
+
+  // ── Half-width profile ──
+  function halfWidth(v){
+    const core = Math.pow(Math.sin(Math.PI*Math.pow(v,0.86)), 0.82);
+    const lobe = Math.exp(-Math.pow((v-0.10)/0.10, 2)) * 0.35;
+    return wmax*(0.94*core + lobe);
+  }
+
+  // ── Parameters ──
+  const channeling = 0.65;
+  const bleedAmt = 0.15;
+  const mottle = 0.35;
+
+  g.loadPixels();
+  const px = g.pixels;
+  let whiteCount = 0, leafCount = 0;
+
+  for(let y=0; y<D; y++){
+    const v = constrain((yBase - y)/(yBase - yTip), 0, 1);
+    if(v <= 0 || v >= 1) continue;
+    const hw = halfWidth(v);
+
+    for(let x=0; x<D; x++){
+      const dx = x - cx;
+      if(Math.abs(dx) > hw) continue;
+
+      // Basal sinus
+      if(v < 0.06 && Math.abs(dx) < wmax*0.10*(1 - v/0.06)) continue;
+
+      // Polar from base origin
+      const px0 = x - originX, py0 = originY - y;
+      const radius = Math.sqrt(px0*px0 + py0*py0);
+      let angle = Math.atan2(px0, py0);
+
+      // Marginal splits
+      let inSplit = false;
+      for(const sa of splitVeins){
+        if(Math.abs(angle - sa) < 0.04 && radius > D*0.32){ inSplit=true; break; }
+      }
+      if(inSplit) continue;
+
+      // Fenestrations
+      let inHole = false;
+      for(const ho of holes){
+        const hx=(x-ho.x)/ho.rx, hy=(y-ho.y)/ho.ry;
+        if(hx*hx+hy*hy < 1){ inHole=true; break; }
+      }
+      if(inHole) continue;
+
+      leafCount++;
+
+      // ── VARIEGATION FIELD ──
+      // (a) Sector membership — angular position maps to meristem sector
+      const angNorm = constrain((angle + 1.25)/2.5, 0, 0.9999);
+      const sIdx = Math.floor(angNorm * nSect);
+      const sFrac = angNorm * nSect - sIdx;
+      const sA = leaf.sectors[sIdx];
+      const sB = leaf.sectors[Math.min(nSect-1, sIdx+1)];
+      const sectorVal = lerp(sA, sB, smooth(sFrac));
+
+      // (b) Anisotropic streak noise — stretches along veins
+      const angFreq = lerp(1.4, 5.5, channeling);
+      const radFreq = lerp(0.020, 0.006, channeling);
+      const streak = g.noise(angle*angFreq + 11.3, radius*radFreq + 4.1, leaf.seed%97);
+
+      // (c) Fine mottle
+      const mottleN = g.noise(x*0.06, y*0.06, 31.7);
+
+      // Combine
+      let field = sectorVal*0.62 + (streak-0.5)*1.15 + (sectorVal-0.5)*0.2;
+      field += (mottleN-0.5) * (0.35*mottle);
+
+      const threshold = 0.5;
+      let wness = smoothstep(threshold-bleedAmt, threshold+bleedAmt, field);
+
+      // Surviving green islands in white
+      if(wness > 0.55 && mottle > 0){
+        const isl = g.noise(x*0.11+5.0, y*0.11+9.0);
+        if(isl < 0.35) wness *= lerp(1.0, 0.15, mottle);
+      }
+
+      // ── COLOR ──
+      const haloAmt = 1 - Math.abs(wness-0.5)*2;
+      let r, gr, b;
+      if(wness < 0.5){
+        const tt = wness/0.5;
+        r  = lerpN(COL.green[0], COL.halo[0], tt*0.65);
+        gr = lerpN(COL.green[1], COL.halo[1], tt*0.65);
+        b  = lerpN(COL.green[2], COL.halo[2], tt*0.65);
+      } else {
+        const tt = (wness-0.5)/0.5;
+        r  = lerpN(COL.halo[0], COL.cream[0], tt);
+        gr = lerpN(COL.halo[1], COL.cream[1], tt);
+        b  = lerpN(COL.halo[2], COL.cream[2], tt);
+      }
+      r  = lerpN(r,  COL.halo[0], haloAmt*0.2);
+      gr = lerpN(gr, COL.halo[1], haloAmt*0.2);
+      b  = lerpN(b,  COL.halo[2], haloAmt*0.2);
+
+      // Vein tracery
+      let minDA = Math.abs(angle);
+      for(const va of veinAngles){
+        const d = Math.abs(angle-va);
+        if(d < minDA) minDA = d;
+      }
+      const veinProx = Math.exp(-minDA*minDA*140) * Math.min(1, radius/40);
+      if(veinProx > 0.04){
+        const vk = veinProx*0.45;
+        r  = lerpN(r,  COL.vein[0], vk);
+        gr = lerpN(gr, COL.vein[1], vk);
+        b  = lerpN(b,  COL.vein[2], vk);
+      }
+
+      // Form shading
+      const edge = Math.abs(dx)/hw;
+      const shade = 1 - edge*edge*0.10;
+      r*=shade; gr*=shade; b*=shade;
+      const sheen = Math.exp(-Math.pow(dx/(hw*0.5),2)) * (1-v)*0.05;
+      r=lerpN(r,255,sheen); gr=lerpN(gr,255,sheen); b=lerpN(b,255,sheen);
+
+      if(wness > 0.5) whiteCount++;
+
+      // Anti-alias margin
+      const aa = constrain((hw-Math.abs(dx))/2.2, 0, 1);
+      const idx = (y*D+x)*4;
+      px[idx]   = r;
+      px[idx+1] = gr;
+      px[idx+2] = b;
+      px[idx+3] = 255*aa;
+    }
+  }
+  g.updatePixels();
+
+  // ── Vein overlay strokes ──
+  g.strokeWeight(1.2);
+  g.stroke(COL.vein[0], COL.vein[1], COL.vein[2], 40);
+  g.noFill();
+  // Midrib
+  g.strokeWeight(1.4);
+  g.line(cx, yTip+5, cx, yBase-5);
+  // Lateral veins
+  g.strokeWeight(0.7);
+  for(const ang of veinAngles){
+    const len = wmax * 0.7;
+    const ex = originX + Math.sin(ang)*len;
+    const ey = originY - Math.cos(ang)*len;
+    const mx = lerp(originX, ex, 0.5);
+    const my = lerp(originY, ey, 0.4) - 10;
+    g.bezier(originX, originY, mx, my, mx, lerp(my,ey,0.6), ex, ey);
+  }
+
+  leaf.whiteArea = leafCount > 0 ? whiteCount/leafCount : 0;
+  leaf.buf = g;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════════
+function smooth(t){ return t*t*(3-2*t); }
+function smoothstep(e0,e1,x){
+  const t=constrain((x-e0)/(e1-e0),0,1);
+  return t*t*(3-2*t);
+}
+function lerpN(a,b,t){ return a+(b-a)*t; }
+
+// ═══════════════════════════════════════════════════════════════════
+//  UI UPDATES
+// ═══════════════════════════════════════════════════════════════════
+function updatePanel(){
+  const n = leaves.length;
+  document.getElementById('nodeCount').textContent = n;
+
+  // Vigor bar
+  const vbar = document.getElementById('vigorBar');
+  vbar.style.width = (vigor*100).toFixed(0) + '%';
+  vbar.style.background = vigor>0.5 ? '#5a8a4a' : (vigor>0.28 ? '#c9a84c' : '#b04a35');
+
+  const vlabel = document.getElementById('vigorLabel');
+  if(vigor < 0.28){ vlabel.textContent='stalling'; vlabel.style.color='#b04a35'; }
+  else if(vigor > 0.7){ vlabel.textContent='thriving'; vlabel.style.color='#5a8a4a'; }
+  else { vlabel.textContent='healthy'; vlabel.style.color='#7a8a6a'; }
+
+  // Last leaf white
+  if(n > 0){
+    const w = leaves[n-1].whiteArea;
+    document.getElementById('whiteBar').style.width = (w*100).toFixed(0) + '%';
+  }
+
+  // Meristem %
+  const mw = meristem.reduce((a,b)=>a+b,0)/meristem.length;
+  document.getElementById('merPct').textContent = (mw*100).toFixed(0) + '% white';
+
+  // Meristem strip
+  drawMeristemStrip();
+}
+
+function drawMeristemStrip(){
+  const c = document.getElementById('meristem-strip');
+  const ctx = c.getContext('2d');
+  const W=c.width, H=c.height;
+  ctx.clearRect(0,0,W,H);
+  const n = meristem.length, seg = W/n;
+  for(let i=0; i<n; i++){
+    const m = meristem[i];
+    const r = lerpN(COL.green[0], COL.cream[0], m);
+    const g = lerpN(COL.green[1], COL.cream[1], m);
+    const b = lerpN(COL.green[2], COL.cream[2], m);
+    ctx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;
+    ctx.fillRect(i*seg, 0, Math.ceil(seg), H);
+  }
+  // Sector dividers
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  for(let i=1; i<n; i++){
+    ctx.beginPath();
+    ctx.moveTo(i*seg, 0);
+    ctx.lineTo(i*seg, H);
+    ctx.stroke();
+  }
+}
+
+function setHint(msg){
+  document.getElementById('hint').textContent = msg;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  ACTIONS
+// ═══════════════════════════════════════════════════════════════════
+function growNext(){
+  growLeaf(false);
+}
+
+function toggleAuto(){
+  autoOn = !autoOn;
+  document.getElementById('btnAuto').textContent =
+    'AUTO-GROW: ' + (autoOn ? 'ON' : 'OFF');
+}
+
+function propagateCutting(){
+  if(!leaves.length){
+    setHint("Grow something to cut first.");
+    return;
+  }
+  const inherited = meristem.slice();
+  const prevCount = leaves.length;
+  leaves = [];
+  history = [];
+  vigor = 0.8;
+  meristem = inherited;
+  for(let i=0; i<3; i++) growLeaf(true);
+
+  annotations.push({
+    nodeIndex: 0,
+    text: `Cutting taken from node ${prevCount}. This plant carries the parent's meristem — will it hold, or revert?`,
+    side: 1, opacity: 1
+  });
+
+  cam = { x:0, y:0, zoom:1 };
+  updatePanel();
+  setHint("New cutting. The meristem carries forward — every propagation is a bet on the lineage.");
+}
+
+function pruneTop(){
+  if(leaves.length <= 1){
+    setHint("Nothing left to prune.");
+    return;
+  }
+  leaves.pop();
+  history.pop();
+  if(history.length){
+    meristem = history[history.length-1].meristem.slice();
+    vigor = history[history.length-1].vigor;
+  }
+  // Remove annotations for pruned node
+  annotations = annotations.filter(a => a.nodeIndex < leaves.length);
+  updatePanel();
+  setHint("Pruned. Meristem rolled back — the next leaf gets a second chance.");
+}
+
+function newPlant(){
+  const seed = Math.floor(Math.random() * 99999) + 1;
+  document.getElementById('seedInput').value = seed;
+  initMeristem(seed);
+  for(let i=0; i<4; i++) growLeaf(true);
+  cam = { x:0, y:0, zoom:1 };
+  updatePanel();
+  setHint("New lineage from seed " + seed + ".");
+}
+
+function setSeed(){
+  const s = parseInt(document.getElementById('seedInput').value) || 42;
+  initMeristem(s);
+  for(let i=0; i<4; i++) growLeaf(true);
+  cam = { x:0, y:0, zoom:1 };
+  updatePanel();
+  setHint("Lineage " + s + ".");
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  P5 — SETUP + DRAW
+// ═══════════════════════════════════════════════════════════════════
+function setup(){
+  let canvas = createCanvas(windowWidth, windowHeight);
+  canvas.parent('canvas-container');
+  pixelDensity(1);
+  noiseDetail(3, 0.5);
+  textFont('DM Mono');
+
+  initMeristem(42);
+  for(let i=0; i<4; i++) growLeaf(true);
+  updatePanel();
+}
+
+function draw(){
+  background(10, 15, 8);
+
+  // Subtle atmosphere
+  noStroke();
+  fill(18, 40, 22, 6);
+  ellipse(width*0.3, height*0.6, 500, 350);
+  fill(12, 28, 15, 4);
+  ellipse(width*0.7, height*0.4, 400, 400);
+
+  // Auto-grow
+  if(autoOn){
+    autoTimer++;
+    if(autoTimer > 75){
+      autoTimer = 0;
+      if(leaves.length < MAX_LEAVES) growLeaf(false);
+    }
+  }
+
+  // Animate unfurl
+  for(const lf of leaves){
+    if(lf.growProgress < 1){
+      lf.growProgress = Math.min(1, lf.growProgress + 0.03);
+    }
+  }
+
+  // Camera
+  push();
+  translate(width/2, height*0.75);
+  scale(cam.zoom);
+  translate(-cam.x, -cam.y);
+
+  const baseX = 0;
+  const n = leaves.length;
+
+  // ── Stake ──
+  if(n > 0){
+    const stakeTop = -(n+1) * NODE_SPACING;
+    stroke(100, 82, 58, 60);
+    strokeWeight(6);
+    line(baseX+5, 20, baseX+5, stakeTop);
+  }
+
+  // ── Main stem ──
+  if(n > 0){
+    noFill();
+    stroke(COL.stem[0], COL.stem[1], COL.stem[2], 180);
+    strokeWeight(5);
+    beginShape();
+    curveVertex(baseX, 20);
+    for(let i=0; i<=n; i++){
+      const yy = -i * NODE_SPACING;
+      const xx = baseX + Math.sin(i*0.55)*6;
+      curveVertex(xx, yy);
+    }
+    curveVertex(baseX, -(n+0.5)*NODE_SPACING);
+    endShape();
+  }
+
+  // ── Leaves ──
+  for(let i=0; i<n; i++){
+    const leaf = leaves[i];
+    const prog = leaf.growProgress;
+    if(prog < 0.01) continue;
+
+    const yy = -i * NODE_SPACING;
+    const xx = baseX + Math.sin(i*0.55)*6;
+    const side = leaf.side;
+
+    // Node on stem
+    const stemMix = leaf.meristemSnapshot.reduce((a,b)=>a+b,0)/leaf.meristemSnapshot.length;
+    const nr = lerpN(COL.stem[0], COL.stemWhite[0], stemMix);
+    const ng = lerpN(COL.stem[1], COL.stemWhite[1], stemMix);
+    const nb = lerpN(COL.stem[2], COL.stemWhite[2], stemMix);
+
+    noStroke();
+    fill(nr, ng, nb, 255*prog);
+    ellipse(xx, yy, 8, 8);
+
+    // Classification dot
+    if(leaf.classification){
+      fill(leaf.classification.color);
+      ellipse(xx + (side*-1)*14, yy, 4, 4);
+    }
+
+    // Aerial root
+    if(leaf.hasAerialRoot && prog > 0.5){
+      const rs = side * -1;
+      stroke(85, 75, 58, 80*prog);
+      strokeWeight(1.5);
+      noFill();
+      const rl = 12 + prog*8;
+      bezier(xx+rs*3, yy+2, xx+rs*7, yy+rl*0.4, xx+rs*2, yy+rl*0.7, xx+rs*5, yy+rl);
+    }
+
+    // Petiole
+    const reach = leaf.size * 0.35 * prog;
+    const leafX = xx + side * reach;
+    const leafY = yy - leaf.size * 0.18 * prog;
+    stroke(lerpN(nr, COL.stemWhite[0], 0.2),
+           lerpN(ng, COL.stemWhite[1], 0.2),
+           lerpN(nb, COL.stemWhite[2], 0.2), 200*prog);
+    strokeWeight(2.5);
+    noFill();
+    line(xx, yy, leafX, leafY);
+
+    // Leaf image
+    if(leaf.buf){
+      push();
+      translate(leafX, leafY);
+      const sway = Math.sin(frameCount*0.01 + i*0.7) * 0.02;
+      rotate(side * 0.45 + leaf.tilt + sway);
+      const sc = (leaf.size / LEAF_RES) * prog;
+      scale(sc * (side < 0 ? -1 : 1), sc);
+      imageMode(CENTER);
+      tint(255, 255*prog);
+      image(leaf.buf, 0, -LEAF_RES*0.28);
+      noTint();
+      pop();
+    }
+  }
+
+  // ── Growing tip ──
+  if(n > 0){
+    const tipY = -(n) * NODE_SPACING;
+    const tipX = baseX + Math.sin(n*0.55)*6;
+    fill(70, 130, 60, 100 + Math.sin(frameCount*0.06)*35);
+    noStroke();
+    ellipse(tipX, tipY, 5, 7);
+    fill(90, 150, 80, 35);
+    ellipse(tipX, tipY-5, 3, 4);
+  }
+
+  // ── Annotations ──
+  textFont('Cormorant Garamond');
+  for(const ann of annotations){
+    const ayy = -ann.nodeIndex * NODE_SPACING;
+    const axx = baseX + ann.side * 120;
+
+    // Connector line
+    stroke(216, 208, 188, 15);
+    strokeWeight(0.5);
+    line(baseX + ann.side*18, ayy, axx - ann.side*4, ayy);
+
+    // Text
+    noStroke();
+    fill(216, 208, 188, 60);
+    textSize(10);
+    textAlign(ann.side > 0 ? LEFT : RIGHT);
+    textLeading(14);
+
+    // Word-wrap the annotation
+    const words = ann.text.split(' ');
+    let lines = [];
+    let currentLine = '';
+    const maxW = 140;
+    for(const w of words){
+      const test = currentLine ? currentLine + ' ' + w : w;
+      if(textWidth(test) > maxW && currentLine){
+        lines.push(currentLine);
+        currentLine = w;
+      } else {
+        currentLine = test;
+      }
+    }
+    if(currentLine) lines.push(currentLine);
+
+    for(let li=0; li<lines.length; li++){
+      text(lines[li], axx, ayy + li*14);
+    }
+  }
+  textFont('DM Mono');
+
+  pop(); // end camera transform
+
+  // ── Soil line / pot base ──
+  noStroke();
+  const potY = height*0.75 - cam.y*cam.zoom;
+  // Only draw if visible
+  if(potY > 0 && potY < height + 80){
+    const potX = width/2 - cam.x*cam.zoom;
+    push();
+    translate(potX, potY);
+    scale(cam.zoom);
+    // Pot
+    fill(55, 48, 38);
+    beginShape();
+    vertex(-45, 0); vertex(45, 0);
+    vertex(38, 60); vertex(-38, 60);
+    endShape(CLOSE);
+    // Rim
+    fill(65, 58, 48);
+    rect(-50, -8, 100, 12, 3);
+    // Soil
+    fill(42, 35, 26);
+    ellipse(0, 2, 82, 14);
+    pop();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  MOUSE / CAMERA
+// ═══════════════════════════════════════════════════════════════════
+function mousePressed(){
+  // Ignore clicks on panel
+  if(mouseX > width - 280) return;
+  dragging = true;
+  dragStart = { x: mouseX, y: mouseY };
+  camStart = { x: cam.x, y: cam.y };
+}
+
+function mouseDragged(){
+  if(dragging){
+    cam.x = camStart.x - (mouseX - dragStart.x) / cam.zoom;
+    cam.y = camStart.y - (mouseY - dragStart.y) / cam.zoom;
+  }
+}
+
+function mouseReleased(){
+  dragging = false;
+}
+
+function mouseWheel(event){
+  cam.zoom *= event.delta > 0 ? 0.94 : 1.06;
+  cam.zoom = constrain(cam.zoom, 0.25, 3);
+  return false;
+}
+
+function windowResized(){
+  resizeCanvas(windowWidth, windowHeight);
+}
+</script>
+</body>
+</html>

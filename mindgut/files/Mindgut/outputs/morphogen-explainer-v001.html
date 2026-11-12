@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="only light">
+<title>One Signal Is Enough — pattern from a single morphogen · ø co.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ground:#FFFFFF;--ink:#101014;--grey:#6F6E6A;--grey-2:#B4B2AC;--sunken:#F6F5F2;--hair:#E7E4DD;--hair-2:#F0EEE9;
+--accent:#F4551E;--blue:#2F5AE6;--navy:#16204A;--paper:#F6F5F2;
+--disp:'Archivo','Helvetica Neue',Arial,sans-serif;--text:'Inter','Helvetica Neue',Arial,sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+--g:18px;--nav:44px;--col:1240px}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--text);font-size:15px;line-height:1.62;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button{font:inherit}
+/* nav */
+.nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--hair);height:var(--nav);display:grid;grid-template-columns:auto 1fr auto;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey)}
+.nav>*{display:flex;align-items:center}
+.brand{padding:0 18px;border-right:1px solid var(--hair);gap:10px;color:var(--ink);white-space:nowrap}
+.brand b{font-family:var(--disp);font-weight:700;font-size:12.5px;letter-spacing:.14em}
+.brand b i{font-style:normal;color:var(--accent)}
+.tabs{overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{all:unset;cursor:pointer;height:100%;display:flex;align-items:center;gap:8px;padding:0 16px;border-right:1px solid var(--hair);white-space:nowrap;color:var(--grey)}
+.tabs button i{font-style:normal;color:var(--grey-2)}
+.tabs button:hover{color:var(--ink);background:var(--sunken)}
+.tabs button.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--accent)}
+.nav .meta{padding:0 18px;border-left:1px solid var(--hair);white-space:nowrap}
+.view{display:none}.view.on{display:block}
+/* layout */
+.wrap{max-width:var(--col);margin:0 auto;padding:0 var(--g)}
+section.s{border-bottom:1px solid var(--hair);padding:72px 0}
+.sh{display:grid;grid-template-columns:200px 1fr;gap:32px;margin-bottom:34px}
+.sh .no{font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);padding-top:10px;border-top:1px solid var(--ink)}
+.sh .no span{display:block;color:var(--grey);margin-top:4px}
+.sh h2{font-family:var(--disp);font-weight:650;font-stretch:88%;font-size:clamp(30px,4vw,52px);line-height:1.0;letter-spacing:-.03em;margin:0 0 14px;max-width:18ch}
+.sh .dek{font-size:17px;line-height:1.55;color:var(--grey);max-width:60ch;margin:0}
+.sh .dek b{color:var(--ink);font-weight:500}
+.cols{display:grid;grid-template-columns:200px 1fr;gap:32px}
+.prose{max-width:62ch}
+.prose p{margin:0 0 14px}
+.prose b{font-weight:600}
+.k{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--grey)}
+.side{font-family:var(--mono);font-size:10.5px;line-height:1.6;color:var(--grey)}
+.side b{color:var(--ink);font-weight:500}
+.side .rule{border-top:1px solid var(--hair);padding-top:10px;margin-top:10px}
+/* plates */
+.plate{border:1px solid var(--hair);background:#fff;position:relative}
+.plate .ph{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid var(--hair);font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--grey);gap:12px}
+.plate .ph b{color:var(--ink);font-weight:500}
+.plate canvas,.plate svg{display:block;width:100%}
+.plate .pf{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;padding:10px 12px;border-top:1px solid var(--hair);font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--grey)}
+.plate .pf b{color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hair);border:1px solid var(--hair)}
+.grid2>.plate{border:0}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair)}
+.grid3>.plate{border:0}
+.cap{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--grey);margin-top:10px;line-height:1.55;max-width:90ch}
+.cap b{color:var(--ink);font-weight:500}
+/* controls */
+.ctl{display:flex;flex-wrap:wrap;gap:4px}
+.ctl button{all:unset;cursor:pointer;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--grey);border:1px solid var(--hair);padding:6px 9px;line-height:1;background:#fff}
+.ctl button:hover,.ctl button:focus-visible{color:var(--ink);border-color:var(--ink)}
+.ctl button.on{color:#fff;background:var(--ink);border-color:var(--ink)}
+.rng{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--grey);text-transform:uppercase}
+.rng b{color:var(--ink);font-weight:500;min-width:62px;font-variant-numeric:tabular-nums;text-transform:none;letter-spacing:.02em}
+input[type=range]{-webkit-appearance:none;appearance:none;width:150px;height:18px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--ink)}
+input[type=range]::-moz-range-track{height:1px;background:var(--ink)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:0;background:var(--accent);margin-top:-5px;border:0}
+input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:0;background:var(--accent);border:0}
+/* hero */
+.hero{position:relative;height:calc(100vh - var(--nav));min-height:600px;max-height:980px;border-bottom:1px solid var(--hair);overflow:hidden;background:var(--paper)}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;cursor:crosshair}
+.hero .copy{position:absolute;left:var(--g);bottom:var(--g);width:min(560px,calc(100% - 2*var(--g)));background:#fff;border:1px solid var(--hair);padding:26px 28px 22px;pointer-events:auto}
+.hero h1{font-family:var(--disp);font-weight:700;font-stretch:78%;font-size:clamp(44px,6.4vw,92px);line-height:.9;letter-spacing:-.035em;margin:8px 0 16px}
+.hero h1 i{font-style:normal;color:var(--accent)}
+.hero p{margin:0 0 14px;color:var(--ink);font-size:15.5px;max-width:48ch}
+.hero .edge{position:absolute;top:var(--g);right:var(--g);font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);background:rgba(255,255,255,.88);border:1px solid var(--hair);padding:10px 12px;line-height:1.7;font-variant-numeric:tabular-nums}
+.hero .edge span{color:var(--grey)}
+.hero .hint{position:absolute;top:var(--g);left:var(--g);font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;background:var(--ink);color:#fff;padding:7px 10px}
+/* comparison table */
+.cmp{width:100%;border-collapse:collapse;font-size:13.5px}
+.cmp th,.cmp td{border-top:1px solid var(--hair);padding:12px 14px 12px 0;text-align:left;vertical-align:top}
+.cmp thead th{font-family:var(--mono);font-weight:400;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--grey);border-top:1px solid var(--ink)}
+.cmp td:first-child{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey);width:150px}
+.cmp td.hl{color:var(--ink);font-weight:500}
+.cmp .sw{display:inline-block;width:8px;height:8px;margin-right:7px;vertical-align:1px}
+/* ledger */
+.led{border-top:1px solid var(--ink)}
+.led .row{display:grid;grid-template-columns:44px 1.05fr 1.25fr 116px;gap:0 22px;padding:18px 0 20px;border-bottom:1px solid var(--hair)}
+.led .row .n{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--grey-2);padding-top:3px}
+.led .row h4{font-family:var(--disp);font-weight:600;font-size:17px;letter-spacing:-.01em;line-height:1.25;margin:0 0 6px}
+.led .row .src{font-family:var(--mono);font-size:10px;color:var(--grey);letter-spacing:.03em;line-height:1.55}
+.led .row .src b{color:var(--ink);font-weight:500}
+.led .row p{margin:0 0 8px;font-size:14px;line-height:1.58}
+.led .row p:last-child{margin:0}
+.led .tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;padding:5px 8px;border:1px solid currentColor;align-self:start;text-align:center;line-height:1.25}
+.tag.up{color:#1E7A4F}.tag.dn{color:var(--accent)}.tag.re{color:var(--blue)}.tag.no{color:var(--grey)}
+.led .hd{display:grid;grid-template-columns:44px 1.05fr 1.25fr 116px;gap:0 22px;padding:9px 0;border-bottom:1px solid var(--hair);font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--grey)}
+/* pull */
+.pull{background:var(--ink);color:#F3F1EC;padding:56px 0}
+.pull blockquote{margin:0;font-family:var(--disp);font-weight:600;font-stretch:85%;font-size:clamp(26px,3.3vw,44px);line-height:1.08;letter-spacing:-.025em;max-width:24ch}
+.pull blockquote i{font-style:normal;color:var(--accent)}
+.pull .k{color:#9C9A94;margin-bottom:18px;display:block}
+.pull p{color:#BDBAB2;max-width:60ch;margin:22px 0 0;font-size:15px}
+/* numbers */
+.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair)}
+.nums>div{background:#fff;padding:16px 16px 14px}
+.nums .v{font-family:var(--disp);font-weight:650;font-stretch:80%;font-size:34px;letter-spacing:-.03em;line-height:1}
+.nums .v small{font-family:var(--mono);font-size:11px;font-weight:400;letter-spacing:.04em;color:var(--grey);margin-left:4px}
+.nums .l{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--grey);margin-top:8px;line-height:1.5}
+.nums .l b{color:var(--accent);font-weight:500}
+.flag{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);padding:2px 5px;margin-left:6px;vertical-align:2px}
+.srcs{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
+.srcs li{display:grid;grid-template-columns:44px 1fr 220px;gap:20px;padding:14px 0;border-bottom:1px solid var(--hair);font-size:14px}
+.srcs li .n{font-family:var(--mono);font-size:10px;color:var(--grey-2);padding-top:3px}
+.srcs li .m{font-family:var(--mono);font-size:10px;color:var(--grey);letter-spacing:.04em;line-height:1.55}
+.srcs a{text-decoration:none;border-bottom:1px solid var(--hair)}
+.srcs a:hover{border-color:var(--accent)}
+.chk{font-family:var(--mono);font-size:11.5px;line-height:1.75;color:var(--ink);background:var(--sunken);border:1px solid var(--hair);padding:16px 18px;white-space:pre-wrap;overflow-x:auto}
+.chk .c{color:var(--grey)}
+.chk .ok{color:#1E7A4F}.chk .x{color:var(--accent)}
+footer{padding:36px 0 60px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--grey);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.grain{pointer-events:none;position:absolute;inset:0;opacity:.18;mix-blend-mode:multiply;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--grey)}
+.legend i{display:inline-block;width:14px;height:2px;vertical-align:3px;margin-right:6px}
+.legend i.d{height:0;border-top:1px dashed var(--blue);background:none}
+.stack{display:flex;flex-direction:column;gap:22px}
+.mt{margin-top:22px}
+@media (max-width:960px){
+ .sh,.cols{grid-template-columns:1fr;gap:14px}
+ .grid2,.grid3{grid-template-columns:1fr}
+ .nums{grid-template-columns:1fr 1fr}
+ .led .row,.led .hd{grid-template-columns:1fr;gap:8px}
+ .led .hd{display:none}
+ .led .tag{justify-self:start}
+ .srcs li{grid-template-columns:1fr;gap:4px}
+ section.s{padding:52px 0}
+ .nav .meta{display:none}
+ .hero{height:auto;min-height:0;max-height:none;display:flex;flex-direction:column}
+ .hero canvas{position:relative;height:62vh}
+ .hero .copy{position:relative;left:auto;bottom:auto;width:auto;border:0;border-top:1px solid var(--hair)}
+ .hero .edge{display:none}
+ .cmp td:first-child{width:90px}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="Sections">
+ <a class="brand" href="#" data-go="pattern"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7" fill="none" stroke="#101014" stroke-width="1.6"/><path d="M3.5 14.5 14.5 3.5" stroke="#F4551E" stroke-width="1.6"/></svg><b>IMP<i>Ø</i>SSIBLE</b></a>
+ <div class="tabs" role="tablist">
+  <button class="on" data-v="pattern" role="tab"><i>01</i>One signal</button>
+  <button data-v="pfd" role="tab"><i>02</i>Reading Ø again</button>
+  <button data-v="ztf" role="tab"><i>03</i>ZTF J0440+2325</button>
+  <button data-v="src" role="tab"><i>04</i>Sources &amp; checks</button>
+ </div>
+ <div class="meta">Explainer · v001</div>
+</nav>
+
+<!-- ============ VIEW 1 ============ -->
+<main class="view on" id="v-pattern">
+<header class="hero" id="hero">
+ <canvas id="heroCv" aria-label="Live simulation: a sheet of cells running the single-morphogen circuit. Click to poke it."></canvas>
+ <div class="grain"></div>
+ <div class="hint">Click anywhere · each click is a 2-hour poke</div>
+ <div class="edge" id="heroEdge"></div>
+ <div class="copy">
+  <div class="k" style="color:var(--accent)">Pattern formation · one morphogen</div>
+  <h1>One signal<br>is <i>enough.</i></h1>
+  <p>Every square here is a cell running the same two-gene circuit. Only one molecule can travel between cells. The sheet starts quiet. Give one cell a two-hour nudge and rings march outward, and they stay where they formed after the nudge ends.</p>
+  <div class="k">Wang, Garcia-Ojalvo &amp; Elowitz · parameters from their Table&nbsp;1</div>
+ </div>
+</header>
+
+<section class="s"><div class="wrap">
+ <div class="sh"><div class="no">01<span>The old rule</span></div><div>
+  <h2>Turing needed two. A sheet of cells needs one.</h2>
+  <p class="dek">In 1952 Alan Turing showed that two reacting chemicals can turn a uniform tissue into spots and stripes. One is a short-range <b>activator</b>, the other a long-range <b>inhibitor</b>. For seventy years the minimum count was two diffusing signals. The 2022 model asks what happens if the activator can't leave its cell at all.</p>
+ </div></div>
+ <div class="cols"><div class="side">
+   <b>A</b> activator: made in the cell, boosts itself and R, never leaves.<div class="rule"></div>
+   <b>R</b> repressor: secreted, moves to neighbouring cells, shuts down A and R.<div class="rule"></div>
+   Both genes share one promoter, so A and R rise and fall together.
+  </div>
+  <div class="stack">
+   <div class="plate"><div class="ph"><b>Fig. 01 · the circuit on a lattice</b><span>A stays · R travels</span></div>
+    <svg id="circuitSvg" viewBox="0 0 960 250" role="img" aria-label="Three cells. Each holds an activator that loops onto itself. Repressor molecules cross the cell walls."></svg>
+   </div>
+   <div class="chk"><span class="c">// per cell i, from the paper (ODEs on a discrete lattice)</span>
+dAᵢ/dt = β<sub>A</sub>·F(Aᵢ,Rᵢ) − γ<sub>A</sub>·Aᵢ
+dRᵢ/dt = β<sub>R</sub>·F(Aᵢ,Rᵢ) − γ<sub>R</sub>·Rᵢ + D·Σ<sub>j∈neighbours</sub>(Rⱼ − Rᵢ)
+F(A,R) = (κ + (A/K<sub>A</sub>)ʰ) / (1 + (A/K<sub>A</sub>)ʰ + (R/K<sub>R</sub>)ʰ)
+<span class="c">β_A 100 nM/h · β_R 80 nM/h · γ_A 1.5/h · γ_R 0.5/h · K 10 nM · κ 0.01 · h 2 · D 1 µm²/s · cell 10 µm</span></div>
+   <table class="cmp">
+    <thead><tr><th></th><th><span class="sw" style="background:var(--grey-2)"></span>Classic Turing</th><th><span class="sw" style="background:var(--accent)"></span>Single morphogen</th></tr></thead>
+    <tbody>
+     <tr><td>Who moves</td><td>Both signals; the inhibitor faster</td><td class="hl">Only R. A is confined to its cell</td></tr>
+     <tr><td>Medium</td><td>Works in a smooth continuum</td><td class="hl">Needs discrete cells; fails in a continuum</td></tr>
+     <tr><td>Finest pattern</td><td>Set by a band of unstable wavelengths</td><td class="hl">Two cells: neighbours in opposite states</td></tr>
+     <tr><td>Wavelength</td><td>Tuned by the diffusion ratio + kinetics</td><td class="hl">Scales with √D, the only parameter with length in it</td></tr>
+     <tr><td>How it starts</td><td>Spontaneously, from noise</td><td class="hl">A brief poke at a point, line or boundary</td></tr>
+     <tr><td>Once formed</td><td>Spots shuffle to even out spacing</td><td class="hl">Peaks stay fixed; keeps going after the poke ends</td></tr>
+    </tbody>
+   </table>
+  </div>
+ </div>
+</div></section>
+
+<section class="s" style="background:var(--sunken)"><div class="wrap">
+ <div class="sh"><div class="no">02<span>The cutoff</span></div><div>
+  <h2>Why a smooth medium can't do it, and cells can.</h2>
+  <p class="dek">Drag the sliders. The curve shows how fast a ripple of each wavelength grows out of the uniform state. If the activator can't move, the curve <b>never turns down</b>: finer ripples always grow faster, and in a continuum that ends in infinitely fine noise. Cells set a floor. Nothing on a lattice is finer than two cells, so the curve simply stops there.</p>
+ </div></div>
+ <div class="cols"><div class="side" id="dispSide"></div>
+  <div class="plate"><div class="ph"><b>Fig. 02 · dispersion relation, computed live</b><span id="dispTag">single morphogen</span></div>
+   <canvas id="dispCv" height="420"></canvas>
+   <div class="pf">
+    <label class="rng">D <input type="range" id="dD" min="0.1" max="2" step="0.05" value="1"><b id="dDv"></b></label>
+    <label class="rng">Activator diffusion <input type="range" id="dA" min="0" max="0.2" step="0.005" value="0"><b id="dAv"></b></label>
+    <div class="legend"><span><i style="background:var(--accent)"></i>lattice</span><span><i class="d"></i>continuum</span></div>
+   </div>
+  </div>
+ </div>
+ <p class="cap offs">Push <b>activator diffusion</b> above zero and the curve bends back down into the classic Turing hump. That's the same circuit with one extra mobile signal. At zero it's the single-morphogen limit, where the lattice is the only thing stopping runaway fineness.</p>
+</div></section>
+
+<section class="s"><div class="wrap">
+ <div class="sh"><div class="no">03<span>The march</span></div><div>
+  <h2>A poke at the edge becomes stripes that keep going.</h2>
+  <p class="dek">A single row of 140 cells. For the first two hours the leftmost cell gets extra repressor, and then the poke stops. Time runs downward. Watch the front: <b>each stripe forms once and stays where it formed.</b> The front then moves on to the next position at a steady speed.</p>
+ </div></div>
+ <div class="cols"><div class="side">
+   <b>Read it like a seismograph.</b> Horizontal is position along the row, vertical is hours. Ink is high activator.<div class="rule"></div>
+   Larger D gives wider stripes and a faster front. In the paper both scale with <b>√D</b>.<div class="rule"></div>
+   The time between new stripes <b>does not change with D</b>. Hold that thought for section 04.
+  </div>
+  <div class="plate"><div class="ph"><b>Fig. 03 · kymograph, 1-D lattice</b><span id="kyTag"></span></div>
+   <canvas id="kyCv" height="460"></canvas>
+   <div class="pf">
+    <label class="rng">D (µm²/s) <input type="range" id="kD" min="0.15" max="1.6" step="0.05" value="1"><b id="kDv"></b></label>
+    <div class="ctl"><button id="kRun">Run</button><button id="kReset">Reset</button></div>
+    <span>λ <b id="kLam">–</b></span><span>front <b id="kVel">–</b></span>
+   </div>
+  </div>
+ </div>
+</div></section>
+
+<section class="s" style="background:var(--sunken)"><div class="wrap">
+ <div class="sh"><div class="no">04<span>Clock into space</span></div><div>
+  <h2>The stripes are a clock, printed onto the tissue.</h2>
+  <p class="dek">Leave out diffusion and each cell's circuit is a <b>damped oscillator</b>. Nudge it and it rings about once every 8.9 hours, fading over roughly 19. Every rate in the circuit is measured per hour, and D is the only quantity that carries length. So stripe spacing and front speed both scale with √D, and their ratio, <b>the time between stripes, can't depend on D at all.</b> The tissue keeps time in hours and lays it out in microns.</p>
+ </div></div>
+ <div class="grid2">
+  <div class="plate"><div class="ph"><b>Fig. 04a · one isolated cell, nudged</b><span>no diffusion</span></div><canvas id="bellCv" height="300"></canvas>
+   <div class="pf"><span>linearised ring <b id="bellW"></b></span><span>decay <b id="bellS"></b></span></div></div>
+  <div class="plate"><div class="ph"><b>Fig. 04b · phase portrait</b><span>A vs R, spiralling in</span></div><canvas id="phaseCv" height="300"></canvas>
+   <div class="pf"><span>steady state <b id="ssv"></b></span></div></div>
+ </div>
+ <div class="nums mt" id="clockNums"></div><p class="cap">Both panels are computed in the page from the paper's parameters: Jacobian eigenvalues −0.053 ± 0.706i per hour. The table underneath was measured in this page's engine with D running from 0.15 to 1.6 µm²/s. A new stripe appears every 4.3–5.3 h, with no trend in D, while spacing grows 2.6× for a 10.7× change in D (√10.7 ≈ 3.3). <b>Correction to my earlier draft:</b> the stripe interval is about half the ringing period, not equal to it. The bell is the circuit's clock, but the beat between stripes is a different, shorter time. The D-independence is the paper's result, and the bell is my gloss.</p>
+</div></section>
+
+<section class="s"><div class="wrap">
+ <div class="sh"><div class="no">05<span>The weakness</span></div><div>
+  <h2>Noise wins the race, unless the tissue waits or grows.</h2>
+  <p class="dek">The same instability that makes stripes also amplifies every random wobble. With 5% cell-to-cell variation, cells ahead of the front go off by themselves into fine salt-and-pepper, and the clean wave gets blocked. Patterns that have already formed are safe. <b>Noise only wins where the tissue is patternable but not yet patterned.</b> The paper gives two fixes. The question to ask of each lane: does the spacing come out at the front's wavelength, or at the noise's?</p>
+ </div></div>
+ <div class="grid3">
+  <div class="plate"><div class="ph"><b>A · No protection</b><span>η 5%</span></div><canvas class="nz" data-mode="plain" height="400"></canvas><div class="pf"><span>spacing <b class="sp">–</b></span><span>CV <b class="cv">–</b></span></div></div>
+  <div class="plate"><div class="ph"><b>B · Inhibition-release lock</b><span>η 5%</span></div><canvas class="nz" data-mode="lock" height="400"></canvas><div class="pf"><span>spacing <b class="sp">–</b></span><span>CV <b class="cv">–</b></span></div></div>
+  <div class="plate"><div class="ph"><b>C · Growth-coupled</b><span>η 5%</span></div><canvas class="nz" data-mode="grow" height="400"></canvas><div class="pf"><span>spacing <b class="sp">–</b></span><span>CV <b class="cv">–</b></span></div></div>
+ </div>
+ <div class="cols mt"><div class="side"><div class="ctl"><button id="nzRun">Run all three</button></div></div>
+  <div class="prose"><p><b>B.</b> Cells start locked in a quiet ground state, with activator degraded six times faster. A cell unlocks only when repressor from the oncoming front pushes past a threshold. Noise has nothing to amplify until the wave arrives. The paper uses a bistable switch, M → M*; here it's simplified to a one-way latch.</p>
+  <p><b>C.</b> New cells are born at the growing tip, one every two hours, and join the pattern right away, so no cell spends long in the vulnerable state.</p>
+  <p><b>What I measured</b> (D = 0.25 µm²/s, η = 5%, three seeds). Clean wavelength with no noise: 9.7 cells. Unprotected: 4.2–4.7 cells, which is the noise's grain, about half the real wavelength. Lock: 7.4–8.1. Growth: 9.1–10.5, the closest to clean. Regularity improves less consistently: CV 0.25–0.29 unprotected, 0.12–0.23 for the two fixes. My earlier draft claimed a clean drop "from 0.3 to 0.1". One seed did that; most didn't.</p>
+  <p class="cap">Spacing = mean distance between stripes, in cells. CV = standard deviation of spacing ÷ mean, lower is more regular. η and seed are the same in all three lanes.</p></div>
+ </div>
+</div></section>
+
+<section class="s" style="background:var(--sunken)"><div class="wrap">
+ <div class="sh"><div class="no">06<span>The chemical cousin</span></div><div>
+  <h2>Target patterns: the same family, a different engine.</h2>
+  <p class="dek">Suematsu's lab at Meiji builds life-like behaviour from non-living chemistry. In the Belousov–Zhabotinsky reaction a blue dot appears in red solution and expands, and then <b>the same spot fires again, and again.</b> Rings stack outward into a target. The left panel is a standard excitable-medium model (Barkley) with a pacemaker at its centre. The right panel is the single-morphogen sheet, poked once.</p>
+ </div></div>
+ <div class="grid2">
+  <div class="plate"><div class="ph"><b>Fig. 06a · BZ-type target (Barkley)</b><span>pacemaker fires every T</span></div><canvas id="bzCv" height="420"></canvas>
+   <div class="pf"><label class="rng">Pacemaker T <input type="range" id="bzT" min="3" max="12" step="0.5" value="6"><b id="bzTv"></b></label><div class="ctl"><button id="bzStop">Stop pacemaker</button></div></div></div>
+  <div class="plate"><div class="ph"><b>Fig. 06b · single morphogen, one poke</b><span>poke stops at 2 h</span></div><canvas id="smCv" height="420"></canvas>
+   <div class="pf"><div class="ctl"><button id="smReset">Poke again</button></div><span>t <b id="smT">0 h</b></span></div></div>
+ </div>
+ <table class="cmp mt">
+  <thead><tr><th></th><th>BZ target pattern</th><th>Single-morphogen rings</th></tr></thead>
+  <tbody>
+   <tr><td>What moves</td><td>Waves of oxidation that travel and vanish</td><td class="hl">A front. What it leaves behind doesn't move</td></tr>
+   <tr><td>Remove the source</td><td>The pacemaker stops, the last rings run out, the dish goes quiet</td><td class="hl">The pattern keeps propagating and stays</td></tr>
+   <tr><td>Energy</td><td>Burns down a chemical store: an open driven loop</td><td class="hl">Each cell's own production and decay, every hour</td></tr>
+   <tr><td>The shared idea</td><td colspan="2">No cell or droplet "knows" the pattern. It exists only in the relation between neighbours: local feedback plus coupling.</td></tr>
+  </tbody>
+ </table>
+</div></section>
+
+<section class="pull"><div class="wrap">
+ <span class="k">What the two articles add up to</span>
+ <blockquote>A pattern needs a <i>trigger</i>, a <i>clock</i>, and a <i>floor</i>. It doesn't need a second signal.</blockquote>
+ <p>The trigger is the boundary poke, the clock is each cell's damped ringing, and the floor is the fact that cells come in units. Take away the floor (a continuum) and you get noise all the way down. Take away the trigger and you get salt-and-pepper. With all three, a single diffusing molecule paints periodic structure across a tissue and then leaves it standing.</p>
+</div></section>
+</main>
+
+<style>
+.cap.offs{margin-left:232px}
+@media (max-width:960px){.cap.offs{margin-left:0}}
+.mitab{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px;font-variant-numeric:tabular-nums}
+.mitab th,.mitab td{border-top:1px solid var(--hair);padding:8px 10px 8px 0;text-align:left}
+.mitab thead th{font-weight:400;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--grey);border-top:1px solid var(--ink)}
+.mitab td.r{color:var(--accent)}
+.bar{display:inline-block;height:6px;background:var(--ink);vertical-align:1px;margin-right:6px}
+.bar.o{background:var(--accent)}
+.qstat{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding:5px 8px;border:1px solid currentColor}
+.qstat.ok{color:#1E7A4F}.qstat.bad{color:var(--accent)}
+.bands{display:flex;gap:4px;flex-wrap:wrap}
+</style>
+
+<!-- ============ VIEW 2 ============ -->
+<main class="view" id="v-pfd">
+<section class="s"><div class="wrap">
+ <div class="sh"><div class="no">02<span>Reading Ø again</span></div><div>
+  <h2>What these papers do and don't do to the book.</h2>
+  <p class="dek">Ø 2.1.0 makes claims about lattices, modes, ringing and stability. The morphogen paper is a clean, checkable case of a real lattice doing real work, so it makes a good instrument for reading the book. Each row below quotes or paraphrases one claim from the book, sets the evidence beside it, and gives it a tag. <b>Supports</b> means the paper is a genuine instance of the idea. <b>Undercuts</b> means a test or counterexample cuts against it. <b>Reframes</b> means the idea survives but the mechanism differs. No row tests a PFD number.</p>
+ </div></div>
+ <div class="led">
+  <div class="hd"><span>#</span><span>The book says</span><span>What the evidence shows</span><span>Tag</span></div>
+
+  <div class="row"><div class="n">L1</div>
+   <div><h4>The lattice's Nyquist limit is load-bearing.</h4><div class="src">Ø Glossary, "Hierarchy Problem": the Higgs mass is "geometrically locked… by the <b>Nyquist limit of the discrete vacuum lattice</b>."</div></div>
+   <div><p>Wang et al. is a working example of exactly this kind of thing. With an immobile activator the growth curve never turns down, and in a continuum the instability runs to infinitely fine scales. Discreteness sets a shortest wavelength of two cells, and that cutoff is what makes the pattern possible (Fig. 02).</p><p>What it doesn't show: anything about a vacuum lattice, or any particular mass. It shows that "a discrete cutoff does real physical work" is a respectable kind of claim, not that this one is true.</p></div>
+   <div class="tag up">Supports · the form only</div></div>
+
+  <div class="row"><div class="n">L2</div>
+   <div><h4>Same lattice, different frets.</h4><div class="src">Ø §56.8, "Mode Selection, Not Cooling": "The lattice isn't cooling. Galaxies are pressing on different frets."</div></div>
+   <div><p>The paper shows one circuit with fixed parameters on one lattice producing very different wavelengths depending only on <b>how it's disturbed</b>. Global noise gives fine-grain patterns. A localised poke gives long, regular stripes. Mode selection by perturbation, not by changing the medium, is standard pattern-formation physics (the paper cites Cross &amp; Hohenberg 1993).</p><p>So the mechanism the book reaches for is real and well studied. Whether galaxies use it is a separate empirical question, and this paper can't answer it.</p></div>
+   <div class="tag up">Supports · mechanism exists</div></div>
+
+  <div class="row"><div class="n">L3</div>
+   <div><h4>The lattice rings, and the fundamental survives.</h4><div class="src">Ø §53.3, "Reheating as Lattice Ringing": every mode fires at once, the "high harmonics… died away first," and "the bell finds its voice by losing everything that isn't its voice."</div></div>
+   <div><p>On the morphogen lattice it's the other way round. Start from noise and the <b>finest</b> modes grow fastest and win, which is the salt-and-pepper of Fig. 05A. A long wavelength survives only if something selects it: a trigger at a boundary, a latch, or growth.</p><p>The image of a lattice finding its voice survives. The mechanism it names, high modes dying off by themselves, is the opposite of what this lattice does. A bell is a damped system. This lattice is unstable, so selection has to come from boundary conditions, not decay.</p></div>
+   <div class="tag re">Reframes</div></div>
+
+  <div class="row"><div class="n">L4</div>
+   <div><h4>A dyad can't hold tension.</h4><div class="src">Ø Ch. 5: "binary structures collapse. Two elements in contradiction resolve by annihilation… A dyad cannot hold tension. A triad can."</div></div>
+   <div><p>The A–R circuit is two species locked in opposition: A drives R, and R shuts down A. It holds a stable, patterned, long-lived state. If "dyad" means two opposing components, this is a working counterexample.</p><p>A defender would say the lattice is the third element. That move is available, but if the third element can be "whatever else is in the system," the claim stops ruling anything out. The book should say what counts. (The pull-quote on tab 01 lists three ingredients. That's my framing, and it shouldn't be counted as a triad.)</p></div>
+   <div class="tag dn">Undercuts · as stated</div></div>
+
+  <div class="row"><div class="n">L5</div>
+   <div><h4>Variable-star periods carry 7-structure; pulsators show it more than eclipsers.</h4><div class="src">Ø §59.15–59.16: MI(mod3×mod7) = 1.85 across 489,309 stars, null ≈ 0.003, z &gt; 30. RR Lyrae 2.31, SR 2.18, Cepheid 2.09, EA 0.89, EB 0.71. Listed as "Pre-registered · Passed" in the §70.4 ledger.</div></div>
+   <div><p>I re-ran the test on <b>random</b> periods. The three residues are all computed from the same number, ln P, so they're deterministically linked. Over any narrow range of periods they move together. Random periods give large MI, and the narrower the range, the larger the MI. Running the table below, random log-uniform periods over an RR-Lyrae-like range score 2.16, about what the book reports for real RR Lyrae.</p><p>Range width also explains much of the class ranking. RR Lyrae and Cepheids sit in narrow period bands, and narrow bands score high whether or not there's any structure. Semiregulars are the case to watch: they span a wide range but the book reports them high, so width doesn't explain everything. That's worth a proper test, with a null drawn from each class's own period distribution. The quoted null of ≈ 0.003 is what you get by shuffling residues independently, which cuts the link the test depends on. The book's described null, "permute the periods among stars," can't change the statistic at all, because every star's three residues travel together.</p></div>
+   <div class="tag dn">Undercuts · test is uninformative</div></div>
+ </div>
+
+ <div class="cols mt"><div class="side"><b>Run it yourself.</b> Each row draws fresh random periods, log-uniform over the range shown, and computes MI with 20×20 bins. No stars are involved.<div class="rule"></div>The class ranges are my rough estimates, not catalogue values. I don't have the book's data or its exact binning, so absolute values can differ. The pattern, narrow range giving high MI, doesn't depend on either.</div>
+  <div class="plate"><div class="ph"><b>Fig. 07 · MI from periods with no structure at all</b><span id="miTag">computed in page</span></div>
+   <div style="padding:6px 12px 2px"><table class="mitab" id="miTab"><thead><tr><th>Random periods</th><th>Range (d)</th><th>Decades</th><th>N</th><th>MI(3×7)</th><th>Shuffled null</th><th>Book, matching class</th></tr></thead><tbody></tbody></table></div>
+   <div class="pf"><div class="ctl"><button id="miRun">Redraw</button></div><span>bins <b>20×20</b></span><span>residue <b>frac(ln P / ln b)</b></span></div>
+  </div>
+ </div>
+</div></section>
+
+<section class="s" style="background:var(--sunken)"><div class="wrap">
+ <div class="sh"><div class="no">02b<span>Net reading</span></div><div>
+  <h2>Two moves in the book get a real-world anchor, and one test fails.</h2>
+  <p class="dek">The morphogen paper gives honest physical footing to two moves the book makes in passing: <b>discreteness as enabling</b>, and <b>mode selection without changing the medium</b>. It cuts against the book's picture of ringing and against its dyad rule as written. The variable-star statistic, which the ledger marks as pre-registered and passed, can't tell structured periods from random ones. That one should come out of the ledger or be redone with a null drawn from the same period distribution.</p>
+ </div></div>
+</div></section>
+</main>
+
+<!-- ============ VIEW 3 ============ -->
+<main class="view" id="v-ztf">
+<section class="s"><div class="wrap">
+ <div class="sh"><div class="no">03<span>ZTF J0440+2325</span></div><div>
+  <h2>A brown dwarf being eaten slowly, for billions of years.</h2>
+  <p class="dek">Householder et al. (2026) report the first direct look at a brown dwarf feeding a normal star. The pair orbit every <b>86.65 minutes</b>. The brown dwarf fills its Roche lobe, the region it can hold with its own gravity, and gas spills over the saddle point onto the M dwarf. Where that stream lands, a hot spot forms, and it swings into and out of view once per orbit. In the u band the system brightens more than <b>30×</b>, in the z band only about 1.4×. A stream that strikes the star directly, with no disc, matches the light curve.</p>
+ </div></div>
+ <div class="nums">
+  <div><div class="v">86.65<small>min</small></div><div class="l">Orbital period</div></div>
+  <div><div class="v">30.2<small>M<sub>Jup</sub></small></div><div class="l">Donor · brown dwarf</div></div>
+  <div><div class="v">111<small>M<sub>Jup</sub></small></div><div class="l">Accretor · M8 dwarf</div></div>
+  <div><div class="v">0.27<small>q</small></div><div class="l">Mass ratio · stable if <b>≲ 2/3</b></div></div>
+ </div>
+ <div class="grid2 mt">
+  <div class="plate"><div class="ph"><b>Fig. 08 · Roche geometry + ballistic stream</b><span>co-rotating frame, computed live</span></div>
+   <canvas id="rocheCv" height="440"></canvas>
+   <div class="pf"><label class="rng">Mass ratio q <input type="range" id="rq" min="0.1" max="1" step="0.01" value="0.27"><b id="rqv"></b></label><span id="rqs" class="qstat ok">stable</span><span>impact <b id="rImp">–</b></span></div></div>
+  <div class="plate"><div class="ph"><b>Fig. 09 · toy light curve, five bands</b><span>calibrated to u ×30, z ×1.4</span></div>
+   <canvas id="lcCv" height="440"></canvas>
+   <div class="pf"><label class="rng">Phase <input type="range" id="lp" min="0" max="1" step="0.005" value="0.46"><b id="lpv"></b></label><div class="ctl"><button id="lPlay" class="on">Playing</button></div></div></div>
+ </div>
+ <div class="cols mt"><div class="side">
+   <b>Left.</b> Dashed curves are equipotentials. The heavy one passes through L1, the saddle where the stream leaves. Drag q to change the masses. Above about 2/3, transfer from a convective donor runs away.<div class="rule"></div>
+   <b>Right.</b> The observer arrow on the left rotates with the phase slider. Peak brightness falls just before φ = 0.5, when the M dwarf's day side faces us.
+  </div>
+  <div class="prose">
+   <p><b>Why the stream lands where it does.</b> Gas leaving L1 falls toward the M dwarf, but the frame is rotating, so the Coriolis force bends the stream to one side. At q = 0.27 my integration puts the impact about <b>15°</b> ahead of the line joining the two bodies. The paper gets 14.8° and a phase offset of Δφ ≈ 0.04, which matches the observed peak at φ ≈ 0.44–0.48.</p>
+   <p><b>Why the colours differ so much.</b> A small patch much hotter than a 2,700 K photosphere adds a lot of blue light and very little red. Fitting a single blackbody spot to the two quoted amplitudes gives about <b>5,200 K</b> covering about 2.5% of the visible disc, a radius of roughly 0.02 R<sub>☉</sub>. The paper gives R<sub>hot</sub> ∼ 10<sup>−2</sup> R<sub>☉</sub>. Same order, from a fit with two parameters. The real spot has a temperature gradient, so treat the right-hand panel as a toy.</p>
+   <p><b>Why it's stable.</b> Both bodies are dense, and the donor (the lighter one) is losing mass. When a convective donor loses mass its Roche lobe shrinks more slowly than the star does, as long as q stays below about 2/3. Transfer then throttles itself instead of running away. The authors' argument is that finding two such systems at all means the phase lasts a long time, ≳ 10<sup>7</sup>–10<sup>8</sup> years and plausibly gigayears.</p>
+  </div>
+ </div>
+</div></section>
+
+<section class="s" style="background:var(--sunken)"><div class="wrap">
+ <div class="sh"><div class="no">03b<span>Why it's in this explainer</span></div><div>
+  <h2>One link is honest. One isn't.</h2>
+  <p class="dek">The honest link is about <b>stability</b>. In the morphogen lattice and in this binary, a durable structure is a process held in balance, not a thing at rest. Stripes are made and degraded every hour. The stream is lost and replaced every orbit. Each one has a sharp threshold, a two-cell floor in one case and q ≈ 2/3 in the other, past which the balance fails.</p>
+ </div></div>
+ <div class="cols"><div class="side">J0440's own period, 0.0602 d, gives residues 0.945 / 0.442 / 0.556 (mod 2 / 3 / 7). They aren't near anything, and Fig. 07 shows why that wouldn't matter either way.</div>
+  <div class="prose"><p><b>The dishonest link</b> would be to put J0440 into the book's §59 framework. Its period is orbital. In the book's own terms that's an "eclipser-like," geometry-set period, the class the book expects to carry little 7-structure. More to the point, the residue test can't tell structure from range width (tab 02, L5). So this system has nothing to add to that statistic, and the statistic has nothing to say about it.</p></div>
+ </div>
+</div></section>
+</main>
+
+<!-- ============ VIEW 4 ============ -->
+<main class="view" id="v-src">
+<section class="s"><div class="wrap">
+ <div class="sh"><div class="no">04<span>Sources &amp; checks</span></div><div>
+  <h2>What's measured, what's quoted, what's mine.</h2>
+  <p class="dek">Every live figure in this page runs in your browser from the parameters listed. I checked each number below by running it in Python or Node before quoting it. The X marks are places where my earlier draft was wrong or where a claim couldn't be verified.</p>
+ </div></div>
+ <ul class="srcs">
+  <li><span class="n">S1</span><span>Wang, S., Garcia-Ojalvo, J. &amp; Elowitz, M. B. <a href="https://doi.org/10.1101/2022.03.21.484932" target="_blank" rel="noopener">Periodic spatial patterning with a single morphogen.</a> bioRxiv 2022.03.21.484932.</span><span class="m">Preprint, posted 22 Mar 2022. Parameters from Table 1. Not peer reviewed at that version.</span></li>
+  <li><span class="n">S2</span><span>Householder, A., Burdge, K. B., El-Badry, K., et al. <a href="https://arxiv.org/abs/2603.17039" target="_blank" rel="noopener">Stars stably accreting from substellar objects.</a> arXiv:2603.17039 [astro-ph.SR].</span><span class="m">17 Mar 2026. All J0440 numbers are from their Table 1 and text.</span></li>
+  <li><span class="n">S3</span><span>Sojka, C., with Benitez, G. &amp; Merges, K. <i>Ø: Paradox Field Dynamics</i>, v2.1.0 working draft.</span><span class="m">§5.9, §53.3, §56.8, §59.15–16, §70.4, Glossary. Quoted from the PDF text.</span></li>
+  <li><span class="n">S4</span><span>Barkley, D. A model for fast computer simulation of waves in excitable media. <i>Physica D</i> 49, 61–70 (1991).</span><span class="m">Fig. 06a model; a = 0.75, b = 0.06, ε = 0.02.</span></li>
+  <li><span class="n">S5</span><span>Turing, A. M. The chemical basis of morphogenesis. <i>Phil. Trans. R. Soc. B</i> 237, 37–72 (1952).</span><span class="m">Background for section 01.</span></li>
+  <li><span class="n">S6</span><span>Cross, M. C. &amp; Hohenberg, P. C. Pattern formation outside of equilibrium. <i>Rev. Mod. Phys.</i> 65, 851 (1993).</span><span class="m">Mode selection, cited by S1. Supports L2.</span></li>
+  <li><span class="n">S7</span><span>Suematsu lab (Meiji University), BZ-reaction work on life-like behaviour in non-living chemistry.<span class="flag">unverified</span></span><span class="m">Taken from the article you shared earlier. My web search failed this session, so I couldn't confirm the paper. Fig. 06a uses a generic BZ model, not their system.</span></li>
+ </ul>
+
+ <div class="cols mt"><div class="side"><b>Reproduce.</b> Scripts in <span style="color:var(--ink)">sandbox/morph/</span>: disp.py, meas.js, look2.js, gate2d.js, roche.py, mi.py.</div>
+ <div class="chk" id="checks"><span class="c">// single-morphogen circuit, Table 1 parameters</span>
+<span class="ok">✓</span> homogeneous steady state           A₀ = 8.206 nM, R₀ = 19.693 nM
+<span class="ok">✓</span> Jacobian eigenvalues (D=0)         −0.053 ± 0.706i h⁻¹  → ring 8.90 h, decay 18.8 h
+<span class="ok">✓</span> continuum growth never turns down  → J₁₁ = 1.092 h⁻¹ as q→∞; lattice stops at q = π
+<span class="ok">✓</span> λ ∝ √D                             λ/√Dc = 2.85–3.51 over D = 0.15–1.6 µm²/s
+<span class="ok">✓</span> stripe interval independent of D   4.3–5.3 h, no trend
+<span class="x">✗</span> "interval = ring period"           earlier draft; measured ≈ 0.55× ring period
+<span class="ok">✓</span> noise → fine grain                 unprotected spacing 4.2–4.7 vs clean 9.7 cells
+<span class="ok">✓</span> lock + growth restore wavelength   7.4–8.1 and 9.1–10.5 cells (3 seeds)
+<span class="x">✗</span> "CV 0.3 → 0.1 with growth"         one seed out of three; typical 0.16–0.23
+<span class="c">// ZTF J0440+2325</span>
+<span class="ok">✓</span> L1 at 0.369 a from donor (q=0.27)  ballistic impact 14.9–15.5° (paper: 14.8°)
+<span class="ok">✓</span> blackbody spot fit to u ×30, z ×1.4  T ≈ 5,160 K, R ≈ 0.020 R☉ (paper: ∼10⁻² R☉)
+<span class="c">// Ø §59 residue test</span>
+<span class="x">✗</span> MI(3×7) reflects 7-structure       random log-uniform periods: 0.63 (wide) to 2.16 (narrow)
+<span class="x">✗</span> "permute periods among stars"      statistic unchanged: 0.634 → 0.634</div>
+ </div>
+</div></section>
+</main>
+
+<div class="wrap"><footer><span>ø co. · explainer v001</span><span>Live sims: Table 1 parameters, explicit Euler, Neumann edges</span><span>Built from S1–S3</span></footer></div>
+
+<script>
+/* single-morphogen lattice engine — Wang, Garcia-Ojalvo & Elowitz (2022), Table 1 */
+const SM=(function(){
+const bA=100,bR=80,gA=1.5,gR=0.5,KA=10,KR=10,kap=0.01;
+function F(A,R){const a=(A/KA)*(A/KA),r=(R/KR)*(R/KR);return (kap+a)/(1+a+r);}
+// homogeneous steady state, D=0 (Newton)
+let A0=8,R0=20;
+for(let i=0;i<60;i++){const e=1e-6,f=(A,R)=>[bA*F(A,R)-gA*A,bR*F(A,R)-gR*R];
+ const f0=f(A0,R0),fa=f(A0+e,R0),fr=f(A0,R0+e);
+ const j=[[(fa[0]-f0[0])/e,(fr[0]-f0[0])/e],[(fa[1]-f0[1])/e,(fr[1]-f0[1])/e]];
+ const det=j[0][0]*j[1][1]-j[0][1]*j[1][0];
+ A0-=( j[1][1]*f0[0]-j[0][1]*f0[1])/det; R0-=(-j[1][0]*f0[0]+j[0][0]*f0[1])/det;}
+const e=1e-6;
+const FA=(F(A0+e,R0)-F(A0-e,R0))/(2*e),FR=(F(A0,R0+e)-F(A0,R0-e))/(2*e);
+const J=[[bA*FA-gA,bA*FR],[bR*FA,bR*FR-gR]];
+function growth(lap){ // largest real eigenvalue of J - diag(0,lap)
+ const a=J[0][0],b=J[0][1],c=J[1][0],d=J[1][1]-lap,tr=a+d,det=a*d-b*c,disc=tr*tr/4-det;
+ return disc>=0? tr/2+Math.sqrt(disc) : tr/2;}
+const tr=J[0][0]+J[1][1],det=J[0][0]*J[1][1]-J[0][1]*J[1][0];
+const omega=Math.sqrt(det-tr*tr/4), sigma=tr/2;
+// 1-D lattice
+function Lane(N,o){o=o||{};this.N=N;this.Dc=o.Dc||36;this.A=new Float64Array(N).fill(A0);this.R=new Float64Array(N).fill(R0);
+ this.het=new Float64Array(N).fill(1);this.t=0;this.pulse=o.pulse===undefined?2:o.pulse;this.gate=!!o.gate;this.gk=o.gk||6;this.th=o.th||4;
+ this.on=new Uint8Array(N).fill(this.gate?0:1);this.L=new Float64Array(N);
+ if(o.eta){let s=o.seed||7;const rnd=()=>{s=(s*16807)%2147483647;return s/2147483647;};
+  for(let i=0;i<N;i++){const u=rnd()||1e-9,v=rnd();this.het[i]=1+o.eta*Math.sqrt(-2*Math.log(u))*Math.cos(6.2832*v);}}
+ if(this.gate){ // relax to ground state (high A degradation)
+  let a=0.5,r=1.5;for(let k=0;k<20000;k++){const f=F(a,r);a+=0.002*(bA*f-gA*this.gk*a);r+=0.002*(bR*f-gR*r);}
+  this.A.fill(a);this.R.fill(r);}
+}
+Lane.prototype.step=function(dt){const N=this.N,A=this.A,R=this.R,L=this.L,D=this.Dc;
+ for(let i=1;i<N-1;i++)L[i]=R[i+1]+R[i-1]-2*R[i];L[0]=R[1]-R[0];L[N-1]=R[N-2]-R[N-1];
+ for(let i=0;i<N;i++){const f=F(A[i],R[i])*this.het[i],g=this.on[i]?gA:gA*this.gk;
+  A[i]+=dt*(bA*f-g*A[i]);R[i]+=dt*(bR*f-gR*R[i]+D*L[i]);
+  if(this.gate&&!this.on[i]&&R[i]>this.th)this.on[i]=1;}
+ if(this.t<this.pulse)R[0]=R0*3;this.t+=dt;};
+Lane.prototype.advance=function(h){const dt=Math.min(0.004,0.35/this.Dc);let n=Math.ceil(h/dt);for(let i=0;i<n;i++)this.step(h/n);};
+// 2-D lattice
+function Sheet(W,H,Dc){this.W=W;this.H=H;this.Dc=Dc;const n=W*H;this.A=new Float64Array(n).fill(A0);this.R=new Float64Array(n).fill(R0);
+ this.L=new Float64Array(n);this.src=[];this.t=0;}
+Sheet.prototype.poke=function(x,y,dur){this.src.push({x:x|0,y:y|0,until:this.t+(dur||2)});};
+Sheet.prototype.step=function(dt){const W=this.W,H=this.H,A=this.A,R=this.R,L=this.L,D=this.Dc;
+ for(let y=0;y<H;y++){const yu=y?y-1:0,yd=y<H-1?y+1:H-1;for(let x=0;x<W;x++){const i=y*W+x,xl=x?x-1:0,xr=x<W-1?x+1:W-1;
+  L[i]=R[y*W+xl]+R[y*W+xr]+R[yu*W+x]+R[yd*W+x]-4*R[i];}}
+ for(let i=0;i<W*H;i++){const f=F(A[i],R[i]);A[i]+=dt*(bA*f-gA*A[i]);R[i]+=dt*(bR*f-gR*R[i]+D*L[i]);}
+ this.src=this.src.filter(s=>s.until>this.t);
+ for(const s of this.src)for(let dy=0;dy<2;dy++)for(let dx=0;dx<2;dx++){const xx=Math.min(W-1,s.x+dx),yy=Math.min(H-1,s.y+dy);R[yy*W+xx]=R0*3;}
+ this.t+=dt;};
+return {F,A0,R0,J,growth,omega,sigma,Lane,Sheet};
+})();
+if(typeof module!=='undefined')module.exports=SM;
+/* growth-coupled lane: cells are born at the far end at `rate` cells/h */
+SM.Grow=function(Nmax,o){o=o||{};this.Nmax=Nmax;this.Dc=o.Dc||36;this.rate=o.rate||0.5;this.eta=o.eta||0;
+ this.A=new Float64Array(Nmax);this.R=new Float64Array(Nmax);this.het=new Float64Array(Nmax).fill(1);this.L=new Float64Array(Nmax);
+ this.n=1;this.A[0]=SM.A0*3;this.R[0]=SM.R0;this.t=0;this.next=1/this.rate;let s=o.seed||11;
+ this.rnd=()=>{s=(s*16807)%2147483647;return s/2147483647;};};
+SM.Grow.prototype.step=function(dt){const n=this.n,A=this.A,R=this.R,L=this.L,D=this.Dc;
+ if(n>1){for(let i=1;i<n-1;i++)L[i]=R[i+1]+R[i-1]-2*R[i];L[0]=R[1]-R[0];L[n-1]=R[n-2]-R[n-1];}else L[0]=0;
+ for(let i=0;i<n;i++){const f=SM.F(A[i],R[i])*this.het[i];A[i]+=dt*(100*f-1.5*A[i]);R[i]+=dt*(80*f-0.5*R[i]+D*L[i]);}
+ this.t+=dt;
+ if(this.t>=this.next&&this.n<this.Nmax){const i=this.n;A[i]=0.2;R[i]=R[i-1];
+  const u=this.rnd()||1e-9,v=this.rnd();this.het[i]=1+this.eta*Math.sqrt(-2*Math.log(u))*Math.cos(6.2832*v);this.n++;this.next+=1/this.rate;}};
+SM.Grow.prototype.advance=function(h){const dt=Math.min(0.004,0.35/this.Dc);let k=Math.ceil(h/dt);for(let i=0;i<k;i++)this.step(h/k);};
+
+
+/* ===== page script ===== */
+(function(){
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const C={ink:'#101014',grey:'#6F6E6A',g2:'#B4B2AC',hair:'#E7E4DD',acc:'#F4551E',blue:'#2F5AE6',navy:'#16204A',paper:'#F6F5F2',green:'#1E7A4F',white:'#FFFFFF'};
+const MONO='10px "JetBrains Mono", ui-monospace, Menlo, monospace';
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+function hex(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+const RGB={ink:hex(C.ink),paper:hex(C.paper),acc:hex(C.acc),navy:hex(C.navy),white:[255,255,255],blue:hex(C.blue),hair:hex(C.hair)};
+function mix(a,b,t){return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];}
+function fit(cv){const h0=+(cv.dataset.h||(cv.dataset.h=cv.getAttribute('height')));const r=cv.getBoundingClientRect();
+ const w=Math.max(40,r.width);const h=w<500?Math.round(Math.min(h0,Math.max(300,w*1.05))):h0;
+ const dpr=Math.min(2,window.devicePixelRatio||1);cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);
+ const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.font=MONO;return {x,w,h};}
+function visible(el){if(!el.offsetParent&&el!==document.body)return false;const r=el.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight&&r.width>0;}
+function axisText(x,s,X,Y,al,col){x.fillStyle=col||C.grey;x.textAlign=al||'left';x.fillText(s,X,Y);}
+const SMc=SM; const bA=100,bR=80,gA=1.5,gR=0.5;
+
+/* ---------- tabs ---------- */
+const redraw=[];
+function go(v,push){$$('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+ $$('.view').forEach(m=>m.classList.toggle('on',m.id==='v-'+v));window.scrollTo(0,0);
+ if(push!==false)history.replaceState(null,'','#'+v);requestAnimationFrame(()=>redraw.forEach(f=>f()));}
+$$('.tabs button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.v)));
+$$('[data-go]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();go(a.dataset.go);}));
+let rT;addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(()=>redraw.forEach(f=>f()),120);});
+
+/* ---------- gated sheet (quiet ground state, latch opens when R passes th) ---------- */
+const GROUND=(()=>{let a=0.5,r=1.5;for(let k=0;k<20000;k++){const f=SMc.F(a,r);a+=0.002*(bA*f-gA*6*a);r+=0.002*(bR*f-gR*r);}return [a,r];})();
+function GSheet(W,H,o){o=o||{};this.W=W;this.H=H;this.Dc=o.Dc||9;this.th=o.th||3;this.gk=6;const n=W*H;
+ this.A=new Float32Array(n).fill(GROUND[0]);this.R=new Float32Array(n).fill(GROUND[1]);this.on=new Uint8Array(n);
+ this.tOn=new Float32Array(n).fill(-1e9);this.L=new Float32Array(n);this.src=[];this.t=0;this.nOn=0;}
+GSheet.prototype.poke=function(x,y,d){this.src.push({x:clamp(x|0,0,this.W-2),y:clamp(y|0,0,this.H-2),until:this.t+(d||2)});};
+GSheet.prototype.step=function(dt){const W=this.W,H=this.H,A=this.A,R=this.R,L=this.L,D=this.Dc,on=this.on,th=this.th,gk=this.gk;
+ for(let y=0;y<H;y++){const yu=(y?y-1:0)*W,yd=(y<H-1?y+1:H-1)*W,yy=y*W;for(let x=0;x<W;x++){const i=yy+x;
+  L[i]=R[yy+(x?x-1:0)]+R[yy+(x<W-1?x+1:W-1)]+R[yu+x]+R[yd+x]-4*R[i];}}
+ for(let i=0;i<W*H;i++){const a=A[i]/10,r=R[i]/10,a2=a*a,f=(0.01+a2)/(1+a2+r*r),g=on[i]?gA:gA*gk;
+  A[i]+=dt*(bA*f-g*A[i]);R[i]+=dt*(bR*f-gR*R[i]+D*L[i]);
+  if(!on[i]&&R[i]>th){on[i]=1;this.tOn[i]=this.t;this.nOn++;}}
+ this.src=this.src.filter(s=>s.until>this.t);
+ for(const s of this.src)for(let dy=0;dy<2;dy++)for(let dx=0;dx<2;dx++)R[(s.y+dy)*W+s.x+dx]=SMc.R0*3;
+ this.t+=dt;};
+function paintSheet(img,S,ink){const d=img.data,A=S.A,on=S.on,tOn=S.tOn,t=S.t;const INK=ink||RGB.ink;
+ for(let i=0;i<S.W*S.H;i++){let c;
+  if(!on[i])c=RGB.paper;else{const v=clamp((A[i]-4)/34,0,1);c=mix(RGB.white,INK,Math.pow(v,0.8));
+   const age=t-tOn[i];if(age<2.5){const k=(1-age/2.5)*0.55;c=mix(c,RGB.acc,k);}}
+  const j=i*4;d[j]=c[0];d[j+1]=c[1];d[j+2]=c[2];d[j+3]=255;}}
+
+/* ---------- HERO ---------- */
+(function(){const cv=$('#heroCv'),edge=$('#heroEdge');if(!cv)return;let S,off,octx,img,cellPx,lastPoke=0;
+ function init(){const r=cv.getBoundingClientRect();cellPx=r.width<700?6:7;const W=Math.max(30,Math.round(r.width/cellPx)),H=Math.max(30,Math.round(r.height/cellPx));
+  S=new GSheet(W,H,{Dc:9,th:3});off=document.createElement('canvas');off.width=W;off.height=H;octx=off.getContext('2d');img=octx.createImageData(W,H);
+  const dpr=Math.min(2,devicePixelRatio||1);cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);
+  const px=r.width<700?0.5:0.68;S.poke(Math.round(W*px),Math.round(H*(r.width<700?0.5:0.38)),2);lastPoke=0;}
+ function draw(){const x=cv.getContext('2d');x.imageSmoothingEnabled=false;paintSheet(img,S);octx.putImageData(img,0,0);x.drawImage(off,0,0,cv.width,cv.height);
+  edge.innerHTML=`<span>t</span> ${S.t.toFixed(1)} h<br><span>cells</span> ${S.W}×${S.H}<br><span>unlocked</span> ${(100*S.nOn/(S.W*S.H)).toFixed(0)}%<br><span>D</span> 0.25 µm²/s · <span>latch</span> 3 nM`;}
+ cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect();S.poke((e.clientX-r.left)/r.width*S.W,(e.clientY-r.top)/r.height*S.H,2);lastPoke=S.t;});
+ function loop(){if(visible(cv)){for(let k=0;k<12;k++)S.step(0.02);
+   if(S.nOn>=S.W*S.H*0.995&&S.t-lastPoke>45){init();}draw();}requestAnimationFrame(loop);}
+ init();draw();requestAnimationFrame(loop);
+ let rw=0;redraw.push(()=>{const w=cv.getBoundingClientRect().width;if(w&&Math.abs(w-rw)>40){rw=w;init();draw();}});})();
+
+/* ---------- Fig 01 circuit ---------- */
+(function(){const s=$('#circuitSvg');if(!s)return;let g='<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#101014"/></marker><marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#F4551E"/></marker></defs>';
+ const xs=[40,350,660];xs.forEach((X,k)=>{g+=`<rect x="${X}" y="30" width="260" height="190" fill="${k==1?'#F6F5F2':'#fff'}" stroke="#101014" stroke-width="1.2"/>`;
+  g+=`<text x="${X+12}" y="50" font-family="JetBrains Mono,monospace" font-size="10" letter-spacing="1.5" fill="#6F6E6A">CELL ${['i−1','i','i+1'][k]}</text>`;
+  g+=`<circle cx="${X+90}" cy="130" r="26" fill="#101014"/><text x="${X+90}" y="135" text-anchor="middle" font-family="Archivo,sans-serif" font-weight="700" font-size="16" fill="#fff">A</text>`;
+  g+=`<path d="M${X+70},106 C${X+52},70 ${X+128},70 ${X+110},106" fill="none" stroke="#101014" stroke-width="1.4" marker-end="url(#ah)"/>`;
+  g+=`<circle cx="${X+190}" cy="130" r="20" fill="none" stroke="#F4551E" stroke-width="1.8"/><text x="${X+190}" y="135" text-anchor="middle" font-family="Archivo,sans-serif" font-weight="700" font-size="14" fill="#F4551E">R</text>`;
+  g+=`<path d="M${X+118},130 L${X+166},130" stroke="#101014" stroke-width="1.4" marker-end="url(#ah)"/>`;
+  g+=`<path d="M${X+178},150 C${X+160},190 ${X+108},190 ${X+96},160" fill="none" stroke="#F4551E" stroke-width="1.4"/><path d="M${X+88},166 L${X+104},156" stroke="#F4551E" stroke-width="2.2"/>`;
+  g+=`<text x="${X+90}" y="208" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9.5" fill="#6F6E6A">stays</text>`;});
+ [[300,350],[610,660]].forEach(([a,b])=>{g+=`<path d="M${a-60},120 L${b+60},120" stroke="#F4551E" stroke-width="1.2" stroke-dasharray="3 4" marker-end="url(#ahr)"/><path d="M${b+60},142 L${a-60},142" stroke="#F4551E" stroke-width="1.2" stroke-dasharray="3 4" marker-end="url(#ahr)"/>`;
+  for(let k=0;k<4;k++)g+=`<circle cx="${a-18+k*16}" cy="${k%2?142:120}" r="3" fill="#F4551E"/>`;});
+ g+=`<text x="480" y="244" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="9.5" letter-spacing="1" fill="#6F6E6A">R DIFFUSES BETWEEN NEIGHBOURS · A NEVER CROSSES A WALL</text>`;
+ s.innerHTML=g;})();
+
+/* ---------- Fig 02 dispersion ---------- */
+(function(){const cv=$('#dispCv');if(!cv)return;const J=SMc.J;
+ function lam(la,lr){const a=J[0][0]-la,b=J[0][1],c=J[1][0],d=J[1][1]-lr,tr=a+d,det=a*d-b*c,disc=tr*tr/4-det;return disc>=0?tr/2+Math.sqrt(disc):tr/2;}
+ function draw(){const D=+$('#dD').value,Da=+$('#dA').value;$('#dDv').textContent=D.toFixed(2)+' µm²/s';$('#dAv').textContent=Da.toFixed(3)+' µm²/s';
+  const Dc=36*D,Dac=36*Da;const {x,w,h}=fit(cv);const m={l:48,r:16,t:18,b:38};const qMax=2*Math.PI;
+  const X=q=>m.l+(w-m.l-m.r)*q/qMax,yMin=-0.6,yMax=1.3,Y=v=>m.t+(h-m.t-m.b)*(yMax-v)/(yMax-yMin);
+  x.clearRect(0,0,w,h);x.strokeStyle=C.hair;x.lineWidth=1;
+  for(let v=-0.5;v<=1.25;v+=0.25){x.beginPath();x.moveTo(m.l,Y(v));x.lineTo(w-m.r,Y(v));x.stroke();axisText(x,v.toFixed(2),m.l-6,Y(v)+3,'right');}
+  x.strokeStyle=C.ink;x.beginPath();x.moveTo(m.l,Y(0));x.lineTo(w-m.r,Y(0));x.stroke();
+  // lattice wall
+  x.fillStyle='rgba(16,16,20,0.045)';x.fillRect(X(Math.PI),m.t,w-m.r-X(Math.PI),h-m.t-m.b);
+  x.strokeStyle=C.ink;x.setLineDash([2,3]);x.beginPath();x.moveTo(X(Math.PI),m.t);x.lineTo(X(Math.PI),h-m.b);x.stroke();x.setLineDash([]);
+  axisText(x,'q = π · two-cell period',X(Math.PI)+6,m.t+12,'left',C.ink);axisText(x,'no lattice modes here',X(Math.PI)+6,m.t+26);
+  [0,Math.PI/2,Math.PI,3*Math.PI/2,2*Math.PI].forEach((q,k)=>axisText(x,['0','π/2','π','3π/2','2π'][k],X(q),h-m.b+16,'center'));
+  axisText(x,'wavenumber q (per cell) →',w-m.r,h-6,'right');x.save();x.translate(12,m.t+4);x.rotate(-Math.PI/2);axisText(x,'growth rate (1/h)',0,0,'right');x.restore();
+  // continuum
+  x.strokeStyle=C.blue;x.lineWidth=1.5;x.setLineDash([5,4]);x.beginPath();
+  for(let i=0;i<=400;i++){const q=qMax*i/400,v=lam(Dac*q*q,Dc*q*q);i?x.lineTo(X(q),Y(clamp(v,yMin,yMax))):x.moveTo(X(q),Y(v));}x.stroke();x.setLineDash([]);
+  // lattice
+  x.strokeStyle=C.acc;x.lineWidth=2.4;x.beginPath();let best=-9,bq=0;
+  for(let i=0;i<=300;i++){const q=Math.PI*i/300,l=2-2*Math.cos(q),v=lam(Dac*l,Dc*l);if(v>best){best=v;bq=q;}i?x.lineTo(X(q),Y(clamp(v,yMin,yMax))):x.moveTo(X(q),Y(v));}x.stroke();
+  x.fillStyle=C.acc;x.beginPath();x.arc(X(bq),Y(best),4,0,7);x.fill();
+  const asym=J[0][0];if(Da===0){x.strokeStyle=C.g2;x.setLineDash([1,3]);x.beginPath();x.moveTo(m.l,Y(asym));x.lineTo(w-m.r,Y(asym));x.stroke();x.setLineDash([]);axisText(x,'ceiling '+asym.toFixed(3)+' /h, approached but never reached',m.l+6,Y(asym)-6);}
+  const tag=Da===0?'single morphogen':'two mobile signals';$('#dispTag').textContent=tag;
+  const per=bq>0.001?(2*Math.PI/bq):Infinity;
+  $('#dispSide').innerHTML=`<b>Fastest lattice mode</b><br>q = ${bq.toFixed(2)} · period ${isFinite(per)?per.toFixed(1)+' cells':'∞'}<br>grows at ${best.toFixed(3)} /h<div class="rule"></div>`+
+   (Da===0?`<b>Continuum</b><br>still rising at q = 2π and beyond. It creeps toward ${asym.toFixed(3)} /h forever, so the finest scale always wins.`:`<b>Continuum</b><br>turns over. Activator diffusion penalises fine ripples, so a finite band wins. That's the classic Turing picture.`)+
+   `<div class="rule"></div><b>Uniform state, q = 0</b><br>${lam(0,0).toFixed(3)} /h, stable on its own`;}
+ ['#dD','#dA'].forEach(s=>$(s).addEventListener('input',draw));redraw.push(draw);draw();})();
+
+/* ---------- Fig 03 kymograph ---------- */
+(function(){const cv=$('#kyCv');if(!cv)return;const N=140,T=110;let L,rows,running=false,raf;
+ function reset(){const D=+$('#kD').value;$('#kDv').textContent=D.toFixed(2);L=new SMc.Lane(N,{Dc:36*D});rows=[];$('#kLam').textContent='–';$('#kVel').textContent='–';
+  $('#kyTag').textContent='140 cells · 0–'+T+' h';draw();}
+ function measure(){const first=L._first;const hi=[];for(let i=0;i<N;i++)if(L.A[i]>25)hi.push(i);
+  const cl=[];for(const i of hi){if(!cl.length||i-cl[cl.length-1][cl[cl.length-1].length-1]>3)cl.push([i]);else cl[cl.length-1].push(i);}
+  if(cl.length<4)return;const c=cl.map(x=>x.reduce((a,b)=>a+b)/x.length),tt=cl.map(x=>Math.min(...x.map(i=>first[i])));
+  const k1=Math.min(c.length-1,7);let sp=0,iv=0,n=0;for(let k=2;k<=k1;k++){sp+=c[k]-c[k-1];iv+=tt[k]-tt[k-1];n++;}if(!n)return;
+  sp/=n;iv/=n;$('#kLam').textContent=(sp*10).toFixed(0)+' µm';$('#kVel').textContent=(sp*10/iv).toFixed(0)+' µm/h · new stripe every '+iv.toFixed(1)+' h';}
+ function draw(){const {x,w,h}=fit(cv);const m={l:40,r:10,t:10,b:26};const cw=(w-m.l-m.r)/N,rh=(h-m.t-m.b)/T;
+  x.fillStyle=C.white;x.fillRect(0,0,w,h);
+  for(let r=0;r<rows.length;r++){const row=rows[r];for(let i=0;i<N;i++){const v=clamp((row[i]-4)/34,0,1);if(v<0.04)continue;const c=mix(RGB.white,RGB.ink,Math.pow(v,0.8));
+   x.fillStyle=`rgb(${c[0]|0},${c[1]|0},${c[2]|0})`;x.fillRect(m.l+i*cw,m.t+r*rh,Math.ceil(cw),Math.ceil(rh)+0.5);}}
+  x.fillStyle=C.acc;x.fillRect(m.l,m.t,Math.max(2,cw),2*rh);
+  x.strokeStyle=C.hair;x.strokeRect(m.l+0.5,m.t+0.5,w-m.l-m.r-1,h-m.t-m.b-1);
+  for(let t=0;t<=T;t+=20){axisText(x,t+'h',m.l-6,m.t+t*rh+3,'right');}
+  for(let i=0;i<=N;i+=20)axisText(x,String(i),m.l+i*cw,h-8,'center');
+  axisText(x,'poke',m.l+cw+4,m.t+12,'left',C.acc);if(rows.length>30)axisText(x,'grey = uniform, not yet reached',w-m.r-6,m.t+14,'right');}
+ function tick(){if(!running)return;if(!L._first)L._first=new Float64Array(N).fill(1e9);const dt=Math.min(0.004,0.35/L.Dc),ns=Math.ceil(1/dt);
+  for(let k=0;k<2&&rows.length<T;k++){for(let s=0;s<ns;s++){L.step(1/ns);for(let i=0;i<N;i++)if(L._first[i]>1e8&&L.A[i]>25)L._first[i]=L.t;}rows.push(Float32Array.from(L.A));}
+  draw();if(rows.length>=T){running=false;$('#kRun').classList.remove('on');$('#kRun').textContent='Run';measure();return;}raf=requestAnimationFrame(tick);}
+ $('#kRun').addEventListener('click',()=>{if(rows.length>=T)reset();running=!running;$('#kRun').classList.toggle('on',running);$('#kRun').textContent=running?'Pause':'Run';if(running)tick();});
+ $('#kReset').addEventListener('click',()=>{running=false;$('#kRun').classList.remove('on');$('#kRun').textContent='Run';reset();});
+ $('#kD').addEventListener('input',()=>{running=false;$('#kRun').classList.remove('on');$('#kRun').textContent='Run';reset();});
+ redraw.push(draw);reset();
+ const io=new IntersectionObserver(es=>{if(es[0].isIntersecting&&!rows.length&&!running){$('#kRun').click();}},{threshold:0.35});io.observe(cv);})();
+
+/* ---------- Fig 04 bell + phase ---------- */
+(function(){const cb=$('#bellCv'),cp=$('#phaseCv');if(!cb)return;const A0=SMc.A0,R0=SMc.R0;
+ const tr=[];let a=A0*1.6,r=R0;const dt=0.01;for(let s=0;s<=6000;s++){if(s%10==0)tr.push([s*dt,a,r]);const f=SMc.F(a,r);a+=dt*(bA*f-gA*a);r+=dt*(bR*f-gR*r);}
+ $('#bellW').textContent=(2*Math.PI/SMc.omega).toFixed(2)+' h period';$('#bellS').textContent='e-fold '+(1/-SMc.sigma).toFixed(1)+' h';$('#ssv').textContent='A '+A0.toFixed(2)+' · R '+R0.toFixed(2)+' nM';
+ function draw(){let {x,w,h}=fit(cb);const m={l:40,r:12,t:14,b:28};const T=60,X=t=>m.l+(w-m.l-m.r)*t/T;
+  let lo=1e9,hi=-1e9;tr.forEach(p=>{lo=Math.min(lo,p[1]);hi=Math.max(hi,p[1]);});const Y=v=>m.t+(h-m.t-m.b)*(hi-v)/(hi-lo);
+  x.clearRect(0,0,w,h);x.strokeStyle=C.hair;for(let t=0;t<=T;t+=8.9){x.beginPath();x.moveTo(X(t),m.t);x.lineTo(X(t),h-m.b);x.stroke();}
+  x.strokeStyle=C.g2;x.setLineDash([3,3]);x.beginPath();x.moveTo(m.l,Y(A0));x.lineTo(w-m.r,Y(A0));x.stroke();x.setLineDash([]);
+  x.strokeStyle=C.ink;x.lineWidth=2;x.beginPath();tr.forEach((p,i)=>i?x.lineTo(X(p[0]),Y(p[1])):x.moveTo(X(p[0]),Y(p[1])));x.stroke();x.lineWidth=1;
+  for(let t=0;t<=T;t+=10)axisText(x,t+'h',X(t),h-10,'center');axisText(x,'A (nM)',m.l+4,m.t+10,'left');axisText(x,'gridlines every 8.9 h',w-m.r,m.t+10,'right');
+  ({x,w,h}=fit(cp));const pm={l:44,r:12,t:14,b:28};let al=1e9,ah=-1e9,rl=1e9,rhh=-1e9;tr.forEach(p=>{al=Math.min(al,p[1]);ah=Math.max(ah,p[1]);rl=Math.min(rl,p[2]);rhh=Math.max(rhh,p[2]);});
+  const PX=v=>pm.l+(w-pm.l-pm.r)*(v-al)/(ah-al),PY=v=>pm.t+(h-pm.t-pm.b)*(rhh-v)/(rhh-rl);
+  x.clearRect(0,0,w,h);x.strokeStyle=C.ink;x.lineWidth=1.4;x.beginPath();tr.forEach((p,i)=>i?x.lineTo(PX(p[1]),PY(p[2])):x.moveTo(PX(p[1]),PY(p[2])));x.stroke();
+  x.fillStyle=C.acc;x.beginPath();x.arc(PX(tr[0][1]),PY(tr[0][2]),4,0,7);x.fill();axisText(x,'nudge',PX(tr[0][1])+7,PY(tr[0][2])+3,'left',C.acc);
+  x.strokeStyle=C.ink;x.beginPath();x.arc(PX(A0),PY(R0),4,0,7);x.stroke();axisText(x,'rest',PX(A0)+7,PY(R0)-6,'left',C.ink);
+  axisText(x,'A →',w-pm.r,h-10,'right');axisText(x,'R ↑',pm.l-8,pm.t+10,'right');}
+ redraw.push(draw);draw();
+ const nums=$('#clockNums');if(nums)nums.innerHTML=[['8.90','h','Ringing period · one cell, no diffusion'],['4.3–5.3','h','Time between stripes · <b>flat across D</b>'],['2.85–3.51','×√D','Spacing per √D · 10.7× range of D'],['0.66–0.68','×√D','Front speed per √D · cells/h']].map(a=>`<div><div class="v">${a[0]}<small>${a[1]}</small></div><div class="l">${a[2]}</div></div>`).join('');})();
+
+/* ---------- Fig 05 noise lanes ---------- */
+(function(){const cvs=$$('canvas.nz');if(!cvs.length)return;const N=120,T=150,D=9,eta=0.05,seed=5;let sims=[],rows=[],running=false;
+ function make(){sims=cvs.map(cv=>{const m=cv.dataset.mode;if(m==='plain')return new SMc.Lane(N,{Dc:D,eta,seed});if(m==='lock')return new SMc.Lane(N,{Dc:D,eta,seed,gate:true,th:4});return new SMc.Grow(N,{Dc:D,eta,rate:0.5,seed});});
+  rows=cvs.map(()=>[]);cvs.forEach(c=>{const p=c.closest('.plate');p.querySelector('.cv').textContent='–';p.querySelector('.sp').textContent='–';});drawAll();}
+ function stat(S){const n=S.n||N,A=S.A,p=[];for(let i=2;i<n-1;i++)if(A[i]>15&&A[i]>=A[i-1]&&A[i]>A[i+1]&&(!p.length||i-p[p.length-1]>2))p.push(i);
+  const d=[];for(let i=1;i<p.length;i++)d.push(p[i]-p[i-1]);if(d.length<2)return null;const mu=d.reduce((a,b)=>a+b,0)/d.length;const sd=Math.sqrt(d.reduce((a,b)=>a+(b-mu)**2,0)/d.length);return [mu,sd/mu];}
+ function drawAll(){cvs.forEach((cv,k)=>{const {x,w,h}=fit(cv);const R=rows[k],cw=w/N,rh=h/T;x.fillStyle=C.white;x.fillRect(0,0,w,h);
+  const lock=cv.dataset.mode==='lock',grow=cv.dataset.mode==='grow';
+  for(let r=0;r<R.length;r++){const row=R[r];for(let i=0;i<N;i++){const v=row[i];if(v<0){x.fillStyle=C.paper;x.fillRect(i*cw,r*rh,Math.ceil(cw),Math.ceil(rh)+0.5);continue;}
+    const t=clamp((v-4)/34,0,1);if(t<0.04)continue;const c=mix(RGB.white,RGB.ink,Math.pow(t,0.8));x.fillStyle=`rgb(${c[0]|0},${c[1]|0},${c[2]|0})`;x.fillRect(i*cw,r*rh,Math.ceil(cw),Math.ceil(rh)+0.5);}}
+  axisText(x,lock?'grey = still locked':grow?'grey = not born yet':'',w-6,h-8,'right');});}
+ function tick(){if(!running)return;for(let s=0;s<3;s++){if(rows[0].length>=T)break;
+   sims.forEach((S,k)=>{S.advance(1);const n=S.n||N,row=new Float32Array(N);for(let i=0;i<N;i++)row[i]=i>=n?-1:(S.on&&!S.on[i]?-1:S.A[i]);rows[k].push(row);});}
+  drawAll();
+  if(rows[0].length>=T){running=false;$('#nzRun').classList.remove('on');$('#nzRun').textContent='Run again';
+   const extra=[0,50,110];sims.forEach((S,k)=>{S.advance(extra[k]);});
+   sims.forEach((S,k)=>{const st=stat(S),p=cvs[k].closest('.plate');p.querySelector('.cv').textContent=st?st[1].toFixed(2):'–';p.querySelector('.sp').textContent=st?st[0].toFixed(1)+' cells':'–';});return;}
+  requestAnimationFrame(tick);}
+ $('#nzRun').addEventListener('click',()=>{make();running=true;$('#nzRun').classList.add('on');$('#nzRun').textContent='Running…';tick();});
+ redraw.push(drawAll);make();
+ const io=new IntersectionObserver(es=>{if(es[0].isIntersecting&&!running&&!rows[0].length)$('#nzRun').click();},{threshold:0.3});io.observe(cvs[0]);})();
+
+/* ---------- Fig 06 BZ (Barkley) vs single morphogen ---------- */
+(function(){const cb=$('#bzCv'),cs=$('#smCv');if(!cb)return;
+ const W=120,H=84,hh=0.5,dt=0.01,a=0.75,b=0.06,eps=0.02;let u,v,t,last,pace=true;
+ const offB=document.createElement('canvas');offB.width=W;offB.height=H;const ob=offB.getContext('2d'),ib=ob.createImageData(W,H);
+ function resetB(){u=new Float32Array(W*H);v=new Float32Array(W*H);t=0;last=-99;}
+ function stepB(){const T=+$('#bzT').value;if(pace&&t-last>=T){for(let y=H/2-2;y<H/2+2;y++)for(let x=W/2-2;x<W/2+2;x++)u[y*W+x]=1;last=t;}
+  const nu=new Float32Array(W*H);for(let y=0;y<H;y++){const yu=(y?y-1:0)*W,yd=(y<H-1?y+1:H-1)*W,yy=y*W;for(let x=0;x<W;x++){const i=yy+x;
+   const lap=(u[yy+(x?x-1:0)]+u[yy+(x<W-1?x+1:W-1)]+u[yu+x]+u[yd+x]-4*u[i])/(hh*hh);const ut=(v[i]+b)/a,U=u[i];
+   nu[i]=clamp(U+dt*(U*(1-U)*(U-ut)/eps+lap),0,1);v[i]+=dt*(U-v[i]);}}u=nu;t+=dt;}
+ function paintB(){const d=ib.data;for(let i=0;i<W*H;i++){let c=mix(RGB.white,RGB.navy,clamp(v[i]*1.6,0,1)*0.55);c=mix(c,RGB.acc,clamp(u[i],0,1));const j=i*4;d[j]=c[0];d[j+1]=c[1];d[j+2]=c[2];d[j+3]=255;}
+  ob.putImageData(ib,0,0);const {x,w,h}=fit(cb);x.imageSmoothingEnabled=false;x.drawImage(offB,0,0,w,h);axisText(x,'t = '+t.toFixed(0)+' (model units)',w-8,h-8,'right',C.ink);}
+ $('#bzT').addEventListener('input',()=>$('#bzTv').textContent=(+$('#bzT').value).toFixed(1));$('#bzTv').textContent=(+$('#bzT').value).toFixed(1);
+ $('#bzStop').addEventListener('click',()=>{pace=!pace;$('#bzStop').classList.toggle('on',!pace);$('#bzStop').textContent=pace?'Stop pacemaker':'Restart pacemaker';});
+ // single morphogen: the bare circuit (no latch), uniform start, one 2 h poke
+ let S;const SW=96,SH=68;const offS=document.createElement('canvas');offS.width=SW;offS.height=SH;const os=offS.getContext('2d'),is=os.createImageData(SW,SH);
+ function resetS(){S=new SMc.Sheet(SW,SH,9);S.poke(SW/2-1,SH/2-1,2);}
+ function paintS(){const d=is.data;for(let i=0;i<SW*SH;i++){const q=clamp((S.A[i]-4)/34,0,1);let c=mix(RGB.white,RGB.ink,Math.pow(q,0.8));if(Math.abs(S.A[i]-SMc.A0)<0.05)c=RGB.paper;const j=i*4;d[j]=c[0];d[j+1]=c[1];d[j+2]=c[2];d[j+3]=255;}
+  os.putImageData(is,0,0);const {x,w,h}=fit(cs);x.imageSmoothingEnabled=false;x.drawImage(offS,0,0,w,h);$('#smT').textContent=S.t.toFixed(0)+' h';
+  if(S.t<2){x.strokeStyle=C.acc;x.lineWidth=2;const px=w/SW;x.strokeRect((SW/2-1)*px-4,(SH/2-1)*px*h/w*SW/SH-4,2*px+8,2*px+8);}}
+ $('#smReset').addEventListener('click',()=>{resetS();paintS();});
+ resetB();resetS();
+ function loop(){if(visible(cb)){for(let k=0;k<30;k++)stepB();paintB();if(S.t<70){for(let k=0;k<10;k++)S.step(0.02);}paintS();}requestAnimationFrame(loop);}
+ redraw.push(()=>{paintB();paintS();});requestAnimationFrame(loop);})();
+
+/* ---------- Fig 07 mutual information on random periods ---------- */
+(function(){const tb=$('#miTab tbody');if(!tb)return;
+ const rowsDef=[['All variables (wide)',0.1,1000,489309,'1.85 · all 489k'],['RR Lyrae-like',0.3,0.9,42156,'2.31 · RRab'],['Cepheid-like',1,50,4891,'2.09 · Cepheid'],['Semiregular-like',20,2000,78432,'2.18 · SR'],['Algol EA-like',0.2,30,112445,'0.89 · EA'],['β Lyr EB-like',0.25,10,45221,'0.71 · EB']];
+ function mi(x,y,n,B){const H=new Float64Array(B*B),px=new Float64Array(B),py=new Float64Array(B);for(let i=0;i<n;i++){const a=Math.min(B-1,(x[i]*B)|0),b=Math.min(B-1,(y[i]*B)|0);H[a*B+b]++;px[a]++;py[b]++;}
+  let s=0;for(let a=0;a<B;a++)for(let b=0;b<B;b++){const p=H[a*B+b]/n;if(p>0)s+=p*Math.log(p/((px[a]/n)*(py[b]/n)));}return s;}
+ const fr=v=>v-Math.floor(v),L3=Math.log(3),L7=Math.log(7);
+ function run(){tb.innerHTML='';let mx=0;const out=rowsDef.map(([name,lo,hi,n,book])=>{const r3=new Float64Array(n),r7=new Float64Array(n),s7=new Float64Array(n);const a=Math.log(lo),b=Math.log(hi);
+   for(let i=0;i<n;i++){const lp=a+(b-a)*Math.random();r3[i]=fr(lp/L3);r7[i]=fr(lp/L7);s7[i]=fr((a+(b-a)*Math.random())/L7);}
+   const m=mi(r3,r7,n,20),z=mi(r3,s7,n,20);mx=Math.max(mx,m);return [name,lo,hi,n,m,z,book];});
+  out.forEach(([name,lo,hi,n,m,z,book])=>{const tr=document.createElement('tr');const dec=Math.log10(hi/lo);
+   tr.innerHTML=`<td>${name}</td><td>${lo}–${hi}</td><td>${dec.toFixed(1)}</td><td>${n.toLocaleString()}</td><td><span class="bar o" style="width:${Math.round(60*m/mx)}px"></span>${m.toFixed(2)}</td><td>${z.toFixed(3)}</td><td class="r">${book}</td>`;tb.appendChild(tr);});
+  $('#miTag').textContent='drawn '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+ $('#miRun').addEventListener('click',run);let done=false;
+ const io=new IntersectionObserver(es=>{if(es[0].isIntersecting&&!done){done=true;setTimeout(run,30);}});io.observe(tb);})();
+
+/* ---------- Fig 08 Roche + stream ---------- */
+(function(){const cv=$('#rocheCv');if(!cv)return;
+ function geom(q){const mu=q/(1+q),x1=-mu,x2=1-mu;
+  const phi=(x,y)=>-(1-mu)/Math.hypot(x-x1,y)-mu/Math.hypot(x-x2,y)-0.5*(x*x+y*y);
+  const dPhi=x=>(1-mu)*(x-x1)/Math.abs(x-x1)**3+mu*(x-x2)/Math.abs(x-x2)**3-x;
+  let lo=x1+0.02,hi=x2-0.02;for(let k=0;k<80;k++){const m=(lo+hi)/2;(dPhi(lo)*dPhi(m)<=0)?hi=m:lo=m;}const L1=(lo+hi)/2;
+  const qa=1/q,e=(qq)=>0.49*Math.pow(qq,2/3)/(0.6*Math.pow(qq,2/3)+Math.log(1+Math.cbrt(qq)));const Racc=0.773*e(qa);
+  // stream
+  function acc(x,y,vx,vy){const r1=Math.hypot(x-x1,y),r2=Math.hypot(x-x2,y);return [2*vy+x-(1-mu)*(x-x1)/r1**3-mu*(x-x2)/r2**3,-2*vx+y-(1-mu)*y/r1**3-mu*y/r2**3];}
+  let s=[L1-1e-3,0,-0.02,0];const path=[[s[0],s[1]]];const dt=2e-4;let hit=null;
+  const f=s=>{const a=acc(s[0],s[1],s[2],s[3]);return [s[2],s[3],a[0],a[1]];};
+  for(let i=0;i<60000;i++){const k1=f(s),k2=f(s.map((v,j)=>v+dt/2*k1[j])),k3=f(s.map((v,j)=>v+dt/2*k2[j])),k4=f(s.map((v,j)=>v+dt*k3[j]));
+   s=s.map((v,j)=>v+dt/6*(k1[j]+2*k2[j]+2*k3[j]+k4[j]));if(i%20==0)path.push([s[0],s[1]]);if(Math.hypot(s[0]-x1,s[1])<Racc){hit=[s[0],s[1]];path.push(hit);break;}}
+  const ang=hit?Math.atan2(hit[1],hit[0]-x1)*180/Math.PI:null;return {mu,x1,x2,phi,L1,Racc,path,hit,ang,pL1:phi(L1,0)};}
+ const off=document.createElement('canvas');
+ function draw(){const q=+$('#rq').value;$('#rqv').textContent=q.toFixed(2);const G=geom(q);const st=$('#rqs');const ok=q<=2/3;st.textContent=ok?'stable · q ≲ 2/3':'unstable · runaway';st.className='qstat '+(ok?'ok':'bad');
+  $('#rImp').textContent=G.ang!=null?Math.abs(G.ang).toFixed(1)+'° · Δφ ≈ '+(Math.abs(G.ang)/360).toFixed(3):'–';
+  const {x,w,h}=fit(cv);const sc=Math.min(w/2.5,h/1.75),cx=w/2,cy=h/2;const toS=(X,Y)=>[cx+X*sc,cy-Y*sc];
+  const RW=Math.round(w/2),RH=Math.round(h/2);off.width=RW;off.height=RH;const o=off.getContext('2d'),img=o.createImageData(RW,RH),d=img.data;
+  const levels=[G.pL1*1.35,G.pL1*1.18,G.pL1*1.06,G.pL1*0.97,G.pL1*0.93];
+  for(let j=0;j<RH;j++)for(let i=0;i<RW;i++){const X=(i*2-cx)/sc,Y=-(j*2-cy)/sc;const p=G.phi(X,Y);let c=RGB.white;
+   const inDonor=p<G.pL1&&X>G.L1&&Math.hypot(X-G.x2,Y)<0.6;if(inDonor)c=mix(RGB.white,RGB.navy,0.16);
+   const k=(i+j*RW)*4;d[k]=c[0];d[k+1]=c[1];d[k+2]=c[2];d[k+3]=255;}
+  o.putImageData(img,0,0);x.imageSmoothingEnabled=true;x.drawImage(off,0,0,w,h);
+  // contours by marching on a coarse grid (cheap: draw short segments where sign changes)
+  const step=3;function contour(lv,col,lw,dash){x.strokeStyle=col;x.lineWidth=lw;x.setLineDash(dash||[]);x.beginPath();
+   for(let j=0;j<h;j+=step)for(let i=0;i<w;i+=step){const P=(a,b)=>G.phi((a-cx)/sc,-(b-cy)/sc)-lv;const v0=P(i,j),v1=P(i+step,j),v2=P(i,j+step);
+    if(v0*v1<0){const t=v0/(v0-v1);x.moveTo(i+t*step,j-0.6);x.lineTo(i+t*step,j+0.6);} if(v0*v2<0){const t=v0/(v0-v2);x.moveTo(i-0.6,j+t*step);x.lineTo(i+0.6,j+t*step);}}
+   x.stroke();x.setLineDash([]);}
+  levels.forEach(l=>contour(l,C.g2,1));contour(G.pL1,C.ink,1.6);
+  // accretor
+  const [ax,ay]=toS(G.x1,0);x.fillStyle=C.ink;x.beginPath();x.arc(ax,ay,G.Racc*sc,0,7);x.fill();
+  // stream
+  x.strokeStyle=C.acc;x.lineWidth=2.2;x.beginPath();G.path.forEach((p,i)=>{const [X,Y]=toS(p[0],p[1]);i?x.lineTo(X,Y):x.moveTo(X,Y);});x.stroke();
+  if(G.hit){const [hx,hy]=toS(G.hit[0],G.hit[1]);const gr=x.createRadialGradient(hx,hy,0,hx,hy,16);gr.addColorStop(0,'rgba(244,85,30,1)');gr.addColorStop(1,'rgba(244,85,30,0)');x.fillStyle=gr;x.beginPath();x.arc(hx,hy,16,0,7);x.fill();}
+  const [lx,ly]=toS(G.L1,0);x.fillStyle=C.white;x.strokeStyle=C.ink;x.lineWidth=1.2;x.beginPath();x.arc(lx,ly,3.5,0,7);x.fill();x.stroke();
+  axisText(x,'L1',lx+6,ly-8,'left',C.ink);axisText(x,'M dwarf · accretor',ax,ay+G.Racc*sc+16,'center',C.ink);
+  const [dx,dy]=toS(G.x2,0);axisText(x,'brown dwarf · donor',dx,dy+0.42*sc,'center',C.ink);axisText(x,'fills its lobe',dx,dy+0.42*sc+13,'center');
+  axisText(x,'orbital motion ↺',12,18,'left');axisText(x,'q = M_donor / M_accretor',w-12,18,'right');}
+ $('#rq').addEventListener('input',draw);redraw.push(draw);draw();})();
+
+/* ---------- Fig 09 light curve ---------- */
+(function(){const cv=$('#lcCv');if(!cv)return;
+ const bands=[['u',30.0,0.480,C.acc],['g',6.55,0.468,C.blue],['r',2.49,0.458,C.navy],['i',1.73,0.450,C.grey],['z',1.40,0.442,C.g2]];
+ const vis=(ph,pk)=>Math.max(0,Math.cos(2*Math.PI*(ph-pk)));const flux=(b,ph)=>1+(b[1]-1)*vis(ph,b[2]);
+ let playing=true,ph=+$('#lp').value,lt=0;
+ function draw(){$('#lpv').textContent='φ '+ph.toFixed(2);const {x,w,h}=fit(cv);const m={l:46,r:30,t:16,b:30};const X=p=>m.l+(w-m.l-m.r)*p,Y=v=>m.t+(h-m.t-m.b)*(1-Math.log10(v)/Math.log10(36));
+  x.clearRect(0,0,w,h);x.strokeStyle=C.hair;[1,2,5,10,20,30].forEach(v=>{x.beginPath();x.moveTo(m.l,Y(v));x.lineTo(w-m.r,Y(v));x.stroke();axisText(x,'×'+v,m.l-6,Y(v)+3,'right');});
+  [0,0.25,0.5,0.75,1].forEach(p=>axisText(x,p.toFixed(2),X(p),h-10,'center'));axisText(x,'orbital phase φ',w-m.r,h-22,'right');
+  x.strokeStyle=C.ink;x.setLineDash([2,3]);x.beginPath();x.moveTo(X(0.5),m.t);x.lineTo(X(0.5),h-m.b);x.stroke();x.setLineDash([]);axisText(x,'superior conj.',X(0.5)+5,m.t+10,'left');
+  bands.forEach(b=>{x.strokeStyle=b[3];x.lineWidth=b[0]==='u'?2.4:1.6;x.beginPath();for(let i=0;i<=300;i++){const p=i/300,v=flux(b,p);i?x.lineTo(X(p),Y(v)):x.moveTo(X(p),Y(v));}x.stroke();
+   const v=flux(b,ph);x.fillStyle=b[3];x.beginPath();x.arc(X(ph),Y(v),3.5,0,7);x.fill();axisText(x,b[0],w-m.r+8,Y(flux(b,1))+3,'left',b[3]);});
+  x.lineWidth=1;x.strokeStyle=C.acc;x.beginPath();x.moveTo(X(ph),m.t);x.lineTo(X(ph),h-m.b);x.stroke();
+  // orbit inset (observer at bottom)
+  const ox=m.l+62,oy=m.t+58,R=36;x.fillStyle='rgba(255,255,255,.92)';x.fillRect(ox-56,oy-50,112,118);x.strokeStyle=C.hair;x.strokeRect(ox-56,oy-50,112,118);
+  x.strokeStyle=C.g2;x.beginPath();x.arc(ox,oy,R,0,7);x.stroke();
+  const th=2*Math.PI*ph;const axp=[ox+Math.sin(th)*R*0.78*-1,oy+Math.cos(th)*R*0.78],dnp=[ox-(axp[0]-ox)*0.3/0.78*1.4,oy-(axp[1]-oy)*0.3/0.78*1.4];
+  x.fillStyle=C.navy;x.beginPath();x.arc(dnp[0],dnp[1],5,0,7);x.fill();x.fillStyle=C.ink;x.beginPath();x.arc(axp[0],axp[1],8,0,7);x.fill();
+  const sx=axp[0]+(dnp[0]-axp[0])/Math.hypot(dnp[0]-axp[0],dnp[1]-axp[1])*8,sy=axp[1]+(dnp[1]-axp[1])/Math.hypot(dnp[0]-axp[0],dnp[1]-axp[1])*8;
+  x.fillStyle=C.acc;x.beginPath();x.arc(sx,sy,3,0,7);x.fill();
+  x.strokeStyle=C.ink;x.beginPath();x.moveTo(ox,oy+R+24);x.lineTo(ox,oy+R+8);x.stroke();x.beginPath();x.moveTo(ox-4,oy+R+12);x.lineTo(ox,oy+R+7);x.lineTo(ox+4,oy+R+12);x.stroke();
+  axisText(x,'observer',ox,oy+R+34,'center');}
+ $('#lp').addEventListener('input',()=>{ph=+$('#lp').value;playing=false;$('#lPlay').classList.remove('on');$('#lPlay').textContent='Play';draw();});
+ $('#lPlay').addEventListener('click',()=>{playing=!playing;$('#lPlay').classList.toggle('on',playing);$('#lPlay').textContent=playing?'Playing':'Play';});
+ function loop(ts){if(playing&&visible(cv)){const dt=lt?Math.min(0.05,(ts-lt)/1000):0;ph=(ph+dt*0.08)%1;$('#lp').value=ph;draw();}lt=ts;requestAnimationFrame(loop);}
+ redraw.push(draw);draw();requestAnimationFrame(loop);})();
+
+/* initial route */
+const h0=(location.hash||'').slice(1);if(['pattern','pfd','ztf','src'].includes(h0))go(h0,false);
+})();
+
+</script>
+</body>
+</html>

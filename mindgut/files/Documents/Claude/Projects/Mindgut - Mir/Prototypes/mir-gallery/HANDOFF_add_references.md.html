@@ -1,0 +1,237 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HANDOFF_add_references.md</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>HANDOFF_add_references.md</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/mir-gallery/HANDOFF_add_references.md</span><span>0.01 MB · sha256 345d0f685eacc9b7…</span><a download="HANDOFF_add_references.md" id="dl" href="#">Download the original</a></header><main><pre># Handoff: Add Reference Images to Mir Gallery
+
+## What needs to happen
+
+Copy all 126 reference images from `Visualizations/References/` into the `mir-gallery/references/` folder, then update `index.html` with a `REFERENCES` array entry for each image (descriptive name + tags). Push everything to `github.com/jalulia/mir-gallery` on `main`. The site is live at `jalulia.github.io/mir-gallery`.
+
+## File locations
+
+- **Source images:** `~/Documents/Claude/Projects/Mindgut - Mir/Visualizations/References/` (126 files, 126MB — jpg, gif, png, webp, pdf)
+- **Gallery repo (local):** `~/Documents/Claude/Projects/Mindgut - Mir/mir-gallery/` (git repo, remote `origin` = `https://github.com/jalulia/mir-gallery.git`, branch `main`)
+- **Gallery index:** `mir-gallery/index.html` (719 lines, fully built)
+- **Destination for images:** `mir-gallery/references/` (currently has only `.gitkeep`)
+
+## Steps
+
+### 1. Copy images
+```bash
+cp ~/Documents/Claude/Projects/Mindgut\ -\ Mir/Visualizations/References/* \
+   ~/Documents/Claude/Projects/Mindgut\ -\ Mir/mir-gallery/references/
+```
+
+Skip `___pdf.pdf` — it&#x27;s not an image reference. Also skip the `_ContactSheet-*.jpg` files (6 of them) — those are overview contact sheets, not individual references. That leaves ~119 actual reference images.
+
+### 2. View each image and categorize
+
+Each image needs a short **name** (2–5 words describing what it depicts) and **tags** from this vocabulary:
+
+| Tag | Meaning |
+|-----|---------|
+| `notation` | Scientific notation, hand-drawn dots, frequency charts, musical scores, circuit diagrams |
+| `terminal` | Retro HUD, oscilloscope, CRT, monospaced readouts, instrument panels |
+| `topology` | Grid distortion, gravitational lensing, field lines, orbital traces, mesh warping |
+| `dataviz` | Charts, scatter plots, dashboards, heatmaps, contour maps, data-driven |
+| `generative` | Algorithmic/code art, dot-matrix, wireframe geometry, procedural patterns |
+| `emergence` | Cellular automata, state evolution, phase transitions, pattern formation |
+| `whimsy` | Playful, human figures, humor, warmth, illustration |
+| `waveform` | Sine waves, harmonics, frequency spectra, oscillation |
+| `orbital` | Orbits, trajectories, n-body, gravitational paths |
+| `grid` | Grid structures, lattices, mesh, graph paper |
+| `particles` | Point clouds, particle systems, dot fields, swarms |
+| `network` | Node-link graphs, connected networks, force-directed layouts |
+| `schematic` | Diagrams, blueprints, technical drawings, flowcharts |
+| `color` | Strong color use as a defining feature |
+
+Assign 2–4 tags per image. Lean toward precision over completeness.
+
+### 3. Update index.html REFERENCES array
+
+The array lives at approximately line 548 in `index.html`. Currently:
+```js
+const REFERENCES = [
+  // Example entry — replace/extend with your actual references:
+  // { file: &quot;references/010174be7b366ba8caafae676b0c12f5.jpg&quot;, tags: [&quot;schematics&quot;, &quot;notation&quot;], name: &quot;Scientific primitives sampler&quot; },
+];
+```
+
+Replace with actual entries:
+```js
+const REFERENCES = [
+  { file: &quot;references/010174be7b366ba8caafae676b0c12f5.jpg&quot;, name: &quot;scientific notation grid&quot;, tags: [&quot;notation&quot;, &quot;schematic&quot;, &quot;grid&quot;] },
+  { file: &quot;references/099dfa3bdd4c86f62dab8750f2f761b8.jpg&quot;, name: &quot;oscilloscope hud display&quot;, tags: [&quot;terminal&quot;, &quot;waveform&quot;] },
+  // ... one entry per image
+];
+```
+
+### 4. Git commit and push
+```bash
+cd ~/Documents/Claude/Projects/Mindgut\ -\ Mir/mir-gallery
+git add references/ index.html
+git commit -m &quot;Add 119 categorized reference images to gallery&quot;
+git push origin main
+```
+
+### 5. Verify
+Wait ~60s for GitHub Pages rebuild, then check `https://jalulia.github.io/mir-gallery/` — the References tab should show all images in a filterable grid.
+
+## Partial categorization (batch 1 — 34 images already reviewed)
+
+These were reviewed visually in the previous session:
+
+```js
+{ file: &quot;references/010174be7b366ba8caafae676b0c12f5.jpg&quot;, name: &quot;scientific notation grid&quot;, tags: [&quot;notation&quot;, &quot;schematic&quot;, &quot;grid&quot;] },
+{ file: &quot;references/099dfa3bdd4c86f62dab8750f2f761b8.jpg&quot;, name: &quot;oscilloscope hud display&quot;, tags: [&quot;terminal&quot;, &quot;waveform&quot;] },
+{ file: &quot;references/0b54f392c84378bb4446dd4762d2da7a.gif&quot;, name: &quot;optical wave propagation&quot;, tags: [&quot;waveform&quot;, &quot;dataviz&quot;] },
+{ file: &quot;references/0d64488fa4a991649eb00c22ddb4210f.jpg&quot;, name: &quot;chromatic light sphere&quot;, tags: [&quot;color&quot;, &quot;orbital&quot;, &quot;generative&quot;] },
+{ file: &quot;references/0ea4519f6552c71e256fe0c3bee56ba6.jpg&quot;, name: &quot;blurred heat spectrum array&quot;, tags: [&quot;color&quot;, &quot;dataviz&quot;, &quot;generative&quot;] },
+{ file: &quot;references/0f25e3a0d133f7f520c6043308ef637f.jpg&quot;, name: &quot;parameter node flow&quot;, tags: [&quot;schematic&quot;, &quot;network&quot;] },
+{ file: &quot;references/127a67419098bfca471c5bce0957699b.jpg&quot;, name: &quot;color motion notation grid&quot;, tags: [&quot;notation&quot;, &quot;color&quot;, &quot;grid&quot;] },
+{ file: &quot;references/140ac702e841e5c354f706882afbe269.jpg&quot;, name: &quot;generative flow diagrams&quot;, tags: [&quot;dataviz&quot;, &quot;generative&quot;, &quot;topology&quot;] },
+{ file: &quot;references/181e65a809b30ad11d8ab3b6440bd1a1.jpg&quot;, name: &quot;field line distortion&quot;, tags: [&quot;topology&quot;, &quot;dataviz&quot;] },
+{ file: &quot;references/185b5bc1edf3c17d97e1893506650f42.jpg&quot;, name: &quot;galaxy classification catalog&quot;, tags: [&quot;color&quot;, &quot;dataviz&quot;, &quot;generative&quot;] },
+{ file: &quot;references/1ad24720c608ade14625df9204411680.gif&quot;, name: &quot;orbital path lines&quot;, tags: [&quot;orbital&quot;, &quot;particles&quot;, &quot;generative&quot;] },
+{ file: &quot;references/22b87b982c6197d8fef461ba34fb8601.jpg&quot;, name: &quot;3d dashboard interface&quot;, tags: [&quot;dataviz&quot;, &quot;generative&quot;, &quot;terminal&quot;] },
+{ file: &quot;references/22dc0e7acac7845caed6312a5e4c0b2f.jpg&quot;, name: &quot;grid pattern glitch&quot;, tags: [&quot;grid&quot;, &quot;dataviz&quot;, &quot;generative&quot;] },
+{ file: &quot;references/2448c9e0d6e740cc84272718ad4f9616.jpg&quot;, name: &quot;network nodes connections&quot;, tags: [&quot;network&quot;, &quot;dataviz&quot;, &quot;particles&quot;] },
+{ file: &quot;references/24c87a7a94973cdb588e7e6c21b8b9d2.jpg&quot;, name: &quot;loop mechanical diagram&quot;, tags: [&quot;schematic&quot;, &quot;whimsy&quot;, &quot;notation&quot;] },
+{ file: &quot;references/2566cf66ae393862271c476523151113.jpg&quot;, name: &quot;field line propagation&quot;, tags: [&quot;topology&quot;, &quot;waveform&quot;, &quot;dataviz&quot;] },
+{ file: &quot;references/26212cbe674bf41226506343043a1e50.jpg&quot;, name: &quot;video data monitor hud&quot;, tags: [&quot;terminal&quot;, &quot;dataviz&quot;, &quot;schematic&quot;] },
+{ file: &quot;references/26984419b805573fa39ed1fc92d024c0.jpg&quot;, name: &quot;geometric polyhedron forms&quot;, tags: [&quot;generative&quot;, &quot;topology&quot;, &quot;color&quot;] },
+{ file: &quot;references/2dd76b8ef6eb5072b8fc140c99183ed6.gif&quot;, name: &quot;recursive circle patterns&quot;, tags: [&quot;generative&quot;, &quot;particles&quot;, &quot;topology&quot;] },
+{ file: &quot;references/2e0e8ce22b51ab797100e58d6ae0da6c.jpg&quot;, name: &quot;danger zone field diagram&quot;, tags: [&quot;topology&quot;, &quot;color&quot;, &quot;schematic&quot;] },
+{ file: &quot;references/3166168d48946e5ab6344fda5ecee4f8.jpg&quot;, name: &quot;particle cloud visualization&quot;, tags: [&quot;particles&quot;, &quot;dataviz&quot;, &quot;color&quot;] },
+{ file: &quot;references/32b52ca8e865f1afafb8451089ff413e.jpg&quot;, name: &quot;dot matrix network nodes&quot;, tags: [&quot;particles&quot;, &quot;network&quot;, &quot;notation&quot;] },
+{ file: &quot;references/337c7465bf1742168eacca461d9debd6.jpg&quot;, name: &quot;spectrum analysis heatmap&quot;, tags: [&quot;dataviz&quot;, &quot;color&quot;, &quot;terminal&quot;] },
+{ file: &quot;references/3556b67bfc9e633b1b8cf36ca77c7340.jpg&quot;, name: &quot;scientific parameter scan&quot;, tags: [&quot;dataviz&quot;, &quot;terminal&quot;, &quot;notation&quot;] },
+{ file: &quot;references/3632db5d1c2ae755d695abfe1491bdbf.gif&quot;, name: &quot;animated grid distortion&quot;, tags: [&quot;topology&quot;, &quot;grid&quot;, &quot;generative&quot;] },
+{ file: &quot;references/36e5b0bf2d0bd9a19e3b86fc0f408544.jpg&quot;, name: &quot;geometric lattice structures&quot;, tags: [&quot;topology&quot;, &quot;generative&quot;, &quot;color&quot;] },
+{ file: &quot;references/3782e13cadab7d9d8af897d543e7ff8c.jpg&quot;, name: &quot;spectral heat radiation&quot;, tags: [&quot;color&quot;, &quot;waveform&quot;, &quot;generative&quot;] },
+{ file: &quot;references/37831023482ccf32c6075eadeafafc76.gif&quot;, name: &quot;orbiting particle swarm&quot;, tags: [&quot;orbital&quot;, &quot;particles&quot;, &quot;generative&quot;] },
+{ file: &quot;references/3986ab05fe9d89ddb5afe318b02c4896.gif&quot;, name: &quot;dynamic field evolution&quot;, tags: [&quot;emergence&quot;, &quot;topology&quot;, &quot;generative&quot;] },
+{ file: &quot;references/3bc6bf31624262bede4e7f6bff21e2c0.gif&quot;, name: &quot;kaleidoscopic pattern rotation&quot;, tags: [&quot;generative&quot;, &quot;color&quot;, &quot;particles&quot;] },
+{ file: &quot;references/478acefbbafc10ce5af773d746c06e84.jpg&quot;, name: &quot;comfort zone diagram&quot;, tags: [&quot;schematic&quot;, &quot;notation&quot;, &quot;whimsy&quot;] },
+{ file: &quot;references/480a93d488e4576071e3f21d50a5841c.jpg&quot;, name: &quot;dense text particle matrix&quot;, tags: [&quot;particles&quot;, &quot;notation&quot;, &quot;emergence&quot;] },
+{ file: &quot;references/4f64d2cab4066b0632692e16619bc980.jpg&quot;, name: &quot;spectral galaxy survey&quot;, tags: [&quot;dataviz&quot;, &quot;color&quot;, &quot;terminal&quot;] },
+{ file: &quot;references/4fb57b8a7e0b88131ef775cbdd5d7279.jpg&quot;, name: &quot;polyhedron wireframe study&quot;, tags: [&quot;topology&quot;, &quot;generative&quot;, &quot;color&quot;] },
+```
+
+### Remaining ~85 images still need visual review and categorization:
+
+```
+560fc351465da1eae441080890059006.gif
+56a482948d2acecd126a53fd89132781.jpg
+59750d64764c687898babf6ab6185048.gif
+5b16ad71cae7ce674fc5191d0b2f0443.gif
+5b711994773ca7eaa75a05e454a1c269.jpg
+61Jmc9xmVVL._AC_SX569_.jpg
+61X77W5IsiL._SY466_.jpg
+660a5603acd2a747dcd178002284b311.jpg
+6c5e29c68ab9067aebdc3ea749aae697.jpg
+6eb93cb6275b188fb7b403373cd1c7da.gif
+7510014f96ae2ef5def8bfcf363bc76c.jpg
+754bf0914b94abe15c95835e6051f422.jpg
+76b843bd291fb0aaad6c38cedf433ec8.jpg
+77845a679fcbba63a2ffbca460de7ee4.jpg
+816c1034174a65f999d1af8db905828f.gif
+82b0a181c4f241337af22eece858d2b0.jpg
+83e642cc81f190e95d165c55d4a112ec.jpg
+8b399bddeeb5698f8cfcf6a1db92d6f3.jpg
+8e9841d1028bc3e90df30ee846eb7df8.jpg
+8f2586f173052165633b9cedc8fc30ae.jpg
+929a18bab87b6ca81d401dae800e7315.jpg
+95343f75c86b05c98618bc1976027a4d.jpg
+9b2b2c90b56b649beba4b94f7e283f92.jpg
+9d20c90e6bc63f3db53c9b8896d92f6b.jpg
+9e2e4f13a0e418ced92c444a0103621a.jpg
+Ternary-Contour-Plot-300x300.webp
+Ternary-Plot-1-300x300.webp
+a2a7cd958e0c9c7aaecb34cdfc468c7e.jpg
+a360ecc29bf83707a8aca43f03eb6ab2.gif
+a4a840782cd536a33c59a6dabe5de4f3.jpg
+a5c56d8827285de18f79389cc5f0d121.jpg
+a85e8974d3fc79bc35d682d00bf43198.jpg
+a9d6e64b9ad8a6714ebb618f7099730b.jpg
+ae0434197e4692ef405f929bba7455c0.gif
+apollo-11-tli-3.webp
+b03c8838ff9e9e5fa3563dac680f1fb9.jpg
+b1b61e52f8e2f73958b7c0e71c602498.jpg
+b326ff758b38fafa8279439e5278b982.jpg
+b3ab75b13cc8fdc86e3078dfef6db79d.gif
+b3f3b19709c7d55c7de59717e2a3d2c2.jpg
+b605877fa6f8f786db3308ec6c9284da.jpg
+b61e0befb4c27c93b7c027021a5a83fa.jpg
+b931a9b70f2722f4c74ef5a114a497cd.jpg
+bbe3a5106534262d5b39216f2db7c928.gif
+c0d45667dbe1e44d7e266233f8d7eaa9.gif
+c1d2c9815a35fdd23b4a0966e9945ee4.jpg
+c1fd8b48c4dcd820f803014085ff6a4f.gif
+c259d1459009787b376566bb30f2ed82.jpg
+c529d9980cb768b4fec0f19a65fe7f82.jpg
+c645c7ec6f0fabe8fa2156d44b65a448.gif
+c737a4b78935d45b9928aea9c9ecf4b6.gif
+c8f8392860107bdbeb06cf83ddadd941.jpg
+c9bda9ab58fa77487e90725d8c346594.gif
+ce80ad0c94bfbfeeb934375c9fd4d030.jpg
+d5de78d777e7447a9f23df828a6ec763.jpg
+d7951d0321818908cf29802a330aa7e9.gif
+db49ff93f40367d345751817a016977f.jpg
+dd3819e0deab88aabfef53c09d4c24a7.gif
+download (1).png
+download.png
+e009d88c3f46ee42634541de5d162f66.gif
+e061fd6bc24ea03cb637761b5ce86308.gif
+e6223ab875b7cb0588df8492d6d44d16.gif
+ee307f3056eb4cf6c1cf53c4dd476f40.jpg
+f2e5fba2d7fefaf6c76302af582be9d8.jpg
+f3f4dfeb4fa8fc2625bda6cdb33ac7f5.jpg
+fd58bb3831ee0e7d0ec898140e6d4c5e.jpg
+lil-mirs-yous.jpg
+reboundbanner.png
+videoframe_12452.png
+videoframe_13507.png
+videoframe_1808.png
+videoframe_2077.png
+videoframe_22999.png
+videoframe_2588.png
+videoframe_2886.png
+videoframe_4672.png
+videoframe_5300.png
+videoframe_5307.png
+videoframe_5777.png
+videoframe_583.png
+videoframe_6513.png
+videoframe_7815.png
+videoframe_8706.png
+videoframe_9616.png
+```
+
+## Known special images
+
+- `lil-mirs-yous.jpg` — playful illustration, tags: [&quot;whimsy&quot;]
+- `reboundbanner.png` — REBOUND n-body sim banner, tags: [&quot;orbital&quot;, &quot;particles&quot;]
+- `Ternary-Contour-Plot-300x300.webp` — ternary contour plot, tags: [&quot;dataviz&quot;, &quot;topology&quot;]
+- `Ternary-Plot-1-300x300.webp` — ternary scatter plot, tags: [&quot;dataviz&quot;]
+- `apollo-11-tli-3.webp` — Apollo 11 trajectory diagram, tags: [&quot;orbital&quot;, &quot;schematic&quot;]
+- `videoframe_*.png` (16 files) — frames extracted from a video, likely animation/visualization stills
+- `61Jmc9xmVVL._AC_SX569_.jpg` and `61X77W5IsiL._SY466_.jpg` — Amazon product images (likely book covers)
+- `download.png` and `download (1).png` — generic filenames, need visual review
+
+## Context from the scratchpad
+
+The full research scratchpad is at `~/Documents/Claude/Projects/Mindgut - Mir/SCRATCHPAD_Viz_Gallery.md`. Section /01 has the 7 style families with detailed descriptions. The through-line: &quot;the place where rigorous science becomes visually beautiful without trying.&quot;
+
+## What&#x27;s already done
+
+- Gallery repo created and live on GitHub Pages
+- `index.html` fully built with two-tab UI (References/Artifacts), IO Brand Kit v2.1 design system, search, tag filtering, grid/large views, lightbox, dark/light toggle
+- Folder structure in place (`references/`, `artifacts/`, `artifacts/thumbs/`)
+- Git remote configured, credentials working on Mac
+
+## What Claude Code should do
+
+1. Open each image file and visually categorize it (name + tags)
+2. Copy all image files to `mir-gallery/references/`
+3. Build the complete REFERENCES array and update `index.html`
+4. Commit and push
+5. Optionally verify the deployment
+</pre></main><script>var b=atob("IyBIYW5kb2ZmOiBBZGQgUmVmZXJlbmNlIEltYWdlcyB0byBNaXIgR2FsbGVyeQoKIyMgV2hhdCBuZWVkcyB0byBoYXBwZW4KCkNvcHkgYWxsIDEyNiByZWZlcmVuY2UgaW1hZ2VzIGZyb20gYFZpc3VhbGl6YXRpb25zL1JlZmVyZW5jZXMvYCBpbnRvIHRoZSBgbWlyLWdhbGxlcnkvcmVmZXJlbmNlcy9gIGZvbGRlciwgdGhlbiB1cGRhdGUgYGluZGV4Lmh0bWxgIHdpdGggYSBgUkVGRVJFTkNFU2AgYXJyYXkgZW50cnkgZm9yIGVhY2ggaW1hZ2UgKGRlc2NyaXB0aXZlIG5hbWUgKyB0YWdzKS4gUHVzaCBldmVyeXRoaW5nIHRvIGBnaXRodWIuY29tL2phbHVsaWEvbWlyLWdhbGxlcnlgIG9uIGBtYWluYC4gVGhlIHNpdGUgaXMgbGl2ZSBhdCBgamFsdWxpYS5naXRodWIuaW8vbWlyLWdhbGxlcnlgLgoKIyMgRmlsZSBsb2NhdGlvbnMKCi0gKipTb3VyY2UgaW1hZ2VzOioqIGB+L0RvY3VtZW50cy9DbGF1ZGUvUHJvamVjdHMvTWluZGd1dCAtIE1pci9WaXN1YWxpemF0aW9ucy9SZWZlcmVuY2VzL2AgKDEyNiBmaWxlcywgMTI2TUIg4oCUIGpwZywgZ2lmLCBwbmcsIHdlYnAsIHBkZikKLSAqKkdhbGxlcnkgcmVwbyAobG9jYWwpOioqIGB+L0RvY3VtZW50cy9DbGF1ZGUvUHJvamVjdHMvTWluZGd1dCAtIE1pci9taXItZ2FsbGVyeS9gIChnaXQgcmVwbywgcmVtb3RlIGBvcmlnaW5gID0gYGh0dHBzOi8vZ2l0aHViLmNvbS9qYWx1bGlhL21pci1nYWxsZXJ5LmdpdGAsIGJyYW5jaCBgbWFpbmApCi0gKipHYWxsZXJ5IGluZGV4OioqIGBtaXItZ2FsbGVyeS9pbmRleC5odG1sYCAoNzE5IGxpbmVzLCBmdWxseSBidWlsdCkKLSAqKkRlc3RpbmF0aW9uIGZvciBpbWFnZXM6KiogYG1pci1nYWxsZXJ5L3JlZmVyZW5jZXMvYCAoY3VycmVudGx5IGhhcyBvbmx5IGAuZ2l0a2VlcGApCgojIyBTdGVwcwoKIyMjIDEuIENvcHkgaW1hZ2VzCmBgYGJhc2gKY3Agfi9Eb2N1bWVudHMvQ2xhdWRlL1Byb2plY3RzL01pbmRndXRcIC1cIE1pci9WaXN1YWxpemF0aW9ucy9SZWZlcmVuY2VzLyogXAogICB+L0RvY3VtZW50cy9DbGF1ZGUvUHJvamVjdHMvTWluZGd1dFwgLVwgTWlyL21pci1nYWxsZXJ5L3JlZmVyZW5jZXMvCmBgYAoKU2tpcCBgX19fcGRmLnBkZmAg4oCUIGl0J3Mgbm90IGFuIGltYWdlIHJlZmVyZW5jZS4gQWxzbyBza2lwIHRoZSBgX0NvbnRhY3RTaGVldC0qLmpwZ2AgZmlsZXMgKDYgb2YgdGhlbSkg4oCUIHRob3NlIGFyZSBvdmVydmlldyBjb250YWN0IHNoZWV0cywgbm90IGluZGl2aWR1YWwgcmVmZXJlbmNlcy4gVGhhdCBsZWF2ZXMgfjExOSBhY3R1YWwgcmVmZXJlbmNlIGltYWdlcy4KCiMjIyAyLiBWaWV3IGVhY2ggaW1hZ2UgYW5kIGNhdGVnb3JpemUKCkVhY2ggaW1hZ2UgbmVlZHMgYSBzaG9ydCAqKm5hbWUqKiAoMuKAkzUgd29yZHMgZGVzY3JpYmluZyB3aGF0IGl0IGRlcGljdHMpIGFuZCAqKnRhZ3MqKiBmcm9tIHRoaXMgdm9jYWJ1bGFyeToKCnwgVGFnIHwgTWVhbmluZyB8CnwtLS0tLXwtLS0tLS0tLS18CnwgYG5vdGF0aW9uYCB8IFNjaWVudGlmaWMgbm90YXRpb24sIGhhbmQtZHJhd24gZG90cywgZnJlcXVlbmN5IGNoYXJ0cywgbXVzaWNhbCBzY29yZXMsIGNpcmN1aXQgZGlhZ3JhbXMgfAp8IGB0ZXJtaW5hbGAgfCBSZXRybyBIVUQsIG9zY2lsbG9zY29wZSwgQ1JULCBtb25vc3BhY2VkIHJlYWRvdXRzLCBpbnN0cnVtZW50IHBhbmVscyB8CnwgYHRvcG9sb2d5YCB8IEdyaWQgZGlzdG9ydGlvbiwgZ3Jhdml0YXRpb25hbCBsZW5zaW5nLCBmaWVsZCBsaW5lcywgb3JiaXRhbCB0cmFjZXMsIG1lc2ggd2FycGluZyB8CnwgYGRhdGF2aXpgIHwgQ2hhcnRzLCBzY2F0dGVyIHBsb3RzLCBkYXNoYm9hcmRzLCBoZWF0bWFwcywgY29udG91ciBtYXBzLCBkYXRhLWRyaXZlbiB8CnwgYGdlbmVyYXRpdmVgIHwgQWxnb3JpdGhtaWMvY29kZSBhcnQsIGRvdC1tYXRyaXgsIHdpcmVmcmFtZSBnZW9tZXRyeSwgcHJvY2VkdXJhbCBwYXR0ZXJucyB8CnwgYGVtZXJnZW5jZWAgfCBDZWxsdWxhciBhdXRvbWF0YSwgc3RhdGUgZXZvbHV0aW9uLCBwaGFzZSB0cmFuc2l0aW9ucywgcGF0dGVybiBmb3JtYXRpb24gfAp8IGB3aGltc3lgIHwgUGxheWZ1bCwgaHVtYW4gZmlndXJlcywgaHVtb3IsIHdhcm10aCwgaWxsdXN0cmF0aW9uIHwKfCBgd2F2ZWZvcm1gIHwgU2luZSB3YXZlcywgaGFybW9uaWNzLCBmcmVxdWVuY3kgc3BlY3RyYSwgb3NjaWxsYXRpb24gfAp8IGBvcmJpdGFsYCB8IE9yYml0cywgdHJhamVjdG9yaWVzLCBuLWJvZHksIGdyYXZpdGF0aW9uYWwgcGF0aHMgfAp8IGBncmlkYCB8IEdyaWQgc3RydWN0dXJlcywgbGF0dGljZXMsIG1lc2gsIGdyYXBoIHBhcGVyIHwKfCBgcGFydGljbGVzYCB8IFBvaW50IGNsb3VkcywgcGFydGljbGUgc3lzdGVtcywgZG90IGZpZWxkcywgc3dhcm1zIHwKfCBgbmV0d29ya2AgfCBOb2RlLWxpbmsgZ3JhcGhzLCBjb25uZWN0ZWQgbmV0d29ya3MsIGZvcmNlLWRpcmVjdGVkIGxheW91dHMgfAp8IGBzY2hlbWF0aWNgIHwgRGlhZ3JhbXMsIGJsdWVwcmludHMsIHRlY2huaWNhbCBkcmF3aW5ncywgZmxvd2NoYXJ0cyB8CnwgYGNvbG9yYCB8IFN0cm9uZyBjb2xvciB1c2UgYXMgYSBkZWZpbmluZyBmZWF0dXJlIHwKCkFzc2lnbiAy4oCTNCB0YWdzIHBlciBpbWFnZS4gTGVhbiB0b3dhcmQgcHJlY2lzaW9uIG92ZXIgY29tcGxldGVuZXNzLgoKIyMjIDMuIFVwZGF0ZSBpbmRleC5odG1sIFJFRkVSRU5DRVMgYXJyYXkKClRoZSBhcnJheSBsaXZlcyBhdCBhcHByb3hpbWF0ZWx5IGxpbmUgNTQ4IGluIGBpbmRleC5odG1sYC4gQ3VycmVudGx5OgpgYGBqcwpjb25zdCBSRUZFUkVOQ0VTID0gWwogIC8vIEV4YW1wbGUgZW50cnkg4oCUIHJlcGxhY2UvZXh0ZW5kIHdpdGggeW91ciBhY3R1YWwgcmVmZXJlbmNlczoKICAvLyB7IGZpbGU6ICJyZWZlcmVuY2VzLzAxMDE3NGJlN2IzNjZiYThjYWFmYWU2NzZiMGMxMmY1LmpwZyIsIHRhZ3M6IFsic2NoZW1hdGljcyIsICJub3RhdGlvbiJdLCBuYW1lOiAiU2NpZW50aWZpYyBwcmltaXRpdmVzIHNhbXBsZXIiIH0sCl07CmBgYAoKUmVwbGFjZSB3aXRoIGFjdHVhbCBlbnRyaWVzOgpgYGBqcwpjb25zdCBSRUZFUkVOQ0VTID0gWwogIHsgZmlsZTogInJlZmVyZW5jZXMvMDEwMTc0YmU3YjM2NmJhOGNhYWZhZTY3NmIwYzEyZjUuanBnIiwgbmFtZTogInNjaWVudGlmaWMgbm90YXRpb24gZ3JpZCIsIHRhZ3M6IFsibm90YXRpb24iLCAic2NoZW1hdGljIiwgImdyaWQiXSB9LAogIHsgZmlsZTogInJlZmVyZW5jZXMvMDk5ZGZhM2JkZDRjODZmNjJkYWI4NzUwZjJmNzYxYjguanBnIiwgbmFtZTogIm9zY2lsbG9zY29wZSBodWQgZGlzcGxheSIsIHRhZ3M6IFsidGVybWluYWwiLCAid2F2ZWZvcm0iXSB9LAogIC8vIC4uLiBvbmUgZW50cnkgcGVyIGltYWdlCl07CmBgYAoKIyMjIDQuIEdpdCBjb21taXQgYW5kIHB1c2gKYGBgYmFzaApjZCB+L0RvY3VtZW50cy9DbGF1ZGUvUHJvamVjdHMvTWluZGd1dFwgLVwgTWlyL21pci1nYWxsZXJ5CmdpdCBhZGQgcmVmZXJlbmNlcy8gaW5kZXguaHRtbApnaXQgY29tbWl0IC1tICJBZGQgMTE5IGNhdGVnb3JpemVkIHJlZmVyZW5jZSBpbWFnZXMgdG8gZ2FsbGVyeSIKZ2l0IHB1c2ggb3JpZ2luIG1haW4KYGBgCgojIyMgNS4gVmVyaWZ5CldhaXQgfjYwcyBmb3IgR2l0SHViIFBhZ2VzIHJlYnVpbGQsIHRoZW4gY2hlY2sgYGh0dHBzOi8vamFsdWxpYS5naXRodWIuaW8vbWlyLWdhbGxlcnkvYCDigJQgdGhlIFJlZmVyZW5jZXMgdGFiIHNob3VsZCBzaG93IGFsbCBpbWFnZXMgaW4gYSBmaWx0ZXJhYmxlIGdyaWQuCgojIyBQYXJ0aWFsIGNhdGVnb3JpemF0aW9uIChiYXRjaCAxIOKAlCAzNCBpbWFnZXMgYWxyZWFkeSByZXZpZXdlZCkKClRoZXNlIHdlcmUgcmV2aWV3ZWQgdmlzdWFsbHkgaW4gdGhlIHByZXZpb3VzIHNlc3Npb246CgpgYGBqcwp7IGZpbGU6ICJyZWZlcmVuY2VzLzAxMDE3NGJlN2IzNjZiYThjYWFmYWU2NzZiMGMxMmY1LmpwZyIsIG5hbWU6ICJzY2llbnRpZmljIG5vdGF0aW9uIGdyaWQiLCB0YWdzOiBbIm5vdGF0aW9uIiwgInNjaGVtYXRpYyIsICJncmlkIl0gfSwKeyBmaWxlOiAicmVmZXJlbmNlcy8wOTlkZmEzYmRkNGM4NmY2MmRhYjg3NTBmMmY3NjFiOC5qcGciLCBuYW1lOiAib3NjaWxsb3Njb3BlIGh1ZCBkaXNwbGF5IiwgdGFnczogWyJ0ZXJtaW5hbCIsICJ3YXZlZm9ybSJdIH0sCnsgZmlsZTogInJlZmVyZW5jZXMvMGI1NGYzOTJjODQzNzhiYjQ0NDZkZDQ3NjJkMmRhN2EuZ2lmIiwgbmFtZTogIm9wdGljYWwgd2F2ZSBwcm9wYWdhdGlvbiIsIHRhZ3M6IFsid2F2ZWZvcm0iLCAiZGF0YXZpeiJdIH0sCnsgZmlsZTogInJlZmVyZW5jZXMvMGQ2NDQ4OGZhNGE5OTE2NDllYjAwYzIyZGRiNDIxMGYuanBnIiwgbmFtZTogImNocm9tYXRpYyBsaWdodCBzcGhlcmUiLCB0YWdzOiBbImNvbG9yIiwgIm9yYml0YWwiLCAiZ2VuZXJhdGl2ZSJdIH0sCnsgZmlsZTogInJlZmVyZW5jZXMvMGVhNDUxOWY2NTUyYzcxZTI1NmZlMGMzYmVlNTZiYTYuanBnIiwgbmFtZTogImJsdXJyZWQgaGVhdCBzcGVjdHJ1bSBhcnJheSIsIHRhZ3M6IFsiY29sb3IiLCAiZGF0YXZpeiIsICJnZW5lcmF0aXZlIl0gfSwKeyBmaWxlOiAicmVmZXJlbmNlcy8wZjI1ZTNhMGQxMzNmN2Y1MjBjNjA0MzMwOGVmNjM3Zi5qcGciLCBuYW1lOiAicGFyYW1ldGVyIG5vZGUgZmxvdyIsIHRhZ3M6IFsic2NoZW1hdGljIiwgIm5ldHdvcmsiXSB9LAp7IGZpbGU6ICJyZWZlcmVuY2VzLzEyN2E2NzQxOTA5OGJmY2E0NzFjNWJjZTA5NTc2OTliLmpwZyIsIG5hbWU6ICJjb2xvciBtb3Rpb24gbm90YXRpb24gZ3JpZCIsIHRhZ3M6IFsibm90YXRpb24iLCAiY29sb3IiLCAiZ3JpZCJdIH0sCnsgZmlsZTogInJlZmVyZW5jZXMvMTQwYWM3MDJlODQxZTVjMzU0ZjcwNjg4MmFmYmUyNjkuanBnIiwgbmFtZTogImdlbmVyYXRpdmUgZmxvdyBkaWFncmFtcyIsIHRhZ3M6IFsiZGF0YXZpeiIsICJnZW5lcmF0aXZlIiwgInRvcG9sb2d5Il0gfSwKeyBmaWxlOiAicmVmZXJlbmNlcy8xODFlNjVhODA5YjMwYWQxMWQ4YWIzYjY0NDBiZDFhMS5qcGciLCBuYW1lOiAiZmllbGQgbGluZSBkaXN0b3J0aW9uIiwgdGFnczogWyJ0b3BvbG9neSIsICJkYXRhdml6Il0gfSwKeyBmaWxlOiAicmVmZXJlbmNlcy8xODViNWJjMWVkZjNjMTdkOTdlMTg5MzUwNjY1MGY0Mi5qcGciLCBuYW1lOiAiZ2FsYXh5IGNsYXNzaWZpY2F0aW9uIGNhdGFsb2ciLCB0YWdzOiBbImNvbG9yIiwgImRhdGF2aXoiLCAiZ2VuZXJhdGl2ZSJdIH0sCnsgZmlsZTogInJlZmVyZW5jZXMvMWFkMjQ3MjBjNjA4YWRlMTQ2MjVkZjkyMDQ0MTE2ODAuZ2lmIiwgbmFtZTogIm9yYml0YWwgcGF0aCBsaW5lcyIsIHRhZ3M6IFsib3JiaXRhbCIsICJwYXJ0aWNsZXMiLCAiZ2VuZXJhdGl2ZSJdIH0sCnsgZmlsZTogInJlZmVyZW5jZXMvMjJiODdiOTgyYzYxOTdkOGZlZjQ2MWJhMzRmYjg2MDEuanBnIiwgbmFtZTogIjNkIGRhc2hib2FyZCBpbnRlcmZhY2UiLCB0YWdzOiBbImRhdGF2aXoiLCAiZ2VuZXJhdGl2ZSIsICJ0ZXJtaW5hbCJdIH0sCnsgZmlsZTogInJlZmVyZW5jZXMvMjJkYzBlN2FjYWM3ODQ1Y2FlZDYzMTJhNWU0YzBiMmYuanBnIiwgbmFtZTogImdyaWQgcGF0dGVybiBnbGl0Y2giLCB0YWdzOiBbImdyaWQiLCAiZGF0YXZpeiIsICJnZW5lcmF0aXZlIl0gfSwKeyBmaWxlOiAicmVmZXJlbmNlcy8yNDQ4YzllMGQ2ZTc0MGNjODQyNzI3MThhZDRmOTYxNi5qcGciLCBuYW1lOiAibmV0d29yayBub2RlcyBjb25uZWN0aW9ucyIsIHRhZ3M6IFsibmV0d29yayIsICJkYXRhdml6IiwgInBhcnRpY2xlcyJdIH0sCnsgZmlsZTogInJlZmVyZW5jZXMvMjRjODdhN2E5NDk3M2NkYjU4OGU3ZTZjMjFiOGI5ZDIuanBnIiwgbmFtZTogImxvb3AgbWVjaGFuaWNhbCBkaWFncmFtIiwgdGFnczogWyJzY2hlbWF0aWMiLCAid2hpbXN5IiwgIm5vdGF0aW9uIl0gfSwKeyBmaWxlOiAicmVmZXJlbmNlcy8yNTY2Y2Y2NmFlMzkzODYyMjcxYzQ3NjUyMzE1MTExMy5qcGciLCBuYW1lOiAiZmllbGQgbGluZSBwcm9wYWdhdGlvbiIsIHRhZ3M6IFsidG9wb2xvZ3kiLCAid2F2ZWZvcm0iLCAiZGF0YXZpeiJdIH0sCnsgZmlsZTogInJlZmVyZW5jZXMvMjYyMTJjYmU2NzRiZjQxMjI2NTA2MzQzMDQzYTFlNTAuanBnIiwgbmFtZTogInZpZGVvIGRhdGEgbW9uaXRvciBodWQiLCB0YWdzOiBbInRlcm1pbmFsIiwgImRhdGF2aXoiLCAic2NoZW1hdGljIl0gfSwKeyBmaWxlOiAicmVmZXJlbmNlcy8yNjk4NDQxOWI4MDU1NzNmYTM5ZWQxZmM5MmQwMjRjMC5qcGciLCBuYW1lOiAiZ2VvbWV0cmljIHBvbHloZWRyb24gZm9ybXMiLCB0YWdzOiBbImdlbmVyYXRpdmUiLCAidG9wb2xvZ3kiLCAiY29sb3IiXSB9LAp7IGZpbGU6ICJyZWZlcmVuY2VzLzJkZDc2YjhlZjZlYjUwNzJiOGZjMTQwYzk5MTgzZWQ2LmdpZiIsIG5hbWU6ICJyZWN1cnNpdmUgY2lyY2xlIHBhdHRlcm5zIiwgdGFnczogWyJnZW5lcmF0aXZlIiwgInBhcnRpY2xlcyIsICJ0b3BvbG9neSJdIH0sCnsgZmlsZTogInJlZmVyZW5jZXMvMmUwZThjZTIyYjUxYWI3OTcxMDBlNThkNmFlMGRhNmMuanBnIiwgbmFtZTogImRhbmdlciB6b25lIGZpZWxkIGRpYWdyYW0iLCB0YWdzOiBbInRvcG9sb2d5IiwgImNvbG9yIiwgInNjaGVtYXRpYyJdIH0sCnsgZmlsZTogInJlZmVyZW5jZXMvMzE2NjE2OGQ0ODk0NmU1YWI2MzQ0ZmRhNWVjZWU0ZjguanBnIiwgbmFtZTogInBhcnRpY2xlIGNsb3VkIHZpc3VhbGl6YXRpb24iLCB0YWdzOiBbInBhcnRpY2xlcyIsICJkYXRhdml6IiwgImNvbG9yIl0gfSwKeyBmaWxlOiAicmVmZXJlbmNlcy8zMmI1MmNhOGU4NjVmMWFmYWZiODQ1MTA4OWZmNDEzZS5qcGciLCBuYW1lOiAiZG90IG1hdHJpeCBuZXR3b3JrIG5vZGVzIiwgdGFnczogWyJwYXJ0aWNsZXMiLCAibmV0d29yayIsICJub3RhdGlvbiJdIH0sCnsgZmlsZTogInJlZmVyZW5jZXMvMzM3Yzc0NjViZjE3NDIxNjhlYWNjYTQ2MWQ5ZGViZDYuanBnIiwgbmFtZTogInNwZWN0cnVtIGFuYWx5c2lzIGhlYXRtYXAiLCB0YWdzOiBbImRhdGF2aXoiLCAiY29sb3IiLCAidGVybWluYWwiXSB9LAp7IGZpbGU6ICJyZWZlcmVuY2VzLzM1NTZiNjdiZmM5ZTYzM2IxYjhjZjM2Y2E3N2M3MzQwLmpwZyIsIG5hbWU6ICJzY2llbnRpZmljIHBhcmFtZXRlciBzY2FuIiwgdGFnczogWyJkYXRhdml6IiwgInRlcm1pbmFsIiwgIm5vdGF0aW9uIl0gfSwKeyBmaWxlOiAicmVmZXJlbmNlcy8zNjMyZGI1ZDFjMmFlNzU1ZDY5NWFiZmUxNDkxYmRiZi5naWYiLCBuYW1lOiAiYW5pbWF0ZWQgZ3JpZCBkaXN0b3J0aW9uIiwgdGFnczogWyJ0b3BvbG9neSIsICJncmlkIiwgImdlbmVyYXRpdmUiXSB9LAp7IGZpbGU6ICJyZWZlcmVuY2VzLzM2ZTViMGJmMmQwYmQ5YTE5ZTNiODZmYzBmNDA4NTQ0LmpwZyIsIG5hbWU6ICJnZW9tZXRyaWMgbGF0dGljZSBzdHJ1Y3R1cmVzIiwgdGFnczogWyJ0b3BvbG9neSIsICJnZW5lcmF0aXZlIiwgImNvbG9yIl0gfSwKeyBmaWxlOiAicmVmZXJlbmNlcy8zNzgyZTEzY2FkYWI3ZDlkOGFmODk3ZDU0M2U3ZmY4Yy5qcGciLCBuYW1lOiAic3BlY3RyYWwgaGVhdCByYWRpYXRpb24iLCB0YWdzOiBbImNvbG9yIiwgIndhdmVmb3JtIiwgImdlbmVyYXRpdmUiXSB9LAp7IGZpbGU6ICJyZWZlcmVuY2VzLzM3ODMxMDIzNDgyY2NmMzJjNjA3NWVhZGVhZmFmYzc2LmdpZiIsIG5hbWU6ICJvcmJpdGluZyBwYXJ0aWNsZSBzd2FybSIsIHRhZ3M6IFsib3JiaXRhbCIsICJwYXJ0aWNsZXMiLCAiZ2VuZXJhdGl2ZSJdIH0sCnsgZmlsZTogInJlZmVyZW5jZXMvMzk4NmFiMDVmZTlkODlkZGI1YWZlMzE4YjAyYzQ4OTYuZ2lmIiwgbmFtZTogImR5bmFtaWMgZmllbGQgZXZvbHV0aW9uIiwgdGFnczogWyJlbWVyZ2VuY2UiLCAidG9wb2xvZ3kiLCAiZ2VuZXJhdGl2ZSJdIH0sCnsgZmlsZTogInJlZmVyZW5jZXMvM2JjNmJmMzE2MjQyNjJiZWRlNGU3ZjZiZmYyMWUyYzAuZ2lmIiwgbmFtZTogImthbGVpZG9zY29waWMgcGF0dGVybiByb3RhdGlvbiIsIHRhZ3M6IFsiZ2VuZXJhdGl2ZSIsICJjb2xvciIsICJwYXJ0aWNsZXMiXSB9LAp7IGZpbGU6ICJyZWZlcmVuY2VzLzQ3OGFjZWZiYmFmYzEwY2U1YWY3NzNkNzQ2YzA2ZTg0LmpwZyIsIG5hbWU6ICJjb21mb3J0IHpvbmUgZGlhZ3JhbSIsIHRhZ3M6IFsic2NoZW1hdGljIiwgIm5vdGF0aW9uIiwgIndoaW1zeSJdIH0sCnsgZmlsZTogInJlZmVyZW5jZXMvNDgwYTkzZDQ4OGU0NTc2MDcxZTNmMjFkNTBhNTg0MWMuanBnIiwgbmFtZTogImRlbnNlIHRleHQgcGFydGljbGUgbWF0cml4IiwgdGFnczogWyJwYXJ0aWNsZXMiLCAibm90YXRpb24iLCAiZW1lcmdlbmNlIl0gfSwKeyBmaWxlOiAicmVmZXJlbmNlcy80ZjY0ZDJjYWI0MDY2YjA2MzI2OTJlMTY2MTliYzk4MC5qcGciLCBuYW1lOiAic3BlY3RyYWwgZ2FsYXh5IHN1cnZleSIsIHRhZ3M6IFsiZGF0YXZpeiIsICJjb2xvciIsICJ0ZXJtaW5hbCJdIH0sCnsgZmlsZTogInJlZmVyZW5jZXMvNGZiNTdiOGE3ZTBiODgxMzFlZjc3NWNiZGQ1ZDcyNzkuanBnIiwgbmFtZTogInBvbHloZWRyb24gd2lyZWZyYW1lIHN0dWR5IiwgdGFnczogWyJ0b3BvbG9neSIsICJnZW5lcmF0aXZlIiwgImNvbG9yIl0gfSwKYGBgCgojIyMgUmVtYWluaW5nIH44NSBpbWFnZXMgc3RpbGwgbmVlZCB2aXN1YWwgcmV2aWV3IGFuZCBjYXRlZ29yaXphdGlvbjoKCmBgYAo1NjBmYzM1MTQ2NWRhMWVhZTQ0MTA4MDg5MDA1OTAwNi5naWYKNTZhNDgyOTQ4ZDJhY2VjZDEyNmE1M2ZkODkxMzI3ODEuanBnCjU5NzUwZDY0NzY0YzY4Nzg5OGJhYmY2YWI2MTg1MDQ4LmdpZgo1YjE2YWQ3MWNhZTdjZTY3NGZjNTE5MWQwYjJmMDQ0My5naWYKNWI3MTE5OTQ3NzNjYTdlYWE3NWEwNWU0NTRhMWMyNjkuanBnCjYxSm1jOXhtVlZMLl9BQ19TWDU2OV8uanBnCjYxWDc3VzVJc2lMLl9TWTQ2Nl8uanBnCjY2MGE1NjAzYWNkMmE3NDdkY2QxNzgwMDIyODRiMzExLmpwZwo2YzVlMjljNjhhYjkwNjdhZWJkYzNlYTc0OWFhZTY5Ny5qcGcKNmViOTNjYjYyNzViMTg4ZmI3YjQwMzM3M2NkMWM3ZGEuZ2lmCjc1MTAwMTRmOTZhZTJlZjVkZWY4YmZjZjM2M2JjNzZjLmpwZwo3NTRiZjA5MTRiOTRhYmUxNWM5NTgzNWU2MDUxZjQyMi5qcGcKNzZiODQzYmQyOTFmYjBhYWFkNmMzOGNlZGY0MzNlYzguanBnCjc3ODQ1YTY3OWZjYmJhNjNhMmZmYmNhNDYwZGU3ZWU0LmpwZwo4MTZjMTAzNDE3NGE2NWY5OTlkMWFmOGRiOTA1ODI4Zi5naWYKODJiMGExODFjNGYyNDEzMzdhZjIyZWVjZTg1OGQyYjAuanBnCjgzZTY0MmNjODFmMTkwZTk1ZDE2NWM1NWQ0YTExMmVjLmpwZwo4YjM5OWJkZGVlYjU2OThmOGNmY2Y2YTFkYjkyZDZmMy5qcGcKOGU5ODQxZDEwMjhiYzNlOTBkZjMwZWU4NDZlYjdkZjguanBnCjhmMjU4NmYxNzMwNTIxNjU2MzNiOWNlZGM4ZmMzMGFlLmpwZwo5MjlhMThiYWI4N2I2Y2E4MWQ0MDFkYWU4MDBlNzMxNS5qcGcKOTUzNDNmNzVjODZiMDVjOTg2MThiYzE5NzYwMjdhNGQuanBnCjliMmIyYzkwYjU2YjY0OWJlYmE0Yjk0ZjdlMjgzZjkyLmpwZwo5ZDIwYzkwZTZiYzYzZjNkYjUzYzliODg5NmQ5MmY2Yi5qcGcKOWUyZTRmMTNhMGU0MThjZWQ5MmM0NDRhMDEwMzYyMWEuanBnClRlcm5hcnktQ29udG91ci1QbG90LTMwMHgzMDAud2VicApUZXJuYXJ5LVBsb3QtMS0zMDB4MzAwLndlYnAKYTJhN2NkOTU4ZTBjOWM3YWFlY2IzNGNkZmM0NjhjN2UuanBnCmEzNjBlY2MyOWJmODM3MDdhOGFjYTQzZjAzZWI2YWIyLmdpZgphNGE4NDA3ODJjZDUzNmEzM2M1OWE2ZGFiZTVkZTRmMy5qcGcKYTVjNTZkODgyNzI4NWRlMThmNzkzODljYzVmMGQxMjEuanBnCmE4NWU4OTc0ZDNmYzc5YmMzNWQ2ODJkMDBiZjQzMTk4LmpwZwphOWQ2ZTY0YjlhZDhhNjcxNGViYjYxOGY3MDk5NzMwYi5qcGcKYWUwNDM0MTk3ZTQ2OTJlZjQwNWY5MjliYmE3NDU1YzAuZ2lmCmFwb2xsby0xMS10bGktMy53ZWJwCmIwM2M4ODM4ZmY5ZTllNWZhMzU2M2RhYzY4MGYxZmI5LmpwZwpiMWI2MWU1MmY4ZTJmNzM5NThiN2MwZTcxYzYwMjQ5OC5qcGcKYjMyNmZmNzU4YjM4ZmFmYTgyNzk0MzllNTI3OGI5ODIuanBnCmIzYWI3NWIxM2NjOGZkYzg2ZTMwNzhkZmVmNmRiNzlkLmdpZgpiM2YzYjE5NzA5YzdkNTVjN2RlNTk3MTdlMmEzZDJjMi5qcGcKYjYwNTg3N2ZhNmY4Zjc4NmRiMzMwOGVjNmM5Mjg0ZGEuanBnCmI2MWUwYmVmYjRjMjdjOTNiN2MwMjcwMjFhNWE4M2ZhLmpwZwpiOTMxYTliNzBmMjcyMmY0Yzc0ZWY1YTExNGE0OTdjZC5qcGcKYmJlM2E1MTA2NTM0MjYyZDViMzkyMTZmMmRiN2M5MjguZ2lmCmMwZDQ1NjY3ZGJlMWU0NGQ3ZTI2NjIzM2Y4ZDdlYWE5LmdpZgpjMWQyYzk4MTVhMzVmZGQyM2I0YTA5NjZlOTk0NWVlNC5qcGcKYzFmZDhiNDhjNGRjZDgyMGY4MDMwMTQwODVmZjZhNGYuZ2lmCmMyNTlkMTQ1OTAwOTc4N2IzNzY1NjZiYjMwZjJlZDgyLmpwZwpjNTI5ZDk5ODBjYjc2OGI0ZmVjMGYxOWE2NWZlN2Y4Mi5qcGcKYzY0NWM3ZWM2ZjBmYWJlOGZhMjE1NmQ0NGI2NWE0NDguZ2lmCmM3MzdhNGI3ODkzNWQ0NWI5OTI4YWVhOWM5ZWNmNGI2LmdpZgpjOGY4MzkyODYwMTA3YmRiZWIwNmNmODNkZGFkZDk0MS5qcGcKYzliZGE5YWI1OGZhNzc0ODdlOTA3MjVkOGMzNDY1OTQuZ2lmCmNlODBhZDBjOTRiZmJmZWViOTM0Mzc1YzlmZDRkMDMwLmpwZwpkNWRlNzhkNzc3ZTc0NDdhOWYyM2RmODI4YTZlYzc2My5qcGcKZDc5NTFkMDMyMTgxODkwOGNmMjk4MDJhMzMwYWE3ZTkuZ2lmCmRiNDlmZjkzZjQwMzY3ZDM0NTc1MTgxN2EwMTY5NzdmLmpwZwpkZDM4MTllMGRlYWI4OGFhYmZlZjUzYzA5ZDRjMjRhNy5naWYKZG93bmxvYWQgKDEpLnBuZwpkb3dubG9hZC5wbmcKZTAwOWQ4OGMzZjQ2ZWU0MjYzNDU0MWRlNWQxNjJmNjYuZ2lmCmUwNjFmZDZiYzI0ZWEwM2NiNjM3NzYxYjVjZTg2MzA4LmdpZgplNjIyM2FiODc1YjdjYjA1ODhkZjg0OTJkNmQ0NGQxNi5naWYKZWUzMDdmMzA1NmViNGNmNmMxY2Y1M2M0ZGQ0NzZmNDAuanBnCmYyZTVmYmEyZDdmZWZhZjZjNzYzMDJhZjU4MmJlOWQ4LmpwZwpmM2Y0ZGZlYjRmYThmYzI2MjViZGE2Y2RiMzNhYzdmNS5qcGcKZmQ1OGJiMzgzMWVlMGU3ZDBlYzg5ODE0MGU2ZDRjNWUuanBnCmxpbC1taXJzLXlvdXMuanBnCnJlYm91bmRiYW5uZXIucG5nCnZpZGVvZnJhbWVfMTI0NTIucG5nCnZpZGVvZnJhbWVfMTM1MDcucG5nCnZpZGVvZnJhbWVfMTgwOC5wbmcKdmlkZW9mcmFtZV8yMDc3LnBuZwp2aWRlb2ZyYW1lXzIyOTk5LnBuZwp2aWRlb2ZyYW1lXzI1ODgucG5nCnZpZGVvZnJhbWVfMjg4Ni5wbmcKdmlkZW9mcmFtZV80NjcyLnBuZwp2aWRlb2ZyYW1lXzUzMDAucG5nCnZpZGVvZnJhbWVfNTMwNy5wbmcKdmlkZW9mcmFtZV81Nzc3LnBuZwp2aWRlb2ZyYW1lXzU4My5wbmcKdmlkZW9mcmFtZV82NTEzLnBuZwp2aWRlb2ZyYW1lXzc4MTUucG5nCnZpZGVvZnJhbWVfODcwNi5wbmcKdmlkZW9mcmFtZV85NjE2LnBuZwpgYGAKCiMjIEtub3duIHNwZWNpYWwgaW1hZ2VzCgotIGBsaWwtbWlycy15b3VzLmpwZ2Ag4oCUIHBsYXlmdWwgaWxsdXN0cmF0aW9uLCB0YWdzOiBbIndoaW1zeSJdCi0gYHJlYm91bmRiYW5uZXIucG5nYCDigJQgUkVCT1VORCBuLWJvZHkgc2ltIGJhbm5lciwgdGFnczogWyJvcmJpdGFsIiwgInBhcnRpY2xlcyJdCi0gYFRlcm5hcnktQ29udG91ci1QbG90LTMwMHgzMDAud2VicGAg4oCUIHRlcm5hcnkgY29udG91ciBwbG90LCB0YWdzOiBbImRhdGF2aXoiLCAidG9wb2xvZ3kiXQotIGBUZXJuYXJ5LVBsb3QtMS0zMDB4MzAwLndlYnBgIOKAlCB0ZXJuYXJ5IHNjYXR0ZXIgcGxvdCwgdGFnczogWyJkYXRhdml6Il0KLSBgYXBvbGxvLTExLXRsaS0zLndlYnBgIOKAlCBBcG9sbG8gMTEgdHJhamVjdG9yeSBkaWFncmFtLCB0YWdzOiBbIm9yYml0YWwiLCAic2NoZW1hdGljIl0KLSBgdmlkZW9mcmFtZV8qLnBuZ2AgKDE2IGZpbGVzKSDigJQgZnJhbWVzIGV4dHJhY3RlZCBmcm9tIGEgdmlkZW8sIGxpa2VseSBhbmltYXRpb24vdmlzdWFsaXphdGlvbiBzdGlsbHMKLSBgNjFKbWM5eG1WVkwuX0FDX1NYNTY5Xy5qcGdgIGFuZCBgNjFYNzdXNUlzaUwuX1NZNDY2Xy5qcGdgIOKAlCBBbWF6b24gcHJvZHVjdCBpbWFnZXMgKGxpa2VseSBib29rIGNvdmVycykKLSBgZG93bmxvYWQucG5nYCBhbmQgYGRvd25sb2FkICgxKS5wbmdgIOKAlCBnZW5lcmljIGZpbGVuYW1lcywgbmVlZCB2aXN1YWwgcmV2aWV3CgojIyBDb250ZXh0IGZyb20gdGhlIHNjcmF0Y2hwYWQKClRoZSBmdWxsIHJlc2VhcmNoIHNjcmF0Y2hwYWQgaXMgYXQgYH4vRG9jdW1lbnRzL0NsYXVkZS9Qcm9qZWN0cy9NaW5kZ3V0IC0gTWlyL1NDUkFUQ0hQQURfVml6X0dhbGxlcnkubWRgLiBTZWN0aW9uIC8wMSBoYXMgdGhlIDcgc3R5bGUgZmFtaWxpZXMgd2l0aCBkZXRhaWxlZCBkZXNjcmlwdGlvbnMuIFRoZSB0aHJvdWdoLWxpbmU6ICJ0aGUgcGxhY2Ugd2hlcmUgcmlnb3JvdXMgc2NpZW5jZSBiZWNvbWVzIHZpc3VhbGx5IGJlYXV0aWZ1bCB3aXRob3V0IHRyeWluZy4iCgojIyBXaGF0J3MgYWxyZWFkeSBkb25lCgotIEdhbGxlcnkgcmVwbyBjcmVhdGVkIGFuZCBsaXZlIG9uIEdpdEh1YiBQYWdlcwotIGBpbmRleC5odG1sYCBmdWxseSBidWlsdCB3aXRoIHR3by10YWIgVUkgKFJlZmVyZW5jZXMvQXJ0aWZhY3RzKSwgSU8gQnJhbmQgS2l0IHYyLjEgZGVzaWduIHN5c3RlbSwgc2VhcmNoLCB0YWcgZmlsdGVyaW5nLCBncmlkL2xhcmdlIHZpZXdzLCBsaWdodGJveCwgZGFyay9saWdodCB0b2dnbGUKLSBGb2xkZXIgc3RydWN0dXJlIGluIHBsYWNlIChgcmVmZXJlbmNlcy9gLCBgYXJ0aWZhY3RzL2AsIGBhcnRpZmFjdHMvdGh1bWJzL2ApCi0gR2l0IHJlbW90ZSBjb25maWd1cmVkLCBjcmVkZW50aWFscyB3b3JraW5nIG9uIE1hYwoKIyMgV2hhdCBDbGF1ZGUgQ29kZSBzaG91bGQgZG8KCjEuIE9wZW4gZWFjaCBpbWFnZSBmaWxlIGFuZCB2aXN1YWxseSBjYXRlZ29yaXplIGl0IChuYW1lICsgdGFncykKMi4gQ29weSBhbGwgaW1hZ2UgZmlsZXMgdG8gYG1pci1nYWxsZXJ5L3JlZmVyZW5jZXMvYAozLiBCdWlsZCB0aGUgY29tcGxldGUgUkVGRVJFTkNFUyBhcnJheSBhbmQgdXBkYXRlIGBpbmRleC5odG1sYAo0LiBDb21taXQgYW5kIHB1c2gKNS4gT3B0aW9uYWxseSB2ZXJpZnkgdGhlIGRlcGxveW1lbnQK"),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

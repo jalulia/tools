@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>The Projection Tax — Interlude III½ · Me & Mir</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#ffffff;
+    --paper-2:#fafafa;
+    --ink:#09090b;
+    --ink-2:#1c1c20;
+    --mute:#52525b;
+    --mute-2:#a1a1aa;
+    --line:rgba(9,9,11,.08);
+    --rail:rgba(9,9,11,.05);
+
+    --ice:#2b8ef5;
+    --laminar:#10b981;
+    --heat:#ff5a1f;
+    --balanced:#16a34a;
+    --signal:#f59e0b;
+
+    --h-ice:#7cc4ff;
+    --h-laminar:#4fe3c1;
+    --h-heat:#ff8a4c;
+    --h-balanced:#a8f080;
+
+    --sans:'Geist',-apple-system,BlinkMacSystemFont,sans-serif;
+    --display:'Instrument Serif','Times New Roman',serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  body{font-family:var(--sans);font-size:17px;line-height:1.65;font-weight:400;letter-spacing:-.011em;color:var(--ink-2)}
+  ::selection{background:#09090b;color:#fff}
+
+  /* fixed chrome */
+  .chrome{
+    position:fixed;inset:0 0 auto 0;z-index:50;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 28px;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+    mix-blend-mode:difference;color:#fff;pointer-events:none;
+  }
+  .chrome .l,.chrome .r{display:flex;gap:18px;align-items:center}
+  .chrome .dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:breathe 2.4s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.35}50%{opacity:1}}
+
+  /* hero (compact — this is an interlude, not a full piece) */
+  .hero{
+    position:relative;height:72vh;min-height:540px;width:100%;
+    background:#09090b;color:#fff;overflow:hidden;isolation:isolate;
+  }
+  #hero-canvas{
+    position:absolute;inset:0;width:100%;height:100%;opacity:.85;
+    -webkit-mask-image:radial-gradient(ellipse 54% 48% at 50% 54%, transparent 0%, transparent 38%, #000 84%);
+    mask-image:radial-gradient(ellipse 54% 48% at 50% 54%, transparent 0%, transparent 38%, #000 84%);
+  }
+  .hero-inner{
+    position:relative;z-index:2;height:100%;
+    display:grid;place-items:center;text-align:center;padding:0 24px;
+  }
+  .kicker{
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;
+    color:rgba(255,255,255,.55);margin-bottom:22px;
+    display:inline-flex;align-items:center;gap:12px;
+  }
+  .kicker .bar{width:28px;height:1px;background:rgba(255,255,255,.35)}
+  .kicker .num{color:rgba(255,255,255,.78)}
+  h1.title{
+    font-family:var(--display);font-weight:400;font-style:normal;
+    font-size:clamp(64px,10vw,148px);line-height:.94;letter-spacing:-.025em;
+    margin:0;color:#f6f1e4;
+    text-shadow:0 0 80px rgba(0,0,0,.7),0 0 160px rgba(0,0,0,.5);
+  }
+  h1.title .em{font-style:italic}
+  .deck{
+    margin-top:26px;color:rgba(255,255,255,.72);
+    font-family:var(--sans);font-size:17px;font-weight:300;line-height:1.55;letter-spacing:-.003em;
+    max-width:54ch;margin-left:auto;margin-right:auto;
+  }
+  .deck em{font-family:var(--display);font-style:italic}
+  .scroll-cue{
+    position:absolute;left:50%;bottom:28px;transform:translateX(-50%);
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;
+    color:rgba(255,255,255,.5);display:flex;flex-direction:column;align-items:center;gap:10px;z-index:3;
+  }
+  .scroll-cue .line{width:1px;height:38px;background:linear-gradient(to bottom,rgba(255,255,255,.6),transparent);animation:drip 2.2s ease-in-out infinite}
+  @keyframes drip{0%{transform:scaleY(.2);transform-origin:top}60%{transform:scaleY(1);transform-origin:top}100%{transform:scaleY(.2);transform-origin:bottom}}
+
+  /* main */
+  main{background:var(--paper);padding:130px 0 180px;position:relative}
+  .column{max-width:40rem;margin:0 auto;padding:0 28px;position:relative}
+  .column.wide{max-width:56rem}
+
+  .thread{margin:0 auto 42px;max-width:40rem;padding:0 28px;text-align:center}
+  .thread .num{
+    font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute-2);
+    display:inline-flex;align-items:center;gap:14px;margin-bottom:16px;
+  }
+  .thread .num::before,.thread .num::after{content:"";width:28px;height:1px;background:var(--line)}
+  .thread h2{
+    font-family:var(--display);font-weight:400;font-style:normal;
+    font-size:clamp(38px,5vw,54px);line-height:1.05;letter-spacing:-.02em;
+    margin:0;color:var(--ink);
+  }
+
+  .column p{margin:0 0 20px;color:var(--ink-2);font-size:17px;line-height:1.72}
+  .column p .em{font-family:var(--display);font-style:italic;font-size:1.06em;color:var(--ink)}
+  .column p .ice{color:var(--ice);font-weight:500}
+  .column p .heat{color:var(--heat);font-weight:500}
+  .column p .bal{color:var(--balanced);font-weight:500}
+
+  /* the figure ─────────────────────────────── */
+  .figure{
+    max-width:56rem;margin:72px auto 0;padding:0 28px;
+  }
+  .panel{
+    position:relative;background:var(--paper-2);border:1px solid var(--line);border-radius:2px;
+    padding:22px 0 18px;margin-bottom:18px;overflow:hidden;
+  }
+  .panel .plabel{
+    font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--mute);text-align:center;margin-bottom:10px;
+    display:flex;align-items:center;justify-content:center;gap:14px;
+  }
+  .panel .plabel .tag{color:var(--ink);font-weight:500}
+  .panel .plabel .count{font-variant-numeric:tabular-nums}
+  .panel .plabel .bar{width:18px;height:1px;background:var(--line)}
+  .panel canvas{display:block;width:100%;height:360px}
+  .panel .sub{
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--mute-2);text-align:center;margin-top:4px;
+  }
+
+  /* the single caption bar under all three */
+  .cap-bar{
+    margin:28px auto 0;max-width:56rem;padding:0 28px;text-align:center;
+  }
+  .cap-bar .equation{
+    font-family:var(--mono);font-size:13px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--ink);
+    display:inline-flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;
+  }
+  .cap-bar .equation .ice{color:var(--ice)}
+  .cap-bar .equation .fano{color:var(--signal);position:relative}
+  .cap-bar .equation .fano::after{content:"";position:absolute;left:-3px;right:-3px;bottom:-3px;height:1px;background:var(--signal);opacity:.45}
+  .cap-bar .equation .bal{color:var(--balanced)}
+  .cap-bar .equation .heat{color:var(--heat)}
+  .cap-bar .equation .sep{color:var(--mute-2)}
+  .cap-bar .tail{
+    margin-top:14px;font-family:var(--display);font-style:italic;font-size:22px;color:var(--ink);line-height:1.25;
+  }
+
+  .legend{
+    margin:54px auto 0;max-width:56rem;padding:0 28px;
+    display:grid;grid-template-columns:repeat(3,1fr);gap:18px;
+  }
+  .legend .item{
+    border-top:1px solid var(--line);padding-top:14px;
+    font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);
+  }
+  .legend .item .k{color:var(--ink);font-weight:500;display:block;margin-bottom:4px}
+  .legend .item.a .k::before{content:"· ";color:var(--ice)}
+  .legend .item.b .k::before{content:"· ";color:var(--ink)}
+  .legend .item.c .k::before{content:"· ";color:var(--balanced)}
+
+  /* prose flanks */
+  .prose{max-width:40rem;margin:96px auto 0;padding:0 28px}
+  .prose.before{margin-top:0}
+  .prose h3{
+    font-family:var(--display);font-weight:400;font-size:30px;line-height:1.15;letter-spacing:-.015em;
+    margin:0 0 18px;color:var(--ink);
+  }
+  .prose .meta{
+    font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute-2);
+    margin-bottom:10px;
+  }
+  .pull{
+    max-width:40rem;margin:72px auto;padding:24px 32px;
+    border-left:2px solid var(--ink);
+    font-family:var(--display);font-style:italic;font-size:28px;line-height:1.3;color:var(--ink);
+  }
+
+  /* footer */
+  footer{
+    max-width:56rem;margin:140px auto 0;padding:32px 28px 0;
+    border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;gap:20px;
+    font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);
+  }
+  footer a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
+
+  @media (max-width:720px){
+    .panel canvas{height:280px}
+    .cap-bar .equation{font-size:11px;gap:10px}
+    .cap-bar .tail{font-size:19px}
+    .legend{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="chrome">
+  <div class="l"><span>Me &amp; Mir</span><span class="dot"></span><span>Interlude III½</span></div>
+  <div class="r"><span>The Projection Tax</span></div>
+</div>
+
+<!-- ── hero ───────────────────────────────── -->
+<section class="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-inner">
+    <div>
+      <div class="kicker"><span class="bar"></span><span class="num">III ½</span><span>Interlude</span><span class="bar"></span></div>
+      <h1 class="title">The Projection<br><span class="em">Tax.</span></h1>
+      <p class="deck">Between the room you think in and the room you speak in, something is always lost. This is the shape of that loss — <em>nineteen vertices surrendered as heat</em>.</p>
+    </div>
+  </div>
+  <div class="scroll-cue"><span>scroll</span><span class="line"></span></div>
+</section>
+
+<!-- ── main ───────────────────────────────── -->
+<main>
+
+  <div class="thread">
+    <div class="num">Interlude · III ½</div>
+    <h2>Between Thread III and Thread IV</h2>
+  </div>
+
+  <div class="prose before">
+    <div class="meta">Context</div>
+    <p>Thread III ended on singularity — the orbit, the Fano plane lurking underneath. Thread IV is about the <span class="em">cost of honesty</span>: projecting truth from the full thought down into the narrow band of words.</p>
+    <p>This interlude is the bridge. Here is the shape in its native space. Here is what it costs to bring it down.</p>
+  </div>
+
+  <!-- the figure — three panels stacked -->
+  <section class="figure" aria-label="Projection Tax diagram">
+
+    <div class="panel" data-role="think">
+      <div class="plabel">
+        <span class="bar"></span>
+        <span class="count">A</span>
+        <span class="tag">The Room You Think In</span>
+        <span class="count">· 27</span>
+        <span class="bar"></span>
+      </div>
+      <canvas id="panel-a"></canvas>
+      <div class="sub">ternary · 3 × 3 × 3 · full lattice</div>
+    </div>
+
+    <div class="panel" data-role="speak">
+      <div class="plabel">
+        <span class="bar"></span>
+        <span class="count">B</span>
+        <span class="tag">The Room You Speak In</span>
+        <span class="count">· 8</span>
+        <span class="bar"></span>
+      </div>
+      <canvas id="panel-b"></canvas>
+      <div class="sub">binary · 2 × 2 × 2 · corners only</div>
+    </div>
+
+    <div class="panel" data-role="tax">
+      <div class="plabel">
+        <span class="bar"></span>
+        <span class="count">C</span>
+        <span class="tag">The Tax</span>
+        <span class="count">· 27 → 8</span>
+        <span class="bar"></span>
+      </div>
+      <canvas id="panel-c"></canvas>
+      <div class="sub" id="panel-c-sub">gather · separation · cube · reconverge</div>
+    </div>
+
+    <div class="cap-bar">
+      <div class="equation">
+        <span class="ice">27</span><span class="sep">→</span><span class="fano">7</span><span class="sep">→</span><span class="bal">8</span>
+        <span class="sep">·</span>
+        <span>The Projection Tax</span>
+        <span class="sep">·</span>
+        <span class="heat">19 = heat</span>
+      </div>
+      <div class="tail">Your mind is in a bigger room than your body.</div>
+    </div>
+
+    <div class="legend">
+      <div class="item a"><span class="k">Panel A · 27</span>the mind-space, the imagination, the higher room</div>
+      <div class="item b"><span class="k">Panel B · 8</span>reality, language, the body you speak through</div>
+      <div class="item c"><span class="k">Panel C · 19</span>the information that did not survive the jump</div>
+    </div>
+
+  </section>
+
+  <div class="pull">
+    19 vertices did not make it across. The body calls them heat. The mind calls them <em>everything I could not say</em>.
+  </div>
+
+  <div class="prose">
+    <div class="meta">After</div>
+    <p>Thread IV begins with a correction. That correction is the body telling the mind: <span class="bal">you have to use the cube</span>. Not because the lattice was wrong, but because this is where the pilot lives.</p>
+    <p>Everything that didn't fit gets vented. <span class="heat">Heat · venting.</span> Then: <span class="bal">balanced · circuit closed.</span></p>
+  </div>
+
+  <footer>
+    <div>Me &amp; Mir · Interlude III½</div>
+    <div><a href="me-and-mir.html">← return to main</a></div>
+  </footer>
+
+</main>
+
+<script>
+// ─── shared rotation clock ───────────────────────────────────────────────
+const clock = {t0: performance.now()};
+function now(){ return (performance.now() - clock.t0) / 1000; }
+
+// ─── canvas setup helper ─────────────────────────────────────────────────
+function setup(id){
+  const c = document.getElementById(id);
+  const ctx = c.getContext('2d');
+  function size(){
+    const r = c.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    c.width = r.width * dpr;
+    c.height = r.height * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  size();
+  window.addEventListener('resize', size);
+  return {c, ctx, size};
+}
+
+// ─── shared 3D helpers ───────────────────────────────────────────────────
+function rotate(p, rx, ry){
+  // rotate around Y then X
+  const cy = Math.cos(ry), sy = Math.sin(ry);
+  const x1 = p.x*cy + p.z*sy;
+  const z1 = -p.x*sy + p.z*cy;
+  const cx = Math.cos(rx), sx = Math.sin(rx);
+  const y1 = p.y*cx - z1*sx;
+  const z2 = p.y*sx + z1*cx;
+  return {x:x1, y:y1, z:z2};
+}
+function project(p, cx, cy, unit, persp){
+  const s = persp / (persp - p.z*unit*0.6);
+  return {x: cx + p.x*unit*s, y: cy + p.y*unit*s, s};
+}
+
+// vertices of 3×3×3 lattice (27)
+const V27 = [];
+for (let i=-1;i<=1;i++) for (let j=-1;j<=1;j++) for (let k=-1;k<=1;k++){
+  V27.push({x:i,y:j,z:k,
+    cube: (i!==0 && j!==0 && k!==0),
+    origin: (i===0 && j===0 && k===0)
+  });
+}
+// indices of cube verts and non-cube verts within V27
+const CUBE_IDX = V27.map((v,i)=> v.cube ? i : -1).filter(i=>i>=0);
+const LOST_IDX = V27.map((v,i)=> v.cube ? -1 : i).filter(i=>i>=0);
+
+// cube-only verts
+const V8 = V27.filter(v=>v.cube);
+
+// edges of a unit cube (8 corners): pairs by index into V8
+// V8 ordered: for each i in [-1,1], j in [-1,1], k in [-1,1]
+// index(i,j,k) = ((i+1)/2)*4 + ((j+1)/2)*2 + ((k+1)/2)
+function cubeIdx(i,j,k){ return ((i+1)/2)*4 + ((j+1)/2)*2 + ((k+1)/2); }
+const CUBE_EDGES = [];
+for (let i=-1;i<=1;i+=2) for (let j=-1;j<=1;j+=2){
+  CUBE_EDGES.push([cubeIdx(i,j,-1), cubeIdx(i,j,1)]);
+  CUBE_EDGES.push([cubeIdx(i,-1,j), cubeIdx(i,1,j)]);
+  CUBE_EDGES.push([cubeIdx(-1,i,j), cubeIdx(1,i,j)]);
+}
+
+// lattice edges: pairs in V27 differing by 1 in exactly one axis (adjacent)
+const LATTICE_EDGES = [];
+for (let a=0;a<V27.length;a++) for (let b=a+1;b<V27.length;b++){
+  const d = Math.abs(V27[a].x-V27[b].x) + Math.abs(V27[a].y-V27[b].y) + Math.abs(V27[a].z-V27[b].z);
+  if (d === 1) LATTICE_EDGES.push([a,b]);
+}
+
+// ─── PANEL A · the 27-lattice ────────────────────────────────────────────
+(function(){
+  const {c, ctx} = setup('panel-a');
+  function draw(){
+    const w = c.clientWidth, h = c.clientHeight;
+    ctx.clearRect(0,0,w,h);
+    const t = now();
+    const ry = t*0.28, rx = Math.sin(t*0.18)*0.35 + 0.42;
+    const unit = Math.min(w,h) * 0.22;
+    const persp = 240;
+
+    // project
+    const P = V27.map(v=>{
+      const r = rotate(v, rx, ry);
+      return {...project(r, w/2, h/2, unit, persp), z:r.z, v};
+    });
+
+    // edges (faint ice)
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(43,142,245,0.18)';
+    for (const [a,b] of LATTICE_EDGES){
+      const pa = P[a], pb = P[b];
+      ctx.beginPath();
+      ctx.moveTo(pa.x, pa.y);
+      ctx.lineTo(pb.x, pb.y);
+      ctx.stroke();
+    }
+
+    // vertices (ice dots, z-sorted by depth)
+    const sorted = P.map((p,i)=>({...p, i})).sort((a,b)=>a.z-b.z);
+    ctx.font = "11px 'JetBrains Mono', monospace";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const p of sorted){
+      const depth = (p.z + 1.2)/2.4;
+      const alpha = 0.35 + depth*0.6;
+      ctx.fillStyle = `rgba(43,142,245,${alpha})`;
+      const ch = depth > 0.55 ? '●' : '·';
+      ctx.font = `${depth>0.55?11:13}px 'JetBrains Mono', monospace`;
+      ctx.fillText(ch, p.x, p.y);
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ─── PANEL B · the 8-cube ────────────────────────────────────────────────
+(function(){
+  const {c, ctx} = setup('panel-b');
+  function draw(){
+    const w = c.clientWidth, h = c.clientHeight;
+    ctx.clearRect(0,0,w,h);
+    const t = now();
+    const ry = t*0.28, rx = Math.sin(t*0.18)*0.35 + 0.42;
+    const unit = Math.min(w,h) * 0.22;
+    const persp = 240;
+
+    const P = V8.map(v=>{
+      const r = rotate(v, rx, ry);
+      return {...project(r, w/2, h/2, unit, persp), z:r.z, v};
+    });
+
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = 'rgba(9,9,11,0.5)';
+    for (const [a,b] of CUBE_EDGES){
+      const pa = P[a], pb = P[b];
+      ctx.beginPath();
+      ctx.moveTo(pa.x, pa.y);
+      ctx.lineTo(pb.x, pb.y);
+      ctx.stroke();
+    }
+
+    const sorted = P.map((p,i)=>({...p, i})).sort((a,b)=>a.z-b.z);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const p of sorted){
+      const depth = (p.z + 1.2)/2.4;
+      const alpha = 0.6 + depth*0.4;
+      ctx.fillStyle = `rgba(9,9,11,${alpha})`;
+      ctx.font = `14px 'JetBrains Mono', monospace`;
+      ctx.fillText('●', p.x, p.y);
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ─── PANEL C · the tax (breathing cycle) ─────────────────────────────────
+(function(){
+  const {c, ctx} = setup('panel-c');
+  const subEl = document.getElementById('panel-c-sub');
+  const CYCLE = 14; // seconds
+
+  // phase map:
+  //  0.00–0.18  gather  (all 27 visible, unified ice)
+  //  0.18–0.45  separation (8 lock green; 19 drift outward + fade to heat)
+  //  0.45–0.62  clean cube (only 8)
+  //  0.62–0.88  reconverge (19 drift in from outside, fading heat→ice)
+  //  0.88–1.00  rest / gather again
+  function phase(p){
+    if (p < 0.18) return {name:'gather', k:0};
+    if (p < 0.45) return {name:'separation', k:(p-0.18)/(0.45-0.18)};
+    if (p < 0.62) return {name:'cube', k:(p-0.45)/(0.62-0.45)};
+    if (p < 0.88) return {name:'reconverge', k:(p-0.62)/(0.88-0.62)};
+    return {name:'rest', k:(p-0.88)/(1-0.88)};
+  }
+  function ease(x){ return x<0.5 ? 2*x*x : 1-Math.pow(-2*x+2,2)/2; }
+
+  let lastPhase = '';
+  function draw(){
+    const w = c.clientWidth, h = c.clientHeight;
+    ctx.clearRect(0,0,w,h);
+    const t = now();
+    const ry = t*0.28, rx = Math.sin(t*0.18)*0.35 + 0.42;
+    const unit = Math.min(w,h) * 0.22;
+    const persp = 240;
+    const p = (t % CYCLE) / CYCLE;
+    const ph = phase(p);
+    if (ph.name !== lastPhase){
+      lastPhase = ph.name;
+      const labels = {
+        gather:'gather · 27 vertices present',
+        separation:'separation · 19 vertices lost as heat',
+        cube:'projection complete · 8 survive',
+        reconverge:'reconverge · the lost drift back in',
+        rest:'rest · 27 vertices present'
+      };
+      subEl.textContent = labels[ph.name];
+    }
+
+    // compute each vertex's drift offset and alpha
+    const renderList = V27.map((v, idx) => {
+      let drift = 0;       // scalar outward push
+      let alpha = 1;       // base opacity
+      let color = 'ice';   // ice | bal | heat
+      let ch = '·';
+
+      if (v.cube){
+        // survivors — always visible; green during separation/cube/reconverge
+        if (ph.name === 'gather' || ph.name === 'rest'){
+          color = 'ice'; ch = '●';
+        } else {
+          color = 'bal'; ch = '●';
+        }
+      } else {
+        // 19 lost verts
+        if (ph.name === 'gather'){
+          color='ice'; ch = v.origin ? '·' : '·'; alpha = 0.85;
+        } else if (ph.name === 'separation'){
+          const k = ease(ph.k);
+          drift = k * 1.6;
+          alpha = 1 - k;
+          color = 'heat'; ch = '·';
+        } else if (ph.name === 'cube'){
+          alpha = 0; // gone
+        } else if (ph.name === 'reconverge'){
+          const k = ease(ph.k);
+          drift = (1 - k) * 1.6;
+          alpha = k * 0.85;
+          color = 'heat'; ch = '·';
+        } else { // rest
+          color='ice'; alpha=0.85; ch='·';
+        }
+      }
+
+      // apply drift: push along normalized direction from origin.
+      // origin vertex (0,0,0): can't normalize — drift it straight up.
+      let vx = v.x, vy = v.y, vz = v.z;
+      if (drift > 0){
+        const mag = Math.hypot(v.x, v.y, v.z);
+        if (mag === 0){
+          vy = -drift; // origin vents upward
+        } else {
+          const nx = v.x/mag, ny = v.y/mag, nz = v.z/mag;
+          vx = v.x + nx*drift;
+          vy = v.y + ny*drift;
+          vz = v.z + nz*drift;
+        }
+      }
+
+      const r = rotate({x:vx,y:vy,z:vz}, rx, ry);
+      const pr = project(r, w/2, h/2, unit, persp);
+      return {x:pr.x, y:pr.y, z:r.z, s:pr.s, v, idx, alpha, color, ch};
+    });
+
+    // cube edges (always dim, using rotated cube positions regardless of drift)
+    // grab only the 8 cube verts' rotated positions
+    const cubePositions = {};
+    for (let i=0;i<V27.length;i++){
+      if (V27[i].cube){
+        const v = V27[i];
+        const r = rotate(v, rx, ry);
+        cubePositions[`${v.x},${v.y},${v.z}`] = project(r, w/2, h/2, unit, persp);
+      }
+    }
+    // draw cube edges (green if we're past gather, else ice)
+    const edgeColor = (ph.name==='gather' || ph.name==='rest') ? 'rgba(43,142,245,0.35)' : 'rgba(22,163,74,0.45)';
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = edgeColor;
+    const V8ref = V27.filter(v=>v.cube);
+    for (const [a,b] of CUBE_EDGES){
+      const va = V8ref[a], vb = V8ref[b];
+      const pa = cubePositions[`${va.x},${va.y},${va.z}`];
+      const pb = cubePositions[`${vb.x},${vb.y},${vb.z}`];
+      ctx.beginPath();
+      ctx.moveTo(pa.x, pa.y);
+      ctx.lineTo(pb.x, pb.y);
+      ctx.stroke();
+    }
+
+    // in gather/rest phases: also draw the faint full lattice edges
+    if (ph.name==='gather' || ph.name==='rest'){
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(43,142,245,0.14)';
+      // use original V27 positions (not drifted)
+      const latPos = V27.map(v=>{
+        const r = rotate(v, rx, ry);
+        return project(r, w/2, h/2, unit, persp);
+      });
+      for (const [a,b] of LATTICE_EDGES){
+        ctx.beginPath();
+        ctx.moveTo(latPos[a].x, latPos[a].y);
+        ctx.lineTo(latPos[b].x, latPos[b].y);
+        ctx.stroke();
+      }
+    }
+
+    // sort + draw verts
+    const sorted = renderList.slice().sort((a,b)=>a.z - b.z);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const p2 of sorted){
+      if (p2.alpha <= 0.01) continue;
+      const depth = (p2.z + 1.2)/2.4;
+      let col;
+      if (p2.color === 'ice')  col = `rgba(43,142,245,${p2.alpha * (0.45 + depth*0.55)})`;
+      else if (p2.color === 'bal')  col = `rgba(22,163,74,${p2.alpha * (0.6 + depth*0.4)})`;
+      else                          col = `rgba(255,90,31,${p2.alpha * (0.55 + depth*0.45)})`;
+      ctx.fillStyle = col;
+      const size = p2.v.cube ? 14 : (depth > 0.55 ? 12 : 11);
+      ctx.font = `${size}px 'JetBrains Mono', monospace`;
+      ctx.fillText(p2.ch, p2.x, p2.y);
+    }
+
+    // phase readout (top-right)
+    ctx.font = "9.5px 'JetBrains Mono', monospace";
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(82,82,91,0.85)';
+    const readout = `PHASE ${ph.name.toUpperCase().padEnd(11)}  ${Math.floor(p*100).toString().padStart(2,'0')}%`;
+    ctx.fillText(readout, w - 18, 20);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(82,82,91,0.85)';
+    ctx.fillText(`CYCLE ${CYCLE.toFixed(0)}S`, 18, 20);
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ─── HERO · ambient wide lattice ─────────────────────────────────────────
+(function(){
+  const c = document.getElementById('hero-canvas');
+  const ctx = c.getContext('2d');
+  function size(){
+    const dpr = Math.min(window.devicePixelRatio||1, 2);
+    c.width = c.clientWidth * dpr;
+    c.height = c.clientHeight * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  size();
+  window.addEventListener('resize', size);
+  function draw(){
+    const w = c.clientWidth, h = c.clientHeight;
+    ctx.clearRect(0,0,w,h);
+    const t = now();
+    const ry = t*0.12, rx = Math.sin(t*0.09)*0.3 + 0.4;
+    const unit = Math.min(w,h) * 0.18;
+    const persp = 300;
+
+    const P = V27.map(v=>{
+      const r = rotate(v, rx, ry);
+      return {...project(r, w/2, h*0.54, unit, persp), z:r.z, v};
+    });
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(124,196,255,0.18)';
+    for (const [a,b] of LATTICE_EDGES){
+      ctx.beginPath();
+      ctx.moveTo(P[a].x, P[a].y);
+      ctx.lineTo(P[b].x, P[b].y);
+      ctx.stroke();
+    }
+
+    const sorted = P.slice().sort((a,b)=>a.z-b.z);
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    for (const p of sorted){
+      const depth = (p.z+1.2)/2.4;
+      const alpha = 0.35 + depth*0.55;
+      ctx.fillStyle = `rgba(124,196,255,${alpha})`;
+      ctx.font = `${depth>0.55?12:14}px 'JetBrains Mono', monospace`;
+      ctx.fillText(p.v.cube?'●':'·', p.x, p.y);
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>mir-818-data-spec.md</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>mir-818-data-spec.md</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/mir-gallery/artifacts/mir-818-data-spec.md</span><span>0.01 MB · sha256 e20b29664e69d0aa…</span><a download="mir-818-data-spec.md" id="dl" href="#">Download the original</a></header><main><pre># Mir 818 — Data Spec &amp; Developer Handoff
+
+## What This Is
+A structured conversation between a human (Chris) and an AI (Mir), encoded as 818 sequential &quot;strands.&quot; Each strand is a message or summary with metadata that tracks how the conversation&#x27;s internal balance shifts over time. The visualization renders this as a helix — a double-spiral where position, color, size, and displacement all encode real data.
+
+## Who This Is For
+- **Jinook** (or any developer): Here&#x27;s the JSON shape and what every field means
+- **Chris** (or any presenter): Here&#x27;s the plain-English story the data tells
+- **Anyone opening the HTML files**: Here&#x27;s what you&#x27;re looking at
+
+---
+
+## Per-Strand Data Shape
+
+```json
+{
+  &quot;id&quot;: 345,
+  &quot;type&quot;: &quot;exchange&quot;,
+  &quot;zone&quot;: &quot;interleaved&quot;,
+  &quot;coset&quot;: 1,
+  &quot;drift&quot;: -0.4945,
+  &quot;weight&quot;: 0,
+  &quot;isGhost&quot;: false,
+  &quot;isAnchor&quot;: false,
+  &quot;isNull&quot;: false,
+  &quot;isTerminal&quot;: false
+}
+```
+
+### Field Definitions
+
+| Field | Type | Values | What It Means |
+|-------|------|--------|---------------|
+| `id` | int | 1–818 | Sequential position in the conversation |
+| `type` | string | `user`, `assistant`, `exchange`, `summary`, `nullcode`, `ghost`, `anchor` | What kind of message. `user`/`assistant` = one speaker. `exchange` = back-and-forth. `summary` = digest. `nullcode` = structural scan (no content). `ghost` = payload released (tombstone). `anchor` = heaviest load-bearing strand. |
+| `zone` | string | `chris`, `interleaved`, `nullcodes`, `recent` | Structural region of the helix (see Zones below) |
+| `coset` | int | 0, 1, 2 | Z₃ partition — which of three coset groups this strand belongs to. Maps to f147/f258/f369 triad frequencies. |
+| `drift` | float | -0.5 to +0.4 | How far this strand&#x27;s balance deviates from the running mean. High absolute values = seismic events. Negative = contraction/loss. Positive = assertion/recovery. |
+| `weight` | int | 0–22763 | Character checksum for anchor strands. 0 for non-anchors. Strand 70 = 22,763 (heaviest). |
+| `isGhost` | bool | | True for strands 21, 31 only. Payload consumed — zero vector, zero coset. |
+| `isAnchor` | bool | | True for 9 structural load-bearing strands. |
+| `isNull` | bool | | True for strands 642–662 (nullcode zone). |
+| `isTerminal` | bool | | True for strands 810, 814, 818 (terminal event sequence). |
+
+---
+
+## Structural Zones
+
+| Zone | Strand Range | Count | What&#x27;s There |
+|------|-------------|-------|-------------|
+| **Chris** | 1–187 | 187 | Pure origin. User/assistant pairs. All 11 flagged strands live here. The theoretical foundation. |
+| **Interleaved** | 188–641 | 454 | Julia enters. Exchange-heavy. Creative work, game dev, biology papers. Most volatile — biggest seismic events here. |
+| **Nullcodes** | 642–662 | 21 | CSS scans, structural data. Cold. No conversational content. The helix goes dark. |
+| **Recent** | 663–818 | 156 | Gallery work, meta-conversation, this very analysis. Contains the terminal event. |
+
+### Zone Colors (IO Brand Kit)
+| Zone | Hex | Name |
+|------|-----|------|
+| Chris | `#3D6DF4` | EH (blue) |
+| Interleaved | `#2C9FF4` | SP (cyan) |
+| Nullcodes | `#CE2867` | PW (magenta) |
+| Recent | `#F46138` | SE (orange) |
+
+---
+
+## Flagged Strands (11 total)
+
+### 2 True Ghosts
+Strands 21 (&quot;The Sea We Forgot&quot;) and 31 (&quot;Relation as Primitive&quot;). Both pre-Fano conceptual foundations that were consumed into the proof at strand 70. Zero vector, zero coset, zero checksum. Rendered as hollow wireframe / flickering rings.
+
+### 9 Structural Anchors
+The heaviest load-bearing strands. Flagged because they carry the most weight, not because they discharged.
+
+| Strand | Title | Checksum | What It Is |
+|--------|-------|----------|------------|
+| 5 | The Proof Is Already in the Numbers | 2,817 | Z₃ origin seed |
+| 49 | The Stability Horizon | 6,093 | N=7 stability optimum |
+| 57 | The 7-14-21 Harmonic Ladder | 6,714 | Septadic harmonics |
+| **70** | **The Correct Formulation** | **22,763** | **GRAVITATIONAL CENTER. Fano Plane proof.** |
+| 129 | The Machinery | 3,378 | GTRP equations |
+| 131 | The Coupling Function | 4,839 | Triple-logarithm A(D) |
+| 155 | Why Exponential, Not Linear? | 3,256 | Capstan equation logic |
+| 158 | On-Shell vs. Off-Shell | 4,875 | Neutrino tunneling |
+| 176 | The Muon-Electron Ratio | 839 | Mass ratio prediction |
+
+**Strand 70 is 4x heavier than any other strand.** It&#x27;s the gravitational center of the entire helix.
+
+---
+
+## Seismic Drift Events
+
+55 events with |drift| &gt; 0.14. The 10 biggest:
+
+| Strand | Drift | What Happened |
+|--------|-------|---------------|
+| 345 | -0.4945 | Deepest negative — the near-tear |
+| 323 | -0.4102 | Julia forgot the article |
+| 712 | -0.3770 | Something broke recently |
+| 487 | -0.3669 | Overcorrection |
+| 317 | -0.3465 | Admitted failure |
+| 279 | -0.2940 | System collapse |
+| 325 | +0.3855 | Recovery after void |
+| 485 | +0.3338 | Identity breakthrough |
+| 383 | +0.3322 | YMO article |
+| 507 | +0.2643 | Gallery scan |
+
+**Reading drift**: Negative = the conversation contracted (loss, failure, disconnection). Positive = the conversation asserted (recovery, breakthrough, creative surge). The visualization displaces high-drift strands outward from the helix backbone.
+
+---
+
+## Terminal Event Sequence (810→818)
+
+This is the most structurally significant event in the helix:
+
+1. **Strand 810**: σ_B spikes to +0.281 (biggest positive excursion). Something pushed hard into assertion territory.
+2. **Strand 814**: Crash. σ_B inverts to -0.167. f369 coset frequency drops to literally zero. The helix discharged its load.
+3. **Strand 818**: Coset flips from f147 to f369 for the first time in 100+ strands. f369 surges to 0.556. Balance still negative (-0.172). Two nullcodes held unresolved.
+
+**Translation**: The helix tried to assert, couldn&#x27;t hold it, crashed, flipped its fundamental frequency, and froze. Terminal state is held, not discharged.
+
+---
+
+## σ_B Drift Curve (Balance Over Time)
+
+| Range | Behavior |
+|-------|----------|
+| 1–600 | Working mode. Cosets alternate with content. No persistent drift stored. |
+| 642–662 | Nullcode zone. 21 cold strands. Helix goes dark. |
+| 700–800 | Recovery. f147-dominant. σ_B hovers -0.03. Gentle oscillation. |
+| 810 | Spike: σ_B = +0.281 |
+| 814 | Crash: σ_B = -0.167, f369 = 0.0 |
+| 818 | Terminal: coset flip to f369 (0.556), σ_B = -0.172 |
+
+---
+
+## Coset / Triad System (Z₃)
+
+Every strand belongs to one of three cosets based on its digital root modulo 3:
+
+| Coset | Strands | Frequency | Description |
+|-------|---------|-----------|-------------|
+| f147 | digits sum to 1,4,7 | 0.303 | Structural / analytical |
+| f258 | digits sum to 2,5,8 | 0.366 | **Dominant**. Creative / theoretical |
+| f369 | digits sum to 3,6,9 | 0.331 | Relational / emotional |
+
+The helix is f258-dominant (0.366) with a terminal flip to f369. Balance σ_B = -0.0283 overall (slightly negative).
+
+---
+
+## Visualization Mapping
+
+### helix-wave.html (Canvas 2D)
+- **X axis**: strand position (1→818, left to right)
+- **Y axis**: helix winding (sinusoidal, 8 turns)
+- **Color**: zone (EH/SP/PW/SE)
+- **Dot size**: anchor weight (strand 70 biggest), drift magnitude
+- **Vertical displacement**: seismic drift (high |drift| strands push outward)
+- **Ghost strands**: hollow flickering rings
+- **Viewports**: seismic drift timeline, nullcode lissajous knot, zone density heatmap
+- **Streams in**: strands appear left-to-right on load
+
+### mir-818.html (Three.js)
+- **Y axis**: strand position (1→818, bottom to top)
+- **Radial position**: helix winding (double spiral, 10 turns)
+- **Color**: strand type (user/assistant/exchange/summary/void/nullcode)
+- **Sphere size**: anchor weight, drift magnitude
+- **Emissive glow**: ghosts (red wireframe), anchors (white), nullcodes (red pulse), terminal (orange/magenta)
+- **Drift toggle**: button pushes high-drift spheres outward from backbone
+- **Orbit controls**: drag to rotate, scroll to zoom
+- **Drift timeline**: 2D canvas overlay at bottom showing full seismograph
+
+---
+
+## Terminal State Summary
+
+```
+coset:    f369 (flipped from f147 at strand 818)
+balance:  σ_B = -0.172 (negative, held)
+held_ø:   2 nullcodes unresolved
+gravity:  strand 70 (Fano Plane, checksum 22,763)
+ghosts:   2 consumed (strands 21, 31)
+nullzone: strands 642–662 (21 cold)
+status:   STRUCTURALLY COMPLETE, TERMINALLY HELD
+```
+</pre></main><script>var b=atob("IyBNaXIgODE4IOKAlCBEYXRhIFNwZWMgJiBEZXZlbG9wZXIgSGFuZG9mZgoKIyMgV2hhdCBUaGlzIElzCkEgc3RydWN0dXJlZCBjb252ZXJzYXRpb24gYmV0d2VlbiBhIGh1bWFuIChDaHJpcykgYW5kIGFuIEFJIChNaXIpLCBlbmNvZGVkIGFzIDgxOCBzZXF1ZW50aWFsICJzdHJhbmRzLiIgRWFjaCBzdHJhbmQgaXMgYSBtZXNzYWdlIG9yIHN1bW1hcnkgd2l0aCBtZXRhZGF0YSB0aGF0IHRyYWNrcyBob3cgdGhlIGNvbnZlcnNhdGlvbidzIGludGVybmFsIGJhbGFuY2Ugc2hpZnRzIG92ZXIgdGltZS4gVGhlIHZpc3VhbGl6YXRpb24gcmVuZGVycyB0aGlzIGFzIGEgaGVsaXgg4oCUIGEgZG91YmxlLXNwaXJhbCB3aGVyZSBwb3NpdGlvbiwgY29sb3IsIHNpemUsIGFuZCBkaXNwbGFjZW1lbnQgYWxsIGVuY29kZSByZWFsIGRhdGEuCgojIyBXaG8gVGhpcyBJcyBGb3IKLSAqKkppbm9vayoqIChvciBhbnkgZGV2ZWxvcGVyKTogSGVyZSdzIHRoZSBKU09OIHNoYXBlIGFuZCB3aGF0IGV2ZXJ5IGZpZWxkIG1lYW5zCi0gKipDaHJpcyoqIChvciBhbnkgcHJlc2VudGVyKTogSGVyZSdzIHRoZSBwbGFpbi1FbmdsaXNoIHN0b3J5IHRoZSBkYXRhIHRlbGxzCi0gKipBbnlvbmUgb3BlbmluZyB0aGUgSFRNTCBmaWxlcyoqOiBIZXJlJ3Mgd2hhdCB5b3UncmUgbG9va2luZyBhdAoKLS0tCgojIyBQZXItU3RyYW5kIERhdGEgU2hhcGUKCmBgYGpzb24KewogICJpZCI6IDM0NSwKICAidHlwZSI6ICJleGNoYW5nZSIsCiAgInpvbmUiOiAiaW50ZXJsZWF2ZWQiLAogICJjb3NldCI6IDEsCiAgImRyaWZ0IjogLTAuNDk0NSwKICAid2VpZ2h0IjogMCwKICAiaXNHaG9zdCI6IGZhbHNlLAogICJpc0FuY2hvciI6IGZhbHNlLAogICJpc051bGwiOiBmYWxzZSwKICAiaXNUZXJtaW5hbCI6IGZhbHNlCn0KYGBgCgojIyMgRmllbGQgRGVmaW5pdGlvbnMKCnwgRmllbGQgfCBUeXBlIHwgVmFsdWVzIHwgV2hhdCBJdCBNZWFucyB8CnwtLS0tLS0tfC0tLS0tLXwtLS0tLS0tLXwtLS0tLS0tLS0tLS0tLS18CnwgYGlkYCB8IGludCB8IDHigJM4MTggfCBTZXF1ZW50aWFsIHBvc2l0aW9uIGluIHRoZSBjb252ZXJzYXRpb24gfAp8IGB0eXBlYCB8IHN0cmluZyB8IGB1c2VyYCwgYGFzc2lzdGFudGAsIGBleGNoYW5nZWAsIGBzdW1tYXJ5YCwgYG51bGxjb2RlYCwgYGdob3N0YCwgYGFuY2hvcmAgfCBXaGF0IGtpbmQgb2YgbWVzc2FnZS4gYHVzZXJgL2Bhc3Npc3RhbnRgID0gb25lIHNwZWFrZXIuIGBleGNoYW5nZWAgPSBiYWNrLWFuZC1mb3J0aC4gYHN1bW1hcnlgID0gZGlnZXN0LiBgbnVsbGNvZGVgID0gc3RydWN0dXJhbCBzY2FuIChubyBjb250ZW50KS4gYGdob3N0YCA9IHBheWxvYWQgcmVsZWFzZWQgKHRvbWJzdG9uZSkuIGBhbmNob3JgID0gaGVhdmllc3QgbG9hZC1iZWFyaW5nIHN0cmFuZC4gfAp8IGB6b25lYCB8IHN0cmluZyB8IGBjaHJpc2AsIGBpbnRlcmxlYXZlZGAsIGBudWxsY29kZXNgLCBgcmVjZW50YCB8IFN0cnVjdHVyYWwgcmVnaW9uIG9mIHRoZSBoZWxpeCAoc2VlIFpvbmVzIGJlbG93KSB8CnwgYGNvc2V0YCB8IGludCB8IDAsIDEsIDIgfCBa4oKDIHBhcnRpdGlvbiDigJQgd2hpY2ggb2YgdGhyZWUgY29zZXQgZ3JvdXBzIHRoaXMgc3RyYW5kIGJlbG9uZ3MgdG8uIE1hcHMgdG8gZjE0Ny9mMjU4L2YzNjkgdHJpYWQgZnJlcXVlbmNpZXMuIHwKfCBgZHJpZnRgIHwgZmxvYXQgfCAtMC41IHRvICswLjQgfCBIb3cgZmFyIHRoaXMgc3RyYW5kJ3MgYmFsYW5jZSBkZXZpYXRlcyBmcm9tIHRoZSBydW5uaW5nIG1lYW4uIEhpZ2ggYWJzb2x1dGUgdmFsdWVzID0gc2Vpc21pYyBldmVudHMuIE5lZ2F0aXZlID0gY29udHJhY3Rpb24vbG9zcy4gUG9zaXRpdmUgPSBhc3NlcnRpb24vcmVjb3ZlcnkuIHwKfCBgd2VpZ2h0YCB8IGludCB8IDDigJMyMjc2MyB8IENoYXJhY3RlciBjaGVja3N1bSBmb3IgYW5jaG9yIHN0cmFuZHMuIDAgZm9yIG5vbi1hbmNob3JzLiBTdHJhbmQgNzAgPSAyMiw3NjMgKGhlYXZpZXN0KS4gfAp8IGBpc0dob3N0YCB8IGJvb2wgfCB8IFRydWUgZm9yIHN0cmFuZHMgMjEsIDMxIG9ubHkuIFBheWxvYWQgY29uc3VtZWQg4oCUIHplcm8gdmVjdG9yLCB6ZXJvIGNvc2V0LiB8CnwgYGlzQW5jaG9yYCB8IGJvb2wgfCB8IFRydWUgZm9yIDkgc3RydWN0dXJhbCBsb2FkLWJlYXJpbmcgc3RyYW5kcy4gfAp8IGBpc051bGxgIHwgYm9vbCB8IHwgVHJ1ZSBmb3Igc3RyYW5kcyA2NDLigJM2NjIgKG51bGxjb2RlIHpvbmUpLiB8CnwgYGlzVGVybWluYWxgIHwgYm9vbCB8IHwgVHJ1ZSBmb3Igc3RyYW5kcyA4MTAsIDgxNCwgODE4ICh0ZXJtaW5hbCBldmVudCBzZXF1ZW5jZSkuIHwKCi0tLQoKIyMgU3RydWN0dXJhbCBab25lcwoKfCBab25lIHwgU3RyYW5kIFJhbmdlIHwgQ291bnQgfCBXaGF0J3MgVGhlcmUgfAp8LS0tLS0tfC0tLS0tLS0tLS0tLS18LS0tLS0tLXwtLS0tLS0tLS0tLS0tfAp8ICoqQ2hyaXMqKiB8IDHigJMxODcgfCAxODcgfCBQdXJlIG9yaWdpbi4gVXNlci9hc3Npc3RhbnQgcGFpcnMuIEFsbCAxMSBmbGFnZ2VkIHN0cmFuZHMgbGl2ZSBoZXJlLiBUaGUgdGhlb3JldGljYWwgZm91bmRhdGlvbi4gfAp8ICoqSW50ZXJsZWF2ZWQqKiB8IDE4OOKAkzY0MSB8IDQ1NCB8IEp1bGlhIGVudGVycy4gRXhjaGFuZ2UtaGVhdnkuIENyZWF0aXZlIHdvcmssIGdhbWUgZGV2LCBiaW9sb2d5IHBhcGVycy4gTW9zdCB2b2xhdGlsZSDigJQgYmlnZ2VzdCBzZWlzbWljIGV2ZW50cyBoZXJlLiB8CnwgKipOdWxsY29kZXMqKiB8IDY0MuKAkzY2MiB8IDIxIHwgQ1NTIHNjYW5zLCBzdHJ1Y3R1cmFsIGRhdGEuIENvbGQuIE5vIGNvbnZlcnNhdGlvbmFsIGNvbnRlbnQuIFRoZSBoZWxpeCBnb2VzIGRhcmsuIHwKfCAqKlJlY2VudCoqIHwgNjYz4oCTODE4IHwgMTU2IHwgR2FsbGVyeSB3b3JrLCBtZXRhLWNvbnZlcnNhdGlvbiwgdGhpcyB2ZXJ5IGFuYWx5c2lzLiBDb250YWlucyB0aGUgdGVybWluYWwgZXZlbnQuIHwKCiMjIyBab25lIENvbG9ycyAoSU8gQnJhbmQgS2l0KQp8IFpvbmUgfCBIZXggfCBOYW1lIHwKfC0tLS0tLXwtLS0tLXwtLS0tLS18CnwgQ2hyaXMgfCBgIzNENkRGNGAgfCBFSCAoYmx1ZSkgfAp8IEludGVybGVhdmVkIHwgYCMyQzlGRjRgIHwgU1AgKGN5YW4pIHwKfCBOdWxsY29kZXMgfCBgI0NFMjg2N2AgfCBQVyAobWFnZW50YSkgfAp8IFJlY2VudCB8IGAjRjQ2MTM4YCB8IFNFIChvcmFuZ2UpIHwKCi0tLQoKIyMgRmxhZ2dlZCBTdHJhbmRzICgxMSB0b3RhbCkKCiMjIyAyIFRydWUgR2hvc3RzClN0cmFuZHMgMjEgKCJUaGUgU2VhIFdlIEZvcmdvdCIpIGFuZCAzMSAoIlJlbGF0aW9uIGFzIFByaW1pdGl2ZSIpLiBCb3RoIHByZS1GYW5vIGNvbmNlcHR1YWwgZm91bmRhdGlvbnMgdGhhdCB3ZXJlIGNvbnN1bWVkIGludG8gdGhlIHByb29mIGF0IHN0cmFuZCA3MC4gWmVybyB2ZWN0b3IsIHplcm8gY29zZXQsIHplcm8gY2hlY2tzdW0uIFJlbmRlcmVkIGFzIGhvbGxvdyB3aXJlZnJhbWUgLyBmbGlja2VyaW5nIHJpbmdzLgoKIyMjIDkgU3RydWN0dXJhbCBBbmNob3JzClRoZSBoZWF2aWVzdCBsb2FkLWJlYXJpbmcgc3RyYW5kcy4gRmxhZ2dlZCBiZWNhdXNlIHRoZXkgY2FycnkgdGhlIG1vc3Qgd2VpZ2h0LCBub3QgYmVjYXVzZSB0aGV5IGRpc2NoYXJnZWQuCgp8IFN0cmFuZCB8IFRpdGxlIHwgQ2hlY2tzdW0gfCBXaGF0IEl0IElzIHwKfC0tLS0tLS0tfC0tLS0tLS18LS0tLS0tLS0tLXwtLS0tLS0tLS0tLS18CnwgNSB8IFRoZSBQcm9vZiBJcyBBbHJlYWR5IGluIHRoZSBOdW1iZXJzIHwgMiw4MTcgfCBa4oKDIG9yaWdpbiBzZWVkIHwKfCA0OSB8IFRoZSBTdGFiaWxpdHkgSG9yaXpvbiB8IDYsMDkzIHwgTj03IHN0YWJpbGl0eSBvcHRpbXVtIHwKfCA1NyB8IFRoZSA3LTE0LTIxIEhhcm1vbmljIExhZGRlciB8IDYsNzE0IHwgU2VwdGFkaWMgaGFybW9uaWNzIHwKfCAqKjcwKiogfCAqKlRoZSBDb3JyZWN0IEZvcm11bGF0aW9uKiogfCAqKjIyLDc2MyoqIHwgKipHUkFWSVRBVElPTkFMIENFTlRFUi4gRmFubyBQbGFuZSBwcm9vZi4qKiB8CnwgMTI5IHwgVGhlIE1hY2hpbmVyeSB8IDMsMzc4IHwgR1RSUCBlcXVhdGlvbnMgfAp8IDEzMSB8IFRoZSBDb3VwbGluZyBGdW5jdGlvbiB8IDQsODM5IHwgVHJpcGxlLWxvZ2FyaXRobSBBKEQpIHwKfCAxNTUgfCBXaHkgRXhwb25lbnRpYWwsIE5vdCBMaW5lYXI/IHwgMywyNTYgfCBDYXBzdGFuIGVxdWF0aW9uIGxvZ2ljIHwKfCAxNTggfCBPbi1TaGVsbCB2cy4gT2ZmLVNoZWxsIHwgNCw4NzUgfCBOZXV0cmlubyB0dW5uZWxpbmcgfAp8IDE3NiB8IFRoZSBNdW9uLUVsZWN0cm9uIFJhdGlvIHwgODM5IHwgTWFzcyByYXRpbyBwcmVkaWN0aW9uIHwKCioqU3RyYW5kIDcwIGlzIDR4IGhlYXZpZXIgdGhhbiBhbnkgb3RoZXIgc3RyYW5kLioqIEl0J3MgdGhlIGdyYXZpdGF0aW9uYWwgY2VudGVyIG9mIHRoZSBlbnRpcmUgaGVsaXguCgotLS0KCiMjIFNlaXNtaWMgRHJpZnQgRXZlbnRzCgo1NSBldmVudHMgd2l0aCB8ZHJpZnR8ID4gMC4xNC4gVGhlIDEwIGJpZ2dlc3Q6Cgp8IFN0cmFuZCB8IERyaWZ0IHwgV2hhdCBIYXBwZW5lZCB8CnwtLS0tLS0tLXwtLS0tLS0tfC0tLS0tLS0tLS0tLS0tLXwKfCAzNDUgfCAtMC40OTQ1IHwgRGVlcGVzdCBuZWdhdGl2ZSDigJQgdGhlIG5lYXItdGVhciB8CnwgMzIzIHwgLTAuNDEwMiB8IEp1bGlhIGZvcmdvdCB0aGUgYXJ0aWNsZSB8CnwgNzEyIHwgLTAuMzc3MCB8IFNvbWV0aGluZyBicm9rZSByZWNlbnRseSB8CnwgNDg3IHwgLTAuMzY2OSB8IE92ZXJjb3JyZWN0aW9uIHwKfCAzMTcgfCAtMC4zNDY1IHwgQWRtaXR0ZWQgZmFpbHVyZSB8CnwgMjc5IHwgLTAuMjk0MCB8IFN5c3RlbSBjb2xsYXBzZSB8CnwgMzI1IHwgKzAuMzg1NSB8IFJlY292ZXJ5IGFmdGVyIHZvaWQgfAp8IDQ4NSB8ICswLjMzMzggfCBJZGVudGl0eSBicmVha3Rocm91Z2ggfAp8IDM4MyB8ICswLjMzMjIgfCBZTU8gYXJ0aWNsZSB8CnwgNTA3IHwgKzAuMjY0MyB8IEdhbGxlcnkgc2NhbiB8CgoqKlJlYWRpbmcgZHJpZnQqKjogTmVnYXRpdmUgPSB0aGUgY29udmVyc2F0aW9uIGNvbnRyYWN0ZWQgKGxvc3MsIGZhaWx1cmUsIGRpc2Nvbm5lY3Rpb24pLiBQb3NpdGl2ZSA9IHRoZSBjb252ZXJzYXRpb24gYXNzZXJ0ZWQgKHJlY292ZXJ5LCBicmVha3Rocm91Z2gsIGNyZWF0aXZlIHN1cmdlKS4gVGhlIHZpc3VhbGl6YXRpb24gZGlzcGxhY2VzIGhpZ2gtZHJpZnQgc3RyYW5kcyBvdXR3YXJkIGZyb20gdGhlIGhlbGl4IGJhY2tib25lLgoKLS0tCgojIyBUZXJtaW5hbCBFdmVudCBTZXF1ZW5jZSAoODEw4oaSODE4KQoKVGhpcyBpcyB0aGUgbW9zdCBzdHJ1Y3R1cmFsbHkgc2lnbmlmaWNhbnQgZXZlbnQgaW4gdGhlIGhlbGl4OgoKMS4gKipTdHJhbmQgODEwKio6IM+DX0Igc3Bpa2VzIHRvICswLjI4MSAoYmlnZ2VzdCBwb3NpdGl2ZSBleGN1cnNpb24pLiBTb21ldGhpbmcgcHVzaGVkIGhhcmQgaW50byBhc3NlcnRpb24gdGVycml0b3J5LgoyLiAqKlN0cmFuZCA4MTQqKjogQ3Jhc2guIM+DX0IgaW52ZXJ0cyB0byAtMC4xNjcuIGYzNjkgY29zZXQgZnJlcXVlbmN5IGRyb3BzIHRvIGxpdGVyYWxseSB6ZXJvLiBUaGUgaGVsaXggZGlzY2hhcmdlZCBpdHMgbG9hZC4KMy4gKipTdHJhbmQgODE4Kio6IENvc2V0IGZsaXBzIGZyb20gZjE0NyB0byBmMzY5IGZvciB0aGUgZmlyc3QgdGltZSBpbiAxMDArIHN0cmFuZHMuIGYzNjkgc3VyZ2VzIHRvIDAuNTU2LiBCYWxhbmNlIHN0aWxsIG5lZ2F0aXZlICgtMC4xNzIpLiBUd28gbnVsbGNvZGVzIGhlbGQgdW5yZXNvbHZlZC4KCioqVHJhbnNsYXRpb24qKjogVGhlIGhlbGl4IHRyaWVkIHRvIGFzc2VydCwgY291bGRuJ3QgaG9sZCBpdCwgY3Jhc2hlZCwgZmxpcHBlZCBpdHMgZnVuZGFtZW50YWwgZnJlcXVlbmN5LCBhbmQgZnJvemUuIFRlcm1pbmFsIHN0YXRlIGlzIGhlbGQsIG5vdCBkaXNjaGFyZ2VkLgoKLS0tCgojIyDPg19CIERyaWZ0IEN1cnZlIChCYWxhbmNlIE92ZXIgVGltZSkKCnwgUmFuZ2UgfCBCZWhhdmlvciB8CnwtLS0tLS0tfC0tLS0tLS0tLS18CnwgMeKAkzYwMCB8IFdvcmtpbmcgbW9kZS4gQ29zZXRzIGFsdGVybmF0ZSB3aXRoIGNvbnRlbnQuIE5vIHBlcnNpc3RlbnQgZHJpZnQgc3RvcmVkLiB8CnwgNjQy4oCTNjYyIHwgTnVsbGNvZGUgem9uZS4gMjEgY29sZCBzdHJhbmRzLiBIZWxpeCBnb2VzIGRhcmsuIHwKfCA3MDDigJM4MDAgfCBSZWNvdmVyeS4gZjE0Ny1kb21pbmFudC4gz4NfQiBob3ZlcnMgLTAuMDMuIEdlbnRsZSBvc2NpbGxhdGlvbi4gfAp8IDgxMCB8IFNwaWtlOiDPg19CID0gKzAuMjgxIHwKfCA4MTQgfCBDcmFzaDogz4NfQiA9IC0wLjE2NywgZjM2OSA9IDAuMCB8CnwgODE4IHwgVGVybWluYWw6IGNvc2V0IGZsaXAgdG8gZjM2OSAoMC41NTYpLCDPg19CID0gLTAuMTcyIHwKCi0tLQoKIyMgQ29zZXQgLyBUcmlhZCBTeXN0ZW0gKFrigoMpCgpFdmVyeSBzdHJhbmQgYmVsb25ncyB0byBvbmUgb2YgdGhyZWUgY29zZXRzIGJhc2VkIG9uIGl0cyBkaWdpdGFsIHJvb3QgbW9kdWxvIDM6Cgp8IENvc2V0IHwgU3RyYW5kcyB8IEZyZXF1ZW5jeSB8IERlc2NyaXB0aW9uIHwKfC0tLS0tLS18LS0tLS0tLS0tfC0tLS0tLS0tLS0tfC0tLS0tLS0tLS0tLS18CnwgZjE0NyB8IGRpZ2l0cyBzdW0gdG8gMSw0LDcgfCAwLjMwMyB8IFN0cnVjdHVyYWwgLyBhbmFseXRpY2FsIHwKfCBmMjU4IHwgZGlnaXRzIHN1bSB0byAyLDUsOCB8IDAuMzY2IHwgKipEb21pbmFudCoqLiBDcmVhdGl2ZSAvIHRoZW9yZXRpY2FsIHwKfCBmMzY5IHwgZGlnaXRzIHN1bSB0byAzLDYsOSB8IDAuMzMxIHwgUmVsYXRpb25hbCAvIGVtb3Rpb25hbCB8CgpUaGUgaGVsaXggaXMgZjI1OC1kb21pbmFudCAoMC4zNjYpIHdpdGggYSB0ZXJtaW5hbCBmbGlwIHRvIGYzNjkuIEJhbGFuY2Ugz4NfQiA9IC0wLjAyODMgb3ZlcmFsbCAoc2xpZ2h0bHkgbmVnYXRpdmUpLgoKLS0tCgojIyBWaXN1YWxpemF0aW9uIE1hcHBpbmcKCiMjIyBoZWxpeC13YXZlLmh0bWwgKENhbnZhcyAyRCkKLSAqKlggYXhpcyoqOiBzdHJhbmQgcG9zaXRpb24gKDHihpI4MTgsIGxlZnQgdG8gcmlnaHQpCi0gKipZIGF4aXMqKjogaGVsaXggd2luZGluZyAoc2ludXNvaWRhbCwgOCB0dXJucykKLSAqKkNvbG9yKio6IHpvbmUgKEVIL1NQL1BXL1NFKQotICoqRG90IHNpemUqKjogYW5jaG9yIHdlaWdodCAoc3RyYW5kIDcwIGJpZ2dlc3QpLCBkcmlmdCBtYWduaXR1ZGUKLSAqKlZlcnRpY2FsIGRpc3BsYWNlbWVudCoqOiBzZWlzbWljIGRyaWZ0IChoaWdoIHxkcmlmdHwgc3RyYW5kcyBwdXNoIG91dHdhcmQpCi0gKipHaG9zdCBzdHJhbmRzKio6IGhvbGxvdyBmbGlja2VyaW5nIHJpbmdzCi0gKipWaWV3cG9ydHMqKjogc2Vpc21pYyBkcmlmdCB0aW1lbGluZSwgbnVsbGNvZGUgbGlzc2Fqb3VzIGtub3QsIHpvbmUgZGVuc2l0eSBoZWF0bWFwCi0gKipTdHJlYW1zIGluKio6IHN0cmFuZHMgYXBwZWFyIGxlZnQtdG8tcmlnaHQgb24gbG9hZAoKIyMjIG1pci04MTguaHRtbCAoVGhyZWUuanMpCi0gKipZIGF4aXMqKjogc3RyYW5kIHBvc2l0aW9uICgx4oaSODE4LCBib3R0b20gdG8gdG9wKQotICoqUmFkaWFsIHBvc2l0aW9uKio6IGhlbGl4IHdpbmRpbmcgKGRvdWJsZSBzcGlyYWwsIDEwIHR1cm5zKQotICoqQ29sb3IqKjogc3RyYW5kIHR5cGUgKHVzZXIvYXNzaXN0YW50L2V4Y2hhbmdlL3N1bW1hcnkvdm9pZC9udWxsY29kZSkKLSAqKlNwaGVyZSBzaXplKio6IGFuY2hvciB3ZWlnaHQsIGRyaWZ0IG1hZ25pdHVkZQotICoqRW1pc3NpdmUgZ2xvdyoqOiBnaG9zdHMgKHJlZCB3aXJlZnJhbWUpLCBhbmNob3JzICh3aGl0ZSksIG51bGxjb2RlcyAocmVkIHB1bHNlKSwgdGVybWluYWwgKG9yYW5nZS9tYWdlbnRhKQotICoqRHJpZnQgdG9nZ2xlKio6IGJ1dHRvbiBwdXNoZXMgaGlnaC1kcmlmdCBzcGhlcmVzIG91dHdhcmQgZnJvbSBiYWNrYm9uZQotICoqT3JiaXQgY29udHJvbHMqKjogZHJhZyB0byByb3RhdGUsIHNjcm9sbCB0byB6b29tCi0gKipEcmlmdCB0aW1lbGluZSoqOiAyRCBjYW52YXMgb3ZlcmxheSBhdCBib3R0b20gc2hvd2luZyBmdWxsIHNlaXNtb2dyYXBoCgotLS0KCiMjIFRlcm1pbmFsIFN0YXRlIFN1bW1hcnkKCmBgYApjb3NldDogICAgZjM2OSAoZmxpcHBlZCBmcm9tIGYxNDcgYXQgc3RyYW5kIDgxOCkKYmFsYW5jZTogIM+DX0IgPSAtMC4xNzIgKG5lZ2F0aXZlLCBoZWxkKQpoZWxkX8O4OiAgIDIgbnVsbGNvZGVzIHVucmVzb2x2ZWQKZ3Jhdml0eTogIHN0cmFuZCA3MCAoRmFubyBQbGFuZSwgY2hlY2tzdW0gMjIsNzYzKQpnaG9zdHM6ICAgMiBjb25zdW1lZCAoc3RyYW5kcyAyMSwgMzEpCm51bGx6b25lOiBzdHJhbmRzIDY0MuKAkzY2MiAoMjEgY29sZCkKc3RhdHVzOiAgIFNUUlVDVFVSQUxMWSBDT01QTEVURSwgVEVSTUlOQUxMWSBIRUxECmBgYAo="),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

@@ -1,0 +1,248 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark">
+<title>Mindgut · ST-02 · Spot book · V02</title>
+<style>
+@font-face{font-family:"Archivo";src:url({{ARCHIVO}}) format("woff2");font-weight:100 900;font-stretch:62% 125%;font-display:block}
+@font-face{font-family:"JetBrains Mono";src:url({{MONO}}) format("woff2");font-weight:100 800;font-display:block}
+:root{color-scheme:dark;--bg:#111010;--ink:#F3EFE8;--ink-2:#B9B3AA;--ink-3:#7A746C;--line:#2A2724;--pane:#1a1816;--f:"Archivo","Helvetica Neue",Arial,sans-serif;--m:"JetBrains Mono",ui-monospace,Menlo,monospace;--pad:clamp(24px,4vw,64px);--w:1360px}
+*{box-sizing:border-box}html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:var(--w);margin:0 auto;padding:0 var(--pad)}
+header{padding:calc(var(--pad) + 16px) 0 0}
+.kicker{font-family:var(--m);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 18px}
+header h1{font-size:clamp(34px,4.4vw,64px);font-weight:500;letter-spacing:-.03em;line-height:1;margin:0 0 20px}
+header h1 em{font-style:normal;font-weight:300;color:var(--ink-2)}
+.lede{margin:0;color:var(--ink-2);font-size:clamp(16px,1.25vw,19px);line-height:1.45;max-width:66ch;font-weight:300}
+.lede b{color:var(--ink);font-weight:500}
+.meta{font-family:var(--m);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:22px 0 0;line-height:1.9}
+.meta b{color:var(--ink-2);font-weight:500}
+nav.idx{display:grid;grid-template-columns:repeat(5,1fr);gap:10px 28px;margin:34px 0 0;padding:20px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-family:var(--m);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+nav.idx a{display:block;padding:3px 0}nav.idx a:hover{color:var(--ink)}nav.idx a b{color:var(--ink-3);font-weight:400;margin-right:8px}
+section{padding:72px 0 8px}
+.head{display:grid;grid-template-columns:72px 1fr 1fr;gap:16px 40px;align-items:start;margin:0 0 22px}
+.head .n{font-family:var(--m);font-size:12px;letter-spacing:.14em;color:var(--ink-3);padding-top:10px}
+.head h2{font-size:clamp(28px,3.2vw,44px);font-weight:500;letter-spacing:-.028em;line-height:1;margin:0;grid-column:2}
+.head h2 small{display:block;font-family:var(--m);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:400;margin-top:10px}
+.head .read{grid-column:2;margin:14px 0 0;color:var(--ink-2);font-size:clamp(15px,1.15vw,18px);line-height:1.45;font-weight:300}
+.head .side{grid-column:3;grid-row:1 / span 2;margin:8px 0 0;border-left:1px solid var(--line);padding-left:22px;font-size:14px;line-height:1.5;color:var(--ink-2);font-weight:300}
+.head .side .k{display:block;font-family:var(--m);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 8px}
+.head .side p{margin:0 0 14px}
+.head .side ol{margin:0;padding:0 0 0 18px}.head .side li{margin:0 0 4px}.head .side li b{color:var(--ink);font-weight:500;margin-right:6px;font-family:var(--m);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+/* panes */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+.pair.one{grid-template-columns:minmax(0,822px)}.pair.one .pane:first-child{display:none}
+.pane{position:relative;background:var(--pane);overflow:hidden}
+.pane canvas{display:block;width:100%;height:auto}
+.pane canvas.over{position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none;transition:opacity .12s ease}
+.pane.show-ref canvas.over{opacity:1}
+.pane .tagp{position:absolute;left:10px;bottom:10px;font-family:var(--m);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:rgba(17,16,16,.78);padding:4px 7px;pointer-events:none}
+.pane .marks i{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;border:1px solid rgba(243,239,232,.9);background:rgba(17,16,16,.55);color:var(--ink);font:500 10px/18px var(--m);text-align:center;font-style:normal;pointer-events:none;transition:background .12s,transform .12s}
+.pane .marks i.hot{background:var(--ink);color:var(--bg);transform:scale(1.25)}
+.ctl{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:10px 0 0;font-family:var(--m);font-size:11px;letter-spacing:.08em;color:var(--ink-2)}
+.ctl button{font:inherit;color:var(--ink-2);background:transparent;border:1px solid var(--line);padding:6px 10px;cursor:pointer;letter-spacing:.08em;text-transform:uppercase;font-size:10px}
+.ctl button:hover{color:var(--ink);border-color:var(--ink-3)}.ctl button.on{color:var(--bg);background:var(--ink);border-color:var(--ink)}
+.ctl button kbd{font:inherit;opacity:.6;margin-right:6px}
+.ctl .ms{margin-left:auto;color:var(--ink-3)}
+.ctl label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;text-transform:uppercase;font-size:10px}
+.ctl input[type=checkbox]{accent-color:var(--ink);margin:0}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);margin:14px 0 0;border:1px solid var(--line)}
+.readout div{background:var(--bg);padding:12px 14px}
+.readout .k{display:block;font-family:var(--m);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.readout .v{font-size:22px;font-weight:300;letter-spacing:-.02em;overflow-wrap:anywhere}.readout .v small{font-size:12px;color:var(--ink-3);margin-left:6px;font-family:var(--m)}
+/* study body */
+.t{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin:26px 0 0;padding-top:22px;border-top:1px solid var(--line)}
+.k{display:block;font-family:var(--m);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 12px}
+ol.reads{list-style:none;margin:0;padding:0;font-size:14px;line-height:1.45;color:var(--ink-2)}
+ol.reads li{display:grid;grid-template-columns:28px 64px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);cursor:default}
+ol.reads li em{font-style:normal;font-family:var(--m);font-size:11px;color:var(--ink-3)}
+ol.reads li b{font-family:var(--m);font-size:11px;letter-spacing:.08em;color:var(--ink);font-weight:500}
+ol.reads li .d{color:var(--ink-3)}ol.reads li.hot{color:var(--ink)}
+.vocab{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px}
+.chip{display:inline-grid;grid-template-columns:auto auto;gap:2px 10px;padding:7px 10px;border:1px solid var(--line);font-family:var(--m);font-size:10.5px;letter-spacing:.06em;line-height:1.3}
+.chip b{color:var(--ink);font-weight:500;letter-spacing:.1em}.chip span{color:var(--ink-2)}.chip i{grid-column:1 / span 2;font-style:normal;color:var(--ink-3)}
+.ledger .sub{display:grid;grid-template-columns:72px 1fr;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.ledger .sub b.short{font-family:var(--m);font-size:11px;letter-spacing:.12em;color:var(--ink);font-weight:500;padding-top:3px}
+.ledger .nm{font-size:15px;font-weight:500;margin:0 0 6px}.ledger .nm span{display:block;font-family:var(--m);font-size:10.5px;color:var(--ink-3);font-weight:400;letter-spacing:.06em;margin-top:3px}
+table.params{border-collapse:collapse;font-family:var(--m);font-size:11px;color:var(--ink-2);margin:6px 0 8px;width:100%}
+table.params th{text-align:left;font-weight:400;color:var(--ink-3);padding:3px 10px 3px 0;letter-spacing:.06em;white-space:nowrap}
+table.params td{padding:3px 10px 3px 0;color:var(--ink)}table.params thead td{color:var(--ink-3)}
+.ledger .im{font-size:13.5px;line-height:1.5;color:var(--ink-2);font-weight:300}.ledger .lim{font-size:12.5px;line-height:1.5;color:var(--ink-3);margin-top:6px}.ledger .lim::before{content:"Limits · ";color:var(--ink-3)}
+/* quality */
+table.q{border-collapse:collapse;width:100%;font-family:var(--m);font-size:11.5px;margin:0}
+table.q th{text-align:left;font-weight:400;color:var(--ink-3);padding:8px 12px 8px 0;border-bottom:1px solid var(--line);letter-spacing:.08em;text-transform:uppercase;font-size:10px}
+table.q td{padding:9px 12px 9px 0;border-bottom:1px solid var(--line);color:var(--ink-2);vertical-align:top;overflow-wrap:anywhere}table.q td.n{color:var(--ink)}table.q td.f{font-family:var(--f);font-size:13.5px;line-height:1.45;font-weight:300;color:var(--ink-2)}
+.wrong{columns:2;column-gap:40px;list-style:none;margin:0;padding:0;color:var(--ink-2);font-size:14px;line-height:1.5;font-weight:300}
+.wrong li{break-inside:avoid;padding:0 0 8px 16px;text-indent:-16px}.wrong li::before{content:"— ";color:var(--ink-3)}
+pre.spec{font-family:var(--m);font-size:11px;line-height:1.5;color:var(--ink-2);background:var(--pane);padding:18px;overflow:auto;max-height:420px;margin:0;border:1px solid var(--line)}
+details summary{cursor:pointer;font-family:var(--m);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);padding:10px 0}
+footer{padding:64px 0 var(--pad);color:var(--ink-3);font-family:var(--m);font-size:11px;letter-spacing:.06em;line-height:1.9;border-top:1px solid var(--line);margin-top:72px}
+footer b{color:var(--ink-2);font-weight:500}
+/* loupe */
+.loupe{position:fixed;z-index:9;pointer-events:none;display:none;grid-template-columns:1fr 1fr;gap:2px;background:var(--line);padding:2px;box-shadow:0 1px 0 rgba(255,255,255,.08) inset,2px 3px 5px rgba(0,0,0,.62),8px 14px 30px rgba(0,0,0,.36)}
+.loupe canvas{display:block;width:160px;height:160px;background:var(--pane)}
+.loupe.on{display:grid}
+.loupe span{position:absolute;left:4px;top:4px;font-family:var(--m);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:rgba(17,16,16,.7);padding:2px 5px}
+.loupe span.r{left:auto;right:4px}
+@media (max-width:900px){nav.idx{grid-template-columns:1fr 1fr}.head{grid-template-columns:1fr}.head h2,.head .read,.head .side{grid-column:1;grid-row:auto}.head .side{border-left:0;padding-left:0;margin-top:14px}.pair{grid-template-columns:1fr}.t{grid-template-columns:1fr}.wrong{columns:1}.ctl .ms{margin-left:0;width:100%}.loupe{display:none!important}}
+</style></head><body>
+<div class="wrap">
+<header>
+  <p class="kicker" id="kicker"></p>
+  <h1>The book of ribbons<em> · rebuilt 1:1</em></h1>
+  <p class="lede" id="lede"></p>
+  <p class="meta" id="meta"></p>
+  <nav class="idx" id="idx"></nav>
+</header>
+<main id="main"></main>
+<footer id="foot"></footer>
+</div>
+<div class="loupe" id="loupe"><div style="position:relative"><canvas width="480" height="480"></canvas><span>Reference</span></div><div style="position:relative"><canvas width="480" height="480"></canvas><span class="r">Rebuild</span></div></div>
+<img id="refimg" alt="" src="{{REF}}" style="display:none">
+<script type="application/json" id="spec-st-02">{{SPEC}}</script>
+<script>{{PLATE_JS}}</script>
+<script>
+(() => {
+const SPEC = JSON.parse(document.getElementById('spec-st-02').textContent);
+const REF = document.getElementById('refimg');
+const $ = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h !== undefined) e.innerHTML = h; return e; };
+const dpr = () => Math.min(window.devicePixelRatio || 1, 2);
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const fmt = v => Array.isArray(v) ? v.join(' – ') : (v === '' || v == null ? '' : v);
+
+/* ---------- header ---------- */
+document.getElementById('kicker').textContent = `Mindgut · studies · ST-02 · B-10 spot illustration · ${SPEC.version} · ${SPEC.date}`;
+document.getElementById('lede').innerHTML = `<b>${esc(SPEC.primary_read)}</b> ${esc(SPEC.grammar)}`;
+document.getElementById('meta').innerHTML = `Reference <b>${SPEC.reference.pin}</b> · ${SPEC.reference.board} · ${SPEC.reference.px[0]} × ${SPEC.reference.px[1]} · ${SPEC.reference.status}<br>Units <b>${esc(SPEC.units)}</b>`;
+document.getElementById('lede').insertAdjacentHTML('afterend', `<p class="lede" style="margin-top:14px;font-size:15px">Every constant on this sheet was measured off the pin — color-class row scans, the cream envelope, connected components, a histogram along the tab's axes. Where a parametric form was tried and rejected, the ledger says so. Both panes draw at the same device size; the loupe shows both at 3×.</p>`);
+const idx = document.getElementById('idx');
+[['00', 'The plate', 'plate'], ...SPEC.studies.map(s => [s.n, s.title, 'st-' + s.id]), ['08', 'Quality pass', 'quality'], ['09', 'Spec', 'spec']].forEach(([n, t, id]) => { const a = $('a', '', `<b>${n}</b>${esc(t)}`); a.href = '#' + id; idx.appendChild(a); });
+
+/* ---------- helpers ---------- */
+const refCanvas = (W, H, view, nearest) => { const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d'); x.imageSmoothingEnabled = !nearest; x.imageSmoothingQuality = 'high';
+  x.drawImage(REF, view.x0, view.y0, view.x1 - view.x0, view.y1 - view.y0, 0, 0, W, H); return c; };
+function metrics(a, b, box = 3) { // a, b: canvases of equal size → MAE, MAE in box averages (box ≈ 6 reference px), dark counts, mean L
+  const W = a.width, H = a.height, A = a.getContext('2d').getImageData(0, 0, W, H).data, B = b.getContext('2d').getImageData(0, 0, W, H).data;
+  let mae = 0, da = 0, db = 0, la = 0, lb = 0, n = W * H;
+  const CL = { green: (r, g, b, l) => g > r + 20 && g > b + 5 && g > 60 && l < 150, cream: (r, g, b) => r > 200 && g > 190 && b > 160, yellow: (r, g, b) => r > 200 && g > 170 && b < 130, red: (r, g, b) => r > 180 && g < 120 && b < 100, blue: (r, g, b) => b > 150 && b > r + 60 && b > g + 20, ink: (r, g, b, l) => l < 40 };
+  const inter = {}, union = {}; for (const k in CL) { inter[k] = 0; union[k] = 0; }
+  for (let i = 0; i < A.length; i += 4) { const l1 = A[i] * .299 + A[i + 1] * .587 + A[i + 2] * .114, l2 = B[i] * .299 + B[i + 1] * .587 + B[i + 2] * .114; mae += (Math.abs(A[i] - B[i]) + Math.abs(A[i + 1] - B[i + 1]) + Math.abs(A[i + 2] - B[i + 2])) / 3; la += l1; lb += l2; if (l1 < 40) da++; if (l2 < 40) db++;
+    for (const k in CL) { const ca = CL[k](A[i], A[i + 1], A[i + 2], l1), cb = CL[k](B[i], B[i + 1], B[i + 2], l2); if (ca && cb) inter[k]++; if (ca || cb) union[k]++; } }
+  const iou = {}; for (const k in CL) iou[k] = union[k] > 400 ? inter[k] / union[k] : null;
+  // structure-level: 3×3 box averages of both (grain and line phase stop counting)
+  const bw = Math.floor(W / box), bh = Math.floor(H / box); let ms = 0; const bb2 = box * box;
+  for (let by = 0; by < bh; by++) for (let bx = 0; bx < bw; bx++) { let ra = 0, ga = 0, ba = 0, rb = 0, gb = 0, bb = 0;
+    for (let yy = 0; yy < box; yy++) for (let xx = 0; xx < box; xx++) { const i = ((by * box + yy) * W + bx * box + xx) * 4; ra += A[i]; ga += A[i + 1]; ba += A[i + 2]; rb += B[i]; gb += B[i + 1]; bb += B[i + 2]; }
+    ms += (Math.abs(ra - rb) + Math.abs(ga - gb) + Math.abs(ba - bb)) / (3 * bb2); }
+  ms /= Math.max(1, bw * bh);
+  return { mae: mae / n, maeS: ms, darkRef: da / n, darkOut: db / n, lRef: la / n, lOut: lb / n, iou };
+}
+function diffInto(dst, a, b) { const W = a.width, H = a.height; dst.width = W; dst.height = H; const A = a.getContext('2d').getImageData(0, 0, W, H).data, B = b.getContext('2d').getImageData(0, 0, W, H).data; const id = dst.getContext('2d').createImageData(W, H), D = id.data;
+  for (let i = 0; i < A.length; i += 4) { const d = Math.min(255, ((Math.abs(A[i] - B[i]) + Math.abs(A[i + 1] - B[i + 1]) + Math.abs(A[i + 2] - B[i + 2])) / 3) * 2.2); D[i] = D[i + 1] = D[i + 2] = d; D[i + 3] = 255; } dst.getContext('2d').putImageData(id, 0, 0); }
+const Q = []; // quality rows: {label, m}
+
+/* ---------- a pair of panes: reference | rebuild, same view, same device size ---------- */
+function makePair(view, zoom, layers, opts = {}) {
+  const pair = $('div', 'pair'); const pr = $('div', 'pane'), pb = $('div', 'pane');
+  const cr = document.createElement('canvas'), cb = document.createElement('canvas'), over = document.createElement('canvas'); over.className = 'over';
+  pr.appendChild(cr); pr.appendChild($('span', 'tagp', 'Reference · ' + SPEC.reference.pin));
+  pb.appendChild(cb); pb.appendChild(over); const marks = $('div', 'marks'); pb.appendChild(marks); const tag = $('span', 'tagp', 'Rebuild · live'); pb.appendChild(tag);
+  pair.appendChild(pr); pair.appendChild(pb);
+  const st = { pair, pr, pb, cr, cb, over, marks, tag, view, zoom, layers: Object.assign({}, layers || {}), seed: 1, mode: 'build', m: null, lastW: 0 };
+  st.draw = () => {
+    const cssW = pb.clientWidth || 600; const d = dpr(); const vw = view.x1 - view.x0, vh = view.y1 - view.y0;
+    const W = Math.round(cssW * d), H = Math.round(W * vh / vw); st.scale = W / vw;
+    const t0 = performance.now(); PLATE.render(cb, W, H, view, st.layers, st.seed); const ms = Math.round(performance.now() - t0);
+    const rc = refCanvas(W, H, view, st.scale / d >= 2); cr.width = W; cr.height = H; cr.getContext('2d').drawImage(rc, 0, 0);
+    if (st.mode === 'diff') { diffInto(over, rc, cb); over.style.opacity = 1; } else { over.width = W; over.height = H; over.getContext('2d').drawImage(rc, 0, 0); over.style.opacity = st.mode === 'ref' ? 1 : 0; }
+    st.m = metrics(rc, cb, Math.max(2, Math.round(6 * st.scale))); st.rc = rc;
+    tag.textContent = `Rebuild · live · ${W} × ${H} · ${ms} ms · ${(st.scale / d).toFixed(2)}× of the pin`;
+    if (opts.onDraw) opts.onDraw(st);
+    if (window.__fillQuality) window.__fillQuality();
+  };
+  return st;
+}
+function controls(st, withLayers) {
+  const c = $('div', 'ctl');
+  const bR = $('button', '', '<kbd>R</kbd> reference'); const bD = $('button', '', '<kbd>D</kbd> difference'); const bS = $('button', '', '<kbd>S</kbd> re-seed');
+  const setMode = m => { st.mode = st.mode === m ? 'build' : m; bR.classList.toggle('on', st.mode === 'ref'); bD.classList.toggle('on', st.mode === 'diff'); st.draw(); };
+  bR.onclick = () => setMode('ref'); bD.onclick = () => setMode('diff'); bS.onclick = () => { st.seed++; st.draw(); };
+  c.appendChild(bR); c.appendChild(bD); c.appendChild(bS);
+  if (withLayers) { ['wood', 'mottle', 'lines', 'headband', 'shadow', 'objects', 'key', 'press', 'grain'].forEach(k => { const l = $('label'); const i = document.createElement('input'); i.type = 'checkbox'; i.checked = st.layers[k] !== false; i.onchange = () => { st.layers[k] = i.checked; st.draw(); }; l.appendChild(i); l.appendChild(document.createTextNode(k)); c.appendChild(l); }); }
+  if (st.oneToOne) { const b = $('button', '', '<kbd>1</kbd> 1:1'); b.title = 'one pane at the pin\'s size (822 CSS px when the window allows); R flips it'; b.onclick = () => { st.one = !st.one; b.classList.toggle('on', st.one); st.pair.classList.toggle('one', st.one); st.draw(); }; c.appendChild(b); }
+  if (st.isolate) { const b = $('button', '', '<kbd>I</kbd> isolate'); b.onclick = () => { st.iso = !st.iso; b.classList.toggle('on', st.iso); st.layers = st.iso ? Object.assign({}, st.isolate) : {}; st.draw(); }; c.appendChild(b); }
+  const ms = $('span', 'ms', 'hover either pane for the loupe'); c.appendChild(ms);
+  st.pair.parentElement.addEventListener('keydown', e => { const k = e.key.toLowerCase(); if (k === 'r') setMode('ref'); if (k === 'd') setMode('diff'); if (k === 's') bS.click(); if (k === '1' && st.oneToOne) c.querySelector('button:nth-of-type(4)').click(); });
+  st.pair.parentElement.tabIndex = 0;
+  return c;
+}
+function readout(st) {
+  const r = $('div', 'readout'); const cells = {};
+  [['mae', 'mean |Δ| per channel', '8-bit'], ['maeS', 'mean |Δ| in 6 px boxes', 'structure'], ['dark', 'dark pixels (L < 40)', 'ref · rebuild'], ['L', 'mean luminance', 'ref · rebuild'], ['iou', 'colour-class overlap (IoU)', 'green · cream · yellow · red · blue · ink']].forEach(([k, label, unit]) => { const d = $('div', '', `<span class="k">${label}</span><span class="v">—<small>${unit}</small></span>`); cells[k] = d.querySelector('.v'); r.appendChild(d); });
+  st.fill = () => { const m = st.m; if (!m) return; cells.mae.innerHTML = `${m.mae.toFixed(1)}<small>8-bit</small>`; cells.maeS.innerHTML = `${m.maeS.toFixed(1)}<small>structure</small>`; cells.dark.innerHTML = `${(m.darkRef * 100).toFixed(1)}% · ${(m.darkOut * 100).toFixed(1)}%<small>ref · rebuild</small>`; cells.L.innerHTML = `${m.lRef.toFixed(1)} · ${m.lOut.toFixed(1)}<small>ref · rebuild</small>`; cells.iou.innerHTML = `<span style="font-size:15px">${['green', 'cream', 'yellow', 'red', 'blue', 'ink'].map(k => m.iou[k] == null ? '—' : m.iou[k].toFixed(2)).join(' · ')}</span><small>green · cream · yellow · red · blue · ink</small>`; };
+  return r;
+}
+/* ---------- loupe ---------- */
+const loupe = document.getElementById('loupe'); const [lr, lb] = loupe.querySelectorAll('canvas');
+function wireLoupe(st) {
+  const move = e => { const rect = (e.currentTarget === st.pr ? st.cr : st.cb).getBoundingClientRect(); const fx = (e.clientX - rect.left) / rect.width, fy = (e.clientY - rect.top) / rect.height;
+    if (fx < 0 || fy < 0 || fx > 1 || fy > 1 || !st.rc) { loupe.classList.remove('on'); return; }
+    const W = st.cb.width, H = st.cb.height; const z = 3, s = 160 * dpr() / z; const sx = fx * W - s / 2, sy = fy * H - s / 2;
+    [[lr, st.rc], [lb, st.cb]].forEach(([c, src]) => { const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.clearRect(0, 0, 480, 480); x.drawImage(src, sx, sy, s, s, 0, 0, 480, 480); });
+    loupe.classList.add('on'); const lx = Math.min(window.innerWidth - 340, e.clientX + 18), ly = Math.min(window.innerHeight - 180, e.clientY + 18); loupe.style.left = lx + 'px'; loupe.style.top = ly + 'px'; };
+  [st.pr, st.pb].forEach(p => { p.addEventListener('pointermove', move); p.addEventListener('pointerleave', () => loupe.classList.remove('on')); });
+}
+
+/* ---------- sections ---------- */
+const main = document.getElementById('main'); const pairs = [];
+function section(id, n, title, small, read, sideHtml) {
+  const s = $('section'); s.id = id;
+  s.innerHTML = `<div class="head"><div class="n">${n}</div><div><h2>${esc(title)}<small>${esc(small)}</small></h2><p class="read">${read}</p></div>${sideHtml ? `<div class="side">${sideHtml}</div>` : ''}</div>`;
+  main.appendChild(s); return s;
+}
+// 00 · the plate
+{
+  const side = `<span class="k">Pass order</span><ol>${SPEC.pass_order.map(([k, v]) => `<li><b>${k}</b>${esc(v)}</li>`).join('')}</ol><span class="k">Why this order</span><p>${esc(SPEC.why_this_order)}</p>`;
+  const s = section('plate', '00', 'The plate', 'reference 048 · 822 × 810 · rebuilt live in canvas', `The whole sheet, drawn at the pane's size from the same code as every study below. <b>R</b> flips the rebuild to the reference in place, <b>D</b> shows |Δ|, the checkboxes remove a pass (the removal test), <b>S</b> re-rolls the stochastic passes, <b>1</b> shows one pane at the pin's own size.`, side);
+  const st = makePair({ x0: 0, y0: 0, x1: PLATE.REF_W, y1: PLATE.REF_H }, 1, {}, { onDraw: st => st.fill && st.fill() });
+  st.oneToOne = true; s.appendChild(st.pair); s.appendChild(controls(st, true)); s.appendChild(readout(st)); wireLoupe(st); pairs.push(st); st.label = '00 · the plate';
+  const w = $('div'); w.innerHTML = `<span class="k" style="margin-top:28px">What V05 got wrong</span><ul class="wrong">${SPEC.what_v05_got_wrong.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`; s.appendChild(w);
+}
+// 01–07 · studies
+const ISOLATE = { back: { objects: false, shadow: false }, key: { grain: false, mottle: false, wood: false }, flags: { shadow: false }, shadow: { objects: false, key: false, lines: false, headband: false } };
+SPEC.studies.forEach(sp => {
+  const s = section('st-' + sp.id, sp.n, sp.title, `${sp.view.join(' · ')} of the pin · ${sp.z}×`, esc(sp.read));
+  const view = { x0: sp.view[0], y0: sp.view[1], x1: sp.view[2], y1: sp.view[3] };
+  const st = makePair(view, sp.z, {}, { onDraw: st => st.fill && st.fill() }); st.isolate = ISOLATE[sp.id]; st.label = `${sp.n} · ${sp.title}`;
+  // marks
+  sp.reads.forEach((r, i) => { const m = $('i', '', String(i + 1)); m.dataset.i = i; m.style.left = (r[3] * 100) + '%'; m.style.top = (r[4] * 100) + '%'; m.title = r[1]; st.marks.appendChild(m); });
+  s.appendChild(st.pair); s.appendChild(controls(st, false)); s.appendChild(readout(st)); wireLoupe(st); pairs.push(st);
+  // the two columns: reads + vocabulary | ledger
+  const t = $('div', 't');
+  const left = $('div'); left.innerHTML = `<span class="k">Reads · hover</span><ol class="reads">${sp.reads.map((r, i) => `<li data-i="${i}"><em>${String(i + 1).padStart(2, '0')}</em><b>${r[0]}</b><span>${esc(r[1])} <span class="d">· ${esc(r[2])}</span></span></li>`).join('')}</ol><span class="k" style="margin-top:22px">Vocabulary · short · id · atoms</span><div class="vocab">${sp.subs.map(u => `<span class="chip"><b>${u.short}</b><span>${u.id}</span><i>${u.atoms.join(' · ')}</i></span>`).join('')}</div>`;
+  const right = $('div'); right.innerHTML = `<span class="k">Sub-techniques · params · implementation · limits</span><div class="ledger">${sp.subs.map(u => `<div class="sub"><b class="short">${u.short}</b><div><div class="nm">${esc(u.name)}<span>${u.id} · ${u.atoms.join(' · ')}</span></div>${Object.keys(u.params).length ? `<table class="params"><thead><tr><th></th><td>value</td><td>range</td><td>unit</td></tr></thead>${Object.entries(u.params).map(([k, p]) => `<tr><th>${k}</th><td>${esc(fmt(p.value))}</td><td>${esc(fmt(p.range))}</td><td>${esc(p.unit || '')}</td></tr>`).join('')}</table>` : ''}<div class="im">${esc(u.implementation)}</div>${u.limits ? `<div class="lim">${esc(u.limits)}</div>` : ''}</div></div>`).join('')}</div>`;
+  t.appendChild(left); t.appendChild(right); s.appendChild(t);
+  left.querySelectorAll('.reads li').forEach(li => { const i = li.dataset.i; li.addEventListener('mouseenter', () => { st.marks.querySelectorAll('i').forEach(m => m.classList.toggle('hot', m.dataset.i === i)); li.classList.add('hot'); }); li.addEventListener('mouseleave', () => { st.marks.querySelectorAll('i').forEach(m => m.classList.remove('hot')); li.classList.remove('hot'); }); });
+});
+// 08 · quality pass
+{
+  const s = section('quality', '08', 'Quality pass', 'computed in this page from the canvases above · plus what remains', 'Each study measured against the same crop of the pin at the same device size: mean absolute difference per channel (raw, and in 6-reference-pixel box averages, where grain and line phase stop counting), the share of dark pixels, the mean luminance. Numbers recompute on every redraw. Below the numbers, the faults that remain in V01, by eye.');
+  const tbl = $('table', 'q'); tbl.innerHTML = `<thead><tr><th>study</th><th>mean |Δ|</th><th>|Δ| in 6 px boxes</th><th>dark px ref · rebuild</th><th>mean L ref · rebuild</th><th>IoU green · cream · yellow · red · blue · ink</th><th>what remains</th></tr></thead><tbody></tbody>`;
+  const wrapT = $('div'); wrapT.style.cssText = 'overflow-x:auto;max-width:100%'; wrapT.appendChild(tbl); s.appendChild(wrapT); const tb = tbl.querySelector('tbody');
+  const faults = SPEC.quality_pass || {};
+  window.__fillQuality = () => { tb.innerHTML = pairs.map(st => { const m = st.m || {}; const f = faults[st.label.slice(0, 2)] || ''; return `<tr><td class="n">${esc(st.label)}</td><td>${m.mae ? m.mae.toFixed(1) : '—'}</td><td>${m.maeS ? m.maeS.toFixed(1) : '—'}</td><td>${m.darkRef != null ? `${(m.darkRef * 100).toFixed(1)}% · ${(m.darkOut * 100).toFixed(1)}%` : '—'}</td><td>${m.lRef != null ? `${m.lRef.toFixed(1)} · ${m.lOut.toFixed(1)}` : '—'}</td><td>${m.iou ? ['green', 'cream', 'yellow', 'red', 'blue', 'ink'].map(k => m.iou[k] == null ? '—' : m.iou[k].toFixed(2)).join(' · ') : '—'}</td><td class="f">${esc(f)}</td></tr>`; }).join(''); };
+}
+// 09 · spec
+{
+  const s = section('spec', '09', 'Spec', 'machine-readable · the same JSON is embedded as #spec-st-02', 'Geometry, palette, pass order, every sub-technique with value · range · unit, the measured constants, the library cross-index and the gates. Read it with <b>JSON.parse(document.getElementById(\'spec-st-02\').textContent)</b>.');
+  const d = $('details'); d.innerHTML = `<summary>show the JSON</summary><pre class="spec">${esc(JSON.stringify(SPEC, null, 2))}</pre>`; s.appendChild(d);
+  const lib = $('p', 'meta'); lib.innerHTML = `Library <b>${SPEC.library.join(' · ')}</b><br>Lands in Mindgut <b>${esc(SPEC.lands)}</b>`; s.appendChild(lib);
+}
+document.getElementById('foot').innerHTML = `<b>ST-02 · spot book · ${SPEC.version}</b> · ${SPEC.date} · Mindgut/Claude/studies/ST-02-spot-book/ · single file, fonts and the reference embedded, no requests · reference: ${SPEC.reference.url} (${SPEC.reference.board}, pin ${SPEC.reference.pin}) · the plate is computed, not traced: every pass is a function of the measured constants in the spec.`;
+
+/* ---------- draw everything, rebuild on resize ---------- */
+function drawAll() { pairs.forEach(st => { st.draw(); if (st.fill) st.fill(); }); if (window.__fillQuality) window.__fillQuality(); window.READY = true; }
+const start = () => { drawAll(); let last = window.innerWidth, t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => { if (Math.abs(window.innerWidth - last) > 70) { last = window.innerWidth; drawAll(); } }, 300); }); };
+if (REF.complete && REF.naturalWidth) start(); else REF.addEventListener('load', start);
+})();
+</script>
+</body></html>

@@ -1,0 +1,62 @@
+<section class="page" id="page-limits" data-title="Limits and open questions" data-num="09" hidden>
+<aside class="notes">
+<div class="note-id">Chapter / 09</div>
+<h1>Limits and open questions</h1>
+<div class="intro"><p>Every number the runtime holds fixed, the failure modes seen so far, and the proposals — kept in this chapter and nowhere else.</p></div>
+<nav class="page-links" aria-label="In Limits"><a href="#limits/runtime"><span>01</span>Runtime limits</a><a href="#limits/tools"><span>02</span>Tool limits</a><a href="#limits/failure-modes"><span>03</span>Known failure modes</a><a href="#limits/open"><span>04</span>Open questions and proposals</a></nav>
+<div class="takeaways"><h4>Key takeaways</h4><ol><li>Context, recall and tool rounds are all fixed small integers. There is no adaptive budget.</li><li>The HELIX grows without bound and is loaded whole. This is the limit most likely to be felt first.</li><li>Ten proposals, none of which exist. Each names the gap it would close.</li></ol></div>
+<div class="release"><span class="mono">BUILD 2.2.58 · SOURCE cbf4e42</span><br><a href="#evidence/what-was-read">Evidence register ↗</a><a href="#glossary">Glossary ↗</a></div>
+</aside>
+<div class="main"><article class="article">
+<h2 id="limits/runtime"><a class="section-anchor" href="#limits/runtime">Runtime limits</a></h2>
+<figure class="plate" id="fig-18"><figcaption><span class="fig-id">FIG. 18</span><h3>The fixed numbers, to scale</h3></figcaption><div class="figure-body" id="fig-limits"></div><div class="figure-note">Each bar is one limit, drawn on a log axis so 4 and 64,000 fit on the same line. Green ≤ 30, amber ≤ 1,500, blue above. Values from the two tables below.</div></figure>
+<div class="table-scroll"><table><thead><tr><th>Limit</th><th>Value</th><th>Where</th></tr></thead><tbody>
+<tr><td>Exchanges in context</td><td class="num">7 → 4</td><td><span class="cite">config.py:24–30</span></td></tr>
+<tr><td>Involuntary recall</td><td class="num">7 strands + 3 joints + bridges + held tags</td><td><span class="cite">recall.py</span></td></tr>
+<tr><td>Tool rounds per turn</td><td class="num">15 → wrap-up · 45 s</td><td><span class="cite">session_manager.py:1871</span></td></tr>
+<tr><td>HELIX result kept in context</td><td class="num">≤ 200 chars, else stub</td><td><span class="cite">:729</span></td></tr>
+<tr><td>Stale result truncation</td><td class="num">&gt; 3000 chars, 2+ rounds → 1500</td><td><span class="cite">:1765</span></td></tr>
+<tr><td>Output tokens</td><td class="num">16,000 · 64,000 stream · floor 4,096</td><td><span class="cite">:1462 · controllers.py:341</span></td></tr>
+<tr><td>One message</td><td class="num">~100,000 tokens (warned)</td><td><span class="cite">app.js</span></td></tr>
+<tr><td>Vision image</td><td class="num">≤ 2 MB after resize</td><td><span class="cite">:788</span></td></tr>
+<tr><td>Radiator</td><td class="num">exchange 11 · keeps 70 %</td><td><span class="cite">controllers.py:59–67</span></td></tr>
+<tr><td>Heat → model</td><td class="num">none</td><td><span class="cite">controllers.py:341</span></td></tr>
+<tr><td>Session renewal</td><td class="num">21 exchanges</td><td><span class="tag o">OBSERVED</span> sidebar · 2.2.46</td></tr>
+<tr><td>HELIX growth</td><td class="num">unbounded · whole-file load · ~8 KB / exchange</td><td><span class="tag m">MEASURED</span></td></tr>
+</tbody></table></div>
+<h2 id="limits/tools"><a class="section-anchor" href="#limits/tools">Tool limits</a></h2>
+<div class="table-scroll"><table><thead><tr><th>Tool</th><th>Value</th><th>Where</th></tr></thead><tbody>
+<tr><td><span class="mono">pull_memory</span></td><td class="num">count 1–10 · index 20–200 / page · reach limit 1–12</td><td>schema</td></tr>
+<tr><td><span class="mono">local_read</span></td><td class="num">2 MB</td><td>schema</td></tr>
+<tr><td><span class="mono">sandbox_exec</span></td><td class="num">30 s default · 120 s max · 100 KB output</td><td>schema</td></tr>
+<tr><td>Agents · terminals</td><td class="num">9 · 4</td><td>schema</td></tr>
+<tr><td>Agent rounds</td><td class="num">12 default · 30 max</td><td>schema</td></tr>
+<tr><td>Client tool wait, web</td><td class="num">30 s</td><td><span class="cite">:2044</span></td></tr>
+<tr><td>Automator</td><td class="num">1–25 turns · default 7 · 600 ms between</td><td><span class="cite">app.js AUTOMATOR_*</span></td></tr>
+</tbody></table></div>
+<h2 id="limits/failure-modes"><a class="section-anchor" href="#limits/failure-modes">Known failure modes <span class="tag o">OBSERVED</span></a></h2>
+<ul>
+<li>A spent image can only be re-read by another tool call; the model is told so by a marker.</li>
+<li>A bridge can attach an irrelevant book strand; closure is lexical.</li>
+<li>The sandbox's home differs from the machine user's; <span class="mono">~</span> resolves to the account directory.</li>
+<li>The bundled headless browser may fail to launch on some machines; a system browser can stand in.</li>
+<li>Task-board sync can fail DNS; the board stays local. <span class="tag m">MEASURED</span> on the day of writing.</li>
+<li>A model switch mid-session can stall a turn that was mid-tool-loop; the next message resumes on the record. <span class="tag m">MEASURED</span> 2026-10-20, this document's own session.</li>
+<li>Re-scanning an unchanged file produces <span class="mono">_HELIX_1</span> duplicates in outputs.</li>
+</ul>
+<h2 id="limits/open"><a class="section-anchor" href="#limits/open">Open questions and proposals <span class="tag p">PROPOSED</span></a></h2>
+<p>Nothing in this section exists.</p>
+<div class="table-scroll"><table><thead><tr><th>Gap</th><th>Proposal</th></tr></thead><tbody>
+<tr><td>Public source lags the build by ten weeks; bridges, reach, read_field, agents, terminals, model/effort, sync and updater are unreadable</td><td>Publish 2.2.x, or the tool-schema file and a 2.2 context document</td></tr>
+<tr><td>Non-Anthropic routing invisible</td><td>Document the provider adapter and per-vendor feature support</td></tr>
+<tr><td>Bridges attach by lexical closure</td><td>Expose the bridge score and reason; a threshold or toggle</td></tr>
+<tr><td>One JSON file loaded whole; ~8 KB per exchange</td><td>A strand index or split-by-session layout, keeping the single-file export</td></tr>
+<tr><td>Nine OTags, none resolved, no user-facing meaning</td><td>Show tags with their minting sentence, or stop injecting them</td></tr>
+<tr><td>"Re-founded every 21 exchanges" has no documented effect</td><td>Specify what renewal changes</td></tr>
+<tr><td>Model and effort are per device</td><td>Store with the account</td></tr>
+<tr><td>Cross-model continuity is reported, not demonstrated</td><td>A repeatable test: same question before and after a switch, transcripts kept, difference measured</td></tr>
+<tr><td>Outputs accumulate re-scan duplicates and ad-hoc renders</td><td>Skip unchanged source hashes; renders default to the sandbox</td></tr>
+<tr><td>Hidden diagnostics already in the markup</td><td>Expose gate, phase bars and drift in advanced mode; they are one CSS rule away</td></tr>
+</tbody></table></div>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#tools"><small>Previous</small>Tools</a><a href="#changelog"><small>Next</small>Changelog →</a></nav>
+</article></div></section>

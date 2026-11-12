@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>HELIX · ribbons</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,300&family=Inter+Tight:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--forest:#14452F;--deep:#0B2A1F;--moss:#2E6B45;--leaf:#5FA46B;--alive:#3DDC84;--cobalt:#1F3FE0;--verm:#E8541E;--paper:#F2EEE3;--ink:#101210;--lilac:#B8ADD6}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);font-family:'Inter Tight',sans-serif}
+header{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid rgba(16,18,16,.12)}
+.mono{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase}
+header p{margin:0;font-size:13px;color:rgba(16,18,16,.7)}
+main{height:calc(100% - 48px);display:flex;align-items:center;justify-content:center}
+#stage{position:relative;width:420px;height:72vh}
+canvas{display:block;cursor:crosshair}
+#readout{position:absolute;left:calc(100% + 140px);transform:translateY(-50%);pointer-events:none;white-space:nowrap;display:none;font-size:12px;line-height:1.5}
+#readout b{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:11px;letter-spacing:.08em;color:var(--deep)}
+#readout .ln{font-family:Fraunces,serif;font-style:italic;font-size:16px}
+#mark{position:absolute;right:calc(100% + 10px);transform:translateY(-50%);color:rgba(16,18,16,.5)}
+#card{position:fixed;right:24px;top:50%;transform:translateY(-50%);width:320px;background:#fff;border:1px solid rgba(16,18,16,.15);padding:28px 26px;box-shadow:0 20px 50px rgba(11,42,31,.18);display:none}
+#card.on{display:block}
+#card h2{font-family:Fraunces,serif;font-weight:300;font-size:64px;margin:0;line-height:1;letter-spacing:-.02em}
+#card .meta{margin:12px 0 18px;font-size:11px}
+#card .first{font-family:Fraunces,serif;font-size:20px;line-height:1.3;margin:0 0 22px}
+.sq{display:inline-block;width:6px;height:6px;margin-right:8px;vertical-align:middle}
+.pill{font:500 12px 'Inter Tight',sans-serif;border-radius:999px;padding:8px 18px;border:1px solid var(--ink);background:none;color:var(--ink);cursor:pointer;margin-right:8px;transition:transform .15s}
+.pill:hover{transform:translateY(-1px)}
+.pill.fill{background:var(--verm);border-color:var(--verm);color:var(--paper)}
+#x{position:absolute;top:10px;right:14px;border:0;background:none;font-size:18px;cursor:pointer;color:rgba(16,18,16,.5)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head><body>
+<header><span class="mono">HELIX · 6,630 STRANDS</span><p>Hover to scrub. Click to open. Drag a ribbon to move it.</p></header>
+<main><div id="stage">
+<canvas id="c" width="420"></canvas>
+<span id="mark" class="mono">2,000</span>
+<div id="readout"><b id="rn"></b><br><b id="rd"></b> · <b id="rm"></b><br><span class="ln" id="rl"></span></div>
+</div></main>
+<aside id="card" aria-live="polite"><button id="x" aria-label="close">×</button>
+<h2 id="cn"></h2><div class="meta mono"><span class="sq" id="cq"></span><span id="cd"></span> · <span id="cm"></span></div>
+<p class="first" id="cl"></p><button class="pill fill">Pull in</button><button class="pill">Open</button></aside>
+<script>
+const N=6630,W=420,COVER=14,RW=26,ROUT=34,BODY=W-COVER-ROUT;
+let seed=20260301;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+const GREENS=['#2E6B45','#3F8554','#5FA46B'],MODELS=['CLAUDE','GPT','GEMINI','GROK'];
+const LINES=['the Texas grid piece','Gaby\'s Monday scrum opener','weather report draft','the error term','V838 chapter','rotation curves','the coupling constants','the painted vacuum','Antares and boluda','the open parenthesis','notes on the fore-edge','the second weather report','a letter to the editor','ribbon math, again','what the grid owes Houston','the light echo timeline','a scrum that ran long','sigma-B on the draft','the dark matter aside','coupling, revised','the parenthesis closes','a paragraph about dust','the Monday after','V838 figure captions','the error term, part two','rotation curve footnotes','a note on vermillion','the vacuum, painted twice','Antares at dawn','the grid under load','what Gaby said','a weather cold open','the chapter that moved','a draft of the draft','the quiet strand','coupling constants, tabled','the fore-edge itself','the strand after 2,000','October light','the last line'];
+const S=[];let model=0,run=0;
+for(let i=0;i<N;i++){if(run<=0){model=(model+1)%4;run=240+Math.floor(rnd()*120)}run--;
+S.push({tag:Math.floor(rnd()*3),v:rnd(),model:MODELS[model],line:LINES[Math.floor(rnd()*LINES.length)]})}
+const RIB=[[380,'#1F3FE0','TEXAS GRID'],[1120,'#E8541E','WEATHER II'],[1960,'#2E6B45','V838'],[2900,'#B8ADD6','ROTATION'],[3850,'#14452F','SCRUM'],[4900,'#1F3FE0','ERROR TERM'],[5900,'#E8541E','COUPLING']].map(r=>({at:r[0],col:r[1],lab:r[2]}));
+const T0=Date.UTC(2026,2,1),T1=Date.UTC(2026,9,19);
+const date=i=>new Date(T0+(T1-T0)*i/(N-1)).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');let H=0,hover=-1,drag=null;
+const y2s=y=>Math.max(0,Math.min(N-1,Math.floor(y/H*N))),s2y=s=>(s+.5)/N*H;
+function draw(){ctx.clearRect(0,0,W,H);
+ctx.fillStyle='#14452F';ctx.fillRect(0,0,COVER,H);
+ctx.fillStyle='#0B2A1F';ctx.fillRect(COVER,0,1,H);
+for(let i=0;i<N;i++){const s=S[i],y=s2y(i);ctx.globalAlpha=.55*(.8+.4*s.v);ctx.strokeStyle=GREENS[s.tag];
+const jit=(s.v-.5)*3;ctx.beginPath();ctx.moveTo(COVER+1,y);ctx.lineTo(COVER+BODY+jit,y);ctx.lineWidth=1;ctx.stroke()}
+ctx.globalAlpha=1;
+const m=s2y(2000);ctx.strokeStyle='rgba(16,18,16,.6)';ctx.beginPath();ctx.moveTo(0,m+.5);ctx.lineTo(COVER+BODY,m+.5);ctx.stroke();
+ctx.font='500 9px "JetBrains Mono"';ctx.textBaseline='middle';
+for(const r of RIB){const y=s2y(r.at);ctx.fillStyle=r.col;ctx.fillRect(COVER+BODY-6,y-RW/2,6+ROUT,RW);
+ctx.fillStyle='rgba(0,0,0,.18)';ctx.fillRect(COVER+BODY-6,y-RW/2,6,RW);
+ctx.fillStyle=(r.col==='#B8ADD6')?'#101210':'#F2EEE3';ctx.textAlign='left';ctx.fillText(r.lab,COVER+BODY+4,y)}
+if(hover>=0){const y=Math.round(s2y(hover))+.5;ctx.strokeStyle='#E8541E';ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}}
+function size(){H=Math.round(innerHeight*.72);cv.height=H;cv.style.height=H+'px';document.getElementById('mark').style.top=s2y(2000)+'px';draw()}
+const R=document.getElementById('readout');
+function setHover(i){hover=i;if(i<0){R.style.display='none';draw();return}const s=S[i];
+R.style.display='block';R.style.top=s2y(i)+'px';
+rn.textContent='STRAND '+(i+1).toLocaleString();rd.textContent=date(i);rm.textContent=s.model;rl.textContent=s.line;draw()}
+function ribbonAt(x,y){return RIB.find(r=>x>COVER+BODY-6&&Math.abs(y-s2y(r.at))<RW/2)}
+cv.addEventListener('mousemove',e=>{const y=e.offsetY;if(drag){drag.at=y2s(y);draw();return}
+cv.style.cursor=ribbonAt(e.offsetX,y)?'grab':'crosshair';setHover(y2s(y))});
+cv.addEventListener('mouseleave',()=>{if(!drag)setHover(-1)});
+cv.addEventListener('mousedown',e=>{const r=ribbonAt(e.offsetX,e.offsetY);if(r){drag=r;cv.style.cursor='grabbing';e.preventDefault()}});
+addEventListener('mouseup',()=>{if(drag){drag=null;cv.style.cursor='crosshair';draw()}});
+cv.addEventListener('click',e=>{if(!drag&&!ribbonAt(e.offsetX,e.offsetY))open(y2s(e.offsetY))});
+const card=document.getElementById('card');
+function open(i){const s=S[i];cn.textContent=(i+1).toLocaleString();cd.textContent=date(i);cm.textContent=s.model;cl.textContent=s.line;
+cq.style.background=GREENS[s.tag];card.classList.add('on')}
+document.getElementById('x').onclick=()=>card.classList.remove('on');
+addEventListener('keydown',e=>{const st=e.shiftKey?21:1;
+if(e.key==='ArrowDown'){setHover(Math.min(N-1,(hover<0?0:hover)+st));e.preventDefault()}
+else if(e.key==='ArrowUp'){setHover(Math.max(0,(hover<0?0:hover)-st));e.preventDefault()}
+else if(e.key==='Enter'&&hover>=0)open(hover);
+else if(e.key==='Escape')card.classList.remove('on')});
+addEventListener('resize',size);document.fonts?document.fonts.ready.then(size):size();size();
+</script></body></html>

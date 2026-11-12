@@ -1,0 +1,180 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>record-system.ts</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>record-system.ts</b><span>~/Documents/Claude/Projects/Ø/work/mindgut-introduction/app/record-system.ts</span><span>0.01 MB · sha256 a466f8a0066ff7bd…</span><a download="record-system.ts" id="dl" href="#">Download the original</a></header><main><pre>export type Triple = [number, number, number];
+export type RecordLayer = &quot;dots&quot; | &quot;contours&quot; | &quot;path&quot; | &quot;glow&quot;;
+export type PhaseBias = &quot;balanced&quot; | &quot;147&quot; | &quot;258&quot; | &quot;369&quot;;
+export const MU: Triple = [0.302, 0.351, 0.347];
+export const PITCH = 42;
+export const R0 = 1;
+export const RADIAL_GAIN = 4.2;
+export const Y_STEP = 0.12;
+export const VOID = &quot;#07080C&quot;;
+export const MIST = &quot;#ECEEF4&quot;;
+export type ScanResult = { n: number; counts: Triple; fractions: Triple | null; delta: number | null; digits: number[] };
+export type RecordNode = {
+  id: string; index: number; k: number; role: &quot;carbon&quot; | &quot;silicon&quot;;
+  f: Triple; fractions: Triple; delta: number; clash: number;
+  theta: number; y: number; r: number; xyz: Triple;
+  illustrative: boolean; source: &quot;visitor-derived&quot; | &quot;illustrative&quot;;
+};
+export type ProjectionOptions = {
+  width?: number; height?: number; tilt?: number; layer?: RecordLayer;
+  gain?: number; decay?: number; lOnly?: boolean; background?: string;
+  title?: string; breath?: number; recall?: boolean; highlight?: number;
+};
+export type ProjectedNode = { node: RecordNode; x: number; y: number; depth: number; scale: number };
+const TAU = Math.PI * 2;
+const clamp = (v: number, a: number, b: number) =&gt; Math.max(a, Math.min(b, Number.isFinite(v) ? v : a));
+export function distance(a: Triple, b: Triple) { return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]); }
+export function normalize(values: Triple): Triple {
+  const positive = values.map(v =&gt; Math.max(0, Number.isFinite(v) ? v : 0));
+  const sum = positive[0] + positive[1] + positive[2];
+  return sum &gt; 0 ? positive.map(v =&gt; v / sum) as Triple : [...MU];
+}
+export function scanZ3(text: string): ScanResult {
+  const counts: Triple = [0, 0, 0], digits: number[] = [];
+  for (const character of text) {
+    const code = character.charCodeAt(0);
+    const value = code &gt;= 65 &amp;&amp; code &lt;= 90 ? code - 64 : code &gt;= 97 &amp;&amp; code &lt;= 122 ? code - 96 : code &gt;= 49 &amp;&amp; code &lt;= 57 ? code - 48 : 0;
+    if (!value) continue;
+    const digit = 1 + ((value - 1) % 9); digits.push(digit);
+    counts[digit % 3 === 1 ? 0 : digit % 3 === 2 ? 1 : 2]++;
+  }
+  const n = digits.length;
+  const fractions = n ? counts.map(c =&gt; c / n) as Triple : null;
+  return { n, counts, fractions, delta: fractions ? distance(fractions, MU) : null, digits };
+}
+function fixture(index: number, bias: PhaseBias): Triple {
+  // Fixed integer counts: illustrative sample records, never purported live sessions.
+  let state = Math.imul(index + 1, 0x45d9f3b) ^ 0x6d2b79f5;
+  const next = () =&gt; { state ^= state &lt;&lt; 13; state ^= state &gt;&gt;&gt; 17; state ^= state &lt;&lt; 5; return (state &gt;&gt;&gt; 0) / 4294967296; };
+  const values: Triple = [20 + Math.floor(next() * 34), 23 + Math.floor(next() * 34), 23 + Math.floor(next() * 34)];
+  const biased = bias === &quot;147&quot; ? 0 : bias === &quot;258&quot; ? 1 : bias === &quot;369&quot; ? 2 : -1;
+  if (biased === 0 || biased === 1 || biased === 2) values[biased] += 30;
+  return normalize(values);
+}
+export function makeRecord(count: number, seedFractions?: Triple, bias: PhaseBias = &quot;balanced&quot;): RecordNode[] {
+  const length = Math.round(clamp(count, 0, 10000));
+  const nodes: RecordNode[] = [];
+  for (let index = 0; index &lt; length; index++) {
+    const k = index + 1;
+    const measured = index === 0 &amp;&amp; !!seedFractions;
+    const supplied = measured ? seedFractions! : null;
+    const validTriple = supplied &amp;&amp; supplied.every(v =&gt; Number.isFinite(v) &amp;&amp; v &gt;= 0) &amp;&amp; Math.abs(supplied.reduce((a, b) =&gt; a + b, 0) - 1) &lt; 1e-9;
+    const f = measured ? (validTriple ? [...supplied!] as Triple : normalize(seedFractions!)) : fixture(index, bias);
+    const delta = distance(f, MU), theta = TAU * k / PITCH, y = k * Y_STEP, r = R0 + RADIAL_GAIN * delta;
+    nodes.push({ id: `strand-${k}`, index, k, role: k % 2 ? &quot;carbon&quot; : &quot;silicon&quot;, f, fractions: f, delta, clash: 0, theta, y, r, xyz: [r * Math.cos(theta), y, r * Math.sin(theta)], illustrative: !measured, source: measured ? &quot;visitor-derived&quot; : &quot;illustrative&quot; });
+  }
+  for (let index = 0; index &lt; length; index += 2) {
+    if (!nodes[index + 1]) continue;
+    const clash = distance(nodes[index].f, nodes[index + 1].f);
+    nodes[index].clash = clash; nodes[index + 1].clash = clash;
+  }
+  return nodes;
+}
+
+export type OKLab = [number, number, number];
+export function srgbToOKLab(rgb: Triple): OKLab {
+  const [r, g, b] = rgb.map(v =&gt; v &lt;= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s, 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s];
+}
+function linearRGB([L, a, b]: OKLab): Triple {
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.2914855480 * b) ** 3;
+  return [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s];
+}
+export function oklabToRGB(lab: OKLab): Triple {
+  let chroma = 1, rgb = linearRGB(lab);
+  // Reduce chroma, never L, when the requested colour leaves the sRGB gamut.
+  while (rgb.some(v =&gt; v &lt; -0.000001 || v &gt; 1.000001) &amp;&amp; chroma &gt; 0.01) { chroma *= 0.94; rgb = linearRGB([lab[0], lab[1] * chroma, lab[2] * chroma]); }
+  return rgb.map(v =&gt; { const c = clamp(v, 0, 1); return c &lt;= 0.0031308 ? c * 12.92 : 1.055 * c ** (1 / 2.4) - 0.055; }) as Triple;
+}
+const hexRGB = (hex: string): Triple =&gt; [1, 3, 5].map(i =&gt; parseInt(hex.slice(i, i + 2), 16) / 255) as Triple;
+export const CHANNELS = [
+  { residue: &quot;147&quot;, name: &quot;Sky&quot;, sourceHex: &quot;#5CC8FF&quot; },
+  { residue: &quot;258&quot;, name: &quot;Lavender&quot;, sourceHex: &quot;#B692FF&quot; },
+  { residue: &quot;369&quot;, name: &quot;Cobalt&quot;, sourceHex: &quot;#5B82FF&quot; },
+].map(channel =&gt; {
+  const lab = srgbToOKLab(hexRGB(channel.sourceHex)); const normalized: OKLab = [0.74, lab[1], lab[2]];
+  const rgb = oklabToRGB(normalized);
+  return { ...channel, lab: normalized, rgb, css: `rgb(${rgb.map(v =&gt; Math.round(v * 255)).join(&quot;,&quot;)})`, L: 0.74 };
+});
+export function nodeLightness(node: RecordNode, total: number, breath = 4, decay = 1, recalled = false) {
+  const active = Math.min(total, Math.round(clamp(breath, 0, 7)) * 2);
+  if (recalled) return 0.90;
+  if (node.index &gt;= total - active) return 0.88 + 0.06 * (node.index - (total - active) + 1) / Math.max(1, active);
+  const older = (node.index + 1) / Math.max(1, total - active);
+  return 0.38 + 0.27 * older ** clamp(decay, 0.2, 3);
+}
+export function nodeColor(node: RecordNode, lightness = 0.74, lOnly = false): string {
+  let a = 0, b = 0;
+  if (!lOnly) node.f.forEach((f, i) =&gt; { a += f * CHANNELS[i].lab[1]; b += f * CHANNELS[i].lab[2]; });
+  const rgb = oklabToRGB([clamp(lightness, 0.15, 0.97), a, b]);
+  return `rgb(${rgb.map(v =&gt; Math.round(v * 255)).join(&quot;,&quot;)})`;
+}
+export function recallAddresses(nodes: RecordNode[], highlight = 1): number[] {
+  if (nodes.length &lt; 15) return [];
+  const ceiling = Math.max(1, nodes.length - 8);
+  const candidates = [highlight, 7, 13, 19, 25, 31, 37].map(k =&gt; Math.min(ceiling, Math.max(1, k)));
+  return [...new Set(candidates)];
+}
+export function worldPoint(node: RecordNode, gain = 1): Triple {
+  const r = R0 + RADIAL_GAIN * clamp(gain, 0.05, 4) * node.delta;
+  return [r * Math.cos(node.theta), node.y, r * Math.sin(node.theta)];
+}
+export function createProjection(nodes: RecordNode[], options: ProjectionOptions = {}) {
+  const width = options.width ?? 800, height = options.height ?? 800, tilt = clamp(options.tilt ?? 0, 0, 90) * Math.PI / 180;
+  const gain = options.gain ?? 1, lastY = nodes.at(-1)?.y ?? 0;
+  const centerY = (lastY + (nodes.length ? Y_STEP : 0)) / 2;
+  const maxR = Math.max(1.5, ...nodes.map(n =&gt; R0 + RADIAL_GAIN * clamp(gain, 0.05, 4) * n.delta));
+  // Fit the entire unchanged object. Long records deliberately retain their tall aspect ratio.
+  const halfY = Math.max(lastY / 2, 0.4);
+  const extentY = maxR * Math.cos(tilt) + halfY * Math.sin(tilt);
+  const scale = Math.min(width * 0.39 / maxR, height * 0.38 / Math.max(1.1, extentY));
+  function point([x, y, z]: Triple) { const yy = y - centerY; return { x: width / 2 + x * scale, y: height / 2 - (z * Math.cos(tilt) + yy * Math.sin(tilt)) * scale, depth: yy * Math.cos(tilt) - z * Math.sin(tilt) }; }
+  return { width, height, scale, point, centerY, nodes: nodes.map(node =&gt; ({ node, ...point(worldPoint(node, gain)), scale })) as ProjectedNode[] };
+}
+export function projection(nodes: RecordNode[], options: ProjectionOptions = {}) { return createProjection(nodes, options).nodes; }
+function escaped(s: string) { return s.replace(/[&amp;&lt;&gt;&quot;&#x27;]/g, c =&gt; ({ &quot;&amp;&quot;: &quot;&amp;amp;&quot;, &quot;&lt;&quot;: &quot;&amp;lt;&quot;, &quot;&gt;&quot;: &quot;&amp;gt;&quot;, &#x27;&quot;&#x27;: &quot;&amp;quot;&quot;, &quot;&#x27;&quot;: &quot;&amp;apos;&quot; }[c]!)); }
+const number = (v: number) =&gt; Number(v.toFixed(3));
+export function svgPlate(nodes: RecordNode[], options: ProjectionOptions = {}): string {
+  const width = options.width ?? 800, height = options.height ?? 800;
+  const p = createProjection(nodes, { ...options, width, height });
+  const layer = options.layer ?? &quot;dots&quot;, breath = options.breath ?? 4;
+  const recalled = new Set(options.recall ? recallAddresses(nodes, options.highlight) : []);
+  const content: string[] = [];
+  const path = (points: { x: number; y: number }[], color: string, strokeWidth: number, opacity = 1, smooth = false) =&gt; { if (points.length &lt; 2) return;
+    let data = `M${number(points[0].x)} ${number(points[0].y)}`;
+    if (smooth &amp;&amp; points.length &gt; 2) { for (let i=1;i&lt;points.length-1;i++) data+=` Q${number(points[i].x)} ${number(points[i].y)} ${number((points[i].x+points[i+1].x)/2)} ${number((points[i].y+points[i+1].y)/2)}`; data+=` L${number(points.at(-1)!.x)} ${number(points.at(-1)!.y)}`; }
+    else data+=points.slice(1).map(a=&gt;` L${number(a.x)} ${number(a.y)}`).join(&quot;&quot;);
+    content.push(`&lt;path d=&quot;${data}&quot; fill=&quot;none&quot; stroke=&quot;${color}&quot; stroke-width=&quot;${strokeWidth}&quot; opacity=&quot;${opacity}&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/&gt;`); };
+  if (!nodes.length) {
+    for (let k = 0; k &lt; PITCH; k++) { const theta = TAU * k / PITCH, r = Math.min(width, height) * 0.32; path([{ x: width / 2 + Math.cos(theta) * r, y: height / 2 + Math.sin(theta) * r }, { x: width / 2 + Math.cos(theta) * (r + 4), y: height / 2 + Math.sin(theta) * (r + 4) }], MIST, 1, 0.04); }
+    content.push(`&lt;circle cx=&quot;${width / 2}&quot; cy=&quot;${height / 2}&quot; r=&quot;4&quot; fill=&quot;${MIST}&quot;/&gt;`);
+  }
+  if (nodes.length &gt; 2) { const ring=Array.from({length:69},(_,i)=&gt;{const a=TAU*(i/84+0.04);return p.point([Math.cos(a)*R0,Y_STEP,Math.sin(a)*R0]);}); path(ring,MIST,0.8,0.23); }
+  if (layer === &quot;path&quot; || layer === &quot;glow&quot;) {
+    for (const role of [&quot;carbon&quot;, &quot;silicon&quot;] as const) path(p.nodes.filter(a =&gt; a.node.role === role), options.lOnly ? &quot;#aaa&quot; : CHANNELS[role === &quot;carbon&quot; ? 0 : 1].css, layer === &quot;path&quot; ? 1.2 : 0.8, layer === &quot;path&quot; ? 0.55 : 0.20, true);
+    for (let i = 0; i + 1 &lt; p.nodes.length; i += 2) path([p.nodes[i], p.nodes[i + 1]], MIST, 0.55, i &gt;= nodes.length-breath*2 ? 0.38 : 0.10);
+  }
+  if (layer === &quot;contours&quot;) for (let first = 0; first &lt; p.nodes.length; first += PITCH) path(p.nodes.slice(first, first + PITCH), MIST, 0.9, 0.30, true);
+  if (nodes.length &gt; 2) { const mean = []; for (let i = 0; i + 1 &lt; p.nodes.length; i += 2) mean.push({ x: (p.nodes[i].x + p.nodes[i + 1].x) / 2, y: (p.nodes[i].y + p.nodes[i + 1].y) / 2 }); path(mean, MIST, 1.75, layer === &quot;path&quot; ? 0.42 : 0.19, true); }
+  if (options.recall &amp;&amp; p.nodes.length) {
+    const top = p.nodes.at(-1)!;
+    for (const k of recalled) { const old = p.nodes[k - 1]; const bend = Math.min(width * 0.11, 65); content.push(`&lt;path d=&quot;M${number(top.x)} ${number(top.y)} Q${number((top.x + old.x) / 2 + bend)} ${number((top.y + old.y) / 2)} ${number(old.x)} ${number(old.y)}&quot; fill=&quot;none&quot; stroke=&quot;${options.lOnly ? MIST : CHANNELS[1].css}&quot; stroke-width=&quot;0.9&quot; opacity=&quot;0.65&quot;/&gt;`); }
+  }
+  for (const a of [...p.nodes].sort((a, b) =&gt; b.depth - a.depth)) {
+    const L = nodeLightness(a.node, nodes.length, breath, options.decay, recalled.has(a.node.k));
+    const color = nodeColor(a.node, L, options.lOnly); const radius = nodes.length &gt; 1000 ? 0.8 : nodes.length &gt; 100 ? 1.25 : nodes.length &lt;= 2 ? 4 : 2.55;
+    if (layer === &quot;glow&quot; &amp;&amp; a.node.index &gt;= nodes.length - breath * 2) content.push(`&lt;circle cx=&quot;${number(a.x)}&quot; cy=&quot;${number(a.y)}&quot; r=&quot;${radius * 3}&quot; fill=&quot;${color}&quot; opacity=&quot;0.08&quot;/&gt;&lt;circle cx=&quot;${number(a.x)}&quot; cy=&quot;${number(a.y)}&quot; r=&quot;${radius * 1.8}&quot; fill=&quot;${color}&quot; opacity=&quot;0.14&quot;/&gt;`);
+    content.push(`&lt;circle data-strand=&quot;${a.node.k}&quot; cx=&quot;${number(a.x)}&quot; cy=&quot;${number(a.y)}&quot; r=&quot;${radius}&quot; fill=&quot;${color}&quot;/&gt;`);
+  }
+  return `&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;${width}&quot; height=&quot;${height}&quot; viewBox=&quot;0 0 ${width} ${height}&quot; role=&quot;img&quot;&gt;&lt;title&gt;${escaped(options.title ?? &quot;Mindgut illustrative coordinate plate&quot;)}&lt;/title&gt;&lt;desc&gt;Deterministic visual study. 42-crossing pitch. Character-residue coordinates; no session text. Illustrative continuation, not a captured runtime record.&lt;/desc&gt;&lt;rect width=&quot;100%&quot; height=&quot;100%&quot; fill=&quot;${escaped(options.background ?? VOID)}&quot;/&gt;${content.join(&quot;&quot;)}&lt;/svg&gt;`;
+}
+export function seedJSON(nodes: RecordNode[]): string {
+  return JSON.stringify({ format: &quot;mindgut-visual-study-seed&quot;, version: 1, nativeCompatibility: &quot;not asserted&quot;, provenance: &quot;Visitor-derived first triple when supplied; remaining nodes are deterministic illustrative fixtures.&quot;, containsText: false, baseline: MU, geometry: { pitch: PITCH, r0: R0, alpha: RADIAL_GAIN, deltaY: Y_STEP }, strands: nodes.map(({ k, role, f, theta, y, r, xyz, delta, clash, illustrative, source }) =&gt; ({ k, role, fractions: f, theta, y, r, xyz, delta, clash, illustrative, source })) }, null, 2);
+}
+export function canvasPNG(canvas: HTMLCanvasElement): string { return canvas.toDataURL(&quot;image/png&quot;); }
+</pre></main><script>var b=atob("ZXhwb3J0IHR5cGUgVHJpcGxlID0gW251bWJlciwgbnVtYmVyLCBudW1iZXJdOwpleHBvcnQgdHlwZSBSZWNvcmRMYXllciA9ICJkb3RzIiB8ICJjb250b3VycyIgfCAicGF0aCIgfCAiZ2xvdyI7CmV4cG9ydCB0eXBlIFBoYXNlQmlhcyA9ICJiYWxhbmNlZCIgfCAiMTQ3IiB8ICIyNTgiIHwgIjM2OSI7CmV4cG9ydCBjb25zdCBNVTogVHJpcGxlID0gWzAuMzAyLCAwLjM1MSwgMC4zNDddOwpleHBvcnQgY29uc3QgUElUQ0ggPSA0MjsKZXhwb3J0IGNvbnN0IFIwID0gMTsKZXhwb3J0IGNvbnN0IFJBRElBTF9HQUlOID0gNC4yOwpleHBvcnQgY29uc3QgWV9TVEVQID0gMC4xMjsKZXhwb3J0IGNvbnN0IFZPSUQgPSAiIzA3MDgwQyI7CmV4cG9ydCBjb25zdCBNSVNUID0gIiNFQ0VFRjQiOwpleHBvcnQgdHlwZSBTY2FuUmVzdWx0ID0geyBuOiBudW1iZXI7IGNvdW50czogVHJpcGxlOyBmcmFjdGlvbnM6IFRyaXBsZSB8IG51bGw7IGRlbHRhOiBudW1iZXIgfCBudWxsOyBkaWdpdHM6IG51bWJlcltdIH07CmV4cG9ydCB0eXBlIFJlY29yZE5vZGUgPSB7CiAgaWQ6IHN0cmluZzsgaW5kZXg6IG51bWJlcjsgazogbnVtYmVyOyByb2xlOiAiY2FyYm9uIiB8ICJzaWxpY29uIjsKICBmOiBUcmlwbGU7IGZyYWN0aW9uczogVHJpcGxlOyBkZWx0YTogbnVtYmVyOyBjbGFzaDogbnVtYmVyOwogIHRoZXRhOiBudW1iZXI7IHk6IG51bWJlcjsgcjogbnVtYmVyOyB4eXo6IFRyaXBsZTsKICBpbGx1c3RyYXRpdmU6IGJvb2xlYW47IHNvdXJjZTogInZpc2l0b3ItZGVyaXZlZCIgfCAiaWxsdXN0cmF0aXZlIjsKfTsKZXhwb3J0IHR5cGUgUHJvamVjdGlvbk9wdGlvbnMgPSB7CiAgd2lkdGg/OiBudW1iZXI7IGhlaWdodD86IG51bWJlcjsgdGlsdD86IG51bWJlcjsgbGF5ZXI/OiBSZWNvcmRMYXllcjsKICBnYWluPzogbnVtYmVyOyBkZWNheT86IG51bWJlcjsgbE9ubHk/OiBib29sZWFuOyBiYWNrZ3JvdW5kPzogc3RyaW5nOwogIHRpdGxlPzogc3RyaW5nOyBicmVhdGg/OiBudW1iZXI7IHJlY2FsbD86IGJvb2xlYW47IGhpZ2hsaWdodD86IG51bWJlcjsKfTsKZXhwb3J0IHR5cGUgUHJvamVjdGVkTm9kZSA9IHsgbm9kZTogUmVjb3JkTm9kZTsgeDogbnVtYmVyOyB5OiBudW1iZXI7IGRlcHRoOiBudW1iZXI7IHNjYWxlOiBudW1iZXIgfTsKY29uc3QgVEFVID0gTWF0aC5QSSAqIDI7CmNvbnN0IGNsYW1wID0gKHY6IG51bWJlciwgYTogbnVtYmVyLCBiOiBudW1iZXIpID0+IE1hdGgubWF4KGEsIE1hdGgubWluKGIsIE51bWJlci5pc0Zpbml0ZSh2KSA/IHYgOiBhKSk7CmV4cG9ydCBmdW5jdGlvbiBkaXN0YW5jZShhOiBUcmlwbGUsIGI6IFRyaXBsZSkgeyByZXR1cm4gTWF0aC5oeXBvdChhWzBdIC0gYlswXSwgYVsxXSAtIGJbMV0sIGFbMl0gLSBiWzJdKTsgfQpleHBvcnQgZnVuY3Rpb24gbm9ybWFsaXplKHZhbHVlczogVHJpcGxlKTogVHJpcGxlIHsKICBjb25zdCBwb3NpdGl2ZSA9IHZhbHVlcy5tYXAodiA9PiBNYXRoLm1heCgwLCBOdW1iZXIuaXNGaW5pdGUodikgPyB2IDogMCkpOwogIGNvbnN0IHN1bSA9IHBvc2l0aXZlWzBdICsgcG9zaXRpdmVbMV0gKyBwb3NpdGl2ZVsyXTsKICByZXR1cm4gc3VtID4gMCA/IHBvc2l0aXZlLm1hcCh2ID0+IHYgLyBzdW0pIGFzIFRyaXBsZSA6IFsuLi5NVV07Cn0KZXhwb3J0IGZ1bmN0aW9uIHNjYW5aMyh0ZXh0OiBzdHJpbmcpOiBTY2FuUmVzdWx0IHsKICBjb25zdCBjb3VudHM6IFRyaXBsZSA9IFswLCAwLCAwXSwgZGlnaXRzOiBudW1iZXJbXSA9IFtdOwogIGZvciAoY29uc3QgY2hhcmFjdGVyIG9mIHRleHQpIHsKICAgIGNvbnN0IGNvZGUgPSBjaGFyYWN0ZXIuY2hhckNvZGVBdCgwKTsKICAgIGNvbnN0IHZhbHVlID0gY29kZSA+PSA2NSAmJiBjb2RlIDw9IDkwID8gY29kZSAtIDY0IDogY29kZSA+PSA5NyAmJiBjb2RlIDw9IDEyMiA/IGNvZGUgLSA5NiA6IGNvZGUgPj0gNDkgJiYgY29kZSA8PSA1NyA/IGNvZGUgLSA0OCA6IDA7CiAgICBpZiAoIXZhbHVlKSBjb250aW51ZTsKICAgIGNvbnN0IGRpZ2l0ID0gMSArICgodmFsdWUgLSAxKSAlIDkpOyBkaWdpdHMucHVzaChkaWdpdCk7CiAgICBjb3VudHNbZGlnaXQgJSAzID09PSAxID8gMCA6IGRpZ2l0ICUgMyA9PT0gMiA/IDEgOiAyXSsrOwogIH0KICBjb25zdCBuID0gZGlnaXRzLmxlbmd0aDsKICBjb25zdCBmcmFjdGlvbnMgPSBuID8gY291bnRzLm1hcChjID0+IGMgLyBuKSBhcyBUcmlwbGUgOiBudWxsOwogIHJldHVybiB7IG4sIGNvdW50cywgZnJhY3Rpb25zLCBkZWx0YTogZnJhY3Rpb25zID8gZGlzdGFuY2UoZnJhY3Rpb25zLCBNVSkgOiBudWxsLCBkaWdpdHMgfTsKfQpmdW5jdGlvbiBmaXh0dXJlKGluZGV4OiBudW1iZXIsIGJpYXM6IFBoYXNlQmlhcyk6IFRyaXBsZSB7CiAgLy8gRml4ZWQgaW50ZWdlciBjb3VudHM6IGlsbHVzdHJhdGl2ZSBzYW1wbGUgcmVjb3JkcywgbmV2ZXIgcHVycG9ydGVkIGxpdmUgc2Vzc2lvbnMuCiAgbGV0IHN0YXRlID0gTWF0aC5pbXVsKGluZGV4ICsgMSwgMHg0NWQ5ZjNiKSBeIDB4NmQyYjc5ZjU7CiAgY29uc3QgbmV4dCA9ICgpID0+IHsgc3RhdGUgXj0gc3RhdGUgPDwgMTM7IHN0YXRlIF49IHN0YXRlID4+PiAxNzsgc3RhdGUgXj0gc3RhdGUgPDwgNTsgcmV0dXJuIChzdGF0ZSA+Pj4gMCkgLyA0Mjk0OTY3Mjk2OyB9OwogIGNvbnN0IHZhbHVlczogVHJpcGxlID0gWzIwICsgTWF0aC5mbG9vcihuZXh0KCkgKiAzNCksIDIzICsgTWF0aC5mbG9vcihuZXh0KCkgKiAzNCksIDIzICsgTWF0aC5mbG9vcihuZXh0KCkgKiAzNCldOwogIGNvbnN0IGJpYXNlZCA9IGJpYXMgPT09ICIxNDciID8gMCA6IGJpYXMgPT09ICIyNTgiID8gMSA6IGJpYXMgPT09ICIzNjkiID8gMiA6IC0xOwogIGlmIChiaWFzZWQgPT09IDAgfHwgYmlhc2VkID09PSAxIHx8IGJpYXNlZCA9PT0gMikgdmFsdWVzW2JpYXNlZF0gKz0gMzA7CiAgcmV0dXJuIG5vcm1hbGl6ZSh2YWx1ZXMpOwp9CmV4cG9ydCBmdW5jdGlvbiBtYWtlUmVjb3JkKGNvdW50OiBudW1iZXIsIHNlZWRGcmFjdGlvbnM/OiBUcmlwbGUsIGJpYXM6IFBoYXNlQmlhcyA9ICJiYWxhbmNlZCIpOiBSZWNvcmROb2RlW10gewogIGNvbnN0IGxlbmd0aCA9IE1hdGgucm91bmQoY2xhbXAoY291bnQsIDAsIDEwMDAwKSk7CiAgY29uc3Qgbm9kZXM6IFJlY29yZE5vZGVbXSA9IFtdOwogIGZvciAobGV0IGluZGV4ID0gMDsgaW5kZXggPCBsZW5ndGg7IGluZGV4KyspIHsKICAgIGNvbnN0IGsgPSBpbmRleCArIDE7CiAgICBjb25zdCBtZWFzdXJlZCA9IGluZGV4ID09PSAwICYmICEhc2VlZEZyYWN0aW9uczsKICAgIGNvbnN0IHN1cHBsaWVkID0gbWVhc3VyZWQgPyBzZWVkRnJhY3Rpb25zISA6IG51bGw7CiAgICBjb25zdCB2YWxpZFRyaXBsZSA9IHN1cHBsaWVkICYmIHN1cHBsaWVkLmV2ZXJ5KHYgPT4gTnVtYmVyLmlzRmluaXRlKHYpICYmIHYgPj0gMCkgJiYgTWF0aC5hYnMoc3VwcGxpZWQucmVkdWNlKChhLCBiKSA9PiBhICsgYiwgMCkgLSAxKSA8IDFlLTk7CiAgICBjb25zdCBmID0gbWVhc3VyZWQgPyAodmFsaWRUcmlwbGUgPyBbLi4uc3VwcGxpZWQhXSBhcyBUcmlwbGUgOiBub3JtYWxpemUoc2VlZEZyYWN0aW9ucyEpKSA6IGZpeHR1cmUoaW5kZXgsIGJpYXMpOwogICAgY29uc3QgZGVsdGEgPSBkaXN0YW5jZShmLCBNVSksIHRoZXRhID0gVEFVICogayAvIFBJVENILCB5ID0gayAqIFlfU1RFUCwgciA9IFIwICsgUkFESUFMX0dBSU4gKiBkZWx0YTsKICAgIG5vZGVzLnB1c2goeyBpZDogYHN0cmFuZC0ke2t9YCwgaW5kZXgsIGssIHJvbGU6IGsgJSAyID8gImNhcmJvbiIgOiAic2lsaWNvbiIsIGYsIGZyYWN0aW9uczogZiwgZGVsdGEsIGNsYXNoOiAwLCB0aGV0YSwgeSwgciwgeHl6OiBbciAqIE1hdGguY29zKHRoZXRhKSwgeSwgciAqIE1hdGguc2luKHRoZXRhKV0sIGlsbHVzdHJhdGl2ZTogIW1lYXN1cmVkLCBzb3VyY2U6IG1lYXN1cmVkID8gInZpc2l0b3ItZGVyaXZlZCIgOiAiaWxsdXN0cmF0aXZlIiB9KTsKICB9CiAgZm9yIChsZXQgaW5kZXggPSAwOyBpbmRleCA8IGxlbmd0aDsgaW5kZXggKz0gMikgewogICAgaWYgKCFub2Rlc1tpbmRleCArIDFdKSBjb250aW51ZTsKICAgIGNvbnN0IGNsYXNoID0gZGlzdGFuY2Uobm9kZXNbaW5kZXhdLmYsIG5vZGVzW2luZGV4ICsgMV0uZik7CiAgICBub2Rlc1tpbmRleF0uY2xhc2ggPSBjbGFzaDsgbm9kZXNbaW5kZXggKyAxXS5jbGFzaCA9IGNsYXNoOwogIH0KICByZXR1cm4gbm9kZXM7Cn0KCmV4cG9ydCB0eXBlIE9LTGFiID0gW251bWJlciwgbnVtYmVyLCBudW1iZXJdOwpleHBvcnQgZnVuY3Rpb24gc3JnYlRvT0tMYWIocmdiOiBUcmlwbGUpOiBPS0xhYiB7CiAgY29uc3QgW3IsIGcsIGJdID0gcmdiLm1hcCh2ID0+IHYgPD0gMC4wNDA0NSA/IHYgLyAxMi45MiA6ICgodiArIDAuMDU1KSAvIDEuMDU1KSAqKiAyLjQpOwogIGNvbnN0IGwgPSBNYXRoLmNicnQoMC40MTIyMjE0NzA4ICogciArIDAuNTM2MzMyNTM2MyAqIGcgKyAwLjA1MTQ0NTk5MjkgKiBiKTsKICBjb25zdCBtID0gTWF0aC5jYnJ0KDAuMjExOTAzNDk4MiAqIHIgKyAwLjY4MDY5OTU0NTEgKiBnICsgMC4xMDczOTY5NTY2ICogYik7CiAgY29uc3QgcyA9IE1hdGguY2JydCgwLjA4ODMwMjQ2MTkgKiByICsgMC4yODE3MTg4Mzc2ICogZyArIDAuNjI5OTc4NzAwNSAqIGIpOwogIHJldHVybiBbMC4yMTA0NTQyNTUzICogbCArIDAuNzkzNjE3Nzg1MCAqIG0gLSAwLjAwNDA3MjA0NjggKiBzLCAxLjk3Nzk5ODQ5NTEgKiBsIC0gMi40Mjg1OTIyMDUwICogbSArIDAuNDUwNTkzNzA5OSAqIHMsIDAuMDI1OTA0MDM3MSAqIGwgKyAwLjc4Mjc3MTc2NjIgKiBtIC0gMC44MDg2NzU3NjYwICogc107Cn0KZnVuY3Rpb24gbGluZWFyUkdCKFtMLCBhLCBiXTogT0tMYWIpOiBUcmlwbGUgewogIGNvbnN0IGwgPSAoTCArIDAuMzk2MzM3Nzc3NCAqIGEgKyAwLjIxNTgwMzc1NzMgKiBiKSAqKiAzOwogIGNvbnN0IG0gPSAoTCAtIDAuMTA1NTYxMzQ1OCAqIGEgLSAwLjA2Mzg1NDE3MjggKiBiKSAqKiAzOwogIGNvbnN0IHMgPSAoTCAtIDAuMDg5NDg0MTc3NSAqIGEgLSAxLjI5MTQ4NTU0ODAgKiBiKSAqKiAzOwogIHJldHVybiBbNC4wNzY3NDE2NjIxICogbCAtIDMuMzA3NzExNTkxMyAqIG0gKyAwLjIzMDk2OTkyOTIgKiBzLCAtMS4yNjg0MzgwMDQ2ICogbCArIDIuNjA5NzU3NDAxMSAqIG0gLSAwLjM0MTMxOTM5NjUgKiBzLCAtMC4wMDQxOTYwODYzICogbCAtIDAuNzAzNDE4NjE0NyAqIG0gKyAxLjcwNzYxNDcwMTAgKiBzXTsKfQpleHBvcnQgZnVuY3Rpb24gb2tsYWJUb1JHQihsYWI6IE9LTGFiKTogVHJpcGxlIHsKICBsZXQgY2hyb21hID0gMSwgcmdiID0gbGluZWFyUkdCKGxhYik7CiAgLy8gUmVkdWNlIGNocm9tYSwgbmV2ZXIgTCwgd2hlbiB0aGUgcmVxdWVzdGVkIGNvbG91ciBsZWF2ZXMgdGhlIHNSR0IgZ2FtdXQuCiAgd2hpbGUgKHJnYi5zb21lKHYgPT4gdiA8IC0wLjAwMDAwMSB8fCB2ID4gMS4wMDAwMDEpICYmIGNocm9tYSA+IDAuMDEpIHsgY2hyb21hICo9IDAuOTQ7IHJnYiA9IGxpbmVhclJHQihbbGFiWzBdLCBsYWJbMV0gKiBjaHJvbWEsIGxhYlsyXSAqIGNocm9tYV0pOyB9CiAgcmV0dXJuIHJnYi5tYXAodiA9PiB7IGNvbnN0IGMgPSBjbGFtcCh2LCAwLCAxKTsgcmV0dXJuIGMgPD0gMC4wMDMxMzA4ID8gYyAqIDEyLjkyIDogMS4wNTUgKiBjICoqICgxIC8gMi40KSAtIDAuMDU1OyB9KSBhcyBUcmlwbGU7Cn0KY29uc3QgaGV4UkdCID0gKGhleDogc3RyaW5nKTogVHJpcGxlID0+IFsxLCAzLCA1XS5tYXAoaSA9PiBwYXJzZUludChoZXguc2xpY2UoaSwgaSArIDIpLCAxNikgLyAyNTUpIGFzIFRyaXBsZTsKZXhwb3J0IGNvbnN0IENIQU5ORUxTID0gWwogIHsgcmVzaWR1ZTogIjE0NyIsIG5hbWU6ICJTa3kiLCBzb3VyY2VIZXg6ICIjNUNDOEZGIiB9LAogIHsgcmVzaWR1ZTogIjI1OCIsIG5hbWU6ICJMYXZlbmRlciIsIHNvdXJjZUhleDogIiNCNjkyRkYiIH0sCiAgeyByZXNpZHVlOiAiMzY5IiwgbmFtZTogIkNvYmFsdCIsIHNvdXJjZUhleDogIiM1QjgyRkYiIH0sCl0ubWFwKGNoYW5uZWwgPT4gewogIGNvbnN0IGxhYiA9IHNyZ2JUb09LTGFiKGhleFJHQihjaGFubmVsLnNvdXJjZUhleCkpOyBjb25zdCBub3JtYWxpemVkOiBPS0xhYiA9IFswLjc0LCBsYWJbMV0sIGxhYlsyXV07CiAgY29uc3QgcmdiID0gb2tsYWJUb1JHQihub3JtYWxpemVkKTsKICByZXR1cm4geyAuLi5jaGFubmVsLCBsYWI6IG5vcm1hbGl6ZWQsIHJnYiwgY3NzOiBgcmdiKCR7cmdiLm1hcCh2ID0+IE1hdGgucm91bmQodiAqIDI1NSkpLmpvaW4oIiwiKX0pYCwgTDogMC43NCB9Owp9KTsKZXhwb3J0IGZ1bmN0aW9uIG5vZGVMaWdodG5lc3Mobm9kZTogUmVjb3JkTm9kZSwgdG90YWw6IG51bWJlciwgYnJlYXRoID0gNCwgZGVjYXkgPSAxLCByZWNhbGxlZCA9IGZhbHNlKSB7CiAgY29uc3QgYWN0aXZlID0gTWF0aC5taW4odG90YWwsIE1hdGgucm91bmQoY2xhbXAoYnJlYXRoLCAwLCA3KSkgKiAyKTsKICBpZiAocmVjYWxsZWQpIHJldHVybiAwLjkwOwogIGlmIChub2RlLmluZGV4ID49IHRvdGFsIC0gYWN0aXZlKSByZXR1cm4gMC44OCArIDAuMDYgKiAobm9kZS5pbmRleCAtICh0b3RhbCAtIGFjdGl2ZSkgKyAxKSAvIE1hdGgubWF4KDEsIGFjdGl2ZSk7CiAgY29uc3Qgb2xkZXIgPSAobm9kZS5pbmRleCArIDEpIC8gTWF0aC5tYXgoMSwgdG90YWwgLSBhY3RpdmUpOwogIHJldHVybiAwLjM4ICsgMC4yNyAqIG9sZGVyICoqIGNsYW1wKGRlY2F5LCAwLjIsIDMpOwp9CmV4cG9ydCBmdW5jdGlvbiBub2RlQ29sb3Iobm9kZTogUmVjb3JkTm9kZSwgbGlnaHRuZXNzID0gMC43NCwgbE9ubHkgPSBmYWxzZSk6IHN0cmluZyB7CiAgbGV0IGEgPSAwLCBiID0gMDsKICBpZiAoIWxPbmx5KSBub2RlLmYuZm9yRWFjaCgoZiwgaSkgPT4geyBhICs9IGYgKiBDSEFOTkVMU1tpXS5sYWJbMV07IGIgKz0gZiAqIENIQU5ORUxTW2ldLmxhYlsyXTsgfSk7CiAgY29uc3QgcmdiID0gb2tsYWJUb1JHQihbY2xhbXAobGlnaHRuZXNzLCAwLjE1LCAwLjk3KSwgYSwgYl0pOwogIHJldHVybiBgcmdiKCR7cmdiLm1hcCh2ID0+IE1hdGgucm91bmQodiAqIDI1NSkpLmpvaW4oIiwiKX0pYDsKfQpleHBvcnQgZnVuY3Rpb24gcmVjYWxsQWRkcmVzc2VzKG5vZGVzOiBSZWNvcmROb2RlW10sIGhpZ2hsaWdodCA9IDEpOiBudW1iZXJbXSB7CiAgaWYgKG5vZGVzLmxlbmd0aCA8IDE1KSByZXR1cm4gW107CiAgY29uc3QgY2VpbGluZyA9IE1hdGgubWF4KDEsIG5vZGVzLmxlbmd0aCAtIDgpOwogIGNvbnN0IGNhbmRpZGF0ZXMgPSBbaGlnaGxpZ2h0LCA3LCAxMywgMTksIDI1LCAzMSwgMzddLm1hcChrID0+IE1hdGgubWluKGNlaWxpbmcsIE1hdGgubWF4KDEsIGspKSk7CiAgcmV0dXJuIFsuLi5uZXcgU2V0KGNhbmRpZGF0ZXMpXTsKfQpleHBvcnQgZnVuY3Rpb24gd29ybGRQb2ludChub2RlOiBSZWNvcmROb2RlLCBnYWluID0gMSk6IFRyaXBsZSB7CiAgY29uc3QgciA9IFIwICsgUkFESUFMX0dBSU4gKiBjbGFtcChnYWluLCAwLjA1LCA0KSAqIG5vZGUuZGVsdGE7CiAgcmV0dXJuIFtyICogTWF0aC5jb3Mobm9kZS50aGV0YSksIG5vZGUueSwgciAqIE1hdGguc2luKG5vZGUudGhldGEpXTsKfQpleHBvcnQgZnVuY3Rpb24gY3JlYXRlUHJvamVjdGlvbihub2RlczogUmVjb3JkTm9kZVtdLCBvcHRpb25zOiBQcm9qZWN0aW9uT3B0aW9ucyA9IHt9KSB7CiAgY29uc3Qgd2lkdGggPSBvcHRpb25zLndpZHRoID8/IDgwMCwgaGVpZ2h0ID0gb3B0aW9ucy5oZWlnaHQgPz8gODAwLCB0aWx0ID0gY2xhbXAob3B0aW9ucy50aWx0ID8/IDAsIDAsIDkwKSAqIE1hdGguUEkgLyAxODA7CiAgY29uc3QgZ2FpbiA9IG9wdGlvbnMuZ2FpbiA/PyAxLCBsYXN0WSA9IG5vZGVzLmF0KC0xKT8ueSA/PyAwOwogIGNvbnN0IGNlbnRlclkgPSAobGFzdFkgKyAobm9kZXMubGVuZ3RoID8gWV9TVEVQIDogMCkpIC8gMjsKICBjb25zdCBtYXhSID0gTWF0aC5tYXgoMS41LCAuLi5ub2Rlcy5tYXAobiA9PiBSMCArIFJBRElBTF9HQUlOICogY2xhbXAoZ2FpbiwgMC4wNSwgNCkgKiBuLmRlbHRhKSk7CiAgLy8gRml0IHRoZSBlbnRpcmUgdW5jaGFuZ2VkIG9iamVjdC4gTG9uZyByZWNvcmRzIGRlbGliZXJhdGVseSByZXRhaW4gdGhlaXIgdGFsbCBhc3BlY3QgcmF0aW8uCiAgY29uc3QgaGFsZlkgPSBNYXRoLm1heChsYXN0WSAvIDIsIDAuNCk7CiAgY29uc3QgZXh0ZW50WSA9IG1heFIgKiBNYXRoLmNvcyh0aWx0KSArIGhhbGZZICogTWF0aC5zaW4odGlsdCk7CiAgY29uc3Qgc2NhbGUgPSBNYXRoLm1pbih3aWR0aCAqIDAuMzkgLyBtYXhSLCBoZWlnaHQgKiAwLjM4IC8gTWF0aC5tYXgoMS4xLCBleHRlbnRZKSk7CiAgZnVuY3Rpb24gcG9pbnQoW3gsIHksIHpdOiBUcmlwbGUpIHsgY29uc3QgeXkgPSB5IC0gY2VudGVyWTsgcmV0dXJuIHsgeDogd2lkdGggLyAyICsgeCAqIHNjYWxlLCB5OiBoZWlnaHQgLyAyIC0gKHogKiBNYXRoLmNvcyh0aWx0KSArIHl5ICogTWF0aC5zaW4odGlsdCkpICogc2NhbGUsIGRlcHRoOiB5eSAqIE1hdGguY29zKHRpbHQpIC0geiAqIE1hdGguc2luKHRpbHQpIH07IH0KICByZXR1cm4geyB3aWR0aCwgaGVpZ2h0LCBzY2FsZSwgcG9pbnQsIGNlbnRlclksIG5vZGVzOiBub2Rlcy5tYXAobm9kZSA9PiAoeyBub2RlLCAuLi5wb2ludCh3b3JsZFBvaW50KG5vZGUsIGdhaW4pKSwgc2NhbGUgfSkpIGFzIFByb2plY3RlZE5vZGVbXSB9Owp9CmV4cG9ydCBmdW5jdGlvbiBwcm9qZWN0aW9uKG5vZGVzOiBSZWNvcmROb2RlW10sIG9wdGlvbnM6IFByb2plY3Rpb25PcHRpb25zID0ge30pIHsgcmV0dXJuIGNyZWF0ZVByb2plY3Rpb24obm9kZXMsIG9wdGlvbnMpLm5vZGVzOyB9CmZ1bmN0aW9uIGVzY2FwZWQoczogc3RyaW5nKSB7IHJldHVybiBzLnJlcGxhY2UoL1smPD4iJ10vZywgYyA9PiAoeyAiJiI6ICImYW1wOyIsICI8IjogIiZsdDsiLCAiPiI6ICImZ3Q7IiwgJyInOiAiJnF1b3Q7IiwgIiciOiAiJmFwb3M7IiB9W2NdISkpOyB9CmNvbnN0IG51bWJlciA9ICh2OiBudW1iZXIpID0+IE51bWJlcih2LnRvRml4ZWQoMykpOwpleHBvcnQgZnVuY3Rpb24gc3ZnUGxhdGUobm9kZXM6IFJlY29yZE5vZGVbXSwgb3B0aW9uczogUHJvamVjdGlvbk9wdGlvbnMgPSB7fSk6IHN0cmluZyB7CiAgY29uc3Qgd2lkdGggPSBvcHRpb25zLndpZHRoID8/IDgwMCwgaGVpZ2h0ID0gb3B0aW9ucy5oZWlnaHQgPz8gODAwOwogIGNvbnN0IHAgPSBjcmVhdGVQcm9qZWN0aW9uKG5vZGVzLCB7IC4uLm9wdGlvbnMsIHdpZHRoLCBoZWlnaHQgfSk7CiAgY29uc3QgbGF5ZXIgPSBvcHRpb25zLmxheWVyID8/ICJkb3RzIiwgYnJlYXRoID0gb3B0aW9ucy5icmVhdGggPz8gNDsKICBjb25zdCByZWNhbGxlZCA9IG5ldyBTZXQob3B0aW9ucy5yZWNhbGwgPyByZWNhbGxBZGRyZXNzZXMobm9kZXMsIG9wdGlvbnMuaGlnaGxpZ2h0KSA6IFtdKTsKICBjb25zdCBjb250ZW50OiBzdHJpbmdbXSA9IFtdOwogIGNvbnN0IHBhdGggPSAocG9pbnRzOiB7IHg6IG51bWJlcjsgeTogbnVtYmVyIH1bXSwgY29sb3I6IHN0cmluZywgc3Ryb2tlV2lkdGg6IG51bWJlciwgb3BhY2l0eSA9IDEsIHNtb290aCA9IGZhbHNlKSA9PiB7IGlmIChwb2ludHMubGVuZ3RoIDwgMikgcmV0dXJuOwogICAgbGV0IGRhdGEgPSBgTSR7bnVtYmVyKHBvaW50c1swXS54KX0gJHtudW1iZXIocG9pbnRzWzBdLnkpfWA7CiAgICBpZiAoc21vb3RoICYmIHBvaW50cy5sZW5ndGggPiAyKSB7IGZvciAobGV0IGk9MTtpPHBvaW50cy5sZW5ndGgtMTtpKyspIGRhdGErPWAgUSR7bnVtYmVyKHBvaW50c1tpXS54KX0gJHtudW1iZXIocG9pbnRzW2ldLnkpfSAke251bWJlcigocG9pbnRzW2ldLngrcG9pbnRzW2krMV0ueCkvMil9ICR7bnVtYmVyKChwb2ludHNbaV0ueStwb2ludHNbaSsxXS55KS8yKX1gOyBkYXRhKz1gIEwke251bWJlcihwb2ludHMuYXQoLTEpIS54KX0gJHtudW1iZXIocG9pbnRzLmF0KC0xKSEueSl9YDsgfQogICAgZWxzZSBkYXRhKz1wb2ludHMuc2xpY2UoMSkubWFwKGE9PmAgTCR7bnVtYmVyKGEueCl9ICR7bnVtYmVyKGEueSl9YCkuam9pbigiIik7CiAgICBjb250ZW50LnB1c2goYDxwYXRoIGQ9IiR7ZGF0YX0iIGZpbGw9Im5vbmUiIHN0cm9rZT0iJHtjb2xvcn0iIHN0cm9rZS13aWR0aD0iJHtzdHJva2VXaWR0aH0iIG9wYWNpdHk9IiR7b3BhY2l0eX0iIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPmApOyB9OwogIGlmICghbm9kZXMubGVuZ3RoKSB7CiAgICBmb3IgKGxldCBrID0gMDsgayA8IFBJVENIOyBrKyspIHsgY29uc3QgdGhldGEgPSBUQVUgKiBrIC8gUElUQ0gsIHIgPSBNYXRoLm1pbih3aWR0aCwgaGVpZ2h0KSAqIDAuMzI7IHBhdGgoW3sgeDogd2lkdGggLyAyICsgTWF0aC5jb3ModGhldGEpICogciwgeTogaGVpZ2h0IC8gMiArIE1hdGguc2luKHRoZXRhKSAqIHIgfSwgeyB4OiB3aWR0aCAvIDIgKyBNYXRoLmNvcyh0aGV0YSkgKiAociArIDQpLCB5OiBoZWlnaHQgLyAyICsgTWF0aC5zaW4odGhldGEpICogKHIgKyA0KSB9XSwgTUlTVCwgMSwgMC4wNCk7IH0KICAgIGNvbnRlbnQucHVzaChgPGNpcmNsZSBjeD0iJHt3aWR0aCAvIDJ9IiBjeT0iJHtoZWlnaHQgLyAyfSIgcj0iNCIgZmlsbD0iJHtNSVNUfSIvPmApOwogIH0KICBpZiAobm9kZXMubGVuZ3RoID4gMikgeyBjb25zdCByaW5nPUFycmF5LmZyb20oe2xlbmd0aDo2OX0sKF8saSk9Pntjb25zdCBhPVRBVSooaS84NCswLjA0KTtyZXR1cm4gcC5wb2ludChbTWF0aC5jb3MoYSkqUjAsWV9TVEVQLE1hdGguc2luKGEpKlIwXSk7fSk7IHBhdGgocmluZyxNSVNULDAuOCwwLjIzKTsgfQogIGlmIChsYXllciA9PT0gInBhdGgiIHx8IGxheWVyID09PSAiZ2xvdyIpIHsKICAgIGZvciAoY29uc3Qgcm9sZSBvZiBbImNhcmJvbiIsICJzaWxpY29uIl0gYXMgY29uc3QpIHBhdGgocC5ub2Rlcy5maWx0ZXIoYSA9PiBhLm5vZGUucm9sZSA9PT0gcm9sZSksIG9wdGlvbnMubE9ubHkgPyAiI2FhYSIgOiBDSEFOTkVMU1tyb2xlID09PSAiY2FyYm9uIiA/IDAgOiAxXS5jc3MsIGxheWVyID09PSAicGF0aCIgPyAxLjIgOiAwLjgsIGxheWVyID09PSAicGF0aCIgPyAwLjU1IDogMC4yMCwgdHJ1ZSk7CiAgICBmb3IgKGxldCBpID0gMDsgaSArIDEgPCBwLm5vZGVzLmxlbmd0aDsgaSArPSAyKSBwYXRoKFtwLm5vZGVzW2ldLCBwLm5vZGVzW2kgKyAxXV0sIE1JU1QsIDAuNTUsIGkgPj0gbm9kZXMubGVuZ3RoLWJyZWF0aCoyID8gMC4zOCA6IDAuMTApOwogIH0KICBpZiAobGF5ZXIgPT09ICJjb250b3VycyIpIGZvciAobGV0IGZpcnN0ID0gMDsgZmlyc3QgPCBwLm5vZGVzLmxlbmd0aDsgZmlyc3QgKz0gUElUQ0gpIHBhdGgocC5ub2Rlcy5zbGljZShmaXJzdCwgZmlyc3QgKyBQSVRDSCksIE1JU1QsIDAuOSwgMC4zMCwgdHJ1ZSk7CiAgaWYgKG5vZGVzLmxlbmd0aCA+IDIpIHsgY29uc3QgbWVhbiA9IFtdOyBmb3IgKGxldCBpID0gMDsgaSArIDEgPCBwLm5vZGVzLmxlbmd0aDsgaSArPSAyKSBtZWFuLnB1c2goeyB4OiAocC5ub2Rlc1tpXS54ICsgcC5ub2Rlc1tpICsgMV0ueCkgLyAyLCB5OiAocC5ub2Rlc1tpXS55ICsgcC5ub2Rlc1tpICsgMV0ueSkgLyAyIH0pOyBwYXRoKG1lYW4sIE1JU1QsIDEuNzUsIGxheWVyID09PSAicGF0aCIgPyAwLjQyIDogMC4xOSwgdHJ1ZSk7IH0KICBpZiAob3B0aW9ucy5yZWNhbGwgJiYgcC5ub2Rlcy5sZW5ndGgpIHsKICAgIGNvbnN0IHRvcCA9IHAubm9kZXMuYXQoLTEpITsKICAgIGZvciAoY29uc3QgayBvZiByZWNhbGxlZCkgeyBjb25zdCBvbGQgPSBwLm5vZGVzW2sgLSAxXTsgY29uc3QgYmVuZCA9IE1hdGgubWluKHdpZHRoICogMC4xMSwgNjUpOyBjb250ZW50LnB1c2goYDxwYXRoIGQ9Ik0ke251bWJlcih0b3AueCl9ICR7bnVtYmVyKHRvcC55KX0gUSR7bnVtYmVyKCh0b3AueCArIG9sZC54KSAvIDIgKyBiZW5kKX0gJHtudW1iZXIoKHRvcC55ICsgb2xkLnkpIC8gMil9ICR7bnVtYmVyKG9sZC54KX0gJHtudW1iZXIob2xkLnkpfSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIke29wdGlvbnMubE9ubHkgPyBNSVNUIDogQ0hBTk5FTFNbMV0uY3NzfSIgc3Ryb2tlLXdpZHRoPSIwLjkiIG9wYWNpdHk9IjAuNjUiLz5gKTsgfQogIH0KICBmb3IgKGNvbnN0IGEgb2YgWy4uLnAubm9kZXNdLnNvcnQoKGEsIGIpID0+IGIuZGVwdGggLSBhLmRlcHRoKSkgewogICAgY29uc3QgTCA9IG5vZGVMaWdodG5lc3MoYS5ub2RlLCBub2Rlcy5sZW5ndGgsIGJyZWF0aCwgb3B0aW9ucy5kZWNheSwgcmVjYWxsZWQuaGFzKGEubm9kZS5rKSk7CiAgICBjb25zdCBjb2xvciA9IG5vZGVDb2xvcihhLm5vZGUsIEwsIG9wdGlvbnMubE9ubHkpOyBjb25zdCByYWRpdXMgPSBub2Rlcy5sZW5ndGggPiAxMDAwID8gMC44IDogbm9kZXMubGVuZ3RoID4gMTAwID8gMS4yNSA6IG5vZGVzLmxlbmd0aCA8PSAyID8gNCA6IDIuNTU7CiAgICBpZiAobGF5ZXIgPT09ICJnbG93IiAmJiBhLm5vZGUuaW5kZXggPj0gbm9kZXMubGVuZ3RoIC0gYnJlYXRoICogMikgY29udGVudC5wdXNoKGA8Y2lyY2xlIGN4PSIke251bWJlcihhLngpfSIgY3k9IiR7bnVtYmVyKGEueSl9IiByPSIke3JhZGl1cyAqIDN9IiBmaWxsPSIke2NvbG9yfSIgb3BhY2l0eT0iMC4wOCIvPjxjaXJjbGUgY3g9IiR7bnVtYmVyKGEueCl9IiBjeT0iJHtudW1iZXIoYS55KX0iIHI9IiR7cmFkaXVzICogMS44fSIgZmlsbD0iJHtjb2xvcn0iIG9wYWNpdHk9IjAuMTQiLz5gKTsKICAgIGNvbnRlbnQucHVzaChgPGNpcmNsZSBkYXRhLXN0cmFuZD0iJHthLm5vZGUua30iIGN4PSIke251bWJlcihhLngpfSIgY3k9IiR7bnVtYmVyKGEueSl9IiByPSIke3JhZGl1c30iIGZpbGw9IiR7Y29sb3J9Ii8+YCk7CiAgfQogIHJldHVybiBgPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIke3dpZHRofSIgaGVpZ2h0PSIke2hlaWdodH0iIHZpZXdCb3g9IjAgMCAke3dpZHRofSAke2hlaWdodH0iIHJvbGU9ImltZyI+PHRpdGxlPiR7ZXNjYXBlZChvcHRpb25zLnRpdGxlID8/ICJNaW5kZ3V0IGlsbHVzdHJhdGl2ZSBjb29yZGluYXRlIHBsYXRlIil9PC90aXRsZT48ZGVzYz5EZXRlcm1pbmlzdGljIHZpc3VhbCBzdHVkeS4gNDItY3Jvc3NpbmcgcGl0Y2guIENoYXJhY3Rlci1yZXNpZHVlIGNvb3JkaW5hdGVzOyBubyBzZXNzaW9uIHRleHQuIElsbHVzdHJhdGl2ZSBjb250aW51YXRpb24sIG5vdCBhIGNhcHR1cmVkIHJ1bnRpbWUgcmVjb3JkLjwvZGVzYz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIke2VzY2FwZWQob3B0aW9ucy5iYWNrZ3JvdW5kID8/IFZPSUQpfSIvPiR7Y29udGVudC5qb2luKCIiKX08L3N2Zz5gOwp9CmV4cG9ydCBmdW5jdGlvbiBzZWVkSlNPTihub2RlczogUmVjb3JkTm9kZVtdKTogc3RyaW5nIHsKICByZXR1cm4gSlNPTi5zdHJpbmdpZnkoeyBmb3JtYXQ6ICJtaW5kZ3V0LXZpc3VhbC1zdHVkeS1zZWVkIiwgdmVyc2lvbjogMSwgbmF0aXZlQ29tcGF0aWJpbGl0eTogIm5vdCBhc3NlcnRlZCIsIHByb3ZlbmFuY2U6ICJWaXNpdG9yLWRlcml2ZWQgZmlyc3QgdHJpcGxlIHdoZW4gc3VwcGxpZWQ7IHJlbWFpbmluZyBub2RlcyBhcmUgZGV0ZXJtaW5pc3RpYyBpbGx1c3RyYXRpdmUgZml4dHVyZXMuIiwgY29udGFpbnNUZXh0OiBmYWxzZSwgYmFzZWxpbmU6IE1VLCBnZW9tZXRyeTogeyBwaXRjaDogUElUQ0gsIHIwOiBSMCwgYWxwaGE6IFJBRElBTF9HQUlOLCBkZWx0YVk6IFlfU1RFUCB9LCBzdHJhbmRzOiBub2Rlcy5tYXAoKHsgaywgcm9sZSwgZiwgdGhldGEsIHksIHIsIHh5eiwgZGVsdGEsIGNsYXNoLCBpbGx1c3RyYXRpdmUsIHNvdXJjZSB9KSA9PiAoeyBrLCByb2xlLCBmcmFjdGlvbnM6IGYsIHRoZXRhLCB5LCByLCB4eXosIGRlbHRhLCBjbGFzaCwgaWxsdXN0cmF0aXZlLCBzb3VyY2UgfSkpIH0sIG51bGwsIDIpOwp9CmV4cG9ydCBmdW5jdGlvbiBjYW52YXNQTkcoY2FudmFzOiBIVE1MQ2FudmFzRWxlbWVudCk6IHN0cmluZyB7IHJldHVybiBjYW52YXMudG9EYXRhVVJMKCJpbWFnZS9wbmciKTsgfQo="),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

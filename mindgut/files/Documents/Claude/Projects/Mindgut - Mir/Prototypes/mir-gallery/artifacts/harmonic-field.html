@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harmonic Field</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#06060C;--bg-panel:rgba(8,8,18,0.88);--border:rgba(60,70,110,0.25);
+    --cyan:#4DF0E2;--magenta:#E24DCA;--amber:#E2A84D;--red-star:#FF6B4A;
+    --blue-star:#7EB8FF;--white-star:#E8EAFF;--yellow-star:#FFD580;
+    --text:#C0C4D8;--text-dim:rgba(160,168,200,0.45);--text-bright:#E8EAFF;
+    --mono:'JetBrains Mono',monospace;--sans:'Space Grotesk',sans-serif;
+  }
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--mono)}
+  canvas#galaxy{position:fixed;top:0;left:0;z-index:1}
+  #hud{position:fixed;inset:0;z-index:10;pointer-events:none;display:grid;
+    grid-template-columns:280px 1fr 260px;grid-template-rows:42px 1fr 48px;
+    gap:0;font-size:11px;letter-spacing:0.04em;transition:opacity 0.4s}
+  #hud *{pointer-events:auto}
+  #top-bar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;
+    padding:0 20px;background:var(--bg-panel);border-bottom:1px solid var(--border);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  #top-bar .status{display:flex;gap:24px;align-items:center}
+  .tag{color:var(--text-dim);font-size:10px;text-transform:uppercase;letter-spacing:0.1em}
+  .tag b{color:var(--cyan);font-weight:500}.tag.amber b{color:var(--amber)}.tag.magenta b{color:var(--magenta)}
+  #session-timer{font-variant-numeric:tabular-nums;color:var(--text-dim);font-size:10px}
+  #hint{color:var(--text-dim);font-size:10px;transition:opacity 2s;opacity:1}
+  #hint.hidden{opacity:0}
+  #top-bar .logo{font-family:var(--sans);font-weight:500;font-size:13px;color:var(--text-bright);letter-spacing:0.12em;text-transform:uppercase}
+  #left-panel{background:var(--bg-panel);border-right:1px solid var(--border);
+    backdrop-filter:blur(12px);padding:16px 14px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
+  .panel-header{font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:var(--text-dim);
+    padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .panel-header .count{color:var(--cyan);font-weight:500}
+  #star-data{display:flex;flex-direction:column;gap:8px}
+  #star-data .row{display:flex;justify-content:space-between;align-items:baseline}
+  #star-data .label{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em}
+  #star-data .value{font-size:12px;color:var(--text-bright);font-weight:400;font-variant-numeric:tabular-nums}
+  #star-data .value.cyan{color:var(--cyan)}.value.amber{color:var(--amber)}.value.magenta{color:var(--magenta)}
+  #star-name{font-family:var(--sans);font-size:15px;font-weight:500;color:var(--text-bright);padding:4px 0;min-height:24px}
+  .no-star{color:var(--text-dim);font-style:italic;font-size:11px;font-family:var(--mono)}
+  #scope-wrap,#analyzer-wrap{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:4px;padding:8px;position:relative}
+  #scope-canvas,#analyzer-canvas{width:100%;height:80px;display:block}
+  #scope-label,#analyzer-label{position:absolute;top:4px;right:8px;font-size:8px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em}
+  #right-panel{background:var(--bg-panel);border-left:1px solid var(--border);
+    backdrop-filter:blur(12px);padding:16px 14px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
+  .selector{display:flex;flex-direction:column;gap:4px}
+  .selector .option{padding:6px 10px;border:1px solid transparent;border-radius:3px;font-size:10px;
+    color:var(--text-dim);cursor:pointer;transition:all 0.2s;display:flex;justify-content:space-between;align-items:center;background:transparent}
+  .selector .option:hover{border-color:var(--border);color:var(--text)}
+  .selector .option.active{border-color:var(--cyan);color:var(--cyan);background:rgba(77,240,226,0.04)}
+  .selector .option.active.analog{border-color:var(--amber);color:var(--amber);background:rgba(226,168,77,0.04)}
+  .selector .option.active.granular{border-color:var(--magenta);color:var(--magenta);background:rgba(226,77,202,0.04)}
+  .selector .option.active.spectral{border-color:var(--blue-star);color:var(--blue-star);background:rgba(126,184,255,0.04)}
+  .selector .option.active.organic{border-color:#6BE27A;color:#6BE27A;background:rgba(107,226,122,0.04)}
+  .selector .option .key{font-size:8px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:2px;color:var(--text-dim)}
+  #field-stats{display:flex;flex-direction:column;gap:6px}
+  #field-stats .row{display:flex;justify-content:space-between;font-size:10px}
+  #field-stats .label{color:var(--text-dim)}.val{color:var(--text-bright);font-variant-numeric:tabular-nums}
+  #bottom-bar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;
+    padding:0 20px;background:var(--bg-panel);border-top:1px solid var(--border);backdrop-filter:blur(12px)}
+  #bottom-bar .section{display:flex;gap:16px;align-items:center}
+  #zoom-indicator,#cursor-info{font-size:10px;color:var(--text-dim);font-variant-numeric:tabular-nums}
+  #active-count{font-size:10px;color:var(--cyan)}
+  #viewport{position:relative;overflow:hidden}
+  #cursor-ring{position:fixed;pointer-events:none;z-index:5;border:1px solid rgba(77,240,226,0.18);
+    border-radius:50%;transform:translate(-50%,-50%);transition:width 0.3s,height 0.3s;
+    box-shadow:0 0 20px rgba(77,240,226,0.04),inset 0 0 20px rgba(77,240,226,0.02)}
+  #cursor-dot{position:fixed;width:3px;height:3px;background:var(--cyan);border-radius:50%;
+    pointer-events:none;z-index:6;transform:translate(-50%,-50%);box-shadow:0 0 6px var(--cyan)}
+  .corner{position:fixed;z-index:4;color:var(--border);font-size:24px;line-height:1;pointer-events:none;opacity:0.4}
+  .corner.tl{top:52px;left:288px}.corner.tr{top:52px;right:268px}
+  .corner.bl{bottom:56px;left:288px}.corner.br{bottom:56px;right:268px}
+  #crosshair-h,#crosshair-v{position:fixed;pointer-events:none;z-index:3;background:rgba(77,240,226,0.04)}
+  #crosshair-h{height:1px;left:280px;right:260px;top:50%}
+  #crosshair-v{width:1px;top:42px;bottom:48px;left:50%}
+  #loading{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:16px;transition:opacity 0.8s,visibility 0.8s}
+  #loading.done{opacity:0;visibility:hidden;pointer-events:none}
+  #loading h1{font-family:var(--sans);font-size:28px;font-weight:300;color:var(--text-bright);letter-spacing:0.2em;text-transform:uppercase}
+  #loading p{font-size:10px;color:var(--text-dim);letter-spacing:0.1em}
+  #loading .bar{width:200px;height:1px;background:var(--border);position:relative;overflow:hidden}
+  #loading .fill{position:absolute;left:0;top:0;height:100%;width:0;background:var(--cyan);transition:width 0.3s}
+  #data-badge{display:inline-block;background:rgba(77,240,226,0.08);border:1px solid rgba(77,240,226,0.2);
+    border-radius:3px;padding:2px 8px;font-size:9px;color:var(--cyan);letter-spacing:0.05em;margin-top:2px}
+  #scan-line{position:fixed;pointer-events:none;z-index:4;top:42px;bottom:48px;width:2px;
+    background:linear-gradient(180deg,transparent,var(--cyan),transparent);opacity:0;transition:opacity 0.3s;
+    box-shadow:0 0 12px var(--cyan),0 0 4px var(--cyan)}
+  #scan-line.active{opacity:0.7}
+  #scan-trail{position:fixed;pointer-events:none;z-index:3;top:42px;bottom:48px;width:40px;
+    background:linear-gradient(90deg,rgba(77,240,226,0.06),transparent);opacity:0;transition:opacity 0.3s}
+  #scan-trail.active{opacity:1}
+  .pin-badge{font-size:8px;color:var(--magenta);margin-left:4px}
+  #pin-info{font-size:9px;color:var(--text-dim);line-height:1.7}
+  #pin-info .pinned-star{color:var(--magenta);cursor:pointer}
+  #pin-info .pinned-star:hover{text-decoration:underline}
+  .mode-indicator{display:inline-block;padding:2px 6px;border-radius:2px;font-size:8px;letter-spacing:0.08em;font-weight:500}
+  .mode-indicator.explore{background:rgba(77,240,226,0.1);color:var(--cyan);border:1px solid rgba(77,240,226,0.2)}
+  .mode-indicator.pin{background:rgba(226,77,202,0.1);color:var(--magenta);border:1px solid rgba(226,77,202,0.2)}
+  .mode-indicator.scan{background:rgba(226,168,77,0.1);color:var(--amber);border:1px solid rgba(226,168,77,0.2)}
+  ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+<div id="loading">
+  <h1>Harmonic Field</h1>
+  <div class="bar"><div class="fill" id="load-fill"></div></div>
+  <p id="load-status">LOADING HYG STAR CATALOG</p>
+</div>
+<canvas id="galaxy"></canvas>
+<div id="cursor-ring"></div>
+<div id="cursor-dot"></div>
+<div class="corner tl">[</div><div class="corner tr">]</div>
+<div class="corner bl">[</div><div class="corner br">]</div>
+<div id="crosshair-h"></div><div id="crosshair-v"></div>
+<div id="scan-line"></div>
+<div id="scan-trail"></div>
+
+<div id="hud">
+  <div id="top-bar">
+    <span class="logo">Harmonic Field</span>
+    <div class="status">
+      <span class="tag">MODE <b id="t-mode">EXPLORE</b></span>
+      <span class="tag amber">HARMONY <b id="t-harmony">PENTATONIC</b></span>
+      <span class="tag magenta">PALETTE <b id="t-palette">CRYSTALLINE</b></span>
+      <span class="tag">STARS <b id="t-stars">0</b> SOUNDING</span>
+    </div>
+    <div style="display:flex;gap:20px;align-items:center">
+      <span id="hint">[ MOVE: EXPLORE ] &nbsp; [ SPACE: SCAN ] &nbsp; [ P: PIN ] &nbsp; [ SCROLL: ZOOM ]</span>
+      <span id="session-timer">T:00:00:00</span>
+    </div>
+  </div>
+
+  <div id="left-panel">
+    <div>
+      <div class="panel-header">FOCUSED STAR <span class="count" id="lp-count">&mdash;</span></div>
+      <div id="star-name"><span class="no-star">Move cursor over stars</span></div>
+      <div id="star-data">
+        <div class="row"><span class="label">Name</span><span class="value" id="sd-proper">&mdash;</span></div>
+        <div class="row"><span class="label">Constellation</span><span class="value amber" id="sd-con">&mdash;</span></div>
+        <div class="row"><span class="label">Temperature</span><span class="value" id="sd-temp">&mdash;</span></div>
+        <div class="row"><span class="label">Spectral Type</span><span class="value" id="sd-class">&mdash;</span></div>
+        <div class="row"><span class="label">Magnitude</span><span class="value" id="sd-mag">&mdash;</span></div>
+        <div class="row"><span class="label">Distance</span><span class="value" id="sd-dist">&mdash;</span></div>
+        <div class="row"><span class="label">RA / Dec</span><span class="value" id="sd-radec">&mdash;</span></div>
+        <div class="row"><span class="label">Pitch</span><span class="value cyan" id="sd-pitch">&mdash;</span></div>
+        <div class="row"><span class="label">Frequency</span><span class="value cyan" id="sd-freq">&mdash;</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="panel-header">WAVEFORM <span class="count">LIVE</span></div>
+      <div id="scope-wrap"><canvas id="scope-canvas"></canvas><span id="scope-label">OSCILLOSCOPE</span></div>
+    </div>
+    <div>
+      <div class="panel-header">ACTIVE VOICES <span class="count" id="voice-count">0 / 24</span></div>
+      <div id="voice-list" style="min-height:40px;font-size:9px;color:var(--text-dim)"><span class="no-star">No voices active</span></div>
+    </div>
+    <div>
+      <div class="panel-header">PINNED CONSTELLATION <span class="count" id="pin-count">0</span></div>
+      <div id="pin-info"><span class="no-star">Press P to enter Pin mode, then click stars</span></div>
+    </div>
+    <div>
+      <div class="panel-header">STAR-SOUND MAP</div>
+      <div style="font-size:9px;color:var(--text-dim);line-height:1.7">
+        <div style="display:flex;justify-content:space-between"><span>Temperature (K)</span><span style="color:var(--cyan)">&rarr; Pitch</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Magnitude</span><span style="color:var(--cyan)">&rarr; Volume</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Spectral Class</span><span style="color:var(--cyan)">&rarr; Timbre</span></div>
+        <div style="display:flex;justify-content:space-between"><span>RA (x-axis)</span><span style="color:var(--cyan)">&rarr; Pan</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Dec (y-axis)</span><span style="color:var(--cyan)">&rarr; Filter</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="viewport"></div>
+
+  <div id="right-panel">
+    <div>
+      <div class="panel-header">DATA SOURCE</div>
+      <div id="data-badge">HYG CATALOG v4.1</div>
+      <div style="font-size:9px;color:var(--text-dim);margin-top:6px;line-height:1.6">
+        Hipparcos + Yale Bright Star + Gliese. Real positions, magnitudes, temperatures, and spectral classifications.
+      </div>
+    </div>
+    <div>
+      <div class="panel-header">TONAL PALETTE</div>
+      <div class="selector" id="palette-selector">
+        <div class="option active" data-v="crystalline">Crystalline <span class="key">1</span></div>
+        <div class="option" data-v="analog">Analog <span class="key">2</span></div>
+        <div class="option" data-v="granular">Granular <span class="key">3</span></div>
+        <div class="option" data-v="spectral">Spectral <span class="key">4</span></div>
+        <div class="option" data-v="organic">Organic <span class="key">5</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="panel-header">HARMONIC SYSTEM</div>
+      <div class="selector" id="harmony-selector">
+        <div class="option active" data-v="pentatonic">Pentatonic <span class="key">Q</span></div>
+        <div class="option" data-v="modal">Modal <span class="key">W</span></div>
+        <div class="option" data-v="overtone">Overtone <span class="key">E</span></div>
+        <div class="option" data-v="layered">Layered <span class="key">R</span></div>
+      </div>
+    </div>
+    <div id="modal-sub" style="display:none">
+      <div class="panel-header">MODE SELECT</div>
+      <div class="selector" id="mode-selector">
+        <div class="option active" data-v="lydian">Lydian <span style="font-size:8px;color:var(--text-dim)">&middot; bright, wonder</span></div>
+        <div class="option" data-v="ionian">Ionian <span style="font-size:8px;color:var(--text-dim)">&middot; familiar, major</span></div>
+        <div class="option" data-v="mixolydian">Mixolydian <span style="font-size:8px;color:var(--text-dim)">&middot; open, bluesy</span></div>
+        <div class="option" data-v="dorian">Dorian <span style="font-size:8px;color:var(--text-dim)">&middot; warm, jazz</span></div>
+        <div class="option" data-v="aeolian">Aeolian <span style="font-size:8px;color:var(--text-dim)">&middot; melancholy</span></div>
+        <div class="option" data-v="phrygian">Phrygian <span style="font-size:8px;color:var(--text-dim)">&middot; dark, exotic</span></div>
+        <div class="option" data-v="locrian">Locrian <span style="font-size:8px;color:var(--text-dim)">&middot; eerie, tense</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="panel-header">SPECTRUM <span class="count">LIVE</span></div>
+      <div id="analyzer-wrap"><canvas id="analyzer-canvas"></canvas><span id="analyzer-label">FFT 128</span></div>
+    </div>
+    <div>
+      <div class="panel-header">FIELD STATISTICS</div>
+      <div id="field-stats">
+        <div class="row"><span class="label">Catalog Stars</span><span class="val" id="fs-total">&mdash;</span></div>
+        <div class="row"><span class="label">Rendered</span><span class="val" id="fs-visible">&mdash;</span></div>
+        <div class="row"><span class="label">In Radius</span><span class="val" id="fs-radius">0</span></div>
+        <div class="row"><span class="label">Named Stars</span><span class="val" id="fs-named">&mdash;</span></div>
+        <div class="row"><span class="label">Constellations</span><span class="val" id="fs-constellations">&mdash;</span></div>
+        <div class="row"><span class="label">Temp Range</span><span class="val" id="fs-temprange">&mdash;</span></div>
+        <div class="row"><span class="label">Data Source</span><span class="val" id="fs-source">HYG v4.1</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="panel-header">KEYBOARD</div>
+      <div style="font-size:9px;color:var(--text-dim);line-height:1.9">
+        <div style="display:flex;justify-content:space-between"><span>Scan mode</span><span class="key" style="font-size:8px;background:rgba(226,168,77,0.15);padding:1px 5px;border-radius:2px;color:var(--amber)">SPACE</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Pin mode</span><span class="key" style="font-size:8px;background:rgba(226,77,202,0.15);padding:1px 5px;border-radius:2px;color:var(--magenta)">P</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Play pinned</span><span class="key" style="font-size:8px;background:rgba(226,77,202,0.15);padding:1px 5px;border-radius:2px;color:var(--magenta)">ENTER</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Clear pins</span><span class="key" style="font-size:8px;background:rgba(226,77,202,0.15);padding:1px 5px;border-radius:2px;color:var(--magenta)">BKSP</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Zoom in / out</span><span class="key" style="font-size:8px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:2px">SCROLL</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Toggle HUD</span><span class="key" style="font-size:8px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:2px">H</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Mute / unmute</span><span class="key" style="font-size:8px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:2px">M</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Fullscreen</span><span class="key" style="font-size:8px;background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:2px">F</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="bottom-bar">
+    <div class="section">
+      <span id="zoom-indicator">ZOOM: 1.00x</span>
+      <span style="color:var(--border)">&vert;</span>
+      <span id="cursor-info">RA: &mdash; &nbsp; DEC: &mdash;</span>
+    </div>
+    <div class="section">
+      <span id="active-count">SOUNDING: 0</span>
+      <span style="color:var(--border)">&vert;</span>
+      <span style="font-size:10px;color:var(--text-dim)">RADIUS: <span id="radius-val">120</span>px</span>
+      <span style="color:var(--border)">&vert;</span>
+      <span id="scan-speed-display" style="font-size:10px;color:var(--text-dim)">SCAN: 45 BPM</span>
+      <span style="color:var(--border)">&vert;</span>
+      <span id="pin-tempo-display" style="font-size:10px;color:var(--magenta);opacity:0.5">SEQ: 120 BPM</span>
+    </div>
+    <div class="section"><span style="font-size:10px;color:var(--text-dim)">PHASE II &mdash; REAL DATA &mdash; HYG STELLAR CATALOG</span></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script id="embedded-data">
+const EMBEDDED_STARS=[{"r":0.0,"d":0.0,"m":-26.7,"t":5757,"s":"G2","n":"Sol","c":null,"D":null,"b":0.656},{"r":0.032672,"d":-6.014072,"m":4.37,"t":3607,"s":"M3","n":"30    Psc","c":"Psc","D":132.5,"b":1.631},{"r":0.139791,"d":29.090432,"m":2.07,"t":10625,"s":"B9","n":"Alpheratz","c":"And","D":29.7,"b":-0.038},{"r":0.152887,"d":59.14978,"m":2.28,"t":6989,"s":"F2","n":"Caph","c":"Cas","D":16.8,"b":0.38},{"r":0.156836,"d":-45.747426,"m":3.88,"t":4712,"s":"K0","n":"Eps Phe","c":"Phe","D":44.2,"b":1.013},{"r":0.220598,"d":15.183596,"m":2.83,"t":13348,"s":"B2","n":"Algenib","c":"Peg","D":120.0,"b":-0.19},{"r":0.244005,"d":-18.932866,"m":4.44,"t":3594,"s":"M1","n":"7    Cet","c":"Cet","D":137.2,"b":1.64},{"r":0.323799,"d":-8.823921,"m":3.56,"t":4281,"s":"K2","n":"8Iot Cet","c":"Cet","D":84.2,"b":1.214},{"r":0.334142,"d":-64.874791,"m":4.23,"t":6063,"s":"F9","n":"Zet Tuc","c":"Tuc","D":8.6,"b":0.576},{"r":0.427916,"d":-77.254247,"m":2.82,"t":5898,"s":"G2","n":"Bet Hyi","c":"Hyi","D":7.5,"b":0.618},{"r":0.436716,"d":-43.679829,"m":3.93,"t":8362,"s":"A7","n":"Kap Phe","c":"Phe","D":23.8,"b":0.175},{"r":0.438056,"d":-42.305981,"m":2.4,"t":4552,"s":"K0","n":"Ankaa","c":"Phe","D":26.0,"b":1.083},{"r":0.525725,"d":-62.958218,"m":4.36,"t":11001,"s":"B9","n":"Bet1Tuc","c":"Tuc","D":41.4,"b":-0.064},{"r":0.549997,"d":62.931783,"m":4.17,"t":8748,"s":"B1","n":"15Kap Cas","c":"Cas","D":null,"b":0.13},{"r":0.61468,"d":33.719344,"m":4.34,"t":11975,"s":"B5","n":"29Pi  And","c":"And","D":183.5,"b":-0.123},{"r":0.616188,"d":53.896909,"m":3.69,"t":13489,"s":"B2","n":"Fulu","c":"Cas","D":181.8,"b":-0.196},{"r":0.642602,"d":29.311751,"m":4.34,"t":5075,"s":"G5","n":"30Eps And","c":"And","D":50.2,"b":0.871},{"r":0.655462,"d":30.861024,"m":3.27,"t":4179,"s":"K3","n":"31Del And","c":"And","D":32.4,"b":1.268},{"r":0.675116,"d":56.537331,"m":2.24,"t":4368,"s":"K0","n":"Schedar","c":"Cas","D":70.0,"b":1.17},{"r":0.722567,"d":-57.46306,"m":4.36,"t":9835,"s":"A0","n":"Eta Phe","c":"Phe","D":75.5,"b":0.024},{"r":0.72649,"d":-17.986605,"m":2.04,"t":4698,"s":"K0","n":"Diphda","c":"Cet","D":29.5,"b":1.019},{"r":0.74542,"d":48.284364,"m":4.48,"t":11076,"s":"B5","n":"22Omi Cas","c":"Cas","D":215.5,"b":-0.069},{"r":0.788981,"d":24.267178,"m":4.08,"t":4515,"s":"K1","n":"34Zet And","c":"And","D":58.0,"b":1.1},{"r":0.811373,"d":7.585079,"m":4.44,"t":3794,"s":"K5","n":"63Del Psc","c":"Psc","D":95.4,"b":1.5},{"r":0.81826,"d":57.815187,"m":3.46,"t":6019,"s":"G0","n":"Achird","c":"Cas","D":6.0,"b":0.587},{"r":0.945143,"d":60.71674,"m":2.15,"t":10738,"s":"B0","n":"Cih","c":"Cas","D":168.4,"b":-0.046},{"r":0.945885,"d":38.499345,"m":3.86,"t":8748,"s":"A5","n":"37Mu  And","c":"And","D":39.8,"b":0.13},{"r":0.953445,"d":23.417648,"m":4.4,"t":4892,"s":"G8","n":"38Eta And","c":"And","D":70.4,"b":0.94},{"r":0.976766,"d":-29.357449,"m":4.3,"t":12569,"s":"B7","n":"Alp Scl","c":"Scl","D":238.1,"b":-0.154},{"r":1.049058,"d":7.890135,"m":4.27,"t":4861,"s":"K0","n":"71Eps Psc","c":"Psc","D":55.7,"b":0.952},{"r":1.101407,"d":-46.718414,"m":3.32,"t":5037,"s":"G8","n":"Bet Phe","c":"Phe","D":null,"b":0.885},{"r":1.139742,"d":-55.24576,"m":3.94,"t":11920,"s":"B6","n":"Wurren","c":"Phe","D":91.6,"b":-0.12},{"r":1.143164,"d":-10.182264,"m":3.46,"t":4387,"s":"K2","n":"31Eta Cet","c":"Cet","D":38.0,"b":1.161},{"r":1.145613,"d":86.25709,"m":4.24,"t":4283,"s":"K2","n":"HIP 5372","c":"Cep","D":85.9,"b":1.213},{"r":1.158368,"d":47.241792,"m":4.26,"t":9978,"s":"B7","n":"42Phi And","c":"And","D":219.8,"b":0.012},{"r":1.162194,"d":35.620558,"m":2.07,"t":3683,"s":"M0","n":"Mirach","c":"And","D":60.5,"b":1.576},{"r":1.185017,"d":55.149901,"m":4.34,"t":8403,"s":"A7","n":"33The Cas","c":"Cas","D":41.0,"b":0.17},{"r":1.262704,"d":-68.875927,"m":4.25,"t":6481,"s":"F6","n":"Kap Tuc","c":"Tuc","D":21.0,"b":0.48},{"r":1.40039,"d":-8.183257,"m":3.6,"t":4592,"s":"K0","n":"45The Cet","c":"Cet","D":34.9,"b":1.065},{"r":1.430216,"d":60.235283,"m":2.66,"t":8486,"s":"A5","n":"Ruchbah","c":"Cas","D":30.5,"b":0.16},{"r":1.472759,"d":-43.318234,"m":3.41,"t":3731,"s":"K5","n":"Gam Phe","c":"Phe","D":71.6,"b":1.542},{"r":1.520851,"d":-49.072702,"m":3.93,"t":4811,"s":"K0","n":"Del Phe","c":"Phe","D":43.6,"b":0.972},{"r":1.524725,"d":15.345823,"m":3.62,"t":4806,"s":"G8","n":"Alpherg","c":"Psc","D":107.2,"b":0.974},{"r":1.613299,"d":41.405459,"m":4.1,"t":6230,"s":"F8","n":"Titawin","c":"And","D":13.5,"b":0.536},{"r":1.628556,"d":-57.236757,"m":0.45,"t":12650,"s":"B3","n":"Achernar","c":"Eri","D":42.8,"b":-0.158},{"r":1.633205,"d":48.628213,"m":3.59,"t":4167,"s":"K3","n":"Nembus","c":"And","D":54.3,"b":1.275},{"r":1.690526,"d":5.487613,"m":4.45,"t":4039,"s":"K3","n":"106Nu  Psc","c":"Psc","D":111.4,"b":1.347},{"r":1.727675,"d":50.688732,"m":4.01,"t":11539,"s":"B2","n":"Phi Per","c":"Per","D":220.3,"b":-0.098},{"r":1.734479,"d":-15.93748,"m":3.49,"t":5511,"s":"G8","n":"52Tau Cet","c":"Cet","D":3.7,"b":0.727},{"r":1.756564,"d":9.157736,"m":4.26,"t":4886,"s":"K0","n":"Torcular","c":"Psc","D":85.7,"b":0.942},{"r":1.857676,"d":-10.335038,"m":3.74,"t":4438,"s":"K2","n":"Baten Kaitos","c":"Cet","D":72.0,"b":1.136},{"r":1.884696,"d":29.578829,"m":3.42,"t":6444,"s":"F6","n":"Mothallah","c":"Tri","D":19.4,"b":0.488},{"r":1.89217,"d":19.293852,"m":3.88,"t":10752,"s":"A1","n":"Mesarthim","c":"Ari","D":50.3,"b":-0.047},{"r":1.894102,"d":-46.302669,"m":4.39,"t":3653,"s":"M4","n":"Psi Phe","c":"Phe","D":104.8,"b":1.597},{"r":1.906584,"d":63.670101,"m":3.35,"t":12489,"s":"B2","n":"Segin","c":"Cas","D":126.3,"b":-0.15},{"r":1.910668,"d":20.808035,"m":2.64,"t":8444,"s":"A5","n":"Sheratan","c":"Ari","D":18.0,"b":0.165},{"r":1.932564,"d":-51.608896,"m":3.69,"t":5151,"s":"G5","n":"Chi Eri","c":"Eri","D":17.9,"b":0.844},{"r":1.979451,"d":-61.569859,"m":2.86,"t":7526,"s":"F0","n":"Alp Hyi","c":"Hyi","D":22.0,"b":0.29},{"r":2.000084,"d":-21.077831,"m":3.99,"t":3714,"s":"K5","n":"59Ups Cet","c":"Cet","D":89.8,"b":1.554},{"r":2.032644,"d":70.90702,"m":4.49,"t":8453,"s":"A3","n":"48    Cas","c":"Cas","D":35.3,"b":0.164},{"r":2.034117,"d":2.763759,"m":3.82,"t":9835,"s":"A2","n":"Alrescha","c":"Psc","D":46.2,"b":0.024},{"r":2.057268,"d":72.421294,"m":3.95,"t":10150,"s":"A2","n":"50    Cas","c":"Cas","D":48.2,"b":-0.002},{"r":2.064984,"d":42.329725,"m":2.1,"t":4000,"s":"B8","n":"Almach","c":"And","D":120.5,"b":1.37},{"r":2.119555,"d":23.462423,"m":2.01,"t":4407,"s":"K2","n":"Hamal","c":"Ari","D":20.2,"b":1.151},{"r":2.159058,"d":34.987297,"m":3.0,"t":8658,"s":"A5","n":"4Bet Tri","c":"Tri","D":38.9,"b":0.14},{"r":2.216665,"d":8.846717,"m":4.36,"t":5056,"s":"G8","n":"65Xi 1Cet","c":"Cet","D":117.5,"b":0.878},{"r":2.275154,"d":-51.512165,"m":3.56,"t":11920,"s":"B8","n":"Phi Eri","c":"Eri","D":47.1,"b":-0.12},{"r":2.288573,"d":33.847194,"m":4.03,"t":9894,"s":"A1","n":"9Gam Tri","c":"Tri","D":34.4,"b":0.019},{"r":2.362498,"d":-68.659418,"m":4.08,"t":9720,"s":"A3","n":"Del Hyi","c":"Hyi","D":42.8,"b":0.034},{"r":2.449755,"d":-47.70384,"m":4.24,"t":12216,"s":"B5","n":"Kap Eri","c":"Eri","D":155.8,"b":-0.136},{"r":2.469317,"d":8.460054,"m":4.3,"t":10838,"s":"B9","n":"73Xi 2Cet","c":"Cet","D":59.2,"b":-0.053},{"r":2.484437,"d":67.402474,"m":4.46,"t":8546,"s":"A5","n":"Iot Cas","c":"Cas","D":40.7,"b":0.153},{"r":2.52975,"d":89.264109,"m":1.97,"t":5830,"s":"F7","n":"Polaris","c":"UMi","D":132.6,"b":0.636},{"r":2.658044,"d":0.328511,"m":4.08,"t":13881,"s":"B2","n":"82Del Cet","c":"Cet","D":199.2,"b":-0.212},{"r":2.659799,"d":-68.266946,"m":4.12,"t":10956,"s":"B9","n":"Eps Hyi","c":"Hyi","D":46.6,"b":-0.061},{"r":2.677781,"d":-39.855375,"m":4.11,"t":4728,"s":"K0","n":"Iot Eri","c":"Eri","D":46.2,"b":1.006},{"r":2.721678,"d":3.235818,"m":3.47,"t":9096,"s":"A3","n":"Kaffaljidhma","c":"Cet","D":24.4,"b":0.093},{"r":2.735375,"d":-13.858696,"m":4.24,"t":11957,"s":"B7","n":"89Pi  Cet","c":"Cet","D":120.5,"b":-0.122},{"r":2.736634,"d":49.228448,"m":4.1,"t":6326,"s":"F7","n":"13The Per","c":"Per","D":11.1,"b":0.514},{"r":2.749039,"d":10.114146,"m":4.27,"t":7393,"s":"F1","n":"87Mu  Cet","c":"Cet","D":25.8,"b":0.311},{"r":2.751715,"d":-18.572563,"m":4.47,"t":6476,"s":"F5","n":"1Tau1Eri","c":"Eri","D":14.2,"b":0.481},{"r":2.818169,"d":-32.405898,"m":4.45,"t":4789,"s":"G8","n":"Bet For","c":"For","D":52.9,"b":0.981},{"r":2.833063,"d":27.260507,"m":3.61,"t":11573,"s":"B8","n":"Bharani","c":"Ari","D":50.8,"b":-0.1},{"r":2.843063,"d":38.318644,"m":4.22,"t":7199,"s":"F2","n":"16    Per","c":"Per","D":37.0,"b":0.343},{"r":2.844945,"d":55.895496,"m":3.77,"t":3528,"s":"K3","n":"Miram","c":"Per","D":269.5,"b":1.69},{"r":2.904295,"d":52.762479,"m":3.93,"t":5411,"s":"G4","n":"18Tau Per","c":"Per","D":77.9,"b":0.758},{"r":2.940458,"d":-8.898144,"m":3.89,"t":4541,"s":"K1","n":"Azha","c":"Eri","D":41.9,"b":1.088},{"r":2.971023,"d":-40.304672,"m":2.88,"t":8766,"s":"A4","n":"Acamar","c":"Eri","D":49.4,"b":0.128},{"r":3.037992,"d":4.089734,"m":2.54,"t":3608,"s":"M2","n":"Menkar","c":"Cet","D":76.4,"b":1.63},{"r":3.039863,"d":-23.624472,"m":4.08,"t":8461,"s":"A4","n":"11Tau3Eri","c":"Eri","D":27.2,"b":0.163},{"r":3.079942,"d":53.50644,"m":2.91,"t":5548,"s":"G8","n":"23Gam Per","c":"Per","D":74.6,"b":0.716},{"r":3.08627,"d":38.840274,"m":3.32,"t":3752,"s":"M3","n":"25Rho Per","c":"Per","D":94.3,"b":1.528},{"r":3.136148,"d":40.955648,"m":2.09,"t":10163,"s":"B8","n":"Algol","c":"Per","D":27.6,"b":-0.003},{"r":3.151005,"d":49.613278,"m":4.05,"t":5987,"s":"G0","n":"Iot Per","c":"Per","D":10.5,"b":0.595},{"r":3.158258,"d":44.857544,"m":3.79,"t":4791,"s":"K0","n":"Misam","c":"Per","D":34.6,"b":0.98},{"r":3.193822,"d":19.726677,"m":4.35,"t":4665,"s":"K2","n":"Botein","c":"Ari","D":52.0,"b":1.033},{"r":3.201249,"d":-28.987618,"m":3.8,"t":6200,"s":"F8","n":"Dalim","c":"For","D":14.2,"b":0.543},{"r":3.325278,"d":-21.757864,"m":3.7,"t":3630,"s":"M3","n":"16Tau4Eri","c":"Eri","D":93.4,"b":1.614},{"r":3.331944,"d":-43.069784,"m":4.26,"t":5564,"s":"G8","n":"82 G. Eri","c":"Eri","D":6.0,"b":0.711},{"r":3.338989,"d":29.048458,"m":4.47,"t":3713,"s":"K2","n":"HIP 15549","c":"Ari","D":166.4,"b":1.555},{"r":3.405378,"d":49.86118,"m":1.79,"t":6476,"s":"F5","n":"Mirfak","c":"Per","D":155.3,"b":0.481},{"r":3.413554,"d":9.02887,"m":3.61,"t":5032,"s":"G8","n":"1Omi Tau","c":"Tau","D":89.2,"b":0.887},{"r":3.45282,"d":9.73268,"m":3.73,"t":11279,"s":"B9","n":"2Xi  Tau","c":"Tau","D":64.1,"b":-0.082},{"r":3.484482,"d":59.94033,"m":4.21,"t":6781,"s":"B9","n":"HIP 16228","c":"Cam","D":595.2,"b":0.419},{"r":3.509579,"d":47.995216,"m":4.36,"t":4005,"s":"K3","n":"35Sig Per","c":"Per","D":110.3,"b":1.367},{"r":3.514549,"d":12.936678,"m":4.14,"t":4489,"s":"K0","n":"5    Tau","c":"Tau","D":104.9,"b":1.112},{"r":3.548848,"d":-9.458262,"m":3.72,"t":5048,"s":"K2","n":"Ran","c":"Eri","D":3.2,"b":0.881},{"r":3.563132,"d":-21.632883,"m":4.26,"t":11675,"s":"B9","n":"19Tau5Eri","c":"Eri","D":89.9,"b":-0.106},{"r":3.608159,"d":48.192634,"m":4.32,"t":10912,"s":"B5","n":"37Psi Per","c":"Per","D":178.9,"b":-0.058},{"r":3.614551,"d":0.401662,"m":4.29,"t":6067,"s":"F9","n":"10    Tau","c":"Tau","D":14.0,"b":0.575},{"r":3.715416,"d":47.787551,"m":3.01,"t":12011,"s":"B5","n":"39Del Per","c":"Per","D":158.2,"b":-0.125},{"r":3.720806,"d":-9.763395,"m":3.52,"t":4957,"s":"K0","n":"Rana","c":"Eri","D":9.0,"b":0.915},{"r":3.736593,"d":-64.806903,"m":3.84,"t":4445,"s":"K0","n":"Bet Ret","c":"Ret","D":29.9,"b":1.133},{"r":3.738648,"d":32.288248,"m":3.84,"t":9859,"s":"B1","n":"Atik","c":"Per","D":343.6,"b":0.022},{"r":3.747927,"d":24.113339,"m":3.72,"t":11658,"s":"B6","n":"Electra","c":"Tau","D":124.1,"b":-0.105},{"r":3.753232,"d":42.578549,"m":3.77,"t":6750,"s":"F5","n":"41Nu  Per","c":"Per","D":170.6,"b":0.425},{"r":3.75347,"d":24.467278,"m":4.3,"t":11744,"s":"B6","n":"Taygeta","c":"Tau","D":125.5,"b":-0.11},{"r":3.763779,"d":24.367748,"m":3.87,"t":10986,"s":"B8","n":"Maia","c":"Tau","D":117.5,"b":-0.063},{"r":3.769037,"d":-12.101589,"m":4.43,"t":3644,"s":"M1","n":"26Pi  Eri","c":"Eri","D":147.5,"b":1.604},{"r":3.772104,"d":23.948358,"m":4.14,"t":10809,"s":"B6","n":"Merope","c":"Tau","D":116.6,"b":-0.051},{"r":3.780804,"d":-23.249723,"m":4.22,"t":6704,"s":"F3","n":"27Tau6Eri","c":"Eri","D":17.6,"b":0.434},{"r":3.787295,"d":-74.238962,"m":3.26,"t":3663,"s":"M2","n":"Gam Hyi","c":"Hyi","D":65.6,"b":1.59},{"r":3.79141,"d":24.105137,"m":2.85,"t":11343,"s":"B7","n":"Alcyone","c":"Tau","D":123.6,"b":-0.086},{"r":3.809963,"d":-37.620155,"m":4.3,"t":10625,"s":"A+","n":"HIP 17797","c":"Eri","D":50.7,"b":-0.038},{"r":3.819373,"d":24.053415,"m":3.62,"t":11092,"s":"B8","n":"Atlas","c":"Tau","D":117.2,"b":-0.07},{"r":3.824237,"d":-36.20025,"m":4.17,"t":4925,"s":"G8","n":"HIP 17874","c":"Eri","D":64.4,"b":0.927},{"r":3.825357,"d":65.525972,"m":4.39,"t":3310,"s":"M1","n":"HIP 17884","c":"Cam","D":243.9,"b":1.87},{"r":3.9022,"d":31.883635,"m":2.84,"t":7651,"s":"B1","n":"44Zet Per","c":"Per","D":230.4,"b":0.271},{"r":3.904862,"d":-2.95473,"m":4.46,"t":5699,"s":"G8","n":"32    Eri","c":"Eri","D":96.0,"b":0.672},{"r":3.96423,"d":40.010215,"m":2.9,"t":13561,"s":"B0","n":"45Eps Per","c":"Per","D":195.7,"b":-0.199},{"r":3.967157,"d":-13.508515,"m":2.97,"t":3666,"s":"M1","n":"Zaurak","c":"Eri","D":62.3,"b":1.588},{"r":3.98275,"d":35.791033,"m":3.98,"t":9930,"s":"O7","n":"Menkib","c":"Per","D":381.7,"b":0.016},{"r":4.011338,"d":12.490347,"m":3.41,"t":11556,"s":"B3","n":"35Lam Tau","c":"Tau","D":148.4,"b":-0.099},{"r":4.014946,"d":-62.159284,"m":4.48,"t":3794,"s":"M4","n":"Gam Ret","c":"Ret","D":143.9,"b":1.5},{"r":4.052606,"d":5.989305,"m":3.91,"t":9743,"s":"A1","n":"38Nu  Tau","c":"Tau","D":35.9,"b":0.032},{"r":4.078253,"d":22.081926,"m":4.36,"t":4594,"s":"K0","n":"37    Tau","c":"Tau","D":57.4,"b":1.064},{"r":4.109735,"d":50.351262,"m":4.25,"t":10265,"s":"A0","n":"47Lam Per","c":"Per","D":129.4,"b":-0.011},{"r":4.144357,"d":47.712513,"m":3.96,"t":10448,"s":"B3","n":"48    Per","c":"Per","D":146.2,"b":-0.025},{"r":4.197761,"d":-6.837581,"m":4.04,"t":7294,"s":"F2","n":"Beid","c":"Eri","D":37.3,"b":0.327},{"r":4.233363,"d":-42.294368,"m":3.85,"t":4548,"s":"K1","n":"Alp Hor","c":"Hor","D":35.3,"b":1.085},{"r":4.240404,"d":-62.473858,"m":3.33,"t":4957,"s":"G7","n":"Alp Ret","c":"Ret","D":49.6,"b":0.915},{"r":4.248295,"d":48.409331,"m":4.12,"t":4904,"s":"G0","n":"51Mu  Per","c":"Per","D":276.2,"b":0.935},{"r":4.254537,"d":-7.652871,"m":4.43,"t":5221,"s":"K1","n":"Keid","c":"Eri","D":5.0,"b":0.82},{"r":4.258905,"d":8.892357,"m":4.27,"t":10853,"s":"B3","n":"49Mu  Tau","c":"Tau","D":139.7,"b":-0.054},{"r":4.267097,"d":-51.486648,"m":4.26,"t":7386,"s":"F4","n":"Gam Dor","c":"Dor","D":20.5,"b":0.312},{"r":4.274738,"d":-59.302156,"m":4.44,"t":4563,"s":"K2","n":"Eps Ret","c":"Ret","D":18.2,"b":1.078},{"r":4.298237,"d":-33.798348,"m":3.55,"t":11709,"s":"B9","n":"41Ups4Eri","c":"Eri","D":54.6,"b":-0.108},{"r":4.329889,"d":15.627642,"m":3.65,"t":4789,"s":"G8","n":"Prima Hyadum","c":"Tau","D":49.5,"b":0.981},{"r":4.382247,"d":17.542514,"m":3.77,"t":4784,"s":"G8","n":"Secunda Hyadum","c":"Tau","D":47.7,"b":0.983},{"r":4.400613,"d":-34.016846,"m":3.97,"t":3842,"s":"K4","n":"Beemim","c":"Eri","D":90.8,"b":1.468},{"r":4.422822,"d":22.293874,"m":4.21,"t":8694,"s":"A7","n":"65Kap1Tau","c":"Tau","D":47.2,"b":0.136},{"r":4.424828,"d":17.92791,"m":4.3,"t":9552,"s":"A2","n":"68Del3Tau","c":"Tau","D":45.5,"b":0.049},{"r":4.438461,"d":22.813583,"m":4.28,"t":7705,"s":"A8","n":"69Ups Tau","c":"Tau","D":47.1,"b":0.263},{"r":4.439094,"d":15.618265,"m":4.48,"t":7712,"s":"F0","n":"71    Tau","c":"Tau","D":49.1,"b":0.262},{"r":4.476248,"d":15.962181,"m":3.84,"t":4861,"s":"G7","n":"77The1Tau","c":"Tau","D":47.3,"b":0.952},{"r":4.476943,"d":19.180431,"m":3.53,"t":4709,"s":"K0","n":"Ain","c":"Tau","D":45.0,"b":1.014},{"r":4.477705,"d":15.870883,"m":3.4,"t":8329,"s":"A7","n":"Chamukuy","c":"Tau","D":46.1,"b":0.179},{"r":4.55849,"d":-29.766492,"m":4.49,"t":4811,"s":"K0","n":"50Ups1Eri","c":"Eri","D":39.0,"b":0.972},{"r":4.566598,"d":-55.044975,"m":3.3,"t":11231,"s":"A0","n":"Alp Dor","c":"Dor","D":51.7,"b":-0.079},{"r":4.592512,"d":-30.562341,"m":3.81,"t":4848,"s":"G8","n":"Theemin","c":"Eri","D":65.6,"b":0.957},{"r":4.594239,"d":10.16079,"m":4.25,"t":8289,"s":"A5","n":"88    Tau","c":"Tau","D":47.9,"b":0.184},{"r":4.598677,"d":16.509301,"m":0.87,"t":3737,"s":"K5","n":"Aldebaran","c":"Tau","D":20.4,"b":1.538},{"r":4.605317,"d":-3.352459,"m":3.93,"t":13831,"s":"B2","n":"48Nu  Eri","c":"Eri","D":207.0,"b":-0.21},{"r":4.611508,"d":41.264808,"m":4.25,"t":4366,"s":"G8","n":"58    Per","c":"Per","D":244.5,"b":1.171},{"r":4.635961,"d":12.510838,"m":4.27,"t":8820,"s":"A6","n":"90    Tau","c":"Tau","D":47.1,"b":0.122},{"r":4.63634,"d":-14.30402,"m":3.86,"t":4554,"s":"K1","n":"Sceptrum","c":"Eri","D":33.7,"b":1.082},{"r":4.674031,"d":-19.671493,"m":4.32,"t":3650,"s":"M3","n":"54    Eri","c":"Eri","D":113.0,"b":1.599},{"r":4.676039,"d":-41.863752,"m":4.44,"t":7205,"s":"F2","n":"Alp Cae","c":"Cae","D":20.2,"b":0.342},{"r":4.704084,"d":22.956926,"m":4.27,"t":11779,"s":"B3","n":"94Tau Tau","c":"Tau","D":122.1,"b":-0.112},{"r":4.758375,"d":-3.254657,"m":4.01,"t":12449,"s":"B5","n":"57Mu  Eri","c":"Eri","D":160.0,"b":-0.148},{"r":4.830669,"d":6.961276,"m":3.19,"t":6462,"s":"F6","n":"Tabit","c":"Ori","D":8.1,"b":0.484},{"r":4.843534,"d":8.900176,"m":4.35,"t":10002,"s":"A1","n":"2Pi 2Ori","c":"Ori","D":68.8,"b":0.01},{"r":4.853434,"d":5.605104,"m":3.68,"t":12630,"s":"B2","n":"3Pi 4Ori","c":"Ori","D":322.6,"b":-0.157},{"r":4.881575,"d":-5.452695,"m":4.36,"t":7747,"s":"A9","n":"61Ome Eri","c":"Eri","D":72.0,"b":0.257},{"r":4.900836,"d":66.342678,"m":4.26,"t":10226,"s":"O9","n":"9Alp Cam","c":"Cam","D":null,"b":-0.008},{"r":4.904193,"d":2.440672,"m":3.71,"t":13099,"s":"B2","n":"8Pi 5Ori","c":"Ori","D":411.5,"b":-0.179},{"r":4.939521,"d":13.514466,"m":4.06,"t":4393,"s":"K2","n":"9Omi2Ori","c":"Ori","D":57.0,"b":1.158},{"r":4.949894,"d":33.16609,"m":2.69,"t":3809,"s":"K3","n":"Hassaleh","c":"Aur","D":151.3,"b":1.49},{"r":4.95478,"d":53.752101,"m":4.43,"t":10342,"s":"A1","n":"7    Cam","c":"Cam","D":114.0,"b":-0.017},{"r":4.975806,"d":1.714016,"m":4.47,"t":4002,"s":"K2","n":"10Pi 6Ori","c":"Ori","D":289.9,"b":1.369},{"r":5.032815,"d":43.823308,"m":3.03,"t":6226,"s":"F0","n":"Almaaz","c":"Aur","D":653.6,"b":0.537},{"r":5.041301,"d":41.075837,"m":3.69,"t":4401,"s":"K4","n":"Saclateni","c":"Aur","D":241.0,"b":1.154},{"r":5.05697,"d":60.442245,"m":4.03,"t":4941,"s":"G0","n":"10Bet Cam","c":"Cam","D":267.4,"b":0.921},{"r":5.091018,"d":-22.371032,"m":3.19,"t":3855,"s":"K4","n":"2Eps Lep","c":"Lep","D":65.4,"b":1.46},{"r":5.10858,"d":41.234474,"m":3.18,"t":12449,"s":"B3","n":"Haedus","c":"Aur","D":74.6,"b":-0.148},{"r":5.130829,"d":-5.086446,"m":2.78,"t":8478,"s":"A3","n":"Cursa","c":"Eri","D":27.4,"b":0.161},{"r":5.15244,"d":-8.754081,"m":4.25,"t":13279,"s":"B2","n":"69Lam Eri","c":"Eri","D":248.8,"b":-0.187},{"r":5.204973,"d":-11.869219,"m":4.45,"t":11556,"s":"B8","n":"3Iot Lep","c":"Lep","D":71.1,"b":-0.099},{"r":5.215528,"d":-16.205468,"m":3.29,"t":11744,"s":"B9","n":"5Mu  Lep","c":"Lep","D":57.0,"b":-0.11},{"r":5.220522,"d":-12.941291,"m":4.36,"t":11473,"s":"B7","n":"4Kap Lep","c":"Lep","D":223.2,"b":-0.094},{"r":5.221523,"d":2.861265,"m":4.46,"t":4377,"s":"K3","n":"17Rho Ori","c":"Ori","D":107.3,"b":1.166},{"r":5.242298,"d":-8.20164,"m":0.18,"t":10516,"s":"B8","n":"Rigel","c":"Ori","D":264.6,"b":-0.03},{"r":5.27815,"d":45.997991,"m":0.08,"t":5296,"s":"M1","n":"Capella","c":"Aur","D":13.1,"b":0.795},{"r":5.293442,"d":-6.844409,"m":3.59,"t":11831,"s":"B5","n":"20Tau Ori","c":"Ori","D":151.5,"b":-0.115},{"r":5.326257,"d":-13.176788,"m":4.29,"t":14492,"s":"B0","n":"6Lam Lep","c":"Lep","D":261.1,"b":-0.235},{"r":5.399119,"d":-7.808065,"m":4.13,"t":4884,"s":"G8","n":"29    Ori","c":"Ori","D":48.2,"b":0.943},{"r":5.407949,"d":-2.397146,"m":3.35,"t":14633,"s":"B1","n":"28Eta Ori","c":"Ori","D":299.4,"b":-0.24},{"r":5.418851,"d":6.349702,"m":1.64,"t":14192,"s":"B2","n":"Bellatrix","c":"Ori","D":77.4,"b":-0.224},{"r":5.438198,"d":28.60745,"m":1.65,"t":12103,"s":"B7","n":"Elnath","c":"Tau","D":41.1,"b":-0.13},{"r":5.470756,"d":-20.759441,"m":2.81,"t":5260,"s":"G5","n":"Nihal","c":"Lep","D":49.2,"b":0.807},{"r":5.51307,"d":5.948139,"m":4.2,"t":12351,"s":"B5","n":"32    Ori","c":"Ori","D":92.9,"b":-0.143},{"r":5.520209,"d":-35.470519,"m":3.86,"t":4451,"s":"K1","n":"Eps Col","c":"Col","D":80.7,"b":1.13},{"r":5.533445,"d":-0.299092,"m":2.25,"t":13011,"s":"O9","n":"Mintaka","c":"Ori","D":212.3,"b":-0.175},{"r":5.536875,"d":18.594234,"m":4.32,"t":null,"s":"M2","n":"119    Tau","c":"Tau","D":549.5,"b":2.06},{"r":5.545504,"d":-17.822289,"m":2.58,"t":8079,"s":"F0","n":"Arneb","c":"Lep","D":680.3,"b":0.211},{"r":5.560421,"d":-62.489825,"m":3.76,"t":5815,"s":"F6","n":"Bet Dor","c":"Dor","D":308.6,"b":0.64},{"r":5.580344,"d":9.489579,"m":4.39,"t":12630,"s":"B0","n":"37Phi1Ori","c":"Ori","D":333.3,"b":-0.157},{"r":5.585633,"d":9.934158,"m":3.39,"t":12692,"s":"O.","n":"Meissa","c":"Ori","D":336.7,"b":-0.16},{"r":5.590551,"d":-5.909901,"m":2.75,"t":13831,"s":"O9","n":"Hatysa","c":"Ori","D":714.3,"b":-0.21},{"r":5.603559,"d":-1.20192,"m":1.69,"t":13211,"s":"B0","n":"Alnilam","c":"Ori","D":606.1,"b":-0.184},{"r":5.615108,"d":9.290673,"m":4.09,"t":4864,"s":"G8","n":"40Phi2Ori","c":"Ori","D":36.0,"b":0.951},{"r":5.627413,"d":21.142549,"m":2.97,"t":12449,"s":"B4","n":"Tianguan","c":"Tau","D":136.4,"b":-0.148},{"r":5.645769,"d":-2.600069,"m":3.77,"t":13348,"s":"O9","n":"48Sig Ori","c":"Ori","D":328.9,"b":-0.19},{"r":5.653096,"d":4.121467,"m":4.5,"t":11539,"s":"B3","n":"47Ome Ori","c":"Ori","D":423.7,"b":-0.098},{"r":5.660817,"d":-34.074108,"m":2.65,"t":11920,"s":"B7","n":"Phact","c":"Col","D":80.1,"b":-0.12},{"r":5.679313,"d":-1.942572,"m":1.74,"t":13561,"s":"O9","n":"Alnitak","c":"Ori","D":225.7,"b":-0.199},{"r":5.741057,"d":-22.448382,"m":3.59,"t":6476,"s":"F7","n":"13Gam Lep","c":"Lep","D":8.9,"b":0.481},{"r":5.746223,"d":-65.735526,"m":4.34,"t":8034,"s":"A7","n":"Del Dor","c":"Dor","D":45.9,"b":0.217},{"r":5.782595,"d":-14.82195,"m":3.55,"t":8989,"s":"A2","n":"14Zet Lep","c":"Lep","D":21.6,"b":0.104},{"r":5.788079,"d":-51.066514,"m":3.85,"t":8394,"s":"A3","n":"Bet Pic","c":"Pic","D":19.4,"b":0.171},{"r":5.795941,"d":-9.669605,"m":2.07,"t":12860,"s":"B0","n":"Saiph","c":"Ori","D":198.4,"b":-0.168},{"r":5.830451,"d":-56.166663,"m":4.5,"t":4570,"s":"K1","n":"Gam Pic","c":"Pic","D":54.2,"b":1.075},{"r":5.849329,"d":-35.768309,"m":3.12,"t":4417,"s":"K1","n":"Wazn","c":"Col","D":26.7,"b":1.146},{"r":5.855357,"d":-20.879089,"m":3.76,"t":4781,"s":"G8","n":"15Del Lep","c":"Lep","D":34.9,"b":0.984},{"r":5.858166,"d":39.14848,"m":3.97,"t":4447,"s":"K0","n":"32Nu  Aur","c":"Aur","D":70.6,"b":1.132},{"r":5.906386,"d":20.276174,"m":4.39,"t":5991,"s":"G0","n":"54Chi1Ori","c":"Ori","D":8.7,"b":0.594},{"r":5.919529,"d":7.407063,"m":0.45,"t":3794,"s":"M2","n":"Betelgeuse","c":"Ori","D":152.7,"b":1.5},{"r":5.940082,"d":-14.1677,"m":3.71,"t":7235,"s":"F1","n":"16Eta Lep","c":"Lep","D":14.9,"b":0.337},{"r":5.958947,"d":-35.28328,"m":4.36,"t":12796,"s":"B2","n":"Gam Col","c":"Col","D":266.7,"b":-0.165},{"r":5.985778,"d":-42.815135,"m":3.96,"t":4417,"s":"K0","n":"Eta Col","c":"Col","D":144.7,"b":1.146},{"r":5.992111,"d":54.284656,"m":3.72,"t":4719,"s":"K0","n":"33Del Aur","c":"Aur","D":38.6,"b":1.01},{"r":5.992149,"d":44.947433,"m":1.9,"t":9256,"s":"A2","n":"Menkalinan","c":"Aur","D":24.9,"b":0.077},{"r":5.995351,"d":37.212585,"m":2.65,"t":11295,"s":"A0","n":"Mahasim","c":"Aur","D":50.8,"b":-0.083},{"r":5.998917,"d":45.936736,"m":4.3,"t":3514,"s":"M3","n":"35Pi  Aur","c":"Aur","D":230.4,"b":1.701},{"r":6.039722,"d":9.647276,"m":4.12,"t":8403,"s":"Am","n":"61Mu  Ori","c":"Ori","D":47.5,"b":0.17},{"r":6.068671,"d":23.263341,"m":4.16,"t":5177,"s":"G7","n":"1    Gem","c":"Gem","D":47.6,"b":0.835},{"r":6.126201,"d":14.768472,"m":4.42,"t":12775,"s":"B3","n":"67Nu  Ori","c":"Ori","D":158.2,"b":-0.164},{"r":6.198999,"d":14.208765,"m":4.45,"t":13121,"s":"B3","n":"70Xi  Ori","c":"Ori","D":186.2,"b":-0.18},{"r":6.247592,"d":-6.274776,"m":3.99,"t":4088,"s":"K3","n":"5Gam Mon","c":"Mon","D":152.7,"b":1.319},{"r":6.247961,"d":22.506799,"m":3.31,"t":3649,"s":"M3","n":"Propus","c":"Gem","D":117.9,"b":1.6},{"r":6.256304,"d":29.498076,"m":4.32,"t":4693,"s":"G8","n":"44Kap Aur","c":"Aur","D":54.3,"b":1.021},{"r":6.275871,"d":-35.140519,"m":4.37,"t":4796,"s":"G8","n":"Kap Col","c":"Col","D":56.0,"b":0.978},{"r":6.327052,"d":59.010964,"m":4.44,"t":9743,"s":"A2","n":"2    Lyn","c":"Lyn","D":48.0,"b":0.032},{"r":6.338553,"d":-30.063367,"m":3.02,"t":12692,"s":"B2","n":"Furud","c":"CMa","D":111.1,"b":-0.16},{"r":6.368564,"d":-33.4364,"m":3.85,"t":5112,"s":"G7","n":"Del Col","c":"Col","D":71.7,"b":0.858},{"r":6.378329,"d":-17.955918,"m":1.98,"t":14633,"s":"B1","n":"Mirzam","c":"CMa","D":151.1,"b":-0.24},{"r":6.382673,"d":22.513586,"m":2.87,"t":3620,"s":"M3","n":"Tejat","c":"Gem","D":71.0,"b":1.621},{"r":6.396135,"d":4.592865,"m":4.39,"t":8049,"s":"A5","n":"8Eps Mon","c":"Mon","D":37.5,"b":0.215},{"r":6.399195,"d":-52.69566,"m":-0.62,"t":8453,"s":"F0","n":"Canopus","c":"Car","D":94.8,"b":0.164},{"r":6.469503,"d":-32.58007,"m":4.47,"t":12881,"s":"B4","n":"Lam CMa","c":"CMa","D":129.9,"b":-0.169},{"r":6.480297,"d":-7.033062,"m":3.76,"t":11796,"s":"B3","n":"11Bet Mon","c":"Mon","D":207.5,"b":-0.113},{"r":6.482719,"d":20.212133,"m":4.13,"t":11831,"s":"B6","n":"18Nu  Gem","c":"Gem","D":166.9,"b":-0.115},{"r":6.530935,"d":-23.418422,"m":4.34,"t":14777,"s":"B1","n":"4Xi 1CMa","c":"CMa","D":423.7,"b":-0.245},{"r":6.548396,"d":7.332965,"m":4.47,"t":9847,"s":"A0","n":"13    Mon","c":"Mon","D":null,"b":0.023},{"r":6.58294,"d":-52.975607,"m":4.35,"t":10395,"s":"B9","n":"HIP 31407","c":"Car","D":418.4,"b":-0.021},{"r":6.611399,"d":-19.255879,"m":3.95,"t":4656,"s":"K1","n":"7Nu 2CMa","c":"CMa","D":19.8,"b":1.037},{"r":6.628528,"d":16.399252,"m":1.93,"t":10113,"s":"A0","n":"Alhena","c":"Gem","D":33.5,"b":0.001},{"r":6.629353,"d":-43.195934,"m":3.17,"t":11624,"s":"B8","n":"Nu  Pup","c":"Pup","D":113.9,"b":-0.103},{"r":6.631506,"d":-18.237478,"m":4.42,"t":4436,"s":"K0","n":"8Nu 3CMa","c":"CMa","D":129.2,"b":1.137},{"r":6.732202,"d":25.131124,"m":3.06,"t":3988,"s":"A3","n":"Mebsuta","c":"Gem","D":259.1,"b":1.377},{"r":6.733137,"d":13.228017,"m":4.49,"t":4375,"s":"K1","n":"30    Gem","c":"Gem","D":88.6,"b":1.167},{"r":6.752481,"d":-16.716116,"m":-1.44,"t":10014,"s":"A0","n":"Sirius","c":"CMa","D":2.6,"b":0.009},{"r":6.754824,"d":12.895591,"m":3.35,"t":6659,"s":"F5","n":"Alzirr","c":"Gem","D":18.0,"b":0.443},{"r":6.79768,"d":2.412159,"m":4.48,"t":4517,"s":"K0","n":"18    Mon","c":"Mon","D":112.9,"b":1.099},{"r":6.803194,"d":-61.941391,"m":3.24,"t":7974,"s":"A7","n":"Alp Pic","c":"Pic","D":29.6,"b":0.225},{"r":6.830683,"d":-32.508478,"m":3.5,"t":11849,"s":"B1","n":"13Kap CMa","c":"CMa","D":202.0,"b":-0.116},{"r":6.830921,"d":-53.622449,"m":4.41,"t":4999,"s":"G6","n":"HIP 32761","c":"Car","D":166.9,"b":0.899},{"r":6.832266,"d":-50.61456,"m":2.94,"t":4295,"s":"K0","n":"Tau Pup","c":"Pup","D":55.8,"b":1.207},{"r":6.879816,"d":33.961254,"m":3.6,"t":9008,"s":"A3","n":"34The Gem","c":"Gem","D":58.0,"b":0.102},{"r":6.902209,"d":-24.184211,"m":3.89,"t":3465,"s":"K3","n":"16Omi1CMa","c":"CMa","D":null,"b":1.74},{"r":6.903167,"d":-12.038628,"m":4.08,"t":3921,"s":"K4","n":"14The CMa","c":"CMa","D":79.9,"b":1.418},{"r":6.935618,"d":-17.054242,"m":4.36,"t":10986,"s":"B3","n":"20Iot CMa","c":"CMa","D":769.2,"b":-0.063},{"r":6.954612,"d":58.422759,"m":4.35,"t":5134,"s":"G5","n":"15    Lyn","c":"Lyn","D":54.7,"b":0.85},{"r":6.977097,"d":-28.972084,"m":1.5,"t":13856,"s":"B2","n":"Adhara","c":"CMa","D":124.2,"b":-0.211},{"r":7.028652,"d":-27.93483,"m":3.49,"t":3479,"s":"K4","n":"Nganurganity","c":"CMa","D":343.6,"b":1.729},{"r":7.050409,"d":-23.833291,"m":3.02,"t":11200,"s":"B3","n":"24Omi2CMa","c":"CMa","D":847.5,"b":-0.077},{"r":7.062637,"d":-15.633286,"m":4.11,"t":11779,"s":"B8","n":"Muliphein","c":"CMa","D":135.5,"b":-0.112},{"r":7.068481,"d":20.570297,"m":4.01,"t":4999,"s":"G3","n":"Mekbuda","c":"Gem","D":421.9,"b":0.899},{"r":7.139857,"d":-26.3932,"m":1.83,"t":5703,"s":"F8","n":"Wezen","c":"CMa","D":492.6,"b":0.671},{"r":7.145788,"d":-70.498932,"m":3.78,"t":4728,"s":"G8","n":"Gam2Vol","c":"Vol","D":42.9,"b":1.006},{"r":7.185659,"d":30.245163,"m":4.41,"t":4192,"s":"K2","n":"46Tau Gem","c":"Gem","D":98.4,"b":1.261},{"r":7.197739,"d":-0.492764,"m":4.15,"t":10188,"s":"A2","n":"22Del Mon","c":"Mon","D":117.8,"b":-0.005},{"r":7.20935,"d":-46.759305,"m":4.49,"t":7313,"s":"F0","n":"HIP 34834","c":"Pup","D":21.4,"b":0.324},{"r":7.225637,"d":-44.639739,"m":4.42,"t":4067,"s":"M5","n":"HIP 34922","c":"Pup","D":64.1,"b":1.331},{"r":7.237559,"d":-26.352507,"m":4.42,"t":12902,"s":"B3","n":"27    CMa","c":"CMa","D":531.9,"b":-0.17},{"r":7.246849,"d":-26.772667,"m":4.01,"t":12489,"s":"B2","n":"28Ome CMa","c":"CMa","D":279.3,"b":-0.15},{"r":7.280508,"d":-67.957152,"m":3.97,"t":5404,"s":"F6","n":"Del Vol","c":"Vol","D":226.2,"b":0.76},{"r":7.285711,"d":-37.09747,"m":2.71,"t":3627,"s":"K3","n":"Pi  Pup","c":"Pup","D":247.5,"b":1.616},{"r":7.30155,"d":16.540383,"m":3.58,"t":8970,"s":"A3","n":"54Lam Gem","c":"Gem","D":30.9,"b":0.106},{"r":7.311802,"d":-24.954375,"m":4.37,"t":12141,"s":"O9","n":"30Tau CMa","c":"CMa","D":917.4,"b":-0.132},{"r":7.335383,"d":21.98232,"m":3.5,"t":7022,"s":"F0","n":"Wasat","c":"Gem","D":18.5,"b":0.374},{"r":7.401584,"d":-29.303104,"m":2.45,"t":11295,"s":"B5","n":"Aludra","c":"CMa","D":609.8,"b":-0.083},{"r":7.428779,"d":27.79808,"m":3.78,"t":4686,"s":"G9","n":"60Iot Gem","c":"Gem","D":36.9,"b":1.024},{"r":7.452512,"d":8.289315,"m":2.89,"t":11523,"s":"B8","n":"Gomeisa","c":"CMi","D":49.6,"b":-0.097},{"r":7.469387,"d":8.92553,"m":4.33,"t":3910,"s":"K3","n":"4Gam CMi","c":"CMi","D":97.6,"b":1.425},{"r":7.485195,"d":31.78455,"m":4.16,"t":7337,"s":"F0","n":"62Rho Gem","c":"Gem","D":18.0,"b":0.32},{"r":7.487179,"d":-43.301432,"m":3.25,"t":3780,"s":"K5","n":"Sig Pup","c":"Pup","D":59.4,"b":1.509},{"r":7.567551,"d":-22.296067,"m":4.44,"t":6295,"s":"F6","n":"HIP 36795","c":"Pup","D":25.3,"b":0.521},{"r":7.576634,"d":31.888276,"m":1.58,"t":9720,"s":"A2","n":"Castor","c":"Gem","D":15.6,"b":0.034},{"r":7.598708,"d":26.895741,"m":4.06,"t":3734,"s":"K5","n":"69Ups Gem","c":"Gem","D":83.1,"b":1.54},{"r":7.647186,"d":-26.803836,"m":3.8,"t":12671,"s":"B5","n":"HIP 37229","c":"Pup","D":106.3,"b":-0.159},{"r":7.655033,"d":5.224993,"m":0.4,"t":6714,"s":"F5","n":"Procyon","c":"CMi","D":3.5,"b":0.432},{"r":7.687454,"d":-9.551131,"m":3.94,"t":4691,"s":"K0","n":"26Alp Mon","c":"Mon","D":45.3,"b":1.022},{"r":7.697004,"d":-72.606098,"m":3.93,"t":4665,"s":"K0","n":"Zet Vol","c":"Vol","D":43.2,"b":1.033},{"r":7.721867,"d":28.88351,"m":4.23,"t":4476,"s":"K1","n":"75Sig Gem","c":"Gem","D":38.3,"b":1.118},{"r":7.73013,"d":-28.954826,"m":3.94,"t":8486,"s":"A2","n":"3    Pup","c":"Pup","D":null,"b":0.16},{"r":7.740793,"d":24.397993,"m":3.57,"t":4912,"s":"G8","n":"77Kap Gem","c":"Gem","D":43.3,"b":0.932},{"r":7.754249,"d":-37.968584,"m":3.62,"t":3508,"s":"K4","n":"HIP 37819","c":"Pup","D":347.2,"b":1.706},{"r":7.755277,"d":28.026199,"m":1.16,"t":4764,"s":"K0","n":"Pollux","c":"Gem","D":10.4,"b":0.991},{"r":7.801436,"d":-25.937169,"m":4.4,"t":11092,"s":"B1","n":"Omi Pup","c":"Pup","D":434.8,"b":-0.07},{"r":7.820638,"d":-46.373205,"m":4.1,"t":12692,"s":"B0","n":"HIP 38164","c":"Pup","D":505.1,"b":-0.16},{"r":7.821571,"d":-24.859786,"m":3.34,"t":4274,"s":"G6","n":"Azmidi","c":"Pup","D":367.6,"b":1.218},{"r":7.870288,"d":-40.575786,"m":3.71,"t":4714,"s":"G5","n":"HIP 38414","c":"Pup","D":108.1,"b":1.012},{"r":7.877402,"d":-38.862812,"m":4.49,"t":13302,"s":"B2","n":"HIP 38455","c":"Pup","D":198.8,"b":-0.188},{"r":7.888378,"d":-48.102934,"m":4.22,"t":12103,"s":"B0","n":"HIP 38518","c":"Pup","D":507.6,"b":-0.13},{"r":7.946313,"d":-52.98236,"m":3.46,"t":13055,"s":"B3","n":"Chi Car","c":"Car","D":139.5,"b":-0.177},{"r":7.94765,"d":-22.880119,"m":4.2,"t":5541,"s":"F7","n":"11    Pup","c":"Pup","D":160.0,"b":0.718},{"r":7.970678,"d":-49.244912,"m":4.47,"t":13121,"s":"B1","n":"HIP 38957","c":"Pup","D":294.1,"b":-0.18},{"r":8.03776,"d":2.334571,"m":4.39,"t":4209,"s":"K2","n":"HIP 39311","c":"CMi","D":77.9,"b":1.252},{"r":8.059737,"d":-40.003148,"m":2.21,"t":15515,"s":"O5","n":"Naos","c":"Pup","D":332.2,"b":-0.269},{"r":8.125737,"d":-24.304324,"m":2.83,"t":6586,"s":"F2","n":"Tureis","c":"Pup","D":19.5,"b":0.458},{"r":8.132173,"d":-68.617062,"m":4.35,"t":11796,"s":"B6","n":"Eps Vol","c":"Vol","D":172.4,"b":-0.113},{"r":8.143236,"d":-2.983786,"m":4.36,"t":4816,"s":"G2","n":"29Zet Mon","c":"Mon","D":324.7,"b":0.97},{"r":8.150455,"d":-19.245014,"m":4.4,"t":12692,"s":"B5","n":"16    Pup","c":"Pup","D":142.7,"b":-0.16},{"r":8.158876,"d":-47.336588,"m":1.75,"t":12390,"s":"WC","n":"Gam2Vel","c":"Vel","D":342.5,"b":-0.145},{"r":8.189304,"d":-39.618545,"m":4.44,"t":3663,"s":"K4","n":"HIP 40091","c":"Pup","D":520.8,"b":1.59},{"r":8.234143,"d":-40.34789,"m":4.42,"t":4368,"s":"K1","n":"HIP 40326","c":"Pup","D":91.5,"b":1.17},{"r":8.275256,"d":9.185545,"m":3.53,"t":3822,"s":"K4","n":"Tarf","c":"Cnc","D":93.0,"b":1.481},{"r":8.308703,"d":-76.919722,"m":4.05,"t":6812,"s":"F5","n":"Alp Cha","c":"Cha","D":19.6,"b":0.413},{"r":8.309258,"d":-36.659288,"m":4.44,"t":7997,"s":"A4","n":"HIP 40706","c":"Pup","D":28.6,"b":0.222},{"r":8.344115,"d":-77.484477,"m":4.34,"t":4387,"s":"K0","n":"The Cha","c":"Cha","D":47.6,"b":1.161},{"r":8.375236,"d":-59.509483,"m":1.86,"t":4317,"s":"K3","n":"Avior","c":"Car","D":185.5,"b":1.196},{"r":8.380588,"d":43.188131,"m":4.25,"t":3720,"s":"K5","n":"Alsciaukat","c":"Lyn","D":117.2,"b":1.55},{"r":8.427676,"d":-3.906424,"m":3.91,"t":10277,"s":"A0","n":"HIP 41307","c":"Hya","D":37.5,"b":-0.012},{"r":8.428951,"d":-66.13689,"m":3.77,"t":4447,"s":"K2","n":"Bet Vol","c":"Vol","D":33.0,"b":1.132},{"r":8.504431,"d":60.718169,"m":3.35,"t":5117,"s":"G4","n":"Muscida","c":"UMa","D":54.9,"b":0.856},{"r":8.627399,"d":-42.989081,"m":4.11,"t":8942,"s":"A6","n":"HIP 42312","c":"Vel","D":558.7,"b":0.109},{"r":8.627602,"d":5.703782,"m":4.14,"t":10088,"s":"A1","n":"4Del Hya","c":"Hya","D":49.2,"b":0.003},{"r":8.645955,"d":3.341435,"m":4.45,"t":4278,"s":"K2","n":"Minchir","c":"Hya","D":114.3,"b":1.216},{"r":8.668373,"d":-35.308352,"m":3.97,"t":4902,"s":"G5","n":"Bet Pyx","c":"Pyx","D":127.6,"b":0.936},{"r":8.671554,"d":-52.921887,"m":3.6,"t":12860,"s":"B3","n":"HIP 42536","c":"Vel","D":151.3,"b":-0.168},{"r":8.676953,"d":-59.761003,"m":4.31,"t":11867,"s":"B1","n":"HIP 42568","c":"Car","D":442.5,"b":-0.117},{"r":8.677103,"d":-46.648744,"m":3.77,"t":5706,"s":"F3","n":"HIP 42570","c":"Vel","D":null,"b":0.67},{"r":8.72041,"d":3.398662,"m":4.3,"t":13395,"s":"B3","n":"7Eta Hya","c":"Hya","D":179.9,"b":-0.192},{"r":8.726539,"d":-33.186385,"m":3.68,"t":13121,"s":"B1","n":"Alp Pyx","c":"Pyx","D":269.5,"b":-0.18},{"r":8.739987,"d":-42.649276,"m":4.05,"t":5067,"s":"G5","n":"HIP 42884","c":"Vel","D":70.2,"b":0.874},{"r":8.74475,"d":18.154309,"m":3.94,"t":4552,"s":"K0","n":"Asellus Australis","c":"Cnc","D":40.0,"b":1.083},{"r":8.745059,"d":-54.708821,"m":1.93,"t":9619,"s":"A1","n":"Alsephina","c":"Vel","D":24.7,"b":0.043},{"r":8.767124,"d":-46.041527,"m":3.87,"t":9942,"s":"A1","n":"HIP 43023","c":"Vel","D":568.2,"b":0.015},{"r":8.772927,"d":-13.54772,"m":4.32,"t":4996,"s":"G8","n":"12    Hya","c":"Hya","D":75.1,"b":0.9},{"r":8.778284,"d":28.759898,"m":4.03,"t":4726,"s":"G8","n":"48Iot Cnc","c":"Cnc","D":101.5,"b":1.007},{"r":8.778487,"d":-56.769776,"m":4.5,"t":12881,"s":"B3","n":"HIP 43105","c":"Car","D":185.5,"b":-0.169},{"r":8.779587,"d":6.418809,"m":3.38,"t":5653,"s":"G0","n":"Ashlesha","c":"Hya","D":39.6,"b":0.685},{"r":8.807214,"d":5.837812,"m":4.35,"t":10709,"s":"A0","n":"13Rho Hya","c":"Hya","D":108.6,"b":-0.044},{"r":8.842204,"d":-27.709844,"m":4.02,"t":4172,"s":"K3","n":"Gam Pyx","c":"Pyx","D":63.6,"b":1.272},{"r":8.917457,"d":-60.644609,"m":3.84,"t":11641,"s":"B8","n":"HIP 43783","c":"Car","D":98.0,"b":-0.104},{"r":8.92323,"d":5.945563,"m":3.11,"t":4796,"s":"G8","n":"16Zet Hya","c":"Hya","D":51.3,"b":0.978},{"r":8.974784,"d":11.857701,"m":4.26,"t":8650,"s":"A5","n":"Acubens","c":"Cnc","D":57.7,"b":0.141},{"r":8.986828,"d":48.041826,"m":3.12,"t":7989,"s":"A7","n":"Talitha","c":"UMa","D":14.5,"b":0.223},{"r":9.001505,"d":-41.253605,"m":4.45,"t":5793,"s":"Fp","n":"HIP 44191","c":"Vel","D":64.5,"b":0.646},{"r":9.010685,"d":41.782911,"m":3.96,"t":6562,"s":"F5","n":"HIP 44248","c":"Lyn","D":16.1,"b":0.463},{"r":9.040777,"d":-66.396076,"m":4.0,"t":8615,"s":"Am","n":"Alp Vol","c":"Vol","D":38.3,"b":0.145},{"r":9.060427,"d":47.156525,"m":3.57,"t":10039,"s":"A1","n":"Alkaphrah","c":"UMa","D":109.9,"b":0.007},{"r":9.069248,"d":-47.097737,"m":3.75,"t":4360,"s":"K2","n":"HIP 44511","c":"Vel","D":91.8,"b":1.174},{"r":9.085785,"d":-72.602705,"m":4.47,"t":5940,"s":"F6","n":"HIP 44599","c":"Car","D":122.9,"b":0.607},{"r":9.133268,"d":-43.432589,"m":2.23,"t":3561,"s":"K4","n":"Suhail","c":"Vel","D":166.9,"b":1.665},{"r":9.147863,"d":51.604648,"m":4.46,"t":7539,"s":"Am","n":"15    UMa","c":"UMa","D":28.8,"b":0.288},{"r":9.182804,"d":-58.966896,"m":3.43,"t":13348,"s":"B2","n":"HIP 45080","c":"Car","D":137.0,"b":-0.19},{"r":9.187985,"d":-62.316977,"m":3.96,"t":13121,"s":"B3","n":"HIP 45101","c":"Car","D":166.4,"b":-0.18},{"r":9.220041,"d":-69.717208,"m":1.67,"t":9328,"s":"A2","n":"Miaplacidus","c":"Car","D":34.7,"b":0.07},{"r":9.239405,"d":2.31428,"m":3.89,"t":10941,"s":"B9","n":"22The Hya","c":"Hya","D":34.8,"b":-0.06},{"r":9.270024,"d":-57.541473,"m":4.34,"t":3646,"s":"M1","n":"HIP 45496","c":"Car","D":149.7,"b":1.602},{"r":9.284838,"d":-59.275229,"m":2.21,"t":8249,"s":"A8","n":"Aspidiske","c":"Car","D":234.7,"b":0.189},{"r":9.314069,"d":36.802597,"m":3.82,"t":9370,"s":"A1","n":"38    Lyn","c":"Lyn","D":38.3,"b":0.066},{"r":9.350925,"d":34.392562,"m":3.14,"t":3720,"s":"M0","n":"40Alp Lyn","c":"Lyn","D":62.3,"b":1.55},{"r":9.368562,"d":-55.010668,"m":2.47,"t":12312,"s":"B2","n":"Markeb","c":"Vel","D":175.4,"b":-0.141},{"r":9.410906,"d":26.182324,"m":4.47,"t":4266,"s":"K2","n":"1Kap Leo","c":"Leo","D":61.7,"b":1.222},{"r":9.45979,"d":-8.658603,"m":1.99,"t":3886,"s":"K3","n":"Alphard","c":"Hya","D":55.3,"b":1.44},{"r":9.511674,"d":-40.466769,"m":3.6,"t":7039,"s":"F2","n":"Psi Vel","c":"Vel","D":18.8,"b":0.371},{"r":9.520371,"d":-57.034377,"m":3.16,"t":3737,"s":"K5","n":"HIP 46701","c":"Vel","D":73.3,"b":1.538},{"r":9.525453,"d":63.061861,"m":3.65,"t":7101,"s":"F0","n":"23    UMa","c":"UMa","D":23.8,"b":0.36},{"r":9.528675,"d":22.967971,"m":4.32,"t":3733,"s":"K5","n":"Alterf","c":"Leo","D":100.9,"b":1.541},{"r":9.547715,"d":51.6773,"m":3.17,"t":6504,"s":"F6","n":"25The UMa","c":"UMa","D":13.5,"b":0.475},{"r":9.574071,"d":-59.229753,"m":4.08,"t":10290,"s":"B5","n":"HIP 46974","c":"Car","D":406.5,"b":-0.013},{"r":9.580405,"d":52.051477,"m":4.47,"t":9800,"s":"A2","n":"26    UMa","c":"UMa","D":80.4,"b":0.027},{"r":9.613772,"d":-49.355026,"m":4.34,"t":8378,"s":"A5","n":"HIP 47175","c":"Vel","D":32.3,"b":0.173},{"r":9.618151,"d":81.326382,"m":4.28,"t":3812,"s":"K3","n":"HIP 47193","c":"Dra","D":304.9,"b":1.488},{"r":9.664267,"d":-1.14281,"m":3.9,"t":4098,"s":"K3","n":"Ukdah","c":"Hya","D":80.7,"b":1.313},{"r":9.685843,"d":9.892308,"m":3.52,"t":6317,"s":"A5","n":"Subra","c":"Leo","D":40.0,"b":0.516},{"r":9.754117,"d":-62.507903,"m":3.69,"t":4719,"s":"G5","n":"HIP 47854","c":"Car","D":478.5,"b":1.01},{"r":9.764188,"d":23.774255,"m":2.97,"t":5257,"s":"G0","n":"Ras Elased Australis","c":"Leo","D":75.6,"b":0.808},{"r":9.785036,"d":-65.072007,"m":2.92,"t":7638,"s":"A9","n":"Ups Car","c":"Car","D":440.5,"b":0.273},{"r":9.849867,"d":59.038735,"m":3.78,"t":7520,"s":"F0","n":"29Ups UMa","c":"UMa","D":35.6,"b":0.291},{"r":9.85797,"d":-14.846603,"m":4.11,"t":4949,"s":"G6","n":"Zhang","c":"Hya","D":80.9,"b":0.918},{"r":9.879398,"d":26.006951,"m":3.88,"t":4266,"s":"K0","n":"Rasalas","c":"Leo","D":38.1,"b":1.222},{"r":9.947708,"d":-54.56779,"m":3.52,"t":11046,"s":"B5","n":"Phi Vel","c":"Vel","D":487.8,"b":-0.067},{"r":10.122209,"d":16.762664,"m":3.48,"t":10529,"s":"A0","n":"30Eta Leo","c":"Leo","D":389.1,"b":-0.031},{"r":10.123821,"d":35.244693,"m":4.49,"t":8241,"s":"A7","n":"21    LMi","c":"LMi","D":28.2,"b":0.19},{"r":10.131742,"d":9.997508,"m":4.39,"t":3873,"s":"K4","n":"31    Leo","c":"Leo","D":90.6,"b":1.448},{"r":10.1323,"d":-0.371637,"m":4.48,"t":10543,"s":"A0","n":"15Alp Sex","c":"Sex","D":86.9,"b":-0.032},{"r":10.139532,"d":11.967207,"m":1.36,"t":11359,"s":"B7","n":"Regulus","c":"Leo","D":24.3,"b":-0.087},{"r":10.176467,"d":-12.354083,"m":3.61,"t":4726,"s":"K0","n":"41Lam Hya","c":"Hya","D":34.5,"b":1.007},{"r":10.228961,"d":-70.037903,"m":3.29,"t":11153,"s":"B8","n":"Ome Car","c":"Car","D":104.8,"b":-0.074},{"r":10.245607,"d":-42.121942,"m":3.85,"t":9531,"s":"A2","n":"HIP 50191","c":"Vel","D":31.1,"b":0.051},{"r":10.278171,"d":23.417311,"m":3.43,"t":7418,"s":"F0","n":"Adhafera","c":"Leo","D":84.0,"b":0.307},{"r":10.28472,"d":-61.332304,"m":3.39,"t":3733,"s":"K3","n":"HIP 50371","c":"Car","D":201.6,"b":1.541},{"r":10.284952,"d":42.914365,"m":3.45,"t":9777,"s":"A2","n":"Tania Borealis","c":"UMa","D":42.2,"b":0.029},{"r":10.332873,"d":19.841489,"m":2.01,"t":4455,"s":"K0","n":"Algieba","c":"Leo","D":39.9,"b":1.128},{"r":10.348557,"d":-56.04322,"m":4.5,"t":11607,"s":"B3","n":"HIP 50676","c":"Vel","D":352.1,"b":-0.102},{"r":10.372155,"d":41.499516,"m":3.06,"t":3645,"s":"M0","n":"Tania Australis","c":"UMa","D":70.6,"b":1.603},{"r":10.406592,"d":-74.031612,"m":3.99,"t":7050,"s":"F2","n":"HIP 50954","c":"Car","D":16.2,"b":0.369},{"r":10.434842,"d":-16.83629,"m":3.83,"t":3861,"s":"K4","n":"42Mu  Hya","c":"Hya","D":71.8,"b":1.456},{"r":10.45253,"d":-31.067779,"m":4.28,"t":3904,"s":"K4","n":"Alp Ant","c":"Ant","D":112.2,"b":1.429},{"r":10.464649,"d":-58.739403,"m":3.81,"t":7356,"s":"F2","n":"HIP 51232","c":"Car","D":411.5,"b":0.317},{"r":10.464727,"d":36.707212,"m":4.2,"t":4975,"s":"G8","n":"31Bet LMi","c":"LMi","D":47.2,"b":0.908},{"r":10.533743,"d":-61.685332,"m":3.3,"t":11391,"s":"B4","n":"HIP 51576","c":"Car","D":148.1,"b":-0.089},{"r":10.546853,"d":9.306586,"m":3.84,"t":12449,"s":"B1","n":"47Rho Leo","c":"Leo","D":null,"b":-0.148},{"r":10.591166,"d":-78.607786,"m":4.11,"t":3677,"s":"M0","n":"Gam Cha","c":"Cha","D":128.0,"b":1.58},{"r":10.59314,"d":-57.557636,"m":4.45,"t":3644,"s":"K3","n":"HIP 51849","c":"Car","D":361.0,"b":1.604},{"r":10.621717,"d":-48.22562,"m":3.84,"t":7462,"s":"A3","n":"HIP 51986","c":"Vel","D":26.8,"b":0.3},{"r":10.655112,"d":-55.603268,"m":4.29,"t":4684,"s":"G2","n":"HIP 52154","c":"Vel","D":257.7,"b":1.025},{"r":10.715949,"d":-64.39445,"m":2.74,"t":14087,"s":"B0","n":"The Car","c":"Car","D":139.7,"b":-0.22},{"r":10.763087,"d":-80.540188,"m":4.45,"t":13302,"s":"B2","n":"Del2Cha","c":"Cha","D":107.5,"b":-0.188},{"r":10.779488,"d":-49.420255,"m":2.69,"t":4994,"s":"G5","n":"Mu  Vel","c":"Vel","D":35.9,"b":0.901},{"r":10.827079,"d":-16.193648,"m":3.11,"t":4247,"s":"K0","n":"Nu  Hya","c":"Hya","D":44.1,"b":1.232},{"r":10.888526,"d":34.214871,"m":3.79,"t":4649,"s":"K0","n":"Praecipua","c":"LMi","D":29.1,"b":1.04},{"r":10.891559,"d":-58.853171,"m":3.78,"t":4879,"s":"K0","n":"HIP 53253","c":"Car","D":29.1,"b":0.945},{"r":10.92689,"d":24.749718,"m":4.3,"t":9930,"s":"A1","n":"54    Leo","c":"Leo","D":88.0,"b":0.016},{"r":10.996244,"d":-18.298783,"m":4.08,"t":4561,"s":"K1","n":"Alkes","c":"Crt","D":48.8,"b":1.079},{"r":11.002572,"d":-42.225859,"m":4.37,"t":8876,"s":"A3","n":"HIP 53773","c":"Vel","D":60.2,"b":0.116},{"r":11.030677,"d":56.382427,"m":2.34,"t":9731,"s":"A1","n":"Merak","c":"UMa","D":24.4,"b":0.033},{"r":11.038827,"d":20.179842,"m":4.42,"t":9509,"s":"A1","n":"60    Leo","c":"Leo","D":38.9,"b":0.053},{"r":11.062155,"d":61.751033,"m":1.81,"t":4601,"s":"F7","n":"Dubhe","c":"UMa","D":37.7,"b":1.061},{"r":11.143165,"d":-58.975037,"m":3.93,"t":4260,"s":"G0","n":"HIP 54463","c":"Car","D":null,"b":1.225},{"r":11.161062,"d":44.498487,"m":3.0,"t":4422,"s":"K1","n":"52Psi UMa","c":"UMa","D":44.3,"b":1.144},{"r":11.194302,"d":-22.825847,"m":4.46,"t":9824,"s":"A1","n":"11Bet Crt","c":"Crt","D":104.3,"b":0.025},{"r":11.235138,"d":20.523717,"m":2.56,"t":8766,"s":"A4","n":"Zosma","c":"Leo","D":17.9,"b":0.128},{"r":11.237335,"d":15.42957,"m":3.33,"t":10163,"s":"A2","n":"Chertan","c":"Leo","D":50.6,"b":-0.003},{"r":11.277695,"d":-3.651601,"m":4.45,"t":8086,"s":"A7","n":"74Phi Leo","c":"Leo","D":56.5,"b":0.21},{"r":11.307983,"d":33.094306,"m":3.49,"t":3950,"s":"K3","n":"Alula Borealis","c":"UMa","D":122.4,"b":1.4},{"r":11.322347,"d":-14.778541,"m":3.56,"t":4489,"s":"K0","n":"12Del Crt","c":"Crt","D":56.9,"b":1.112},{"r":11.350117,"d":-54.491019,"m":3.9,"t":12630,"s":"B5","n":"Pi  Cen","c":"Cen","D":109.6,"b":-0.157},{"r":11.352276,"d":6.029322,"m":4.05,"t":10912,"s":"B9","n":"77Sig Leo","c":"Leo","D":67.5,"b":-0.058},{"r":11.398736,"d":10.529509,"m":4.0,"t":6760,"s":"F2","n":"78Iot Leo","c":"Leo","D":23.7,"b":0.423},{"r":11.414702,"d":-17.68401,"m":4.06,"t":8041,"s":"A9","n":"15Gam Crt","c":"Crt","D":25.2,"b":0.216},{"r":11.523407,"d":69.331076,"m":3.82,"t":3631,"s":"M0","n":"Giausar","c":"Dra","D":102.1,"b":1.613},{"r":11.550038,"d":-31.857625,"m":3.54,"t":4874,"s":"G8","n":"Xi  Hya","c":"Hya","D":39.7,"b":0.947},{"r":11.596363,"d":-63.019841,"m":3.11,"t":10709,"s":"B9","n":"Lam Cen","c":"Cen","D":128.7,"b":-0.044},{"r":11.615814,"d":-0.823749,"m":4.3,"t":4784,"s":"G9","n":"91Ups Leo","c":"Leo","D":55.6,"b":0.983},{"r":11.760141,"d":-66.728763,"m":3.63,"t":8486,"s":"A7","n":"Lam Mus","c":"Mus","D":39.0,"b":0.16},{"r":11.764322,"d":6.529376,"m":4.04,"t":3792,"s":"M0","n":"3Nu  Vir","c":"Vir","D":90.1,"b":1.501},{"r":11.767515,"d":47.779406,"m":3.69,"t":4346,"s":"K0","n":"Taiyangshou","c":"UMa","D":56.3,"b":1.181},{"r":11.775232,"d":-61.178398,"m":4.11,"t":5010,"s":"G0","n":"HIP 57439","c":"Cen","D":119.5,"b":0.895},{"r":11.799762,"d":20.218931,"m":4.5,"t":6183,"s":"A ","n":"93    Leo","c":"Leo","D":71.3,"b":0.547},{"r":11.817663,"d":14.57206,"m":2.14,"t":9125,"s":"A3","n":"Denebola","c":"Leo","D":11.0,"b":0.09},{"r":11.828077,"d":-63.788478,"m":4.3,"t":12469,"s":"B3","n":"HIP 57669","c":"Cen","D":182.5,"b":-0.149},{"r":11.844922,"d":1.764718,"m":3.59,"t":6308,"s":"F8","n":"Zavijava","c":"Vir","D":10.9,"b":0.518},{"r":11.852419,"d":-45.17347,"m":4.47,"t":4152,"s":"K4","n":"HIP 57803","c":"Cen","D":132.8,"b":1.283},{"r":11.881813,"d":-33.908124,"m":4.29,"t":11573,"s":"Ap","n":"Bet Hya","c":"Hya","D":95.0,"b":-0.1},{"r":11.897168,"d":53.69476,"m":2.41,"t":9608,"s":"A0","n":"Phecda","c":"UMa","D":25.5,"b":0.044},{"r":12.050447,"d":-63.31293,"m":4.32,"t":7591,"s":"Am","n":"The1Cru","c":"Cru","D":72.0,"b":0.28},{"r":12.086817,"d":8.732985,"m":4.12,"t":4823,"s":"G8","n":"9Omi Vir","c":"Vir","D":50.1,"b":0.967},{"r":12.114687,"d":-64.61373,"m":4.14,"t":7141,"s":"F2","n":"Eta Cru","c":"Cru","D":19.8,"b":0.353},{"r":12.134788,"d":-50.661278,"m":4.46,"t":12754,"s":"B2","n":"HIP 59173","c":"Cen","D":134.4,"b":-0.163},{"r":12.13931,"d":-50.722425,"m":2.58,"t":12066,"s":"B2","n":"Del Cen","c":"Cen","D":127.2,"b":-0.128},{"r":12.140225,"d":-24.728875,"m":4.02,"t":7252,"s":"F0","n":"Alchiba","c":"Crv","D":14.9,"b":0.334},{"r":12.168746,"d":-22.619766,"m":3.02,"t":4075,"s":"K2","n":"2Eps Crv","c":"Crv","D":97.5,"b":1.326},{"r":12.194202,"d":-52.36846,"m":3.97,"t":12610,"s":"B3","n":"Rho Cen","c":"Cen","D":116.1,"b":-0.156},{"r":12.252427,"d":-58.748928,"m":2.79,"t":13418,"s":"B2","n":"Imai","c":"Cru","D":105.8,"b":-0.193},{"r":12.257086,"d":57.032617,"m":3.32,"t":9256,"s":"A3","n":"Megrez","c":"UMa","D":24.7,"b":0.077},{"r":12.263437,"d":-17.541929,"m":2.58,"t":11692,"s":"B8","n":"Gienah","c":"Crv","D":47.1,"b":-0.107},{"r":12.292917,"d":-67.960736,"m":4.06,"t":3645,"s":"M5","n":"Eps Mus","c":"Mus","D":92.4,"b":1.603},{"r":12.305812,"d":-79.31224,"m":4.24,"t":11975,"s":"B5","n":"Bet Cha","c":"Cha","D":91.5,"b":-0.123},{"r":12.307298,"d":-64.003071,"m":4.06,"t":12860,"s":"B2","n":"Zet Cru","c":"Cru","D":109.6,"b":-0.168},{"r":12.331766,"d":-0.666803,"m":3.89,"t":9812,"s":"A2","n":"Zaniah","c":"Vir","D":81.4,"b":0.026},{"r":12.356031,"d":-60.401147,"m":3.59,"t":3968,"s":"K3","n":"Ginan","c":"Cru","D":70.5,"b":1.389},{"r":12.443311,"d":-63.099092,"m":0.77,"t":14719,"s":"B0","n":"Acrux","c":"Cru","D":98.7,"b":-0.243},{"r":12.448966,"d":28.268423,"m":4.35,"t":4455,"s":"K2","n":"15Gam Com","c":"Com","D":51.3,"b":1.128},{"r":12.467331,"d":-50.230635,"m":3.91,"t":13395,"s":"B3","n":"Sig Cen","c":"Cen","D":126.3,"b":-0.192},{"r":12.497739,"d":-16.515432,"m":2.94,"t":10277,"s":"B9","n":"Algorab","c":"Crv","D":26.6,"b":-0.012},{"r":12.519429,"d":-57.113212,"m":1.59,"t":3649,"s":"M4","n":"Gacrux","c":"Cru","D":27.2,"b":1.6},{"r":12.53451,"d":-16.196007,"m":4.3,"t":6945,"s":"F2","n":"8Eta Crv","c":"Crv","D":18.3,"b":0.388},{"r":12.541134,"d":-72.132988,"m":3.84,"t":12630,"s":"B5","n":"Gam Mus","c":"Mus","D":99.6,"b":-0.157},{"r":12.558058,"d":69.788238,"m":3.85,"t":11849,"s":"B6","n":"5Kap Dra","c":"Dra","D":150.4,"b":-0.116},{"r":12.562411,"d":41.35748,"m":4.24,"t":6015,"s":"G0","n":"Chara","c":"CVn","D":8.4,"b":0.588},{"r":12.573121,"d":-23.396759,"m":2.65,"t":5015,"s":"G5","n":"Kraz","c":"Crv","D":44.7,"b":0.893},{"r":12.619739,"d":-69.135564,"m":2.69,"t":13033,"s":"B2","n":"Alp Mus","c":"Mus","D":96.7,"b":-0.176},{"r":12.628394,"d":-48.541304,"m":3.85,"t":9552,"s":"A2","n":"Tau Cen","c":"Cen","D":40.2,"b":0.049},{"r":12.691971,"d":-48.959888,"m":2.2,"t":10422,"s":"A1","n":"Gam Cen","c":"Cen","D":39.9,"b":-0.023},{"r":12.694345,"d":-1.449375,"m":2.74,"t":7055,"s":"F0","n":"Porrima","c":"Vir","D":11.7,"b":0.368},{"r":12.771346,"d":-68.108119,"m":3.04,"t":13077,"s":"B2","n":"Bet Mus","c":"Mus","D":104.7,"b":-0.178},{"r":12.795359,"d":-59.688764,"m":1.25,"t":14576,"s":"B0","n":"Mimosa","c":"Cru","D":85.4,"b":-0.238},{"r":12.885258,"d":-48.943315,"m":4.33,"t":4044,"s":"K3","n":"HIP 62867","c":"Cen","D":90.3,"b":1.344},{"r":12.890607,"d":-40.178872,"m":4.25,"t":7982,"s":"A4","n":"HIP 62896","c":"Cen","D":45.6,"b":0.224},{"r":12.900472,"d":55.959821,"m":1.76,"t":10408,"s":"A0","n":"Alioth","c":"UMa","D":25.3,"b":-0.022},{"r":12.9099,"d":-57.177924,"m":4.03,"t":13121,"s":"B2","n":"Mu 1Cru","c":"Cru","D":127.1,"b":-0.18},{"r":12.926725,"d":3.39747,"m":3.39,"t":3690,"s":"M3","n":"Minelauva","c":"Vir","D":60.8,"b":1.571},{"r":12.933807,"d":38.31838,"m":2.89,"t":11831,"s":"A0","n":"Cor Caroli","c":"CVn","D":35.2,"b":-0.115},{"r":13.036278,"d":10.95915,"m":2.85,"t":4907,"s":"G8","n":"Vindemiatrix","c":"Vir","D":33.6,"b":0.934},{"r":13.037759,"d":-71.548855,"m":3.61,"t":4328,"s":"K2","n":"Del Mus","c":"Mus","D":27.9,"b":1.19},{"r":13.11518,"d":-49.906246,"m":4.27,"t":13166,"s":"B1","n":"Xi 2Cen","c":"Cen","D":143.3,"b":-0.182},{"r":13.165831,"d":-5.53901,"m":4.38,"t":10226,"s":"A1","n":"51The Vir","c":"Vir","D":96.8,"b":-0.008},{"r":13.166469,"d":17.529431,"m":4.32,"t":6600,"s":"F5","n":"Diadem","c":"Com","D":17.8,"b":0.455},{"r":13.197904,"d":27.878183,"m":4.23,"t":6079,"s":"G0","n":"43Bet Com","c":"Com","D":9.1,"b":0.572},{"r":13.315359,"d":-23.171512,"m":2.99,"t":4943,"s":"G8","n":"46Gam Hya","c":"Hya","D":41.0,"b":0.92},{"r":13.343296,"d":-36.712295,"m":2.75,"t":9349,"s":"A2","n":"Iot Cen","c":"Cen","D":18.0,"b":0.068},{"r":13.398747,"d":54.925362,"m":2.23,"t":9466,"s":"A2","n":"Mizar","c":"UMa","D":26.3,"b":0.057},{"r":13.419883,"d":-11.161322,"m":0.98,"t":14492,"s":"B1","n":"Spica","c":"Vir","D":76.6,"b":-0.235},{"r":13.420413,"d":54.987958,"m":3.99,"t":8411,"s":"A5","n":"Alcor","c":"UMa","D":25.1,"b":0.169},{"r":13.517405,"d":-39.407307,"m":3.9,"t":4336,"s":"G8","n":"HIP 65936","c":"Cen","D":277.8,"b":1.186},{"r":13.57822,"d":-0.59582,"m":3.38,"t":8895,"s":"A3","n":"Heze","c":"Vir","D":22.7,"b":0.114},{"r":13.664796,"d":-53.466394,"m":2.29,"t":12924,"s":"B1","n":"Eps Cen","c":"Cen","D":131.1,"b":-0.171},{"r":13.761471,"d":-33.043721,"m":4.23,"t":6934,"s":"F3","n":"1    Cen","c":"Cen","D":19.4,"b":0.39},{"r":13.78771,"d":17.456906,"m":4.5,"t":6353,"s":"F7","n":"4Tau Boo","c":"Boo","D":15.6,"b":0.508},{"r":13.792354,"d":49.313265,"m":1.85,"t":11556,"s":"B3","n":"Alkaid","c":"UMa","D":31.9,"b":-0.099},{"r":13.824091,"d":-34.450776,"m":4.19,"t":3764,"s":"M5","n":"2    Cen","c":"Cen","D":56.1,"b":1.52},{"r":13.824623,"d":15.797905,"m":4.05,"t":3764,"s":"K5","n":"5Ups Boo","c":"Boo","D":80.8,"b":1.52},{"r":13.825078,"d":-41.687709,"m":3.41,"t":14219,"s":"B2","n":"Nu  Cen","c":"Cen","D":133.9,"b":-0.225},{"r":13.826943,"d":-42.473732,"m":3.47,"t":12902,"s":"B2","n":"Mu  Cen","c":"Cen","D":155.0,"b":-0.17},{"r":13.863779,"d":-32.994089,"m":4.32,"t":12409,"s":"B5","n":"3    Cen","c":"Cen","D":105.4,"b":-0.146},{"r":13.911411,"d":18.397717,"m":2.68,"t":6047,"s":"G0","n":"Muphrid","c":"Boo","D":11.4,"b":0.58},{"r":13.925667,"d":-47.288375,"m":2.55,"t":13033,"s":"B2","n":"Zet Cen","c":"Cen","D":117.1,"b":-0.176},{"r":13.971186,"d":-42.100753,"m":3.83,"t":14192,"s":"B2","n":"Phi Cen","c":"Cen","D":161.0,"b":-0.224},{"r":13.977987,"d":-44.803584,"m":3.87,"t":13781,"s":"B2","n":"Ups1Cen","c":"Cen","D":131.1,"b":-0.208},{"r":14.027443,"d":1.544532,"m":4.23,"t":8830,"s":"A3","n":"93Tau Vir","c":"Vir","D":69.0,"b":0.121},{"r":14.028748,"d":-45.603421,"m":4.34,"t":5975,"s":"F6","n":"Ups2Cen","c":"Cen","D":389.1,"b":0.598},{"r":14.063729,"d":-60.373039,"m":0.61,"t":14381,"s":"B1","n":"Hadar","c":"Cen","D":120.2,"b":-0.231},{"r":14.073165,"d":64.37585,"m":3.67,"t":10781,"s":"A0","n":"Thuban","c":"Dra","D":92.9,"b":-0.049},{"r":14.10077,"d":-41.179633,"m":4.36,"t":13537,"s":"B2","n":"Chi Cen","c":"Cen","D":156.5,"b":-0.198},{"r":14.106193,"d":-26.682361,"m":3.25,"t":4534,"s":"K2","n":"49Pi  Hya","c":"Hya","D":31.0,"b":1.091},{"r":14.111395,"d":-36.369954,"m":2.06,"t":4716,"s":"K0","n":"Menkent","c":"Cen","D":18.0,"b":1.011},{"r":14.214929,"d":-10.273702,"m":4.18,"t":4081,"s":"K3","n":"Kang","c":"Vir","D":78.1,"b":1.323},{"r":14.26103,"d":19.18241,"m":-0.05,"t":4234,"s":"K2","n":"Arcturus","c":"Boo","D":11.3,"b":1.239},{"r":14.266908,"d":-6.000547,"m":4.07,"t":6339,"s":"F7","n":"Syrma","c":"Vir","D":22.2,"b":0.511},{"r":14.273074,"d":46.088305,"m":4.18,"t":9155,"s":"A0","n":"Xuange","c":"Boo","D":30.4,"b":0.087},{"r":14.323396,"d":-46.058093,"m":3.55,"t":13211,"s":"B2","n":"Iot Lup","c":"Lup","D":103.6,"b":-0.184},{"r":14.338763,"d":-56.386497,"m":4.3,"t":9205,"s":"B6","n":"HIP 70069","c":"Cen","D":375.9,"b":0.082},{"r":14.342623,"d":-37.885295,"m":4.05,"t":10516,"s":"A0","n":"Psi Cen","c":"Cen","D":79.4,"b":-0.03},{"r":14.383956,"d":-39.511819,"m":4.41,"t":13234,"s":"B2","n":"HIP 70300","c":"Cen","D":140.3,"b":-0.185},{"r":14.419967,"d":51.850744,"m":4.04,"t":6403,"s":"F7","n":"23The Boo","c":"Boo","D":14.5,"b":0.497},{"r":14.436336,"d":-45.379276,"m":4.33,"t":6704,"s":"A7","n":"Tau2Lup","c":"Lup","D":97.8,"b":0.434},{"r":14.448801,"d":-83.667884,"m":4.31,"t":4121,"s":"K2","n":"Del Oct","c":"Oct","D":91.7,"b":1.3},{"r":14.458758,"d":75.695993,"m":4.25,"t":3900,"s":"K4","n":"5    UMi","c":"UMi","D":110.0,"b":1.431},{"r":14.5305,"d":30.371437,"m":3.57,"t":4125,"s":"K3","n":"25Rho Boo","c":"Boo","D":49.1,"b":1.298},{"r":14.534636,"d":38.308253,"m":3.04,"t":8233,"s":"A7","n":"Seginus","c":"Boo","D":26.6,"b":0.191},{"r":14.543629,"d":-50.457157,"m":4.44,"t":13055,"s":"B2","n":"Sig Lup","c":"Lup","D":176.4,"b":-0.177},{"r":14.578,"d":29.74513,"m":4.47,"t":7078,"s":"F3","n":"28Sig Boo","c":"Boo","D":15.8,"b":0.364},{"r":14.591786,"d":-42.157824,"m":2.33,"t":12630,"s":"B1","n":"Eta Cen","c":"Cen","D":93.7,"b":-0.157},{"r":14.631454,"d":-49.425828,"m":4.05,"t":12529,"s":"B5","n":"Rho Lup","c":"Lup","D":96.9,"b":-0.152},{"r":14.660346,"d":-60.8383,"m":1.35,"t":4996,"s":"K1","n":"Toliman","c":"Cen","D":1.3,"b":0.9},{"r":14.660765,"d":-60.833976,"m":-0.01,"t":5568,"s":"G2","n":"Rigil Kentaurus","c":"Cen","D":1.3,"b":0.71},{"r":14.678768,"d":16.418324,"m":4.49,"t":10150,"s":"B9","n":"29Pi 1Boo","c":"Boo","D":93.7,"b":-0.002},{"r":14.68582,"d":13.7283,"m":3.78,"t":9608,"s":"A3","n":"30Zet Boo","c":"Boo","D":53.9,"b":0.044},{"r":14.698823,"d":-47.3882,"m":2.3,"t":12569,"s":"B1","n":"Alp Lup","c":"Lup","D":142.5,"b":-0.154},{"r":14.699332,"d":-37.793498,"m":4.01,"t":12630,"s":"B2","n":"HIP 71865","c":"Cen","D":104.0,"b":-0.157},{"r":14.708492,"d":-64.975138,"m":3.18,"t":7753,"s":"F1","n":"Alp Cir","c":"Cir","D":16.6,"b":0.256},{"r":14.717673,"d":-5.658207,"m":3.87,"t":6961,"s":"F2","n":"107Mu  Vir","c":"Vir","D":18.3,"b":0.385},{"r":14.727624,"d":-35.173655,"m":4.06,"t":4024,"s":"K3","n":"HIP 72010","c":"Cen","D":64.2,"b":1.356},{"r":14.749784,"d":27.074222,"m":2.35,"t":4826,"s":"A0","n":"Izar","c":"Boo","D":62.1,"b":0.966},{"r":14.770812,"d":1.892885,"m":3.73,"t":10188,"s":"A0","n":"109    Vir","c":"Vir","D":41.2,"b":-0.005},{"r":14.797701,"d":-79.044751,"m":3.83,"t":3897,"s":"K5","n":"Alp Aps","c":"Aps","D":137.0,"b":1.433},{"r":14.838147,"d":-27.960371,"m":4.42,"t":4007,"s":"K3","n":"58    Hya","c":"Hya","D":101.5,"b":1.366},{"r":14.845105,"d":74.155505,"m":2.07,"t":3847,"s":"K4","n":"Kochab","c":"UMi","D":40.1,"b":1.465},{"r":14.847977,"d":-16.041778,"m":2.75,"t":8597,"s":"A3","n":"Zubenelgenubi","c":"Lib","D":23.2,"b":0.147},{"r":14.860641,"d":-43.575359,"m":4.32,"t":12569,"s":"B5","n":"Omi Lup","c":"Lup","D":123.9,"b":-0.154},{"r":14.953055,"d":-4.346462,"m":4.47,"t":7349,"s":"F0","n":"16    Lib","c":"Lib","D":26.9,"b":0.318},{"r":14.975537,"d":-43.13396,"m":2.68,"t":13211,"s":"B2","n":"Bet Lup","c":"Lup","D":117.4,"b":-0.184},{"r":14.986025,"d":-42.104194,"m":3.13,"t":13781,"s":"B2","n":"Kap Cen","c":"Cen","D":117.5,"b":-0.208},{"r":15.032436,"d":40.390566,"m":3.49,"t":4851,"s":"G8","n":"Nekkar","c":"Boo","D":69.1,"b":0.956},{"r":15.048344,"d":2.091303,"m":4.39,"t":4681,"s":"K0","n":"110    Vir","c":"Vir","D":59.9,"b":1.026},{"r":15.067839,"d":-25.281965,"m":3.25,"t":3549,"s":"M3","n":"Brachium","c":"Lib","D":88.4,"b":1.674},{"r":15.085303,"d":-47.051245,"m":3.91,"t":12370,"s":"B5","n":"Pi  Lup","c":"Lup","D":135.9,"b":-0.144},{"r":15.147394,"d":-45.279857,"m":4.07,"t":12733,"s":"B3","n":"Lam Lup","c":"Lup","D":238.1,"b":-0.162},{"r":15.198918,"d":-48.737819,"m":3.88,"t":10502,"s":"B9","n":"Kap1Lup","c":"Lup","D":55.2,"b":-0.029},{"r":15.20476,"d":-52.099247,"m":3.41,"t":4949,"s":"G8","n":"Zet Lup","c":"Lup","D":36.0,"b":0.918},{"r":15.258376,"d":33.314833,"m":3.46,"t":4838,"s":"G8","n":"49Del Boo","c":"Boo","D":37.3,"b":0.961},{"r":15.283449,"d":-9.382917,"m":2.61,"t":11107,"s":"B8","n":"Zubeneschamali","c":"Lib","D":56.8,"b":-0.071},{"r":15.291917,"d":-58.801208,"m":4.07,"t":9145,"s":"A3","n":"Bet Cir","c":"Cir","D":30.6,"b":0.088},{"r":15.297178,"d":-30.148673,"m":4.35,"t":4515,"s":"K1","n":"2    Lup","c":"Lup","D":99.9,"b":1.1},{"r":15.308897,"d":-47.875272,"m":4.27,"t":11343,"s":"B8","n":"Mu  Lup","c":"Lup","D":102.9,"b":-0.086},{"r":15.315181,"d":-68.679545,"m":2.87,"t":9954,"s":"A1","n":"Gam TrA","c":"TrA","D":56.4,"b":0.014},{"r":15.345483,"d":71.834016,"m":3.0,"t":9455,"s":"A3","n":"Pherkad","c":"UMi","D":149.3,"b":0.058},{"r":15.356201,"d":-40.647518,"m":3.22,"t":14273,"s":"B1","n":"Del Lup","c":"Lup","D":271.0,"b":-0.227},{"r":15.36344,"d":-36.261376,"m":3.57,"t":3743,"s":"K5","n":"Phi1Lup","c":"Lup","D":84.3,"b":1.534},{"r":15.378021,"d":-44.689622,"m":3.37,"t":13372,"s":"B2","n":"Eps Lup","c":"Lup","D":157.0,"b":-0.191},{"r":15.389625,"d":-59.320787,"m":4.48,"t":8411,"s":"B5","n":"Gam Cir","c":"Cir","D":137.6,"b":0.169},{"r":15.408181,"d":37.377167,"m":4.31,"t":7405,"s":"F0","n":"Alkalurops","c":"Boo","D":34.7,"b":0.309},{"r":15.415494,"d":58.966065,"m":3.29,"t":4377,"s":"K2","n":"Edasich","c":"Dra","D":31.0,"b":1.166},{"r":15.463818,"d":29.105703,"m":3.66,"t":7343,"s":"F0","n":"Nusakan","c":"CrB","D":34.3,"b":0.319},{"r":15.548829,"d":31.359133,"m":4.14,"t":12048,"s":"B6","n":"4The CrB","c":"CrB","D":115.1,"b":-0.127},{"r":15.578128,"d":26.714693,"m":2.22,"t":9743,"s":"A0","n":"Alphecca","c":"CrB","D":23.0,"b":0.032},{"r":15.580041,"d":10.538867,"m":3.8,"t":7671,"s":"F0","n":"13Del Ser","c":"Ser","D":69.9,"b":0.268},{"r":15.585681,"d":-41.166757,"m":2.8,"t":13983,"s":"B2","n":"Gam Lup","c":"Lup","D":129.0,"b":-0.216},{"r":15.592105,"d":-14.789537,"m":3.91,"t":4726,"s":"K0","n":"Zubenelhakrabi","c":"Lib","D":50.0,"b":1.007},{"r":15.612,"d":-66.317037,"m":4.11,"t":4387,"s":"K0","n":"Eps TrA","c":"TrA","D":61.8,"b":1.161},{"r":15.61707,"d":-28.135079,"m":3.6,"t":4015,"s":"K3","n":"39Ups Lib","c":"Lib","D":68.6,"b":1.361},{"r":15.634232,"d":-42.567348,"m":4.34,"t":3931,"s":"K4","n":"Ome Lup","c":"Lup","D":67.0,"b":1.412},{"r":15.64427,"d":-29.777754,"m":3.66,"t":13055,"s":"B2","n":"40Tau Lib","c":"Lib","D":112.5,"b":-0.177},{"r":15.712381,"d":26.295637,"m":3.81,"t":9882,"s":"A1","n":"8Gam CrB","c":"CrB","D":44.8,"b":0.02},{"r":15.734299,"d":77.794493,"m":4.29,"t":9675,"s":"A3","n":"16Zet UMi","c":"UMi","D":113.1,"b":0.038},{"r":15.737798,"d":6.425627,"m":2.63,"t":4375,"s":"K2","n":"Unukalhai","c":"Ser","D":22.7,"b":1.167},{"r":15.769793,"d":15.421826,"m":3.65,"t":9297,"s":"A3","n":"28Bet Ser","c":"Ser","D":47.6,"b":0.073},{"r":15.77406,"d":7.353073,"m":4.42,"t":5952,"s":"G0","n":"27Lam Ser","c":"Ser","D":12.1,"b":0.604},{"r":15.812327,"d":18.141564,"m":4.09,"t":3627,"s":"M1","n":"Gudja","c":"Ser","D":117.1,"b":1.616},{"r":15.827002,"d":-3.430208,"m":3.54,"t":10598,"s":"A0","n":"32Mu  Ser","c":"Ser","D":52.0,"b":-0.036},{"r":15.846935,"d":4.47773,"m":3.71,"t":8597,"s":"A2","n":"37Eps Ser","c":"Ser","D":21.6,"b":0.147},{"r":15.849316,"d":-33.627165,"m":3.97,"t":10724,"s":"B9","n":"5Chi Lup","c":"Lup","D":59.8,"b":-0.045},{"r":15.897093,"d":-16.729293,"m":4.13,"t":4736,"s":"K0","n":"46The Lib","c":"Lib","D":51.7,"b":1.003},{"r":15.919083,"d":-63.430727,"m":2.83,"t":7368,"s":"F2","n":"Bet TrA","c":"TrA","D":12.4,"b":0.315},{"r":15.940882,"d":15.661617,"m":3.85,"t":6490,"s":"F6","n":"41Gam Ser","c":"Ser","D":11.3,"b":0.478},{"r":15.948077,"d":-29.214073,"m":3.87,"t":13561,"s":"B2","n":"Iklil","c":"Sco","D":144.7,"b":-0.199},{"r":15.959794,"d":26.87788,"m":4.14,"t":4249,"s":"K3","n":"13Eps CrB","c":"CrB","D":67.9,"b":1.231},{"r":15.980865,"d":-26.114105,"m":2.89,"t":13121,"s":"B1","n":"Fang","c":"Sco","D":179.5,"b":-0.18},{"r":16.002036,"d":-38.396706,"m":3.42,"t":13731,"s":"B2","n":"Eta Lup","c":"Lup","D":135.5,"b":-0.206},{"r":16.005557,"d":-22.62171,"m":2.29,"t":11867,"s":"B0","n":"Dschubba","c":"Sco","D":150.6,"b":-0.117},{"r":16.031532,"d":58.565251,"m":4.01,"t":6265,"s":"F8","n":"13The Dra","c":"Dra","D":21.0,"b":0.528},{"r":16.09062,"d":-19.805453,"m":2.56,"t":11016,"s":"B0","n":"Acrab","c":"Sco","D":123.9,"b":-0.065},{"r":16.109874,"d":-36.802288,"m":4.22,"t":13211,"s":"B2","n":"The Lup","c":"Lup","D":127.1,"b":-0.184},{"r":16.113452,"d":-20.669192,"m":3.93,"t":10738,"s":"B1","n":"9Ome1Sco","c":"Sco","D":144.5,"b":-0.046},{"r":16.123424,"d":-20.868764,"m":4.31,"t":5189,"s":"G6","n":"10Ome2Sco","c":"Sco","D":89.1,"b":0.831},{"r":16.146162,"d":44.934906,"m":4.23,"t":10724,"s":"B9","n":"11Phi Her","c":"Her","D":62.5,"b":-0.045},{"r":16.199926,"d":-19.460708,"m":4.0,"t":9266,"s":"B2","n":"Jabbah","c":"Sco","D":145.3,"b":0.076},{"r":16.239094,"d":-3.694323,"m":2.73,"t":3671,"s":"M1","n":"Yed Prior","c":"Oph","D":52.5,"b":1.584},{"r":16.257297,"d":-63.685682,"m":3.86,"t":4504,"s":"G5","n":"Del TrA","c":"TrA","D":186.2,"b":1.105},{"r":16.305358,"d":-4.692511,"m":3.23,"t":4826,"s":"G8","n":"Yed Posterior","c":"Oph","D":32.6,"b":0.966},{"r":16.329011,"d":46.313366,"m":3.91,"t":12508,"s":"B5","n":"22Tau Her","c":"Her","D":94.3,"b":-0.151},{"r":16.330687,"d":-50.155508,"m":4.01,"t":4559,"s":"G8","n":"Gam2Nor","c":"Nor","D":39.5,"b":1.08},{"r":16.353143,"d":-25.592796,"m":2.9,"t":7468,"s":"B1","n":"Alniyat","c":"Sco","D":213.7,"b":0.299},{"r":16.365338,"d":19.15313,"m":3.74,"t":7468,"s":"A9","n":"20Gam Her","c":"Her","D":59.1,"b":0.299},{"r":16.39986,"d":61.514213,"m":2.73,"t":4970,"s":"G8","n":"Athebyne","c":"Dra","D":28.2,"b":0.91},{"r":16.401718,"d":-20.037327,"m":4.48,"t":4752,"s":"K0","n":"4Psi Oph","c":"Oph","D":61.2,"b":0.996},{"r":16.450399,"d":-18.456251,"m":4.22,"t":8034,"s":"B2","n":"7Chi Oph","c":"Oph","D":161.0,"b":0.217},{"r":16.453067,"d":-47.554786,"m":4.46,"t":11092,"s":"B4","n":"Eps Nor","c":"Nor","D":162.6,"b":-0.07},{"r":16.490128,"d":-26.432002,"m":1.06,"t":3316,"s":"M1","n":"Antares","c":"Sco","D":169.8,"b":1.865},{"r":16.503668,"d":21.489613,"m":2.78,"t":4874,"s":"G8","n":"Kornephoros","c":"Her","D":42.7,"b":0.947},{"r":16.515229,"d":1.983923,"m":3.82,"t":9859,"s":"A2","n":"Marfik","c":"Oph","D":53.1,"b":0.022},{"r":16.518991,"d":-16.612733,"m":4.29,"t":4933,"s":"G8","n":"8Phi Oph","c":"Oph","D":74.7,"b":0.924},{"r":16.523037,"d":-34.704366,"m":4.24,"t":12860,"s":"B2","n":"HIP 80911","c":"Sco","D":170.1,"b":-0.168},{"r":16.535611,"d":-21.46639,"m":4.45,"t":8748,"s":"Ap","n":"9Ome Oph","c":"Oph","D":51.7,"b":0.13},{"r":16.557609,"d":-78.897148,"m":3.86,"t":4936,"s":"K0","n":"Gam Aps","c":"Aps","D":47.9,"b":0.923},{"r":16.568384,"d":42.437041,"m":4.2,"t":10290,"s":"B9","n":"35Sig Her","c":"Her","D":96.5,"b":-0.013},{"r":16.598043,"d":-28.216016,"m":2.82,"t":13731,"s":"B0","n":"Paikauhale","c":"Sco","D":145.3,"b":-0.206},{"r":16.606242,"d":-35.255326,"m":4.18,"t":3742,"s":"K5","n":"HIP 81304","c":"Sco","D":105.0,"b":1.535},{"r":16.619316,"d":-10.56709,"m":2.54,"t":9675,"s":"O9","n":"13Zet Oph","c":"Oph","D":112.2,"b":0.038},{"r":16.688113,"d":31.602726,"m":2.81,"t":5778,"s":"F9","n":"40Zet Her","c":"Her","D":10.7,"b":0.65},{"r":16.714933,"d":38.922254,"m":3.48,"t":4954,"s":"G8","n":"44Eta Her","c":"Her","D":33.3,"b":0.916},{"r":16.718126,"d":-77.517435,"m":4.23,"t":4603,"s":"K0","n":"Bet Aps","c":"Aps","D":48.1,"b":1.06},{"r":16.766159,"d":82.037262,"m":4.21,"t":5004,"s":"G5","n":"22Eps UMi","c":"UMi","D":93.2,"b":0.897},{"r":16.811077,"d":-69.027715,"m":1.91,"t":3875,"s":"K2","n":"Atria","c":"TrA","D":119.8,"b":1.447},{"r":16.82976,"d":-59.041378,"m":3.77,"t":3703,"s":"K5","n":"Eta Ara","c":"Ara","D":91.7,"b":1.562},{"r":16.83608,"d":-34.293232,"m":2.29,"t":4422,"s":"K2","n":"Larawag","c":"Sco","D":19.5,"b":1.144},{"r":16.864509,"d":-38.04738,"m":3.0,"t":13585,"s":"B1","n":"Xamidimura","c":"Sco","D":153.6,"b":-0.2},{"r":16.872263,"d":-38.017536,"m":3.56,"t":13831,"s":"B2","n":"Pipirima","c":"Sco","D":145.3,"b":-0.21},{"r":16.900131,"d":10.165359,"m":4.39,"t":11375,"s":"B8","n":"25Iot Oph","c":"Oph","D":75.2,"b":-0.088},{"r":16.909731,"d":-42.361313,"m":3.62,"t":3962,"s":"K4","n":"Zet2Sco","c":"Sco","D":40.6,"b":1.393},{"r":16.961139,"d":9.375033,"m":3.19,"t":4389,"s":"K2","n":"27Kap Oph","c":"Oph","D":28.0,"b":1.16},{"r":16.977006,"d":-55.990141,"m":3.12,"t":3717,"s":"K5","n":"Zet Ara","c":"Ara","D":149.0,"b":1.552},{"r":16.993069,"d":-53.160438,"m":4.06,"t":3867,"s":"K4","n":"Eps1Ara","c":"Ara","D":110.6,"b":1.452},{"r":17.004827,"d":30.926405,"m":3.92,"t":10355,"s":"A0","n":"58Eps Her","c":"Her","D":47.5,"b":-0.018},{"r":17.146448,"d":65.714683,"m":3.17,"t":11920,"s":"B6","n":"Aldhibah","c":"Dra","D":100.7,"b":-0.12},{"r":17.172968,"d":-15.72491,"m":2.43,"t":9444,"s":"A2","n":"Sabik","c":"Oph","D":27.1,"b":0.059},{"r":17.202552,"d":-43.239189,"m":3.32,"t":6669,"s":"F3","n":"Eta Sco","c":"Sco","D":22.5,"b":0.441},{"r":17.244127,"d":14.390333,"m":2.78,"t":4381,"s":"M5","n":"Rasalgethi","c":"Her","D":110.3,"b":1.164},{"r":17.250531,"d":24.839204,"m":3.12,"t":9226,"s":"A3","n":"Sarin","c":"Her","D":23.0,"b":0.08},{"r":17.250788,"d":36.809162,"m":3.16,"t":3891,"s":"K3","n":"67Pi  Her","c":"Her","D":115.5,"b":1.437},{"r":17.255836,"d":-26.602829,"m":4.33,"t":5120,"s":"K2","n":"Guniibuu","c":"Oph","D":5.9,"b":0.855},{"r":17.347128,"d":-12.846875,"m":4.32,"t":9686,"s":"A0","n":"53Nu  Ser","c":"Ser","D":62.3,"b":0.037},{"r":17.350101,"d":-21.112933,"m":4.39,"t":6912,"s":"F2","n":"40Xi  Oph","c":"Oph","D":17.4,"b":0.394},{"r":17.366827,"d":-24.999545,"m":3.27,"t":13256,"s":"B2","n":"42The Oph","c":"Oph","D":133.7,"b":-0.186},{"r":17.394708,"d":37.145946,"m":4.15,"t":10265,"s":"B9","n":"75Rho Her","c":"Her","D":120.6,"b":-0.011},{"r":17.421665,"d":-55.529884,"m":2.84,"t":3825,"s":"K3","n":"Bet Ara","c":"Ara","D":198.0,"b":1.479},{"r":17.423239,"d":-56.377727,"m":3.31,"t":12489,"s":"B1","n":"Gam Ara","c":"Ara","D":341.3,"b":-0.15},{"r":17.439504,"d":-24.175309,"m":4.16,"t":7572,"s":"A3","n":"44    Oph","c":"Oph","D":25.5,"b":0.283},{"r":17.441911,"d":4.14036,"m":4.34,"t":3824,"s":"K3","n":"49Sig Oph","c":"Oph","D":276.2,"b":1.48},{"r":17.455909,"d":-29.867033,"m":4.28,"t":6870,"s":"F3","n":"45    Oph","c":"Oph","D":34.2,"b":0.402},{"r":17.507213,"d":52.301387,"m":2.79,"t":4856,"s":"G2","n":"Rastaban","c":"Dra","D":116.6,"b":0.954},{"r":17.512308,"d":26.110645,"m":4.41,"t":3896,"s":"K3","n":"Maasym","c":"Her","D":113.3,"b":1.434},{"r":17.512732,"d":-37.295811,"m":2.7,"t":13099,"s":"B2","n":"Lesath","c":"Sco","D":176.7,"b":-0.179},{"r":17.518318,"d":-60.683848,"m":3.6,"t":11641,"s":"B8","n":"Del Ara","c":"Ara","D":60.7,"b":-0.104},{"r":17.530695,"d":-49.876145,"m":2.84,"t":12216,"s":"B2","n":"Alp Ara","c":"Ara","D":82.0,"b":-0.136},{"r":17.536918,"d":86.58646,"m":4.35,"t":9871,"s":"A1","n":"Yildun","c":"UMi","D":52.8,"b":0.021},{"r":17.560145,"d":-37.103821,"m":1.62,"t":14381,"s":"B1","n":"Shaula","c":"Sco","D":175.1,"b":-0.231},{"r":17.582241,"d":12.560035,"m":2.08,"t":8528,"s":"A5","n":"Rasalhague","c":"Oph","D":14.9,"b":0.155},{"r":17.609121,"d":-38.635308,"m":4.26,"t":4570,"s":"G8","n":"HIP 86170","c":"Sco","D":50.8,"b":1.075},{"r":17.62198,"d":-42.997824,"m":1.86,"t":6848,"s":"F1","n":"Sargas","c":"Sco","D":92.1,"b":0.406},{"r":17.626445,"d":-15.398557,"m":3.54,"t":7712,"s":"F0","n":"55Xi  Ser","c":"Ser","D":32.3,"b":0.262},{"r":17.657747,"d":46.006332,"m":3.82,"t":13099,"s":"B3","n":"85Iot Her","c":"Her","D":139.5,"b":-0.179},{"r":17.690243,"d":-12.875307,"m":4.24,"t":9165,"s":"A2","n":"56Omi Ser","c":"Ser","D":53.1,"b":0.086},{"r":17.708132,"d":-39.029983,"m":2.39,"t":12924,"s":"B1","n":"Kap Sco","c":"Sco","D":148.1,"b":-0.171},{"r":17.724543,"d":4.567303,"m":2.76,"t":4372,"s":"K2","n":"Cebalrai","c":"Oph","D":25.1,"b":1.168},{"r":17.762221,"d":-64.723871,"m":3.61,"t":4387,"s":"K1","n":"Eta Pav","c":"Pav","D":108.0,"b":1.161},{"r":17.774319,"d":27.720676,"m":3.42,"t":5436,"s":"G5","n":"86Mu  Her","c":"Her","D":8.3,"b":0.75},{"r":17.793078,"d":-40.126997,"m":2.99,"t":6348,"s":"F3","n":"Iot1Sco","c":"Sco","D":591.7,"b":0.509},{"r":17.798211,"d":2.707276,"m":3.75,"t":9619,"s":"A0","n":"62Gam Oph","c":"Oph","D":31.5,"b":0.043},{"r":17.830965,"d":-37.043304,"m":3.19,"t":4324,"s":"K0","n":"Fuyue","c":"Sco","D":38.6,"b":1.192},{"r":17.892134,"d":56.872643,"m":3.73,"t":4354,"s":"K2","n":"Grumium","c":"Dra","D":34.5,"b":1.177},{"r":17.93755,"d":37.250539,"m":3.86,"t":4034,"s":"K1","n":"91The Her","c":"Her","D":230.9,"b":1.35},{"r":17.943437,"d":51.488895,"m":2.24,"t":3762,"s":"K5","n":"Eltanin","c":"Dra","D":47.3,"b":1.521},{"r":17.962744,"d":29.24788,"m":3.7,"t":4904,"s":"K0","n":"92Xi  Her","c":"Her","D":41.9,"b":0.935},{"r":17.975041,"d":30.189277,"m":4.41,"t":6989,"s":"F2","n":"94Nu  Her","c":"Her","D":263.9,"b":0.38},{"r":17.983775,"d":-9.773632,"m":3.32,"t":4774,"s":"K0","n":"64Nu  Oph","c":"Oph","D":46.2,"b":0.987},{"r":18.010754,"d":2.931568,"m":3.93,"t":9777,"s":"B5","n":"67    Oph","c":"Oph","D":377.4,"b":0.029},{"r":18.025113,"d":21.595782,"m":4.26,"t":6848,"s":"G5","n":"95    Her","c":"Her","D":127.9,"b":0.406},{"r":18.029222,"d":1.305076,"m":4.42,"t":9585,"s":"A2","n":"68    Oph","c":"Oph","D":89.7,"b":0.046},{"r":18.090913,"d":2.500099,"m":4.03,"t":5106,"s":"K0","n":"70    Oph","c":"Oph","D":5.1,"b":0.86},{"r":18.096803,"d":-30.424091,"m":2.98,"t":4789,"s":"K0","n":"Alnasl","c":"Sgr","D":29.7,"b":0.981},{"r":18.11052,"d":-50.091477,"m":3.65,"t":11590,"s":"B2","n":"The Ara","c":"Ara","D":249.4,"b":-0.101},{"r":18.122496,"d":9.563847,"m":3.71,"t":8495,"s":"A4","n":"72    Oph","c":"Oph","D":26.6,"b":0.159},{"r":18.125708,"d":28.762488,"m":3.84,"t":10355,"s":"B9","n":"103Omi Her","c":"Her","D":103.6,"b":-0.018},{"r":18.143,"d":-63.668553,"m":4.33,"t":7952,"s":"Am","n":"Pi  Pav","c":"Pav","D":39.9,"b":0.228},{"r":18.14597,"d":20.814557,"m":4.37,"t":12775,"s":"B2","n":"102    Her","c":"Her","D":280.9,"b":-0.164},{"r":18.229392,"d":-21.058834,"m":3.84,"t":8202,"s":"B2","n":"Polis","c":"Sgr","D":null,"b":0.195},{"r":18.293793,"d":-36.761686,"m":3.1,"t":3674,"s":"M2","n":"Eta Sgr","c":"Sgr","D":44.7,"b":1.582},{"r":18.331031,"d":36.064547,"m":4.33,"t":4385,"s":"K2","n":"1Kap Lyr","c":"Lyr","D":77.2,"b":1.162},{"r":18.345955,"d":71.337814,"m":4.22,"t":11456,"s":"A0","n":"43Phi Dra","c":"Dra","D":92.9,"b":-0.093},{"r":18.3499,"d":-29.828103,"m":2.72,"t":3983,"s":"K3","n":"Kaus Media","c":"Sgr","D":106.6,"b":1.38},{"r":18.350736,"d":72.732843,"m":3.55,"t":6439,"s":"F7","n":"44Chi Dra","c":"Dra","D":8.1,"b":0.489},{"r":18.355167,"d":-2.898825,"m":3.23,"t":4889,"s":"K0","n":"58Eta Ser","c":"Ser","D":18.5,"b":0.941},{"r":18.387117,"d":-61.493901,"m":4.35,"t":3852,"s":"M1","n":"Xi  Pav","c":"Pav","D":143.7,"b":1.462},{"r":18.394967,"d":21.769752,"m":3.85,"t":4372,"s":"K2","n":"109    Her","c":"Her","D":36.5,"b":1.168},{"r":18.402868,"d":-34.384616,"m":1.79,"t":10529,"s":"B9","n":"Kaus Australis","c":"Sgr","D":43.9,"b":-0.031},{"r":18.449561,"d":-45.968459,"m":3.49,"t":13099,"s":"B3","n":"Alp Tel","c":"Tel","D":85.2,"b":-0.179},{"r":18.466179,"d":-25.4217,"m":2.82,"t":4684,"s":"K1","n":"Kaus Borealis","c":"Sgr","D":24.0,"b":1.025},{"r":18.480505,"d":-49.070588,"m":4.1,"t":4755,"s":"G8","n":"Zet Tel","c":"Tel","D":38.7,"b":0.995},{"r":18.586785,"d":-8.244073,"m":3.85,"t":4091,"s":"K2","n":"Alp Sct","c":"Sct","D":61.1,"b":1.317},{"r":18.61564,"d":38.783692,"m":0.03,"t":10138,"s":"A0","n":"Vega","c":"Lyr","D":7.7,"b":-0.001},{"r":18.71726,"d":-71.428113,"m":4.01,"t":4442,"s":"K2","n":"Zet Pav","c":"Pav","D":67.0,"b":1.134},{"r":18.746209,"d":37.605115,"m":4.34,"t":8225,"s":"Am","n":"6Zet1Lyr","c":"Lyr","D":47.9,"b":0.192},{"r":18.76094,"d":-26.990778,"m":3.17,"t":11692,"s":"B8","n":"27Phi Sgr","c":"Sgr","D":73.4,"b":-0.107},{"r":18.761035,"d":20.546308,"m":4.19,"t":6467,"s":"F6","n":"110    Her","c":"Her","D":19.2,"b":0.483},{"r":18.783686,"d":18.181519,"m":4.34,"t":8589,"s":"A5","n":"111    Her","c":"Her","D":28.9,"b":0.148},{"r":18.786242,"d":-4.747867,"m":4.22,"t":4543,"s":"G5","n":"Bet Sct","c":"Sct","D":280.9,"b":1.087},{"r":18.834665,"d":33.362667,"m":3.52,"t":10088,"s":"A8","n":"Sheliak","c":"Lyr","D":295.0,"b":0.003},{"r":18.870288,"d":-62.187593,"m":4.22,"t":12489,"s":"B2","n":"Lam Pav","c":"Pav","D":438.6,"b":-0.15},{"r":18.908412,"d":36.898613,"m":4.22,"t":3684,"s":"M4","n":"12Del2Lyr","c":"Lyr","D":225.7,"b":1.575},{"r":18.92109,"d":-26.296722,"m":2.05,"t":12178,"s":"B2","n":"Nunki","c":"Sgr","D":69.8,"b":-0.134},{"r":18.922249,"d":43.946088,"m":4.08,"t":3955,"s":"M5","n":"13    Lyr","c":"Lyr","D":91.4,"b":1.397},{"r":18.949177,"d":-67.233495,"m":4.4,"t":6256,"s":"F5","n":"Kap Pav","c":"Pav","D":153.4,"b":0.53},{"r":18.962167,"d":-21.106654,"m":3.52,"t":4407,"s":"G8","n":"37Xi 2Sgr","c":"Sgr","D":112.0,"b":1.151},{"r":18.982395,"d":32.689557,"m":3.25,"t":10781,"s":"B9","n":"Sulafat","c":"Lyr","D":190.1,"b":-0.049},{"r":18.993711,"d":15.068298,"m":4.02,"t":4554,"s":"K2","n":"13Eps Aql","c":"Aql","D":47.5,"b":1.082},{"r":19.028008,"d":-5.739115,"m":4.02,"t":4561,"s":"K1","n":"12    Aql","c":"Aql","D":44.1,"b":1.079},{"r":19.043532,"d":-29.880105,"m":2.6,"t":9412,"s":"A3","n":"Ascella","c":"Sgr","D":27.0,"b":0.062},{"r":19.07805,"d":-21.741496,"m":3.76,"t":4714,"s":"K0","n":"39Omi Sgr","c":"Sgr","D":43.6,"b":1.012},{"r":19.090169,"d":13.863478,"m":2.99,"t":9954,"s":"A0","n":"Okab","c":"Aql","D":25.5,"b":0.014},{"r":19.10415,"d":-4.882554,"m":3.43,"t":11506,"s":"B9","n":"16Lam Aql","c":"Aql","D":37.9,"b":-0.096},{"r":19.106971,"d":-37.063437,"m":4.23,"t":6286,"s":"F7","n":"Gam CrA","c":"CrA","D":17.3,"b":0.523},{"r":19.11567,"d":-27.670423,"m":3.32,"t":4370,"s":"K1","n":"40Tau Sgr","c":"Sgr","D":37.3,"b":1.169},{"r":19.157869,"d":-37.904474,"m":4.11,"t":9630,"s":"A0","n":"Meridiana","c":"CrA","D":38.4,"b":0.042},{"r":19.162731,"d":-21.023615,"m":2.88,"t":7005,"s":"F2","n":"Albaldah","c":"Sgr","D":156.2,"b":0.377},{"r":19.167154,"d":-39.340796,"m":4.1,"t":4383,"s":"K0","n":"Bet CrA","c":"CrA","D":145.3,"b":1.163},{"r":19.209225,"d":67.661541,"m":3.07,"t":4767,"s":"G9","n":"Altais","c":"Dra","D":29.9,"b":0.99},{"r":19.229302,"d":39.145968,"m":4.43,"t":12489,"s":"B2","n":"Aladfar","c":"Lyr","D":425.5,"b":-0.15},{"r":19.259229,"d":73.355468,"m":4.45,"t":4200,"s":"K3","n":"60Tau Dra","c":"Dra","D":44.9,"b":1.257},{"r":19.272804,"d":38.133731,"m":4.35,"t":4198,"s":"K0","n":"21The Lyr","c":"Lyr","D":255.1,"b":1.258},{"r":19.28504,"d":53.368459,"m":3.8,"t":4866,"s":"K0","n":"1Kap Cyg","c":"Cyg","D":38.1,"b":0.95},{"r":19.361211,"d":-17.847197,"m":3.92,"t":7952,"s":"F0","n":"44Rho1Sgr","c":"Sgr","D":38.9,"b":0.228},{"r":19.377303,"d":-44.458965,"m":3.96,"t":11327,"s":"B9","n":"Arkab Prior","c":"Sgr","D":96.2,"b":-0.085},{"r":19.386976,"d":-44.799778,"m":4.27,"t":7158,"s":"F2","n":"Arkab Posterior","c":"Sgr","D":41.1,"b":0.35},{"r":19.398103,"d":-40.61594,"m":3.96,"t":11658,"s":"B8","n":"Rukbat","c":"Sgr","D":55.7,"b":-0.105},{"r":19.424972,"d":3.114775,"m":3.36,"t":7343,"s":"F0","n":"30Del Aql","c":"Aql","D":15.5,"b":0.319},{"r":19.478427,"d":24.664905,"m":4.44,"t":3791,"s":"M0","n":"Anser","c":"Vul","D":91.2,"b":1.502},{"r":19.495098,"d":51.729779,"m":3.76,"t":8589,"s":"A5","n":"10Iot2Cyg","c":"Cyg","D":37.2,"b":0.148},{"r":19.512023,"d":27.959681,"m":3.05,"t":4541,"s":"K3","n":"Albireo","c":"Cyg","D":133.2,"b":1.088},{"r":19.568153,"d":7.378941,"m":4.45,"t":4356,"s":"K3","n":"38Mu  Aql","c":"Aql","D":33.0,"b":1.176},{"r":19.607372,"d":50.221103,"m":4.49,"t":6907,"s":"F4","n":"13The Cyg","c":"Cyg","D":18.3,"b":0.395},{"r":19.612022,"d":-1.286601,"m":4.36,"t":11231,"s":"B5","n":"41Iot Aql","c":"Aql","D":119.9,"b":-0.079},{"r":19.668275,"d":18.01389,"m":4.39,"t":5351,"s":"G0","n":"Sham","c":"Sge","D":130.4,"b":0.777},{"r":19.68415,"d":17.476041,"m":4.39,"t":4646,"s":"G8","n":"6Bet Sge","c":"Sge","D":134.8,"b":1.041},{"r":19.749574,"d":45.13081,"m":2.86,"t":10150,"s":"B9","n":"Fawaris","c":"Cyg","D":50.6,"b":-0.002},{"r":19.770994,"d":10.613261,"m":2.72,"t":3783,"s":"K3","n":"Tarazed","c":"Aql","D":121.1,"b":1.507},{"r":19.789795,"d":18.534286,"m":3.68,"t":4098,"s":"M2","n":"7Del Sge","c":"Sge","D":182.1,"b":1.313},{"r":19.80285,"d":70.26793,"m":3.84,"t":5029,"s":"G8","n":"63Eps Dra","c":"Dra","D":45.4,"b":0.888},{"r":19.846388,"d":8.868322,"m":0.76,"t":8004,"s":"A7","n":"Altair","c":"Aql","D":5.1,"b":0.221},{"r":19.874547,"d":1.005661,"m":3.87,"t":5853,"s":"F6","n":"55Eta Aql","c":"Aql","D":423.7,"b":0.63},{"r":19.921026,"d":-41.868288,"m":4.12,"t":4596,"s":"K0","n":"Iot Sgr","c":"Sgr","D":55.7,"b":1.063},{"r":19.921887,"d":6.406763,"m":3.71,"t":5120,"s":"G8","n":"Alshain","c":"Aql","D":13.7,"b":0.855},{"r":19.938438,"d":35.083424,"m":3.89,"t":4698,"s":"K0","n":"21Eta Cyg","c":"Cyg","D":41.4,"b":1.019},{"r":19.979285,"d":19.492148,"m":3.51,"t":3690,"s":"K5","n":"12Gam Sge","c":"Sge","D":79.2,"b":1.571},{"r":19.995605,"d":-35.276305,"m":4.37,"t":12489,"s":"B2","n":"The1Sgr","c":"Sgr","D":159.0,"b":-0.15},{"r":20.009845,"d":-72.910504,"m":3.97,"t":10543,"s":"A0","n":"Eps Pav","c":"Pav","D":32.2,"b":-0.032},{"r":20.044299,"d":-27.709845,"m":4.43,"t":3594,"s":"M4","n":"62    Sgr","c":"Sgr","D":137.6,"b":1.64},{"r":20.145157,"d":-66.182068,"m":3.55,"t":5433,"s":"G5","n":"Del Pav","c":"Pav","D":6.1,"b":0.751},{"r":20.148145,"d":77.711419,"m":4.38,"t":10738,"s":"B9","n":"1Kap Cep","c":"Cep","D":96.5,"b":-0.046},{"r":20.188413,"d":-0.821461,"m":3.24,"t":11031,"s":"B9","n":"65The Aql","c":"Aql","D":87.8,"b":-0.066},{"r":20.223288,"d":56.567722,"m":4.28,"t":8895,"s":"A3","n":"33    Cyg","c":"Cyg","D":48.8,"b":0.114},{"r":20.227196,"d":46.741329,"m":3.8,"t":4176,"s":"K2","n":"31    Cyg","c":"Cyg","D":271.0,"b":1.27},{"r":20.257867,"d":47.714208,"m":3.96,"t":3869,"s":"K3","n":"32    Cyg","c":"Cyg","D":324.7,"b":1.451},{"r":20.262816,"d":27.814242,"m":4.5,"t":4198,"s":"K3","n":"23    Vul","c":"Vul","D":103.8,"b":1.258},{"r":20.29413,"d":-12.508212,"m":4.3,"t":4923,"s":"G3","n":"5Alp1Cap","c":"Cap","D":174.5,"b":0.928},{"r":20.300904,"d":-12.544852,"m":3.58,"t":5042,"s":"G6","n":"Algedi","c":"Cap","D":32.4,"b":0.883},{"r":20.350187,"d":-14.781367,"m":3.05,"t":5311,"s":"A5","n":"Dabih","c":"Cap","D":100.2,"b":0.79},{"r":20.370473,"d":40.256679,"m":2.23,"t":5696,"s":"F8","n":"Sadr","c":"Cyg","D":561.8,"b":0.673},{"r":20.397671,"d":32.190172,"m":4.43,"t":4067,"s":"K3","n":"39    Cyg","c":"Cyg","D":76.6,"b":1.331},{"r":20.427459,"d":-56.73509,"m":1.94,"t":11885,"s":"B2","n":"Peacock","c":"Pav","D":54.8,"b":-0.118},{"r":20.489926,"d":30.368555,"m":4.01,"t":6859,"s":"F5","n":"41    Cyg","c":"Cyg","D":235.8,"b":0.404},{"r":20.493015,"d":62.994105,"m":4.21,"t":8171,"s":"A7","n":"2The Cep","c":"Cep","D":41.8,"b":0.199},{"r":20.553547,"d":11.303263,"m":4.03,"t":11975,"s":"B6","n":"Aldulfin","c":"Del","D":101.3,"b":-0.123},{"r":20.625816,"d":14.595087,"m":3.64,"t":6750,"s":"F5","n":"Rotanev","c":"Del","D":30.9,"b":0.425},{"r":20.626116,"d":-47.291502,"m":3.11,"t":4748,"s":"K0","n":"Alp Ind","c":"Ind","D":30.1,"b":0.998},{"r":20.638967,"d":-1.105121,"m":4.31,"t":4869,"s":"G8","n":"71    Aql","c":"Aql","D":103.4,"b":0.949},{"r":20.660635,"d":15.912072,"m":3.77,"t":10897,"s":"B9","n":"Sualocin","c":"Del","D":77.8,"b":-0.057},{"r":20.690532,"d":45.280338,"m":1.25,"t":9106,"s":"A2","n":"Deneb","c":"Cyg","D":432.9,"b":0.092},{"r":20.724315,"d":15.074581,"m":4.43,"t":7449,"s":"A7","n":"11Del Del","c":"Del","D":68.4,"b":0.302},{"r":20.749314,"d":-66.203212,"m":3.42,"t":8461,"s":"A5","n":"Bet Pav","c":"Pav","D":41.4,"b":0.163},{"r":20.754811,"d":61.838782,"m":3.41,"t":4964,"s":"K0","n":"3Eta Cep","c":"Cep","D":14.3,"b":0.912},{"r":20.761043,"d":30.719715,"m":4.22,"t":4624,"s":"K0","n":"52    Cyg","c":"Cyg","D":61.7,"b":1.051},{"r":20.76826,"d":-25.270898,"m":4.13,"t":6745,"s":"F5","n":"16Psi Cap","c":"Cap","D":14.7,"b":0.426},{"r":20.770178,"d":33.970256,"m":2.48,"t":4693,"s":"K0","n":"Aljanah","c":"Cyg","D":22.3,"b":1.021},{"r":20.77764,"d":16.124296,"m":4.27,"t":4644,"s":"K1","n":"12Gam2Del","c":"Del","D":38.7,"b":1.042},{"r":20.794598,"d":-9.495776,"m":3.78,"t":10125,"s":"A1","n":"Albali","c":"Aqr","D":63.7,"b":0.0},{"r":20.795621,"d":-5.027701,"m":4.43,"t":3596,"s":"M3","n":"3    Aqr","c":"Aqr","D":179.5,"b":1.639},{"r":20.863692,"d":-26.919133,"m":4.12,"t":3604,"s":"K4","n":"18Ome Cap","c":"Cap","D":258.4,"b":1.633},{"r":20.913498,"d":-58.454155,"m":3.67,"t":4213,"s":"K0","n":"Bet Ind","c":"Ind","D":187.6,"b":1.25},{"r":20.952893,"d":41.167136,"m":3.94,"t":9800,"s":"A1","n":"58Nu  Cyg","c":"Cyg","D":114.8,"b":0.027},{"r":21.082184,"d":43.927852,"m":3.72,"t":3637,"s":"K5","n":"62Xi  Cyg","c":"Cyg","D":258.4,"b":1.609},{"r":21.099118,"d":-17.232861,"m":4.08,"t":10252,"s":"A1","n":"23The Cap","c":"Cap","D":49.7,"b":-0.01},{"r":21.118797,"d":-25.005853,"m":4.49,"t":3644,"s":"K5","n":"24    Cap","c":"Cap","D":139.9,"b":1.604},{"r":21.159902,"d":-11.371693,"m":4.5,"t":4928,"s":"G8","n":"13Nu  Aqr","c":"Aqr","D":48.9,"b":0.926},{"r":21.215607,"d":30.226916,"m":3.21,"t":4767,"s":"G8","n":"64Zet Cyg","c":"Cyg","D":43.9,"b":0.99},{"r":21.241337,"d":10.006981,"m":4.47,"t":6260,"s":"F5","n":"7Del Equ","c":"Equ","D":18.5,"b":0.529},{"r":21.246517,"d":38.045317,"m":3.74,"t":6918,"s":"F1","n":"65Tau Cyg","c":"Cyg","D":20.3,"b":0.393},{"r":21.263731,"d":5.247845,"m":3.92,"t":6175,"s":"G0","n":"Kitalpha","c":"Equ","D":58.3,"b":0.549},{"r":21.290265,"d":39.394681,"m":4.22,"t":9047,"s":"B9","n":"67Sig Cyg","c":"Cyg","D":885.0,"b":0.098},{"r":21.298632,"d":34.896898,"m":4.41,"t":11624,"s":"B2","n":"66Ups Cyg","c":"Cyg","D":196.9,"b":-0.103},{"r":21.30963,"d":62.585573,"m":2.45,"t":7747,"s":"A7","n":"Alderamin","c":"Cep","D":15.0,"b":0.257},{"r":21.331096,"d":-53.449427,"m":4.39,"t":8233,"s":"A5","n":"The Ind","c":"Ind","D":30.3,"b":0.191},{"r":21.36811,"d":19.804508,"m":4.08,"t":4498,"s":"K1","n":"1    Peg","c":"Peg","D":47.8,"b":1.108},{"r":21.370776,"d":-16.834542,"m":4.28,"t":5029,"s":"G8","n":"32Iot Cap","c":"Cap","D":60.3,"b":0.888},{"r":21.440705,"d":-65.366198,"m":4.21,"t":6416,"s":"F6","n":"Gam Pav","c":"Pav","D":9.3,"b":0.494},{"r":21.444452,"d":-22.411332,"m":3.77,"t":4738,"s":"G4","n":"34Zet Cap","c":"Cap","D":118.2,"b":1.002},{"r":21.477662,"d":70.560716,"m":3.23,"t":13609,"s":"B2","n":"Alfirk","c":"Cep","D":210.1,"b":-0.201},{"r":21.478721,"d":-21.80718,"m":4.5,"t":5026,"s":"K0","n":"36    Cap","c":"Cap","D":52.5,"b":0.889},{"r":21.525982,"d":-5.571172,"m":2.9,"t":5198,"s":"G0","n":"Sadalsuud","c":"Aqr","D":164.7,"b":0.828},{"r":21.56635,"d":45.591837,"m":3.98,"t":5037,"s":"G8","n":"73Rho Cyg","c":"Cyg","D":37.9,"b":0.885},{"r":21.668181,"d":-16.662308,"m":3.69,"t":7337,"s":"A7","n":"Nashira","c":"Cap","D":48.1,"b":0.32},{"r":21.691253,"d":-77.390046,"m":3.73,"t":4724,"s":"K0","n":"Nu  Oct","c":"Oct","D":21.2,"b":1.008},{"r":21.725127,"d":58.780046,"m":4.23,"t":null,"s":"M2","n":"Mu  Cep","c":"Cep","D":null,"b":2.242},{"r":21.73571,"d":28.742632,"m":4.49,"t":6335,"s":"F6","n":"78Mu 1Cyg","c":"Cyg","D":22.2,"b":0.512},{"r":21.736433,"d":9.875011,"m":2.38,"t":3764,"s":"K2","n":"Enif","c":"Peg","D":211.4,"b":1.52},{"r":21.74186,"d":17.350017,"m":4.34,"t":4387,"s":"G5","n":"9    Peg","c":"Peg","D":284.1,"b":1.161},{"r":21.744092,"d":25.645036,"m":4.14,"t":6750,"s":"F5","n":"10Kap Peg","c":"Peg","D":34.2,"b":0.425},{"r":21.749113,"d":-33.025781,"m":4.35,"t":10838,"s":"B9","n":"9Iot PsA","c":"PsA","D":62.6,"b":-0.053},{"r":21.75748,"d":61.120806,"m":4.25,"t":6509,"s":"A2","n":"10Nu  Cep","c":"Cep","D":null,"b":0.474},{"r":21.779891,"d":49.30957,"m":4.23,"t":11920,"s":"B3","n":"81Pi 2Cyg","c":"Cyg","D":339.0,"b":-0.12},{"r":21.784011,"d":-16.127286,"m":2.85,"t":8321,"s":"A5","n":"Deneb Algedi","c":"Cap","D":11.9,"b":0.18},{"r":21.898808,"d":-37.364852,"m":3.0,"t":11311,"s":"B8","n":"Aldhanab","c":"Gru","D":64.7,"b":-0.084},{"r":21.965293,"d":-54.992575,"m":4.4,"t":7481,"s":"F0","n":"Del Ind","c":"Ind","D":57.7,"b":0.297},{"r":22.063135,"d":64.627971,"m":4.26,"t":6994,"s":"Am","n":"Kurhah","c":"Cep","D":29.6,"b":0.379},{"r":22.096399,"d":-0.319851,"m":2.95,"t":4818,"s":"G2","n":"Sadalmelik","c":"Aqr","D":160.5,"b":0.969},{"r":22.101914,"d":-39.543353,"m":4.47,"t":4036,"s":"M0","n":"Lam Gru","c":"Gru","D":74.2,"b":1.349},{"r":22.107286,"d":-13.869679,"m":4.29,"t":11169,"s":"B8","n":"33Iot Aqr","c":"Aqr","D":53.7,"b":-0.075},{"r":22.116847,"d":25.345112,"m":3.77,"t":6699,"s":"F5","n":"24Iot Peg","c":"Peg","D":11.7,"b":0.435},{"r":22.137209,"d":-46.960975,"m":1.73,"t":11092,"s":"B7","n":"Alnair","c":"Gru","D":31.0,"b":-0.07},{"r":22.139722,"d":-32.988468,"m":4.5,"t":9498,"s":"A2","n":"14Mu  PsA","c":"PsA","D":41.6,"b":0.054},{"r":22.166457,"d":33.178224,"m":4.28,"t":6523,"s":"F5","n":"29Pi 2Peg","c":"Peg","D":80.6,"b":0.471},{"r":22.169996,"d":6.197865,"m":3.52,"t":9165,"s":"A2","n":"Biham","c":"Peg","D":28.3,"b":0.086},{"r":22.180908,"d":58.201261,"m":3.39,"t":3708,"s":"K1","n":"21Zet Cep","c":"Cep","D":256.4,"b":1.558},{"r":22.231312,"d":39.714927,"m":4.5,"t":3975,"s":"K3","n":"HIP 109754","c":"Lac","D":147.9,"b":1.385},{"r":22.250544,"d":57.043587,"m":4.18,"t":7605,"s":"F0","n":"23Eps Cep","c":"Cep","D":26.2,"b":0.278},{"r":22.26616,"d":37.748737,"m":4.14,"t":3875,"s":"K3","n":"1    Lac","c":"Lac","D":190.5,"b":1.447},{"r":22.280565,"d":-7.78329,"m":4.17,"t":4794,"s":"G8","n":"Ancha","c":"Aqr","D":57.5,"b":0.979},{"r":22.308371,"d":-60.259587,"m":2.87,"t":3967,"s":"K3","n":"Alp Tuc","c":"Tuc","D":61.2,"b":1.39},{"r":22.360938,"d":-1.387331,"m":3.86,"t":10897,"s":"A0","n":"Sadachbia","c":"Aqr","D":50.2,"b":-0.057},{"r":22.392675,"d":52.229046,"m":4.42,"t":4707,"s":"G9","n":"3Bet Lac","c":"Lac","D":52.1,"b":1.015},{"r":22.480531,"d":-0.019972,"m":3.65,"t":6848,"s":"F3","n":"55Zet1Aqr","c":"Aqr","D":28.2,"b":0.406},{"r":22.486183,"d":58.415198,"m":4.07,"t":5348,"s":"G2","n":"27Del Cep","c":"Cep","D":265.3,"b":0.778},{"r":22.487825,"d":-43.495565,"m":3.97,"t":4691,"s":"G6","n":"Del1Gru","c":"Gru","D":94.9,"b":1.022},{"r":22.492173,"d":47.706887,"m":4.34,"t":3543,"s":"M0","n":"5    Lac","c":"Lac","D":505.1,"b":1.679},{"r":22.495955,"d":-43.749224,"m":4.12,"t":3691,"s":"M4","n":"Del2Gru","c":"Gru","D":101.2,"b":1.57},{"r":22.521515,"d":50.282491,"m":3.76,"t":9754,"s":"A1","n":"7Alp Lac","c":"Lac","D":31.5,"b":0.031},{"r":22.52509,"d":-32.346073,"m":4.29,"t":9990,"s":"A1","n":"17Bet PsA","c":"PsA","D":43.8,"b":0.011},{"r":22.589272,"d":-0.117498,"m":4.04,"t":11295,"s":"B9","n":"62Eta Aqr","c":"Aqr","D":51.5,"b":-0.083},{"r":22.675233,"d":44.276305,"m":4.5,"t":4090,"s":"K3","n":"11    Lac","c":"Lac","D":102.0,"b":1.318},{"r":22.677594,"d":-27.043617,"m":4.18,"t":11658,"s":"B8","n":"18Eps PsA","c":"PsA","D":149.3,"b":-0.105},{"r":22.691033,"d":10.831364,"m":3.41,"t":11343,"s":"B8","n":"Homam","c":"Peg","D":62.7,"b":-0.086},{"r":22.711115,"d":-46.884577,"m":2.07,"t":3635,"s":"M5","n":"Tiaki","c":"Gru","D":54.3,"b":1.61},{"r":22.716704,"d":30.221245,"m":2.93,"t":5129,"s":"G2","n":"Matar","c":"Peg","D":65.7,"b":0.852},{"r":22.767692,"d":-81.381615,"m":4.13,"t":8102,"s":"A9","n":"Bet Oct","c":"Oct","D":45.8,"b":0.208},{"r":22.775521,"d":23.565654,"m":3.97,"t":4581,"s":"G8","n":"47Lam Peg","c":"Peg","D":112.0,"b":1.07},{"r":22.778216,"d":12.172888,"m":4.2,"t":6380,"s":"F7","n":"46Xi  Peg","c":"Peg","D":16.3,"b":0.502},{"r":22.809239,"d":-51.316864,"m":3.49,"t":9195,"s":"A3","n":"Eps Gru","c":"Gru","D":39.5,"b":0.083},{"r":22.826528,"d":-13.592632,"m":4.05,"t":3691,"s":"K5","n":"71Tau2Aqr","c":"Aqr","D":97.4,"b":1.57},{"r":22.82802,"d":66.200408,"m":3.5,"t":4619,"s":"K0","n":"32Iot Cep","c":"Cep","D":35.3,"b":1.053},{"r":22.833385,"d":24.601579,"m":3.51,"t":4910,"s":"M2","n":"Sadalbari","c":"Peg","D":32.5,"b":0.933},{"r":22.875427,"d":-32.875504,"m":4.46,"t":10612,"s":"A0","n":"22Gam PsA","c":"PsA","D":66.1,"b":-0.037},{"r":22.87691,"d":-7.579599,"m":3.73,"t":3613,"s":"M2","n":"73Lam Aqr","c":"Aqr","D":118.1,"b":1.626},{"r":22.910837,"d":-15.82082,"m":3.27,"t":9370,"s":"A3","n":"Skat","c":"Aqr","D":49.2,"b":0.066},{"r":22.932472,"d":-32.539628,"m":4.2,"t":4861,"s":"G8","n":"23Del PsA","c":"PsA","D":47.3,"b":0.952},{"r":22.960838,"d":-29.622236,"m":1.17,"t":8615,"s":"A3","n":"Fomalhaut","c":"PsA","D":7.7,"b":0.145},{"r":23.014677,"d":-52.754137,"m":4.11,"t":4841,"s":"G8","n":"Zet Gru","c":"Gru","D":33.4,"b":0.96},{"r":23.032017,"d":42.325979,"m":3.62,"t":11556,"s":"B6","n":"1Omi And","c":"And","D":210.5,"b":-0.099},{"r":23.062901,"d":28.082789,"m":2.44,"t":3574,"s":"M2","n":"Scheat","c":"Peg","D":60.1,"b":1.655},{"r":23.064615,"d":3.820045,"m":4.48,"t":11831,"s":"B6","n":"Fumalsamakah","c":"Psc","D":125.2,"b":-0.115},{"r":23.079348,"d":15.205264,"m":2.49,"t":10150,"s":"B9","n":"Markab","c":"Peg","D":40.9,"b":-0.002},{"r":23.111345,"d":-23.743115,"m":4.48,"t":5018,"s":"G8","n":"86    Aqr","c":"Aqr","D":66.3,"b":0.892},{"r":23.11465,"d":-43.520358,"m":4.28,"t":6760,"s":"F5","n":"The Gru","c":"Gru","D":40.4,"b":0.423},{"r":23.131623,"d":75.387496,"m":4.41,"t":5275,"s":"G2","n":"33Pi  Cep","c":"Cep","D":75.6,"b":0.802},{"r":23.157443,"d":-21.17241,"m":3.68,"t":4305,"s":"K1","n":"88    Aqr","c":"Aqr","D":83.0,"b":1.202},{"r":23.17264,"d":-45.246711,"m":3.88,"t":4748,"s":"K0","n":"Iot Gru","c":"Gru","D":56.2,"b":0.998},{"r":23.238711,"d":-6.049003,"m":4.22,"t":3727,"s":"M2","n":"90Phi Aqr","c":"Aqr","D":62.0,"b":1.545},{"r":23.264859,"d":-9.087737,"m":4.24,"t":4500,"s":"K0","n":"91Psi1Aqr","c":"Aqr","D":45.9,"b":1.107},{"r":23.286094,"d":3.282289,"m":3.7,"t":4954,"s":"G7","n":"6Gam Psc","c":"Psc","D":42.3,"b":0.916},{"r":23.290498,"d":-58.235734,"m":3.99,"t":6827,"s":"F1","n":"Gam Tuc","c":"Tuc","D":23.1,"b":0.41},{"r":23.298393,"d":-9.182513,"m":4.41,"t":12370,"s":"B5","n":"93Psi2Aqr","c":"Aqr","D":123.2,"b":-0.144},{"r":23.313733,"d":-32.532027,"m":4.41,"t":4495,"s":"K1","n":"Gam Scl","c":"Scl","D":55.9,"b":1.109},{"r":23.382842,"d":-20.10058,"m":3.96,"t":4554,"s":"K0","n":"98    Aqr","c":"Aqr","D":50.1,"b":1.082},{"r":23.422993,"d":23.404101,"m":4.42,"t":5902,"s":"F8","n":"Alkarab","c":"Peg","D":52.2,"b":0.617},{"r":23.434108,"d":-20.642014,"m":4.38,"t":3855,"s":"K4","n":"99    Aqr","c":"Aqr","D":86.9,"b":1.46},{"r":23.466138,"d":6.378992,"m":4.27,"t":4599,"s":"K1","n":"10The Psc","c":"Psc","D":45.5,"b":1.062},{"r":23.549512,"d":-37.818268,"m":4.38,"t":11489,"s":"B9","n":"Bet Scl","c":"Scl","D":53.4,"b":-0.095},{"r":23.626056,"d":46.458152,"m":3.81,"t":4781,"s":"G8","n":"16Lam And","c":"And","D":26.4,"b":0.984},{"r":23.63561,"d":43.268073,"m":4.29,"t":11295,"s":"B8","n":"17Iot And","c":"And","D":153.1,"b":-0.083},{"r":23.65582,"d":77.632276,"m":3.21,"t":4670,"s":"K1","n":"Errai","c":"Cep","D":14.1,"b":1.031},{"r":23.665844,"d":5.626292,"m":4.13,"t":6357,"s":"F7","n":"17Iot Psc","c":"Psc","D":13.7,"b":0.507},{"r":23.673469,"d":44.333932,"m":4.15,"t":11107,"s":"B9","n":"19Kap And","c":"And","D":51.6,"b":-0.071},{"r":23.700779,"d":1.780041,"m":4.49,"t":8163,"s":"A7","n":"18Lam Psc","c":"Psc","D":32.7,"b":0.2},{"r":23.712039,"d":-14.544905,"m":4.49,"t":10543,"s":"B9","n":"105Ome2Aqr","c":"Aqr","D":45.5,"b":-0.032},{"r":23.988525,"d":6.863321,"m":4.03,"t":6781,"s":"F4","n":"28Ome Psc","c":"Psc","D":32.0,"b":0.419},{"r":23.998594,"d":-65.577132,"m":4.49,"t":11169,"s":"B9","n":"Eps Tuc","c":"Tuc","D":114.4,"b":-0.075},{"r":5.277926,"d":46.000842,"m":0.96,"t":null,"s":"G0","n":null,"c":"Aur","D":12.9},{"r":7.576827,"d":31.89052,"m":2.85,"t":null,"s":"A ","n":"Castor B","c":"Gem","D":15.8},{"r":11.303118,"d":31.528783,"m":4.33,"t":6007,"s":"G0","n":"Alula Australis","c":"UMa","D":10.4,"b":0.59},{"r":12.694171,"d":-1.449235,"m":3.52,"t":null,"s":"F0","n":"29Gam Vir","c":"Vir","D":11.8},{"r":13.398996,"d":54.920471,"m":3.95,"t":8748,"s":"A1","n":"79Zet UMa","c":"UMa","D":24.2,"b":0.13},{"r":17.172783,"d":-15.726921,"m":3.4,"t":null,"s":"A3","n":null,"c":"Oph","D":25.8}];
+</script>
+
+<script>
+(function(){
+'use strict';
+
+// ═══════════════════════════════════════════════════
+// DOM HELPER (must be first — used throughout)
+// ═══════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+
+// ═══════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════
+const LISTEN_RADIUS = 120;
+const MAX_VOICES = 24;
+
+// ═══════════════════════════════════════════════════
+// STATE (hoisted to avoid temporal dead zones)
+// ═══════════════════════════════════════════════════
+let currentHarmony = 'pentatonic';
+let currentMode = 'lydian';
+let currentPalette = 'crystalline';
+let scaleFreqs, scaleNames;
+let starPoints, starMaterial, starData = [];
+let positions, colors, sizes, alphas;
+let pinLinesMesh = null;
+let pinHaloMesh = null;
+let audioStarted = false, analyserNode, analyserData, waveformData;
+const voicePool = [];
+const activeVoices = new Map();
+let audioChain = null;
+let interactionMode = 'explore';
+const mouseScreen = {x:0, y:0};
+let focusedStar = null, starsInRadius = new Set(), prevStarsInRadius = new Set();
+const pinnedStars = [];
+let pinSequencePlaying = false, pinSequenceInterval = null, pinSequenceIdx = 0;
+let pinTempoBPM = 120;
+let scanning = false, scanX = 0, scanBPM = 45, scanDirection = 1;
+let composer = null;
+let bloomPass = null;
+let starMeshBright = null;
+let starMeshDim = null;
+let brightIndices = [];
+let dimIndices = [];
+let starScales = null;
+const MAG_WIREFRAME_THRESHOLD = 4.0;
+let zoomLevel = 1, isDragging = false, dragStart = {x:0,y:0}, rotY = 0, rotX = 0;
+let hudVisible = true;
+let frame = 0;
+let hoverHelperGroup = null;
+let hoverLabelSprite = null;
+let currentHoverStar = null;
+const starTriggerScales = new Map();
+let constellationGroup = null;
+let spectralBoundaryGroup = null;
+let showSpectralBoundaries = false;
+let harmonicLineGroup = null;
+const harmonicLinePool = [];
+const activeHarmonicLines = [];
+
+// ═══════════════════════════════════════════════════
+// CONSTELLATION LINES
+// ═══════════════════════════════════════════════════
+const CONSTELLATION_LINES = {
+  "UMa":[["Dubhe","Merak"],["Merak","Phecda"],["Phecda","Megrez"],["Megrez","Alioth"],["Alioth","Mizar"],["Mizar","Alkaid"],["Megrez","Dubhe"]],
+  "Ori":[["Betelgeuse","Meissa"],["Meissa","Bellatrix"],["Bellatrix","Mintaka"],["Mintaka","Alnilam"],["Alnilam","Alnitak"],["Alnitak","Saiph"],["Mintaka","Betelgeuse"],["Alnitak","Rigel"]],
+  "Sco":[["Antares","Dschubba"],["Dschubba","Acrab"],["Acrab","Fang"],["Antares","Larawag"],["Larawag","Sargas"],["Sargas","Shaula"],["Shaula","Lesath"]],
+  "Leo":[["Regulus","Chertan"],["Chertan","Zosma"],["Zosma","Denebola"],["Regulus","Algieba"],["Algieba","Adhafera"],["Adhafera","Rasalas"]],
+  "Cyg":[["Deneb","Sadr"],["Sadr","Albireo"],["Sadr","Fawaris"],["Sadr","Aljanah"]],
+  "Cas":[["Schedar","Caph"],["Schedar","Navi"],["Navi","Ruchbah"],["Ruchbah","Segin"]],
+  "CMa":[["Sirius","Mirzam"],["Sirius","Muliphein"],["Muliphein","Wezen"],["Wezen","Aludra"],["Wezen","Adhara"]],
+  "Gem":[["Pollux","Castor"],["Pollux","Alhena"],["Alhena","Tejat"],["Tejat","Propus"],["Castor","Mebsuta"]],
+  "Tau":[["Aldebaran","Ain"],["Aldebaran","Elnath"]],
+  "Vir":[["Spica","Porrima"],["Porrima","Vindemiatrix"],["Porrima","Minelauva"],["Minelauva","Heze"],["Heze","Spica"]],
+  "Aql":[["Altair","Tarazed"],["Altair","Alshain"]],
+  "Lyr":[["Vega","Sheliak"],["Sheliak","Sulafat"],["Sulafat","Vega"]],
+  "CMi":[["Procyon","Gomeisa"]],
+  "Boo":[["Arcturus","Izar"],["Izar","Nekkar"],["Nekkar","Seginus"],["Arcturus","Muphrid"]],
+  "Aur":[["Capella","Menkalinan"],["Capella","Almaaz"],["Almaaz","Haedus"],["Capella","Hassaleh"]],
+  "Peg":[["Markab","Scheat"],["Scheat","Matar"],["Markab","Algenib"],["Scheat","Enif"]],
+  "And":[["Alpheratz","Mirach"],["Mirach","Almach"]],
+  "Per":[["Mirfak","Algol"],["Mirfak","Atik"]],
+  "Ari":[["Hamal","Sheratan"],["Sheratan","Mesarthim"]],
+  "CrB":[["Alphecca","Nusakan"]],
+  "Crv":[["Gienah","Kraz"],["Kraz","Algorab"],["Algorab","Minkar"]],
+  "Sgr":[["Kaus Australis","Kaus Media"],["Kaus Media","Kaus Borealis"],["Kaus Media","Nunki"],["Nunki","Ascella"]],
+  "Cen":[["Rigil Kentaurus","Hadar"]],
+  "Oph":[["Rasalhague","Cebalrai"],["Rasalhague","Sabik"]],
+  "Lib":[["Zubeneschamali","Zubenelgenubi"]],
+  "Dra":[["Eltanin","Rastaban"],["Rastaban","Grumium"]],
+  "Her":[["Kornephoros","Rasalgethi"],["Kornephoros","Sarin"]],
+  "Cep":[["Alderamin","Alfirk"],["Alfirk","Errai"]],
+  "Cap":[["Deneb Algedi","Dabih"],["Dabih","Algedi"]],
+  "Car":[["Canopus","Avior"],["Avior","Miaplacidus"]],
+  "Vel":[["Suhail","Alsephina"]],
+  "Eri":[["Achernar","Acamar"],["Acamar","Cursa"]],
+  "Gru":[["Alnair","Tiaki"]]
+};
+
+// ═══════════════════════════════════════════════════
+// HARMONIC SYSTEMS
+// ═══════════════════════════════════════════════════
+// All intervals in semitones from root
+const HARMONY_DEFS = {
+  pentatonic: { name:'PENTATONIC', intervals:[0,2,4,7,9] },  // C D E G A
+  modal: {
+    name:'MODAL',
+    modes: {
+      lydian:     {name:'LYDIAN',     intervals:[0,2,4,6,7,9,11]},
+      ionian:     {name:'IONIAN',     intervals:[0,2,4,5,7,9,11]},
+      mixolydian: {name:'MIXOLYDIAN', intervals:[0,2,4,5,7,9,10]},
+      dorian:     {name:'DORIAN',     intervals:[0,2,3,5,7,9,10]},
+      aeolian:    {name:'AEOLIAN',    intervals:[0,2,3,5,7,8,10]},
+      phrygian:   {name:'PHRYGIAN',   intervals:[0,1,3,5,7,8,10]},
+      locrian:    {name:'LOCRIAN',    intervals:[0,1,3,5,6,8,10]}
+    }
+  },
+  overtone: { name:'OVERTONE' },  // special: natural harmonic series
+  layered:  { name:'LAYERED' }    // special: combines pentatonic, modal, overtone by register
+};
+
+// Build frequency table from root C2 (65.41 Hz) spanning 5 octaves
+const ROOT_FREQ = 65.41; // C2
+const OCTAVES = 5;
+
+function buildScaleFreqs(intervals) {
+  const freqs = [], names = [];
+  const noteNames = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  for (let oct = 0; oct < OCTAVES; oct++) {
+    for (const semi of intervals) {
+      const midiOffset = oct * 12 + semi;
+      const freq = ROOT_FREQ * Math.pow(2, midiOffset / 12);
+      if (freq > 20 && freq < 6000) {
+        freqs.push(freq);
+        names.push(noteNames[semi % 12] + (2 + oct));
+      }
+    }
+  }
+  return {freqs, names};
+}
+
+function buildOvertoneFreqs() {
+  // Natural harmonic series from C2, up to 32 partials
+  const fundamental = ROOT_FREQ;
+  const freqs = [], names = [];
+  for (let n = 1; n <= 32; n++) {
+    const f = fundamental * n;
+    if (f > 20 && f < 6000) {
+      freqs.push(f);
+      names.push(`H${n}`);
+    }
+  }
+  return {freqs, names};
+}
+
+function buildLayeredFreqs() {
+  // Low register: overtone, mid: modal (lydian), high: pentatonic
+  const overtone = buildOvertoneFreqs();
+  const modal = buildScaleFreqs(HARMONY_DEFS.modal.modes.lydian.intervals);
+  const penta = buildScaleFreqs(HARMONY_DEFS.pentatonic.intervals);
+  const freqs = [], names = [];
+  // Low: overtones below 200Hz
+  overtone.freqs.forEach((f,i) => { if (f < 200) { freqs.push(f); names.push(overtone.names[i]); }});
+  // Mid: modal 200-1000Hz
+  modal.freqs.forEach((f,i) => { if (f >= 200 && f < 1000) { freqs.push(f); names.push(modal.names[i]); }});
+  // High: pentatonic above 1000Hz
+  penta.freqs.forEach((f,i) => { if (f >= 1000) { freqs.push(f); names.push(penta.names[i]); }});
+  // Sort by frequency
+  const combined = freqs.map((f,i) => ({f, n: names[i]})).sort((a,b) => a.f - b.f);
+  return {freqs: combined.map(c=>c.f), names: combined.map(c=>c.n)};
+}
+
+function rebuildScale() {
+  if (currentHarmony === 'pentatonic') {
+    const s = buildScaleFreqs(HARMONY_DEFS.pentatonic.intervals);
+    scaleFreqs = s.freqs; scaleNames = s.names;
+  } else if (currentHarmony === 'modal') {
+    const s = buildScaleFreqs(HARMONY_DEFS.modal.modes[currentMode].intervals);
+    scaleFreqs = s.freqs; scaleNames = s.names;
+  } else if (currentHarmony === 'overtone') {
+    const s = buildOvertoneFreqs();
+    scaleFreqs = s.freqs; scaleNames = s.names;
+  } else if (currentHarmony === 'layered') {
+    const s = buildLayeredFreqs();
+    scaleFreqs = s.freqs; scaleNames = s.names;
+  }
+  // Re-map all star pitches
+  if (starData.length) {
+    starData.forEach(s => {
+      const idx = tempToPitch(s.temp);
+      s.pitchIdx = idx;
+      s.freq = scaleFreqs[idx];
+      s.note = scaleNames[idx];
+    });
+  }
+}
+
+function tempToPitch(temp) {
+  if (!temp || !scaleFreqs.length) return Math.floor(scaleFreqs.length / 2);
+  const t = Math.max(2500, Math.min(35000, temp));
+  const norm = (t - 2500) / (35000 - 2500);
+  return Math.floor(norm * (scaleFreqs.length - 1));
+}
+
+rebuildScale(); // init
+
+// ═══════════════════════════════════════════════════
+// B-V → Color
+// ═══════════════════════════════════════════════════
+function ciToColor(ci) {
+  if (ci == null) return new THREE.Color(0.9, 0.9, 1.0);
+  const bv = Math.max(-0.4, Math.min(2.0, ci));
+  let r, g, b;
+  if (bv < 0) { r = 0.7; g = 0.8; b = 1.0; }
+  else if (bv < 0.15) { r = 0.8; g = 0.88; b = 1.0; }
+  else if (bv < 0.4) { r = 1.0; g = 1.0; b = 0.98; }
+  else if (bv < 0.6) { r = 1.0; g = 0.97; b = 0.85; }
+  else if (bv < 0.8) { r = 1.0; g = 0.88; b = 0.7; }
+  else if (bv < 1.0) { r = 1.0; g = 0.78; b = 0.55; }
+  else if (bv < 1.4) { r = 1.0; g = 0.65; b = 0.4; }
+  else { r = 1.0; g = 0.5; b = 0.3; }
+  return new THREE.Color(r, g, b);
+}
+
+// Constellation full names
+const CON_NAMES = {And:'Andromeda',Ant:'Antlia',Aps:'Apus',Aqr:'Aquarius',Aql:'Aquila',Ara:'Ara',Ari:'Aries',Aur:'Auriga',Boo:'Boötes',Cae:'Caelum',Cam:'Camelopardalis',Cnc:'Cancer',CVn:'Canes Venatici',CMa:'Canis Major',CMi:'Canis Minor',Cap:'Capricornus',Car:'Carina',Cas:'Cassiopeia',Cen:'Centaurus',Cep:'Cepheus',Cet:'Cetus',Cha:'Chamaeleon',Cir:'Circinus',Col:'Columba',Com:'Coma Berenices',CrA:'Corona Austrina',CrB:'Corona Borealis',Crv:'Corvus',Crt:'Crater',Cru:'Crux',Cyg:'Cygnus',Del:'Delphinus',Dor:'Dorado',Dra:'Draco',Equ:'Equuleus',Eri:'Eridanus',For:'Fornax',Gem:'Gemini',Gru:'Grus',Her:'Hercules',Hor:'Horologium',Hya:'Hydra',Hyi:'Hydrus',Ind:'Indus',Lac:'Lacerta',Leo:'Leo',LMi:'Leo Minor',Lep:'Lepus',Lib:'Libra',Lup:'Lupus',Lyn:'Lynx',Lyr:'Lyra',Men:'Mensa',Mic:'Microscopium',Mon:'Monoceros',Mus:'Musca',Nor:'Norma',Oct:'Octans',Oph:'Ophiuchus',Ori:'Orion',Pav:'Pavo',Peg:'Pegasus',Per:'Perseus',Phe:'Phoenix',Pic:'Pictor',Psc:'Pisces',PsA:'Piscis Austrinus',Pup:'Puppis',Pyx:'Pyxis',Ret:'Reticulum',Sge:'Sagitta',Sgr:'Sagittarius',Sco:'Scorpius',Scl:'Sculptor',Sct:'Scutum',Ser:'Serpens',Sex:'Sextans',Tau:'Taurus',Tel:'Telescopium',Tri:'Triangulum',TrA:'Triangulum Australe',Tuc:'Tucana',UMa:'Ursa Major',UMi:'Ursa Minor',Vel:'Vela',Vir:'Virgo',Vol:'Volans',Vul:'Vulpecula'};
+
+// ═══════════════════════════════════════════════════
+// THREE.JS SETUP
+// ═══════════════════════════════════════════════════
+const canvas = document.getElementById('galaxy');
+const renderer = new THREE.WebGLRenderer({canvas, antialias: true});
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x06060C);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 1, 8000);
+camera.position.set(0, 200, 500);
+camera.lookAt(0, 0, 0);
+
+// Hemisphere + Directional lights for Phase 3
+const ambientLight = new THREE.HemisphereLight(0x1a1a2e, 0x0a0a15, 0.4);
+scene.add(ambientLight);
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.15);
+dirLight.position.set(100, 200, 300);
+scene.add(dirLight);
+
+// Hover helpers
+hoverHelperGroup = new THREE.Group();
+hoverHelperGroup.visible = false;
+scene.add(hoverHelperGroup);
+const ringGeo = new THREE.TorusGeometry(8, 0.15, 8, 32);
+hoverHelperGroup.add(new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({color:0xcccccc, wireframe:true, transparent:true, opacity:0.6})));
+const axGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-12,0,0),new THREE.Vector3(12,0,0),new THREE.Vector3(0,-12,0),new THREE.Vector3(0,12,0)]);
+hoverHelperGroup.add(new THREE.LineSegments(axGeo, new THREE.LineBasicMaterial({color:0x888888, transparent:true, opacity:0.3})));
+
+// Scan geometry
+let scanPlaneMesh = new THREE.Mesh(new THREE.PlaneGeometry(2,1400), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.03,side:THREE.DoubleSide}));
+scanPlaneMesh.visible = false; scene.add(scanPlaneMesh);
+let scanLight = new THREE.PointLight(0xffffff, 0.6, 150);
+scanLight.visible = false; scene.add(scanLight);
+
+// Pin path geometry
+let pinPathPositions = new Float32Array(300);
+const pinPathGeo = new THREE.BufferGeometry();
+pinPathGeo.setAttribute('position', new THREE.BufferAttribute(pinPathPositions, 3));
+pinPathGeo.setDrawRange(0, 0);
+let pinPathLine = new THREE.Line(pinPathGeo, new THREE.LineBasicMaterial({color:0xaaaaaa,transparent:true,opacity:0.25}));
+pinPathLine.visible = false; scene.add(pinPathLine);
+const beatGeo = new THREE.BufferGeometry();
+beatGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+let pinBeatLineMesh = new THREE.Line(beatGeo, new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.5}));
+pinBeatLineMesh.visible = false; scene.add(pinBeatLineMesh);
+
+// Post-processing pipeline
+const renderPass = new THREE.RenderPass(scene, camera);
+bloomPass = new THREE.UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight), 0.15, 0.4, 0
+);
+renderer.toneMapping = THREE.ReinhardToneMapping;
+renderer.toneMappingExposure = 1.0;
+composer = new THREE.EffectComposer(renderer);
+composer.addPass(renderPass);
+composer.addPass(bloomPass);
+const filmNoiseShader = {
+  uniforms: { tDiffuse:{value:null}, uTime:{value:0}, uIntensity:{value:0.08} },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
+  fragmentShader: 'uniform sampler2D tDiffuse; uniform float uTime; uniform float uIntensity; varying vec2 vUv; float rand(vec2 co){return fract(sin(dot(co,vec2(12.9898,78.233)))*43758.5453);} void main(){ vec4 color=texture2D(tDiffuse,vUv); float noise=(rand(vUv+uTime)-0.5)*uIntensity; color.rgb+=noise; gl_FragColor=color; }'
+};
+composer.addPass(new THREE.ShaderPass(filmNoiseShader));
+// Background dust
+const dustN = 6000, dustGeo = new THREE.BufferGeometry(), dustP = new Float32Array(dustN*3);
+for (let i=0;i<dustN;i++){dustP[i*3]=(Math.random()-0.5)*4000;dustP[i*3+1]=(Math.random()-0.5)*4000;dustP[i*3+2]=(Math.random()-0.5)*4000}
+dustGeo.setAttribute('position',new THREE.BufferAttribute(dustP,3));
+scene.add(new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0x1a1a2e,size:0.6,transparent:true,opacity:0.4,blending:THREE.AdditiveBlending,depthWrite:false})));
+
+// Pin constellation lines (Three.js)
+const pinLineMat = new THREE.LineBasicMaterial({color:0xE24DCA, transparent:true, opacity:0.45, blending:THREE.AdditiveBlending, depthWrite:false});
+
+// Pin halos
+const pinHaloMat = new THREE.ShaderMaterial({
+  uniforms: {uTime:{value:0}},
+  vertexShader:`
+    attribute float size;
+    uniform float uTime;
+    varying float vAlpha;
+    void main(){
+      vAlpha = 0.5 + 0.3*sin(uTime*2.0+position.x*0.1);
+      vec4 mv = modelViewMatrix*vec4(position,1.0);
+      gl_PointSize = size*(400.0/-mv.z);
+      gl_Position = projectionMatrix*mv;
+    }`,
+  fragmentShader:`
+    varying float vAlpha;
+    void main(){
+      float d = length(gl_PointCoord-vec2(0.5));
+      if(d>0.5)discard;
+      float ring = smoothstep(0.48,0.42,d) - smoothstep(0.38,0.32,d);
+      float glow = exp(-d*4.0)*0.15;
+      gl_FragColor = vec4(0.886,0.302,0.792, (ring*0.6+glow)*vAlpha);
+    }`,
+  transparent:true, blending:THREE.AdditiveBlending, depthWrite:false
+});
+
+// ═══════════════════════════════════════════════════
+// UTILITY FUNCTIONS FOR PHASE 3
+// ═══════════════════════════════════════════════════
+function blackbodyColor(tempK) {
+  const t = tempK;
+  let r, g, b;
+  if (t >= 30000) { r=0.61; g=0.69; b=1.00; }
+  else if (t >= 10000) { const f=(t-10000)/20000; r=0.67+f*-0.06; g=0.75+f*-0.06; b=1.0; }
+  else if (t >= 7500) { const f=(t-7500)/2500; r=0.79+f*-0.12; g=0.84+f*-0.09; b=1.0; }
+  else if (t >= 6000) { const f=(t-6000)/1500; r=0.97+f*-0.18; g=0.97+f*-0.13; b=1.0+f*-0.02; }
+  else if (t >= 5200) { const f=(t-5200)/800; r=1.0; g=0.96+f*0.01; b=0.92+f*0.06; }
+  else if (t >= 3700) { const f=(t-3700)/1500; r=1.0; g=0.82+f*0.14; b=0.63+f*0.29; }
+  else { const f=Math.max(0,(t-2400)/1300); r=1.0; g=0.60+f*0.22; b=0.30+f*0.33; }
+  return new THREE.Color(r, g, b);
+}
+
+function star3DPos(s) {
+  const ra = s.ra * Math.PI / 12;
+  const dec = s.dec * Math.PI / 180;
+  const R = 600;
+  return new THREE.Vector3(R * Math.cos(dec) * Math.cos(ra), R * Math.sin(dec), -R * Math.cos(dec) * Math.sin(ra));
+}
+
+function createLabelSprite(text) {
+  const cvs = document.createElement('canvas');
+  cvs.width = 512; cvs.height = 64;
+  const ctx = cvs.getContext('2d');
+  ctx.font = '24px "Space Mono", monospace';
+  ctx.fillStyle = '#cccccc';
+  ctx.fillText(text, 8, 40);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cvs), transparent:true, opacity:0.85}));
+  sp.scale.set(40, 5, 1);
+  return sp;
+}
+
+function updateHoverHelper(star) {
+  if (!star) {
+    if(hoverHelperGroup) hoverHelperGroup.visible=false;
+    currentHoverStar=null;
+    resetConstellationHighlight();
+    return;
+  }
+  if (star === currentHoverStar) return;
+  currentHoverStar = star;
+  hoverHelperGroup.position.copy(star3DPos(star));
+  hoverHelperGroup.lookAt(camera.position);
+  if (hoverLabelSprite) hoverHelperGroup.remove(hoverLabelSprite);
+  hoverLabelSprite = createLabelSprite((star.spect||'??')+' — '+(star.name||'unnamed'));
+  hoverLabelSprite.position.set(0, 14, 0);
+  hoverHelperGroup.add(hoverLabelSprite);
+  hoverHelperGroup.visible = true;
+  if (star.con) highlightConstellation(star.con);
+}
+
+function triggerStarVisual(si) {
+  starTriggerScales.set(si, {startTime:performance.now(), attackMs:60, decayMs:800});
+}
+
+function updatePinPath() {
+  if (!pinPathLine || pinnedStars.length < 2) { if(pinPathLine) pinPathLine.visible=false; return; }
+  for (let i=0; i<pinnedStars.length && i<100; i++) {
+    const p = star3DPos(starData[pinnedStars[i]]);
+    pinPathPositions[i*3]=p.x; pinPathPositions[i*3+1]=p.y; pinPathPositions[i*3+2]=p.z;
+  }
+  pinPathLine.geometry.attributes.position.needsUpdate = true;
+  pinPathLine.geometry.setDrawRange(0, Math.min(pinnedStars.length, 100));
+  pinPathLine.visible = true;
+}
+
+// ═══════════════════════════════════════════════════
+// CONSTELLATION WIREFRAMES
+// ═══════════════════════════════════════════════════
+function highlightConstellation(c) {
+  if(!constellationGroup) return;
+  constellationGroup.children.forEach(ch => { ch.material.opacity = ch.userData.constellation===c ? 0.5 : 0.18; });
+}
+
+function resetConstellationHighlight() {
+  if(!constellationGroup) return;
+  constellationGroup.children.forEach(ch => { ch.material.opacity = 0.18; });
+}
+
+// ═══════════════════════════════════════════════════
+// SPECTRAL BOUNDARIES
+// ═══════════════════════════════════════════════════
+function buildSpectralBoundaries() {
+  if(spectralBoundaryGroup) scene.remove(spectralBoundaryGroup);
+  spectralBoundaryGroup = new THREE.Group();
+  spectralBoundaryGroup.visible = showSpectralBoundaries;
+  const sc = {O:0x9bb0ff, B:0xaabfff, A:0xcad7ff, F:0xf8f7ff, G:0xfff4ea, K:0xffd2a1, M:0xffcc6f};
+  const gr = {};
+  starData.forEach(s => { const c=(s.spect||'?')[0]; if(sc[c]){if(!gr[c])gr[c]=[];gr[c].push(star3DPos(s));} });
+  for (const [c,ps] of Object.entries(gr)) {
+    if(ps.length<3) continue;
+    const lp=[];
+    for(let i=0;i<ps.length;i++){
+      let nd=Infinity,nj=-1;
+      for(let j=0;j<ps.length;j++){ if(i===j)continue; const d=ps[i].distanceTo(ps[j]); if(d<nd&&d<120){nd=d;nj=j;} }
+      if(nj!==-1) lp.push(ps[i].x,ps[i].y,ps[i].z, ps[nj].x,ps[nj].y,ps[nj].z);
+    }
+    if(!lp.length)continue;
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.Float32BufferAttribute(lp,3));
+    spectralBoundaryGroup.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:sc[c],transparent:true,opacity:0.08})));
+  }
+  scene.add(spectralBoundaryGroup);
+}
+
+// ═══════════════════════════════════════════════════
+// HARMONIC PROXIMITY LINES
+// ═══════════════════════════════════════════════════
+function initHarmonicLinePool() {
+  harmonicLineGroup = new THREE.Group();
+  for(let i=0;i<30;i++){
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(6),3));
+    const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0}));
+    l.visible=false; harmonicLineGroup.add(l); harmonicLinePool.push(l);
+  }
+  scene.add(harmonicLineGroup);
+}
+
+function showHarmonicConnections(si) {
+  if(!harmonicLineGroup||!scaleFreqs||!scaleFreqs.length) return;
+  const s=starData[si]; if(!s) return;
+  const tMin=2000,tMax=35000;
+  const tn=Math.max(0,Math.min(1,((s.temp||5800)-tMin)/(tMax-tMin)));
+  const tf=scaleFreqs[Math.min(Math.floor(tn*(scaleFreqs.length-1)),scaleFreqs.length-1)];
+  const tp=star3DPos(s);
+  for(const {r,o} of [{r:2,o:0.35},{r:1.5,o:0.22},{r:4/3,o:0.12}]){
+    const target=tf*r;
+    let ci=-1,cd=Infinity;
+    for(let i=0;i<starData.length;i++){
+      if(i===si)continue;
+      const stn=Math.max(0,Math.min(1,((starData[i].temp||5800)-tMin)/(tMax-tMin)));
+      const sf=scaleFreqs[Math.min(Math.floor(stn*(scaleFreqs.length-1)),scaleFreqs.length-1)];
+      const d=Math.abs(sf-target);
+      if(d<cd){cd=d;ci=i;}
+    }
+    if(ci===-1||cd>target*0.15) continue;
+    const ln=harmonicLinePool.find(l=>!l.visible);
+    if(!ln) continue;
+    const op=star3DPos(starData[ci]);
+    const a=ln.geometry.attributes.position.array;
+    a[0]=tp.x;a[1]=tp.y;a[2]=tp.z;a[3]=op.x;a[4]=op.y;a[5]=op.z;
+    ln.geometry.attributes.position.needsUpdate=true;
+    ln.material.opacity=o; ln.visible=true;
+    activeHarmonicLines.push({mesh:ln,startTime:performance.now(),baseOpacity:o,fadeDuration:2000});
+  }
+}
+
+function buildStarField(catalog) {
+  const N = catalog.length;
+  starData = catalog.map((s, i) => {
+    const ra = s.ra * (Math.PI / 12);
+    const dec = s.dec * (Math.PI / 180);
+    const r = 600;
+    const x = r * Math.cos(dec) * Math.cos(ra);
+    const y = r * Math.sin(dec);
+    const z = r * Math.cos(dec) * Math.sin(ra);
+    const color = ciToColor(s.ci);
+    const pitchIdx = tempToPitch(s.temp);
+    const brightness = Math.max(0, Math.min(1, 1 - (s.mag + 1.5) / 9.5));
+    return {
+      id: i, x, y, z, ra: s.ra, dec: s.dec, temp: s.temp, mag: s.mag, ci: s.ci,
+      spect: s.spect, name: s.name, con: s.con, dist: s.dist, color, pitchIdx,
+      note: scaleNames[pitchIdx], freq: scaleFreqs[pitchIdx], brightness,
+      size: 1.0 + brightness * 6
+    };
+  });
+
+  positions = new Float32Array(N * 3);
+  colors = new Float32Array(N * 3);
+  sizes = new Float32Array(N);
+  alphas = new Float32Array(N);
+
+  for (let i = 0; i < N; i++) {
+    const s = starData[i];
+    positions[i*3] = s.x; positions[i*3+1] = s.y; positions[i*3+2] = s.z;
+    colors[i*3] = s.color.r; colors[i*3+1] = s.color.g; colors[i*3+2] = s.color.b;
+    sizes[i] = s.size;
+    alphas[i] = 0.3 + s.brightness * 0.7;
+  }
+
+// STAR GEOMETRY — Instanced Icosahedrons
+  const baseGeo = new THREE.IcosahedronGeometry(1, 1);
+  brightIndices = []; dimIndices = [];
+  starData.forEach((s, i) => {
+    if (s.mag < MAG_WIREFRAME_THRESHOLD) brightIndices.push(i);
+    else dimIndices.push(i);
+  });
+
+  function setupInstances(mesh, indices) {
+    const dummy = new THREE.Object3D();
+    const colorArr = new Float32Array(indices.length * 3);
+    indices.forEach((si, ii) => {
+      const s = starData[si];
+      const p = star3DPos(s);
+      const magNorm = 1 - ((s.mag + 1.5) / 8);
+      const scale = 0.8 + magNorm * 4.0;
+      dummy.position.copy(p);
+      dummy.scale.setScalar(scale);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(ii, dummy.matrix);
+      const c = blackbodyColor(s.temp || 5800);
+      colorArr[ii*3]=c.r; colorArr[ii*3+1]=c.g; colorArr[ii*3+2]=c.b;
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.geometry.setAttribute('instanceColor', new THREE.InstancedBufferAttribute(colorArr, 3));
+  }
+
+  // Bright stars: solid with per-instance color + alpha
+  const brightMat = new THREE.MeshStandardMaterial({ metalness:0.1, roughness:0.3, transparent:true, opacity:1.0 });
+  brightMat.onBeforeCompile = function(shader) {
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', 'attribute vec3 instanceColor;\nvarying vec3 vIColor;\nattribute float instanceAlpha;\nvarying float vIAlpha;\n#include <common>')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvIColor = instanceColor;\nvIAlpha = instanceAlpha;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', 'varying vec3 vIColor;\nvarying float vIAlpha;\n#include <common>')
+      .replace('#include <color_fragment>', 'diffuseColor.rgb = vIColor;\n#include <color_fragment>')
+      .replace('#include <dithering_fragment>', 'gl_FragColor.a *= vIAlpha;\n#include <dithering_fragment>');
+  };
+  starMeshBright = new THREE.InstancedMesh(baseGeo, brightMat, brightIndices.length);
+  setupInstances(starMeshBright, brightIndices);
+  // Add per-instance alpha
+  const alphaAttrBright = new Float32Array(brightIndices.length);
+  brightIndices.forEach((si, ii) => {
+    const s = starData[si];
+    alphaAttrBright[ii] = s.mag < 1 ? 1.0 : s.mag < 2 ? 0.95 : s.mag < 3 ? 0.85 : 0.7;
+  });
+  starMeshBright.geometry.setAttribute('instanceAlpha', new THREE.InstancedBufferAttribute(alphaAttrBright, 1));
+  scene.add(starMeshBright);
+
+  // Dim stars: wireframe
+  const dimMat = new THREE.MeshStandardMaterial({ metalness:0.0, roughness:0.5, wireframe:true, transparent:true, opacity:0.35 });
+  dimMat.onBeforeCompile = function(shader) {
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', 'attribute vec3 instanceColor;\nvarying vec3 vIColor;\n#include <common>')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvIColor = instanceColor;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', 'varying vec3 vIColor;\n#include <common>')
+      .replace('#include <color_fragment>', 'diffuseColor.rgb = vIColor;\n#include <color_fragment>');
+  };
+  starMeshDim = new THREE.InstancedMesh(baseGeo.clone(), dimMat, dimIndices.length);
+  setupInstances(starMeshDim, dimIndices);
+  scene.add(starMeshDim);
+
+  // Build constellation wireframes
+  constellationGroup = new THREE.Group();
+  const nameToIdx = new Map();
+  starData.forEach((s,i) => { if(s.name) nameToIdx.set(s.name, i); });
+  for (const [cn, pairs] of Object.entries(CONSTELLATION_LINES)) {
+    const lp = [];
+    for (const [n1,n2] of pairs) {
+      const i1=nameToIdx.get(n1), i2=nameToIdx.get(n2);
+      if (i1===undefined || i2===undefined) continue;
+      const p1=star3DPos(starData[i1]), p2=star3DPos(starData[i2]);
+      lp.push(p1.x,p1.y,p1.z, p2.x,p2.y,p2.z);
+    }
+    if (!lp.length) continue;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(lp, 3));
+    const l = new THREE.LineSegments(g, new THREE.LineDashedMaterial({color:0x888880,transparent:true,opacity:0.18,dashSize:8,gapSize:4}));
+    l.computeLineDistances();
+    l.userData = {constellation:cn};
+    constellationGroup.add(l);
+  }
+  scene.add(constellationGroup);
+
+  // Build spectral boundaries
+  buildSpectralBoundaries();
+
+  // Initialize harmonic line pool
+  initHarmonicLinePool();
+
+  starScales = new Float32Array(starData.length).fill(1.0);
+
+  // Update stats
+  const named = starData.filter(s => s.name && !s.name.startsWith('HIP')).length;
+  const cons = new Set(starData.filter(s=>s.con).map(s=>s.con)).size;
+  const temps = starData.filter(s=>s.temp).map(s=>s.temp);
+  document.getElementById('fs-total').textContent = N.toLocaleString();
+  document.getElementById('fs-visible').textContent = N.toLocaleString();
+  document.getElementById('fs-named').textContent = named.toLocaleString();
+  document.getElementById('fs-constellations').textContent = cons;
+  if (temps.length) document.getElementById('fs-temprange').textContent = `${Math.min(...temps).toLocaleString()}\u2013${Math.max(...temps).toLocaleString()} K`;
+}
+
+// ═══════════════════════════════════════════════════
+// AUDIO ENGINE — 5 TONAL PALETTES
+// ═══════════════════════════════════════════════════
+function initAudio() {
+  if (audioStarted) return;
+  Tone.start(); audioStarted = true;
+
+  // Master chain
+  const comp = new Tone.Compressor({threshold:-18, ratio:3, attack:0.05, release:0.2}).toDestination();
+  const reverb = new Tone.Reverb({decay:4.5, wet:0.3}).connect(comp);
+  const chorus = new Tone.Chorus({frequency:0.25, depth:0.3, wet:0.12}).connect(reverb);
+  const delay = new Tone.FeedbackDelay({delayTime:'8n', feedback:0.15, wet:0.08}).connect(chorus);
+  audioChain = {reverb, chorus, delay, comp, output: delay};
+
+  buildVoicePool();
+
+  analyserNode = Tone.getContext().createAnalyser();
+  analyserNode.fftSize = 256;
+  Tone.getDestination().connect(analyserNode);
+  analyserData = new Uint8Array(analyserNode.frequencyBinCount);
+  waveformData = new Uint8Array(analyserNode.fftSize);
+}
+
+function buildVoicePool() {
+  // Clear existing
+  voicePool.forEach(v => { try{v.synth.dispose();v.panner.dispose();v.filter.dispose();}catch(e){} });
+  voicePool.length = 0;
+
+  for (let i = 0; i < MAX_VOICES; i++) {
+    const synth = createSynthForPalette(currentPalette);
+    const panner = new Tone.Panner(0);
+    const filter = new Tone.Filter({frequency:8000, type:'lowpass', rolloff:-12});
+    synth.connect(filter);
+    filter.connect(panner);
+    panner.connect(audioChain.output);
+    synth.volume.value = -22;
+    voicePool.push({synth, panner, filter, busy:false});
+  }
+}
+
+function createSynthForPalette(palette) {
+  switch(palette) {
+    case 'crystalline':
+      return new Tone.Synth({
+        oscillator:{type:'sine', partialCount:8, partials:[1,0.5,0.3,0.15,0.08,0.04,0.02,0.01]},
+        envelope:{attack:0.06, decay:1.8, sustain:0.12, release:3.0}
+      });
+    case 'analog':
+      return new Tone.Synth({
+        oscillator:{type:'fatsawtooth', spread:15, count:3},
+        envelope:{attack:0.12, decay:2.5, sustain:0.35, release:4.0}
+      });
+    case 'granular':
+      // Simulate granular with rapid-attack AM sine + noise modulation
+      return new Tone.AMSynth({
+        harmonicity:3.2,
+        oscillator:{type:'sine'},
+        modulation:{type:'sine'},
+        envelope:{attack:0.005, decay:0.6, sustain:0.05, release:2.0},
+        modulationEnvelope:{attack:0.01, decay:0.3, sustain:0.1, release:1.5}
+      });
+    case 'spectral':
+      // FM synthesis for metallic/bell-like spectral tones
+      return new Tone.FMSynth({
+        harmonicity:5.07,
+        modulationIndex:8,
+        oscillator:{type:'sine'},
+        modulation:{type:'triangle'},
+        envelope:{attack:0.01, decay:3.0, sustain:0.04, release:4.0},
+        modulationEnvelope:{attack:0.02, decay:1.5, sustain:0.2, release:3.0}
+      });
+    case 'organic':
+      // Triangle + gentle noise characteristics
+      return new Tone.Synth({
+        oscillator:{type:'triangle', partialCount:6, partials:[1,0.6,0.35,0.2,0.1,0.05]},
+        envelope:{attack:0.25, decay:3.0, sustain:0.25, release:5.0}
+      });
+    default:
+      return new Tone.Synth({
+        oscillator:{type:'sine'},
+        envelope:{attack:0.06, decay:1.8, sustain:0.12, release:3.0}
+      });
+  }
+}
+
+function playStarSound(star) {
+  if (!audioStarted || activeVoices.has(star.id)) return;
+  let vi = voicePool.findIndex(v => !v.busy);
+  if (vi === -1) {
+    const oldest = [...activeVoices.entries()].sort((a,b)=>a[1].t-b[1].t)[0];
+    if (oldest) { stopStarSound(oldest[0]); vi = oldest[1].vi; } else return;
+  }
+  const v = voicePool[vi]; v.busy = true;
+  v.synth.volume.value = -30 + star.brightness * 18;
+  const sp = getScreenPos(star);
+  if (sp) {
+    v.panner.pan.value = Math.max(-1, Math.min(1, ((sp.x/window.innerWidth)-0.5)*1.6));
+    v.filter.frequency.value = 2000 + ((1-sp.y/window.innerHeight)*10000);
+  }
+  v.synth.triggerAttack(star.freq);
+  activeVoices.set(star.id, {vi, t:Date.now()});
+  updateVoiceDisplay();
+}
+
+function stopStarSound(id) {
+  const e = activeVoices.get(id); if (!e) return;
+  voicePool[e.vi].synth.triggerRelease();
+  setTimeout(()=>{if(voicePool[e.vi])voicePool[e.vi].busy=false},3200);
+  activeVoices.delete(id);
+  updateVoiceDisplay();
+}
+
+function stopAllSounds() {
+  for (const id of [...activeVoices.keys()]) stopStarSound(id);
+}
+
+// ═══════════════════════════════════════════════════
+// PALETTE & HARMONY SWITCHING
+// ═══════════════════════════════════════════════════
+function switchPalette(p) {
+  currentPalette = p;
+  document.querySelectorAll('#palette-selector .option').forEach(el => {
+    el.classList.remove('active','analog','granular','spectral','organic');
+    if (el.dataset.v === p) { el.classList.add('active', p); }
+  });
+  $('t-palette').textContent = p.toUpperCase();
+
+  // Update effects chain for palette
+  if (audioChain) {
+    switch(p) {
+      case 'crystalline': audioChain.reverb.decay = 4.5; audioChain.reverb.wet.value = 0.3; audioChain.chorus.wet.value = 0.12; audioChain.delay.wet.value = 0.08; break;
+      case 'analog':      audioChain.reverb.decay = 6.0; audioChain.reverb.wet.value = 0.35; audioChain.chorus.wet.value = 0.25; audioChain.delay.wet.value = 0.12; break;
+      case 'granular':    audioChain.reverb.decay = 8.0; audioChain.reverb.wet.value = 0.5;  audioChain.chorus.wet.value = 0.08; audioChain.delay.wet.value = 0.3; break;
+      case 'spectral':    audioChain.reverb.decay = 3.0; audioChain.reverb.wet.value = 0.2;  audioChain.chorus.wet.value = 0.05; audioChain.delay.wet.value = 0.15; break;
+      case 'organic':     audioChain.reverb.decay = 7.0; audioChain.reverb.wet.value = 0.45; audioChain.chorus.wet.value = 0.18; audioChain.delay.wet.value = 0.2; break;
+    }
+  }
+  // Rebuild synths with new palette — fade out existing then rebuild
+  stopAllSounds();
+  if (audioStarted) setTimeout(buildVoicePool, 200);
+}
+
+function switchHarmony(h) {
+  currentHarmony = h;
+  document.querySelectorAll('#harmony-selector .option').forEach(el => {
+    el.classList.toggle('active', el.dataset.v === h);
+  });
+  $('modal-sub').style.display = (h === 'modal') ? 'block' : 'none';
+  const label = h === 'modal' ? `MODAL: ${currentMode.toUpperCase()}` : h.toUpperCase();
+  $('t-harmony').textContent = label;
+  rebuildScale();
+}
+
+function switchMode(m) {
+  currentMode = m;
+  document.querySelectorAll('#mode-selector .option').forEach(el => {
+    el.classList.toggle('active', el.dataset.v === m);
+  });
+  $('t-harmony').textContent = `MODAL: ${m.toUpperCase()}`;
+  rebuildScale();
+}
+
+// Wire up selector clicks
+document.querySelectorAll('#palette-selector .option').forEach(el => {
+  el.addEventListener('click', () => { initAudio(); switchPalette(el.dataset.v); });
+});
+document.querySelectorAll('#harmony-selector .option').forEach(el => {
+  el.addEventListener('click', () => { switchHarmony(el.dataset.v); });
+});
+document.querySelectorAll('#mode-selector .option').forEach(el => {
+  el.addEventListener('click', () => { switchMode(el.dataset.v); });
+});
+
+// ═══════════════════════════════════════════════════
+// INTERACTION MODES
+// ═══════════════════════════════════════════════════
+const scanLineEl = document.getElementById('scan-line');
+const scanTrailEl = document.getElementById('scan-trail');
+
+function setMode(mode) {
+  interactionMode = mode;
+  const modeLabel = $('t-mode');
+  modeLabel.textContent = mode.toUpperCase();
+  // Update cursor appearance
+  const ring = $('cursor-ring');
+  const dot = $('cursor-dot');
+  if (mode === 'pin') {
+    ring.style.borderColor = 'rgba(226,77,202,0.25)';
+    dot.style.background = 'var(--magenta)';
+    dot.style.boxShadow = '0 0 6px #E24DCA';
+  } else if (mode === 'scan') {
+    ring.style.borderColor = 'rgba(226,168,77,0.15)';
+    dot.style.background = 'var(--amber)';
+    dot.style.boxShadow = '0 0 6px #E2A84D';
+  } else {
+    ring.style.borderColor = 'rgba(77,240,226,0.18)';
+    dot.style.background = 'var(--cyan)';
+    dot.style.boxShadow = '0 0 6px #4DF0E2';
+  }
+  // Stop scan if leaving scan mode
+  if (mode !== 'scan' && scanning) stopScan();
+}
+
+function getScreenPos(star) {
+  const v = new THREE.Vector3(star.x, star.y, star.z);
+  v.project(camera);
+  if (v.z > 1) return null;
+  return {x:(v.x*0.5+0.5)*window.innerWidth, y:(-v.y*0.5+0.5)*window.innerHeight};
+}
+
+function findStarsInRadius() {
+  if (interactionMode !== 'explore') return;
+  prevStarsInRadius = new Set(starsInRadius);
+  starsInRadius.clear();
+  let closest = null, closestD = Infinity;
+
+  for (const s of starData) {
+    const sp = getScreenPos(s);
+    if (!sp) continue;
+    const dx = sp.x - mouseScreen.x, dy = sp.y - mouseScreen.y;
+    const d = Math.sqrt(dx*dx + dy*dy);
+    if (d < LISTEN_RADIUS) {
+      starsInRadius.add(s.id);
+      if (d < closestD) { closestD = d; closest = s; }
+    }
+  }
+
+  for (const id of starsInRadius) { if (!prevStarsInRadius.has(id)) { playStarSound(starData[id]); triggerStarVisual(id); showHarmonicConnections(id); } }
+  for (const id of prevStarsInRadius) { if (!starsInRadius.has(id)) stopStarSound(id); }
+  focusedStar = closest;
+}
+
+// ═══════════════════════════════════════════════════
+// PIN MODE — Constellation Sequencer
+// ═══════════════════════════════════════════════════
+function pinStar(star) {
+  if (pinnedStars.includes(star.id)) {
+    // Unpin
+    const idx = pinnedStars.indexOf(star.id);
+    pinnedStars.splice(idx, 1);
+  } else {
+    pinnedStars.push(star.id);
+  }
+  updatePinDisplay();
+  updatePinVisuals();
+  updatePinPath();
+}
+
+function clearPins() {
+  stopPinSequence();
+  pinnedStars.length = 0;
+  updatePinDisplay();
+  updatePinVisuals();
+  updatePinPath();
+}
+
+function updatePinDisplay() {
+  $('pin-count').textContent = pinnedStars.length;
+  const info = $('pin-info');
+  if (!pinnedStars.length) {
+    info.innerHTML = '<span class="no-star">Press P to enter Pin mode, then click stars</span>';
+    $('pin-tempo-display').style.opacity = '0.5';
+    return;
+  }
+  $('pin-tempo-display').style.opacity = '1';
+  const items = pinnedStars.map((id, i) => {
+    const s = starData[id];
+    const nm = s.name && !s.name.startsWith('HIP') ? s.name : s.note;
+    return `<span class="pinned-star" data-id="${id}">${i+1}. ${nm}</span>`;
+  });
+  info.innerHTML = items.join('<br>') + (pinSequencePlaying ? '<br><span style="color:var(--magenta)">▶ PLAYING</span>' : '');
+}
+
+function updatePinVisuals() {
+  // Remove old
+  if (pinLinesMesh) { scene.remove(pinLinesMesh); pinLinesMesh.geometry.dispose(); pinLinesMesh = null; }
+  if (pinHaloMesh) { scene.remove(pinHaloMesh); pinHaloMesh.geometry.dispose(); pinHaloMesh = null; }
+  if (pinnedStars.length < 1) return;
+
+  // Constellation lines
+  if (pinnedStars.length >= 2) {
+    const pts = [];
+    for (let i = 0; i < pinnedStars.length; i++) {
+      const s = starData[pinnedStars[i]];
+      pts.push(new THREE.Vector3(s.x, s.y, s.z));
+      if (i < pinnedStars.length - 1) {
+        const s2 = starData[pinnedStars[i+1]];
+        pts.push(new THREE.Vector3(s2.x, s2.y, s2.z));
+      }
+    }
+    // Close the loop
+    const first = starData[pinnedStars[0]], last = starData[pinnedStars[pinnedStars.length-1]];
+    pts.push(new THREE.Vector3(last.x, last.y, last.z));
+    pts.push(new THREE.Vector3(first.x, first.y, first.z));
+
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+    pinLinesMesh = new THREE.LineSegments(lineGeo, pinLineMat);
+    scene.add(pinLinesMesh);
+  }
+
+  // Halos around pinned stars
+  const haloPos = new Float32Array(pinnedStars.length * 3);
+  const haloSize = new Float32Array(pinnedStars.length);
+  pinnedStars.forEach((id, i) => {
+    const s = starData[id];
+    haloPos[i*3] = s.x; haloPos[i*3+1] = s.y; haloPos[i*3+2] = s.z;
+    haloSize[i] = s.size * 3;
+  });
+  const haloGeo = new THREE.BufferGeometry();
+  haloGeo.setAttribute('position', new THREE.BufferAttribute(haloPos, 3));
+  haloGeo.setAttribute('size', new THREE.BufferAttribute(haloSize, 1));
+  pinHaloMesh = new THREE.Points(haloGeo, pinHaloMat);
+  scene.add(pinHaloMesh);
+}
+
+function startPinSequence() {
+  if (pinnedStars.length < 2 || pinSequencePlaying) return;
+  pinSequencePlaying = true;
+  pinSequenceIdx = 0;
+  const msPerBeat = 60000 / pinTempoBPM;
+
+  function playNext() {
+    if (!pinSequencePlaying) return;
+    // Stop previous sound
+    if (pinSequenceIdx > 0) {
+      stopStarSound(pinnedStars[(pinSequenceIdx - 1) % pinnedStars.length]);
+    }
+    const id = pinnedStars[pinSequenceIdx % pinnedStars.length];
+    const star = starData[id];
+    focusedStar = star;
+    updateStarPanel();
+    updateHoverHelper(focusedStar);
+    playStarSound(star);
+    triggerStarVisual(id);
+    showHarmonicConnections(id);
+
+    // Fly camera gently
+    const target = new THREE.Vector3(star.x, star.y, star.z).normalize().multiplyScalar(500/zoomLevel);
+    const cur = camera.position.clone();
+    let step = 0;
+    function fly() {
+      if (step >= 20) return;
+      step++;
+      camera.position.lerpVectors(cur, target, (step/20)*0.15);
+      camera.lookAt(0,0,0);
+      requestAnimationFrame(fly);
+    }
+    fly();
+
+    if (pinBeatLineMesh && pinnedStars.length > 1) {
+      const cp = star3DPos(pinnedStars[pinSequenceIdx]);
+      const np = star3DPos(starData[pinnedStars[(pinSequenceIdx+1)%pinnedStars.length]]);
+      const a = pinBeatLineMesh.geometry.attributes.position.array;
+      a[0]=cp.x;a[1]=cp.y;a[2]=cp.z;a[3]=np.x;a[4]=np.y;a[5]=np.z;
+      pinBeatLineMesh.geometry.attributes.position.needsUpdate = true;
+      pinBeatLineMesh.visible = true;
+    }
+
+    pinSequenceIdx++;
+    pinSequenceInterval = setTimeout(playNext, msPerBeat);
+  }
+  playNext();
+  updatePinDisplay();
+}
+
+function stopPinSequence() {
+  pinSequencePlaying = false;
+  if (pinSequenceInterval) clearTimeout(pinSequenceInterval);
+  pinSequenceInterval = null;
+  stopAllSounds();
+  updatePinDisplay();
+}
+
+// ═══════════════════════════════════════════════════
+// SCAN MODE — Visual Sweep Sonification
+// ═══════════════════════════════════════════════════
+function startScan() {
+  if (scanning) return;
+  scanning = true;
+  setMode('scan');
+  scanLineEl.classList.add('active');
+  scanTrailEl.classList.add('active');
+  scanX = 280; // start at left panel edge
+}
+
+function stopScan() {
+  scanning = false;
+  scanLineEl.classList.remove('active');
+  scanTrailEl.classList.remove('active');
+  if (interactionMode === 'scan') setMode('explore');
+}
+
+function updateScan() {
+  if (scanPlaneMesh) {
+    const wx = (scanX / window.innerWidth - 0.5) * 1200;
+    scanPlaneMesh.position.set(wx, 0, 0); scanPlaneMesh.visible = true;
+    scanLight.position.set(wx, 0, 200); scanLight.visible = true;
+  }
+  if (!scanning || !starData.length) return;
+  const leftEdge = 280, rightEdge = window.innerWidth - 260;
+  const range = rightEdge - leftEdge;
+  const pxPerFrame = (scanBPM / 60) * (range / 60) * scanDirection; // traverse in ~60/BPM seconds
+
+  scanX += pxPerFrame;
+  if (scanX > rightEdge) { scanX = leftEdge; }
+  if (scanX < leftEdge) { scanX = rightEdge; }
+
+  scanLineEl.style.left = scanX + 'px';
+  scanTrailEl.style.left = (scanX - 40) + 'px';
+
+  // Find stars near the scan line
+  const scanWidth = 6;
+  for (const s of starData) {
+    const sp = getScreenPos(s);
+    if (!sp) continue;
+    if (Math.abs(sp.x - scanX) < scanWidth && sp.y > 42 && sp.y < window.innerHeight - 48) {
+      if (!activeVoices.has(s.id)) {
+        playStarSound(s);
+        triggerStarVisual(s.id);
+        showHarmonicConnections(s.id);
+        focusedStar = s;
+        updateStarPanel();
+        updateHoverHelper(focusedStar);
+        // Auto-release after a short time
+        setTimeout(() => stopStarSound(s.id), 2500);
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// HUD UPDATES
+// ═══════════════════════════════════════════════════
+
+function updateStarPanel() {
+  if (!focusedStar) {
+    $('star-name').innerHTML = '<span class="no-star">Move cursor over stars</span>';
+    $('sd-proper').textContent = '\u2014'; $('sd-con').textContent = '\u2014'; $('sd-temp').textContent = '\u2014';
+    $('sd-class').textContent = '\u2014'; $('sd-mag').textContent = '\u2014'; $('sd-dist').textContent = '\u2014';
+    $('sd-radec').textContent = '\u2014'; $('sd-pitch').textContent = '\u2014'; $('sd-freq').textContent = '\u2014';
+    $('lp-count').textContent = '\u2014';
+    return;
+  }
+  const s = focusedStar;
+  const displayName = s.name && !s.name.startsWith('HIP') ? s.name : (s.name || `Star #${s.id}`);
+  const isPinned = pinnedStars.includes(s.id);
+  $('star-name').innerHTML = displayName + (isPinned ? ' <span class="pin-badge">\u2605 PINNED</span>' : '');
+  $('sd-proper').textContent = displayName;
+  $('sd-con').textContent = s.con ? (CON_NAMES[s.con] || s.con) : '\u2014';
+  $('sd-temp').textContent = s.temp ? s.temp.toLocaleString() + ' K' : '\u2014';
+  if (s.temp) $('sd-temp').style.color = '#' + s.color.getHexString();
+  $('sd-class').textContent = s.spect || '\u2014';
+  $('sd-mag').textContent = s.mag.toFixed(2);
+  $('sd-dist').textContent = s.dist ? s.dist.toFixed(1) + ' ly' : '\u2014';
+  $('sd-radec').textContent = `${s.ra.toFixed(3)}h / ${s.dec.toFixed(2)}\u00B0`;
+  $('sd-pitch').textContent = s.note;
+  $('sd-freq').textContent = s.freq.toFixed(1) + ' Hz';
+  $('lp-count').textContent = '#' + s.id;
+}
+
+function updateVoiceDisplay() {
+  $('voice-count').textContent = `${activeVoices.size} / ${MAX_VOICES}`;
+  $('t-stars').textContent = activeVoices.size;
+  $('active-count').textContent = `SOUNDING: ${activeVoices.size}`;
+  const vl = $('voice-list');
+  if (!activeVoices.size) { vl.innerHTML = '<span class="no-star">No voices active</span>'; return; }
+  const items = [...activeVoices.keys()].slice(0,10).map(id => {
+    const s = starData[id];
+    const col = s.temp > 8000 ? 'var(--blue-star)' : s.temp > 5500 ? 'var(--yellow-star)' : 'var(--red-star)';
+    const nm = s.name && !s.name.startsWith('HIP') ? s.name : s.note;
+    const pinned = pinnedStars.includes(id) ? '\u2605' : '';
+    return `<span style="color:${col}">${pinned}${nm}</span>`;
+  });
+  vl.innerHTML = items.join(' \u00B7 ') + (activeVoices.size > 10 ? ` +${activeVoices.size-10}` : '');
+}
+
+// Oscilloscope + Analyzer
+const scopeC = $('scope-canvas'), scopeX = scopeC.getContext('2d');
+const analC = $('analyzer-canvas'), analX = analC.getContext('2d');
+
+function drawScope() {
+  const w = scopeC.width = scopeC.clientWidth*2, h = scopeC.height = scopeC.clientHeight*2;
+  scopeX.clearRect(0,0,w,h);
+  if (!analyserNode) return;
+  analyserNode.getByteTimeDomainData(waveformData);
+  const palCol = currentPalette==='analog'?'rgba(226,168,77,0.6)':currentPalette==='granular'?'rgba(226,77,202,0.6)':currentPalette==='spectral'?'rgba(126,184,255,0.6)':currentPalette==='organic'?'rgba(107,226,122,0.6)':'rgba(77,240,226,0.6)';
+  scopeX.strokeStyle=palCol; scopeX.lineWidth=1.5; scopeX.beginPath();
+  const sl = w/waveformData.length;
+  for (let i=0;i<waveformData.length;i++){const v=waveformData[i]/128,y=v*h/2;i===0?scopeX.moveTo(0,y):scopeX.lineTo(i*sl,y)}
+  scopeX.stroke();
+  scopeX.strokeStyle='rgba(60,70,110,0.12)';scopeX.lineWidth=0.5;
+  for(let i=0;i<5;i++){const y=i/4*h;scopeX.beginPath();scopeX.moveTo(0,y);scopeX.lineTo(w,y);scopeX.stroke()}
+}
+
+function drawAnalyzer() {
+  const w=analC.width=analC.clientWidth*2, h=analC.height=analC.clientHeight*2;
+  analX.clearRect(0,0,w,h);
+  if (!analyserNode) return;
+  analyserNode.getByteFrequencyData(analyserData);
+  const bw=w/analyserData.length;
+  const hueBase = currentPalette==='analog'?30:currentPalette==='granular'?300:currentPalette==='spectral'?220:currentPalette==='organic'?130:180;
+  for(let i=0;i<analyserData.length;i++){const v=analyserData[i]/255;analX.fillStyle=`hsla(${hueBase+i*0.8},70%,60%,${0.3+v*0.5})`;analX.fillRect(i*bw,h-v*h,bw-1,v*h)}
+}
+
+// ═══════════════════════════════════════════════════
+// CAMERA CONTROLS
+// ═══════════════════════════════════════════════════
+function handleWheel(e) {
+  e.preventDefault(); initAudio();
+  zoomLevel = Math.max(0.3, Math.min(5, zoomLevel + (e.deltaY > 0 ? -0.08 : 0.08)));
+  camera.position.setLength(500/zoomLevel);
+  camera.lookAt(0,0,0);
+  $('zoom-indicator').textContent = `ZOOM: ${zoomLevel.toFixed(2)}x`;
+}
+
+canvas.addEventListener('mousedown', e => { isDragging=true; dragStart={x:e.clientX,y:e.clientY}; });
+window.addEventListener('mouseup', () => { isDragging=false; });
+
+function handleMouseMove(e) {
+  initAudio();
+  mouseScreen.x = e.clientX; mouseScreen.y = e.clientY;
+
+  // Update cursor ring position
+  const ring = $('cursor-ring');
+  ring.style.left = e.clientX + 'px';
+  ring.style.top = e.clientY + 'px';
+  ring.style.width = LISTEN_RADIUS*2 + 'px';
+  ring.style.height = LISTEN_RADIUS*2 + 'px';
+  const dot = $('cursor-dot');
+  dot.style.left = e.clientX + 'px';
+  dot.style.top = e.clientY + 'px';
+
+  // Orbit camera on drag
+  if (isDragging) {
+    rotY += (e.clientX - dragStart.x) * 0.003;
+    rotX += (e.clientY - dragStart.y) * 0.002;
+    rotX = Math.max(-1.2, Math.min(1.2, rotX));
+    const r = 500/zoomLevel;
+    camera.position.x = r * Math.sin(rotY) * Math.cos(rotX);
+    camera.position.y = r * Math.sin(rotX);
+    camera.position.z = r * Math.cos(rotY) * Math.cos(rotX);
+    camera.lookAt(0,0,0);
+    dragStart = {x:e.clientX, y:e.clientY};
+  }
+
+  $('cursor-info').textContent = `CURSOR: ${e.clientX}, ${e.clientY}`;
+}
+
+// Click handler — Pin mode clicks
+canvas.addEventListener('click', e => {
+  initAudio();
+  if (interactionMode === 'pin' && focusedStar) {
+    pinStar(focusedStar);
+  } else if (interactionMode === 'explore' && !isDragging) {
+    // Find closest star to click position for focus
+    let closest = null, closestD = Infinity;
+    for (const s of starData) {
+      const sp = getScreenPos(s);
+      if (!sp) continue;
+      const dx = sp.x - e.clientX, dy = sp.y - e.clientY;
+      const d = Math.sqrt(dx*dx + dy*dy);
+      if (d < 30 && d < closestD) { closestD = d; closest = s; }
+    }
+    if (closest) {
+      focusedStar = closest;
+      updateStarPanel();
+      updateHoverHelper(focusedStar);
+      playStarSound(closest);
+      triggerStarVisual(closest.id);
+      showHarmonicConnections(closest.id);
+    }
+  }
+});
+
+// Right-click to unpin
+canvas.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  if (interactionMode === 'pin' && focusedStar && pinnedStars.includes(focusedStar.id)) {
+    pinStar(focusedStar); // toggles off
+  }
+});
+
+// Keyboard
+window.addEventListener('keydown', e => {
+  // HUD toggle
+  if (e.key==='h'||e.key==='H') { hudVisible=!hudVisible; $('hud').style.opacity=hudVisible?'1':'0'; $('hud').style.pointerEvents=hudVisible?'auto':'none'; }
+  // Mute
+  if (e.key==='m'||e.key==='M') { Tone.getDestination().mute=!Tone.getDestination().mute; }
+  // Fullscreen
+  if (e.key==='f'||e.key==='F') { document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen(); }
+  // Scan mode toggle
+  if (e.key === ' ' && !e.repeat) { e.preventDefault(); initAudio(); if (scanning) { stopScan(); setMode('explore'); } else { stopPinSequence(); startScan(); } }
+  // Pin mode toggle
+  if ((e.key==='p'||e.key==='P') && !e.repeat) { initAudio(); if (interactionMode==='pin') { setMode('explore'); } else { if(scanning)stopScan(); setMode('pin'); } }
+  // Play pinned sequence
+  if (e.key==='Enter' && !e.repeat) { initAudio(); if (pinSequencePlaying) stopPinSequence(); else startPinSequence(); }
+  // Clear pins
+  if (e.key==='Backspace' && !e.repeat) { clearPins(); }
+  // Palette shortcuts
+  if (e.key==='1') { initAudio(); switchPalette('crystalline'); }
+  if (e.key==='2') { initAudio(); switchPalette('analog'); }
+  if (e.key==='3') { initAudio(); switchPalette('granular'); }
+  if (e.key==='4') { initAudio(); switchPalette('spectral'); }
+  if (e.key==='5') { initAudio(); switchPalette('organic'); }
+  // Harmony shortcuts
+  if (e.key==='q'||e.key==='Q') switchHarmony('pentatonic');
+  if (e.key==='w'||e.key==='W') { e.preventDefault(); switchHarmony('modal'); }
+  if (e.key==='e'||e.key==='E') { e.preventDefault(); switchHarmony('overtone'); }
+  if (e.key==='r'||e.key==='R') switchHarmony('layered');
+  // Scan speed +/-
+  if (e.key==='ArrowRight' && scanning) { scanBPM=Math.min(200,scanBPM+5); $('scan-speed-display').textContent=`SCAN: ${scanBPM} BPM`; }
+  if (e.key==='ArrowLeft' && scanning) { scanBPM=Math.max(10,scanBPM-5); $('scan-speed-display').textContent=`SCAN: ${scanBPM} BPM`; }
+  // Pin tempo +/-
+  if (e.key==='ArrowUp') { pinTempoBPM=Math.min(300,pinTempoBPM+10); $('pin-tempo-display').textContent=`SEQ: ${pinTempoBPM} BPM`; }
+  if (e.key==='ArrowDown') { pinTempoBPM=Math.max(30,pinTempoBPM-10); $('pin-tempo-display').textContent=`SEQ: ${pinTempoBPM} BPM`; }
+});
+
+// ═══════════════════════════════════════════════════
+// SESSION TIMER
+// ═══════════════════════════════════════════════════
+const t0 = Date.now();
+function updateTimer() {
+  const e=Date.now()-t0, s=Math.floor(e/1000)%60, m=Math.floor(e/60000)%60, h=Math.floor(e/3600000);
+  $('session-timer').textContent=`T:${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+// ═══════════════════════════════════════════════════
+// ANIMATION LOOP
+// ═══════════════════════════════════════════════════
+function animate() {
+  requestAnimationFrame(animate);
+  frame++;
+  const now = performance.now() * 0.001;
+  if (starMaterial) starMaterial.uniforms.uTime.value = now;
+  if (pinHaloMat) pinHaloMat.uniforms.uTime.value = now;
+
+  // Explore mode: find stars in cursor radius
+  if (frame%3===0 && starData.length && interactionMode==='explore') {
+    findStarsInRadius();
+    updateStarPanel();
+    updateHoverHelper(focusedStar);
+    $('fs-radius').textContent = starsInRadius.size;
+  }
+
+  // Pin mode: find closest star under cursor for focus
+  if (frame%3===0 && starData.length && interactionMode==='pin') {
+    let closest = null, closestD = Infinity;
+    for (const s of starData) {
+      const sp = getScreenPos(s);
+      if (!sp) continue;
+      const dx = sp.x - mouseScreen.x, dy = sp.y - mouseScreen.y;
+      const d = Math.sqrt(dx*dx + dy*dy);
+      if (d < 40 && d < closestD) { closestD = d; closest = s; }
+    }
+    focusedStar = closest;
+    updateStarPanel();
+    updateHoverHelper(focusedStar);
+  }
+
+  // Scan mode: sweep
+  if (scanning) updateScan();
+
+  // Draw visualizers
+  if (frame%2===0) { drawScope(); drawAnalyzer(); }
+  if (frame%30===0) updateTimer();
+  if (composer && composer.passes[2]) composer.passes[2].uniforms.uTime.value = performance.now() * 0.001;
+
+  // Audio-reactive star scaling
+  if (starTriggerScales.size > 0) {
+    const now = performance.now();
+    const dummy = new THREE.Object3D();
+    let nb = false, nd = false;
+    for (const [si, a] of starTriggerScales) {
+      const el = now - a.startTime;
+      let sc;
+      if (el < a.attackMs) sc = 1.0 + 0.3*(el/a.attackMs);
+      else { const t=Math.min(1,(el-a.attackMs)/a.decayMs); sc=1.3-0.3*t*t; }
+      if (el > a.attackMs + a.decayMs) { starTriggerScales.delete(si); sc=1.0; }
+      const bi = brightIndices.indexOf(si);
+      if (bi!==-1 && starMeshBright) {
+        starMeshBright.getMatrixAt(bi, dummy.matrix);
+        dummy.matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
+        dummy.scale.setScalar(dummy.scale.x/(starScales[si]||1)*sc);
+        dummy.updateMatrix();
+        starMeshBright.setMatrixAt(bi, dummy.matrix); nb=true;
+      } else {
+        const di = dimIndices.indexOf(si);
+        if (di!==-1 && starMeshDim) {
+          starMeshDim.getMatrixAt(di, dummy.matrix);
+          dummy.matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
+          dummy.scale.setScalar(dummy.scale.x/(starScales[si]||1)*sc);
+          dummy.updateMatrix();
+          starMeshDim.setMatrixAt(di, dummy.matrix); nd=true;
+        }
+      }
+      starScales[si] = sc;
+    }
+    if (nb && starMeshBright) starMeshBright.instanceMatrix.needsUpdate=true;
+    if (nd && starMeshDim) starMeshDim.instanceMatrix.needsUpdate=true;
+  }
+
+  // Hide scan geometry when not scanning
+  if (!scanning && scanPlaneMesh) { scanPlaneMesh.visible=false; scanLight.visible=false; }
+
+  // Harmonic line fade animation
+  for(let i=activeHarmonicLines.length-1;i>=0;i--){
+    const h=activeHarmonicLines[i];
+    const t=(performance.now()-h.startTime)/h.fadeDuration;
+    if(t>=1){h.mesh.visible=false;h.mesh.material.opacity=0;activeHarmonicLines.splice(i,1);}
+    else h.mesh.material.opacity=h.baseOpacity*(1-t*t);
+  }
+
+  // Global audio breathing
+  if (analyserData) {
+    let rms=0;
+    for(let i=0;i<analyserData.length;i++) rms+=analyserData[i]*analyserData[i];
+    rms = Math.sqrt(rms/analyserData.length)/255;
+    scene.traverse(o => { if(o.isHemisphereLight) o.intensity=0.4+rms*0.08; });
+  }
+
+  composer ? composer.render() : renderer.render(scene, camera);
+}
+
+// Resize
+window.addEventListener('resize', () => {
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  if (composer) composer.setSize(window.innerWidth, window.innerHeight);
+});
+
+window.addEventListener('mousemove', handleMouseMove);
+window.addEventListener('wheel', handleWheel, {passive:false});
+
+setTimeout(()=>$('hint').classList.add('hidden'), 12000);
+
+// ═══════════════════════════════════════════════════
+// LOAD DATA
+// ═══════════════════════════════════════════════════
+const fill = $('load-fill'), loadSt = $('load-status');
+fill.style.width = '10%';
+loadSt.textContent = 'LOADING STAR CATALOG';
+
+function initWithData(data) {
+  fill.style.width = '85%';
+  loadSt.textContent = `BUILDING STAR FIELD \u2014 ${data.length.toLocaleString()} STARS`;
+  setTimeout(() => {
+    buildStarField(data);
+    fill.style.width = '100%';
+    loadSt.textContent = 'READY';
+    setTimeout(() => $('loading').classList.add('done'), 600);
+  }, 100);
+}
+
+function expandCompact(arr) {
+  return arr.map(s => ({
+    ra: s.r, dec: s.d, mag: s.m, temp: s.t, spect: s.s,
+    name: s.n, con: s.c, dist: s.D, ci: s.b != null ? s.b : null
+  }));
+}
+
+// Standalone mode: use embedded star data directly
+loadSt.textContent = 'LOADING EMBEDDED CATALOG — 926 BRIGHT STARS';
+fill.style.width = '50%';
+if (typeof EMBEDDED_STARS !== 'undefined') {
+  initWithData(expandCompact(EMBEDDED_STARS));
+} else {
+  loadSt.textContent = 'GENERATING PROCEDURAL STARS';
+  const fallback = [];
+  for (let i = 0; i < 2000; i++) {
+    const ra = Math.random() * 24, dec = (Math.random()-0.5)*180;
+    const mag = -1+Math.random()*8, ci = -0.3+Math.random()*2.0;
+    const temp = Math.round(4600*(1/(0.92*ci+1.7)+1/(0.92*ci+0.62)));
+    fallback.push({ra,dec,mag:+mag.toFixed(2),ci:+ci.toFixed(3),temp,spect:null,name:null,con:null,dist:null});
+  }
+  initWithData(fallback);
+}
+
+animate();
+
+})();
+</script>
+
+<div id="layers-panel" style="position:absolute;bottom:80px;right:20px;font:11px 'Space Mono',monospace;color:#888;z-index:10;">
+  <div style="margin-bottom:4px;color:#666;">LAYERS</div>
+  <label style="display:block;cursor:pointer;margin:2px 0;"><input type="checkbox" id="tog-const" checked style="accent-color:#888;"> CONSTELLATIONS</label>
+  <label style="display:block;cursor:pointer;margin:2px 0;"><input type="checkbox" id="tog-spectral" style="accent-color:#888;"> SPECTRAL</label>
+  <label style="display:block;cursor:pointer;margin:2px 0;"><input type="checkbox" id="tog-harmonic" checked style="accent-color:#888;"> HARMONIC</label>
+</div>
+
+<script>
+// Wire up layer toggles
+if($('tog-const')) $('tog-const').addEventListener('change', e => { if(constellationGroup) constellationGroup.visible=e.target.checked; });
+if($('tog-spectral')) $('tog-spectral').addEventListener('change', e => { if(spectralBoundaryGroup){spectralBoundaryGroup.visible=e.target.checked;showSpectralBoundaries=e.target.checked;} });
+if($('tog-harmonic')) $('tog-harmonic').addEventListener('change', e => { if(harmonicLineGroup) harmonicLineGroup.visible=e.target.checked; });
+</script>
+
+</body>
+</html>

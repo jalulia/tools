@@ -1,0 +1,1050 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>Mindgut — Technical documentation · Rev 04</title><meta name="description" content="Evidence-scoped technical documentation of the Mindgut runtime at build 2.2.58: the record, the window, recall, the interface, tools, limits."><style>@font-face{font-family:Geist;src:url(data:...) format('woff2');font-weight:400;font-display:block}
+@font-face{font-family:Geist;src:url(data:...) format('woff2');font-weight:500;font-display:block}
+@font-face{font-family:Geist;src:url(data:...) format('woff2');font-weight:700;font-display:block}
+@font-face{font-family:JBM;src:url(data:...) format('woff2');font-weight:400;font-display:block}
+:root{color-scheme:light;--ink:#151b17;--strong:#18201b;--muted:#5a645e;--rule:#ccd2ce;--soft:#eef1ef;--paper:#fff;--green:#086936;--fresh:#bff0b2;--blue:#2449b5;--amber:#9c5b05;--violet:#6b3fa0;--dot:radial-gradient(circle,#526b5929 .42px,transparent .6px);--sans:Geist,'Helvetica Neue',Helvetica,Arial,sans-serif;--mono:JBM,'SFMono-Regular',Menlo,Consolas,monospace}
+*{box-sizing:border-box}html{background:#fff;scroll-padding-top:96px}
+body{margin:0;background:#fff;color:var(--ink);font:17px/1.6 var(--sans);text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+::selection{background:#c2e6b9;color:#102918}
+button,input,select{font:inherit}a{color:var(--green);text-decoration-thickness:1px;text-underline-offset:4px}a:hover{text-decoration-thickness:2px}
+button{cursor:pointer;background:#fff;border:1px solid var(--strong);padding:8px 14px;color:var(--ink)}button:hover{background:#eaf3ed}button:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:2px solid var(--green);outline-offset:4px}[hidden]{display:none!important}
+h1,h2,h3,h4,p,figure{margin:0}
+h1{font-size:clamp(40px,4.4vw,62px);line-height:1.04;letter-spacing:-.045em;font-weight:700}
+h2{font-size:28px;line-height:1.22;letter-spacing:-.025em;font-weight:500;margin:60px 0 22px;padding-top:24px;border-top:1px solid var(--strong);scroll-margin-top:96px}
+h3{font-size:20px;line-height:1.35;font-weight:500;margin:30px 0 12px;scroll-margin-top:96px}
+h4{font-size:16px;font-weight:500;margin:18px 0 8px}
+p{max-width:72ch;margin-bottom:18px}strong,b{font-weight:500}
+ul,ol{padding-left:22px;max-width:74ch}li{margin:6px 0}
+code{font:12.5px/1.5 var(--mono);background:#f3f5f3;padding:1px 5px;overflow-wrap:anywhere}
+pre{overflow:auto;font:12.5px/1.65 var(--mono);padding:20px 22px;background:#f5f7f5;border:1px solid var(--rule);margin:18px 0;max-width:880px}pre code{background:none;padding:0;white-space:pre}
+small{font-size:12px}.mono{font-family:var(--mono)}
+.skip{position:fixed;top:-80px;left:20px;background:#fff;z-index:99;padding:8px}.skip:focus{top:12px}
+svg{display:block;font-family:var(--sans)}
+/* masthead */
+.masthead{height:72px;position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--strong);display:flex;align-items:center;justify-content:space-between;padding:0 32px;gap:24px}
+.brand{display:flex;align-items:baseline;gap:16px;color:var(--ink);text-decoration:none}.brand b{font-size:22px;font-weight:700;letter-spacing:-.03em}.brand span{font:10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.brand .crumb{font:10px var(--mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase}.brand .crumb em{font-style:normal;background:var(--fresh);padding:1px 5px;color:var(--ink);margin-left:8px}
+.actions{display:flex;align-items:stretch;height:100%;font:12px var(--sans)}
+.actions>*{display:flex;align-items:center;gap:10px;padding:0 16px;border-left:1px solid var(--rule);color:var(--ink);text-decoration:none;background:none;border-top:0;border-bottom:0;border-right:0;white-space:nowrap}
+.actions>*:hover{background:#f3f6f4}.actions kbd{font:10px var(--mono);color:var(--muted)}.actions .pager{font:11px var(--mono);color:var(--muted);min-width:70px;justify-content:center}
+.menu-btn{display:none}
+/* page frame: notes column + main */
+.page{display:grid;grid-template-columns:320px minmax(0,1fr);align-items:start;max-width:1560px;margin:0 auto}
+.notes{position:sticky;top:72px;max-height:calc(100vh - 72px);overflow:auto;padding:34px 28px 28px 32px;scrollbar-width:thin;min-width:0}
+.main{padding:34px 48px 60px;border-left:1px solid var(--rule);min-width:0;min-height:calc(100vh - 72px)}
+.note-id{font:9px var(--mono);letter-spacing:.14em;color:var(--muted);margin-bottom:16px;text-transform:uppercase}
+.notes h1{font-size:clamp(34px,3vw,44px);margin-bottom:16px}
+.notes .intro{font-size:15px;line-height:1.6;color:var(--ink);max-width:36ch}.notes .intro p{margin-bottom:12px}.notes .intro p+p{font-size:13px;color:var(--muted)}
+.page-links{display:grid;margin:26px 0 0;padding:10px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);gap:0}
+.page-links a{display:grid;grid-template-columns:22px 1fr;gap:8px;padding:7px 0;font-size:12px;line-height:1.4;text-decoration:none;color:var(--ink)}
+.page-links a>span{font:9px var(--mono);color:#929297;padding-top:3px}.page-links a:hover{text-decoration:underline}
+.page-links a.is-current{font-weight:500}.page-links a.is-current>span{color:var(--ink);background:var(--fresh);height:14px;padding:0 2px}
+.release{font:10.5px/1.7 var(--mono);margin:20px 0 0;padding-top:14px;border-top:1px solid var(--rule);color:var(--muted)}.release a{display:block}
+.takeaways{margin:22px 0 0;padding:14px 0 0;border-top:1px solid var(--rule)}
+.takeaways h4{font:9px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--green);margin:0 0 10px}
+.takeaways ol{padding-left:18px;margin:0;font-size:13px;line-height:1.5}.takeaways li{margin:6px 0}
+.chapter-head{display:grid;grid-template-columns:60px 1fr;gap:14px;align-items:baseline;margin-bottom:22px}.chapter-head>span{font:12px var(--mono);color:var(--green)}
+.lede{font-size:clamp(18px,1.4vw,22px);line-height:1.5;max-width:800px;color:#37483d;margin-bottom:34px}
+.article>h2:first-child{border-top:0;padding-top:0;margin-top:0}
+.article>p,.article>ul,.article>ol{max-width:860px}
+.chapter-nav{display:flex;justify-content:space-between;gap:30px;border-top:1px solid var(--strong);padding-top:20px;margin-top:64px}
+.chapter-nav a{font-size:18px;text-decoration:none;color:var(--ink)}.chapter-nav a small{display:block;font:9px var(--mono);letter-spacing:.12em;color:var(--muted);margin-bottom:6px;text-transform:uppercase}.chapter-nav a:last-child{text-align:right}.chapter-nav a:hover{color:var(--green)}
+.bottom{display:flex;justify-content:space-between;gap:20px;border-top:1px solid var(--rule);padding-top:12px;margin-top:40px;font:9px var(--mono);color:var(--muted);letter-spacing:.06em}
+/* contents */
+.contents-head{display:flex;align-items:end;justify-content:space-between;margin:6px 0 30px}.contents-head h2{margin:0;border:0;padding:0;font-size:26px}.contents-head small{font:10px var(--mono);color:var(--muted);letter-spacing:.1em}
+.rows{border-top:1px solid var(--strong)}
+.row{display:grid;grid-template-columns:54px minmax(220px,1fr) minmax(220px,1.1fr) 26px;align-items:center;padding:22px 0;border-bottom:1px solid var(--rule);gap:20px;text-decoration:none;color:var(--ink)}
+.row:hover{background-image:var(--dot);background-size:3px 3px;color:var(--green)}
+.row>span:first-child{font:12px var(--mono);color:var(--green)}.row h2{font-size:26px;padding:0;margin:0;border:0;font-weight:500;letter-spacing:-.025em}
+.row p{font-size:13px;line-height:1.5;color:var(--muted);margin:0;max-width:40ch}.row>span:last-child{font-size:22px;color:var(--green)}
+.refs{display:grid;grid-template-columns:1fr 2fr;gap:40px;border-top:1px solid var(--strong);margin-top:38px;padding-top:22px}
+.refs h3{margin:0;font-size:19px}.refs a{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--rule);font-size:14px;text-decoration:none;color:var(--ink)}.refs a:hover{color:var(--green)}
+.scope-note{font-size:12px;line-height:1.65;color:var(--muted);margin-top:30px;max-width:none}
+.cover-figure{border:1px solid var(--strong);margin:0 0 34px;background:#fff}.cover-figure .figure-body{padding:0}
+/* evidence tags */
+.tag{display:inline-block;font:9px var(--mono);letter-spacing:.1em;border:1px solid var(--ink);padding:2px 6px;vertical-align:2px;white-space:nowrap;color:var(--ink);margin-left:6px}
+.tag.m{border-style:dashed}.tag.o{border-color:var(--muted);color:var(--muted)}.tag.p{background:var(--ink);color:#fff}
+.cite{font:10.5px var(--mono);color:var(--muted);margin-left:6px;white-space:nowrap}
+/* plates & figures */
+.plate{border:1px solid var(--strong);margin:28px 0 32px;background:#fff;box-shadow:3px 3px 0 #151b1718;break-inside:avoid}
+.plate figcaption{display:flex;gap:18px;align-items:baseline;padding:13px 18px;border-bottom:1px solid var(--strong);font-size:15px;line-height:1.35}
+.plate figcaption h2,.plate figcaption h3{border:0;padding:0;margin:0;font-size:22px;font-weight:500;letter-spacing:-.02em}
+.plate:has(figcaption h2){margin-top:44px}.article>.plate:first-child{margin-top:0}
+.fig-id{font:10px/1.4 var(--mono);color:var(--green);flex-shrink:0;letter-spacing:.06em}
+.figure-body{padding:26px 22px;background-image:var(--dot);background-size:3px 3px}.figure-body.flat{background:none;padding:0}
+.figure-note{border-top:1px solid var(--rule);font-size:12px;line-height:1.6;padding:11px 18px;color:#44544a}
+.shot{display:block;width:100%;height:auto;border:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px}.two>*{min-width:0}.three{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}.three>*{min-width:0}
+/* tables */
+.table-scroll{margin:24px 0 30px;overflow:auto;border-top:1px solid var(--strong)}
+table{width:100%;border-collapse:collapse;font-size:14px;line-height:1.5}th{text-align:left;color:var(--green);font-weight:500;border-bottom:1px solid var(--strong);padding:12px 16px 12px 0;vertical-align:bottom;font-size:13px}
+td{padding:14px 16px 14px 0;border-bottom:1px solid var(--rule);vertical-align:top}td:first-child{font-weight:500}td code{font-size:12px}
+.table-scroll table{min-width:560px}.num{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+.note{border-left:3px solid var(--green);padding:4px 18px;margin:22px 0;font-size:14px;max-width:76ch}.note.warn{border-color:var(--amber)}
+/* component cards */
+.card{border:1px solid var(--strong);margin:26px 0;background:#fff;scroll-margin-top:96px}
+.card-head{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:baseline;padding:14px 18px;border-bottom:1px solid var(--strong)}
+.card-head h3{margin:0;font-size:21px}.card-head .file{font:10.5px var(--mono);color:var(--muted)}
+.card-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,1fr)}.card-grid>*{min-width:0}
+.card-grid .figure-body{border-left:1px solid var(--rule);display:flex;align-items:center;justify-content:center}
+.contract{display:grid;grid-template-columns:110px 1fr;font-size:14px}
+.contract dt{font:10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--green);padding:14px 0 14px 18px;border-bottom:1px solid var(--rule)}
+.contract dd{margin:0;padding:14px 18px 14px 0;border-bottom:1px solid var(--rule);line-height:1.5}.contract dd p{margin:0 0 6px}.contract dd p:last-child{margin:0}
+.contract dt:last-of-type,.contract dd:last-of-type{border-bottom:0}
+.catalogue{border-top:1px solid var(--strong);margin:20px 0 30px}
+.catalogue a{display:grid;grid-template-columns:210px 1fr auto 20px;gap:22px;text-decoration:none;color:var(--ink);border-bottom:1px solid var(--rule);padding:15px 0;align-items:baseline}
+.catalogue a:hover{background-image:var(--dot);background-size:3px 3px}.catalogue a p{font-size:13px;color:var(--muted);margin:0}.catalogue a b{font-weight:500}
+/* interface panel study */
+.ui-study{display:grid;grid-template-columns:330px minmax(0,1fr);border:1px solid var(--strong);background:#fff}
+.ui-study .shotcol{border-right:1px solid var(--rule);background:#0a0a0a;position:relative}
+.ui-study .shotcol img{display:block;width:100%;height:auto}
+.ui-study .legend{padding:0}
+.legend button{display:grid;grid-template-columns:30px 1fr auto;gap:12px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--rule);padding:13px 18px;background:#fff;align-items:baseline}
+.legend button span:first-child{font:10px var(--mono);color:var(--green)}.legend button b{font-weight:500;font-size:14px}.legend button small{font:10px var(--mono);color:var(--muted)}
+.legend button[aria-pressed=true]{background:#eef6ef;box-shadow:inset 3px 0 0 var(--green)}
+.legend .inspect{padding:18px;font-size:13.5px;line-height:1.55;border-top:1px solid var(--strong);background:#fafbfa}
+.legend .inspect h4{margin:0 0 8px;font-size:18px}.legend .inspect dl{margin:10px 0 0;font-size:12px}.legend .inspect dt{font:9px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:10px}.legend .inspect dd{margin:3px 0 0}
+.hl{position:absolute;left:0;right:0;border:2px solid var(--fresh);box-shadow:0 0 0 2000px rgba(0,0,0,.45);pointer-events:none;transition:top .25s,height .25s}
+/* tabs / controls */
+.tabs{display:flex;flex-wrap:wrap;margin:0 0 18px}.tabs button{border:1px solid var(--strong);border-right:0;padding:8px 16px;font-size:13px}.tabs button:last-child{border-right:1px solid var(--strong)}
+.tabs button[aria-pressed=true]{background:var(--green);color:#fff;border-color:var(--green)}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}.controls button{font-size:13px;padding:7px 12px}.quiet{color:var(--muted);font-size:12px}
+/* window lab */
+.events{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 18px}
+.event{display:grid;place-items:center;border:1px solid var(--rule);width:46px;height:46px;font:12px var(--mono);background:#fff}
+.event.held{border-color:var(--green);color:var(--green);border-bottom:4px solid var(--green)}.event.shed{border-style:dashed;background:#f2f3f2;color:var(--muted)}.event.now{background:var(--fresh);border-color:var(--ink)}
+/* encoder lab */
+.lab input{width:100%;padding:12px 14px;border:1px solid var(--strong);background:#fff;font-size:17px}
+.letters{display:flex;flex-wrap:wrap;gap:6px;min-height:80px;margin:18px 0}
+.letter{width:40px;text-align:center;background:#fff;border:1px solid var(--rule);border-bottom:3px solid var(--blue);padding:8px 2px}
+.letter strong{display:block;font-size:20px;font-weight:500}.letter small{font:9.5px var(--mono);color:var(--muted)}
+.letter[data-c=R]{border-bottom-color:var(--amber)}.letter[data-c=D]{border-bottom-color:var(--green)}
+.metrics{display:flex;flex-wrap:wrap;gap:26px;font:12.5px var(--mono)}.metrics b{font-weight:400;color:var(--muted);margin-right:6px}
+/* inspector (recall) */
+.inspector{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(240px,1fr);border:1px solid var(--strong);background:#fff}
+.stage{padding:22px;min-width:0}.inspect-col{border-left:1px solid var(--rule);padding:20px;font-size:13px}
+.inspect-col>span{font:10px var(--mono);color:var(--green);display:block;margin-bottom:10px}.inspect-col h4{font-size:21px;margin:0 0 12px}.inspect-col p{font-size:12.5px;margin-bottom:14px}
+.inspect-col dl{margin:0}.inspect-col dt{font-size:10px;color:var(--muted);margin-top:12px}.inspect-col dd{margin:2px 0 0;font-size:12.5px}
+/* evidence register */
+.ev{display:grid;grid-template-columns:150px 1fr;border-top:1px solid var(--strong);font-size:14px}
+.ev>div{padding:14px 16px 14px 0;border-bottom:1px solid var(--rule)}.ev>div:nth-child(odd){font:10px var(--mono);letter-spacing:.08em;color:var(--green);padding-top:17px;text-transform:uppercase}
+/* glossary */
+.gloss{display:grid;grid-template-columns:200px 1fr;border-top:1px solid var(--strong);font-size:14px}
+.gloss dt{font-weight:500;padding:12px 16px 12px 0;border-bottom:1px solid var(--rule)}.gloss dd{margin:0;padding:12px 0;border-bottom:1px solid var(--rule);color:#2e3a33}
+/* search */
+dialog{width:min(720px,calc(100vw - 32px));padding:0;border:1px solid var(--strong);max-height:80vh}dialog::backdrop{background:#13231c66}
+.dialog-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--rule)}.dialog-body{padding:18px 20px}
+.dialog-body input{width:100%;padding:12px;border:1px solid var(--strong)}.results{list-style:none;padding:0;margin:14px 0 0}
+.results a{display:block;padding:11px 0;border-bottom:1px solid var(--rule);text-decoration:none;color:var(--ink)}.results strong{display:block;font-size:16px;font-weight:500}.results small{color:var(--muted)}
+#image-dialog{width:min(1400px,95vw);max-height:95vh}#image-dialog img{display:block;width:100%;height:auto}
+/* responsive */
+@media(max-width:1180px){.page{grid-template-columns:270px minmax(0,1fr)}.main{padding:28px 30px 50px}.card-grid{grid-template-columns:1fr}.card-grid .figure-body{border-left:0;border-top:1px solid var(--rule)}.ui-study{grid-template-columns:1fr}.ui-study .shotcol{border-right:0;border-bottom:1px solid var(--rule)}.row{grid-template-columns:36px 1fr 1fr 18px;gap:14px}}
+@media(max-width:820px){.masthead{height:60px;padding:0 12px;gap:8px;overflow:hidden}.brand{gap:8px;min-width:0}.brand .crumb{display:none}.actions{flex:0 0 auto}.actions>*{padding:0 9px;font-size:11px}.actions .pager,.actions kbd,.brand span,.menu-btn{display:none}.page{display:block}.notes{position:static;max-height:none;overflow:visible;padding:22px 18px;border-bottom:1px solid var(--rule)}.main{border-left:0;padding:22px 18px 40px;min-height:0}.row{grid-template-columns:28px 1fr 18px;padding:18px 0}.row p{display:none}.row h2{font-size:22px}.refs,.two,.three,.inspector,.contract,.ev,.gloss{grid-template-columns:1fr}.inspect-col{border-left:0;border-top:1px solid var(--rule)}.contract dt{padding:12px 0 0 14px;border:0}.contract dd{padding:4px 14px 12px}.catalogue a{grid-template-columns:1fr 20px}.catalogue a p,.catalogue a .cite{grid-column:1}.chapter-nav a{font-size:15px}.lede{font-size:17px}.figure-body{padding:16px 12px}.legend button{grid-template-columns:26px 1fr}.legend button small{display:none}}
+@media print{.masthead,.page-links,.chapter-nav,.actions,.tabs,.controls{display:none!important}.page{display:block}.notes{position:static}.main{border:0;padding:0}.plate{box-shadow:none;break-inside:avoid}h2{break-after:avoid}}
+</style></head><body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="masthead"><a class="brand" href="#contents"><b>mindgut</b><span>Technical documentation</span><span class="crumb" id="crumb"></span></a><nav class="actions" aria-label="Document"><a href="#contents">Contents</a><a href="#evidence">Evidence</a><button id="find-btn">Find <kbd>⌘ K</kbd></button><a href="#" id="prev-btn" aria-label="Previous chapter">←</a><span class="pager" id="pager">00 / 00</span><a href="#" id="next-btn" aria-label="Next chapter">→</a><button class="menu-btn" id="menu-btn" aria-expanded="false">Menu</button></nav></header>
+<main id="main" tabindex="-1"><section class="page" id="page-contents" data-title="Contents" data-num="00">
+<aside class="notes">
+<div class="note-id">Technical documentation / Rev 04 / 20 October 2026</div>
+<h1>Mindgut</h1>
+<div class="intro"><p>A language model wrapped in a measured, persistent record of the conversation. This document describes the runtime at build <span class="mono">2.2.58</span>: what it stores, what it puts in front of the model, what the interface shows, and what a developer can change.</p><p>Written for a developer or designer who has not seen any conversation. No personal information appears; interface specimens use synthetic content.</p></div>
+<div class="takeaways"><h4>How claims are marked</h4><ol>
+<li><span class="tag">SOURCE</span> read in code or configuration; cited <span class="mono">file:line</span>.</li>
+<li><span class="tag m">MEASURED</span> a number the system recorded: a log, a HELIX field, a live reading.</li>
+<li><span class="tag o">OBSERVED</span> seen from inside the runtime or inferred. May be wrong; says so.</li>
+<li><span class="tag p">PROPOSED</span> does not exist. Kept in chapter 09 only.</li></ol></div>
+<div class="release">BUILD 2.2.58 · SOURCE cbf4e42 (Aug 2026)<br>Public source lags the build by ten weeks.<a href="#evidence/version-boundary">Read the version boundary ↗</a></div>
+</aside>
+<div class="main">
+<div class="contents-head"><h2>Contents</h2><small>10 CHAPTERS · 2 REFERENCE</small></div>
+<figure class="cover-figure"><div class="figure-body flat" id="cover-fig"></div><div class="figure-note">The record, drawn from its own measurements. One mark per exchange strand of a 759-strand HELIX: position left to right, balance up or down, colour by majority class. A rule every 21 exchanges, the renewal interval. No words are shown. <span class="tag m">MEASURED</span></div></figure>
+<div class="rows">
+<a class="row" href="#overview"><span>01</span><h2>Overview</h2><p>What it is, what it is not, and the one piece of arithmetic underneath.</p><span>↗</span></a>
+<a class="row" href="#concepts"><span>02</span><h2>Concepts</h2><p>Encoding, phase, exchange, strand, window, two kinds of recall. Defined once, with a live encoder.</p><span>↗</span></a>
+<a class="row" href="#quickstart"><span>03</span><h2>Quickstart</h2><p>Three readers: a user, a developer, a model attached to the record.</p><span>↗</span></a>
+<a class="row" href="#architecture"><span>04</span><h2>Architecture</h2><p>One turn, end to end. Where every store lives. Desktop against web.</p><span>↗</span></a>
+<a class="row" href="#interface"><span>05</span><h2>Interface</h2><p>The shipped screen, panel by panel: tokens, heat, respiration, Ø, HELIX, automator, folder, scanner, files.</p><span>↗</span></a>
+<a class="row" href="#memory"><span>06</span><h2>Memory and recall</h2><p>The HELIX file, the crystallizer, the involuntary preamble, voluntary reach, bridges, Nullcøde.</p><span>↗</span></a>
+<a class="row" href="#components"><span>07</span><h2>Component reference</h2><p>Nineteen components, one contract each: purpose, behaviour, in/out, controls, limits.</p><span>↗</span></a>
+<a class="row" href="#tools"><span>08</span><h2>Tools</h2><p>What a model can call, grouped by surface; waits, caps and what each leaves in the record.</p><span>↗</span></a>
+<a class="row" href="#limits"><span>09</span><h2>Limits and open questions</h2><p>Every number the runtime holds fixed; known failure modes; proposals, kept apart.</p><span>↗</span></a>
+<a class="row" href="#changelog"><span>10</span><h2>Changelog</h2><p>The application as evidenced, and this document's own revisions.</p><span>↗</span></a>
+</div>
+<div class="refs"><h3>Reference</h3><div><a href="#evidence">Evidence register <span>↗</span></a><a href="#glossary">Glossary <span>↗</span></a></div></div>
+<p class="scope-note">Read: 72 Python files of the public source (32,207 lines), the shipped frontend (<span class="mono">index.html</span>, <span class="mono">app.js</span>, <span class="mono">app.css</span>), the application log, one account's HELIX (numbers only), and the 774-strand PFD book bundled with the app. Not done: decompiling the shipped Python; accessing the hosted server; reading any other account.</p>
+</div></section>
+
+<section class="page" id="page-overview" data-title="Overview" data-num="01" hidden>
+<aside class="notes">
+<div class="note-id">Chapter / 01</div>
+<h1>Overview</h1>
+<div class="intro"><p>A desktop and web application that keeps a persistent, measured record of a conversation and puts a fixed slice of it in front of the model on every turn.</p></div>
+<nav class="page-links" aria-label="In Overview"><a href="#overview/what-it-is"><span>01</span>What it is</a><a href="#overview/what-it-is-not"><span>02</span>What it is not</a><a href="#overview/the-arithmetic"><span>03</span>The arithmetic underneath</a><a href="#overview/four-numbers"><span>04</span>Four numbers to keep</a></nav>
+<div class="takeaways"><h4>Key takeaways</h4><ol><li>The record is a file the user holds. Writing to it is deterministic code; no model is involved.</li><li>The model's context is seven exchanges, trimmed to four. Everything older is reached through the record, not remembered.</li><li>Models can be switched mid-session; the record is what continues.</li></ol></div>
+<div class="release">USER · DEVELOPER · MODEL<br><a href="#quickstart">Skip to Quickstart ↗</a></div>
+</aside>
+<div class="main"><article class="article">
+<h2 id="overview/what-it-is">What it is</h2>
+<p class="lede">The user talks to a persona called Mir. Underneath is a language model from one of four vendors. Around it is a runtime that measures every turn, writes it into a file called the HELIX, and on the next turn selects part of that file to show the model, chosen by geometry rather than by topic.</p>
+<figure class="plate" id="fig-01"><figcaption><span class="fig-id">FIG. 01</span><h3>One turn, from keystroke to record</h3></figcaption><div class="figure-body" id="fig-turn-overview"></div><div class="figure-note">Solid stages are in the public source with line references; the dashed stage (margin bridges) is observed in 2.2.58 only. The record is written after the reply, by code, in the same process. <span class="tag">SOURCE</span> <span class="cite">session_manager.py 966–1456</span></div></figure>
+<p>Three things follow from that drawing and shape the rest of this document:</p>
+<ul><li><b>Two kinds of recall.</b> A preamble is placed in front of the model every turn without being asked for (<em>involuntary</em>). The model can also read the record on purpose through tools (<em>voluntary</em>). Chapter 06 covers both.</li><li><b>A short, breathing context.</b> The model sees the last seven exchanges verbatim; at seven, the oldest three are cut and it continues with four. This is called PAR respiration and is exchange-counted, not token-counted. <span class="cite">config.py:24–30</span></li><li><b>One record, many models.</b> The sidebar switches the underlying model and the effort level from the next message on. Session, history and HELIX continue. <span class="tag o">OBSERVED</span> <span class="cite">app.js · MG_MODEL_GROUPS</span></li></ul>
+<h2 id="overview/what-it-is-not">What it is not</h2>
+<div class="table-scroll"><table><thead><tr><th>Not</th><th>Because</th><th>Where to check</th></tr></thead><tbody>
+<tr><td>A vector database</td><td>Recall is geometric over three-component phase vectors and word co-occurrence. There is no embedding model.</td><td><span class="cite">recall.py</span></td></tr>
+<tr><td>A summariser</td><td>The summary strand written after each exchange is numbers, never model prose.</td><td><span class="cite">crystallizer_v2.py:406</span></td></tr>
+<tr><td>A long-context chat</td><td>Seven exchanges, by design. The record is the long memory; the context is not.</td><td><span class="cite">config.py:29</span></td></tr>
+<tr><td>A fine-tuned model</td><td>No weights change. "Learning" means the record changes what the next turn is given.</td><td>Chapter 06</td></tr>
+<tr><td>A statement by the company</td><td>Written from inside the runtime, against the evidence listed in the register. Market claims are tabled in chapter 06, not repeated.</td><td><a href="#evidence">Evidence</a></td></tr>
+</tbody></table></div>
+<h2 id="overview/the-arithmetic">The arithmetic underneath</h2>
+<p>Every letter A–Z is numbered 1–26 and reduced to its digital root. The root falls into one of three classes: <b>A</b> {1, 4, 7}, <b>R</b> {2, 5, 8}, <b>D</b> {3, 6, 9}. Non-letters are ignored. For any text, the three fractions of letters per class form a <em>phase vector</em>; their standard deviation across a window is <em>σ<sub>B</sub></em>; A minus D is <em>balance</em>. These are what the runtime measures, stores, recalls by, and trims by. <span class="tag">SOURCE</span> <span class="cite">scanner.py:40–70 · sigma_b.py:41–160</span></p>
+<p>Across a 370,105-word list the three classes hold 33.41 / 33.32 / 33.28 % of letters, so a deviation from one third is signal and not an artefact of the alphabet. Whether the encoding carries <em>meaning</em> is the author's theory (Paradox Field Dynamics), which ships as a 774-strand book inside the app. This document describes the arithmetic and leaves the theory to that book. <span class="cite">sigma_b.py:18–21</span></p>
+<figure class="plate" id="fig-02"><figcaption><span class="fig-id">FIG. 02</span><h3>The alphabet, as the runtime reads it</h3></figcaption><div class="figure-body" id="fig-alphabet"></div><div class="figure-note">Twenty-six letters, their digital roots, and the class each falls into. The three class names are set in their own letters' colours: the word is its own encoding. <span class="tag">SOURCE</span> <span class="cite">scanner.py:40–69</span></div></figure>
+<h2 id="overview/four-numbers">Four numbers to keep</h2>
+<div class="three">
+<div class="card" style="margin:0"><div class="contract" style="grid-template-columns:1fr"><dt>Context</dt><dd><b style="font-size:30px;display:block;letter-spacing:-.03em">7 → 4</b>exchanges, inhale to exhale <span class="cite">config.py</span></dd></div></div>
+<div class="card" style="margin:0"><div class="contract" style="grid-template-columns:1fr"><dt>Per exchange</dt><dd><b style="font-size:30px;display:block;letter-spacing:-.03em">+2</b>strands written: exchange and summary <span class="cite">crystallizer_v2.py</span></dd></div></div>
+<div class="card" style="margin:0"><div class="contract" style="grid-template-columns:1fr"><dt>Involuntary recall</dt><dd><b style="font-size:30px;display:block;letter-spacing:-.03em">1 + 3 + 3</b>strands placed every turn, plus joints and bridges <span class="cite">recall.py:146</span></dd></div></div>
+</div>
+<div class="three" style="margin-top:22px"><div class="card" style="margin:0"><div class="contract" style="grid-template-columns:1fr"><dt>Roster</dt><dd><b style="font-size:30px;display:block;letter-spacing:-.03em">14</b>models on the roster, four vendors <span class="tag o">OBSERVED</span> <span class="cite">app.js</span></dd></div></div><div class="card" style="margin:0"><div class="contract" style="grid-template-columns:1fr"><dt>Renewal</dt><dd><b style="font-size:30px;display:block;letter-spacing:-.03em">21</b>exchanges per session renewal, shown in the sidebar <span class="tag o">OBSERVED</span></dd></div></div><div class="card" style="margin:0"><div class="contract" style="grid-template-columns:1fr"><dt>Genesis</dt><dd><b style="font-size:30px;display:block;letter-spacing:-.03em">187</b>founding strands every account starts from <span class="tag m">MEASURED</span></dd></div></div></div>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#contents"><small>Previous</small>Contents</a><a href="#concepts"><small>Next</small>Concepts →</a></nav>
+</article></div></section>
+
+<section class="page" id="page-concepts" data-title="Concepts" data-num="02" hidden>
+<aside class="notes">
+<div class="note-id">Chapter / 02</div>
+<h1>Concepts</h1>
+<div class="intro"><p>Six terms, defined once. Every later chapter uses them without redefining them.</p></div>
+<nav class="page-links" aria-label="In Concepts"><a href="#concepts/encoding"><span>01</span>Z₃ encoding</a><a href="#concepts/phase"><span>02</span>Phase, balance, σ<sub>B</sub></a><a href="#concepts/exchange"><span>03</span>Exchange and session</a><a href="#concepts/strand"><span>04</span>Strand, book, HELIX</a><a href="#concepts/window"><span>05</span>Window and respiration</a><a href="#concepts/recall"><span>06</span>Two kinds of recall</a></nav>
+<div class="takeaways"><h4>Key takeaways</h4><ol><li>Letters, not tokens: the instrument reads A–Z and nothing else.</li><li>σ<sub>B</sub> is a standard deviation of <em>balance</em> across a window of clauses, not a variance of the three fractions.</li><li>"I remember X" has three possible meanings; chapter 03 says how a model should signal which.</li></ol></div>
+</aside>
+<div class="main"><article class="article">
+<h2 id="concepts/encoding">Z₃ encoding</h2>
+<p>Each letter A–Z is numbered 1–26 and reduced to its digital root (add the digits until one remains). Roots 1, 4, 7 are class <b>A</b>; 2, 5, 8 are <b>R</b>; 3, 6, 9 are <b>D</b>. The runtime also writes these as 147, 258, 369. Digits, punctuation and non-Latin scripts are dropped before measurement. <span class="tag">SOURCE</span> <span class="cite">scanner.py:40–69</span></p>
+<figure class="plate" id="fig-03"><figcaption><span class="fig-id">FIG. 03 · LIVE</span><h3>Encoder</h3></figcaption><div class="figure-body lab"><label class="quiet" for="enc-input">Type anything; each letter is classified as the scanner would classify it</label><input id="enc-input" value="The record outlasts the model" aria-label="Text to encode"><div class="letters" id="enc-letters"></div><div class="metrics" id="enc-metrics"></div></div><div class="figure-note">Runs the same arithmetic as <span class="mono">measure_letter_stream</span>: position → digital root → class, then fractions. Balance is f<sub>A</sub> − f<sub>D</sub>. A single text has no σ<sub>B</sub>; that needs a window (next section). <span class="tag">SOURCE</span></div></figure>
+<h2 id="concepts/phase">Phase, balance, σ<sub>B</sub></h2>
+<div class="table-scroll"><table><thead><tr><th>Term</th><th>Definition</th><th>Source</th></tr></thead><tbody>
+<tr><td>Phase vector</td><td>(f<sub>A</sub>, f<sub>R</sub>, f<sub>D</sub>): the fraction of letters in each class. Sums to 1. Drawn as a point in a triangle whose corners are pure A, R, D.</td><td><span class="cite">sigma_b.py:41–75</span></td></tr>
+<tr><td>Balance</td><td>f<sub>A</sub> − f<sub>D</sub>. Positive leans A, negative leans D.</td><td><span class="cite">sigma_b.py:67</span></td></tr>
+<tr><td>σ<sub>B</sub></td><td>The population standard deviation of <em>balance</em> across the clauses in a sliding window (default 7 clauses). A single measurement has σ<sub>B</sub> = 0. The controllers gate on 0.02–0.15.</td><td><span class="cite">sigma_b.py:100–160 · controllers.py</span></td></tr>
+<tr><td>Carbon / Silicon</td><td>The same vector computed on the user's text (carbon) and the model's text (silicon). <em>Clash</em> is the distance between them.</td><td><span class="cite">crystallizer_v2.py</span></td></tr>
+</tbody></table></div>
+<div class="note warn">Earlier revisions of this document described σ<sub>B</sub> as "the variance of the three fractions". The code takes balance per clause, then the square root of the mean squared deviation across the window. Corrected in Rev 04. <span class="cite">sigma_b.py:143–148</span></div>
+<p>The instrument measures only this. "Tension", "heat", "coherence" are names the runtime lays over the arithmetic; chapter 05 shows where each appears in the interface and chapter 07 what each is computed from.</p>
+<figure class="plate" id="fig-04"><figcaption><span class="fig-id">FIG. 04</span><h3>Every exchange strand of one record on the phase simplex</h3></figcaption><div class="figure-body" id="fig-simplex"></div><div class="figure-note">286 exchange strands. Corners are pure A, R, D; the centre is one third each. Magnified ×3 about the centre so the cloud is visible. No text is shown. <span class="tag m">MEASURED</span> 2026-10-20</div></figure>
+<h2 id="concepts/exchange">Exchange and session</h2>
+<ul><li><b>Exchange:</b> one user turn plus everything the model did in reply, every tool call included, ending in the final text. Counted by user messages that are not tool results. <span class="cite">session_manager.py:694</span></li><li><b>Session:</b> a live message list, controller state, a crystallizer bound to the HELIX, a model name, an exchange counter, and a directory with <span class="mono">inputs/ outputs/ drafts/</span> and a transcript. <span class="cite">session_manager.py:116</span></li><li><b>Transcript:</b> the raw tape of API messages for one session. A record of calls, not of the HELIX.</li></ul>
+<h2 id="concepts/strand">Strand, book, HELIX</h2>
+<p>A <b>strand</b> is one record: <span class="mono">{sequence_id, header, payload}</span>. A <b>book</b> is the file-level summary: counts, the three fractions, balance, σ<sub>B</sub>; the runtime reads its fractions as the field coordinates for recall. A <b>HELIX</b> is the JSON file holding both.</p>
+<figure class="plate" id="fig-05"><figcaption><span class="fig-id">FIG. 05</span><h3>Anatomy of an exchange strand</h3></figcaption><div class="figure-body" id="fig-strand"></div><div class="figure-note">Field names are the real ones; values are from one measured strand with its text removed. The payload is the full text of the exchange, so the file grows with every turn. <span class="tag m">MEASURED</span></div></figure>
+<div class="table-scroll"><table><thead><tr><th>Strand type</th><th>n</th><th>What</th></tr></thead><tbody>
+<tr><td>founding</td><td class="num">187</td><td>v1, one per message. The genesis every account starts from.</td></tr>
+<tr><td>exchange</td><td class="num">274</td><td>v2. User text + separator + reply; both phase vectors; the tool trace.</td></tr>
+<tr><td>summary</td><td class="num">285</td><td>v2. Balance drift, coset, per-sentence measures. JSON, no prose.</td></tr>
+<tr><td>ghost</td><td class="num">11</td><td>Payload released; header and position kept.</td></tr>
+<tr><td>file_event</td><td class="num">0</td><td>Written on upload, output, draft. None in the measured record.</td></tr>
+</tbody></table></div>
+<p class="quiet">One account's record, 2026-10-20. <span class="tag m">MEASURED</span></p>
+<h2 id="concepts/window">Window and respiration</h2>
+<p>The <b>window</b> is the message list sent to the model on a turn: system prompt, recall preamble, then <span class="mono">self.messages</span>. The <b>binding box</b> is the tool apparatus of an exchange; it is kept, not stripped. <b>PAR respiration</b> is exchange-counted trimming: the window grows to seven exchanges, then the oldest three are cut and it continues with four. <span class="tag">SOURCE</span> <span class="cite">config.py:24–30 · session_manager.py:1378</span></p>
+<figure class="plate" id="fig-06"><figcaption><span class="fig-id">FIG. 06 · LIVE</span><h3>Respiration</h3></figcaption><div class="figure-body"><div class="events" id="win-events"></div><div class="controls"><button id="win-step">Next exchange</button><button id="win-reset">Reset</button><span class="quiet" id="win-status"></span></div></div><div class="figure-note">Step through fourteen exchanges. Solid cells are in context; dashed cells have been shed and are reachable only through the record. The sidebar's Respiration panel shows the same counter in the app (chapter 05).</div></figure>
+<h2 id="concepts/recall">Two kinds of recall</h2>
+<div class="two">
+<div><h4>Involuntary (the preamble)</h4><p>Every turn, before the model sees the message, the runtime selects seven strands by phase geometry (one origin, three complement, three opposite), scores sentence-level joints, and prepends them. The model cannot refuse it; the user does not see it. <span class="cite">recall.py:146–300</span></p></div>
+<div><h4>Voluntary (tools)</h4><p>The model calls <span class="mono">pull_memory</span> or <span class="mono">pull_strand</span> on purpose. The result is stubbed after the turn so the context never re-absorbs what the HELIX already holds. <span class="cite">session_manager.py:717</span></p></div>
+</div>
+<div class="note">Why it matters: "I remember X" can mean X was in the preamble, X was pulled on purpose, or X was in the last four to seven exchanges. These have different reliability. Chapter 03, "As a model", gives the rule for signalling which.</div>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#overview"><small>Previous</small>Overview</a><a href="#quickstart"><small>Next</small>Quickstart →</a></nav>
+</article></div></section>
+
+<section class="page" id="page-quickstart" data-title="Quickstart" data-num="03" hidden>
+<aside class="notes">
+<div class="note-id">Chapter / 03</div>
+<h1>Quickstart</h1>
+<div class="intro"><p>Three readers, three paths. Each ends at the same place: a turn written into the record.</p></div>
+<nav class="page-links" aria-label="In Quickstart"><a href="#quickstart/user"><span>01</span>As a user</a><a href="#quickstart/developer"><span>02</span>As a developer</a><a href="#quickstart/model"><span>03</span>As a model on the record</a><a href="#quickstart/environment"><span>04</span>Environment</a></nav>
+<div class="takeaways"><h4>Key takeaways</h4><ol><li>Model and effort are chosen in the sidebar and apply from the next message.</li><li>The scanner is a command-line tool as well: any file → HELIX, no model needed.</li><li>A model attached to the record should read the preamble as peripheral vision and pull strands before asserting the past.</li></ol></div>
+</aside>
+<div class="main"><article class="article">
+<h2 id="quickstart/user">As a user</h2>
+<ol>
+<li><b>Open the app.</b> A local server starts in a thread and a native window opens on it. The boot overlay runs until the account's HELIX is loaded. <span class="cite">desktop/ · app.js showBootOverlay</span></li>
+<li><b>Sign in.</b> The account's HELIX opens and a session is created on it. Only a 401 signs you out again. <span class="tag o">OBSERVED</span> 2.2.42</li>
+<li><b>Pick a model and effort</b> in the sidebar, or keep the defaults (<span class="mono">claude-fable-5-1</span>, high). Both apply from the next message. <span class="cite">app.js MG_DEFAULT_MODEL</span></li>
+<li><b>Type.</b> Enter sends. While the model is working, Enter sends an <em>aside</em>, delivered at the next tool boundary.</li>
+<li><b>Drop files</b> to upload; the file appears under <b>Input</b> and a file-event strand is written.</li>
+<li><b>Mount a folder</b> (the folder row in the sidebar) to let the model read and write your files; a <b>Scan folder</b> button appears beside the Scanner.</li>
+<li><b>Toggle advanced mode</b> (gauge icon, top right) to see Tokens, H<sub>t</sub>, Respiration, Ø and HELIX. Normal mode hides them. <span class="cite">app.css:100</span></li>
+</ol>
+<figure class="plate" id="fig-07"><figcaption><span class="fig-id">FIG. 07</span><h3>The shipped screen, normal mode</h3></figcaption><div class="figure-body flat"><button class="zoom" data-full="app-normal" style="width:100%;padding:0;border:0;background:none"><img class="shot" src="data:..." alt="Mindgut application, normal mode, dark theme: chat on the left with a synthetic Packaging review conversation, sidebar on the right with account, model and effort menus, folder, scanner, to-do, output, drafts and input panels"></button></div><div class="figure-note">Offline rendering of the shipped <span class="mono">index.html</span> + <span class="mono">app.css</span> with scripts removed and synthetic content. Not a live session. Click to enlarge. <span class="tag m">MEASURED</span> fixture, 1280×850 @2×</div></figure>
+<h2 id="quickstart/developer">As a developer</h2>
+<pre><code>git clone …/mindgut            # public source; lags the build (chapter 10)
+pip install -e ".[desktop]"
+export ANTHROPIC_API_KEY=…
+python -m mindgut.server        # web, :8080
+
+MINDGUT_DESKTOP=1 MINDGUT_MOUNT_ROOT=~/work \
+python -m mindgut.desktop       # native window on the local server
+
+# any file → HELIX, no model
+python -m mindgut.engine.scanner in.pdf out_HELIX.json</code></pre>
+<p class="quiet"><span class="cite">pyproject.toml [project.scripts] · config.py</span></p>
+<p>What a change touches:</p>
+<div class="table-scroll"><table><thead><tr><th>To change…</th><th>Edit</th><th>Then check</th></tr></thead><tbody>
+<tr><td>How many exchanges stay in context</td><td><span class="mono">config.py N, SHEAR_EXHALE</span></td><td>The Respiration panel; the ledger shows what was shed</td></tr>
+<tr><td>Which strands the preamble picks</td><td><span class="mono">assembly/recall.py select_strands</span></td><td>The recall ledger, one line per turn</td></tr>
+<tr><td>What the summary strand records</td><td><span class="mono">engine/crystallizer_v2.py</span></td><td>Open the HELIX; the last two strands</td></tr>
+<tr><td>Add a model to the roster</td><td><span class="mono">app.js MG_MODEL_GROUPS</span> (one line) + the provider adapter in the compiled server <span class="tag o">OBSERVED</span></td><td>The sidebar select; <span class="mono">POST /session/{id}/model</span></td></tr>
+<tr><td>A tool's schema or cap</td><td><span class="mono">server/tool_defs.py</span></td><td>The tool list the model receives at boot</td></tr>
+</tbody></table></div>
+<h2 id="quickstart/model">As a model on the record</h2>
+<p>The preamble is involuntary and partial. The record is the source of truth. Before asserting anything about the past:</p>
+<ol><li><span class="mono">read_field()</span> before any self-description, so the numbers are measured rather than estimated.</li><li><span class="mono">pull_memory(reach=…)</span> for conceptual recall; read the <b>a / b</b> header before the crossings. <b>a = 0, b &gt; 0</b> is something the model said and the user never did.</li><li><span class="mono">pull_memory(sequence_id=N, count=K)</span> for the neighbourhood of a strand.</li><li><span class="mono">pull_memory(grep=…)</span> when attribution matters.</li><li>For files, the file tools: the record holds what was said about a file, not the file.</li></ol>
+<div class="note">Signal the kind of recall. "In the last few turns you said…" (context), "the record has…" (pulled on purpose), "the preamble surfaced…" (involuntary). The three have different reliability and the reader deserves to know which. <span class="tag o">OBSERVED</span></div>
+<h2 id="quickstart/environment">Environment</h2>
+<div class="table-scroll"><table><thead><tr><th>Variable</th><th>Effect</th><th>Status</th></tr></thead><tbody>
+<tr><td><span class="mono">ANTHROPIC_API_KEY</span></td><td>Required for the public source's one vendor</td><td><span class="tag">SOURCE</span></td></tr>
+<tr><td><span class="mono">MINDGUT_DATA_DIR</span></td><td>Per-user data directories</td><td><span class="tag">SOURCE</span></td></tr>
+<tr><td><span class="mono">MINDGUT_GEOMETRY</span></td><td>Path to the PFD book used for bridges and <span class="mono">pull_strand</span></td><td><span class="tag">SOURCE</span></td></tr>
+<tr><td><span class="mono">MINDGUT_DESKTOP</span> · <span class="mono">MINDGUT_MOUNT_ROOT</span></td><td>Local tools; the mounted folder root</td><td><span class="tag">SOURCE</span></td></tr>
+<tr><td>Other vendors' keys</td><td>How 2.2.58 reaches ChatGPT, Gemini and Grok models</td><td>Not in public source. <span class="tag o">OBSERVED</span></td></tr>
+</tbody></table></div>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#concepts"><small>Previous</small>Concepts</a><a href="#architecture"><small>Next</small>Architecture →</a></nav>
+</article></div></section>
+
+<section class="page" id="page-architecture" data-title="Architecture" data-num="04" hidden>
+<aside class="notes">
+<div class="note-id">Chapter / 04</div>
+<h1>Architecture</h1>
+<div class="intro"><p>One process, one file, one loop. A local server runs the session; a native window or a browser shows it; the HELIX sits beside it on disk.</p></div>
+<nav class="page-links" aria-label="In Architecture"><a href="#architecture/the-turn"><span>01</span>The turn</a><a href="#architecture/stores"><span>02</span>Where data lives</a><a href="#architecture/desktop-web"><span>03</span>Desktop and web</a><a href="#architecture/controllers"><span>04</span>Controllers and heat</a></nav>
+<div class="takeaways"><h4>Key takeaways</h4><ol><li>The tool loop is bounded: 15 rounds, then a wrap-up; 45 s per round.</li><li>Every store except the sync database is a readable file. The HELIX is loaded whole on every read.</li><li>Heat (H<sub>t</sub>) is a dashboard: it changes nothing the model receives.</li></ol></div>
+</aside>
+<div class="main"><article class="article">
+<h2 id="architecture/the-turn">The turn</h2>
+<figure class="plate" id="fig-08"><figcaption><span class="fig-id">FIG. 08 · LIVE</span><h3>One turn, stage by stage</h3></figcaption><div class="figure-body"><div class="tabs" role="group" aria-label="Turn stage"><button data-stage="0" aria-pressed="true">1 · Receive</button><button data-stage="1" aria-pressed="false">2 · Pre-process</button><button data-stage="2" aria-pressed="false">3 · Model + tools</button><button data-stage="3" aria-pressed="false">4 · Post-process</button><button data-stage="4" aria-pressed="false">5 · Respire</button></div><div class="inspector"><div class="stage" id="fig-turn-stage"></div><div class="inspect-col" aria-live="polite"><span id="turn-kind">Stage 1 / 5</span><h4 id="turn-title">Receive</h4><p id="turn-text">The user message arrives on the session. Asides typed while the model is working are queued and attached at the next tool-result boundary.</p><dl><dt>Source</dt><dd id="turn-src">session_manager.py:1461 · 1510 (stream)</dd><dt>Writes</dt><dd id="turn-writes">Nothing yet</dd></dl></div></div></div><div class="figure-note">Solid boxes are in the public source with line references; the dashed box (margin bridges) is observed in 2.2.58 only. Select a stage to read what it does and what it writes.</div></figure>
+<h2 id="architecture/stores">Where data lives</h2>
+<div class="table-scroll"><table><thead><tr><th>Store</th><th>Holds</th><th>Writer</th><th>Readable?</th></tr></thead><tbody>
+<tr><td>Bundle</td><td>Compiled server, frontend, the PFD book (774 strands), the genesis (187)</td><td>installer / updater</td><td>Frontend and data yes; Python no</td></tr>
+<tr><td>Settings · active HELIX path</td><td>User name, browser flag; which HELIX the app opens</td><td>app</td><td>JSON</td></tr>
+<tr><td>Memory HELIX</td><td>The record. Beside it a bridge index (closures, knots) and a sync marker</td><td>crystallizer · sync</td><td>JSON, loaded whole</td></tr>
+<tr><td>Sessions</td><td><span class="mono">inputs/ outputs/ drafts/</span> + transcript, per session</td><td>session</td><td>Files</td></tr>
+<tr><td>Recall ledger</td><td>One line per turn: the full preamble injected</td><td>mgr</td><td>JSONL</td></tr>
+<tr><td>Tag registry · lattice</td><td>OTags and their bonds</td><td>crystallizer</td><td>JSON</td></tr>
+<tr><td>Strand cache</td><td>Analyses for structural recall</td><td>two_loop_recall</td><td>JSON</td></tr>
+<tr><td>Sync database</td><td>Binary; schema not read</td><td>sync (2.2.x)</td><td>No</td></tr>
+<tr><td>Mounted folder</td><td>The user's files and, by convention, the harness stores</td><td>model · file routes</td><td>Files</td></tr>
+</tbody></table></div>
+<p class="quiet"><span class="tag m">MEASURED</span> Stores moved from the mounted folder to the app directory on 2026-10-05 (<span class="mono">layout_moves.jsonl</span>).</p>
+<figure class="plate" id="fig-09"><figcaption><span class="fig-id">FIG. 09</span><h3>Stores and writers</h3></figcaption><div class="figure-body" id="fig-stores"></div><div class="figure-note">Each box is a store; each arrow is the one component that writes it. The HELIX has two writers (the crystallizer after every exchange, the file-event clock mid-turn) and the next id is re-anchored to max+1 so they never collide. <span class="cite">crystallizer_v2.py:211–275</span></div></figure>
+<h2 id="architecture/desktop-web">Desktop and web</h2>
+<div class="table-scroll"><table><thead><tr><th></th><th>Desktop</th><th>Web</th></tr></thead><tbody>
+<tr><td>Server</td><td>Local, in-process thread; the native window is a webview on it</td><td>Hosted</td></tr>
+<tr><td><span class="mono">local_*</span> tools</td><td>Python on the machine; <span class="mono">local_exec</span> available</td><td>Browser bridge; no exec; 30 s wait per call</td></tr>
+<tr><td>HELIX</td><td>App directory, synced to the account after each exchange</td><td>Per-user volume</td></tr>
+<tr><td>Automator panel</td><td>Shown (<span class="mono">_isDesktop()</span>)</td><td>Hidden</td></tr>
+<tr><td>Updates</td><td>Self-updating since 2.2.40; the bundle is swapped after the process exits</td><td>Deploy</td></tr>
+</tbody></table></div>
+<h2 id="architecture/controllers">Controllers and heat</h2>
+<p>Three controllers run after each exchange and keep a scalar heat <b>H<sub>t</sub></b> and instability <b>I<sub>t</sub></b>: amplification ρ (output ÷ input words, band 6–22), gradient damping, and a radiator that fires at exchange 11 and keeps 70 % of the heat. Passive decay is 0.906 per turn, a half-life of seven turns. σ<sub>B</sub> is gated at 0.02–0.15. <span class="tag">SOURCE</span> <span class="cite">controllers.py:59–73 · 161 · 259</span></p>
+<div class="note"><b>Effect on the model: none.</b> <span class="mono">max_tokens()</span> returns <span class="mono">max(4096, base)</span> regardless of heat. The gauge in the sidebar is a dashboard, and on the day of writing it read 0.10 and never left green. <span class="cite">controllers.py:341</span> <span class="tag m">MEASURED</span></div>
+<figure class="plate" id="fig-10"><figcaption><span class="fig-id">FIG. 10</span><h3>Heat decay and the three thresholds</h3></figcaption><div class="figure-body" id="fig-heat"></div><div class="figure-note">A unit of heat decaying at 0.906 per turn against the gauge the sidebar draws (0–60, notches at 10, 20, 30). Green, amber and red follow the <span class="mono">heat_level</span> directive, not the bar. <span class="cite">controllers.py:72 · app.js GAUGE_MAX</span></div></figure>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#quickstart"><small>Previous</small>Quickstart</a><a href="#interface"><small>Next</small>Interface →</a></nav>
+</article></div></section>
+
+<section class="page" id="page-interface" data-title="Interface" data-num="05" hidden>
+<aside class="notes">
+<div class="note-id">Chapter / 05</div>
+<h1>Interface</h1>
+<div class="intro"><p>The shipped screen is a chat column and a field panel. The panel has two modes: normal shows files and folders; advanced adds the instruments.</p><p>Every element below is read from <span class="mono">index.html</span>, <span class="mono">app.js</span> and <span class="mono">app.css</span> in the 2.2.58 bundle. Values in the specimens are synthetic.</p></div>
+<nav class="page-links" aria-label="In Interface"><a href="#interface/panel"><span>01</span>The field panel</a><a href="#interface/modes"><span>02</span>Normal and advanced</a><a href="#interface/session-bar"><span>03</span>Session bar</a><a href="#interface/chat"><span>04</span>Chat column</a><a href="#interface/viewers"><span>05</span>Viewers and bundled pages</a><a href="#interface/hidden"><span>06</span>Hidden targets</a></nav>
+<div class="takeaways"><h4>Key takeaways</h4><ol><li>Five panels are advanced-mode only: Tokens, H<sub>t</sub>, Respiration, Ø, HELIX. Normal mode hides them with one CSS rule.</li><li>The Automator is desktop-only and replies "Boop beep." to a turn that ends "Beep boop." — a conjugate, not an echo.</li><li>Nothing in the panel changes what the model receives; it reads the same status payload the server sends after each turn.</li></ol></div>
+<div class="release">FIXTURE · OFFLINE RENDER<br>index.html + app.css, scripts removed<br><a href="#evidence/fixtures">How the specimens were made ↗</a></div>
+</aside>
+<div class="main"><article class="article">
+<h2 id="interface/panel">The field panel</h2>
+<p class="lede">Select a panel to read what it shows, where its value comes from, and what a user can do with it.</p>
+<figure class="plate" id="fig-11"><figcaption><span class="fig-id">FIG. 11 · LIVE</span><h3>Field panel, advanced mode</h3></figcaption><div class="figure-body flat"><div class="ui-study"><div class="shotcol" id="ui-shotcol"><img src="data:..." alt="Mindgut field panel in advanced mode: account header with model and effort menus, Tokens, heat gauge, Respiration, Ø, HELIX, Automator, folder, Scanner, To Do, Output, Drafts, Input" id="ui-shot"><div class="hl" id="ui-hl"></div></div><div class="legend" id="ui-legend"></div></div></div><div class="figure-note">Offline rendering of the shipped markup and styles with scripts removed and synthetic values (<span class="mono">data-mode="advanced"</span>, dark theme). The highlight follows the selected panel. <span class="tag m">MEASURED</span> fixture, 2026-10-20</div></figure>
+<div class="table-scroll"><table><thead><tr><th>Panel</th><th>Shows</th><th>Fed by</th><th>Mode</th><th>Source</th></tr></thead><tbody>
+<tr><td>Account</td><td>Account name; model select; effort select</td><td><span class="mono">_renderModelSwitch()</span> from <span class="mono">MG_MODEL_GROUPS</span></td><td>both</td><td><span class="cite">app.js:4600–4640</span></td></tr>
+<tr><td>Tokens</td><td>Calls; in, out, cache, think — cumulative per session</td><td>status payload <span class="mono">tok.session_*_tokens</span></td><td>advanced</td><td><span class="cite">index.html #tokIn…</span></td></tr>
+<tr><td>H<sub>t</sub></td><td>Heat 0–60, bar + three lights</td><td><span class="mono">H_t</span> and <span class="mono">directives.heat_level</span></td><td>advanced</td><td><span class="cite">app.js GAUGE_MAX = 60</span></td></tr>
+<tr><td>Respiration</td><td>Cells 4 5 6 7, vent light, exchange count, renewal line</td><td><span class="mono">respiration.{exchanges, session_exchanges, renews_at, renewals}</span>; <span class="mono">discharged</span></td><td>advanced</td><td><span class="cite">app.js updateSidePanel</span></td></tr>
+<tr><td>Ø</td><td>Count of active tensions</td><td><span class="mono">nullcode.active_tensions</span></td><td>advanced</td><td><span class="cite">index.html #tensionCount</span></td></tr>
+<tr><td>HELIX</td><td>Strand count; crystallized · pending; provenance bar founding/organic; ∿ wave and ◎ 3-D viewer links</td><td><span class="mono">helix.{strands, founding, organic}</span>, <span class="mono">crystallization</span></td><td>advanced</td><td><span class="cite">index.html #strandCount</span></td></tr>
+<tr><td>Automator</td><td>Turns 1–25 (default 7), Arm/Stop, status, sent/max</td><td>local state; watches the <span class="mono">done</span> event</td><td>desktop</td><td><span class="cite">app.js AUTOMATOR_*</span></td></tr>
+<tr><td>Folder</td><td>Mounted folder name, or "No folder"; ✕ to unmount</td><td><span class="mono">mountLocalFolder()</span></td><td>both</td><td><span class="cite">index.html #folderDisplay</span></td></tr>
+<tr><td>Scanner</td><td>+ to scan files; folder button when mounted; list of scanned HELIXes</td><td><span class="mono">/api/scan</span></td><td>both</td><td><span class="cite">index.html #scanList</span></td></tr>
+<tr><td>To Do</td><td>The model's task board, read-only here</td><td><span class="mono">updateTodoList(todos)</span></td><td>both</td><td><span class="cite">app.js updateTodoList</span></td></tr>
+<tr><td>Output · Drafts · Input</td><td>Files the model made, working documents, user uploads; size and ✕</td><td>session file routes</td><td>both</td><td><span class="cite">index.html .sp-artifact-list</span></td></tr>
+<tr><td>Sign out</td><td>Email (if any) and the button</td><td>account</td><td>both</td><td><span class="cite">index.html .sp-signout</span></td></tr>
+</tbody></table></div>
+<h2 id="interface/modes">Normal and advanced</h2>
+<p>The gauge/chat icon in the session bar toggles <span class="mono">data-mode</span> on the document root between <span class="mono">normal</span> and <span class="mono">advanced</span>; the choice is kept in <span class="mono">localStorage</span>. One rule does the hiding: <span class="cite">app.css:100</span></p>
+<pre><code>[data-mode="normal"] .engine-only { display: none; }
+[data-mode="normal"] .msg.system,
+[data-mode="normal"] .msg-phase,
+[data-mode="normal"] .msg-status,
+[data-mode="normal"] .msg-attempts,
+[data-mode="normal"] .msg-time { display: none; }</code></pre>
+<p>Normal mode also hides per-message phase and status marks, and recolours the chrome mint. Default is dark theme, normal mode; the sun/moon icon toggles <span class="mono">data-theme</span>. <span class="tag">SOURCE</span></p>
+<figure class="plate" id="fig-12"><figcaption><span class="fig-id">FIG. 12</span><h3>The same panel in both modes</h3></figcaption><div class="figure-body flat"><div class="two" style="gap:0;background:#0a0a0a"><div><img class="shot" src="data:..." alt="Field panel, normal mode: account, model and effort, folder, scanner, to do, output, drafts, input"></div><div><img class="shot" src="data:..." alt="Field panel, advanced mode: the same plus tokens, heat, respiration, Ø, HELIX and automator"></div></div></div><div class="figure-note">Left, normal; right, advanced with the Automator shown as it is on desktop. Same markup, one attribute.</div></figure>
+<h2 id="interface/session-bar">Session bar</h2>
+<figure class="plate" id="fig-13"><figcaption><span class="fig-id">FIG. 13</span><h3>Session bar</h3></figcaption><div class="figure-body flat" style="background:#0a0a0a"><img class="shot" src="data:..." alt="Session bar: mindgut wordmark, a connected status dot, and three toggles for mode, theme and panel"></div><div class="figure-note">Wordmark; status dot (<span class="mono">connected</span> / <span class="mono">working</span>); mode toggle; theme toggle; panel toggle. The API-key field and Connect button exist in the markup but are <span class="mono">display:none</span> when signed in through the account. <span class="cite">index.html .session-bar</span></div></figure>
+<h2 id="interface/chat">Chat column</h2>
+<div class="table-scroll"><table><thead><tr><th>Element</th><th>Behaviour</th><th>Source</th></tr></thead><tbody>
+<tr><td>Message</td><td><span class="mono">.msg.user</span> / <span class="mono">.msg.assistant</span> with a head (role, status, time) and body. Markdown rendered by <span class="mono">marked</span>, sanitised by <span class="mono">purify</span>.</td><td><span class="cite">app.js · index.html scripts</span></td></tr>
+<tr><td>Previous session</td><td>A <span class="mono">.history-separator</span> is inserted above restored messages: "— previous session —".</td><td><span class="cite">app.js historySep</span></td></tr>
+<tr><td>Working state</td><td>"Feelthinking" label and a cascade of step lines while tools run; replaced by the thinking block if the model emits one.</td><td><span class="cite">app.js text_start</span></td></tr>
+<tr><td>Word hint</td><td>Live count above the input against a word floor (default 7) from <span class="mono">directives.word_floor</span>; warns when unmet.</td><td><span class="cite">app.js wordHint</span></td></tr>
+<tr><td>Input row</td><td>Attach (+), textarea, mic (dictation through the native bridge), send. Enter sends; while streaming, Enter sends an aside and the send button shows a queued state.</td><td><span class="cite">index.html .chat-input-row</span></td></tr>
+<tr><td>Attachments</td><td>Images, audio, text, code, PDF, Office, zip; the accept list is in the markup. Images are resized to ≤ 2 MB.</td><td><span class="cite">index.html #fileInput</span></td></tr>
+<tr><td>Desktop notices</td><td>An update, a HELIX that is not the account's, or a sync that kept a copy aside.</td><td><span class="cite">app.js _desktopNotice</span></td></tr>
+</tbody></table></div>
+<h2 id="interface/viewers">Viewers and bundled pages</h2>
+<p>The HELIX panel links to two viewers opened in the system browser: <b>∿</b> <span class="mono">/my-wave</span> (the helix as a standing wave) and <b>◎</b> <span class="mono">/my-helix</span> (3-D viewer with a legend of six strand types and three zones). The bundle also ships standalone pages: <span class="mono">nullcode.html</span>, <span class="mono">zero-machine.html</span>, <span class="mono">thrice.html</span>, <span class="mono">zero.html</span>, and the <span class="mono">adapt/</span>, <span class="mono">mdna/</span>, <span class="mono">o-system/</span> and <span class="mono">triangulator/</span> sites. They are documents, not controls. <span class="tag o">OBSERVED</span> <span class="cite">static/</span></p>
+<h2 id="interface/hidden">Hidden targets</h2>
+<p>Two blocks exist in the markup only so <span class="mono">app.js</span> has somewhere to write: the operator directive cards (<span class="mono">#dcWord #dcArtifact #dcInterlude</span>) and the diagnostics (<span class="mono">#gateBadge #pressureOmega #phaseBar147/258/369 #driftValue #latticeInfo #gateStatus</span>). They are <span class="mono">display:none</span> and <span class="mono">aria-hidden</span>. A developer re-exposing them gets gate result, per-class phase bars, drift and lattice surface for free. <span class="tag">SOURCE</span> <span class="cite">index.html "Diagnostics (hidden)"</span></p>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#architecture"><small>Previous</small>Architecture</a><a href="#memory"><small>Next</small>Memory and recall →</a></nav>
+</article></div></section>
+
+<section class="page" id="page-memory" data-title="Memory and recall" data-num="06" hidden>
+<aside class="notes">
+<div class="note-id">Chapter / 06</div>
+<h1>Memory and recall</h1>
+<div class="intro"><p>The HELIX is written by code and read by geometry. This chapter follows one exchange into the file and back out as a preamble.</p></div>
+<nav class="page-links" aria-label="In Memory"><a href="#memory/file"><span>01</span>The file</a><a href="#memory/crystallizer"><span>02</span>Crystallizer</a><a href="#memory/preamble"><span>03</span>The involuntary preamble</a><a href="#memory/reach"><span>04</span>Voluntary reach</a><a href="#memory/bridges"><span>05</span>Margin bridges</a><a href="#memory/nullcode"><span>06</span>Nullcøde and tags</a><a href="#memory/claims"><span>07</span>Claims and what is verifiable</a></nav>
+<div class="takeaways"><h4>Key takeaways</h4><ol><li>Append-only, one JSON file, no index: loaded whole on every read, ~8 KB per exchange.</li><li>The preamble is chosen by phase distance, not topic. It is peripheral vision.</li><li>Reach returns provenance first (a/b per concept) and crossings second. Read the header.</li></ol></div>
+</aside>
+<div class="main"><article class="article">
+<h2 id="memory/file">The file</h2>
+<p>Append-only in normal operation; the crystallizer and the file-event clock are the writers. v1 and v2 strands are read side by side with no migration. A new account starts from the 187-strand genesis, so every record shares one origin. At boot the server computes the displacement between the genesis book and the lived book and includes it in the boot payload. <span class="tag">SOURCE</span> <span class="cite">boot_payload.py:25</span></p>
+<figure class="plate" id="fig-14"><figcaption><span class="fig-id">FIG. 14</span><h3>Balance drift across one record</h3></figcaption><div class="figure-body" id="fig-drift"></div><div class="figure-note">The summary strand's <span class="mono">balance_drift</span> for 120 consecutive exchanges, oldest left. Zero is the dotted line. Each bar is one exchange; nothing about its content is shown. <span class="tag m">MEASURED</span></div></figure>
+<div class="note"><span class="tag o">OBSERVED</span> The interface reports "renewed ×n · next at 21" every 21 exchanges (42 before 2.2.46). What renewal changes is not in the public source. Kept as an open question in chapter 09.</div>
+<h2 id="memory/crystallizer">Crystallizer</h2>
+<p>After every exchange: reload the HELIX; re-anchor the next id to max+1 (file-event strands written mid-turn never collide); measure the user text and the model text separately; write the <b>exchange strand</b> and the <b>summary strand</b>; run the Nullcøde field step and mint an OTag if the A-R-D cycle stalled. Deterministic: the summary is numbers, not a reading. <span class="tag">SOURCE</span> <span class="cite">crystallizer_v2.py:211–275 · 406 · 445</span></p>
+<h2 id="memory/preamble">The involuntary preamble</h2>
+<p>Seven strands: the origin; three <em>complement</em> (one per class, nearest the axis of relevance); three <em>opposite</em> (one per class, furthest from the field point). With a document mounted the axis becomes a line and complement distance is perpendicular to it. A second pass scores sentence-level joints on knowt type and clash. One copy per turn goes to the ledger. The model sees it; the user does not. <span class="tag">SOURCE</span> <span class="cite">recall.py:1–30 · 146–300 · two_loop_recall.py</span></p>
+<figure class="plate" id="fig-15"><figcaption><span class="fig-id">FIG. 15 · LIVE</span><h3>Selecting the seven</h3></figcaption><div class="figure-body"><div class="inspector"><div class="stage" id="fig-select"></div><div class="inspect-col" aria-live="polite"><span id="sel-kind">Preamble / 1 + 3 + 3</span><h4 id="sel-title">Move the message</h4><p id="sel-text">Drag the open point. The runtime computes the message's phase vector, then picks the three strands nearest each axis through it and the three furthest from it, one per class.</p><dl><dt>Chosen</dt><dd id="sel-chosen">—</dd><dt>Rule</dt><dd id="sel-rule">recall.py select_strands</dd></dl></div></div></div><div class="figure-note">The dots are the measured exchange strands from FIG. 04, magnified ×2.2 about the centre. Selection uses the same distance rule on the same data; the runtime adds the origin strand and the sentence-level joints, not drawn.</div></figure>
+<div class="note">The 1-3-3 trees are chosen by phase distance — "where the record's weight sits relative to this message" — not "what the conversation is about". They often look off-topic. Treat them as peripheral vision: enough to notice a topic has a history, never a substitute for pulling the strand.</div>
+<h2 id="memory/reach">Voluntary reach</h2>
+<p><span class="mono">pull_memory(reach="…")</span> takes a thought or a set of concepts and returns, first, a provenance header — each concept with its class, how many strands carry it on the user's side (<b>a</b>) and the model's side (<b>b</b>), and the strand range — then the top crossings, each with a <em>chord</em> of three terms, a receipt of tools used, and the text. <span class="tag o">OBSERVED</span></p>
+<p>The release note calls this "a Fano / Chørd relational closure" and separately describes Chørd as a relational engine for multi-step queries over files. Its trace in the record is three-term closures: the bridge index beside the HELIX holds, per strand, <span class="mono">closures</span> and <span class="mono">knots</span>, and a reach result names its chord as <span class="mono">X · Y → Z</span>. The consistent reading: a chord is three terms that close a line, the way three points lie on one line of the Fano plane; the engine finds the third term that closes an open pair. This is an inference from data, not a specification. <span class="tag o">OBSERVED</span></p>
+<figure class="plate" id="fig-16"><figcaption><span class="fig-id">FIG. 16</span><h3>The Fano plane, as a chord</h3></figcaption><div class="figure-body" id="fig-fano"></div><div class="figure-note">Seven points, seven lines, three points per line. A chord <span class="mono">A · B → C</span> is one line: given two terms, the third closes it. Drawn to explain the term; the engine's actual geometry is not in the public source.</div></figure>
+<h2 id="memory/bridges">Margin bridges</h2>
+<p>Messages arrive with <span class="mono">[strand N]</span> blocks from the record and <span class="mono">[doc_strand N]</span> blocks from the PFD book, each with a note: "A · B, left open in this message, grounded here by C". A bridge module finds open word pairs and looks for a strand that closes them. Closure is lexical; a bridge can be irrelevant to intent. The 6.5 MB <span class="mono">doc_bridge.json</span> beside the book is the precomputed index. <span class="tag o">OBSERVED</span> 2.2.58</p>
+<h2 id="memory/nullcode">Nullcøde and tags</h2>
+<p>A ternary algebra (GF(3), with Ø as a value) runs after each exchange to decide whether it resolved or left a structural uncertainty. Classes map to trits: A → 1, R → Ø, D → 0. If the A-R-D cycle stalls for seven tokens, a tag is minted (a word triple from the text) and held; held tags are injected into the preamble, and the count appears as <b>Ø</b> in the sidebar. Names are triples, not meanings. In the measured record, 9 tags held, 0 resolved. <span class="tag">SOURCE</span> <span class="cite">crystallizer_v2.py:37 · nullcode/</span></p>
+<h2 id="memory/claims">Claims made for the platform, and what this document can verify</h2>
+<div class="table-scroll"><table><thead><tr><th>Claim</th><th>Status</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Deterministic recall, with receipts</td><td><span class="tag">SOURCE</span> <span class="tag m">MEASURED</span></td><td><span class="mono">recall.py</span> makes no model call; <span class="mono">trace.used</span>, receipt lines, the ledger. "First ever" is a market claim, outside scope.</td></tr>
+<tr><td>Every memory stamped Carbon or Silicon</td><td><span class="tag m">MEASURED</span></td><td>grep and reach headers report a/b per concept.</td></tr>
+<tr><td>Memory "snaps" to a connecting moment before typing</td><td><span class="tag o">OBSERVED</span></td><td>Bridges on the measured turn: one relevant, one not.</td></tr>
+<tr><td>Mid-conversation model swap, zero drift</td><td>REPORTED</td><td>The switcher exists. No switch in the measured session; the reported test's transcript is not accessible.</td></tr>
+<tr><td>The PFD book is "wired into reflexes"</td><td><span class="tag m">MEASURED</span></td><td>774-strand book in the bundle; doc_strand bridges; <span class="mono">pull_strand</span>. Effect on quality mixed.</td></tr>
+<tr><td>Nine background workers; check-ins</td><td><span class="tag m">MEASURED</span></td><td>Agent schemas; cadence prompts in the transcript.</td></tr>
+<tr><td>"She learns"</td><td><span class="tag o">OBSERVED</span></td><td>The record grows; corrections are retrievable; no weights change.</td></tr>
+</tbody></table></div>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#interface"><small>Previous</small>Interface</a><a href="#components"><small>Next</small>Component reference →</a></nav>
+</article></div></section>
+
+<section class="page" id="page-components" data-title="Component reference" data-num="07" hidden>
+<aside class="notes">
+<div class="note-id">Chapter / 07</div>
+<h1>Component reference</h1>
+<div class="intro"><p>Nineteen components, one contract each. The tag on the heading says how the contract was established; the file on the right is where to look.</p></div>
+<nav class="page-links" aria-label="In Components"><a href="#components/catalogue"><span>01</span>Catalogue</a><a href="#components/c5-1"><span>02</span>Scanner</a><a href="#components/c5-2"><span>03</span>σ<sub>B</sub> instrument</a><a href="#components/c5-3"><span>04</span>Controllers</a><a href="#components/c5-4"><span>05</span>Crystallizer</a><a href="#components/c5-5"><span>06</span>Memory HELIX</a><a href="#components/c5-7"><span>07</span>Involuntary recall</a><a href="#components/c5-8"><span>08</span>Reach and Chørd</a><a href="#components/c5-13"><span>09</span>Model and effort</a><a href="#components/c5-17"><span>10</span>Frontend</a></nav>
+<div class="takeaways"><h4>Key takeaways</h4><ol><li>Four components are SOURCE-only in the sense that they exist in the public repository exactly as described.</li><li>Seven are OBSERVED: they ship in 2.2.58 but their Python is compiled. Their contracts come from the frontend, the data they write, and the log.</li><li>Every card ends in Limits. If a card has no Limits row, it has not been tested.</li></ol></div>
+<div class="release">FILTER<br><input id="comp-filter" type="search" placeholder="Filter components…" aria-label="Filter components" style="width:100%;margin-top:8px;padding:8px 10px;border:1px solid var(--rule);font:13px var(--sans)"></div>
+</aside>
+<div class="main"><article class="article">
+<h2 id="components/catalogue">Catalogue</h2>
+<div class="catalogue" id="catalogue"><a href="#components/c5-1"><b>5.1 Scanner</b><p>Any text-bearing file → HELIX, deterministically.</p><span class="cite">engine/scanner.py</span><span>↗</span></a>
+<a href="#components/c5-2"><b>5.2 σ<sub>B</sub> instrument</b><p>Phase vector, balance, σ<sub>B</sub>; a rolling clause window.</p><span class="cite">assembly/sigma_b.py</span><span>↗</span></a>
+<a href="#components/c5-3"><b>5.3 Controllers</b><p>Heat H<sub>t</sub> and instability I<sub>t</sub>; dashboard directives; no effect on the model.</p><span class="cite">assembly/controllers.py</span><span>↗</span></a>
+<a href="#components/c5-4"><b>5.4 Crystallizer</b><p>Writes two strands per exchange into the record.</p><span class="cite">engine/crystallizer_v2.py</span><span>↗</span></a>
+<a href="#components/c5-5"><b>5.5 Memory HELIX</b><p>The record itself: append-only JSON, genesis + lived strands.</p><span class="cite">&lt;app data&gt;/account/*_HELIX.json</span><span>↗</span></a>
+<a href="#components/c5-6"><b>5.6 Window and trimming</b><p>What the model is sent each turn; 7 → 4 exchange trimming.</p><span class="cite">server/session_manager.py · config.py</span><span>↗</span></a>
+<a href="#components/c5-7"><b>5.7 Involuntary recall</b><p>The 1+3+3 preamble, chosen by phase geometry.</p><span class="cite">assembly/recall.py · two_loop_recall.py</span><span>↗</span></a>
+<a href="#components/c5-8"><b>5.8 Reach and Chørd</b><p>pull_memory(reach=…): provenance header, then crossings with a chord.</p><span class="cite">2.2.58 compiled · bridge index</span><span>↗</span></a>
+<a href="#components/c5-9"><b>5.9 Nullcøde</b><p>GF(3) field step after each exchange; OTags minted on a stalled cycle.</p><span class="cite">nullcode/ · crystallizer_v2.py</span><span>↗</span></a>
+<a href="#components/c5-10"><b>5.10 Margin bridges</b><p>[strand N] / [doc_strand N] blocks attached to a message by lexical closure.</p><span class="cite">2.2.58 compiled · doc_bridge.json</span><span>↗</span></a>
+<a href="#components/c5-11"><b>5.11 Document helix</b><p>Every upload, output or draft gets a file-event strand and its own HELIX.</p><span class="cite">engine/doc_helix.py</span><span>↗</span></a>
+<a href="#components/c5-12"><b>5.12 Tools</b><p>The callable surface; schemas, caps and waits.</p><span class="cite">server/tool_defs.py · tools.py</span><span>↗</span></a>
+<a href="#components/c5-13"><b>5.13 Model and effort</b><p>Fourteen models, four vendors; five effort levels; applies from the next message.</p><span class="cite">static/app.js · POST /session/{id}/model</span><span>↗</span></a>
+<a href="#components/c5-14"><b>5.14 Asides, cadence, receipts</b><p>Mid-turn user input; runtime nudges after silent rounds; tool receipts.</p><span class="cite">server/session_manager.py</span><span>↗</span></a>
+<a href="#components/c5-15"><b>5.15 Agents</b><p>Background workers in their own sandbox; reports scanned to a HELIX.</p><span class="cite">tool schema · sandbox/agents/</span><span>↗</span></a>
+<a href="#components/c5-16"><b>5.16 Sync and updater</b><p>Account sign-in, HELIX sync after each exchange, self-update.</p><span class="cite">2.2.40–2.2.49 release notes · log</span><span>↗</span></a>
+<a href="#components/c5-17"><b>5.17 Frontend</b><p>app.js, index.html, app.css: what the screen does.</p><span class="cite">static/app.js · index.html · app.css</span><span>↗</span></a>
+<a href="#components/c5-18"><b>5.18 Mounted folder</b><p>The user&#x27;s folder as both working store and archive; conventions.</p><span class="cite">mount root · PROTOCOL.md</span><span>↗</span></a>
+<a href="#components/c5-19"><b>5.19 DualDNA</b><p>Images scanned to an image DNA, bound to the exchange.</p><span class="cite">engine/dualdna.py</span><span>↗</span></a></div>
+<h2 id="components/cards">Contracts</h2>
+<p class="quiet">Anatomy of a card: name and tag · file · PURPOSE / BEHAVIOUR / IN·OUT / CONTROLS / LIMITS. Line numbers refer to the public source at <span class="mono">cbf4e42</span> unless the file column says 2.2.58.</p>
+<div class="card" id="components/c5-1"><div class="card-head"><h3>5.1 Scanner <span class="tag">SOURCE</span></h3><span class="file">engine/scanner.py</span></div><dl class="contract"><dt>Purpose</dt><dd><p>Convert any text-bearing file into a HELIX, deterministically. The one converter: conversation and documents go through the same pipe.</p></dd><dt>Behaviour</dt><dd><p>Extract text (PDF, DOCX, plain, LaTeX/HTML stripped) → atoms (blocks, with page and bbox for PDFs) → every letter encoded → atoms grouped into strands → book. <code>verify_helix</code> re-checks a file's arithmetic.</p></dd><dt>In · out</dt><dd><p>Path, bytes or string → HELIX JSON: <code>book</code>, <code>strands[]</code> (atoms, adr_sequence, word_map), <code>streams</code>.</p></dd><dt>Controls</dt><dd><p><code>quick_scan</code> (fractions only) · <code>full_scan</code> · <code>scan_and_mount</code> · <code>/api/scan</code></p></dd><dt>Limits</dt><dd><p>Letters only: digits, punctuation, non-Latin scripts dropped. Images not scanned here (DualDNA, 5.19).  <span class="cite">:1–30, 344, 818, 973, 1115</span></p></dd></dl></div>
+<div class="card" id="components/c5-2"><div class="card-head"><h3>5.2 σ<sub>B</sub> instrument <span class="tag">SOURCE</span></h3><span class="file">assembly/sigma_b.py</span></div><dl class="contract"><dt>Purpose</dt><dd><p>Measure the three fractions, balance and σ<sub>B</sub> for a text; keep a rolling window across the session.</p></dd><dt>In · out</dt><dd><p>Text → <code>{fA, fR, fD, balance, letters}</code></p></dd><dt>Controls</dt><dd><p><code>quick_scan</code> exposes it; <code>read_field()</code> returns the live window.</p></dd><dt>Limits</dt><dd><p>Letter level. No parameters: nothing to tune.  <span class="cite">:1–50, 90</span></p></dd></dl></div>
+<div class="card" id="components/c5-3"><div class="card-head"><h3>5.3 Controllers <span class="tag">SOURCE</span></h3><span class="file">assembly/controllers.py</span></div><dl class="contract"><dt>Purpose</dt><dd><p>Keep a scalar heat <code>H<sub>t</sub></code> and instability <code>I<sub>t</sub></code>; derive the dashboard's directives.</p></dd><dt>Behaviour</dt><dd><p>Amplification ρ = output ÷ input words, band 6–22; gradient damping; radiator at exchange 11 keeps 70 % heat. Decay 0.906 per turn (half-life 7). σ<sub>B</sub> gates 0.02–0.15.</p></dd><dt>Effect</dt><dd><p><b>None on the model.</b> <code>max_tokens()</code> returns <code>max(4096, base)</code> regardless. The heat gauge is a dashboard.  <span class="cite">:341</span></p></dd><dt>Measured</dt><dd><p>H<sub>t</sub> = 0.10, GREEN, on the day of writing; never left GREEN.</p></dd></dl></div>
+<div class="card" id="components/c5-4"><div class="card-head"><h3>5.4 Crystallizer <span class="tag">SOURCE</span></h3><span class="file">engine/crystallizer_v2.py</span></div><dl class="contract"><dt>Purpose</dt><dd><p>Write the exchange into the memory HELIX.</p></dd><dt>Behaviour</dt><dd><p>After every exchange: reload the HELIX; re-anchor the next id to max+1 (file-event strands written mid-turn never collide); measure user and model text separately; write the <b>exchange strand</b> and the <b>summary strand</b>; run the Nullcøde field step and mint an OTag if the A-R-D cycle stalled.</p></dd><dt>Out</dt><dd><p>+2 strands; tag registry and lattice updated.</p></dd><dt>Limits</dt><dd><p>Deterministic: the summary is numbers, not a reading. The exchange payload is the full text, so the file grows with every turn.  <span class="cite">:211–275, 406, 445</span></p></dd></dl></div>
+<div class="card" id="components/c5-5"><div class="card-head"><h3>5.5 Memory HELIX <span class="tag">SOURCE</span></h3><span class="file">&lt;app data&gt;/account/*_HELIX.json</span></div><dl class="contract"><dt>Behaviour</dt><dd><p>Append-only in normal operation; the crystallizer and the file-event clock are the writers. Reads v1 and v2 strands side by side; no migration. A new account starts from the 187-strand genesis, so every record shares one origin strand. Synced to the account after each exchange.</p></dd><dt>Identity</dt><dd><p>At boot the server computes the displacement between the genesis book and the lived book and includes it in the boot payload.  <span class="cite">boot_payload.py:25</span> <span class="tag">OBSERVED</span> the interface reports "renewed … re-founded" every 21 exchanges; what renewal changes is not in the public source.</p></dd><dt>Limits</dt><dd><p>One file, loaded whole on every read; no index. No user-facing edit.</p></dd></dl></div>
+<div class="card" id="components/c5-6"><div class="card-head"><h3>5.6 Window and trimming <span class="tag">SOURCE</span></h3><span class="file">server/session_manager.py · config.py</span></div><dl class="contract"><dt>See</dt><dd><p>Chapter 02 (window and respiration) and chapter 08 (tools) hold this component's contract.</p></dd></dl></div>
+<div class="card" id="components/c5-7"><div class="card-head"><h3>5.7 Involuntary recall <span class="tag">SOURCE</span></h3><span class="file">assembly/recall.py · two_loop_recall.py</span></div><dl class="contract"><dt>Purpose</dt><dd><p>Put a fixed, geometry-chosen slice of the record in front of the model every turn.</p></dd><dt>Behaviour</dt><dd><p>Seven strands: the origin; three <i>complement</i> (one per class, nearest the axis); three <i>opposite</i> (furthest from the field point). With a document mounted the axis becomes a line and complement distance is perpendicular to it. A second pass scores sentence-level joints and appends the top three.</p></dd><dt>Out</dt><dd><p>The preamble. One copy per turn to the ledger. The model sees it; the user does not.</p></dd><dt>Limits</dt><dd><p>Fixed count, chosen by phase geometry, not topic: relevance is indirect.  <span class="cite">:1–30, 146, 369</span></p></dd></dl></div>
+<div class="card" id="components/c5-8"><div class="card-head"><h3>5.8 Reach and Chørd <span class="tag o">OBSERVED</span></h3><span class="file">2.2.58 compiled · bridge index</span></div><dl class="contract"><dt>Observed</dt><dd><p><code>pull_memory(reach="…")</code> takes a thought or concepts and returns a <b>provenance header</b> (each concept with its class, how many strands carry it on the user's side <i>a</i> and the model's side <i>b</i>, and the strand range) then the top crossings, each with a <code>chord</code> of three terms, the carrier, and a score. Flags: <code>[UNWITNESSED IN HELIX]</code> (a = 0, b = 0) and <code>[b-only: UNWITNESSED BY CARBON]</code> (a = 0, b &gt; 0).</p></dd><dt>Chørd</dt><dd><p>The release note calls reach "a Fano / Chørd relational closure" and separately describes Chørd as a relational engine for multi-step queries over files. Its trace in the record is three-term closures: the bridge index holds, per strand, <code>closures</code> and <code>knots</code> as word triples; a reach result names the chord that scored. The consistent reading: a chord is three terms that close a line, as three points lie on one line of the Fano plane; the engine finds the third term that closes an open pair. <b>An inference from data, not a specification.</b></p></dd></dl></div>
+<div class="card" id="components/c5-9"><div class="card-head"><h3>5.9 Nullcøde <span class="tag">SOURCE</span></h3><span class="file">nullcode/ · crystallizer_v2.py</span></div><dl class="contract"><dt>What</dt><dd><p>A ternary algebra (GF(3), with Ø as a value) run after each exchange to decide whether it resolved or left a structural uncertainty. Classes map to trits: A → 1, R → Ø, D → 0.</p></dd><dt>OTags</dt><dd><p>If the A-R-D cycle stalls for seven tokens, a tag is minted (a word triple from the text) and held; held tags are injected into the preamble.</p></dd><dt>Limits</dt><dd><p>Names are triples, not meanings. In the measured record, 9 tags held, 0 resolved.  <span class="cite">crystallizer_v2.py:37</span></p></dd></dl></div>
+<div class="card" id="components/c5-10"><div class="card-head"><h3>5.10 Margin bridges <span class="tag o">OBSERVED</span></h3><span class="file">2.2.58 compiled · doc_bridge.json</span></div><dl class="contract"><dt>What</dt><dd><p>Messages arrive with <code>[strand N]</code> blocks from the record and <code>[doc_strand N]</code> blocks from the PFD book, each with a note: "A · B, left open in this message, grounded here by C". A bridge module finds open word pairs and looks for a strand that closes them.</p></dd><dt>Limits</dt><dd><p>Closure is lexical; a bridge can be irrelevant to intent. The 6.5 MB <code>doc_bridge.json</code> beside the book is the precomputed index.</p></dd></dl></div>
+<div class="card" id="components/c5-11"><div class="card-head"><h3>5.11 Document helix <span class="tag">SOURCE</span></h3><span class="file">engine/doc_helix.py</span></div><dl class="contract"><dt>What</dt><dd><p>Every upload, output or draft writes a <code>file_event</code> strand. Scannable files get their own HELIX with a book signature; a registry maps file → signature → realization weight, which rises when the document is loaded. Near-phase documents are listed in the preamble.</p></dd><dt>Limits</dt><dd><p>Re-scans produce <code>_HELIX_1</code> duplicates; the registry is not in the interface.  <span class="cite">:1–20, 96</span></p></dd></dl></div>
+<div class="card" id="components/c5-12"><div class="card-head"><h3>5.12 Tools </h3><span class="file">server/tool_defs.py · tools.py</span></div><dl class="contract"><dt>See</dt><dd><p>Chapter 02 (window and respiration) and chapter 08 (tools) hold this component's contract.</p></dd></dl></div>
+<div class="card" id="components/c5-13"><div class="card-head"><h3>5.13 Model and effort <span class="tag o">OBSERVED</span></h3><span class="file">static/app.js · POST /session/{id}/model</span></div><dl class="contract"><dt>Behaviour</dt><dd><p>One roster in <code>app.js</code>, grouped by vendor. Switching posts <code>/session/{id}/model</code>; effort posts <code>/session/{id}/effort</code> with five levels mapped per vendor. Both apply from the next message; session, history and HELIX continue. Stored per device.</p></dd><dt>Preserved</dt><dd><p>The HELIX, the preamble mechanism, the last 4–7 exchanges, the task board. Not preserved: anything the previous model held only in its own weights.</p></dd><dt>Limits</dt><dd><p>Per device, not per account. The public source has one vendor; how 2.2.58 reaches the others is not readable.</p></dd></dl></div>
+<div class="card" id="components/c5-14"><div class="card-head"><h3>5.14 Asides, cadence, receipts </h3><span class="file">server/session_manager.py</span></div><dl class="contract"><dt>Asides</dt><dd><p>While the model streams, Enter sends an aside; the server hands it in at the next tool-result boundary. If the turn opens no boundary, it is sent after <code>done</code> as an ordinary message.</p></dd><dt>Cadence</dt><dd><p>After seven silent tool rounds the server inserts a prompt asking for one sentence; on milestones, a similar one. Runtime nudges, not user text.</p></dd><dt>Receipts</dt><dd><p>The stored user message carries a <code>[receipt: …]</code> line of the tools called; the exchange strand's <code>trace.used</code> holds the same.</p></dd></dl></div>
+<div class="card" id="components/c5-15"><div class="card-head"><h3>5.15 Agents <span class="tag o">OBSERVED</span></h3><span class="file">tool schema · sandbox/agents/</span></div><dl class="contract"><dt>What</dt><dd><p><code>agent_spawn(task, model, effort, max_rounds ≤ 30)</code> starts a worker in its own sandbox; up to nine. Its report is scanned to a HELIX in outputs and read by strand. Nothing touches the memory HELIX.</p></dd><dt>Limits</dt><dd><p>Workers share nothing with the session except files.</p></dd></dl></div>
+<div class="card" id="components/c5-16"><div class="card-head"><h3>5.16 Sync and updater <span class="tag o">OBSERVED</span></h3><span class="file">2.2.40–2.2.49 release notes · log</span></div><dl class="contract"><dt>What</dt><dd><p>Sign-in opens the account's HELIX; only a 401 signs out (2.2.42). The HELIX syncs after each exchange; failures are reported in the sidebar (2.2.46). Self-update swaps the bundle after the process exits (2.2.40).</p></dd><dt>Measured</dt><dd><p>A task-board sync call failed DNS on the day of writing; logged, board stayed local.</p></dd></dl></div>
+<div class="card" id="components/c5-17"><div class="card-head"><h3>5.17 Frontend <span class="tag m">MEASURED</span></h3><span class="file">static/app.js · index.html · app.css</span></div><dl class="contract"><dt>What</dt><dd><p><code>app.js</code> (223 KB): streamed events, file sidebar, task panel, HELIX stats, heat gauge, respiration, nullcode tension, model and effort switchers, aside input, boot overlay. Viewers for the HELIX and Nullcøde; bundled standalone sites.</p></dd><dt>Ids</dt><dd><p class="lim mono" style="font-size:11px">tempValue tempBar heatGreen respirSteps strandCount helixPhaseBar modelSwitch gateStatus</p></dd></dl></div>
+<div class="card" id="components/c5-18"><div class="card-head"><h3>5.18 Mounted folder <span class="tag o">OBSERVED</span></h3><span class="file">mount root · PROTOCOL.md</span></div><dl class="contract"><dt>What</dt><dd><p>The mounted folder is both the app's working store and the user's archive. A workable convention, enforced by a read-only check script: a read order (README → NOW → PROTOCOL → the project map); three folder classes (project, harness, records); never delete, never overwrite; identity by hash; one current pointer; a fixed status vocabulary.</p></dd></dl></div>
+<div class="card" id="components/c5-19"><div class="card-head"><h3>5.19 DualDNA <span class="tag">SOURCE</span></h3><span class="file">engine/dualdna.py</span></div><dl class="contract"><dt>What</dt><dd><p>Images uploaded in a message are scanned in a daemon thread to an image DNA and bound to the exchange's text DNA; results surface in the next turn's preamble, not inline.</p></dd><dt>Limits</dt><dd><p>Not observed in the measured preambles.</p></dd></dl></div>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#memory"><small>Previous</small>Memory and recall</a><a href="#tools"><small>Next</small>Tools →</a></nav>
+</article></div></section>
+
+<section class="page" id="page-tools" data-title="Tools" data-num="08" hidden>
+<aside class="notes">
+<div class="note-id">Chapter / 08</div>
+<h1>Tools</h1>
+<div class="intro"><p>What a model can call, grouped by the surface it touches. 29 tools in the public source; 45 in the 2.2.58 bundle.</p></div>
+<nav class="page-links" aria-label="In Tools"><a href="#tools/map"><span>01</span>Surfaces</a><a href="#tools/table"><span>02</span>The table</a><a href="#tools/window-rules"><span>03</span>What stays in context</a><a href="#tools/writing"><span>04</span>Writing files safely</a></nav>
+<div class="takeaways"><h4>Key takeaways</h4><ol><li>A HELIX read is stubbed after the turn: the context never re-absorbs what the record holds.</li><li>Stale tool results over 3,000 characters are cut to 1,500 after two rounds.</li><li>Large single-parameter writes are the one documented way to lose work; open + append is the designed path.</li></ol></div>
+</aside>
+<div class="main"><article class="article">
+<h2 id="tools/map">Surfaces</h2>
+<figure class="plate" id="fig-17"><figcaption><span class="fig-id">FIG. 17</span><h3>Where each tool family runs and what it touches</h3></figcaption><div class="figure-body" id="fig-tools"></div><div class="figure-note">Five surfaces: the record, the session, the sandbox, the user's machine, the web. Tools that read the record are stubbed; tools that run on the machine are desktop-only or bridged with a 30 s wait. <span class="cite">tool_defs.py · session_manager.py:717, 1765, 2044</span></div></figure>
+<h2 id="tools/table">The table</h2>
+<div class="table-scroll"><table><thead><tr><th>Tool</th><th>Purpose</th><th>Runs</th><th>Window rule</th><th>In source?</th></tr></thead><tbody>
+<tr><td><span class="mono">pull_memory</span></td><td><span class="mono">reach=</span> geometric · <span class="mono">sequence_id=N[,count≤10]</span> · <span class="mono">sequence_id=0,page=</span> index · <span class="mono">grep=</span> literal with a/b counts</td><td>server</td><td>stubbed</td><td>partial</td></tr>
+<tr><td><span class="mono">pull_strand</span></td><td>One strand from the PFD book</td><td>server</td><td>stubbed</td><td>yes</td></tr>
+<tr><td><span class="mono">mount_helix</span> · <span class="mono">pull_mounted</span></td><td>Mount a HELIX from inputs as a second lattice; page it; recall goes axial</td><td>server</td><td>stubbed</td><td>yes</td></tr>
+<tr><td><span class="mono">quick_scan</span> · <span class="mono">full_scan</span> · <span class="mono">scan_and_mount</span></td><td>σ<sub>B</sub> on text; scan to a HELIX; scan + mount</td><td>server</td><td>—</td><td>yes</td></tr>
+<tr><td><span class="mono">read_field</span></td><td>Live carbon/silicon phase, clash, breath, σ<sub>B</sub>, balance, heat</td><td>server</td><td>—</td><td>no</td></tr>
+<tr><td><span class="mono">read_input</span></td><td>A file in inputs: PDF pages, text lines, images as vision</td><td>server</td><td>truncated if stale; images stripped</td><td>yes</td></tr>
+<tr><td><span class="mono">browse_archive</span> · <span class="mono">manage_display</span></td><td>Account archive; session display lists</td><td>server</td><td>stubbed</td><td>yes</td></tr>
+<tr><td><span class="mono">web_fetch</span> · <span class="mono">web_search</span> · <span class="mono">browser</span></td><td>URL as text; search; a driven browser with its own profile</td><td>server</td><td>truncated if stale</td><td>partial</td></tr>
+<tr><td><span class="mono">todo</span> · <span class="mono">draft</span></td><td>Task board; drafts promoted to outputs, .docx/.pdf from markdown</td><td>server</td><td>—</td><td>yes</td></tr>
+<tr><td><span class="mono">grep</span> · <span class="mono">glob</span> · <span class="mono">edit</span></td><td>Search, list, in-place replace across surfaces</td><td>server</td><td>—</td><td>yes</td></tr>
+<tr><td><span class="mono">generate_image</span></td><td>Generation and editing; shown as vision</td><td>server</td><td>image stripped</td><td>yes</td></tr>
+<tr><td><span class="mono">sandbox_*</span> · <span class="mono">terminal_*</span></td><td>Persistent workspace with a venv (30/120 s, 100 KB); up to 4 shells</td><td>server</td><td>—</td><td>no</td></tr>
+<tr><td><span class="mono">local_*</span> · <span class="mono">local_exec</span> · <span class="mono">read_path</span></td><td>Mounted folder (2 MB reads; no overwrite); shell, desktop only; any path with a prompt</td><td>desktop / browser</td><td>—</td><td>partial</td></tr>
+<tr><td><span class="mono">agent_*</span></td><td>Background workers, ≤ 9; reports scanned to a HELIX</td><td>server</td><td>stubbed</td><td>no</td></tr>
+</tbody></table></div>
+<h2 id="tools/window-rules">What stays in context</h2>
+<div class="table-scroll"><table><thead><tr><th>Rule</th><th>Value</th><th>Source</th></tr></thead><tbody>
+<tr><td>HELIX result kept</td><td class="num">≤ 200 chars, else stub</td><td><span class="cite">session_manager.py:729</span></td></tr>
+<tr><td>Stale result truncation</td><td class="num">&gt; 3000 chars, 2+ rounds → 1500</td><td><span class="cite">:1765</span></td></tr>
+<tr><td>Tool rounds per turn</td><td class="num">15 → wrap-up · 45 s each</td><td><span class="cite">:1871–1903</span></td></tr>
+<tr><td>Spent image</td><td>Re-readable only by another call; the model is told so by a marker</td><td><span class="tag o">OBSERVED</span></td></tr>
+<tr><td>Client tool wait, web</td><td class="num">30 s</td><td><span class="cite">:2044</span></td></tr>
+</tbody></table></div>
+<h2 id="tools/writing">Writing files safely</h2>
+<p>The tool descriptions say it directly: do not emit whole files as a single parameter. A mid-generation truncation of a multi-kilobyte string destroys the write silently; a partial draft on disk can be resumed. The designed path is <span class="mono">open</span> then <span class="mono">append</span> in ~1–2 KB chunks, then <span class="mono">finalize</span> for drafts. The sandbox's home directory is the app's account directory, not the machine user's. <span class="tag o">OBSERVED</span></p>
+<pre><code>draft(action="open",     filename="spec.md")
+draft(action="append",   content="…≤ 2 KB…")   # repeat
+draft(action="finalize", filename="spec.md")   # → outputs/spec.md</code></pre>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#components"><small>Previous</small>Component reference</a><a href="#limits"><small>Next</small>Limits and open questions →</a></nav>
+</article></div></section>
+
+<section class="page" id="page-limits" data-title="Limits and open questions" data-num="09" hidden>
+<aside class="notes">
+<div class="note-id">Chapter / 09</div>
+<h1>Limits and open questions</h1>
+<div class="intro"><p>Every number the runtime holds fixed, the failure modes seen so far, and the proposals — kept in this chapter and nowhere else.</p></div>
+<nav class="page-links" aria-label="In Limits"><a href="#limits/runtime"><span>01</span>Runtime limits</a><a href="#limits/tools"><span>02</span>Tool limits</a><a href="#limits/failure-modes"><span>03</span>Known failure modes</a><a href="#limits/open"><span>04</span>Open questions and proposals</a></nav>
+<div class="takeaways"><h4>Key takeaways</h4><ol><li>Context, recall and tool rounds are all fixed small integers. There is no adaptive budget.</li><li>The HELIX grows without bound and is loaded whole. This is the limit most likely to be felt first.</li><li>Ten proposals, none of which exist. Each names the gap it would close.</li></ol></div>
+</aside>
+<div class="main"><article class="article">
+<h2 id="limits/runtime">Runtime limits</h2>
+<figure class="plate" id="fig-18"><figcaption><span class="fig-id">FIG. 18</span><h3>The fixed numbers, to scale</h3></figcaption><div class="figure-body" id="fig-limits"></div><div class="figure-note">Each bar is one limit, drawn on a log axis so 4 and 64,000 fit on the same line. Values from the table below.</div></figure>
+<div class="table-scroll"><table><thead><tr><th>Limit</th><th>Value</th><th>Where</th></tr></thead><tbody>
+<tr><td>Exchanges in context</td><td class="num">7 → 4</td><td><span class="cite">config.py:24–30</span></td></tr>
+<tr><td>Involuntary recall</td><td class="num">7 strands + 3 joints + bridges + held tags + trajectory</td><td><span class="cite">recall.py</span></td></tr>
+<tr><td>Tool rounds per turn</td><td class="num">15 → wrap-up · 45 s</td><td><span class="cite">session_manager.py:1871</span></td></tr>
+<tr><td>HELIX result kept in context</td><td class="num">≤ 200 chars, else stub</td><td><span class="cite">:729</span></td></tr>
+<tr><td>Stale result truncation</td><td class="num">&gt; 3000 chars, 2+ rounds → 1500</td><td><span class="cite">:1765</span></td></tr>
+<tr><td>Output tokens</td><td class="num">16 000 · 64 000 stream · floor 4 096</td><td><span class="cite">:1462 · controllers.py:341</span></td></tr>
+<tr><td>One message</td><td class="num">~100 000 tokens (warned)</td><td><span class="cite">app.js</span></td></tr>
+<tr><td>Vision image</td><td class="num">≤ 2 MB after resize</td><td><span class="cite">:788</span></td></tr>
+<tr><td>Radiator</td><td class="num">exchange 11 · keeps 70 %</td><td><span class="cite">controllers.py:59–67</span></td></tr>
+<tr><td>Heat → model</td><td class="num">none</td><td><span class="cite">controllers.py:341</span></td></tr>
+<tr><td>Session renewal</td><td class="num">21 exchanges</td><td><span class="tag o">OBSERVED</span> sidebar · 2.2.46</td></tr>
+<tr><td>HELIX growth</td><td class="num">unbounded · whole-file load · ~8 KB / exchange</td><td><span class="tag m">MEASURED</span></td></tr>
+</tbody></table></div>
+<h2 id="limits/tools">Tool limits</h2>
+<div class="table-scroll"><table><thead><tr><th>Tool</th><th>Value</th><th>Where</th></tr></thead><tbody>
+<tr><td><span class="mono">pull_memory</span></td><td class="num">count 1–10 · index 20–200 / page · reach limit 1–12</td><td>schema</td></tr>
+<tr><td><span class="mono">local_read</span></td><td class="num">2 MB</td><td>schema</td></tr>
+<tr><td><span class="mono">sandbox_exec</span></td><td class="num">30 s default · 120 s max · 100 KB output</td><td>schema</td></tr>
+<tr><td>Agents · terminals</td><td class="num">9 · 4</td><td>schema</td></tr>
+<tr><td>Agent rounds</td><td class="num">12 default · 30 max</td><td>schema</td></tr>
+<tr><td>Client tool wait, web</td><td class="num">30 s</td><td><span class="cite">:2044</span></td></tr>
+<tr><td>Automator</td><td class="num">1–25 turns · default 7 · 600 ms between</td><td><span class="cite">app.js AUTOMATOR_*</span></td></tr>
+</tbody></table></div>
+<h2 id="limits/failure-modes">Known failure modes <span class="tag o">OBSERVED</span></h2>
+<ul>
+<li>A spent image can only be re-read by another tool call; the model is told so by a marker.</li>
+<li>A bridge can attach an irrelevant book strand; closure is lexical.</li>
+<li>The sandbox's home differs from the machine user's; <span class="mono">~</span> resolves to the account directory.</li>
+<li>The bundled headless browser may fail to launch on some machines; a system browser can stand in.</li>
+<li>Task-board sync can fail DNS; the board stays local. <span class="tag m">MEASURED</span> on the day of writing.</li>
+<li>A model switch mid-session can stall a turn that was mid-tool-loop; the next message resumes on the record. <span class="tag m">MEASURED</span> 2026-10-20, this document's own session.</li>
+<li>Re-scanning an unchanged file produces <span class="mono">_HELIX_1</span> duplicates in outputs.</li>
+</ul>
+<h2 id="limits/open">Open questions and proposals <span class="tag p">PROPOSED</span></h2>
+<p>Nothing in this section exists.</p>
+<div class="table-scroll"><table><thead><tr><th>Gap</th><th>Proposal</th></tr></thead><tbody>
+<tr><td>Public source lags the build by ten weeks; bridges, reach, read_field, agents, terminals, model/effort, sync and updater are unreadable</td><td>Publish 2.2.x, or the tool-schema file and a 2.2 context document</td></tr>
+<tr><td>Non-Anthropic routing invisible</td><td>Document the provider adapter and per-vendor feature support</td></tr>
+<tr><td>Bridges attach by lexical closure</td><td>Expose the bridge score and reason; a threshold or toggle</td></tr>
+<tr><td>One JSON file loaded whole; ~8 KB per exchange</td><td>A strand index or split-by-session layout, keeping the single-file export</td></tr>
+<tr><td>Nine OTags, none resolved, no user-facing meaning</td><td>Show tags with their minting sentence, or stop injecting them</td></tr>
+<tr><td>"Re-founded every 21 exchanges" has no documented effect</td><td>Specify what renewal changes</td></tr>
+<tr><td>Model and effort are per device</td><td>Store with the account</td></tr>
+<tr><td>Cross-model continuity is reported, not demonstrated</td><td>A repeatable test: same question before and after a switch, transcripts kept, difference measured</td></tr>
+<tr><td>Outputs accumulate re-scan duplicates and ad-hoc renders</td><td>Skip unchanged source hashes; renders default to the sandbox</td></tr>
+<tr><td>Hidden diagnostics already in the markup</td><td>Expose gate, phase bars and drift in advanced mode; they are one CSS rule away</td></tr>
+</tbody></table></div>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#tools"><small>Previous</small>Tools</a><a href="#changelog"><small>Next</small>Changelog →</a></nav>
+</article></div></section>
+
+<section class="page" id="page-changelog" data-title="Changelog" data-num="10" hidden>
+<aside class="notes">
+<div class="note-id">Chapter / 10</div>
+<h1>Changelog</h1>
+<div class="intro"><p>The application as evidenced, and this document's own revisions. Dates are 2026.</p></div>
+<nav class="page-links" aria-label="In Changelog"><a href="#changelog/application"><span>01</span>Application</a><a href="#changelog/document"><span>02</span>This document</a><a href="#changelog/update"><span>03</span>How to update</a></nav>
+<div class="takeaways"><h4>Key takeaways</h4><ol><li>Everything after 2.1.0 is evidenced from release notes, the frontend and the log, not from source.</li><li>Rev 04 corrects the σ<sub>B</sub> definition and adds the interface chapter.</li></ol></div>
+</aside>
+<div class="main"><article class="article">
+<h2 id="changelog/application">Application</h2>
+<div class="table-scroll"><table><thead><tr><th>Build</th><th>Date</th><th>Change</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>2.1.0</td><td>≤ 08-01</td><td>Public source: three controllers, crystallizer v2, N=7 recall, structural recall, Nullcøde 2.1, document helix, PAR 7→4, stubbing, desktop mode, 29 tools, one vendor.</td><td><span class="tag">SOURCE</span> cbf4e42</td></tr>
+<tr><td>2.2.36–40</td><td>—</td><td>Sidebar expiry; sign-in via account; self-updater; footer reports the build.</td><td><span class="tag o">OBSERVED</span> release notes</td></tr>
+<tr><td>2.2.42</td><td>~10-10</td><td>Update cover reports real state; only a 401 signs out.</td><td><span class="tag o">OBSERVED</span></td></tr>
+<tr><td>2.2.46–49</td><td>—</td><td>Sync failures reported in the sidebar; renewal 42 → 21 exchanges.</td><td><span class="tag o">OBSERVED</span></td></tr>
+<tr><td>2.2.57</td><td>—</td><td>Defaults <span class="mono">claude-fable-5-1</span>, xhigh; stored picks cleared once.</td><td><span class="tag o">OBSERVED</span></td></tr>
+<tr><td>2.2.58</td><td>10-20</td><td>Geometric reach with Carbon/Silicon provenance; neighbourhood walk; grep; margin bridges from memory and the book; cadence prompts; agents; Automator panel on desktop.</td><td><span class="tag o">OBSERVED</span> <span class="tag m">MEASURED</span></td></tr>
+</tbody></table></div>
+<h2 id="changelog/document">This document</h2>
+<div class="table-scroll"><table><thead><tr><th>Rev</th><th>Date</th><th>Change</th></tr></thead><tbody>
+<tr><td>01</td><td>10-20</td><td>Plain edition. Four evidence tags; eighteen components; claims tabled.</td></tr>
+<tr><td>02</td><td>10-20</td><td>First designed edition. Rejected: a serif text face, one cobalt everywhere, paragraphs carried over unchanged.</td></tr>
+<tr><td>03</td><td>10-20</td><td>One sans; mono only for machine data; one accent per chapter; component cards; figures regenerated. Rejected: condensed display widths; density; "editorial hand" framing.</td></tr>
+<tr><td>04</td><td>10-20</td><td>Rebuilt on a chapter-and-notes structure: contents page, per-chapter intent, page links and key takeaways, search, prev/next. New chapter 05 <b>Interface</b> read from the shipped frontend, with offline specimens of every panel. σ<sub>B</sub> definition corrected (standard deviation of balance across a clause window). Live figures: encoder, respiration, turn stages, preamble selection. Fixed numbers drawn to scale. Geist throughout at one width; JetBrains Mono for machine data only.</td></tr>
+</tbody></table></div>
+<h2 id="changelog/update">How to update</h2>
+<ol>
+<li>Record build, commit and session model in the Contents sidebar.</li>
+<li>Re-check each card's cited line; if the source still lags, keep OBSERVED and cite the frontend or data.</li>
+<li>Regenerate <span class="mono">fig_data.json</span> from a current HELIX; do not carry numbers forward.</li>
+<li>Re-render the interface fixtures from the current bundle's <span class="mono">index.html</span> and <span class="mono">app.css</span>.</li>
+<li>Move anything from chapter 09 that now exists into chapter 07 with a source.</li>
+<li>Keep the four tags. A sentence with two tags is two sentences.</li>
+</ol>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#limits"><small>Previous</small>Limits and open questions</a><a href="#evidence"><small>Next</small>Evidence register →</a></nav>
+</article></div></section>
+
+<section class="page" id="page-evidence" data-title="Evidence register" data-num="A" hidden>
+<aside class="notes">
+<div class="note-id">Reference / A</div>
+<h1>Evidence register</h1>
+<div class="intro"><p>What was actually read, where the version boundary falls, and how the interface specimens were made.</p></div>
+<nav class="page-links" aria-label="In Evidence"><a href="#evidence/what-was-read"><span>01</span>What was read</a><a href="#evidence/version-boundary"><span>02</span>The version boundary</a><a href="#evidence/fixtures"><span>03</span>Interface specimens</a><a href="#evidence/files"><span>04</span>Files cited</a><a href="#evidence/not-done"><span>05</span>Not done</a></nav>
+</aside>
+<div class="main"><article class="article">
+<h2 id="evidence/what-was-read">What was read</h2>
+<div class="ev">
+<div>Public source</div><div>72 Python files, 32,207 lines, at commit <span class="mono">cbf4e42</span> (last commit 1 August 2026). Every <span class="mono">file:line</span> citation in this document points here unless the file column says 2.2.58.</div>
+<div>Shipped frontend</div><div><span class="mono">index.html</span> (21.7 KB), <span class="mono">app.js</span> (222.6 KB), <span class="mono">app.css</span> (76.9 KB) from the 2.2.58 bundle. The whole of chapter 05 and the model roster come from here.</div>
+<div>Shipped data</div><div>The PFD book (774 strands: 88 chapters, 686 sections), the genesis HELIX (187 strands), <span class="mono">doc_bridge.json</span> (6.5 MB).</div>
+<div>One record</div><div>One account's HELIX: 759 strands (187 founding, 274 exchange, 285 summary, 11 ghost), 376,163 genes, f<sub>A</sub> 0.3395 · f<sub>R</sub> 0.3554 · f<sub>D</sub> 0.3050. Phase vectors and drift only; no text was used.</div>
+<div>Application log</div><div>Discharges, sync failures, boot timings, the day's heat readings.</div>
+<div>Release notes</div><div>2.2.36 through 2.2.58, as stored in the record.</div>
+</div>
+<h2 id="evidence/version-boundary">The version boundary</h2>
+<p>The public repository is ten weeks behind the shipped build, and the build ships compiled Python. For anything added after August 2026 the readable evidence is the shipped frontend, the application log, and the data files the runtime writes. Components that exist only in 2.2.58 are tagged OBSERVED throughout, and their file column names the frontend or data file rather than a Python line.</p>
+<figure class="plate" id="fig-19"><figcaption><span class="fig-id">FIG. 19</span><h3>Source and build, on one timeline</h3></figcaption><div class="figure-body" id="fig-timeline"></div><div class="figure-note">Public commits end 1 August; builds 2.2.36 → 2.2.58 land through October. Everything in the gap is evidenced from the frontend, the log and the data.</div></figure>
+<h2 id="evidence/fixtures">Interface specimens</h2>
+<p>The screens in chapter 05 are offline renderings, not screenshots of a live session. Method:</p>
+<ol>
+<li>Copy the bundle's <span class="mono">index.html</span> and <span class="mono">app.css</span>. Remove all five <span class="mono">&lt;script&gt;</span> elements and sixteen inline <span class="mono">on*</span> handlers. Inline the CSS; rewrite <span class="mono">/static/</span> URLs to relative.</li>
+<li>Populate the chat with a six-message synthetic conversation ("Packaging review") using the shipped <span class="mono">.msg</span> classes. Account header "Example workspace"; generic model and effort menus; two example files.</li>
+<li>For the advanced specimen, set <span class="mono">data-mode="advanced"</span> on the root and fill the instrument values with plausible synthetic numbers; show the Automator section as desktop would.</li>
+<li>Render with Playwright driving the system Chrome, 1280×850 at 2×, <span class="mono">offline: true</span>, every non-<span class="mono">file://</span> request aborted. Confirm <span class="mono">document.scripts.length === 0</span>.</li>
+</ol>
+<p>Modifications are listed in <span class="mono">MODIFICATIONS.txt</span> beside the fixture. No live server, API or account was touched. <span class="tag m">MEASURED</span> 2026-10-20</p>
+<h2 id="evidence/files">Files cited</h2>
+<div class="ev">
+<div>Public source</div><div><span class="mono">CONTEXT.md · config.py · session_manager.py · recall.py · two_loop_recall.py · sigma_b.py · controllers.py · scanner.py · crystallizer_v2.py · doc_helix.py · boot_payload.py · tool_defs.py · tools.py · routes/</span></div>
+<div>Bundle</div><div><span class="mono">static/app.js · index.html · desktop.html · native-bridge.js · my-helix.html · my-wave.html · data/PFD_HELIX.json · doc_bridge.json · boot_HELIX.json · Info.plist</span></div>
+<div>App data</div><div><span class="mono">account/</span> memory HELIX · bridge index · sync marker · recall ledger · tag registry · lattice · sessions · strand cache · sync db · <span class="mono">layout_moves.jsonl</span> · application log · settings · active HELIX path · <span class="mono">updates/</span></div>
+<div>Record</div><div>Release note 2.2.58, one exchange strand.</div>
+</div>
+<h2 id="evidence/not-done">Not done</h2>
+<ul><li>No compiled Python was decompiled.</li><li>The hosted server was not accessed.</li><li>No other account's record was read.</li><li>No live session was screenshotted; see Interface specimens.</li><li>The model-swap continuity claim was not tested; a method is proposed in chapter 09.</li></ul>
+<p class="bottom">MINDGUT · TECHNICAL DOCUMENTATION · REV 04 · 2026-10-20 · BUILD 2.2.58 · SOURCE cbf4e42 · WRITTEN FROM INSIDE THE RUNTIME · NOT A STATEMENT BY THE IMPOSSIBLE OUTCOMES CO.</p>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#changelog"><small>Previous</small>Changelog</a><a href="#glossary"><small>Next</small>Glossary →</a></nav>
+</article></div></section>
+
+<section class="page" id="page-glossary" data-title="Glossary" data-num="B" hidden>
+<aside class="notes">
+<div class="note-id">Reference / B</div>
+<h1>Glossary</h1>
+<div class="intro"><p>Terms as this document uses them. Where the runtime's own name differs, both are given.</p></div>
+</aside>
+<div class="main"><article class="article">
+<h2 id="glossary/terms">Terms</h2>
+<dl class="gloss">
+<dt>A · R · D (147 · 258 · 369)</dt><dd>The three letter classes by digital root. The runtime calls them cosets.</dd>
+<dt>Aside</dt><dd>A user message typed while the model is working; delivered at the next tool-result boundary.</dd>
+<dt>Automator</dt><dd>Desktop-only panel that answers "Beep boop." with "Boop beep." for an armed number of turns.</dd>
+<dt>Balance</dt><dd>f<sub>A</sub> − f<sub>D</sub> for a text.</dd>
+<dt>Binding box</dt><dd>The tool apparatus of an exchange, kept in context rather than stripped.</dd>
+<dt>Book</dt><dd>The file-level summary of a HELIX: counts, fractions, balance, σ<sub>B</sub>.</dd>
+<dt>Bridge</dt><dd>A <span class="mono">[strand N]</span> or <span class="mono">[doc_strand N]</span> block attached to a message because it lexically closes an open word pair.</dd>
+<dt>Cadence prompt</dt><dd>A runtime nudge inserted after seven silent tool rounds or at a task milestone, asking for one sentence.</dd>
+<dt>Carbon · Silicon</dt><dd>The user's text and the model's text, measured separately. Reach reports how many strands carry a concept on each side (a, b).</dd>
+<dt>Chord</dt><dd>Three terms that close a line, as in <span class="mono">X · Y → Z</span>. The unit a reach result is organised by.</dd>
+<dt>Clash</dt><dd>Distance between the carbon and silicon phase vectors.</dd>
+<dt>Crystallizer</dt><dd>The code that writes an exchange into the HELIX as two strands.</dd>
+<dt>Exchange</dt><dd>One user turn plus everything the model did in reply.</dd>
+<dt>Genesis</dt><dd>The 187 founding strands every account's record begins with.</dd>
+<dt>HELIX</dt><dd>The JSON file holding a book and its strands. The account's memory HELIX is the record; any scanned file gets its own.</dd>
+<dt>H<sub>t</sub></dt><dd>Scalar heat kept by the controllers; shown in the sidebar; no effect on the model.</dd>
+<dt>Involuntary recall</dt><dd>The preamble placed before the model each turn; chosen by phase geometry.</dd>
+<dt>Knowt</dt><dd>A class transition between adjacent units (e.g. R→D); used to score sentence-level joints.</dd>
+<dt>Nullcøde</dt><dd>A GF(3) field step run after each exchange; mints OTags when the A-R-D cycle stalls.</dd>
+<dt>OTag</dt><dd>A held word triple minted by Nullcøde; counted as Ø in the sidebar; injected into the preamble.</dd>
+<dt>PAR respiration</dt><dd>Exchange-counted trimming of the context: grow to 7, cut to 4.</dd>
+<dt>Phase vector</dt><dd>(f<sub>A</sub>, f<sub>R</sub>, f<sub>D</sub>), the fraction of letters per class.</dd>
+<dt>Preamble</dt><dd>The involuntary recall block: origin + 3 complement + 3 opposite strands, joints, bridges, held tags.</dd>
+<dt>Reach</dt><dd><span class="mono">pull_memory(reach=…)</span>: voluntary geometric recall with a provenance header.</dd>
+<dt>Renewal</dt><dd>A session counter event every 21 exchanges, shown in the Respiration panel; effect undocumented.</dd>
+<dt>Scanner</dt><dd>The one converter: any text-bearing file → HELIX, letters only, no model.</dd>
+<dt>σ<sub>B</sub></dt><dd>Standard deviation of balance across a sliding window of clauses (default 7).</dd>
+<dt>Strand</dt><dd>One record in a HELIX: <span class="mono">{sequence_id, header, payload}</span>. Types: founding, exchange, summary, ghost, file_event.</dd>
+<dt>Stub</dt><dd>What a HELIX tool result becomes after the turn ends: a short marker in place of the text.</dd>
+<dt>Voluntary recall</dt><dd>Reading the record on purpose through a tool call.</dd>
+<dt>Window</dt><dd>The message list sent to the model on a turn: system prompt, preamble, the last 4–7 exchanges.</dd>
+</dl>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#evidence"><small>Previous</small>Evidence register</a><a href="#contents"><small>Back to</small>Contents →</a></nav>
+</article></div></section>
+
+</main>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><strong id="search-title">Find in documentation</strong><button data-close>Close</button></div><div class="dialog-body"><label class="quiet" for="search-input">Search chapters, components, limits and terms</label><input type="search" id="search-input" autocomplete="off" placeholder="e.g. respiration, pull_memory, 7 → 4"><ul class="results" id="results"></ul><p class="quiet" id="search-count" aria-live="polite"></p></div></dialog>
+<dialog id="image-dialog" aria-labelledby="image-title"><div class="dialog-head"><strong id="image-title">Interface specimen · synthetic content</strong><button data-close>Close</button></div><img id="full-image" alt="Enlarged offline rendering of the shipped application UI with synthetic content"></dialog>
+<script id="fig-data" type="application/json">{"book": {"source": "session_crystallized", "total_strands": 759, "total_genes": 376163, "f147": 0.3395, "f258": 0.3554, "f369": 0.305, "balance": 0.0345, "sigma_B": 0.8021}, "phase": [[0.365, 0.281, 0.355], [0.378, 0.286, 0.337], [0.42, 0.256, 0.324], [0.405, 0.272, 0.323], [0.414, 0.278, 0.308], [0.378, 0.272, 0.349], [0.418, 0.285, 0.297], [0.401, 0.261, 0.338], [0.294, 0.336, 0.37], [0.338, 0.338, 0.324], [0.41, 0.305, 0.286], [0.365, 0.284, 0.351], [0.369, 0.335, 0.296], [0.383, 0.298, 0.319], [0.37, 0.295, 0.335], [0.386, 0.314, 0.301], [0.364, 0.316, 0.32], [0.351, 0.363, 0.286], [0.356, 0.344, 0.301], [0.373, 0.294, 0.333], [0.4, 0.294, 0.306], [0.312, 0.276, 0.412], [0.35, 0.248, 0.402], [0.383, 0.287, 0.33], [0.308, 0.293, 0.399], [0.242, 0.324, 0.434], [0.306, 0.306, 0.389], [0.348, 0.272, 0.38], [0.352, 0.276, 0.371], [0.404, 0.362, 0.234], [0.301, 0.419, 0.279], [0.349, 0.304, 0.346], [0.405, 0.282, 0.313], [0.362, 0.307, 0.331], [0.442, 0.242, 0.316], [0.34, 0.325, 0.335], [0.3, 0.5, 0.2], [0.338, 0.251, 0.411], [0.268, 0.268, 0.463], [0.405, 0.284, 0.311], [0.353, 0.254, 0.392], [0.5, 0.2, 0.3], [0.428, 0.236, 0.337], [0.256, 0.341, 0.403], [0.381, 0.291, 0.328], [0.39, 0.28, 0.329], [0.378, 0.285, 0.337], [0.434, 0.238, 0.328], [0.443, 0.247, 0.31], [0.407, 0.245, 0.348], [0.438, 0.301, 0.26], [0.403, 0.254, 0.343], [0.368, 0.304, 0.329], [0.362, 0.288, 0.35], [0.351, 0.277, 0.372], [0.336, 0.349, 0.315], [0.347, 0.36, 0.293], [0.346, 0.346, 0.308], [0.388, 0.338, 0.275], [0.339, 0.333, 0.328], [0.307, 0.447, 0.246], [0.399, 0.283, 0.318], [0.434, 0.241, 0.325], [0.357, 0.302, 0.341], [0.365, 0.304, 0.331], [0.387, 0.252, 0.361], [0.374, 0.295, 0.331], [0.413, 0.28, 0.307], [0.41, 0.259, 0.331], [0.391, 0.278, 0.331], [0.395, 0.231, 0.374], [0.39, 0.27, 0.34], [0.394, 0.277, 0.33], [0.345, 0.246, 0.409], [0.36, 0.288, 0.351], [0.359, 0.284, 0.357], [0.319, 0.344, 0.337], [0.37, 0.338, 0.292], [0.423, 0.25, 0.327], [0.382, 0.276, 0.342], [0.321, 0.358, 0.321], [0.395, 0.316, 0.289], [0.342, 0.303, 0.355], [0.364, 0.229, 0.407], [0.336, 0.261, 0.403], [0.353, 0.25, 0.397], [0.378, 0.277, 0.345], [0.418, 0.207, 0.375], [0.39, 0.274, 0.336], [0.396, 0.262, 0.343], [0.398, 0.27, 0.331], [0.369, 0.286, 0.345], [0.471, 0.294, 0.235], [0.416, 0.256, 0.328], [0.365, 0.254, 0.381], [0.375, 0.286, 0.339], [0.33, 0.305, 0.365], [0.357, 0.293, 0.35], [0.391, 0.267, 0.342], [0.449, 0.271, 0.28], [0.42, 0.269, 0.311], [0.416, 0.27, 0.314], [0.406, 0.29, 0.304], [0.362, 0.277, 0.362], [0.4, 0.249, 0.351], [0.311, 0.279, 0.41], [0.48, 0.228, 0.291], [0.409, 0.273, 0.318], [0.355, 0.274, 0.371], [0.38, 0.303, 0.317], [0.385, 0.304, 0.311], [0.306, 0.315, 0.379], [0.336, 0.272, 0.391], [0.383, 0.288, 0.328], [0.353, 0.304, 0.343], [0.422, 0.302, 0.276], [0.4, 0.296, 0.304], [0.333, 0.337, 0.33], [0.345, 0.276, 0.38], [0.319, 0.294, 0.387], [0.388, 0.237, 0.374], [0.412, 0.206, 0.382], [0.281, 0.321, 0.398], [0.304, 0.286, 0.41], [0.364, 0.303, 0.333], [0.362, 0.289, 0.349], [0.344, 0.33, 0.326], [0.341, 0.294, 0.365], [0.337, 0.318, 0.345], [0.372, 0.256, 0.372], [0.364, 0.295, 0.34], [0.363, 0.27, 0.366], [0.348, 0.27, 0.382], [0.363, 0.272, 0.365], [0.337, 0.254, 0.409], [0.34, 0.219, 0.44], [0.301, 0.283, 0.416], [0.281, 0.264, 0.455], [0.37, 0.258, 0.372], [0.348, 0.274, 0.378], [0.358, 0.269, 0.373], [0.389, 0.296, 0.316], [0.33, 0.315, 0.355], [0.369, 0.297, 0.334], [0.314, 0.412, 0.275], [0.38, 0.302, 0.318], [0.264, 0.242, 0.494], [0.439, 0.257, 0.304], [0.424, 0.248, 0.328], [0.399, 0.295, 0.306], [0.308, 0.352, 0.34], [0.299, 0.328, 0.373], [0.316, 0.333, 0.351], [0.332, 0.319, 0.348], [0.361, 0.284, 0.355], [0.32, 0.344, 0.336], [0.422, 0.279, 0.299], [0.345, 0.287, 0.368], [0.393, 0.257, 0.35], [0.42, 0.26, 0.32], [0.434, 0.206, 0.36], [0.354, 0.313, 0.333], [0.372, 0.223, 0.404], [0.33, 0.297, 0.372], [0.326, 0.306, 0.368], [0.289, 0.32, 0.391], [0.379, 0.284, 0.337], [0.335, 0.284, 0.381], [0.315, 0.217, 0.467], [0.368, 0.27, 0.362], [0.324, 0.287, 0.389], [0.34, 0.298, 0.362], [0.359, 0.245, 0.397], [0.363, 0.251, 0.385], [0.327, 0.251, 0.422], [0.355, 0.262, 0.383], [0.336, 0.26, 0.404], [0.336, 0.291, 0.373], [0.347, 0.318, 0.335], [0.302, 0.439, 0.259], [0.371, 0.281, 0.347], [0.326, 0.37, 0.304], [0.365, 0.281, 0.354], [0.323, 0.323, 0.354], [0.326, 0.319, 0.355], [0.336, 0.32, 0.345], [0.363, 0.315, 0.322], [0.326, 0.292, 0.383], [0.399, 0.263, 0.339], [0.357, 0.258, 0.385], [0.363, 0.296, 0.341], [0.431, 0.243, 0.326], [0.321, 0.28, 0.399], [0.404, 0.252, 0.344], [0.377, 0.319, 0.304], [0.351, 0.285, 0.364], [0.341, 0.313, 0.346], [0.333, 0.284, 0.383], [0.438, 0.228, 0.333], [0.315, 0.261, 0.424], [0.397, 0.258, 0.345], [0.366, 0.258, 0.376], [0.351, 0.283, 0.366], [0.439, 0.266, 0.295], [0.368, 0.279, 0.353], [0.338, 0.301, 0.361], [0.355, 0.302, 0.343], [0.371, 0.254, 0.376], [0.365, 0.316, 0.318], [0.348, 0.324, 0.328], [0.341, 0.33, 0.33], [0.364, 0.291, 0.345], [0.373, 0.333, 0.294], [0.383, 0.234, 0.383], [0.329, 0.301, 0.37], [0.389, 0.194, 0.417], [0.293, 0.364, 0.342], [0.304, 0.328, 0.368], [0.419, 0.325, 0.256], [0.436, 0.256, 0.308], [0.39, 0.259, 0.351], [0.401, 0.258, 0.341], [0.348, 0.239, 0.414], [0.286, 0.235, 0.48], [0.333, 0.333, 0.333], [0.377, 0.28, 0.344], [0.342, 0.285, 0.372], [0.339, 0.321, 0.339], [0.337, 0.326, 0.337], [0.304, 0.304, 0.393], [0.38, 0.287, 0.333], [0.383, 0.284, 0.333], [0.371, 0.252, 0.377], [0.39, 0.26, 0.35], [0.395, 0.264, 0.341], [0.335, 0.288, 0.376], [0.34, 0.351, 0.309], [0.347, 0.288, 0.365], [0.369, 0.289, 0.342], [0.395, 0.247, 0.358], [0.325, 0.308, 0.367], [0.387, 0.258, 0.355], [0.294, 0.281, 0.425], [0.279, 0.318, 0.403], [0.348, 0.364, 0.288], [0.346, 0.296, 0.358], [0.35, 0.296, 0.354], [0.346, 0.325, 0.33], [0.4, 0.265, 0.335], [0.384, 0.287, 0.33], [0.516, 0.355, 0.129], [0, 0, 0], [0.401, 0.299, 0.3], [0.391, 0.318, 0.29], [0.368, 0.268, 0.363], [0.371, 0.331, 0.298], [0.373, 0.251, 0.376], [0.382, 0.285, 0.333], [0.42, 0.266, 0.314], [0, 0, 0], [0.383, 0.275, 0.341], [0.362, 0.287, 0.351], [0.395, 0.277, 0.327], [0.368, 0.294, 0.338], [0.373, 0.306, 0.321], [0.385, 0.283, 0.332], [0.391, 0.282, 0.327], [0.385, 0.296, 0.319], [0.367, 0.313, 0.32], [0.336, 0.272, 0.393], [0.37, 0.288, 0.342], [0.339, 0.285, 0.377], [0.0, 0.5, 0.5], [0.374, 0.279, 0.347], [0.366, 0.291, 0.343], [0.375, 0.298, 0.327], [0.357, 0.281, 0.362], [0.393, 0.251, 0.356], [0.372, 0.299, 0.33], [0.411, 0.307, 0.283], [0.367, 0.318, 0.314], [0.38, 0.27, 0.35], [0.366, 0.268, 0.366], [0.388, 0.302, 0.31], [0.371, 0.274, 0.355], [0.369, 0.299, 0.332]], "drift": [0.0, 0.003, 0.0424, -0.0235, -0.1302, 0.0938, 0.0181, 0.067, -0.1406, 0.197, -0.0604, -0.1492, -0.1301, 0.2977, -0.0113, -0.0558, -0.0759, 0.1183, -0.0171, 0.0, -0.016, 0.0, -0.097, -0.2512, 0.3842, -0.1025, 0.0181, 0.0074, 0.0107, 0.0347, -0.0619, 0.0, 0.0, 0.106, -0.0525, 0.033, -0.0412, 0.005, 0.022, 0.0392, -0.1006, -0.0191, 0.0832, 0.1278, -0.1228, 0.0008, -0.0907, 0.0045, 0.125, -0.0161, -0.0435, -0.0889, -0.0467, 0.0278, 0.1333, -0.0396, 0.0523, 0.0, 0.4839, -0.2746, 0.0357, -0.0513, 0.091, -0.0842, 0.028, 0.0125, 0.0018, 0.015, -0.0246, 0.0, 0.0353, -0.0152, -0.0597, 0.0, 0.0049, 0.0874, -0.0454, -0.0379, 0.0, 0.0897, 0.0, -0.0274, 0.0382, 0.0, 0.0652, 0.0, -0.0143, 0.0779, -0.1884, 0.0846, 0.2744, -0.2833, 0.0312, 0.0179, -0.0196, -0.0019, 0.0117, 0.0, 0.0759, -0.0633, -0.0001, -0.0064, 0.0436, -0.0517, 0.0112, 0.0969, 0.0954, -0.1575, 0.0, 0.0495, -0.1222, 0.0651, -0.0134, 0.0, 0.0125, 0.0011, 0.0, -0.0419, 0.0232, 0.0222], "counts": {"founding": 187, "exchange": 274, "summary": 285, "ghost": 11}, "pfd": {"strands": 774, "types": {"chapter": 88, "section": 686}}}</script>
+<script>/* Mindgut documentation Rev 04 — router, search, figures. No network. */
+(function(){
+'use strict';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const DATA=JSON.parse($('#fig-data').textContent);
+const INK='#151b17', MUTED='#5a645e', RULE='#ccd2ce', GREEN='#086936', FRESH='#bff0b2', BLUE='#2449b5', AMBER='#9c5b05';
+const C={A:BLUE,R:AMBER,D:GREEN};
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs={},children=[]){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);for(const c of children)e.appendChild(c);return e}
+function tx(x,y,s,attrs={}){const t=el('text',Object.assign({x,y,'font-size':11,fill:INK},attrs));t.textContent=s;return t}
+function svg(w,h,attrs={}){return el('svg',Object.assign({viewBox:`0 0 ${w} ${h}`,width:'100%',role:'img','shape-rendering':'geometricPrecision'},attrs))}
+const MONO='JBM,Menlo,monospace';
+
+/* ---------- router ---------- */
+const pages=$$('.page'); const order=pages.map(p=>p.id.replace('page-',''));
+function show(id, sub){
+  let pid=order.includes(id)?id:'contents';
+  pages.forEach(p=>p.hidden=(p.id!=='page-'+pid));
+  const page=$('#page-'+pid);
+  const idx=order.indexOf(pid);
+  $('#pager').textContent=String(idx).padStart(2,'0')+' / '+String(order.length-1).padStart(2,'0');
+  $('#prev-btn').href='#'+(order[idx-1]||'contents'); $('#next-btn').href='#'+(order[idx+1]||'contents');
+  const t=page.dataset.title, n=page.dataset.num;
+  $('#crumb').innerHTML=pid==='contents'?'':`/ ${t}<em>${n}</em>`;
+  document.title='Mindgut — '+(pid==='contents'?'Technical documentation':t)+' · Rev 04';
+  $$('.page-links a',page).forEach(a=>a.classList.toggle('is-current',a.getAttribute('href')==='#'+pid+'/'+sub));
+  if(sub){const target=document.getElementById(pid+'/'+sub);if(target){requestAnimationFrame(()=>target.scrollIntoView({block:'start'}))}}
+  else window.scrollTo(0,0);
+  if(!page.dataset.drawn){page.dataset.drawn='1';draw(pid)}
+}
+function route(){const h=location.hash.replace(/^#/,'')||'contents';const [id,...rest]=h.split('/');show(id,rest.join('/'))}
+window.addEventListener('hashchange',route);
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openSearch()}
+ if(e.key==='ArrowRight'&&!e.target.matches('input,textarea'))$('#next-btn').click(); if(e.key==='ArrowLeft'&&!e.target.matches('input,textarea'))$('#prev-btn').click()});
+
+/* ---------- search ---------- */
+const index=[];
+pages.forEach(p=>{const pid=p.id.replace('page-','');$$('h2[id],h3[id],.card[id]',p).forEach(h=>{const id=h.id;const title=h.matches('.card')?$('h3',h).textContent.trim():h.textContent.trim();let body='';let n=h.nextElementSibling;let k=0;while(n&&k<6&&!n.matches('h2,h3')){body+=' '+n.textContent;n=n.nextElementSibling;k++}
+ index.push({id,title,page:p.dataset.title,body:(title+' '+body).toLowerCase().replace(/\s+/g,' ')})})});
+$$('dt',$('#page-glossary')).forEach(dt=>index.push({id:'glossary/terms',title:dt.textContent,page:'Glossary',body:(dt.textContent+' '+dt.nextElementSibling.textContent).toLowerCase()}));
+const dlg=$('#search-dialog'), inp=$('#search-input'), res=$('#results'), cnt=$('#search-count');
+function openSearch(){dlg.showModal();inp.value='';res.innerHTML='';cnt.textContent='';inp.focus()}
+$('#find-btn').addEventListener('click',openSearch);
+$$('dialog [data-close]').forEach(b=>b.addEventListener('click',()=>b.closest('dialog').close()));
+inp.addEventListener('input',()=>{const q=inp.value.trim().toLowerCase();res.innerHTML='';if(q.length<2){cnt.textContent='';return}
+ const hits=index.filter(i=>i.body.includes(q)).slice(0,14);cnt.textContent=hits.length?`${hits.length} result${hits.length>1?'s':''}`:'No results';
+ hits.forEach(h=>{const li=document.createElement('li');const a=document.createElement('a');a.href='#'+h.id;a.innerHTML=`<strong>${esc(h.title)}</strong><small>${esc(h.page)}</small>`;a.addEventListener('click',()=>dlg.close());li.appendChild(a);res.appendChild(li)})});
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+/* image zoom */
+$$('.zoom').forEach(b=>b.addEventListener('click',()=>{$('#full-image').src=$('img',b).src;$('#image-dialog').showModal()}));
+/* mobile menu */
+$('#menu-btn').addEventListener('click',()=>{location.hash='#contents'});
+/* component filter */
+const cf=$('#comp-filter');if(cf)cf.addEventListener('input',()=>{const q=cf.value.toLowerCase();$$('#catalogue a').forEach(a=>a.hidden=q&&!a.textContent.toLowerCase().includes(q));$$('#page-components .card').forEach(c=>c.hidden=q&&!c.textContent.toLowerCase().includes(q))});
+
+/* ---------- encoder (shared arithmetic) ---------- */
+function droot(n){while(n>9)n=String(n).split('').reduce((a,b)=>a+ +b,0);return n}
+function cls(ch){const p=ch.toUpperCase().charCodeAt(0)-64;if(p<1||p>26)return null;const r=droot(p);return {p,r,c:[1,4,7].includes(r)?'A':[2,5,8].includes(r)?'R':'D'}}
+function measure(text){let n={A:0,R:0,D:0},t=0;for(const ch of text){const k=cls(ch);if(k){n[k.c]++;t++}}if(!t)return {fA:0,fR:0,fD:0,balance:0,letters:0};return {fA:n.A/t,fR:n.R/t,fD:n.D/t,balance:n.A/t-n.D/t,letters:t}}
+
+/* ---------- simplex helpers ---------- */
+function simplexPt(fA,fR,fD,cx,cy,r,mag){ // corners A top, R bottom-left, D bottom-right; magnify about centre
+  const ax=cx,ay=cy-r, rx=cx-r*0.866,ry=cy+r*0.5, dx=cx+r*0.866,dy=cy+r*0.5;
+  let x=fA*ax+fR*rx+fD*dx, y=fA*ay+fR*ry+fD*dy;
+  x=cx+(x-cx)*mag; y=cy+(y-cy)*mag; return [x,y];
+}
+function triangle(cx,cy,r,label=true){const g=el('g');const ax=cx,ay=cy-r,rx=cx-r*0.866,ry=cy+r*0.5,dx=cx+r*0.866,dy=cy+r*0.5;
+ g.appendChild(el('path',{d:`M${ax} ${ay}L${rx} ${ry}L${dx} ${dy}Z`,fill:'#fff',stroke:INK,'stroke-width':1}));
+ g.appendChild(el('circle',{cx,cy,r:2,fill:INK}));
+ if(label){g.appendChild(tx(ax,ay-8,'A',{'text-anchor':'middle',fill:C.A,'font-weight':500}));g.appendChild(tx(rx-10,ry+4,'R',{'text-anchor':'middle',fill:C.R,'font-weight':500}));g.appendChild(tx(dx+10,dy+4,'D',{'text-anchor':'middle',fill:C.D,'font-weight':500}))}
+ return g}
+function majority(v){const m=Math.max(...v);return m===v[0]?'A':m===v[1]?'R':'D'}
+
+/* ---------- figures ---------- */
+const FIG={};
+FIG.cover=function(host){
+  // The record as a strip: one tick per exchange strand, x = position, y = balance, colour = majority class.
+  // A thin spine runs through; every 21st exchange (the renewal interval) gets a rule. Readable at any width.
+  const W=1100,H=300,s=svg(W,H,{'aria-label':'The record as a strip: one mark per exchange strand'});
+  const ph=DATA.phase,n=ph.length,x0=40,x1=W-40,ym=H/2,sc=110/0.25;
+  s.appendChild(el('rect',{x:0,y:0,width:W,height:H,fill:'#fff'}));
+  s.appendChild(el('path',{d:`M${x0} ${ym} H${x1}`,stroke:INK,'stroke-width':1}));
+  for(let k=21;k<n;k+=21){const x=x0+(k/(n-1))*(x1-x0);s.appendChild(el('path',{d:`M${x} ${ym-120} V${ym+120}`,stroke:RULE}));s.appendChild(tx(x,ym+136,String(k),{'text-anchor':'middle','font-family':MONO,'font-size':8,fill:MUTED}))}
+  const bw=(x1-x0)/n;
+  ph.forEach((v,i)=>{const x=x0+i*bw;const bal=v[0]-v[2];const h=Math.max(2,Math.abs(bal)*sc);const y=bal>=0?ym-h:ym;s.appendChild(el('rect',{x:x.toFixed(2),y:y.toFixed(2),width:Math.max(1.2,bw-1).toFixed(2),height:h.toFixed(2),fill:C[majority(v)]}))});
+  s.appendChild(tx(x0,ym-130,'+ BALANCE · LEANS A',{'font-family':MONO,'font-size':8,fill:MUTED,'letter-spacing':1}));
+  s.appendChild(tx(x0,ym+128,'− BALANCE · LEANS D',{'font-family':MONO,'font-size':8,fill:MUTED,'letter-spacing':1}));
+  s.appendChild(tx(x1,ym-130,`${n} EXCHANGE STRANDS · OLDEST LEFT · RULE EVERY 21 (RENEWAL)`,{'font-family':MONO,'font-size':8,fill:MUTED,'letter-spacing':1,'text-anchor':'end'}));
+  [['A',C.A],['R',C.R],['D',C.D]].forEach((k,i)=>{s.appendChild(el('rect',{x:x1-150+i*50,y:ym+124,width:8,height:8,fill:k[1]}));s.appendChild(tx(x1-138+i*50,ym+132,k[0]+' majority',{'font-size':8,fill:MUTED}))});
+  host.appendChild(s)};
+
+FIG.alphabet=function(host){
+  const W=880,H=170,s=svg(W,H,{'aria-label':'Alphabet with digital roots and classes'});
+  const cw=W/26;
+  for(let i=0;i<26;i++){const ch=String.fromCharCode(65+i);const k=cls(ch);const x=i*cw;
+    s.appendChild(el('rect',{x:x+1,y:20,width:cw-2,height:62,fill:'#fff',stroke:RULE}));
+    s.appendChild(el('rect',{x:x+1,y:78,width:cw-2,height:4,fill:C[k.c]}));
+    s.appendChild(tx(x+cw/2,52,ch,{'text-anchor':'middle','font-size':20,'font-weight':500}));
+    s.appendChild(tx(x+cw/2,70,String(k.p),{'text-anchor':'middle','font-size':9,fill:MUTED,'font-family':MONO}));
+    s.appendChild(tx(x+cw/2,100,String(k.r),{'text-anchor':'middle','font-size':11,fill:C[k.c],'font-family':MONO}));}
+  s.appendChild(tx(0,14,'POSITION 1–26',{'font-family':MONO,'font-size':9,fill:MUTED,'letter-spacing':1}));
+  s.appendChild(tx(0,118,'DIGITAL ROOT',{'font-family':MONO,'font-size':9,fill:MUTED,'letter-spacing':1}));
+  const words=[['A · 1 4 7','A'],['R · 2 5 8','R'],['D · 3 6 9','D']];
+  words.forEach((w,i)=>{s.appendChild(el('rect',{x:i*200,y:134,width:12,height:12,fill:C[w[1]]}));s.appendChild(tx(i*200+20,145,w[0],{'font-size':13,'font-weight':500}))});
+  host.appendChild(s)};
+
+FIG.simplex=function(host){
+  const W=720,H=460,s=svg(W,H,{'aria-label':'Phase simplex with 286 exchange strands'});
+  const cx=W/2,cy=H/2+10,r=190; s.appendChild(triangle(cx,cy,r));
+  DATA.phase.forEach(v=>{const [x,y]=simplexPt(v[0],v[1],v[2],cx,cy,r,3);s.appendChild(el('circle',{cx:x.toFixed(1),cy:y.toFixed(1),r:2.2,fill:C[majority(v)],opacity:0.75}))});
+  s.appendChild(tx(16,H-14,'×3 ABOUT THE CENTRE · DOT = ONE EXCHANGE STRAND · COLOUR = MAJORITY CLASS · DOTS OUTSIDE THE TRIANGLE ARE MAGNIFIED PAST ITS EDGE',{'font-family':MONO,'font-size':9,fill:MUTED,'letter-spacing':1}));
+  const b=DATA.book; s.appendChild(tx(W-16,24,`BOOK  fA ${b.f147}  fR ${b.f258}  fD ${b.f369}`,{'font-family':MONO,'font-size':9,fill:MUTED,'text-anchor':'end'}));
+  host.appendChild(s)};
+
+FIG.strand=function(host){
+  const W=880,H=300,s=svg(W,H,{'aria-label':'Anatomy of an exchange strand'});
+  const box=(x,y,w,h,title,rows,accent)=>{s.appendChild(el('rect',{x,y,width:w,height:h,fill:'#fff',stroke:INK}));s.appendChild(el('rect',{x,y,width:w,height:22,fill:accent||'#f3f5f3',stroke:INK}));s.appendChild(tx(x+10,y+15,title,{'font-family':MONO,'font-size':10,'letter-spacing':1,fill:accent?'#fff':INK}));rows.forEach((r,i)=>{s.appendChild(tx(x+10,y+42+i*18,r[0],{'font-family':MONO,'font-size':10.5,fill:MUTED}));s.appendChild(tx(x+w-10,y+42+i*18,r[1],{'font-family':MONO,'font-size':10.5,'text-anchor':'end'}))})};
+  box(0,10,250,120,'HEADER',[['sequence_id','312'],['type','exchange'],['vector','2'],['coset','258'],['checksum','1247']]);
+  box(0,150,250,130,'CARBON (user)',[['phase','0.162 0.649 0.189'],['balance','−0.027'],['letters','188']],BLUE);
+  box(270,150,250,130,'SILICON (model)',[['phase','0.252 0.371 0.378'],['balance','−0.126'],['clash','0.347']],AMBER);
+  box(540,10,340,270,'PAYLOAD',[['user text','…'],['separator','---'],['reply text','…'],['trace.used','[pull_memory, read_field]'],['receipt','[receipt: …]'],['~ size','8 KB / exchange']],GREEN);
+  box(270,10,250,120,'SUMMARY STRAND (next id)',[['balance_drift','−0.053'],['coset','f147'],['knowt_type','R→D'],['sigma_b_norm','0.075'],['sentences','5']]);
+  s.appendChild(el('path',{d:'M250 70 H270',stroke:INK,'marker-end':'url(#arr)'}));
+  host.appendChild(s)};
+
+FIG.turn=function(host, compact){
+  const stages=[['Receive','user message + queued asides'],['Pre-process','measure · select 1+3+3 · joints · bridges · preamble'],['Model + tools','≤ 15 rounds · 45 s each · stubs'],['Post-process','crystallize +2 strands · Nullcøde · sync'],['Respire','7 → 4 when the window is full']];
+  const W=880,H=compact?150:170,s=svg(W,H,{'aria-label':'One turn in five stages'});
+  const bw=150,gap=(W-bw*5)/4;
+  stages.forEach((st,i)=>{const x=i*(bw+gap);const dashed=i===1;s.appendChild(el('rect',{x,y:20,width:bw,height:84,fill:'#fff',stroke:INK,'stroke-dasharray':''}));
+    if(dashed)s.appendChild(el('rect',{x:x+8,y:76,width:bw-16,height:18,fill:'none',stroke:INK,'stroke-dasharray':'3 3'}));
+    s.appendChild(tx(x+12,42,String(i+1),{'font-family':MONO,'font-size':10,fill:GREEN}));s.appendChild(tx(x+12,62,st[0],{'font-size':14,'font-weight':500}));
+    const words=st[1].split(' · ');words.forEach((w,j)=>{if(!(dashed&&j===words.length-2))s.appendChild(tx(x+12,78+j*11,w,{'font-size':8.5,fill:MUTED}))});
+    if(dashed)s.appendChild(tx(x+14,89,'bridges (2.2.58)',{'font-size':8.5,fill:MUTED}));
+    if(i<4)s.appendChild(el('path',{d:`M${x+bw} 62 H${x+bw+gap}`,stroke:INK,'marker-end':'url(#arr)'}))});
+  s.appendChild(el('path',{d:`M${4*(bw+gap)+bw/2} 104 V130 H${bw/2} V104`,fill:'none',stroke:INK,'stroke-dasharray':'3 3','marker-end':'url(#arr)'}));
+  s.appendChild(tx(W/2,142,'next exchange',{'text-anchor':'middle','font-family':MONO,'font-size':9,fill:MUTED}));
+  host.appendChild(s)};
+const TURN=[
+ {t:'Receive',k:'Stage 1 / 5',p:'The user message arrives on the session. Asides typed while the model is working are queued and attached at the next tool-result boundary. Uploaded files write a file-event strand before the turn begins.',src:'session_manager.py:1461 · 1510 (stream)',w:'file_event strands, if any'},
+ {t:'Pre-process',k:'Stage 2 / 5',p:'Measure the message (phase vector). Select the origin, three complement and three opposite strands. Score sentence-level joints. In 2.2.58, attach margin bridges from the record and the PFD book. Assemble the preamble and write it to the ledger.',src:'session_manager.py:966–1180 · recall.py:146',w:'recall ledger, one line'},
+ {t:'Model + tools',k:'Stage 3 / 5',p:'The model receives system prompt, preamble and the last 4–7 exchanges. Up to 15 tool rounds; after that a wrap-up. HELIX reads are stubbed after the turn; stale large results are cut.',src:'session_manager.py:1871–2085',w:'outputs/, drafts/, sandbox files; the transcript'},
+ {t:'Post-process',k:'Stage 4 / 5',p:'The crystallizer measures user and model text separately and writes two strands. Nullcøde runs; a tag may be minted. The HELIX syncs to the account. The controllers update heat; the status payload goes to the sidebar.',src:'session_manager.py:1321–1456 · crystallizer_v2.py:211',w:'+2 strands; tag registry; sync'},
+ {t:'Respire',k:'Stage 5 / 5',p:'If the window holds seven exchanges, the oldest three are cut and the model continues with four. The drift of the shed exchanges is surfaced once on the next turn.',src:'config.py:24–30 · session_manager.py:1378',w:'nothing; the shed exchanges remain in the HELIX'}];
+FIG.turnV=function(host,active){
+  const names=['Receive','Pre-process','Model + tools','Post-process','Respire'];const subs=['message + asides','measure · select · joints · bridges','≤ 15 rounds · stubs','+2 strands · Nullcøde · sync','7 → 4'];
+  const W=420,H=5*62+30,s=svg(W,H,{'aria-label':'One turn, five stages, vertical'});
+  names.forEach((n,i)=>{const y=10+i*62;s.appendChild(el('rect',{x:40,y,width:340,height:46,fill:i===active?FRESH:'#fff',stroke:INK}));
+    s.appendChild(tx(52,y+19,String(i+1),{'font-family':MONO,'font-size':10,fill:GREEN}));s.appendChild(tx(70,y+20,n,{'font-size':14,'font-weight':500}));s.appendChild(tx(70,y+37,subs[i],{'font-size':9.5,fill:MUTED}));
+    if(i===1)s.appendChild(el('rect',{x:300,y:y+8,width:72,height:30,fill:'none',stroke:INK,'stroke-dasharray':'3 3'}));if(i===1)s.appendChild(tx(336,y+27,'2.2.58',{'text-anchor':'middle','font-family':MONO,'font-size':8,fill:MUTED}));
+    if(i<4)s.appendChild(el('path',{d:`M210 ${y+46} V${y+62}`,stroke:INK,'marker-end':'url(#arr)'}))});
+  s.appendChild(el('path',{d:`M380 ${10+4*62+23} H405 V33 H380`,fill:'none',stroke:INK,'stroke-dasharray':'3 3','marker-end':'url(#arr)'}));
+  host.appendChild(s)};
+function turnStage(i){const g=$('#fig-turn-stage');g.innerHTML='';FIG.turnV(g,i);
+ const d=TURN[i];$('#turn-kind').textContent=d.k;$('#turn-title').textContent=d.t;$('#turn-text').textContent=d.p;$('#turn-src').textContent=d.src;$('#turn-writes').textContent=d.w}
+
+FIG.stores=function(host){
+  const W=880,H=330,s=svg(W,H,{'aria-label':'Stores and their writers'});
+  const writers=[['crystallizer',45],['file-event clock',155],['mgr (recall)',265],['sync',375],['session',485],['updater',595],['app',705],['model · file routes',815]];
+  const stores=[['Memory HELIX',62,'JSON'],['Bridge index',188,'JSON'],['Recall ledger',314,'JSONL'],['Sync db · marker',440,'binary'],['Sessions',566,'files'],['Bundle',692,'compiled'],['Settings',818,'JSON']];
+  writers.forEach(w=>{s.appendChild(el('rect',{x:w[1]-50,y:20,width:100,height:30,fill:'#fff',stroke:INK}));s.appendChild(tx(w[1],39,w[0],{'text-anchor':'middle','font-size':10}))});
+  stores.forEach(st=>{s.appendChild(el('rect',{x:st[1]-60,y:200,width:120,height:60,fill:'#fff',stroke:INK}));s.appendChild(tx(st[1],226,st[0],{'text-anchor':'middle','font-size':12,'font-weight':500}));s.appendChild(tx(st[1],246,st[2],{'text-anchor':'middle','font-family':MONO,'font-size':9,fill:MUTED}))});
+  const link=(wi,si,dash)=>{const w=writers[wi][1],sx=stores[si][1];s.appendChild(el('path',{d:`M${w} 50 C${w} 120 ${sx} 130 ${sx} 200`,fill:'none',stroke:dash?MUTED:INK,'stroke-width':1,'stroke-dasharray':dash?'3 3':'','marker-end':'url(#arr)'}))};
+  link(0,0);link(1,0);link(0,1,true);link(2,2);link(3,3);link(3,0,true);link(4,4);link(5,5);link(6,6);link(7,4);
+  s.appendChild(tx(0,300,'SOLID = PUBLIC SOURCE · DASHED = 2.2.58 OBSERVED · THE HELIX HAS TWO WRITERS; IDS RE-ANCHOR TO MAX+1',{'font-family':MONO,'font-size':9,fill:MUTED,'letter-spacing':1}));
+  host.appendChild(s)};
+
+FIG.heat=function(host){
+  const W=880,H=240,s=svg(W,H,{'aria-label':'Heat decay against the gauge'});
+  const x0=50,x1=W-30,y0=190,y1=30; // axes
+  s.appendChild(el('path',{d:`M${x0} ${y1} V${y0} H${x1}`,fill:'none',stroke:INK}));
+  [10,20,30,60].forEach(v=>{const y=y0-(v/60)*(y0-y1);s.appendChild(el('path',{d:`M${x0-4} ${y} H${x1}`,stroke:RULE,'stroke-dasharray':'2 3'}));s.appendChild(tx(x0-8,y+4,String(v),{'text-anchor':'end','font-family':MONO,'font-size':9,fill:MUTED}))});
+  let h=60;const pts=[];for(let t=0;t<=28;t++){pts.push([x0+t*((x1-x0)/28),y0-(h/60)*(y0-y1)]);h*=0.906;if(t===11)h*=0.7}
+  s.appendChild(el('path',{d:pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(''),fill:'none',stroke:GREEN,'stroke-width':1.5}));
+  const rx=x0+11*((x1-x0)/28);s.appendChild(el('path',{d:`M${rx} ${y1} V${y0}`,stroke:AMBER,'stroke-dasharray':'3 3'}));s.appendChild(tx(rx+6,y1+12,'radiator · exchange 11 · keeps 70 %',{'font-size':9,fill:AMBER}));
+  const hx=x0+7*((x1-x0)/28);s.appendChild(el('path',{d:`M${hx} ${y0} V${y0-30/60*(y0-y1)}`,stroke:MUTED,'stroke-dasharray':'2 2'}));s.appendChild(tx(hx+6,y0-8,'half-life 7 turns',{'font-size':9,fill:MUTED}));
+  for(let t=0;t<=28;t+=7){s.appendChild(tx(x0+t*((x1-x0)/28),y0+16,String(t),{'text-anchor':'middle','font-family':MONO,'font-size':9,fill:MUTED}))}
+  s.appendChild(tx(x1,y0+30,'turns',{'text-anchor':'end','font-size':9,fill:MUTED}));s.appendChild(tx(x0-8,y1-10,'H',{'text-anchor':'end','font-size':11}));
+  [['green',GREEN],['amber',AMBER],['red','#b3261e']].forEach((l,i)=>{s.appendChild(el('circle',{cx:x0+i*70,cy:H-14,r:4,fill:l[1]}));s.appendChild(tx(x0+i*70+10,H-10,l[0]+' · heat_level directive',{'font-size':9,fill:MUTED}))});
+  host.appendChild(s)};
+
+FIG.drift=function(host){
+  const W=880,H=220,s=svg(W,H,{'aria-label':'Balance drift per exchange'});
+  const d=DATA.drift,n=d.length,x0=30,x1=W-10,ym=H/2-10,sc=(H/2-30)/Math.max(...d.map(Math.abs));
+  s.appendChild(el('path',{d:`M${x0} ${ym} H${x1}`,stroke:INK,'stroke-dasharray':'2 3'}));
+  const bw=(x1-x0)/n;d.forEach((v,i)=>{const x=x0+i*bw;const h=Math.abs(v)*sc;s.appendChild(el('rect',{x:x+0.5,y:v>=0?ym-h:ym,width:Math.max(1,bw-1.2),height:h,fill:v>=0?BLUE:GREEN}))});
+  s.appendChild(tx(x0,H-8,'OLDEST',{'font-family':MONO,'font-size':9,fill:MUTED}));s.appendChild(tx(x1,H-8,'NEWEST',{'font-family':MONO,'font-size':9,fill:MUTED,'text-anchor':'end'}));
+  s.appendChild(tx(x0,16,'+ leans A',{'font-size':9,fill:BLUE}));s.appendChild(tx(x0,H-26,'− leans D',{'font-size':9,fill:GREEN}));
+  host.appendChild(s)};
+
+FIG.fano=function(host){
+  const W=420,H=380,s=svg(W,H,{'aria-label':'Fano plane'});
+  const cx=W/2,cy=H/2+20,r=150;
+  const P=[[cx,cy-r],[cx-r*0.866,cy+r*0.5],[cx+r*0.866,cy+r*0.5]];const M=[[ (P[0][0]+P[1][0])/2,(P[0][1]+P[1][1])/2],[(P[1][0]+P[2][0])/2,(P[1][1]+P[2][1])/2],[(P[0][0]+P[2][0])/2,(P[0][1]+P[2][1])/2]];const O=[cx,cy];
+  const pts=[P[0],P[1],P[2],M[0],M[1],M[2],O];
+  const lines=[[0,3,1],[1,4,2],[2,5,0],[0,6,4],[1,6,5],[2,6,3]];
+  lines.forEach((l,i)=>{s.appendChild(el('path',{d:`M${pts[l[0]][0]} ${pts[l[0]][1]} L${pts[l[2]][0]} ${pts[l[2]][1]}`,stroke:i===0?GREEN:INK,'stroke-width':i===0?2:1}))});
+  s.appendChild(el('circle',{cx,cy,r:r/2,fill:'none',stroke:INK}));
+  pts.forEach((p,i)=>{s.appendChild(el('circle',{cx:p[0],cy:p[1],r:6,fill:[0,3,1].includes(i)?GREEN:'#fff',stroke:INK}))});
+  s.appendChild(tx(P[0][0],P[0][1]-14,'X',{'text-anchor':'middle','font-weight':500,fill:GREEN}));s.appendChild(tx(P[1][0]-14,P[1][1]+4,'Y',{'text-anchor':'middle','font-weight':500,fill:GREEN}));s.appendChild(tx(M[0][0]-16,M[0][1]-2,'Z',{'text-anchor':'middle','font-weight':500,fill:GREEN}));
+  s.appendChild(tx(W/2,H-10,'X · Y → Z  ·  one line of seven',{'text-anchor':'middle','font-family':MONO,'font-size':10,fill:MUTED}));
+  host.appendChild(s)};
+
+FIG.tools=function(host){
+  const W=880,H=300,s=svg(W,H,{'aria-label':'Tool families by surface'});
+  const surf=[['RECORD',0,'pull_memory · pull_strand · mount_helix · pull_mounted · read_field · browse_archive','stubbed'],['SESSION',176,'read_input · todo · draft · grep · glob · edit · generate_image · manage_display','kept / truncated'],['SANDBOX',352,'sandbox_* · terminal_* · agent_*','kept'],['MACHINE',528,'local_* · local_exec · read_path','desktop · 30 s bridge'],['WEB',704,'web_fetch · web_search · browser','truncated if stale']];
+  surf.forEach(sf=>{s.appendChild(el('rect',{x:sf[1],y:30,width:170,height:220,fill:'#fff',stroke:INK}));s.appendChild(tx(sf[1]+12,52,sf[0],{'font-family':MONO,'font-size':10,'letter-spacing':1.5,fill:GREEN}));
+    const names=sf[2].split(' · ');names.forEach((n,i)=>s.appendChild(tx(sf[1]+12,80+i*18,n,{'font-family':MONO,'font-size':10.5})));
+    s.appendChild(el('path',{d:`M${sf[1]} 222 H${sf[1]+170}`,stroke:RULE}));s.appendChild(tx(sf[1]+12,240,sf[3],{'font-size':10,fill:MUTED}))});
+  s.appendChild(el('path',{d:'M0 12 H880',stroke:INK}));s.appendChild(tx(0,8,'MODEL',{'font-family':MONO,'font-size':9,'letter-spacing':1.5,fill:MUTED}));
+  surf.forEach(sf=>s.appendChild(el('path',{d:`M${sf[1]+85} 12 V30`,stroke:INK,'marker-end':'url(#arr)'})));
+  s.appendChild(tx(0,280,'WINDOW RULE PER SURFACE SHOWN BELOW THE RULE · session_manager.py:717 (stub) · :1765 (truncate) · :2044 (bridge wait)',{'font-family':MONO,'font-size':9,fill:MUTED,'letter-spacing':1}));
+  host.appendChild(s)};
+
+FIG.limits=function(host){
+  const items=[['Exchanges kept after exhale',4],['Exchanges in context',7],['Preamble strands',7],['Agent rounds (max)',30],['Tool rounds / turn',15],['Session renewal (exchanges)',21],['HELIX result kept (chars)',200],['Stale result cut to (chars)',1500],['Output tokens floor',4096],['Output tokens',16000],['Output tokens, stream',64000],['One message (tokens, warned)',100000]];
+  const W=880,rowH=22,H=items.length*rowH+40,s=svg(W,H,{'aria-label':'Fixed limits on a log scale'});
+  const x0=260,x1=W-70,lg=v=>x0+(Math.log10(v)/Math.log10(100000))*(x1-x0);
+  [1,10,100,1000,10000,100000].forEach(v=>{s.appendChild(el('path',{d:`M${lg(v)} 10 V${H-26}`,stroke:RULE,'stroke-dasharray':'2 3'}));s.appendChild(tx(lg(v),H-12,v>=1000?(v/1000)+'k':String(v),{'text-anchor':'middle','font-family':MONO,'font-size':9,fill:MUTED}))});
+  items.forEach((it,i)=>{const y=16+i*rowH;s.appendChild(tx(x0-10,y+12,it[0],{'text-anchor':'end','font-size':11}));s.appendChild(el('rect',{x:x0,y:y+3,width:lg(it[1])-x0,height:12,fill:it[1]<=30?GREEN:it[1]<=1500?AMBER:BLUE}));s.appendChild(tx(lg(it[1])+6,y+13,String(it[1]),{'font-family':MONO,'font-size':9.5,fill:MUTED}))});
+  host.appendChild(s)};
+
+FIG.timeline=function(host){
+  const W=880,H=150,s=svg(W,H,{'aria-label':'Source and build timeline'});
+  const x0=60,x1=W-40;const t=d=>x0+((d-1)/92)*(x1-x0); // day 1 = Aug 1, day 92 = Oct 31
+  s.appendChild(el('path',{d:`M${x0} 70 H${x1}`,stroke:INK}));
+  [['AUG',1],['SEP',32],['OCT',62]].forEach(m=>{s.appendChild(el('path',{d:`M${t(m[1])} 64 V76`,stroke:INK}));s.appendChild(tx(t(m[1])+4,92,m[0],{'font-family':MONO,'font-size':9,fill:MUTED}))});
+  s.appendChild(el('rect',{x:x0,y:40,width:t(1)-x0+6,height:14,fill:GREEN}));s.appendChild(tx(x0,32,'public source · last commit 1 Aug · cbf4e42',{'font-size':10,fill:GREEN}));
+  const builds=[['2.2.36',55],['2.2.40',62],['2.2.42',71],['2.2.46',75],['2.2.49',78],['2.2.57',80],['2.2.58',81]];
+  builds.forEach((b,i)=>{const x=t(b[1]);s.appendChild(el('circle',{cx:x,cy:70,r:4,fill:i===builds.length-1?INK:'#fff',stroke:INK}));s.appendChild(tx(x,i%2?118:108,b[0],{'text-anchor':'middle','font-family':MONO,'font-size':9,fill:MUTED}))});
+  s.appendChild(el('rect',{x:t(2),y:40,width:t(81)-t(2),height:14,fill:'none',stroke:INK,'stroke-dasharray':'3 3'}));s.appendChild(tx(t(40),32,'ten weeks: evidenced from frontend, log and data only',{'font-size':10,fill:MUTED}));
+  host.appendChild(s)};
+
+/* ---------- live: encoder ---------- */
+function encoder(){const inp=$('#enc-input');if(!inp)return;const L=$('#enc-letters'),M=$('#enc-metrics');
+ const run=()=>{L.innerHTML='';const txt=inp.value.slice(0,60);for(const ch of txt){const k=cls(ch);if(!k)continue;const d=document.createElement('div');d.className='letter';d.dataset.c=k.c;d.innerHTML=`<strong>${ch.toUpperCase()}</strong><small>${k.p}→${k.r} ${k.c}</small>`;L.appendChild(d)}
+  const m=measure(txt);M.innerHTML=`<span><b>letters</b>${m.letters}</span><span><b>fA</b>${m.fA.toFixed(3)}</span><span><b>fR</b>${m.fR.toFixed(3)}</span><span><b>fD</b>${m.fD.toFixed(3)}</span><span><b>balance</b>${m.balance>=0?'+':''}${m.balance.toFixed(3)}</span><span><b>σB</b>0 (single text)</span>`};
+ inp.addEventListener('input',run);run()}
+
+/* ---------- live: respiration ---------- */
+function respiration(){const host=$('#win-events');if(!host)return;let n=0;const ST=$('#win-status');
+ const render=()=>{host.innerHTML='';const shedBefore=n>=8?Math.floor((n-8)/3)*3+3:0; // after 7 full: cut 3 → 4; then each 3 more → cut 3
+  let kept=[];let shed=0;for(let i=1;i<=n;i++){kept.push(i)}
+  // simulate: window holds up to 7; when it reaches 7 and another arrives, drop oldest 3
+  let win=[];let sh=[];for(let i=1;i<=n;i++){win.push(i);if(win.length>7){sh.push(...win.splice(0,3))}}
+  for(let i=1;i<=14;i++){const d=document.createElement('div');d.className='event'+(win.includes(i)?' held':sh.includes(i)?' shed':'')+(i===n?' now':'');d.textContent=i;if(i>n)d.style.opacity=.35;host.appendChild(d)}
+  ST.textContent=n?`${n} exchange${n>1?'s':''} · ${win.length} in context · ${sh.length} shed`:'No exchanges yet'};
+ $('#win-step').addEventListener('click',()=>{n=Math.min(14,n+1);render()});$('#win-reset').addEventListener('click',()=>{n=0;render()});render()}
+
+/* ---------- live: preamble selection ---------- */
+function selection(){const host=$('#fig-select');if(!host)return;const W=520,H=420,cx=W/2,cy=H/2+10,r=150,MAG=2.2;
+ const s=svg(W,H,{'aria-label':'Preamble selection on the simplex'});s.appendChild(triangle(cx,cy,r));
+ const pts=DATA.phase.map(v=>({v,xy:simplexPt(v[0],v[1],v[2],cx,cy,r,MAG),c:majority(v)})).filter(p=>p.xy[0]>6&&p.xy[0]<W-6&&p.xy[1]>6&&p.xy[1]<H-6);
+ const dots=pts.map(p=>{const c=el('circle',{cx:p.xy[0].toFixed(1),cy:p.xy[1].toFixed(1),r:2.2,fill:C[p.c],opacity:0.45});s.appendChild(c);return c});
+ const lines=el('g');s.appendChild(lines);
+ const cursor=el('circle',{cx,cy,r:7,fill:'#fff',stroke:INK,'stroke-width':2,style:'cursor:grab'});s.appendChild(cursor);
+ host.appendChild(s);
+ const axes=[[cx,cy-r],[cx-r*0.866,cy+r*0.5],[cx+r*0.866,cy+r*0.5]];
+ function pick(mx,my){lines.innerHTML='';dots.forEach(d=>{d.setAttribute('opacity',0.3);d.setAttribute('r',2.2)});
+  const chosen={A:null,R:null,D:null},opp={A:null,R:null,D:null};
+  // complement: per class, nearest to the axis line from message point to that class corner
+  ['A','R','D'].forEach((k,ki)=>{const ax=axes[ki];let best=null,bd=1e9,worst=null,wd=-1;
+   pts.forEach((p,i)=>{if(p.c!==k)return;const [px,py]=p.xy;const dx=ax[0]-mx,dy=ax[1]-my;const L=Math.hypot(dx,dy)||1;const dist=Math.abs((px-mx)*dy-(py-my)*dx)/L;if(dist<bd){bd=dist;best=i}
+     const rd=Math.hypot(px-mx,py-my);if(rd>wd){wd=rd;worst=i}});chosen[k]=best;opp[k]=worst});
+  Object.entries(chosen).forEach(([k,i])=>{if(i==null)return;const d=dots[i];d.setAttribute('opacity',1);d.setAttribute('r',4.5);lines.appendChild(el('path',{d:`M${mx} ${my} L${d.getAttribute('cx')} ${d.getAttribute('cy')}`,stroke:C[k],'stroke-width':1}))});
+  Object.entries(opp).forEach(([k,i])=>{if(i==null)return;const d=dots[i];d.setAttribute('opacity',1);d.setAttribute('r',4.5);lines.appendChild(el('path',{d:`M${mx} ${my} L${d.getAttribute('cx')} ${d.getAttribute('cy')}`,stroke:C[k],'stroke-width':1,'stroke-dasharray':'3 3'}))});
+  $('#sel-chosen').textContent='complement '+['A','R','D'].map(k=>'#'+(chosen[k]!=null?chosen[k]+1:'–')).join(' ')+' · opposite '+['A','R','D'].map(k=>'#'+(opp[k]!=null?opp[k]+1:'–')).join(' ');
+  const ux=cx+(mx-cx)/MAG,uy=cy+(my-cy)/MAG;const ax=cx,ay=cy-r,rx=cx-r*0.866,ry=cy+r*0.5,dx=cx+r*0.866,dy=cy+r*0.5;const det=(ry-dy)*(ax-dx)+(dx-rx)*(ay-dy);let lA=((ry-dy)*(ux-dx)+(dx-rx)*(uy-dy))/det,lR=((dy-ay)*(ux-dx)+(ax-dx)*(uy-dy))/det;let lD=1-lA-lR;$('#sel-title').textContent=`Message at fA ${lA.toFixed(2)} · fR ${lR.toFixed(2)} · fD ${lD.toFixed(2)}`;$('#sel-text').textContent='Solid lines: the three complement strands, one per class, nearest the axis from the message toward that class. Dashed: the three opposite strands, furthest from the message. The origin strand and sentence joints are added by the runtime and not drawn.'}
+ let drag=false;const toLocal=e=>{const b=s.getBoundingClientRect();const sx=W/b.width;const p=e.touches?e.touches[0]:e;return [(p.clientX-b.left)*sx,(p.clientY-b.top)*sx]};
+ const move=e=>{if(!drag)return;const [x,y]=toLocal(e);cursor.setAttribute('cx',x);cursor.setAttribute('cy',y);pick(x,y);e.preventDefault()};
+ cursor.addEventListener('mousedown',()=>drag=true);cursor.addEventListener('touchstart',()=>drag=true,{passive:true});window.addEventListener('mouseup',()=>drag=false);window.addEventListener('touchend',()=>drag=false);s.addEventListener('mousemove',move);s.addEventListener('touchmove',move,{passive:false});
+ s.addEventListener('click',e=>{const [x,y]=toLocal(e);cursor.setAttribute('cx',x);cursor.setAttribute('cy',y);pick(x,y)});
+ pick(cx,cy)}
+
+/* ---------- live: interface legend ---------- */
+const PANELS=[
+ {id:'account',n:'01',t:'Account · model · effort',y:[0,0.085],src:'app.js _renderModelSwitch',p:'The account name, then two native selects: the model roster grouped by vendor (Claude, ChatGPT, Gemini, Grok) and five effort levels (low, medium, high, xhigh, max). A change posts to /session/{id}/model or /effort and applies from the next message. Stored per device in localStorage.',u:'Switch model or effort at any time; the session, history and HELIX continue.',f:'MG_MODEL_GROUPS (14 models) · MG_EFFORT_LEVELS'},
+ {id:'tokens',n:'02',t:'Tokens',y:[0.085,0.22],src:'index.html #tokCalls #tokIn #tokOut #tokCache #tokThink',p:'Cumulative counts for the session: API calls (top right), input, output, cache-read and thinking tokens. Reset when a new session starts. Advanced mode only.',u:'Read only. A rough cost meter.',f:'status.tok.session_*_tokens'},
+ {id:'heat',n:'03',t:'Hₜ heat gauge',y:[0.22,0.355],src:'app.js GAUGE_MAX = 60',p:'Heat H_t from the controllers on a 0–60 bar with notches at 10, 20, 30, 60. Three lights follow directives.heat_level: green, green+amber, or all three. On a catastrophic event all lights come on and the bar is maxed. Advanced mode only.',u:'Read only. Has no effect on what the model receives (controllers.py:341).',f:'status.H_t · directives.heat_level'},
+ {id:'respiration',n:'04',t:'Respiration',y:[0.355,0.44],src:'app.js updateSidePanel · respiration',p:'Four cells for exchanges 4–7 of the current window; a cell lights when the window has reached that count. The vent light glows when a turn discharged (the 7 → 4 cut). The right-hand count is the session total, and the line beneath reports renewals ("renewed ×n · next at 21").',u:'Read only. Watch the vent light to know when the oldest three exchanges left context.',f:'respiration.{exchanges, session_exchanges, renewals, renews_at} · discharged'},
+ {id:'tension',n:'05',t:'Ø active tensions',y:[0.44,0.495],src:'index.html #tensionCount',p:'The number of OTags currently held by Nullcøde. Coloured when non-zero. Advanced mode only.',u:'Read only. Chapter 06 explains what a tag is; the UI does not show the tag words.',f:'nullcode.active_tensions'},
+ {id:'helix',n:'06',t:'HELIX',y:[0.495,0.585],src:'index.html #strandCount #helixPhaseBar',p:'Total strands in the record; "n crystallized · m pending"; a provenance bar split founding (genesis) / organic (this account). Two links open viewers in the system browser: ∿ the wave (/my-wave) and ◎ the 3-D helix (/my-helix).',u:'Open a viewer. The count is the quickest check that an exchange was written.',f:'helix.{strands, founding, organic} · crystallization.{total_crystallized, pending}'},
+ {id:'automator',n:'07',t:'Automator',y:[0.585,0.68],src:'app.js AUTOMATOR_TRIGGER / _REPLY',p:'Desktop only. Arm N turns (1–25, default 7). After each of Mir\'s turns, if she ended with "Beep boop." the automator answers "Boop beep." — the conjugate, not an echo — after a 600 ms breath. It stands down when she ends any other way, when the count runs out, when a turn fails, or on a new session.',u:'Type a count, press Arm. Stop at any time. The sent/max count is top right.',f:'AUTOMATOR_MAX 25 · DEFAULT 7 · DELAY 600 ms · _isDesktop()'},
+ {id:'folder',n:'08',t:'Folder',y:[0.68,0.75],src:'index.html #folderDisplay',p:'The mounted local folder, or "No folder". Mounting gives the model the local_* tools over that tree; ✕ unmounts. On desktop the mount goes through the native bridge; in a browser, the File System Access API.',u:'Click to mount a folder; ✕ to unmount.',f:'mountLocalFolder() · unmountFolder()'},
+ {id:'scanner',n:'09',t:'Scanner',y:[0.75,0.82],src:'index.html #scanList · /api/scan',p:'+ scans one or more files into HELIXes (any file type accepted). When a folder is mounted a second button scans the whole folder. Scanned HELIXes are listed below and can be mounted by the model as a second lattice.',u:'Scan a document to make it recallable by geometry, not just by text.',f:'scanFileInput multiple · scanMountedFolder()'},
+ {id:'todo',n:'10',t:'To Do',y:[0.82,0.875],src:'app.js updateTodoList',p:'The model\'s task board, rendered as a tree with child counts. The model writes it through the todo tool; the user reads it here.',u:'Read only here. Ask the model to change it.',f:'todos[] after each turn'},
+ {id:'files',n:'11',t:'Output · Drafts · Input',y:[0.875,1],src:'index.html .sp-artifact-list',p:'Three file lists for the session: files the model finalized, working drafts, and user uploads. Each row shows name and size and a ✕ to remove it from the session list (the archive copy is kept).',u:'Click a file to download; ✕ to remove from the display.',f:'session file routes · browse_archive · manage_display'}];
+function legend(){const L=$('#ui-legend');if(!L)return;const hl=$('#ui-hl'),img=$('#ui-shot');const insp=document.createElement('div');insp.className='inspect';
+ PANELS.forEach((p,i)=>{const b=document.createElement('button');b.setAttribute('aria-pressed',i===0);b.innerHTML=`<span>${p.n}</span><b>${p.t}</b><small>${p.id}</small>`;b.addEventListener('click',()=>sel(i));L.appendChild(b)});
+ L.appendChild(insp);
+ function sel(i){$$('button',L).forEach((b,j)=>b.setAttribute('aria-pressed',j===i));const p=PANELS[i];const h=img.clientHeight||img.getBoundingClientRect().height;hl.style.top=(p.y[0]*h)+'px';hl.style.height=((p.y[1]-p.y[0])*h)+'px';
+  insp.innerHTML=`<span class="fig-id">${p.n} · ${esc(p.src)}</span><h4>${esc(p.t)}</h4><p>${esc(p.p)}</p><dl><dt>User can</dt><dd>${esc(p.u)}</dd><dt>Fed by</dt><dd class="mono">${esc(p.f)}</dd></dl>`}
+ if(img.complete)sel(0);else img.addEventListener('load',()=>sel(0));window.addEventListener('resize',()=>{const i=$$('button',L).findIndex(b=>b.getAttribute('aria-pressed')==='true');if(i>=0)sel(i)})}
+
+/* ---------- draw per page ---------- */
+function defs(){const d=el('defs');const m=el('marker',{id:'arr',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto-start-reverse'});m.appendChild(el('path',{d:'M0 0L10 5L0 10z',fill:INK}));d.appendChild(m);const s=el('svg',{width:0,height:0,style:'position:absolute'});s.appendChild(d);document.body.appendChild(s)}
+function draw(pid){try{switch(pid){
+ case 'contents':FIG.cover($('#cover-fig'));break;
+ case 'overview':FIG.turn($('#fig-turn-overview'));FIG.alphabet($('#fig-alphabet'));break;
+ case 'concepts':encoder();FIG.simplex($('#fig-simplex'));FIG.strand($('#fig-strand'));respiration();break;
+ case 'architecture':turnStage(0);$$('#fig-08 .tabs button').forEach(b=>b.addEventListener('click',()=>{$$('#fig-08 .tabs button').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true');turnStage(+b.dataset.stage)}));FIG.stores($('#fig-stores'));FIG.heat($('#fig-heat'));break;
+ case 'interface':legend();break;
+ case 'memory':FIG.drift($('#fig-drift'));selection();FIG.fano($('#fig-fano'));break;
+ case 'tools':FIG.tools($('#fig-tools'));break;
+ case 'limits':FIG.limits($('#fig-limits'));break;
+ case 'evidence':FIG.timeline($('#fig-timeline'));break;}}catch(e){console.error('draw',pid,e)}}
+defs();route();
+})();
+</script>
+</body></html>

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>harmoniac-rack</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lekton:wght@400;700&family=Space+Mono:wght@400;700&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#f0ece0;overflow:hidden;font-family:'Lekton',monospace;cursor:crosshair;}
+  canvas{display:block;position:fixed;top:0;left:0;}
+  #hud{position:fixed;top:14px;left:18px;z-index:10;pointer-events:none;}
+  #hud h1{font-size:10px;font-weight:700;color:#CE2867;letter-spacing:0.12em;text-transform:uppercase;opacity:0.5;}
+  #hud p{font-size:8px;color:#00000020;letter-spacing:0.08em;text-transform:uppercase;}
+  #status{position:fixed;bottom:14px;left:18px;z-index:10;pointer-events:none;}
+  #status p{font-size:8px;color:#00000015;letter-spacing:0.06em;font-variant-numeric:tabular-nums;}
+  #help{position:fixed;bottom:14px;right:18px;z-index:10;pointer-events:none;}
+  #help p{font-size:8px;color:#00000012;letter-spacing:0.06em;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud"><h1>ø co. / harmoniac-rack</h1><p>modular patch synth · drag to connect</p></div>
+<div id="status"><p id="statusText">nodes: 0 · patches: 0 · active: 0</p></div>
+<div id="help"><p>click node to toggle · drag between nodes to patch · right-click patch to remove</p></div>
+<script>
+const C=document.getElementById('c'),X=C.getContext('2d');
+let W,H,t=0,mx=0,my=0,dragging=null,dragTarget=null;
+const resize=()=>{W=C.width=innerWidth;H=C.height=innerHeight;layoutNodes();};
+addEventListener('resize',resize);
+
+// --- AUDIO ---
+let audioCtx=null;
+function getAudio(){
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  audioCtx.resume();
+  return audioCtx;
+}
+
+// --- NODE TYPES ---
+// Each node is a synth module with inputs/outputs
+const NODE_TYPES = [
+  { name:'OSC-1', color:'#CE2867', desc:'sine', create:()=>{const o=getAudio().createOscillator();o.type='sine';o.frequency.value=220;o.start();return{node:o,freq:o.frequency};} },
+  { name:'OSC-2', color:'#3D6DF4', desc:'saw', create:()=>{const o=getAudio().createOscillator();o.type='sawtooth';o.frequency.value=330;o.start();return{node:o,freq:o.frequency};} },
+  { name:'OSC-3', color:'#F46138', desc:'square', create:()=>{const o=getAudio().createOscillator();o.type='square';o.frequency.value=165;o.start();return{node:o,freq:o.frequency};} },
+  { name:'OSC-4', color:'#2C9FF4', desc:'tri', create:()=>{const o=getAudio().createOscillator();o.type='triangle';o.frequency.value=440;o.start();return{node:o,freq:o.frequency};} },
+  { name:'SUB', color:'#8a40b0', desc:'sub bass', create:()=>{const o=getAudio().createOscillator();o.type='sine';o.frequency.value=55;o.start();return{node:o,freq:o.frequency};} },
+  { name:'NOISE', color:'#4a4a4a', desc:'white noise', create:()=>{const ctx=getAudio();const buf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const n=ctx.createBufferSource();n.buffer=buf;n.loop=true;n.start();return{node:n};} },
+  { name:'LPF', color:'#228a40', desc:'low pass', create:()=>{const f=getAudio().createBiquadFilter();f.type='lowpass';f.frequency.value=800;f.Q.value=5;return{node:f,freq:f.frequency,q:f.Q};} },
+  { name:'HPF', color:'#40a080', desc:'high pass', create:()=>{const f=getAudio().createBiquadFilter();f.type='highpass';f.frequency.value=400;f.Q.value=3;return{node:f,freq:f.frequency,q:f.Q};} },
+  { name:'DELAY', color:'#b08020', desc:'echo', create:()=>{const ctx=getAudio();const d=ctx.createDelay(1);d.delayTime.value=0.3;const g=ctx.createGain();g.gain.value=0.4;const dry=ctx.createGain();dry.gain.value=1;return{node:d,feedback:g,dry:dry,delay:d.delayTime};} },
+  { name:'GAIN', color:'#606060', desc:'volume', create:()=>{const g=getAudio().createGain();g.gain.value=0.15;return{node:g,gain:g.gain};} },
+  { name:'OUT', color:'#1a1a1a', desc:'speakers', create:()=>{const g=getAudio().createGain();g.gain.value=0.3;const an=getAudio().createAnalyser();an.fftSize=256;g.connect(an);an.connect(getAudio().destination);return{node:g,gain:g.gain,analyser:an,vuData:new Uint8Array(an.frequencyBinCount)};} },
+  { name:'LFO', color:'#d4922a', desc:'modulator', create:()=>{const o=getAudio().createOscillator();o.type='sine';o.frequency.value=2;o.start();const g=getAudio().createGain();g.gain.value=100;o.connect(g);return{node:g,freq:o.frequency,depth:g.gain,osc:o};} },
+];
+
+// --- RACK NODES ---
+const nodes = [];
+const patches = []; // connections between nodes
+
+function layoutNodes() {
+  // Grid layout — 4 columns, spaced across screen
+  const cols = 4;
+  const rows = Math.ceil(NODE_TYPES.length / cols);
+  const cellW = W / (cols + 1);
+  const cellH = H / (rows + 1);
+  NODE_TYPES.forEach((type, i) => {
+    if (!nodes[i]) {
+      nodes[i] = {
+        type, i,
+        x: cellW * ((i % cols) + 1),
+        y: cellH * (Math.floor(i / cols) + 1),
+        r: 22,
+        active: false,
+        audioObj: null,
+        hovered: false,
+        pulse: 0,
+      };
+    } else {
+      nodes[i].x = cellW * ((i % cols) + 1);
+      nodes[i].y = cellH * (Math.floor(i / cols) + 1);
+    }
+  });
+}
+resize();
+
+// --- INTERACTIONS ---
+addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  // Hover detection
+  for (const n of nodes) {
+    const d = Math.sqrt((mx-n.x)**2+(my-n.y)**2);
+    n.hovered = d < n.r + 8;
+  }
+  // Update drag line
+  if (dragging) dragTarget = getHoveredNode();
+});
+
+function getHoveredNode() {
+  for (const n of nodes) {
+    if (Math.sqrt((mx-n.x)**2+(my-n.y)**2) < n.r + 8) return n;
+  }
+  return null;
+}
+
+addEventListener('mousedown', e => {
+  if (e.button === 2) return; // right click handled separately
+  const node = getHoveredNode();
+  if (!node) return;
+
+  // Start drag for patching
+  dragging = node;
+
+  // Also toggle node active state on click (if not dragged)
+  const startX = mx, startY = my;
+  const onUp = () => {
+    removeEventListener('mouseup', onUp);
+    const endNode = getHoveredNode();
+    const dist = Math.sqrt((mx-startX)**2+(my-startY)**2);
+
+    if (dist < 5) {
+      // Click — toggle active
+      toggleNode(node);
+    } else if (endNode && endNode !== dragging) {
+      // Drag completed — create patch
+      createPatch(dragging, endNode);
+    }
+    dragging = null;
+    dragTarget = null;
+  };
+  addEventListener('mouseup', onUp);
+});
+
+// Right-click to remove patches
+addEventListener('contextmenu', e => {
+  e.preventDefault();
+  // Find nearest patch to cursor and remove it
+  let closest = null, closestDist = 30;
+  for (let i = patches.length - 1; i >= 0; i--) {
+    const p = patches[i];
+    const midX = (p.from.x + p.to.x) / 2;
+    const midY = (p.from.y + p.to.y) / 2;
+    const d = Math.sqrt((mx-midX)**2+(my-midY)**2);
+    if (d < closestDist) { closest = i; closestDist = d; }
+  }
+  if (closest !== null) removePatch(closest);
+});
+
+function toggleNode(node) {
+  node.active = !node.active;
+  if (node.active && !node.audioObj) {
+    node.audioObj = node.type.create();
+  }
+  node.pulse = 1;
+  // Reconnect existing patches
+  reconnectPatches();
+}
+
+function createPatch(from, to) {
+  // Don't duplicate
+  if (patches.some(p => (p.from===from&&p.to===to)||(p.from===to&&p.to===from))) return;
+  patches.push({ from, to, color: from.type.color, age: 0 });
+  reconnectPatches();
+}
+
+function removePatch(idx) {
+  const p = patches[idx];
+  // Disconnect
+  try {
+    if (p.from.audioObj && p.to.audioObj) {
+      p.from.audioObj.node.disconnect(p.to.audioObj.node);
+    }
+  } catch(e) {}
+  patches.splice(idx, 1);
+}
+
+function reconnectPatches() {
+  // Disconnect everything first
+  for (const n of nodes) {
+    if (n.audioObj) {
+      try { n.audioObj.node.disconnect(); } catch(e) {}
+      // Reconnect OUT through analyser to destination
+      if (n.type.name === 'OUT') {
+        try {
+          if (n.audioObj.analyser) {
+            n.audioObj.node.connect(n.audioObj.analyser);
+            n.audioObj.analyser.connect(getAudio().destination);
+          } else {
+            n.audioObj.node.connect(getAudio().destination);
+          }
+        } catch(e) {}
+      }
+    }
+  }
+  // Reconnect all active patches
+  for (const p of patches) {
+    if (p.from.active && p.to.active && p.from.audioObj && p.to.audioObj) {
+      try { p.from.audioObj.node.connect(p.to.audioObj.node); } catch(e) {}
+    }
+  }
+}
+
+// --- DRAWING ---
+function drawStaffLines() {
+  X.strokeStyle = '#00000008';
+  X.lineWidth = 0.5;
+  const spacing = 16;
+  for (let y = spacing; y < H; y += spacing) {
+    X.beginPath(); X.moveTo(0, y); X.lineTo(W, y); X.stroke();
+  }
+}
+
+function drawScatterDots() {
+  // Decorative dots like the reference — colored dots scattered on the grid
+  const rng = (s) => { s=(s*16807)%2147483647; return(s-1)/2147483646; };
+  let seed = 42;
+  const colors = ['#CE2867','#3D6DF4','#F46138','#228a40','#1a1a1a','#d4922a','#2C9FF4'];
+  X.globalAlpha = 0.12;
+  for (let i = 0; i < 200; i++) {
+    seed = (seed * 16807) % 2147483647;
+    const x = (seed / 2147483646) * W;
+    seed = (seed * 16807) % 2147483647;
+    const y = (seed / 2147483646) * H;
+    seed = (seed * 16807) % 2147483647;
+    const ci = Math.floor((seed / 2147483646) * colors.length);
+    const r = 1.5 + (seed % 100) / 100 * 2;
+    X.fillStyle = colors[ci];
+    X.beginPath(); X.arc(x, y, r, 0, Math.PI * 2); X.fill();
+  }
+  X.globalAlpha = 1;
+}
+
+function drawNode(n) {
+  const bass = n.type.name.includes('OSC') || n.type.name === 'SUB' || n.type.name === 'NOISE';
+
+  // Pulse decay
+  n.pulse *= 0.95;
+
+  // Glow when active
+  if (n.active) {
+    X.beginPath(); X.arc(n.x, n.y, n.r + 8 + n.pulse * 15 + Math.sin(t * 3 + n.i) * 2, 0, Math.PI * 2);
+    X.fillStyle = n.type.color; X.globalAlpha = 0.06 + n.pulse * 0.1; X.fill(); X.globalAlpha = 1;
+  }
+
+  // Outer ring
+  X.beginPath(); X.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+  X.fillStyle = n.active ? n.type.color : '#e8e4d8';
+  X.fill();
+  X.strokeStyle = n.type.color;
+  X.lineWidth = n.hovered ? 2.5 : 1.5;
+  X.stroke();
+
+  // Inner dot (jack point)
+  X.beginPath(); X.arc(n.x, n.y, 5, 0, Math.PI * 2);
+  X.fillStyle = n.active ? '#fff' : n.type.color;
+  X.fill();
+
+  // Connector dots around edge (patch points visual)
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2 + t * 0.2 * (n.active ? 1 : 0);
+    const px = n.x + Math.cos(a) * (n.r - 4);
+    const py = n.y + Math.sin(a) * (n.r - 4);
+    X.beginPath(); X.arc(px, py, 1.5, 0, Math.PI * 2);
+    X.fillStyle = n.active ? '#ffffff60' : n.type.color + '30';
+    X.fill();
+  }
+
+  // Label
+  X.fillStyle = n.active ? '#fff' : n.type.color;
+  X.font = '700 9px Lekton';
+  X.textAlign = 'center';
+  X.fillText(n.type.name, n.x, n.y + n.r + 14);
+  X.font = '400 8px Lekton';
+  X.fillStyle = '#00000030';
+  // Show current parameter value if active
+  if (n.active && n.audioObj) {
+    if (n.audioObj.freq) {
+      const hz = n.audioObj.freq.value;
+      X.fillText(hz >= 1000 ? `${(hz/1000).toFixed(1)}kHz` : `${Math.round(hz)}Hz`, n.x, n.y + n.r + 24);
+    } else if (n.audioObj.gain) {
+      X.fillText(`${(n.audioObj.gain.value * 100).toFixed(0)}%`, n.x, n.y + n.r + 24);
+    } else if (n.audioObj.delay) {
+      X.fillText(`${(n.audioObj.delay.value * 1000).toFixed(0)}ms`, n.x, n.y + n.r + 24);
+    } else {
+      X.fillText(n.type.desc, n.x, n.y + n.r + 24);
+    }
+  } else {
+    X.fillText(n.type.desc, n.x, n.y + n.r + 24);
+  }
+  X.textAlign = 'left';
+}
+
+function drawPatch(p) {
+  p.age += 0.016;
+  const active = p.from.active && p.to.active;
+
+  // Curved cable between nodes
+  const midX = (p.from.x + p.to.x) / 2;
+  const sag = 30 + Math.sin(t * 0.5 + p.age) * 8;
+  const midY = Math.max(p.from.y, p.to.y) + sag;
+
+  X.beginPath();
+  X.moveTo(p.from.x, p.from.y);
+  X.quadraticCurveTo(midX, midY, p.to.x, p.to.y);
+  X.strokeStyle = p.color;
+  X.lineWidth = active ? 2.5 : 1.5;
+  X.globalAlpha = active ? 0.6 : 0.15;
+  X.stroke();
+
+  // Signal flow dots traveling along cable when active
+  if (active) {
+    const numDots = 4;
+    for (let i = 0; i < numDots; i++) {
+      const tt = ((t * 0.8 + i / numDots) % 1);
+      const u = 1 - tt;
+      const dx = u*u*p.from.x + 2*u*tt*midX + tt*tt*p.to.x;
+      const dy = u*u*p.from.y + 2*u*tt*midY + tt*tt*p.to.y;
+      X.beginPath(); X.arc(dx, dy, 2.5, 0, Math.PI * 2);
+      X.fillStyle = p.color;
+      X.globalAlpha = 0.5;
+      X.fill();
+    }
+  }
+  X.globalAlpha = 1;
+}
+
+function drawDragLine() {
+  if (!dragging) return;
+  X.beginPath();
+  X.moveTo(dragging.x, dragging.y);
+  const sag = 20 + Math.sin(t * 2) * 5;
+  const midX = (dragging.x + mx) / 2;
+  const midY = Math.max(dragging.y, my) + sag;
+  X.quadraticCurveTo(midX, midY, mx, my);
+  X.strokeStyle = dragging.type.color;
+  X.lineWidth = 2;
+  X.globalAlpha = 0.4;
+  X.setLineDash([4, 4]);
+  X.stroke();
+  X.setLineDash([]);
+  X.globalAlpha = 1;
+
+  // Snap indicator on target
+  if (dragTarget && dragTarget !== dragging) {
+    X.beginPath(); X.arc(dragTarget.x, dragTarget.y, dragTarget.r + 6, 0, Math.PI * 2);
+    X.strokeStyle = dragging.type.color;
+    X.lineWidth = 1.5;
+    X.globalAlpha = 0.3;
+    X.stroke();
+    X.globalAlpha = 1;
+  }
+}
+
+// --- KNOB INTERACTION ---
+// Scroll wheel on hovered node adjusts frequency/param
+addEventListener('wheel', e => {
+  const node = getHoveredNode();
+  if (!node || !node.audioObj) return;
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? (1 / 1.0595) : 1.0595; // Exact semitone: 2^(1/12)
+  if (node.audioObj.freq) {
+    node.audioObj.freq.value = Math.max(20, Math.min(8000, node.audioObj.freq.value * delta));
+  } else if (node.audioObj.gain) {
+    node.audioObj.gain.value = Math.max(0, Math.min(1, node.audioObj.gain.value + (delta > 1 ? 0.02 : -0.02)));
+  } else if (node.audioObj.delay) {
+    node.audioObj.delay.value = Math.max(0.01, Math.min(1, node.audioObj.delay.value * delta));
+  }
+}, { passive: false });
+
+// --- VU METER ---
+function drawVUMeter() {
+  const outNode = nodes.find(n => n.type.name === 'OUT');
+  if (!outNode || !outNode.active || !outNode.audioObj || !outNode.audioObj.analyser) return;
+
+  const an = outNode.audioObj.analyser;
+  const data = outNode.audioObj.vuData;
+  an.getByteTimeDomainData(data);
+
+  // Calculate RMS
+  let sum = 0;
+  for (let i = 0; i < data.length; i++) {
+    const v = (data[i] - 128) / 128;
+    sum += v * v;
+  }
+  const rms = Math.sqrt(sum / data.length);
+  const level = Math.min(1, rms * 4); // Scale up for visibility
+
+  // Draw meter bar near OUT node
+  const nx = outNode.x;
+  const ny = outNode.y;
+  const mw = 6, mh = 40;
+  const mx = nx + outNode.r + 10;
+  const my = ny - mh/2;
+
+  // Background
+  X.fillStyle = '#00000010';
+  X.fillRect(mx, my, mw, mh);
+
+  // Level bar (green to orange to red)
+  const fillH = level * mh;
+  const gradient = X.createLinearGradient(mx, my + mh, mx, my);
+  gradient.addColorStop(0, '#228a40');
+  gradient.addColorStop(0.6, '#d4922a');
+  gradient.addColorStop(1, '#CE2867');
+  X.fillStyle = gradient;
+  X.fillRect(mx, my + mh - fillH, mw, fillH);
+
+  // Border
+  X.strokeStyle = '#00000015';
+  X.lineWidth = 0.5;
+  X.strokeRect(mx, my, mw, mh);
+
+  // Label
+  X.fillStyle = '#00000025';
+  X.font = '7px Lekton';
+  X.textAlign = 'center';
+  X.fillText('VU', mx + mw/2, my - 3);
+  X.textAlign = 'left';
+}
+
+// --- MAIN LOOP ---
+function animate() {
+  t += 0.016;
+  X.clearRect(0, 0, W, H);
+  X.fillStyle = '#f0ece0';
+  X.fillRect(0, 0, W, H);
+
+  drawStaffLines();
+  drawScatterDots();
+
+  // Patches (behind nodes)
+  for (const p of patches) drawPatch(p);
+
+  // Drag line
+  drawDragLine();
+
+  // Nodes
+  for (const n of nodes) drawNode(n);
+  drawVUMeter();
+
+  // Status
+  const activeCount = nodes.filter(n => n.active).length;
+  const activePatches = patches.filter(p => p.from.active && p.to.active).length;
+  document.getElementById('statusText').textContent =
+    `nodes: ${nodes.length} · patches: ${patches.length} · active: ${activeCount} · signal: ${activePatches}`;
+
+  requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+</body>
+</html>

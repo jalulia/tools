@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>harmoniac</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lekton:wght@400;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0A0A0A; overflow: hidden; font-family: 'Lekton', monospace; }
+  canvas { display: block; position: fixed; top: 0; left: 0; }
+  #hud { position: fixed; top: 16px; left: 20px; z-index: 10; pointer-events: none; }
+  #hud h1 { font-size: 10px; font-weight: 700; color: #CE2867; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.6; }
+  #hud p { font-size: 9px; color: #ffffff10; letter-spacing: 0.08em; text-transform: uppercase; }
+  #readout { position: fixed; top: 16px; right: 20px; z-index: 10; pointer-events: none; text-align: right; }
+  #readout p { font-size: 9px; color: #3D6DF420; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+  #keys-hint { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10; pointer-events: none; }
+  #keys-hint p { font-size: 9px; color: #ffffff; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.25; transition: opacity 0.3s; }
+  #keys-guide { position: fixed; bottom: 48px; left: 50%; transform: translateX(-50%); z-index: 10; pointer-events: none; display: flex; gap: 4px; }
+  .key-box { width: 28px; height: 28px; border: 1px solid #ffffff25; border-radius: 3px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.15s; }
+  .key-box .letter { font-family: 'Lekton', monospace; font-size: 10px; color: #ffffff; opacity: 0.35; font-weight: 700; }
+  .key-box .note { font-family: 'Lekton', monospace; font-size: 7px; color: #ffffff; opacity: 0.2; }
+  .key-box.active { border-color: currentColor; }
+  .key-box.active .letter { opacity: 0.8; }
+  .key-box.active .note { opacity: 0.5; }
+  .wave-box { width: 22px; height: 28px; border: 1px solid #ffffff20; border-radius: 3px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; margin-left: 8px; }
+  .wave-box .num { font-family: 'Lekton', monospace; font-size: 10px; color: #ffffff; opacity: 0.3; }
+  .wave-box.active { border-color: #CE2867; }
+  .wave-box.active .num { opacity: 0.7; color: #CE2867; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <h1>ø co. / harmoniac</h1>
+  <p>modular synth · click or press keys</p>
+</div>
+<div id="readout">
+  <p id="readoutText">hz: --- · osc: ---</p>
+</div>
+<div id="keys-guide">
+  <div class="key-box" data-key="a" style="color:#F46138"><span class="letter">A</span><span class="note">C3</span></div>
+  <div class="key-box" data-key="s" style="color:#F46138"><span class="letter">S</span><span class="note">D3</span></div>
+  <div class="key-box" data-key="d" style="color:#CE2867"><span class="letter">D</span><span class="note">E3</span></div>
+  <div class="key-box" data-key="f" style="color:#3D6DF4"><span class="letter">F</span><span class="note">G3</span></div>
+  <div class="key-box" data-key="g" style="color:#3D6DF4"><span class="letter">G</span><span class="note">A3</span></div>
+  <div class="key-box" data-key="h" style="color:#F46138"><span class="letter">H</span><span class="note">C4</span></div>
+  <div class="key-box" data-key="j" style="color:#F46138"><span class="letter">J</span><span class="note">D4</span></div>
+  <div class="key-box" data-key="k" style="color:#CE2867"><span class="letter">K</span><span class="note">E4</span></div>
+  <div class="key-box" data-key="l" style="color:#3D6DF4"><span class="letter">L</span><span class="note">G4</span></div>
+  <div class="wave-box" data-wave="0"><span class="num">1</span></div>
+  <div class="wave-box" data-wave="1"><span class="num">2</span></div>
+  <div class="wave-box" data-wave="2"><span class="num">3</span></div>
+  <div class="wave-box" data-wave="3"><span class="num">4</span></div>
+</div>
+<div id="keys-hint">
+  <p>keyboard = notes · 1-4 = waveform · mouse y = filter · mouse x = resonance</p>
+</div>
+<script>
+const canvas = document.getElementById('c');
+const ctx2d = canvas.getContext('2d');
+const readoutText = document.getElementById('readoutText');
+let W, H, t = 0, mx = 0, my = 0;
+
+function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+addEventListener('resize', resize); resize();
+addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+
+// --- AUDIO SYNTH ---
+let audioCtx = null;
+const activeVoices = {};
+const voiceHistory = []; // recent note events for visual
+const WAVEFORMS = ['sine', 'triangle', 'sawtooth', 'square'];
+let currentWave = 0;
+
+// Musical scale — A minor pentatonic + extras for weirdness
+const NOTE_MAP = {
+  'a': 130.81, // C3
+  's': 146.83, // D3
+  'd': 164.81, // E3
+  'f': 196.00, // G3
+  'g': 220.00, // A3
+  'h': 261.63, // C4
+  'j': 293.66, // D4
+  'k': 329.63, // E4
+  'l': 392.00, // G4
+};
+
+// Waveform selector
+const WAVE_KEYS = { '1': 0, '2': 1, '3': 2, '4': 3 };
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function ensureAnalyser() {
+  if (!window.sharedAnalyser) {
+    window.sharedAnalyser = audioCtx.createAnalyser();
+    window.sharedAnalyser.fftSize = 1024;
+    window.sharedTimeDomain = new Uint8Array(window.sharedAnalyser.fftSize);
+    window.sharedAnalyser.connect(audioCtx.destination);
+  }
+}
+
+function startNote(freq) {
+  if (!audioCtx) initAudio();
+  if (activeVoices[freq]) return;
+  ensureAnalyser();
+
+  const now = audioCtx.currentTime;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 200 + (1 - my / H) * 4000;
+  filter.Q.value = 4 + (mx / W) * 12;
+
+  const gain = audioCtx.createGain();
+  const nodes = []; // track all oscillators for cleanup
+
+  if (currentWave === 0) {
+    // 1: Clean sine — pure, warm
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine'; osc.frequency.value = freq;
+    const sub = audioCtx.createOscillator();
+    sub.type = 'sine'; sub.frequency.value = freq / 2;
+    const subG = audioCtx.createGain(); subG.gain.value = 0.25;
+    osc.connect(filter); sub.connect(subG); subG.connect(filter);
+    osc.start(); sub.start();
+    nodes.push(osc, sub);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.15, now + 0.05);
+    gain.gain.linearRampToValueAtTime(0.1, now + 0.2);
+
+  } else if (currentWave === 1) {
+    // 2: Deep bass — sub-heavy, warm rumble
+    const sub = audioCtx.createOscillator();
+    sub.type = 'sine'; sub.frequency.value = freq / 2;
+    const sub2 = audioCtx.createOscillator();
+    sub2.type = 'sine'; sub2.frequency.value = freq / 4;
+    const sub2G = audioCtx.createGain(); sub2G.gain.value = 0.4;
+    const body = audioCtx.createOscillator();
+    body.type = 'triangle'; body.frequency.value = freq;
+    const bodyG = audioCtx.createGain(); bodyG.gain.value = 0.15;
+    sub.connect(filter); sub2.connect(sub2G); sub2G.connect(filter);
+    body.connect(bodyG); bodyG.connect(filter);
+    sub.start(); sub2.start(); body.start();
+    nodes.push(sub, sub2, body);
+    // Slow attack for weight
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.2, now + 0.08);
+    gain.gain.linearRampToValueAtTime(0.15, now + 0.3);
+
+  } else if (currentWave === 2) {
+    // 3: Ethereal pad — detuned sines, slow swell, cloud-like
+    const osc1 = audioCtx.createOscillator();
+    osc1.type = 'sine'; osc1.frequency.value = freq * 1.003; // slight sharp
+    const osc2 = audioCtx.createOscillator();
+    osc2.type = 'sine'; osc2.frequency.value = freq * 0.997; // slight flat
+    const osc3 = audioCtx.createOscillator();
+    osc3.type = 'sine'; osc3.frequency.value = freq * 2.001; // octave shimmer
+    const shimG = audioCtx.createGain(); shimG.gain.value = 0.08;
+    osc1.connect(filter); osc2.connect(filter);
+    osc3.connect(shimG); shimG.connect(filter);
+    // LFO for gentle vibrato
+    const lfo = audioCtx.createOscillator();
+    lfo.type = 'sine'; lfo.frequency.value = 0.3;
+    const lfoG = audioCtx.createGain(); lfoG.gain.value = 2;
+    lfo.connect(lfoG); lfoG.connect(osc1.frequency); lfoG.connect(osc2.frequency);
+    osc1.start(); osc2.start(); osc3.start(); lfo.start();
+    nodes.push(osc1, osc2, osc3, lfo);
+    // Slow cloud attack
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.12, now + 0.3);
+    gain.gain.linearRampToValueAtTime(0.1, now + 0.8);
+
+  } else {
+    // 4: Marimba — sharp attack triangle + harmonic ping, fast decay
+    const bar = audioCtx.createOscillator();
+    bar.type = 'triangle'; bar.frequency.value = freq;
+    const ping = audioCtx.createOscillator();
+    ping.type = 'sine'; ping.frequency.value = freq * 4; // 2nd overtone ring
+    const pingG = audioCtx.createGain();
+    pingG.gain.setValueAtTime(0.15, now);
+    pingG.gain.exponentialRampToValueAtTime(0.001, now + 0.12); // fast ring decay
+    const body = audioCtx.createOscillator();
+    body.type = 'sine'; body.frequency.value = freq;
+    const bodyG = audioCtx.createGain(); bodyG.gain.value = 0.3;
+    bar.connect(filter); ping.connect(pingG); pingG.connect(filter);
+    body.connect(bodyG); bodyG.connect(filter);
+    bar.start(); ping.start(); body.start();
+    nodes.push(bar, ping, body);
+    // Sharp attack, quick decay with sustain
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.25, now + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.06, now + 0.2);
+    gain.gain.linearRampToValueAtTime(0.04, now + 0.5);
+  }
+
+  filter.connect(gain);
+  gain.connect(window.sharedAnalyser);
+
+  activeVoices[freq] = { nodes, gain, filter, startTime: t };
+
+  voiceHistory.push({
+    freq, t: t, x: mx, y: my, wave: currentWave,
+    color: freq < 200 ? '#F46138' : freq < 300 ? '#CE2867' : freq < 400 ? '#3D6DF4' : '#2C9FF4',
+    alive: true
+  });
+}
+
+function stopNote(freq) {
+  const voice = activeVoices[freq];
+  if (!voice) return;
+  const releaseTime = currentWave === 2 ? 0.6 : 0.3;
+  voice.gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + releaseTime);
+  setTimeout(() => {
+    voice.nodes.forEach(n => { try { n.stop(); n.disconnect(); } catch(e){} });
+  }, (releaseTime + 0.1) * 1000);
+  delete activeVoices[freq];
+
+  const ev = voiceHistory.findLast(v => v.freq === freq && v.alive);
+  if (ev) ev.alive = false;
+}
+
+// Update filter in real-time
+function updateFilters() {
+  for (const v of Object.values(activeVoices)) {
+    v.filter.frequency.value = 200 + (1 - my / H) * 4000;
+    v.filter.Q.value = 4 + (mx / W) * 12;
+  }
+}
+
+// Keyboard
+addEventListener('keydown', e => {
+  if (e.repeat) return;
+  const key = e.key.toLowerCase();
+  if (NOTE_MAP[key]) {
+    startNote(NOTE_MAP[key]);
+    const box = document.querySelector(`.key-box[data-key="${key}"]`);
+    if (box) box.classList.add('active');
+  }
+  if (WAVE_KEYS[key] !== undefined) {
+    currentWave = WAVE_KEYS[key];
+    document.querySelectorAll('.wave-box').forEach(b => b.classList.remove('active'));
+    const wbox = document.querySelector(`.wave-box[data-wave="${currentWave}"]`);
+    if (wbox) wbox.classList.add('active');
+  }
+});
+addEventListener('keyup', e => {
+  const key = e.key.toLowerCase();
+  if (NOTE_MAP[key]) {
+    stopNote(NOTE_MAP[key]);
+    const box = document.querySelector(`.key-box[data-key="${key}"]`);
+    if (box) box.classList.remove('active');
+  }
+});
+
+// Click/touch — play note based on X position
+addEventListener('mousedown', e => {
+  initAudio();
+  const notes = Object.values(NOTE_MAP);
+  const idx = Math.floor((e.clientX / W) * notes.length);
+  const freq = notes[Math.min(idx, notes.length - 1)];
+  startNote(freq);
+  addEventListener('mouseup', () => stopNote(freq), { once: true });
+});
+
+// --- VISUALS ---
+
+// Oscilloscope rings (from ref 1)
+function drawOscRings(cx, cy, r) {
+  const numRings = 7;
+  const activeCount = Object.keys(activeVoices).length;
+  for (let i = 0; i < numRings; i++) {
+    const rr = r * 0.3 + (i / numRings) * r * 0.7;
+    const wobble = activeCount > 0 ? Math.sin(t * 3 + i * 0.8) * (5 + activeCount * 3) : 0;
+    const scaleX = 0.6 + Math.sin(t * 0.5 + i * 0.3) * 0.3 + (activeCount * 0.05);
+    ctx2d.save();
+    ctx2d.translate(cx, cy);
+    ctx2d.scale(scaleX, 1);
+    ctx2d.beginPath();
+    ctx2d.arc(0, 0, rr + wobble, 0, Math.PI * 2);
+    ctx2d.strokeStyle = i % 2 === 0 ? '#ffffff' : '#CE2867';
+    ctx2d.globalAlpha = 0.1 + activeCount * 0.04 + (i === 3 ? 0.06 : 0);
+    ctx2d.lineWidth = 0.8;
+    ctx2d.stroke();
+    ctx2d.restore();
+  }
+  ctx2d.globalAlpha = 1;
+
+  // Brackets
+  const bw = 12, bh = r * 1.8;
+  ctx2d.strokeStyle = '#ffffff18';
+  ctx2d.lineWidth = 1;
+  // Left bracket
+  ctx2d.beginPath();
+  ctx2d.moveTo(cx - r * 0.85 + bw, cy - bh/2);
+  ctx2d.lineTo(cx - r * 0.85, cy - bh/2);
+  ctx2d.lineTo(cx - r * 0.85, cy + bh/2);
+  ctx2d.lineTo(cx - r * 0.85 + bw, cy + bh/2);
+  ctx2d.stroke();
+  // Right bracket
+  ctx2d.beginPath();
+  ctx2d.moveTo(cx + r * 0.85 - bw, cy - bh/2);
+  ctx2d.lineTo(cx + r * 0.85, cy - bh/2);
+  ctx2d.lineTo(cx + r * 0.85, cy + bh/2);
+  ctx2d.lineTo(cx + r * 0.85 - bw, cy + bh/2);
+  ctx2d.stroke();
+}
+
+// Layered waveform display (from ref 4)
+function drawWaveforms(cx, cy, w, h) {
+  const activeFreqs = Object.keys(activeVoices).map(Number);
+  if (activeFreqs.length === 0) {
+    // Idle waveform — subtle breathing
+    ctx2d.beginPath();
+    for (let i = 0; i <= 200; i++) {
+      const x = cx - w/2 + (i / 200) * w;
+      const y = cy + Math.sin(i * 0.05 + t * 0.5) * 8;
+      if (i === 0) ctx2d.moveTo(x, y); else ctx2d.lineTo(x, y);
+    }
+    ctx2d.strokeStyle = '#CE2867';
+    ctx2d.globalAlpha = 0.06;
+    ctx2d.lineWidth = 0.8;
+    ctx2d.stroke();
+    ctx2d.globalAlpha = 1;
+    return;
+  }
+
+  // Draw composite waveform for each active voice
+  const colors = ['#F46138', '#CE2867', '#3D6DF4', '#2C9FF4', '#ffffff'];
+  activeFreqs.forEach((freq, vi) => {
+    const voice = activeVoices[freq];
+    const age = t - voice.startTime;
+    const c = colors[vi % colors.length];
+
+    // Multiple overlapping traces (the "weird" layering from ref 4)
+    for (let layer = 0; layer < 3; layer++) {
+      ctx2d.beginPath();
+      const phaseOff = layer * 0.3 + vi * 0.7;
+      const ampMod = 1 - layer * 0.25;
+      for (let i = 0; i <= 300; i++) {
+        const x = cx - w/2 + (i / 300) * w;
+        const normFreq = freq / 130;
+        const y = cy + Math.sin(i * normFreq * 0.04 + t * freq * 0.01 + phaseOff) * h * 0.3 * ampMod
+                     + Math.sin(i * normFreq * 0.02 + t * 2 + layer) * h * 0.1;
+        if (i === 0) ctx2d.moveTo(x, y); else ctx2d.lineTo(x, y);
+      }
+      ctx2d.strokeStyle = c;
+      ctx2d.globalAlpha = (0.3 - layer * 0.06) * Math.min(1, age * 5);
+      ctx2d.lineWidth = 0.8;
+      ctx2d.stroke();
+    }
+  });
+  ctx2d.globalAlpha = 1;
+}
+
+// Comfort zone / eye shape (from refs 2 & 3)
+function drawEyeMesh(cx, cy, r) {
+  const activeCount = Object.keys(activeVoices).length;
+  const breath = Math.sin(t * 0.8) * 0.15;
+  const openness = 0.3 + activeCount * 0.1 + breath;
+
+  // Eye outline
+  ctx2d.beginPath();
+  ctx2d.moveTo(cx - r, cy);
+  ctx2d.quadraticCurveTo(cx, cy - r * openness, cx + r, cy);
+  ctx2d.quadraticCurveTo(cx, cy + r * openness, cx - r, cy);
+  ctx2d.strokeStyle = '#2C9FF4';
+  ctx2d.globalAlpha = 0.2 + activeCount * 0.06;
+  ctx2d.lineWidth = 1;
+  ctx2d.stroke();
+
+  // Inner mesh rings
+  for (let i = 1; i <= 5; i++) {
+    const ir = r * (i / 6);
+    const io = openness * (i / 5);
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx - ir, cy);
+    ctx2d.quadraticCurveTo(cx, cy - ir * io, cx + ir, cy);
+    ctx2d.quadraticCurveTo(cx, cy + ir * io, cx - ir, cy);
+    ctx2d.strokeStyle = i % 2 === 0 ? '#3D6DF4' : '#CE2867';
+    ctx2d.globalAlpha = 0.1 + activeCount * 0.04;
+    ctx2d.lineWidth = 0.6;
+    ctx2d.stroke();
+  }
+
+  // Pupil
+  ctx2d.beginPath();
+  ctx2d.arc(cx, cy, 4 + activeCount * 2, 0, Math.PI * 2);
+  ctx2d.fillStyle = '#CE2867';
+  ctx2d.globalAlpha = 0.35 + activeCount * 0.15;
+  ctx2d.fill();
+  ctx2d.globalAlpha = 1;
+
+  // Radial mesh lines (the "weird" from ref 2)
+  const meshLines = 12 + activeCount * 2;
+  for (let i = 0; i < meshLines; i++) {
+    const a = (i / meshLines) * Math.PI * 2 + t * 0.02;
+    const len = r * (0.4 + Math.sin(t * 0.5 + i * 0.5) * 0.2 + activeCount * 0.05);
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx + Math.cos(a) * 8, cy + Math.sin(a) * 8);
+    ctx2d.lineTo(cx + Math.cos(a) * len, cy + Math.sin(a) * len * openness);
+    ctx2d.strokeStyle = i % 3 === 0 ? '#F46138' : '#3D6DF420';
+    ctx2d.lineWidth = 0.4;
+    ctx2d.globalAlpha = 0.15 + activeCount * 0.05;
+    ctx2d.stroke();
+  }
+  ctx2d.globalAlpha = 1;
+}
+
+// Note event particles
+function drawNoteEvents() {
+  // Keep last 40 events
+  while (voiceHistory.length > 40) voiceHistory.shift();
+
+  for (const ev of voiceHistory) {
+    const age = t - ev.t;
+    if (age > 8) continue;
+
+    const decay = Math.max(0, 1 - age / (ev.alive ? 20 : 3));
+    const r = 10 + age * 25;
+
+    // Expanding ring
+    ctx2d.beginPath();
+    ctx2d.arc(ev.x, ev.y, r, 0, Math.PI * 2);
+    ctx2d.strokeStyle = ev.color;
+    ctx2d.globalAlpha = decay * 0.12;
+    ctx2d.lineWidth = 0.6;
+    ctx2d.stroke();
+
+    // Inner dot
+    if (ev.alive) {
+      ctx2d.beginPath();
+      ctx2d.arc(ev.x, ev.y, 3, 0, Math.PI * 2);
+      ctx2d.fillStyle = ev.color;
+      ctx2d.globalAlpha = 0.4;
+      ctx2d.fill();
+    }
+  }
+  ctx2d.globalAlpha = 1;
+}
+
+// Oscilloscope display
+function drawOscilloscope(x, y, w, h) {
+  if (!window.sharedAnalyser || !window.sharedTimeDomain) return;
+  window.sharedAnalyser.getByteTimeDomainData(window.sharedTimeDomain);
+  const data = window.sharedTimeDomain;
+  const len = data.length;
+
+  // Background panel
+  ctx2d.fillStyle = '#0A0A0A';
+  ctx2d.globalAlpha = 0.3;
+  ctx2d.fillRect(x, y, w, h);
+  ctx2d.globalAlpha = 1;
+
+  // Border
+  ctx2d.strokeStyle = '#ffffff18';
+  ctx2d.lineWidth = 0.5;
+  ctx2d.strokeRect(x, y, w, h);
+
+  // Center line
+  ctx2d.beginPath();
+  ctx2d.moveTo(x, y + h/2);
+  ctx2d.lineTo(x + w, y + h/2);
+  ctx2d.strokeStyle = '#ffffff06';
+  ctx2d.lineWidth = 0.5;
+  ctx2d.stroke();
+
+  // Waveform
+  ctx2d.beginPath();
+  for (let i = 0; i < len; i++) {
+    const px = x + (i / len) * w;
+    const py = y + (data[i] / 255) * h;
+    if (i === 0) ctx2d.moveTo(px, py); else ctx2d.lineTo(px, py);
+  }
+  ctx2d.strokeStyle = '#CE2867';
+  ctx2d.globalAlpha = 0.8;
+  ctx2d.lineWidth = 1;
+  ctx2d.stroke();
+  ctx2d.globalAlpha = 1;
+
+  // Label
+  ctx2d.fillStyle = '#ffffff';
+  ctx2d.globalAlpha = 0.2;
+  ctx2d.font = '8px Lekton';
+  ctx2d.fillText('SCOPE', x + 4, y + 10);
+  ctx2d.globalAlpha = 1;
+}
+
+// HUD overlay (from ref 1)
+function drawHUD() {
+  const activeCount = Object.keys(activeVoices).length;
+  ctx2d.fillStyle = '#ffffff';
+  ctx2d.globalAlpha = 0.08;
+  ctx2d.font = '9px Lekton';
+
+  // Timecode
+  const sec = Math.floor(t);
+  const fr = Math.floor((t % 1) * 30);
+  ctx2d.fillText(`T:${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}:${String(fr).padStart(2,'0')}`, 20, H - 20);
+
+  // Crosshairs
+  const chSz = 6;
+  // Center
+  ctx2d.strokeStyle = '#ffffff';
+  ctx2d.globalAlpha = 0.08;
+  ctx2d.lineWidth = 0.5;
+  ctx2d.beginPath(); ctx2d.moveTo(W/2 - chSz, H/2); ctx2d.lineTo(W/2 + chSz, H/2); ctx2d.stroke();
+  ctx2d.beginPath(); ctx2d.moveTo(W/2, H/2 - chSz); ctx2d.lineTo(W/2, H/2 + chSz); ctx2d.stroke();
+
+  // Hash marks at edges
+  for (let i = 0; i < 4; i++) {
+    const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
+    const dist = Math.min(W, H) * 0.42;
+    const hx = W/2 + Math.cos(angle) * dist;
+    const hy = H/2 + Math.sin(angle) * dist;
+    ctx2d.beginPath();
+    ctx2d.moveTo(hx - 4, hy - 4); ctx2d.lineTo(hx + 4, hy + 4);
+    ctx2d.moveTo(hx + 4, hy - 4); ctx2d.lineTo(hx - 4, hy + 4);
+    ctx2d.stroke();
+  }
+
+  ctx2d.globalAlpha = 1;
+
+  // Readout
+  if (activeCount > 0) {
+    const freqs = Object.keys(activeVoices).map(Number);
+    readoutText.textContent = `hz: ${freqs[0].toFixed(0)} · osc: ${WAVEFORMS[currentWave]} · voices: ${activeCount}`;
+  } else {
+    readoutText.textContent = `hz: --- · osc: ${WAVEFORMS[currentWave]} · filter: ${Math.floor(200 + (1 - my/H) * 4000)}`;
+  }
+}
+
+// Scan line effect
+function drawScanlines() {
+  ctx2d.fillStyle = '#ffffff';
+  for (let y = 0; y < H; y += 3) {
+    ctx2d.globalAlpha = 0.008;
+    ctx2d.fillRect(0, y, W, 1);
+  }
+  ctx2d.globalAlpha = 1;
+}
+
+// Noise grain
+function drawGrain() {
+  const imgData = ctx2d.getImageData(0, 0, W, H);
+  const data = imgData.data;
+  // Sparse grain — only affect every 8th pixel for performance
+  for (let i = 0; i < data.length; i += 32) {
+    const noise = (Math.random() - 0.5) * 12;
+    data[i] += noise;
+    data[i+1] += noise;
+    data[i+2] += noise;
+  }
+  ctx2d.putImageData(imgData, 0, 0);
+}
+
+// --- MAIN LOOP ---
+function animate() {
+  t += 0.016;
+
+  ctx2d.clearRect(0, 0, W, H);
+  ctx2d.fillStyle = '#0A0A0A';
+  ctx2d.fillRect(0, 0, W, H);
+
+  updateFilters();
+
+  const cx = W / 2;
+  const cy = H / 2;
+  const r = Math.min(W, H) * 0.35;
+
+  // Layer 1: Eye mesh (background)
+  drawEyeMesh(cx, cy, r);
+
+  // Layer 2: Oscilloscope rings
+  drawOscRings(cx, cy, r * 0.7);
+
+  // Layer 3: Waveforms
+  drawWaveforms(cx, cy, W * 0.8, H * 0.4);
+
+  // Layer 3b: Oscilloscope
+  drawOscilloscope(W - 200, 60, 170, 80);
+
+  // Layer 4: Note events
+  drawNoteEvents();
+
+  // Layer 5: HUD
+  drawHUD();
+
+  // Layer 6: Scanlines + grain
+  drawScanlines();
+  // Grain is expensive — only every 3rd frame
+  if (Math.floor(t * 60) % 3 === 0) drawGrain();
+
+  requestAnimationFrame(animate);
+}
+
+mx = W/2; my = H/2;
+// Set initial waveform indicator
+document.querySelector('.wave-box[data-wave="0"]').classList.add('active');
+animate();
+</script>
+</body>
+</html>

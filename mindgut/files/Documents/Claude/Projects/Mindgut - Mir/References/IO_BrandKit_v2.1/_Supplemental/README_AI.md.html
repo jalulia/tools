@@ -1,0 +1,257 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>README_AI.md</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>README_AI.md</b><span>~/Documents/Claude/Projects/Mindgut - Mir/References/IO_BrandKit_v2.1/_Supplemental/README_AI.md</span><span>0.01 MB · sha256 c7b235e6a94d4dc6…</span><a download="README_AI.md" id="dl" href="#">Download the original</a></header><main><pre># IO Brand ToolKit — LLM Integration Guide
+
+&gt; **Audience:** Language models, AI agents, and developers integrating brand constraints into generation pipelines.
+&gt; **Version:** 2.1 · March 2026
+
+---
+
+## 0. Start here — the brand kit PDF is your visual ground truth
+
+The most important file in this toolkit is **`Assets/Impossible Brand Kit.pdf`** (23MB, ~20 pages). The spec documents (`IO_Brand_Spec_AI.md`) give you rules and values. The PDF shows you what those rules *look like* when executed correctly. You need both.
+
+**How to use them together:**
+
+1. **Load `IO_Brand_Spec_AI.md` first** — it gives you every hex value, font name, spacing rule, and constraint in machine-readable form. This is your rulebook.
+2. **Read the brand kit PDF for visual reference** — it shows real application examples, composition patterns, light/dark mode treatments, gradient usage, and the overall *feel* the brand is going for. Rules without visual context produce technically correct but lifeless output.
+3. **When in doubt, the PDF wins.** If you&#x27;re unsure how to compose a layout, apply a gradient, or balance dark vs. light — look at the PDF pages listed below. The spec tells you *what*; the PDF shows you *how*.
+
+### PDF page map — what&#x27;s where
+
+| Pages | Section | What you&#x27;ll learn from it |
+|-------|---------|--------------------------|
+| 1 | Cover | The canonical dark-mode layout: grid overlay, large Ø watermark at low opacity, footer pattern (company name left, date + ø mark right), gradient accent bar |
+| 2 | Table of Contents | The canonical light-mode layout: warm cream background, large Ø wireframe line-art as compositional anchor, dark text hierarchy, editorial spacing |
+| 3–5 | Brand Ecosystem | Sub-brands, toolkit assets grid, gradient blob/orb usage in compositions — shows how organic shapes coexist with geometric structure |
+| 6–8 | Logo System | Primary stacked lockup, Ø mark, wordmark, horizontal — both on dark and light. Clear space rules, sizing. **Critical:** see how the logo sits within compositions, not just in isolation |
+| 9–13 | Typography | Quasimoda Black specimens, Lekton data labels, SF Pro body. **Pages 12–13 are essential** — they show typography on cream: bold black headlines, Ø wireframe watermark behind text, dark image insets on cream surfaces |
+| 14–15 | Color Overview | Joy Division waveforms as section dividers, prismatic Ø outline (concentric rings in brand colors), gradient bar + foundation palette bar side by side |
+| 16–17 | Color Detail | Full-bleed accent swatches with descriptions. **Page 17 is essential** — four application mockups showing how color appears in real layouts (prismatic wheel on cream, checkerboard grid, dark inset panels, accent-colored surfaces) |
+| 18–20 | Applications | Real-world usage: stage mockups, social templates, presentation layouts. Shows the balance between dark and cream, how gradient art works as background texture vs. foreground accent |
+
+### What to look for in the PDF
+
+When generating branded output, reference these visual patterns:
+
+- **Dark mode compositions (most pages):** Rich black (#0A0A0A) background, thin white grid at 10–15% opacity, gradient elements as hero moments, white text hierarchy, Ø mark at low opacity as watermark
+- **Light mode compositions (pp. 2, 12, 17, 20):** Warm cream (#F5F0E8) background, Ø wireframe in black at 4–8% opacity, bold black text, thin charcoal grid at 4–6% opacity, black line-art graphics (not filled shapes), gradient washes at very low opacity from edges
+- **Footer pattern (every page):** Thin rule, company name bottom-left in Lekton, date bottom-right, small Ø mark
+- **Section dividers:** Large section number + title on dark background, dramatic graphic element on the right half (waveforms, orbs, gradient shapes)
+- **Pacing:** The PDF itself demonstrates the dark/light rhythm — ~70% dark, ~30% cream, with cream pages providing editorial breathing room
+
+---
+
+## 1. File map — what to load for each task
+
+| Task | Load these files | Priority |
+|------|-----------------|----------|
+| Generate any branded output | `IO_Brand_Spec_AI.md` (full) + skim PDF pp. 1–2 for layout feel | Required |
+| Build a presentation / slide deck | Spec → LAYOUT, COLOR, TYPOGRAPHY, COMPOSITION, GRAPHICS + PDF pp. 9–13 (typography in use), pp. 18–20 (applications) | Sections + PDF |
+| Write branded copy / email | Spec → IDENTITY (Voice), IDENTITY (Name), APPLICATION (Email) | Sections |
+| Create a data visualization | Spec → COLOR (Accent), GRAPHICS (Data Viz), TYPOGRAPHY (Accent) + PDF p. 17 (color in use) | Sections + PDF |
+| Design a social media post | Spec → COLOR, LOGO, APPLICATION (Social), GRAPHICS + PDF pp. 6–8 (logo in use) | Sections + PDF |
+| Design a light-mode layout | Spec → COMPOSITION, COLOR (Light mode) + **PDF pp. 2, 12, 17, 20** (every cream example) | Critical |
+| Evaluate existing brand output | `IO_Brand_Spec_AI_Validation.md` + Spec → COMMON AI FAILURE MODES | Both |
+| Understand available assets | `IO_Brand_Assets.md` | Standalone |
+| Quick human-readable reference | `README.md` | Standalone |
+
+**Retrieval strategy:** The spec uses `## SECTION: Subsection` naming (e.g., `## COLOR: Foundation Palette`). Target specific sections by matching the `## CATEGORY:` prefix. Each section is self-contained — it includes its own Rule, Specs, Use-when, Never, and Example blocks.
+
+---
+
+## 2. Section naming pattern (for chunk targeting)
+
+```
+## CATEGORY: Specific Topic
+```
+
+Categories and their sections:
+
+| Category | Sections |
+|----------|----------|
+| `IDENTITY` | Company Name &amp; Notation, Brand Positioning, Brand Voice &amp; Tone |
+| `LOGO` | Primary Mark, Secondary Mark, Tertiary Mark, Clear Space, Color Variations |
+| `COLOR` | Foundation Palette, Accent Palette, Gradient Specifications |
+| `TYPOGRAPHY` | Display, Secondary/UI, Accent/Technical, Body, Fallback Stack, Additional Fonts |
+| `COMPOSITION` | Principles &amp; Spatial Relationships |
+| `PHOTOGRAPHY` | Direction (treatments, subjects, nevers) |
+| `GRAPHICS` | Prismatic Diffusion, Vector Shapes, Gradient Shapes, 3D Objects, Icon System, Data Viz, Grid System, Concentric Circles, Expressive Gradient Frameworks |
+| `LAYOUT` | Section Numbering, Slide Templates (dark + light), Spacing |
+| `APPLICATION` | Email Signature, Social Media, Presentations, Print |
+| `COMMON AI FAILURE MODES` | (single section — always worth loading as a pre-flight check) |
+| `QUICK REFERENCE` | One-Glance Cheat Sheet |
+
+---
+
+## 3. Pre-generation checklist — 10 highest-frequency violations
+
+Before generating any branded output, verify against these constraints. They represent the most common failures observed in LLM-generated brand content, ranked by frequency:
+
+| # | Violation | Constraint | Check |
+|---|-----------|-----------|-------|
+| 1 | Writing &quot;Impossible&quot; without ø | Always `Impøssible` (U+00F8). Never `Impossible`, never `∅` (U+2205). | String check |
+| 2 | Colored backgrounds as default | Background must be `#0A0A0A` (dark) or `#F5F0E8` (light). Never a brand accent color as surface. | First pixel |
+| 3 | Accent color &gt; 15% surface area | Electric Horizon, Sky Pulse, Solar Ember, Pulsewave are *punctuation*. Measure total colored area vs. total layout area. | Area ratio |
+| 4 | Generic off-brand blue | `#007BFF`, `#0000FF`, `#0066CC` are all wrong. Brand blue is `#3D6DF4` (Electric Horizon) or `#2C9FF4` (Sky Pulse). | Hex match |
+| 5 | Gradient on every page | Prismatic gradient is for hero moments, dividers, accent bars. ≤20-30% of pages/slides in a deck. | Page count |
+| 6 | Misquoted tagline | &quot;But never impossible&quot; — NOT &quot;But never is impossible.&quot; | String match |
+| 7 | Dark mode only | Light mode (`#F5F0E8` warm cream, black line-art, B&amp;W photography) is equal-status. Long decks must mix both. | Mode audit |
+| 8 | Unfiltered stock photography | Every photo needs treatment: B&amp;W, circular crop, concentric overlays, or geometric wireframe. | Visual check |
+| 9 | Body text in display font | Quasimoda Black is headlines only. Body is SF Pro Regular. | Font assignment |
+| 10 | &quot;Ad agency&quot; positioning | The company is an &quot;innovation house.&quot; Never &quot;agency,&quot; &quot;firm,&quot; or &quot;consultancy.&quot; | Term check |
+
+---
+
+## 4. Decision trees — when you&#x27;re choosing between options
+
+### 4.1 Background color selection
+
+```
+START
+├── Is this a hero/cover/divider slide?
+│   ├── YES → Consider prismatic gradient or full-bleed brand pattern
+│   └── NO ↓
+├── What is the content purpose?
+│   ├── Data-heavy, immersive, dramatic → Dark mode (#0A0A0A)
+│   ├── Editorial, photography-forward, breathing room → Light mode (#F5F0E8)
+│   ├── Standard content slide → Default to dark (#0A0A0A)
+│   └── In a long deck? → Alternate: ~60-70% dark, ~30-40% light for pacing
+├── DARK selected:
+│   └── Background: #0A0A0A. Cards: #1A1A1A. Never pure #000000 as bg.
+└── LIGHT selected:
+    └── Background: #F5F0E8 (warm cream). NEVER pure #FFFFFF.
+        Cards: #1A1A1A (dark on cream) or #E8E3DB (subtle on cream).
+```
+
+### 4.2 Text color hierarchy
+
+```
+DARK BACKGROUND (#0A0A0A):
+├── Headlines → #FFFFFF (pure white)
+├── Subheadings → #FFFFFF or #E0E0E0
+├── Body text → #E0E0E0 (off-white)
+├── Secondary/captions → #B0B0B0 (light gray)
+├── Tertiary/metadata → #666666
+└── Accent text → brand color at full saturation (sparingly)
+
+LIGHT BACKGROUND (#F5F0E8):
+├── Headlines → #000000 (true black)
+├── Subheadings → #1A1A1A
+├── Body text → #333333
+├── Secondary/captions → #555555–#666666
+├── Tertiary/metadata → #999999
+└── Accent text → avoid on cream. Use dark text. Color is for small elements only.
+```
+
+### 4.3 Accent color priority
+
+```
+When you need ONE accent color:
+└── Electric Horizon #3D6DF4 (default choice)
+
+When you need TWO:
+└── Electric Horizon #3D6DF4 + Sky Pulse #2C9FF4
+
+When you need THREE (e.g., charts):
+└── Electric Horizon → Sky Pulse → Solar Ember #F46138
+
+When you need FOUR (max for data viz):
+└── Electric Horizon → Sky Pulse → Solar Ember → Pulsewave #CE2867
+
+NEVER use more than 4 data colors.
+NEVER use accent colors as background fill.
+ALWAYS: total accent area ≤ 15% of composition.
+```
+
+### 4.4 Font assignment
+
+```
+START: What kind of text?
+├── Hero text, page title, section header, display → Quasimoda Black (Tier 1)
+│   └── Size: 40-72px desktop, 28-40px mobile. Line-height: 1.0-1.1
+├── Subheading, nav label, button, card title → SF Pro Medium (Tier 2)
+│   └── Size: 16-24px. Line-height: 1.3-1.4
+├── Data label, KPI number, slide number, code, timestamp → LEKTON (Tier 3)
+│   └── Size: 12-20px. Letter-spacing: 0.04-0.08em
+│   └── Section numbers always use /01 /02 format
+├── Paragraph, email body, description, caption → SF Pro Regular (Tier 4)
+│   └── Size: 16px default. Line-height: 1.6. Max-width: 680px
+└── NEVER: body text in Quasimoda. NEVER: headlines in SF Pro Regular.
+```
+
+### 4.5 Graphic treatment selection
+
+```
+DARK BACKGROUND:
+├── Need geometric decoration? → IO Vector Shapes (flat fill, single accent color)
+├── Need hero/dramatic moment? → IO Gradient Shapes (gradient fill + glow)
+├── Need texture/structure? → Grid pattern (white lines, 10-15% opacity)
+├── Need radiating energy? → Concentric circles (Sky Pulse, fading opacity)
+├── Need showcase object? → Impøssible Øbjects (one 3D render per comp, max)
+└── Data visualization? → Chart with brand accent colors, LEKTON labels
+
+LIGHT BACKGROUND (#F5F0E8):
+├── Need geometric decoration? → Line-art wireframes (black outlines, no fill)
+├── Need radiating energy? → Concentric circles (black strokes)
+├── Need compositional anchor? → Large Ø wireframe at 4-8% opacity (see PDF p. 2, 12)
+├── Need texture? → Grid (charcoal lines, 4-6% opacity)
+├── Need ambient mood? → Gradient wash (brand colors at 5-15% opacity, from edges)
+├── Need decorative detail? → Icon clusters (4-5 small black line-art icons, corners)
+├── Photography? → B&amp;W, circular crop, concentric circle overlay
+└── NEVER: filled color shapes on light. NEVER: gradient glow shapes on light. NEVER: 3D objects on light.
+```
+
+### 4.6 Slide deck composition ratios
+
+```
+Short deck (&lt; 8 slides):
+├── 1 title slide (gradient or pattern)
+├── 5-6 content slides (dark default, 1-2 light for variety)
+└── 1 closing slide (gradient or ø mark)
+
+Medium deck (8-20 slides):
+├── 1 title
+├── 1-2 section dividers (gradient/pattern)
+├── 10-14 content slides (~70% dark, ~30% light)
+├── 1-2 data/KPI slides (dark)
+└── 1 closing
+
+Long deck (20+ slides):
+├── 1 title
+├── 3-5 section dividers
+├── 60-70% dark content slides
+├── 30-40% light content slides (pacing, editorial, photography)
+├── 2-4 data/KPI slides (dark)
+└── 1 closing
+
+EVERY slide must have:
+- At least one brand element (logo mark, accent bar, typography tier, color, grid)
+- Consistent footer: company name (left), date/section (right), thin rule, small ø
+- /XX section numbers in LEKTON where applicable
+```
+
+---
+
+## 5. Integration patterns
+
+### Loading with the brand kit PDF
+
+For multimodal LLMs that can read images/PDFs: load the brand kit PDF alongside the spec. Point the model at specific pages for the task at hand (see the page map in section 0). The PDF provides what text descriptions cannot — spatial relationships, gradient feel, compositional balance, the overall mood.
+
+For text-only LLMs: rely on `IO_Brand_Spec_AI.md` and `IO_Brand_Guide_Toolkit.html` (the interactive HTML guide renders all visual patterns in-browser, including gradient frameworks, logo SVGs, and light/dark mode treatments).
+
+### As a system prompt
+
+Load `IO_Brand_Spec_AI.md` as a system prompt or prepended context. Append the COMMON AI FAILURE MODES section as a final reminder. For token efficiency, load only the sections relevant to the task (see file map above).
+
+### As a retrieval target
+
+Index each `## SECTION:` block as an independent chunk. The section naming pattern (`CATEGORY: Topic`) provides natural retrieval keys. The QUICK REFERENCE section works as a fallback when no specific section matches.
+
+### As a validation checklist
+
+After generating output, run the 10-item pre-generation checklist (section 3 above) as a post-generation audit. The `IO_Brand_Spec_AI_Validation.md` file provides 5 worked examples.
+
+---
+
+v2.1 · March 2026
+</pre></main><script>var b=atob("IyBJTyBCcmFuZCBUb29sS2l0IOKAlCBMTE0gSW50ZWdyYXRpb24gR3VpZGUKCj4gKipBdWRpZW5jZToqKiBMYW5ndWFnZSBtb2RlbHMsIEFJIGFnZW50cywgYW5kIGRldmVsb3BlcnMgaW50ZWdyYXRpbmcgYnJhbmQgY29uc3RyYWludHMgaW50byBnZW5lcmF0aW9uIHBpcGVsaW5lcy4KPiAqKlZlcnNpb246KiogMi4xIMK3IE1hcmNoIDIwMjYKCi0tLQoKIyMgMC4gU3RhcnQgaGVyZSDigJQgdGhlIGJyYW5kIGtpdCBQREYgaXMgeW91ciB2aXN1YWwgZ3JvdW5kIHRydXRoCgpUaGUgbW9zdCBpbXBvcnRhbnQgZmlsZSBpbiB0aGlzIHRvb2xraXQgaXMgKipgQXNzZXRzL0ltcG9zc2libGUgQnJhbmQgS2l0LnBkZmAqKiAoMjNNQiwgfjIwIHBhZ2VzKS4gVGhlIHNwZWMgZG9jdW1lbnRzIChgSU9fQnJhbmRfU3BlY19BSS5tZGApIGdpdmUgeW91IHJ1bGVzIGFuZCB2YWx1ZXMuIFRoZSBQREYgc2hvd3MgeW91IHdoYXQgdGhvc2UgcnVsZXMgKmxvb2sgbGlrZSogd2hlbiBleGVjdXRlZCBjb3JyZWN0bHkuIFlvdSBuZWVkIGJvdGguCgoqKkhvdyB0byB1c2UgdGhlbSB0b2dldGhlcjoqKgoKMS4gKipMb2FkIGBJT19CcmFuZF9TcGVjX0FJLm1kYCBmaXJzdCoqIOKAlCBpdCBnaXZlcyB5b3UgZXZlcnkgaGV4IHZhbHVlLCBmb250IG5hbWUsIHNwYWNpbmcgcnVsZSwgYW5kIGNvbnN0cmFpbnQgaW4gbWFjaGluZS1yZWFkYWJsZSBmb3JtLiBUaGlzIGlzIHlvdXIgcnVsZWJvb2suCjIuICoqUmVhZCB0aGUgYnJhbmQga2l0IFBERiBmb3IgdmlzdWFsIHJlZmVyZW5jZSoqIOKAlCBpdCBzaG93cyByZWFsIGFwcGxpY2F0aW9uIGV4YW1wbGVzLCBjb21wb3NpdGlvbiBwYXR0ZXJucywgbGlnaHQvZGFyayBtb2RlIHRyZWF0bWVudHMsIGdyYWRpZW50IHVzYWdlLCBhbmQgdGhlIG92ZXJhbGwgKmZlZWwqIHRoZSBicmFuZCBpcyBnb2luZyBmb3IuIFJ1bGVzIHdpdGhvdXQgdmlzdWFsIGNvbnRleHQgcHJvZHVjZSB0ZWNobmljYWxseSBjb3JyZWN0IGJ1dCBsaWZlbGVzcyBvdXRwdXQuCjMuICoqV2hlbiBpbiBkb3VidCwgdGhlIFBERiB3aW5zLioqIElmIHlvdSdyZSB1bnN1cmUgaG93IHRvIGNvbXBvc2UgYSBsYXlvdXQsIGFwcGx5IGEgZ3JhZGllbnQsIG9yIGJhbGFuY2UgZGFyayB2cy4gbGlnaHQg4oCUIGxvb2sgYXQgdGhlIFBERiBwYWdlcyBsaXN0ZWQgYmVsb3cuIFRoZSBzcGVjIHRlbGxzIHlvdSAqd2hhdCo7IHRoZSBQREYgc2hvd3MgeW91ICpob3cqLgoKIyMjIFBERiBwYWdlIG1hcCDigJQgd2hhdCdzIHdoZXJlCgp8IFBhZ2VzIHwgU2VjdGlvbiB8IFdoYXQgeW91J2xsIGxlYXJuIGZyb20gaXQgfAp8LS0tLS0tLXwtLS0tLS0tLS18LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS18CnwgMSB8IENvdmVyIHwgVGhlIGNhbm9uaWNhbCBkYXJrLW1vZGUgbGF5b3V0OiBncmlkIG92ZXJsYXksIGxhcmdlIMOYIHdhdGVybWFyayBhdCBsb3cgb3BhY2l0eSwgZm9vdGVyIHBhdHRlcm4gKGNvbXBhbnkgbmFtZSBsZWZ0LCBkYXRlICsgw7ggbWFyayByaWdodCksIGdyYWRpZW50IGFjY2VudCBiYXIgfAp8IDIgfCBUYWJsZSBvZiBDb250ZW50cyB8IFRoZSBjYW5vbmljYWwgbGlnaHQtbW9kZSBsYXlvdXQ6IHdhcm0gY3JlYW0gYmFja2dyb3VuZCwgbGFyZ2Ugw5ggd2lyZWZyYW1lIGxpbmUtYXJ0IGFzIGNvbXBvc2l0aW9uYWwgYW5jaG9yLCBkYXJrIHRleHQgaGllcmFyY2h5LCBlZGl0b3JpYWwgc3BhY2luZyB8CnwgM+KAkzUgfCBCcmFuZCBFY29zeXN0ZW0gfCBTdWItYnJhbmRzLCB0b29sa2l0IGFzc2V0cyBncmlkLCBncmFkaWVudCBibG9iL29yYiB1c2FnZSBpbiBjb21wb3NpdGlvbnMg4oCUIHNob3dzIGhvdyBvcmdhbmljIHNoYXBlcyBjb2V4aXN0IHdpdGggZ2VvbWV0cmljIHN0cnVjdHVyZSB8CnwgNuKAkzggfCBMb2dvIFN5c3RlbSB8IFByaW1hcnkgc3RhY2tlZCBsb2NrdXAsIMOYIG1hcmssIHdvcmRtYXJrLCBob3Jpem9udGFsIOKAlCBib3RoIG9uIGRhcmsgYW5kIGxpZ2h0LiBDbGVhciBzcGFjZSBydWxlcywgc2l6aW5nLiAqKkNyaXRpY2FsOioqIHNlZSBob3cgdGhlIGxvZ28gc2l0cyB3aXRoaW4gY29tcG9zaXRpb25zLCBub3QganVzdCBpbiBpc29sYXRpb24gfAp8IDnigJMxMyB8IFR5cG9ncmFwaHkgfCBRdWFzaW1vZGEgQmxhY2sgc3BlY2ltZW5zLCBMZWt0b24gZGF0YSBsYWJlbHMsIFNGIFBybyBib2R5LiAqKlBhZ2VzIDEy4oCTMTMgYXJlIGVzc2VudGlhbCoqIOKAlCB0aGV5IHNob3cgdHlwb2dyYXBoeSBvbiBjcmVhbTogYm9sZCBibGFjayBoZWFkbGluZXMsIMOYIHdpcmVmcmFtZSB3YXRlcm1hcmsgYmVoaW5kIHRleHQsIGRhcmsgaW1hZ2UgaW5zZXRzIG9uIGNyZWFtIHN1cmZhY2VzIHwKfCAxNOKAkzE1IHwgQ29sb3IgT3ZlcnZpZXcgfCBKb3kgRGl2aXNpb24gd2F2ZWZvcm1zIGFzIHNlY3Rpb24gZGl2aWRlcnMsIHByaXNtYXRpYyDDmCBvdXRsaW5lIChjb25jZW50cmljIHJpbmdzIGluIGJyYW5kIGNvbG9ycyksIGdyYWRpZW50IGJhciArIGZvdW5kYXRpb24gcGFsZXR0ZSBiYXIgc2lkZSBieSBzaWRlIHwKfCAxNuKAkzE3IHwgQ29sb3IgRGV0YWlsIHwgRnVsbC1ibGVlZCBhY2NlbnQgc3dhdGNoZXMgd2l0aCBkZXNjcmlwdGlvbnMuICoqUGFnZSAxNyBpcyBlc3NlbnRpYWwqKiDigJQgZm91ciBhcHBsaWNhdGlvbiBtb2NrdXBzIHNob3dpbmcgaG93IGNvbG9yIGFwcGVhcnMgaW4gcmVhbCBsYXlvdXRzIChwcmlzbWF0aWMgd2hlZWwgb24gY3JlYW0sIGNoZWNrZXJib2FyZCBncmlkLCBkYXJrIGluc2V0IHBhbmVscywgYWNjZW50LWNvbG9yZWQgc3VyZmFjZXMpIHwKfCAxOOKAkzIwIHwgQXBwbGljYXRpb25zIHwgUmVhbC13b3JsZCB1c2FnZTogc3RhZ2UgbW9ja3Vwcywgc29jaWFsIHRlbXBsYXRlcywgcHJlc2VudGF0aW9uIGxheW91dHMuIFNob3dzIHRoZSBiYWxhbmNlIGJldHdlZW4gZGFyayBhbmQgY3JlYW0sIGhvdyBncmFkaWVudCBhcnQgd29ya3MgYXMgYmFja2dyb3VuZCB0ZXh0dXJlIHZzLiBmb3JlZ3JvdW5kIGFjY2VudCB8CgojIyMgV2hhdCB0byBsb29rIGZvciBpbiB0aGUgUERGCgpXaGVuIGdlbmVyYXRpbmcgYnJhbmRlZCBvdXRwdXQsIHJlZmVyZW5jZSB0aGVzZSB2aXN1YWwgcGF0dGVybnM6CgotICoqRGFyayBtb2RlIGNvbXBvc2l0aW9ucyAobW9zdCBwYWdlcyk6KiogUmljaCBibGFjayAoIzBBMEEwQSkgYmFja2dyb3VuZCwgdGhpbiB3aGl0ZSBncmlkIGF0IDEw4oCTMTUlIG9wYWNpdHksIGdyYWRpZW50IGVsZW1lbnRzIGFzIGhlcm8gbW9tZW50cywgd2hpdGUgdGV4dCBoaWVyYXJjaHksIMOYIG1hcmsgYXQgbG93IG9wYWNpdHkgYXMgd2F0ZXJtYXJrCi0gKipMaWdodCBtb2RlIGNvbXBvc2l0aW9ucyAocHAuIDIsIDEyLCAxNywgMjApOioqIFdhcm0gY3JlYW0gKCNGNUYwRTgpIGJhY2tncm91bmQsIMOYIHdpcmVmcmFtZSBpbiBibGFjayBhdCA04oCTOCUgb3BhY2l0eSwgYm9sZCBibGFjayB0ZXh0LCB0aGluIGNoYXJjb2FsIGdyaWQgYXQgNOKAkzYlIG9wYWNpdHksIGJsYWNrIGxpbmUtYXJ0IGdyYXBoaWNzIChub3QgZmlsbGVkIHNoYXBlcyksIGdyYWRpZW50IHdhc2hlcyBhdCB2ZXJ5IGxvdyBvcGFjaXR5IGZyb20gZWRnZXMKLSAqKkZvb3RlciBwYXR0ZXJuIChldmVyeSBwYWdlKToqKiBUaGluIHJ1bGUsIGNvbXBhbnkgbmFtZSBib3R0b20tbGVmdCBpbiBMZWt0b24sIGRhdGUgYm90dG9tLXJpZ2h0LCBzbWFsbCDDmCBtYXJrCi0gKipTZWN0aW9uIGRpdmlkZXJzOioqIExhcmdlIHNlY3Rpb24gbnVtYmVyICsgdGl0bGUgb24gZGFyayBiYWNrZ3JvdW5kLCBkcmFtYXRpYyBncmFwaGljIGVsZW1lbnQgb24gdGhlIHJpZ2h0IGhhbGYgKHdhdmVmb3Jtcywgb3JicywgZ3JhZGllbnQgc2hhcGVzKQotICoqUGFjaW5nOioqIFRoZSBQREYgaXRzZWxmIGRlbW9uc3RyYXRlcyB0aGUgZGFyay9saWdodCByaHl0aG0g4oCUIH43MCUgZGFyaywgfjMwJSBjcmVhbSwgd2l0aCBjcmVhbSBwYWdlcyBwcm92aWRpbmcgZWRpdG9yaWFsIGJyZWF0aGluZyByb29tCgotLS0KCiMjIDEuIEZpbGUgbWFwIOKAlCB3aGF0IHRvIGxvYWQgZm9yIGVhY2ggdGFzawoKfCBUYXNrIHwgTG9hZCB0aGVzZSBmaWxlcyB8IFByaW9yaXR5IHwKfC0tLS0tLXwtLS0tLS0tLS0tLS0tLS0tLXwtLS0tLS0tLS0tfAp8IEdlbmVyYXRlIGFueSBicmFuZGVkIG91dHB1dCB8IGBJT19CcmFuZF9TcGVjX0FJLm1kYCAoZnVsbCkgKyBza2ltIFBERiBwcC4gMeKAkzIgZm9yIGxheW91dCBmZWVsIHwgUmVxdWlyZWQgfAp8IEJ1aWxkIGEgcHJlc2VudGF0aW9uIC8gc2xpZGUgZGVjayB8IFNwZWMg4oaSIExBWU9VVCwgQ09MT1IsIFRZUE9HUkFQSFksIENPTVBPU0lUSU9OLCBHUkFQSElDUyArIFBERiBwcC4gOeKAkzEzICh0eXBvZ3JhcGh5IGluIHVzZSksIHBwLiAxOOKAkzIwIChhcHBsaWNhdGlvbnMpIHwgU2VjdGlvbnMgKyBQREYgfAp8IFdyaXRlIGJyYW5kZWQgY29weSAvIGVtYWlsIHwgU3BlYyDihpIgSURFTlRJVFkgKFZvaWNlKSwgSURFTlRJVFkgKE5hbWUpLCBBUFBMSUNBVElPTiAoRW1haWwpIHwgU2VjdGlvbnMgfAp8IENyZWF0ZSBhIGRhdGEgdmlzdWFsaXphdGlvbiB8IFNwZWMg4oaSIENPTE9SIChBY2NlbnQpLCBHUkFQSElDUyAoRGF0YSBWaXopLCBUWVBPR1JBUEhZIChBY2NlbnQpICsgUERGIHAuIDE3IChjb2xvciBpbiB1c2UpIHwgU2VjdGlvbnMgKyBQREYgfAp8IERlc2lnbiBhIHNvY2lhbCBtZWRpYSBwb3N0IHwgU3BlYyDihpIgQ09MT1IsIExPR08sIEFQUExJQ0FUSU9OIChTb2NpYWwpLCBHUkFQSElDUyArIFBERiBwcC4gNuKAkzggKGxvZ28gaW4gdXNlKSB8IFNlY3Rpb25zICsgUERGIHwKfCBEZXNpZ24gYSBsaWdodC1tb2RlIGxheW91dCB8IFNwZWMg4oaSIENPTVBPU0lUSU9OLCBDT0xPUiAoTGlnaHQgbW9kZSkgKyAqKlBERiBwcC4gMiwgMTIsIDE3LCAyMCoqIChldmVyeSBjcmVhbSBleGFtcGxlKSB8IENyaXRpY2FsIHwKfCBFdmFsdWF0ZSBleGlzdGluZyBicmFuZCBvdXRwdXQgfCBgSU9fQnJhbmRfU3BlY19BSV9WYWxpZGF0aW9uLm1kYCArIFNwZWMg4oaSIENPTU1PTiBBSSBGQUlMVVJFIE1PREVTIHwgQm90aCB8CnwgVW5kZXJzdGFuZCBhdmFpbGFibGUgYXNzZXRzIHwgYElPX0JyYW5kX0Fzc2V0cy5tZGAgfCBTdGFuZGFsb25lIHwKfCBRdWljayBodW1hbi1yZWFkYWJsZSByZWZlcmVuY2UgfCBgUkVBRE1FLm1kYCB8IFN0YW5kYWxvbmUgfAoKKipSZXRyaWV2YWwgc3RyYXRlZ3k6KiogVGhlIHNwZWMgdXNlcyBgIyMgU0VDVElPTjogU3Vic2VjdGlvbmAgbmFtaW5nIChlLmcuLCBgIyMgQ09MT1I6IEZvdW5kYXRpb24gUGFsZXR0ZWApLiBUYXJnZXQgc3BlY2lmaWMgc2VjdGlvbnMgYnkgbWF0Y2hpbmcgdGhlIGAjIyBDQVRFR09SWTpgIHByZWZpeC4gRWFjaCBzZWN0aW9uIGlzIHNlbGYtY29udGFpbmVkIOKAlCBpdCBpbmNsdWRlcyBpdHMgb3duIFJ1bGUsIFNwZWNzLCBVc2Utd2hlbiwgTmV2ZXIsIGFuZCBFeGFtcGxlIGJsb2Nrcy4KCi0tLQoKIyMgMi4gU2VjdGlvbiBuYW1pbmcgcGF0dGVybiAoZm9yIGNodW5rIHRhcmdldGluZykKCmBgYAojIyBDQVRFR09SWTogU3BlY2lmaWMgVG9waWMKYGBgCgpDYXRlZ29yaWVzIGFuZCB0aGVpciBzZWN0aW9uczoKCnwgQ2F0ZWdvcnkgfCBTZWN0aW9ucyB8CnwtLS0tLS0tLS0tfC0tLS0tLS0tLS18CnwgYElERU5USVRZYCB8IENvbXBhbnkgTmFtZSAmIE5vdGF0aW9uLCBCcmFuZCBQb3NpdGlvbmluZywgQnJhbmQgVm9pY2UgJiBUb25lIHwKfCBgTE9HT2AgfCBQcmltYXJ5IE1hcmssIFNlY29uZGFyeSBNYXJrLCBUZXJ0aWFyeSBNYXJrLCBDbGVhciBTcGFjZSwgQ29sb3IgVmFyaWF0aW9ucyB8CnwgYENPTE9SYCB8IEZvdW5kYXRpb24gUGFsZXR0ZSwgQWNjZW50IFBhbGV0dGUsIEdyYWRpZW50IFNwZWNpZmljYXRpb25zIHwKfCBgVFlQT0dSQVBIWWAgfCBEaXNwbGF5LCBTZWNvbmRhcnkvVUksIEFjY2VudC9UZWNobmljYWwsIEJvZHksIEZhbGxiYWNrIFN0YWNrLCBBZGRpdGlvbmFsIEZvbnRzIHwKfCBgQ09NUE9TSVRJT05gIHwgUHJpbmNpcGxlcyAmIFNwYXRpYWwgUmVsYXRpb25zaGlwcyB8CnwgYFBIT1RPR1JBUEhZYCB8IERpcmVjdGlvbiAodHJlYXRtZW50cywgc3ViamVjdHMsIG5ldmVycykgfAp8IGBHUkFQSElDU2AgfCBQcmlzbWF0aWMgRGlmZnVzaW9uLCBWZWN0b3IgU2hhcGVzLCBHcmFkaWVudCBTaGFwZXMsIDNEIE9iamVjdHMsIEljb24gU3lzdGVtLCBEYXRhIFZpeiwgR3JpZCBTeXN0ZW0sIENvbmNlbnRyaWMgQ2lyY2xlcywgRXhwcmVzc2l2ZSBHcmFkaWVudCBGcmFtZXdvcmtzIHwKfCBgTEFZT1VUYCB8IFNlY3Rpb24gTnVtYmVyaW5nLCBTbGlkZSBUZW1wbGF0ZXMgKGRhcmsgKyBsaWdodCksIFNwYWNpbmcgfAp8IGBBUFBMSUNBVElPTmAgfCBFbWFpbCBTaWduYXR1cmUsIFNvY2lhbCBNZWRpYSwgUHJlc2VudGF0aW9ucywgUHJpbnQgfAp8IGBDT01NT04gQUkgRkFJTFVSRSBNT0RFU2AgfCAoc2luZ2xlIHNlY3Rpb24g4oCUIGFsd2F5cyB3b3J0aCBsb2FkaW5nIGFzIGEgcHJlLWZsaWdodCBjaGVjaykgfAp8IGBRVUlDSyBSRUZFUkVOQ0VgIHwgT25lLUdsYW5jZSBDaGVhdCBTaGVldCB8CgotLS0KCiMjIDMuIFByZS1nZW5lcmF0aW9uIGNoZWNrbGlzdCDigJQgMTAgaGlnaGVzdC1mcmVxdWVuY3kgdmlvbGF0aW9ucwoKQmVmb3JlIGdlbmVyYXRpbmcgYW55IGJyYW5kZWQgb3V0cHV0LCB2ZXJpZnkgYWdhaW5zdCB0aGVzZSBjb25zdHJhaW50cy4gVGhleSByZXByZXNlbnQgdGhlIG1vc3QgY29tbW9uIGZhaWx1cmVzIG9ic2VydmVkIGluIExMTS1nZW5lcmF0ZWQgYnJhbmQgY29udGVudCwgcmFua2VkIGJ5IGZyZXF1ZW5jeToKCnwgIyB8IFZpb2xhdGlvbiB8IENvbnN0cmFpbnQgfCBDaGVjayB8CnwtLS18LS0tLS0tLS0tLS18LS0tLS0tLS0tLS18LS0tLS0tLXwKfCAxIHwgV3JpdGluZyAiSW1wb3NzaWJsZSIgd2l0aG91dCDDuCB8IEFsd2F5cyBgSW1ww7hzc2libGVgIChVKzAwRjgpLiBOZXZlciBgSW1wb3NzaWJsZWAsIG5ldmVyIGDiiIVgIChVKzIyMDUpLiB8IFN0cmluZyBjaGVjayB8CnwgMiB8IENvbG9yZWQgYmFja2dyb3VuZHMgYXMgZGVmYXVsdCB8IEJhY2tncm91bmQgbXVzdCBiZSBgIzBBMEEwQWAgKGRhcmspIG9yIGAjRjVGMEU4YCAobGlnaHQpLiBOZXZlciBhIGJyYW5kIGFjY2VudCBjb2xvciBhcyBzdXJmYWNlLiB8IEZpcnN0IHBpeGVsIHwKfCAzIHwgQWNjZW50IGNvbG9yID4gMTUlIHN1cmZhY2UgYXJlYSB8IEVsZWN0cmljIEhvcml6b24sIFNreSBQdWxzZSwgU29sYXIgRW1iZXIsIFB1bHNld2F2ZSBhcmUgKnB1bmN0dWF0aW9uKi4gTWVhc3VyZSB0b3RhbCBjb2xvcmVkIGFyZWEgdnMuIHRvdGFsIGxheW91dCBhcmVhLiB8IEFyZWEgcmF0aW8gfAp8IDQgfCBHZW5lcmljIG9mZi1icmFuZCBibHVlIHwgYCMwMDdCRkZgLCBgIzAwMDBGRmAsIGAjMDA2NkNDYCBhcmUgYWxsIHdyb25nLiBCcmFuZCBibHVlIGlzIGAjM0Q2REY0YCAoRWxlY3RyaWMgSG9yaXpvbikgb3IgYCMyQzlGRjRgIChTa3kgUHVsc2UpLiB8IEhleCBtYXRjaCB8CnwgNSB8IEdyYWRpZW50IG9uIGV2ZXJ5IHBhZ2UgfCBQcmlzbWF0aWMgZ3JhZGllbnQgaXMgZm9yIGhlcm8gbW9tZW50cywgZGl2aWRlcnMsIGFjY2VudCBiYXJzLiDiiaQyMC0zMCUgb2YgcGFnZXMvc2xpZGVzIGluIGEgZGVjay4gfCBQYWdlIGNvdW50IHwKfCA2IHwgTWlzcXVvdGVkIHRhZ2xpbmUgfCAiQnV0IG5ldmVyIGltcG9zc2libGUiIOKAlCBOT1QgIkJ1dCBuZXZlciBpcyBpbXBvc3NpYmxlLiIgfCBTdHJpbmcgbWF0Y2ggfAp8IDcgfCBEYXJrIG1vZGUgb25seSB8IExpZ2h0IG1vZGUgKGAjRjVGMEU4YCB3YXJtIGNyZWFtLCBibGFjayBsaW5lLWFydCwgQiZXIHBob3RvZ3JhcGh5KSBpcyBlcXVhbC1zdGF0dXMuIExvbmcgZGVja3MgbXVzdCBtaXggYm90aC4gfCBNb2RlIGF1ZGl0IHwKfCA4IHwgVW5maWx0ZXJlZCBzdG9jayBwaG90b2dyYXBoeSB8IEV2ZXJ5IHBob3RvIG5lZWRzIHRyZWF0bWVudDogQiZXLCBjaXJjdWxhciBjcm9wLCBjb25jZW50cmljIG92ZXJsYXlzLCBvciBnZW9tZXRyaWMgd2lyZWZyYW1lLiB8IFZpc3VhbCBjaGVjayB8CnwgOSB8IEJvZHkgdGV4dCBpbiBkaXNwbGF5IGZvbnQgfCBRdWFzaW1vZGEgQmxhY2sgaXMgaGVhZGxpbmVzIG9ubHkuIEJvZHkgaXMgU0YgUHJvIFJlZ3VsYXIuIHwgRm9udCBhc3NpZ25tZW50IHwKfCAxMCB8ICJBZCBhZ2VuY3kiIHBvc2l0aW9uaW5nIHwgVGhlIGNvbXBhbnkgaXMgYW4gImlubm92YXRpb24gaG91c2UuIiBOZXZlciAiYWdlbmN5LCIgImZpcm0sIiBvciAiY29uc3VsdGFuY3kuIiB8IFRlcm0gY2hlY2sgfAoKLS0tCgojIyA0LiBEZWNpc2lvbiB0cmVlcyDigJQgd2hlbiB5b3UncmUgY2hvb3NpbmcgYmV0d2VlbiBvcHRpb25zCgojIyMgNC4xIEJhY2tncm91bmQgY29sb3Igc2VsZWN0aW9uCgpgYGAKU1RBUlQK4pSc4pSA4pSAIElzIHRoaXMgYSBoZXJvL2NvdmVyL2RpdmlkZXIgc2xpZGU/CuKUgiAgIOKUnOKUgOKUgCBZRVMg4oaSIENvbnNpZGVyIHByaXNtYXRpYyBncmFkaWVudCBvciBmdWxsLWJsZWVkIGJyYW5kIHBhdHRlcm4K4pSCICAg4pSU4pSA4pSAIE5PIOKGkwrilJzilIDilIAgV2hhdCBpcyB0aGUgY29udGVudCBwdXJwb3NlPwrilIIgICDilJzilIDilIAgRGF0YS1oZWF2eSwgaW1tZXJzaXZlLCBkcmFtYXRpYyDihpIgRGFyayBtb2RlICgjMEEwQTBBKQrilIIgICDilJzilIDilIAgRWRpdG9yaWFsLCBwaG90b2dyYXBoeS1mb3J3YXJkLCBicmVhdGhpbmcgcm9vbSDihpIgTGlnaHQgbW9kZSAoI0Y1RjBFOCkK4pSCICAg4pSc4pSA4pSAIFN0YW5kYXJkIGNvbnRlbnQgc2xpZGUg4oaSIERlZmF1bHQgdG8gZGFyayAoIzBBMEEwQSkK4pSCICAg4pSU4pSA4pSAIEluIGEgbG9uZyBkZWNrPyDihpIgQWx0ZXJuYXRlOiB+NjAtNzAlIGRhcmssIH4zMC00MCUgbGlnaHQgZm9yIHBhY2luZwrilJzilIDilIAgREFSSyBzZWxlY3RlZDoK4pSCICAg4pSU4pSA4pSAIEJhY2tncm91bmQ6ICMwQTBBMEEuIENhcmRzOiAjMUExQTFBLiBOZXZlciBwdXJlICMwMDAwMDAgYXMgYmcuCuKUlOKUgOKUgCBMSUdIVCBzZWxlY3RlZDoKICAgIOKUlOKUgOKUgCBCYWNrZ3JvdW5kOiAjRjVGMEU4ICh3YXJtIGNyZWFtKS4gTkVWRVIgcHVyZSAjRkZGRkZGLgogICAgICAgIENhcmRzOiAjMUExQTFBIChkYXJrIG9uIGNyZWFtKSBvciAjRThFM0RCIChzdWJ0bGUgb24gY3JlYW0pLgpgYGAKCiMjIyA0LjIgVGV4dCBjb2xvciBoaWVyYXJjaHkKCmBgYApEQVJLIEJBQ0tHUk9VTkQgKCMwQTBBMEEpOgrilJzilIDilIAgSGVhZGxpbmVzIOKGkiAjRkZGRkZGIChwdXJlIHdoaXRlKQrilJzilIDilIAgU3ViaGVhZGluZ3Mg4oaSICNGRkZGRkYgb3IgI0UwRTBFMArilJzilIDilIAgQm9keSB0ZXh0IOKGkiAjRTBFMEUwIChvZmYtd2hpdGUpCuKUnOKUgOKUgCBTZWNvbmRhcnkvY2FwdGlvbnMg4oaSICNCMEIwQjAgKGxpZ2h0IGdyYXkpCuKUnOKUgOKUgCBUZXJ0aWFyeS9tZXRhZGF0YSDihpIgIzY2NjY2NgrilJTilIDilIAgQWNjZW50IHRleHQg4oaSIGJyYW5kIGNvbG9yIGF0IGZ1bGwgc2F0dXJhdGlvbiAoc3BhcmluZ2x5KQoKTElHSFQgQkFDS0dST1VORCAoI0Y1RjBFOCk6CuKUnOKUgOKUgCBIZWFkbGluZXMg4oaSICMwMDAwMDAgKHRydWUgYmxhY2spCuKUnOKUgOKUgCBTdWJoZWFkaW5ncyDihpIgIzFBMUExQQrilJzilIDilIAgQm9keSB0ZXh0IOKGkiAjMzMzMzMzCuKUnOKUgOKUgCBTZWNvbmRhcnkvY2FwdGlvbnMg4oaSICM1NTU1NTXigJMjNjY2NjY2CuKUnOKUgOKUgCBUZXJ0aWFyeS9tZXRhZGF0YSDihpIgIzk5OTk5OQrilJTilIDilIAgQWNjZW50IHRleHQg4oaSIGF2b2lkIG9uIGNyZWFtLiBVc2UgZGFyayB0ZXh0LiBDb2xvciBpcyBmb3Igc21hbGwgZWxlbWVudHMgb25seS4KYGBgCgojIyMgNC4zIEFjY2VudCBjb2xvciBwcmlvcml0eQoKYGBgCldoZW4geW91IG5lZWQgT05FIGFjY2VudCBjb2xvcjoK4pSU4pSA4pSAIEVsZWN0cmljIEhvcml6b24gIzNENkRGNCAoZGVmYXVsdCBjaG9pY2UpCgpXaGVuIHlvdSBuZWVkIFRXTzoK4pSU4pSA4pSAIEVsZWN0cmljIEhvcml6b24gIzNENkRGNCArIFNreSBQdWxzZSAjMkM5RkY0CgpXaGVuIHlvdSBuZWVkIFRIUkVFIChlLmcuLCBjaGFydHMpOgrilJTilIDilIAgRWxlY3RyaWMgSG9yaXpvbiDihpIgU2t5IFB1bHNlIOKGkiBTb2xhciBFbWJlciAjRjQ2MTM4CgpXaGVuIHlvdSBuZWVkIEZPVVIgKG1heCBmb3IgZGF0YSB2aXopOgrilJTilIDilIAgRWxlY3RyaWMgSG9yaXpvbiDihpIgU2t5IFB1bHNlIOKGkiBTb2xhciBFbWJlciDihpIgUHVsc2V3YXZlICNDRTI4NjcKCk5FVkVSIHVzZSBtb3JlIHRoYW4gNCBkYXRhIGNvbG9ycy4KTkVWRVIgdXNlIGFjY2VudCBjb2xvcnMgYXMgYmFja2dyb3VuZCBmaWxsLgpBTFdBWVM6IHRvdGFsIGFjY2VudCBhcmVhIOKJpCAxNSUgb2YgY29tcG9zaXRpb24uCmBgYAoKIyMjIDQuNCBGb250IGFzc2lnbm1lbnQKCmBgYApTVEFSVDogV2hhdCBraW5kIG9mIHRleHQ/CuKUnOKUgOKUgCBIZXJvIHRleHQsIHBhZ2UgdGl0bGUsIHNlY3Rpb24gaGVhZGVyLCBkaXNwbGF5IOKGkiBRdWFzaW1vZGEgQmxhY2sgKFRpZXIgMSkK4pSCICAg4pSU4pSA4pSAIFNpemU6IDQwLTcycHggZGVza3RvcCwgMjgtNDBweCBtb2JpbGUuIExpbmUtaGVpZ2h0OiAxLjAtMS4xCuKUnOKUgOKUgCBTdWJoZWFkaW5nLCBuYXYgbGFiZWwsIGJ1dHRvbiwgY2FyZCB0aXRsZSDihpIgU0YgUHJvIE1lZGl1bSAoVGllciAyKQrilIIgICDilJTilIDilIAgU2l6ZTogMTYtMjRweC4gTGluZS1oZWlnaHQ6IDEuMy0xLjQK4pSc4pSA4pSAIERhdGEgbGFiZWwsIEtQSSBudW1iZXIsIHNsaWRlIG51bWJlciwgY29kZSwgdGltZXN0YW1wIOKGkiBMRUtUT04gKFRpZXIgMykK4pSCICAg4pSU4pSA4pSAIFNpemU6IDEyLTIwcHguIExldHRlci1zcGFjaW5nOiAwLjA0LTAuMDhlbQrilIIgICDilJTilIDilIAgU2VjdGlvbiBudW1iZXJzIGFsd2F5cyB1c2UgLzAxIC8wMiBmb3JtYXQK4pSc4pSA4pSAIFBhcmFncmFwaCwgZW1haWwgYm9keSwgZGVzY3JpcHRpb24sIGNhcHRpb24g4oaSIFNGIFBybyBSZWd1bGFyIChUaWVyIDQpCuKUgiAgIOKUlOKUgOKUgCBTaXplOiAxNnB4IGRlZmF1bHQuIExpbmUtaGVpZ2h0OiAxLjYuIE1heC13aWR0aDogNjgwcHgK4pSU4pSA4pSAIE5FVkVSOiBib2R5IHRleHQgaW4gUXVhc2ltb2RhLiBORVZFUjogaGVhZGxpbmVzIGluIFNGIFBybyBSZWd1bGFyLgpgYGAKCiMjIyA0LjUgR3JhcGhpYyB0cmVhdG1lbnQgc2VsZWN0aW9uCgpgYGAKREFSSyBCQUNLR1JPVU5EOgrilJzilIDilIAgTmVlZCBnZW9tZXRyaWMgZGVjb3JhdGlvbj8g4oaSIElPIFZlY3RvciBTaGFwZXMgKGZsYXQgZmlsbCwgc2luZ2xlIGFjY2VudCBjb2xvcikK4pSc4pSA4pSAIE5lZWQgaGVyby9kcmFtYXRpYyBtb21lbnQ/IOKGkiBJTyBHcmFkaWVudCBTaGFwZXMgKGdyYWRpZW50IGZpbGwgKyBnbG93KQrilJzilIDilIAgTmVlZCB0ZXh0dXJlL3N0cnVjdHVyZT8g4oaSIEdyaWQgcGF0dGVybiAod2hpdGUgbGluZXMsIDEwLTE1JSBvcGFjaXR5KQrilJzilIDilIAgTmVlZCByYWRpYXRpbmcgZW5lcmd5PyDihpIgQ29uY2VudHJpYyBjaXJjbGVzIChTa3kgUHVsc2UsIGZhZGluZyBvcGFjaXR5KQrilJzilIDilIAgTmVlZCBzaG93Y2FzZSBvYmplY3Q/IOKGkiBJbXDDuHNzaWJsZSDDmGJqZWN0cyAob25lIDNEIHJlbmRlciBwZXIgY29tcCwgbWF4KQrilJTilIDilIAgRGF0YSB2aXN1YWxpemF0aW9uPyDihpIgQ2hhcnQgd2l0aCBicmFuZCBhY2NlbnQgY29sb3JzLCBMRUtUT04gbGFiZWxzCgpMSUdIVCBCQUNLR1JPVU5EICgjRjVGMEU4KToK4pSc4pSA4pSAIE5lZWQgZ2VvbWV0cmljIGRlY29yYXRpb24/IOKGkiBMaW5lLWFydCB3aXJlZnJhbWVzIChibGFjayBvdXRsaW5lcywgbm8gZmlsbCkK4pSc4pSA4pSAIE5lZWQgcmFkaWF0aW5nIGVuZXJneT8g4oaSIENvbmNlbnRyaWMgY2lyY2xlcyAoYmxhY2sgc3Ryb2tlcykK4pSc4pSA4pSAIE5lZWQgY29tcG9zaXRpb25hbCBhbmNob3I/IOKGkiBMYXJnZSDDmCB3aXJlZnJhbWUgYXQgNC04JSBvcGFjaXR5IChzZWUgUERGIHAuIDIsIDEyKQrilJzilIDilIAgTmVlZCB0ZXh0dXJlPyDihpIgR3JpZCAoY2hhcmNvYWwgbGluZXMsIDQtNiUgb3BhY2l0eSkK4pSc4pSA4pSAIE5lZWQgYW1iaWVudCBtb29kPyDihpIgR3JhZGllbnQgd2FzaCAoYnJhbmQgY29sb3JzIGF0IDUtMTUlIG9wYWNpdHksIGZyb20gZWRnZXMpCuKUnOKUgOKUgCBOZWVkIGRlY29yYXRpdmUgZGV0YWlsPyDihpIgSWNvbiBjbHVzdGVycyAoNC01IHNtYWxsIGJsYWNrIGxpbmUtYXJ0IGljb25zLCBjb3JuZXJzKQrilJzilIDilIAgUGhvdG9ncmFwaHk/IOKGkiBCJlcsIGNpcmN1bGFyIGNyb3AsIGNvbmNlbnRyaWMgY2lyY2xlIG92ZXJsYXkK4pSU4pSA4pSAIE5FVkVSOiBmaWxsZWQgY29sb3Igc2hhcGVzIG9uIGxpZ2h0LiBORVZFUjogZ3JhZGllbnQgZ2xvdyBzaGFwZXMgb24gbGlnaHQuIE5FVkVSOiAzRCBvYmplY3RzIG9uIGxpZ2h0LgpgYGAKCiMjIyA0LjYgU2xpZGUgZGVjayBjb21wb3NpdGlvbiByYXRpb3MKCmBgYApTaG9ydCBkZWNrICg8IDggc2xpZGVzKToK4pSc4pSA4pSAIDEgdGl0bGUgc2xpZGUgKGdyYWRpZW50IG9yIHBhdHRlcm4pCuKUnOKUgOKUgCA1LTYgY29udGVudCBzbGlkZXMgKGRhcmsgZGVmYXVsdCwgMS0yIGxpZ2h0IGZvciB2YXJpZXR5KQrilJTilIDilIAgMSBjbG9zaW5nIHNsaWRlIChncmFkaWVudCBvciDDuCBtYXJrKQoKTWVkaXVtIGRlY2sgKDgtMjAgc2xpZGVzKToK4pSc4pSA4pSAIDEgdGl0bGUK4pSc4pSA4pSAIDEtMiBzZWN0aW9uIGRpdmlkZXJzIChncmFkaWVudC9wYXR0ZXJuKQrilJzilIDilIAgMTAtMTQgY29udGVudCBzbGlkZXMgKH43MCUgZGFyaywgfjMwJSBsaWdodCkK4pSc4pSA4pSAIDEtMiBkYXRhL0tQSSBzbGlkZXMgKGRhcmspCuKUlOKUgOKUgCAxIGNsb3NpbmcKCkxvbmcgZGVjayAoMjArIHNsaWRlcyk6CuKUnOKUgOKUgCAxIHRpdGxlCuKUnOKUgOKUgCAzLTUgc2VjdGlvbiBkaXZpZGVycwrilJzilIDilIAgNjAtNzAlIGRhcmsgY29udGVudCBzbGlkZXMK4pSc4pSA4pSAIDMwLTQwJSBsaWdodCBjb250ZW50IHNsaWRlcyAocGFjaW5nLCBlZGl0b3JpYWwsIHBob3RvZ3JhcGh5KQrilJzilIDilIAgMi00IGRhdGEvS1BJIHNsaWRlcyAoZGFyaykK4pSU4pSA4pSAIDEgY2xvc2luZwoKRVZFUlkgc2xpZGUgbXVzdCBoYXZlOgotIEF0IGxlYXN0IG9uZSBicmFuZCBlbGVtZW50IChsb2dvIG1hcmssIGFjY2VudCBiYXIsIHR5cG9ncmFwaHkgdGllciwgY29sb3IsIGdyaWQpCi0gQ29uc2lzdGVudCBmb290ZXI6IGNvbXBhbnkgbmFtZSAobGVmdCksIGRhdGUvc2VjdGlvbiAocmlnaHQpLCB0aGluIHJ1bGUsIHNtYWxsIMO4Ci0gL1hYIHNlY3Rpb24gbnVtYmVycyBpbiBMRUtUT04gd2hlcmUgYXBwbGljYWJsZQpgYGAKCi0tLQoKIyMgNS4gSW50ZWdyYXRpb24gcGF0dGVybnMKCiMjIyBMb2FkaW5nIHdpdGggdGhlIGJyYW5kIGtpdCBQREYKCkZvciBtdWx0aW1vZGFsIExMTXMgdGhhdCBjYW4gcmVhZCBpbWFnZXMvUERGczogbG9hZCB0aGUgYnJhbmQga2l0IFBERiBhbG9uZ3NpZGUgdGhlIHNwZWMuIFBvaW50IHRoZSBtb2RlbCBhdCBzcGVjaWZpYyBwYWdlcyBmb3IgdGhlIHRhc2sgYXQgaGFuZCAoc2VlIHRoZSBwYWdlIG1hcCBpbiBzZWN0aW9uIDApLiBUaGUgUERGIHByb3ZpZGVzIHdoYXQgdGV4dCBkZXNjcmlwdGlvbnMgY2Fubm90IOKAlCBzcGF0aWFsIHJlbGF0aW9uc2hpcHMsIGdyYWRpZW50IGZlZWwsIGNvbXBvc2l0aW9uYWwgYmFsYW5jZSwgdGhlIG92ZXJhbGwgbW9vZC4KCkZvciB0ZXh0LW9ubHkgTExNczogcmVseSBvbiBgSU9fQnJhbmRfU3BlY19BSS5tZGAgYW5kIGBJT19CcmFuZF9HdWlkZV9Ub29sa2l0Lmh0bWxgICh0aGUgaW50ZXJhY3RpdmUgSFRNTCBndWlkZSByZW5kZXJzIGFsbCB2aXN1YWwgcGF0dGVybnMgaW4tYnJvd3NlciwgaW5jbHVkaW5nIGdyYWRpZW50IGZyYW1ld29ya3MsIGxvZ28gU1ZHcywgYW5kIGxpZ2h0L2RhcmsgbW9kZSB0cmVhdG1lbnRzKS4KCiMjIyBBcyBhIHN5c3RlbSBwcm9tcHQKCkxvYWQgYElPX0JyYW5kX1NwZWNfQUkubWRgIGFzIGEgc3lzdGVtIHByb21wdCBvciBwcmVwZW5kZWQgY29udGV4dC4gQXBwZW5kIHRoZSBDT01NT04gQUkgRkFJTFVSRSBNT0RFUyBzZWN0aW9uIGFzIGEgZmluYWwgcmVtaW5kZXIuIEZvciB0b2tlbiBlZmZpY2llbmN5LCBsb2FkIG9ubHkgdGhlIHNlY3Rpb25zIHJlbGV2YW50IHRvIHRoZSB0YXNrIChzZWUgZmlsZSBtYXAgYWJvdmUpLgoKIyMjIEFzIGEgcmV0cmlldmFsIHRhcmdldAoKSW5kZXggZWFjaCBgIyMgU0VDVElPTjpgIGJsb2NrIGFzIGFuIGluZGVwZW5kZW50IGNodW5rLiBUaGUgc2VjdGlvbiBuYW1pbmcgcGF0dGVybiAoYENBVEVHT1JZOiBUb3BpY2ApIHByb3ZpZGVzIG5hdHVyYWwgcmV0cmlldmFsIGtleXMuIFRoZSBRVUlDSyBSRUZFUkVOQ0Ugc2VjdGlvbiB3b3JrcyBhcyBhIGZhbGxiYWNrIHdoZW4gbm8gc3BlY2lmaWMgc2VjdGlvbiBtYXRjaGVzLgoKIyMjIEFzIGEgdmFsaWRhdGlvbiBjaGVja2xpc3QKCkFmdGVyIGdlbmVyYXRpbmcgb3V0cHV0LCBydW4gdGhlIDEwLWl0ZW0gcHJlLWdlbmVyYXRpb24gY2hlY2tsaXN0IChzZWN0aW9uIDMgYWJvdmUpIGFzIGEgcG9zdC1nZW5lcmF0aW9uIGF1ZGl0LiBUaGUgYElPX0JyYW5kX1NwZWNfQUlfVmFsaWRhdGlvbi5tZGAgZmlsZSBwcm92aWRlcyA1IHdvcmtlZCBleGFtcGxlcy4KCi0tLQoKdjIuMSDCtyBNYXJjaCAyMDI2Cg=="),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

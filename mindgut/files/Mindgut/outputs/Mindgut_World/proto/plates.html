@@ -1,0 +1,54 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>MINDGUT · plates</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#F2EEE3;font-family:"JetBrains Mono",monospace;color:#14452F;padding:32px}
+  .grid{display:grid;grid-template-columns:repeat(3,480px);gap:28px 24px;justify-content:center}
+  figure{margin:0}canvas,.box{width:480px;height:360px;display:block;background:#F2EEE3}
+  figcaption{font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-top:8px;opacity:.8}
+  .box{display:flex;align-items:center;justify-content:center}
+</style></head><body>
+<div class="grid">
+  <figure><canvas id="c1"></canvas><figcaption>01 · riso · forest + vermillion</figcaption></figure>
+  <figure><canvas id="c2"></canvas><figcaption>02 · line screen · pitch 4</figcaption></figure>
+  <figure><div class="box" id="c3"></div><figcaption>03 · stamp</figcaption></figure>
+  <figure><canvas id="c4"></canvas><figcaption>04 · grain gradient · belt</figcaption></figure>
+  <figure><canvas id="c5"></canvas><figcaption>05 · paper tooth · amp 10 / 22 / 40</figcaption></figure>
+  <figure><canvas id="c6"></canvas><figcaption>06 · 2,000 ticks · breath 1%</figcaption></figure>
+</div>
+<script src="../lib/press.js"></script>
+<script>
+var W=480,H=360,$=function(i){return document.getElementById(i)};
+document.fonts.ready.then(function(){
+  // 1 riso: text sampled into coverage()
+  var t=document.createElement('canvas');t.width=240;t.height=180;var tc=t.getContext('2d');
+  tc.fillStyle='#000';tc.font='700 64px Fraunces, serif';tc.textAlign='center';tc.textBaseline='middle';
+  tc.fillText('mindgut',120,90);var td=tc.getImageData(0,0,240,180).data;
+  var text=function(u,v){var x=Math.min(239,u*240|0),y=Math.min(179,v*180|0);return td[(y*240+x)*4+3]/255};
+  var ring=function(u,v){var d=Math.hypot((u-.5)*4/3,v-.5);return Math.abs(d-.3)<.025?.95:0};
+  MG.riso($('c1'),W,H,[{color:'#14452F',coverage:text},{color:'#E8541E',coverage:ring}],{seed:11});
+  // 2 line screen
+  MG.lineScreen($('c2'),W,H,function(c){c.font='700 72px Fraunces, serif';c.textAlign='center';c.textBaseline='middle';c.fillText('Mir remembers.',W/2,H/2)},{pitch:4});
+  // 3 stamp
+  MG.stamp($('c3'),{});
+  // 4 grain gradient with belt
+  MG.grainGradient($('c4'),W,H,[[0,'#14452F'],[.6,'#5FA46B'],[1,'#F2EEE3']],{seed:9,belt:{y:.62,h:.06,color:'#1F3FE0'}});
+  // 5 paper tooth triptych
+  var c5=$('c5');c5.width=W;c5.height=H;var x5=c5.getContext('2d');
+  [10,22,40].forEach(function(a,i){var p=document.createElement('canvas');MG.paperTooth(p,160,H,{seed:30+i,amp:a});x5.drawImage(p,i*160,0)});
+  // 6 ticks with breath
+  var c6=$('c6');c6.width=W;c6.height=H;var x6=c6.getContext('2d');
+  var paper=document.createElement('canvas');MG.paperTooth(paper,W,H,{seed:44});
+  var greens=['#14452F','#2E6B45','#5FA46B'],r6=MG.rng(6),hue=[];for(var i=0;i<2000;i++)hue.push(greens[r6()*3|0]);
+  function ticks(t){
+    var b=MG.breath(t),s=1+b*.01;x6.drawImage(paper,0,0);
+    x6.save();x6.translate(W/2,H/2);x6.scale(s,s);x6.translate(-W/2,-H/2);
+    var cols=50,rows=40,cw=W/cols,rh=H/rows;
+    for(var i=0;i<2000;i++){x6.fillStyle=hue[i];x6.fillRect((i%cols)*cw+cw*.35,(i/cols|0)*rh+rh*.2,1.4,rh*.6)}
+    x6.restore();requestAnimationFrame(ticks);
+  }
+  requestAnimationFrame(ticks);
+});
+</script>
+</body></html>

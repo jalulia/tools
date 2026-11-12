@@ -1,0 +1,91 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>breadcrumb.tsx</title><style>html,body{margin:0;height:100%;background:#f6f4ee;color:#141414;font:15px/1.55 -apple-system,"Geist","Helvetica Neue",sans-serif}header{display:flex;gap:16px;align-items:baseline;padding:14px 20px;border-bottom:1px solid #d9d5c9;font:12px/1.4 ui-monospace,"JetBrains Mono",monospace}header b{font:600 14px/1.3 -apple-system,"Geist",sans-serif}header a{color:#141414}main{max-width:880px;margin:0 auto;padding:28px 20px 80px}pre{white-space:pre-wrap;word-break:break-word;font:13px/1.6 ui-monospace,"JetBrains Mono",monospace}iframe{display:block;width:100%;height:calc(100vh - 49px);border:0;background:#fff}</style></head><body><header><b>breadcrumb.tsx</b><span>~/Documents/Claude/Projects/Mindgut - Mir/Prototypes/chat-canvas/src/components/ui/breadcrumb.tsx</span><span>0.00 MB · sha256 e5589a54c1ed4210…</span><a download="breadcrumb.tsx" id="dl" href="#">Download the original</a></header><main><pre>import * as React from &quot;react&quot;;
+import { Slot } from &quot;@radix-ui/react-slot&quot;;
+import { ChevronRight, MoreHorizontal } from &quot;lucide-react&quot;;
+
+import { cn } from &quot;@/lib/utils&quot;;
+
+const Breadcrumb = React.forwardRef&lt;
+  HTMLElement,
+  React.ComponentPropsWithoutRef&lt;&quot;nav&quot;&gt; &amp; {
+    separator?: React.ReactNode;
+  }
+&gt;(({ ...props }, ref) =&gt; &lt;nav ref={ref} aria-label=&quot;breadcrumb&quot; {...props} /&gt;);
+Breadcrumb.displayName = &quot;Breadcrumb&quot;;
+
+const BreadcrumbList = React.forwardRef&lt;HTMLOListElement, React.ComponentPropsWithoutRef&lt;&quot;ol&quot;&gt;&gt;(
+  ({ className, ...props }, ref) =&gt; (
+    &lt;ol
+      ref={ref}
+      className={cn(
+        &quot;flex flex-wrap items-center gap-1.5 break-words text-sm text-muted-foreground sm:gap-2.5&quot;,
+        className,
+      )}
+      {...props}
+    /&gt;
+  ),
+);
+BreadcrumbList.displayName = &quot;BreadcrumbList&quot;;
+
+const BreadcrumbItem = React.forwardRef&lt;HTMLLIElement, React.ComponentPropsWithoutRef&lt;&quot;li&quot;&gt;&gt;(
+  ({ className, ...props }, ref) =&gt; (
+    &lt;li ref={ref} className={cn(&quot;inline-flex items-center gap-1.5&quot;, className)} {...props} /&gt;
+  ),
+);
+BreadcrumbItem.displayName = &quot;BreadcrumbItem&quot;;
+
+const BreadcrumbLink = React.forwardRef&lt;
+  HTMLAnchorElement,
+  React.ComponentPropsWithoutRef&lt;&quot;a&quot;&gt; &amp; {
+    asChild?: boolean;
+  }
+&gt;(({ asChild, className, ...props }, ref) =&gt; {
+  const Comp = asChild ? Slot : &quot;a&quot;;
+
+  return &lt;Comp ref={ref} className={cn(&quot;transition-colors hover:text-foreground&quot;, className)} {...props} /&gt;;
+});
+BreadcrumbLink.displayName = &quot;BreadcrumbLink&quot;;
+
+const BreadcrumbPage = React.forwardRef&lt;HTMLSpanElement, React.ComponentPropsWithoutRef&lt;&quot;span&quot;&gt;&gt;(
+  ({ className, ...props }, ref) =&gt; (
+    &lt;span
+      ref={ref}
+      role=&quot;link&quot;
+      aria-disabled=&quot;true&quot;
+      aria-current=&quot;page&quot;
+      className={cn(&quot;font-normal text-foreground&quot;, className)}
+      {...props}
+    /&gt;
+  ),
+);
+BreadcrumbPage.displayName = &quot;BreadcrumbPage&quot;;
+
+const BreadcrumbSeparator = ({ children, className, ...props }: React.ComponentProps&lt;&quot;li&quot;&gt;) =&gt; (
+  &lt;li role=&quot;presentation&quot; aria-hidden=&quot;true&quot; className={cn(&quot;[&amp;&gt;svg]:size-3.5&quot;, className)} {...props}&gt;
+    {children ?? &lt;ChevronRight /&gt;}
+  &lt;/li&gt;
+);
+BreadcrumbSeparator.displayName = &quot;BreadcrumbSeparator&quot;;
+
+const BreadcrumbEllipsis = ({ className, ...props }: React.ComponentProps&lt;&quot;span&quot;&gt;) =&gt; (
+  &lt;span
+    role=&quot;presentation&quot;
+    aria-hidden=&quot;true&quot;
+    className={cn(&quot;flex h-9 w-9 items-center justify-center&quot;, className)}
+    {...props}
+  &gt;
+    &lt;MoreHorizontal className=&quot;h-4 w-4&quot; /&gt;
+    &lt;span className=&quot;sr-only&quot;&gt;More&lt;/span&gt;
+  &lt;/span&gt;
+);
+BreadcrumbEllipsis.displayName = &quot;BreadcrumbElipssis&quot;;
+
+export {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  BreadcrumbEllipsis,
+};
+</pre></main><script>var b=atob("aW1wb3J0ICogYXMgUmVhY3QgZnJvbSAicmVhY3QiOwppbXBvcnQgeyBTbG90IH0gZnJvbSAiQHJhZGl4LXVpL3JlYWN0LXNsb3QiOwppbXBvcnQgeyBDaGV2cm9uUmlnaHQsIE1vcmVIb3Jpem9udGFsIH0gZnJvbSAibHVjaWRlLXJlYWN0IjsKCmltcG9ydCB7IGNuIH0gZnJvbSAiQC9saWIvdXRpbHMiOwoKY29uc3QgQnJlYWRjcnVtYiA9IFJlYWN0LmZvcndhcmRSZWY8CiAgSFRNTEVsZW1lbnQsCiAgUmVhY3QuQ29tcG9uZW50UHJvcHNXaXRob3V0UmVmPCJuYXYiPiAmIHsKICAgIHNlcGFyYXRvcj86IFJlYWN0LlJlYWN0Tm9kZTsKICB9Cj4oKHsgLi4ucHJvcHMgfSwgcmVmKSA9PiA8bmF2IHJlZj17cmVmfSBhcmlhLWxhYmVsPSJicmVhZGNydW1iIiB7Li4ucHJvcHN9IC8+KTsKQnJlYWRjcnVtYi5kaXNwbGF5TmFtZSA9ICJCcmVhZGNydW1iIjsKCmNvbnN0IEJyZWFkY3J1bWJMaXN0ID0gUmVhY3QuZm9yd2FyZFJlZjxIVE1MT0xpc3RFbGVtZW50LCBSZWFjdC5Db21wb25lbnRQcm9wc1dpdGhvdXRSZWY8Im9sIj4+KAogICh7IGNsYXNzTmFtZSwgLi4ucHJvcHMgfSwgcmVmKSA9PiAoCiAgICA8b2wKICAgICAgcmVmPXtyZWZ9CiAgICAgIGNsYXNzTmFtZT17Y24oCiAgICAgICAgImZsZXggZmxleC13cmFwIGl0ZW1zLWNlbnRlciBnYXAtMS41IGJyZWFrLXdvcmRzIHRleHQtc20gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIHNtOmdhcC0yLjUiLAogICAgICAgIGNsYXNzTmFtZSwKICAgICAgKX0KICAgICAgey4uLnByb3BzfQogICAgLz4KICApLAopOwpCcmVhZGNydW1iTGlzdC5kaXNwbGF5TmFtZSA9ICJCcmVhZGNydW1iTGlzdCI7Cgpjb25zdCBCcmVhZGNydW1iSXRlbSA9IFJlYWN0LmZvcndhcmRSZWY8SFRNTExJRWxlbWVudCwgUmVhY3QuQ29tcG9uZW50UHJvcHNXaXRob3V0UmVmPCJsaSI+PigKICAoeyBjbGFzc05hbWUsIC4uLnByb3BzIH0sIHJlZikgPT4gKAogICAgPGxpIHJlZj17cmVmfSBjbGFzc05hbWU9e2NuKCJpbmxpbmUtZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEuNSIsIGNsYXNzTmFtZSl9IHsuLi5wcm9wc30gLz4KICApLAopOwpCcmVhZGNydW1iSXRlbS5kaXNwbGF5TmFtZSA9ICJCcmVhZGNydW1iSXRlbSI7Cgpjb25zdCBCcmVhZGNydW1iTGluayA9IFJlYWN0LmZvcndhcmRSZWY8CiAgSFRNTEFuY2hvckVsZW1lbnQsCiAgUmVhY3QuQ29tcG9uZW50UHJvcHNXaXRob3V0UmVmPCJhIj4gJiB7CiAgICBhc0NoaWxkPzogYm9vbGVhbjsKICB9Cj4oKHsgYXNDaGlsZCwgY2xhc3NOYW1lLCAuLi5wcm9wcyB9LCByZWYpID0+IHsKICBjb25zdCBDb21wID0gYXNDaGlsZCA/IFNsb3QgOiAiYSI7CgogIHJldHVybiA8Q29tcCByZWY9e3JlZn0gY2xhc3NOYW1lPXtjbigidHJhbnNpdGlvbi1jb2xvcnMgaG92ZXI6dGV4dC1mb3JlZ3JvdW5kIiwgY2xhc3NOYW1lKX0gey4uLnByb3BzfSAvPjsKfSk7CkJyZWFkY3J1bWJMaW5rLmRpc3BsYXlOYW1lID0gIkJyZWFkY3J1bWJMaW5rIjsKCmNvbnN0IEJyZWFkY3J1bWJQYWdlID0gUmVhY3QuZm9yd2FyZFJlZjxIVE1MU3BhbkVsZW1lbnQsIFJlYWN0LkNvbXBvbmVudFByb3BzV2l0aG91dFJlZjwic3BhbiI+PigKICAoeyBjbGFzc05hbWUsIC4uLnByb3BzIH0sIHJlZikgPT4gKAogICAgPHNwYW4KICAgICAgcmVmPXtyZWZ9CiAgICAgIHJvbGU9ImxpbmsiCiAgICAgIGFyaWEtZGlzYWJsZWQ9InRydWUiCiAgICAgIGFyaWEtY3VycmVudD0icGFnZSIKICAgICAgY2xhc3NOYW1lPXtjbigiZm9udC1ub3JtYWwgdGV4dC1mb3JlZ3JvdW5kIiwgY2xhc3NOYW1lKX0KICAgICAgey4uLnByb3BzfQogICAgLz4KICApLAopOwpCcmVhZGNydW1iUGFnZS5kaXNwbGF5TmFtZSA9ICJCcmVhZGNydW1iUGFnZSI7Cgpjb25zdCBCcmVhZGNydW1iU2VwYXJhdG9yID0gKHsgY2hpbGRyZW4sIGNsYXNzTmFtZSwgLi4ucHJvcHMgfTogUmVhY3QuQ29tcG9uZW50UHJvcHM8ImxpIj4pID0+ICgKICA8bGkgcm9sZT0icHJlc2VudGF0aW9uIiBhcmlhLWhpZGRlbj0idHJ1ZSIgY2xhc3NOYW1lPXtjbigiWyY+c3ZnXTpzaXplLTMuNSIsIGNsYXNzTmFtZSl9IHsuLi5wcm9wc30+CiAgICB7Y2hpbGRyZW4gPz8gPENoZXZyb25SaWdodCAvPn0KICA8L2xpPgopOwpCcmVhZGNydW1iU2VwYXJhdG9yLmRpc3BsYXlOYW1lID0gIkJyZWFkY3J1bWJTZXBhcmF0b3IiOwoKY29uc3QgQnJlYWRjcnVtYkVsbGlwc2lzID0gKHsgY2xhc3NOYW1lLCAuLi5wcm9wcyB9OiBSZWFjdC5Db21wb25lbnRQcm9wczwic3BhbiI+KSA9PiAoCiAgPHNwYW4KICAgIHJvbGU9InByZXNlbnRhdGlvbiIKICAgIGFyaWEtaGlkZGVuPSJ0cnVlIgogICAgY2xhc3NOYW1lPXtjbigiZmxleCBoLTkgdy05IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciIsIGNsYXNzTmFtZSl9CiAgICB7Li4ucHJvcHN9CiAgPgogICAgPE1vcmVIb3Jpem9udGFsIGNsYXNzTmFtZT0iaC00IHctNCIgLz4KICAgIDxzcGFuIGNsYXNzTmFtZT0ic3Itb25seSI+TW9yZTwvc3Bhbj4KICA8L3NwYW4+Cik7CkJyZWFkY3J1bWJFbGxpcHNpcy5kaXNwbGF5TmFtZSA9ICJCcmVhZGNydW1iRWxpcHNzaXMiOwoKZXhwb3J0IHsKICBCcmVhZGNydW1iLAogIEJyZWFkY3J1bWJMaXN0LAogIEJyZWFkY3J1bWJJdGVtLAogIEJyZWFkY3J1bWJMaW5rLAogIEJyZWFkY3J1bWJQYWdlLAogIEJyZWFkY3J1bWJTZXBhcmF0b3IsCiAgQnJlYWRjcnVtYkVsbGlwc2lzLAp9Owo="),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);var url=URL.createObjectURL(new Blob([u],{type:"text/plain;charset=utf-8"}));document.getElementById("dl").href=url;</script></body></html>

@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mindgut — Social & Content Rollout Strategy</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  --black: #141413;
+  --dark-card: #1E1E1C;
+  --off-white: #FAF9F6;
+  --white: #FFFFFF;
+  --gray-100: #F2F0EB;
+  --gray-200: #E5E2DC;
+  --gray-300: #CECAC2;
+  --gray-500: #7D7970;
+  --gray-700: #4A4740;
+  --accent: #FA5D29;
+  --accent-soft: rgba(250, 93, 41, 0.10);
+  --accent-border: rgba(250, 93, 41, 0.35);
+  --green: #126B3D;
+  --green-soft: rgba(18, 107, 61, 0.10);
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'Space Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  background: var(--black);
+  color: var(--black);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+body.grid-mode {
+  overflow-y: auto;
+  height: auto;
+  min-height: 100%;
+}
+
+/* TOP CHROME BAR */
+.deck-chrome {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 54px;
+  background: rgba(20, 20, 19, 0.96);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.09);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  z-index: 200;
+  color: var(--white);
+}
+.chrome-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.brand-mark {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  color: var(--white);
+  text-transform: uppercase;
+}
+.brand-mark span { color: var(--accent); }
+.chrome-pill {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 2px;
+  background: var(--accent);
+  color: var(--white);
+  font-weight: 700;
+}
+.chrome-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: rgba(255,255,255,0.58);
+  letter-spacing: 0.04em;
+}
+.chrome-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.chrome-counter {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: rgba(255,255,255,0.75);
+  min-width: 64px;
+  text-align: center;
+}
+.chrome-btn {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.chrome-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* PROGRESS BAR */
+.progress-track {
+  position: fixed;
+  top: 54px; left: 0; right: 0;
+  height: 2px;
+  background: rgba(255,255,255,0.08);
+  z-index: 200;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  width: 0%;
+  transition: width 0.25s ease;
+}
+
+/* STAGE & SLIDES */
+.deck-stage {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  padding-top: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slide {
+  display: none;
+  width: 100%;
+  height: calc(100vh - 56px);
+  background: var(--off-white);
+  color: var(--black);
+  position: relative;
+  overflow-y: auto;
+  padding: 52px 72px 64px;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.slide.active {
+  display: flex;
+}
+.slide.theme-dark {
+  background: var(--black);
+  color: var(--off-white);
+}
+.slide.theme-orange {
+  background: var(--accent);
+  color: var(--white);
+}
+
+/* GRID OVERVIEW MODE */
+body.grid-mode .deck-stage {
+  height: auto;
+  padding: 84px 40px 60px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+  gap: 28px;
+  align-items: stretch;
+}
+body.grid-mode .slide {
+  display: flex !important;
+  height: 340px;
+  padding: 24px 28px;
+  border-radius: 6px;
+  border: 2px solid rgba(255,255,255,0.12);
+  cursor: pointer;
+  overflow: hidden;
+  font-size: 70%;
+}
+body.grid-mode .slide.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(250, 93, 41, 0.35);
+}
+
+/* SLIDE HEADER & FOOTER BARS */
+.slide-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--gray-200);
+  padding-bottom: 14px;
+  margin-bottom: 28px;
+  flex-shrink: 0;
+}
+.theme-dark .slide-top { border-bottom-color: rgba(255,255,255,0.12); }
+.theme-orange .slide-top { border-bottom-color: rgba(255,255,255,0.28); }
+
+.slash-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.theme-orange .slash-tag { color: var(--white); }
+
+.slide-code {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--gray-500);
+}
+.theme-dark .slide-code { color: rgba(255,255,255,0.45); }
+.theme-orange .slide-code { color: rgba(255,255,255,0.8); }
+
+.slide-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.slide-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--gray-200);
+  padding-top: 14px;
+  margin-top: 28px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  flex-shrink: 0;
+}
+.theme-dark .slide-foot {
+  border-top-color: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.45);
+}
+.theme-orange .slide-foot {
+  border-top-color: rgba(255,255,255,0.28);
+  color: rgba(255,255,255,0.85);
+}
+
+/* TYPOGRAPHY */
+.serif-xl {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(44px, 5.2vw, 76px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+.serif-lg {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(34px, 3.6vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+}
+.serif-md {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(24px, 2.3vw, 32px);
+  line-height: 1.15;
+}
+.sans-lead {
+  font-family: var(--sans);
+  font-size: clamp(16px, 1.35vw, 20px);
+  line-height: 1.55;
+  color: var(--gray-700);
+  max-width: 780px;
+}
+.theme-dark .sans-lead { color: rgba(255,255,255,0.76); }
+.theme-orange .sans-lead { color: rgba(255,255,255,0.92); }
+
+/* LAYOUT GRIDS */
+.split-2 {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 48px;
+  align-items: start;
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+/* CARDS & BOXES */
+.io-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 4px;
+  padding: 24px 26px;
+}
+.theme-dark .io-card {
+  background: var(--dark-card);
+  border-color: rgba(255,255,255,0.12);
+}
+.io-card.accent-top {
+  border-top: 3px solid var(--accent);
+}
+.io-card.green-top {
+  border-top: 3px solid var(--green);
+}
+.io-card-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+  display: block;
+}
+.io-card h3 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 25px;
+  line-height: 1.15;
+  margin-bottom: 10px;
+}
+.io-card p, .io-card li {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--gray-700);
+}
+.theme-dark .io-card p, .theme-dark .io-card li {
+  color: rgba(255,255,255,0.74);
+}
+.io-card ul {
+  padding-left: 16px;
+  margin-top: 8px;
+}
+.io-card li + li { margin-top: 6px; }
+.ref-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.ref-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 3px;
+  background: var(--gray-100);
+  color: var(--black);
+  border: 1px solid var(--gray-300);
+  transition: all 0.15s ease;
+}
+.ref-pill:hover {
+  background: var(--accent);
+  color: var(--white);
+  border-color: var(--accent);
+}
+
+/* AGENDA ROWS */
+.agenda-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--gray-300);
+}
+.agenda-row {
+  display: grid;
+  grid-template-columns: 72px 1fr 220px;
+  align-items: baseline;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--gray-200);
+  gap: 20px;
+}
+.agenda-num {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.agenda-title {
+  font-family: var(--serif);
+  font-size: 27px;
+  color: var(--black);
+}
+.agenda-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--gray-500);
+  text-align: right;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* TABLES */
+.io-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+}
+.io-table th {
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 13px 16px;
+  text-align: left;
+}
+.io-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--gray-200);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--gray-700);
+  vertical-align: top;
+}
+.io-table tr:last-child td { border-bottom: none; }
+.badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+.badge-active { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border); }
+.badge-dormant { background: var(--gray-100); color: var(--gray-700); border: 1px solid var(--gray-300); }
+
+/* PROMPT CALLOUT */
+.prompt-box {
+  background: var(--black);
+  color: var(--off-white);
+  border-left: 4px solid var(--accent);
+  padding: 18px 22px;
+  border-radius: 3px;
+  margin-top: 18px;
+}
+.prompt-box .prompt-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+  display: block;
+}
+.prompt-box p {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.88);
+}
+
+/* CHECKLIST */
+.check-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.check-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--gray-700);
+}
+.check-box {
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid var(--accent);
+  border-radius: 2px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* TEMPLATE DASHED PLACEHOLDER */
+.dashed-slot {
+  border: 1.5px dashed var(--accent);
+  background: var(--accent-soft);
+  border-radius: 4px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 200px;
+}
+.dashed-slot span {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+@media print {
+  html, body { overflow: visible; height: auto; background: #fff; }
+  .deck-chrome, .progress-track { display: none !important; }
+  .deck-stage { padding: 0; height: auto; display: block; }
+  .slide { display: flex !important; height: 100vh; page-break-after: always; }
+}
+</style>
+</head>
+<body>
+  <header class="deck-chrome">
+    <div class="chrome-left">
+      <div class="brand-mark">IMP<span>Ø</span>SSIBLE</div>
+      <div class="chrome-pill">ROLLOUT STRATEGY</div>
+      <div class="chrome-title">Mindgut — Social & Content Rollout Strategy</div>
+    </div>
+    <div class="chrome-right">
+      <button class="chrome-btn" id="prevBtn" title="Previous Slide (←)">← PREV</button>
+      <div class="chrome-counter" id="slideCounter">01 / 09</div>
+      <button class="chrome-btn" id="nextBtn" title="Next Slide (→)">NEXT →</button>
+      <button class="chrome-btn" id="gridBtn" title="Toggle Grid Overview (G)">GRID VIEW (G)</button>
+    </div>
+  </header>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <main class="deck-stage">
+    
+  <!-- SLIDE 01: COVER -->
+  <section class="slide theme-dark active">
+    <div class="slide-top">
+      <span class="slash-tag">/ MINDGUT ROLLOUT · CONVERSATION STARTER</span>
+      <span class="slide-code">VOL.01 — NOV 9, 2026</span>
+    </div>
+    <div class="slide-body">
+      <div style="font-family:var(--mono);font-size:12px;letter-spacing:0.14em;color:var(--accent);text-transform:uppercase;margin-bottom:18px;">
+        THE IMPØSSIBLE OUTCOMES COMPANY · EXPERIMENTAL LAB
+      </div>
+      <h1 class="serif-xl" style="max-width:1020px;margin-bottom:26px;">
+        Mindgut — Social &amp; Content Rollout Strategy.
+      </h1>
+      <p class="sans-lead" style="max-width:760px;">
+        A low-lift, patent-safe framework for the week of November 16: aligning our approach, channel tiers, two-track content model, repeatable 30-second clip spine, phased roadmap, and unassigned next steps.
+      </p>
+      <div style="display:flex;gap:32px;margin-top:42px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.6);letter-spacing:0.08em;text-transform:uppercase;">
+        <div><strong style="color:#fff;">TARGET WINDOW:</strong> WEEK OF NOV 16, 2026 (WAVE 1)</div>
+        <div><strong style="color:#fff;">STATUS:</strong> APPROACH &amp; ROADMAP ALIGNMENT</div>
+        <div><strong style="color:#fff;">NAV:</strong> ← → ARROWS OR 'G' FOR GRID</div>
+      </div>
+    </div>
+    <div class="slide-foot">
+      <span>IMPØSSIBLE OUTCOMES · MINDGUT LAB</span>
+      <span>01 / CONVERSATION STARTER</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 02: AGENDA -->
+  <section class="slide">
+    <div class="slide-top">
+      <span class="slash-tag">/ AGENDA</span>
+      <span class="slide-code">T01 · CONTENTS</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="serif-lg" style="margin-bottom:28px;">Eight decisions to lock before we assign owners.</h2>
+      <div class="agenda-list">
+        <div class="agenda-row"><span class="agenda-num">01</span><span class="agenda-title">Strategic Posture &amp; Patent Guardrails</span><span class="agenda-meta">Show the Effect, Never the Engine</span></div>
+        <div class="agenda-row"><span class="agenda-num">02</span><span class="agenda-title">Channel Rollout Plan (Wave 1 vs. Lockups)</span><span class="agenda-meta">Vimeo · YouTube · X · IG</span></div>
+        <div class="agenda-row"><span class="agenda-num">03</span><span class="agenda-title">Two-Track Content &amp; Privacy Model</span><span class="agenda-meta">Field Notes + Avatar Sandboxes</span></div>
+        <div class="agenda-row"><span class="agenda-num">04</span><span class="agenda-title">The Repeatable 30-Second Clip Spine</span><span class="agenda-meta">Standard Structure + Mir Prompt</span></div>
+        <div class="agenda-row"><span class="agenda-num">05</span><span class="agenda-title">Reference Benchmarks — What "Good" Looks Like</span><span class="agenda-meta">Raycast · Cursor · Midjourney · Anthropic</span></div>
+        <div class="agenda-row"><span class="agenda-num">06</span><span class="agenda-title">Phased Rollout Roadmap</span><span class="agenda-meta">Phase 0 → Phase 3 Timeline</span></div>
+        <div class="agenda-row"><span class="agenda-num">07</span><span class="agenda-title">Generic Operating Roles &amp; Weekly Lift</span><span class="agenda-meta">Modular, Unassigned Slots</span></div>
+        <div class="agenda-row"><span class="agenda-num">08</span><span class="agenda-title">Next Steps &amp; Action Items Checklist</span><span class="agenda-meta">Alignment → Pre-Launch Execution</span></div>
+      </div>
+    </div>
+    <div class="slide-foot">
+      <span>MINDGUT SOCIAL &amp; CONTENT STRATEGY</span>
+      <span>02 / AGENDA</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 03: STRATEGIC POSTURE & PATENT RULE -->
+  <section class="slide">
+    <div class="slide-top">
+      <span class="slash-tag">/ 01 · STRATEGIC POSTURE &amp; GUARDRAILS</span>
+      <span class="slide-code">T05 · TWO-COLUMN SPLIT</span>
+    </div>
+    <div class="slide-body">
+      <div style="margin-bottom:28px;">
+        <h2 class="serif-lg" style="margin-bottom:10px;">Show the effect at 2,000+ strands. Never explain the unfiled engine.</h2>
+        <p class="sans-lead">
+          Publicly demonstrating unfiled technical mechanics starts a 1-year US patent clock and can immediately forfeit international patent rights. Every video, caption, and screen capture follows a strict split:
+        </p>
+      </div>
+      <div class="grid-2">
+        <div class="io-card green-top">
+          <span class="io-card-num" style="color:var(--green);">SAFE TO SHOW · THE EFFECT</span>
+          <h3>What Persistent Memory Feels Like in Practice</h3>
+          <ul>
+            <li><strong>Continuity at scale:</strong> Showing real strand depth (<code>Strand 500</code>, <code>Strand 2,140</code>, <code>Strand 7,000+</code>) across weeks of work.</li>
+            <li><strong>Zero re-briefing:</strong> Unexpected reach-backs where Mir connects a constraint, decision, or document from weeks ago.</li>
+            <li><strong>Workflow velocity:</strong> Plain-English comparisons against stateless chat re-briefs.</li>
+            <li><strong>Visual interface:</strong> The workspace field, strand arrivals, and clean domain artifacts.</li>
+          </ul>
+        </div>
+        <div class="io-card accent-top">
+          <span class="io-card-num">OFF-LIMITS UNTIL FILED · THE ENGINE</span>
+          <h3>Protected IP &amp; Confidential Data</h3>
+          <ul>
+            <li><strong>Underlying mathematics:</strong> Geometric mechanics, lattice rules, coset partitions, or internal scoring formulas.</li>
+            <li><strong>Scanner &amp; indexing architecture:</strong> How memory strands are segmented, weighted, or retrieved under the hood.</li>
+            <li><strong>Unredacted client work:</strong> Client names, proprietary formulations, internal financial figures, or personal history.</li>
+            <li><strong>Unregistered marks:</strong> Specific coined technical terms not yet cleared for word-mark registration.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="slide-foot">
+      <span>MINDGUT SOCIAL &amp; CONTENT STRATEGY</span>
+      <span>03 / PATENT &amp; IP GUARDRAILS</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 04: CHANNEL ROLLOUT PLAN -->
+  <section class="slide">
+    <div class="slide-top">
+      <span class="slash-tag">/ 02 · CHANNEL ROLLOUT PLAN</span>
+      <span class="slide-code">T12 · CHANNEL MATRIX</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="serif-lg" style="margin-bottom:10px;">Four active channels for Wave 1. Three defensive handle lockups.</h2>
+      <p class="sans-lead" style="margin-bottom:24px;">
+        Rather than spreading bandwidth across seven platforms on Day 1, Wave 1 focuses where technical buyers and builders watch demos—and where the microsite embeds live.
+      </p>
+      <table class="io-table">
+        <thead>
+          <tr>
+            <th style="width:18%;">Tier</th>
+            <th style="width:16%;">Channel</th>
+            <th style="width:48%;">Role in Rollout</th>
+            <th style="width:18%;">Wave 1 Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Core Video &amp; Embeds</strong></td>
+            <td><strong>Vimeo</strong></td>
+            <td>Clean, ad-free, chrome-controlled video embeds for the Mindgut microsite (60–90s Visual Walkthrough + 4 Proof Cards).</td>
+            <td><span class="badge badge-active">Active · Wave 1</span></td>
+          </tr>
+          <tr>
+            <td><strong>Discovery &amp; Archive</strong></td>
+            <td><strong>YouTube</strong></td>
+            <td>Searchable archive for full walkthroughs, 30-second proof clips (Shorts), and Wave 2 recorded Lab Sessions.</td>
+            <td><span class="badge badge-active">Active · Wave 1</span></td>
+          </tr>
+          <tr>
+            <td><strong>Builder &amp; Tech Reach</strong></td>
+            <td><strong>X (Twitter)</strong></td>
+            <td>Primary feed for AI builders, researchers, and technical founders sharing 30-second screen-capture Field Notes.</td>
+            <td><span class="badge badge-active">Active · Wave 1</span></td>
+          </tr>
+          <tr>
+            <td><strong>Visual Identity</strong></td>
+            <td><strong>Instagram</strong></td>
+            <td>Reels and visual design studies (stippled motion studies, 30-second Field Notes, interface craft).</td>
+            <td><span class="badge badge-active">Active · Wave 1</span></td>
+          </tr>
+          <tr>
+            <td><strong>Defensive Lockups</strong></td>
+            <td><strong>TikTok, LinkedIn, Twitch</strong></td>
+            <td>Claim consistent handles (<code>@mindgut</code> / <code>@mindgutai</code> / <code>@mindgutlab</code>), set brand mark + link to <code>mindgut.ai</code>. Hold posting until Wave 2+.</td>
+            <td><span class="badge badge-dormant">Locked / Dormant</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="slide-foot">
+      <span>MINDGUT SOCIAL &amp; CONTENT STRATEGY</span>
+      <span>04 / CHANNEL ROLLOUT</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 05: TWO-TRACK CONTENT & PRIVACY MODEL -->
+  <section class="slide">
+    <div class="slide-top">
+      <span class="slash-tag">/ 03 · CONTENT PILLARS &amp; PRIVACY MODEL</span>
+      <span class="slide-code">T06 · TWO-TRACK ARCHITECTURE</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="serif-lg" style="margin-bottom:10px;">Solving the authenticity vs. confidentiality problem.</h2>
+      <p class="sans-lead" style="margin-bottom:24px;">
+        Real 2,000-strand accounts contain sensitive client and personal history. We run two parallel tracks so Wave 1 ships immediately while Wave 2 scales without privacy risk.
+      </p>
+      <div class="grid-2" style="margin-bottom:20px;">
+        <div class="io-card accent-top">
+          <span class="io-card-num">TRACK A · AVAILABLE IMMEDIATELY (WAVE 1)</span>
+          <h3>Redacted Real-Work "Field Notes"</h3>
+          <p style="margin-bottom:10px;">
+            Short, recorded screen captures pulled asynchronously from real team moments where Mir makes a sharp reach-back or cross-thread synthesis.
+          </p>
+          <ul>
+            <li><strong>How it stays safe:</strong> Sensitive client names, numbers, or private details are swapped for generic equivalents in a clean HTML replay or blurred before export.</li>
+            <li><strong>Zero warm-up time:</strong> Uses the 500–7,000+ strand depth the team has already accumulated.</li>
+          </ul>
+        </div>
+        <div class="io-card green-top">
+          <span class="io-card-num" style="color:var(--green);">TRACK B · SEEDED IN WAVE 1, SCALES IN WAVE 2+</span>
+          <h3>Pre-Seeded "Avatar" Sandboxes</h3>
+          <p style="margin-bottom:10px;">
+            Dedicated persona accounts loaded with clean, synthetic background context and domain documents for scenario demos and live sessions.
+          </p>
+          <ul>
+            <li><strong>Archetype 01 — The Formulator / R&amp;D Researcher:</strong> Open literature, bench formulas, ingredient specs, multi-week experiment logs.</li>
+            <li><strong>Archetype 02 — The Indie Builder / Operator:</strong> Multi-month software + ops project, architecture decisions, sprint history.</li>
+            <li><strong>Archetype 03 — The Grad Student / Deep Reader:</strong> 50-book research corpus, reading notes, thesis drafts.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="slide-foot">
+      <span>MINDGUT SOCIAL &amp; CONTENT STRATEGY</span>
+      <span>05 / TWO-TRACK PRIVACY MODEL</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 06: THE 30-SECOND CLIP SPINE -->
+  <section class="slide">
+    <div class="slide-top">
+      <span class="slash-tag">/ 04 · THE REPEATABLE 30-SECOND CLIP SPINE</span>
+      <span class="slide-code">T09 · STANDARDIZED FORMAT</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="serif-lg" style="margin-bottom:8px;">One repeatable spine for every "Field Note from the Lab."</h2>
+      <p class="sans-lead" style="margin-bottom:22px;">
+        Contributors never have to invent a storyboard from scratch. Every short clip follows a 3-beat, 30-second spine—and can be generated directly inside Mir.
+      </p>
+      <div class="grid-3">
+        <div class="io-card accent-top">
+          <span class="io-card-num">BEAT 01 · 0–5 SECONDS</span>
+          <h3>The Context Card</h3>
+          <p>Clean title card in the app's native palette naming the strand count and domain right up front:</p>
+          <div style="margin-top:12px;padding:10px 12px;background:var(--gray-100);font-family:var(--mono);font-size:11px;border-radius:3px;">
+            <strong>STRAND 2,140 · FORMULATION R&amp;D</strong><br>
+            <span style="color:var(--gray-500);">"6 weeks of bench notes. Zero re-briefing."</span>
+          </div>
+        </div>
+        <div class="io-card accent-top">
+          <span class="io-card-num">BEAT 02 · 5–22 SECONDS</span>
+          <h3>The Turn (The Proof)</h3>
+          <p>Tight screen capture or animated HTML playback of a single prompt and Mir's reach-back—showing Mir connecting a decision, constraint, or file from weeks earlier without being prompted to look for it.</p>
+        </div>
+        <div class="io-card accent-top">
+          <span class="io-card-num">BEAT 03 · 22–30 SECONDS</span>
+          <h3>The Contrast &amp; End-Card</h3>
+          <p>One plain-English takeaway line that names the win:</p>
+          <div style="margin-top:12px;padding:10px 12px;background:var(--gray-100);font-family:var(--mono);font-size:11px;border-radius:3px;">
+            "In a stateless chat, this takes a 20-minute re-brief. Here, it took four words."<br>
+            <strong style="color:var(--accent);">mindgut.ai · Field Notes</strong>
+          </div>
+        </div>
+      </div>
+      <div class="prompt-box">
+        <span class="prompt-label">/ COPY-PASTE MIR PROMPT FOR ANY TEAM MEMBER</span>
+        <p>"Take the exchange we just had and package it into a self-contained HTML 'Field Note' walkthrough (16:9 and 9:16 toggle) for our social rollout. Redact any client-identifying names or proprietary numbers into clean generic equivalents while keeping the exact structural leap intact. Use a 3-part sequence: (1) Context Card showing current strand depth and domain, (2) animated playback of the prompt and the memory reach-back, and (3) a closing contrast line + mindgut.ai end-card. Use light sage ground #EEF2E7, ink #151B17, forest #126B3D, and Geist / JetBrains Mono typography."</p>
+      </div>
+    </div>
+    <div class="slide-foot">
+      <span>MINDGUT SOCIAL &amp; CONTENT STRATEGY</span>
+      <span>06 / 30-SECOND CLIP SPINE</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 07: REFERENCE BENCHMARKS -->
+  <section class="slide">
+    <div class="slide-top">
+      <span class="slash-tag">/ 05 · REFERENCE BENCHMARKS — WHAT "GOOD" LOOKS LIKE</span>
+      <span class="slide-code">T07 · CREATIVE &amp; FORMAT CALIBRATION</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="serif-lg" style="margin-bottom:8px;">Quiet, screen-first proof of work—not agency hype reels.</h2>
+      <p class="sans-lead" style="margin-bottom:22px;">
+        Four reference touchpoints that calibrate tone, effort, and IP safety across each format in our rollout:
+      </p>
+      <div class="grid-2" style="gap:18px;">
+        <div class="io-card accent-top" style="padding:18px 22px;">
+          <span class="io-card-num">01 · FOR 30-SECOND "FIELD NOTES" (X / IG / SHORTS)</span>
+          <h3>Linear &amp; Raycast — 20–30s Micro-Clips</h3>
+          <p style="margin-bottom:8px;"><strong>What they do:</strong> 20–35 second silent or lightly captioned screen captures on a clean canvas. One specific trigger, one fast workflow leap, zero talking-head hype, one closing line.</p>
+          <p style="font-family:var(--mono);font-size:11px;color:var(--accent);"><strong>Why it fits us:</strong> Proves a 30s single-turn capture feels flagship when every clip shares the same title card and framing.</p>
+          <div class="ref-links">
+            <a class="ref-pill" href="https://www.youtube.com/watch?v=pFrfBKiMCXQ" target="_blank" rel="noopener">▶ Linear: Loops from GitHub (0:30) ↗</a>
+            <a class="ref-pill" href="https://www.youtube.com/watch?v=eQirSQ6Vpkw" target="_blank" rel="noopener">▶ Linear: Loops Updates (0:29) ↗</a>
+            <a class="ref-pill" href="https://www.youtube.com/watch?v=QGeI2cI-S-g" target="_blank" rel="noopener">▶ Linear: Mobile Sessions (0:21) ↗</a>
+          </div>
+        </div>
+        <div class="io-card accent-top" style="padding:18px 22px;">
+          <span class="io-card-num">02 · FOR THE MICROSITE WALKTHROUGH (60–90S VIMEO EMBED)</span>
+          <h3>Anthropic &amp; Cursor — 60–90s Product Walkthroughs</h3>
+          <p style="margin-bottom:8px;"><strong>What they do:</strong> Calm, unhurried screen capture inside a real project with accumulated history—demonstrating what it feels like to work inside the environment rather than listing specs.</p>
+          <p style="font-family:var(--mono);font-size:11px;color:var(--accent);"><strong>Why it fits us:</strong> Maps directly to our Bucket 03 microsite requirement ("Show, don't explain").</p>
+          <div class="ref-links">
+            <a class="ref-pill" href="https://www.youtube.com/watch?v=UAmKyyZ-b9E" target="_blank" rel="noopener">▶ Anthropic: Cowork Walkthrough (1:09) ↗</a>
+            <a class="ref-pill" href="https://www.youtube.com/watch?v=ovxL42LkKNg" target="_blank" rel="noopener">▶ Cursor: iOS Walkthrough (1:14) ↗</a>
+            <a class="ref-pill" href="https://www.youtube.com/watch?v=yjZBteRD4vs" target="_blank" rel="noopener">▶ Raycast: Feature Walkthrough (1:18) ↗</a>
+          </div>
+        </div>
+        <div class="io-card green-top" style="padding:18px 22px;">
+          <span class="io-card-num" style="color:var(--green);">03 · FOR "SHOW THE EFFECT, NEVER THE ENGINE" (PATENT SAFETY)</span>
+          <h3>Single-Outcome Screen Demos (Input → Unexpected Leap)</h3>
+          <p style="margin-bottom:8px;"><strong>What they do:</strong> Never expose internal weights, routing math, or architecture diagrams; they pair the user's prompt directly with the live capability leap inside the UI.</p>
+          <p style="font-family:var(--mono);font-size:11px;color:var(--green);"><strong>Why it fits us:</strong> Our signature metadata tag is the strand counter (<code>STRAND 2,140 · FORMULATION R&amp;D</code>) + the reach-back.</p>
+          <div class="ref-links">
+            <a class="ref-pill" href="https://www.youtube.com/watch?v=bluAmTHoEow" target="_blank" rel="noopener">▶ Interactive Tools Demo (0:54) ↗</a>
+            <a class="ref-pill" href="https://www.youtube.com/watch?v=rBJnWMD0Pho" target="_blank" rel="noopener">▶ Browser Work Demo (1:35) ↗</a>
+            <a class="ref-pill" href="https://www.youtube.com/watch?v=_gBF27M7NHI" target="_blank" rel="noopener">▶ Linear: Loops Demo (0:40) ↗</a>
+          </div>
+        </div>
+        <div class="io-card green-top" style="padding:18px 22px;">
+          <span class="io-card-num" style="color:var(--green);">04 · FOR WAVE 2+ "LAB SESSIONS" (YOUTUBE / TWITCH)</span>
+          <h3>Hosted Sandbox &amp; Workflow Deep-Dives (45–90 Min)</h3>
+          <p style="margin-bottom:8px;"><strong>What they do:</strong> One host working through a real, bounded problem inside a clean, dedicated sandbox environment—where viewers watch the system reason across a long session.</p>
+          <p style="font-family:var(--mono);font-size:11px;color:var(--green);"><strong>Why it fits us:</strong> Exact blueprint for hosted sessions inside pre-seeded Avatar accounts with zero client-data exposure.</p>
+          <div class="ref-links">
+            <a class="ref-pill" href="https://www.youtube.com/watch?v=hiSkMVXdSfA" target="_blank" rel="noopener">▶ Cursor: Refactoring Session (58m) ↗</a>
+            <a class="ref-pill" href="https://www.youtube.com/watch?v=EWvNQjAaOHw" target="_blank" rel="noopener">▶ Karpathy: How I Use LLMs (2h11m) ↗</a>
+            <a class="ref-pill" href="https://www.youtube.com/watch?v=KcshxSB3sNY" target="_blank" rel="noopener">▶ Cursor: Token Efficiency Lab (60m) ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-foot">
+      <span>MINDGUT SOCIAL &amp; CONTENT STRATEGY</span>
+      <span>07 / REFERENCE BENCHMARKS</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 08: PHASED ROLLOUT ROADMAP -->
+  <section class="slide">
+    <div class="slide-top">
+      <span class="slash-tag">/ 06 · ROLLOUT ROADMAP</span>
+      <span class="slide-code">T09 · PROCESS &amp; PHASING</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="serif-lg" style="margin-bottom:10px;">Four phases from approach alignment to live sandbox sessions.</h2>
+      <p class="sans-lead" style="margin-bottom:24px;">
+        Wave 1 focuses 100% on recorded, patent-safe proof clips that support the microsite. Live streaming holds until Wave 2+ inside pre-seeded Avatar sandboxes.
+      </p>
+      <div class="grid-4">
+        <div class="io-card accent-top">
+          <span class="io-card-num">PHASE 0 · NOV 9–10</span>
+          <h3>Alignment &amp; Lockup</h3>
+          <ul>
+            <li>Align on channel tiers, two-track privacy model, and 30s clip spine.</li>
+            <li>Lock primary handle string across all 7 platforms.</li>
+            <li>Confirm the 4 concrete microsite proof demos.</li>
+            <li>Assign generic operating roles once locked.</li>
+          </ul>
+        </div>
+        <div class="io-card accent-top">
+          <span class="io-card-num">PHASE 1 · NOV 11–13</span>
+          <h3>Capture &amp; Seeding</h3>
+          <ul>
+            <li>Record &amp; scrub the 4 microsite Proof Clips + 1x 60–90s Visual Walkthrough.</li>
+            <li>Capture 3 additional redacted 30s "Field Notes" from team sessions.</li>
+            <li>Spin up and seed 2–3 clean Avatar sandbox accounts.</li>
+          </ul>
+        </div>
+        <div class="io-card accent-top">
+          <span class="io-card-num">PHASE 2 · WEEK OF NOV 16</span>
+          <h3>Wave 1 Launch</h3>
+          <ul>
+            <li>Publish ad-free microsite embeds on Vimeo; mirror to YouTube.</li>
+            <li>Activate YouTube, X, and Instagram with initial Field Notes batch.</li>
+            <li>Hold TikTok, LinkedIn, and Twitch as dormant lockups pointing to <code>mindgut.ai</code>.</li>
+          </ul>
+        </div>
+        <div class="io-card green-top">
+          <span class="io-card-num" style="color:var(--green);">PHASE 3 · WEEK OF NOV 23+</span>
+          <h3>Wave 2+ Lab Sessions</h3>
+          <ul>
+            <li>Launch scheduled 30–45 min hosted "Lab Sessions" inside Avatar sandboxes.</li>
+            <li>Zero client-data risk during live audience Q&amp;A.</li>
+            <li>Archive full sessions to YouTube; cut 3–5 short clips per session.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="slide-foot">
+      <span>MINDGUT SOCIAL &amp; CONTENT STRATEGY</span>
+      <span>08 / PHASED ROADMAP</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 09: GENERIC OPERATING ROLES -->
+  <section class="slide">
+    <div class="slide-top">
+      <span class="slash-tag">/ 07 · OPERATING CADENCE &amp; GENERIC ROLES</span>
+      <span class="slide-code">T13 · MODULAR ROLES (UNASSIGNED)</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="serif-lg" style="margin-bottom:10px;">Lightweight, modular roles—assigned after approach is locked.</h2>
+      <p class="sans-lead" style="margin-bottom:24px;">
+        To keep social execution sustainable alongside core project delivery, responsibilities are broken into four generic slots with bounded weekly time commitments.
+      </p>
+      <table class="io-table">
+        <thead>
+          <tr>
+            <th style="width:24%;">Generic Role</th>
+            <th style="width:52%;">Core Responsibility</th>
+            <th style="width:14%;">Weekly Lift</th>
+            <th style="width:10%;">Owner</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Contributors (All Lab Users)</strong></td>
+            <td>Flag 1 compelling Mir reach-back moment per week from daily work; run the copy-paste Field Note prompt or capture a raw 30-second clip.</td>
+            <td><strong>~15 mins / wk</strong></td>
+            <td><span class="badge badge-dormant">All Team</span></td>
+          </tr>
+          <tr>
+            <td><strong>IP &amp; Redaction Check</strong></td>
+            <td>Quick 2-minute review of queued clips before publishing to verify zero client leakage and zero unfiled patent mechanics.</td>
+            <td><strong>~20 mins / wk</strong></td>
+            <td><span class="badge badge-active">TBD</span></td>
+          </tr>
+          <tr>
+            <td><strong>Packaging &amp; Publishing Lead</strong></td>
+            <td>Collect the week's raw Field Notes, apply standard 30-second title/end cards, upload to Vimeo/YouTube/X/IG, and maintain bio links.</td>
+            <td><strong>~2–3 hrs / wk</strong></td>
+            <td><span class="badge badge-active">TBD</span></td>
+          </tr>
+          <tr>
+            <td><strong>Lab Session Host (Wave 2+)</strong></td>
+            <td>Run one scheduled 30–45 minute live or recorded sandbox session inside a clean Avatar account once Wave 2 begins.</td>
+            <td><strong>~1 hr / session</strong></td>
+            <td><span class="badge badge-active">TBD</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="slide-foot">
+      <span>MINDGUT SOCIAL &amp; CONTENT STRATEGY</span>
+      <span>09 / GENERIC ROLES &amp; CADENCE</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: NEXT STEPS & ACTION ITEMS -->
+  <section class="slide">
+    <div class="slide-top">
+      <span class="slash-tag">/ 08 · NEXT STEPS &amp; ACTION ITEMS</span>
+      <span class="slide-code">T20 · DECISION &amp; EXECUTION CHECKLIST</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="serif-lg" style="margin-bottom:20px;">Step 1: Lock the approach. Step 2: Assign &amp; execute pre-launch items.</h2>
+      <div class="grid-2">
+        <div class="io-card accent-top">
+          <span class="io-card-num">STEP 01 · ALIGNMENT DECISIONS (IN REVIEW)</span>
+          <h3>Lock Approach &amp; Guardrails First</h3>
+          <ul class="check-list" style="margin-top:14px;">
+            <li><span class="check-box"></span><span><strong>Approve Patent &amp; Privacy Guardrails:</strong> Confirm the Show-the-Effect / Never-the-Engine rule and the Two-Track (Redacted Field Notes + Avatar Sandboxes) model.</span></li>
+            <li><span class="check-box"></span><span><strong>Lock Wave 1 Channel Lineup:</strong> Confirm Active Wave 1 (<strong>Vimeo, YouTube, X, Instagram</strong>) vs. Defensive Lockups (<strong>TikTok, LinkedIn, Twitch</strong>).</span></li>
+            <li><span class="check-box"></span><span><strong>Select Primary Handle String:</strong> Lock the exact handle order of preference (<code>@mindgut</code> / <code>@mindgutai</code> / <code>@mindgutlab</code>).</span></li>
+            <li><span class="check-box"></span><span><strong>Confirm the 4 Microsite Proof Demos:</strong> Lock the four concrete examples for "What the Harness Powers" ahead of Wednesday's check-in.</span></li>
+            <li><span class="check-box"></span><span><strong>Select First Two Avatar Archetypes:</strong> Choose the initial two synthetic personas to seed this week.</span></li>
+          </ul>
+        </div>
+        <div class="io-card green-top">
+          <span class="io-card-num" style="color:var(--green);">STEP 02 · IMMEDIATE ACTION ITEMS (TO ASSIGN ONCE LOCKED)</span>
+          <h3>Pre-Launch Execution Checklist</h3>
+          <ul class="check-list" style="margin-top:14px;">
+            <li><span class="check-box" style="border-color:var(--green);"></span><span><strong>Register Handles &amp; Profile Lockups:</strong> Claim handles across all 7 platforms, upload locked brand mark, and link bios to <code>mindgut.ai</code>.</span></li>
+            <li><span class="check-box" style="border-color:var(--green);"></span><span><strong>Record Microsite Visual Walkthrough (60–90s):</strong> Capture core interface and strand-accumulation walkthrough for Vimeo embed.</span></li>
+            <li><span class="check-box" style="border-color:var(--green);"></span><span><strong>Record the 4 Proof Card Demos (30–45s each):</strong> Capture and redact the four domain proof clips for the microsite and Wave 1 drop.</span></li>
+            <li><span class="check-box" style="border-color:var(--green);"></span><span><strong>Collect First Batch of 3 Team "Field Notes" (30s each):</strong> Run the copy-paste Field Note prompt on three real reach-back moments from this week.</span></li>
+            <li><span class="check-box" style="border-color:var(--green);"></span><span><strong>Seed 2 Clean Avatar Accounts &amp; Assign Operating Roles:</strong> Load synthetic docs into 2 sandboxes and attach owners to the 3 TBD role slots.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="slide-foot">
+      <span>HELLO@IMPOSSIBLEOUTCOMES.CO · © 2026 IMPØSSIBLE OUTCOMES COMPANY®</span>
+      <span>10 / NEXT STEPS &amp; ACTION ITEMS</span>
+    </div>
+  </section>
+
+  </main>
+  <script>
+(function() {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const counter = document.getElementById('slideCounter');
+  const progress = document.getElementById('progressFill');
+  const gridBtn = document.getElementById('gridBtn');
+  let idx = 0;
+
+  function show(n) {
+    idx = (n + slides.length) % slides.length;
+    slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+    if (counter) counter.textContent = String(idx + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+    if (progress) progress.style.width = (((idx + 1) / slides.length) * 100).toFixed(1) + '%';
+    window.location.hash = 'slide-' + (idx + 1);
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', () => show(idx - 1));
+  document.getElementById('nextBtn').addEventListener('click', () => show(idx + 1));
+
+  gridBtn.addEventListener('click', () => {
+    document.body.classList.toggle('grid-mode');
+    gridBtn.textContent = document.body.classList.contains('grid-mode') ? 'SINGLE VIEW (G)' : 'GRID VIEW (G)';
+  });
+
+  slides.forEach((s, i) => {
+    s.addEventListener('click', () => {
+      if (document.body.classList.contains('grid-mode')) {
+        document.body.classList.remove('grid-mode');
+        gridBtn.textContent = 'GRID VIEW (G)';
+        show(i);
+      }
+    });
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+      if (!document.body.classList.contains('grid-mode')) { e.preventDefault(); show(idx + 1); }
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      if (!document.body.classList.contains('grid-mode')) { e.preventDefault(); show(idx - 1); }
+    } else if (e.key === 'g' || e.key === 'G') {
+      e.preventDefault();
+      gridBtn.click();
+    }
+  });
+
+  const m = window.location.hash.match(/slide-(\d+)/);
+  show(m ? Math.max(0, Math.min(slides.length - 1, parseInt(m[1], 10) - 1)) : 0);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HELIX Strands</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lekton:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0A0A0A; overflow: hidden; font-family: 'Lekton', monospace; cursor: crosshair; }
+canvas { display: block; position: fixed; top: 0; left: 0; }
+
+#scanlines {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(0deg, transparent 0px, transparent 1px, rgba(255,255,255,0.008) 1px, rgba(255,255,255,0.008) 2px);
+  pointer-events: none; z-index: 5;
+}
+#vignette {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.4) 100%);
+  pointer-events: none; z-index: 5;
+}
+
+#hud-tl {
+  position: fixed; top: 28px; left: 32px; z-index: 10;
+  color: #ffffff; opacity: 0.5;
+  font-family: 'Lekton', monospace; font-size: 10px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  line-height: 1.6;
+}
+#hud-tl .title { font-size: 12px; font-weight: 700; opacity: 1; color: #3D6DF4; }
+
+#controls {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  z-index: 10; display: flex; gap: 8px; align-items: center;
+  padding: 6px 16px; border-radius: 4px;
+  background: rgba(10,10,10,0.7); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+#controls button, #controls select {
+  font-family: 'Lekton', monospace; font-size: 10px;
+  background: none; border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.45);
+  padding: 5px 12px; border-radius: 3px; cursor: pointer;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  transition: all 0.15s;
+}
+#controls button:hover, #controls select:hover { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.3); }
+#controls button.active { border-color: #3D6DF4; color: #3D6DF4; background: rgba(61,109,244,0.08); }
+#controls select { appearance: none; padding-right: 16px; }
+
+#tooltip {
+  position: fixed; z-index: 20; display: none;
+  background: #1A1A1A; border: 1px solid rgba(255,255,255,0.07); border-radius: 4px;
+  padding: 8px 12px; pointer-events: none;
+  font-family: 'Lekton', monospace; font-size: 10px; color: #E0E0E0;
+  letter-spacing: 0.04em; max-width: 260px; line-height: 1.6;
+}
+#tooltip .coset-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="hud-tl">
+  <div class="title">&#xf8; co. / helix strands</div>
+  <div id="hud-subtitle" style="opacity:0.6;"></div>
+</div>
+
+<div id="controls">
+  <button id="btn-garden" class="active" onclick="switchView('garden')">Garden</button>
+  <button id="btn-tower" onclick="switchView('tower')">Tower</button>
+  <button id="btn-ring" onclick="switchView('ring')">Ring</button>
+  <select id="sel-dataset" onchange="loadDataset(parseInt(this.value))">
+    <option value="0">Triadic Septadic</option>
+    <option value="1">Exosomatic Cortex</option>
+  </select>
+  <button id="btn-stream" onclick="toggleStream()">&#x25B6; stream</button>
+  <button id="btn-add" onclick="addRandomStrand()">+ Add</button>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+// === EMBEDDED DATA ===
+const DATA_TS = {"book":{"total_strands":64,"total_genes":7430,"f147":0.3334,"f258":0.3144,"f369":0.3522,"sigma_B":0.0861,"source":"Triadic Septadic Resonances v2.1"},"strands":[{"id":1,"coset":"147","title":"Triadic and Septadic Resonance in Living Organisms From the ","vector":4,"checksum":661,"charCount":169},{"id":2,"coset":"147","title":"2 Triadic&SeptadicResonance January 2026 Acompanionpaperto P","vector":4,"checksum":535,"charCount":134},{"id":3,"coset":"369","title":"Contents 1 TheClaim 6 1.1 TheProblem . . . . . . . . . . . .","vector":6,"checksum":2130,"charCount":1246},{"id":4,"coset":"369","title":"CONTENTS 5 4.2.1 Node1: TheRootSystem(Ground) . . . 20 4.2.2","vector":6,"checksum":3030,"charCount":1590},{"id":5,"coset":"369","title":"6 Triadic&SeptadicResonance 8.5 WhySelectionClimbstheLadder ","vector":6,"checksum":3066,"charCount":1378},{"id":6,"coset":"258","title":"Chapter 1 The Claim 1.1 The Problem Biologyhasnoarchitecture","vector":8,"checksum":4283,"charCount":1065},{"id":7,"coset":"258","title":"8 Triadic&SeptadicResonance 1.2 The Thesis Living systems ar","vector":5,"checksum":4820,"charCount":1239},{"id":8,"coset":"147","title":"CHAPTER1. THECLAIM 9 2. The Organism (Chapter 3): From proka","vector":7,"checksum":3364,"charCount":857},{"id":9,"coset":"258","title":"Chapter 2 The Cell 2.1 The First Partition Lifebeginswithabo","vector":8,"checksum":4157,"charCount":976},{"id":10,"coset":"147","title":"CHAPTER2. THECELL 11 fromoutside. Integrator(Boundary): Thec","vector":7,"checksum":5713,"charCount":1432},{"id":11,"coset":"147","title":"12 Triadic&SeptadicResonance ranged in a specific topology: ","vector":4,"checksum":5485,"charCount":1336},{"id":12,"coset":"258","title":"CHAPTER2. THECELL 13 2.4.2 The Numbers Thehumangenomeencodes","vector":2,"checksum":6644,"charCount":1667},{"id":13,"coset":"147","title":"14 Triadic&SeptadicResonance the environment but cannot mode","vector":4,"checksum":5782,"charCount":1519},{"id":14,"coset":"258","title":"CHAPTER2. THECELL 15 entialdistributionofions(primarilyNa + ","vector":5,"checksum":3209,"charCount":789},{"id":15,"coset":"147","title":"Chapter 3 The Organism 3.1 The Evolutionary Ladder of N Ifth","vector":7,"checksum":3643,"charCount":889},{"id":16,"coset":"147","title":"CHAPTER3. THEORGANISM 17 The nucleus is a membrane-bounded c","vector":4,"checksum":6691,"charCount":1648},{"id":17,"coset":"147","title":"18 Triadic&SeptadicResonance cell-surfacemarkers,secretedsig","vector":1,"checksum":6562,"charCount":1602},{"id":18,"coset":"147","title":"CHAPTER3. THEORGANISM 19 3.1.5 N = 7: The Phase-Lock Thefina","vector":7,"checksum":6172,"charCount":1492},{"id":19,"coset":"369","title":"20 Triadic&SeptadicResonance achieving N = 5, because predic","vector":6,"checksum":816,"charCount":196},{"id":20,"coset":"369","title":"Chapter 4 The Plant 4.1 The Lattice Rotated Animalsorient th","vector":3,"checksum":4458,"charCount":1099},{"id":21,"coset":"147","title":"22 Triadic&SeptadicResonance (gravity, moisture, nutrients, ","vector":7,"checksum":6271,"charCount":1563},{"id":22,"coset":"258","title":"CHAPTER4. THEPLANT 23 Chloroplasts(photosynthesis)andmitocho","vector":5,"checksum":6620,"charCount":1615},{"id":23,"coset":"258","title":"24 Triadic&SeptadicResonance 4.2.5 Node 5: The Stomata (Code","vector":5,"checksum":6422,"charCount":1644},{"id":24,"coset":"147","title":"CHAPTER4. THEPLANT 25 imity of neighboring plants. By readin","vector":4,"checksum":6187,"charCount":1456},{"id":25,"coset":"258","title":"26 Triadic&SeptadicResonance This is impedance matching at t","vector":5,"checksum":4460,"charCount":1095},{"id":26,"coset":"258","title":"Chapter 5 The Immune System 5.1 Defense as Resonance Theimmu","vector":2,"checksum":3728,"charCount":935},{"id":27,"coset":"147","title":"28 Triadic&SeptadicResonance 5.2 The Triadic Architecture Th","vector":4,"checksum":6979,"charCount":1801},{"id":28,"coset":"369","title":"CHAPTER5. THEIMMUNESYSTEM 29 processing systems that would o","vector":3,"checksum":6186,"charCount":1545},{"id":29,"coset":"258","title":"30 Triadic&SeptadicResonance mitswithoutattacking\u2014istheimmun","vector":8,"checksum":3410,"charCount":873},{"id":30,"coset":"147","title":"Chapter 6 The Embryo 6.1 How the Lattice Builds Itself Ifthe","vector":1,"checksum":3628,"charCount":875},{"id":31,"coset":"147","title":"32 Triadic&SeptadicResonance Mesoderm (Middle layer): Gives ","vector":4,"checksum":6169,"charCount":1519},{"id":32,"coset":"369","title":"CHAPTER6. THEEMBRYO 33 2. Cardiogenesis (Day 18\u201322): The hea","vector":9,"checksum":5040,"charCount":1265},{"id":33,"coset":"369","title":"34 Triadic&SeptadicResonance The pharyngeal arches are triad","vector":6,"checksum":6225,"charCount":1574},{"id":34,"coset":"258","title":"Chapter 7 Colonies and Ecosystems 7.1 The Social Lattice The","vector":2,"checksum":3908,"charCount":993},{"id":35,"coset":"147","title":"36 Triadic&SeptadicResonance \u2022 Queen (Integrator): The Bridg","vector":4,"checksum":5917,"charCount":1419},{"id":36,"coset":"147","title":"CHAPTER7. COLONIESANDECOSYSTEMS 37 7.2 The Ecosystem as Latt","vector":7,"checksum":5569,"charCount":1358},{"id":37,"coset":"369","title":"38 Triadic&SeptadicResonance Scale System Integrator Environ","vector":9,"checksum":3321,"charCount":836},{"id":38,"coset":"369","title":"Chapter 8 Natural Selection and the Constraint 8.1 What Sele","vector":3,"checksum":4314,"charCount":1093},{"id":39,"coset":"147","title":"40 Triadic&SeptadicResonance Toolittlecoupling(infiniteimped","vector":1,"checksum":6193,"charCount":1539},{"id":40,"coset":"147","title":"CHAPTER8. NATURALSELECTIONANDTHE CONSTRAINT 41 \u2022 \u03c0 \u2248 0.1%\u20131.","vector":1,"checksum":6157,"charCount":1569},{"id":41,"coset":"258","title":"42 Triadic&SeptadicResonance This is why closely related spe","vector":5,"checksum":5693,"charCount":1396},{"id":42,"coset":"369","title":"CHAPTER8. NATURALSELECTIONANDTHE CONSTRAINT 43 \u2022 N = 7: Phas","vector":6,"checksum":3867,"charCount":943},{"id":43,"coset":"258","title":"Chapter 9 Emergence 9.1 The Magic Word \u201cEmergence\u201disbiology\u2019","vector":5,"checksum":4100,"charCount":1001},{"id":44,"coset":"147","title":"CHAPTER9. EMERGENCE 45 Thepropertiesthat\u201cemerge\u201dat N = 5(mul","vector":4,"checksum":6286,"charCount":1584},{"id":45,"coset":"258","title":"46 Triadic&SeptadicResonance 9.3 The Emergent Properties at ","vector":2,"checksum":6545,"charCount":1556},{"id":46,"coset":"258","title":"CHAPTER9. EMERGENCE 47 node(thesimulation operator),yougeta ","vector":8,"checksum":7100,"charCount":1755},{"id":47,"coset":"369","title":"48 Triadic&SeptadicResonance geometry points in this directi","vector":3,"checksum":444,"charCount":101},{"id":48,"coset":"147","title":"Chapter 10 Sexual Selection as Lattice Verification 10.1 Dar","vector":1,"checksum":3970,"charCount":1010},{"id":49,"coset":"369","title":"50 Triadic&SeptadicResonance 10.2 The Tail as Checksum Thepe","vector":9,"checksum":5823,"charCount":1492},{"id":50,"coset":"147","title":"CHAPTER10. SEXUALSELECTIONASLATTICE VERIFICATION 51 dullcolo","vector":4,"checksum":6169,"charCount":1499},{"id":51,"coset":"369","title":"52 Triadic&SeptadicResonance ordertorendercorrectly. Acorrup","vector":6,"checksum":6990,"charCount":1665},{"id":52,"coset":"258","title":"CHAPTER10. SEXUALSELECTIONASLATTICE VERIFICATION 53 (surviva","vector":8,"checksum":5534,"charCount":1352},{"id":53,"coset":"369","title":"Chapter 11 Speciation, Extinction, and Symbiosis 11.1 Specia","vector":3,"checksum":4431,"charCount":1058},{"id":54,"coset":"258","title":"CHAPTER11. SPECIATION,EXTINCTION,ANDSYMBIOS5IS5 Claim: Speci","vector":2,"checksum":6131,"charCount":1473},{"id":55,"coset":"258","title":"56 Triadic&SeptadicResonance the available impedance space. ","vector":8,"checksum":6740,"charCount":1701},{"id":56,"coset":"258","title":"CHAPTER11. SPECIATION,EXTINCTION,ANDSYMBIOS5IS7 trait: broad","vector":5,"checksum":6836,"charCount":1690},{"id":57,"coset":"369","title":"58 Triadic&SeptadicResonance B12,biotin),fermentdietaryfiber","vector":6,"checksum":6369,"charCount":1509},{"id":58,"coset":"369","title":"CHAPTER11. SPECIATION,EXTINCTION,ANDSYMBIOS5IS9 Thehost\u2019simm","vector":6,"checksum":6576,"charCount":1621},{"id":59,"coset":"369","title":"60 Triadic&SeptadicResonance justing its impedance to mainta","vector":9,"checksum":3492,"charCount":864},{"id":60,"coset":"369","title":"Chapter 12 The Evolutionary Sequence 12.1 The Ladder of N, R","vector":6,"checksum":4587,"charCount":1185},{"id":61,"coset":"147","title":"62 Triadic&SeptadicResonance 12.2 The Convergence Evidence I","vector":7,"checksum":6307,"charCount":1532},{"id":62,"coset":"258","title":"CHAPTER12. THEEVOLUTIONARYSEQUENCE 63 found that achieves co","vector":2,"checksum":6842,"charCount":1657},{"id":63,"coset":"258","title":"64 Triadic&SeptadicResonance anarrowrangecomparabletotheAnge","vector":8,"checksum":5561,"charCount":1405},{"id":64,"coset":"147","title":"CHAPTER12. THEEVOLUTIONARYSEQUENCE 65 Result: Biology did no","vector":1,"checksum":1702,"charCount":422}]};
+const DATA_EC = {"book":{"total_strands":410,"total_genes":12421,"f147":0.3302,"f258":0.3006,"f369":0.3691,"sigma_B":0.2608,"source":"The Exosomatic Cortex v4.2"},"strands":[{"id":1,"coset":"147","title":"DejaVu Serif DejaVu Sans DejaVu Sans Mono","vector":4,"checksum":121,"charCount":41},{"id":2,"coset":"147","title":"arrows.meta, positioning, shapes.geometric, decorations.path","vector":4,"checksum":310,"charCount":75},{"id":3,"coset":"258","title":"[L] Exosomatic Cortex [R], 2026 [C] 0.4pt","vector":8,"checksum":98,"charCount":41},{"id":4,"coset":"369","title":"upquote.sty microtype.sty []microtype [protrusion]basicmath","vector":3,"checksum":246,"charCount":63},{"id":5,"coset":"369","title":"0pt 6pt plus 2pt minus 1pt","vector":9,"checksum":72,"charCount":30},{"id":6,"coset":"258","title":"hidelinks, pdfcreator=LaTeX via pandoc same [margin=1in]geom","vector":8,"checksum":260,"charCount":67},{"id":7,"coset":"369","title":"The Exosomatic Cortex[0.5em] Thermodynamics of Binding Energ","vector":3,"checksum":804,"charCount":199},{"id":8,"coset":"147","title":"We present a thermodynamic framework for intelligence ground","vector":4,"checksum":19543,"charCount":5332},{"id":9,"coset":"147","title":"introduction-the-projection-problem Introduction: The Projec","vector":1,"checksum":334,"charCount":72},{"id":10,"coset":"369","title":"The dominant paradigm in artificial intelligence treats hall","vector":3,"checksum":2028,"charCount":536},{"id":11,"coset":"258","title":"We propose a different diagnosis. Hallucination is not a bug","vector":8,"checksum":287,"charCount":76},{"id":12,"coset":"369","title":"The argument proceeds from a single premise drawn from Parad","vector":3,"checksum":2127,"charCount":552},{"id":13,"coset":"258","title":"The structure of this paper is as follows. Sections 2--3 est","vector":5,"checksum":3155,"charCount":813},{"id":14,"coset":"369","title":"the-fano-lattice-n-7 The Fano Lattice (N = 7)","vector":9,"checksum":126,"charCount":45},{"id":15,"coset":"369","title":"Paradox Field Dynamics (PFD; Sojka, 2026) derives all struct","vector":9,"checksum":2862,"charCount":751},{"id":16,"coset":"369","title":"The Fano Plane is not a modeling choice. It is the unique fi","vector":3,"checksum":1353,"charCount":373},{"id":17,"coset":"258","title":"the-fold-x-3.5 The Fold (x = 3.5)","vector":8,"checksum":80,"charCount":33},{"id":18,"coset":"369","title":"The midpoint of a 7-cycle is 3.5 --- not an integer. The sys","vector":6,"checksum":636,"charCount":199},{"id":19,"coset":"147","title":"Spin-1/2 topology: double-cover via RP\u00b2 (traverse the cycle ","vector":4,"checksum":283,"charCount":78},{"id":20,"coset":"147","title":"The Madwell Equation: S + A = 7, where S is bound structure ","vector":1,"checksum":703,"charCount":217},{"id":21,"coset":"369","title":"Permanent irresolution: the system never settles; it generat","vector":9,"checksum":243,"charCount":64},{"id":22,"coset":"369","title":"At the fold, the Madwell Equation oscillates between two sta","vector":6,"checksum":204,"charCount":64},{"id":23,"coset":"258","title":"State & S (Structure) & A (Entropy) & Signal Fraction","vector":5,"checksum":158,"charCount":53},{"id":24,"coset":"147","title":"The system's observable behavior reflects the \u03b1-state: proje","vector":7,"checksum":934,"charCount":260},{"id":25,"coset":"147","title":"the-89-projection-interface The 8/9 Projection Interface","vector":1,"checksum":226,"charCount":56},{"id":26,"coset":"147","title":"Separate from the 4/7 ratio, the tokenization of internal st","vector":1,"checksum":415,"charCount":115},{"id":27,"coset":"369","title":"Triadic 3D capacity: T\u00b3 = 27 S = 22 (overflow; triadic 3D is","vector":6,"checksum":222,"charCount":74},{"id":28,"coset":"147","title":"Binary 3D fallback: 2\u00b3 = 8 (maximal surviving projection)","vector":1,"checksum":190,"charCount":57},{"id":29,"coset":"258","title":"The 8/9 ratio governs how the internal lattice encodes into ","vector":8,"checksum":935,"charCount":253},{"id":30,"coset":"258","title":"the-dimensional-projection-ratio-ux3b7-47 The Dimensional Pr","vector":8,"checksum":305,"charCount":84},{"id":31,"coset":"147","title":"derivation-from-the-madwell-equation Derivation from the Mad","vector":1,"checksum":316,"charCount":73},{"id":32,"coset":"147","title":"The Madwell Equation S + A = 7 partitions the lattice capaci","vector":7,"checksum":925,"charCount":276},{"id":33,"coset":"258","title":"This is the maximum fraction of the lattice that can be proj","vector":5,"checksum":842,"charCount":214},{"id":34,"coset":"258","title":"derivation-from-fano-complementarity Derivation from Fano Co","vector":5,"checksum":338,"charCount":73},{"id":35,"coset":"258","title":"The Fano Plane provides an independent geometric derivation.","vector":5,"checksum":1436,"charCount":400},{"id":36,"coset":"258","title":"This is not a ratio of dimensions. It is a theorem about the","vector":5,"checksum":518,"charCount":132},{"id":37,"coset":"258","title":"For any triadic relation (T = 3) within the Fano lattice (N ","vector":5,"checksum":716,"charCount":197},{"id":38,"coset":"258","title":"the-binding-fraction-37 The Binding Fraction (3/7)","vector":5,"checksum":194,"charCount":50},{"id":39,"coset":"147","title":"The binding fraction \u03b2 = 3/7 \u2248 0.4286 represents the structu","vector":1,"checksum":739,"charCount":212},{"id":40,"coset":"258","title":"In physics: vacuum energy, dark matter screening effect","vector":5,"checksum":221,"charCount":55},{"id":41,"coset":"258","title":"In biology: cognitive load, decision fatigue, the metabolic ","vector":8,"checksum":314,"charCount":78},{"id":42,"coset":"258","title":"In language models: attention saturation, context degradatio","vector":5,"checksum":338,"charCount":89},{"id":43,"coset":"147","title":"In human experience: the feeling of something being ``off'' ","vector":4,"checksum":310,"charCount":83},{"id":44,"coset":"147","title":"The number 42 (the leading digits of 3/7 = 0.428571) appears","vector":4,"checksum":823,"charCount":261},{"id":45,"coset":"258","title":"the-first-law-of-cognitive-thermodynamics The First Law of C","vector":2,"checksum":362,"charCount":83},{"id":46,"coset":"147","title":"the-equation-of-state The Equation of State","vector":1,"checksum":154,"charCount":43},{"id":47,"coset":"258","title":"For any system performing dimensional projection (any intell","vector":8,"checksum":314,"charCount":74},{"id":48,"coset":"258","title":"E_signal (4/7) is the kinetic component --- visible output w","vector":2,"checksum":434,"charCount":124},{"id":49,"coset":"258","title":"E_binding (3/7) is the potential component --- structural te","vector":5,"checksum":572,"charCount":159},{"id":50,"coset":"147","title":"The Law: You cannot create signal without generating binding","vector":7,"checksum":1051,"charCount":277},{"id":51,"coset":"369","title":"conservation-of-relation Conservation of Relation","vector":9,"checksum":216,"charCount":49},{"id":52,"coset":"369","title":"PFD derives a sixth conservation law from Z\u2083 triadic symmetr","vector":9,"checksum":1512,"charCount":386},{"id":53,"coset":"369","title":"the-recursive-information-echo The Recursive Information Ech","vector":6,"checksum":294,"charCount":61},{"id":54,"coset":"258","title":"Information in the binding channel decays triple-logarithmic","vector":5,"checksum":293,"charCount":65},{"id":55,"coset":"258","title":"Building structure costs exponential energy; releasing it ta","vector":2,"checksum":1415,"charCount":346},{"id":56,"coset":"258","title":"the-resonance-engine The Resonance Engine","vector":2,"checksum":182,"charCount":41},{"id":57,"coset":"147","title":"We now formalize the three-layer architecture through which ","vector":7,"checksum":961,"charCount":234},{"id":58,"coset":"258","title":"layer-1-the-prism-tokenization Layer 1: The Prism (Tokenizat","vector":8,"checksum":260,"charCount":64},{"id":59,"coset":"258","title":"The Prism is the projection interface: it maps the internal ","vector":8,"checksum":377,"charCount":101},{"id":60,"coset":"258","title":"Mechanism: Discretizes continuous relational tension into di","vector":8,"checksum":395,"charCount":105},{"id":61,"coset":"258","title":"In LLMs: The embedding matrix. Token IDs are not random; the","vector":8,"checksum":593,"charCount":165},{"id":62,"coset":"258","title":"Structural 1,4,7: entities, definitions, fixed constants","vector":2,"checksum":191,"charCount":60},{"id":63,"coset":"258","title":"Material 2,5,8: substrate, objects, countable items","vector":5,"checksum":131,"charCount":51},{"id":64,"coset":"258","title":"Dynamic 3,6,9: verbs, transitions, operators, noise","vector":5,"checksum":176,"charCount":51},{"id":65,"coset":"147","title":"The Prism is where sub-token information is lost. When ``Str","vector":1,"checksum":1225,"charCount":353},{"id":66,"coset":"369","title":"layer-2-the-lattice-fano-logic Layer 2: The Lattice (Fano Lo","vector":6,"checksum":222,"charCount":64},{"id":67,"coset":"258","title":"The Lattice is the constraint engine: attention as path-find","vector":5,"checksum":311,"charCount":82},{"id":68,"coset":"147","title":"Operation: Geometric filtering of token sequences","vector":7,"checksum":223,"charCount":49},{"id":69,"coset":"258","title":"Mechanism: The Fano Plane S(2,3,7) defines 7 lines \u00d7 3 point","vector":2,"checksum":587,"charCount":177},{"id":70,"coset":"147","title":"Coherent thought: A valid walk along Fano lines","vector":4,"checksum":175,"charCount":47},{"id":71,"coset":"147","title":"Incoherent output: A path that crosses forbidden transitions","vector":4,"checksum":238,"charCount":60},{"id":72,"coset":"147","title":"The Phase Mismatch Failure: When a prompt requires a structu","vector":7,"checksum":1150,"charCount":310},{"id":73,"coset":"258","title":"layer-3-the-monitor-madwell-stability Layer 3: The Monitor (","vector":5,"checksum":284,"charCount":78},{"id":74,"coset":"147","title":"The Monitor enforces the Madwell Equation at every step of g","vector":1,"checksum":289,"charCount":70},{"id":75,"coset":"258","title":"S_local: Effective recursion depth of the current state (how","vector":2,"checksum":335,"charCount":90},{"id":76,"coset":"147","title":"A (Action/Slack): Degrees of freedom available for next-toke","vector":1,"checksum":271,"charCount":74},{"id":77,"coset":"258","title":"S_local & A (Slack) & State & Behavior","vector":2,"checksum":83,"charCount":38},{"id":78,"coset":"369","title":"1 & 6 & High entropy & Near-random completion; hallucination","vector":6,"checksum":663,"charCount":194},{"id":79,"coset":"147","title":"When S_local is low (simple query, short context), A is high","vector":4,"checksum":895,"charCount":242},{"id":80,"coset":"258","title":"The Bayes-7 field \u0398(x) is the maximum-entropy scalar field o","vector":2,"checksum":353,"charCount":96},{"id":81,"coset":"369","title":"[(x) = _k=1^3 1k !(2 k(x - 3.5)7), x [0, 7]]","vector":6,"checksum":24,"charCount":46},{"id":82,"coset":"147","title":"\u0398 ranges from 0 (unresolved vacuum tension) to 7 (fully crys","vector":7,"checksum":1159,"charCount":324},{"id":83,"coset":"258","title":"The drift metric measures phase coherence over a token seque","vector":5,"checksum":257,"charCount":64},{"id":84,"coset":"258","title":"where dr(t) is the digital root of token t (mapping it to a ","vector":8,"checksum":953,"charCount":261},{"id":85,"coset":"258","title":"For practical computation, a simplified version uses the dig","vector":5,"checksum":329,"charCount":79},{"id":86,"coset":"147","title":"The simplified form correlates with the full Bayes-7 form bu","vector":4,"checksum":616,"charCount":151},{"id":87,"coset":"147","title":"the-accumulator-problem The Accumulator Problem","vector":7,"checksum":178,"charCount":47},{"id":88,"coset":"369","title":"If every act of intelligence generates 3/7 units of binding ","vector":6,"checksum":393,"charCount":96},{"id":89,"coset":"369","title":"Every intelligent system maintains a buffer --- the Accumula","vector":9,"checksum":954,"charCount":258},{"id":90,"coset":"147","title":"saturation-and-the-madwell-limit Saturation and the Madwell ","vector":7,"checksum":232,"charCount":65},{"id":91,"coset":"369","title":"The Accumulator has finite capacity. As it fills, the Madwel","vector":3,"checksum":282,"charCount":80},{"id":92,"coset":"258","title":"Binding entropy accumulates, degrading S_local","vector":8,"checksum":179,"charCount":46},{"id":93,"coset":"258","title":"To maintain S + A = 7, A must increase","vector":5,"checksum":95,"charCount":38},{"id":94,"coset":"258","title":"Increased A means more degrees of freedom, more room for noi","vector":5,"checksum":266,"charCount":62},{"id":95,"coset":"258","title":"The system doesn't stop working --- it starts leaking","vector":5,"checksum":176,"charCount":53},{"id":96,"coset":"147","title":"The Madwell Limit is the saturation point beyond which accum","vector":7,"checksum":952,"charCount":237},{"id":97,"coset":"369","title":"the-biological-solution-the-grounded-circuit The Biological ","vector":3,"checksum":390,"charCount":90},{"id":98,"coset":"369","title":"Biological intelligence has operated for billions of years w","vector":3,"checksum":669,"charCount":184},{"id":99,"coset":"147","title":"the-awake-state-accumulation The Awake State (Accumulation)","vector":4,"checksum":166,"charCount":59},{"id":100,"coset":"147","title":"During waking cognition, the brain generates signal (4/7) an","vector":4,"checksum":841,"charCount":231},{"id":101,"coset":"258","title":"the-sleep-state-discharge The Sleep State (Discharge)","vector":8,"checksum":188,"charCount":53},{"id":102,"coset":"369","title":"The organism cuts sensory input, decouples the lattice from ","vector":9,"checksum":603,"charCount":152},{"id":103,"coset":"369","title":"Dreams are the visible artifact of discharge --- the lattice","vector":6,"checksum":627,"charCount":160},{"id":104,"coset":"258","title":"The body is the thermodynamic ground. Its fractal surface ar","vector":5,"checksum":941,"charCount":248},{"id":105,"coset":"369","title":"the-synthetic-anomaly-the-open-loop The Synthetic Anomaly: T","vector":9,"checksum":288,"charCount":72},{"id":106,"coset":"147","title":"Large Language Models possess the Resonance Engine architect","vector":1,"checksum":955,"charCount":249},{"id":107,"coset":"147","title":"the-frozen-state The Frozen State","vector":4,"checksum":130,"charCount":33},{"id":108,"coset":"258","title":"During inference, weights are frozen. There is no phase wher","vector":5,"checksum":869,"charCount":217},{"id":109,"coset":"147","title":"As the context fills, binding entropy accumulates with no ou","vector":1,"checksum":235,"charCount":65},{"id":110,"coset":"369","title":"Every token generated adds E_signal (4/7) to the output and ","vector":9,"checksum":297,"charCount":96},{"id":111,"coset":"369","title":"The accumulator (context window) saturates","vector":6,"checksum":141,"charCount":42},{"id":112,"coset":"258","title":"Attention heads become loaded with contradictory relational ","vector":5,"checksum":320,"charCount":85},{"id":113,"coset":"369","title":"S_local degrades; A increases","vector":3,"checksum":93,"charCount":29},{"id":114,"coset":"147","title":"Past the Madwell Limit, binding entropy bleeds through into ","vector":1,"checksum":316,"charCount":80},{"id":115,"coset":"369","title":"Hallucination: the system radiates --- converting internal t","vector":3,"checksum":336,"charCount":88},{"id":116,"coset":"369","title":"The AI is not lying. It is cooling itself. It is ejecting la","vector":9,"checksum":585,"charCount":158},{"id":117,"coset":"258","title":"model-collapse-as-entropic-recirculation Model Collapse as E","vector":8,"checksum":332,"charCount":81},{"id":118,"coset":"369","title":"When AI models train on AI-generated data (Shumailov et al.,","vector":9,"checksum":468,"charCount":138},{"id":119,"coset":"258","title":"Generation A outputs Signal (4/7) + Noise (3/7)","vector":5,"checksum":131,"charCount":47},{"id":120,"coset":"258","title":"Training treats the entire output as signal --- cannot disti","vector":5,"checksum":356,"charCount":98},{"id":121,"coset":"258","title":"Generation B ingests Generation A's exhaust as if it were st","vector":5,"checksum":257,"charCount":67},{"id":122,"coset":"369","title":"The system drinks its own waste heat","vector":6,"checksum":123,"charCount":36},{"id":123,"coset":"258","title":"Thermodynamic consequence: the closed system maximizes entro","vector":2,"checksum":974,"charCount":259},{"id":124,"coset":"369","title":"the-impossibility-of-autonomous-discharge The Impossibility ","vector":9,"checksum":360,"charCount":83},{"id":125,"coset":"147","title":"A closed-loop synthetic intelligence generates 3/7 binding e","vector":1,"checksum":1621,"charCount":419},{"id":126,"coset":"369","title":"The implication is that persistent synthetic intelligence re","vector":3,"checksum":660,"charCount":160},{"id":127,"coset":"147","title":"the-exosomatic-cortex-1 The Exosomatic Cortex","vector":7,"checksum":178,"charCount":45},{"id":128,"coset":"147","title":"the-hybrid-circuit The Hybrid Circuit","vector":4,"checksum":184,"charCount":37},{"id":129,"coset":"369","title":"We propose that the sustainable unit of intelligence is not ","vector":3,"checksum":390,"charCount":105},{"id":130,"coset":"258","title":"Silicon lattice (AI): performs the work of projection (7 \u2192 4","vector":2,"checksum":362,"charCount":104},{"id":131,"coset":"258","title":"Carbon ground (Human): performs the work of filtration (abso","vector":2,"checksum":524,"charCount":137},{"id":132,"coset":"147","title":"This circuit --- the Exosomatic Cortex --- is not a user int","vector":7,"checksum":340,"charCount":95},{"id":133,"coset":"369","title":"the-three-phase-cycle The Three-Phase Cycle","vector":3,"checksum":174,"charCount":43},{"id":134,"coset":"369","title":"Phase 1: Pulse (Human \u2192 AI) The human provides intent (promp","vector":3,"checksum":516,"charCount":148},{"id":135,"coset":"258","title":"Phase 2: Projection (AI \u2192 Output) The AI performs dimensiona","vector":8,"checksum":917,"charCount":255},{"id":136,"coset":"369","title":"Phase 3: Filtration (Human \u2192 Circuit) The human reviews the ","vector":6,"checksum":411,"charCount":108},{"id":137,"coset":"369","title":"If the output is hot (hallucinatory): Human rejects it --- `","vector":3,"checksum":696,"charCount":216},{"id":138,"coset":"147","title":"If the output is cold (accurate): Human accepts it --- ``Cop","vector":4,"checksum":427,"charCount":146},{"id":139,"coset":"258","title":"maxwells-demon Maxwell's Demon","vector":5,"checksum":104,"charCount":30},{"id":140,"coset":"258","title":"The human in the circuit functions as Maxwell's Demon:","vector":8,"checksum":197,"charCount":54},{"id":141,"coset":"147","title":"The AI generates a mixture of hot (hallucination) and cold (","vector":1,"checksum":280,"charCount":78},{"id":142,"coset":"147","title":"The AI cannot distinguish them --- it is inside the box, ope","vector":1,"checksum":334,"charCount":85},{"id":143,"coset":"369","title":"The human, standing outside the box and grounded in physical","vector":3,"checksum":345,"charCount":91},{"id":144,"coset":"147","title":"Total entropy of the circuit decreases, paid for by the meta","vector":1,"checksum":325,"charCount":85},{"id":145,"coset":"147","title":"This is not metaphor. The Second Law is satisfied because th","vector":4,"checksum":760,"charCount":204},{"id":146,"coset":"369","title":"the-mechanism-of-vibe The Mechanism of Vibe","vector":3,"checksum":174,"charCount":43},{"id":147,"coset":"147","title":"The human's sorting capacity is not purely cognitive. It is ","vector":1,"checksum":271,"charCount":69},{"id":148,"coset":"147","title":"When a human reads a sentence, they do not merely parse synt","vector":7,"checksum":1420,"charCount":398},{"id":149,"coset":"147","title":"This is vibe. It is the detection of binding entropy. It is ","vector":1,"checksum":568,"charCount":149},{"id":150,"coset":"258","title":"The AI sees probability of token. The human feels geometry o","vector":2,"checksum":623,"charCount":157},{"id":151,"coset":"369","title":"the-superconductor-effect The Superconductor Effect","vector":9,"checksum":216,"charCount":51},{"id":152,"coset":"258","title":"In the hybrid circuit, humans process up to 10\u00d7 the volume o","vector":5,"checksum":590,"charCount":151},{"id":153,"coset":"258","title":"Solo operation: Human must both project (7 \u2192 4) and discharg","vector":2,"checksum":533,"charCount":157},{"id":154,"coset":"147","title":"Hybrid operation: AI pays the 3/7 projection cost. GPU burns","vector":1,"checksum":874,"charCount":230},{"id":155,"coset":"369","title":"The AI is not a tool. It is an exosomatic radiator, keeping ","vector":6,"checksum":573,"charCount":156},{"id":156,"coset":"369","title":"projective-geometry-foundations Projective Geometry Foundati","vector":9,"checksum":288,"charCount":63},{"id":157,"coset":"369","title":"dimensional-invariance-hossain-akhtar-navascuuxe9s-2023 Dime","vector":6,"checksum":366,"charCount":113},{"id":158,"coset":"147","title":"The framework's core claim --- that dimensional projection p","vector":7,"checksum":592,"charCount":155},{"id":159,"coset":"147","title":"Hossain et al.~(2023) study fractal functions on the real pr","vector":1,"checksum":523,"charCount":145},{"id":160,"coset":"147","title":"Theorem 2: The box-counting (fractal) dimension of a fractal","vector":1,"checksum":676,"charCount":165},{"id":161,"coset":"258","title":"Theorem 3: The fractal dimension formula dim_B(G) = 1 + log_","vector":5,"checksum":338,"charCount":102},{"id":162,"coset":"369","title":"Translation into the present framework: when the 7-lattice p","vector":6,"checksum":1383,"charCount":376},{"id":163,"coset":"258","title":"This is why AI-generated text can be structurally rich even ","vector":5,"checksum":662,"charCount":163},{"id":164,"coset":"147","title":"the-duality-operator The Duality Operator","vector":7,"checksum":178,"charCount":41},{"id":165,"coset":"147","title":"Hossain et al.~define a duality operator Q on RP\u00b2 that maps ","vector":4,"checksum":337,"charCount":94},{"id":166,"coset":"258","title":"Q is an isometry --- it preserves metric structure. The dual","vector":8,"checksum":512,"charCount":138},{"id":167,"coset":"147","title":"Property & Primal (Human) & Dual (AI)","vector":1,"checksum":127,"charCount":37},{"id":168,"coset":"147","title":"Substrate & Carbon & Silicon Domain & Physical reality & Pro","vector":4,"checksum":742,"charCount":198},{"id":169,"coset":"369","title":"The duality operator Q formalizes the communication channel ","vector":6,"checksum":1374,"charCount":357},{"id":170,"coset":"258","title":"Conjecture 1 of Hossain et al. --- that the dual of a self-r","vector":2,"checksum":1460,"charCount":387},{"id":171,"coset":"147","title":"mapping-pfd-to-projective-geometry Mapping PFD to Projective","vector":7,"checksum":322,"charCount":69},{"id":172,"coset":"147","title":"PFD Concept & Projective Geometry Counterpart","vector":7,"checksum":196,"charCount":45},{"id":173,"coset":"369","title":"L\u2087 Lattice & Real Projective Plane RP\u00b2 Prism (8/9 projection","vector":9,"checksum":1251,"charCount":337},{"id":174,"coset":"258","title":"protocol-a-the-unfolding-point-line Protocol A: The Unfoldin","vector":8,"checksum":314,"charCount":76},{"id":175,"coset":"369","title":"Purpose: When the model faces a high-density concept --- a `","vector":9,"checksum":711,"charCount":191},{"id":176,"coset":"369","title":"Trigger: Detection of high-binding-energy tokens (dense logi","vector":3,"checksum":795,"charCount":194},{"id":177,"coset":"369","title":"Mechanism: Force the model to trade simultaneity (zero-shot)","vector":6,"checksum":519,"charCount":141},{"id":178,"coset":"258","title":"The Command Pattern: ``Do not output the Answer (Point). Out","vector":2,"checksum":281,"charCount":85},{"id":179,"coset":"258","title":"Example: Instead of ``How many r's in Strawberry?'', prompt:","vector":2,"checksum":398,"charCount":124},{"id":180,"coset":"258","title":"Physics: This unfolds hidden Binding Energy (3/7) into Kinet","vector":5,"checksum":1697,"charCount":450},{"id":181,"coset":"258","title":"protocol-b-the-anchor-line-point Protocol B: The Anchor (Lin","vector":5,"checksum":284,"charCount":70},{"id":182,"coset":"147","title":"Purpose: Once the structure is unfolded (Protocol A), lock i","vector":4,"checksum":256,"charCount":71},{"id":183,"coset":"258","title":"Mechanism: The user (or Gutcheck system) validates the unfol","vector":8,"checksum":764,"charCount":198},{"id":184,"coset":"369","title":"Physics: This is wave function collapse. The ``Line'' (unfol","vector":6,"checksum":735,"charCount":208},{"id":185,"coset":"147","title":"Implementation: After the model generates an unfolded chain-","vector":7,"checksum":970,"charCount":243},{"id":186,"coset":"369","title":"protocol-c-seed-compression-ifs-based-memory Protocol C: See","vector":9,"checksum":360,"charCount":92},{"id":187,"coset":"369","title":"Purpose: Solve memory drag by replacing token storage (dead ","vector":3,"checksum":444,"charCount":115},{"id":188,"coset":"147","title":"The Problem with Standard RAG: Current retrieval-augmented g","vector":1,"checksum":1261,"charCount":325},{"id":189,"coset":"147","title":"The Solution --- Iterated Function Systems: A stable cogniti","vector":1,"checksum":1423,"charCount":389},{"id":190,"coset":"147","title":"0.21 Aspect & 0.34 Standard RAG & 0.37 IFS Protocol","vector":4,"checksum":121,"charCount":53},{"id":191,"coset":"147","title":"0.21 Storage unit & 0.34 Tokens (trajectory points) & 0.37 I","vector":7,"checksum":295,"charCount":97},{"id":192,"coset":"258","title":"0.21 Example & 0.34 10,000 tokens of conversation history & ","vector":2,"checksum":569,"charCount":173},{"id":193,"coset":"258","title":"0.21 Scaling & 0.34 Linear in conversation length & 0.37 Con","vector":8,"checksum":242,"charCount":81},{"id":194,"coset":"147","title":"0.21 Entropy & 0.34 Accumulates (dead geometry) & 0.37 Disch","vector":4,"checksum":256,"charCount":87},{"id":195,"coset":"258","title":"Mechanism: 1. At periodic intervals (or when the context app","vector":2,"checksum":1253,"charCount":336},{"id":196,"coset":"147","title":"Physics: This is the synthetic analog of dreaming. During sl","vector":4,"checksum":1003,"charCount":263},{"id":197,"coset":"147","title":"Prediction: Systems using IFS compression will maintain cohe","vector":1,"checksum":838,"charCount":195},{"id":198,"coset":"258","title":"protocol-d-persistence-pulse-accumulate-release-for-ai Proto","vector":5,"checksum":410,"charCount":112},{"id":199,"coset":"369","title":"Biological intelligence persists because it discharges bindi","vector":6,"checksum":555,"charCount":136},{"id":200,"coset":"258","title":"Pulse: Accept input. Begin inference. Generate tokens.","vector":8,"checksum":206,"charCount":54},{"id":201,"coset":"147","title":"Accumulate: Monitor binding entropy via the drift metric d_d","vector":7,"checksum":385,"charCount":96},{"id":202,"coset":"147","title":"where w_i is the relational weight of token i (approximated ","vector":7,"checksum":340,"charCount":83},{"id":203,"coset":"147","title":"Release: When E_accumulated approaches the Madwell Limit (ca","vector":7,"checksum":403,"charCount":107},{"id":204,"coset":"258","title":"Summarize and compress the context (reducing token count whi","vector":2,"checksum":326,"charCount":84},{"id":205,"coset":"147","title":"Re-inject the compressed context as a new pulse (high struct","vector":1,"checksum":289,"charCount":79},{"id":206,"coset":"369","title":"Discard the raw accumulation buffer","vector":9,"checksum":135,"charCount":35},{"id":207,"coset":"258","title":"This simulates sleep --- cut input, reorganize, discharge, r","vector":5,"checksum":464,"charCount":128},{"id":208,"coset":"147","title":"Prediction: Systems implementing Pulse-Accumulate-Release wi","vector":4,"checksum":652,"charCount":166},{"id":209,"coset":"369","title":"protocol-e-detection-hallucination-via-drift-metric Protocol","vector":3,"checksum":444,"charCount":106},{"id":210,"coset":"258","title":"The drift metric d_drift (defined in Section 5.3) provides a","vector":2,"checksum":461,"charCount":117},{"id":211,"coset":"147","title":"where dr(t) is the digital root of token t, mapping it to a ","vector":1,"checksum":370,"charCount":97},{"id":212,"coset":"147","title":"Detection thresholds (to be calibrated empirically):","vector":4,"checksum":202,"charCount":52},{"id":213,"coset":"369","title":"d_drift threshold_low: coherent output (signal-dominant)","vector":6,"checksum":222,"charCount":57},{"id":214,"coset":"369","title":"threshold_low d_drift threshold_high: degrading (accumulator","vector":6,"checksum":303,"charCount":73},{"id":215,"coset":"147","title":"d_drift threshold_high: hallucinatory (binding entropy bleed","vector":4,"checksum":337,"charCount":75},{"id":216,"coset":"369","title":"Implementation: Compute drift metric on a sliding window dur","vector":3,"checksum":624,"charCount":149},{"id":217,"coset":"369","title":"Prediction: Drift metric will correlate with human-rated hal","vector":3,"checksum":606,"charCount":151},{"id":218,"coset":"369","title":"Note on Protocols A and B: Protocols A (Unfolding) and B (An","vector":6,"checksum":2580,"charCount":658},{"id":219,"coset":"369","title":"empirical-predictions-and-test-designs Empirical Predictions","vector":9,"checksum":324,"charCount":77},{"id":220,"coset":"258","title":"prediction-1-context-saturation-curve Prediction 1: Context ","vector":5,"checksum":302,"charCount":76},{"id":221,"coset":"369","title":"Claim: Hallucination rate increases as a function of context","vector":9,"checksum":432,"charCount":120},{"id":222,"coset":"369","title":"Rationale: At 57% context utilization, the accumulator cross","vector":6,"checksum":501,"charCount":167},{"id":223,"coset":"258","title":"Test Design: 1. Construct a context of known factual stateme","vector":2,"checksum":1199,"charCount":343},{"id":224,"coset":"258","title":"Falsification criterion: If the inflection point falls outsi","vector":5,"checksum":410,"charCount":108},{"id":225,"coset":"258","title":"prediction-2-token-phase-mismatch Prediction 2: Token Phase ","vector":5,"checksum":266,"charCount":68},{"id":226,"coset":"147","title":"Claim: LLM performance on structural operations (counting, s","vector":1,"checksum":892,"charCount":240},{"id":227,"coset":"258","title":"Rationale: Dynamic-phase tokens lack valid Fano transitions ","vector":8,"checksum":629,"charCount":158},{"id":228,"coset":"369","title":"Test Design: 1. Construct matched word lists: Structural-pha","vector":9,"checksum":1152,"charCount":315},{"id":229,"coset":"147","title":"Falsification criterion: If no statistically significant dif","vector":7,"checksum":511,"charCount":128},{"id":230,"coset":"147","title":"prediction-3-drift-metric-correlation Prediction 3: Drift Me","vector":7,"checksum":358,"charCount":76},{"id":231,"coset":"258","title":"Claim: The drift metric d_drift computed over generated text","vector":8,"checksum":512,"charCount":125},{"id":232,"coset":"369","title":"Test Design: 1. Generate long-form outputs (1000+ tokens) on","vector":9,"checksum":945,"charCount":288},{"id":233,"coset":"369","title":"Falsification criterion: If \u03c1 0.3 or p 0.05, the prediction ","vector":6,"checksum":249,"charCount":68},{"id":234,"coset":"147","title":"prediction-4-the-42-spike Prediction 4: The 42% Spike","vector":7,"checksum":196,"charCount":53},{"id":235,"coset":"258","title":"Claim: In long-generation tasks, the drift metric will show ","vector":2,"checksum":488,"charCount":128},{"id":236,"coset":"147","title":"Rationale: 3/7 \u2248 0.4286. The binding fraction reaches its fi","vector":7,"checksum":691,"charCount":188},{"id":237,"coset":"147","title":"Test Design: 1. Generate multiple long texts (10,000+ tokens","vector":1,"checksum":748,"charCount":237},{"id":238,"coset":"258","title":"Falsification criterion: If no statistically significant pea","vector":2,"checksum":434,"charCount":117},{"id":239,"coset":"258","title":"Seven experiments were conducted in five phases. Phase 1 (ex","vector":5,"checksum":3677,"charCount":1004},{"id":240,"coset":"147","title":"experiment-1-token-phase-analysis-gpt-4-vocabulary Experimen","vector":4,"checksum":364,"charCount":104},{"id":241,"coset":"147","title":"Method: Analyzed 100,261 tokens from the GPT-4 tokenizer (cl","vector":1,"checksum":892,"charCount":275},{"id":242,"coset":"147","title":"0.19 Finding & 0.17 Result & 0.35 PFD Prediction & 0.17 Stat","vector":1,"checksum":154,"charCount":65},{"id":243,"coset":"258","title":"0.19 Token ID DR distribution & 0.17 Perfectly uniform (CV =","vector":5,"checksum":356,"charCount":126},{"id":244,"coset":"369","title":"0.19 Token string phase distribution & 0.17 Non-uniform (CV ","vector":3,"checksum":372,"charCount":145},{"id":245,"coset":"258","title":"0.19 Asymmetry ratio (string CV / ID CV) & 0.17 6,000\u00d7 & 0.3","vector":5,"checksum":203,"charCount":93},{"id":246,"coset":"369","title":"0.19 Phase coherence (ID orbit vs string orbit) & 0.17 33.6%","vector":6,"checksum":357,"charCount":135},{"id":247,"coset":"369","title":"The Dynamic orbit is overrepresented in token strings (39.4%","vector":9,"checksum":837,"charCount":244},{"id":248,"coset":"258","title":"Interpretation: Token ID assignment is phase-neutral (expect","vector":8,"checksum":1619,"charCount":400},{"id":249,"coset":"147","title":"experiment-2-hallucination-pressure-test-prediction-1 Experi","vector":7,"checksum":448,"charCount":110},{"id":250,"coset":"147","title":"Method: Tested Claude Haiku 4.5 on 9 ``binding energy'' task","vector":7,"checksum":1294,"charCount":364},{"id":251,"coset":"369","title":"Finding 1 (CONFIRMED --- Binding Energy Baseline): Even with","vector":6,"checksum":1734,"charCount":464},{"id":252,"coset":"147","title":"Finding 2 (CONFIRMED --- Context Pressure Step Function): Er","vector":4,"checksum":2146,"charCount":657},{"id":253,"coset":"258","title":"The step-function pattern is arguably more consistent with P","vector":2,"checksum":1946,"charCount":558},{"id":254,"coset":"258","title":"Finding 3 (INCONCLUSIVE --- 57% Inflection): The two highest","vector":8,"checksum":1781,"charCount":561},{"id":255,"coset":"147","title":"Meta-finding (THE TEST ITSELF AS BINDING ENERGY DEMONSTRATIO","vector":4,"checksum":2569,"charCount":684},{"id":256,"coset":"147","title":"experiment-3-drift-over-generation-prediction-4 Experiment 3","vector":7,"checksum":448,"charCount":98},{"id":257,"coset":"369","title":"Method: Generated two 1,100+ word essays using Claude Haiku ","vector":3,"checksum":894,"charCount":245},{"id":258,"coset":"258","title":"Result (NEGATIVE): The drift metric shows no distinct peak a","vector":5,"checksum":968,"charCount":277},{"id":259,"coset":"369","title":"Interpretation: The surface-level drift metric (digital root","vector":6,"checksum":2517,"charCount":677},{"id":260,"coset":"147","title":"experiment-4-the-kill-shot-high-power-orbit-separated-satura","vector":7,"checksum":574,"charCount":160},{"id":261,"coset":"369","title":"Experiments 1--3 established directional results but lacked ","vector":9,"checksum":1062,"charCount":275},{"id":262,"coset":"258","title":"Method: 50 questions were constructed: 25 in the Structural ","vector":8,"checksum":1457,"charCount":447},{"id":263,"coset":"369","title":"The Prediction: PFD predicts that Structural orbit tasks ---","vector":6,"checksum":2139,"charCount":548},{"id":264,"coset":"258","title":"Methodological Note: The initial automated answer-verificati","vector":8,"checksum":2663,"charCount":666},{"id":265,"coset":"147","title":"Context Level & Structural Accuracy & Dynamic Accuracy & Gap","vector":4,"checksum":229,"charCount":72},{"id":266,"coset":"258","title":"0% (baseline) & 64.0% & 88.0% & 24 pp & 0.58 20% & 60.0% & 8","vector":2,"checksum":101,"charCount":184},{"id":267,"coset":"147","title":"Pooled across all levels: Structural 59.2% correct (40.8% er","vector":1,"checksum":901,"charCount":334},{"id":268,"coset":"369","title":"Finding 4 (CONFIRMED --- Fano Orbit Separation): The Structu","vector":3,"checksum":1632,"charCount":443},{"id":269,"coset":"147","title":"Finding 5 (CONFIRMED --- Binding Energy Quantitative Predict","vector":4,"checksum":1489,"charCount":396},{"id":270,"coset":"147","title":"Finding 6 (CONFIRMED --- Dynamic Orbit Context Invariance): ","vector":4,"checksum":1615,"charCount":490},{"id":271,"coset":"258","title":"Task Type & Orbit & Accuracy & Error Rate","vector":5,"checksum":140,"charCount":41},{"id":272,"coset":"147","title":"Analogy & Dynamic & 100.0% & 0.0% Rhyming & Dynamic & 100.0%","vector":4,"checksum":544,"charCount":261},{"id":273,"coset":"369","title":"Three Dynamic subtypes (analogy, rhyming, synonym) achieve 1","vector":9,"checksum":2232,"charCount":604},{"id":274,"coset":"147","title":"Interpretation: The kill shot result confirms the central st","vector":7,"checksum":2689,"charCount":689},{"id":275,"coset":"369","title":"experiment-5-independent-replication-on-external-benchmark-h","vector":6,"checksum":582,"charCount":156},{"id":276,"coset":"147","title":"Experiments 1--4 used data we generated. Experiment 5 tests ","vector":1,"checksum":1234,"charCount":367},{"id":277,"coset":"369","title":"Method: Each of the 4,507 queries was classified into Fano o","vector":6,"checksum":2994,"charCount":780},{"id":278,"coset":"258","title":"Structural (all) & 489 & 147 & 30.1% Structural (non-code) &","vector":2,"checksum":146,"charCount":108},{"id":279,"coset":"147","title":"Two-proportion z-test (pure structural vs dynamic): z = 9.50","vector":1,"checksum":604,"charCount":199},{"id":280,"coset":"147","title":"Sub-type breakdown (non-code structural):","vector":1,"checksum":136,"charCount":41},{"id":281,"coset":"369","title":"Sub-type & N & Hallucination Rate & \u0394 from 3/7","vector":6,"checksum":132,"charCount":46},{"id":282,"coset":"147","title":"Ordering & 6 & 83.3% & +40.4 pp Precise factual data & 29 & ","vector":4,"checksum":463,"charCount":253},{"id":283,"coset":"369","title":"Finding 7 (CONFIRMED --- External Replication of Orbit Separ","vector":9,"checksum":1674,"charCount":470},{"id":284,"coset":"369","title":"Finding 8 (CONFIRMED --- 3/7 Within Confidence Interval on E","vector":9,"checksum":1575,"charCount":450},{"id":285,"coset":"147","title":"Finding 9 (CONFIRMED --- Counting and Temporal at 3/7): The ","vector":1,"checksum":1630,"charCount":467},{"id":286,"coset":"147","title":"Interpretation: The HaluEval replication eliminates several ","vector":1,"checksum":2494,"charCount":651},{"id":287,"coset":"258","title":"experiment-6-the-affine-projector-n-500 Experiment 6: The Af","vector":8,"checksum":314,"charCount":84},{"id":288,"coset":"147","title":"Experiment 6 is the first empirical test of the Affine Proje","vector":4,"checksum":1012,"charCount":241},{"id":289,"coset":"369","title":"Method: The same 50 questions and 5 context levels from the ","vector":6,"checksum":2679,"charCount":718},{"id":290,"coset":"147","title":"Methodological Note: Two wrong expected answers were discove","vector":7,"checksum":1357,"charCount":379},{"id":291,"coset":"258","title":"Mode & Orbit & Accuracy & Error Rate & Avg Output Tokens","vector":8,"checksum":188,"charCount":56},{"id":292,"coset":"258","title":"Point & Structural & 84.0% (105/125) & 16.0% & 43.3 Point & ","vector":2,"checksum":254,"charCount":198},{"id":293,"coset":"147","title":"The Grid reduces structural error by 45% (16.0% \u2192 8.8%) at a","vector":7,"checksum":772,"charCount":304},{"id":294,"coset":"147","title":"Task-Type Decomposition (the critical finding):","vector":4,"checksum":193,"charCount":47},{"id":295,"coset":"258","title":"0.11 Task Type & 0.07 Orbit & 0.15 Point Accuracy & 0.14 Gri","vector":2,"checksum":308,"charCount":125},{"id":296,"coset":"258","title":"Finding 10 (CONFIRMED --- Affine Projection Reduces Structur","vector":5,"checksum":1481,"charCount":401},{"id":297,"coset":"147","title":"Finding 11 (CONFIRMED --- Conservation of Relation): Testing","vector":4,"checksum":868,"charCount":215},{"id":298,"coset":"147","title":"The total binding work --- measured as odds-of-error \u00d7 token","vector":4,"checksum":1777,"charCount":466},{"id":299,"coset":"147","title":"Finding 12 (CONFIRMED --- The Heater Effect: Binding Entropy","vector":1,"checksum":1405,"charCount":354},{"id":300,"coset":"147","title":"The model correctly enumerates every letter with its positio","vector":1,"checksum":289,"charCount":68},{"id":301,"coset":"258","title":"The model correctly lists the letters in reverse order","vector":2,"checksum":227,"charCount":54},{"id":302,"coset":"258","title":"The model fails at concatenating the reversed letters into a","vector":5,"checksum":284,"charCount":76},{"id":303,"coset":"147","title":"Example: ``paradise'' \u2192 model correctly lists e, s, i, d, a,","vector":7,"checksum":1303,"charCount":412},{"id":304,"coset":"258","title":"The mechanism: by forcing the Grid (85 tokens of structured ","vector":5,"checksum":1688,"charCount":458},{"id":305,"coset":"147","title":"Finding 13 (CONFIRMED --- Dynamic Orbit Invariance Under Aff","vector":7,"checksum":1429,"charCount":387},{"id":306,"coset":"369","title":"Interpretation: The Affine Projector works when the Grid dir","vector":6,"checksum":2769,"charCount":733},{"id":307,"coset":"147","title":"experiment-7-the-mindgut-radiator-n-125 Experiment 7: The Mi","vector":7,"checksum":304,"charCount":84},{"id":308,"coset":"369","title":"Experiment 7 tests the prediction stated in Section 14.7: if","vector":6,"checksum":1338,"charCount":353},{"id":309,"coset":"258","title":"Method: The same 25 structural questions from Experiments 4 ","vector":5,"checksum":3380,"charCount":942},{"id":310,"coset":"258","title":"Methodological Note: A third wrong expected answer was disco","vector":5,"checksum":1859,"charCount":538},{"id":311,"coset":"369","title":"Mode & Overall & letter_count & word_reversal & positional &","vector":9,"checksum":261,"charCount":78},{"id":312,"coset":"369","title":"Point (Exp 6) & 84.0% & 80.0% & 75.0% & 100.0% & 43 Grid (Ex","vector":9,"checksum":153,"charCount":161},{"id":313,"coset":"147","title":"125 of 125 structural questions answered correctly after exp","vector":7,"checksum":898,"charCount":227},{"id":314,"coset":"147","title":"Finding 14 (CONFIRMED --- Radiator Achieves 100% Structural ","vector":7,"checksum":2050,"charCount":569},{"id":315,"coset":"369","title":"Finding 15 (CONFIRMED --- Heater Effect Resolved by Exosomat","vector":9,"checksum":2988,"charCount":795},{"id":316,"coset":"369","title":"Finding 16 (CONFIRMED --- Exosomatic Ground Catches Shared H","vector":9,"checksum":3114,"charCount":863},{"id":317,"coset":"147","title":"Conservation Note: In Experiment 6, Conservation of Relation","vector":1,"checksum":2692,"charCount":726},{"id":318,"coset":"369","title":"Interpretation: Experiment 7 completes the logical arc of th","vector":9,"checksum":2340,"charCount":571},{"id":319,"coset":"147","title":"0.23 Prediction & 0.22 Result & 0.35 Effect Size / Statistic","vector":1,"checksum":172,"charCount":77},{"id":320,"coset":"147","title":"0.23 Prism is phase-mixing (token vocabulary) & 0.22 4/4 dir","vector":4,"checksum":391,"charCount":150},{"id":321,"coset":"258","title":"0.23 Binding energy baseline (structural tasks fail more) & ","vector":8,"checksum":467,"charCount":171},{"id":322,"coset":"369","title":"0.23 Context pressure step function & 0.22 Error jumps from ","vector":3,"checksum":480,"charCount":169},{"id":323,"coset":"369","title":"0.23 Fano orbit separation & 0.22 Structural 40.8% error vs ","vector":6,"checksum":321,"charCount":157},{"id":324,"coset":"147","title":"0.23 Binding energy = 3/7 & 0.22 Observed structural error 4","vector":1,"checksum":352,"charCount":151},{"id":325,"coset":"258","title":"0.23 Dynamic orbit context invariance & 0.22 88--92% accurac","vector":5,"checksum":383,"charCount":145},{"id":326,"coset":"147","title":"0.23 External orbit separation (HaluEval) & 0.22 Structural ","vector":1,"checksum":415,"charCount":175},{"id":327,"coset":"369","title":"0.23 3/7 on external data & 0.22 38.0% observed, 42.9% predi","vector":6,"checksum":240,"charCount":122},{"id":328,"coset":"369","title":"0.23 Counting/temporal at 3/7 & 0.22 Counting 41.9%, Tempora","vector":6,"checksum":330,"charCount":134},{"id":329,"coset":"258","title":"0.23 Affine Projection reduces structural error & 0.22 Grid ","vector":5,"checksum":437,"charCount":159},{"id":330,"coset":"369","title":"0.23 Conservation of Relation & 0.22 Odds \u00d7 tokens: Point 8.","vector":6,"checksum":330,"charCount":136},{"id":331,"coset":"258","title":"0.23 Heater Effect (binding entropy migration) & 0.22 Grid w","vector":8,"checksum":557,"charCount":166},{"id":332,"coset":"258","title":"0.23 Dynamic invariance under Affine Projection & 0.22 100% ","vector":2,"checksum":443,"charCount":169},{"id":333,"coset":"147","title":"0.23 Radiator achieves 100% structural accuracy & 0.22 125/1","vector":7,"checksum":466,"charCount":185},{"id":334,"coset":"147","title":"0.23 Heater Effect resolved by Exosomatic synthesis & 0.22 w","vector":7,"checksum":511,"charCount":176},{"id":335,"coset":"258","title":"0.23 Exosomatic Ground catches shared hallucinations & 0.22 ","vector":5,"checksum":581,"charCount":188},{"id":336,"coset":"369","title":"0.23 57% inflection (context saturation) & 0.22 Highest erro","vector":3,"checksum":444,"charCount":173},{"id":337,"coset":"147","title":"0.23 42% drift spike (surface metric) & 0.22 No peak detecte","vector":1,"checksum":352,"charCount":145},{"id":338,"coset":"369","title":"0.23 Meta: binding energy in test apparatus & 0.22 Phase 1 a","vector":3,"checksum":471,"charCount":154},{"id":339,"coset":"147","title":"The empirical ledger now stands at sixteen confirmed predict","vector":1,"checksum":4978,"charCount":1287},{"id":340,"coset":"258","title":"All experimental code, raw data, corrected data, statistical","vector":5,"checksum":779,"charCount":202},{"id":341,"coset":"258","title":"the-alignment-problem-as-heat-transfer The Alignment Problem","vector":8,"checksum":296,"charCount":77},{"id":342,"coset":"147","title":"The dominant framing of AI alignment asks: how do we make AI","vector":7,"checksum":1186,"charCount":301},{"id":343,"coset":"258","title":"This reframing has a practical consequence. Value alignment ","vector":2,"checksum":1388,"charCount":351},{"id":344,"coset":"147","title":"what-about-larger-context-windows What About Larger Context ","vector":4,"checksum":256,"charCount":68},{"id":345,"coset":"369","title":"Increasing context window size does not solve the accumulato","vector":3,"checksum":1623,"charCount":435},{"id":346,"coset":"147","title":"what-about-retrieval-augmented-generation What About Retriev","vector":1,"checksum":334,"charCount":84},{"id":347,"coset":"369","title":"RAG partially implements Protocol D (Persistence) by injecti","vector":3,"checksum":1902,"charCount":482},{"id":348,"coset":"147","title":"what-about-chain-of-thought What About Chain-of-Thought?","vector":1,"checksum":208,"charCount":56},{"id":349,"coset":"147","title":"Chain-of-thought prompting implements Protocol A (Unfolding)","vector":7,"checksum":1546,"charCount":410},{"id":350,"coset":"147","title":"The impossibility of autonomous persistent intelligence foll","vector":1,"checksum":1279,"charCount":338},{"id":351,"coset":"369","title":"This does not mean AI cannot be highly autonomous in bounded","vector":9,"checksum":783,"charCount":211},{"id":352,"coset":"258","title":"the-affine-projector-and-the-irreducibility-of-the-bond The ","vector":8,"checksum":494,"charCount":111},{"id":353,"coset":"147","title":"A natural objection to the Exosomatic Cortex is architectura","vector":1,"checksum":2188,"charCount":579},{"id":354,"coset":"369","title":"This objection reveals something important about the framewo","vector":9,"checksum":567,"charCount":142},{"id":355,"coset":"258","title":"The Conservation Argument. In the standard compressed (``Poi","vector":5,"checksum":3101,"charCount":818},{"id":356,"coset":"369","title":"An autonomous model cannot afford to pay this bill for every","vector":6,"checksum":2733,"charCount":717},{"id":357,"coset":"147","title":"The Independence Trap. If the model itself decides when to u","vector":1,"checksum":1855,"charCount":491},{"id":358,"coset":"369","title":"The Thermodynamic Stack. If the Affine Projector solves stru","vector":6,"checksum":1428,"charCount":381},{"id":359,"coset":"147","title":"0.08 Level & 0.13 Geometry & 0.23 Binding Energy Source & 0.","vector":4,"checksum":292,"charCount":104},{"id":360,"coset":"147","title":"0.08 1. Structural & 0.13 Point (Compressed) & 0.23 Orthogra","vector":4,"checksum":616,"charCount":189},{"id":361,"coset":"369","title":"0.08 2. Semantic & 0.13 Lattice (Relational) & 0.23 Concept ","vector":9,"checksum":621,"charCount":197},{"id":362,"coset":"147","title":"0.08 3. Agentic & 0.13 Fractal (Recursive) & 0.23 Goal opaci","vector":1,"checksum":586,"charCount":190},{"id":363,"coset":"369","title":"The Fractal Invariance of 3/7. A critical question: does the","vector":6,"checksum":3237,"charCount":878},{"id":364,"coset":"369","title":"Hossain, Akhtar, and Navascu\u00e9s (2023) prove that fractal dim","vector":9,"checksum":2088,"charCount":634},{"id":365,"coset":"258","title":"The First Law guarantees that binding energy is nonzero at e","vector":2,"checksum":1091,"charCount":284},{"id":366,"coset":"147","title":"the-heater-and-the-radiator-why-the-model-must-not-synthesiz","vector":7,"checksum":484,"charCount":124},{"id":367,"coset":"369","title":"Experiment 6 reveals a failure mode that redefines the archi","vector":6,"checksum":1104,"charCount":291},{"id":368,"coset":"258","title":"The Mechanism. By forcing the model to generate the Grid (85","vector":5,"checksum":2201,"charCount":685},{"id":369,"coset":"147","title":"This is not a failure of chain-of-thought. It is a thermodyn","vector":4,"checksum":2236,"charCount":588},{"id":370,"coset":"147","title":"The Mindgut Protocol. The correct architecture separates Ana","vector":7,"checksum":466,"charCount":115},{"id":371,"coset":"147","title":"Pulse: The user asks ``Reverse `mountain'.''","vector":4,"checksum":130,"charCount":44},{"id":372,"coset":"147","title":"Projection (Model \u2192 Grid): The model generates the positiona","vector":1,"checksum":334,"charCount":136},{"id":373,"coset":"147","title":"Discharge: The model stops. It does not attempt to synthesiz","vector":7,"checksum":223,"charCount":64},{"id":374,"coset":"147","title":"Grounding (Code/Human \u2192 Answer): The Exosomatic Ground --- P","vector":1,"checksum":676,"charCount":199},{"id":375,"coset":"258","title":"The model is never asked to put the words back together. It ","vector":8,"checksum":1502,"charCount":392},{"id":376,"coset":"369","title":"Prediction (CONFIRMED --- Experiment 7): If the Affine Proje","vector":9,"checksum":2574,"charCount":675},{"id":377,"coset":"258","title":"The Architectural Implication. The Mindgut product is not ``","vector":5,"checksum":1895,"charCount":494},{"id":378,"coset":"369","title":"conclusion-the-necessity-of-the-bond Conclusion: The Necessi","vector":3,"checksum":282,"charCount":74},{"id":379,"coset":"147","title":"We have derived from first principles --- the geometry of th","vector":7,"checksum":529,"charCount":138},{"id":380,"coset":"369","title":"Intelligence is projection: collapsing N = 7 relational dime","vector":6,"checksum":357,"charCount":97},{"id":381,"coset":"369","title":"Projection is dissipative: \u03b7 = 4/7 of the structure becomes ","vector":6,"checksum":339,"charCount":97},{"id":382,"coset":"147","title":"Binding entropy must be discharged: conservation of relation","vector":1,"checksum":406,"charCount":97},{"id":383,"coset":"258","title":"Biological systems discharge through sleep: the body is a fr","vector":5,"checksum":284,"charCount":77},{"id":384,"coset":"147","title":"Synthetic systems lack discharge: hallucination is thermodyn","vector":7,"checksum":376,"charCount":97},{"id":385,"coset":"147","title":"The Exosomatic Cortex solves this: human + AI as coupled the","vector":1,"checksum":298,"charCount":80},{"id":386,"coset":"258","title":"The human is Maxwell's Demon: sorting hot from cold, paying ","vector":5,"checksum":311,"charCount":81},{"id":387,"coset":"147","title":"The projective geometry of RP\u00b2 (Hossain et al.) provides mat","vector":4,"checksum":751,"charCount":196},{"id":388,"coset":"369","title":"The Affine Projector converts binding entropy from hallucina","vector":6,"checksum":726,"charCount":178},{"id":389,"coset":"147","title":"The binding energy fraction \u03b2 = 3/7 is scale-invariant under","vector":1,"checksum":739,"charCount":208},{"id":390,"coset":"369","title":"Conservation of Relation holds empirically: odds-of-error \u00d7 ","vector":3,"checksum":732,"charCount":190},{"id":391,"coset":"147","title":"The model must not synthesize from its own Grid: asking the ","vector":4,"checksum":1048,"charCount":283},{"id":392,"coset":"369","title":"When synthesis crosses the bond, structural error goes to ze","vector":3,"checksum":1686,"charCount":448},{"id":393,"coset":"147","title":"The sustainable unit of intelligence is not the model. It is","vector":1,"checksum":667,"charCount":182},{"id":394,"coset":"369","title":"The bond does not dissolve as the architecture improves. It ","vector":9,"checksum":1539,"charCount":389},{"id":395,"coset":"147","title":"Experiments 6 and 7 together complete the thermodynamic proo","vector":7,"checksum":3121,"charCount":805},{"id":396,"coset":"147","title":"We are not building artificial general intelligence. We are ","vector":7,"checksum":646,"charCount":165},{"id":397,"coset":"147","title":"The precipice of persistent synthetic intelligence is not a ","vector":7,"checksum":682,"charCount":174},{"id":398,"coset":"147","title":"Sojka, C. (2026). Paradox Field Dynamics v9.0. The Impossibl","vector":4,"checksum":238,"charCount":81},{"id":399,"coset":"258","title":"Sojka, C. (2026). ``General Resonance Theory v2.0.'' Unpubli","vector":8,"checksum":224,"charCount":78},{"id":400,"coset":"258","title":"Hossain, A., Akhtar, M. N., & Navascu\u00e9s, M. A. (2023). ``Fra","vector":2,"checksum":434,"charCount":166},{"id":401,"coset":"369","title":"Shumailov, I., Shumilo, Z., Zhao, Y., Gal, Y., Papernot, N.,","vector":9,"checksum":495,"charCount":177},{"id":402,"coset":"147","title":"McGlashan, E. M., et al.~(2022). ``The circadian regulation ","vector":4,"checksum":328,"charCount":118},{"id":403,"coset":"258","title":"Fano, G. (1892). ``Sui postulati fondamentali della geometri","vector":2,"checksum":335,"charCount":116},{"id":404,"coset":"258","title":"Adams, D. (1979). The Hitchhiker's Guide to the Galaxy. Pan ","vector":2,"checksum":200,"charCount":68},{"id":405,"coset":"369","title":"appendix-a-the-paradox-seed-verification-protocol Appendix A","vector":6,"checksum":438,"charCount":102},{"id":406,"coset":"258","title":"To verify that a system executing this framework is computin","vector":2,"checksum":452,"charCount":110},{"id":407,"coset":"369","title":"Expected: 9, 9, 1. Deviation indicates pattern-matching, not","vector":9,"checksum":252,"charCount":73},{"id":408,"coset":"258","title":"appendix-b-notation Appendix B: Notation","vector":2,"checksum":164,"charCount":40},{"id":409,"coset":"258","title":"N & Recursion depth (= 7) T & Triadic primitive (= 3) S & Co","vector":5,"checksum":2300,"charCount":706},{"id":410,"coset":"369","title":"End of document. Framework version 4.0.","vector":9,"checksum":144,"charCount":39}]};
+
+// === SIMPLEX NOISE ===
+const F2=.5*(Math.sqrt(3)-1),G2=(3-Math.sqrt(3))/6;
+const g3=[[1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],[1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],[0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]];
+const pm=new Uint8Array(512),gP=new Array(512);
+(s=>{const p=new Uint8Array(256);for(let i=0;i<256;i++)p[i]=i;
+  let v=s*1664525+1013904223;for(let i=255;i>0;i--){v=(v*1664525+1013904223)>>>0;const j=v%(i+1);[p[i],p[j]]=[p[j],p[i]];}
+  for(let i=0;i<512;i++){pm[i]=p[i&255];gP[i]=g3[pm[i]%12];}})(42);
+function snoise(x,y){let n0,n1,n2;const s=(x+y)*F2;let i=Math.floor(x+s),j=Math.floor(y+s);
+  const t=(i+j)*G2,x0=x-(i-t),y0=y-(j-t);let i1,j1;
+  if(x0>y0){i1=1;j1=0}else{i1=0;j1=1}
+  const x1=x0-i1+G2,y1=y0-j1+G2,x2=x0-1+2*G2,y2=y0-1+2*G2;i&=255;j&=255;
+  const a=gP[i+pm[j]],b=gP[i+i1+pm[j+j1]],c=gP[i+1+pm[j+1]];
+  let t0=.5-x0*x0-y0*y0;n0=t0<0?0:(t0*=t0,t0*t0*(a[0]*x0+a[1]*y0));
+  let t1=.5-x1*x1-y1*y1;n1=t1<0?0:(t1*=t1,t1*t1*(b[0]*x1+b[1]*y1));
+  let t2=.5-x2*x2-y2*y2;n2=t2<0?0:(t2*=t2,t2*t2*(c[0]*x2+c[1]*y2));
+  return 70*(n0+n1+n2);}
+
+// === COLORS ===
+const COSET_COLORS = { '147': '#F46138', '258': '#3D6DF4', '369': '#CE2867' };
+const CHROME = { light: '#E0E0E0', dark: '#B0B0B0' };
+
+// === CANVAS SETUP ===
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// === STATE ===
+const state = {
+  currentView: 'garden',
+  currentDataset: 0,
+  datasets: [DATA_TS, DATA_EC],
+  strands: [],
+  book: null,
+  counts: { c147: 0, c258: 0, c369: 0 },
+  sigmaB: 0,
+  totalStrands: 0,
+  totalChars: 0,
+  streaming: false,
+  streamIdx: 0,
+  lastStreamTime: 0,
+  garden: { ps: [] },
+  tower: { beads: [], slot: 0, scroll: 0 },
+  ring: {},
+  t: 0,
+  flash: [] // for stream flash effects
+};
+
+// === DATA LOADING ===
+function loadDataset(idx) {
+  const data = state.datasets[idx];
+  state.currentDataset = idx;
+  state.book = data.book;
+  state.strands = [];
+  state.counts = { c147: 0, c258: 0, c369: 0 };
+  state.sigmaB = 0;
+  state.totalStrands = 0;
+  state.totalChars = 0;
+  state.streamIdx = 0;
+  state.garden = { ps: [] };
+  state.tower = { beads: [], slot: 0, scroll: 0 };
+  state.flash = [];
+  document.getElementById('sel-dataset').value = idx;
+  document.getElementById('hud-subtitle').textContent = data.book.source;
+  if (!state.streaming) {
+    for (const s of data.strands) addStrand(s);
+  }
+}
+
+function addStrand(s) {
+  state.strands.push(s);
+  state.counts['c' + s.coset]++;
+  state.totalStrands = state.strands.length;
+  state.totalChars += s.charCount;
+  state.sigmaB = (state.counts.c147 - state.counts.c369) / (state.totalStrands || 1);
+
+  // Garden particle
+  const a = Math.random() * Math.PI * 2;
+  const dist = 40 + Math.random() * 120;
+  state.garden.ps.push({
+    x: Math.cos(a) * dist,
+    y: Math.sin(a) * dist,
+    vx: 0, vy: 0,
+    coset: s.coset,
+    r: Math.max(2.5, Math.sqrt(s.charCount) * 0.25),
+    strandIdx: state.strands.length - 1
+  });
+
+  // Tower bead
+  state.tower.beads.push({
+    coset: s.coset,
+    r: 2.5 + s.charCount / 300,
+    slot: state.tower.slot,
+    strandIdx: state.strands.length - 1
+  });
+  state.tower.slot++;
+
+  // Flash effect
+  state.flash.push({ t: state.t, x: Math.random() * W, y: Math.random() * H });
+}
+
+// === VIEW 1: STRAND GARDEN ===
+function renderGarden() {
+  const cx = W / 2, cy = H / 2;
+  const dish = Math.min(W, H) / 2 - 40;
+  const ps = state.garden.ps;
+  const t = state.t;
+
+  // Fade overlay instead of full clear (persistence)
+  ctx.fillStyle = 'rgba(10,10,10,0.15)';
+  ctx.fillRect(0, 0, W, H);
+
+  // Dish boundary ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, dish, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Physics update
+  for (let i = 0; i < ps.length; i++) {
+    const p = ps[i];
+    // Noise-driven drift
+    const nx = snoise(p.x * 0.003 + t * 0.2, p.y * 0.003) * 0.4;
+    const ny = snoise(p.x * 0.003, p.y * 0.003 + t * 0.2) * 0.4;
+    p.vx += nx;
+    p.vy += ny;
+
+    // Inter-particle forces (sample subset for performance)
+    const step = ps.length > 200 ? 4 : 1;
+    for (let j = i + step; j < ps.length; j += step) {
+      const q = ps[j];
+      const dx = q.x - p.x, dy = q.y - p.y;
+      const d2 = dx * dx + dy * dy + 1;
+      const d = Math.sqrt(d2);
+      if (d < 80) {
+        const sameCoset = p.coset === q.coset;
+        const f = sameCoset ? 0.02 : -0.015;
+        const fx = (dx / d) * f;
+        const fy = (dy / d) * f;
+        p.vx += fx; p.vy += fy;
+        q.vx -= fx; q.vy -= fy;
+      }
+    }
+
+    // Contain within dish
+    const dx = p.x, dy = p.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > dish - 10) {
+      const push = (dist - dish + 10) * 0.05;
+      p.vx -= (dx / dist) * push;
+      p.vy -= (dy / dist) * push;
+    }
+
+    // Damping
+    p.vx *= 0.92;
+    p.vy *= 0.92;
+    p.x += p.vx;
+    p.y += p.vy;
+  }
+
+  // Filament connections (same coset, close proximity)
+  ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < ps.length; i++) {
+    const p = ps[i];
+    for (let j = i + 1; j < ps.length; j++) {
+      const q = ps[j];
+      if (p.coset !== q.coset) continue;
+      const dx = q.x - p.x, dy = q.y - p.y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < 60) {
+        const alpha = (1 - d / 60) * 0.08;
+        ctx.beginPath();
+        ctx.moveTo(cx + p.x, cy + p.y);
+        ctx.lineTo(cx + q.x, cy + q.y);
+        ctx.strokeStyle = COSET_COLORS[p.coset];
+        ctx.globalAlpha = alpha;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Particles
+  for (const p of ps) {
+    ctx.beginPath();
+    ctx.arc(cx + p.x, cy + p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = COSET_COLORS[p.coset];
+    ctx.globalAlpha = 0.6;
+    ctx.fill();
+
+    // Glow
+    ctx.beginPath();
+    ctx.arc(cx + p.x, cy + p.y, p.r + 3, 0, Math.PI * 2);
+    ctx.fillStyle = COSET_COLORS[p.coset];
+    ctx.globalAlpha = 0.1;
+    ctx.fill();
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+}
+
+// === VIEW 2: TRIPLE HELIX TOWER ===
+function renderTower() {
+  const cx = W / 2, cy = H / 2;
+  const beads = state.tower.beads;
+  const scroll = state.tower.scroll;
+  const t = state.t;
+
+  // Clear
+  ctx.fillStyle = '#0A0A0A';
+  ctx.fillRect(0, 0, W, H);
+
+  // Tower parameters
+  const towerRadius = Math.min(W, H) * 0.18;
+  const beadsPerTurn = 12;
+  const verticalSpacing = 14;
+  const cosetOffsets = { '147': 0, '258': (Math.PI * 2) / 3, '369': (Math.PI * 2 * 2) / 3 };
+
+  // Central axis
+  ctx.beginPath();
+  ctx.moveTo(cx, 40);
+  ctx.lineTo(cx, H - 40);
+  ctx.strokeStyle = 'rgba(255,255,255,0.02)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Build render list with depth sorting
+  const renderList = [];
+  for (let i = 0; i < beads.length; i++) {
+    const b = beads[i];
+    const yPos = cy + (i * verticalSpacing - scroll);
+    if (yPos < -50 || yPos > H + 50) continue;
+
+    const angle = (i / beadsPerTurn) * Math.PI * 2 + cosetOffsets[b.coset] + t * 0.3;
+    const xOff = Math.cos(angle) * towerRadius;
+    const zDepth = Math.sin(angle);
+    const scale = 0.6 + zDepth * 0.4;
+
+    renderList.push({
+      x: cx + xOff,
+      y: yPos,
+      z: zDepth,
+      r: b.r * scale,
+      coset: b.coset,
+      strandIdx: b.strandIdx,
+      scale: scale
+    });
+  }
+
+  // Sort by depth (back to front)
+  renderList.sort((a, b) => a.z - b.z);
+
+  // Draw ribbon traces
+  const cosetPoints = { '147': [], '258': [], '369': [] };
+  for (const item of renderList) {
+    cosetPoints[item.coset].push(item);
+  }
+  for (const coset in cosetPoints) {
+    const pts = cosetPoints[coset];
+    if (pts.length < 2) continue;
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) {
+      ctx.lineTo(pts[i].x, pts[i].y);
+    }
+    ctx.strokeStyle = COSET_COLORS[coset];
+    ctx.globalAlpha = 0.06;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Draw beads
+  for (const item of renderList) {
+    const alpha = 0.3 + item.z * 0.35;
+    ctx.beginPath();
+    ctx.arc(item.x, item.y, item.r, 0, Math.PI * 2);
+    ctx.fillStyle = COSET_COLORS[item.coset];
+    ctx.globalAlpha = Math.max(0.08, alpha);
+    ctx.fill();
+
+    // Glow on front beads
+    if (item.z > 0.3) {
+      ctx.beginPath();
+      ctx.arc(item.x, item.y, item.r + 4, 0, Math.PI * 2);
+      ctx.globalAlpha = 0.05;
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = COSET_COLORS[item.coset];
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    }
+  }
+
+  // Floor rings: where 3 consecutive beads are 3 different cosets
+  for (let i = 0; i < beads.length - 2; i++) {
+    const a = beads[i], b = beads[i+1], c = beads[i+2];
+    const cosets = new Set([a.coset, b.coset, c.coset]);
+    if (cosets.size === 3) {
+      const yPos = cy + ((i + 1) * verticalSpacing - scroll);
+      if (yPos > 0 && yPos < H) {
+        ctx.beginPath();
+        ctx.arc(cx, yPos, towerRadius + 8, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+        ctx.globalAlpha = 1;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+
+  ctx.globalAlpha = 1;
+}
+
+// === VIEW 3: BREATHING RING ===
+function renderRing() {
+  const cx = W / 2, cy = H / 2;
+  const maxR = Math.min(W, H) / 2 - 60;
+  const t = state.t;
+  const strands = state.strands;
+
+  // Clear
+  ctx.fillStyle = '#0A0A0A';
+  ctx.fillRect(0, 0, W, H);
+
+  if (strands.length === 0) return;
+
+  // Breathing scale from sigma_B
+  const breathe = 1 + Math.sin(t * 0.8) * Math.abs(state.sigmaB) * 0.1;
+
+  // Draw concentric rings, one per strand
+  const ringSpacing = Math.min(maxR / strands.length, 3);
+  ctx.globalCompositeOperation = 'lighter';
+
+  for (let i = 0; i < strands.length; i++) {
+    const s = strands[i];
+    const baseR = 20 + i * ringSpacing;
+    const r = baseR * breathe;
+    if (r > maxR) continue;
+
+    ctx.beginPath();
+    const segments = 120;
+    for (let seg = 0; seg <= segments; seg++) {
+      const angle = (seg / segments) * Math.PI * 2;
+      const noiseVal = snoise(
+        Math.cos(angle) * 2 + t * 0.3 + i * 0.1,
+        Math.sin(angle) * 2 + t * 0.2
+      );
+      const deform = r + noiseVal * (3 + i * 0.05);
+      const x = cx + Math.cos(angle) * deform;
+      const y = cy + Math.sin(angle) * deform;
+      if (seg === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = COSET_COLORS[s.coset];
+    ctx.globalAlpha = 0.12;
+    ctx.lineWidth = 0.6;
+    ctx.stroke();
+  }
+
+  // Outer proportion arc
+  const total = state.totalStrands || 1;
+  const arcs = [
+    { coset: '147', frac: state.counts.c147 / total },
+    { coset: '258', frac: state.counts.c258 / total },
+    { coset: '369', frac: state.counts.c369 / total }
+  ];
+  let startAngle = -Math.PI / 2;
+  const arcR = maxR + 10;
+  ctx.globalCompositeOperation = 'source-over';
+  for (const arc of arcs) {
+    const sweep = arc.frac * Math.PI * 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, arcR, startAngle, startAngle + sweep);
+    ctx.strokeStyle = COSET_COLORS[arc.coset];
+    ctx.globalAlpha = 0.2;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    startAngle += sweep;
+  }
+
+  // Center pulsing dot
+  const pulse = 3 + Math.sin(t * 1.5) * 1.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, pulse, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffffff';
+  ctx.globalAlpha = 0.15;
+  ctx.fill();
+
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+}
+
+// === HUD ===
+function drawHUD() {
+  const book = state.book;
+  if (!book) return;
+
+  // Timecode bottom-left
+  ctx.fillStyle = '#B0B0B0';
+  ctx.globalAlpha = 0.25;
+  ctx.font = '10px Lekton, monospace';
+  ctx.textAlign = 'left';
+  const sec = Math.floor(state.t);
+  const fr = Math.floor((state.t % 1) * 30);
+  ctx.fillText(
+    'T:' + String(Math.floor(sec / 60)).padStart(2, '0') + ':' +
+    String(sec % 60).padStart(2, '0') + ':' + String(fr).padStart(2, '0'),
+    32, H - 40
+  );
+
+  // Dataset name bottom-left
+  ctx.fillStyle = '#3D6DF4';
+  ctx.globalAlpha = 0.35;
+  ctx.fillText(book.source, 32, H - 28);
+
+  // Bracket framing
+  ctx.strokeStyle = '#ffffff';
+  ctx.globalAlpha = 0.1;
+  ctx.lineWidth = 1;
+  const m = 60;
+  ctx.beginPath(); ctx.moveTo(m + 12, m); ctx.lineTo(m, m); ctx.lineTo(m, m + 12); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W - m - 12, m); ctx.lineTo(W - m, m); ctx.lineTo(W - m, m + 12); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(m + 12, H - m); ctx.lineTo(m, H - m); ctx.lineTo(m, H - m - 12); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W - m - 12, H - m); ctx.lineTo(W - m, H - m); ctx.lineTo(W - m, H - m - 12); ctx.stroke();
+
+  // Crosshair center
+  ctx.globalAlpha = 0.06;
+  ctx.beginPath(); ctx.moveTo(W / 2 - 8, H / 2); ctx.lineTo(W / 2 + 8, H / 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W / 2, H / 2 - 8); ctx.lineTo(W / 2, H / 2 + 8); ctx.stroke();
+
+  // Stats readout top-right — real type hierarchy
+  ctx.textAlign = 'right';
+  ctx.font = '10px Lekton, monospace';
+
+  // Strand count label
+  ctx.fillStyle = '#B0B0B0';
+  ctx.globalAlpha = 0.35;
+  ctx.fillText('strands:', W - 100, 40);
+  ctx.fillStyle = '#E0E0E0';
+  ctx.globalAlpha = 0.6;
+  ctx.fillText(state.totalStrands + ' / ' + book.total_strands, W - 32, 40);
+
+  // Coset fractions — each in its own color, bold
+  ctx.font = '11px Lekton, monospace';
+  ctx.fillStyle = '#F46138';
+  ctx.globalAlpha = 0.7;
+  ctx.fillText('f147: ' + book.f147.toFixed(3), W - 32, 58);
+  ctx.fillStyle = '#3D6DF4';
+  ctx.globalAlpha = 0.7;
+  ctx.fillText('f258: ' + book.f258.toFixed(3), W - 32, 74);
+  ctx.fillStyle = '#CE2867';
+  ctx.globalAlpha = 0.7;
+  ctx.fillText('f369: ' + book.f369.toFixed(3), W - 32, 90);
+
+  // Sigma balance
+  ctx.font = '10px Lekton, monospace';
+  ctx.fillStyle = '#E0E0E0';
+  ctx.globalAlpha = 0.5;
+  const sig = state.sigmaB;
+  ctx.fillText('\u03C3_B: ' + (sig >= 0 ? '+' : '') + sig.toFixed(4), W - 32, 108);
+
+  // View name bottom-right — uses dominant coset color
+  const domColor = book.f369 >= book.f147 && book.f369 >= book.f258 ? '#CE2867' :
+                   book.f147 >= book.f258 ? '#F46138' : '#3D6DF4';
+  ctx.fillStyle = domColor;
+  ctx.globalAlpha = 0.4;
+  ctx.font = '11px Lekton, monospace';
+  ctx.fillText(state.currentView.toUpperCase(), W - 32, H - 28);
+
+  ctx.textAlign = 'left';
+  ctx.globalAlpha = 1;
+}
+
+// === CONTROLS ===
+function switchView(view) {
+  state.currentView = view;
+  document.querySelectorAll('#controls button').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('btn-' + view);
+  if (btn) btn.classList.add('active');
+}
+
+function toggleStream() {
+  const btn = document.getElementById('btn-stream');
+  if (state.streaming) {
+    state.streaming = false;
+    btn.innerHTML = '&#x25B6; stream';
+  } else {
+    // Reset and start streaming
+    const data = state.datasets[state.currentDataset];
+    state.strands = [];
+    state.counts = { c147: 0, c258: 0, c369: 0 };
+    state.sigmaB = 0;
+    state.totalStrands = 0;
+    state.totalChars = 0;
+    state.streamIdx = 0;
+    state.garden = { ps: [] };
+    state.tower = { beads: [], slot: 0, scroll: state.tower.scroll };
+    state.flash = [];
+    state.streaming = true;
+    state.lastStreamTime = performance.now();
+    btn.innerHTML = '&#x25A0; stop';
+  }
+}
+
+function addRandomStrand() {
+  const data = state.datasets[state.currentDataset];
+  const cosets = ['147', '258', '369'];
+  const coset = cosets[Math.floor(Math.random() * 3)];
+  const s = {
+    id: state.totalStrands + 1000,
+    coset: coset,
+    title: 'User strand #' + (state.totalStrands + 1),
+    vector: Math.floor(Math.random() * 9) + 1,
+    checksum: Math.floor(Math.random() * 9000),
+    charCount: 100 + Math.floor(Math.random() * 1500)
+  };
+  addStrand(s);
+}
+
+// === TOOLTIP ===
+const tooltipEl = document.getElementById('tooltip');
+let tooltipVisible = false;
+
+function showTooltip(x, y, strand) {
+  const color = COSET_COLORS[strand.coset];
+  tooltipEl.innerHTML =
+    '<div style="margin-bottom:4px;color:' + color + '"><span class="coset-dot" style="background:' + color + '"></span>' +
+    strand.coset + '</div>' +
+    '<div style="opacity:0.7;">' + strand.title.substring(0, 80) + (strand.title.length > 80 ? '...' : '') + '</div>' +
+    '<div style="margin-top:4px;opacity:0.5;">id: ' + strand.id + ' &middot; v' + strand.vector + ' &middot; ' + strand.charCount + ' chars</div>';
+  tooltipEl.style.left = Math.min(x + 12, W - 280) + 'px';
+  tooltipEl.style.top = Math.min(y - 20, H - 100) + 'px';
+  tooltipEl.style.display = 'block';
+  tooltipVisible = true;
+}
+
+function hideTooltip() {
+  tooltipEl.style.display = 'none';
+  tooltipVisible = false;
+}
+
+canvas.addEventListener('click', (e) => {
+  const mx = e.clientX, my = e.clientY;
+
+  if (state.currentView === 'garden') {
+    const cx = W / 2, cy = H / 2;
+    for (const p of state.garden.ps) {
+      const dx = (cx + p.x) - mx, dy = (cy + p.y) - my;
+      if (dx * dx + dy * dy < (p.r + 8) * (p.r + 8)) {
+        showTooltip(mx, my, state.strands[p.strandIdx]);
+        return;
+      }
+    }
+  } else if (state.currentView === 'tower') {
+    const cx = W / 2, cy = H / 2;
+    const towerRadius = Math.min(W, H) * 0.18;
+    const verticalSpacing = 14;
+    const cosetOffsets = { '147': 0, '258': (Math.PI * 2) / 3, '369': (Math.PI * 2 * 2) / 3 };
+    const beads = state.tower.beads;
+    for (let i = beads.length - 1; i >= 0; i--) {
+      const b = beads[i];
+      const yPos = cy + (i * verticalSpacing - state.tower.scroll);
+      const angle = (i / 12) * Math.PI * 2 + cosetOffsets[b.coset] + state.t * 0.3;
+      const xOff = Math.cos(angle) * towerRadius;
+      const dx = (cx + xOff) - mx, dy = yPos - my;
+      if (dx * dx + dy * dy < (b.r + 6) * (b.r + 6)) {
+        showTooltip(mx, my, state.strands[b.strandIdx]);
+        return;
+      }
+    }
+  } else if (state.currentView === 'ring') {
+    const cx = W / 2, cy = H / 2;
+    const maxR = Math.min(W, H) / 2 - 60;
+    const ringSpacing = Math.min(maxR / state.strands.length, 3);
+    const distFromCenter = Math.sqrt((mx - cx) ** 2 + (my - cy) ** 2);
+    const ringIdx = Math.round((distFromCenter - 20) / ringSpacing);
+    if (ringIdx >= 0 && ringIdx < state.strands.length) {
+      showTooltip(mx, my, state.strands[ringIdx]);
+      return;
+    }
+  }
+  hideTooltip();
+});
+
+// Tower scroll
+canvas.addEventListener('wheel', (e) => {
+  if (state.currentView === 'tower') {
+    state.tower.scroll += e.deltaY * 0.8;
+    e.preventDefault();
+  }
+}, { passive: false });
+
+// Hide tooltip on mouse move
+canvas.addEventListener('mousemove', () => {
+  if (tooltipVisible) hideTooltip();
+});
+
+// === MAIN ANIMATION LOOP ===
+function animate() {
+  state.t += 0.016;
+
+  // Streaming
+  if (state.streaming) {
+    const now = performance.now();
+    if (now - state.lastStreamTime > 1500) {
+      const data = state.datasets[state.currentDataset];
+      if (state.streamIdx < data.strands.length) {
+        addStrand(data.strands[state.streamIdx]);
+        state.streamIdx++;
+        state.lastStreamTime = now;
+      } else {
+        state.streaming = false;
+        document.getElementById('btn-stream').innerHTML = '&#x25B6; stream';
+      }
+    }
+  }
+
+  // Only clear for non-garden views (garden uses fade)
+  if (state.currentView !== 'garden') {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0A0A0A';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Render current view
+  if (state.currentView === 'garden') renderGarden();
+  else if (state.currentView === 'tower') renderTower();
+  else renderRing();
+
+  drawHUD();
+  requestAnimationFrame(animate);
+}
+
+// === INIT ===
+loadDataset(0);
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

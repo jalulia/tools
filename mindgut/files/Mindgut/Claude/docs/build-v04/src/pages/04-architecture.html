@@ -1,0 +1,40 @@
+<section class="page" id="page-architecture" data-title="Architecture" data-num="04" hidden>
+<aside class="notes">
+<div class="note-id">Chapter / 04</div>
+<h1>Architecture</h1>
+<div class="intro"><p>One process, one file, one loop. A local server runs the session; a native window or a browser shows it; the HELIX sits beside it on disk.</p></div>
+<nav class="page-links" aria-label="In Architecture"><a href="#architecture/the-turn"><span>01</span>The turn</a><a href="#architecture/stores"><span>02</span>Where data lives</a><a href="#architecture/desktop-web"><span>03</span>Desktop and web</a><a href="#architecture/controllers"><span>04</span>Controllers and heat</a></nav>
+<div class="takeaways"><h4>Key takeaways</h4><ol><li>The tool loop is bounded: 15 rounds, then a wrap-up; 45 s per round.</li><li>Every store except the sync database is a readable file. The HELIX is loaded whole on every read.</li><li>Heat (<span style="white-space:nowrap">H<sub>t</sub></span>) is a dashboard: it changes nothing the model receives.</li></ol></div>
+<div class="release"><span class="mono">BUILD 2.2.58 · SOURCE cbf4e42</span><br><a href="#evidence/what-was-read">Evidence register ↗</a><a href="#glossary">Glossary ↗</a></div>
+</aside>
+<div class="main"><article class="article">
+<h2 id="architecture/the-turn"><a class="section-anchor" href="#architecture/the-turn">The turn</a></h2>
+<figure class="plate" id="fig-08"><figcaption><span class="fig-id">FIG. 08 · LIVE</span><h3>One turn, stage by stage</h3></figcaption><div class="figure-body"><div class="tabs" role="group" aria-label="Turn stage"><button data-stage="0" aria-pressed="true">1 · Receive</button><button data-stage="1" aria-pressed="false">2 · Pre-process</button><button data-stage="2" aria-pressed="false">3 · Model + tools</button><button data-stage="3" aria-pressed="false">4 · Post-process</button><button data-stage="4" aria-pressed="false">5 · Respire</button></div><div class="inspector"><div class="stage" id="fig-turn-stage"></div><div class="inspect-col" aria-live="polite"><span id="turn-kind">Stage 1 / 5</span><h4 id="turn-title">Receive</h4><p id="turn-text">The user message arrives on the session. Asides typed while the model is working are queued and attached at the next tool-result boundary.</p><dl><dt>Source</dt><dd id="turn-src">session_manager.py:1461 · 1510 (stream)</dd><dt>Writes</dt><dd id="turn-writes">Nothing yet</dd></dl></div></div></div><div class="figure-note">Solid boxes are in the public source with line references; the dashed box (margin bridges) is observed in 2.2.58 only. Select a stage to read what it does and what it writes.</div></figure>
+<h2 id="architecture/stores"><a class="section-anchor" href="#architecture/stores">Where data lives</a></h2>
+<div class="table-scroll"><table><thead><tr><th>Store</th><th>Holds</th><th>Writer</th><th>Readable?</th></tr></thead><tbody>
+<tr><td>Bundle</td><td>Compiled server, frontend, the PFD book (774 strands), the genesis (187)</td><td>installer / updater</td><td>Frontend and data yes; Python no</td></tr>
+<tr><td>Settings · active HELIX path</td><td>User name, browser flag; which HELIX the app opens</td><td>app</td><td>JSON</td></tr>
+<tr><td>Memory HELIX</td><td>The record. Beside it a bridge index (closures, knots) and a sync marker</td><td>crystallizer · sync</td><td>JSON, loaded whole</td></tr>
+<tr><td>Sessions</td><td><span class="mono">inputs/ outputs/ drafts/</span> + transcript, per session</td><td>session</td><td>Files</td></tr>
+<tr><td>Recall ledger</td><td>One line per turn: the full preamble injected</td><td>mgr (the involuntary-recall step)</td><td>JSONL</td></tr>
+<tr><td>Tag registry · lattice</td><td>OTags and their bonds</td><td>crystallizer</td><td>JSON</td></tr>
+<tr><td>Strand cache</td><td>Analyses for structural recall</td><td>two_loop_recall</td><td>JSON</td></tr>
+<tr><td>Sync database</td><td>Binary; schema not read</td><td>sync (2.2.x)</td><td>No</td></tr>
+<tr><td>Mounted folder</td><td>The user's files and, by convention, the harness stores</td><td>model · file routes</td><td>Files</td></tr>
+</tbody></table></div>
+<p class="quiet"><span class="tag m">MEASURED</span> Stores moved from the mounted folder to the app directory on 2026-10-05 (<span class="mono">layout_moves.jsonl</span>).</p>
+<figure class="plate" id="fig-09"><figcaption><span class="fig-id">FIG. 09</span><h3>Stores and writers</h3></figcaption><div class="figure-body" id="fig-stores"></div><div class="figure-note">The seven stores a developer will open, and who writes each. The HELIX has two writers in source (the crystallizer after every exchange, the file-event clock mid-turn) and a third, sync, in 2.2.58 (dashed); the next id is re-anchored to max+1 so they never collide. Tag registry, strand cache and the mounted folder are in the table above and not drawn. <span class="cite">crystallizer_v2.py:211–275</span></div></figure>
+<h2 id="architecture/desktop-web"><a class="section-anchor" href="#architecture/desktop-web">Desktop and web</a></h2>
+<div class="table-scroll"><table><thead><tr><th></th><th>Desktop</th><th>Web</th></tr></thead><tbody>
+<tr><td>Server</td><td>Local, in-process thread; the native window is a webview on it</td><td>Hosted</td></tr>
+<tr><td><span class="mono">local_*</span> tools</td><td>Python on the machine; <span class="mono">local_exec</span> available</td><td>Browser bridge; no exec; 30 s wait per call</td></tr>
+<tr><td>HELIX</td><td>App directory, synced to the account after each exchange <span class="tag o">OBSERVED</span></td><td>Per-user volume</td></tr>
+<tr><td>Automator panel</td><td>Shown (<span class="mono">_isDesktop()</span>)</td><td>Hidden</td></tr>
+<tr><td>Updates</td><td>Self-updating since 2.2.40; the bundle is swapped after the process exits <span class="tag o">OBSERVED</span></td><td>Deploy</td></tr>
+</tbody></table></div>
+<h2 id="architecture/controllers"><a class="section-anchor" href="#architecture/controllers">Controllers and heat</a></h2>
+<p>Three controllers run after each exchange and keep a scalar heat <b><span style="white-space:nowrap">H<sub>t</sub></span></b> and instability <b>I<sub>t</sub></b>: amplification ρ (output ÷ input words, band 6–22), gradient damping, and a radiator that fires at exchange 11 and keeps 70 % of the heat. Passive decay is 0.906 per turn, a half-life of seven turns. <span style="white-space:nowrap">σ<sub>B</sub></span> is gated at 0.02–0.15. <span class="tag">SOURCE</span> <span class="cite">controllers.py:59–73 · 161 · 259</span></p>
+<div class="note"><b>Effect on the model: none.</b> <span class="mono">max_tokens()</span> returns <span class="mono">max(4096, base)</span> regardless of heat. The gauge in the sidebar is a dashboard, and on the day of writing it read 0.10 and never left green. <span class="cite">controllers.py:341</span> <span class="tag m">MEASURED</span></div>
+<figure class="plate" id="fig-10"><figcaption><span class="fig-id">FIG. 10</span><h3>Heat decay and the radiator</h3></figcaption><div class="figure-body" id="fig-heat"></div><div class="figure-note">Heat starting at the gauge maximum (60) and decaying at 0.906 per turn, with the radiator's 30 % cut at exchange 11, drawn against the gauge the sidebar shows (0–60, notches at 10, 20, 30, 60). Green, amber and red follow the <span class="mono">heat_level</span> directive, not a bar threshold. <span class="cite">controllers.py:72 · app.js GAUGE_MAX</span></div></figure>
+<nav class="chapter-nav" aria-label="Chapter navigation"><a href="#quickstart"><small>Previous</small>Quickstart</a><a href="#interface"><small>Next</small>Interface →</a></nav>
+</article></div></section>
