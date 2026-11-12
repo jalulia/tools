@@ -71,6 +71,6 @@ export const params={
 export const A={};
 A.rng=seed=>{ let s=seed|0; return ()=>{ s=s+0x6D2B79F5|0; let t=Math.imul(s^s>>>15,1|s); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; };
 export const make=(P,u,A)=>({ draw:(x,ends,W,H,color)=>{ const r=A.rng(P.seed); const s=P.square_u*u; x.fillStyle=color; x.font=`400 ${P.type_u*u}px Inter, sans-serif`; x.textBaseline='alphabetic';
-        for(let i=0;i<P.nodes;i++){ let X,Y; if(i<ends.length&&r()<0.6){ X=ends[i][0]; Y=ends[i][1]; r(); } else { X=(0.04+0.92*r())*W; Y=(0.06+0.88*r())*H; }
-          const v=(r()*900+10).toFixed(1).padStart(5,'0'); if(X<0||Y<0||X>W||Y>H)continue; x.fillRect(X-s/2,Y-s/2,s,s); x.fillText(v,X+P.offset_u[0]*u,Y+P.offset_u[1]*u); } } });
+        for(let i=0;i<P.nodes;i++){ let X,Y; const a=r(), b=r(), c=r(); if(i<ends.length&&a<0.7){ X=ends[i][0]; Y=ends[i][1]; } else { X=(0.04+0.92*b)*W; Y=(0.06+0.88*c)*H; }
+          const v=(r()*900+10).toFixed(1).padStart(5,'0'); if(X<0||Y<0||X>W||Y>H)continue; x.fillRect(Math.round(X-s/2),Math.round(Y-s/2),Math.round(s),Math.round(s)); x.fillText(v,X+P.offset_u[0]*u,Y+P.offset_u[1]*u); } } });
 export default make;

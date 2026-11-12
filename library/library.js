@@ -229,9 +229,11 @@
   }
   /* A small control on a tile: the work's page in a new window, or its picture when it has no page. */
   var NW_SVG = '<svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M5 2.5H2.5v7h7V7M7 2.5h2.5V5M9.5 2.5 5.5 6.5" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>';
+  /* Every pictured record opens something: its own page, or the plate page that shows its picture at full size. */
+  function openUrl(r) { return r.href || (r.thumb ? 'plate.html?r=' + encodeURIComponent(r.acc) : ''); }
   function nw(r) {
-    var u = r.href || r.thumb_2x || r.thumb; if (!u) return '';
-    return '<span class="nw" role="button" tabindex="-1" data-open="' + e(u) + '" title="' + (r.href ? 'Open in a new window' : 'Open the picture in a new window') + '">' + NW_SVG + '</span>';
+    var u = openUrl(r); if (!u) return '';
+    return '<span class="nw" role="button" tabindex="-1" data-open="' + e(u) + '" title="' + (r.href ? 'Open in a new window' : 'Open the plate in a new window') + '">' + NW_SVG + '</span>';
   }
   function card(r) {
     var st = r.status ? r.status.replace('-', ' ') : '';
@@ -418,7 +420,7 @@
     var h = '<div class="dh"><span class="id">' + (r.call ? '<b>' + e(r.call) + '</b>' : '') + r.acc + '</span><span>' + (i >= 0 ? (i + 1) + ' / ' + LIST.length : '') + '</span>' +
       '<button type="button" data-r="' + (prev ? prev.acc : '') + '"' + (prev ? '' : ' disabled') + ' aria-label="Previous record">←</button><button type="button" data-r="' + (next ? next.acc : '') + '"' + (next ? '' : ' disabled') + ' aria-label="Next record">→</button><button type="button" data-close aria-label="Close">×</button></div><div class="db">';
     h += pic(r, '(max-width:720px) 92vw, 500px') + '<h1>' + e(r.title) + '</h1>' + (r.sub ? '<p class="sub">' + e(r.sub) + '</p>' : '');
-    h += '<div class="acts">' + (r.href ? '<a class="pri" href="' + e(r.href) + '">Open ↗</a>' : '<span>' + (r.access === 'private' || r.access === 'local' ? 'Local file' : 'Not published') + '</span>') +
+    h += '<div class="acts">' + (openUrl(r) ? '<a class="pri" href="' + e(openUrl(r)) + '">Open ↗</a>' : '<span>' + (r.access === 'private' || r.access === 'local' ? 'Local file' : 'Not published') + '</span>') +
       (r.spec_href ? '<a href="' + e(r.spec_href) + '">Spec JSON ↗</a>' : '') + '<button type="button" data-copy="record">Copy record</button>' + (PREVIEW ? '' : '<button type="button" data-copy="link">Copy link</button>') + '</div>';
     var rows = [];
     var of = r.work ? byId[r.work] : null;

@@ -54,7 +54,7 @@
     ],
     "grammar": "bundles of thin gradient arcs from a hub on black; dashed meridians of a sphere; small square nodes with numeric labels; soft glow"
   },
-  "units": "design units, 1000 = sheet width",
+  "units": "design units, 1000 = sheet width; the plate is 1000 × 577",
   "palette": {
     "ground": "#000000",
     "grid": "#8C8C90",
@@ -119,14 +119,14 @@
         },
         "axis": "the middle meridian is solid"
       },
-      "limits": "Over ~31 meridians the dashes of neighbors align into bands. A radius under the half-height of the sheet shows the sphere outline and the picture reads as a ball, not a field.",
+      "limits": "Over ~31 meridians the dashes of neighbors align into bands. A radius under half the sheet height shows the sphere outline.",
       "implementation": "Each meridian is an ellipse with the sphere radius as its tall axis and radius·|sin λ| as its wide one, stroked with a 6 on 5 dash.",
       "module": "lib/meridian-grid.js"
     },
     {
       "id": "arc-bundle",
       "short": "ARC",
-      "name": "Nested arc bundle",
+      "name": "Trunk-and-fan arc bundle",
       "layer": 2,
       "pass": 2,
       "atoms": [
@@ -135,12 +135,26 @@
         "bundle"
       ],
       "params": {
-        "hub_u": [
-          470,
-          292
-        ],
+        "hub": {
+          "x": {
+            "value": 470,
+            "range": [
+              0,
+              1000
+            ],
+            "unit": "u"
+          },
+          "y": {
+            "value": 292,
+            "range": [
+              0,
+              577
+            ],
+            "unit": "u"
+          }
+        },
         "bundles": {
-          "value": 14,
+          "value": 12,
           "range": [
             1,
             24
@@ -148,41 +162,77 @@
           "step": 1
         },
         "strands": [
-          10,
-          34
+          8,
+          30
         ],
         "reach_u": [
-          230,
-          520
+          420,
+          900
         ],
-        "fan_u": {
-          "value": 78,
+        "trunk": {
+          "value": 0.5,
           "range": [
-            10,
-            400
+            0.2,
+            0.9
           ],
-          "unit": "u",
-          "note": "length of the line the strokes end along"
+          "note": "control point distance, as a share of the reach"
         },
-        "stagger": {
-          "value": 0.3,
-          "range": [
-            0,
-            0.8
-          ],
-          "note": "share of the reach by which stroke ends step back across the bundle"
-        },
-        "bend": [
-          0.04,
-          0.36
+        "spread": [
+          0.2,
+          0.6
         ],
+        "curl": [
+          0.3,
+          1.1
+        ],
+        "squash": {
+          "value": 0.72,
+          "range": [
+            0.3,
+            1.2
+          ],
+          "note": "vertical scale of the whole fan"
+        },
         "line_u": {
-          "value": 1.5,
+          "value": 1.8,
           "range": [
             0.4,
             4
           ],
           "unit": "u"
+        },
+        "line_var": {
+          "value": 0.5,
+          "range": [
+            0,
+            1
+          ]
+        },
+        "sway": {
+          "value": 0,
+          "range": [
+            0,
+            1
+          ],
+          "note": "swings every bundle through one cycle; Motion runs it"
+        },
+        "pulse_u": {
+          "value": 46,
+          "range": [
+            8,
+            200
+          ],
+          "unit": "u",
+          "note": "length of the moving pulse"
+        },
+        "pulse_s": {
+          "value": 3.2,
+          "range": [
+            0.5,
+            12
+          ],
+          "unit": "s",
+          "note": "time for a pulse to run a strand"
         },
         "seed": {
           "value": 404,
@@ -191,11 +241,10 @@
             9999
           ],
           "step": 1
-        },
-        "curve": "quadratic; control point at mid-chord, pushed sideways by bend × chord length"
+        }
       },
-      "limits": "fan under ~10 u collapses a bundle to one thick line. Past ~24 bundles the sheet fills and single arcs stop reading.",
-      "implementation": "For each bundle a target point is picked around the hub; stroke ends are spaced along a line through it, and each stroke is a quadratic curve whose sideways bend steps up across the bundle.",
+      "limits": "trunk under ~0.25 lets strands separate at the hub and the bundle reads as a plain fan. Past ~24 bundles the sheet fills and single arcs stop reading.",
+      "implementation": "Each strand is a quadratic curve from the hub. Its control point lies on the bundle’s ray at trunk × reach; its end is turned from that ray by the curl plus its share of the spread.",
       "module": "lib/arc-bundle.js"
     },
     {
@@ -210,24 +259,24 @@
       ],
       "params": {
         "root_alpha": {
-          "value": 0.2,
+          "value": 0.34,
           "range": [
             0,
             1
           ]
         },
         "tip_alpha": {
-          "value": 0.66,
+          "value": 0.8,
           "range": [
             0,
             1
           ]
         },
-        "ink_step": "ink index steps across the bundle, mixed with the next ink",
+        "stops": "root tint at 0, second ink at 0.4, third ink at 1",
         "blend": "lighter"
       },
-      "limits": "With both alphas at 1 on a dark ground, crossings near the hub clip to white.",
-      "implementation": "A linear gradient from the hub to the stroke end colors each stroke: faint at the root, full ink at the tip. Strokes are composited with the lighter blend.",
+      "limits": "With both alphas at 1 on a dark ground the whole trunk clips to white.",
+      "implementation": "A linear gradient from the hub to the strand end colors each strand through three inks; strands are composited with the lighter blend.",
       "module": "lib/stroke-gradient.js"
     },
     {
@@ -257,8 +306,8 @@
           ]
         }
       },
-      "limits": "gain above ~1 washes the thin strokes into a haze.",
-      "implementation": "The stroke layer is blurred and added back over itself.",
+      "limits": "gain above ~1 washes the thin strands into a haze. On a light ground the pass is skipped: it would only gray the paper.",
+      "implementation": "The strand layer is blurred and added back over itself.",
       "module": "lib/glow-pass.js"
     },
     {
@@ -318,12 +367,12 @@
   "pass_order": [
     "ground · flat",
     "grid · dashed meridians, one solid axis",
-    "arcs · bundles from the hub, gradient strokes, lighter blend",
+    "arcs · trunk-and-fan bundles, gradient strokes, lighter blend",
     "glow · blurred copy added",
     "nodes · squares and numbers"
   ],
   "notes": [
-    "Measured on ref.png: stroke ≈ 0.9 px at 702 px (1.25 u); dash ≈ 4 px on, 3.5 px off; label cap height ≈ 7.5 px.",
-    "The numbers are generated and stand for nothing. The subject is new: hub, bundle directions and node positions differ from the reference."
+    "Measured on ref.png: stroke ≈ 1.3 px at 702 px (1.8 u); dash ≈ 4 px on, 3.5 px off; label cap height ≈ 7 px.",
+    "The numbers are generated and stand for nothing. The hub, bundle directions and node positions differ from the reference."
   ]
 }

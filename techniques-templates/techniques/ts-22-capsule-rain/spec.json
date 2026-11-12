@@ -1,0 +1,391 @@
+{
+  "id": "ts-22-capsule-rain",
+  "code": "TS-22",
+  "title": "Capsule rain system",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "Five ink",
+      "swatches": [
+        "#E6007E",
+        "#E8202A",
+        "#F6D21C",
+        "#141414",
+        "#1273DE"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "Ø",
+      "swatches": [
+        "#F4551E",
+        "#2F5AE6",
+        "#101014",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "id": "night",
+      "label": "Night",
+      "swatches": [
+        "#0E0E12",
+        "#FF4FA3",
+        "#FFD23F",
+        "#4DA3FF"
+      ]
+    },
+    {
+      "id": "mono",
+      "label": "One ink",
+      "swatches": [
+        "#141414",
+        "#8A8A88",
+        "#ECECEA"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      1080,
+      1350
+    ],
+    "grammar": "one field of rounded capsules in columns, growing along an axis with five inks in sequence; used full, sparse, clipped to shapes and inside hairline frames; tracked mono labels; gray sheet"
+  },
+  "units": "design units, 1000 = sheet width",
+  "palette": {
+    "sheet": "#ECECEA",
+    "ink": "#141414",
+    "magenta": "#E6007E",
+    "red": "#E8202A",
+    "yellow": "#F6D21C",
+    "blue": "#1273DE"
+  },
+  "techniques": [
+    {
+      "id": "capsule-rain",
+      "short": "RAIN",
+      "name": "Capsule columns",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "capsule",
+        "column",
+        "growth-axis"
+      ],
+      "params": {
+        "pitch_u": {
+          "value": 6.5,
+          "range": [
+            4,
+            30
+          ],
+          "unit": "u"
+        },
+        "length_u": [
+          2,
+          78
+        ],
+        "width_u": [
+          1.5,
+          10.5
+        ],
+        "length_curve": {
+          "value": 1.7,
+          "range": [
+            0.5,
+            4
+          ],
+          "note": "exponent on t for length"
+        },
+        "gap": {
+          "value": 0.28,
+          "range": [
+            0.05,
+            2
+          ],
+          "note": "gap as a share of the pill length"
+        },
+        "fill": {
+          "value": 0.94,
+          "range": [
+            0.05,
+            1
+          ],
+          "note": "chance that a slot holds a pill"
+        },
+        "jitter_u": {
+          "value": 1.2,
+          "range": [
+            0,
+            6
+          ],
+          "unit": "u"
+        },
+        "fall": {
+          "value": 0,
+          "range": [
+            0,
+            1
+          ],
+          "note": "phase of the fall; Motion runs it"
+        },
+        "seed": {
+          "value": 88,
+          "range": [
+            1,
+            9999
+          ],
+          "step": 1
+        }
+      },
+      "limits": "Pitch under the largest width (10.5 u) makes columns overlap their neighbors; that is intended at 6.5 u and turns to a solid tint under ~4 u. gap under ~0.1 fuses a column into a bar.",
+      "implementation": "Each column is filled top to bottom with rounded bars whose length and width are set by the column’s position t on the growth axis; lengths vary ±50 %.",
+      "module": "lib/capsule-rain.js"
+    },
+    {
+      "id": "wedge-envelope",
+      "short": "WEDG",
+      "name": "Wedge envelope",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "envelope",
+        "ramp"
+      ],
+      "params": {
+        "anchor": "bottom",
+        "power": {
+          "value": 0.9,
+          "range": [
+            0.3,
+            3
+          ]
+        },
+        "floor": {
+          "value": 0.04,
+          "range": [
+            0,
+            1
+          ],
+          "note": "filled share of the height at t = 0"
+        },
+        "scatter": {
+          "value": 0.2,
+          "range": [
+            0,
+            0.6
+          ],
+          "note": "chance of a pill above the wedge, falling with distance"
+        }
+      },
+      "limits": "floor at 1 fills the frame and the wedge is gone. scatter above ~0.4 hides the wedge edge.",
+      "implementation": "The filled height is floor + (1 − floor)·t^power from the anchor side; a few pills are allowed past the edge.",
+      "module": "lib/wedge-envelope.js"
+    },
+    {
+      "id": "ink-bands",
+      "short": "INK",
+      "name": "Ink bands on the axis",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "palette-field",
+        "overprint",
+        "multiply"
+      ],
+      "params": {
+        "centers": [
+          0.16,
+          0.36,
+          0.54,
+          0.72,
+          0.9
+        ],
+        "offset": {
+          "value": 0,
+          "range": [
+            -1,
+            1
+          ],
+          "note": "slides the bands along the axis"
+        },
+        "width": {
+          "value": 0.17,
+          "range": [
+            0.03,
+            0.5
+          ],
+          "note": "gaussian width of each band in t"
+        },
+        "blend": "multiply"
+      },
+      "limits": "width above ~0.35 mixes all five inks everywhere. Under ~0.05 the inks meet in hard stripes.",
+      "implementation": "Each pill draws its ink from five gaussian bands along t and is composited with multiply, so overlaps print darker.",
+      "module": "lib/ink-bands.js"
+    },
+    {
+      "id": "shape-mask",
+      "short": "MASK",
+      "name": "Shape clip",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "clip",
+        "mask"
+      ],
+      "params": {
+        "ring": {
+          "center_u": [
+            232,
+            562
+          ],
+          "outer_u": {
+            "value": 132,
+            "range": [
+              40,
+              300
+            ],
+            "unit": "u"
+          },
+          "inner_u": {
+            "value": 70,
+            "range": [
+              0,
+              280
+            ],
+            "unit": "u"
+          },
+          "gap_deg": [
+            -34,
+            34
+          ]
+        },
+        "shapes": "frame rectangle · ring with a gap"
+      },
+      "limits": "An inner radius within ~20 u of the outer leaves a band thinner than one long capsule and the field no longer reads.",
+      "implementation": "The capsule field is drawn through a clip path: a rectangle for framed panels, a ring with an opening for the mark.",
+      "module": "lib/shape-mask.js"
+    },
+    {
+      "id": "hairline-frame",
+      "short": "FRAME",
+      "name": "Hairline frame",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "rule",
+        "frame"
+      ],
+      "params": {
+        "line_u": {
+          "value": 1.2,
+          "range": [
+            0.4,
+            4
+          ],
+          "unit": "u"
+        },
+        "corner": "square"
+      },
+      "limits": "Above ~3 u the frame competes with the capsules.",
+      "implementation": "A square-cornered rectangle stroked once over the clipped field.",
+      "module": "lib/hairline-frame.js"
+    },
+    {
+      "id": "tracked-label",
+      "short": "LABL",
+      "name": "Tracked mono label",
+      "layer": 4,
+      "pass": 4,
+      "atoms": [
+        "mono-caps",
+        "tracking",
+        "rule"
+      ],
+      "params": {
+        "size_u": {
+          "value": 12.5,
+          "range": [
+            8,
+            24
+          ],
+          "unit": "u"
+        },
+        "tracking_em": {
+          "value": 0.22,
+          "range": [
+            0,
+            0.6
+          ],
+          "unit": "em"
+        },
+        "leading": {
+          "value": 1.65,
+          "range": [
+            1.1,
+            2.4
+          ]
+        },
+        "rule_u": [
+          22,
+          1.2
+        ],
+        "rule_gap_u": {
+          "value": 16,
+          "range": [
+            4,
+            40
+          ],
+          "unit": "u"
+        }
+      },
+      "limits": "Tracking above ~0.4 em breaks words into letters at this size.",
+      "implementation": "Capitals in JetBrains Mono, set letter by letter with 0.22 em added; a short rule sits one gap below the last line.",
+      "module": "lib/tracked-label.js"
+    },
+    {
+      "id": "sheet-grain",
+      "short": "TOOTH",
+      "name": "Sheet grain",
+      "layer": 5,
+      "pass": 5,
+      "atoms": [
+        "grain",
+        "stock"
+      ],
+      "params": {
+        "amp": {
+          "value": 0.02,
+          "range": [
+            0,
+            0.1
+          ]
+        },
+        "seed": {
+          "value": 3,
+          "range": [
+            1,
+            9999
+          ],
+          "step": 1
+        }
+      },
+      "limits": "Above ~0.06 the grain shows inside the flat inks.",
+      "implementation": "A mono multiply grain over the finished sheet.",
+      "module": "lib/sheet-grain.js"
+    }
+  ],
+  "pass_order": [
+    "sheet · flat gray",
+    "fields · capsule columns per panel, clipped, multiplied",
+    "frames · hairlines, block, circle pair",
+    "labels · tracked mono capitals and rules",
+    "grain · 2 % mono"
+  ],
+  "notes": [
+    "Measured on ref.png: column pitch ≈ 7 px at 1080 px (6.5 u); longest capsule ≈ 84 px; frame rule ≈ 1.3 px; label cap height ≈ 9 px.",
+    "Words are invented and plain. The subject is new: panel sizes, the ring and the order of panels differ from the reference."
+  ]
+}

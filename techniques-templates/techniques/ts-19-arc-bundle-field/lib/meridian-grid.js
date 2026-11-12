@@ -2,7 +2,7 @@
    Lifted from techniques/ts-19-arc-bundle-field/study.js by _build/build.mjs — do not edit here. Self-contained: every helper it uses is inlined.
    make(P,u,A) — P: params as plain values (defaults below; override any), u: device px per design unit
    (canvas.width / 1000), A: the helpers, V: variant colors (hex strings) where the signature asks for them.
-   Limits: Over ~31 meridians the dashes of neighbors align into bands. A radius under the half-height of the sheet shows the sphere outline and the picture reads as a ball, not a field. */
+   Limits: Over ~31 meridians the dashes of neighbors align into bands. A radius under half the sheet height shows the sphere outline. */
 export const id="meridian-grid", name="Dashed meridians", code="TS-19", entry="ts-19-arc-bundle-field";
 export const atoms=["sphere","ellipse","dash"];
 export const spec={
@@ -59,7 +59,7 @@ export const spec={
     },
     "axis": "the middle meridian is solid"
   },
-  "limits": "Over ~31 meridians the dashes of neighbors align into bands. A radius under the half-height of the sheet shows the sphere outline and the picture reads as a ball, not a field.",
+  "limits": "Over ~31 meridians the dashes of neighbors align into bands. A radius under half the sheet height shows the sphere outline.",
   "implementation": "Each meridian is an ellipse with the sphere radius as its tall axis and radius·|sin λ| as its wide one, stroked with a 6 on 5 dash."
 };
 export const params={
