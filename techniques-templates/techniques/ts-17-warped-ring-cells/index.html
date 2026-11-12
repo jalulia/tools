@@ -4,23 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="only light">
-<meta name="description" content="TS-17 · Warped ring cells — A grid of ringed cells pulled through a lens, printed as speckle.">
+<meta name="description" content="TS-17 · Warped ring cells — A grid of rounded cells on a pulled sheet, inked in pools, printed as single pixels.">
 <link rel="icon" href="data:,">
 <title>TS-17 — Warped ring cells · Techniques &amp; Templates · ø co.</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
-<link rel="stylesheet" href="../../_shared/shell.css?v=202611121738">
+<link rel="stylesheet" href="../../_shared/shell.css?v=202611121814">
 <link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
 <!-- <a class="brand" href="../../index.html" title="Index"><svg class="o" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-554.33,-11.46)" fill="currentColor" fill-rule="evenodd"><path d="M682.33,35.81c-57.24,0-103.65,46.4-103.65,103.65s46.4,103.65,103.65,103.65,103.65-46.4,103.65-103.65-46.4-103.65-103.65-103.65ZM682.33,187.75c-26.67,0-48.29-21.62-48.29-48.29s21.62-48.29,48.29-48.29,48.29,21.62,48.29,48.29-21.62,48.29-48.29,48.29Z"/><rect x="666.18" y="-5.46" width="32.29" height="289.83" transform="translate(298.46 -441.63) rotate(45)"/></g></svg><span class="wm">IMP<i>Ø</i>SSIBLE</span></a>
   <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Warped ring cells</b><span class="code">TS-17</span></span>
-  <span class="pager"><a href="../../techniques/ts-16-stipple-cloud-bank/index.html" title="Stipple bank and dot burst">← TS-16</a><a href="../../index.html#techniques"><span class="n">17</span>&nbsp;/ 18</a><a href="../../techniques/ts-19-arc-bundle-field/index.html" title="Arc bundles on a dashed globe">TS-19 →</a></span> <p class="kicker">Technique · TS-17</p><h1 class="lede">A grid of ringed cells pulled through a lens, printed as speckle.</h1><div class="body"><p>A square grid of rounded cells, pitch 64 u, turned 14°. Each cell carries an outer ring and, in most cells, a thin inner ring. The grid is read through a pinch lens: sample positions are pulled toward the lens center, so cells far from it stretch along the radius.</p><p>Ink color comes from five anchors blended by distance and fixed per cell. Every pixel is thresholded against noise, so rings are speckle, not line, and stray color pixels land on the stock between them. A 34 u margin frames the sheet.</p></div>
-  <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>margin</b> · paper</div></li><li><div><b>warp</b> · pixel to sample point</div></li><li><div><b>cells</b> · two ring bands per cell, ink by region</div></li><li><div><b>print</b> · noise threshold per pixel, stray ink on stock</div></li><li><div><b>soften</b> · 0.8 px blur</div></li></ol></div>
-  <div class="meta"><div class="full"><h2>Vocabulary · a technique highlights its reads · an atom finds every use</h2><div class="vocab" id="chips"><div class="vr"><span data-t="paper-margin" title="Plain margin"><b>EDGE</b>paper-margin</span><span class="at"><a href="../../index.html#techniques?a=margin">margin</a><i>·</i><a href="../../index.html#techniques?a=stock">stock</a></span></div><div class="vr"><span data-t="lens-warp" title="Pinch lens"><b>WARP</b>lens-warp</span><span class="at"><a href="../../index.html#techniques?a=domain-warp">domain-warp</a><i>·</i><a href="../../index.html#techniques?a=radial">radial</a><i>·</i><a href="../../index.html#techniques?a=lens">lens</a></span></div><div class="vr"><span data-t="ring-cell" title="Ringed rounded cell"><b>CELL</b>ring-cell</span><span class="at"><a href="../../index.html#techniques?a=grid">grid</a><i>·</i><a href="../../index.html#techniques?a=superellipse">superellipse</a><i>·</i><a href="../../index.html#techniques?a=ring">ring</a></span></div><div class="vr"><span data-t="hue-field" title="Anchored ink regions"><b>HUE</b>hue-field</span><span class="at"><a href="../../index.html#techniques?a=palette-field">palette-field</a><i>·</i><a href="../../index.html#techniques?a=per-cell">per-cell</a></span></div><div class="vr"><span data-t="stochastic-speckle" title="Noise-threshold print"><b>GRAIN</b>stochastic-speckle</span><span class="at"><a href="../../index.html#techniques?a=dither">dither</a><i>·</i><a href="../../index.html#techniques?a=grain">grain</a><i>·</i><a href="../../index.html#techniques?a=speckle">speckle</a></span></div></div></div>
-  <div><h2>Reference</h2><div class="ro">Reference 17 · warped grid of grainy color rings, 735 × 956</div></div><div><h2>Study</h2><div class="nm">Warped ring cells</div><div class="ro">TS-17 · Techniques · 17 / 18</div></div></div>
-  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>paper-margin</b> · Plain margin — Flat paper fill; the print sits inset on every side. <span class="ro">Limits · Above ~120 u the margin crops the stretched cells at the sheet edge.</span> <a href="lib/paper-margin.js">lib/paper-margin.js</a></div></li><li><div><b>lens-warp</b> · Pinch lens — Each pixel is mapped to a sample point pulled toward the lens center by 1/(1 + k·r²); the grid is evaluated at the sample point. <span class="ro">Limits · k below about −0.6 folds the grid over itself inside the sheet. k above ~3 stretches the outer cells past the sheet and they read as bars.</span> <a href="lib/lens-warp.js">lib/lens-warp.js</a></div></li><li><div><b>ring-cell</b> · Ringed rounded cell — Inside each cell the distance to the center is measured as a superellipse; two bands of that distance carry ink and the space past 0.45 carries a lighter tint. Both strengthen with a gaussian field centered on the lens. <span class="ro">Limits · outer.at + width + grow above ~0.6 closes every gutter and the cells read as holes in a flat tint. Pitch under ~28 u falls below the speckle and the rings vanish.</span> <a href="lib/ring-cell.js">lib/ring-cell.js</a></div></li><li><div><b>hue-field</b> · Anchored ink regions — Five anchor points carry one ink each. A cell takes the ink of its nearest anchor, or with up to 30 % chance the second nearest. <span class="ro">Limits · sharpness under ~1.5 mixes every region and no ink dominates anywhere. mix above ~0.4 reads as random color.</span> <a href="lib/hue-field.js">lib/hue-field.js</a></div></li><li><div><b>stochastic-speckle</b> · Noise-threshold print — Per pixel: ink if a random number is under the coverage, else stock; a share of stock pixels take a random ink. A 0.8 px blur follows. <span class="ro">Limits · stray above ~0.2 lifts the stock to a tint and the rings lose contrast. soften above ~1.5 px turns the speckle into tone.</span> <a href="lib/stochastic-speckle.js">lib/stochastic-speckle.js</a></div></li></ol></div>
-  <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>WARP</b> · Lens center · cells are smallest here <span class="ro">u 0.50 · v 0.52 · lens-warp</span></div></li><li><div><b>WARP</b> · Far from the center · cells stretch along the radius <span class="ro">u 0.46 · v 0.14 · lens-warp</span></div></li><li><div><b>CELL</b> · Outer ring · band at 0.37 of the cell, rounded square <span class="ro">u 0.30 · v 0.44 · ring-cell</span></div></li><li><div><b>CELL</b> · Inner ring · band at 0.2, in 7 cells of 10 <span class="ro">u 0.66 · v 0.40 · ring-cell</span></div></li><li><div><b>CELL</b> · Gutters · up to 60 % ink between cells near the center <span class="ro">u 0.56 · v 0.62 · ring-cell</span></div></li><li><div><b>HUE</b> · Ink anchor · red, lower right <span class="ro">u 0.74 · v 0.80 · hue-field</span></div></li><li><div><b>HUE</b> · Ink anchor · yellow, left edge <span class="ro">u 0.14 · v 0.66 · hue-field</span></div></li><li><div><b>GRAIN</b> · Stray pixels · 15 % of stock pixels take an ink <span class="ro">u 0.86 · v 0.30 · stochastic-speckle</span></div></li><li><div><b>GRAIN</b> · Ring edge · thresholded against noise, no hard line <span class="ro">u 0.22 · v 0.88 · stochastic-speckle</span></div></li><li><div><b>EDGE</b> · Margin · 34 u, no rule <span class="ro">u 0.50 · v 0.01 · paper-margin</span></div></li></ol></div>
-  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read</span><span>ø co. · 2026</span></div> {
+  <span class="pager"><a href="../../techniques/ts-16-stipple-cloud-bank/index.html" title="Stipple bank and dot burst">← TS-16</a><a href="../../index.html#techniques"><span class="n">17</span>&nbsp;/ 19</a><a href="../../techniques/ts-19-arc-bundle-field/index.html" title="Arc bundles on a dashed globe">TS-19 →</a></span> <p class="kicker">Technique · TS-17</p><h1 class="lede">A grid of rounded cells on a pulled sheet, inked in pools, printed as single pixels.</h1><div class="body"><p>A square grid of rounded cells, pitch 52 u, lies on a sheet that is pulled at four points. A pull moves the sheet by a vector that falls off as a gaussian. Cells behind a pull stretch to nearly three times their length; cells ahead of it shrink. Thirteen pools of ink sit over the sheet. A pool fills the cells, outlines them, or fills the gutters between them.</p><p>Nothing is drawn as a line and nothing is blurred. Each pixel takes an ink with a chance equal to the coverage there, drawn in proportion to the pools that reach it, and otherwise shows stock. 12 % of pixels near a pool take a stray ink. Motion swings the pulls. Live adds a pull under the pointer.</p></div>
+  <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>margin</b> · paper</div></li><li><div><b>pulls</b> · pixel to sample point</div></li><li><div><b>cells</b> · solid, outline and gutter coverage</div></li><li><div><b>pools</b> · strength per pixel, ink by share</div></li><li><div><b>print</b> · one ink or stock per pixel</div></li></ol></div>
+  <div class="meta"><div class="full"><h2>Vocabulary · a technique highlights its reads · an atom finds every use</h2><div class="vocab" id="chips"><div class="vr"><span data-t="paper-margin" title="Plain margin"><b>EDGE</b>paper-margin</span><span class="at"><a href="../../index.html#techniques?a=margin">margin</a><i>·</i><a href="../../index.html#techniques?a=stock">stock</a></span></div><div class="vr"><span data-t="sheet-pull" title="Gaussian sheet pulls"><b>PULL</b>sheet-pull</span><span class="at"><a href="../../index.html#techniques?a=domain-warp">domain-warp</a><i>·</i><a href="../../index.html#techniques?a=gaussian">gaussian</a><i>·</i><a href="../../index.html#techniques?a=displacement">displacement</a></span></div><div class="vr"><span data-t="ring-cell" title="Rounded cell"><b>CELL</b>ring-cell</span><span class="at"><a href="../../index.html#techniques?a=grid">grid</a><i>·</i><a href="../../index.html#techniques?a=superellipse">superellipse</a><i>·</i><a href="../../index.html#techniques?a=ring">ring</a></span></div><div class="vr"><span data-t="ink-pool" title="Ink pools"><b>POOL</b>ink-pool</span><span class="at"><a href="../../index.html#techniques?a=palette-field">palette-field</a><i>·</i><a href="../../index.html#techniques?a=gaussian">gaussian</a><i>·</i><a href="../../index.html#techniques?a=per-cell">per-cell</a></span></div><div class="vr"><span data-t="stochastic-speckle" title="Noise-threshold print"><b>GRAIN</b>stochastic-speckle</span><span class="at"><a href="../../index.html#techniques?a=dither">dither</a><i>·</i><a href="../../index.html#techniques?a=grain">grain</a><i>·</i><a href="../../index.html#techniques?a=speckle">speckle</a></span></div></div></div>
+  <div><h2>Reference</h2><div class="ro">Reference 17 · warped grid of grainy color cells, 735 × 956</div></div><div><h2>Study</h2><div class="nm">Warped ring cells</div><div class="ro">TS-17 · Techniques · 17 / 19</div></div></div>
+  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>paper-margin</b> · Plain margin — Flat paper fill; the print sits inset on every side. <span class="ro">Limits · Above ~120 u the margin crops the stretched band.</span> <a href="lib/paper-margin.js">lib/paper-margin.js</a></div></li><li><div><b>sheet-pull</b> · Gaussian sheet pulls — Each pixel is sampled at its own position minus every pull vector times exp(−d² / r²). The grid is read at the sample point, so the sheet stretches behind a pull and bunches ahead of it. <span class="ro">Limits · A pull folds the sheet when 0.86 × vector length exceeds its radius; at strength 1 the largest ratio is 0.65. Pitch under ~24 u puts a cell below ten pixels and the outline closes.</span> <a href="lib/sheet-pull.js">lib/sheet-pull.js</a></div></li><li><div><b>ring-cell</b> · Rounded cell — The distance from the cell center is a superellipse. Three shapes are read from it: the solid cell, an outline band, and the gutter past it. <span class="ro">Limits · cell_at above gutter_at removes the stock band between a cell and its gutter. edge above ~0.2 thins every shape to a haze.</span> <a href="lib/ring-cell.js">lib/ring-cell.js</a></div></li><li><div><b>ink-pool</b> · Ink pools — Each pool has an ink, a center, a gaussian radius and a mode. Its strength is 2.4 × the gaussian, read per pixel and clipped at 1, so the middle of a pool is solid; the mode says which shape of the cell it colors. <span class="ro">Limits · size above ~2 merges the pools into one field and no region reads. gain under ~0.4 leaves only the stray pixels.</span> <a href="lib/ink-pool.js">lib/ink-pool.js</a></div></li><li><div><b>stochastic-speckle</b> · Noise-threshold print — Per pixel: ink if a random number is under the coverage, with the ink drawn in proportion to each pool’s share; otherwise stock, or a stray ink pixel. <span class="ro">Limits · stray above ~0.25 lifts the stock to a tint. Any soften above 0 turns the pixels into tone and the print reads as blurred.</span> <a href="lib/stochastic-speckle.js">lib/stochastic-speckle.js</a></div></li></ol></div>
+  <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>PULL</b> · Behind the pull · cells 2.9 × as tall <span class="ro">u 0.47 · v 0.33 · sheet-pull</span></div></li><li><div><b>PULL</b> · Ahead of the pull · cells shrink <span class="ro">u 0.50 · v 0.05 · sheet-pull</span></div></li><li><div><b>PULL</b> · Side pull · cells lean along the vector <span class="ro">u 0.80 · v 0.38 · sheet-pull</span></div></li><li><div><b>POOL</b> · Cell pool · teal fills the cells <span class="ro">u 0.28 · v 0.10 · ink-pool</span></div></li><li><div><b>POOL</b> · Gutter pool · blue fills between the cells <span class="ro">u 0.52 · v 0.58 · ink-pool</span></div></li><li><div><b>POOL</b> · Outline pool · yellow outlines the cells <span class="ro">u 0.88 · v 0.60 · ink-pool</span></div></li><li><div><b>CELL</b> · Solid cell · superellipse, exponent 2.8 <span class="ro">u 0.38 · v 0.82 · ring-cell</span></div></li><li><div><b>CELL</b> · Outline · band at 0.34 of the cell <span class="ro">u 0.64 · v 0.49 · ring-cell</span></div></li><li><div><b>GRAIN</b> · One pixel, one ink · no blur <span class="ro">u 0.18 · v 0.66 · stochastic-speckle</span></div></li><li><div><b>EDGE</b> · Margin · 34 u, no rule <span class="ro">u 0.50 · v 0.01 · paper-margin</span></div></li></ol></div>
+  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read · <b>M</b> motion · <b>L</b> live</span><span>ø co. · 2026</span></div> {
   &quot;id&quot;: &quot;ts-17-warped-ring-cells&quot;,
   &quot;code&quot;: &quot;TS-17&quot;,
   &quot;title&quot;: &quot;Warped ring cells&quot;,
@@ -30,11 +30,11 @@
       &quot;id&quot;: &quot;ref&quot;,
       &quot;label&quot;: &quot;Five ink&quot;,
       &quot;swatches&quot;: [
-        &quot;#17DDBE&quot;,
-        &quot;#19B5F0&quot;,
-        &quot;#F2401C&quot;,
-        &quot;#F6C31E&quot;,
-        &quot;#E0D3B4&quot;
+        &quot;#0AF2D1&quot;,
+        &quot;#0AB9F1&quot;,
+        &quot;#EE4A1E&quot;,
+        &quot;#F2C234&quot;,
+        &quot;#D7D7B6&quot;
       ]
     },
     {
@@ -54,7 +54,7 @@
         &quot;#1E3A8A&quot;,
         &quot;#19B5F0&quot;,
         &quot;#7FE3D4&quot;,
-        &quot;#EEF2F4&quot;
+        &quot;#E6ECEE&quot;
       ]
     },
     {
@@ -64,7 +64,7 @@
         &quot;#F2401C&quot;,
         &quot;#F6C31E&quot;,
         &quot;#E86AA0&quot;,
-        &quot;#F4EFEA&quot;
+        &quot;#F1E6DA&quot;
       ]
     }
   ],
@@ -74,17 +74,19 @@
       735,
       956
     ],
-    &quot;grammar&quot;: &quot;a grid of rounded ring cells seen through a lens distortion; five inks placed by region; every tone built from noise-thresholded pixels; plain margin&quot;
+    &quot;grammar&quot;: &quot;a grid of rounded cells on a warped sheet; pools of ink that fill cells, outline them or fill the gutters; every tone built from noise-thresholded pixels; plain margin&quot;
   },
   &quot;units&quot;: &quot;design units, 1000 = sheet width&quot;,
   &quot;palette&quot;: {
-    &quot;paper&quot;: &quot;#EFEBE7&quot;,
-    &quot;stock&quot;: &quot;#E0D3B4&quot;,
-    &quot;teal&quot;: &quot;#17DDBE&quot;,
-    &quot;blue&quot;: &quot;#19B5F0&quot;,
-    &quot;red&quot;: &quot;#F2401C&quot;,
-    &quot;yellow&quot;: &quot;#F6C31E&quot;,
-    &quot;pink&quot;: &quot;#E86AA0&quot;
+    &quot;paper&quot;: &quot;#EFECE6&quot;,
+    &quot;stock&quot;: &quot;#D7D7B6&quot;,
+    &quot;base&quot;: &quot;#A0D1C2&quot;,
+    &quot;teal&quot;: &quot;#0AF2D1&quot;,
+    &quot;blue&quot;: &quot;#0AB9F1&quot;,
+    &quot;red&quot;: &quot;#EE4A1E&quot;,
+    &quot;yellow&quot;: &quot;#F2C234&quot;,
+    &quot;pink&quot;: &quot;#E877A8&quot;,
+    &quot;orange&quot;: &quot;#F28A1E&quot;
   },
   &quot;techniques&quot;: [
     {
@@ -108,60 +110,150 @@
         },
         &quot;rule&quot;: &quot;none&quot;
       },
-      &quot;limits&quot;: &quot;Above ~120 u the margin crops the stretched cells at the sheet edge.&quot;,
+      &quot;limits&quot;: &quot;Above ~120 u the margin crops the stretched band.&quot;,
       &quot;implementation&quot;: &quot;Flat paper fill; the print sits inset on every side.&quot;,
       &quot;module&quot;: &quot;lib/paper-margin.js&quot;
     },
     {
-      &quot;id&quot;: &quot;lens-warp&quot;,
-      &quot;short&quot;: &quot;WARP&quot;,
-      &quot;name&quot;: &quot;Pinch lens&quot;,
+      &quot;id&quot;: &quot;sheet-pull&quot;,
+      &quot;short&quot;: &quot;PULL&quot;,
+      &quot;name&quot;: &quot;Gaussian sheet pulls&quot;,
       &quot;layer&quot;: 1,
       &quot;pass&quot;: 1,
       &quot;atoms&quot;: [
         &quot;domain-warp&quot;,
-        &quot;radial&quot;,
-        &quot;lens&quot;
+        &quot;gaussian&quot;,
+        &quot;displacement&quot;
       ],
       &quot;params&quot;: {
-        &quot;center_u&quot;: [
-          520,
-          700
-        ],
-        &quot;radius_u&quot;: {
-          &quot;value&quot;: 700,
+        &quot;pitch_u&quot;: {
+          &quot;value&quot;: 52,
           &quot;range&quot;: [
-            200,
-            1600
+            24,
+            160
           ],
           &quot;unit&quot;: &quot;u&quot;
         },
-        &quot;k&quot;: {
-          &quot;value&quot;: 0.85,
+        &quot;turn_deg&quot;: {
+          &quot;value&quot;: -8,
           &quot;range&quot;: [
-            -0.6,
-            3
+            -45,
+            45
           ],
-          &quot;note&quot;: &quot;pinch strength; negative bulges&quot;
+          &quot;unit&quot;: &quot;°&quot;
         },
-        &quot;stretch_y&quot;: {
-          &quot;value&quot;: 1.1,
+        &quot;pulls&quot;: [
+          {
+            &quot;at&quot;: [
+              0.5,
+              0.16
+            ],
+            &quot;radius_u&quot;: 310,
+            &quot;vec_u&quot;: [
+              0,
+              -235
+            ]
+          },
+          {
+            &quot;at&quot;: [
+              0.93,
+              0.3
+            ],
+            &quot;radius_u&quot;: 250,
+            &quot;vec_u&quot;: [
+              150,
+              -105
+            ]
+          },
+          {
+            &quot;at&quot;: [
+              0.04,
+              0.86
+            ],
+            &quot;radius_u&quot;: 330,
+            &quot;vec_u&quot;: [
+              -215,
+              20
+            ]
+          },
+          {
+            &quot;at&quot;: [
+              0.62,
+              1
+            ],
+            &quot;radius_u&quot;: 260,
+            &quot;vec_u&quot;: [
+              60,
+              120
+            ]
+          }
+        ],
+        &quot;strength&quot;: {
+          &quot;value&quot;: 1,
           &quot;range&quot;: [
-            -0.8,
-            1.6
+            0,
+            1.5
           ],
-          &quot;note&quot;: &quot;extra pull above the center&quot;
+          &quot;note&quot;: &quot;multiplies every pull vector&quot;
         },
-        &quot;q&quot;: &quot;c + d / (1 + k·|d/R|²), with d.y scaled by 1 − stretch_y·clamp(−d.y/R, 0, 1)·0.5&quot;
+        &quot;radius&quot;: {
+          &quot;value&quot;: 1,
+          &quot;range&quot;: [
+            0.5,
+            2
+          ],
+          &quot;note&quot;: &quot;multiplies every pull radius&quot;
+        },
+        &quot;swing&quot;: {
+          &quot;value&quot;: 0,
+          &quot;range&quot;: [
+            0,
+            1
+          ],
+          &quot;note&quot;: &quot;turns and scales the pulls through one cycle; Motion runs it&quot;
+        },
+        &quot;grab&quot;: {
+          &quot;x&quot;: {
+            &quot;value&quot;: 0.5,
+            &quot;range&quot;: [
+              0,
+              1
+            ]
+          },
+          &quot;y&quot;: {
+            &quot;value&quot;: 0.5,
+            &quot;range&quot;: [
+              0,
+              1
+            ]
+          },
+          &quot;pull_u&quot;: {
+            &quot;value&quot;: 0,
+            &quot;range&quot;: [
+              0,
+              320
+            ],
+            &quot;unit&quot;: &quot;u&quot;,
+            &quot;note&quot;: &quot;a fifth pull, away from the sheet center; Live sets it at the pointer&quot;
+          },
+          &quot;radius_u&quot;: {
+            &quot;value&quot;: 280,
+            &quot;range&quot;: [
+              80,
+              600
+            ],
+            &quot;unit&quot;: &quot;u&quot;
+          }
+        }
       },
-      &quot;limits&quot;: &quot;k below about −0.6 folds the grid over itself inside the sheet. k above ~3 stretches the outer cells past the sheet and they read as bars.&quot;,
-      &quot;implementation&quot;: &quot;Each pixel is mapped to a sample point pulled toward the lens center by 1/(1 + k·r²); the grid is evaluated at the sample point.&quot;,
-      &quot;module&quot;: &quot;lib/lens-warp.js&quot;
+      &quot;limits&quot;: &quot;A pull folds the sheet when 0.86 × vector length exceeds its radius; at strength 1 the largest ratio is 0.65. Pitch under ~24 u puts a cell below ten pixels and the outline closes.&quot;,
+      &quot;implementation&quot;: &quot;Each pixel is sampled at its own position minus every pull vector times exp(−d² / r²). The grid is read at the sample point, so the sheet stretches behind a pull and bunches ahead of it.&quot;,
+      &quot;module&quot;: &quot;lib/sheet-pull.js&quot;
     },
     {
       &quot;id&quot;: &quot;ring-cell&quot;,
       &quot;short&quot;: &quot;CELL&quot;,
-      &quot;name&quot;: &quot;Ringed rounded cell&quot;,
+      &quot;name&quot;: &quot;Rounded cell&quot;,
       &quot;layer&quot;: 1,
       &quot;pass&quot;: 1,
       &quot;atoms&quot;: [
@@ -170,120 +262,218 @@
         &quot;ring&quot;
       ],
       &quot;params&quot;: {
-        &quot;pitch_u&quot;: {
-          &quot;value&quot;: 64,
-          &quot;range&quot;: [
-            28,
-            160
-          ],
-          &quot;unit&quot;: &quot;u&quot;
-        },
-        &quot;turn_deg&quot;: {
-          &quot;value&quot;: 14,
-          &quot;range&quot;: [
-            -45,
-            45
-          ],
-          &quot;unit&quot;: &quot;°&quot;
-        },
         &quot;roundness&quot;: {
-          &quot;value&quot;: 2.7,
+          &quot;value&quot;: 2.8,
           &quot;range&quot;: [
             2,
             8
           ],
-          &quot;note&quot;: &quot;superellipse exponent; 2 is a circle&quot;
+          &quot;note&quot;: &quot;superellipse exponent; 2 is an ellipse&quot;
         },
-        &quot;outer&quot;: {
-          &quot;at&quot;: {
-            &quot;value&quot;: 0.37,
-            &quot;range&quot;: [
-              0.3,
-              0.5
-            ]
-          },
-          &quot;width&quot;: {
-            &quot;value&quot;: 0.05,
-            &quot;range&quot;: [
-              0.02,
-              0.16
-            ]
-          },
-          &quot;grow&quot;: {
-            &quot;value&quot;: 0.07,
-            &quot;range&quot;: [
-              0,
-              0.25
-            ],
-            &quot;note&quot;: &quot;added width at full field strength&quot;
-          }
+        &quot;cell_at&quot;: {
+          &quot;value&quot;: 0.33,
+          &quot;range&quot;: [
+            0.2,
+            0.45
+          ],
+          &quot;note&quot;: &quot;edge of the solid cell, in cell units&quot;
         },
-        &quot;gutter&quot;: {
-          &quot;tint&quot;: {
-            &quot;value&quot;: 0.6,
-            &quot;range&quot;: [
-              0,
-              0.9
-            ],
-            &quot;note&quot;: &quot;ink coverage between cells&quot;
-          }
+        &quot;ring_at&quot;: {
+          &quot;value&quot;: 0.34,
+          &quot;range&quot;: [
+            0.1,
+            0.42
+          ]
+        },
+        &quot;ring_width&quot;: {
+          &quot;value&quot;: 0.1,
+          &quot;range&quot;: [
+            0.02,
+            0.24
+          ]
+        },
+        &quot;gutter_at&quot;: {
+          &quot;value&quot;: 0.43,
+          &quot;range&quot;: [
+            0.3,
+            0.55
+          ]
         },
         &quot;edge&quot;: {
-          &quot;value&quot;: 0.075,
+          &quot;value&quot;: 0.04,
           &quot;range&quot;: [
             0.01,
-            0.2
+            0.25
           ],
-          &quot;note&quot;: &quot;softness of a band edge, in cell units&quot;
-        },
-        &quot;inner&quot;: {
-          &quot;at&quot;: {
-            &quot;value&quot;: 0.2,
-            &quot;range&quot;: [
-              0.1,
+          &quot;note&quot;: &quot;width over which coverage ramps at every edge&quot;
+        }
+      },
+      &quot;limits&quot;: &quot;cell_at above gutter_at removes the stock band between a cell and its gutter. edge above ~0.2 thins every shape to a haze.&quot;,
+      &quot;implementation&quot;: &quot;The distance from the cell center is a superellipse. Three shapes are read from it: the solid cell, an outline band, and the gutter past it.&quot;,
+      &quot;module&quot;: &quot;lib/ring-cell.js&quot;
+    },
+    {
+      &quot;id&quot;: &quot;ink-pool&quot;,
+      &quot;short&quot;: &quot;POOL&quot;,
+      &quot;name&quot;: &quot;Ink pools&quot;,
+      &quot;layer&quot;: 1,
+      &quot;pass&quot;: 1,
+      &quot;atoms&quot;: [
+        &quot;palette-field&quot;,
+        &quot;gaussian&quot;,
+        &quot;per-cell&quot;
+      ],
+      &quot;params&quot;: {
+        &quot;pools&quot;: [
+          {
+            &quot;ink&quot;: &quot;base&quot;,
+            &quot;mode&quot;: &quot;gutter&quot;,
+            &quot;at&quot;: [
+              0.25,
+              0.25
+            ],
+            &quot;size&quot;: 0.42
+          },
+          {
+            &quot;ink&quot;: &quot;teal&quot;,
+            &quot;mode&quot;: &quot;cell&quot;,
+            &quot;at&quot;: [
+              0.45,
+              0.08
+            ],
+            &quot;size&quot;: 0.22
+          },
+          {
+            &quot;ink&quot;: &quot;teal&quot;,
+            &quot;mode&quot;: &quot;cell&quot;,
+            &quot;at&quot;: [
+              0.45,
+              0.31
+            ],
+            &quot;size&quot;: 0.19
+          },
+          {
+            &quot;ink&quot;: &quot;red&quot;,
+            &quot;mode&quot;: &quot;ring&quot;,
+            &quot;at&quot;: [
+              0.58,
+              0.34
+            ],
+            &quot;size&quot;: 0.08
+          },
+          {
+            &quot;ink&quot;: &quot;red&quot;,
+            &quot;mode&quot;: &quot;ring&quot;,
+            &quot;at&quot;: [
+              0.93,
               0.3
-            ]
-          },
-          &quot;width&quot;: {
-            &quot;value&quot;: 0.04,
-            &quot;range&quot;: [
-              0.01,
-              0.1
-            ]
-          },
-          &quot;share&quot;: {
-            &quot;value&quot;: 0.7,
-            &quot;range&quot;: [
-              0,
-              1
             ],
-            &quot;note&quot;: &quot;share of cells that carry it&quot;
+            &quot;size&quot;: 0.11
+          },
+          {
+            &quot;ink&quot;: &quot;orange&quot;,
+            &quot;mode&quot;: &quot;ring&quot;,
+            &quot;at&quot;: [
+              0.95,
+              0.18
+            ],
+            &quot;size&quot;: 0.08
+          },
+          {
+            &quot;ink&quot;: &quot;yellow&quot;,
+            &quot;mode&quot;: &quot;ring&quot;,
+            &quot;at&quot;: [
+              0.88,
+              0.55
+            ],
+            &quot;size&quot;: 0.12
+          },
+          {
+            &quot;ink&quot;: &quot;yellow&quot;,
+            &quot;mode&quot;: &quot;ring&quot;,
+            &quot;at&quot;: [
+              0.9,
+              0.85
+            ],
+            &quot;size&quot;: 0.14
+          },
+          {
+            &quot;ink&quot;: &quot;blue&quot;,
+            &quot;mode&quot;: &quot;gutter&quot;,
+            &quot;at&quot;: [
+              0.52,
+              0.58
+            ],
+            &quot;size&quot;: 0.19
+          },
+          {
+            &quot;ink&quot;: &quot;red&quot;,
+            &quot;mode&quot;: &quot;cell&quot;,
+            &quot;at&quot;: [
+              0.38,
+              0.82
+            ],
+            &quot;size&quot;: 0.14
+          },
+          {
+            &quot;ink&quot;: &quot;orange&quot;,
+            &quot;mode&quot;: &quot;cell&quot;,
+            &quot;at&quot;: [
+              0.08,
+              0.9
+            ],
+            &quot;size&quot;: 0.09
+          },
+          {
+            &quot;ink&quot;: &quot;pink&quot;,
+            &quot;mode&quot;: &quot;ring&quot;,
+            &quot;at&quot;: [
+              0.1,
+              0.42
+            ],
+            &quot;size&quot;: 0.1
+          },
+          {
+            &quot;ink&quot;: &quot;blue&quot;,
+            &quot;mode&quot;: &quot;cell&quot;,
+            &quot;at&quot;: [
+              0.58,
+              0.97
+            ],
+            &quot;size&quot;: 0.06
           }
+        ],
+        &quot;gain&quot;: {
+          &quot;value&quot;: 1,
+          &quot;range&quot;: [
+            0,
+            2
+          ],
+          &quot;note&quot;: &quot;multiplies every pool&quot;
         },
-        &quot;field&quot;: {
-          &quot;sigma_u&quot;: {
-            &quot;value&quot;: 400,
-            &quot;range&quot;: [
-              150,
-              1200
-            ],
-            &quot;unit&quot;: &quot;u&quot;
-          },
-          &quot;floor&quot;: {
-            &quot;value&quot;: 0.1,
-            &quot;range&quot;: [
-              0,
-              1
-            ]
-          }
+        &quot;size&quot;: {
+          &quot;value&quot;: 1,
+          &quot;range&quot;: [
+            0.4,
+            2.5
+          ],
+          &quot;note&quot;: &quot;multiplies every pool radius&quot;
         },
         &quot;cell_var&quot;: {
-          &quot;value&quot;: 0.55,
+          &quot;value&quot;: 0.25,
           &quot;range&quot;: [
             0,
             1
           ],
-          &quot;note&quot;: &quot;how much ring strength varies cell to cell&quot;
+          &quot;note&quot;: &quot;how much strength varies cell to cell&quot;
+        },
+        &quot;drift&quot;: {
+          &quot;value&quot;: 0,
+          &quot;range&quot;: [
+            0,
+            1
+          ],
+          &quot;note&quot;: &quot;moves every pool once around a small loop; Motion runs it&quot;
         },
         &quot;seed&quot;: {
           &quot;value&quot;: 31,
@@ -294,64 +484,9 @@
           &quot;step&quot;: 1
         }
       },
-      &quot;limits&quot;: &quot;outer.at + width + grow above ~0.6 closes every gutter and the cells read as holes in a flat tint. Pitch under ~28 u falls below the speckle and the rings vanish.&quot;,
-      &quot;implementation&quot;: &quot;Inside each cell the distance to the center is measured as a superellipse; two bands of that distance carry ink and the space past 0.45 carries a lighter tint. Both strengthen with a gaussian field centered on the lens.&quot;,
-      &quot;module&quot;: &quot;lib/ring-cell.js&quot;
-    },
-    {
-      &quot;id&quot;: &quot;hue-field&quot;,
-      &quot;short&quot;: &quot;HUE&quot;,
-      &quot;name&quot;: &quot;Anchored ink regions&quot;,
-      &quot;layer&quot;: 1,
-      &quot;pass&quot;: 1,
-      &quot;atoms&quot;: [
-        &quot;palette-field&quot;,
-        &quot;per-cell&quot;
-      ],
-      &quot;params&quot;: {
-        &quot;anchors_u&quot;: [
-          [
-            480,
-            130
-          ],
-          [
-            520,
-            640
-          ],
-          [
-            760,
-            1040
-          ],
-          [
-            60,
-            860
-          ],
-          [
-            960,
-            420
-          ]
-        ],
-        &quot;sharpness&quot;: {
-          &quot;value&quot;: 3,
-          &quot;range&quot;: [
-            1,
-            8
-          ],
-          &quot;note&quot;: &quot;higher gives harder region borders&quot;
-        },
-        &quot;mix&quot;: {
-          &quot;value&quot;: 0.38,
-          &quot;range&quot;: [
-            0,
-            0.5
-          ],
-          &quot;note&quot;: &quot;chance that a cell takes its second-nearest ink&quot;
-        },
-        &quot;inner&quot;: &quot;the inner ring takes the next ink in the list&quot;
-      },
-      &quot;limits&quot;: &quot;sharpness under ~1.5 mixes every region and no ink dominates anywhere. mix above ~0.4 reads as random color.&quot;,
-      &quot;implementation&quot;: &quot;Five anchor points carry one ink each. A cell takes the ink of its nearest anchor, or with up to 30 % chance the second nearest.&quot;,
-      &quot;module&quot;: &quot;lib/hue-field.js&quot;
+      &quot;limits&quot;: &quot;size above ~2 merges the pools into one field and no region reads. gain under ~0.4 leaves only the stray pixels.&quot;,
+      &quot;implementation&quot;: &quot;Each pool has an ink, a center, a gaussian radius and a mode. Its strength is 2.4 × the gaussian, read per pixel and clipped at 1, so the middle of a pool is solid; the mode says which shape of the cell it colors.&quot;,
+      &quot;module&quot;: &quot;lib/ink-pool.js&quot;
     },
     {
       &quot;id&quot;: &quot;stochastic-speckle&quot;,
@@ -366,7 +501,7 @@
       ],
       &quot;params&quot;: {
         &quot;gain&quot;: {
-          &quot;value&quot;: 0.82,
+          &quot;value&quot;: 0.92,
           &quot;range&quot;: [
             0.3,
             1
@@ -374,27 +509,28 @@
           &quot;note&quot;: &quot;highest ink coverage&quot;
         },
         &quot;stray&quot;: {
-          &quot;value&quot;: 0.15,
+          &quot;value&quot;: 0.12,
           &quot;range&quot;: [
             0,
-            0.3
+            0.35
           ],
-          &quot;note&quot;: &quot;share of stock pixels that take an ink&quot;
+          &quot;note&quot;: &quot;share of pixels near a pool that take its ink regardless&quot;
         },
         &quot;stock_noise&quot;: {
-          &quot;value&quot;: 0.1,
+          &quot;value&quot;: 0.08,
           &quot;range&quot;: [
             0,
-            0.2
+            0.25
           ]
         },
         &quot;soften_px&quot;: {
-          &quot;value&quot;: 0.8,
+          &quot;value&quot;: 0,
           &quot;range&quot;: [
             0,
             3
           ],
-          &quot;unit&quot;: &quot;px&quot;
+          &quot;unit&quot;: &quot;px&quot;,
+          &quot;note&quot;: &quot;blur after printing; 0 keeps single pixels&quot;
         },
         &quot;seed&quot;: {
           &quot;value&quot;: 211,
@@ -405,21 +541,21 @@
           &quot;step&quot;: 1
         }
       },
-      &quot;limits&quot;: &quot;stray above ~0.2 lifts the stock to a tint and the rings lose contrast. soften above ~1.5 px turns the speckle into tone.&quot;,
-      &quot;implementation&quot;: &quot;Per pixel: ink if a random number is under the coverage, else stock; a share of stock pixels take a random ink. A 0.8 px blur follows.&quot;,
+      &quot;limits&quot;: &quot;stray above ~0.25 lifts the stock to a tint. Any soften above 0 turns the pixels into tone and the print reads as blurred.&quot;,
+      &quot;implementation&quot;: &quot;Per pixel: ink if a random number is under the coverage, with the ink drawn in proportion to each pool’s share; otherwise stock, or a stray ink pixel.&quot;,
       &quot;module&quot;: &quot;lib/stochastic-speckle.js&quot;
     }
   ],
   &quot;pass_order&quot;: [
     &quot;margin · paper&quot;,
-    &quot;warp · pixel to sample point&quot;,
-    &quot;cells · two ring bands per cell, ink by region&quot;,
-    &quot;print · noise threshold per pixel, stray ink on stock&quot;,
-    &quot;soften · 0.8 px blur&quot;
+    &quot;pulls · pixel to sample point&quot;,
+    &quot;cells · solid, outline and gutter coverage&quot;,
+    &quot;pools · strength per pixel, ink by share&quot;,
+    &quot;print · one ink or stock per pixel&quot;
   ],
   &quot;notes&quot;: [
-    &quot;Measured on ref.png: cell pitch ≈ 47 px at the center (64 u); margin ≈ 25 px (34 u); grain std ≈ 24/255 on the stock.&quot;,
-    &quot;The subject is new: lens center, grid turn and ink regions differ from the reference.&quot;
+    &quot;Measured on ref.png: stock (215,215,182); pale tint (160,209,194); blue (10,185,241); teal (10,242,209); cell pitch ≈ 38 px at the center (52 u); tallest cells ≈ 110 px; margin ≈ 25 px.&quot;,
+    &quot;The subject is new: the pulls and pools are a mirror of the reference layout.&quot;
   ]
 } are BAKED here by `node _build/build.mjs` from study.js — a static read for readers that
      cannot run scripts. shell.js redraws all of it on load. Edit study.js or _build/, never the generated index.html. -->
@@ -454,11 +590,11 @@
   <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
   <pre id="specpre">{{SPEC}}</pre>
 </aside>
-<script src="../../_shared/entries.js?v=202611121738"></script>
-<script src="../../_shared/vocab.js?v=202611121738"></script>
-<script src="../../_shared/art.js?v=202611121738"></script>
+<script src="../../_shared/entries.js?v=202611121814"></script>
+<script src="../../_shared/vocab.js?v=202611121814"></script>
+<script src="../../_shared/art.js?v=202611121814"></script>
 <script src="ref.js"></script>
 <script src="study.js"></script>
-<script src="../../_shared/shell.js?v=202611121738"></script>
+<script src="../../_shared/shell.js?v=202611121814"></script>
 </body>
 </html>

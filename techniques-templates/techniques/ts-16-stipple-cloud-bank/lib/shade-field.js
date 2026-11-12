@@ -1,36 +1,89 @@
-/* shade-field · Density shading — TS-16 Stipple bank and dot burst · Techniques & Templates · ø co.
+/* shade-field · Tone by depth and wisp — TS-16 Stipple bank and dot burst · Techniques & Templates · ø co.
    Lifted from techniques/ts-16-stipple-cloud-bank/study.js by _build/build.mjs — do not edit here. Self-contained: every helper it uses is inlined.
    make(P,u,A) — P: params as plain values (defaults below; override any), u: device px per design unit
    (canvas.width / 1000), A: the helpers, V: variant colors (hex strings) where the signature asks for them.
-   Limits: floor at 1 removes the shading. scale under ~80 u reads as blotches, not form. */
-export const id="shade-field", name="Density shading", code="TS-16", entry="ts-16-stipple-cloud-bank";
-export const atoms=["noise-field","density"];
+   Limits: wisp_mix at 0 leaves only the depth ramp and the banks read as flat steps. stretch above ~6 turns wisps into stripes. */
+export const id="shade-field", name="Tone by depth and wisp", code="TS-16", entry="ts-16-stipple-cloud-bank";
+export const atoms=["noise-field","density","edge-distance"];
 export const spec={
   "id": "shade-field",
   "short": "SHAD",
-  "name": "Density shading",
+  "name": "Tone by depth and wisp",
   "layer": 2,
-  "pass": 3,
+  "pass": 2,
   "atoms": [
     "noise-field",
-    "density"
+    "density",
+    "edge-distance"
   ],
   "params": {
-    "scale_u": {
-      "value": 260,
+    "rim_depth": {
+      "value": 0.9,
       "range": [
-        80,
-        900
+        0.2,
+        3
       ],
-      "unit": "u"
+      "note": "rim falloff, in lobe radii"
     },
-    "floor": {
-      "value": 0.45,
+    "rim_floor": {
+      "value": 0.5,
       "range": [
         0,
         1
       ],
-      "note": "lowest share of dots kept"
+      "note": "tone left deep inside a rim bank"
+    },
+    "body_from": {
+      "value": 0.12,
+      "range": [
+        0,
+        1
+      ],
+      "note": "depth where a body bank starts to take tone, in lobe radii"
+    },
+    "body_to": {
+      "value": 1.1,
+      "range": [
+        0.3,
+        3
+      ]
+    },
+    "wisp_u": {
+      "value": 150,
+      "range": [
+        40,
+        600
+      ],
+      "unit": "u"
+    },
+    "stretch": {
+      "value": 3.2,
+      "range": [
+        1,
+        8
+      ],
+      "note": "wisp length over width"
+    },
+    "contrast": {
+      "value": 0.2,
+      "range": [
+        0.05,
+        0.6
+      ]
+    },
+    "wisp_mix": {
+      "value": 0.85,
+      "range": [
+        0,
+        1
+      ]
+    },
+    "gain": {
+      "value": 1,
+      "range": [
+        0,
+        1.5
+      ]
     },
     "seed": {
       "value": 9,
@@ -39,17 +92,22 @@ export const spec={
         9999
       ],
       "step": 1
-    },
-    "density": "floor + (1 − floor) · smoothstep(−0.25, 0.3, fbm)"
+    }
   },
-  "limits": "floor at 1 removes the shading. scale under ~80 u reads as blotches, not form.",
-  "implementation": "A two-octave noise field gives each dot a keep probability between the floor and 1."
+  "limits": "wisp_mix at 0 leaves only the depth ramp and the banks read as flat steps. stretch above ~6 turns wisps into stripes.",
+  "implementation": "Rim banks: tone = floor + (1 − floor)·exp(−depth / rim depth). Body banks: tone = smoothstep(depth) × wisp, where wisp is three-octave noise sampled in coordinates turned to the bank and stretched along it."
 };
 export const params={
-  "scale_u": 260,
-  "floor": 0.45,
-  "seed": 9,
-  "density": "floor + (1 − floor) · smoothstep(−0.25, 0.3, fbm)"
+  "rim_depth": 0.9,
+  "rim_floor": 0.5,
+  "body_from": 0.12,
+  "body_to": 1.1,
+  "wisp_u": 150,
+  "stretch": 3.2,
+  "contrast": 0.2,
+  "wisp_mix": 0.85,
+  "gain": 1,
+  "seed": 9
 };
 export const A={};
 A.perlin=seed=>{ const r=A.rng(seed); const perm=new Uint8Array(512); const p=[]; for(let i=0;i<256;i++)p[i]=i; for(let i=255;i>0;i--){ const j=(r()*(i+1))|0; const t=p[i]; p[i]=p[j]; p[j]=t; } for(let i=0;i<512;i++)perm[i]=p[i&255];
@@ -60,5 +118,8 @@ A.perlin=seed=>{ const r=A.rng(seed); const perm=new Uint8Array(512); const p=[]
 A.rng=seed=>{ let s=seed|0; return ()=>{ s=s+0x6D2B79F5|0; let t=Math.imul(s^s>>>15,1|s); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; };
 A.sstep=(a,b,x)=>{ const t=A.clamp((x-a)/(b-a),0,1); return t*t*(3-2*t); };
 A.clamp=(v,a,b)=>v<a?a:v>b?b:v;
-export const make=(P,u,A)=>{ const n=A.perlin(P.seed); const s=P.scale_u*u; return { keep:(x,y)=>P.floor+(1-P.floor)*A.sstep(-0.25,0.3,n.fbm(x/s,y/s,2)) }; };
+export const make=(P,u,A)=>{ const n=A.perlin(P.seed); const sy=P.wisp_u*u, sx=sy*P.stretch;
+      return { tone:(b,depth,x,y)=>{ const a=x*b.dir[0]+y*b.dir[1], c=-x*b.dir[1]+y*b.dir[0]; const w=A.sstep(-P.contrast,P.contrast,n.fbm(a/sx+3.1,c/sy+7.7,3)); const m=1-P.wisp_mix+P.wisp_mix*w; let t;
+          if(b.shade==='rim'){ const e=depth<0?1:Math.exp(-depth/(P.rim_depth*b.Rb)); t=(P.rim_floor+(1-P.rim_floor)*e)*(0.55+0.45*m); } else t=A.sstep(P.body_from*b.Rb,P.body_to*b.Rb,depth)*m;
+          t*=P.gain; return t<0?0:(t>1?1:t); } }; };
 export default make;

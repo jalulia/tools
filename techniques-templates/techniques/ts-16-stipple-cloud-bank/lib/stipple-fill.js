@@ -1,14 +1,14 @@
-/* stipple-fill · Jittered dot layer — TS-16 Stipple bank and dot burst · Techniques & Templates · ø co.
+/* stipple-fill · Jittered dot lattice — TS-16 Stipple bank and dot burst · Techniques & Templates · ø co.
    Lifted from techniques/ts-16-stipple-cloud-bank/study.js by _build/build.mjs — do not edit here. Self-contained: every helper it uses is inlined.
    make(P,u,A) — P: params as plain values (defaults below; override any), u: device px per design unit
    (canvas.width / 1000), A: the helpers, V: variant colors (hex strings) where the signature asks for them.
-   Limits: radius above ~0.45 × pitch merges dots into a tint. jitter 0 shows the grid as rows. Below 3.5 u pitch the layer costs over 100 k dots per sheet. */
-export const id="stipple-fill", name="Jittered dot layer", code="TS-16", entry="ts-16-stipple-cloud-bank";
+   Limits: radius above ~0.45 × pitch merges dots into a tint. jitter 0 shows the lattice as rows. Below 3 u pitch the sheet carries over 150 k dots. */
+export const id="stipple-fill", name="Jittered dot lattice", code="TS-16", entry="ts-16-stipple-cloud-bank";
 export const atoms=["stipple","jittered-grid","near-tone"];
 export const spec={
   "id": "stipple-fill",
   "short": "STIP",
-  "name": "Jittered dot layer",
+  "name": "Jittered dot lattice",
   "layer": 2,
   "pass": 3,
   "atoms": [
@@ -18,18 +18,18 @@ export const spec={
   ],
   "params": {
     "pitch_u": {
-      "value": 6.4,
+      "value": 5,
       "range": [
-        3.5,
+        3,
         16
       ],
       "unit": "u"
     },
     "radius_u": {
-      "value": 1.5,
+      "value": 1.2,
       "range": [
-        0.6,
-        3.5
+        0.5,
+        4
       ],
       "unit": "u"
     },
@@ -41,6 +41,14 @@ export const spec={
       ],
       "note": "share of the pitch"
     },
+    "swell": {
+      "value": 0.6,
+      "range": [
+        0,
+        1.5
+      ],
+      "note": "a dot grows with tone, up to radius × (1 + swell)"
+    },
     "seed": {
       "value": 161,
       "range": [
@@ -49,19 +57,20 @@ export const spec={
       ],
       "step": 1
     },
-    "tone": "one dot color per fill, close to the fill; the sky carries no dot layer"
+    "rows": "alternate rows are offset by half the pitch"
   },
-  "limits": "radius above ~0.45 × pitch merges dots into a tint. jitter 0 shows the grid as rows. Below 3.5 u pitch the layer costs over 100 k dots per sheet.",
-  "implementation": "One dot per grid cell, moved by up to 0.42 of the pitch; the fill under the dot center picks the dot color."
+  "limits": "radius above ~0.45 × pitch merges dots into a tint. jitter 0 shows the lattice as rows. Below 3 u pitch the sheet carries over 150 k dots.",
+  "implementation": "One dot per lattice cell, moved by up to 0.42 of the pitch, with one random threshold. A dot is drawn when its threshold is under the tone at its position."
 };
 export const params={
-  "pitch_u": 6.4,
-  "radius_u": 1.5,
+  "pitch_u": 5,
+  "radius_u": 1.2,
   "jitter": 0.42,
+  "swell": 0.6,
   "seed": 161,
-  "tone": "one dot color per fill, close to the fill; the sky carries no dot layer"
+  "rows": "alternate rows are offset by half the pitch"
 };
 export const A={};
 A.rng=seed=>{ let s=seed|0; return ()=>{ s=s+0x6D2B79F5|0; let t=Math.imul(s^s>>>15,1|s); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; };
-export const make=(P,u,A)=>({ r:P.radius_u*u, each:(W,H,put)=>{ const r=A.rng(P.seed); const p=P.pitch_u*u; for(let y=p*0.5;y<H;y+=p)for(let X=p*0.5;X<W;X+=p)put(X+(r()*2-1)*P.jitter*p, y+(r()*2-1)*P.jitter*p, r()); } });
+export const make=(P,u,A)=>({ r:P.radius_u*u, swell:P.swell, each:(W,H,put)=>{ const r=A.rng(P.seed); const p=P.pitch_u*u; let j=0; for(let y=p*0.5;y<H;y+=p*0.866,j++)for(let X=p*0.5+(j&1)*p*0.5;X<W;X+=p)put(X+(r()*2-1)*P.jitter*p,y+(r()*2-1)*P.jitter*p,r()); } });
 export default make;

@@ -8,11 +8,11 @@
       "id": "ref",
       "label": "Five ink",
       "swatches": [
-        "#17DDBE",
-        "#19B5F0",
-        "#F2401C",
-        "#F6C31E",
-        "#E0D3B4"
+        "#0AF2D1",
+        "#0AB9F1",
+        "#EE4A1E",
+        "#F2C234",
+        "#D7D7B6"
       ]
     },
     {
@@ -32,7 +32,7 @@
         "#1E3A8A",
         "#19B5F0",
         "#7FE3D4",
-        "#EEF2F4"
+        "#E6ECEE"
       ]
     },
     {
@@ -42,7 +42,7 @@
         "#F2401C",
         "#F6C31E",
         "#E86AA0",
-        "#F4EFEA"
+        "#F1E6DA"
       ]
     }
   ],
@@ -52,17 +52,19 @@
       735,
       956
     ],
-    "grammar": "a grid of rounded ring cells seen through a lens distortion; five inks placed by region; every tone built from noise-thresholded pixels; plain margin"
+    "grammar": "a grid of rounded cells on a warped sheet; pools of ink that fill cells, outline them or fill the gutters; every tone built from noise-thresholded pixels; plain margin"
   },
   "units": "design units, 1000 = sheet width",
   "palette": {
-    "paper": "#EFEBE7",
-    "stock": "#E0D3B4",
-    "teal": "#17DDBE",
-    "blue": "#19B5F0",
-    "red": "#F2401C",
-    "yellow": "#F6C31E",
-    "pink": "#E86AA0"
+    "paper": "#EFECE6",
+    "stock": "#D7D7B6",
+    "base": "#A0D1C2",
+    "teal": "#0AF2D1",
+    "blue": "#0AB9F1",
+    "red": "#EE4A1E",
+    "yellow": "#F2C234",
+    "pink": "#E877A8",
+    "orange": "#F28A1E"
   },
   "techniques": [
     {
@@ -86,60 +88,150 @@
         },
         "rule": "none"
       },
-      "limits": "Above ~120 u the margin crops the stretched cells at the sheet edge.",
+      "limits": "Above ~120 u the margin crops the stretched band.",
       "implementation": "Flat paper fill; the print sits inset on every side.",
       "module": "lib/paper-margin.js"
     },
     {
-      "id": "lens-warp",
-      "short": "WARP",
-      "name": "Pinch lens",
+      "id": "sheet-pull",
+      "short": "PULL",
+      "name": "Gaussian sheet pulls",
       "layer": 1,
       "pass": 1,
       "atoms": [
         "domain-warp",
-        "radial",
-        "lens"
+        "gaussian",
+        "displacement"
       ],
       "params": {
-        "center_u": [
-          520,
-          700
-        ],
-        "radius_u": {
-          "value": 700,
+        "pitch_u": {
+          "value": 52,
           "range": [
-            200,
-            1600
+            24,
+            160
           ],
           "unit": "u"
         },
-        "k": {
-          "value": 0.85,
+        "turn_deg": {
+          "value": -8,
           "range": [
-            -0.6,
-            3
+            -45,
+            45
           ],
-          "note": "pinch strength; negative bulges"
+          "unit": "°"
         },
-        "stretch_y": {
-          "value": 1.1,
+        "pulls": [
+          {
+            "at": [
+              0.5,
+              0.16
+            ],
+            "radius_u": 310,
+            "vec_u": [
+              0,
+              -235
+            ]
+          },
+          {
+            "at": [
+              0.93,
+              0.3
+            ],
+            "radius_u": 250,
+            "vec_u": [
+              150,
+              -105
+            ]
+          },
+          {
+            "at": [
+              0.04,
+              0.86
+            ],
+            "radius_u": 330,
+            "vec_u": [
+              -215,
+              20
+            ]
+          },
+          {
+            "at": [
+              0.62,
+              1
+            ],
+            "radius_u": 260,
+            "vec_u": [
+              60,
+              120
+            ]
+          }
+        ],
+        "strength": {
+          "value": 1,
           "range": [
-            -0.8,
-            1.6
+            0,
+            1.5
           ],
-          "note": "extra pull above the center"
+          "note": "multiplies every pull vector"
         },
-        "q": "c + d / (1 + k·|d/R|²), with d.y scaled by 1 − stretch_y·clamp(−d.y/R, 0, 1)·0.5"
+        "radius": {
+          "value": 1,
+          "range": [
+            0.5,
+            2
+          ],
+          "note": "multiplies every pull radius"
+        },
+        "swing": {
+          "value": 0,
+          "range": [
+            0,
+            1
+          ],
+          "note": "turns and scales the pulls through one cycle; Motion runs it"
+        },
+        "grab": {
+          "x": {
+            "value": 0.5,
+            "range": [
+              0,
+              1
+            ]
+          },
+          "y": {
+            "value": 0.5,
+            "range": [
+              0,
+              1
+            ]
+          },
+          "pull_u": {
+            "value": 0,
+            "range": [
+              0,
+              320
+            ],
+            "unit": "u",
+            "note": "a fifth pull, away from the sheet center; Live sets it at the pointer"
+          },
+          "radius_u": {
+            "value": 280,
+            "range": [
+              80,
+              600
+            ],
+            "unit": "u"
+          }
+        }
       },
-      "limits": "k below about −0.6 folds the grid over itself inside the sheet. k above ~3 stretches the outer cells past the sheet and they read as bars.",
-      "implementation": "Each pixel is mapped to a sample point pulled toward the lens center by 1/(1 + k·r²); the grid is evaluated at the sample point.",
-      "module": "lib/lens-warp.js"
+      "limits": "A pull folds the sheet when 0.86 × vector length exceeds its radius; at strength 1 the largest ratio is 0.65. Pitch under ~24 u puts a cell below ten pixels and the outline closes.",
+      "implementation": "Each pixel is sampled at its own position minus every pull vector times exp(−d² / r²). The grid is read at the sample point, so the sheet stretches behind a pull and bunches ahead of it.",
+      "module": "lib/sheet-pull.js"
     },
     {
       "id": "ring-cell",
       "short": "CELL",
-      "name": "Ringed rounded cell",
+      "name": "Rounded cell",
       "layer": 1,
       "pass": 1,
       "atoms": [
@@ -148,120 +240,218 @@
         "ring"
       ],
       "params": {
-        "pitch_u": {
-          "value": 64,
-          "range": [
-            28,
-            160
-          ],
-          "unit": "u"
-        },
-        "turn_deg": {
-          "value": 14,
-          "range": [
-            -45,
-            45
-          ],
-          "unit": "°"
-        },
         "roundness": {
-          "value": 2.7,
+          "value": 2.8,
           "range": [
             2,
             8
           ],
-          "note": "superellipse exponent; 2 is a circle"
+          "note": "superellipse exponent; 2 is an ellipse"
         },
-        "outer": {
-          "at": {
-            "value": 0.37,
-            "range": [
-              0.3,
-              0.5
-            ]
-          },
-          "width": {
-            "value": 0.05,
-            "range": [
-              0.02,
-              0.16
-            ]
-          },
-          "grow": {
-            "value": 0.07,
-            "range": [
-              0,
-              0.25
-            ],
-            "note": "added width at full field strength"
-          }
+        "cell_at": {
+          "value": 0.33,
+          "range": [
+            0.2,
+            0.45
+          ],
+          "note": "edge of the solid cell, in cell units"
         },
-        "gutter": {
-          "tint": {
-            "value": 0.6,
-            "range": [
-              0,
-              0.9
-            ],
-            "note": "ink coverage between cells"
-          }
+        "ring_at": {
+          "value": 0.34,
+          "range": [
+            0.1,
+            0.42
+          ]
+        },
+        "ring_width": {
+          "value": 0.1,
+          "range": [
+            0.02,
+            0.24
+          ]
+        },
+        "gutter_at": {
+          "value": 0.43,
+          "range": [
+            0.3,
+            0.55
+          ]
         },
         "edge": {
-          "value": 0.075,
+          "value": 0.04,
           "range": [
             0.01,
-            0.2
+            0.25
           ],
-          "note": "softness of a band edge, in cell units"
-        },
-        "inner": {
-          "at": {
-            "value": 0.2,
-            "range": [
-              0.1,
+          "note": "width over which coverage ramps at every edge"
+        }
+      },
+      "limits": "cell_at above gutter_at removes the stock band between a cell and its gutter. edge above ~0.2 thins every shape to a haze.",
+      "implementation": "The distance from the cell center is a superellipse. Three shapes are read from it: the solid cell, an outline band, and the gutter past it.",
+      "module": "lib/ring-cell.js"
+    },
+    {
+      "id": "ink-pool",
+      "short": "POOL",
+      "name": "Ink pools",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "palette-field",
+        "gaussian",
+        "per-cell"
+      ],
+      "params": {
+        "pools": [
+          {
+            "ink": "base",
+            "mode": "gutter",
+            "at": [
+              0.25,
+              0.25
+            ],
+            "size": 0.42
+          },
+          {
+            "ink": "teal",
+            "mode": "cell",
+            "at": [
+              0.45,
+              0.08
+            ],
+            "size": 0.22
+          },
+          {
+            "ink": "teal",
+            "mode": "cell",
+            "at": [
+              0.45,
+              0.31
+            ],
+            "size": 0.19
+          },
+          {
+            "ink": "red",
+            "mode": "ring",
+            "at": [
+              0.58,
+              0.34
+            ],
+            "size": 0.08
+          },
+          {
+            "ink": "red",
+            "mode": "ring",
+            "at": [
+              0.93,
               0.3
-            ]
-          },
-          "width": {
-            "value": 0.04,
-            "range": [
-              0.01,
-              0.1
-            ]
-          },
-          "share": {
-            "value": 0.7,
-            "range": [
-              0,
-              1
             ],
-            "note": "share of cells that carry it"
+            "size": 0.11
+          },
+          {
+            "ink": "orange",
+            "mode": "ring",
+            "at": [
+              0.95,
+              0.18
+            ],
+            "size": 0.08
+          },
+          {
+            "ink": "yellow",
+            "mode": "ring",
+            "at": [
+              0.88,
+              0.55
+            ],
+            "size": 0.12
+          },
+          {
+            "ink": "yellow",
+            "mode": "ring",
+            "at": [
+              0.9,
+              0.85
+            ],
+            "size": 0.14
+          },
+          {
+            "ink": "blue",
+            "mode": "gutter",
+            "at": [
+              0.52,
+              0.58
+            ],
+            "size": 0.19
+          },
+          {
+            "ink": "red",
+            "mode": "cell",
+            "at": [
+              0.38,
+              0.82
+            ],
+            "size": 0.14
+          },
+          {
+            "ink": "orange",
+            "mode": "cell",
+            "at": [
+              0.08,
+              0.9
+            ],
+            "size": 0.09
+          },
+          {
+            "ink": "pink",
+            "mode": "ring",
+            "at": [
+              0.1,
+              0.42
+            ],
+            "size": 0.1
+          },
+          {
+            "ink": "blue",
+            "mode": "cell",
+            "at": [
+              0.58,
+              0.97
+            ],
+            "size": 0.06
           }
+        ],
+        "gain": {
+          "value": 1,
+          "range": [
+            0,
+            2
+          ],
+          "note": "multiplies every pool"
         },
-        "field": {
-          "sigma_u": {
-            "value": 400,
-            "range": [
-              150,
-              1200
-            ],
-            "unit": "u"
-          },
-          "floor": {
-            "value": 0.1,
-            "range": [
-              0,
-              1
-            ]
-          }
+        "size": {
+          "value": 1,
+          "range": [
+            0.4,
+            2.5
+          ],
+          "note": "multiplies every pool radius"
         },
         "cell_var": {
-          "value": 0.55,
+          "value": 0.25,
           "range": [
             0,
             1
           ],
-          "note": "how much ring strength varies cell to cell"
+          "note": "how much strength varies cell to cell"
+        },
+        "drift": {
+          "value": 0,
+          "range": [
+            0,
+            1
+          ],
+          "note": "moves every pool once around a small loop; Motion runs it"
         },
         "seed": {
           "value": 31,
@@ -272,64 +462,9 @@
           "step": 1
         }
       },
-      "limits": "outer.at + width + grow above ~0.6 closes every gutter and the cells read as holes in a flat tint. Pitch under ~28 u falls below the speckle and the rings vanish.",
-      "implementation": "Inside each cell the distance to the center is measured as a superellipse; two bands of that distance carry ink and the space past 0.45 carries a lighter tint. Both strengthen with a gaussian field centered on the lens.",
-      "module": "lib/ring-cell.js"
-    },
-    {
-      "id": "hue-field",
-      "short": "HUE",
-      "name": "Anchored ink regions",
-      "layer": 1,
-      "pass": 1,
-      "atoms": [
-        "palette-field",
-        "per-cell"
-      ],
-      "params": {
-        "anchors_u": [
-          [
-            480,
-            130
-          ],
-          [
-            520,
-            640
-          ],
-          [
-            760,
-            1040
-          ],
-          [
-            60,
-            860
-          ],
-          [
-            960,
-            420
-          ]
-        ],
-        "sharpness": {
-          "value": 3,
-          "range": [
-            1,
-            8
-          ],
-          "note": "higher gives harder region borders"
-        },
-        "mix": {
-          "value": 0.38,
-          "range": [
-            0,
-            0.5
-          ],
-          "note": "chance that a cell takes its second-nearest ink"
-        },
-        "inner": "the inner ring takes the next ink in the list"
-      },
-      "limits": "sharpness under ~1.5 mixes every region and no ink dominates anywhere. mix above ~0.4 reads as random color.",
-      "implementation": "Five anchor points carry one ink each. A cell takes the ink of its nearest anchor, or with up to 30 % chance the second nearest.",
-      "module": "lib/hue-field.js"
+      "limits": "size above ~2 merges the pools into one field and no region reads. gain under ~0.4 leaves only the stray pixels.",
+      "implementation": "Each pool has an ink, a center, a gaussian radius and a mode. Its strength is 2.4 × the gaussian, read per pixel and clipped at 1, so the middle of a pool is solid; the mode says which shape of the cell it colors.",
+      "module": "lib/ink-pool.js"
     },
     {
       "id": "stochastic-speckle",
@@ -344,7 +479,7 @@
       ],
       "params": {
         "gain": {
-          "value": 0.82,
+          "value": 0.92,
           "range": [
             0.3,
             1
@@ -352,27 +487,28 @@
           "note": "highest ink coverage"
         },
         "stray": {
-          "value": 0.15,
+          "value": 0.12,
           "range": [
             0,
-            0.3
+            0.35
           ],
-          "note": "share of stock pixels that take an ink"
+          "note": "share of pixels near a pool that take its ink regardless"
         },
         "stock_noise": {
-          "value": 0.1,
+          "value": 0.08,
           "range": [
             0,
-            0.2
+            0.25
           ]
         },
         "soften_px": {
-          "value": 0.8,
+          "value": 0,
           "range": [
             0,
             3
           ],
-          "unit": "px"
+          "unit": "px",
+          "note": "blur after printing; 0 keeps single pixels"
         },
         "seed": {
           "value": 211,
@@ -383,20 +519,20 @@
           "step": 1
         }
       },
-      "limits": "stray above ~0.2 lifts the stock to a tint and the rings lose contrast. soften above ~1.5 px turns the speckle into tone.",
-      "implementation": "Per pixel: ink if a random number is under the coverage, else stock; a share of stock pixels take a random ink. A 0.8 px blur follows.",
+      "limits": "stray above ~0.25 lifts the stock to a tint. Any soften above 0 turns the pixels into tone and the print reads as blurred.",
+      "implementation": "Per pixel: ink if a random number is under the coverage, with the ink drawn in proportion to each pool’s share; otherwise stock, or a stray ink pixel.",
       "module": "lib/stochastic-speckle.js"
     }
   ],
   "pass_order": [
     "margin · paper",
-    "warp · pixel to sample point",
-    "cells · two ring bands per cell, ink by region",
-    "print · noise threshold per pixel, stray ink on stock",
-    "soften · 0.8 px blur"
+    "pulls · pixel to sample point",
+    "cells · solid, outline and gutter coverage",
+    "pools · strength per pixel, ink by share",
+    "print · one ink or stock per pixel"
   ],
   "notes": [
-    "Measured on ref.png: cell pitch ≈ 47 px at the center (64 u); margin ≈ 25 px (34 u); grain std ≈ 24/255 on the stock.",
-    "The subject is new: lens center, grid turn and ink regions differ from the reference."
+    "Measured on ref.png: stock (215,215,182); pale tint (160,209,194); blue (10,185,241); teal (10,242,209); cell pitch ≈ 38 px at the center (52 u); tallest cells ≈ 110 px; margin ≈ 25 px.",
+    "The subject is new: the pulls and pools are a mirror of the reference layout."
   ]
 }

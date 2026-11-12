@@ -8,10 +8,10 @@
       "id": "ref",
       "label": "Sky",
       "swatches": [
-        "#5E9BCB",
-        "#EDE9DA",
-        "#0E1418",
-        "#F3D2BD"
+        "#6298C1",
+        "#FAF9EF",
+        "#05070B",
+        "#FCEFDE"
       ]
     },
     {
@@ -51,15 +51,15 @@
       736,
       1308
     ],
-    "grammar": "flat color areas with scalloped edges; one layer of small dots per area in a near tone; a sunburst made only of dots; fine sheet grain"
+    "grammar": "flat color areas with scalloped edges, shaded only by the density of small dots in a near tone; a sunburst made of the same dots; canvas weave"
   },
-  "units": "design units, 1000 = sheet width",
+  "units": "design units, 1000 = sheet width; the plate is 1000 × 1200",
   "palette": {
-    "sky": "#5E9BCB",
-    "pale": "#EDE9DA",
-    "dark": "#0E1418",
-    "warm": "#F3D2BD",
-    "ray": "#F4F6F2"
+    "sky": "#6298C1",
+    "pale": "#FAF9EF",
+    "dark": "#05070B",
+    "warm": "#FCEFDE",
+    "ray": "#F4F5EE"
   },
   "techniques": [
     {
@@ -77,54 +77,58 @@
         "banks": [
           {
             "fill": "warm",
+            "shade": "body",
             "from": [
-              1090,
-              520
+              -120,
+              500
             ],
             "to": [
-              430,
-              1300
+              360,
+              1010
             ],
-            "R": 104,
+            "R": 96,
             "seed": 11
           },
           {
             "fill": "dark",
+            "shade": "rim",
             "from": [
-              1100,
-              760
+              1120,
+              380
             ],
             "to": [
-              330,
-              1560
+              590,
+              1010
             ],
-            "R": 96,
+            "R": 104,
             "seed": 23
           },
           {
             "fill": "pale",
+            "shade": "body",
             "from": [
-              -90,
-              1010
+              -130,
+              790
             ],
             "to": [
-              1120,
-              1640
+              1130,
+              930
             ],
-            "R": 128,
+            "R": 132,
             "seed": 37
           },
           {
             "fill": "dark",
+            "shade": "rim",
             "from": [
-              -100,
-              1330
+              -130,
+              1130
             ],
             "to": [
-              640,
-              1880
+              1130,
+              1040
             ],
-            "R": 92,
+            "R": 100,
             "seed": 51
           }
         ],
@@ -137,7 +141,7 @@
           "note": "multiplies every lobe radius"
         },
         "R_var": {
-          "value": 0.3,
+          "value": 0.35,
           "range": [
             0,
             0.6
@@ -151,16 +155,24 @@
             1.9
           ],
           "note": "lobe centers sit this many radii apart"
+        },
+        "child": {
+          "value": 0.55,
+          "range": [
+            0,
+            1
+          ],
+          "note": "chance that a lobe carries a smaller lobe on its rim"
         }
       },
       "limits": "spacing above ~1.9 opens gaps between lobes and the edge reads as beads. R_var above ~0.6 makes single lobes swallow their neighbors.",
-      "implementation": "Each bank is a row of circles along a spine from one point to another, filled together with the polygon under the spine; later banks cover earlier ones.",
+      "implementation": "A bank is a row of circles along a spine plus the area under the spine. The depth of a point is its distance inside the nearest lobe; the shading reads that depth.",
       "module": "lib/scallop-bank.js"
     },
     {
       "id": "stipple-fill",
       "short": "STIP",
-      "name": "Jittered dot layer",
+      "name": "Jittered dot lattice",
       "layer": 2,
       "pass": 3,
       "atoms": [
@@ -170,18 +182,18 @@
       ],
       "params": {
         "pitch_u": {
-          "value": 6.4,
+          "value": 5,
           "range": [
-            3.5,
+            3,
             16
           ],
           "unit": "u"
         },
         "radius_u": {
-          "value": 1.5,
+          "value": 1.2,
           "range": [
-            0.6,
-            3.5
+            0.5,
+            4
           ],
           "unit": "u"
         },
@@ -193,6 +205,14 @@
           ],
           "note": "share of the pitch"
         },
+        "swell": {
+          "value": 0.6,
+          "range": [
+            0,
+            1.5
+          ],
+          "note": "a dot grows with tone, up to radius × (1 + swell)"
+        },
         "seed": {
           "value": 161,
           "range": [
@@ -201,38 +221,91 @@
           ],
           "step": 1
         },
-        "tone": "one dot color per fill, close to the fill; the sky carries no dot layer"
+        "rows": "alternate rows are offset by half the pitch"
       },
-      "limits": "radius above ~0.45 × pitch merges dots into a tint. jitter 0 shows the grid as rows. Below 3.5 u pitch the layer costs over 100 k dots per sheet.",
-      "implementation": "One dot per grid cell, moved by up to 0.42 of the pitch; the fill under the dot center picks the dot color.",
+      "limits": "radius above ~0.45 × pitch merges dots into a tint. jitter 0 shows the lattice as rows. Below 3 u pitch the sheet carries over 150 k dots.",
+      "implementation": "One dot per lattice cell, moved by up to 0.42 of the pitch, with one random threshold. A dot is drawn when its threshold is under the tone at its position.",
       "module": "lib/stipple-fill.js"
     },
     {
       "id": "shade-field",
       "short": "SHAD",
-      "name": "Density shading",
+      "name": "Tone by depth and wisp",
       "layer": 2,
-      "pass": 3,
+      "pass": 2,
       "atoms": [
         "noise-field",
-        "density"
+        "density",
+        "edge-distance"
       ],
       "params": {
-        "scale_u": {
-          "value": 260,
+        "rim_depth": {
+          "value": 0.9,
           "range": [
-            80,
-            900
+            0.2,
+            3
           ],
-          "unit": "u"
+          "note": "rim falloff, in lobe radii"
         },
-        "floor": {
-          "value": 0.45,
+        "rim_floor": {
+          "value": 0.5,
           "range": [
             0,
             1
           ],
-          "note": "lowest share of dots kept"
+          "note": "tone left deep inside a rim bank"
+        },
+        "body_from": {
+          "value": 0.12,
+          "range": [
+            0,
+            1
+          ],
+          "note": "depth where a body bank starts to take tone, in lobe radii"
+        },
+        "body_to": {
+          "value": 1.1,
+          "range": [
+            0.3,
+            3
+          ]
+        },
+        "wisp_u": {
+          "value": 150,
+          "range": [
+            40,
+            600
+          ],
+          "unit": "u"
+        },
+        "stretch": {
+          "value": 3.2,
+          "range": [
+            1,
+            8
+          ],
+          "note": "wisp length over width"
+        },
+        "contrast": {
+          "value": 0.2,
+          "range": [
+            0.05,
+            0.6
+          ]
+        },
+        "wisp_mix": {
+          "value": 0.85,
+          "range": [
+            0,
+            1
+          ]
+        },
+        "gain": {
+          "value": 1,
+          "range": [
+            0,
+            1.5
+          ]
         },
         "seed": {
           "value": 9,
@@ -241,31 +314,93 @@
             9999
           ],
           "step": 1
-        },
-        "density": "floor + (1 − floor) · smoothstep(−0.25, 0.3, fbm)"
+        }
       },
-      "limits": "floor at 1 removes the shading. scale under ~80 u reads as blotches, not form.",
-      "implementation": "A two-octave noise field gives each dot a keep probability between the floor and 1.",
+      "limits": "wisp_mix at 0 leaves only the depth ramp and the banks read as flat steps. stretch above ~6 turns wisps into stripes.",
+      "implementation": "Rim banks: tone = floor + (1 − floor)·exp(−depth / rim depth). Body banks: tone = smoothstep(depth) × wisp, where wisp is three-octave noise sampled in coordinates turned to the bank and stretched along it.",
       "module": "lib/shade-field.js"
+    },
+    {
+      "id": "grain-wash",
+      "short": "WASH",
+      "name": "Wash from the tone field",
+      "layer": 1,
+      "pass": 2,
+      "atoms": [
+        "stochastic-gradient",
+        "clip",
+        "grain"
+      ],
+      "params": {
+        "amount": {
+          "value": 0.5,
+          "range": [
+            0,
+            1
+          ]
+        },
+        "grain": {
+          "value": 1,
+          "range": [
+            0,
+            1
+          ],
+          "note": "1 = single on/off pixels; 0 = a smooth gradient"
+        },
+        "res_div": {
+          "value": 4,
+          "range": [
+            2,
+            8
+          ],
+          "step": 1,
+          "note": "the tone field is sampled at 1/res_div size"
+        },
+        "seed": {
+          "value": 13,
+          "range": [
+            1,
+            9999
+          ],
+          "step": 1
+        }
+      },
+      "limits": "At amount 1 the wash hides the dots on light banks. grain at 0 gives a smooth gradient, which reads as blur beside the dots.",
+      "implementation": "The tone field is sampled at quarter size. Each pixel of the bank takes the wash color with a chance equal to tone × amount, so the gradient is made of single pixels.",
+      "module": "lib/grain-wash.js"
     },
     {
       "id": "dot-burst",
       "short": "RAYS",
-      "name": "Dot sunburst",
-      "layer": 1,
-      "pass": 2,
+      "name": "Burst tone field",
+      "layer": 2,
+      "pass": 3,
       "atoms": [
         "radial",
-        "dot-stream",
+        "taper",
         "falloff"
       ],
       "params": {
-        "center_u": [
-          470,
-          800
-        ],
+        "center": {
+          "x": {
+            "value": 480,
+            "range": [
+              0,
+              1000
+            ],
+            "unit": "u"
+          },
+          "y": {
+            "value": 760,
+            "range": [
+              0,
+              1200
+            ],
+            "unit": "u"
+          }
+        },
         "rays": {
-          "value": 30,
+          "value": 26,
           "range": [
             6,
             60
@@ -273,9 +408,16 @@
           "step": 1
         },
         "fan_deg": [
-          -172,
-          -8
+          -200,
+          20
         ],
+        "jitter": {
+          "value": 0.7,
+          "range": [
+            0,
+            1
+          ]
+        },
         "length_u": {
           "value": 560,
           "range": [
@@ -292,53 +434,50 @@
           ]
         },
         "root_width_u": {
-          "value": 64,
+          "value": 46,
           "range": [
             6,
             140
           ],
           "unit": "u"
         },
-        "dots_per_ray": {
-          "value": 520,
+        "taper": {
+          "value": 0.8,
           "range": [
-            60,
-            1200
-          ],
-          "step": 1
-        },
-        "core_dots": {
-          "value": 7000,
-          "range": [
-            0,
-            16000
-          ],
-          "step": 1
-        },
-        "core_sigma_u": {
-          "value": 185,
-          "range": [
-            40,
-            300
-          ],
-          "unit": "u"
-        },
-        "dot_u": {
-          "value": 1.5,
-          "range": [
-            0.6,
+            0.2,
             3
+          ]
+        },
+        "core_radius_u": {
+          "value": 250,
+          "range": [
+            0,
+            500
           ],
           "unit": "u"
         },
-        "gap_u": {
-          "value": 5.2,
+        "ray_floor": {
+          "value": 0.35,
           "range": [
             0,
-            10
+            1
           ],
-          "unit": "u",
-          "note": "no two dots closer than this"
+          "note": "tone kept near the tip before the fade"
+        },
+        "turn_deg": {
+          "value": 0,
+          "range": [
+            -180,
+            180
+          ],
+          "unit": "°"
+        },
+        "gain": {
+          "value": 1,
+          "range": [
+            0,
+            1.5
+          ]
         },
         "seed": {
           "value": 77,
@@ -349,36 +488,43 @@
           "step": 1
         }
       },
-      "limits": "Over ~60 rays the streams merge into a disc; root_width above ~140 u does the same. core_dots at 0 leaves the rays unjoined. gap at 0 lets dots pile up and the burst reads as spray, not stipple.",
-      "implementation": "Dots are placed along each ray with a spread that narrows to the tip and a count that thins with distance; a gaussian core sits on the center. A dot is dropped when another already sits within the gap. Dots land only on the sky.",
+      "limits": "Over ~60 rays, or a root width above ~140 u, the rays merge into a disc. core_radius at 0 leaves the rays unjoined.",
+      "implementation": "Tone is the larger of a soft core disc and the nearest ray. A ray is a gaussian across its axis whose width tapers to the tip.",
       "module": "lib/dot-burst.js"
     },
     {
       "id": "paper-tooth",
       "short": "TOOTH",
-      "name": "Sheet grain",
+      "name": "Weave and grain",
       "layer": 3,
       "pass": 4,
       "atoms": [
         "grain",
-        "stock"
+        "stock",
+        "weave"
       ],
       "params": {
         "amp": {
-          "value": 0.035,
+          "value": 0.03,
           "range": [
             0,
             0.12
           ]
         },
-        "pitch_px": {
-          "value": 1,
+        "weave": {
+          "value": 0.025,
           "range": [
-            1,
-            4
+            0,
+            0.12
+          ]
+        },
+        "weave_u": {
+          "value": 3,
+          "range": [
+            2,
+            12
           ],
-          "step": 1,
-          "unit": "px"
+          "unit": "u"
         },
         "seed": {
           "value": 5,
@@ -389,20 +535,20 @@
           "step": 1
         }
       },
-      "limits": "Above ~0.08 the grain competes with the dots.",
-      "implementation": "A mono multiply grain over the finished sheet.",
+      "limits": "Above ~0.08 either one competes with the dots.",
+      "implementation": "Each pixel is multiplied by 1 + grain + weave, where weave is the product of two sine waves at the weave pitch.",
       "module": "lib/paper-tooth.js"
     }
   ],
   "pass_order": [
     "sky · flat fill",
     "banks · scalloped fills, back to front",
-    "burst · dot streams and core on the sky",
-    "dots · one layer per fill, thinned by the shade field",
-    "grain · 3.5 % mono"
+    "wash · tone field as soft color, clipped per bank",
+    "dots · one lattice; kept where the threshold is under the tone",
+    "tooth · weave and grain"
   ],
   "notes": [
-    "Measured on ref.png: dot pitch ≈ 4.7 px at 736 px (6.4 u); dot radius ≈ 1.1 px; sky (94,155,203); pale (237,233,218); dark (14,20,24).",
-    "The subject is new: the banks and the burst are placed differently from the reference."
+    "Measured on ref.png: sky (98,152,193); light bank (250,249,239) with dots (169,168,158); dark bank (5,7,11) with dots (122,167,204); dot spacing ≈ 6 px and dot width ≈ 2.5 px at 736 px.",
+    "The plate is 5 : 6, wider than the 9 : 16 reference, and the banks and burst are placed differently."
   ]
 }

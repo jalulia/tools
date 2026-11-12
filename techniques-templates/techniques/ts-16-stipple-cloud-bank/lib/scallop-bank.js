@@ -20,54 +20,58 @@ export const spec={
     "banks": [
       {
         "fill": "warm",
+        "shade": "body",
         "from": [
-          1090,
-          520
+          -120,
+          500
         ],
         "to": [
-          430,
-          1300
+          360,
+          1010
         ],
-        "R": 104,
+        "R": 96,
         "seed": 11
       },
       {
         "fill": "dark",
+        "shade": "rim",
         "from": [
-          1100,
-          760
+          1120,
+          380
         ],
         "to": [
-          330,
-          1560
+          590,
+          1010
         ],
-        "R": 96,
+        "R": 104,
         "seed": 23
       },
       {
         "fill": "pale",
+        "shade": "body",
         "from": [
-          -90,
-          1010
+          -130,
+          790
         ],
         "to": [
-          1120,
-          1640
+          1130,
+          930
         ],
-        "R": 128,
+        "R": 132,
         "seed": 37
       },
       {
         "fill": "dark",
+        "shade": "rim",
         "from": [
-          -100,
-          1330
+          -130,
+          1130
         ],
         "to": [
-          640,
-          1880
+          1130,
+          1040
         ],
-        "R": 92,
+        "R": 100,
         "seed": 51
       }
     ],
@@ -80,7 +84,7 @@ export const spec={
       "note": "multiplies every lobe radius"
     },
     "R_var": {
-      "value": 0.3,
+      "value": 0.35,
       "range": [
         0,
         0.6
@@ -94,73 +98,93 @@ export const spec={
         1.9
       ],
       "note": "lobe centers sit this many radii apart"
+    },
+    "child": {
+      "value": 0.55,
+      "range": [
+        0,
+        1
+      ],
+      "note": "chance that a lobe carries a smaller lobe on its rim"
     }
   },
   "limits": "spacing above ~1.9 opens gaps between lobes and the edge reads as beads. R_var above ~0.6 makes single lobes swallow their neighbors.",
-  "implementation": "Each bank is a row of circles along a spine from one point to another, filled together with the polygon under the spine; later banks cover earlier ones."
+  "implementation": "A bank is a row of circles along a spine plus the area under the spine. The depth of a point is its distance inside the nearest lobe; the shading reads that depth."
 };
 export const params={
   "banks": [
     {
       "fill": "warm",
+      "shade": "body",
       "from": [
-        1090,
-        520
+        -120,
+        500
       ],
       "to": [
-        430,
-        1300
+        360,
+        1010
       ],
-      "R": 104,
+      "R": 96,
       "seed": 11
     },
     {
       "fill": "dark",
+      "shade": "rim",
       "from": [
-        1100,
-        760
+        1120,
+        380
       ],
       "to": [
-        330,
-        1560
+        590,
+        1010
       ],
-      "R": 96,
+      "R": 104,
       "seed": 23
     },
     {
       "fill": "pale",
+      "shade": "body",
       "from": [
-        -90,
-        1010
+        -130,
+        790
       ],
       "to": [
-        1120,
-        1640
+        1130,
+        930
       ],
-      "R": 128,
+      "R": 132,
       "seed": 37
     },
     {
       "fill": "dark",
+      "shade": "rim",
       "from": [
-        -100,
-        1330
+        -130,
+        1130
       ],
       "to": [
-        640,
-        1880
+        1130,
+        1040
       ],
-      "R": 92,
+      "R": 100,
       "seed": 51
     }
   ],
   "R_scale": 1,
-  "R_var": 0.3,
-  "spacing": 1.25
+  "R_var": 0.35,
+  "spacing": 1.25,
+  "child": 0.55
 };
 export const A={};
 A.rng=seed=>{ let s=seed|0; return ()=>{ s=s+0x6D2B79F5|0; let t=Math.imul(s^s>>>15,1|s); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; };
-export const make=(P,u,A)=>({ banks:P.banks.map(b=>{ const r=A.rng(b.seed); const fx=b.from[0]*u, fy=b.from[1]*u, tx=b.to[0]*u, ty=b.to[1]*u; const len=Math.hypot(tx-fx,ty-fy); const lobes=[]; let s=0;
-        while(s<=len){ const R=b.R*P.R_scale*u*(1+(r()*2-1)*P.R_var); lobes.push([fx+(tx-fx)*s/len, fy+(ty-fy)*s/len, R]); s+=R*P.spacing; }
-        return { fill:b.fill, draw:(x,W,H)=>{ x.beginPath(); x.moveTo(fx,fy); x.lineTo(tx,ty); x.lineTo(tx,H+4*u); x.lineTo(fx<0?-4*u:(fx>W?W+4*u:fx),H+4*u); if(fx>W||fx<0)x.lineTo(fx,H+4*u); x.closePath(); x.fill(); for(const l of lobes){ x.beginPath(); x.arc(l[0],l[1],l[2],0,6.2832); x.fill(); } } }; }) });
+export const make=(P,u,A)=>({ banks:P.banks.map(b=>{ const r=A.rng(b.seed); const fx=b.from[0]*u, fy=b.from[1]*u, tx=b.to[0]*u, ty=b.to[1]*u; const len=Math.hypot(tx-fx,ty-fy); const dx=(tx-fx)/len, dy=(ty-fy)/len; let nx=dy, ny=-dx; if(ny>0){ nx=-nx; ny=-ny; }
+        const Rb=b.R*P.R_scale*u; const lobes=[]; let s=0;
+        while(s<=len){ const R=Rb*(1+(r()*2-1)*P.R_var); const cx=fx+dx*s, cy=fy+dy*s; lobes.push([cx,cy,R]);
+          if(r()<P.child){ const a=(r()*2-1)*0.9, ca=Math.cos(a), sa=Math.sin(a); const kx=nx*ca-ny*sa, ky=nx*sa+ny*ca; lobes.push([cx+kx*R*0.78,cy+ky*R*0.78,R*(0.38+0.25*r())]); }
+          s+=R*P.spacing; }
+        const x0=Math.min(fx,tx), x1=Math.max(fx,tx);
+        const depth=(x,y)=>{ let d=-1e9; for(let i=0;i<lobes.length;i++){ const l=lobes[i]; const ex=x-l[0], ey=y-l[1]; const q=l[2]-Math.sqrt(ex*ex+ey*ey); if(q>d)d=q; } if(x>=x0&&x<=x1){ const below=-((x-fx)*nx+(y-fy)*ny); if(below>0){ const q=below+Rb*0.375; if(q>d)d=q; } } return d; };
+        const path=(c,W,H)=>{ const B=Math.max(fy,ty,H)+Rb; const pts=[[fx,fy],[tx,ty],[tx,B],[fx,B]]; let a=0; for(let i=0;i<4;i++){ const p=pts[i], q=pts[(i+1)%4]; a+=p[0]*q[1]-q[0]*p[1]; } if(a<0)pts.reverse();
+          c.beginPath(); c.moveTo(pts[0][0],pts[0][1]); for(let i=1;i<4;i++)c.lineTo(pts[i][0],pts[i][1]); c.closePath(); for(const l of lobes){ c.moveTo(l[0]+l[2],l[1]); c.arc(l[0],l[1],l[2],0,6.2832); } };
+        return { fill:b.fill, shade:b.shade, Rb, dir:[dx,dy], depth, path }; }) });
 export default make;
