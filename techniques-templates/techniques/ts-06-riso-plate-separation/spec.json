@@ -78,8 +78,22 @@
         "axes": "x → (cos30, sin30), y → (−cos30, sin30), z → (0, −1)",
         "letters": {
           "font": "Archivo 900",
-          "size_u": 235,
-          "depth_u": 85
+          "size_u": {
+            "value": 235,
+            "range": [
+              140,
+              300
+            ],
+            "unit": "u"
+          },
+          "depth_u": {
+            "value": 85,
+            "range": [
+              10,
+              180
+            ],
+            "unit": "u"
+          }
         },
         "slabs": {
           "depth_u": [
@@ -89,11 +103,20 @@
           ]
         },
         "bars": {
-          "depth_u": 52
+          "depth_u": {
+            "value": 52,
+            "range": [
+              10,
+              140
+            ],
+            "unit": "u"
+          }
         },
         "probe_px": "(±2,+1)"
       },
-      "implementation": "Each object is a top-face mask drawn in the plane transform; a column scan drops every boundary pixel whose +x or +y probe is empty by the depth, labelling right or left face, top always winning; later objects overwrite earlier ones."
+      "limits": "The drop is a column scan, so a depth past the gap to the object below it paints over that object’s top face. Shapes thinner than 4 px have no interior for the ±2 px probe and get no side faces.",
+      "implementation": "Each object is a top-face mask drawn in the plane transform; a column scan drops every boundary pixel whose +x or +y probe is empty by the depth, labelling right or left face, top always winning; later objects overwrite earlier ones.",
+      "module": "lib/iso-extrude.js"
     },
     {
       "id": "plate-separation",
@@ -111,11 +134,38 @@
         "blue": "right faces + keylines",
         "pink": "left faces + keylines + marble",
         "keyline": "on all three plates",
-        "keyline_u": 3.6,
+        "keyline_u": {
+          "value": 3.6,
+          "range": [
+            1,
+            12
+          ],
+          "unit": "u"
+        },
+        "wash": {
+          "gain": {
+            "value": 0.92,
+            "range": [
+              0,
+              1
+            ],
+            "note": "yellow corner wash at its center"
+          },
+          "radius_w": {
+            "value": 0.9,
+            "range": [
+              0.2,
+              1.6
+            ],
+            "note": "fraction of the sheet width"
+          }
+        },
         "composite": "multiply",
         "max_coverage": 1
       },
-      "implementation": "Face labels become three coverage rasters; each raster is coloured mix(white, ink, coverage) on its own canvas and multiplied onto the stock in plate order."
+      "limits": "Keylines past ~8 u close the counters of the letters. The wash is one radial falloff from the lower-left corner; past radius 1.3 it covers the whole sheet and reads as a yellow stock.",
+      "implementation": "Face labels become three coverage rasters; each raster is coloured mix(white, ink, coverage) on its own canvas and multiplied onto the stock in plate order.",
+      "module": "lib/plate-separation.js"
     },
     {
       "id": "misregister",
@@ -128,21 +178,65 @@
         "offset"
       ],
       "params": {
-        "yellow_u": [
-          -3,
-          2
-        ],
-        "blue_u": [
-          1,
-          -2
-        ],
-        "pink_u": [
-          4,
-          3
-        ],
+        "yellow": {
+          "dx_u": {
+            "value": -3,
+            "range": [
+              -14,
+              14
+            ],
+            "unit": "u"
+          },
+          "dy_u": {
+            "value": 2,
+            "range": [
+              -14,
+              14
+            ],
+            "unit": "u"
+          }
+        },
+        "blue": {
+          "dx_u": {
+            "value": 1,
+            "range": [
+              -14,
+              14
+            ],
+            "unit": "u"
+          },
+          "dy_u": {
+            "value": -2,
+            "range": [
+              -14,
+              14
+            ],
+            "unit": "u"
+          }
+        },
+        "pink": {
+          "dx_u": {
+            "value": 4,
+            "range": [
+              -14,
+              14
+            ],
+            "unit": "u"
+          },
+          "dy_u": {
+            "value": 3,
+            "range": [
+              -14,
+              14
+            ],
+            "unit": "u"
+          }
+        },
         "measured_px": "pink +3,+2 · yellow −2,+1 relative to blue"
       },
-      "implementation": "Each plate canvas is drawn translated by its own vector; the keyline sits on all three plates, so the offsets show as coloured fringes on every edge and the overprint of all three is the near-black line."
+      "limits": "Past ~8 u a plate leaves its keyline and reads as a second drawing. With all three offsets equal there is no fringe and the print reads as flat digital color.",
+      "implementation": "Each plate canvas is drawn translated by its own vector; the keyline sits on all three plates, so the offsets show as coloured fringes on every edge and the overprint of all three is the near-black line.",
+      "module": "lib/misregister.js"
     },
     {
       "id": "ink-grain",
@@ -161,17 +255,90 @@
           0.12,
           0.11
         ],
+        "amp_scale": {
+          "value": 1,
+          "range": [
+            0,
+            3
+          ],
+          "note": "multiplies the three plate amplitudes"
+        },
         "seeds": [
           601,
           602,
           603
         ],
         "pitch_px": 1,
-        "stochastic_thin": "coverage × (1 − 0.4·rand)",
-        "edge_thin": "coverage × (0.72 + 0.28·blur(coverage, 4 u))",
-        "mottle": "0.86 + 0.14·perlin(p / 60 u)"
+        "stochastic": {
+          "value": 0.4,
+          "range": [
+            0,
+            0.95
+          ],
+          "note": "coverage × (1 − stochastic·rand)"
+        },
+        "edge": {
+          "blur_u": {
+            "value": 4,
+            "range": [
+              0,
+              20
+            ],
+            "unit": "u"
+          },
+          "floor": {
+            "value": 0.72,
+            "range": [
+              0.2,
+              1
+            ]
+          },
+          "gain": {
+            "value": 0.28,
+            "range": [
+              0,
+              0.8
+            ]
+          },
+          "formula": "coverage × (floor + gain·blur(coverage, blur_u))"
+        },
+        "mottle": {
+          "base": {
+            "value": 0.86,
+            "range": [
+              0.4,
+              1
+            ]
+          },
+          "depth": {
+            "value": 0.14,
+            "range": [
+              0,
+              0.6
+            ]
+          },
+          "scale_u": {
+            "value": 60,
+            "range": [
+              12,
+              300
+            ],
+            "unit": "u"
+          },
+          "seed": {
+            "value": 611,
+            "range": [
+              1,
+              9999
+            ],
+            "step": 1
+          },
+          "formula": "base + depth·perlin(p / scale_u)"
+        }
       },
-      "implementation": "Before colouring, coverage is multiplied by a blurred copy of itself so fills thin toward their edges, and by a slow perlin mottle; after colouring ART.grain runs mono on the plate and paper pixels are reset to white."
+      "limits": "floor + gain above 1 clips fills to full coverage and the edge thinning disappears. stochastic above ~0.7 breaks the keyline into specks. A mottle scale under ~20 u reads as a second grain, not as uneven inking.",
+      "implementation": "Before colouring, coverage is multiplied by a blurred copy of itself so fills thin toward their edges, and by a slow perlin mottle; after colouring ART.grain runs mono on the plate and paper pixels are reset to white.",
+      "module": "lib/ink-grain.js"
     },
     {
       "id": "marbled-fill",
@@ -185,14 +352,65 @@
         "band"
       ],
       "params": {
-        "scale_u": 30,
-        "octaves": 4,
-        "gain": 0.6,
-        "band_core": "|n| < 0.055 → coverage 0",
-        "band_rim": "|n| < 0.10 → coverage 0.5",
+        "scale_u": {
+          "value": 30,
+          "range": [
+            8,
+            140
+          ],
+          "unit": "u"
+        },
+        "octaves": {
+          "value": 4,
+          "range": [
+            1,
+            6
+          ],
+          "step": 1
+        },
+        "gain": {
+          "value": 0.6,
+          "range": [
+            0.3,
+            0.9
+          ]
+        },
+        "core": {
+          "value": 0.055,
+          "range": [
+            0,
+            0.2
+          ],
+          "note": "|n| below this → paper"
+        },
+        "rim": {
+          "value": 0.1,
+          "range": [
+            0,
+            0.35
+          ],
+          "note": "|n| below this → rim coverage"
+        },
+        "rim_coverage": {
+          "value": 0.5,
+          "range": [
+            0,
+            1
+          ]
+        },
+        "seed": {
+          "value": 610,
+          "range": [
+            1,
+            9999
+          ],
+          "step": 1
+        },
         "elsewhere": 1
       },
-      "implementation": "Inside the top faces the pink plate is full except where an fbm field crosses zero: the core of the band is paper, the rim half-coverage, which reads as swirls."
+      "limits": "core ≥ rim removes the half-tone rim and the veins go hard-edged. Above scale ~100 u a top face holds less than one vein. One octave gives smooth contour lines, not marble.",
+      "implementation": "Inside the top faces the pink plate is full except where an fbm field crosses zero: the core of the band is paper, the rim half-coverage, which reads as swirls.",
+      "module": "lib/marbled-fill.js"
     },
     {
       "id": "grid-stock",
@@ -207,12 +425,34 @@
       ],
       "params": {
         "stock": "#EEEEEC",
-        "vertical_pitch_u": 31.5,
+        "vertical_pitch_u": {
+          "value": 31.5,
+          "range": [
+            12,
+            90
+          ],
+          "unit": "u"
+        },
         "diagonals": "±30° through the same lattice, 18.2 u apart along a vertical",
-        "alpha": 0.16,
-        "width_u": 1
+        "alpha": {
+          "value": 0.16,
+          "range": [
+            0,
+            0.6
+          ]
+        },
+        "width_u": {
+          "value": 1,
+          "range": [
+            0.3,
+            3
+          ],
+          "unit": "u"
+        }
       },
-      "implementation": "Flat gray fill, then verticals and both diagonal families stroked in the grid ink at 16 % before any plate lands."
+      "limits": "Above alpha ~0.35 the grid competes with the keyline. Under a 14 u pitch the three line families merge into a gray tint.",
+      "implementation": "Flat gray fill, then verticals and both diagonal families stroked in the grid ink at 16 % before any plate lands.",
+      "module": "lib/grid-stock.js"
     }
   ],
   "pass_order": [

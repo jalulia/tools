@@ -8,7 +8,7 @@
 <link rel="icon" href="data:,">
 <title>TS-06 — Riso three-plate separation · Techniques &amp; Templates · ø co.</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
-<link rel="stylesheet" href="../../_shared/shell.css?v=202611102327">
+<link rel="stylesheet" href="../../_shared/shell.css?v=202611121633">
 <link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
@@ -18,7 +18,7 @@
   <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>stock</b> · gray fill + iso grid</div></li><li><div><b>labels</b> · top / right / left per object, back to front</div></li><li><div><b>coverage</b> · three rasters from labels, marble cut into pink, wash and strokes into yellow</div></li><li><div><b>grain</b> · edge thinning, mottle, mono noise per plate</div></li><li><div><b>plates</b> · multiply in order yellow, blue, pink, each translated by its register error</div></li></ol></div>
   <div class="meta"><div class="full"><h2>Vocabulary · a technique highlights its reads · an atom finds every use</h2><div class="vocab" id="chips"><div class="vr"><span data-t="iso-extrude" title="Isometric extrusion by outline drop"><b>EXTR</b>iso-extrude</span><span class="at"><a href="../../index.html#techniques?a=isometric">isometric</a><i>·</i><a href="../../index.html#techniques?a=extrude">extrude</a><i>·</i><a href="../../index.html#techniques?a=painter-order">painter-order</a></span></div><div class="vr"><span data-t="plate-separation" title="Three-plate coverage split"><b>PLTE</b>plate-separation</span><span class="at"><a href="../../index.html#techniques?a=separation">separation</a><i>·</i><a href="../../index.html#techniques?a=multiply">multiply</a><i>·</i><a href="../../index.html#techniques?a=coverage">coverage</a></span></div><div class="vr"><span data-t="misregister" title="Per-plate register error"><b>MREG</b>misregister</span><span class="at"><a href="../../index.html#techniques?a=translate">translate</a><i>·</i><a href="../../index.html#techniques?a=offset">offset</a></span></div><div class="vr"><span data-t="ink-grain" title="Per-plate ink grain"><b>GRN</b>ink-grain</span><span class="at"><a href="../../index.html#techniques?a=grain">grain</a><i>·</i><a href="../../index.html#techniques?a=mottle">mottle</a><i>·</i><a href="../../index.html#techniques?a=edge-thinning">edge-thinning</a></span></div><div class="vr"><span data-t="marbled-fill" title="Marbled fill from fbm bands"><b>MARB</b>marbled-fill</span><span class="at"><a href="../../index.html#techniques?a=fbm">fbm</a><i>·</i><a href="../../index.html#techniques?a=threshold">threshold</a><i>·</i><a href="../../index.html#techniques?a=band">band</a></span></div><div class="vr"><span data-t="grid-stock" title="Isometric grid stock"><b>STCK</b>grid-stock</span><span class="at"><a href="../../index.html#techniques?a=stock">stock</a><i>·</i><a href="../../index.html#techniques?a=grid">grid</a><i>·</i><a href="../../index.html#techniques?a=isometric">isometric</a></span></div></div></div>
   <div><h2>Reference</h2><div class="ro">Reference 06 · risograph print, three plates on grid stock, 1080 × 1080</div></div><div><h2>Study</h2><div class="nm">Riso three-plate separation</div><div class="ro">TS-06 · Techniques · 6 / 15</div></div></div>
-  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>iso-extrude</b> · Isometric extrusion by outline drop — Each object is a top-face mask drawn in the plane transform; a column scan drops every boundary pixel whose +x or +y probe is empty by the depth, labelling right or left face, top always winning; later objects overwrite earlier ones.</div></li><li><div><b>plate-separation</b> · Three-plate coverage split — Face labels become three coverage rasters; each raster is coloured mix(white, ink, coverage) on its own canvas and multiplied onto the stock in plate order.</div></li><li><div><b>misregister</b> · Per-plate register error — Each plate canvas is drawn translated by its own vector; the keyline sits on all three plates, so the offsets show as coloured fringes on every edge and the overprint of all three is the near-black line.</div></li><li><div><b>ink-grain</b> · Per-plate ink grain — Before colouring, coverage is multiplied by a blurred copy of itself so fills thin toward their edges, and by a slow perlin mottle; after colouring ART.grain runs mono on the plate and paper pixels are reset to white.</div></li><li><div><b>marbled-fill</b> · Marbled fill from fbm bands — Inside the top faces the pink plate is full except where an fbm field crosses zero: the core of the band is paper, the rim half-coverage, which reads as swirls.</div></li><li><div><b>grid-stock</b> · Isometric grid stock — Flat gray fill, then verticals and both diagonal families stroked in the grid ink at 16 % before any plate lands.</div></li></ol></div>
+  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>iso-extrude</b> · Isometric extrusion by outline drop — Each object is a top-face mask drawn in the plane transform; a column scan drops every boundary pixel whose +x or +y probe is empty by the depth, labelling right or left face, top always winning; later objects overwrite earlier ones. <span class="ro">Limits · The drop is a column scan, so a depth past the gap to the object below it paints over that object’s top face. Shapes thinner than 4 px have no interior for the ±2 px probe and get no side faces.</span> <a href="lib/iso-extrude.js">lib/iso-extrude.js</a></div></li><li><div><b>plate-separation</b> · Three-plate coverage split — Face labels become three coverage rasters; each raster is coloured mix(white, ink, coverage) on its own canvas and multiplied onto the stock in plate order. <span class="ro">Limits · Keylines past ~8 u close the counters of the letters. The wash is one radial falloff from the lower-left corner; past radius 1.3 it covers the whole sheet and reads as a yellow stock.</span> <a href="lib/plate-separation.js">lib/plate-separation.js</a></div></li><li><div><b>misregister</b> · Per-plate register error — Each plate canvas is drawn translated by its own vector; the keyline sits on all three plates, so the offsets show as coloured fringes on every edge and the overprint of all three is the near-black line. <span class="ro">Limits · Past ~8 u a plate leaves its keyline and reads as a second drawing. With all three offsets equal there is no fringe and the print reads as flat digital color.</span> <a href="lib/misregister.js">lib/misregister.js</a></div></li><li><div><b>ink-grain</b> · Per-plate ink grain — Before colouring, coverage is multiplied by a blurred copy of itself so fills thin toward their edges, and by a slow perlin mottle; after colouring ART.grain runs mono on the plate and paper pixels are reset to white. <span class="ro">Limits · floor + gain above 1 clips fills to full coverage and the edge thinning disappears. stochastic above ~0.7 breaks the keyline into specks. A mottle scale under ~20 u reads as a second grain, not as uneven inking.</span> <a href="lib/ink-grain.js">lib/ink-grain.js</a></div></li><li><div><b>marbled-fill</b> · Marbled fill from fbm bands — Inside the top faces the pink plate is full except where an fbm field crosses zero: the core of the band is paper, the rim half-coverage, which reads as swirls. <span class="ro">Limits · core ≥ rim removes the half-tone rim and the veins go hard-edged. Above scale ~100 u a top face holds less than one vein. One octave gives smooth contour lines, not marble.</span> <a href="lib/marbled-fill.js">lib/marbled-fill.js</a></div></li><li><div><b>grid-stock</b> · Isometric grid stock — Flat gray fill, then verticals and both diagonal families stroked in the grid ink at 16 % before any plate lands. <span class="ro">Limits · Above alpha ~0.35 the grid competes with the keyline. Under a 14 u pitch the three line families merge into a gray tint.</span> <a href="lib/grid-stock.js">lib/grid-stock.js</a></div></li></ol></div>
   <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>PLTE</b> · Top face · yellow plate, pink marble plate over it <span class="ro">u 0.15 · v 0.35 · plate-separation</span></div></li><li><div><b>PLTE</b> · Right face · blue plate only <span class="ro">u 0.35 · v 0.56 · plate-separation</span></div></li><li><div><b>PLTE</b> · Left face · pink plate only <span class="ro">u 0.07 · v 0.44 · plate-separation</span></div></li><li><div><b>MREG</b> · Register error · pink +4,+3 u, yellow −3,+2 u, blue +1,−2 u <span class="ro">u 0.61 · v 0.56 · misregister</span></div></li><li><div><b>MREG</b> · Outline fringe · blue and pink keylines land 6 u apart <span class="ro">u 0.79 · v 0.30 · misregister</span></div></li><li><div><b>MARB</b> · Marble · fbm zero-crossing band, two coverage levels <span class="ro">u 0.31 · v 0.43 · marbled-fill</span></div></li><li><div><b>EXTR</b> · Slab stack · three extrusions, depth 40 / 30 / 24 u <span class="ro">u 0.63 · v 0.15 · iso-extrude</span></div></li><li><div><b>EXTR</b> · Extrusion · top outline dropped 85 u down the z axis <span class="ro">u 0.49 · v 0.64 · iso-extrude</span></div></li><li><div><b>GRN</b> · Ink grain · mono noise amp 0.10, coverage thins at fill edges <span class="ro">u 0.20 · v 0.86 · ink-grain</span></div></li><li><div><b>STCK</b> · Grid stock · 31.5 u verticals, ±30° diagonals, 16 % ink <span class="ro">u 0.90 · v 0.74 · grid-stock</span></div></li></ol></div>
   <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read · <b>M</b> motion</span><span>ø co. · 2026</span></div> {
   &quot;id&quot;: &quot;ts-06-riso-plate-separation&quot;,
@@ -100,8 +100,22 @@
         &quot;axes&quot;: &quot;x → (cos30, sin30), y → (−cos30, sin30), z → (0, −1)&quot;,
         &quot;letters&quot;: {
           &quot;font&quot;: &quot;Archivo 900&quot;,
-          &quot;size_u&quot;: 235,
-          &quot;depth_u&quot;: 85
+          &quot;size_u&quot;: {
+            &quot;value&quot;: 235,
+            &quot;range&quot;: [
+              140,
+              300
+            ],
+            &quot;unit&quot;: &quot;u&quot;
+          },
+          &quot;depth_u&quot;: {
+            &quot;value&quot;: 85,
+            &quot;range&quot;: [
+              10,
+              180
+            ],
+            &quot;unit&quot;: &quot;u&quot;
+          }
         },
         &quot;slabs&quot;: {
           &quot;depth_u&quot;: [
@@ -111,11 +125,20 @@
           ]
         },
         &quot;bars&quot;: {
-          &quot;depth_u&quot;: 52
+          &quot;depth_u&quot;: {
+            &quot;value&quot;: 52,
+            &quot;range&quot;: [
+              10,
+              140
+            ],
+            &quot;unit&quot;: &quot;u&quot;
+          }
         },
         &quot;probe_px&quot;: &quot;(±2,+1)&quot;
       },
-      &quot;implementation&quot;: &quot;Each object is a top-face mask drawn in the plane transform; a column scan drops every boundary pixel whose +x or +y probe is empty by the depth, labelling right or left face, top always winning; later objects overwrite earlier ones.&quot;
+      &quot;limits&quot;: &quot;The drop is a column scan, so a depth past the gap to the object below it paints over that object’s top face. Shapes thinner than 4 px have no interior for the ±2 px probe and get no side faces.&quot;,
+      &quot;implementation&quot;: &quot;Each object is a top-face mask drawn in the plane transform; a column scan drops every boundary pixel whose +x or +y probe is empty by the depth, labelling right or left face, top always winning; later objects overwrite earlier ones.&quot;,
+      &quot;module&quot;: &quot;lib/iso-extrude.js&quot;
     },
     {
       &quot;id&quot;: &quot;plate-separation&quot;,
@@ -133,11 +156,38 @@
         &quot;blue&quot;: &quot;right faces + keylines&quot;,
         &quot;pink&quot;: &quot;left faces + keylines + marble&quot;,
         &quot;keyline&quot;: &quot;on all three plates&quot;,
-        &quot;keyline_u&quot;: 3.6,
+        &quot;keyline_u&quot;: {
+          &quot;value&quot;: 3.6,
+          &quot;range&quot;: [
+            1,
+            12
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        },
+        &quot;wash&quot;: {
+          &quot;gain&quot;: {
+            &quot;value&quot;: 0.92,
+            &quot;range&quot;: [
+              0,
+              1
+            ],
+            &quot;note&quot;: &quot;yellow corner wash at its center&quot;
+          },
+          &quot;radius_w&quot;: {
+            &quot;value&quot;: 0.9,
+            &quot;range&quot;: [
+              0.2,
+              1.6
+            ],
+            &quot;note&quot;: &quot;fraction of the sheet width&quot;
+          }
+        },
         &quot;composite&quot;: &quot;multiply&quot;,
         &quot;max_coverage&quot;: 1
       },
-      &quot;implementation&quot;: &quot;Face labels become three coverage rasters; each raster is coloured mix(white, ink, coverage) on its own canvas and multiplied onto the stock in plate order.&quot;
+      &quot;limits&quot;: &quot;Keylines past ~8 u close the counters of the letters. The wash is one radial falloff from the lower-left corner; past radius 1.3 it covers the whole sheet and reads as a yellow stock.&quot;,
+      &quot;implementation&quot;: &quot;Face labels become three coverage rasters; each raster is coloured mix(white, ink, coverage) on its own canvas and multiplied onto the stock in plate order.&quot;,
+      &quot;module&quot;: &quot;lib/plate-separation.js&quot;
     },
     {
       &quot;id&quot;: &quot;misregister&quot;,
@@ -150,21 +200,65 @@
         &quot;offset&quot;
       ],
       &quot;params&quot;: {
-        &quot;yellow_u&quot;: [
-          -3,
-          2
-        ],
-        &quot;blue_u&quot;: [
-          1,
-          -2
-        ],
-        &quot;pink_u&quot;: [
-          4,
-          3
-        ],
+        &quot;yellow&quot;: {
+          &quot;dx_u&quot;: {
+            &quot;value&quot;: -3,
+            &quot;range&quot;: [
+              -14,
+              14
+            ],
+            &quot;unit&quot;: &quot;u&quot;
+          },
+          &quot;dy_u&quot;: {
+            &quot;value&quot;: 2,
+            &quot;range&quot;: [
+              -14,
+              14
+            ],
+            &quot;unit&quot;: &quot;u&quot;
+          }
+        },
+        &quot;blue&quot;: {
+          &quot;dx_u&quot;: {
+            &quot;value&quot;: 1,
+            &quot;range&quot;: [
+              -14,
+              14
+            ],
+            &quot;unit&quot;: &quot;u&quot;
+          },
+          &quot;dy_u&quot;: {
+            &quot;value&quot;: -2,
+            &quot;range&quot;: [
+              -14,
+              14
+            ],
+            &quot;unit&quot;: &quot;u&quot;
+          }
+        },
+        &quot;pink&quot;: {
+          &quot;dx_u&quot;: {
+            &quot;value&quot;: 4,
+            &quot;range&quot;: [
+              -14,
+              14
+            ],
+            &quot;unit&quot;: &quot;u&quot;
+          },
+          &quot;dy_u&quot;: {
+            &quot;value&quot;: 3,
+            &quot;range&quot;: [
+              -14,
+              14
+            ],
+            &quot;unit&quot;: &quot;u&quot;
+          }
+        },
         &quot;measured_px&quot;: &quot;pink +3,+2 · yellow −2,+1 relative to blue&quot;
       },
-      &quot;implementation&quot;: &quot;Each plate canvas is drawn translated by its own vector; the keyline sits on all three plates, so the offsets show as coloured fringes on every edge and the overprint of all three is the near-black line.&quot;
+      &quot;limits&quot;: &quot;Past ~8 u a plate leaves its keyline and reads as a second drawing. With all three offsets equal there is no fringe and the print reads as flat digital color.&quot;,
+      &quot;implementation&quot;: &quot;Each plate canvas is drawn translated by its own vector; the keyline sits on all three plates, so the offsets show as coloured fringes on every edge and the overprint of all three is the near-black line.&quot;,
+      &quot;module&quot;: &quot;lib/misregister.js&quot;
     },
     {
       &quot;id&quot;: &quot;ink-grain&quot;,
@@ -183,17 +277,90 @@
           0.12,
           0.11
         ],
+        &quot;amp_scale&quot;: {
+          &quot;value&quot;: 1,
+          &quot;range&quot;: [
+            0,
+            3
+          ],
+          &quot;note&quot;: &quot;multiplies the three plate amplitudes&quot;
+        },
         &quot;seeds&quot;: [
           601,
           602,
           603
         ],
         &quot;pitch_px&quot;: 1,
-        &quot;stochastic_thin&quot;: &quot;coverage × (1 − 0.4·rand)&quot;,
-        &quot;edge_thin&quot;: &quot;coverage × (0.72 + 0.28·blur(coverage, 4 u))&quot;,
-        &quot;mottle&quot;: &quot;0.86 + 0.14·perlin(p / 60 u)&quot;
+        &quot;stochastic&quot;: {
+          &quot;value&quot;: 0.4,
+          &quot;range&quot;: [
+            0,
+            0.95
+          ],
+          &quot;note&quot;: &quot;coverage × (1 − stochastic·rand)&quot;
+        },
+        &quot;edge&quot;: {
+          &quot;blur_u&quot;: {
+            &quot;value&quot;: 4,
+            &quot;range&quot;: [
+              0,
+              20
+            ],
+            &quot;unit&quot;: &quot;u&quot;
+          },
+          &quot;floor&quot;: {
+            &quot;value&quot;: 0.72,
+            &quot;range&quot;: [
+              0.2,
+              1
+            ]
+          },
+          &quot;gain&quot;: {
+            &quot;value&quot;: 0.28,
+            &quot;range&quot;: [
+              0,
+              0.8
+            ]
+          },
+          &quot;formula&quot;: &quot;coverage × (floor + gain·blur(coverage, blur_u))&quot;
+        },
+        &quot;mottle&quot;: {
+          &quot;base&quot;: {
+            &quot;value&quot;: 0.86,
+            &quot;range&quot;: [
+              0.4,
+              1
+            ]
+          },
+          &quot;depth&quot;: {
+            &quot;value&quot;: 0.14,
+            &quot;range&quot;: [
+              0,
+              0.6
+            ]
+          },
+          &quot;scale_u&quot;: {
+            &quot;value&quot;: 60,
+            &quot;range&quot;: [
+              12,
+              300
+            ],
+            &quot;unit&quot;: &quot;u&quot;
+          },
+          &quot;seed&quot;: {
+            &quot;value&quot;: 611,
+            &quot;range&quot;: [
+              1,
+              9999
+            ],
+            &quot;step&quot;: 1
+          },
+          &quot;formula&quot;: &quot;base + depth·perlin(p / scale_u)&quot;
+        }
       },
-      &quot;implementation&quot;: &quot;Before colouring, coverage is multiplied by a blurred copy of itself so fills thin toward their edges, and by a slow perlin mottle; after colouring ART.grain runs mono on the plate and paper pixels are reset to white.&quot;
+      &quot;limits&quot;: &quot;floor + gain above 1 clips fills to full coverage and the edge thinning disappears. stochastic above ~0.7 breaks the keyline into specks. A mottle scale under ~20 u reads as a second grain, not as uneven inking.&quot;,
+      &quot;implementation&quot;: &quot;Before colouring, coverage is multiplied by a blurred copy of itself so fills thin toward their edges, and by a slow perlin mottle; after colouring ART.grain runs mono on the plate and paper pixels are reset to white.&quot;,
+      &quot;module&quot;: &quot;lib/ink-grain.js&quot;
     },
     {
       &quot;id&quot;: &quot;marbled-fill&quot;,
@@ -207,14 +374,65 @@
         &quot;band&quot;
       ],
       &quot;params&quot;: {
-        &quot;scale_u&quot;: 30,
-        &quot;octaves&quot;: 4,
-        &quot;gain&quot;: 0.6,
-        &quot;band_core&quot;: &quot;|n| &lt; 0.055 → coverage 0&quot;,
-        &quot;band_rim&quot;: &quot;|n| &lt; 0.10 → coverage 0.5&quot;,
+        &quot;scale_u&quot;: {
+          &quot;value&quot;: 30,
+          &quot;range&quot;: [
+            8,
+            140
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        },
+        &quot;octaves&quot;: {
+          &quot;value&quot;: 4,
+          &quot;range&quot;: [
+            1,
+            6
+          ],
+          &quot;step&quot;: 1
+        },
+        &quot;gain&quot;: {
+          &quot;value&quot;: 0.6,
+          &quot;range&quot;: [
+            0.3,
+            0.9
+          ]
+        },
+        &quot;core&quot;: {
+          &quot;value&quot;: 0.055,
+          &quot;range&quot;: [
+            0,
+            0.2
+          ],
+          &quot;note&quot;: &quot;|n| below this → paper&quot;
+        },
+        &quot;rim&quot;: {
+          &quot;value&quot;: 0.1,
+          &quot;range&quot;: [
+            0,
+            0.35
+          ],
+          &quot;note&quot;: &quot;|n| below this → rim coverage&quot;
+        },
+        &quot;rim_coverage&quot;: {
+          &quot;value&quot;: 0.5,
+          &quot;range&quot;: [
+            0,
+            1
+          ]
+        },
+        &quot;seed&quot;: {
+          &quot;value&quot;: 610,
+          &quot;range&quot;: [
+            1,
+            9999
+          ],
+          &quot;step&quot;: 1
+        },
         &quot;elsewhere&quot;: 1
       },
-      &quot;implementation&quot;: &quot;Inside the top faces the pink plate is full except where an fbm field crosses zero: the core of the band is paper, the rim half-coverage, which reads as swirls.&quot;
+      &quot;limits&quot;: &quot;core ≥ rim removes the half-tone rim and the veins go hard-edged. Above scale ~100 u a top face holds less than one vein. One octave gives smooth contour lines, not marble.&quot;,
+      &quot;implementation&quot;: &quot;Inside the top faces the pink plate is full except where an fbm field crosses zero: the core of the band is paper, the rim half-coverage, which reads as swirls.&quot;,
+      &quot;module&quot;: &quot;lib/marbled-fill.js&quot;
     },
     {
       &quot;id&quot;: &quot;grid-stock&quot;,
@@ -229,12 +447,34 @@
       ],
       &quot;params&quot;: {
         &quot;stock&quot;: &quot;#EEEEEC&quot;,
-        &quot;vertical_pitch_u&quot;: 31.5,
+        &quot;vertical_pitch_u&quot;: {
+          &quot;value&quot;: 31.5,
+          &quot;range&quot;: [
+            12,
+            90
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        },
         &quot;diagonals&quot;: &quot;±30° through the same lattice, 18.2 u apart along a vertical&quot;,
-        &quot;alpha&quot;: 0.16,
-        &quot;width_u&quot;: 1
+        &quot;alpha&quot;: {
+          &quot;value&quot;: 0.16,
+          &quot;range&quot;: [
+            0,
+            0.6
+          ]
+        },
+        &quot;width_u&quot;: {
+          &quot;value&quot;: 1,
+          &quot;range&quot;: [
+            0.3,
+            3
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        }
       },
-      &quot;implementation&quot;: &quot;Flat gray fill, then verticals and both diagonal families stroked in the grid ink at 16 % before any plate lands.&quot;
+      &quot;limits&quot;: &quot;Above alpha ~0.35 the grid competes with the keyline. Under a 14 u pitch the three line families merge into a gray tint.&quot;,
+      &quot;implementation&quot;: &quot;Flat gray fill, then verticals and both diagonal families stroked in the grid ink at 16 % before any plate lands.&quot;,
+      &quot;module&quot;: &quot;lib/grid-stock.js&quot;
     }
   ],
   &quot;pass_order&quot;: [
@@ -282,11 +522,11 @@
   <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
   <pre id="specpre">{{SPEC}}</pre>
 </aside>
-<script src="../../_shared/entries.js?v=202611102327"></script>
-<script src="../../_shared/vocab.js?v=202611102327"></script>
-<script src="../../_shared/art.js?v=202611102327"></script>
+<script src="../../_shared/entries.js?v=202611121633"></script>
+<script src="../../_shared/vocab.js?v=202611121633"></script>
+<script src="../../_shared/art.js?v=202611121633"></script>
 <script src="ref.js"></script>
 <script src="study.js"></script>
-<script src="../../_shared/shell.js?v=202611102327"></script>
+<script src="../../_shared/shell.js?v=202611121633"></script>
 </body>
 </html>

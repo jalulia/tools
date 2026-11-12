@@ -8,7 +8,7 @@
 <link rel="icon" href="data:,">
 <title>TS-10 — Thermal blob field · Techniques &amp; Templates · ø co.</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
-<link rel="stylesheet" href="../../_shared/shell.css?v=202611102327">
+<link rel="stylesheet" href="../../_shared/shell.css?v=202611121633">
 <link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
@@ -18,7 +18,7 @@
   <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>field</b> · four blobs white on black at 1/3 res, blur σ 46 u</div></li><li><div><b>upscale</b> · field to device res</div></li><li><div><b>map</b> · LUT[field] per pixel (rim stop 0.44)</div></li><li><div><b>tooth</b> · mono grain 0.03, perlin mottle 0.012</div></li><li><div><b>ledger</b> · two rules, caption, two-line label</div></li></ol></div>
   <div class="meta"><div class="full"><h2>Vocabulary · a technique highlights its reads · an atom finds every use</h2><div class="vocab" id="chips"><div class="vr"><span data-t="blob-field" title="Blurred blob field"><b>BLOB</b>blob-field</span><span class="at"><a href="../../index.html#techniques?a=blob">blob</a><i>·</i><a href="../../index.html#techniques?a=fourier-radius">fourier-radius</a><i>·</i><a href="../../index.html#techniques?a=gaussian-blur">gaussian-blur</a></span></div><div class="vr"><span data-t="gradient-map" title="Gradient map"><b>RAMP</b>gradient-map</span><span class="at"><a href="../../index.html#techniques?a=lut">lut</a><i>·</i><a href="../../index.html#techniques?a=gradient-map">gradient-map</a></span></div><div class="vr"><span data-t="rim-stop" title="Dark rim stop"><b>RIM</b>rim-stop</span><span class="at"><a href="../../index.html#techniques?a=lut-stop">lut-stop</a><i>·</i><a href="../../index.html#techniques?a=edge-band">edge-band</a></span></div><div class="vr"><span data-t="paper-tooth" title="Paper tooth"><b>TOOTH</b>paper-tooth</span><span class="at"><a href="../../index.html#techniques?a=grain">grain</a><i>·</i><a href="../../index.html#techniques?a=mottle">mottle</a></span></div><div class="vr"><span data-t="rule-ledger" title="Rules, caption and label"><b>RULE</b>rule-ledger</span><span class="at"><a href="../../index.html#techniques?a=hairline">hairline</a><i>·</i><a href="../../index.html#techniques?a=caption">caption</a><i>·</i><a href="../../index.html#techniques?a=label">label</a></span></div></div></div>
   <div><h2>Reference</h2><div class="ro">Reference 10 · blurred blob background with a dark rim, 1200 × 800</div></div><div><h2>Study</h2><div class="nm">Thermal blob field</div><div class="ro">TS-10 · Techniques · 10 / 15</div></div></div>
-  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>blob-field</b> · Blurred blob field — Four Fourier-radius blobs are filled with a radial white-to-gray gradient on a black canvas (union by lighten) at one-third resolution, blurred with σ = 46 u and read back as a 0..1 luminance field.</div></li><li><div><b>gradient-map</b> · Gradient map — Every pixel of the field is replaced by LUT[field]; the ramp is the only place color enters, so all four colourways share one field.</div></li><li><div><b>rim-stop</b> · Dark rim stop — The darkest stop sits just under the mid-point of the blurred edge, where the profile is steepest, so it occupies few pixels and reads as a drawn outline; the blue halo is the ramp segment just outside it.</div></li><li><div><b>paper-tooth</b> · Paper tooth — Multiplicative mono grain per device pixel, then a low-frequency perlin mottle, both on the whole sheet including the blobs.</div></li><li><div><b>rule-ledger</b> · Rules, caption and label — Two 1 u ink rules across the sheet; the caption is set right-aligned 12 u under the first rule, the two-line studio label under the second.</div></li></ol></div>
+  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>blob-field</b> · Blurred blob field — Four Fourier-radius blobs are filled with a radial white-to-gray gradient on a black canvas (union by lighten) at one-third resolution, blurred with σ = 46 u and read back as a 0..1 luminance field. <span class="ro">Limits · Under σ ~15 u the edge profile is too steep for the ramp and the bands alias. Past σ ~110 u neighboring blobs fuse and the rim stop no longer closes. harmonic_scale above ~2 makes r(θ) cross zero and the outline self-intersects.</span> <a href="lib/blob-field.js">lib/blob-field.js</a></div></li><li><div><b>gradient-map</b> · Gradient map — Every pixel of the field is replaced by LUT[field]; the ramp is the only place color enters, so all four colourways share one field. <span class="ro">Limits · The ramp is read at 256 levels; contrast above ~2 leaves fewer than 6 levels across the rim and it stair-steps. A shift past ±0.15 moves the paper stop into the blobs or the core out of range.</span> <a href="lib/gradient-map.js">lib/gradient-map.js</a></div></li><li><div><b>rim-stop</b> · Dark rim stop — The darkest stop sits just under the mid-point of the blurred edge, where the profile is steepest, so it occupies few pixels and reads as a drawn outline; the blue halo is the ramp segment just outside it. <span class="ro">Limits · from must stay below to, and both inside 0.41–0.53 (the stops on either side). A band wider than ~0.07 reads as a dark fill, not an outline.</span> <a href="lib/rim-stop.js">lib/rim-stop.js</a></div></li><li><div><b>paper-tooth</b> · Paper tooth — Multiplicative mono grain per device pixel, then a low-frequency perlin mottle, both on the whole sheet including the blobs. <span class="ro">Limits · Grain above ~0.08 reads as noise on the paper and breaks the rim. A mottle cell under ~30 u reads as a second grain.</span> <a href="lib/paper-tooth.js">lib/paper-tooth.js</a></div></li><li><div><b>rule-ledger</b> · Rules, caption and label — Two 1 u ink rules across the sheet; the caption is set right-aligned 12 u under the first rule, the two-line studio label under the second. <span class="ro">Limits · Rules under 1 device px are drawn at 1 px. A caption past ~22 u collides with the second rule’s label on a narrow sheet.</span> <a href="lib/rule-ledger.js">lib/rule-ledger.js</a></div></li></ol></div>
   <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>BLOB</b> · Blob 2 · Fourier-radius shape, R 280 u, four harmonics <span class="ro">u 0.22 · v 0.75 · blob-field</span></div></li><li><div><b>BLOB</b> · Blob 1 · center off-sheet above, only its lower edge shows <span class="ro">u 0.33 · v 0.06 · blob-field</span></div></li><li><div><b>BLOB</b> · Blob 3 · merges with blob 2, union before the blur <span class="ro">u 0.72 · v 0.96 · blob-field</span></div></li><li><div><b>RIM</b> · Rim · navy stop at field 0.44, band about 16 u wide <span class="ro">u 0.39 · v 0.55 · rim-stop</span></div></li><li><div><b>RIM</b> · Blue halo · outside the rim, field 0.335–0.41 <span class="ro">u 0.40 · v 0.37 · rim-stop</span></div></li><li><div><b>RAMP</b> · Core · field ≥ 0.9 maps to yellow <span class="ro">u 0.30 · v 0.85 · gradient-map</span></div></li><li><div><b>RAMP</b> · Inside the rim · plum → red → orange over field 0.53–0.70 <span class="ro">u 0.36 · v 0.62 · gradient-map</span></div></li><li><div><b>TOOTH</b> · Paper · mono grain amp 0.03 plus mottle amp 0.012 <span class="ro">u 0.70 · v 0.28 · paper-tooth</span></div></li><li><div><b>RULE</b> · Rule 1 · 1 u ink, v 0.475, full width less 12 u <span class="ro">u 0.55 · v 0.47 · rule-ledger</span></div></li><li><div><b>RULE</b> · Rule 2 and label · caption right-set under rule 1, studio label under rule 2 <span class="ro">u 0.10 · v 0.93 · rule-ledger</span></div></li></ol></div>
   <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>space</b> re-read · <b>M</b> motion</span><span>ø co. · 2026</span></div> {
   &quot;id&quot;: &quot;ts-10-thermal-blob-field&quot;,
@@ -97,17 +97,145 @@
       &quot;params&quot;: {
         &quot;blobs&quot;: 4,
         &quot;radius&quot;: &quot;r(θ) = R·(1 + Σ a_k·cos(k·θ + φ_k)), k = 2..4, a ≤ 0.22&quot;,
-        &quot;R_u&quot;: [
-          250,
-          280,
-          200,
-          150
+        &quot;shapes&quot;: [
+          {
+            &quot;c&quot;: [
+              340,
+              -120
+            ],
+            &quot;R&quot;: 250,
+            &quot;sx&quot;: 1.05,
+            &quot;sy&quot;: 0.7,
+            &quot;h&quot;: [
+              [
+                2,
+                0.08,
+                0.4
+              ],
+              [
+                3,
+                0.1,
+                1.9
+              ],
+              [
+                4,
+                0.05,
+                3.2
+              ]
+            ]
+          },
+          {
+            &quot;c&quot;: [
+              210,
+              610
+            ],
+            &quot;R&quot;: 280,
+            &quot;sx&quot;: 1.15,
+            &quot;sy&quot;: 1,
+            &quot;h&quot;: [
+              [
+                2,
+                0.16,
+                3.14
+              ],
+              [
+                3,
+                0.14,
+                4.71
+              ],
+              [
+                4,
+                0.05,
+                4.4
+              ],
+              [
+                5,
+                0.04,
+                1.2
+              ]
+            ]
+          },
+          {
+            &quot;c&quot;: [
+              630,
+              730
+            ],
+            &quot;R&quot;: 200,
+            &quot;sx&quot;: 1.4,
+            &quot;sy&quot;: 0.62,
+            &quot;h&quot;: [
+              [
+                2,
+                0.1,
+                1.1
+              ],
+              [
+                3,
+                0.08,
+                3
+              ]
+            ]
+          },
+          {
+            &quot;c&quot;: [
+              1090,
+              720
+            ],
+            &quot;R&quot;: 150,
+            &quot;sx&quot;: 1,
+            &quot;sy&quot;: 1,
+            &quot;h&quot;: [
+              [
+                2,
+                0.12,
+                0.2
+              ],
+              [
+                3,
+                0.06,
+                2.2
+              ]
+            ]
+          }
         ],
-        &quot;blur_sigma_u&quot;: 46,
-        &quot;field_res&quot;: &quot;1/3 device px&quot;,
+        &quot;R_scale&quot;: {
+          &quot;value&quot;: 1,
+          &quot;range&quot;: [
+            0.4,
+            1.8
+          ],
+          &quot;note&quot;: &quot;multiplies every blob radius&quot;
+        },
+        &quot;harmonic_scale&quot;: {
+          &quot;value&quot;: 1,
+          &quot;range&quot;: [
+            0,
+            2.5
+          ],
+          &quot;note&quot;: &quot;multiplies every a_k&quot;
+        },
+        &quot;blur_sigma_u&quot;: {
+          &quot;value&quot;: 46,
+          &quot;range&quot;: [
+            6,
+            140
+          ],
+          &quot;unit&quot;: &quot;u&quot;
+        },
+        &quot;res_div&quot;: {
+          &quot;value&quot;: 3,
+          &quot;range&quot;: [
+            1,
+            6
+          ],
+          &quot;step&quot;: 1,
+          &quot;note&quot;: &quot;field resolution = device px / res_div&quot;
+        },
         &quot;fill&quot;: &quot;radial white → 0.78 gray at the shape edge, union by lighten&quot;
       },
-      &quot;implementation&quot;: &quot;Four Fourier-radius blobs are filled with a radial white-to-gray gradient on a black canvas (union by lighten) at one-third resolution, blurred with σ = 46 u and read back as a 0..1 luminance field.&quot;
+      &quot;limits&quot;: &quot;Under σ ~15 u the edge profile is too steep for the ramp and the bands alias. Past σ ~110 u neighboring blobs fuse and the rim stop no longer closes. harmonic_scale above ~2 makes r(θ) cross zero and the outline self-intersects.&quot;,
+      &quot;implementation&quot;: &quot;Four Fourier-radius blobs are filled with a radial white-to-gray gradient on a black canvas (union by lighten) at one-third resolution, blurred with σ = 46 u and read back as a 0..1 luminance field.&quot;,
+      &quot;module&quot;: &quot;lib/blob-field.js&quot;
     },
     {
       &quot;id&quot;: &quot;gradient-map&quot;,
@@ -122,9 +250,27 @@
       &quot;params&quot;: {
         &quot;lut&quot;: &quot;256 entries&quot;,
         &quot;stops_ref&quot;: &quot;0.28 paper · 0.37 blue · 0.41 (53,80,126) · 0.44–0.48 navy · 0.53 plum · 0.64 red · 0.70 orange · 0.82 (245,140,30) · 1.0 yellow&quot;,
-        &quot;measured_edge_px&quot;: &quot;paper→blue 12 · blue→navy 12 · navy 20 · plum→red 25 · red→orange 15 (at 1200 px)&quot;
+        &quot;measured_edge_px&quot;: &quot;paper→blue 12 · blue→navy 12 · navy 20 · plum→red 25 · red→orange 15 (at 1200 px)&quot;,
+        &quot;shift&quot;: {
+          &quot;value&quot;: 0,
+          &quot;range&quot;: [
+            -0.2,
+            0.2
+          ],
+          &quot;note&quot;: &quot;slides the field under the ramp&quot;
+        },
+        &quot;contrast&quot;: {
+          &quot;value&quot;: 1,
+          &quot;range&quot;: [
+            0.5,
+            2.5
+          ],
+          &quot;note&quot;: &quot;scales the field around 0.5 before the ramp&quot;
+        }
       },
-      &quot;implementation&quot;: &quot;Every pixel of the field is replaced by LUT[field]; the ramp is the only place color enters, so all four colourways share one field.&quot;
+      &quot;limits&quot;: &quot;The ramp is read at 256 levels; contrast above ~2 leaves fewer than 6 levels across the rim and it stair-steps. A shift past ±0.15 moves the paper stop into the blobs or the core out of range.&quot;,
+      &quot;implementation&quot;: &quot;Every pixel of the field is replaced by LUT[field]; the ramp is the only place color enters, so all four colourways share one field.&quot;,
+      &quot;module&quot;: &quot;lib/gradient-map.js&quot;
     },
     {
       &quot;id&quot;: &quot;rim-stop&quot;,
@@ -137,13 +283,33 @@
         &quot;edge-band&quot;
       ],
       &quot;params&quot;: {
-        &quot;position&quot;: 0.44,
+        &quot;from&quot;: {
+          &quot;value&quot;: 0.44,
+          &quot;range&quot;: [
+            0.415,
+            0.5
+          ],
+          &quot;note&quot;: &quot;field value where the dark stop starts&quot;
+        },
+        &quot;to&quot;: {
+          &quot;value&quot;: 0.48,
+          &quot;range&quot;: [
+            0.44,
+            0.53
+          ],
+          &quot;note&quot;: &quot;field value where it ends&quot;
+        },
+        &quot;stops_at&quot;: [
+          5,
+          6
+        ],
         &quot;color&quot;: &quot;#160F14&quot;,
-        &quot;width_field&quot;: &quot;0.41 → 0.53&quot;,
         &quot;band_px_ref&quot;: &quot;≈ 20 at 1200 px&quot;,
         &quot;halo&quot;: &quot;blue 0.335–0.41 outside the stop&quot;
       },
-      &quot;implementation&quot;: &quot;The darkest stop sits just under the mid-point of the blurred edge, where the profile is steepest, so it occupies few pixels and reads as a drawn outline; the blue halo is the ramp segment just outside it.&quot;
+      &quot;limits&quot;: &quot;from must stay below to, and both inside 0.41–0.53 (the stops on either side). A band wider than ~0.07 reads as a dark fill, not an outline.&quot;,
+      &quot;implementation&quot;: &quot;The darkest stop sits just under the mid-point of the blurred edge, where the profile is steepest, so it occupies few pixels and reads as a drawn outline; the blue halo is the ramp segment just outside it.&quot;,
+      &quot;module&quot;: &quot;lib/rim-stop.js&quot;
     },
     {
       &quot;id&quot;: &quot;paper-tooth&quot;,
@@ -156,13 +322,48 @@
         &quot;mottle&quot;
       ],
       &quot;params&quot;: {
-        &quot;grain_amp&quot;: 0.03,
+        &quot;grain_amp&quot;: {
+          &quot;value&quot;: 0.03,
+          &quot;range&quot;: [
+            0,
+            0.15
+          ]
+        },
         &quot;pitch_px&quot;: 1,
         &quot;mono&quot;: true,
-        &quot;mottle&quot;: &quot;perlin fbm, 3 octaves, cell 90 u, amp 0.012&quot;,
+        &quot;seed&quot;: {
+          &quot;value&quot;: 1010,
+          &quot;range&quot;: [
+            1,
+            9999
+          ],
+          &quot;step&quot;: 1
+        },
+        &quot;mottle&quot;: {
+          &quot;formula&quot;: &quot;perlin fbm, 3 octaves, overlay&quot;,
+          &quot;cell_u&quot;: {
+            &quot;value&quot;: 90,
+            &quot;range&quot;: [
+              20,
+              400
+            ],
+            &quot;unit&quot;: &quot;u&quot;
+          },
+          &quot;amp&quot;: {
+            &quot;value&quot;: 0.012,
+            &quot;range&quot;: [
+              0,
+              0.08
+            ]
+          },
+          &quot;octaves&quot;: 3,
+          &quot;gain&quot;: 0.55
+        },
         &quot;measured&quot;: &quot;high-pass std 3.4/255 on paper, 5.5/255 in the core&quot;
       },
-      &quot;implementation&quot;: &quot;Multiplicative mono grain per device pixel, then a low-frequency perlin mottle, both on the whole sheet including the blobs.&quot;
+      &quot;limits&quot;: &quot;Grain above ~0.08 reads as noise on the paper and breaks the rim. A mottle cell under ~30 u reads as a second grain.&quot;,
+      &quot;implementation&quot;: &quot;Multiplicative mono grain per device pixel, then a low-frequency perlin mottle, both on the whole sheet including the blobs.&quot;,
+      &quot;module&quot;: &quot;lib/paper-tooth.js&quot;
     },
     {
       &quot;id&quot;: &quot;rule-ledger&quot;,
@@ -181,12 +382,34 @@
             0.475,
             0.925
           ],
-          &quot;inset_u&quot;: 12,
-          &quot;weight_u&quot;: 1,
+          &quot;inset_u&quot;: {
+            &quot;value&quot;: 12,
+            &quot;range&quot;: [
+              0,
+              80
+            ],
+            &quot;unit&quot;: &quot;u&quot;
+          },
+          &quot;weight_u&quot;: {
+            &quot;value&quot;: 1,
+            &quot;range&quot;: [
+              0.5,
+              5
+            ],
+            &quot;unit&quot;: &quot;u&quot;
+          },
           &quot;color&quot;: &quot;#1A1618&quot;
         },
         &quot;caption&quot;: {
-          &quot;font&quot;: &quot;JetBrains Mono 14 u&quot;,
+          &quot;font&quot;: &quot;JetBrains Mono&quot;,
+          &quot;size_u&quot;: {
+            &quot;value&quot;: 14,
+            &quot;range&quot;: [
+              8,
+              26
+            ],
+            &quot;unit&quot;: &quot;u&quot;
+          },
           &quot;align&quot;: &quot;right, under rule 1&quot;,
           &quot;x_u&quot;: 988
         },
@@ -197,7 +420,9 @@
           &quot;under&quot;: &quot;rule 2&quot;
         }
       },
-      &quot;implementation&quot;: &quot;Two 1 u ink rules across the sheet; the caption is set right-aligned 12 u under the first rule, the two-line studio label under the second.&quot;
+      &quot;limits&quot;: &quot;Rules under 1 device px are drawn at 1 px. A caption past ~22 u collides with the second rule’s label on a narrow sheet.&quot;,
+      &quot;implementation&quot;: &quot;Two 1 u ink rules across the sheet; the caption is set right-aligned 12 u under the first rule, the two-line studio label under the second.&quot;,
+      &quot;module&quot;: &quot;lib/rule-ledger.js&quot;
     }
   ],
   &quot;pass_order&quot;: [
@@ -244,11 +469,11 @@
   <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
   <pre id="specpre">{{SPEC}}</pre>
 </aside>
-<script src="../../_shared/entries.js?v=202611102327"></script>
-<script src="../../_shared/vocab.js?v=202611102327"></script>
-<script src="../../_shared/art.js?v=202611102327"></script>
+<script src="../../_shared/entries.js?v=202611121633"></script>
+<script src="../../_shared/vocab.js?v=202611121633"></script>
+<script src="../../_shared/art.js?v=202611121633"></script>
 <script src="ref.js"></script>
 <script src="study.js"></script>
-<script src="../../_shared/shell.js?v=202611102327"></script>
+<script src="../../_shared/shell.js?v=202611121633"></script>
 </body>
 </html>

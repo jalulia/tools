@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-10",
+  "generated": "2026-11-12",
   "note": "file by atom, read by technique — every entry in Techniques & Templates, keyed by technique id",
   "techniques": {
     "ring-screen": {
@@ -283,21 +283,65 @@
           "entry": "ts-06-riso-plate-separation",
           "code": "TS-06",
           "params": {
-            "yellow_u": [
-              -3,
-              2
-            ],
-            "blue_u": [
-              1,
-              -2
-            ],
-            "pink_u": [
-              4,
-              3
-            ],
+            "yellow": {
+              "dx_u": {
+                "value": -3,
+                "range": [
+                  -14,
+                  14
+                ],
+                "unit": "u"
+              },
+              "dy_u": {
+                "value": 2,
+                "range": [
+                  -14,
+                  14
+                ],
+                "unit": "u"
+              }
+            },
+            "blue": {
+              "dx_u": {
+                "value": 1,
+                "range": [
+                  -14,
+                  14
+                ],
+                "unit": "u"
+              },
+              "dy_u": {
+                "value": -2,
+                "range": [
+                  -14,
+                  14
+                ],
+                "unit": "u"
+              }
+            },
+            "pink": {
+              "dx_u": {
+                "value": 4,
+                "range": [
+                  -14,
+                  14
+                ],
+                "unit": "u"
+              },
+              "dy_u": {
+                "value": 3,
+                "range": [
+                  -14,
+                  14
+                ],
+                "unit": "u"
+              }
+            },
             "measured_px": "pink +3,+2 · yellow −2,+1 relative to blue"
           },
-          "implementation": "Each plate canvas is drawn translated by its own vector; the keyline sits on all three plates, so the offsets show as coloured fringes on every edge and the overprint of all three is the near-black line."
+          "implementation": "Each plate canvas is drawn translated by its own vector; the keyline sits on all three plates, so the offsets show as coloured fringes on every edge and the overprint of all three is the near-black line.",
+          "limits": "Past ~8 u a plate leaves its keyline and reads as a second drawing. With all three offsets equal there is no fringe and the print reads as flat digital color.",
+          "module": "techniques/ts-06-riso-plate-separation/lib/misregister.js"
         }
       ]
     },
@@ -781,13 +825,48 @@
           "entry": "ts-10-thermal-blob-field",
           "code": "TS-10",
           "params": {
-            "grain_amp": 0.03,
+            "grain_amp": {
+              "value": 0.03,
+              "range": [
+                0,
+                0.15
+              ]
+            },
             "pitch_px": 1,
             "mono": true,
-            "mottle": "perlin fbm, 3 octaves, cell 90 u, amp 0.012",
+            "seed": {
+              "value": 1010,
+              "range": [
+                1,
+                9999
+              ],
+              "step": 1
+            },
+            "mottle": {
+              "formula": "perlin fbm, 3 octaves, overlay",
+              "cell_u": {
+                "value": 90,
+                "range": [
+                  20,
+                  400
+                ],
+                "unit": "u"
+              },
+              "amp": {
+                "value": 0.012,
+                "range": [
+                  0,
+                  0.08
+                ]
+              },
+              "octaves": 3,
+              "gain": 0.55
+            },
             "measured": "high-pass std 3.4/255 on paper, 5.5/255 in the core"
           },
-          "implementation": "Multiplicative mono grain per device pixel, then a low-frequency perlin mottle, both on the whole sheet including the blobs."
+          "implementation": "Multiplicative mono grain per device pixel, then a low-frequency perlin mottle, both on the whole sheet including the blobs.",
+          "limits": "Grain above ~0.08 reads as noise on the paper and breaks the rim. A mottle cell under ~30 u reads as a second grain.",
+          "module": "techniques/ts-10-thermal-blob-field/lib/paper-tooth.js"
         },
         {
           "entry": "ts-12-perforated-stamp",
@@ -813,8 +892,22 @@
             "axes": "x → (cos30, sin30), y → (−cos30, sin30), z → (0, −1)",
             "letters": {
               "font": "Archivo 900",
-              "size_u": 235,
-              "depth_u": 85
+              "size_u": {
+                "value": 235,
+                "range": [
+                  140,
+                  300
+                ],
+                "unit": "u"
+              },
+              "depth_u": {
+                "value": 85,
+                "range": [
+                  10,
+                  180
+                ],
+                "unit": "u"
+              }
             },
             "slabs": {
               "depth_u": [
@@ -824,11 +917,20 @@
               ]
             },
             "bars": {
-              "depth_u": 52
+              "depth_u": {
+                "value": 52,
+                "range": [
+                  10,
+                  140
+                ],
+                "unit": "u"
+              }
             },
             "probe_px": "(±2,+1)"
           },
-          "implementation": "Each object is a top-face mask drawn in the plane transform; a column scan drops every boundary pixel whose +x or +y probe is empty by the depth, labelling right or left face, top always winning; later objects overwrite earlier ones."
+          "implementation": "Each object is a top-face mask drawn in the plane transform; a column scan drops every boundary pixel whose +x or +y probe is empty by the depth, labelling right or left face, top always winning; later objects overwrite earlier ones.",
+          "limits": "The drop is a column scan, so a depth past the gap to the object below it paints over that object’s top face. Shapes thinner than 4 px have no interior for the ±2 px probe and get no side faces.",
+          "module": "techniques/ts-06-riso-plate-separation/lib/iso-extrude.js"
         }
       ]
     },
@@ -843,11 +945,38 @@
             "blue": "right faces + keylines",
             "pink": "left faces + keylines + marble",
             "keyline": "on all three plates",
-            "keyline_u": 3.6,
+            "keyline_u": {
+              "value": 3.6,
+              "range": [
+                1,
+                12
+              ],
+              "unit": "u"
+            },
+            "wash": {
+              "gain": {
+                "value": 0.92,
+                "range": [
+                  0,
+                  1
+                ],
+                "note": "yellow corner wash at its center"
+              },
+              "radius_w": {
+                "value": 0.9,
+                "range": [
+                  0.2,
+                  1.6
+                ],
+                "note": "fraction of the sheet width"
+              }
+            },
             "composite": "multiply",
             "max_coverage": 1
           },
-          "implementation": "Face labels become three coverage rasters; each raster is coloured mix(white, ink, coverage) on its own canvas and multiplied onto the stock in plate order."
+          "implementation": "Face labels become three coverage rasters; each raster is coloured mix(white, ink, coverage) on its own canvas and multiplied onto the stock in plate order.",
+          "limits": "Keylines past ~8 u close the counters of the letters. The wash is one radial falloff from the lower-left corner; past radius 1.3 it covers the whole sheet and reads as a yellow stock.",
+          "module": "techniques/ts-06-riso-plate-separation/lib/plate-separation.js"
         }
       ]
     },
@@ -863,17 +992,90 @@
               0.12,
               0.11
             ],
+            "amp_scale": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "note": "multiplies the three plate amplitudes"
+            },
             "seeds": [
               601,
               602,
               603
             ],
             "pitch_px": 1,
-            "stochastic_thin": "coverage × (1 − 0.4·rand)",
-            "edge_thin": "coverage × (0.72 + 0.28·blur(coverage, 4 u))",
-            "mottle": "0.86 + 0.14·perlin(p / 60 u)"
+            "stochastic": {
+              "value": 0.4,
+              "range": [
+                0,
+                0.95
+              ],
+              "note": "coverage × (1 − stochastic·rand)"
+            },
+            "edge": {
+              "blur_u": {
+                "value": 4,
+                "range": [
+                  0,
+                  20
+                ],
+                "unit": "u"
+              },
+              "floor": {
+                "value": 0.72,
+                "range": [
+                  0.2,
+                  1
+                ]
+              },
+              "gain": {
+                "value": 0.28,
+                "range": [
+                  0,
+                  0.8
+                ]
+              },
+              "formula": "coverage × (floor + gain·blur(coverage, blur_u))"
+            },
+            "mottle": {
+              "base": {
+                "value": 0.86,
+                "range": [
+                  0.4,
+                  1
+                ]
+              },
+              "depth": {
+                "value": 0.14,
+                "range": [
+                  0,
+                  0.6
+                ]
+              },
+              "scale_u": {
+                "value": 60,
+                "range": [
+                  12,
+                  300
+                ],
+                "unit": "u"
+              },
+              "seed": {
+                "value": 611,
+                "range": [
+                  1,
+                  9999
+                ],
+                "step": 1
+              },
+              "formula": "base + depth·perlin(p / scale_u)"
+            }
           },
-          "implementation": "Before colouring, coverage is multiplied by a blurred copy of itself so fills thin toward their edges, and by a slow perlin mottle; after colouring ART.grain runs mono on the plate and paper pixels are reset to white."
+          "implementation": "Before colouring, coverage is multiplied by a blurred copy of itself so fills thin toward their edges, and by a slow perlin mottle; after colouring ART.grain runs mono on the plate and paper pixels are reset to white.",
+          "limits": "floor + gain above 1 clips fills to full coverage and the edge thinning disappears. stochastic above ~0.7 breaks the keyline into specks. A mottle scale under ~20 u reads as a second grain, not as uneven inking.",
+          "module": "techniques/ts-06-riso-plate-separation/lib/ink-grain.js"
         }
       ]
     },
@@ -884,14 +1086,65 @@
           "entry": "ts-06-riso-plate-separation",
           "code": "TS-06",
           "params": {
-            "scale_u": 30,
-            "octaves": 4,
-            "gain": 0.6,
-            "band_core": "|n| < 0.055 → coverage 0",
-            "band_rim": "|n| < 0.10 → coverage 0.5",
+            "scale_u": {
+              "value": 30,
+              "range": [
+                8,
+                140
+              ],
+              "unit": "u"
+            },
+            "octaves": {
+              "value": 4,
+              "range": [
+                1,
+                6
+              ],
+              "step": 1
+            },
+            "gain": {
+              "value": 0.6,
+              "range": [
+                0.3,
+                0.9
+              ]
+            },
+            "core": {
+              "value": 0.055,
+              "range": [
+                0,
+                0.2
+              ],
+              "note": "|n| below this → paper"
+            },
+            "rim": {
+              "value": 0.1,
+              "range": [
+                0,
+                0.35
+              ],
+              "note": "|n| below this → rim coverage"
+            },
+            "rim_coverage": {
+              "value": 0.5,
+              "range": [
+                0,
+                1
+              ]
+            },
+            "seed": {
+              "value": 610,
+              "range": [
+                1,
+                9999
+              ],
+              "step": 1
+            },
             "elsewhere": 1
           },
-          "implementation": "Inside the top faces the pink plate is full except where an fbm field crosses zero: the core of the band is paper, the rim half-coverage, which reads as swirls."
+          "implementation": "Inside the top faces the pink plate is full except where an fbm field crosses zero: the core of the band is paper, the rim half-coverage, which reads as swirls.",
+          "limits": "core ≥ rim removes the half-tone rim and the veins go hard-edged. Above scale ~100 u a top face holds less than one vein. One octave gives smooth contour lines, not marble.",
+          "module": "techniques/ts-06-riso-plate-separation/lib/marbled-fill.js"
         }
       ]
     },
@@ -903,12 +1156,34 @@
           "code": "TS-06",
           "params": {
             "stock": "#EEEEEC",
-            "vertical_pitch_u": 31.5,
+            "vertical_pitch_u": {
+              "value": 31.5,
+              "range": [
+                12,
+                90
+              ],
+              "unit": "u"
+            },
             "diagonals": "±30° through the same lattice, 18.2 u apart along a vertical",
-            "alpha": 0.16,
-            "width_u": 1
+            "alpha": {
+              "value": 0.16,
+              "range": [
+                0,
+                0.6
+              ]
+            },
+            "width_u": {
+              "value": 1,
+              "range": [
+                0.3,
+                3
+              ],
+              "unit": "u"
+            }
           },
-          "implementation": "Flat gray fill, then verticals and both diagonal families stroked in the grid ink at 16 % before any plate lands."
+          "implementation": "Flat gray fill, then verticals and both diagonal families stroked in the grid ink at 16 % before any plate lands.",
+          "limits": "Above alpha ~0.35 the grid competes with the keyline. Under a 14 u pitch the three line families merge into a gray tint.",
+          "module": "techniques/ts-06-riso-plate-separation/lib/grid-stock.js"
         }
       ]
     },
@@ -978,17 +1253,145 @@
           "params": {
             "blobs": 4,
             "radius": "r(θ) = R·(1 + Σ a_k·cos(k·θ + φ_k)), k = 2..4, a ≤ 0.22",
-            "R_u": [
-              250,
-              280,
-              200,
-              150
+            "shapes": [
+              {
+                "c": [
+                  340,
+                  -120
+                ],
+                "R": 250,
+                "sx": 1.05,
+                "sy": 0.7,
+                "h": [
+                  [
+                    2,
+                    0.08,
+                    0.4
+                  ],
+                  [
+                    3,
+                    0.1,
+                    1.9
+                  ],
+                  [
+                    4,
+                    0.05,
+                    3.2
+                  ]
+                ]
+              },
+              {
+                "c": [
+                  210,
+                  610
+                ],
+                "R": 280,
+                "sx": 1.15,
+                "sy": 1,
+                "h": [
+                  [
+                    2,
+                    0.16,
+                    3.14
+                  ],
+                  [
+                    3,
+                    0.14,
+                    4.71
+                  ],
+                  [
+                    4,
+                    0.05,
+                    4.4
+                  ],
+                  [
+                    5,
+                    0.04,
+                    1.2
+                  ]
+                ]
+              },
+              {
+                "c": [
+                  630,
+                  730
+                ],
+                "R": 200,
+                "sx": 1.4,
+                "sy": 0.62,
+                "h": [
+                  [
+                    2,
+                    0.1,
+                    1.1
+                  ],
+                  [
+                    3,
+                    0.08,
+                    3
+                  ]
+                ]
+              },
+              {
+                "c": [
+                  1090,
+                  720
+                ],
+                "R": 150,
+                "sx": 1,
+                "sy": 1,
+                "h": [
+                  [
+                    2,
+                    0.12,
+                    0.2
+                  ],
+                  [
+                    3,
+                    0.06,
+                    2.2
+                  ]
+                ]
+              }
             ],
-            "blur_sigma_u": 46,
-            "field_res": "1/3 device px",
+            "R_scale": {
+              "value": 1,
+              "range": [
+                0.4,
+                1.8
+              ],
+              "note": "multiplies every blob radius"
+            },
+            "harmonic_scale": {
+              "value": 1,
+              "range": [
+                0,
+                2.5
+              ],
+              "note": "multiplies every a_k"
+            },
+            "blur_sigma_u": {
+              "value": 46,
+              "range": [
+                6,
+                140
+              ],
+              "unit": "u"
+            },
+            "res_div": {
+              "value": 3,
+              "range": [
+                1,
+                6
+              ],
+              "step": 1,
+              "note": "field resolution = device px / res_div"
+            },
             "fill": "radial white → 0.78 gray at the shape edge, union by lighten"
           },
-          "implementation": "Four Fourier-radius blobs are filled with a radial white-to-gray gradient on a black canvas (union by lighten) at one-third resolution, blurred with σ = 46 u and read back as a 0..1 luminance field."
+          "implementation": "Four Fourier-radius blobs are filled with a radial white-to-gray gradient on a black canvas (union by lighten) at one-third resolution, blurred with σ = 46 u and read back as a 0..1 luminance field.",
+          "limits": "Under σ ~15 u the edge profile is too steep for the ramp and the bands alias. Past σ ~110 u neighboring blobs fuse and the rim stop no longer closes. harmonic_scale above ~2 makes r(θ) cross zero and the outline self-intersects.",
+          "module": "techniques/ts-10-thermal-blob-field/lib/blob-field.js"
         }
       ]
     },
@@ -1065,9 +1468,27 @@
           "params": {
             "lut": "256 entries",
             "stops_ref": "0.28 paper · 0.37 blue · 0.41 (53,80,126) · 0.44–0.48 navy · 0.53 plum · 0.64 red · 0.70 orange · 0.82 (245,140,30) · 1.0 yellow",
-            "measured_edge_px": "paper→blue 12 · blue→navy 12 · navy 20 · plum→red 25 · red→orange 15 (at 1200 px)"
+            "measured_edge_px": "paper→blue 12 · blue→navy 12 · navy 20 · plum→red 25 · red→orange 15 (at 1200 px)",
+            "shift": {
+              "value": 0,
+              "range": [
+                -0.2,
+                0.2
+              ],
+              "note": "slides the field under the ramp"
+            },
+            "contrast": {
+              "value": 1,
+              "range": [
+                0.5,
+                2.5
+              ],
+              "note": "scales the field around 0.5 before the ramp"
+            }
           },
-          "implementation": "Every pixel of the field is replaced by LUT[field]; the ramp is the only place color enters, so all four colourways share one field."
+          "implementation": "Every pixel of the field is replaced by LUT[field]; the ramp is the only place color enters, so all four colourways share one field.",
+          "limits": "The ramp is read at 256 levels; contrast above ~2 leaves fewer than 6 levels across the rim and it stair-steps. A shift past ±0.15 moves the paper stop into the blobs or the core out of range.",
+          "module": "techniques/ts-10-thermal-blob-field/lib/gradient-map.js"
         }
       ]
     },
@@ -1246,12 +1667,34 @@
                 0.475,
                 0.925
               ],
-              "inset_u": 12,
-              "weight_u": 1,
+              "inset_u": {
+                "value": 12,
+                "range": [
+                  0,
+                  80
+                ],
+                "unit": "u"
+              },
+              "weight_u": {
+                "value": 1,
+                "range": [
+                  0.5,
+                  5
+                ],
+                "unit": "u"
+              },
               "color": "#1A1618"
             },
             "caption": {
-              "font": "JetBrains Mono 14 u",
+              "font": "JetBrains Mono",
+              "size_u": {
+                "value": 14,
+                "range": [
+                  8,
+                  26
+                ],
+                "unit": "u"
+              },
               "align": "right, under rule 1",
               "x_u": 988
             },
@@ -1262,7 +1705,9 @@
               "under": "rule 2"
             }
           },
-          "implementation": "Two 1 u ink rules across the sheet; the caption is set right-aligned 12 u under the first rule, the two-line studio label under the second."
+          "implementation": "Two 1 u ink rules across the sheet; the caption is set right-aligned 12 u under the first rule, the two-line studio label under the second.",
+          "limits": "Rules under 1 device px are drawn at 1 px. A caption past ~22 u collides with the second rule’s label on a narrow sheet.",
+          "module": "techniques/ts-10-thermal-blob-field/lib/rule-ledger.js"
         }
       ]
     },
@@ -1381,13 +1826,33 @@
           "entry": "ts-10-thermal-blob-field",
           "code": "TS-10",
           "params": {
-            "position": 0.44,
+            "from": {
+              "value": 0.44,
+              "range": [
+                0.415,
+                0.5
+              ],
+              "note": "field value where the dark stop starts"
+            },
+            "to": {
+              "value": 0.48,
+              "range": [
+                0.44,
+                0.53
+              ],
+              "note": "field value where it ends"
+            },
+            "stops_at": [
+              5,
+              6
+            ],
             "color": "#160F14",
-            "width_field": "0.41 → 0.53",
             "band_px_ref": "≈ 20 at 1200 px",
             "halo": "blue 0.335–0.41 outside the stop"
           },
-          "implementation": "The darkest stop sits just under the mid-point of the blurred edge, where the profile is steepest, so it occupies few pixels and reads as a drawn outline; the blue halo is the ramp segment just outside it."
+          "implementation": "The darkest stop sits just under the mid-point of the blurred edge, where the profile is steepest, so it occupies few pixels and reads as a drawn outline; the blue halo is the ramp segment just outside it.",
+          "limits": "from must stay below to, and both inside 0.41–0.53 (the stops on either side). A band wider than ~0.07 reads as a dark fill, not an outline.",
+          "module": "techniques/ts-10-thermal-blob-field/lib/rim-stop.js"
         }
       ]
     },
