@@ -510,7 +510,7 @@ for (const r of raw) {
 }
 // a work with no picture of its own shows its newest pictured version
 for (const w of raw) {
-  if (w.work || w.thumb || !w.versions) continue;
+  if (w.work || w.thumb || !w.versions || (CFG.no_frame || {})[w.id]) continue;
   const v = w.versions.map((id) => byId.get(id)).filter((x) => x.thumb).sort((a, b) => (b.dates.modified || '').localeCompare(a.dates.modified || ''))[0];
   if (v) { w.thumb = v.thumb; w.thumb_kind = v.thumb_kind; w.pic = v.pic; w.pic_acc = v.acc; w.thumb_master = v.thumb_master; w.thumb_from = v.id; delete w.no_pic; }
 }
