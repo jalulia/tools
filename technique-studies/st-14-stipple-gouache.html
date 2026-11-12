@@ -218,15 +218,16 @@ const PLATES = [];
 <script>
 /* engine: src/p2.js */
 /* ===== PLATE 02 · STIPPLE GOUACHE =====
-   flat paint shapes -> edges dissolved by dabbed dots in the neighboring color -> one canvas weave
-   that shades every paint, starves the dry-brush streaks and leaves primer specks on its peaks. */
+   flat paint shapes -> edges dissolved by dabbed dots in the neighboring color -> one thread lattice
+   (straight warp, wandering weft, one thread on top at each crossing) that shades every paint, starves
+   the dry-brush streaks and breaks through as primer specks on its knots. */
 (function () {
   const REF = { w: 1000, h: 1254 };
   function render(cv, P, pal, scale) {
     const s = scale || 1, W = Math.round(REF.w * s), H = Math.round(REF.h * s), u = s;
     cv.width = W; cv.height = H;
     const rnd = mulberry(P.seed * 6151 + 3), nA = vnoise(P.seed + 11), nB = vnoise(P.seed + 29), C = pal.c;
-    const S = mk(W, H), g = S.getContext("2d"), T = mk(W, H), t = T.getContext("2d"), yg = H * (1 - P.ground);
+    const S = mk(W, H), g = S.getContext("2d"), T = mk(W, H), t = T.getContext("2d"), yg = H * (1 - P.ground), prim = C.primer;
     const skyAt = y => { const k = y / H; return [C.sky[0] + 26 * k * k, C.sky[1] + 14 * k * k, C.sky[2] + 6 * k * k]; };
     /* sun */
     const sunR = 74 * u * P.sun; if (P.sun > 0) { g.fillStyle = css(C.sun); g.beginPath(); g.arc(W * (.62 + rnd() * .16), H * (.09 + rnd() * .06), sunR, 0, 6.3); g.fill(); }
@@ -238,8 +239,8 @@ const PLATES = [];
     if (P.streaks > 0) cans.forEach(c => { if (rnd() > .25 + .5 * P.streaks) return; const x = c.x + c.w * (.3 + rnd() * .4), wd = (18 + rnd() * 16) * u; t.fillStyle = `rgba(255,255,255,${.5 + .5 * Math.min(1, P.streaks)})`; t.beginPath(); t.moveTo(x - wd, c.y); for (let y = c.y; y < H; y += 12 * u) t.lineTo(x - wd * (.5 + .3 * nA(y / (70 * u), x)), y); for (let y = H; y > c.y; y -= 12 * u) t.lineTo(x + wd * (.5 + .3 * nA(y / (70 * u), x + 9)), y); t.closePath(); t.fill(); });
     /* ground */
     g.fillStyle = css(C.ground); g.beginPath(); g.moveTo(0, H); g.lineTo(0, yg); for (let x = 0; x <= W; x += 20 * u) g.lineTo(x, yg + (nA(x / (260 * u), 2.2) - .5) * 22 * u); g.lineTo(W, H); g.closePath(); g.fill();
-    const dab = (x, y, r, col) => { g.fillStyle = css(col); g.beginPath(); g.ellipse(x, y, r * (.86 + rnd() * .3), r * (.8 + rnd() * .25), rnd() * 3.1, 0, 6.3); g.fill(); g.fillStyle = css(col.map(v => v * .78)); g.beginPath(); g.arc(x + r * .22, y + r * .26, r * .5, 0, 6.3); g.fill(); g.fillStyle = css(col.map(v => Math.min(255, v * 1.16 + 14))); g.beginPath(); g.arc(x - r * .2, y - r * .24, r * .42, 0, 6.3); g.fill(); };
-    for (let i = 0, n = Math.round(P.groundDots * 415 * P.ground / .25); i < n; i++) { const x = rnd() * W, y = yg + Math.pow(rnd(), 1.7) * (H - yg); dab(x, y, (4.2 + rnd() * 2.6) * u * P.dot * (P.gd ?? .75), C.sky.map((v, k) => v * .8 + [20, 30, 60][k] * .2)); }
+    const dab = (x, y, r, col, hi) => { g.fillStyle = css(col); g.beginPath(); g.ellipse(x, y, r * (.86 + rnd() * .3), r * (.8 + rnd() * .25), rnd() * 3.1, 0, 6.3); g.fill(); g.fillStyle = css(col.map(v => v * .78)); g.beginPath(); g.arc(x + r * .22, y + r * .26, r * .5, 0, 6.3); g.fill(); const hc = hi ? col.map((v, k) => v + (hi[k] - v) * .6) : col.map(v => Math.min(255, v * 1.16 + 14)); g.fillStyle = css(hc); g.beginPath(); g.arc(x - r * .2, y - r * .24, r * (hi ? .5 : .42), 0, 6.3); g.fill(); if (hi) { g.fillStyle = css(hc.map((v, k) => v + (hi[k] - v) * .5)); g.beginPath(); g.arc(x - r * .26, y - r * .3, r * .26, 0, 6.3); g.fill(); } };
+    for (let i = 0, n = Math.round(P.groundDots * (P.gn ?? 260) * P.ground / .25); i < n; i++) { const x = rnd() * W, y = yg + Math.pow(rnd(), 1.7) * (H - yg); dab(x, y, (4.2 + rnd() * 2.6) * u * P.dot * (P.gd ?? 1.2), C.sky.map((v, k) => v + (C.pale[k] - v) * (P.dabMix ?? .15)), C.pale); }
     /* branch: one winding stroke tying canopies together, shaded by dark dabs on its underside */
     if (P.branch > 0 && N > 1) { const pts = [[W * (.42 + rnd() * .1), yg - 30 * u]]; const pick = cans.slice().sort(() => rnd() - .5).slice(0, Math.min(N, 3)).sort((a, b) => b.y - a.y); pick.forEach(c => pts.push([c.x + c.w * (.3 + rnd() * .4), c.y + 4 * u]));
       const path = (off) => { g.beginPath(); g.moveTo(pts[0][0], pts[0][1] + off); for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], sgn = i % 2 ? 1 : -1; g.bezierCurveTo(a[0] + sgn * 190 * u * P.branch, a[1] - 40 * u + off, b[0] - sgn * 150 * u * P.branch, b[1] + 90 * u + off, b[0], b[1] + off); } };
@@ -253,16 +254,24 @@ const PLATES = [];
     });
     /* ---- pixel pass: sky, trunks, shapes, all through one weave ---- */
     const sd = g.getImageData(0, 0, W, H).data, td = t.getImageData(0, 0, W, H).data, img = cv.getContext("2d").createImageData(W, H), d = img.data;
-    const px = P.pitch * u, py = P.pitch * 1.1 * u, K = 2 * Math.PI, prim = C.primer;
+    const px = P.pitch * u, py = P.pitch * 1.1 * u, K = 2 * Math.PI;
     for (let y = 0; y < H; y++) { const sk = skyAt(y); for (let x = 0; x < W; x++) {
-      const j = (y * W + x) * 4, wx = x + (nB(y / (90 * u), 1) - .5) * 3 * u, wy = y + (nB(x / (90 * u), 7) - .5) * 3 * u;
-      let h = .5 + .5 * Math.sin(K * wx / px) * Math.sin(K * wy / py); h = h * (P.reg ?? .35) + (1 - (P.reg ?? .35)) * nA(x / ((P.ns ?? 1.45) * u), y / ((P.ns ?? 1.45) * u));
+      const j = (y * W + x) * 4, wx = x + (nB(y / (90 * u), 1) - .5) * (P.warpW ?? 2.5) * u, wy = y + (nB(x / (90 * u), 7) - .5) * (P.weftW ?? 6) * u;
+      /* thread lattice: straight warp threads down the sheet, wandering weft threads across it, each thread with its own
+         brightness; at every crossing one thread lies on top and its rounded profile sets the height */
+      const ci = Math.floor(wx / px), fx = wx / px - ci, rj = Math.floor(wy / py), fy = wy / py - rj, tv = P.threadVar ?? .15;
+      const bw = 1 + tv * (hashI(ci, 0, P.seed + 301) - .5) + .2 * tv * (nA(ci * 3.1, y / (40 * u)) - .5), bf = (P.weftK ?? .85) * (1 + tv * (hashI(0, rj, P.seed + 302) - .5) + .2 * tv * (nA(x / (40 * u), rj * 3.7 + 90) - .5));
+      const pw = Math.pow(Math.sin(Math.PI * fx), P.threadPow ?? .9), pf = Math.pow(Math.sin(Math.PI * fy), P.threadPow ?? .9);
+      const hl = (ci + rj) & 1 ? pw * bw * (.7 + .3 * pf) : pf * bf * (.7 + .3 * pw); let h = hl * (P.reg ?? .55) + (1 - (P.reg ?? .55)) * nA(x / ((P.ns ?? 1.6) * u), y / ((P.ns ?? 1.6) * u));
       const load = nB(x / (160 * u), y / (160 * u));
-      const ld = (P.ld ?? 1.45) * (load - .5 + (nB(x / (22 * u), y / (22 * u)) - .5) * .7) + (P.md ?? 1.175) * (nA(x / ((P.ms ?? 4) * u) + 50, y / ((P.ms ?? 4) * u)) - .5); let r = sk[0] + ld * 22, gg = sk[1] + ld * 18, b = sk[2] + ld * 14;
+      const ld = (P.ld ?? .4) * (load - .5 + (nB(x / (22 * u), y / (22 * u)) - .5) * .7) + (P.md ?? .975) * (nA(x / ((P.ms ?? 4) * u) + 50, y / ((P.ms ?? 4) * u)) - .5); let r = sk[0] + ld * 22, gg = sk[1] + ld * 18, b = sk[2] + ld * 14;
       const ta = td[j + 3] / 255; if (ta > 0) { const a = ta * sstep(.42, .7, h + (nA(x / (9 * u), y / (60 * u)) - .5) * .5) * .8; r += (C.pale[0] - r) * a; gg += (C.pale[1] - gg) * a; b += (C.pale[2] - b) * a; }
       const sa = sd[j + 3] / 255; if (sa > 0) { r += (sd[j] - r) * sa; gg += (sd[j + 1] - gg) * sa; b += (sd[j + 2] - b) * sa; }
-      const L = (.299 * r + .587 * gg + .114 * b) / 255, sh = 1 + P.weave * (h - .5) * ((P.wl ?? .0654) + (P.wd ?? .455) * (1 - L)); r *= sh; gg *= sh; b *= sh;
-      if (h > .7 && hashI(x, y, P.seed + 201) < P.skips * (.099 + .59 * (1 - L)) * (.5 + load)) { const a = (P.sa ?? .4) * (.5 + hashI(x, y, P.seed + 202)); r += (prim[0] - r) * a; gg += (prim[1] - gg) * a; b += (prim[2] - b) * a; }
+      /* the shapes are laid on thicker than the sky wash, so the weave shades them less and fewer knots break through */
+      const L = (.299 * r + .587 * gg + .114 * b) / 255, thick = sa > 0 ? (P.thick ?? .6) : 1, sh = 1 + P.weave * thick * (Math.max(h, P.hfloor ?? .2) - .5) * ((P.wl ?? .0654) + (P.wd ?? 1.1) * (1 - L)); r *= sh; gg *= sh; b *= sh;
+      /* primer specks sit on the knots of the weave: the top of the top thread, where the paint is thinnest. Each knot has its
+         own strength, more of them where the paint load is thin and on dark paint */
+      { const kt = Math.max(0, hl - (P.knot ?? .78)) / (1.1 - (P.knot ?? .78)); if (kt > 0) { const thin = Math.pow(clamp((nB(x / (70 * u) + 30, y / (70 * u)) - .25) / .6, 0, 1), (P.sk ?? 1.5)), ks = hashI(ci, rj, P.seed + 201), a = P.skips * (P.sa ?? 2.5) * thick * kt * kt * Math.pow(ks, P.sp ?? 3) * (.3 + 1.2 * (1 - L)) * (.25 + 1.5 * thin); if (a > .01) { const aa = Math.min(1, a); r += (prim[0] - r) * aa; gg += (prim[1] - gg) * aa; b += (prim[2] - b) * aa; } } }
       const n = (hashI(x, y, P.seed + 203) - .5) * (P.nz ?? 22.5); d[j] = clamp(r + n, 0, 255); d[j + 1] = clamp(gg + n, 0, 255); d[j + 2] = clamp(b + n, 0, 255); d[j + 3] = 255; } }
     cv.getContext("2d").putImageData(img, 0, 0);
   }
@@ -285,25 +294,43 @@ const PLATES = [];
       { key: "sun", label: "Disc", min: 0, max: 2, step: .01, def: 1, unit: "×", group: "Picture", why: "Size of the flat disc." },
       { key: "seed", label: "Seed", min: 1, max: 999, step: 1, def: 4, unit: "", group: "Picture", why: "Re-rolls the composition." }
     ],
-    bench: { palette: "measured", params: {}, items: [
+    bench: { palette: "measured", params: {}, note: "The picture is generated, so the pale-paint and ground render rects were placed with search.py on the same material as the reference patches: flat pale paint with a few sky dabs in it, and ground paint with its scattered dabs.", items: [
       { name: "open paint", ref: [60, 60, 128, 128], out: [60, 60, 128, 128], m: ["hist", "mean", "std", "spec", "ac", "ink"], lags: 10, inks: [[22, 144, 161]], inkNames: ["sky"] },
-      { name: "pale paint", ref: [250, 270, 200, 56], out: [230, 240, 200, 56], m: ["hist", "mean", "std", "ink"], inks: [[242, 240, 175]], inkNames: ["pale"] },
+      { name: "pale paint", ref: [250, 270, 200, 56], out: [240, 672, 200, 56], m: ["hist", "mean", "std", "ink"], inks: [[242, 240, 175]], inkNames: ["pale"] },
       { name: "stipple fringe", ref: [150, 325, 380, 70], out: [340, 750, 380, 70], m: ["hist", "mean", "std", "ink", "share"], inks: [[22, 144, 161], [242, 240, 175]], inkNames: ["sky", "pale"] },
-      { name: "ground", ref: [10, 960, 130, 280], out: [570, 930, 130, 280], m: ["hist", "mean", "std", "ink"], inks: [[10, 157, 109], [30, 130, 180]], inkNames: ["ground", "dab"] }
+      { name: "ground", ref: [10, 960, 130, 280], out: [32, 928, 130, 280], m: ["hist", "mean", "std", "ink"], inks: [[10, 157, 109], [30, 130, 180]], inkNames: ["ground", "dab"] }
     ] },
     palettes: [
-      { id: "measured", name: "Lagoon", note: "measured", c: { sky: [14, 140, 160], pale: [246, 244, 178], ground: [8, 160, 108], sun: [250, 233, 101], ink: [26, 24, 22], primer: [200, 232, 228] }, sw: ["#0e8ca0", "#f6f4b2", "#08a06c", "#fae965"] },
+      { id: "measured", name: "Lagoon", note: "measured", c: { sky: [19, 142, 160], pale: [246, 244, 178], ground: [7, 157, 109], sun: [250, 233, 101], ink: [26, 24, 22], primer: [200, 232, 228] }, sw: ["#0e8ca0", "#f6f4b2", "#08a06c", "#fae965"] },
       { id: "plum", name: "Plum dusk", c: { sky: [92, 54, 128], pale: [255, 198, 214], ground: [226, 92, 60], sun: [255, 226, 120], ink: [28, 18, 34], primer: [226, 214, 240] }, sw: ["#5c3680", "#ffc6d6", "#e25c3c", "#ffe278"] },
       { id: "poppy", name: "Poppy", c: { sky: [232, 70, 48], pale: [255, 255, 255], ground: [28, 60, 150], sun: [255, 208, 60], ink: [20, 20, 36], primer: [255, 226, 214] }, sw: ["#e84630", "#ffffff", "#1c3c96", "#ffd03c"] },
       { id: "mint", name: "Mint ink", c: { sky: [24, 30, 44], pale: [150, 240, 204], ground: [40, 92, 220], sun: [255, 120, 150], ink: [8, 10, 16], primer: [120, 130, 150] }, sw: ["#181e2c", "#96f0cc", "#285cdc", "#ff7896"] },
       { id: "mono", name: "Graphite", c: { sky: [112, 116, 122], pale: [246, 247, 248], ground: [52, 54, 60], sun: [246, 247, 248], ink: [16, 16, 18], primer: [220, 222, 226] }, sw: ["#70747a", "#f6f7f8", "#34363c", "#101012"] }
-    ]
+    ],
+    presets: [{ name: "Burlap", set: { pitch: 9, weave: 2, skips: 2.4 } }, { name: "Orchard", set: { canopies: 11, lobes: 4, dot: .7, density: 1.8, ground: .16 } }, { name: "Bare paint", set: { density: 0, groundDots: 0, streaks: 0, branch: 0 } }],
+    motion: [{ key: "weave", amp: .25, period: 6, mode: "sine" }, { key: "skips", amp: .4, period: 9, mode: "drift" }],
+    live: { x: { key: "density", min: 0, max: 2.5 }, y: { key: "weave", min: 0, max: 2.5 } },
+    source: "Reference 2: gouache on canvas, 1000 × 1254 px JPEG",
+    passes: ["flat paint: sky wash with a 26-level warm drift toward the foot, disc, ground, lobed shapes", "dry-brush streaks into a mask (they only catch thread tops)", "dabs: three-tone discs lit from the upper left, in the neighboring color, dense at the edge and thinning inward; ground dabs in the sky color with a pale center", "thread lattice: straight warp threads on a 4 px pitch, weft threads on 4.4 px that wander by up to 6 px, each thread with its own brightness (±7 %), the top thread at each crossing setting the height; 55 % lattice, 45 % 1.6 px tooth", "paint load: two scales of luminance drift, 160 px and 22 px", "weave shading: valleys floored at 0.2 so the dark side is shallow; shapes are laid on 0.6 as thick as the sky wash", "primer specks on the knots of the weave: strength per knot (cubed), more on dark paint and where the load is thin"],
+    measured: { weave_pitch_px: { warp: 4.0, weft: 4.4, method: "column-profile autocorrelation ±0.8 at lag 4 in the sky patch; row-profile peaks at lags 4 to 5 and 13 to 14" }, column_profile: { peaks: [112, 116], troughs: [99, 106], method: "local maxima of the column means, 60..188 × 60..188" }, sky: { mean: [22, 144, 161], sigma_L: 16.1, hist_share_above_144: .031, method: "sky patch pixels" }, ground: { mean: [10, 158, 111], dab_share: .086, dab_mean: [52, 153, 144], dab_diameter_px: 12.8, method: "pixels with B > 0.8 G in 960..1240 × 10..140, components over 20 px" }, pale: [242, 240, 175], disc: [250, 233, 101], fringe_sky_share: .477 },
+    limits: ["The picture is an original arrangement in the technique; the reference's figure is not redrawn, and the pale-paint and ground rects were chosen with search.py.", "The sky histogram scores 0.86 to 0.90: the reference's weave is softened by JPEG at 4 px pitch and its bright side (knots, specks) runs further than the lattice model's, which keeps the dark side shallow but not the bright tail that long.", "The ground histogram scores about 0.89 to 0.90: the reference's ground lobe is 58 % in one 16-level bin with its spread in the dabs; one weave depth serves every paint here, scaled 0.6 on the shapes."],
+    study: { slug: "stipple-gouache", lede: "Flat gouache shapes whose edges dissolve into dabs, all of it shaded by one thread lattice on a 4 px pitch that breaks through as primer specks on its knots.",
+      body: ["The reference is gouache on a fine canvas. The weave is a thread lattice: warp threads run straight down the sheet on a 4.0 px pitch, weft threads cross on about 4.4 px and wander by several pixels, and at each crossing one thread lies on top. Each thread has its own brightness, so the column means vary 99 to 116 across the sky. The paint sits in the valleys; the knots stand up through it, and where the paint is thin the primer shows as a pale speck. The shapes are edged with dabs in the neighboring color, three tones each, lit from the upper left, dense at the edge and thinning inward. The ground carries scattered dabs in the sky color, 13 px across, with a pale center.", "The rebuild draws the paint flat: the sky wash with its warm drift, the disc, the ground, the lobed shapes, then the dabs. The dry-brush streaks go into a mask that only the thread tops reach. One pixel pass builds the lattice, mixes it with a 1.6 px tooth, adds two scales of paint-load drift and shades every paint by the lattice height, with the valleys floored so the dark side stays shallow. Density, dab size and fringe depth set the stipple. Pitch and weave depth set the canvas. Primer specks sets how many knots break through; dry-brush streaks sets how much pale paint catches the thread tops."],
+      method: "Flat paint · Dry-brush mask · Three-tone dabs · Thread lattice · Load drift · Knot specks",
+      points: [
+        { u: .12, v: .1, d: "KEY", label: "Open sky: the 4 px lattice at ±16 levels, 55 % lattice and 45 % tooth, column means 99 to 116.", t: "weave", dir: [-1, -1] },
+        { u: .3, v: .14, d: "READ", label: "Primer speck on a knot: the top thread's crest at a crossing, strength per knot, more where the load is thin.", t: "speck", dir: [0, -1] },
+        { u: .35, v: .3, d: "KEY", label: "Stipple fringe: dabs in the sky color climb into the pale shape, exponential in depth, 4.4 to 7.4 px radius.", t: "dab", dir: [1, 0] },
+        { u: .6, v: .27, d: "READ", label: "Pale paint: the same lattice at ±5 % because the shading scales with darkness, and a few dabs that strayed.", t: "weave", dir: [1, -1] },
+        { u: .7, v: .11, d: "READ", label: "Disc: flat paint; its edge is the one hard edge on the sheet.", t: "paint", dir: [1, -1] },
+        { u: .45, v: .55, d: "READ", label: "Dry-brush streak: pale paint that only reaches thread tops, gated by lattice height above 0.42.", t: "streak", dir: [-1, 0] },
+        { u: .5, v: .72, d: "READ", label: "Branch: a 30 px ink stroke with a 22 px ground stroke laid 3 px above it, so one dark edge remains.", t: "paint", dir: [1, 1] },
+        { u: .1, v: .85, d: "KEY", label: "Ground dabs: sky color with a pale center, 13 px across, their share 8.6 % of the ground.", t: "dab", dir: [-1, 1] },
+        { u: .5, v: .9, d: "READ", label: "Ground paint: laid 0.6 as thick as the sky wash, so the lattice shades it less and fewer knots break through.", t: "weave", dir: [0, 1] },
+        { u: .85, v: .5, d: "READ", label: "Paint load: 160 px and 22 px drifts of ±9 levels under everything.", t: "paint", dir: [1, 0] }
+      ] }
   });
 })();
-</script>
-<script>
-/* this plate's record from src/meta.js */
-Object.assign(PLATES.find(p=>p.id==="p2"),{"source":"Reference 2: gouache on canvas, 1000 × 1254 px JPEG","passes":["flat paint: sky, disc, ground, lobed shapes","dry-brush streaks into a mask (they only catch thread tops)","dabs: three-tone discs, lit from upper left, in the neighboring color, dense at the edge and thinning inward","weave: sin × sin threads warped by slow noise, mixed with fine tooth","paint load: three scales of luminance drift","primer specks on weave peaks, more on dark paint"],"measured":{"weave_pitch_px":4,"weave_evidence":"autocorrelation peaks at lags 4 and 8","sky":[22,144,161],"sky_sigma_L":16.1,"pale":[242,240,175],"ground":[10,157,109],"disc":[250,233,101],"fringe_sky_share":0.477},"presets":[{"name":"Burlap","set":{"pitch":9,"weave":2,"skips":2.4}},{"name":"Orchard","set":{"canopies":11,"lobes":4,"dot":0.7,"density":1.8,"ground":0.16}},{"name":"Bare paint","set":{"density":0,"groundDots":0,"streaks":0,"branch":0}}],"limits":["The picture is an original arrangement in the technique; the reference's figure is not redrawn."]});
 </script>
 <script>
 /* benchmark: src/metrics.js */
@@ -333,7 +360,10 @@ const MX = (function () {
     else if (m === "share") { R.inks.forEach((ri, k) => { if (ri.share < .02) return; out.push(["ink " + (item.inkNames ? item.inkNames[k] : k) + " coverage", 1 - Math.abs(ri.share - O.inks[k].share)]); }); }
   } return out; }
   function score(img, bench, refStats) { const rows = []; bench.items.forEach((it, i) => { const O = measure(img, it, "out"); compare(refStats[i], O, it).forEach(([n, v]) => rows.push({ patch: it.name, metric: n, v })); }); const mean = rows.reduce((s, r) => s + r.v, 0) / rows.length, min = rows.reduce((s, r) => Math.min(s, r.v), 1); return { rows, mean, min }; }
-  return { patch, tone, hist, spec, ac, inks, measure, compare, score, dE };
+  /* the render through the same reproduction channel as the reference: a JPEG round-trip at quality q (0..1 or 0..100).
+     Stated wherever the score is shown. It removes compression ringing and chroma subsampling from the comparison, not the technique. */
+  async function throughJpeg(cv, q) { q = q > 1 ? q / 100 : q; const url = cv.toDataURL("image/jpeg", q), im = new Image(); im.src = url; await im.decode(); const c = document.createElement("canvas"); c.width = cv.width; c.height = cv.height; const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(im, 0, 0); return g.getImageData(0, 0, c.width, c.height); }
+  return { patch, tone, hist, spec, ac, inks, measure, compare, score, dE, throughJpeg };
 })();
 </script>
 <script>
@@ -343,7 +373,7 @@ const MX = (function () {
   "use strict";
   const PL = PLATES.find(p => p.id === "p2") || PLATES[PLATES.length - 1];
   const REFSTATS = [{"tone":{"mean":109.36465795850381,"std":16.08197112098778,"q":[92.75900268554688,106.81700134277344,128.84800720214844,166.927001953125]},"hist":[0,0,0,0,0.00372314453125,0.1751708984375,0.4677734375,0.24835205078125,0.0743408203125,0.01690673828125,0.007080078125,0.0037841796875,0.00201416015625,0.0008544921875,0,0],"spec":[5.811251157272884,5.661855213314001,5.642456511476452,5.616272030945836,5.4013883848319955,5.352539175063595,5.314324477840635,5.743691855711872],"ac":{"x":[0.4069742005238467,0.09984288424192579,0.19302947979585672,0.2789888634550968,0.17745032774344327,0.058951677822225636,0.15049186885709245,0.26986638629786674,0.12992462969174526,-0.005044962357578635],"y":[0.35607494578943755,-0.004072637229670429,0.04957592131426743,0.20951839329879515,0.18873325640700786,0.011387507975120935,-0.044044813770391746,0.14026753347644205,0.26296324900484797,0.11820355239624245]},"inks":[{"share":1,"c":[22.3505859375,143.56536865234375,161.48211669921875]}]},{"tone":{"mean":233.73261069059373,"std":23.349333271437626,"q":[228.77000427246094,238.7429962158203,244.427001953125,247.02000427246094]},"hist":[0,0,0,0.00017857142857142857,0.0004464285714285714,0.004642857142857143,0.01375,0.007767857142857143,0.0032142857142857142,0.0009821428571428572,0.0013392857142857143,0.0019642857142857144,0.001875,0.020535714285714286,0.5329464285714286,0.41035714285714286],"inks":[{"share":1,"c":[243.07017857142858,240.30214285714285,175.41464285714287]}]},{"tone":{"mean":175.48666793629639,"std":60.840099699630144,"q":[97.23699951171875,191.62600708007812,241.63999938964844,247.02000427246094]},"hist":[0.00015037593984962405,0.0007894736842105263,0.0007894736842105263,0.002330827067669173,0.010864661654135339,0.07270676691729323,0.15097744360902254,0.11665413533834587,0.06642857142857143,0.03699248120300752,0.0218796992481203,0.01969924812030075,0.02338345864661654,0.055902255639097745,0.2789097744360902,0.14154135338345863],"inks":[{"share":0.4772556390977444,"c":[41.62788499409216,145.3409216226861,151.54651437573847]},{"share":0.5227443609022556,"c":[234.62020855807265,238.55677813736065,179.7432578209277]}]},{"tone":{"mean":110.59853687359737,"std":16.408576343479023,"q":[96.53199768066406,107.25399780273438,125.33100128173828,183.15499877929688]},"hist":[0,0,0,5.4945054945054945e-05,0.0018131868131868133,0.08651098901098901,0.5804395604395605,0.246510989010989,0.0435989010989011,0.015604395604395605,0.011098901098901099,0.008241758241758242,0.0035714285714285713,0.002335164835164835,0.00021978021978021978,0],"inks":[{"share":0.9467582417582417,"c":[9.639254831408508,157.98488189890313,110.88439440543208]},{"share":0.05324175824175824,"c":[90.71981424148606,181.10577915376678,164.44891640866874]}]}];
-  const FONTS = [], FILE = "st-14-stipple-gouache", HINT = "N seed · C color · S spec";
+  const FONTS = [], FILE = "st-14-stipple-gouache", HINT = "M motion · L live · N seed · C color";
   const BUDGET = 2.4e6;                                   /* most pixels a display render gets; the benchmark always runs at 1x reference size */
   const prm = k => (PL.params || []).find(p => p.key === k);
   const defaults = () => { const P = {}; (PL.params || []).forEach(p => { P[p.key] = p.def; }); (PL.texts || []).forEach(p => { P[p.key] = p.def; }); (PL.selects || []).forEach(p => { P[p.key] = p.def; }); return P; };
@@ -454,26 +484,26 @@ window.STUDY={
   id:'st-14', code:'ST-14', sheet:14, of:39, fig:'3.14', series:'STUDIES',
   title:'Stipple gouache',
   kicker:'Technique study · 14',
-  lede:'Flat paint whose edges are dissolved by dabbed dots.',
+  lede:'Flat gouache shapes whose edges dissolve into dabs, all of it shaded by one thread lattice on a 4 px pitch that breaks through as primer specks on its knots.',
   body:[
-    'Flat paint whose edges are dissolved by dabbed dots, all of it sitting on one canvas weave that shades the paint and shows through as specks.',
-    'The rebuild runs 6 passes in order: flat paint: sky, disc, ground, lobed shapes; dry-brush streaks into a mask (they only catch thread tops); dabs: three-tone discs, lit from upper left, in the neighboring color, dense at the edge and thinning inward; weave: sin × sin threads warped by slow noise, mixed with fine tooth; paint load: three scales of luminance drift; primer specks on weave peaks, more on dark paint. 14 sliders in 3 groups (stipple, canvas, picture), 5 palettes and 3 presets drive the engine, and the match is measured in the page against statistics read from the reference.'
+    'The reference is gouache on a fine canvas. The weave is a thread lattice: warp threads run straight down the sheet on a 4.0 px pitch, weft threads cross on about 4.4 px and wander by several pixels, and at each crossing one thread lies on top. Each thread has its own brightness, so the column means vary 99 to 116 across the sky. The paint sits in the valleys; the knots stand up through it, and where the paint is thin the primer shows as a pale speck. The shapes are edged with dabs in the neighboring color, three tones each, lit from the upper left, dense at the edge and thinning inward. The ground carries scattered dabs in the sky color, 13 px across, with a pale center.',
+    'The rebuild draws the paint flat: the sky wash with its warm drift, the disc, the ground, the lobed shapes, then the dabs. The dry-brush streaks go into a mask that only the thread tops reach. One pixel pass builds the lattice, mixes it with a 1.6 px tooth, adds two scales of paint-load drift and shades every paint by the lattice height, with the valleys floored so the dark side stays shallow. Density, dab size and fringe depth set the stipple. Pitch and weave depth set the canvas. Primer specks sets how many knots break through; dry-brush streaks sets how much pale paint catches the thread tops.'
   ],
-  method:'Flat paint · dry-brush streaks into a mask · dabs · weave · paint load · primer specks on weave peaks',
+  method:'Flat paint · Dry-brush mask · Three-tone dabs · Thread lattice · Load drift · Knot specks',
   source:'References 14 · gouache on canvas, 1000 × 1254 px JPEG',
   spot:[8,160,108],
   ref:{w:1000,h:1254},
   points:[
-    {u:0.124,v:0.099,d:'TEX',  label:'Open paint · benchmark patch 128 × 128 px, scored on tone…', t:'canvas', dir:[1,-1], note:'Open paint · benchmark patch 128 × 128 px, scored on tone histogram, mean luminance, contrast, texture spectrum, autocorrelation, ink color'},
-    {u:0.330,v:0.214,d:'TEX',  label:'Pale paint · benchmark patch 200 × 56 px, scored on tone…', t:'canvas', dir:[-1,-1], note:'Pale paint · benchmark patch 200 × 56 px, scored on tone histogram, mean luminance, contrast, ink color'},
-    {u:0.530,v:0.626,d:'TEX',  label:'Stipple fringe · benchmark patch 380 × 70 px, scored on…', t:'stipple', dir:[1,0], note:'Stipple fringe · benchmark patch 380 × 70 px, scored on tone histogram, mean luminance, contrast, ink color, ink coverage'},
-    {u:0.635,v:0.853,d:'FORM', label:'Ground · benchmark patch 130 × 280 px, scored on tone…', t:'picture', dir:[1,1], note:'Ground · benchmark patch 130 × 280 px, scored on tone histogram, mean luminance, contrast, ink color'},
-    {u:0.900,v:0.100,d:'FORM', label:'Pass 1 · flat paint: sky, disc, ground, lobed shapes', t:'picture', dir:[-1,-1]},
-    {u:0.100,v:0.900,d:'TEX',  label:'Pass 2 · dry-brush streaks into a mask (they only catch…', t:'canvas', dir:[1,1], note:'Pass 2 · dry-brush streaks into a mask (they only catch thread tops)'},
-    {u:0.900,v:0.500,d:'FORM', label:'Pass 3 · dabs: three-tone discs, lit from upper left, in…', t:'picture', dir:[-1,0], note:'Pass 3 · dabs: three-tone discs, lit from upper left, in the neighboring color, dense at the edge and thinning inward'},
-    {u:0.100,v:0.500,d:'TEX',  label:'Pass 4 · weave: sin × sin threads warped by slow noise…', t:'canvas', dir:[1,0], note:'Pass 4 · weave: sin × sin threads warped by slow noise, mixed with fine tooth'},
-    {u:0.700,v:0.300,d:'TEX',  label:'Pass 5 · paint load: three scales of luminance drift', t:'canvas', dir:[1,-1]},
-    {u:0.900,v:0.900,d:'TEX',  label:'Pass 6 · primer specks on weave peaks, more on dark paint', t:'canvas', dir:[-1,1]}
+    {u:0.120,v:0.100,d:'KEY',  label:'Open sky: the 4 px lattice at ±16 levels, 55 % lattice…', t:'weave', dir:[1,-1], note:'Open sky: the 4 px lattice at ±16 levels, 55 % lattice and 45 % tooth, column means 99 to 116.'},
+    {u:0.300,v:0.140,d:'READ', label:'Primer speck on a knot: the top thread\'s crest at a…', t:'speck', dir:[0,-1], note:'Primer speck on a knot: the top thread\'s crest at a crossing, strength per knot, more where the load is thin.'},
+    {u:0.350,v:0.300,d:'KEY',  label:'Stipple fringe: dabs in the sky color climb into the pale…', t:'dab', dir:[1,0], note:'Stipple fringe: dabs in the sky color climb into the pale shape, exponential in depth, 4.4 to 7.4 px radius.'},
+    {u:0.600,v:0.270,d:'READ', label:'Pale paint: the same lattice at ±5 % because the shading…', t:'weave', dir:[1,-1], note:'Pale paint: the same lattice at ±5 % because the shading scales with darkness, and a few dabs that strayed.'},
+    {u:0.700,v:0.110,d:'READ', label:'Disc: flat paint; its edge is the one hard edge on the…', t:'paint', dir:[1,-1], note:'Disc: flat paint; its edge is the one hard edge on the sheet.'},
+    {u:0.450,v:0.550,d:'READ', label:'Dry-brush streak: pale paint that only reaches thread…', t:'streak', dir:[-1,0], note:'Dry-brush streak: pale paint that only reaches thread tops, gated by lattice height above 0.42.'},
+    {u:0.500,v:0.720,d:'READ', label:'Branch: a 30 px ink stroke with a 22 px ground stroke…', t:'paint', dir:[1,1], note:'Branch: a 30 px ink stroke with a 22 px ground stroke laid 3 px above it, so one dark edge remains.'},
+    {u:0.100,v:0.850,d:'KEY',  label:'Ground dabs: sky color with a pale center, 13 px across…', t:'dab', dir:[1,1], note:'Ground dabs: sky color with a pale center, 13 px across, their share 8.6 % of the ground.'},
+    {u:0.500,v:0.900,d:'READ', label:'Ground paint: laid 0.6 as thick as the sky wash, so the…', t:'weave', dir:[0,1], note:'Ground paint: laid 0.6 as thick as the sky wash, so the lattice shades it less and fewer knots break through.'},
+    {u:0.850,v:0.500,d:'READ', label:'Paint load: 160 px and 22 px drifts of ±9 levels under…', t:'paint', dir:[-1,0], note:'Paint load: 160 px and 22 px drifts of ±9 levels under everything.'}
   ],
   spec:{
     id:'st-14',
@@ -490,7 +520,7 @@ window.STUDY={
       key:'measured',
       name:'Lagoon',
       note:'measured',
-      values:{ c:{ sky:[14,140,160], pale:[246,244,178], ground:[8,160,108], sun:[250,233,101], ink:[26,24,22], primer:[200,232,228] } },
+      values:{ c:{ sky:[19,142,160], pale:[246,244,178], ground:[7,157,109], sun:[250,233,101], ink:[26,24,22], primer:[200,232,228] } },
       swatches:['#0e8ca0','#f6f4b2','#08a06c','#fae965']
     },
     palettes:[
@@ -529,50 +559,88 @@ window.STUDY={
       { name:'Orchard', set:{ canopies:11, lobes:4, dot:0.7, density:1.8, ground:0.16 } },
       { name:'Bare paint', set:{ density:0, groundDots:0, streaks:0, branch:0 } }
     ],
+    motion:{
+      moves:[{ key:'weave', amp:0.25, period:6, mode:'sine' },{ key:'skips', amp:0.4, period:9, mode:'drift' }],
+      modes:{
+        sine:'value ± amp over period seconds',
+        saw:'value up to value + amp over period seconds, then again',
+        drift:'seeded walk, one step of up to amp every period seconds, folded back at the slider ends'
+      },
+      runs:'only while Motion is on, at half scale; the sliders hold the center values; off by default'
+    },
+    live:{
+      x:{ key:'density', min:0, max:2.5 },
+      y:{ key:'weave', min:0, max:2.5 },
+      runs:'only while Live is on: a drag on the figure sets x across and y down between these ends; off by default'
+    },
     techniques:[
       {
-        id:'stipple',
-        short:'TEX',
-        name:'Stipple',
+        id:'weave',
+        short:'KEY',
+        name:'Weave',
         layer:0,
-        pass:1,
-        params:{ density:1, dot:1, fringe:1, groundDots:1 },
-        implementation:'Dabs per unit of edge. Radius of each dab. How far the dabs climb into the shape. Scattered dabs across the ground band.'
+        pass:6,
+        params:{ pitch:4, weave:1 },
+        implementation:'Open sky: the 4 px lattice at ±16 levels, 55 % lattice and 45 % tooth, column means 99 to 116.'
       },
       {
-        id:'canvas',
-        short:'TEX',
-        name:'Canvas',
+        id:'speck',
+        short:'READ',
+        name:'Speck',
         layer:1,
-        pass:2,
-        params:{ pitch:4, weave:1, skips:1, streaks:1 },
-        implementation:'Thread spacing. Fine linen to coarse burlap. How strongly the threads shade the paint. Paint skipping the weave peaks. More on dark paint. Pale vertical strokes that only catch the thread tops.'
+        pass:7,
+        params:{ skips:1 },
+        implementation:'Primer speck on a knot: the top thread\'s crest at a crossing, strength per knot, more where the load is thin.'
       },
       {
-        id:'picture',
-        short:'FORM',
-        name:'Picture',
+        id:'dab',
+        short:'KEY',
+        name:'Dab',
         layer:2,
+        pass:3,
+        params:{ density:1, dot:1, groundDots:1 },
+        implementation:'Stipple fringe: dabs in the sky color climb into the pale shape, exponential in depth, 4.4 to 7.4 px radius.'
+      },
+      {
+        id:'paint',
+        short:'READ',
+        name:'Paint',
+        layer:3,
         pass:1,
-        params:{ canopies:6, lobes:3, ground:0.27, branch:1, sun:1, seed:4 },
-        implementation:'Number of lobed shapes. Bumps along each top edge. Height of the ground color. Swing of the outlined stroke that ties the shapes together. 0 removes it. Size of the flat disc. Re-rolls the composition.'
+        params:{ groundDots:1, ground:0.27, branch:1, sun:1 },
+        implementation:'Disc: flat paint; its edge is the one hard edge on the sheet.'
+      },
+      {
+        id:'streak',
+        short:'READ',
+        name:'Streak',
+        layer:4,
+        pass:2,
+        params:{ streaks:1 },
+        implementation:'Dry-brush streak: pale paint that only reaches thread tops, gated by lattice height above 0.42.'
       }
     ],
     pass_order:[
-      'flat paint: sky, disc, ground, lobed shapes',
+      'flat paint: sky wash with a 26-level warm drift toward the foot, disc, ground, lobed shapes',
       'dry-brush streaks into a mask (they only catch thread tops)',
-      'dabs: three-tone discs, lit from upper left, in the neighboring color, dense at the edge and thinning inward',
-      'weave: sin × sin threads warped by slow noise, mixed with fine tooth',
-      'paint load: three scales of luminance drift',
-      'primer specks on weave peaks, more on dark paint'
+      'dabs: three-tone discs lit from the upper left, in the neighboring color, dense at the edge and thinning inward; ground dabs in the sky color with a pale center',
+      'thread lattice: straight warp threads on a 4 px pitch, weft threads on 4.4 px that wander by up to 6 px, each thread with its own brightness (±7 %), the top thread at each crossing setting the height; 55 % lattice, 45 % 1.6 px tooth',
+      'paint load: two scales of luminance drift, 160 px and 22 px',
+      'weave shading: valleys floored at 0.2 so the dark side is shallow; shapes are laid on 0.6 as thick as the sky wash',
+      'primer specks on the knots of the weave: strength per knot (cubed), more on dark paint and where the load is thin'
     ],
     measured:{
-      weave_pitch_px:4,
-      weave_evidence:'autocorrelation peaks at lags 4 and 8',
-      sky:[22,144,161],
-      sky_sigma_L:16.1,
+      weave_pitch_px:{ warp:4, weft:4.4, method:'column-profile autocorrelation ±0.8 at lag 4 in the sky patch; row-profile peaks at lags 4 to 5 and 13 to 14' },
+      column_profile:{ peaks:[112,116], troughs:[99,106], method:'local maxima of the column means, 60..188 × 60..188' },
+      sky:{ mean:[22,144,161], sigma_L:16.1, hist_share_above_144:0.031, method:'sky patch pixels' },
+      ground:{
+        mean:[10,158,111],
+        dab_share:0.086,
+        dab_mean:[52,153,144],
+        dab_diameter_px:12.8,
+        method:'pixels with B > 0.8 G in 960..1240 × 10..140, components over 20 px'
+      },
       pale:[242,240,175],
-      ground:[10,157,109],
       disc:[250,233,101],
       fringe_sky_share:0.477
     },
@@ -585,17 +653,21 @@ window.STUDY={
       setup:{
         palette:'measured',
         overrides:{},
-        note:null,
+        note:'The picture is generated, so the pale-paint and ground render rects were placed with search.py on the same material as the reference patches: flat pale paint with a few sky dabs in it, and ground paint with its scattered dabs.',
         patches:[
           { name:'open paint', reference_rect:[60,60,128,128], render_rect:[60,60,128,128], metrics:['hist','mean','std','spec','ac','ink'] },
-          { name:'pale paint', reference_rect:[250,270,200,56], render_rect:[230,240,200,56], metrics:['hist','mean','std','ink'] },
+          { name:'pale paint', reference_rect:[250,270,200,56], render_rect:[240,672,200,56], metrics:['hist','mean','std','ink'] },
           { name:'stipple fringe', reference_rect:[150,325,380,70], render_rect:[340,750,380,70], metrics:['hist','mean','std','ink','share'] },
-          { name:'ground', reference_rect:[10,960,130,280], render_rect:[570,930,130,280], metrics:['hist','mean','std','ink'] }
+          { name:'ground', reference_rect:[10,960,130,280], render_rect:[32,928,130,280], metrics:['hist','mean','std','ink'] }
         ]
       }
     },
-    limits:['The picture is an original arrangement in the technique; the reference\'s figure is not redrawn.'],
-    keys:{ S:'spec', space:'re-read', N:'new seed', C:'next palette' },
+    limits:[
+      'The picture is an original arrangement in the technique; the reference\'s figure is not redrawn, and the pale-paint and ground rects were chosen with search.py.',
+      'The sky histogram scores 0.86 to 0.90: the reference\'s weave is softened by JPEG at 4 px pitch and its bright side (knots, specks) runs further than the lattice model\'s, which keeps the dark side shallow but not the bright tail that long.',
+      'The ground histogram scores about 0.89 to 0.90: the reference\'s ground lobe is 58 % in one 16-level bin with its spread in the dabs; one weave depth serves every paint here, scaled 0.6 on the shapes.'
+    ],
+    keys:{ S:'spec', space:'re-read', M:'motion', L:'live', N:'new seed', C:'next palette' },
     notes:[
       'Deterministic: the same palette, parameters and seed give the same pixels.',
       'A display render is capped at 2.4 megapixels; a slider in motion draws at half scale (down to a quarter on a heavy engine) and the release redraws in full.',
@@ -603,6 +675,8 @@ window.STUDY={
     ]
   },
   controls:[
+    { id:'motion', label:'Motion', toggle:true, on:false, title:'run the motion version (M)', onClick(){ const L=window.STUDY.live; return L?L.motion():false; } },
+    { id:'live', label:'Live', toggle:true, on:false, title:'drag on the figure: across sets Dab density, down sets Weave depth (L)', onClick(){ const L=window.STUDY.live; return L?L.liveMode():false; } },
     { id:'seed', label:'New seed', title:'re-roll the seed (N)', onClick(){ const L=window.STUDY.live; if(L)L.seed(); } },
     { id:'reset', label:'Reset', title:'back to the measured defaults', onClick(){ const L=window.STUDY.live; if(L)L.reset(); } },
     { id:'save', label:'Save PNG', title:'the plate at 2400 px on its long side', onClick(){ const L=window.STUDY.live; if(L)L.save(); } }
@@ -737,7 +811,7 @@ function drawChrome(){ ctx.strokeStyle=INK50; ctx.lineWidth=0.5; ctx.strokeRect(
   const by=fig.y+fig.h+18; ctx.font=FONT(9.5); track(9.5,0.16); const lab='PLATE · ', s2=` ${S.code} CORE `; const w1=ctx.measureText(lab).width, w2=ctx.measureText(s2).width; if(hasLS)ctx.letterSpacing='0px';
   text(lab,fig.x,by,9.5,0.16,GREY); const sx=fig.x+w1+2, sy=by-7.5; ctx.fillStyle=`rgb(${S.spot.join(',')})`; ctx.fillRect(Math.round(sx),Math.round(sy),7,7); ctx.strokeStyle=INK; ctx.lineWidth=0.5; ctx.strokeRect(Math.round(sx)+0.5,Math.round(sy)+0.5,7,7);
   text(s2,sx+11,by,9.5,0.16,GREY); text(S.spot.join(' · '),sx+11+w2,by,9.5,0.16,INK);
-  if(!mobile()){ const rs=`${P.length} POINTS · U,V NORMALISED TO FRAME · ${hasRef?'R REF · ':''}S SPEC`; ctx.font=FONT(9.5); track(9.5,0.16); const rw=ctx.measureText(rs).width, leftEnd=sx+11+w2+ctx.measureText(S.spot.join(' · ')).width; if(hasLS)ctx.letterSpacing='0px'; const rx=fig.x+fig.w; if(rx-rw>leftEnd+24)text(rs,rx,by,9.5,0.16,GREY,'right'); } }
+  if(!mobile()){ const rs=`${P.length} POINTS · U,V NORMALIZED TO FRAME · ${hasRef?'R REF · ':''}S SPEC`; ctx.font=FONT(9.5); track(9.5,0.16); const rw=ctx.measureText(rs).width, leftEnd=sx+11+w2+ctx.measureText(S.spot.join(' · ')).width; if(hasLS)ctx.letterSpacing='0px'; const rx=fig.x+fig.w; if(rx-rw>leftEnd+24)text(rs,rx,by,9.5,0.16,GREY,'right'); } }
 function drawArt(y1){ if(!art)return; ctx.save(); ctx.beginPath(); ctx.rect(fig.x,fig.y,fig.w,Math.max(0,y1-fig.y)); ctx.clip();
   const drawRef=(x0,x1)=>{ if(!refReady)return; ctx.save(); ctx.beginPath(); ctx.rect(x0,fig.y,x1-x0,fig.h); ctx.clip(); ctx.drawImage(refImg,fig.x,fig.y,fig.w,fig.h); ctx.restore(); };
   if(mode===0){ ctx.drawImage(art,fig.x,fig.y,fig.w,fig.h); }

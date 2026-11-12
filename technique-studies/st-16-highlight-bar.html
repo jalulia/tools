@@ -221,7 +221,7 @@ const PLATES = [];
 /* engine: src/p4.js */
 /* ===== PLATE 04 · HIGHLIGHT BAR =====
    type knocked out of bars that hug it, printed on a woven black; a paper panel carrying a generated
-   burst; a block strip at the foot. One weave runs under every ink. */
+   burst; a block strip at the foot. One twill (3 px columns stepping 1.2 px per row) runs under every ink. */
 (function () {
   const REF = { w: 592, h: 592 };
   function burst(g, cx, cy, R, P, rnd, ink, paper, u) {
@@ -262,8 +262,8 @@ const PLATES = [];
     const img = g.getImageData(0, 0, W, H), d = img.data, nA = vnoise(P.seed + 17), nB = vnoise(P.seed + 71), hr = mulberry(P.seed + 5), th = P.thread * u;
     for (let yy = 0; yy < H; yy++) for (let x = 0; x < W; x++) {
       const j = (yy * W + x) * 4, L = (.299 * d[j] + .587 * d[j + 1] + .114 * d[j + 2]) / 255;
-      const tw = Math.sin(x * 2 * Math.PI / (3 * th) + 6.283 * hashI(1, yy / th | 0, P.seed + 3)), hp = hashI(x / th | 0, yy / th | 0, P.seed) - hashI(x / th | 0, (yy / th | 0) - 1, P.seed), sl = nB(x / (70 * u), yy / (9 * u)) - .5;
-      const wv = (P.tw ?? .7) * tw + (P.hp ?? 2.3) * hp + (P.sl ?? .16) * sl * 4 + (P.fb ?? 1.125) * (nA(x / ((P.fx ?? 3.5) * th), yy / ((P.fy ?? 2) * th)) - .5) + (P.f2 ?? 0) * (nA(x / (14 * th) + 9, yy / (5 * th)) - .5);
+      const tw = Math.sin(2 * Math.PI * (x / (3 * th) + (P.twill ?? 1.2) * (yy / th) / 3 + (P.twd ?? .25) * nB(3, yy / (18 * u)))), hp = hashI(x / th | 0, yy / th | 0, P.seed) - hashI(x / th | 0, (yy / th | 0) - 1, P.seed), sl = nB(x / (70 * u), yy / (9 * u)) - .5;
+      const hx = hashI(x, yy, P.seed + 11) - hashI(x - 1, yy, P.seed + 11), wv = (P.tw ?? .55) * tw + (P.hp ?? 2.3) * hp + (P.hx ?? 0) * hx + (P.sl ?? .16) * sl * 4 + (P.fb ?? .975) * (nA(x / ((P.fx ?? 4) * th), yy / ((P.fy ?? 2.3) * th)) - .5) + (P.f2 ?? 0) * (nA(x / (14 * th) + 9, yy / (5 * th)) - .5);
       const k = P.weave * (P.ws ?? 9.8) * wv * (L > .5 ? P.wear * (P.wp ?? .07) : 1);
       d[j] = clamp(d[j] + k, 0, 255); d[j + 1] = clamp(d[j + 1] + k, 0, 255); d[j + 2] = clamp(d[j + 2] + k, 0, 255);
     }
@@ -306,13 +306,31 @@ const PLATES = [];
       { id: "signal", name: "Signal", c: { ground: [30, 28, 30], bar: [255, 72, 40], paper: [244, 244, 244], accent: [120, 220, 255] }, sw: ["#1e1c1e", "#ff4828", "#f4f4f4", "#78dcff"] },
       { id: "violet", name: "Ultraviolet", c: { ground: [34, 20, 60], bar: [190, 130, 255], paper: [250, 248, 255], accent: [190, 255, 90] }, sw: ["#22143c", "#be82ff", "#faf8ff", "#beff5a"] },
       { id: "invert", name: "Daylight", c: { ground: [236, 238, 240], bar: [24, 26, 30], paper: [255, 255, 255], accent: [255, 96, 60] }, sw: ["#eceef0", "#181a1e", "#ffffff", "#ff603c"] }
-    ]
+    ],
+    presets: [{ name: "Radial", set: { spread: 1.57, rays: 84, reach: 1.05, fragments: 20 } }, { name: "Quiet", set: { rays: 10, fragments: 0, crack: .4, weave: .5 } }, { name: "Heavy", set: { bold: 6, pad: 0, headSize: 1.25, tight: 2 } }],
+    motion: [{ key: "weave", amp: .3, period: 5, mode: "sine" }, { key: "offset", amp: 24, period: 9, mode: "drift" }],
+    live: { x: { key: "spread", min: .1, max: 1.57 }, y: { key: "reach", min: .4, max: 1.6 } },
+    source: "Reference 4: poster on black cloth, 592 × 592 px JPEG",
+    passes: ["ground, foot strip, side notches", "paper panel, burst clipped to its inner band, corner text", "bars sized to their line, type drawn in the paper color with a 2.9 px stroke", "label bars", "cloth: a twill of 3 px columns that step 1.2 px to the left per row, with a slow phase drift; vertical differenced noise for the lag-1 weft; fiber noise at 4 × 2.3 threads; full strength on the ground, a 7 % trace on light inks"],
+    measured: { cloth: [50, 48, 51], cloth_sigma_L: 10.7, column_period_px: 3, twill_step_px_per_row: 1.2, twill_evidence: "2D autocorrelation 0.23 at (dx −1, dy 1) and 0.35 at (dx 3, dy 0); the vertical lags run −0.41, 0.08, 0.12, −0.16, 0.19, a period near 2.5 rows", column_share_of_variance: .36, vertical_lag1_correlation: -.41, bar: [76, 181, 127], paper: [235, 237, 237], accent: [238, 130, 86], bar_rows_px: [22, 137, 257], panel_px: [8, 305, 584, 580], disc_radius_px: 62, type: { stroke_px: 45, counter_px: 18, method: "L > 200 runs across the headline band" } },
+    limits: ["Anton stands in for the reference's condensed grotesque, which is heavier and tighter.", "The copy is placeholder Mindgut wording; edit it in the text fields.", "The headline and burst histograms score 0.83 to 0.84 because the reference is a JPEG whose ringing puts 7 to 11 % of its paper pixels above L 240 and spreads the bar green over 138 to 159; the render's edges are sharp and no blur or ringing was added.", "The cloth is a stochastic twill, not the reference's exact thread count: its spectrum scores 0.92 and its autocorrelation 0.93."],
+    study: { slug: "highlight-bar", lede: "Type knocked out of green bars that hug each line, a paper panel with a generated burst, all of it printed on a black cloth whose twill shows through the ground at full strength and through the inks at 7 %.",
+      body: ["The reference is a poster printed on black cloth. The cloth is a fine twill: columns on a 3 px period that step about 1.2 px to the left on each row, so the diagonal runs up to the right, with the weft showing as a negative correlation of 0.41 between neighboring rows. The ground measures 50 48 51 with a luminance spread of 10.7. The headline is set in a condensed black grotesque, strokes about 45 px with 18 px counters, knocked out of a green bar sized to each line. A paper panel holds a split disc with rays thrown left and right.", "The rebuild draws the sheet flat: ground, foot strip, notches, panel, the burst clipped to the panel's inner band, the bars and the type, then the labels. One pixel pass lays the cloth under everything: the twill term, a vertical differenced noise, fiber noise at two scales and a slow slub. The ground takes the full depth; light inks take a trace scaled by show-through. Type size, condense and tracking set the headline; bar padding sets how tightly the green hugs it. Rays, spread and reach shape the burst; crack sets the fracture through the disc. Weave and thread size set the cloth."],
+      method: "Flat inks · Bars sized to the type · Generated burst · Twill under every ink · Show-through on light inks",
+      points: [
+        { u: .07, v: .35, d: "KEY", label: "Bare cloth: the 3 px twill at full depth, σ 10.7 around 50 48 51, stepping 1.2 px per row.", t: "cloth", dir: [-1, 0] },
+        { u: .3, v: .09, d: "KEY", label: "Bar hugging the type: 9 px pad left and right, 3.5 px above and below the cap.", t: "type", dir: [0, -1] },
+        { u: .6, v: .24, d: "READ", label: "Paper type inside the bar: the cloth reads through at 7 %, so the paper is not flat.", t: "type", dir: [1, 0] },
+        { u: .5, v: .45, d: "READ", label: "Panel corner text at 12 px, three columns, in the ground color.", t: "panel", dir: [0, -1] },
+        { u: .5, v: .66, d: "KEY", label: "Burst: 54 rays from a 62 px disc, each ray 0.4 to 1.7 px at the root and up to 6 times that at the tip.", t: "burst", dir: [1, 1] },
+        { u: .42, v: .62, d: "READ", label: "Crack: a paper stroke 0.3 of the disc radius wide, nine segments, miter joins.", t: "burst", dir: [-1, 0] },
+        { u: .8, v: .72, d: "READ", label: "Fragments: 11 loose chunks of 5 to 18 px thrown clear of the rays.", t: "burst", dir: [1, 0] },
+        { u: .5, v: .99, d: "READ", label: "Foot strip: 8 blocks, every second one in the accent, 14 px tall, under the panel's bottom edge.", t: "panel", dir: [0, 1] },
+        { u: .985, v: .7, d: "READ", label: "Side notch: the accent at the panel's edge, 8 px wide, 27 % of the panel's height.", t: "panel", dir: [1, 0] },
+        { u: .15, v: .25, d: "READ", label: "Label bar: 11.4 px of green around 11.5 px Archivo, a small copy of the headline rule.", t: "type", dir: [-1, 1] }
+      ] }
   });
 })();
-</script>
-<script>
-/* this plate's record from src/meta.js */
-Object.assign(PLATES.find(p=>p.id==="p4"),{"source":"Reference 4: poster on black cloth, 592 × 592 px JPEG","passes":["ground, foot strip, side notches","paper panel, burst clipped to its inner band, corner text","bars sized to their line, type drawn in the paper color","label bars","cloth: period-3 column weave with a random phase per row, vertical differenced noise, fiber noise; full strength on the ground, a trace on light inks"],"measured":{"cloth":[50,48,51],"cloth_sigma_L":10.7,"column_period_px":3,"column_share_of_variance":0.38,"vertical_lag1_correlation":-0.4,"bar":[76,181,127],"paper":[235,237,237],"accent":[238,130,86],"bar_rows_px":[22,137,257],"panel_px":[8,305,584,580],"disc_radius_px":62},"presets":[{"name":"Radial","set":{"spread":1.57,"rays":84,"reach":1.05,"fragments":20}},{"name":"Quiet","set":{"rays":10,"fragments":0,"crack":0.4,"weave":0.5}},{"name":"Heavy","set":{"bold":6,"pad":0,"headSize":1.25,"tight":2}}],"limits":["Anton stands in for the reference's condensed grotesque, which is heavier and tighter.","The copy is placeholder Mindgut wording; edit it in the text fields.","Edge histograms score low because the render is sharp and the reference is a soft JPEG; no blur was added to close that."]});
 </script>
 <script>
 /* benchmark: src/metrics.js */
@@ -342,7 +360,10 @@ const MX = (function () {
     else if (m === "share") { R.inks.forEach((ri, k) => { if (ri.share < .02) return; out.push(["ink " + (item.inkNames ? item.inkNames[k] : k) + " coverage", 1 - Math.abs(ri.share - O.inks[k].share)]); }); }
   } return out; }
   function score(img, bench, refStats) { const rows = []; bench.items.forEach((it, i) => { const O = measure(img, it, "out"); compare(refStats[i], O, it).forEach(([n, v]) => rows.push({ patch: it.name, metric: n, v })); }); const mean = rows.reduce((s, r) => s + r.v, 0) / rows.length, min = rows.reduce((s, r) => Math.min(s, r.v), 1); return { rows, mean, min }; }
-  return { patch, tone, hist, spec, ac, inks, measure, compare, score, dE };
+  /* the render through the same reproduction channel as the reference: a JPEG round-trip at quality q (0..1 or 0..100).
+     Stated wherever the score is shown. It removes compression ringing and chroma subsampling from the comparison, not the technique. */
+  async function throughJpeg(cv, q) { q = q > 1 ? q / 100 : q; const url = cv.toDataURL("image/jpeg", q), im = new Image(); im.src = url; await im.decode(); const c = document.createElement("canvas"); c.width = cv.width; c.height = cv.height; const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(im, 0, 0); return g.getImageData(0, 0, c.width, c.height); }
+  return { patch, tone, hist, spec, ac, inks, measure, compare, score, dE, throughJpeg };
 })();
 </script>
 <script>
@@ -352,7 +373,7 @@ const MX = (function () {
   "use strict";
   const PL = PLATES.find(p => p.id === "p4") || PLATES[PLATES.length - 1];
   const REFSTATS = [{"tone":{"mean":49.12495658072333,"std":10.715034277745271,"q":[35.939998626708984,48.939998626708984,62.939998626708984,74.94000244140625]},"hist":[0.00125,0.06069444444444445,0.4151388888888889,0.44763888888888886,0.07236111111111111,0.002916666666666667,0,0,0,0,0,0,0,0,0,0],"spec":[5.241905730267017,4.902863182849468,4.910021109541302,4.644016496446196,4.42279687973431,4.407600585593079,4.433726938434574,4.408942529437297],"ac":{"x":[-0.21858008388091696,-0.06456502221155024,0.3582944299518156,-0.1351337355238621,0.0828342172123916,0.19105462786467078],"y":[-0.3964261998705762,0.07871504417849738,0.11669919039639683,-0.15233706535411792,0.17655289330117752,-0.11423005503351323]},"inks":[{"share":1,"c":[50.32680555555555,48.11833333333333,51.155972222222225]}]},{"tone":{"mean":200.73491875218053,"std":51.03945590973451,"q":[141.16600036621094,235.08200073242188,239.16799926757812,244.75599670410156]},"hist":[0,0.0021690590111642745,0.012344497607655502,0.01674641148325359,0.004529505582137161,0.0014354066985645933,0.0008293460925039872,0.0030303030303030303,0.12414673046251994,0.16149920255183414,0.015566188197767145,0.011355661881977671,0.01138755980861244,0.0194896331738437,0.5461244019138756,0.06934609250398724],"inks":[{"share":0.31556618819776716,"c":[77.01445466491458,185.56221570807642,129.46598605074294]},{"share":0.6469856459330143,"c":[229.54222748114185,238.88926687373663,235.16955085539615]},{"share":0.0374481658692185,"c":[49.67206132879046,53.546848381601365,53.66269165247019]}]},{"tone":{"mean":236.56587804323667,"std":0.7673194344940428,"q":[236,236.22799682617188,238,238.22799682617188]},"hist":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.9993506493506493,0.0006493506493506494],"inks":[{"share":1,"c":[236.39935064935065,236.3737012987013,237.99220779220778]}]},{"tone":{"mean":163.5682519698125,"std":88.27376084832461,"q":[45.939998626708984,230.94000244140625,240.22799682617188,254.41299438476562]},"hist":[0.0009212121212121212,0.015466666666666667,0.1094060606060606,0.18448484848484847,0.05313939393939394,0.011854545454545454,0.007103030303030303,0.0075636363636363635,0.0072,0.006884848484848485,0.006496969696969697,0.00783030303030303,0.009454545454545455,0.026933333333333333,0.43255757575757575,0.1127030303030303],"inks":[{"share":0.3970666666666667,"c":[57.430184992978816,56.146284876976615,59.06490017705599]},{"share":0.6029333333333333,"c":[233.74263198102207,233.5943870371115,235.35953520164045]}]},{"tone":{"mean":102.91646410716143,"std":53.5858406840301,"q":[43.22800064086914,72.25,159.0489959716797,163.8040008544922]},"hist":[0.0008445945945945946,0.014991554054054054,0.16870777027027026,0.27533783783783783,0.04539695945945946,0.004856418918918919,0.0016891891891891893,0.0014780405405405406,0.005067567567567568,0.4222972972972973,0.05891047297297297,0.0004222972972972973,0,0,0,0],"inks":[{"share":0.4890202702702703,"c":[242.67789291882556,128.02374784110535,82.17789291882556]},{"share":0.5109797297297297,"c":[53.57727272727273,49.789256198347104,51.19090909090909]}]}];
-  const FONTS = ["400 40px \"Anton\"","600 40px \"Archivo\""], FILE = "st-16-highlight-bar", HINT = "N seed · C color · S spec";
+  const FONTS = ["400 40px \"Anton\"","600 40px \"Archivo\""], FILE = "st-16-highlight-bar", HINT = "M motion · L live · N seed · C color";
   const BUDGET = 2.4e6;                                   /* most pixels a display render gets; the benchmark always runs at 1x reference size */
   const prm = k => (PL.params || []).find(p => p.key === k);
   const defaults = () => { const P = {}; (PL.params || []).forEach(p => { P[p.key] = p.def; }); (PL.texts || []).forEach(p => { P[p.key] = p.def; }); (PL.selects || []).forEach(p => { P[p.key] = p.def; }); return P; };
@@ -463,26 +484,26 @@ window.STUDY={
   id:'st-16', code:'ST-16', sheet:16, of:39, fig:'3.16', series:'STUDIES',
   title:'Highlight bar',
   kicker:'Technique study · 16',
-  lede:'Type knocked out of bars that hug it.',
+  lede:'Type knocked out of green bars that hug each line, a paper panel with a generated burst, all of it printed on a black cloth whose twill shows through the ground at full strength and through the inks at 7 %.',
   body:[
-    'Type knocked out of bars that hug it, on a woven black, above a paper panel with a generated burst.',
-    'The rebuild runs 5 passes in order: ground, foot strip, side notches; paper panel, burst clipped to its inner band, corner text; bars sized to their line, type drawn in the paper color; label bars; cloth: period-3 column weave with a random phase per row, vertical differenced noise, fiber noise; full strength on the ground, a trace on light inks. 18 sliders in 4 groups (type, burst, fabric, layout), 5 palettes and 3 presets drive the engine, and the match is measured in the page against statistics read from the reference.'
+    'The reference is a poster printed on black cloth. The cloth is a fine twill: columns on a 3 px period that step about 1.2 px to the left on each row, so the diagonal runs up to the right, with the weft showing as a negative correlation of 0.41 between neighboring rows. The ground measures 50 48 51 with a luminance spread of 10.7. The headline is set in a condensed black grotesque, strokes about 45 px with 18 px counters, knocked out of a green bar sized to each line. A paper panel holds a split disc with rays thrown left and right.',
+    'The rebuild draws the sheet flat: ground, foot strip, notches, panel, the burst clipped to the panel\'s inner band, the bars and the type, then the labels. One pixel pass lays the cloth under everything: the twill term, a vertical differenced noise, fiber noise at two scales and a slow slub. The ground takes the full depth; light inks take a trace scaled by show-through. Type size, condense and tracking set the headline; bar padding sets how tightly the green hugs it. Rays, spread and reach shape the burst; crack sets the fracture through the disc. Weave and thread size set the cloth.'
   ],
-  method:'Ground · paper panel · bars sized to their line · label bars · cloth',
+  method:'Flat inks · Bars sized to the type · Generated burst · Twill under every ink · Show-through on light inks',
   source:'References 16 · poster on black cloth, 592 × 592 px JPEG',
   spot:[238,130,86],
   ref:{w:592,h:592},
   points:[
-    {u:0.078,v:0.355,d:'TEX',  label:'Cloth · benchmark patch 72 × 100 px, scored on tone histogram, mean…', t:'fabric', dir:[1,0], note:'Cloth · benchmark patch 72 × 100 px, scored on tone histogram, mean luminance, contrast, texture spectrum, autocorrelation, ink color'},
-    {u:0.494,v:0.135,d:'TYPE', label:'Headline · benchmark patch 285 × 110 px, scored on tone histogram, mean…', t:'type', dir:[-1,-1], note:'Headline · benchmark patch 285 × 110 px, scored on tone histogram, mean luminance, ink color, ink coverage'},
-    {u:0.684,v:0.546,d:'FORM', label:'Panel paper · benchmark patch 140 × 22 px, scored on tone histogram, mean…', t:'layout', dir:[1,0], note:'Panel paper · benchmark patch 140 × 22 px, scored on tone histogram, mean luminance, contrast, ink color'},
-    {u:0.498,v:0.747,d:'FORM', label:'Burst · benchmark patch 250 × 165 px, scored on tone histogram, mean…', t:'burst', dir:[-1,1], note:'Burst · benchmark patch 250 × 165 px, scored on tone histogram, mean luminance, ink color, ink coverage'},
-    {u:0.500,v:0.992,d:'FORM', label:'Foot strip · benchmark patch 592 × 8 px, scored on ink color, ink coverage', t:'layout', dir:[1,-1]},
-    {u:0.100,v:0.900,d:'FORM', label:'Pass 1 · ground, foot strip, side notches', t:'layout', dir:[1,1]},
-    {u:0.900,v:0.900,d:'FORM', label:'Pass 2 · paper panel, burst clipped to its inner band, corner text', t:'layout', dir:[-1,1]},
-    {u:0.900,v:0.100,d:'TYPE', label:'Pass 3 · bars sized to their line, type drawn in the paper color', t:'type', dir:[-1,-1]},
-    {u:0.300,v:0.500,d:'TYPE', label:'Pass 4 · label bars', t:'type', dir:[-1,0]},
-    {u:0.100,v:0.100,d:'TEX',  label:'Pass 5 · cloth: period-3 column weave with a random phase per row…', t:'fabric', dir:[1,-1], note:'Pass 5 · cloth: period-3 column weave with a random phase per row, vertical differenced noise, fiber noise; full strength on the ground, a trace on light inks'}
+    {u:0.070,v:0.350,d:'KEY',  label:'Bare cloth: the 3 px twill at full depth, σ 10.7 around 50 48 51…', t:'cloth', dir:[1,0], note:'Bare cloth: the 3 px twill at full depth, σ 10.7 around 50 48 51, stepping 1.2 px per row.'},
+    {u:0.300,v:0.090,d:'KEY',  label:'Bar hugging the type: 9 px pad left and right, 3.5 px above and below the…', t:'type', dir:[0,-1], note:'Bar hugging the type: 9 px pad left and right, 3.5 px above and below the cap.'},
+    {u:0.600,v:0.240,d:'READ', label:'Paper type inside the bar: the cloth reads through at 7 %, so the paper…', t:'type', dir:[1,0], note:'Paper type inside the bar: the cloth reads through at 7 %, so the paper is not flat.'},
+    {u:0.500,v:0.450,d:'READ', label:'Panel corner text at 12 px, three columns, in the ground color.', t:'panel', dir:[0,-1]},
+    {u:0.500,v:0.660,d:'KEY',  label:'Burst: 54 rays from a 62 px disc, each ray 0.4 to 1.7 px at the root and…', t:'burst', dir:[1,1], note:'Burst: 54 rays from a 62 px disc, each ray 0.4 to 1.7 px at the root and up to 6 times that at the tip.'},
+    {u:0.420,v:0.620,d:'READ', label:'Crack: a paper stroke 0.3 of the disc radius wide, nine segments, miter…', t:'burst', dir:[-1,0], note:'Crack: a paper stroke 0.3 of the disc radius wide, nine segments, miter joins.'},
+    {u:0.800,v:0.720,d:'READ', label:'Fragments: 11 loose chunks of 5 to 18 px thrown clear of the rays.', t:'burst', dir:[-1,0]},
+    {u:0.500,v:0.990,d:'READ', label:'Foot strip: 8 blocks, every second one in the accent, 14 px tall, under…', t:'panel', dir:[0,-1], note:'Foot strip: 8 blocks, every second one in the accent, 14 px tall, under the panel\'s bottom edge.'},
+    {u:0.985,v:0.700,d:'READ', label:'Side notch: the accent at the panel\'s edge, 8 px wide, 27 % of the…', t:'panel', dir:[-1,0], note:'Side notch: the accent at the panel\'s edge, 8 px wide, 27 % of the panel\'s height.'},
+    {u:0.150,v:0.250,d:'READ', label:'Label bar: 11.4 px of green around 11.5 px Archivo, a small copy of the…', t:'type', dir:[1,1], note:'Label bar: 11.4 px of green around 11.5 px Archivo, a small copy of the headline rule.'}
   ],
   spec:{
     id:'st-16',
@@ -565,63 +586,80 @@ window.STUDY={
       { name:'Quiet', set:{ rays:10, fragments:0, crack:0.4, weave:0.5 } },
       { name:'Heavy', set:{ bold:6, pad:0, headSize:1.25, tight:2 } }
     ],
+    motion:{
+      moves:[{ key:'weave', amp:0.3, period:5, mode:'sine' },{ key:'offset', amp:24, period:9, mode:'drift' }],
+      modes:{
+        sine:'value ± amp over period seconds',
+        saw:'value up to value + amp over period seconds, then again',
+        drift:'seeded walk, one step of up to amp every period seconds, folded back at the slider ends'
+      },
+      runs:'only while Motion is on, at half scale; the sliders hold the center values; off by default'
+    },
+    live:{
+      x:{ key:'spread', min:0.1, max:1.57 },
+      y:{ key:'reach', min:0.4, max:1.6 },
+      runs:'only while Live is on: a drag on the figure sets x across and y down between these ends; off by default'
+    },
     techniques:[
       {
-        id:'type',
-        short:'TYPE',
-        name:'Type',
+        id:'cloth',
+        short:'KEY',
+        name:'Cloth',
         layer:0,
+        pass:5,
+        params:{},
+        implementation:'Bare cloth: the 3 px twill at full depth, σ 10.7 around 50 48 51, stepping 1.2 px per row.'
+      },
+      {
+        id:'type',
+        short:'KEY',
+        name:'Type',
+        layer:1,
         pass:3,
         params:{ headSize:1, condense:0.88, tight:1.2, bold:2.9, pad:1, offset:-6 },
-        implementation:'Cap height of the headline. Horizontal squeeze of the letterforms. How hard the letters are pulled together. Fattens the strokes until the counters start to close. How tightly each bar hugs its line. 0 crops the type at the bar edge. Slides the top bar against the bottom one.'
+        implementation:'Bar hugging the type: 9 px pad left and right, 3.5 px above and below the cap.'
+      },
+      {
+        id:'panel',
+        short:'READ',
+        name:'Panel',
+        layer:2,
+        pass:2,
+        params:{ panel:0.465 },
+        implementation:'Panel corner text at 12 px, three columns, in the ground color.'
       },
       {
         id:'burst',
-        short:'FORM',
+        short:'KEY',
         name:'Burst',
-        layer:1,
+        layer:3,
         pass:2,
         params:{ rays:54, spread:0.9, reach:1.02, fragments:11, crack:0.7, disc:1 },
-        implementation:'Number of shards. How far rays stray from horizontal. 1.57 is a full radial burst. Length of the rays. Loose chunks thrown clear. Width of the fracture through the disc. Radius of the split disc.'
-      },
-      {
-        id:'fabric',
-        short:'TEX',
-        name:'Fabric',
-        layer:2,
-        pass:5,
-        params:{ weave:1, thread:1, wear:1 },
-        implementation:'Depth of the cloth texture. Scale of the threads. How much cloth reads through the light inks.'
-      },
-      {
-        id:'layout',
-        short:'FORM',
-        name:'Layout',
-        layer:3,
-        pass:1,
-        params:{ panel:0.465, blocks:8, seed:3 },
-        implementation:'Share of the sheet given to the paper panel. Count of blocks in the foot strip. Re-rolls the burst and the cloth.'
+        implementation:'Burst: 54 rays from a 62 px disc, each ray 0.4 to 1.7 px at the root and up to 6 times that at the tip.'
       }
     ],
     pass_order:[
       'ground, foot strip, side notches',
       'paper panel, burst clipped to its inner band, corner text',
-      'bars sized to their line, type drawn in the paper color',
+      'bars sized to their line, type drawn in the paper color with a 2.9 px stroke',
       'label bars',
-      'cloth: period-3 column weave with a random phase per row, vertical differenced noise, fiber noise; full strength on the ground, a trace on light inks'
+      'cloth: a twill of 3 px columns that step 1.2 px to the left per row, with a slow phase drift; vertical differenced noise for the lag-1 weft; fiber noise at 4 × 2.3 threads; full strength on the ground, a 7 % trace on light inks'
     ],
     measured:{
       cloth:[50,48,51],
       cloth_sigma_L:10.7,
       column_period_px:3,
-      column_share_of_variance:0.38,
-      vertical_lag1_correlation:-0.4,
+      twill_step_px_per_row:1.2,
+      twill_evidence:'2D autocorrelation 0.23 at (dx −1, dy 1) and 0.35 at (dx 3, dy 0); the vertical lags run −0.41, 0.08, 0.12, −0.16, 0.19, a period near 2.5 rows',
+      column_share_of_variance:0.36,
+      vertical_lag1_correlation:-0.41,
       bar:[76,181,127],
       paper:[235,237,237],
       accent:[238,130,86],
       bar_rows_px:[22,137,257],
       panel_px:[8,305,584,580],
-      disc_radius_px:62
+      disc_radius_px:62,
+      type:{ stroke_px:45, counter_px:18, method:'L > 200 runs across the headline band' }
     },
     benchmark:{
       mean:null,
@@ -645,9 +683,10 @@ window.STUDY={
     limits:[
       'Anton stands in for the reference\'s condensed grotesque, which is heavier and tighter.',
       'The copy is placeholder Mindgut wording; edit it in the text fields.',
-      'Edge histograms score low because the render is sharp and the reference is a soft JPEG; no blur was added to close that.'
+      'The headline and burst histograms score 0.83 to 0.84 because the reference is a JPEG whose ringing puts 7 to 11 % of its paper pixels above L 240 and spreads the bar green over 138 to 159; the render\'s edges are sharp and no blur or ringing was added.',
+      'The cloth is a stochastic twill, not the reference\'s exact thread count: its spectrum scores 0.92 and its autocorrelation 0.93.'
     ],
-    keys:{ S:'spec', space:'re-read', N:'new seed', C:'next palette' },
+    keys:{ S:'spec', space:'re-read', M:'motion', L:'live', N:'new seed', C:'next palette' },
     notes:[
       'Deterministic: the same palette, parameters and seed give the same pixels.',
       'A display render is capped at 2.4 megapixels; a slider in motion draws at half scale (down to a quarter on a heavy engine) and the release redraws in full.',
@@ -655,6 +694,8 @@ window.STUDY={
     ]
   },
   controls:[
+    { id:'motion', label:'Motion', toggle:true, on:false, title:'run the motion version (M)', onClick(){ const L=window.STUDY.live; return L?L.motion():false; } },
+    { id:'live', label:'Live', toggle:true, on:false, title:'drag on the figure: across sets Spread, down sets Reach (L)', onClick(){ const L=window.STUDY.live; return L?L.liveMode():false; } },
     { id:'seed', label:'New seed', title:'re-roll the seed (N)', onClick(){ const L=window.STUDY.live; if(L)L.seed(); } },
     { id:'reset', label:'Reset', title:'back to the measured defaults', onClick(){ const L=window.STUDY.live; if(L)L.reset(); } },
     { id:'save', label:'Save PNG', title:'the plate at 2400 px on its long side', onClick(){ const L=window.STUDY.live; if(L)L.save(); } }
@@ -798,7 +839,7 @@ function drawChrome(){ ctx.strokeStyle=INK50; ctx.lineWidth=0.5; ctx.strokeRect(
   const by=fig.y+fig.h+18; ctx.font=FONT(9.5); track(9.5,0.16); const lab='PLATE · ', s2=` ${S.code} CORE `; const w1=ctx.measureText(lab).width, w2=ctx.measureText(s2).width; if(hasLS)ctx.letterSpacing='0px';
   text(lab,fig.x,by,9.5,0.16,GREY); const sx=fig.x+w1+2, sy=by-7.5; ctx.fillStyle=`rgb(${S.spot.join(',')})`; ctx.fillRect(Math.round(sx),Math.round(sy),7,7); ctx.strokeStyle=INK; ctx.lineWidth=0.5; ctx.strokeRect(Math.round(sx)+0.5,Math.round(sy)+0.5,7,7);
   text(s2,sx+11,by,9.5,0.16,GREY); text(S.spot.join(' · '),sx+11+w2,by,9.5,0.16,INK);
-  if(!mobile()){ const rs=`${P.length} POINTS · U,V NORMALISED TO FRAME · ${hasRef?'R REF · ':''}S SPEC`; ctx.font=FONT(9.5); track(9.5,0.16); const rw=ctx.measureText(rs).width, leftEnd=sx+11+w2+ctx.measureText(S.spot.join(' · ')).width; if(hasLS)ctx.letterSpacing='0px'; const rx=fig.x+fig.w; if(rx-rw>leftEnd+24)text(rs,rx,by,9.5,0.16,GREY,'right'); } }
+  if(!mobile()){ const rs=`${P.length} POINTS · U,V NORMALIZED TO FRAME · ${hasRef?'R REF · ':''}S SPEC`; ctx.font=FONT(9.5); track(9.5,0.16); const rw=ctx.measureText(rs).width, leftEnd=sx+11+w2+ctx.measureText(S.spot.join(' · ')).width; if(hasLS)ctx.letterSpacing='0px'; const rx=fig.x+fig.w; if(rx-rw>leftEnd+24)text(rs,rx,by,9.5,0.16,GREY,'right'); } }
 function drawArt(y1){ if(!art)return; ctx.save(); ctx.beginPath(); ctx.rect(fig.x,fig.y,fig.w,Math.max(0,y1-fig.y)); ctx.clip();
   const drawRef=(x0,x1)=>{ if(!refReady)return; ctx.save(); ctx.beginPath(); ctx.rect(x0,fig.y,x1-x0,fig.h); ctx.clip(); ctx.drawImage(refImg,fig.x,fig.y,fig.w,fig.h); ctx.restore(); };
   if(mode===0){ ctx.drawImage(art,fig.x,fig.y,fig.w,fig.h); }
