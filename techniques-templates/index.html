@@ -163,7 +163,7 @@ function cardFor(k){ if(TTBY.has(k))return card(TTBY.get(k),true); if(LIBBY.has(
 function nameFor(k){ const e=TTBY.get(k)||LIBBY.get(k); if(e)return (e.code?e.code+' · ':'')+e.title; const r=REGBY.get(k); return r?r.name:k; }
 /* a set opens as its own page in ../set/, keyed by accession; registry techniques have no accession and stay out */
 const ACC=window.TT_ACC||{};
-function linkFor(s,edit){ const ks=s.k.map(k=>ACC[k]).filter(Boolean); return new URL('../set/',location.href).href+'#'+(edit?'e=1&':'')+(s.t?'t='+encodeURIComponent(s.t)+'&':'')+'k='+ks.join(','); }
+function linkFor(s,edit){ const ks=s.k.map(k=>ACC[k]||(REGBY.has(k)?k:'')).filter(Boolean); /* library pieces travel as accession tails, All-techniques cards as R:<id> */ return new URL('../set/',location.href).href+'#'+(edit?'e=1&':'')+(s.t?'t='+encodeURIComponent(s.t)+'&':'')+'k='+ks.join(','); }
 function keep(){ lsSet('tt-set',SET); }
 function mk(){ return `<button type="button" class="mk${picking?' on':''}" aria-pressed="${picking}" title="Pick cards on any tab to make a set you can send as one link">${picking?'Picking':'Make a set'}${SET.k.length?` <i>${SET.k.length}</i>`:''}</button>`; }
 function decorate(){

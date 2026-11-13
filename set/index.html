@@ -113,6 +113,7 @@ body.edit{height:100vh;overflow:hidden}
 <main id="app"></main>
 <div class="view" id="view" hidden role="dialog" aria-modal="true" aria-label="Piece"></div>
 <script src="../library/catalog.js"></script>
+<script src="../techniques-templates/_shared/reg-index.js"></script>
 <script src="moved.js"></script>
 <script>
 (function(){
@@ -124,6 +125,9 @@ const COL=new Map((L.collections||[]).map(c=>[c.id,c.title]));
 /* every public work with a picture can go in a set; a piece is keyed by the tail of its accession number */
 const POOL=(L.records||[]).filter(r=>r.access==='public'&&!r.role&&r.thumb&&r.acc);
 const tail=r=>String(r.acc).split('.').pop(), BY=new Map(POOL.map(r=>[tail(r),r]));
+/* techniques picked on the T&T "All techniques" tab travel as R:<id>: they show as their own picture and open their own page */
+const ttp=p=>!p?'':(/^(https?:|\.\.\/)/.test(p)?p:'../techniques-templates/'+p);
+for(const e of ((window.TT_REG||{}).entries||[]))if(e.pic)BY.set('R:'+e.id,{key:'R:'+e.id,title:e.name,kind:'technique',family:e.family,collection:'techniques',thumb:ttp(e.pic),href:ttp(e.href)});
 const fromLib=p=>!p?'':(/^(https?:|\.\.\/)/.test(p)?p:'../library/'+p);
 const pic=r=>fromLib(r.thumb_2x&&(!r.thumb_2x_w||r.thumb_2x_w<=1600)?r.thumb_2x:r.thumb);
 const small=r=>fromLib(r.thumb);
@@ -159,7 +163,7 @@ ${list.length?'':'<div class="empty">This link names no pieces.</div>'}</div>`;
 let cur=-1;
 function open(i){ cur=(i+list.length)%list.length; const r=list[cur];
   view.innerHTML=`<aside class="info"><div class="vb"><span class="k">${String(cur+1).padStart(2,'0')} / ${String(list.length).padStart(2,'0')}</span><span><button class="nv" data-d="-1" aria-label="Previous">←</button> <button class="nv" data-d="1" aria-label="Next">→</button> <button class="nv" data-x aria-label="Close">×</button></span></div>
-<div class="who"><span class="k">${esc(line(r))}</span><h2>${esc(r.title)}</h2>${r.sub?`<p>${esc(r.sub)}</p>`:''}<div class="cta"><button type="button" class="btn pri" data-j>Grab the JSON</button><button type="button" class="btn" data-js>Save .json</button></div><span class="fl" aria-live="polite"></span></div>
+<div class="who"><span class="k">${esc(line(r))}</span><h2>${esc(r.title)}</h2>${r.sub?`<p>${esc(r.sub)}</p>`:''}<div class="cta">${r.key?`<a class="btn" href="${esc(r.href)}" target="_blank" rel="noopener">Open page ↗</a>`:''}<button type="button" class="btn pri" data-j>Grab the JSON</button><button type="button" class="btn" data-js>Save .json</button></div><span class="fl" aria-live="polite"></span></div>
 <ol class="nav">${list.map((x,k)=>`<li><button type="button" data-n="${k}" aria-current="${k===cur}"><i>${String(k+1).padStart(2,'0')}</i><span>${esc(x.title)}</span></button></li>`).join('')}</ol></aside>
 <div class="stage">${runs(r)?`<iframe src="${esc(runUrl(r))}" title="${esc(r.title)}" allow="fullscreen"></iframe>`:`<img src="${esc(pic(r))}" alt="${esc(r.title)}">`}</div>`;
   view.hidden=false; document.body.style.overflow='hidden';
@@ -173,7 +177,7 @@ function open(i){ cur=(i+list.length)%list.length; const r=list[cur];
   view.querySelector('[data-x]').focus(); }
 /* the JSON: for a study or plate, its spec (techniques, measured numbers, ranges, modules) with the settings as they are on screen;
    for anything else, its library record (where it is filed: accession, collection, source, dates) */
-async function jsonOf(r){ const f=view.querySelector('iframe'); const page=()=>new URL(runUrl(r).replace(/\?embed.*$/,''),location.href).href;
+async function jsonOf(r){ if(r.key)return { technique:{ id:r.key.slice(2), title:r.title, family:r.family, page:new URL(r.href,location.href).href } }; const f=view.querySelector('iframe'); const page=()=>new URL(runUrl(r).replace(/\?embed.*$/,''),location.href).href;
   if(f){ try{ const w=f.contentWindow, S=w.__study&&w.__study.S; if(S)return { id:S.id, code:S.code, title:S.title, settings:w.__study_state?w.__study_state():null, spec:S.spec }; }catch(e){} }
   if(runs(r)){ try{ const sp=await (await fetch(r.href.replace(/\/?$/,'/')+'spec.json')).json(); return { title:r.title, code:r.call, spec:sp }; }catch(e){} }
   const keep=['acc','call','title','sub','kind','family','collection','techniques','atoms','source','dates','provenance']; const o={}; for(const k of keep)if(r[k]!=null)o[k]=r[k]; return { record:o }; }
