@@ -528,24 +528,24 @@ window.STUDY={
   kicker:'Technique study · 25',
   lede:'One distance field gives every cell its fill, its 4 px keyline and the black gap beside it.',
   body:[
-    'The print is a sheet of cells inked by hand: gray or green blobs, each outlined in black, with black pockets where three walls meet and a mint channel that winds between them and out into the mint frame. Measured off the scan, the gray cells have a median equivalent diameter of 87 px and the green ones 53 px; the keylines are 4 px wide; the channels have a median width of 28 px and swell to 60; black covers 22 percent of the panel.',
-    'The plate seeds cells on a 105 px lattice with jitter, warps the coordinates once, and computes for every pixel the signed distance to the nearest wall as a smooth minimum over the neighboring seeds. That one number is cut three ways: above the keyline it is fill, below zero it is gap, between it is the black line. A second field, the distance to three wandering polylines, is the channel; it pushes the cells back by one keyline so each river has its own black edge. Cell size, jitter and corner radius shape the field; gap, keyline, gain and scan blur are the ink; channels, width and wander are the rivers.'
+    'A sheet of hand-inked cells: gray or green blobs, each outlined in black, with black pockets where three walls meet and a mint channel winding between them into the mint frame. Measured off the scan: gray cells have a median equivalent diameter of 87 px and green ones 53 px; keylines are 4 px wide; channels have a median width of 28 px and swell to 60; black covers 22 percent of the panel.',
+    'Cells are seeded on a 105 px jittered lattice, the coordinates are warped once, and every pixel gets the signed distance to the nearest wall as a smooth minimum over neighboring seeds. That number is cut three ways: above the keyline it is fill, below zero it is gap, in between it is the black line. A second field, the distance to three wandering polylines, makes the channels and pushes the cells back by one keyline, so each channel has its own black edge. Cell size, jitter and corner radius shape the field; gap, keyline, gain and scan blur are the ink; channels, width and wander set the channels.'
   ],
   method:'Jittered seed lattice · warped smooth-min wall distance · polyline channel distance · three-way cut · scan blur and ink gain',
   source:'References 25 · hand-inked cell print with a mint channel network, 850 × 1200 px JPEG scan',
   spot:[173,247,178],
   ref:{w:850,h:1200},
   points:[
-    {u:0.350,v:0.500,d:'KEY',  label:'A wall: 4 px of black keyline on each side of a 6…', t:'edge', dir:[1,0], note:'A wall: 4 px of black keyline on each side of a 6 px gap, all from one distance value.'},
-    {u:0.500,v:0.350,d:'KEY',  label:'A junction: three walls meet and the smooth-min…', t:'edge', dir:[0,1], note:'A junction: three walls meet and the smooth-min distance leaves a black pocket about 22 px across.'},
-    {u:0.600,v:0.600,d:'KEY',  label:'A channel: mint, 28 px median width, swelling…', t:'pull', dir:[0,1], note:'A channel: mint, 28 px median width, swelling along the run, with its own keyline where it passes a cell.'},
-    {u:0.200,v:0.200,d:'READ', label:'A green cell: the fill is decided by hash, 41…', t:'grain', dir:[1,0], note:'A green cell: the fill is decided by hash, 41 percent of cells; its grain is 1.5 times the gray\'s.'},
-    {u:0.500,v:0.500,d:'READ', label:'Gray fill: 3.5 levels of smooth grain at 2.6 px…', t:'grain', dir:[1,1], note:'Gray fill: 3.5 levels of smooth grain at 2.6 px, the scanner\'s noise on flat paper.'},
-    {u:0.030,v:0.500,d:'READ', label:'The frame: 0.055 of the width in mint, with the…', t:'edge', dir:[1,0], note:'The frame: 0.055 of the width in mint, with the panel\'s keyline inside it.'},
-    {u:0.500,v:0.970,d:'READ', label:'Where a channel meets the frame it opens into it…', t:'pull', dir:[0,-1], note:'Where a channel meets the frame it opens into it; the keyline stops at the panel edge.'},
-    {u:0.800,v:0.300,d:'READ', label:'Zoom in: the scan blur of 1.3 px runs on every…', t:'edge', dir:[-1,0], note:'Zoom in: the scan blur of 1.3 px runs on every edge, the gain shifts the cut so black grows 1 px into the fills, and a 3 px bleed darkens the fill beside the line.'},
-    {u:0.700,v:0.800,d:'READ', label:'A small cell pinched between two channels: the…', t:'edge', dir:[0,-1], note:'A small cell pinched between two channels: the channel distance beat the wall distance on both sides.'},
-    {u:0.300,v:0.850,d:'READ', label:'A wide black gap: two seeds far apart leave a long…', t:'edge', dir:[1,0], note:'A wide black gap: two seeds far apart leave a long margin below the keyline cut.'}
+    {u:0.350,v:0.500,d:'KEY',  label:'Wall', t:'edge', dir:[1,0], note:'A wall: 4 px of black keyline on each side of a 6 px gap, all from one distance value.'},
+    {u:0.500,v:0.350,d:'KEY',  label:'Junction', t:'edge', dir:[0,1], note:'A junction: three walls meet and the smooth-min distance leaves a black pocket about 22 px across.'},
+    {u:0.600,v:0.600,d:'KEY',  label:'Channel', t:'pull', dir:[0,1], note:'A channel: mint, 28 px median width, swelling along the run, with its own keyline where it passes a cell.'},
+    {u:0.200,v:0.200,d:'READ', label:'Green cell', t:'grain', dir:[1,0], note:'A green cell: the fill is decided by hash, 41 percent of cells; its grain is 1.5 times the gray\'s.'},
+    {u:0.500,v:0.500,d:'READ', label:'Gray fill', t:'grain', dir:[1,1], note:'Gray fill: 3.5 levels of smooth grain at 2.6 px, the scanner\'s noise on flat paper.'},
+    {u:0.030,v:0.500,d:'READ', label:'Frame', t:'edge', dir:[1,0], note:'The frame: 0.055 of the width in mint, with the panel\'s keyline inside it.'},
+    {u:0.500,v:0.970,d:'READ', label:'Channel meets frame', t:'pull', dir:[0,-1], note:'Where a channel meets the frame it opens into it; the keyline stops at the panel edge.'},
+    {u:0.800,v:0.300,d:'READ', label:'Zoom in', t:'edge', dir:[-1,0], note:'Zoom in: the scan blur of 1.3 px runs on every edge, the gain shifts the cut so black grows 1 px into the fills, and a 3 px bleed darkens the fill beside the line.'},
+    {u:0.700,v:0.800,d:'READ', label:'Pinched cell', t:'edge', dir:[0,-1], note:'A small cell pinched between two channels: the channel distance beat the wall distance on both sides.'},
+    {u:0.300,v:0.850,d:'READ', label:'Wide black gap', t:'edge', dir:[1,0], note:'A wide black gap: two seeds far apart leave a long margin below the keyline cut.'}
   ],
   spec:{
     id:'st-25',
@@ -695,7 +695,7 @@ window.STUDY={
         step:0.001,
         unit:null,
         group:'Motion',
-        does:'Position along the loop. Slides a slow wave through the warp so the walls breathe, and moves the swell along each channel.'
+        does:'Position along the loop. Slides a slow wave through the warp so the walls shift, and moves the swell along each channel.'
       },
       seed:{ value:13, default:13, range:[1,999], step:1, unit:null, group:'Motion', does:'Re-rolls seeds, fills and channels.' }
     },
@@ -838,7 +838,7 @@ window.STUDY={
     { id:'channel', label:'Channel width', min:0.3, max:4, step:0.01, value:1.5, unit:'×', group:'Channels', why:'Width of the mint rivers: 1 is a 28 px median with a swell along the run.', fmt:v=>(+v).toFixed(2)+' ×', onChange(v){ const L=window.STUDY.live; if(L)L.set('channel',v,true); } },
     { id:'wander', label:'Wander', min:0, max:2.5, step:0.01, value:1, unit:'×', group:'Channels', why:'How much each channel swings side to side.', fmt:v=>(+v).toFixed(2)+' ×', onChange(v){ const L=window.STUDY.live; if(L)L.set('wander',v,true); } },
     { id:'frame', label:'Frame', min:0, max:0.15, step:0.001, value:0.055, unit:'of width', group:'Channels', why:'Width of the mint border around the panel.', fmt:v=>(+v).toFixed(3)+' of width', onChange(v){ const L=window.STUDY.live; if(L)L.set('frame',v,true); } },
-    { id:'phase', label:'Phase', min:0, max:1, step:0.001, value:0, unit:'', group:'Motion', why:'Position along the loop. Slides a slow wave through the warp so the walls breathe, and moves the swell along each channel.', fmt:v=>(+v).toFixed(3), onChange(v){ const L=window.STUDY.live; if(L)L.set('phase',v,true); } },
+    { id:'phase', label:'Phase', min:0, max:1, step:0.001, value:0, unit:'', group:'Motion', why:'Position along the loop. Slides a slow wave through the warp so the walls shift, and moves the swell along each channel.', fmt:v=>(+v).toFixed(3), onChange(v){ const L=window.STUDY.live; if(L)L.set('phase',v,true); } },
     { id:'seed', label:'Seed', min:1, max:999, step:1, value:13, unit:'', group:'Motion', why:'Re-rolls seeds, fills and channels.', fmt:v=>(+v).toFixed(0), onChange(v){ const L=window.STUDY.live; if(L)L.set('seed',v,true); } }
   ],
   hud:true,

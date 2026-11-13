@@ -104,10 +104,10 @@ window.STUDY={
   id:'st-03', code:'ST-03', sheet:3, fig:'3.3', series:'STUDIES',
   title:'Thermal die-cut chips',
   kicker:'Technique study · 03',
-  lede:'Eleven cut shapes, a heat-map inside, one slipped line.',
+  lede:'Eleven cut shapes, a heat map inside each, one slipped line.',
   body:[
-    'Die-cut pieces on warm grey stock. Each silhouette carries a hairline plum outline that misregisters from its fill: the pale backing and the colour sit a pixel down-right of the line, so a white sliver shows inside top edges and outside bottom ones. Two pieces are flat orange-and-black with cut windows and dash text.',
-    'Interiors are heat maps: one dominant octave of domain-warped Perlin, read through a pale-biased ramp of pink, white, blue, yellow and cyan, with one liquid contour hardened per chip. Liquid layers are separate blobs with their own outline and ramp. A monochrome print grain at reference-pixel pitch closes everything, paper included.'
+    'Die-cut pieces on warm gray stock. Each silhouette has a hairline plum outline printed out of register with its fill: the pale backing and the color sit a pixel down and right of the line, so a white sliver shows inside top edges and outside bottom ones. Two pieces are flat orange and black, with cut windows and dash text.',
+    'The interiors are heat maps: one dominant octave of domain-warped Perlin noise read through a pale-biased ramp of pink, white, blue, yellow and cyan, with one liquid contour hardened per chip. Liquid layers are separate blobs with their own outline and ramp. A monochrome print grain at reference-pixel pitch goes over everything, paper included.'
   ],
   method:'Die-cut rings · misregistered keyline · warped thermal ramp · print grain',
   source:'Reference 03 · outlined die-cut chips with oil-slick gradient fills',
@@ -127,7 +127,7 @@ window.STUDY={
   ],
   spec:{
     id:'st-03',
-    reference:{ file:'ref-03.png', px:[736,917], measured_at:[722,900], grammar:'die-cut chips on warm grey stock; 1.5 px plum outline misregistered from a white-backed fill; heat-map gradient interiors with liquid sub-layers; two flat orange/black pieces with cut windows and dash-row text; monochrome print grain' },
+    reference:{ file:'ref-03.png', px:[736,917], measured_at:[722,900], grammar:'die-cut chips on warm gray stock; 1.5 px plum outline misregistered from a white-backed fill; heat-map gradient interiors with liquid sub-layers; two flat orange/black pieces with cut windows and dash-row text; monochrome print grain' },
     palette:{ paper:'#DED9D5', backing:'#F3F0EC', keyline:'#2A2634', orange:'#F65C1E', orange_hot:'#F8641F', orange_rim:'#FFA46E', blue_flat:'#1475BE', blue:'#0B85C5', black:'#06070A', pink:'#F6879E', pale_pink:'#EBB2BB', white:'#DAD5D0', cool_white:'#CDD6CF', yellow:'#F0C550', lemon:'#E4C022', cyan:'#7ED6E5', mint:'#39B66B', teal:'#2AAAD0', lilac:'#9C86C7' },
     ground:{ colour:'#DED9D5', L_std_ref:3.0, vignette:'1.5 % radial darkening, corners only', area_ref:0.39 },
     units:'design units, 1000 = plate width (ref 722 px ⇒ 1 u = 0.722 ref px, 1 ref px = 1.385 u)',
@@ -147,7 +147,7 @@ window.STUDY={
       { id:'cutout', short:'FORM', name:'Cut window with pale rim', layer:3, pass:3,
         params:{ black:'#06070A', rim:'#FFA46E', rim_expand_u:1.4, offset_u:[1.4,1.4], corner_r_u:8, gradient:'blue #0477C8 → black over the top 45 % of the window, only on the large window' },
         implementation:'Cut windows reuse the chip rings: a pale-orange rim ring +1.4 u, then the black (or blue-to-black thermal) fill −1.4 u translated (+1.4,+1.4), so a light hairline sits on the top-left of every cut.' },
-      { id:'ground', short:'GRND', name:'Warm grey stock', layer:0, pass:0,
+      { id:'ground', short:'GRND', name:'Warm gray stock', layer:0, pass:0,
         params:{ colour:'#DED9D5', vignette_alpha:0.015, grain:'shared closing grain' },
         implementation:'Flat fill plus a radial 1.5 % darkening from 55 % radius to the corners; the grain pass gives it its tooth.' },
       { id:'liquid-layer', short:'COL', name:'Liquid layer blob', layer:3, pass:3,
@@ -157,8 +157,8 @@ window.STUDY={
         params:{ pitch_u:1.385, amp_uniform:0.042, L_std_ref_target:3.0, lag1_autocorr:0.35, mono:true, on:'everything, paper included', hash:'xorshift of (cx·374761393 + cy·668265263)' },
         implementation:'One ImageData pass over the composite multiplies R, G and B by 1 + 0.042·(0.6·n(c) + 0.2·n(c−x) + 0.2·n(c−y)) with n a signed hash on 1.385 u cells, giving mono grain with a 0.35 lag-1 correlation like the reference’s.' },
       { id:'marbling', short:'TONE', name:'Ridged marbling', layer:2, pass:2,
-        params:{ field:'2-octave warped Perlin at 1/170 u, contrast 2.0', weight:'0.65 × smoothstep((u−0.5)·3 − 0.55 + 0.5) — only the right ~25 % of the capsule', ramp:'[#0B85C5,#2AAAD0,#8FB4C4,#CDD6CF,#DAD5D0,#E4DEC0,#F0C550]', blend:'colour-space mix with the base ramp' },
-        implementation:'On the capsule a second, smaller-scale warped field with its own blue/pale/yellow ramp is mixed in by colour where the weight rises along the length, so the right end breaks into a few soft blue and yellow pools while the left stays a smooth pink-to-white plateau.' },
+        params:{ field:'2-octave warped Perlin at 1/170 u, contrast 2.0', weight:'0.65 × smoothstep((u−0.5)·3 − 0.55 + 0.5); only the right ~25 % of the capsule', ramp:'[#0B85C5,#2AAAD0,#8FB4C4,#CDD6CF,#DAD5D0,#E4DEC0,#F0C550]', blend:'color-space mix with the base ramp' },
+        implementation:'On the capsule a second, smaller-scale warped field with its own blue/pale/yellow ramp is mixed in by color where the weight rises along the length, so the right end breaks into a few soft blue and yellow pools while the left stays a smooth pink-to-white plateau.' },
       { id:'dash-rows', short:'MARK', name:'Dash-row micro text', layer:3, pass:3,
         params:{ colour:'#F46629', dash_h_u:6, dash_w_u:[7,26], gap_u:4, row_pitch_u:11, rows:5, align:'right', jitter:'±1 u' },
         implementation:'Right-aligned rows of 3–6 orange rectangles of random width with a 4 u gap and 11 u pitch stand in for text; nothing is typed.' }

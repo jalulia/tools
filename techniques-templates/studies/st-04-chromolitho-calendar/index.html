@@ -106,8 +106,8 @@ window.STUDY={
   kicker:'Technique study · 04',
   lede:'Nine flat plates, one brown keyline, a hair out of register.',
   body:[
-    'A chromolithograph on cream: every colour is a separate flat plate — ochre, sage, slate, pale grey, salmon, tan, rust, black — printed with no shading, and a dark olive-brown keyline carries all the drawing. Each tint sits about a pixel off the line; the border is a stack of small repeating pattern fields cut by a great arc.',
-    'Built as ten offscreen plates, each drawn with its own register offset and composited in multiply over the paper, then a per-pixel print mottle on the inks only. Tiles are procedural repeats clipped to rules; plants, sheaf and hops are wavered keyline polygons over their tints; the calendar is the one typeset element.'
+    'A chromolithograph on cream. Every color is a separate flat plate (ochre, sage, slate, pale gray, salmon, tan, rust, black) printed without shading, and a dark olive-brown keyline carries all the drawing. Each tint sits about a pixel off the line. The border is a stack of small repeating pattern fields cut by a large arc.',
+    'Ten offscreen plates, each drawn with its own register offset and composited in multiply over the paper, then a per-pixel print mottle on the inks only. Tiles are procedural repeats clipped to rules. Plants, sheaf and hops are wavered keyline polygons over their tints. The calendar is the only typeset element.'
   ],
   method:'Flat plates · register offset · keyline · tile repeats · print mottle',
   source:'Reference 04 · misregistered chromolitho calendar with tiled border',
@@ -118,7 +118,7 @@ window.STUDY={
     {u:0.180,v:0.166,d:'FORM',label:'Cartouche · wheat sheaf on a horizon, rays in thin keyline', t:'cartouche', dir:[1,-1]},
     {u:0.555,v:0.062,d:'TEX', label:'Scallop tile · fish-scale arcs, pitch 22 u on light ochre', t:'tile-scallop', dir:[1,1]},
     {u:0.606,v:0.303,d:'TYPE',label:'Calendar type · serif fillText 27 u, holidays on the red plate', t:'calendar-type', dir:[1,1]},
-    {u:0.876,v:0.360,d:'TEX', label:'Spiral tile · slate ribbon spirals, pitch 52 u on pale grey', t:'tile-spiral', dir:[-1,0]},
+    {u:0.876,v:0.360,d:'TEX', label:'Spiral tile · slate ribbon spirals, pitch 52 u on pale gray', t:'tile-spiral', dir:[-1,0]},
     {u:0.240,v:0.563,d:'COL', label:'Register offset · sage plate 1.8 u off the keyline, slate knocked out', t:'misregister', dir:[1,0]},
     {u:0.555,v:0.567,d:'TEX', label:'Heart tile · paper hearts, black squares, pitch 24 u', t:'tile-hearts', dir:[-1,1]},
     {u:0.785,v:0.659,d:'FORM',label:'Arc · sawtooth ring, salmon and ring-and-dot bands, squares inside', t:'arc', dir:[-1,0]},
@@ -133,14 +133,14 @@ window.STUDY={
     ground:{ colour:'#F1E5CB', tooth:'±1.1 % per-pixel noise before the softness pass (ref paper L std 1.6)', area_ref:'≈0.44 of the sheet at 96 px' },
     techniques:[
       { id:'keyline', short:'KEY', name:'Olive-brown keyline', layer:9, pass:9,
-        params:{ colour:'#3A3016', width_u:2.3, width_ref_px:1.4, ref_integrated_width_px:2.7, waver_amp_u:0.7, waver_freq:0.05, width_jitter:0.15, rule_width_u:1.6, tile_keyline_u:[1.7,2.2], cap:'round', join:'round', register_offset:'none — the keyline is the reference plate' },
+        params:{ colour:'#3A3016', width_u:2.3, width_ref_px:1.4, ref_integrated_width_px:2.7, waver_amp_u:0.7, waver_freq:0.05, width_jitter:0.15, rule_width_u:1.6, tile_keyline_u:[1.7,2.2], cap:'round', join:'round', register_offset:'none; the keyline is the reference plate' },
         implementation:'Every silhouette and rule is a polyline displaced by 3-octave sine noise of arc length (amp 0.7 u) and stroked in 8-point runs whose width varies ±15 %, into one keyline canvas multiplied over the sheet last.' },
       { id:'misregister', short:'COL', name:'Plate register offset + knockout', layer:1, pass:8,
-        params:{ offsets_u:{ ochre:[1.6,-1.0], ochre_light:[1.2,-1.4], sage:[-1.2,1.4], olive:[-0.6,1.8], slate:[1.0,1.6], pale_grey:[-1.6,0.6], peach:[1.8,0.8], salmon:[1.8,0.8], yellow:[-0.8,-1.6], cream:[-0.8,-1.6], tan:[1.4,1.2], rust:[-1.4,-0.8], black:[0.6,1.2], green:[1.2,1.0], red:[-1.0,0.8] }, magnitude_ref_px:'≈1.2', composite:'multiply', ink:'measured colour ÷ paper per channel', knockout:'every fill erases its shape (destination-out) from all other plates and the keyline canvas, so plates do not overprint; the offsets then leave paper slivers and overlaps at every edge' },
+        params:{ offsets_u:{ ochre:[1.6,-1.0], ochre_light:[1.2,-1.4], sage:[-1.2,1.4], olive:[-0.6,1.8], slate:[1.0,1.6], pale_grey:[-1.6,0.6], peach:[1.8,0.8], salmon:[1.8,0.8], yellow:[-0.8,-1.6], cream:[-0.8,-1.6], tan:[1.4,1.2], rust:[-1.4,-0.8], black:[0.6,1.2], green:[1.2,1.0], red:[-1.0,0.8] }, magnitude_ref_px:'≈1.2', composite:'multiply', ink:'measured color ÷ paper per channel', knockout:'every fill erases its shape (destination-out) from all other plates and the keyline canvas, so plates do not overprint; the offsets then leave paper slivers and overlaps at every edge' },
         implementation:'Each tint plate is an offscreen canvas whose base transform is translated by its offset; a fill knocks its polygon out of the other plates, then all plates are multiplied onto a white sheet, mottled, and multiplied onto the paper.' },
       { id:'flat-plate', short:'FILL', name:'Flat tint plate', layer:1, pass:1,
         params:{ gradient:'none', shading:'none', mottle:'see print-mottle' },
-        implementation:'Polygons filled with the plate ink at full opacity; no gradients, no tone — all modelling is left to the keyline.' },
+        implementation:'Polygons filled with the plate ink at full opacity, with no gradients or tone; the keyline does all the modeling.' },
       { id:'print-mottle', short:'TEX', name:'Print mottle on inks', layer:8, pass:8,
         params:{ amp:0.022, cell_u:1.8, cell_ref_px:1.1, on:'ink pixels only', ref_tint_L_std:'3–7' },
         implementation:'ImageData pass over the composited sheet: every non-white pixel is multiplied by 1 ± 0.022·hash(⌊x/cell⌋,⌊y/cell⌋); white (paper) pixels are untouched.' },
@@ -149,7 +149,7 @@ window.STUDY={
         implementation:'After compositing, one ImageData pass applies a horizontal then vertical 3-tap binomial blur so keylines and dot screens carry the reference scan’s soft edges instead of crisp anti-aliasing.' },
       { id:'tile-scallop', short:'TEX', name:'Scallop (fish-scale) tile', layer:2, pass:2,
         params:{ ground:'#E4D189', pitch_u:22, row_u:11, arc_r_u:11, keyline_u:1.9, dot_r_u:1.5, ref_pitch_px:14, field_u:[310,62,800,118] },
-        implementation:'Staggered rows of keyline semicircles (r = pitch/2) over a light-ochre field, a keyline dot at each arc centre, clipped to the band; rust rule beneath.' },
+        implementation:'Staggered rows of keyline semicircles (r = pitch/2) over a light-ochre field, a keyline dot at each arc center, clipped to the band; rust rule beneath.' },
       { id:'tile-spiral', short:'TEX', name:'Spiral tile', layer:2, pass:2,
         params:{ ground:'#D3D0BC', spiral:'#9DA694', pitch_u:52, row_u:44.7, turns:[1.3,1.5], r_max_u:[15,19], r_start_u:3.5, ribbon_w_u:'5.2 × (0.7→1.0)', position_jitter_u:4, keyline_u:1.7, dots:'black r 1.8 between spirals', ref_pitch_px:29, field_u:[800,406,952,600] },
         implementation:'On a hex-staggered 52 u grid each spiral is an Archimedean polyline (r = 3.5 → r_max over 1.3–1.5 turns) offset along its normals into a ribbon, knocked out of the pale plate, filled slate and keylined; a black dot sits in each gap.' },
@@ -164,7 +164,7 @@ window.STUDY={
         implementation:'Slate ribbon spirals every 60 u joined by a quadratic wave ribbon, each knocked out of the pale ground and keylined, black dot in the trough.' },
       { id:'tile-wave', short:'TEX', name:'Wave band', layer:2, pass:2,
         params:{ ground:'#D3D0BC', line:'#9DA694', wavelength_u:30, amp_u:4, line_w_u:5, lines:2, keyline_u:1.4, vertical_variant:'7 lines at 21.7 u pitch, wavelength 30 u, amp 4 u, 4 u ribbon, in the right column 626–1160 u', ref_wavelength_px:16 },
-        implementation:'Sine polylines stroked as slate ribbons on pale grey, each with a thin keyline along one edge.' },
+        implementation:'Sine polylines stroked as slate ribbons on pale gray, each with a thin keyline along one edge.' },
       { id:'dot-screen', short:'TEX', name:'Salmon dot screen', layer:2, pass:2,
         params:{ ground:'#E0B48C', dot:'#C6845A', dot_r_u:[2.8,3.8], pitch_u:9.5, lattice:'hex, jitter ±1.8 u', coverage:'≈0.45', ref_mean:'#CF9468', ref_pitch_px:5, field_u:[60,1222,952,1302] },
         implementation:'Salmon field, then a darker salmon plate of jittered discs on a 9.5 u hex lattice knocked out of the ground, both under the keyline.' },
@@ -178,7 +178,7 @@ window.STUDY={
         params:{ ground:'#EBD5AA', pitch_u:30, row_u:24, sprig:'6 keyline rays 3.5→8–10.5 u round a dot', keyline_u:1.6, field:'arched lunette 60–300 × 332–420 u' },
         implementation:'Peach plate clipped to the arch, keyline star sprigs on a staggered lattice with a dot between.' },
       { id:'arc', short:'FORM', name:'Great arc', layer:3, pass:3,
-        params:{ centre_u:[992,1160], r_u:300, visible:'upper-left quadrant, clipped to 600–952 × 700–1160', rings:[{r:[286,300],tile:'sawtooth: 120 black triangles on pale'},{r:[272,286],tile:'plain salmon, rust rule at 279'},{r:[246,272],tile:'ring-and-dot on pale grey, pitch 20 u, ring r 6.2'},{r:[0,246],tile:'square-and-dot on ochre'}], keylines_u:[2.2,1.8,1.8,2.2] },
+        params:{ centre_u:[992,1160], r_u:300, visible:'upper-left quadrant, clipped to 600–952 × 700–1160', rings:[{r:[286,300],tile:'sawtooth: 120 black triangles on pale'},{r:[272,286],tile:'plain salmon, rust rule at 279'},{r:[246,272],tile:'ring-and-dot on pale gray, pitch 20 u, ring r 6.2'},{r:[0,246],tile:'square-and-dot on ochre'}], keylines_u:[2.2,1.8,1.8,2.2] },
         implementation:'Concentric clip discs drawn over the right column and the calendar bands (each ground knocked out of what lies beneath): inner ochre square tile, ring-and-dot band, a salmon band, a sawtooth ring of black triangles, each ring keylined.' },
       { id:'botanical', short:'FORM', name:'Keyline botanical', layer:4, pass:4,
         params:{ asters:{ petals:[15,17], R_u:[34,64], petal_w:'0.19 R', petal:'two quads base→tip→base, wavered', fill:'#D3D0BC', disc:'0.30 R ochre, 34 keyline stipple dots r 1.2', side_view:'9 petals over 180°, sage calyx' }, goldenrod:{ branches:9, floret_r_u:[3.2,5.0], florets_per_branch:'2–3 per 4 u of branch', crescent:'keyline arc 1.4 u over 2.4 rad', leaves:5 }, leaves:'lanceolate, width sin(πt)^0.8, length 85–160 u, width 13–20 u, keyline midrib 1.6 u', stems:'sage ribbon 4.5–7 u, keylined 2.2 u' },
@@ -197,7 +197,7 @@ window.STUDY={
         implementation:'Flat fill plus a hashed per-pixel brightness noise; nothing else is drawn on the paper except ink.' }
     ],
     pass_order:['paper + paper noise','tile fields (clipped to rules) on their plates','arc rings over the column and bands','botanicals: left panel, top-right cluster, bottom-left bine, frieze','cartouche + symbol tab','calendar text','composite plates with offsets in multiply onto white','print mottle on ink pixels','multiply sheet onto paper','keyline plate in multiply','scan-softness blur'],
-    notes:[ 'Colours are per-region k-means centres on ref-04.png (paper is the modal pixel 241,229,203); keyline width from 266 line crossings (2.7 px integrated darkness incl. scan blur ⇒ ≈1.4–1.7 px ink).', 'Reference shares at 96 px: paper 0.44, black ≈0.024, light ochres ≈0.10; mean L 190.', 'Seed 4404; layout 1000 × 1447 u: left column 60–300, calendar 310–790, right column 800–952, frieze 1170–1342, frame 48–962 × 30–1372.' ]
+    notes:[ 'Colors are per-region k-means centers on ref-04.png (paper is the modal pixel 241,229,203); keyline width from 266 line crossings (2.7 px integrated darkness incl. scan blur ⇒ ≈1.4–1.7 px ink).', 'Reference shares at 96 px: paper 0.44, black ≈0.024, light ochres ≈0.10; mean L 190.', 'Seed 4404; layout 1000 × 1447 u: left column 60–300, calendar 310–790, right column 800–952, frieze 1170–1342, frame 48–962 × 30–1372.' ]
   },
   render(canvas,w,h,dpr){
     const S=w/1000, U=1000, V=h/S;
