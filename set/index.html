@@ -174,8 +174,8 @@ function open(i){ cur=(i+list.length)%list.length; const r=list[cur];
 /* the JSON: for a study or plate, its spec (techniques, measured numbers, ranges, modules) with the settings as they are on screen;
    for anything else, its library record (where it is filed: accession, collection, source, dates) */
 async function jsonOf(r){ const f=view.querySelector('iframe'); const page=()=>new URL(runUrl(r).replace(/\?embed.*$/,''),location.href).href;
-  if(f){ try{ const w=f.contentWindow, S=w.__study&&w.__study.S; if(S)return { id:S.id, code:S.code, title:S.title, page:page(), settings:w.__study_state?w.__study_state():null, spec:S.spec }; }catch(e){} }
-  if(runs(r)){ try{ const sp=await (await fetch(r.href.replace(/\/?$/,'/')+'spec.json')).json(); return { title:r.title, code:r.call, page:page(), spec:sp }; }catch(e){} }
+  if(f){ try{ const w=f.contentWindow, S=w.__study&&w.__study.S; if(S)return { id:S.id, code:S.code, title:S.title, settings:w.__study_state?w.__study_state():null, spec:S.spec }; }catch(e){} }
+  if(runs(r)){ try{ const sp=await (await fetch(r.href.replace(/\/?$/,'/')+'spec.json')).json(); return { title:r.title, code:r.call, spec:sp }; }catch(e){} }
   const keep=['acc','call','title','sub','kind','family','collection','techniques','atoms','source','dates','provenance']; const o={}; for(const k of keep)if(r[k]!=null)o[k]=r[k]; return { record:o }; }
 function close(){ view.hidden=true; view.innerHTML=''; document.body.style.overflow=''; const b=app.querySelector(`.piece[data-i="${cur}"]`); if(b)b.focus(); }
 addEventListener('keydown',e=>{ if(view.hidden)return; if(e.key==='Escape')close(); else if(e.key==='ArrowRight')open(cur+1); else if(e.key==='ArrowLeft')open(cur-1); });

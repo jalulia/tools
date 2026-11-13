@@ -8,7 +8,7 @@ window.STUDY={
   spot:[224,64,45], ref:{w:735,h:956},
   variantLabel:'Inks',
   variants:[
-    { id:'ref', label:'Red / blue', sw:['#E0402D','#5287BB','#F0EBE7'], spot:[224,64,45], paper:'#F0EBE7', field:'#DCD8DC', inkA:'#3670B8', inkB:'#F2381C', overCore:'#F58A80', overFar:'#7A3A6A' },
+    { id:'ref', label:'Red / blue', sw:['#E0402D','#5287BB','#EDEDEE'], spot:[224,64,45], paper:'#EDEDEE', field:'#DCD8DC', inkA:'#3670B8', inkB:'#F2381C', overCore:'#F58A80', overFar:'#7A3A6A' },
     { id:'io',  label:'Ember / sky', sw:['#F4551E','#2F5AE6','#FFFFFF'], spot:[244,85,30], paper:'#FFFFFF', field:'#F4F0F2', inkA:'#2F5AE6', inkB:'#F4551E', overCore:'#FF9A6E', overFar:'#3A2E9E' },
     { id:'ink', label:'Ink / gray', sw:['#101014','#B4B2AC','#FFFFFF'], spot:[16,16,20], paper:'#FFFFFF', field:'#FFFFFF', inkA:'#8C8A84', inkB:'#101014', overCore:'#5A5A60', overFar:'#101014' }
   ],
@@ -20,14 +20,14 @@ window.STUDY={
     {u:0.20,v:0.72,d:'MOIR',label:'Beat fringe · pitch difference 8 u makes the long curves',t:'moire-product',dir:[-1,1]},
     {u:0.14,v:0.20,d:'GRAIN',label:'Stochastic screen · random threshold per ink per pixel',t:'stochastic-grain',dir:[-1,-1]},
     {u:0.86,v:0.86,d:'GRAIN',label:'Overprint pixels · both inks on → plum far out, pink in the core',t:'stochastic-grain',dir:[1,1]},
-    {u:0.50,v:0.08,d:'EDGE',label:'Cream margin · 34 u, no rule',t:'paper-margin',dir:[1,-1]},
+    {u:0.50,v:0.08,d:'EDGE',label:'Paper margin · 34 u, no rule',t:'paper-margin',dir:[1,-1]},
     {u:0.40,v:0.94,d:'HEAT',label:'Heat tail · red coverage falls below 0.1 here',t:'radial-heat',dir:[-1,1]},
     {u:0.88,v:0.45,d:'SCRN',label:'Ring A at the rim · coverage floor 0.42 keeps the field blue',t:'ring-screen',dir:[1,0]}
   ],
   spec:{
-    reference:{ file:'ref.png', px:[735,956], grammar:'two-ink stochastic print: blue dot lattice from two ring gratings, red radial core, cream margin; grain is the screening itself' },
+    reference:{ file:'ref.png', px:[735,956], grammar:'two-ink stochastic print: blue dot lattice from two ring gratings, red radial core, paper margin; grain is the screening itself' },
     units:'design units, 1000 = sheet width',
-    palette:{ paper:'#F0EBE7', field_tint:'#E6D6D8', blue:'#3670B8', red:'#F2381C', overprint_core:'#F58A80', overprint_far:'#8A4A78' },
+    palette:{ paper:'#EDEDEE', field_tint:'#E6D6D8', blue:'#3670B8', red:'#F2381C', overprint_core:'#F58A80', overprint_far:'#8A4A78' },
     /* spec v2: numeric params carry { value, range, unit } — value is the measured number, range the band the technique
        holds together in; limits says where it stops holding. Strings stay as documentation of the formula. */
     techniques:[
@@ -47,12 +47,12 @@ window.STUDY={
         params:{ threshold:'uniform random per pixel per ink', seed:{ value:101, range:[1,9999], step:1 }, overprint:'where both inks land: overCore pink in the field, overFar plum on lattice dots (product > plum_above) inside the core', plum_above:{ value:0.7, range:[0.3,1] }, soften_px:{ value:0.6, range:[0,3], unit:'px' }, cell_px:1 },
         limits:'soften above ~1.5 px dissolves the lattice into tone; cell_px is fixed at 1 in this rebuild (a coarser cell needs a hash per cell, not per pixel).',
         implementation:'For each device pixel: blue if r1 < blue_coverage, red if r2 < red_coverage; both → overprint; neither → paper tint. A 0.6 px blur softens the pixel edges the way the reference’s scan does.' },
-      { id:'paper-margin', short:'EDGE', name:'Cream margin', layer:0, pass:0, atoms:['margin','stock'],
-        params:{ width_u:{ value:34, range:[0,120], unit:'u' }, color:'#F0EBE7', rule:'none' },
+      { id:'paper-margin', short:'EDGE', name:'Paper margin', layer:0, pass:0, atoms:['margin','stock'],
+        params:{ width_u:{ value:34, range:[0,120], unit:'u' }, color:'#EDEDEE', rule:'none' },
         limits:'Above ~120 u the margin crops the beat fringe at the left edge.',
-        implementation:'Flat cream fill; the print sits inset by 34 u on every side.' }
+        implementation:'Flat neutral paper fill; the print sits inset by 34 u on every side.' }
     ],
-    pass_order:['margin · cream sheet','gratings · A and B evaluated per pixel','coverage · blue = product, red = radial × A','screen · random threshold per ink, overprint where both','soften · 0.6 px blur'],
+    pass_order:['margin · paper sheet','gratings · A and B evaluated per pixel','coverage · blue = product, red = radial × A','screen · random threshold per ink, overprint where both','soften · 0.6 px blur'],
     notes:['Measured on ref.png: ring pitch ≈ 50 px at 735 px (68 u); grain std ≈ 20/255 in flat regions; hot red (241,57,29) 3.6 % of pixels; saturated blue (72,130,183) 11.5 %.','Seed 101.']
   },
   /* v2 · techniques as functions — one per spec id, pure, composed by render() in pass order. P is this technique's

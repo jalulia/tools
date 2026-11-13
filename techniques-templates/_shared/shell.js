@@ -1,7 +1,8 @@
 /* Techniques & Templates · plate runtime · ø co.
    Reads window.STUDY (one per page) and window.TT (manifest) and lays out three columns:
    notes (left: title, short description, one accordion), the plate (center: canvas, callouts, build sweep),
-   and the control panel (right: View, Callouts, Motion, Color, Parameters, Export — same order on every page).
+   and the control panel (right: a toolbar — play, drag, callouts, compare, notes — then tabs: Parameters, Color, Presets,
+   Export). The notes column starts folded away on every page; Notes (F) opens it.
    Design notes: _shared/PLATE-UI.md. Everything is generated at runtime; the only bitmap is the inlined reference. */
 (function(){
 if(/[?&]embed\b/.test(location.search))document.body.classList.add('embed');
@@ -29,7 +30,8 @@ const famName=f=>String(f||'').replace(/-/g,' ');
 const ICON={ chev:'<svg class="chev" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 3.8L5 6.3l2.5-2.5"/></svg>', reset:'<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.2 6.3A3.9 3.9 0 1 0 3.4 3"/><path d="M2.6 1v2.4H5"/></svg>' };
 
 /* ---------- nav: crumb + pager (no brand) ---------- */
-(function(){ const n=$('nav'); if(!n)return; const prev=sib[idx-1], next=sib[idx+1];
+const EMBED=document.body.classList.contains('embed');
+(function(){ const n=$('nav'); if(!n)return; if(EMBED){ n.remove(); return; } const prev=sib[idx-1], next=sib[idx+1];
   n.innerHTML=`<span class="crumb"><a href="${ROOT}index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="${ROOT}index.html#${esc(secHash)}">${esc(section.title)}</a><span class="sep">/</span><b>${esc(S.title)}</b><span class="code">${esc(S.code)}</span></span>
   <span class="pager">${prev?`<a href="${ROOT}${prev.path}index.html" title="Previous: ${esc(prev.code)} ${esc(prev.title)} (,)">← ${esc(prev.code)}</a>`:'<a class="off" aria-disabled="true">←</a>'}<a class="pos" href="${ROOT}index.html#${esc(secHash)}" title="All ${esc(section.title.toLowerCase())}"><span class="n">${idx+1}</span>&nbsp;of ${sib.length}</a>${next?`<a href="${ROOT}${next.path}index.html" title="Next: ${esc(next.code)} ${esc(next.title)} (.)">${esc(next.code)} →</a>`:'<a class="off" aria-disabled="true">→</a>'}</span>`; })();
 
@@ -41,7 +43,7 @@ const ICON={ chev:'<svg class="chev" viewBox="0 0 10 10" aria-hidden="true"><pat
   const sents=(S.body||[]).join(' ').split(/(?<=[.!?])\s+(?=[A-Z0-9“"(])/); const bodyShort=sents.slice(0,3).join(' '), bodyMore=sents.slice(3).join(' ');
   const vrows=T.map(t=>`<li class="vr"><button type="button" data-t="${esc(t.id)}" title="Show where ${esc(t.name.toLowerCase())} was measured"><span class="vn">${esc(t.name)}</span><span class="vid">${esc(t.id)}</span></button><span class="at">${(t.atoms||[]).map(a=>`<a href="${ROOT}index.html#techniques?a=${encodeURIComponent(a)}" title="Every entry that uses ${esc(a)}">${esc(a)}</a>`).join('')}${S.techniques&&S.techniques[t.id]?`<a class="mod" href="lib/${esc(t.id)}.js" title="The lifted module">lib/${esc(t.id)}.js</a>`:''}</span></li>`).join('');
   const ef=!!(UI&&UI.engineFirst), refOK=!!(window.__REF&&window.__REF.data), nPal=UI?(UI.palettes?UI.palettes.list.length:0):(S.variants||[]).length, hasMo=UI?!!UI.motion:!!S.motion, hasLv=UI?!!UI.interactive:IFRAME;
-  const keys=[['R',refOK?'Plate, reference, compare':null],['V',!ef&&nPal>1?'Next palette':null],['M',!ef&&hasMo?'Play or pause motion':null],['L',!ef&&hasLv?(S.liveLabel||'Interactive version'):null],['S','Open the spec'],['F','Expand the plate'],[', .',ef?null:'Previous, next study'],['/','Back to the index'],...((UI&&UI.keys)||[])].filter(k=>k[1]);
+  const keys=[['R',refOK?'Plate, reference, compare':null],['V',!ef&&nPal>1?'Next palette':null],['M',!ef&&hasMo?'Play or pause motion':null],['L',!ef&&hasLv?(S.liveLabel||'Interactive version'):null],['S','Open the spec'],['F','Show or hide the notes'],[', .',ef?null:'Previous, next study'],['/','Back to the index'],...((UI&&UI.keys)||[])].filter(k=>k[1]);
   const nParams=UI?UI.params.length:((window.ART.paramLeaves?window.ART.paramLeaves(S.spec).length:0));
   const motDesc=UI?[UI.motion?'loop':'',UI.interactive?UI.interactive.label.toLowerCase():'',UI.pointerHint?'pointer':''].filter(Boolean).join(' · '):[S.motion?'loop':'',S.live?(S.liveLabel||'interactive').toLowerCase():''].filter(Boolean).join(' · ');
   const acc=(id,title,body,open)=>`<details class="acc" name="notes" id="${id}"${open?' open':''}><summary><span>${title}</span>${ICON.chev}</summary><div class="ab">${body}</div></details>`;
@@ -118,10 +120,12 @@ function variant(){ const V=variants[vi]; const E=inkEdits[vi]; if(!E||!Object.k
 function layout(){ if(mobile()){ const w0=wrap.clientWidth; wrap.style.height=Math.round(Math.min(innerHeight*0.86,(w0-32)*ar+68))+'px'; } else wrap.style.height=''; const r=wrap.getBoundingClientRect(); DPR=Math.min(3,Math.max(1,devicePixelRatio||1)); W=r.width; H=r.height; cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR); ctx.setTransform(DPR,0,0,DPR,0,0);
   const mob=mobile(); const left=mob?16:40, top=mob?34:48, right=mob?16:40, bottom=mob?34:44;
   let bw=W-left-right, bh=H-top-bottom; let fw=bw, fh=fw*ar; if(fh>bh){ fh=bh; fw=fh/ar; }
+  /* a study that can run edge to edge (S.fill, set by st-adapter) takes the whole stage, not the reference's aspect */
+  if(S.fill&&mode!==2&&!mob){ fw=bw; fh=bh; }
   fig={x:Math.round(left+(bw-fw)/2),y:Math.round(top+(bh-fh)/2),w:Math.round(fw),h:Math.round(fh)};
   ensureArt(); placePoints(); placeLive(); }
 let overrides={}; /* parameter overrides: { 'technique-id': { 'path': value } } */
-function ensureArt(){ if(typeof S.relayPoints==='function'){ S.relayPoints(overrides); placePoints(); try{ if(phase==='hold')rows.forEach((r,i)=>rowText(r,P[i],[P[i].u,P[i].v],true)); }catch(e){} }   /* a study whose layout follows its parameters moves its points first */
+function ensureArt(){ if(typeof S.relayPoints==='function'){ S.relayPoints(overrides,fig); placePoints(); try{ if(phase==='hold')rows.forEach((r,i)=>rowText(r,P[i],[P[i].u,P[i].v],true)); }catch(e){} }   /* a study whose layout follows its parameters moves its points first */
   const k=fig.w+'x'+fig.h+'@'+DPR+'#'+variant().id+'#'+JSON.stringify(overrides); if(k===artKey&&art)return; artKey=k; if(artCache[k]&&!UI){ art=artCache[k]; artDone=true; dirty=true; computeFidelity(); return; } renderArt(k); }
 function renderArt(key){ const c=document.createElement('canvas'); c.width=Math.round(fig.w*DPR); c.height=Math.round(fig.h*DPR); const x=c.getContext('2d'); x.setTransform(DPR,0,0,DPR,0,0); x.fillStyle='#fff'; x.fillRect(0,0,fig.w,fig.h); artDone=false; dirty=true; busy(true);
   const t0=performance.now();
@@ -144,7 +148,7 @@ const techName=id=>{ const t=(S.spec.techniques||[]).find(q=>q.id===id); return 
 const rows=P.map(t=>{ const r=document.createElement('div'); r.className='r blank'; r.tabIndex=0; r.setAttribute('role','button'); r.innerHTML='<span class="rn"></span><span class="rd"></span><span class="rl"></span><span class="ruv"></span>'; r.onmouseenter=()=>setHover(t); r.onmouseleave=()=>setHover(null); r.onfocus=()=>setHover(t); r.onblur=()=>setHover(null); r.onclick=()=>select(t); r.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); select(t); } }; rowsEl.appendChild(r); return r; });
 function rowText(r,t,uv,done){ const s=r.children; s[0].textContent=String(t.num); s[1].textContent=done?t.d:'—'; s[2].textContent=done?t.label:''; s[3].textContent=uv?uv[0].toFixed(2)+' · '+uv[1].toFixed(2):''; r.classList.toggle('blank',!done); r.title=done?`${t.label} · ${techName(t.t)}`:''; }
 rows.forEach((r,i)=>rowText(r,P[i],null,false));
-if(!P.length){ $('mNote').hidden=true; }
+if(!P.length){ $('mNote').hidden=true; if($('noteTog'))$('noteTog').hidden=true; }
 let hover=null, selected=null, dirty=true, noteOn=false;   /* callouts are off until asked for */
 function setHover(t){ hover=t; rows.forEach((r,i)=>r.classList.toggle('on',P[i]===(hover||selected))); showRead(hover||selected); dirty=true; }
 function select(t){ selected=(selected===t)?null:t; rows.forEach((r,i)=>r.classList.toggle('on',P[i]===(hover||selected))); showRead(selected||hover); if(selected&&selected.t)hlTech(selected.t); dirty=true; }
@@ -163,7 +167,7 @@ const palEl=$('pal'), inksEl=$('inks'); let inkAll=false;
 function drawInks(){ const V=variants[vi], E=inkEdits[vi]||{}; const list=inksOf(V); const edited=Object.keys(E).length>0;
   $('bInkReset').hidden=!edited; palEl.querySelectorAll('button').forEach((b,i)=>{ const e=inkEdits[i]&&Object.keys(inkEdits[i]).length; b.querySelector('.ed').hidden=!e; });
   if(!list.length){ inksEl.innerHTML=''; $('colorHint').textContent=S.colorHint?S.colorHint:variants.length>1?'Pick a palette. This plate computes its colors from the optics, so the inks are not editable one by one.':'This plate computes its colors; there are no separate inks to edit.'; return; }
-  $('colorHint').textContent=variants.length>1?'Pick a palette, then click any ink to change it. The plate redraws.':'Click any ink to change it. The plate redraws.';
+  $('colorHint').textContent=variants.length>1?'Pick a palette; click an ink to change it.':'Click an ink to change it.';
   const CAP=8, shown=inkAll?list:list.slice(0,CAP); const NM=inkLabels(list);
   inksEl.innerHTML=`<div class="ih"><span>Inks in ${esc(V.label)}</span><i>${list.length}</i></div>`+shown.map((k,j)=>{ const cur=E[k.hex]||k.hex; const nm=NM[j]; return `<div class="ink${E[k.hex]?' on':''}" data-h="${k.hex}"><label class="chip" style="--c:${cur}" title="Change ${esc(nm)}"><input type="color" value="${cur}" aria-label="${esc(nm)} color"></label><span class="nm" title="${esc(k.paths.map(inkName).join(', '))}">${esc(nm)}${k.paths.length>1?`<i>+${k.paths.length-1}</i>`:''}</span><input class="hex" value="${cur.toUpperCase()}" maxlength="7" spellcheck="false" autocomplete="off" aria-label="${esc(nm)} hex">${E[k.hex]?`<button type="button" class="rst" title="Back to ${k.hex.toUpperCase()}" aria-label="Reset this ink">${ICON.reset}</button>`:'<span class="rst-sp"></span>'}</div>`; }).join('')+(list.length>CAP?`<button type="button" class="more" id="inkMore">${inkAll?'Show fewer':`Show all ${list.length} inks`}</button>`:'');
   if($('inkMore'))$('inkMore').onclick=()=>{ inkAll=!inkAll; drawInks(); };
@@ -181,7 +185,7 @@ function uiColor(){ const P=UI.palettes;
     palEl.classList.toggle('single',P.list.length<2); palEl.querySelectorAll('button').forEach(b=>b.onclick=()=>{ P.set(+b.dataset.i); draw(); dirty=true; });
     const inks=P.inks?P.inks():[]; const edited=inks.some(k=>k.hex!==k.base); $('bInkReset').hidden=!edited;
     if(!inks.length){ inksEl.innerHTML=''; $('colorHint').textContent=S.colorHint||'Pick a palette. The plate redraws.'; return; }
-    $('colorHint').textContent=P.list.length>1?'Pick a palette, then click any ink to change it. The plate redraws.':'Click any ink to change it. The plate redraws.';
+    $('colorHint').textContent=P.list.length>1?'Pick a palette; click an ink to change it.':'Click an ink to change it.';
     const seen={}; const names=inks.map(k=>{ let n=k.name; if(genericInk(n)){ n=colorName(k.base); seen[n]=(seen[n]||0)+1; if(seen[n]>1)n+=' '+seen[n]; } return n; });
     const CAP=8, shown=inkAll?inks:inks.slice(0,CAP);
     inksEl.innerHTML=`<div class="ih"><span>Inks in ${esc(P.list[cur]?P.list[cur].label:'')}</span><i>${inks.length}</i></div>`+shown.map((k,j)=>{ const on=k.hex!==k.base; return `<div class="ink${on?' on':''}" data-k="${esc(k.key)}"><label class="chip" style="--c:${k.hex}" title="Change ${esc(names[j])}"><input type="color" value="${k.hex}" aria-label="${esc(names[j])} color"></label><span class="nm">${esc(names[j])}</span><input class="hex" value="${k.hex.toUpperCase()}" maxlength="7" spellcheck="false" autocomplete="off" aria-label="${esc(names[j])} hex">${on?`<button type="button" class="rst" title="Back to ${k.base.toUpperCase()}" aria-label="Reset this ink">${ICON.reset}</button>`:'<span class="rst-sp"></span>'}</div>`; }).join('')+(inks.length>CAP?`<button type="button" class="more" id="inkMore">${inkAll?'Show fewer':`Show all ${inks.length} inks`}</button>`:'');
@@ -198,6 +202,29 @@ function uiColor(){ const P=UI.palettes;
 function setVariant(i){ if(UI){ const P=UI.palettes; if(P&&P.list.length>1){ P.set((P.current()+(i>vi?1:-1)+P.list.length)%P.list.length); uiColorDraw(); dirty=true; } return; } vi=(i+variants.length)%variants.length; palEl.querySelectorAll('button').forEach((b,k)=>{ b.classList.toggle('on',k===vi); b.setAttribute('aria-checked',String(k===vi)); }); inkAll=false; drawInks(); refresh(); }
 let rto2=null; function scheduleRefresh(now){ clearTimeout(rto2); rto2=setTimeout(refresh,now?0:120); }
 function refresh(){ if(liveOn&&typeof S.live==='function')liveEl.querySelector('iframe').srcdoc=S.live(variant(),overrides); if(!motionOn)ensureArt(); dirty=true; }
+
+/* ---------- parameter groups: one group at a time, picked from a row of chips ("All" shows every group) ---------- */
+let gnavSync=()=>{};
+function groupNav(host){ const pgs=[...host.querySelectorAll('.pg')]; if(pgs.length<2){ host.classList.remove('one'); return; }
+  const KEY='tt-group:'+(S.id||S.code); let cur=0; try{ const v=sessionStorage.getItem(KEY); if(v!=null)cur=v==='all'?'all':Math.min(pgs.length-1,+v||0); }catch(e){}
+  const nav=document.createElement('div'); nav.className='gnav'; nav.setAttribute('role','tablist'); nav.setAttribute('aria-label','Parameter groups');
+  nav.innerHTML=pgs.map((pg,i)=>`<button type="button" role="tab" data-g="${i}"><span>${esc(pg.querySelector('.pgn').textContent)}</span><i></i></button>`).join('')+`<button type="button" role="tab" data-g="all"><span>All</span><i></i></button>`;
+  host.parentNode.insertBefore(nav,host);
+  const show=g=>{ cur=g; try{ sessionStorage.setItem(KEY,String(g)); }catch(e){} host.classList.toggle('one',g!=='all'); pgs.forEach((pg,i)=>{ pg.hidden=g!=='all'&&i!==g; if(g!=='all')pg.classList.remove('shut'); });
+    nav.querySelectorAll('button').forEach(b=>{ const on=String(g)===b.dataset.g; b.classList.toggle('on',on); b.setAttribute('aria-selected',String(on)); }); };
+  nav.querySelectorAll('button').forEach(b=>b.onclick=()=>show(b.dataset.g==='all'?'all':+b.dataset.g));
+  gnavSync=()=>{ let tot=0; nav.querySelectorAll('button').forEach(b=>{ if(b.dataset.g==='all')return; const ch=pgs[+b.dataset.g].querySelector('.chg'); const n=ch&&!ch.hidden?parseInt(ch.textContent,10)||0:0; tot+=n; b.querySelector('i').textContent=n?String(n):''; }); nav.querySelector('[data-g="all"] i').textContent=tot?String(tot):''; };
+  show(cur); gnavSync(); }
+
+/* ---------- tabs: Parameters, Color, Presets, Export; the last one picked opens next time ---------- */
+(function(){ const tabs=[...document.querySelectorAll('.ptabs [role=tab]')]; if(!tabs.length)return; const panes=[...document.querySelectorAll('.tabp')];
+  const pick=(t,keep)=>{ tabs.forEach(b=>{ const on=b.dataset.tab===t; b.classList.toggle('on',on); b.setAttribute('aria-selected',String(on)); b.tabIndex=on?0:-1; }); panes.forEach(p=>{ p.hidden=p.dataset.tab!==t; }); if(keep){ try{ localStorage.setItem('tt-tab',t); }catch(e){} } };
+  tabs.forEach(b=>{ b.onclick=()=>pick(b.dataset.tab,true); b.onkeydown=e=>{ const i=tabs.indexOf(b); if(e.key==='ArrowRight'||e.key==='ArrowLeft'){ e.preventDefault(); const n=tabs[(i+(e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length]; n.focus(); pick(n.dataset.tab,true); } }; });
+  window.__tt_tabs=pick;
+  let t='params'; try{ t=localStorage.getItem('tt-tab')||'params'; }catch(e){} if(document.body.classList.contains('embed')&&t==='more')t='params';
+  pick(t,false);
+  /* after the modules are built: a tab with nothing in it gives way */
+  setTimeout(()=>{ const cur=tabs.find(b=>b.classList.contains('on')); if(cur&&cur.dataset.tab==='params'&&$('mParams').classList.contains('none'))pick('color',false); },0); })();
 
 /* ---------- parameters module ---------- */
 const ABBR={amp:'amplitude',var:'variation',sat:'saturation',deg:'angle',len:'length',freq:'frequency',corr:'correlation',rot:'rotation',mix:'mix',n:'count',r:'radius',R:'radius',dx:'offset x',dy:'offset y',lo:'low',hi:'high',min:'min',max:'max',w:'width',h:'height',x:'x',y:'y',u:'u',v:'v',px:'',cx:'center x',cy:'center y',k:'k',tol:'tolerance',dens:'density',pct:'percent',ref:'reference',hl:'highlight'};
@@ -217,8 +244,9 @@ const sent=t=>String(t||'').replace(/(^|[.!?]\s+)([a-z])/g,(m,a,b)=>a+b.toUpperC
   const fmt=(l,v)=>{ if(l.st>=1)return String(Math.round(v)); let s=v.toFixed(Math.min(6,l.dec+1)); s=s.replace(/0+$/,''); const d=s.length-s.indexOf('.')-1; if(d<l.base)s=v.toFixed(l.base); if(s.endsWith('.'))s=s.slice(0,-1); return s; };
   const groups=[]; for(const l of leaves){ let g=groups.find(g=>g.tech===l.tech); if(!g){ const t=(S.spec.techniques||[]).find(q=>q.id===l.tech)||{}; g={tech:l.tech,name:t.name||l.tech,short:l.short||'',limits:sent(t.limits||''),items:[]}; groups.push(g); } g.items.push(l); }
   host.innerHTML=groups.map((g,gi)=>`<div class="pg" data-g="${gi}"><button type="button" class="pgh" aria-expanded="true"><span class="pgn">${esc(g.name)}</span><span class="pgc"><i class="chg" hidden></i>${g.items.length}</span>${ICON.chev}</button><div class="pgb">${g.limits?`<p class="lim">${esc(g.limits)}</p>`:''}${g.items.map(l=>{ const i=leaves.indexOf(l); return `<div class="prm" data-i="${i}"><label class="lb" for="pr${i}" title="${esc(l.note||human(l.path))}"><span class="nm">${esc(human(l.path))}</span>${human(l.path).toLowerCase().replace(/ · /g,'.').replace(/ /g,'_')!==l.path.toLowerCase()?`<span class="key">${esc(l.path)}</span>`:''}</label><input id="pr${i}" type="range" min="${l.range[0]}" max="${l.range[1]}" step="${l.st}" value="${l.value}" aria-label="${esc(human(l.path))}"${l.note?` title="${esc(l.note)}"`:''}><span class="vf"><input class="num" value="${fmt(l,l.value)}" inputmode="decimal" spellcheck="false" autocomplete="off" aria-label="${esc(human(l.path))} value"><span class="un">${esc(l.unitS)}</span></span><button type="button" class="rst" tabindex="-1" title="Back to ${fmt(l,l.value)}${l.unitS?' '+esc(l.unitS):''}" aria-label="Reset ${esc(human(l.path))}">${ICON.reset}</button></div>`; }).join('')}<button type="button" class="pgr" hidden>Reset ${esc(g.name.toLowerCase())}</button></div></div>`).join('');
+  groupNav(host);
   let rto=null; const apply=(l,v,now)=>{ if(v===l.value){ if(overrides[l.tech]){ delete overrides[l.tech][l.path]; if(!Object.keys(overrides[l.tech]).length)delete overrides[l.tech]; } } else (overrides[l.tech]??={})[l.path]=v; marks(); clearTimeout(rto); rto=setTimeout(refresh,now?0:140); };
-  const marks=()=>{ const n=Object.values(overrides).reduce((s,o)=>s+Object.keys(o).length,0); const b=$('bParamReset'); b.hidden=!n; b.textContent=`Reset all · ${n}`; host.querySelectorAll('.pg').forEach(pg=>{ const g=groups[+pg.dataset.g]; const c=Object.keys(overrides[g.tech]||{}).length; const ch=pg.querySelector('.chg'); ch.hidden=!c; ch.textContent=c+' changed · '; pg.querySelector('.pgr').hidden=!c; }); };
+  const marks=()=>{ const n=Object.values(overrides).reduce((s,o)=>s+Object.keys(o).length,0); const b=$('bParamReset'); b.hidden=!n; b.textContent=`Reset all · ${n}`; host.querySelectorAll('.pg').forEach(pg=>{ const g=groups[+pg.dataset.g]; const c=Object.keys(overrides[g.tech]||{}).length; const ch=pg.querySelector('.chg'); ch.hidden=!c; ch.textContent=c+' changed · '; pg.querySelector('.pgr').hidden=!c; }); gnavSync(); };
   const rowOf=i=>host.querySelector(`.prm[data-i="${i}"]`);
   const fill=(rg,l,v)=>rg.style.setProperty('--p',(100*(v-l.range[0])/((l.range[1]-l.range[0])||1)).toFixed(2)+'%');
   const setRow=(i,v,commit)=>{ const l=leaves[i], el=rowOf(i); v=clamp(v,l.range[0],l.range[1]); el.querySelector('input[type=range]').value=v; fill(el.querySelector('input[type=range]'),l,v); el.querySelector('.num').value=fmt(l,v); el.classList.toggle('on',Math.abs(v-l.value)>1e-12); apply(l,Math.abs(v-l.value)>1e-12?v:l.value,commit); };
@@ -234,26 +262,27 @@ const sent=t=>String(t||'').replace(/(^|[.!?]\s+)([a-z])/g,(m,a,b)=>a+b.toUpperC
   window.__study_params={leaves,set:(tech,path,v)=>{ const i=leaves.findIndex(x=>x.tech===tech&&x.path===path); if(i>=0)setRow(i,v,true); },overrides:()=>overrides}; })();
 
 /* parameters on a study page: the study's own values (S.ui.params), its actions and presets, same rows as the TS plates */
-function uiParams(){ const host=$('prail'), rows=UI.params||[], acts=UI.actions||[], pres=UI.presets||[];
+function uiParams(){ const host=$('prail'), top=$('ppres'), rows=UI.params||[], acts=UI.actions||[], pres=UI.presets||[];
   const decs=x=>{ const s=String(x); const i=s.indexOf('.'); return i<0?0:s.length-i-1; };
   rows.forEach(r=>{ if(r.type!=='range')return; const l={path:r.id,range:[r.min,r.max],value:r.value,step:r.step}; r.st=stepOf(l); r.dec=decOf(r.st); r.base=r.st>=1?0:Math.min(r.dec,Math.max(decs(r.value),decs(r.min),decs(r.max),decs(r.step||0))); });
   const fmt=(r,v)=>{ v=+v; if(!isFinite(v))return ''; if(r.st>=1)return String(Math.round(v)); let s=v.toFixed(Math.min(6,r.dec+1)).replace(/0+$/,''); const d=s.length-s.indexOf('.')-1; if(d<r.base)s=v.toFixed(r.base); if(s.endsWith('.'))s=s.slice(0,-1); return s; };
   const groups=[]; for(const r of rows){ let g=groups.find(g=>g.name===r.group); if(!g){ g={name:r.group||'Plate',items:[]}; groups.push(g); } g.items.push(r); }
-  const top=(acts.length?`<div class="acts">${acts.map((a,i)=>`<button type="button" class="btn" data-a="${i}" title="${esc(a.title||'')}">${esc(a.relabel?a.relabel():a.label)}</button>`).join('')}</div>`:'')
-    +(pres.length?`<div class="pres"><span class="ph">Presets</span><div class="chips">${pres.map((p,i)=>`<button type="button" class="cb" data-p="${i}" aria-pressed="false" title="${esc(p.title||'')}">${esc(p.label)}</button>`).join('')}</div></div>`:'');
+  const topH=(pres.length?`<div class="pres"><span class="ph">From the study</span><div class="chips">${pres.map((p,i)=>`<button type="button" class="cb" data-p="${i}" aria-pressed="false" title="${esc(p.title||'')}">${esc(p.label)}</button>`).join('')}</div></div>`:'')+(acts.length?`<div class="acts">${acts.map((a,i)=>`<button type="button" class="btn" data-a="${i}" title="${esc(a.title||'')}">${esc(a.relabel?a.relabel():a.label)}</button>`).join('')}</div>`:'');
+  if(top)top.innerHTML=topH;
   const row=(r,i)=>{ const lab=`<label class="lb" for="pr${i}" title="${esc(r.why||r.label)}"><span class="nm">${esc(r.label)}</span>${String(r.id).toLowerCase()!==String(r.label).toLowerCase()?`<span class="key">${esc(r.id)}</span>`:''}</label>`;
     if(r.type==='text')return `<div class="prm txt" data-i="${i}">${lab}<input id="pr${i}" class="tx" type="text" maxlength="${r.maxLength||240}" placeholder="${esc(r.placeholder||'')}" value="${esc(r.value||'')}" spellcheck="false" autocomplete="off" aria-label="${esc(r.label)}"${r.why?` title="${esc(r.why)}"`:''}><button type="button" class="rst" tabindex="-1" title="Back to the measured value" aria-label="Reset ${esc(r.label)}">${ICON.reset}</button></div>`;
     if(r.type==='choice')return `<div class="prm ch" data-i="${i}">${lab}<div class="seg sm" role="radiogroup" aria-label="${esc(r.label)}">${r.options.map((o,k)=>`<button type="button" role="radio" aria-checked="false" data-k="${k}">${esc(o.label)}</button>`).join('')}</div><button type="button" class="rst" tabindex="-1" title="Back to the measured value" aria-label="Reset ${esc(r.label)}">${ICON.reset}</button></div>`;
     return `<div class="prm" data-i="${i}">${lab}<input id="pr${i}" type="range" min="${r.min}" max="${r.max}" step="${r.st}" value="${r.value}" aria-label="${esc(r.label)}"${r.why?` title="${esc(r.why)}"`:''}><span class="vf"><input class="num" value="${fmt(r,r.value)}" inputmode="decimal" spellcheck="false" autocomplete="off" aria-label="${esc(r.label)} value"><span class="un">${esc(r.unit||'')}</span></span><button type="button" class="rst" tabindex="-1" title="Back to ${fmt(r,r.value)}${r.unit?' '+esc(r.unit):''}" aria-label="Reset ${esc(r.label)}">${ICON.reset}</button></div>`; };
-  if(!rows.length){ host.innerHTML=top+'<p class="empty">This study has no adjustable values. Its numbers are in the spec.</p>'; if(!acts.length&&!pres.length){ $('mParams').classList.add('none'); $('mParams').querySelector('.hint').hidden=true; } bindTop(); return; }
-  host.innerHTML=top+groups.map((g,gi)=>`<div class="pg" data-g="${gi}"><button type="button" class="pgh" aria-expanded="true"><span class="pgn">${esc(g.name)}</span><span class="pgc"><i class="chg" hidden></i>${g.items.length}</span>${ICON.chev}</button><div class="pgb">${g.items.map(r=>row(r,rows.indexOf(r))).join('')}<button type="button" class="pgr" hidden>Reset ${esc(String(g.name).toLowerCase())}</button></div></div>`).join('');
+  if(!rows.length){ host.innerHTML='<p class="empty">This study has no adjustable values. Its numbers are in the spec.</p>'; $('mParams').classList.add('none'); $('mParams').querySelector('.hint').hidden=true; bindTop(); return; }
+  host.innerHTML=groups.map((g,gi)=>`<div class="pg" data-g="${gi}"><button type="button" class="pgh" aria-expanded="true"><span class="pgn">${esc(g.name)}</span><span class="pgc"><i class="chg" hidden></i>${g.items.length}</span>${ICON.chev}</button><div class="pgb">${g.items.map(r=>row(r,rows.indexOf(r))).join('')}<button type="button" class="pgr" hidden>Reset ${esc(String(g.name).toLowerCase())}</button></div></div>`).join('');
+  groupNav(host);
   const el=i=>host.querySelector(`.prm[data-i="${i}"]`);
   const same=(r,v)=>r.type==='range'?Math.abs(+v-(+r.value))<1e-9:String(v)===String(r.value);
   const fill=(rg,r,v)=>rg.style.setProperty('--p',(100*(v-r.min)/((r.max-r.min)||1)).toFixed(2)+'%');
   const show=(i,v)=>{ const r=rows[i], e=el(i); if(!e)return; if(r.type==='range'){ const rg=e.querySelector('input[type=range]'), nm=e.querySelector('.num'); if(document.activeElement!==rg)rg.value=v; fill(rg,r,+v); if(document.activeElement!==nm)nm.value=fmt(r,v); }
     else if(r.type==='text'){ const t=e.querySelector('.tx'); if(document.activeElement!==t)t.value=v==null?'':v; } else e.querySelectorAll('.seg button').forEach(b=>{ const on=r.options[+b.dataset.k].v===v; b.classList.toggle('on',on); b.setAttribute('aria-checked',String(on)); });
     e.classList.toggle('on',!same(r,v)); };
-  const marks=()=>{ let n=0; host.querySelectorAll('.pg').forEach(pg=>{ const g=groups[+pg.dataset.g]; const c=g.items.filter(r=>!same(r,r.get())).length; n+=c; const ch=pg.querySelector('.chg'); ch.hidden=!c; ch.textContent=c+' changed · '; pg.querySelector('.pgr').hidden=!c; }); const b=$('bParamReset'); b.hidden=!n; b.textContent=`Reset all · ${n}`; pres.forEach((p,i)=>{ const b=host.querySelector(`.cb[data-p="${i}"]`); const on=!!(p.on&&p.on()); b.classList.toggle('on',on); b.setAttribute('aria-pressed',String(on)); }); acts.forEach((a,i)=>{ if(a.relabel){ const b=host.querySelector(`.acts [data-a="${i}"]`); if(b)b.textContent=a.relabel(); } }); };
+  const marks=()=>{ let n=0; host.querySelectorAll('.pg').forEach(pg=>{ const g=groups[+pg.dataset.g]; const c=g.items.filter(r=>!same(r,r.get())).length; n+=c; const ch=pg.querySelector('.chg'); ch.hidden=!c; ch.textContent=c+' changed · '; pg.querySelector('.pgr').hidden=!c; }); const b=$('bParamReset'); b.hidden=!n; b.textContent=`Reset all · ${n}`; gnavSync(); pres.forEach((p,i)=>{ const b=top.querySelector(`.cb[data-p="${i}"]`); if(!b)return; const on=!!(p.on&&p.on()); b.classList.toggle('on',on); b.setAttribute('aria-pressed',String(on)); }); acts.forEach((a,i)=>{ if(a.relabel){ const b=top.querySelector(`.acts [data-a="${i}"]`); if(b)b.textContent=a.relabel(); } }); };
   const put=(i,v,commit)=>{ const r=rows[i]; if(r.type==='range')v=clamp(+v,r.min,r.max); r.set(v,!commit); if(commit&&r.commit)r.commit(); show(i,v); marks(); dirty=true; };
   rows.forEach((r,i)=>{ const e=el(i); show(i,r.get()); e.querySelector('.rst').onclick=()=>put(i,r.value,true);
     if(r.type==='range'){ const rg=e.querySelector('input[type=range]'), nm=e.querySelector('.num');
@@ -265,7 +294,7 @@ function uiParams(){ const host=$('prail'), rows=UI.params||[], acts=UI.actions|
     else e.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>put(i,r.options[+b.dataset.k].v,true)); });
   host.querySelectorAll('.pg').forEach(pg=>{ const g=groups[+pg.dataset.g]; const h=pg.querySelector('.pgh'); h.onclick=()=>{ const o=pg.classList.toggle('shut'); h.setAttribute('aria-expanded',String(!o)); }; pg.querySelector('.pgr').onclick=()=>{ g.items.forEach(r=>{ if(!same(r,r.get()))put(rows.indexOf(r),r.value,true); }); }; });
   $('bParamReset').onclick=()=>{ if(UI.resetAll)UI.resetAll(); else rows.forEach((r,i)=>{ if(!same(r,r.get()))put(i,r.value,true); }); setTimeout(()=>{ uiSyncRows(); uiColorDraw(); },30); dirty=true; };
-  function bindTop(){ host.querySelectorAll('.acts [data-a]').forEach(b=>{ const a=acts[+b.dataset.a]; b.onclick=()=>{ a.run(); setTimeout(()=>{ uiSyncRows(); uiColorDraw(); },30); dirty=true; }; }); host.querySelectorAll('.cb[data-p]').forEach(b=>{ b.onclick=()=>{ pres[+b.dataset.p].run(); setTimeout(()=>{ uiSyncRows(); uiColorDraw(); },30); dirty=true; }; }); }
+  function bindTop(){ top.querySelectorAll('.acts [data-a]').forEach(b=>{ const a=acts[+b.dataset.a]; b.onclick=()=>{ a.run(); setTimeout(()=>{ uiSyncRows(); uiColorDraw(); },30); dirty=true; }; }); top.querySelectorAll('.cb[data-p]').forEach(b=>{ b.onclick=()=>{ pres[+b.dataset.p].run(); setTimeout(()=>{ uiSyncRows(); uiColorDraw(); },30); dirty=true; }; }); }
   bindTop();
   let raf=0; uiSyncRows=()=>{ if(raf)return; raf=requestAnimationFrame(()=>{ raf=0; rows.forEach((r,i)=>show(i,r.get())); marks(); }); };
   UI.on('sync',uiSyncRows); marks();
@@ -276,14 +305,16 @@ const refImg=new Image(); let refReady=false; const hasRef=!!(window.__REF&&wind
 refImg.onload=()=>{ refReady=true; dirty=true; computeFidelity(); };
 let mode=0, splitX=0.5;
 const VIEW_HINT=['The rebuild, drawn in code.','The source image the technique was measured from.','Reference on the left, rebuild on the right. Move across the plate to slide the split.'];
-if(hasRef)refImg.src=window.__REF.data; else { if($('tCompare')){ $('tCompare').disabled=true; $('cmpTog').classList.add('off'); $('cmpTog').title='No published reference to compare'; } $('viewHint').textContent=S.refHint||'The reference is held locally and not published, so only the rebuild is shown.'; fidEl.innerHTML=S.refHint?`<p class="none">${esc(S.refHint)}</p>`:'<p class="none">Reference held locally, not published. No match score.</p>'; }
+if(hasRef)refImg.src=window.__REF.data; else { if($('tCompare')){ $('tCompare').disabled=true; $('cmpTog').hidden=true; } $('viewHint').textContent=S.refHint||'The reference is held locally and not published, so only the rebuild is shown.'; fidEl.innerHTML=S.refHint?`<p class="none">${esc(S.refHint)}</p>`:'<p class="none">Reference held locally, not published. No match score.</p>'; }
 function setMode(m){ if(!hasRef)m=0; mode=m===2?2:0; if($('tCompare'))$('tCompare').checked=mode===2; if(hasRef)$('viewHint').textContent=VIEW_HINT[mode]+(mode!==0&&fidelity?` Match ${Math.round(fidelity.sum*100)} %.`:''); dirty=true; }
 if($('tCompare'))$('tCompare').onchange=()=>setMode($('tCompare').checked?2:0);
 let readoutEl=null;
-if(UI){ const mv=$('mView');
-  if((UI.view||[]).length){ const box=document.createElement('div'); box.className='vsw'; box.innerHTML=UI.view.map((v,i)=>`<label class="sw-toggle"><input type="checkbox" data-v="${i}"><span class="tr" aria-hidden="true"></span><span class="tl">${esc(v.label)}</span></label>`).join(''); mv.appendChild(box);
-    const sync=()=>box.querySelectorAll('input').forEach(c=>{ c.checked=!!UI.view[+c.dataset.v].on(); }); box.querySelectorAll('input').forEach(c=>c.onchange=()=>{ UI.view[+c.dataset.v].set(c.checked); setTimeout(sync,30); dirty=true; }); UI.on('sync',sync); setTimeout(sync,400); }
-  if(UI.status){ readoutEl=document.createElement('div'); readoutEl.className='readout'; readoutEl.setAttribute('aria-live','off'); mv.appendChild(readoutEl); }
+if(!(UI&&UI.status)&&$('readout'))$('readout').hidden=true;
+if(UI){ const bar=document.querySelector('.tbar');
+  /* a study's own view switches (handles and the like) sit in the toolbar, before Notes */
+  if((UI.view||[]).length&&bar){ const ins=$('bWide'); const els=UI.view.map((v,i)=>{ const l=document.createElement('label'); l.className='tb'; l.title=v.label; l.innerHTML=`<input type="checkbox" data-v="${i}"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.4"/><path d="M8 2v3.2M8 10.8V14M2 8h3.2M10.8 8H14"/></svg><span>${esc(v.label)}</span>`; bar.insertBefore(l,ins); return l; });
+    const sync=()=>els.forEach(l=>{ const c=l.querySelector('input'); c.checked=!!UI.view[+c.dataset.v].on(); }); els.forEach(l=>{ const c=l.querySelector('input'); c.onchange=()=>{ UI.view[+c.dataset.v].set(c.checked); setTimeout(sync,30); dirty=true; }; }); UI.on('sync',sync); setTimeout(sync,400); }
+  if(UI.status)readoutEl=$('readout');
   if(UI.bench){ const pc=v=>(v*100).toFixed(1)+' %'; const row=(k,v)=>`<div class="fr"><span>${esc(k)}</span><span class="fb"><i style="width:${(Math.max(0,Math.min(1,v))*100).toFixed(1)}%"></i></span><span>${pc(v)}</span></div>`;
     const drawB=()=>{ const b=UI.bench(); if(!b){ fidEl.innerHTML='<p class="fh">Measuring against the reference statistics…</p>'; return; } if(b.err){ fidEl.innerHTML=`<p class="none">The benchmark failed: ${esc(b.err)}</p>`; return; }
       const lo=b.rows.reduce((a,r)=>r.v<a.v?r:a,b.rows[0]), n98=b.rows.filter(r=>r.v>=0.98).length; const pats=[...new Set(b.rows.map(r=>r.patch))];
@@ -316,9 +347,10 @@ function computeFidelity(){ if(!art||!refReady)return; try{ const A=stats(refImg
 /* ---------- motion + interactive ---------- */
 let liveOn=false, motionOn=false, mArt=null, mCtx=null, mT0=0;
 const LIVE_LABEL=S.liveLabel||'Interactive';
-(function(){ if(UI){ uiMotion(); return; } const has=!!S.motion, live=IFRAME; $('bMotion').hidden=!has; $('bLive').hidden=!live; $('liveLabel').textContent=LIVE_LABEL;
+(function(){ if(UI){ uiMotion(); return; } const has=!!S.motion, live=IFRAME; $('bMotion').hidden=!has; $('bLive').hidden=!live; $('liveLabel').textContent=String(LIVE_LABEL).split(' ')[0];
   if(!has&&!live){ $('motionRow').innerHTML='<span class="btn off" aria-disabled="true">Still plate</span>'; $('motionHint').textContent='This study has no motion or interactive version.'; $('mMotion').classList.add('none'); return; }
   $('motionHint').textContent=[has?(S.motionHint||'Play runs the plate as a loop.'):'', live?(S.liveHint||`${LIVE_LABEL} opens the working version in place of the plate.`):''].filter(Boolean).join(' ');
+  if(has)$('bMotion').title=(S.motionHint||'Play runs the plate as a loop.')+' (M)'; if(live)$('bLive').title=(S.liveHint||LIVE_LABEL)+' (L)'; if(/^from the source/i.test(LIVE_LABEL))$('liveLabel').textContent='Live';
   if(has)$('bMotion').onclick=()=>setMotion(!motionOn); if(live)$('bLive').onclick=()=>setLive(!liveOn);
   if(has!==live)(has?$('bMotion'):$('bLive')).style.gridColumn='1/3';
   if(live&&!/pointer/i.test(LIVE_LABEL))$('bLive').querySelector('svg').outerHTML='<svg viewBox="0 0 12 12" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.3"><path d="M5 2H2v8h8V7"/><path d="M7 1.5h3.5V5M10.5 1.5L5.5 6.5"/></svg>'; })();
@@ -326,9 +358,10 @@ function motionState(){ if(UI){ const m=!!(UI.motion&&UI.motion.on()), l=!!(UI.i
     const bm=$('bMotion'), bl=$('bLive'); if(bm){ bm.classList.toggle('on',m); bm.setAttribute('aria-pressed',String(m)); bm.querySelector('span').textContent=m?'Pause':'Play'; } if(bl){ bl.classList.toggle('on',l); bl.setAttribute('aria-pressed',String(l)); } return; }
   $('motionState').textContent=motionOn?'Playing':(liveOn?LIVE_LABEL:'Still'); $('motionState').classList.toggle('hot',motionOn||liveOn); }
 /* motion on a study page: Play runs the study's own motion; the second button is its drag or draw mode */
-function uiMotion(){ const M=UI.motion, I=UI.interactive; $('bMotion').hidden=!M; $('bLive').hidden=!I; if(I)$('liveLabel').textContent=I.label;
+function uiMotion(){ const M=UI.motion, I=UI.interactive; $('bMotion').hidden=!M; $('bLive').hidden=!I; if(I)$('liveLabel').textContent=String(I.label).split(' ')[0];
   if(!M&&!I){ if(UI.pointerHint){ $('motionRow').innerHTML='<span class="btn off" aria-disabled="true">Pointer on the plate</span>'; $('motionHint').textContent=UI.pointerHint; } else { $('motionRow').innerHTML='<span class="btn off" aria-disabled="true">Still plate</span>'; $('motionHint').textContent='This study has no motion or interactive version.'; $('mMotion').classList.add('none'); } return; }
   $('motionHint').textContent=[M?(S.motionHint||'Play runs the plate as a loop.'):'', I?(S.liveHint||''):'', UI.pointerHint||''].filter(Boolean).join(' ');
+  if(M)$('bMotion').title=(S.motionHint||'Play runs the plate as a loop.')+' (M)'; if(I)$('bLive').title=(S.liveHint||I.label)+' (L)';
   if(M)$('bMotion').onclick=()=>{ M.set(!M.on()); motionState(); dirty=true; }; if(I)$('bLive').onclick=()=>{ I.set(!I.on()); motionState(); dirty=true; };
   if(!M||!I)(M?$('bMotion'):$('bLive')).style.gridColumn='1/3';
   if(I&&!/pointer|drag/i.test(I.label))$('bLive').querySelector('svg').outerHTML='<svg viewBox="0 0 12 12" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.3"><path d="M2 10l1.2-3.4L8.6 1.2l2.2 2.2-5.4 5.4z"/></svg>';
@@ -395,7 +428,7 @@ function frame(now){ requestAnimationFrame(frame); const dt=Math.min(0.05,(now-l
   else if(phase==='hold'){ for(const t of P)if(t.lock>=0&&pt-t.lock<0.4)work=true; pt+=dt; }
   if(motionOn&&mArt){ work=true; try{ S.motion(mArt,fig.w,fig.h,DPR,variant(),(now-mT0)/1000,mCtx,overrides); }catch(e){ console.error(e); setMotion(false); } }
   const L=ENG(); if(L){ try{ if(L.tick)L.tick(now,dt); }catch(e){ console.error(e); L.tick=null; } if(L.dirty){ L.dirty=false; dirty=true; } }
-  if(UI&&now-uiT>220){ uiT=now; if(readoutEl){ const st=UI.status(); const t=Array.isArray(st)?st.join('\n'):(st||''); if(readoutEl.textContent!==t)readoutEl.textContent=t; } const m=!!(UI.motion&&UI.motion.on()), l=!!(UI.interactive&&UI.interactive.on()), g=UI.message?UI.message():null; if(m!==uiM0||l!==uiL0){ uiM0=m; uiL0=l; motionState(); } if(g!==uiMsg0){ uiMsg0=g; dirty=true; } }
+  if(UI&&now-uiT>220){ uiT=now; if(readoutEl){ const st=UI.status(); const t=Array.isArray(st)?st.filter(Boolean).join(' · '):(st||''); if(readoutEl.textContent!==t)readoutEl.textContent=t; } const m=!!(UI.motion&&UI.motion.on()), l=!!(UI.interactive&&UI.interactive.on()), g=UI.message?UI.message():null; if(m!==uiM0||l!==uiL0){ uiM0=m; uiL0=l; motionState(); } if(g!==uiMsg0){ uiMsg0=g; dirty=true; } }
   if(!work&&!dirty)return; dirty=false;
   ctx.clearRect(0,0,W,H);
   if(liveOn){ drawChrome(); return; }
@@ -422,9 +455,9 @@ cv.addEventListener('click',()=>{ if(hover)select(hover); });
 $('bSpec').onclick=()=>openSpec(!specEl.classList.contains('open')); $('specclose').onclick=()=>openSpec(false);
 $('speccopy').onclick=async()=>{ refreshSpec(); try{ await navigator.clipboard.writeText(specJSON); $('speccopy').textContent='Copied'; setTimeout(()=>$('speccopy').textContent='Copy',1200);}catch(e){} };
 /* expand (F): the notes column folds away and the plate takes its width; remembered per browser */
-let wide=false; try{ wide=localStorage.getItem('tt-wide')==='1'; }catch(e){}
-function setWide(o){ wide=o; document.body.classList.toggle('wide',o); const b=$('bWide'); if(b){ b.classList.toggle('on',o); b.setAttribute('aria-pressed',String(o)); b.querySelector('span').textContent=o?'Collapse':'Expand'; } try{ localStorage.setItem('tt-wide',o?'1':'0'); }catch(e){} requestAnimationFrame(()=>{ layout(); dirty=true; }); }
-if($('bWide')){ $('bWide').onclick=()=>setWide(!wide); } if(wide)setWide(true);
+let wide=true;
+function setWide(o){ wide=o; document.body.classList.toggle('wide',o); const b=$('bWide'); if(b){ b.classList.toggle('on',!o); b.setAttribute('aria-pressed',String(!o)); b.title=o?'Show the notes (F)':'Hide the notes (F)'; } requestAnimationFrame(()=>{ layout(); dirty=true; }); }
+if($('bWide')){ $('bWide').onclick=()=>setWide(!wide); } document.body.classList.add('wide');
 addEventListener('keydown',e=>{ if(e.target&&/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return; if(e.metaKey||e.ctrlKey||e.altKey)return; const k=e.key.toLowerCase(); if(k==='f'){ setWide(!wide); return; }
   const L=ENG(); const toEngine=()=>{ if(L&&L.key&&L.key(e)){ e.preventDefault(); setTimeout(()=>{ uiSyncRows(); uiColorDraw(); motionState(); },30); dirty=true; return true; } return false; };
   /* an instrument page (ST-09…11) owns its keys first; the shell keeps R, S, F, space, Escape and / */
@@ -434,6 +467,7 @@ addEventListener('keydown',e=>{ if(e.target&&/INPUT|TEXTAREA|SELECT/.test(e.targ
   else if(k==='m'&&(UI?UI.motion:S.motion)){ if(UI){ UI.motion.set(!UI.motion.on()); motionState(); dirty=true; } else setMotion(!motionOn); }
   else if(k==='l'&&(UI?UI.interactive:IFRAME)){ if(UI){ UI.interactive.set(!UI.interactive.on()); motionState(); dirty=true; } else setLive(!liveOn); }
   else if(e.key==='Escape')openSpec(false);
+  else if(EMBED&&/^[,./]$/.test(e.key)){ /* a shared page never leads back to the site */ }
   else if(e.key===','&&!(UI&&UI.engineFirst)&&sib[idx-1])location.href=ROOT+sib[idx-1].path+'index.html'; else if(e.key==='.'&&!(UI&&UI.engineFirst)&&sib[idx+1])location.href=ROOT+sib[idx+1].path+'index.html'; else if(e.key==='/')location.href=ROOT+'index.html';
   else toEngine(); });
 let rto=null; addEventListener('resize',()=>{ clearTimeout(rto); rto=setTimeout(()=>{ layout(); dirty=true; },120); });
@@ -461,7 +495,7 @@ if(document.fonts){ Promise.all(['700 20px Archivo','400 12px Inter','400 12px "
   function draw(){ const L=load();
     host.innerHTML=`<div class="mph"><span>Your presets${L.length?` · ${L.length}`:''}</span><button type="button" class="ghost" id="bPreNew">${naming?'Cancel':'Save current'}</button></div>`
       +(naming?`<div class="mpn"><input id="preName" type="text" maxlength="40" placeholder="Name this preset" aria-label="Preset name"><label class="sw-toggle"><input type="checkbox" id="preOn"><span class="tr" aria-hidden="true"></span><span class="tl">On load</span></label><button type="button" class="btn" id="bPreOk">Save</button></div>`:'')
-      +(L.length?`<ul>${L.map((x,i)=>`<li><button type="button" class="pn" data-a="${i}" title="Apply">${esc(x.name)}</button><label class="ol" title="Open this study with this preset"><input type="radio" name="preOnload" data-o="${i}"${x.onload?' checked':''}><span>On load</span></label><button type="button" class="ic" data-l="${i}" title="Copy a link that opens with this preset">Link</button><button type="button" class="ic" data-d="${i}" title="Delete" aria-label="Delete ${esc(x.name)}">×</button></li>`).join('')}</ul>`:'')
+      +(L.length?`<ul>${L.map((x,i)=>`<li><button type="button" class="pn" data-a="${i}" title="Apply">${esc(x.name)}</button><label class="ol" title="Open this study with this preset"><input type="radio" name="preOnload" data-o="${i}"${x.onload?' checked':''}><span>On load</span></label>${document.body.classList.contains('embed')?'':`<button type="button" class="ic" data-l="${i}" title="Copy a link that opens with this preset">Link</button>`}<button type="button" class="ic" data-d="${i}" title="Delete" aria-label="Delete ${esc(x.name)}">×</button></li>`).join('')}</ul>`:'')
       +(L.some(x=>x.onload)?`<button type="button" class="ghost clr" id="bPreOff">Open with the defaults</button>`:'')+`<p class="mpnote" aria-live="polite">${esc(note)}</p>`;
     $('bPreNew').onclick=()=>{ naming=!naming; note=''; draw(); if(naming)$('preName').focus(); };
     if(naming){ const ok=()=>{ const n=$('preName').value.trim()||('Preset '+(L.length+1)); const on=$('preOn').checked; const L2=load().map(x=>on?Object.assign(x,{onload:false}):x); L2.push({name:n,onload:on,d:capture()}); save(L2); naming=false; note=on?`Saved. "${n}" opens on load in this browser.`:`Saved "${n}".`; draw(); };
@@ -479,5 +513,8 @@ if(document.fonts){ Promise.all(['700 20px Archivo','400 12px Inter','400 12px "
   const first=fromUrl?dec(fromUrl):((load().find(x=>x.onload)||{}).d);
   if(first){ let tries=0; const go=()=>{ if(window.__study_params||++tries>40){ apply(first); } else setTimeout(go,50); }; setTimeout(go,60); }
 })();
+/* embedded in a shared set: no link on the page leads back to the site */
+if(EMBED){ const seal=()=>document.querySelectorAll('.notes a[href],.rel a[href],.spec a[href]').forEach(a=>{ a.removeAttribute('href'); a.removeAttribute('target'); }); seal(); setTimeout(seal,1500);
+  document.addEventListener('click',e=>{ const a=e.target.closest&&e.target.closest('a[href]'); if(a&&!a.hasAttribute('download')&&!/^(blob:|#)/.test(a.getAttribute('href')))e.preventDefault(); },true); }
 window.__study={S,fig:()=>fig,art:()=>art,fidelity:()=>fidelity,setMode,setVariant,setMotion,setLive,setNotes,variants,variant,inks:()=>inksOf(variants[vi]),setInk:(h,v)=>{ (inkEdits[vi]??={})[norm(h)]=norm(v); drawInks(); refresh(); }};
 })();

@@ -8,7 +8,7 @@
 <link rel="icon" href="data:,">
 <title>PL-148 · Weighedfrom the concept end · a new drawing in the measured grammar · Techniques &amp; Templates</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
-<link rel="stylesheet" href="../../_shared/shell.css?v=202611130458">
+<link rel="stylesheet" href="../../_shared/shell.css?v=202611130536">
 <link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
@@ -160,43 +160,47 @@
     <div class="live" id="live"></div>
   </section>
   <aside class="panel" id="panel" aria-label="Controls">
-    <section class="mod" id="mView" aria-labelledby="hView">
-      <header><h2 id="hView">View</h2><span class="hr"><label class="sw-toggle" id="cmpTog" title="Reference beside the rebuild (R)"><input type="checkbox" id="tCompare"><span class="tr" aria-hidden="true"></span><span class="tl">Compare</span></label><button type="button" class="ghost" id="bWide" title="Hide the side columns (F)"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1 4.5V1h3.5M11 4.5V1H7.5M1 7.5V11h3.5M11 7.5V11H7.5"/></svg><span>Expand</span></button></span></header>
-      <p class="hint" id="viewHint">The rebuild, drawn in code.</p>
-    </section>
-    <section class="mod" id="mNote" aria-labelledby="hNote">
-      <header><h2 id="hNote">Callouts</h2><label class="sw-toggle"><input type="checkbox" id="tNote"><span class="tr" aria-hidden="true"></span><span class="tl">Show</span></label></header>
-      <p class="hint">Numbered points mark where each technique was measured. Hover one on the plate to read it.</p>
-      <button type="button" class="disc" id="bPoints" aria-expanded="false" aria-controls="pts"><span>Point list</span><b id="ctr">0 / 10</b><svg class="chev" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 3.8L5 6.3l2.5-2.5"/></svg></button>
-      <div class="pts" id="pts" hidden>
-        <div class="rows" id="rows"></div>
-        <div class="read" id="read"><span id="readtxt">Hover or select a point.</span><code id="readcode"></code></div>
+    <div class="ptop">
+      <div class="tbar" role="toolbar" aria-label="Plate">
+        <button type="button" class="tb" id="bMotion" aria-pressed="false" title="Play or pause the motion (M)"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 3h2.6v10H4zM9.4 3H12v10H9.4z"/></svg><span>Play</span></button>
+        <button type="button" class="tb" id="bLive" aria-pressed="false" title="Drag on the plate (L)"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 2.2l9.4 5-4.1 1.3 2.4 4.5-1.6.9-2.4-4.5-3.1 2.9z"/></svg><span id="liveLabel">Drag</span></button>
+        <label class="tb" id="noteTog" title="Numbered points where each technique was measured"><input type="checkbox" id="tNote"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="2.5" width="5" height="5"/><path d="M7.5 5h3.5M11 5v6.5"/><rect x="9" y="11" width="4" height="3" fill="currentColor" stroke="none"/></svg><span>Callouts</span></label>
+        <label class="tb" id="cmpTog" title="Reference beside the rebuild (R)"><input type="checkbox" id="tCompare"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="10"/><path d="M8 1.5v13"/></svg><span>Compare</span></label>
+        <button type="button" class="tb" id="bWide" aria-pressed="false" title="Show the notes (F)"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="3" width="12" height="10"/><path d="M6 3v10M3.5 6h1M3.5 8h1M3.5 10h1"/></svg><span>Notes</span></button>
       </div>
-    </section>
-    <section class="mod" id="mMotion" aria-labelledby="hMotion">
-      <header><h2 id="hMotion">Motion</h2><span class="state" id="motionState">Still</span></header>
-      <div class="row2" id="motionRow">
-        <button type="button" class="btn" id="bMotion" aria-pressed="false" title="Play or pause the motion version (M)"><svg class="i-play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.6v8.8L10.2 6z"/></svg><svg class="i-pause" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5h2v9H3zM7 1.5h2v9H7z"/></svg><span>Play</span></button>
-        <button type="button" class="btn" id="bLive" aria-pressed="false" title="Open the interactive version (L)"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.5l7.5 4-3.3 1 1.9 3.6-1.3.7-1.9-3.6L2.5 9.6z"/></svg><span id="liveLabel">Interactive</span></button>
+      <div class="readout" id="readout" aria-live="off"></div>
+      <div class="ptabs" role="tablist" aria-label="Controls">
+        <button type="button" role="tab" id="tabParams" data-tab="params" aria-selected="true" aria-controls="mParams">Parameters</button>
+        <button type="button" role="tab" id="tabColor" data-tab="color" aria-selected="false" aria-controls="mColor">Color</button>
+        <button type="button" role="tab" id="tabPresets" data-tab="presets" aria-selected="false" aria-controls="mPresets">Presets</button>
+        <button type="button" role="tab" id="tabMore" data-tab="more" aria-selected="false" aria-controls="mExport">Export</button>
       </div>
-      <p class="hint" id="motionHint"></p>
+    </div>
+    <section class="tabp" id="mParams" role="tabpanel" aria-labelledby="tabParams" data-tab="params">
+      <div class="th"><p class="hint">Drag a slider or type a value. Arrow keys step; Shift ×10, Alt ×0.1.</p><button type="button" class="ghost warn" id="bParamReset" hidden>Reset all</button></div>
+      <div class="pgroups" id="prail"></div>
     </section>
-    <section class="mod" id="mColor" aria-labelledby="hColor">
-      <header><h2 id="hColor">Color</h2><button type="button" class="ghost warn" id="bInkReset" hidden>Reset inks</button></header>
-      <p class="hint" id="colorHint">Pick a palette. Click any ink to change it; the plate redraws.</p>
+    <section class="tabp" id="mColor" role="tabpanel" aria-labelledby="tabColor" data-tab="color" hidden>
+      <div class="th"><p class="hint" id="colorHint">Pick a palette. Click any ink to change it.</p><button type="button" class="ghost warn" id="bInkReset" hidden>Reset inks</button></div>
       <div class="pal" id="pal" role="radiogroup" aria-label="Palettes"></div>
       <div class="inks" id="inks"></div>
     </section>
-    <section class="mod" id="mParams" aria-labelledby="hParams">
-      <header><h2 id="hParams">Parameters</h2><button type="button" class="ghost warn" id="bParamReset" hidden>Reset all</button></header>
-      <p class="hint">Every value is editable. Drag a slider or type a number, then Enter. Arrow keys step; Shift ×10, Alt ×0.1. The plate redraws.</p>
-      <div class="pgroups" id="prail"></div>
+    <section class="tabp" id="mPresets" role="tabpanel" aria-labelledby="tabPresets" data-tab="presets" hidden>
+      <div id="ppres"></div>
       <div class="mypre" id="mypre"></div>
     </section>
-    <section class="mod" id="mExport" aria-labelledby="hExport">
-      <header><h2 id="hExport">Export</h2></header>
-      <div class="row3"><button type="button" class="btn" id="bCopy" title="Copy the spec as JSON">Copy spec</button><button type="button" class="btn" id="bSpec" title="Open the spec (S)">Open spec</button><button type="button" class="btn" id="bPng" title="Save the plate as it is drawn now">Save PNG</button></div>
+    <section class="tabp" id="mExport" role="tabpanel" aria-labelledby="tabMore" data-tab="more" hidden>
+      <div class="row3"><button type="button" class="btn" id="bPng" title="Save the plate as it is drawn now">Save PNG</button><button type="button" class="btn" id="bCopy" title="Copy the spec as JSON">Copy spec</button><button type="button" class="btn" id="bSpec" title="Open the spec (S)">Open spec</button></div>
       <p class="hint">The spec holds every measured number, its range and the module that draws it.</p>
+      <div id="mNote">
+        <button type="button" class="disc" id="bPoints" aria-expanded="false" aria-controls="pts"><span>Point list</span><b id="ctr">0 / 10</b><svg class="chev" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 3.8L5 6.3l2.5-2.5"/></svg></button>
+        <div class="pts" id="pts" hidden>
+          <div class="rows" id="rows"></div>
+          <div class="read" id="read"><span id="readtxt">Hover or select a point.</span><code id="readcode"></code></div>
+        </div>
+      </div>
+      <div id="mView"><p class="hint" id="viewHint">The rebuild, drawn in code.</p></div>
+      <div id="mMotion" hidden><span id="motionState">Still</span><div id="motionRow"></div><p id="motionHint"></p></div>
     </section>
   </aside>
 </main>
@@ -204,11 +208,11 @@
   <div class="sh"><span>Spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
   <pre id="specpre">{{SPEC}}</pre>
 </aside>
-<script src="../../_shared/entries.js?v=202611130458"></script>
-<script src="../../_shared/vocab.js?v=202611130458"></script>
-<script src="../../_shared/art.js?v=202611130458"></script>
+<script src="../../_shared/entries.js?v=202611130536"></script>
+<script src="../../_shared/vocab.js?v=202611130536"></script>
+<script src="../../_shared/art.js?v=202611130536"></script>
 <script src="ref.js"></script>
 <script src="study.js"></script>
-<script src="../../_shared/shell.js?v=202611130458"></script>
+<script src="../../_shared/shell.js?v=202611130536"></script>
 </body>
 </html>
