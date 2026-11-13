@@ -472,6 +472,7 @@ if(document.fonts){ Promise.all(['700 20px Archivo','400 12px Inter','400 12px "
       if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(done,()=>{ note=u; draw(); }); else { note=u; draw(); } });
     host.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ const L2=load(); L2.splice(+b.dataset.d,1); save(L2); draw(); });
     const off=$('bPreOff'); if(off)off.onclick=()=>{ save(load().map(x=>Object.assign(x,{onload:false}))); note='Opens with the defaults.'; draw(); }; }
+  window.__study_state=capture;   /* the current palette, inks and parameters, for a set page's "Grab the JSON" */
   draw();
   /* on open: a preset in the address wins, then the one marked on load */
   const fromUrl=(location.hash.match(/[#&]preset=([^&]+)/)||[])[1];
