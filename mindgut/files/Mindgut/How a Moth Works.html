@@ -1154,9 +1154,9 @@ function bodyT(zone,z1,z2,Tth,Tab,flow,ph,jit){
 Plate('p-heat',{w:1200,h:700,seed:12,warm:240,regions:{fur:[164,212,440,446],radiator:[398,262,796,430]},regionInk:LAMP,
  onhl:function(P,k){if(RM)return;if(k==='fur')P.t=Math.floor(P.t/17)*17+3;if(k==='radiator')P.t=Math.floor(P.t/17)*17+12.4;},
  init:function(P){var r=mul(3),S=P.S,i;S.dots=[];HK.build();
-  for(var y=220,row=0;y<470;y+=3.9,row++)for(var xx=130+((row&1)?2.25:0);xx<790;xx+=4.5){var px=xx+(r()-.5)*3.6,py=y+(r()-.5)*3.6,z=bodyZone(px,py);if(z&&(r()<.95-.35*z[1]*z[1]||z[1]>.86))S.dots.push([px,py,z[0],z[1],z[2],r()])}
+  for(var y=220,row=0;y<470;y+=2.6,row++)for(var xx=130+((row&1)?1.5:0);xx<790;xx+=3.0){var px=xx+(r()-.5)*2.4,py=y+(r()-.5)*2.4,z=bodyZone(px,py);if(z&&(r()<.95-.35*z[1]*z[1]||z[1]>.86))S.dots.push([px,py,z[0],z[1],z[2],r()])}
   /* fur: insulation, drawn as hairs standing off the thorax */
-  S.fur=[];var rf=mul(19);for(i=0;i<900;i++){var a=rf()*TAU,ex=306+Math.cos(a)*118,ey=326+Math.sin(a)*92;if(ex>408)continue;S.fur.push([ex-Math.cos(a)*6,ey-Math.sin(a)*6,8+rf()*16,a+(rf()-.5)*.7+.5,.12+.3*rf()])}
+  S.fur=[];var rf=mul(19);for(i=0;i<2400;i++){var a=rf()*TAU,ex=306+Math.cos(a)*118,ey=326+Math.sin(a)*92;if(ex>408)continue;S.fur.push([ex-Math.cos(a)*6,ey-Math.sin(a)*6,6+rf()*14,a+(rf()-.5)*.7+.5,.10+.28*rf()])}
   S.shed=[];S.lat=hkLattice(2.5,860,700,1601);S.env=null;
   /* the pose: the body is drawn at .66 of the old plate so the wings can be drawn at true length (forewing ≈ body).
      It perches level, then pitches nose-up 30° and lifts as it takes off; the stroke plane is 20° off level. */
@@ -1214,11 +1214,12 @@ Plate('p-heat',{w:1200,h:700,seed:12,warm:240,regions:{fur:[164,212,440,446],rad
   [[250,410,226,470,246,512],[300,418,296,476,322,516],[350,410,366,468,398,500]].forEach(function(q){x.beginPath();x.moveTo(q[0],q[1]);x.lineTo(q[2]-lg*10,q[3]+lg*6);x.lineTo(q[4]-lg*28,q[5]+lg*4);x.stroke()});
   x.beginPath();x.moveTo(160,312);x.quadraticCurveTo(120,260,92,250);x.stroke();
   x.beginPath();x.moveTo(146,352);x.bezierCurveTo(110,372,116,398,140,392);x.stroke();
-  x.lineWidth=.8;
+  x.lineWidth=.5;
   for(i=0;i<S.fur.length;i++){var f=S.fur[i],an=f[3];if(ph===1&&!RM)an+=Math.sin(t*80+i)*.1;
     if(bp){var fx=f[0]-bp[0],fy=f[1]-bp[1],d2=fx*fx+fy*fy;if(d2<8100){var aw=Math.atan2(fy,fx);an+=Math.atan2(Math.sin(aw-an),Math.cos(aw-an))*(1-d2/8100)*.85}}
     x.strokeStyle=css(BONE,f[4]);x.beginPath();x.moveTo(f[0],f[1]);x.lineTo(f[0]+Math.cos(an)*(f[2]+6),f[1]+Math.sin(an)*(f[2]+6));x.stroke()}
-  var D=S.dots;for(i=0;i<D.length;i++){var d=D[i];x.fillStyle=heatCss(bodyT(d[2],d[3],d[4],Tth,Tab,flow,ph,(d[5]-.5)*1.4));x.beginPath();x.arc(d[0],d[1],1.5+(d[2]===1?.25:0),0,TAU);x.fill()}
+  var D=S.dots,bins={};for(i=0;i<D.length;i++){var d=D[i],c=heatCss(Math.round(bodyT(d[2],d[3],d[4],Tth,Tab,flow,ph,(d[5]-.5)*1.4)*4)/4);(bins[c]||(bins[c]=[])).push(d)}
+  for(var bc in bins){var L2=bins[bc];x.fillStyle=bc;x.beginPath();for(var bj=0;bj<L2.length;bj++){var dd=L2[bj],rr=.95+(dd[2]===1?.15:0);x.moveTo(dd[0]+rr,dd[1]);x.arc(dd[0],dd[1],rr,0,TAU)}x.fill()}
   x.restore();
   /* near wings, over the body */
   var no={lat:S.lat,k:k,col:wcol,al:.95,fill:fill,vein:.2,edge:.46,hair:.34,gain:1.2};
@@ -1283,7 +1284,7 @@ Plate('p-mech',{w:1200,h:640,seed:14,warm:80,regions:{box:[36,88,584,618],vortex
  init:function(P){var S=P.S,r=mul(23),i;S.ph=0;S.rel=null;S.hand=false;S.al=.7;S.sp=1;S.r=r;S.Lref=0;
   /* lengthwise-muscle fibres seen end-on: hex packed in two bundles */
   S.fib=[];for(var sg=-1;sg<=1;sg+=2){var row=0;for(var yy=-36;yy<=36;yy+=8.6,row++)for(var xx=-30;xx<=30;xx+=9.9){var px=xx+((row&1)?4.95:0);if(px*px/880+yy*yy/1300<1)S.fib.push([sg*38+px,yy])}}
-  S.pt=[];for(i=0;i<480;i++)S.pt.push({x:612+r()*560,y:146+r()*424,tr:[],age:r()*6});},
+  S.em=[];for(var ey=150;ey<568;ey+=7.5)S.em.push({y:ey,p:[]});S.emT=0;},
  paint:function(x,P){x.strokeStyle=css(BONE,.14);x.lineWidth=1;x.beginPath();x.moveTo(600.5,40);x.lineTo(600.5,604);x.stroke()},
  frame:function(x,P,dt){
   var S=P.S,t=P.t,ptr=P.ptr,i,sg,cx=300,cy=296;
@@ -1345,18 +1346,38 @@ Plate('p-mech',{w:1200,h:640,seed:14,warm:80,regions:{box:[36,88,584,618],vortex
   var al=S.al,U=95*S.sp,c=250,M=[892,368],e=[Math.cos(al),Math.sin(al)],n=[e[1],-e[0]],LE=[M[0]-e[0]*c/2,M[1]-e[1]*c/2],
       rc=.15*c,form=smooth(.24,.44,al),G1=3.5*U*rc*Math.sin(al)/Math.sin(.56)*form,Lc=[LE[0]+e[0]*.27*c+n[0]*.17*c,LE[1]+e[1]*.27*c+n[1]*.17*c],
       G2=.55*U*c*Math.sin(al),Bc=[LE[0]+e[0]*.3*c,LE[1]+e[1]*.3*c],V=[0,0];
-  function vel(px,py,o){var vx=U,vy=0,dx=px-Lc[0],dy=py-Lc[1],q=dx*dx+dy*dy+rc*rc;vx+=G1*(-dy)/q;vy+=G1*dx/q;dx=px-Bc[0];dy=py-Bc[1];q=dx*dx+dy*dy+4200;vx+=G2*(-dy)/q;vy+=G2*dx/q;
-    var sx=px-LE[0],sy=py-LE[1],s=(sx*e[0]+sy*e[1])/c,h=sx*n[0]+sy*n[1];
-    if(s>-.04&&s<1.04&&Math.abs(h)<26){var vn=vx*n[0]+vy*n[1],f=Math.min(1,(1-Math.abs(h)/26)*1.6);if((h>0&&vn<0)||(h<0&&vn>0)){vx-=vn*n[0]*f;vy-=vn*n[1]*f}}
-    o[0]=vx;o[1]=vy;o[2]=s;o[3]=h}
-  /* streaks: each is a parcel of air carried through the field */
-  x.lineCap='round';x.lineJoin='round';
-  for(i=0;i<S.pt.length;i++){var p=S.pt[i];
-    if(dt>0){vel(p.x,p.y,V);p.x+=V[0]*dt;p.y+=V[1]*dt;p.age+=dt;if(V[2]>0&&V[2]<1&&Math.abs(V[3])<3){var sgn=V[3]>=0?1:-1;p.x+=n[0]*sgn*3;p.y+=n[1]*sgn*3}
-      p.tr.push(p.x,p.y);if(p.tr.length>(Math.hypot(p.x-Lc[0],p.y-Lc[1])<rc*1.35?10:20))p.tr.splice(0,p.tr.length>12?4:2);
-      if(p.x>1178||p.x<606||p.y<144||p.y>572||p.age>11){if(S.r()<.12&&form>.3){var ra=S.r()*TAU,rq=rc*(.35+S.r()*.8);p.x=Lc[0]+Math.cos(ra)*rq;p.y=Lc[1]+Math.sin(ra)*rq}else{p.x=610;p.y=146+S.r()*424}p.age=0;p.tr.length=0}}
-    if(p.tr.length<4)continue;var core=Math.hypot(p.x-Lc[0],p.y-Lc[1])<rc*1.35&&form>.3;
-    x.strokeStyle=core?css([255,250,236],.85):css(BONE,.5);x.lineWidth=core?1.2:1;x.beginPath();x.moveTo(p.tr[0],p.tr[1]);for(var j=2;j<p.tr.length;j+=2)x.lineTo(p.tr[j],p.tr[j+1]);x.stroke()}
+  /* the air: potential flow past a flat plate (Joukowski map of a circle, Kutta condition at the trailing edge, so the
+     bound circulation is 4πaU sin β), plus the leading-edge vortex as a swirl that stays local to the edge */
+  var A4=c/4,uf0=U*e[0],uf1=U*n[0],bU=Math.hypot(uf0,uf1),cb=uf0/bU,sb=uf1/bU,Gam=4*Math.PI*A4*bU*sb,lev=2.2*rc;
+  function vel(px,py,o){var sx=px-M[0],sy=py-M[1],X=sx*e[0]+sy*e[1],Y=sx*n[0]+sy*n[1];
+    /* ζ = (z + sqrt(z² − 4a²)) / 2, the branch outside the circle */
+    var zr=X*X-Y*Y-4*A4*A4,zi=2*X*Y,m=Math.sqrt(Math.hypot(zr,zi)),ang=Math.atan2(zi,zr)/2,qr=m*Math.cos(ang),qi=m*Math.sin(ang);
+    var r1=(X+qr)/2,i1=(Y+qi)/2;if(r1*r1+i1*i1<A4*A4*.999){r1=(X-qr)/2;i1=(Y-qi)/2}
+    /* dW/dζ = U(e^{-iβ} − a² e^{iβ}/ζ²) + iΓ/(2πζ) */
+    var d2=r1*r1+i1*i1,iz2r=(r1*r1-i1*i1)/(d2*d2),iz2i=-2*r1*i1/(d2*d2),a2=A4*A4;
+    var wr=bU*(cb-a2*(cb*iz2r-sb*iz2i)),wi=bU*(-sb-a2*(cb*iz2i+sb*iz2r));
+    var izr=r1/d2,izi=-i1/d2;wr+=-Gam/(2*Math.PI)*izi;wi+=Gam/(2*Math.PI)*izr;
+    /* ÷ dz/dζ = 1 − a²/ζ² */
+    var jr=1-a2*iz2r,ji=-a2*iz2i,jd=jr*jr+ji*ji+1e-6,ur=(wr*jr+wi*ji)/jd,ui=(wi*jr-wr*ji)/jd,lu=ur,lv=-ui,sp=Math.hypot(lu,lv),cap=4.2*bU;if(sp>cap){lu*=cap/sp;lv*=cap/sp}
+    var vx=lu*e[0]+lv*n[0],vy=lu*e[1]+lv*n[1];
+    var dx=px-Lc[0],dy=py-Lc[1],q=dx*dx+dy*dy,w=Math.exp(-q/(2*lev*lev));vx+=G1*(-dy)/(q+rc*rc)*w;vy+=G1*dx/(q+rc*rc)*w;
+    var s=(sx*e[0]+sy*e[1])/c+.5,h=sx*n[0]+sy*n[1];o[0]=vx;o[1]=vy;o[2]=s;o[3]=h}
+  /* smoke wire: a rake at the left edge lets out a puff on every line forty times a second; each line joins its puffs
+     in order, so the air reads as streaklines that bend over the wing and roll up into the vortex */
+  x.lineCap='round';x.lineJoin='round';var ps,q,j,pen;
+  if(dt>0){S.emT+=dt;var emit=S.emT>=1/40;if(emit)S.emT=0;
+    for(i=0;i<S.em.length;i++){ps=S.em[i].p;if(emit)ps.push([608,S.em[i].y+(S.r()-.5)*.6,0]);
+      for(j=ps.length-1;j>=0;j--){q=ps[j];vel(q[0],q[1],V);q[0]+=V[0]*dt;q[1]+=V[1]*dt;q[2]+=dt;
+        if(V[2]>0&&V[2]<1&&Math.abs(V[3])<3){var sgn=V[3]>=0?1:-1;q[0]+=n[0]*sgn*3;q[1]+=n[1]*sgn*3}
+        if(q[0]>1180||q[0]<604||q[1]<142||q[1]>574||q[2]>7)ps.splice(j,1)}}}
+  /* a puff thins as it ages: three passes, oldest faintest */
+  x.lineWidth=.7;[[0,2.4,.4],[2.4,4.6,.26],[4.6,7,.12]].forEach(function(b){x.strokeStyle=css(BONE,b[2]);x.beginPath();
+    for(i=0;i<S.em.length;i++){ps=S.em[i].p;pen=false;for(j=0;j<ps.length;j++){q=ps[j];var inb=q[2]>=b[0]&&q[2]<b[1];if(!inb||(j&&Math.abs(q[0]-ps[j-1][0])+Math.abs(q[1]-ps[j-1][1])>26)){if(!inb){pen=false;continue}pen=false}if(pen)x.lineTo(q[0],q[1]);else{x.moveTo(q[0],q[1]);pen=true}}}
+    x.stroke()});
+  /* the air the vortex has caught, brighter */
+  if(form>.3){x.strokeStyle=css([255,250,236],.6);x.lineWidth=.85;x.beginPath();
+    for(i=0;i<S.em.length;i++){ps=S.em[i].p;pen=false;for(j=0;j<ps.length;j++){q=ps[j];var cin=Math.hypot(q[0]-Lc[0],q[1]-Lc[1])<rc*1.35;if(cin&&pen&&Math.abs(q[0]-ps[j-1][0])+Math.abs(q[1]-ps[j-1][1])<26)x.lineTo(q[0],q[1]);else if(cin){x.moveTo(q[0],q[1]);pen=true}else pen=false}}
+    x.stroke()}
   /* suction along the upper surface, and the lift it adds up to */
   var sum=0,mom=0,env=[];
   for(var s=.05;s<.97;s+=.046){var bx=LE[0]+e[0]*s*c+n[0]*13,by=LE[1]+e[1]*s*c+n[1]*13;vel(bx,by,V);var suc=clamp((V[0]*V[0]+V[1]*V[1])/(U*U)-1,0,7);sum+=suc;mom+=suc*s;
@@ -1391,6 +1412,10 @@ function mothTop(x,px,py,an,s,beat,wing,ant,edge){
     for(var k=1;k<8;k++){var t=k/8,cx=lerp(ax,bx,t),cy=lerp(ay,by,t)+sd*.02*s*Math.sin(t*3),l=.07*s*Math.sin(Math.PI*(t*.9+.05));x.moveTo(cx,cy);x.lineTo(cx+l*.55,cy-sd*l*.25);x.moveTo(cx,cy);x.lineTo(cx-l*.15,cy+sd*l*.55)}x.stroke()}
   x.restore();
 }
+/* an Io moth from Fig. 8's scale sheets, heading along an, wings beating (the span shortens as they lift);
+   false when Fig. 8 has not built its sheets yet, so the caller can fall back to the outline moth */
+function mothIo(x,fem,px,py,an,sc,beat,a){var IP=byId['p-io'];if(!IP||!IP.S||!IP.S.get)return false;var el=.5+.5*Math.abs(Math.cos(beat||0));
+  x.save();x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.translate(px,py);x.rotate(an+Math.PI/2);x.scale(el,1);ioSprite(x,fem,0,0,sc,a==null?1:a,0);x.restore();return true}
 Plate('p-plume',{w:1200,h:640,seed:21,warm:420,
  paint:function(x,P){
   /* the enlarged antenna, from the side: a ringed shaft, two rows of branches, a hair field on every branch */
@@ -1412,8 +1437,8 @@ Plate('p-plume',{w:1200,h:640,seed:21,warm:420,
   S.spawn=function(){S.m={x:1130,y:110+S.r()*420,vx:-1,vy:0,st:'CAST',dir:S.r()<.5?1:-1,leg:.25,legT:0,last:-9,trail:[],hold:0,turns:[]}};S.spawn();S.T=0;
   S.step=function(dt){var r=S.r,T=(S.T+=dt),ptr=P.ptr,i,q,inset=ptr&&ptr.x<372&&ptr.y>476;
     var gate=fbm(T*.9,3.3,9,2),mea=(fbm(T*.33,1.1,4,3)-.5)*230+(fbm(T*1.4,7.7,6,2)-.5)*70;
-    if(gate>.36)for(i=0;i<4;i++)S.p.push([66,320+(r()-.5)*5,mea+(r()-.5)*16,0,r()]);
-    if(fbm(T*1.2,9.1,13,2)>.56)for(i=0;i<2;i++)S.p.push([66,320+(r()-.5)*5,-mea*.55+34+(r()-.5)*14,0,r()]);
+    if(gate>.36)for(i=0;i<9;i++)S.p.push([66,320+(r()-.5)*5,mea+(r()-.5)*16,0,r()]);
+    if(fbm(T*1.2,9.1,13,2)>.56)for(i=0;i<4;i++)S.p.push([66,320+(r()-.5)*5,-mea*.55+34+(r()-.5)*14,0,r()]);
     /* held down, the pointer is a second source of scent */
     if(ptr&&ptr.down&&!inset)for(i=0;i<5;i++)S.p.push([ptr.x+(r()-.5)*6,ptr.y+(r()-.5)*8,(r()-.5)*40,0,r()]);
     for(i=S.p.length-1;i>=0;i--){q=S.p[i];q[3]+=dt;q[0]+=152*dt;q[1]+=(q[2]*Math.exp(-q[3]*.22)+Math.sin(q[3]*3+q[4]*20)*9)*dt;
@@ -1439,11 +1464,11 @@ Plate('p-plume',{w:1200,h:640,seed:21,warm:420,
   /* the air */
   x.strokeStyle=css(BONE,.10);x.lineWidth=.6;x.beginPath();for(i=0;i<S.air.length;i++){q=S.air[i];if(q[0]<372&&q[1]>470)continue;x.moveTo(q[0],q[1]);x.lineTo(q[0]-10-8*q[2],q[1])}x.stroke();
   /* scent filaments: crisp dots at device pixels, fading as they age and spread */
-  var d1=Math.max(2,Math.round(1.2*k))/k,d2=(Math.max(2,Math.round(1.2*k))+1)/k;
+  var d1=Math.max(1,Math.round(.8*k))/k,d2=(Math.max(1,Math.round(.8*k))+1)/k;
   [[.55,1],[.3,.55],[0,.3]].forEach(function(b){x.beginPath();for(var i=0;i<S.p.length;i++){var q=S.p[i],a=Math.exp(-q[3]*.13);if(a<=b[0]||a>b[1])continue;var dd=q[4]>.6?d2:d1;x.rect(Math.round(q[0]*k)/k,Math.round(q[1]*k)/k,dd,dd)}x.fillStyle=css(SCENT,.9*b[1]);x.fill()});
   /* the female, scent gland out at the tip of the abdomen, facing into the wind */
   var pulse=(T*1.4)%1;x.strokeStyle=css(SCENT,.5*(1-pulse));x.lineWidth=1;x.beginPath();x.arc(66,320,8+pulse*26,0,TAU);x.stroke();
-  mothTop(x,44,320,Math.PI,40,0,css(BONE,.86),css(BONE,.7),'rgba(6,8,13,.6)');x.fillStyle=css(SCENT);x.beginPath();x.arc(66,320,3,0,TAU);x.fill();
+  if(!mothIo(x,true,40,320,Math.PI,.105,0,.35))mothTop(x,44,320,Math.PI,40,0,css(BONE,.86),css(BONE,.7),'rgba(6,8,13,.6)');x.fillStyle=css(SCENT);x.beginPath();x.arc(66,320,3,0,TAU);x.fill();
   if(S.ring>0){S.ring-=dt;var rr=(1.6-S.ring)/1.6;x.strokeStyle=css(SCENT,1-rr);x.lineWidth=1.5;x.beginPath();x.arc(66,320,14+rr*60,0,TAU);x.stroke();label(x,'FOUND HER',96,282,SCENT,1-rr*.6)}
   /* the track: surges solid violet, casts dashed bone; old track fades */
   var tr=m.trail;x.lineJoin='round';x.lineCap='round';
@@ -1456,7 +1481,7 @@ Plate('p-plume',{w:1200,h:640,seed:21,warm:420,
   /* where the scent was lost or found again */
   for(i=S.flash.length-1;i>=0;i--){q=S.flash[i];q[2]+=dt;if(q[2]>1){S.flash.splice(i,1);continue}x.strokeStyle=css(SCENT,1-q[2]);x.lineWidth=1;x.beginPath();x.arc(q[0],q[1],6+q[2]*18,0,TAU);x.stroke()}
   /* the male */
-  if(m.hold<=0){var an=Math.atan2(m.vy,m.vx);mothTop(x,m.x,m.y,an,30,T*TAU*1.6,css(BONE,.9),surge?css(SCENT):css(BONE,.8),'rgba(6,8,13,.7)');
+  if(m.hold<=0){var an=Math.atan2(m.vy,m.vx);if(!mothIo(x,false,m.x,m.y,an,.088,T*TAU*1.6,1))mothTop(x,m.x,m.y,an,30,T*TAU*1.6,css(BONE,.9),surge?css(SCENT):css(BONE,.8),'rgba(6,8,13,.7)');
     var below=m.vy<0,ly=clamp(m.y+(below?42:-34),190,600),left=m.x>930,lx=left?m.x-20:m.x+20,al=left?'right':'left';
     x.strokeStyle=css(surge?SCENT:BONE,.45);x.lineWidth=1;x.beginPath();x.moveTo(m.x+(left?-8:8),m.y+(below?10:-10));x.lineTo(lx,ly+(below?-12:4));x.stroke();
     label(x,surge?'SURGE · ODOR ON':'CAST · ODOR OFF',lx,ly,surge?SCENT:BONE,.95,al)}
