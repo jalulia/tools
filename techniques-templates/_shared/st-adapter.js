@@ -11,7 +11,7 @@
 /* per study: how the plate fills the stage, and which texture parameters stay fine (cap: device px per reference px) */
 const STAGE={ _default:{ fill:'extend' },
   'st-13':{ grain:{ grain:1 } }, 'st-14':{ grain:{ pitch:1.4 } }, 'st-15':{ grain:{ pitch:1.4 } },
-  'st-18':{ grain:{ jitter:1, edge:1 } }, 'st-19':{ grain:{ grainSize:1, jitter:1, edge:1 } }, 'st-20':{ grain:{ spread:1 } },
+  'st-18':{ grain:{ jitter:1, edge:1 } }, 'st-19':{ grain:{ grainSize:1, jitter:1, edge:1 } },
   'st-21':{ grain:{ grain:1, soft:1, lineSoft:1 } }, 'st-22':{ grain:{ edge:1 } }, 'st-24':{ grain:{ cell:1, dot:1 } },
   'st-25':{ grain:{ grainSize:1, soft:1 } }, 'st-26':{ grain:{ spacing:1.4, furW:1.4 } }, 'st-27':{ grain:{ pitch:1.4 } },
   'st-29':{ fill:'pad', grain:{ jitter:1, grainSize:1 } }, 'st-30':{ grain:{ grainSize:1 } }, 'st-31':{ grain:{ cell:1 } },
