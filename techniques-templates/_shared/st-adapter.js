@@ -43,7 +43,7 @@ if(gen==='C'){
   (S.params||[]).forEach(p=>ui.params.push({ id:p.id, label:p.label, group:p.group||'Plate', why:p.why||'', type:p.type==='text'?'text':'range', min:p.min, max:p.max, step:p.step, value:p.value, unit:p.unit||'', maxLength:p.maxLength, placeholder:p.placeholder,
     get:()=>st.P[p.id], set:(v,quick)=>{ const l=L(); if(l)l.set(p.id,v,!!quick); }, commit:()=>{ const l=L(); if(l)l.commit(); } }));
   (PL.selects||[]).forEach(s=>{ const val=o=>Array.isArray(o)?o[0]:o, nm=o=>String(Array.isArray(o)?o[1]:o);
-    ui.params.unshift({ id:s.key, label:s.label, group:'Content', why:s.why||'', type:'choice', options:(s.options||[]).map(o=>({v:val(o),label:nm(o)})), value:s.def, get:()=>st.P[s.key], set:v=>{ const l=L(); if(l)l.set(s.key,v); }, commit(){} }); });
+    ui.params.unshift({ id:s.key, label:s.label, group:s.group||'Content', why:s.why||'', type:'choice', options:(s.options||[]).map(o=>({v:val(o),label:nm(o)})), value:s.def, get:()=>st.P[s.key], set:v=>{ const l=L(); if(l)l.set(s.key,v); }, commit(){} }); });
   // text rows lead their group, the way the plate's own panel had them
   ui.params.sort((a,b)=>(a.group===b.group)?((a.type==='text'?0:1)-(b.type==='text'?0:1)):0);
   if('seed' in st.P)ui.actions.push({ id:'seed', label:'New seed', title:'Re-roll the seed (N)', run:()=>{ const l=L(); if(l)l.seed(); } });
