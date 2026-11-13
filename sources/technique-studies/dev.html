@@ -1,0 +1,23 @@
+<!doctype html><meta charset="utf-8"><title>dev</title>
+<style>
+@font-face{font-family:"Archivo Black";src:url(fonts/x_fontsource-archivo-black-5.3.0/package/files/archivo-black-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Anton";src:url(fonts/x_fontsource-anton-5.3.0/package/files/anton-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Archivo";font-weight:400;src:url(fonts/x_fontsource-archivo-5.3.0/package/files/archivo-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Archivo";font-weight:500;src:url(fonts/x_fontsource-archivo-5.3.0/package/files/archivo-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Archivo";font-weight:600;src:url(fonts/x_fontsource-archivo-5.3.0/package/files/archivo-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Archivo";font-weight:700;src:url(fonts/x_fontsource-archivo-5.3.0/package/files/archivo-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"JetBrains Mono";src:url(fonts/x_fontsource-jetbrains-mono-5.3.0/package/files/jetbrains-mono-latin-400-normal.woff2) format("woff2")}
+body{margin:0;background:#888}
+</style>
+<canvas id="c"></canvas>
+<script>
+/* dev.html?p=p7  loads util.js, p7_lut.js (if present), p7.js, meta.js, metrics.js — one plate per page so agents never collide.
+   dev.html (no ?p) loads every src/p*.js listed in PLATE_LIST below. */
+const PLATE_LIST=['p1','p2','p3','p4'];
+const Q=new URLSearchParams(location.search).get('p');
+const load=(src,optional)=>new Promise(r=>{const s=document.createElement('script');s.src=src;s.onload=()=>r(true);s.onerror=()=>{if(!optional)console.error('failed to load '+src);r(false)};document.head.appendChild(s)});
+window.ready=(async()=>{await load('src/util.js');const ids=Q?[Q]:PLATE_LIST;for(const id of ids){await load('src/'+id+'_lut.js',true);await load('src/'+id+'.js');}await load('src/meta.js',true);await load('src/metrics.js');
+ await Promise.all(['40px "Archivo Black"','40px "Anton"','400 20px "Archivo"','500 20px "Archivo"','600 20px "Archivo"','700 20px "Archivo"','20px "JetBrains Mono"'].map(f=>document.fonts.load(f).catch(()=>0)));return true})();
+function defaults(pl){const P={};(pl.params||[]).forEach(p=>P[p.key]=p.def);(pl.texts||[]).forEach(p=>P[p.key]=p.def);(pl.selects||[]).forEach(p=>P[p.key]=p.def);return P}
+async function draw(id,over,palId,scale){await window.ready;const pl=PLATES.find(p=>p.id===id);if(!pl)throw new Error('plate '+id+' not loaded (open dev.html?p='+id+')');const P=Object.assign(defaults(pl),over||{}),pal=pl.palettes.find(p=>p.id===(palId||pl.palettes[0].id))||pl.palettes[0];const cv=document.getElementById('c');cv.getContext('2d',{willReadFrequently:true});const t=performance.now();pl.render(cv,P,pal,scale||1);return {ms:Math.round(performance.now()-t),w:cv.width,h:cv.height}}
+</script>

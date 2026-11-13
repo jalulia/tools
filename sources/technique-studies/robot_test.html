@@ -1,0 +1,25 @@
+<!doctype html><meta charset="utf-8"><title>robot test</title>
+<style>body{margin:0;background:#888}canvas{display:block}</style>
+<canvas id="c"></canvas>
+<script src="src/util.js"></script>
+<script>
+const W = 1800, H = 760, cv = document.getElementById('c'); cv.width = W; cv.height = H;
+const out = cv.getContext('2d'); out.fillStyle = '#0a9a56'; out.fillRect(0, 0, W, H);
+const body = mk(W, H).getContext('2d'), light = mk(W, H).getContext('2d'), acc = mk(W, H).getContext('2d'), key = mk(W, H).getContext('2d'), shad = mk(W, H).getContext('2d');
+const poses = ['stand', 'wave', 'walk', 'run', 'cheer'];
+poses.forEach((n, i) => { if (n === 'cheer') return; const P = MG_POSE[n]; mgRobot(Object.assign({ x: 180 + i * 330, y: 470, h: 420, rot: n === 'run' ? .18 : 0, flip: 1, shadow: [16, 14],
+  plates: { body: { g: body, style: '#87d7ea' }, light: { g: light, style: '#f6efe0' }, accent: { g: acc, style: '#fdb142' }, shadow: { g: shad, style: '#000' } },
+  key: { g: key, style: '#000', w: 3.2 } }, P)); });
+const comp = (g, col) => { const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d'); x.drawImage(g.canvas, 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = col; x.fillRect(0, 0, W, H); out.drawImage(c, 0, 0); };
+/* climb a diagonal pole with IK */
+{ const ax = 1340, ay = 720, bx = 1790, by = 40, ex = (bx - ax), ey = (by - ay), L = Math.hypot(ex, ey), ux = ex / L, uy = ey / L, nx = -uy, ny = ux;
+  const kg = key; kg.strokeStyle = '#000'; kg.lineWidth = 3.2; body.fillStyle = '#87d7ea';
+  const pole = (g, st) => { g.beginPath(); g.moveTo(ax - nx * 18, ay - ny * 18); g.lineTo(bx - nx * 18, by - ny * 18); g.lineTo(bx + nx * 18, by + ny * 18); g.lineTo(ax + nx * 18, ay + ny * 18); g.closePath(); };
+  shad.fillStyle = '#000'; shad.save(); shad.translate(22, 18); pole(shad); shad.fill(); shad.restore(); pole(acc); acc.fill(); pole(kg); kg.stroke();
+  const t = .42, px = ax + ex * t, py = ay + ey * t, P2 = d => [px + ux * d, py + uy * d];
+  mgRobot({ x: px - nx * 6, y: py - ny * 6, h: 400, rot: .32, flip: 1, shadow: [22, 18], head: -.18, look: .6,
+    arms: [{ to: P2(235), bend: 1 }, { to: P2(165), bend: -1, front: true }],
+    legs: [{ to: P2(-95), bend: 1 }, { a: .9, b: -1.35, front: true }],
+    plates: { body: { g: body, style: '#87d7ea' }, light: { g: light, style: '#f6efe0' }, accent: { g: acc, style: '#fdb142' }, shadow: { g: shad, style: '#000' } }, key: { g: key, style: '#000', w: 3.2 } }); }
+comp(shad, '#14100a'); comp(body, '#87d7ea'); comp(light, '#f4f1ea'); comp(acc, '#fdb142'); comp(key, '#18120a');
+</script>

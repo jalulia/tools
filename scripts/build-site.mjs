@@ -26,7 +26,7 @@ const GRABBER = readFileSync(join(__dirname, 'grabber.js'), 'utf8');
 
 // Tools live directly at the repo root as subfolders (e.g. meshviz/, halftone/).
 // We skip well-known non-tool dirs.
-const SKIP_DIRS = new Set(['.git', '.github', 'node_modules', 'scripts', '_site', 'dist', '.vite']);
+const SKIP_DIRS = new Set(['.git', '.github', 'node_modules', 'scripts', 'sources', 'docs', '_site', 'dist', '.vite']);
 
 function sh(cmd, opts = {}) {
   return execSync(cmd, { stdio: 'inherit', ...opts });

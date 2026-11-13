@@ -28,6 +28,18 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Rebuild generated data (GitHub owns these files)
+        run: node scripts/build-data.mjs
+
+      - name: Guard (nothing lost, nothing new without dials)
+        run: |
+          set +e; node scripts/guard.mjs; code=$?; set -e
+          if [ $code -eq 3 ]; then
+            npm i --no-save --no-audit --no-fund playwright@1.63.0
+            npx playwright install --with-deps chromium
+            node scripts/guard.mjs
+          elif [ $code -ne 0 ]; then exit $code; fi
+
       - name: Build all tools + index
         run: node scripts/build-site.mjs
 
