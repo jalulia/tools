@@ -25,9 +25,9 @@ const ttById = new Map(TT.entries.map((e) => [e.id, e]));
 
 /* plates: T&T rebuilds (TS) and read plates (ST) --------------------------- */
 const plates = [];
-for (const r of recs.filter((r) => r.collection === 'techniques-templates' && r.section === 'techniques')) {
+for (const r of recs.filter((r) => r.collection === 'techniques-templates' && (r.section === 'techniques' || r.section === 'plates'))) {
   const e = ttById.get(r.id.replace(/^tt:/, '')); if (!e) continue;
-  plates.push({ r, code: e.code, title: e.title, n: tsParams('techniques-templates/' + e.path), motion: !!e.motion, live: !!e.live });
+  plates.push({ r, code: e.code, title: e.title, n: tsParams('techniques-templates/' + e.path), motion: !!e.motion, live: !!e.live, fig: r.section === 'plates' });
 }
 for (const r of recs.filter((r) => r.collection === 'technique-studies')) {
   const S = stStudy(r.source); const ps = (S && Array.isArray(S.params)) ? S.params.filter((p) => p.type !== 'text') : [];
@@ -35,8 +35,9 @@ for (const r of recs.filter((r) => r.collection === 'technique-studies')) {
 }
 const date = (p) => (p.r.dates && p.r.dates.accessioned) || '';
 const num = (p) => parseInt(String(p.code).replace(/\D/g, ''), 10) || 0;
-const editable = plates.filter((p) => p.n > 0).sort((a, b) => date(b).localeCompare(date(a)) || (b.code.startsWith('TS') - a.code.startsWith('TS')) || num(b) - num(a));
-const fixed = plates.filter((p) => p.n === 0).sort((a, b) => a.code.localeCompare(b.code) || num(a) - num(b));
+const figs = plates.filter((p) => p.fig).sort((a, b) => num(a) - num(b));
+const editable = plates.filter((p) => p.n > 0 && !p.fig).sort((a, b) => date(b).localeCompare(date(a)) || (b.code.startsWith('TS') - a.code.startsWith('TS')) || num(b) - num(a));
+const fixed = plates.filter((p) => p.n === 0 && !p.fig).sort((a, b) => a.code.localeCompare(b.code) || num(a) - num(b));
 
 /* collections -------------------------------------------------------------- */
 const COLL = [
@@ -116,13 +117,17 @@ footer a{color:var(--ink-2)}footer a:hover{color:var(--ink)}
 <header>
   <div class="top"><span>jalulia / <b>tools</b></span><span>Gallery</span></div>
   <div class="mast"><h1>Gallery</h1><p class="stand"><b>Front-end studies.</b> Every texture is generated in the browser. Plates marked with parameters can be edited on their own page.</p></div>
-  <div class="count">${editable.length + fixed.length + pm.length} plates · updated ${esc(nice(today))}</div>
-  <nav class="jump"><a href="#editable">Editable<i>${editable.length}</i></a><a href="#plates">Read plates<i>${fixed.length}</i></a><a href="#printed">Printed matter<i>${pm.length}</i></a><a href="#collections">Collections<i>${COLL.length}</i></a></nav>
+  <div class="count">${editable.length + figs.length + fixed.length + pm.length} plates · updated ${esc(nice(today))}</div>
+  <nav class="jump"><a href="#editable">Editable studies<i>${editable.length}</i></a><a href="#figures">Figure plates<i>${figs.length}</i></a><a href="#plates">Read plates<i>${fixed.length}</i></a><a href="#printed">Printed matter<i>${pm.length}</i></a><a href="#collections">Collections<i>${COLL.length}</i></a></nav>
 </header>
 
-<section id="editable"><h2><span>Editable plates</span><span>${editable.length}</span></h2>
+<section id="editable"><h2><span>Editable studies</span><span>${editable.length}</span></h2>
 <p class="blurb">Newest first. Each opens its plate, where every parameter, ink and motion setting can be changed.</p>
 <div class="grid">${editable.map(card).join('')}</div></section>
+
+<section id="figures"><h2><span>Figure plates</span><span>${figs.length}</span></h2>
+<p class="blurb">Single figures lifted from pages across the work and rebuilt as plates, each with its own parameters.</p>
+<div class="grid">${figs.map(card).join('')}</div></section>
 
 <section id="plates"><h2><span>Read plates</span><span>${fixed.length}</span></h2>
 <p class="blurb">Measured rebuilds with a spec and no controls yet.</p>
@@ -141,4 +146,4 @@ footer a{color:var(--ink-2)}footer a:hover{color:var(--ink)}
 </html>
 `;
 fs.writeFileSync(path.join(ROOT, 'gallery/index.html'), html);
-console.log(`gallery · ${editable.length} editable · ${fixed.length} read plates · ${pm.length} printed matter · ${COLL.length} collections`);
+console.log(`gallery · ${editable.length} editable · ${figs.length} figure plates · ${fixed.length} read plates · ${pm.length} printed matter · ${COLL.length} collections`);
