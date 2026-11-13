@@ -17,7 +17,7 @@
     "published": false,
     "note": "held locally; this page carries statistics measured from it and none of its pixels"
   },
-  "summary": "Gradient fields for a glow, a cylinder and a flame, each read as a position on a short ramp of inks, screened by one jittered dot lattice so every tone is a mix of whole inks.",
+  "summary": "Each flame lights its own wax pool and a rim of the violet aura around it; the light falls off down each candle wall to a near-black foot; every one of those fields is a position on a short ramp of inks, screened by one jittered dot lattice.",
   "units": "reference pixels; the plate is 736 × 1104 and every length scales with the canvas",
   "palette": {
     "key": "measured",
@@ -159,8 +159,8 @@
       "does": "Rotation of the lattice."
     },
     "jitter": {
-      "value": 0.5,
-      "default": 0.5,
+      "value": 0.35,
+      "default": 0.35,
       "range": [
         0,
         1
@@ -171,8 +171,8 @@
       "does": "How far each lattice point is knocked off its grid; 0 is an ordered screen, 1 is a scatter."
     },
     "span": {
-      "value": 2.8,
-      "default": 2.8,
+      "value": 2.6,
+      "default": 2.6,
       "range": [
         0.6,
         4
@@ -192,23 +192,11 @@
       "step": 0.01,
       "unit": "× pitch",
       "group": "Screen",
-      "does": "The candle bodies were dithered on a finer lattice than the background; this is its pitch as a share of the background's."
-    },
-    "flamePitch": {
-      "value": 0.45,
-      "default": 0.45,
-      "range": [
-        0.2,
-        1.5
-      ],
-      "step": 0.01,
-      "unit": "× pitch",
-      "group": "Screen",
-      "does": "Lattice pitch inside the flames as a share of the background's."
+      "does": "The candles were dithered on a finer lattice than the background; this is its pitch as a share of the background's."
     },
     "flameGrain": {
-      "value": 0.45,
-      "default": 0.45,
+      "value": 0.85,
+      "default": 0.85,
       "range": [
         0,
         1
@@ -217,6 +205,30 @@
       "unit": null,
       "group": "Screen",
       "does": "Share of per-pixel noise in the flame threshold; the reference's flame shows no lattice at all."
+    },
+    "flameSoft": {
+      "value": 0.6,
+      "default": 0.6,
+      "range": [
+        0,
+        3
+      ],
+      "step": 0.01,
+      "unit": "px",
+      "group": "Screen",
+      "does": "Extra ink spread inside the flames, where the reference prints a near-continuous gradient."
+    },
+    "mottle": {
+      "value": 0.05,
+      "default": 0.05,
+      "range": [
+        0,
+        0.5
+      ],
+      "step": 0.01,
+      "unit": "ramp",
+      "group": "Light",
+      "does": "Slow 80 px unevenness in the background tone."
     },
     "fine": {
       "value": 0.1,
@@ -242,21 +254,33 @@
       "group": "Screen",
       "does": "1 keeps every dot hard-edged; lower spreads the ink, as the printed reference does."
     },
-    "glow": {
-      "value": 0.5,
-      "default": 0.5,
+    "pale": {
+      "value": 0.75,
+      "default": 0.75,
       "range": [
-        0.1,
-        1.5
+        0,
+        1
       ],
       "step": 0.01,
-      "unit": "of width",
-      "group": "Light",
-      "does": "Distance over which each flame's glow fades into the background."
+      "unit": null,
+      "group": "Screen",
+      "does": "Share of the light dots in the deep violet aura that print the pale white ink instead of lavender."
+    },
+    "inkVar": {
+      "value": 0.1,
+      "default": 0.1,
+      "range": [
+        0,
+        0.4
+      ],
+      "step": 0.005,
+      "unit": null,
+      "group": "Screen",
+      "does": "Per-pixel variation of ink density, at 1 and 2 px: a printed ink is never one flat value."
     },
     "ambient": {
-      "value": 0.85,
-      "default": 0.85,
+      "value": 0.225,
+      "default": 0.225,
       "range": [
         0,
         2
@@ -264,7 +288,55 @@
       "step": 0.01,
       "unit": "ramp",
       "group": "Light",
-      "does": "Where the background sits on its violet-lavender-lime ramp with no flame near; 0 is solid violet."
+      "does": "Where the background sits on its violet-lavender-lime ramp with no subject near; 0 is solid violet."
+    },
+    "edgeLift": {
+      "value": 0.9,
+      "default": 0.9,
+      "range": [
+        0,
+        1.5
+      ],
+      "step": 0.01,
+      "unit": "ramp",
+      "group": "Light",
+      "does": "How much paler the sheet prints toward its corners: the reference's corners sit near ramp 1.35, lime and lavender dots in equal parts."
+    },
+    "aura": {
+      "value": 0.55,
+      "default": 0.55,
+      "range": [
+        0.1,
+        1
+      ],
+      "step": 0.01,
+      "unit": "of sheet",
+      "group": "Light",
+      "does": "Radius of the violet aura that closes around the candles."
+    },
+    "auraDepth": {
+      "value": 0.95,
+      "default": 0.95,
+      "range": [
+        0,
+        1.5
+      ],
+      "step": 0.01,
+      "unit": "ramp",
+      "group": "Light",
+      "does": "How far the aura pulls the background down toward violet."
+    },
+    "glow": {
+      "value": 0.09,
+      "default": 0.09,
+      "range": [
+        0.02,
+        0.5
+      ],
+      "step": 0.005,
+      "unit": "of width",
+      "group": "Light",
+      "does": "Distance over which each flame's light lifts the aura around it."
     },
     "glowGain": {
       "value": 0.25,
@@ -276,11 +348,11 @@
       "step": 0.01,
       "unit": "×",
       "group": "Light",
-      "does": "How far up the background ramp (violet to lime) the glow pushes."
+      "does": "How far up the ramp the flame's light pushes the aura near it."
     },
     "halo": {
-      "value": 1,
-      "default": 1,
+      "value": 0.6,
+      "default": 0.6,
       "range": [
         0,
         3
@@ -288,11 +360,11 @@
       "step": 0.01,
       "unit": "×",
       "group": "Light",
-      "does": "Width of the lime fringe that bleeds from each flame into the background."
+      "does": "Width of the lavender rim the flame lights in the aura right around its edge: 30 px at 1."
     },
     "heat": {
-      "value": 1,
-      "default": 1,
+      "value": 0.75,
+      "default": 0.75,
       "range": [
         0.4,
         1.6
@@ -302,9 +374,21 @@
       "group": "Light",
       "does": "How far into the flame ramp the core goes; above 1.3 the core goes white."
     },
+    "poolLight": {
+      "value": 0.6,
+      "default": 0.6,
+      "range": [
+        0,
+        1
+      ],
+      "step": 0.01,
+      "unit": null,
+      "group": "Light",
+      "does": "How much of the wax pool the flame lights to lime before its lip falls to lavender."
+    },
     "light": {
-      "value": 0.55,
-      "default": 0.55,
+      "value": 0.4,
+      "default": 0.4,
       "range": [
         -1,
         1
@@ -312,7 +396,7 @@
       "step": 0.01,
       "unit": null,
       "group": "Light",
-      "does": "Which side of each candle is lit and how strongly; 0 lights the middle only."
+      "does": "Which side of each candle wall catches more light; 0 lights both sides alike."
     },
     "fall": {
       "value": 1,
@@ -324,7 +408,7 @@
       "step": 0.01,
       "unit": "×",
       "group": "Light",
-      "does": "How quickly the candle darkens below the flame."
+      "does": "How far down the wall the flame's light reaches before the nearest candle's foot goes near-black: 220 px at 1."
     },
     "candles": {
       "value": 2,
@@ -336,7 +420,31 @@
       "step": 1,
       "unit": null,
       "group": "Subject",
-      "does": "How many candles stand on the sheet."
+      "does": "How many candles stand on the sheet; each one steps right, lower and nearer."
+    },
+    "spread": {
+      "value": 0.375,
+      "default": 0.375,
+      "range": [
+        0,
+        1.5
+      ],
+      "step": 0.01,
+      "unit": "×",
+      "group": "Subject",
+      "does": "How far apart the candles stand across the sheet."
+    },
+    "step": {
+      "value": 1,
+      "default": 1,
+      "range": [
+        -1,
+        1.5
+      ],
+      "step": 0.01,
+      "unit": "×",
+      "group": "Subject",
+      "does": "How much lower each nearer candle's top sits: 180 px between the two at 1, as measured."
     },
     "girth": {
       "value": 1,
@@ -350,17 +458,65 @@
       "group": "Subject",
       "does": "Radius of the candles."
     },
+    "tilt": {
+      "value": 0.33,
+      "default": 0.33,
+      "range": [
+        0.1,
+        0.6
+      ],
+      "step": 0.005,
+      "unit": "×",
+      "group": "Subject",
+      "does": "Short axis of each candle's top over its radius: how far the eye looks down onto the pools."
+    },
+    "poolW": {
+      "value": 1.12,
+      "default": 1.12,
+      "range": [
+        0.8,
+        1.4
+      ],
+      "step": 0.01,
+      "unit": "×",
+      "group": "Subject",
+      "does": "Size of the lit pool against the candle's top; above 1 its light spills past the wall."
+    },
     "flame": {
       "value": 1,
       "default": 1,
       "range": [
         0.4,
-        1.8
+        1.6
       ],
       "step": 0.01,
       "unit": "×",
       "group": "Subject",
-      "does": "Height of each flame relative to its candle."
+      "does": "Height of each flame: 500 and 590 px at 1, as measured from each pool to its tip."
+    },
+    "flameW": {
+      "value": 1,
+      "default": 1,
+      "range": [
+        0.5,
+        1.6
+      ],
+      "step": 0.01,
+      "unit": "×",
+      "group": "Subject",
+      "does": "Width of each flame's lime body."
+    },
+    "core": {
+      "value": 0.58,
+      "default": 0.58,
+      "range": [
+        0.3,
+        0.9
+      ],
+      "step": 0.01,
+      "unit": "of flame",
+      "group": "Subject",
+      "does": "Height of the pink core inside the lime flame."
     },
     "sway": {
       "value": 1,
@@ -372,19 +528,19 @@
       "step": 0.01,
       "unit": "×",
       "group": "Subject",
-      "does": "How much each flame bends and flickers."
+      "does": "How far each flame's S-curve swings."
     },
-    "lean": {
-      "value": 1,
-      "default": 1,
+    "phase": {
+      "value": 0,
+      "default": 0,
       "range": [
         0,
-        2
+        1
       ],
-      "step": 0.01,
-      "unit": "×",
-      "group": "Subject",
-      "does": "Tilt of the candles."
+      "step": 0.001,
+      "unit": null,
+      "group": "Motion",
+      "does": "Position along the loop: the flames sway through one cycle and their tips drift a quarter turn further."
     },
     "seed": {
       "value": 5,
@@ -395,8 +551,8 @@
       ],
       "step": 1,
       "unit": null,
-      "group": "Subject",
-      "does": "Re-rolls the candles, flames and lattice jitter."
+      "group": "Motion",
+      "does": "Re-rolls the lattice jitter and the flames' sway offsets."
     }
   },
   "presets": [
@@ -438,10 +594,10 @@
   "motion": {
     "moves": [
       {
-        "key": "sway",
-        "amp": 0.6,
-        "period": 3.5,
-        "mode": "sine"
+        "key": "phase",
+        "amp": 1,
+        "period": 4,
+        "mode": "saw"
       },
       {
         "key": "heat",
@@ -465,79 +621,81 @@
     },
     "y": {
       "key": "glowGain",
-      "min": 0.3,
-      "max": 1.6
+      "min": 0,
+      "max": 1.4
     },
     "runs": "only while Live is on: a drag on the figure sets x across and y down between these ends; off by default"
   },
   "techniques": [
     {
-      "id": "grain",
-      "short": "KEY",
-      "name": "Grain",
-      "layer": 0,
-      "pass": 4,
-      "params": {
-        "flameGrain": 0.45,
-        "fine": 0.1
-      },
-      "implementation": "Background: violet dots of the lower ink on a lime field, on a lattice of 5.7 px."
-    },
-    {
       "id": "tone",
-      "short": "READ",
+      "short": "KEY",
       "name": "Tone",
-      "layer": 1,
+      "layer": 0,
       "pass": 3,
       "params": {
         "pitch": 5.7,
-        "span": 2.8,
-        "flamePitch": 0.45,
-        "flameGrain": 0.45,
+        "span": 2.6,
+        "candlePitch": 0.72,
+        "flameGrain": 0.85,
+        "flameSoft": 0.6,
         "sharp": 0.6,
-        "halo": 1,
-        "light": 0.55,
-        "flame": 1
+        "pale": 0.75,
+        "ambient": 0.225
       },
-      "implementation": "Far from the flames the dots grow until violet is the field and lime the dot."
+      "implementation": "The front candle's pool: lime at the middle where the flame lights the wax, lavender at its lip, its light spilling past the wall."
     },
     {
       "id": "edge",
       "short": "KEY",
       "name": "Edge",
-      "layer": 2,
-      "pass": 3,
+      "layer": 1,
+      "pass": 2,
       "params": {
-        "candlePitch": 0.72,
-        "flamePitch": 0.45,
-        "flameGrain": 0.45,
-        "halo": 1,
-        "candles": 2,
-        "flame": 1
+        "edgeLift": 0.9
       },
-      "implementation": "Flame edge: lime outside, a lavender band, then pink, each step a dither between two inks."
+      "implementation": "The front flame: a pink core in the lower 58 %, lavender at its edge, lime fringe, the wick splitting its foot."
     },
     {
       "id": "pull",
       "short": "READ",
       "name": "Pull",
-      "layer": 3,
-      "pass": 3,
+      "layer": 2,
+      "pass": 2,
       "params": {
-        "flamePitch": 0.45,
-        "flameGrain": 0.45,
-        "halo": 1,
-        "flame": 1
+        "pitch": 5.7,
+        "span": 2.6,
+        "flameGrain": 0.85,
+        "flameSoft": 0.6,
+        "sharp": 0.6,
+        "pale": 0.75,
+        "aura": 0.55,
+        "auraDepth": 0.95
       },
-      "implementation": "The halo: lime bleeding into the background for about 34 px around the flame."
+      "implementation": "A flame tip: the lime tongue swings one way low and the other way high."
+    },
+    {
+      "id": "grain",
+      "short": "KEY",
+      "name": "Grain",
+      "layer": 3,
+      "pass": 5,
+      "params": {
+        "flameGrain": 0.85,
+        "fine": 0.1
+      },
+      "implementation": "Deep aura: violet with pale white dots on the 5.7 px lattice."
     }
   ],
   "pass_order": [
-    "subject: candles placed along the foot with a radius, a height, a lean and a flame each; nearer candles draw last",
-    "fields: the background is the summed glow of the flames; each candle is a cylinder shading with a bright rim under the flame; each flame is a teardrop with a smaller core",
-    "ramps: every field is a position on a short ramp of inks (background violet-lavender-lime, candle black-violet-lavender, flame lime-lavender-pink-white)",
-    "screen: one jittered dot lattice mixed with fine per-pixel grain gives every pixel a threshold; the fractional ramp position is tested against it, so the lower ink prints as dots that shrink as the field rises",
-    "ink spread: a small blur of the printed sheet"
+    "subject: two candles step right and 180 px lower, the nearer one drawn 1.5 times wider, so it stands in front; each top is an ellipse 0.27 of its radius tall",
+    "the flames: each an S-curved tongue 500 to 590 px tall that swings one way low and the other high; inside it a pink core in the lower 58 %, its foot split by the wick",
+    "light, from the flames outward: each flame lights its wax pool lime at the middle and lavender at the lip, and the pool's light spills past the wall; the flame lights a rim of the aura around itself; its light lifts the aura near it",
+    "the aura: the background is pale at the sheet's corners and pulled down toward violet in a tall oval around the candles",
+    "the walls: lit just under the rim, falling off down the wall; the nearest candle's foot sinks to near-black toward its middle while its sides keep violet; the front candle shades the one behind it near their overlap",
+    "ramps: background violet, lavender, lime; walls black, violet, lavender, lime; pool violet, lavender, lime; flame lime, lavender, pink, white",
+    "screen: one jittered dot lattice at 5.7 px and -21 degrees, finer on the candles and finer still in the flames; in the deep aura the light dots print the pale ink",
+    "ink: 10 % per-pixel density variation, a 0.64 px spread, a 0.6 px extra spread inside the flames"
   ],
   "measured": {
     "inks_p50_of_saturated_pixels": {
@@ -616,16 +774,56 @@
         69,
         -21
       ],
-      "method": "2-D FFT peaks of a 128 px background patch; the radial profile peaks at 0.16 to 0.18 cycles per px and falls slowly on both sides, so the lattice is jittered"
+      "method": "2-D FFT peaks of a 128 px background patch"
     },
     "candle_screen": {
       "pitch_px": [
         4.4,
         3.6
       ],
-      "method": "weak FFT peaks; the radial profile is a broad ring from 0.14 to 0.26 cycles per px, closer to blue noise"
+      "method": "weak FFT peaks; a broad ring from 0.14 to 0.26 cycles per px"
     },
-    "flame": "no lattice peak; the radial profile is flat and 1.5 decades below the background, a fine grain smoothed by the file's compression"
+    "aura": {
+      "corner": [
+        183,
+        193,
+        162
+      ],
+      "beside_flame": [
+        114,
+        87,
+        235
+      ],
+      "method": "15 px box means along row 200 and column 650"
+    },
+    "pools": {
+      "back_top_y": 560,
+      "front_top_y": 740,
+      "color": [
+        185,
+        245,
+        130
+      ],
+      "method": "lime runs in a 40 px grid of 9 px box means"
+    },
+    "front_foot": {
+      "y_920_to_1080": [
+        9,
+        10,
+        12
+      ],
+      "sides_at_y_900": [
+        104,
+        83,
+        233
+      ],
+      "method": "box means along x 300 and row 900"
+    },
+    "flame_tips_y": [
+      55,
+      180
+    ],
+    "rejected": "flat cylinders with no top and a single glow per flame (the first build): the reference's tops are lit lime pools and its aura is deep violet near the candles, pale at the corners"
   },
   "benchmark": {
     "mean": null,
@@ -636,7 +834,7 @@
     "setup": {
       "palette": "measured",
       "overrides": {},
-      "note": "Candles and flames are generated, so the flame gradient, candle shadow and flame-edge rects were placed with search.py; the background corner and the whole plate compare in place.",
+      "note": "The composition moved: the candles are now sized and placed from the reference's measured pools and flames, so the flame gradient, candle shadow and flame edge rects compare in place on the same events (the first build searched them). search.py found no better window for the flame and shadow rects.",
       "patches": [
         {
           "name": "background",
@@ -671,8 +869,8 @@
             128
           ],
           "render_rect": [
-            192,
-            208,
+            180,
+            300,
             128,
             128
           ],
@@ -694,8 +892,8 @@
             128
           ],
           "render_rect": [
-            384,
-            976,
+            220,
+            800,
             128,
             128
           ],
@@ -718,8 +916,8 @@
             96
           ],
           "render_rect": [
-            112,
-            624,
+            100,
+            150,
             128,
             96
           ],
@@ -756,9 +954,10 @@
     }
   },
   "limits": [
-    "Under 98 %: the tone histograms of every patch (0.5 to 0.8) and the black ink color. The reference is a soft JPEG whose dithered dots were blended into continuous tones; this engine prints whole inks and adds a 0.64 px spread, which widens the histogram but not to the reference's.",
-    "The flame and candle screens are set as fractions of the background pitch (0.45 and 0.72) with their own grain share and dot span; the reference's flame grain lies below its compression and was not measured directly.",
-    "The candles and flames are generated; the reference's pair is not traced."
+    "Benchmark mean 0.905, lowest 0.66 (background texture spectrum). Under 98 % on: every tone histogram (0.67 to 0.84) and the flame patches' contrast (0.78 to 0.83). The reference is a soft JPEG whose dots were blended into continuous tones and whose chroma spreads each ink into a range; this engine prints whole inks with a 0.64 px spread and 10 % density variation, so its histogram keeps peaks where the reference's is smooth. The background spectrum misses because the reference lattice is regular enough to leave little energy below its own frequency; the jitter that makes the plate's screen read as hand-dithered at 3x adds that energy.",
+    "The violet ink of the background and the flame edge measures (107,78,208) in the reference against (103,79,225) here: the reference's violet dots are softened toward the lime around them.",
+    "The candles and flames are the plate's own construction: tops, pools and flame heights follow the reference's measured rows within 20 px; the flames' S-curves are drawn from a two-term sway, not traced.",
+    "Render time 0.6 to 0.9 s on this machine depending on load."
   ],
   "keys": {
     "S": "spec",

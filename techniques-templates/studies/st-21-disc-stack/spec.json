@@ -17,7 +17,7 @@
     "published": false,
     "note": "held locally; this page carries statistics measured from it and none of its pixels"
   },
-  "summary": "A stack of lit disc rims and a gray column, all screened by one random dither, between two line-screen flanks whose three color plates slip where the sheet warps.",
+  "summary": "A domed spool and a stack of lit discs seen from above, screened by one random dither, between two flanks where one warped stripe phase prints through three light plates that slip apart where the warp bends hardest.",
   "units": "reference pixels; the plate is 736 × 1282 and every length scales with the canvas",
   "palette": {
     "key": "measured",
@@ -36,24 +36,29 @@
           245
         ],
         "plateR": [
-          245,
-          60,
-          10
+          235,
+          52,
+          8
         ],
         "plateG": [
-          20,
-          215,
-          110
+          22,
+          208,
+          88
         ],
         "plateB": [
-          30,
-          70,
+          20,
+          60,
           215
         ],
         "edge": [
-          90,
-          200,
-          140
+          53,
+          196,
+          196
+        ],
+        "edge2": [
+          178,
+          232,
+          36
         ]
       }
     },
@@ -90,7 +95,7 @@
       "name": "Rust",
       "swatches": [
         "#140806",
-        "#f5f0ec",
+        "#f0f0ee",
         "#fa7828",
         "#ffc85a"
       ]
@@ -128,8 +133,8 @@
   ],
   "params": {
     "rings": {
-      "value": 9,
-      "default": 9,
+      "value": 11,
+      "default": 11,
       "range": [
         1,
         24
@@ -140,44 +145,56 @@
       "does": "Number of discs in the stack."
     },
     "spacing": {
-      "value": 1,
-      "default": 1,
+      "value": 87,
+      "default": 87,
       "range": [
-        0.3,
-        1.4
+        30,
+        160
+      ],
+      "step": 0.5,
+      "unit": "px",
+      "group": "Stack",
+      "does": "Gap between the first two discs; lower gaps grow with the view setting."
+    },
+    "view": {
+      "value": 0.7,
+      "default": 0.7,
+      "range": [
+        0,
+        1.5
       ],
       "step": 0.01,
       "unit": "×",
       "group": "Stack",
-      "does": "Vertical gap between discs."
+      "does": "How far above the stack the eye sits: lower discs tilt toward it and spread apart. 0 shows every disc at the same tilt."
     },
     "discW": {
-      "value": 0.78,
-      "default": 0.78,
+      "value": 0.4,
+      "default": 0.4,
       "range": [
-        0.3,
-        1
+        0.2,
+        0.95
       ],
       "step": 0.005,
-      "unit": "of half width",
+      "unit": "of width",
       "group": "Stack",
-      "does": "Half the long axis of each ellipse."
+      "does": "Long axis of each disc as a share of the sheet width. 0.4 is 145 px of half axis, as measured."
     },
     "discH": {
-      "value": 0.17,
-      "default": 0.17,
+      "value": 0.115,
+      "default": 0.115,
       "range": [
-        0.05,
-        0.6
+        0.03,
+        0.5
       ],
       "step": 0.005,
       "unit": "×",
       "group": "Stack",
-      "does": "Short axis as a share of the long one: a flat disc seen nearly edge-on, or a fuller one."
+      "does": "Short axis of the top disc over its long axis."
     },
     "rim": {
-      "value": 0.8,
-      "default": 0.8,
+      "value": 1,
+      "default": 1,
       "range": [
         0.3,
         2.5
@@ -185,11 +202,59 @@
       "step": 0.01,
       "unit": "×",
       "group": "Stack",
-      "does": "Width of the lit band; it is thickest at the front of each disc and 4 times thinner at the back."
+      "does": "Thickness of each disc's lit wall: 11 px on the top disc, 23 px lower down, as measured."
+    },
+    "inner": {
+      "value": 0.67,
+      "default": 0.67,
+      "range": [
+        0.4,
+        0.98
+      ],
+      "step": 0.005,
+      "unit": "of radius",
+      "group": "Stack",
+      "does": "Where the lit rim ring on each disc's top face begins."
+    },
+    "backRim": {
+      "value": 0.25,
+      "default": 0.25,
+      "range": [
+        0,
+        1
+      ],
+      "step": 0.01,
+      "unit": null,
+      "group": "Stack",
+      "does": "Width of the lit lip at the back of each disc, as a share of its width at the front."
+    },
+    "lip": {
+      "value": 0.95,
+      "default": 0.95,
+      "range": [
+        0.5,
+        1.01
+      ],
+      "step": 0.005,
+      "unit": "coverage",
+      "group": "Stack",
+      "does": "Speck coverage of each disc's lit lip; 1.01 prints it solid, lower lets the screen pit it as the reference's lips are."
+    },
+    "face": {
+      "value": 0.435,
+      "default": 0.435,
+      "range": [
+        0,
+        0.8
+      ],
+      "step": 0.01,
+      "unit": "coverage",
+      "group": "Stack",
+      "does": "Speck coverage inside each disc's top face, under the ridges."
     },
     "halo": {
-      "value": 2,
-      "default": 2,
+      "value": 0.2,
+      "default": 0.2,
       "range": [
         0,
         3
@@ -197,23 +262,23 @@
       "step": 0.01,
       "unit": "×",
       "group": "Stack",
-      "does": "Dithered glow inside and outside the solid band."
+      "does": "Speck ramp the lit edges bleed into the dark: 0.4 is 2.4 px."
     },
-    "sag": {
-      "value": 0.6,
-      "default": 0.6,
+    "base": {
+      "value": 1,
+      "default": 1,
       "range": [
-        -3,
-        3
+        0,
+        2
       ],
       "step": 0.01,
       "unit": "×",
       "group": "Stack",
-      "does": "Bends the discs: positive bows the lower ones down and the upper ones up."
+      "does": "The last disc is wider by 15 % at 1, a foot for the stack."
     },
     "column": {
-      "value": 0.34,
-      "default": 0.34,
+      "value": 0.3,
+      "default": 0.3,
       "range": [
         0.1,
         0.9
@@ -221,7 +286,7 @@
       "step": 0.005,
       "unit": "of width",
       "group": "Screen",
-      "does": "Width of the gray dithered column behind the stack."
+      "does": "Width of the domed gray spool behind the discs: 216 px measured just under each disc."
     },
     "gray": {
       "value": 0.47,
@@ -233,23 +298,11 @@
       "step": 0.005,
       "unit": "coverage",
       "group": "Screen",
-      "does": "Speck coverage of the column: the tone the dither is screening."
+      "does": "Speck coverage of the spool: the tone the dither screens."
     },
-    "grain": {
-      "value": 1.8,
-      "default": 1.8,
-      "range": [
-        1,
-        5
-      ],
-      "step": 0.05,
-      "unit": "px",
-      "group": "Screen",
-      "does": "Cell size of the dither grid. The grid is resampled to the sheet, so a cell above 1 px gives each speck a soft ramp."
-    },
-    "tooth": {
-      "value": 0.5,
-      "default": 0.5,
+    "sheen": {
+      "value": 0.3,
+      "default": 0.3,
       "range": [
         0,
         1.5
@@ -257,11 +310,47 @@
       "step": 0.01,
       "unit": null,
       "group": "Screen",
-      "does": "Low-frequency noise multiplied into the tone before the threshold; clumps the specks. Black stays black."
+      "does": "How much brighter the spool prints near its edges, where the turned surface catches side light."
+    },
+    "grain": {
+      "value": 1.35,
+      "default": 1.35,
+      "range": [
+        1,
+        5
+      ],
+      "step": 0.05,
+      "unit": "px",
+      "group": "Screen",
+      "does": "Cell size of the dither grid; above 1 px each speck gets a soft ramp."
+    },
+    "speckVar": {
+      "value": 0.2,
+      "default": 0.2,
+      "range": [
+        0,
+        0.9
+      ],
+      "step": 0.01,
+      "unit": null,
+      "group": "Screen",
+      "does": "Spread of brightness between specks: each speck prints at 1 minus up to this much, so a fine screen still carries a spread of grays."
+    },
+    "tooth": {
+      "value": 1,
+      "default": 1,
+      "range": [
+        0,
+        1.5
+      ],
+      "step": 0.01,
+      "unit": null,
+      "group": "Screen",
+      "does": "Slow noise added to the tone before the threshold, strongest at mid-gray and nil at black and white; clumps the specks without pitting a lit lip."
     },
     "dust": {
-      "value": 0.008,
-      "default": 0.008,
+      "value": 0.006,
+      "default": 0.006,
       "range": [
         0,
         0.05
@@ -269,11 +358,11 @@
       "step": 0.001,
       "unit": "coverage",
       "group": "Screen",
-      "does": "Stray half-tone specks the screen leaves on the unprinted black: 0.004 is one cell in 250."
+      "does": "Stray half-tone specks on the unprinted black."
     },
     "soft": {
-      "value": 0.6,
-      "default": 0.6,
+      "value": 0.5,
+      "default": 0.5,
       "range": [
         0,
         2
@@ -281,35 +370,11 @@
       "step": 0.01,
       "unit": "px",
       "group": "Screen",
-      "does": "Ink spread after the screen; turns a hard dither into the gray speckle of the print."
-    },
-    "chain": {
-      "value": 0.085,
-      "default": 0.085,
-      "range": [
-        0,
-        0.3
-      ],
-      "step": 0.005,
-      "unit": "of width",
-      "group": "Flanks",
-      "does": "Width of the dark band beside the column where the lines print only as chains of specks."
-    },
-    "chainPitch": {
-      "value": 9.5,
-      "default": 9.5,
-      "range": [
-        4,
-        24
-      ],
-      "step": 0.1,
-      "unit": "px",
-      "group": "Flanks",
-      "does": "Spacing of the fine vertical lines."
+      "does": "Ink spread after the screen."
     },
     "chainTone": {
-      "value": 0.35,
-      "default": 0.35,
+      "value": 1,
+      "default": 1,
       "range": [
         0,
         1
@@ -317,19 +382,55 @@
       "step": 0.01,
       "unit": null,
       "group": "Flanks",
-      "does": "How much of each fine line reaches the threshold: 0.4 breaks it into specks, 1 prints it solid."
+      "does": "Share of each hairline that prints: the lines print in 5 px dashes, and 1 prints them solid."
     },
-    "stripes": {
-      "value": 0.18,
-      "default": 0.18,
+    "chainPitch": {
+      "value": 5.5,
+      "default": 5.5,
+      "range": [
+        4,
+        24
+      ],
+      "step": 0.1,
+      "unit": "px",
+      "group": "Flanks",
+      "does": "Spacing of the hairlines beside the stripes: 5 to 6 px by autocorrelation; the sparse lines outside the stripes sit 1.7 times wider."
+    },
+    "chainW": {
+      "value": 20,
+      "default": 20,
       "range": [
         0,
-        0.4
+        120
+      ],
+      "step": 1,
+      "unit": "px",
+      "group": "Flanks",
+      "does": "Width of the hairline band between the black gap and the stripes; the lines thicken toward the stripes."
+    },
+    "gapW": {
+      "value": 23,
+      "default": 23,
+      "range": [
+        6,
+        80
+      ],
+      "step": 1,
+      "unit": "px",
+      "group": "Flanks",
+      "does": "Unprinted black between the disc edge and the first chain line."
+    },
+    "stripes": {
+      "value": 0.121,
+      "default": 0.121,
+      "range": [
+        0,
+        0.3
       ],
       "step": 0.005,
       "unit": "of width",
       "group": "Flanks",
-      "does": "Width of the printed stripe zone outside the chains."
+      "does": "Width of the stripe zone where no bulge flares it."
     },
     "pitch": {
       "value": 11,
@@ -341,35 +442,47 @@
       "step": 0.1,
       "unit": "px",
       "group": "Flanks",
-      "does": "Line spacing of the color screen."
-    },
-    "beat": {
-      "value": 5,
-      "default": 5,
-      "range": [
-        3,
-        40
-      ],
-      "step": 0.5,
-      "unit": "lines",
-      "group": "Flanks",
-      "does": "The second screen is this many lines per cycle finer; their beat sets where the stripes print full and where they fade to chains."
+      "does": "Line spacing of the stripe screen: 11 px by autocorrelation."
     },
     "flare": {
-      "value": 0.4,
-      "default": 0.4,
+      "value": 1,
+      "default": 1,
       "range": [
         0,
-        1
+        2
+      ],
+      "step": 0.01,
+      "unit": "×",
+      "group": "Flanks",
+      "does": "Strength of the three bulges per flank where the stripe zone flares outward and the lines go bold."
+    },
+    "reach": {
+      "value": 0.07,
+      "default": 0.07,
+      "range": [
+        0,
+        0.2
+      ],
+      "step": 0.005,
+      "unit": "of width",
+      "group": "Flanks",
+      "does": "How far a bulge pushes the stripe zone toward the edge."
+    },
+    "fan": {
+      "value": 0.45,
+      "default": 0.45,
+      "range": [
+        0,
+        1.5
       ],
       "step": 0.01,
       "unit": null,
       "group": "Flanks",
-      "does": "A slow field that opens the stripes to full print in patches regardless of the beat, and spreads the color plates apart there."
+      "does": "How much the lines spread apart inside a bulge: a displacement that grows against the distance from the inner edge, so the pitch opens outward."
     },
     "warp": {
-      "value": 1,
-      "default": 1,
+      "value": 1.4,
+      "default": 1.4,
       "range": [
         0,
         3
@@ -377,11 +490,107 @@
       "step": 0.01,
       "unit": "×",
       "group": "Flanks",
-      "does": "Sideways wave of the sheet that bends every line."
+      "does": "Sideways wave of the sheet that bends every stripe."
     },
-    "misreg": {
+    "lineSoft": {
+      "value": 0.75,
+      "default": 0.75,
+      "range": [
+        0,
+        3
+      ],
+      "step": 0.01,
+      "unit": "px",
+      "group": "Flanks",
+      "does": "Blur of the light plates: the stripe edges of the reference ramp over about 2 px."
+    },
+    "print": {
+      "value": 0.26,
+      "default": 0.26,
+      "range": [
+        0,
+        1
+      ],
+      "step": 0.01,
+      "unit": "of band",
+      "group": "Flanks",
+      "does": "Half width of the band, wandering down each flank, where the stripes print bold through the light plates; a bulge widens it. Outside it the same lines stay dashed hairlines."
+    },
+    "dash": {
+      "value": 5,
+      "default": 5,
+      "range": [
+        1,
+        20
+      ],
+      "step": 0.1,
+      "unit": "px",
+      "group": "Flanks",
+      "does": "Length of the dashes each hairline breaks into."
+    },
+    "weight": {
+      "value": 0.46,
+      "default": 0.46,
+      "range": [
+        0.1,
+        0.7
+      ],
+      "step": 0.01,
+      "unit": "of pitch",
+      "group": "Flanks",
+      "does": "Share of each stripe period the green plate prints; the bulges and the beat add to it."
+    },
+    "fold": {
+      "value": 0.55,
+      "default": 0.55,
+      "range": [
+        0,
+        2
+      ],
+      "step": 0.01,
+      "unit": "×",
+      "group": "Flanks",
+      "does": "Strength of the eye in each bulge: a gaussian push on the stripe phase; above about 0.6 the lines fold into closed loops."
+    },
+    "murk": {
       "value": 0.12,
       "default": 0.12,
+      "range": [
+        0,
+        0.3
+      ],
+      "step": 0.005,
+      "unit": "coverage",
+      "group": "Flanks",
+      "does": "Dim specks the screen leaves across the black flanks; the reference's flank black is 7 % dark gray specks."
+    },
+    "haze": {
+      "value": 0.15,
+      "default": 0.15,
+      "range": [
+        0,
+        0.8
+      ],
+      "step": 0.01,
+      "unit": "share",
+      "group": "Flanks",
+      "does": "Share of the flank black carrying a dim speck, 4 to 30 % gray: the reference's black has a third of its pixels in the lowest gray bins."
+    },
+    "beat": {
+      "value": 7,
+      "default": 7,
+      "range": [
+        3,
+        40
+      ],
+      "step": 0.5,
+      "unit": "lines",
+      "group": "Flanks",
+      "does": "A straight screen this many lines per cycle finer beats against the warped one and sets the line weight: the moire."
+    },
+    "misreg": {
+      "value": 0.09,
+      "default": 0.09,
       "range": [
         0,
         0.6
@@ -389,7 +598,7 @@
       "step": 0.005,
       "unit": "of pitch",
       "group": "Flanks",
-      "does": "How far the red and blue plates sit off the green one. 0 prints every stripe one color."
+      "does": "Sideways slip of the red and blue plates off the green, in space; it doubles inside the bulges. A fold, where the lines run flat, shows no fringe."
     },
     "phase": {
       "value": 0,
@@ -401,7 +610,7 @@
       "step": 0.001,
       "unit": null,
       "group": "Motion",
-      "does": "Position along the loop. Runs the sheet warp down the flanks."
+      "does": "Position along the loop. Runs the sheet warp down the flanks one full wave and slides the hairline dashes down 37.5 px."
     },
     "seed": {
       "value": 9,
@@ -413,44 +622,46 @@
       "step": 1,
       "unit": null,
       "group": "Motion",
-      "does": "Re-rolls the dither and the flare field."
+      "does": "Re-rolls the dither, the bulges and the edge strip."
     }
   },
   "presets": [
     {
       "name": "Tight spring",
       "set": {
-        "rings": 20,
-        "spacing": 0.55,
-        "discH": 0.1,
-        "rim": 0.6
+        "rings": 22,
+        "spacing": 44,
+        "discH": 0.08,
+        "rim": 0.6,
+        "view": 0.3
       }
     },
     {
-      "name": "Solid lines",
+      "name": "Plain lines",
       "set": {
-        "chainTone": 1,
-        "flare": 1,
+        "flare": 0,
         "misreg": 0,
-        "soft": 0.2
+        "warp": 0.3,
+        "beat": 40
       }
     },
     {
       "name": "Fog",
       "set": {
-        "gray": 0.8,
-        "soft": 1.6,
+        "gray": 0.75,
+        "soft": 1.4,
         "halo": 2.5,
-        "column": 0.7
+        "face": 0.6
       }
     },
     {
-      "name": "Wide beat",
+      "name": "Wild bulge",
       "set": {
-        "beat": 25,
-        "warp": 2.4,
-        "misreg": 0.5,
-        "stripes": 0.3
+        "flare": 2,
+        "reach": 0.16,
+        "fan": 1.3,
+        "misreg": 0.35,
+        "warp": 2.4
       }
     }
   ],
@@ -463,8 +674,8 @@
         "mode": "saw"
       },
       {
-        "key": "flare",
-        "amp": 0.15,
+        "key": "misreg",
+        "amp": 0.05,
         "period": 7,
         "mode": "sine"
       }
@@ -480,105 +691,161 @@
     "x": {
       "key": "misreg",
       "min": 0,
-      "max": 0.5
+      "max": 0.45
     },
     "y": {
-      "key": "warp",
+      "key": "view",
       "min": 0,
-      "max": 2.5
+      "max": 1.4
     },
     "runs": "only while Live is on: a drag on the figure sets x across and y down between these ends; off by default"
   },
   "techniques": [
     {
-      "id": "grain",
-      "short": "KEY",
-      "name": "Grain",
-      "layer": 0,
-      "pass": 2,
-      "params": {
-        "grain": 1.8
-      },
-      "implementation": "The gray column: specks at 50 % coverage, 2 px median area, blurred 0.7 px so the tone reads as speckle rather than a hard dither."
-    },
-    {
       "id": "edge",
       "short": "KEY",
       "name": "Edge",
-      "layer": 1,
-      "pass": 4,
+      "layer": 0,
+      "pass": 6,
       "params": {
-        "rings": 9,
-        "discW": 0.78,
-        "discH": 0.17,
-        "rim": 0.8,
-        "halo": 2,
-        "sag": 0.6,
-        "column": 0.34,
-        "gray": 0.47
+        "rings": 11,
+        "discW": 0.4,
+        "discH": 0.115,
+        "rim": 1,
+        "backRim": 0.25,
+        "lip": 0.95,
+        "face": 0.435,
+        "base": 1
       },
-      "implementation": "A disc rim: solid white 14 px thick at the front, thinning toward the back, with a dithered halo on both sides."
+      "implementation": "The top disc's wall: solid white, 11 px tall, the lip above it narrows to a quarter of its width at the back."
+    },
+    {
+      "id": "grain",
+      "short": "KEY",
+      "name": "Grain",
+      "layer": 1,
+      "pass": 3,
+      "params": {
+        "grain": 1.35
+      },
+      "implementation": "Inside a disc face: thin ridges under the lit lip, then the spool's speckle at 47 % coverage."
     },
     {
       "id": "pull",
       "short": "KEY",
       "name": "Pull",
       "layer": 2,
-      "pass": 6,
+      "pass": 3,
       "params": {
-        "chainPitch": 9.5,
-        "stripes": 0.18,
+        "chainW": 20,
+        "gapW": 23,
+        "stripes": 0.121,
         "pitch": 11,
-        "beat": 5,
-        "flare": 0.4
+        "flare": 1,
+        "reach": 0.07,
+        "fan": 0.45,
+        "lineSoft": 0.75
       },
-      "implementation": "Stripes at 11 px pitch, full print where the beat is high: yellow where the red and green plates overlap, green and cyan at the slipped edges."
+      "implementation": "The bold band: yellow where the red plate sits on the green, a thin red edge on one side and the black between."
     }
   ],
   "pass_order": [
-    "tone field: a gray column 0.34 of the width, with soft edges",
-    "flanks: a chain screen (pitch 9.5 px, raised cosine to the 6th power, tone 0.42) beside the column; outside it a stripe screen (pitch 11 px) whose print depth is the beat of that screen against one 8 lines finer, opened further by a slow flare field",
-    "the sheet warp: one sine of 330 px wavelength, scaled by noise, bends every line in the flanks",
-    "disc rims: ellipses 0.78 of the half width, short axis 0.17 of the long, a solid band 14 px thick at the front thinning to 3.5 px at the back, a dithered halo, faint inner arcs",
-    "the screen: one hashed threshold per pixel; the tone goes through it as speck density",
-    "color plates: the green plate on the stripe lines, the red plate on it, the blue plate slipped 0.12 pitch and widened where the flare field is high; screened by the same threshold",
-    "press blur 0.7 px"
+    "the stack: 11 discs from 16 % of the height down, each placed by the eye's height above it, so lower discs sit further apart and tilt further toward the eye; each disc is a top face, a lit lip and a wall",
+    "the spool: a domed gray column behind the discs, brighter toward its edges",
+    "the flanks: a black gap, a band of 1 px hairlines in dashes, then one warped stripe phase; the warp is a sum of two sines whose depth grows inside three bulges per flank, each carrying an eye that folds the lines",
+    "the bold band: a band that wanders down each flank, widened by the bulges, where the stripes print through the light plates; outside it the same lines stay dashed hairlines",
+    "the light plates: green on the line, red a little narrower and slipped one way, blue narrower still and slipped the other way, only inside the bulges; the slip is in space, so a steep run of lines fringes and a fold does not",
+    "the edge strip: a lit band 12 px wide that runs cyan to yellow-green down the sheet, a dim blue rule inside it",
+    "the screen: one hashed threshold per 1.35 px cell turns every gray into speck density; each speck takes a little of its own brightness; a 0.5 px press blur",
+    "flank haze: dim 1 px specks over the black, the scanned sheet's own gray"
   ],
   "measured": {
     "ring_rows_px": [
-      204,
-      294,
-      381,
-      467,
-      554,
-      644,
-      737,
-      832,
-      930,
-      1031,
-      1126
+      206,
+      295,
+      383,
+      469,
+      555,
+      646,
+      739,
+      834,
+      933,
+      1033,
+      1131
     ],
-    "ring_spacing_px": "86 to 101, mean 92",
-    "rim_solid_rows_px": 14,
-    "rim_method": "rows above 190 luminance through the column center at each ring row",
-    "column_px": [
-      240,
-      496
-    ],
-    "column_coverage": 0.498,
-    "column_mean_L": 125,
-    "column_sigma_L": 83,
-    "column_hist": "near flat from bin 1 to bin 14, 13.6 % in bin 0 and 10.5 % in bin 15: a soft dither",
-    "chain_pitch_px": 9.5,
-    "chain_evidence": "column-mean autocorrelation peak at lags 9 to 10",
-    "chain_coverage": 0.079,
-    "chain_mean_L": 36.5,
-    "speck_median_area_px": 2,
+    "ring_method": "peaks of the 80 px wide center column luminance, smoothed over 9 rows",
+    "ring_spacing_px": "89, 88, 86, 86, 91, 93, 95, 99, 100: it grows down the stack",
+    "disc_half_axis_px": 145,
+    "disc_center_x": 369,
+    "disc_axis_method": "first and last x above 185 in the 45 rows over each ring row",
+    "front_band_rows_px": {
+      "top": 11,
+      "ring3": 13,
+      "ring5": 17,
+      "ring6": 23,
+      "bottom": 25,
+      "method": "rows above 180 through the center column at each ring"
+    },
+    "spool_width_px": 216,
+    "spool_method": "speckle coverage above 110 in rows 14 to 24 px under each disc",
+    "hairline_pitch_px": "5 to 6",
+    "hairline_evidence": "column-mean autocorrelation of x 176 to 200 peaks at lags 5 and 6",
     "stripe_pitch_px": 11,
-    "stripe_evidence": "autocorrelation peaks at 11, 22, 34 on the right flank; 14 on the left",
-    "stripe_hues": "yellow (234,229,111) 80 % of saturated pixels, yellow-green (188,223,125) 7 %, cyan-green (101,193,167) 2 %, blue (64,120,157) 1.5 %",
-    "black_share_flanks": 0.476,
-    "edge_strip": "x 0 to 8: (71,186,133) to (117,216,156)"
+    "stripe_kmeans_10": {
+      "black": [
+        5,
+        6,
+        3,
+        0.368
+      ],
+      "dark": [
+        28,
+        35,
+        23,
+        0.097
+      ],
+      "yellow": [
+        238,
+        228,
+        92,
+        0.066
+      ],
+      "yellow_pale": [
+        239,
+        245,
+        152,
+        0.08
+      ],
+      "pale": [
+        231,
+        246,
+        211,
+        0.07
+      ],
+      "method": "k-means on every third pixel of x 60 to 180, y 300 to 1000"
+    },
+    "edge_strip": {
+      "black": [
+        6,
+        15,
+        17,
+        0.724
+      ],
+      "cyan": [
+        53,
+        188,
+        185,
+        0.146
+      ],
+      "yellow_green": [
+        169,
+        215,
+        53,
+        0.129
+      ],
+      "method": "nearest-ink shares of x 0 to 40"
+    },
+    "rejected": "a dotted outline for each ring (the first build): the reference's rims measure 11 to 25 px of solid white"
   },
   "benchmark": {
     "mean": null,
@@ -589,21 +856,21 @@
     "setup": {
       "palette": "measured",
       "overrides": {},
-      "note": "The stack has 9 discs instead of 11 and a bowed spacing, so the ring patches were placed with search.py on the plate's own discs; the column, chain, stripe and edge patches sit on the same zones as the reference.",
+      "note": "Every rect compares in place. The plate places 11 discs within 6 px of the reference's ring rows, so the spool, disc front and disc face rects sit on the same events; the hairline, stripe and edge rects sit on the same zones of the flanks, whose bulges are the plate's own. Composition moved from the first build (9 discs, 7 different rects), so all rects were re-picked against the new stack; search.py on the spool and disc rects found nothing better than the in-place windows.",
       "patches": [
         {
-          "name": "gray column",
+          "name": "spool",
           "reference_rect": [
-            270,
-            600,
-            190,
-            40
+            300,
+            218,
+            140,
+            30
           ],
           "render_rect": [
-            270,
-            600,
-            190,
-            40
+            300,
+            218,
+            140,
+            30
           ],
           "metrics": [
             "hist",
@@ -613,24 +880,44 @@
           ]
         },
         {
-          "name": "column with rim",
+          "name": "disc front",
           "reference_rect": [
-            260,
+            300,
             540,
-            220,
-            80
+            140,
+            30
           ],
           "render_rect": [
-            256,
-            96,
-            220,
-            80
+            300,
+            540,
+            140,
+            30
           ],
           "metrics": [
             "hist",
             "mean",
             "std",
             "spec"
+          ]
+        },
+        {
+          "name": "disc face",
+          "reference_rect": [
+            290,
+            696,
+            160,
+            26
+          ],
+          "render_rect": [
+            290,
+            696,
+            160,
+            26
+          ],
+          "metrics": [
+            "hist",
+            "mean",
+            "std"
           ]
         },
         {
@@ -678,43 +965,25 @@
           ]
         },
         {
-          "name": "rim band",
+          "name": "edge strip",
           "reference_rect": [
-            300,
-            540,
-            140,
-            30
+            0,
+            200,
+            40,
+            900
           ],
           "render_rect": [
-            280,
-            592,
-            140,
-            30
+            0,
+            200,
+            40,
+            900
           ],
           "metrics": [
             "hist",
             "mean",
-            "std"
-          ]
-        },
-        {
-          "name": "black margin",
-          "reference_rect": [
-            700,
-            300,
-            16,
-            400
-          ],
-          "render_rect": [
-            700,
-            300,
-            16,
-            400
-          ],
-          "metrics": [
-            "hist",
-            "mean",
-            "std"
+            "std",
+            "ink",
+            "share"
           ]
         },
         {
@@ -742,10 +1011,10 @@
     }
   },
   "limits": [
-    "Benchmark mean 0.91. The chain band scores lowest (autocorrelation 0.71, contrast 0.77): the reference chains are ragged 1 px lines of gray specks that wander, the plate's are a cosine line 2 px wide through a 1.8 px dither grid with 5-cell streaks, so they sit straighter and print whiter.",
-    "Column texture spectrum 0.81: the reference dither was resampled from a smaller image, which rounds every speck; the plate resamples a 1.8 px grid with Catmull-Rom and blurs 0.6 px, which gets the flat histogram but keeps more energy at 0.2 cycles per pixel.",
-    "The stack is the plate's own: 9 discs with a bow, against 11 straight discs 92 px apart in the reference.",
-    "The reference flanks carry a second, slower warp and hand-masked flare shapes; the plate uses one 330 px sine scaled by noise and a value-noise flare field."
+    "Benchmark mean 0.931, lowest 0.66 (edge strip yellow-green color). Under 98 % on: the hairline band (tone histogram 0.80, mean 0.79): the reference's hairlines are scanned 1 px lines whose gray spreads over bins 1 to 8, the plate's are 1 px dashes at one gray each, so it prints too much pure black; the stripes' autocorrelation (0.72) and yellow (0.83): the reference's lines are near vertical with a 22 px repeat that survives its warp, the plate's bold band folds harder and wanders more, which reads better next to the reference but decorrelates faster; the edge strip's yellow-green (0.66), whose reference band is a saturated (169,215,53) the additive plates reach only at full print.",
+    "Render time 0.86 to 1.3 s on this machine depending on load; the two Catmull-Rom upsamples and five blurs take about a third of it.",
+    "The stack and the flanks are the plate's own: 11 discs placed by a view height, three bulges per flank from the seed; the ring rows land within 6 px of the reference's, the bulges do not sit where its flares do.",
+    "The reference is a JPEG; its ringing around the stripes is not modeled."
   ],
   "keys": {
     "S": "spec",
