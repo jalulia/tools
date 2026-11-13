@@ -1,0 +1,986 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>The Cave Rig</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a dark projection room. The bench (live rig) is the hero; the manual reads as numbered build steps with field notes in the margin. Single dark look by choice. */
+:root {
+  --cave: #110f17;
+  --cave-2: #19161f;
+  --cave-3: #221e2b;
+  --rule: #302b3b;
+  --fg: #e8e3f0;
+  --muted: #9b94ab;
+  --wall: #ddd5ea;
+  --ink: #2a2457;
+  --plato: #58db6a;
+  --lamp: #f2d48a;
+  --f-display: "Young Serif", "Iowan Old Style", Georgia, serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--cave); color: var(--fg); font: 400 16px/1.6 var(--f-body); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: clamp(16px, 4vw, 40px); padding-block: 40px 80px; }
+a { color: var(--wall); text-underline-offset: 3px; }
+a:hover { color: var(--plato); }
+:focus-visible { outline: 2px solid var(--plato); outline-offset: 2px; }
+.mono { font-family: var(--f-mono); }
+.label { font: 500 11px/1.3 var(--f-mono); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+
+/* hero */
+.hero { display: grid; gap: 14px; max-width: 760px; margin-bottom: 28px; }
+.hero h1 { font: 400 clamp(44px, 8vw, 88px)/0.95 var(--f-display); margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.hero h1 .sq { display: inline-block; width: .32em; height: .32em; background: var(--plato); vertical-align: .12em; margin-left: .12em; box-shadow: 0 0 18px rgba(88,219,106,.55); }
+.lede { font-size: 18px; color: var(--fg); max-width: 62ch; margin: 0; }
+.prov { font: 400 12.5px/1.55 var(--f-mono); color: var(--muted); max-width: 78ch; margin: 0; padding-top: 10px; border-top: 1px solid var(--rule); }
+.prov b { color: var(--lamp); font-weight: 500; }
+
+/* bench */
+.bench { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+@media (max-width: 920px) { .bench { grid-template-columns: minmax(0, 1fr); } }
+.stagewrap { position: relative; background: #000; border-radius: 4px; overflow: hidden; cursor: crosshair; touch-action: none; }
+.stagewrap:focus-visible { outline: 2px solid var(--plato); outline-offset: 3px; }
+#stage { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
+.chip { position: absolute; right: 12px; bottom: 12px; font: 500 11px/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 7px 9px; background: rgba(17,15,23,.82); color: var(--fg); border-radius: 3px; pointer-events: none; }
+.chip i { font-style: normal; color: var(--plato); }
+@media (max-width: 600px) { .chip { font-size: 9px; padding: 5px 6px; right: 6px; bottom: 6px; } }
+.pad { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+.pad button { flex: 1 1 80px; }
+.readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 3px; margin-top: 10px; overflow: hidden; }
+.readout div { background: var(--cave-2); padding: 8px 10px; min-width: 0; }
+.readout dd { margin: 3px 0 0; font: 500 15px/1.2 var(--f-mono); font-variant-numeric: tabular-nums; color: var(--fg); }
+.readout dt { font: 500 10px/1.2 var(--f-mono); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+
+.side { display: grid; gap: 16px; min-width: 0; }
+.panel { background: var(--cave-2); border: 1px solid var(--rule); border-radius: 4px; padding: 14px; display: grid; gap: 12px; }
+.panel h3 { margin: 0; }
+#plan { width: 100%; height: auto; aspect-ratio: 1 / 1; display: block; background: var(--cave); border-radius: 3px; touch-action: none; cursor: grab; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; background: transparent; }
+.seg button[aria-pressed="true"] { background: var(--wall); color: var(--ink); }
+button, .filebtn { font: 500 12px/1 var(--f-mono); letter-spacing: .04em; color: var(--fg); background: var(--cave-3); border: 1px solid var(--rule); border-radius: 3px; padding: 10px 10px; cursor: pointer; text-align: center; }
+button:hover, .filebtn:hover { border-color: var(--muted); }
+button.go { background: var(--plato); color: #0d1f10; border-color: var(--plato); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.row > * { flex: 1 1 auto; }
+.ctl { display: grid; gap: 5px; }
+.ctl label { display: flex; justify-content: space-between; gap: 8px; }
+.ctl output { font: 500 11px/1.3 var(--f-mono); color: var(--fg); font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; accent-color: var(--plato); }
+.check { display: flex; align-items: center; gap: 8px; font: 400 13px/1.3 var(--f-body); color: var(--fg); }
+.check input { accent-color: var(--plato); width: 16px; height: 16px; }
+.filebtn { display: block; }
+.filebtn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.hint { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.5; }
+
+/* manual */
+.manual { margin-top: 72px; display: grid; gap: 0; }
+.manual > h2 { font: 400 clamp(30px, 4vw, 42px)/1.05 var(--f-display); margin: 0 0 8px; }
+.step { display: grid; grid-template-columns: 72px minmax(0, 1fr) 320px; gap: 28px; padding: 36px 0; border-top: 1px solid var(--rule); }
+.step:last-of-type { border-bottom: 1px solid var(--rule); }
+@media (max-width: 980px) { .step { grid-template-columns: 52px minmax(0, 1fr); } .step .note { grid-column: 2; } }
+@media (max-width: 560px) { .step { grid-template-columns: minmax(0, 1fr); gap: 14px; } .step .note { grid-column: 1; } }
+.num { font: 400 40px/1 var(--f-display); color: var(--wall); opacity: .55; font-variant-numeric: tabular-nums; }
+.step h3 { font: 400 26px/1.15 var(--f-display); margin: 0 0 12px; text-wrap: balance; }
+.step p { margin: 0 0 12px; max-width: 64ch; }
+.step .rule { border: 1px solid var(--rule); background: var(--cave-2); padding: 10px 12px; border-radius: 3px; font-size: 14.5px; max-width: 64ch; }
+.step .rule b { color: var(--lamp); font-weight: 600; }
+.inf { font: 500 10px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--lamp); border: 1px solid currentColor; border-radius: 2px; padding: 2px 4px; vertical-align: 2px; }
+.tablewrap { overflow-x: auto; margin: 4px 0 12px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 520px; }
+th, td { text-align: left; padding: 9px 10px 9px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font: 500 10.5px/1.2 var(--f-mono); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+td:first-child { color: var(--wall); white-space: nowrap; }
+td button { padding: 7px 9px; white-space: nowrap; }
+.note { background: transparent; border: 1px dashed #4a4360; border-radius: 4px; padding: 14px; display: grid; gap: 10px; align-self: start; }
+.note p { font: 400 italic 15px/1.5 var(--f-body); margin: 0; color: var(--fg); }
+.note textarea { width: 100%; min-height: 92px; resize: vertical; background: var(--cave); color: var(--fg); border: 1px solid var(--rule); border-radius: 3px; padding: 9px; font: 400 13.5px/1.5 var(--f-body); }
+.strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 6px 0 14px; max-width: 760px; }
+@media (max-width: 560px) { .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.strip figure { margin: 0; display: grid; gap: 5px; min-width: 0; }
+.strip canvas { width: 100%; height: auto; aspect-ratio: 16 / 9; display: block; border-radius: 2px; image-rendering: pixelated; background: #000; }
+.strip figcaption { font: 500 10px/1.3 var(--f-mono); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.strip figcaption span { color: var(--fg); }
+
+/* spec */
+.spec { margin-top: 72px; display: grid; gap: 14px; }
+.spec h2 { font: 400 clamp(30px, 4vw, 42px)/1.05 var(--f-display); margin: 0; }
+.spec .bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+pre.json { margin: 0; background: var(--cave-2); border: 1px solid var(--rule); border-radius: 4px; padding: 16px; overflow: auto; max-height: 560px; font: 400 12.5px/1.55 var(--f-mono); color: #cfc8dc; }
+pre.json .k { color: var(--wall); } pre.json .s { color: #a7e3ae; } pre.json .n { color: var(--lamp); }
+footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--rule); display: grid; gap: 6px; font-size: 13.5px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<main class="wrap">
+  <header class="hero">
+    <div class="label">Field manual · after Tee Ken Ng’s <i>Plato</i></div>
+    <h1>The Cave Rig<span class="sq" aria-hidden="true"></span></h1>
+    <p class="lede">A platformer whose levels are real shadows. Light a wall with a projector, put objects in the beam, and a green square named Plato walks on whatever dark shape lands there. Turn the table and the level rebuilds under his feet.</p>
+    <p class="prov"><b>Provenance.</b> Reconstructed. TikTok blocks automated viewing, so this is built from one frame of the video, its caption, and Ng’s documented earlier projection game. His actual pipeline may differ. Every claim tagged <span class="inf">inferred</span> is mine. Everything on this page runs.</p>
+  </header>
+
+  <section class="bench" aria-label="Live rig">
+    <div style="min-width:0">
+      <div class="stagewrap" id="stagewrap" tabindex="0" aria-label="Shadow wall. Focus and use arrow keys or A and D to move, Space to jump. Drag the divider to compare wall and mask.">
+        <canvas id="stage" width="960" height="540"></canvas>
+        <div class="chip" id="chip">Autopilot · <i>click the wall</i>, then ← → Space</div>
+      </div>
+      <div class="pad" aria-label="Touch controls">
+        <button id="tl" aria-label="Move left">◀ Left</button>
+        <button id="tj" class="go" aria-label="Jump">Jump</button>
+        <button id="tr" aria-label="Move right">Right ▶</button>
+      </div>
+      <dl class="readout" aria-live="off">
+        <div><dt>Threshold</dt><dd id="r-th">—</dd></div>
+        <div><dt>Solid px</dt><dd id="r-sol">—</dd></div>
+        <div><dt>Plato x,y</dt><dd id="r-xy">—</dd></div>
+        <div><dt>State</dt><dd id="r-st">—</dd></div>
+        <div><dt>Exits found</dt><dd id="r-ex">0</dd></div>
+        <div><dt>Loop</dt><dd id="r-fps">—</dd></div>
+      </dl>
+    </div>
+
+    <aside class="side">
+      <div class="panel">
+        <div class="label">Source</div>
+        <div class="seg" role="group" aria-label="Source">
+          <button id="m-sim" aria-pressed="true">Simulated rig</button>
+          <button id="m-foot" aria-pressed="false">Your footage</button>
+        </div>
+        <div id="g-sim" class="ctl" style="gap:12px">
+          <div class="label">Plan view · drag the lamp</div>
+          <canvas id="plan" width="560" height="560" aria-label="Top-down plan of wall, turntable and projector. Drag the projector to move the light."></canvas>
+          <div class="ctl"><label for="s-ang"><span class="label">Turntable</span><output id="o-ang">0°</output></label><input id="s-ang" type="range" min="0" max="360" step="1" value="0"></div>
+          <label class="check"><input id="c-spin" type="checkbox" checked> Spin slowly</label>
+          <div class="ctl"><label for="s-ly"><span class="label">Lamp height</span><output id="o-ly">2.6</output></label><input id="s-ly" type="range" min="1.6" max="4.6" step="0.05" value="2.6"></div>
+          <div class="ctl"><label for="s-lz"><span class="label">Lamp distance</span><output id="o-lz">11.0</output></label><input id="s-lz" type="range" min="6.5" max="13" step="0.1" value="11"></div>
+          <div class="row"><button id="b-add">+ Block</button><button id="b-pop">− Last</button><button id="b-reset">Reset</button></div>
+        </div>
+        <div id="g-foot" class="ctl" style="gap:12px" hidden>
+          <p class="hint">Film a lit wall with objects in front of a lamp, then load it. Plato plays on your shadows.</p>
+          <label class="filebtn" for="f-src">Load photo or video<input id="f-src" type="file" accept="video/*,image/*"></label>
+          <div class="row"><button id="b-pin">Pin 4 corners</button><button id="b-unpin">Clear pins</button></div>
+          <div class="ctl"><label for="s-th"><span class="label">Threshold</span><output id="o-th">110</output></label><input id="s-th" type="range" min="0" max="255" step="1" value="110"></div>
+          <label class="check"><input id="c-auto" type="checkbox" checked> Auto threshold (Otsu)</label>
+          <label class="check"><input id="c-inv" type="checkbox"> Invert (light shapes are solid)</label>
+          <label class="check"><input id="c-desp" type="checkbox" checked> Despeckle (3×3 majority)</label>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ctl"><label for="s-wipe"><span class="label">Wall ↔ Mask</span><output id="o-wipe">62%</output></label><input id="s-wipe" type="range" min="0" max="100" step="1" value="62"></div>
+        <p class="hint">Left of the line: what people see. Right: what Plato stands on. Green rows are every surface the game thinks is floor.</p>
+      </div>
+    </aside>
+  </section>
+
+  <section class="manual" aria-label="Manual">
+    <h2>Six moves</h2>
+
+    <article class="step" id="s1">
+      <div class="num">01</div>
+      <div>
+        <h3>Read the trick</h3>
+        <p>Three layers share one wall: light, shadow, sprite. The projector is the lamp and the screen at once. Objects block its light, and the blocked area is the level. A camera reads the wall back, and the game keeps one fact per pixel: dark or lit. Plato is physics on that bitmap. Nothing in the code knows what a block is.</p>
+        <p>Plato is drawn with projector light, and the physics keeps him out of solid pixels, so he can never stand where the projector can’t reach. He is visible by construction. <span class="inf">inferred</span></p>
+      </div>
+      <div class="note"><div class="label">Field note</div><p>A shadow is a projection: 3D to 2D, lossy, many objects collapsed into one outline. Information design makes the same move. Name one projection you made recently. What did it throw away, and who was standing on it?</p><textarea id="n1" aria-label="Field note 1"></textarea></div>
+    </article>
+
+    <article class="step" id="s2">
+      <div class="num">02</div>
+      <div>
+        <h3>Build the rig</h3>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Part</th><th>Role</th><th>Setup</th></tr></thead>
+          <tbody>
+            <tr><td>Projector</td><td>Light + display</td><td>Any brightness. Square to the wall. Short-throw keeps your body out of the beam.</td></tr>
+            <tr><td>Webcam / phone</td><td>Sensor</td><td>Beside the projector lens to cut parallax. Lock exposure, white balance, focus.</td></tr>
+            <tr><td>Lazy susan on books</td><td>Stage</td><td>Lifts objects into the beam. Rotation is your level editor.</td></tr>
+            <tr><td>Blocks, caps, dowels</td><td>Geometry</td><td>Convex shapes read cleanest. Dowels make ramps.</td></tr>
+            <tr><td>Pale matte wall</td><td>Screen</td><td>Dark room. Texture and ambient light become noise in the mask.</td></tr>
+            <tr><td>Laptop</td><td>Runs the loop</td><td>The live rig file that ships with this manual, fullscreen on the projector.</td></tr>
+          </tbody>
+        </table></div>
+        <p class="hint">The frame in Ng’s video shows a lazy susan on a stack of books titled around light, blocks in white, red and blue, a half-round cap, and a leaning dowel. The simulator above is that table.</p>
+      </div>
+      <div class="note"><div class="label">Field note</div><p>You already own most of this. Walk the apartment and list what could go in the beam. Which object do you expect to make the best level, and why that one?</p><textarea id="n2" aria-label="Field note 2"></textarea></div>
+    </article>
+
+    <article class="step" id="s3">
+      <div class="num">03</div>
+      <div>
+        <h3>Close the loop</h3>
+        <p>Camera → warp → luminance → threshold → mask → physics → projector. One frame through all of it, about 30 times a second. These are the live stages of the bench above:</p>
+        <div class="strip">
+          <figure><canvas id="p1" width="320" height="180"></canvas><figcaption>Camera frame</figcaption></figure>
+          <figure><canvas id="p2" width="320" height="180"></canvas><figcaption>Luminance Y</figcaption></figure>
+          <figure><canvas id="p3" width="320" height="180"></canvas><figcaption>Mask · t = <span id="p3t">—</span></figcaption></figure>
+          <figure><canvas id="p4" width="320" height="180"></canvas><figcaption>Floors + Plato</figcaption></figure>
+        </div>
+        <p class="rule"><b>Never project anything dark.</b> The camera can’t tell a drawn dark pixel from a real shadow, so dark UI becomes floor. Keep every projected pixel brighter than the threshold.</p>
+        <p>Past roughly a tenth of a second of lag, Plato trails the shadow he stands on. <span class="inf">estimate</span> Tune by eye.</p>
+      </div>
+      <div class="note"><div class="label">Field note</div><p>The game measures darkness and calls it ground. What does your current instrument actually measure, and what do you say it measures? Write both.</p><textarea id="n3" aria-label="Field note 3"></textarea></div>
+    </article>
+
+    <article class="step" id="s4">
+      <div class="num">04</div>
+      <div>
+        <h3>Calibrate</h3>
+        <p>Camera pixels and projector pixels disagree about where everything is. A homography fixes it: project four dots, click them in the camera image, solve an 8×8 linear system, and every camera pixel maps to a projector pixel.</p>
+        <p>Recalibrate when the camera or projector moves. The turntable moves freely. It’s content.</p>
+        <p class="hint">To try it here: switch to <b>Your footage</b>, load a photo of a wall taken at an angle, press <b>Pin 4 corners</b>, and click the corners in order top-left, top-right, bottom-right, bottom-left.</p>
+      </div>
+      <div class="note"><div class="label">Field note</div><p>Calibration is agreement between two views of one wall. Which two views of a current project are out of alignment? Name the four points you’d pin.</p><textarea id="n4" aria-label="Field note 4"></textarea></div>
+    </article>
+
+    <article class="step" id="s5">
+      <div class="num">05</div>
+      <div>
+        <h3>Sculpt levels</h3>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Operator</th><th>What it does to the level</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>Rotate the table</td><td>Floors become walls. The level rewrites continuously.</td><td><button data-op="rot">Rotate 90°</button></td></tr>
+            <tr><td>Bring the lamp closer</td><td>Magnification is L<sub>z</sub> / (L<sub>z</sub> − P<sub>z</sub>). Closer lamp, bigger level.</td><td><button data-op="closer">Closer</button></td></tr>
+            <tr><td>Raise the lamp</td><td>Everything drops on the wall. Tall pieces stop reaching the top.</td><td><button data-op="higher">Higher</button></td></tr>
+            <tr><td>Stack</td><td>Towers, ledges, overhangs.</td><td><button data-op="block">Add block</button></td></tr>
+            <tr><td>Lean a dowel</td><td>A ramp, or a beam to balance on.</td><td><button data-op="dowel">Add dowel</button></td></tr>
+            <tr><td>Your hand</td><td>A live platform. Or a crusher.</td><td><button data-op="hand">Add hand</button></td></tr>
+          </tbody>
+        </table></div>
+        <p class="rule"><b>Crushing is a design decision.</b> When a shadow grows into Plato, this engine lifts him up to 16 px, so a rising shadow works as an elevator. Respawn him instead and you have a different genre.</p>
+      </div>
+      <div class="note"><div class="label">Field note</div><p>You shape the level by moving things the player can’t see. What’s the turntable in your practice: the thing you rotate offstage that rewrites someone else’s ground?</p><textarea id="n5" aria-label="Field note 5"></textarea></div>
+    </article>
+
+    <article class="step" id="s6">
+      <div class="num">06</div>
+      <div>
+        <h3>Turn it on yourself</h3>
+        <p>Plato’s prisoners take shadows for reality. In this game the shadow is the only reality the player has, and it holds weight.</p>
+        <p>Your practice walks into an unfamiliar domain, refuses its surface, and builds an instrument to reach the structure underneath. This rig is that move made physical. The operator holds the structure. The player lives on the surface. The camera is the instrument between them, and it only ever sees the surface.</p>
+      </div>
+      <div class="note"><div class="label">Field note</div><p>When is the surface the right thing to stand on? Name a case where refusing it would have cost you.</p><textarea id="n6" aria-label="Field note 6"></textarea><button id="b-notes">Copy notes as JSON</button></div>
+    </article>
+  </section>
+
+  <section class="spec" aria-label="Technique spec">
+    <div class="bar"><h2>Technique spec</h2><button id="b-copy">Copy JSON</button></div>
+    <p class="hint" style="max-width:70ch">Machine-readable. Paste into an agent, a repo README, or the live rig’s header. Parameters match the engine on this page.</p>
+    <pre class="json" id="json" tabindex="0"></pre>
+  </section>
+
+  <footer>
+    <div class="label">Sources</div>
+    <div><a href="https://www.tiktok.com/t/ZPLRrsvFs/" target="_blank" rel="noopener">Tee Ken Ng, “Using real shadows to make a video game” (TikTok)</a></div>
+    <div><a href="https://80.lv/articles/artist-turns-bedroom-into-interactive-game-scene" target="_blank" rel="noopener">80 Level, “Artist Turns Bedroom into Interactive Game Scene” (Ng’s Godot + MadMapper room game)</a></div>
+    <div>Live camera build: <span class="mono">cave-rig-live.html</span>, sent alongside this page. Camera access is blocked inside artifact pages, so run it locally in Chrome.</div>
+  </footer>
+</main>
+
+<script>
+/* CAVE engine — shared by the manual and the live rig.
+   One fact per pixel: dark (solid) or not. Everything else is physics on that bitmap. */
+const CAVE = (() => {
+  const W = 320, H = 180;          // mask raster = projector raster
+  const UNIT = 30;                  // 1 scene unit = 30 mask px
+  const HW = W / UNIT / 2;          // wall half-width in scene units
+  const X0 = -HW, Y0 = 0;           // wall view origin in scene units
+
+  /* ---------- geometry ---------- */
+  function hull(pts) {
+    if (pts.length < 3) return pts;
+    pts = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lo = [], up = [];
+    for (const p of pts) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+    for (let i = pts.length - 1; i >= 0; i--) { const p = pts[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+    up.pop(); lo.pop(); return lo.concat(up);
+  }
+  // base-anchored box: (cx, base y, cz), size w,h,d
+  function box(cx, cy, cz, w, h, d) {
+    const v = [];
+    for (const sx of [-1, 1]) for (const sy of [0, 1]) for (const sz of [-1, 1]) v.push([cx + sx * w / 2, cy + sy * h, cz + sz * d / 2]);
+    return v;
+  }
+  function cyl(cx, cy, cz, r, h, n = 28) {
+    const v = [];
+    for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; for (const y of [cy, cy + h]) v.push([cx + Math.cos(a) * r, y, cz + Math.sin(a) * r]); }
+    return v;
+  }
+  function halfDisc(cx, cy, cz, r, d, n = 14) {
+    const v = [];
+    for (let i = 0; i <= n; i++) { const a = i / n * Math.PI; for (const s of [-1, 1]) v.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r, cz + s * d / 2]); }
+    return v;
+  }
+  function rod(a, b, r, n = 8) {
+    const d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+    const len = Math.hypot(...d); d.forEach((_, i) => d[i] /= len);
+    let u = Math.abs(d[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
+    const cross = (p, q) => [p[1] * q[2] - p[2] * q[1], p[2] * q[0] - p[0] * q[2], p[0] * q[1] - p[1] * q[0]];
+    u = cross(d, u); const ul = Math.hypot(...u); u = u.map(x => x / ul);
+    const w = cross(d, u);
+    const v = [];
+    for (const e of [a, b]) for (let i = 0; i < n; i++) {
+      const t = i / n * Math.PI * 2, c = Math.cos(t) * r, s = Math.sin(t) * r;
+      v.push([e[0] + u[0] * c + w[0] * s, e[1] + u[1] * c + w[1] * s, e[2] + u[2] * c + w[2] * s]);
+    }
+    return v;
+  }
+
+  /* ---------- the simulated rig (after the frame in Ng's video) ---------- */
+  function defaultScene() {
+    return {
+      light: { x: 0, y: 2.6, z: 11 },          // projector = the only light
+      table: { x: 0, y: 1.45, z: 3.4, r: 2.3, t: 0.26 }, // lazy susan on a book stack
+      books: { w: 5.4, d: 2.6 },
+      angle: 0,
+      pieces: [
+        { name: 'white block', color: '#efe9de', verts: box(-1.35, 0, 0.4, 0.72, 0.72, 0.72) },
+        { name: 'red step', color: '#e2566b', verts: box(-0.4, 0, 0.15, 0.75, 0.55, 0.7) },
+        { name: 'red riser', color: '#c8434f', verts: box(-0.1, 0, 0.15, 0.36, 1.1, 0.55) },
+        { name: 'blue tower', color: '#2f6fe0', verts: box(1.15, 0, -0.3, 0.58, 1.95, 0.58) },
+        { name: 'half-round cap', color: '#e9dcbf', verts: halfDisc(1.15, 1.95, -0.3, 0.42, 0.3) },
+        { name: 'dowel', color: '#c9a96a', verts: rod([-1.05, 0.05, 0.95], [0.8, 1.5, -0.6], 0.05) },
+      ],
+    };
+  }
+  function randomBlock(rng = Math.random) {
+    const a = rng() * Math.PI * 2, rr = 0.3 + rng() * 1.5;
+    const w = 0.3 + rng() * 0.6, h = 0.3 + rng() * 1.6, d = 0.3 + rng() * 0.5;
+    const hues = ['#e2566b', '#2f6fe0', '#efe9de', '#f0b84a', '#6bbf7a'];
+    return { name: 'block', color: hues[Math.floor(rng() * hues.length)], verts: box(Math.cos(a) * rr, 0, Math.sin(a) * rr, w, h, d) };
+  }
+  function toWorld(scene, p) {
+    const c = Math.cos(scene.angle), s = Math.sin(scene.angle), T = scene.table;
+    return [T.x + p[0] * c + p[2] * s, T.y + p[1], T.z - p[0] * s + p[2] * c];
+  }
+  // point light L, wall plane z=0:  S = L + (Lz/(Lz-Pz))·(P−L)
+  function project(L, P) {
+    if (P[2] >= L.z - 0.05) return null;
+    const t = L.z / (L.z - P[2]);
+    return [L.x + t * (P[0] - L.x), L.y + t * (P[1] - L.y)];
+  }
+  const toPx = (q, k) => [(q[0] - X0) * UNIT * k, (H - (q[1] - Y0) * UNIT) * k];
+
+  // every solid casts its convex silhouette; union = level
+  function shadowPolys(scene, k = 1) {
+    const L = scene.light, T = scene.table, out = [];
+    const solids = [
+      { verts: box(0, -T.y, 0, scene.books.w, T.y - T.t, scene.books.d), fixed: true },
+      { verts: cyl(0, -T.t, 0, T.r, T.t), fixed: true },
+      ...scene.pieces,
+    ];
+    for (const sd of solids) {
+      const pts = [];
+      for (const v of sd.verts) {
+        const w = sd.fixed ? [T.x + v[0], T.y + v[1], T.z + v[2]] : toWorld(scene, v);
+        const q = project(L, w); if (q) pts.push(toPx(q, k));
+      }
+      if (pts.length > 2) out.push(hull(pts));
+    }
+    return out;
+  }
+  function fillPolys(ctx, polys) {
+    ctx.beginPath();
+    for (const p of polys) { ctx.moveTo(p[0][0], p[0][1]); for (let i = 1; i < p.length; i++) ctx.lineTo(p[i][0], p[i][1]); ctx.closePath(); }
+    ctx.fill('nonzero');
+  }
+  // top-down footprints for the plan view
+  function footprints(scene) {
+    return scene.pieces.map(pc => ({ color: pc.color, pts: hull(pc.verts.map(v => { const w = toWorld(scene, v); return [w[0], w[2]]; })) }));
+  }
+
+  /* ---------- vision: warp → luminance → threshold → clean ---------- */
+  function solve8(A, b) {
+    const n = 8;
+    for (let i = 0; i < n; i++) {
+      let m = i; for (let r = i + 1; r < n; r++) if (Math.abs(A[r][i]) > Math.abs(A[m][i])) m = r;
+      [A[i], A[m]] = [A[m], A[i]]; [b[i], b[m]] = [b[m], b[i]];
+      for (let r = i + 1; r < n; r++) { const f = A[r][i] / A[i][i]; for (let c = i; c < n; c++) A[r][c] -= f * A[i][c]; b[r] -= f * b[i]; }
+    }
+    const x = new Array(n);
+    for (let i = n - 1; i >= 0; i--) { let s = b[i]; for (let c = i + 1; c < n; c++) s -= A[i][c] * x[c]; x[i] = s / A[i][i]; }
+    return x;
+  }
+  // homography mapping dst points -> src points (4 pairs)
+  function homography(dst, src) {
+    const A = [], b = [];
+    for (let i = 0; i < 4; i++) {
+      const [x, y] = dst[i], [u, v] = src[i];
+      A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u);
+      A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v);
+    }
+    const h = solve8(A, b); h.push(1); return h;
+  }
+  function otsu(lum) {
+    const hist = new Uint32Array(256); for (let i = 0; i < lum.length; i++) hist[lum[i]]++;
+    let sum = 0; for (let i = 0; i < 256; i++) sum += i * hist[i];
+    let sB = 0, wB = 0, best = 0, t = 128; const tot = lum.length;
+    for (let i = 0; i < 256; i++) {
+      wB += hist[i]; if (!wB) continue; const wF = tot - wB; if (!wF) break;
+      sB += i * hist[i]; const mB = sB / wB, mF = (sum - sB) / wF, v = wB * wF * (mB - mF) ** 2;
+      if (v > best) { best = v; t = i; }
+    }
+    return t;
+  }
+  class Vision {
+    constructor() {
+      this.mask = new Uint8Array(W * H); this.lum = new Uint8Array(W * H);
+      this.color = new ImageData(W, H); this.tmp = new Uint8Array(W * H);
+      this.thresh = 110; this.auto = true; this.invert = false; this.despeckle = true; this.H = null;
+    }
+    // src: ImageData of camera frame (any size). quad: 4 src points matching dstPts in mask space
+    ingest(src, dstPts, quad) {
+      const sw = src.width, sh = src.height, sd = src.data, cd = this.color.data, lum = this.lum;
+      const h = quad ? homography(dstPts, quad) : null;
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        let u, v;
+        if (h) { const z = h[6] * x + h[7] * y + 1; u = (h[0] * x + h[1] * y + h[2]) / z; v = (h[3] * x + h[4] * y + h[5]) / z; }
+        else { u = (x + 0.5) * sw / W; v = (y + 0.5) * sh / H; }
+        const i = y * W + x, o = i * 4;
+        u |= 0; v |= 0;
+        if (u < 0 || v < 0 || u >= sw || v >= sh) { cd[o] = cd[o + 1] = cd[o + 2] = 255; cd[o + 3] = 255; lum[i] = 255; continue; }
+        const s = (v * sw + u) * 4, r = sd[s], g = sd[s + 1], b = sd[s + 2];
+        cd[o] = r; cd[o + 1] = g; cd[o + 2] = b; cd[o + 3] = 255;
+        lum[i] = (r * 77 + g * 150 + b * 29) >> 8;   // Rec.601 Y
+      }
+      this.classify();
+    }
+    classify() {
+      if (this.auto) this.thresh = otsu(this.lum);
+      const t = this.thresh, m = this.despeckle ? this.tmp : this.mask, lum = this.lum, inv = this.invert;
+      for (let i = 0; i < W * H; i++) m[i] = (lum[i] < t) !== inv ? 1 : 0;
+      if (this.despeckle) {   // 3×3 majority vote
+        const out = this.mask;
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+          let c = 0;
+          for (let dy = -1; dy <= 1; dy++) { const yy = y + dy; if (yy < 0 || yy >= H) continue; for (let dx = -1; dx <= 1; dx++) { const xx = x + dx; if (xx < 0 || xx >= W) continue; c += m[yy * W + xx]; } }
+          out[y * W + x] = c >= 5 ? 1 : 0;
+        }
+      }
+    }
+    solidFraction() { let c = 0; for (let i = 0; i < W * H; i++) c += this.mask[i]; return c / (W * H); }
+  }
+
+  /* ---------- Plato: a pixel-AABB platformer on the mask ---------- */
+  const P = { size: 6, gravity: 0.16, maxFall: 3.2, run: 1.25, accel: 0.22, jump: -3.3, stepUp: 3, depen: 16, coyote: 6, buffer: 7 };
+  function solidAt(mask, x, y, w = P.size, h = P.size) {
+    for (let py = y; py < y + h; py++) {
+      if (py < 0 || py >= H) continue;
+      for (let px = x; px < x + w; px++) { if (px < 0 || px >= W) return true; if (mask[py * W + px]) return true; }
+    }
+    return false;
+  }
+  function surfaceTop(mask, col, from = 8) {
+    for (let y = from; y < H; y++) if (mask[y * W + col]) return y;
+    return -1;
+  }
+  class Plato {
+    constructor() { this.reset(); this.exits = 0; this.goal = null; this.goalStuck = 0; this.lastBlocked = false; }
+    reset() { this.x = 20; this.y = 4; this.rx = 0; this.ry = 0; this.vx = 0; this.vy = 0; this.ground = false; this.co = 0; this.buf = 0; this.lift = 0; }
+    spawn(mask) {
+      // first flat-ish floor from the left: neighbors within 3px of the same height
+      for (let c = 12; c < W - 18; c += 2) {
+        const t = surfaceTop(mask, c + 3, 4);
+        if (t < 20 || t > H - 3) continue;
+        const a = surfaceTop(mask, c - 4, 4), b = surfaceTop(mask, c + 10, 4);
+        if (a < 0 || b < 0 || Math.abs(a - t) > 3 || Math.abs(b - t) > 3) continue;
+        if (!solidAt(mask, c, t - P.size - 1)) { this.reset(); this.x = c; this.y = t - P.size - 1; return; }
+      }
+      this.reset();
+    }
+    moveX(mask, amt) {
+      this.rx += amt; let m = Math.round(this.rx); this.rx -= m; const s = Math.sign(m); let blocked = false;
+      while (m) {
+        if (!solidAt(mask, this.x + s, this.y)) { this.x += s; }
+        else {
+          let ok = false;
+          for (let k = 1; k <= P.stepUp; k++) if (!solidAt(mask, this.x + s, this.y - k)) { this.x += s; this.y -= k; ok = true; break; }
+          if (!ok) { this.vx = 0; this.rx = 0; blocked = true; break; }
+        }
+        m -= s;
+      }
+      return blocked;
+    }
+    moveY(mask, amt) {
+      this.ry += amt; let m = Math.round(this.ry); this.ry -= m; const s = Math.sign(m);
+      while (m) {
+        if (!solidAt(mask, this.x, this.y + s)) { this.y += s; m -= s; }
+        else { if (s > 0) this.ground = true; this.vy = 0; this.ry = 0; break; }
+      }
+    }
+    step(mask, inp) {
+      // the world moved: if shadow grew into Plato, lift him out (turntable = elevator)
+      this.lift = 0;
+      if (solidAt(mask, this.x, this.y)) {
+        let freed = false;
+        for (let k = 1; k <= P.depen; k++) if (!solidAt(mask, this.x, this.y - k)) { this.y -= k; this.lift = k; this.vy = Math.min(this.vy, 0); freed = true; break; }
+        if (!freed) for (let k = 1; k <= 6 && !freed; k++) for (const s of [-1, 1]) if (!solidAt(mask, this.x + s * k, this.y)) { this.x += s * k; freed = true; break; }
+        if (!freed) { this.spawn(mask); return 'crushed'; }
+      }
+      const wasGround = this.ground;
+      this.ground = solidAt(mask, this.x, this.y + 1);
+      this.co = this.ground ? P.coyote : Math.max(0, this.co - 1);
+      if (inp.jumpPressed) this.buf = P.buffer; else this.buf = Math.max(0, this.buf - 1);
+      const target = (inp.right - inp.left) * P.run;
+      this.vx += Math.max(-P.accel, Math.min(P.accel, target - this.vx));
+      if (this.buf && this.co) { this.vy = P.jump; this.buf = 0; this.co = 0; this.ground = false; }
+      if (!inp.jumpHeld && this.vy < -1.2) this.vy = -1.2;     // variable jump
+      this.vy = Math.min(P.maxFall, this.vy + P.gravity);
+      this.lastBlocked = this.moveX(mask, this.vx);
+      this.ground = false;
+      this.moveY(mask, this.vy);
+      // snap down small slopes
+      if (wasGround && !this.ground && this.vy >= 0) for (let k = 1; k <= 3; k++) if (solidAt(mask, this.x, this.y + k + 1) && !solidAt(mask, this.x, this.y + k)) { this.y += k; this.ground = true; this.vy = 0; break; }
+      if (this.y > H + 10) { this.spawn(mask); return 'fell'; }
+      // goal
+      if (!this.goal) this.pickGoal(mask);
+      if (this.goal) {
+        if (solidAt(mask, this.goal.x, this.goal.y, 6, 6)) { if (++this.goalStuck > 40) this.pickGoal(mask); } else this.goalStuck = 0;
+        if (Math.abs(this.goal.x - this.x) < 7 && Math.abs(this.goal.y - this.y) < 7) { this.exits++; this.pickGoal(mask); return 'exit'; }
+      }
+      return null;
+    }
+    pickGoal(mask, rng = Math.random) {
+      let best = null;
+      for (let i = 0; i < 80; i++) {
+        const c = 14 + Math.floor(rng() * (W - 28)), t = surfaceTop(mask, c + 3, 6);
+        if (t < 24 || t > H - 4) continue;
+        if (solidAt(mask, c, t - 16, 6, 14)) continue;
+        const g = { x: c, y: t - 9 }, d = Math.abs(g.x - this.x);
+        if (!best || (d > 70 && best.d <= 70)) best = { ...g, d };
+        if (d > 70) break;
+      }
+      this.goal = best ? { x: best.x, y: best.y } : null; this.goalStuck = 0;
+    }
+  }
+  // idle pilot: walks, hops what blocks it, turns around when stuck
+  class Pilot {
+    constructor() { this.dir = 1; this.stuck = 0; this.t = 0; }
+    input(p) {
+      this.t++;
+      if (p.lastBlocked) this.stuck++; else this.stuck = Math.max(0, this.stuck - 1);
+      if (this.stuck > 50) { this.dir *= -1; this.stuck = 0; }
+      if (p.goal && this.t % 240 === 0) this.dir = Math.sign(p.goal.x - p.x) || this.dir;
+      const jump = (p.lastBlocked && p.ground) || (this.t % 97 === 0);
+      return { left: this.dir < 0 ? 1 : 0, right: this.dir > 0 ? 1 : 0, jumpPressed: jump, jumpHeld: jump || p.vy < 0 };
+    }
+  }
+
+  /* ---------- input: keyboard + touch + gamepad ---------- */
+  class Input {
+    constructor() { this.k = new Set(); this.prevJump = false; this.touch = { left: 0, right: 0, jump: 0 }; this.lastHuman = -1e9; }
+    down(code) { this.k.add(code); this.lastHuman = performance.now(); }
+    up(code) { this.k.delete(code); }
+    read() {
+      let left = this.k.has('ArrowLeft') || this.k.has('KeyA') || this.touch.left;
+      let right = this.k.has('ArrowRight') || this.k.has('KeyD') || this.touch.right;
+      let jump = this.k.has('Space') || this.k.has('ArrowUp') || this.k.has('KeyW') || this.touch.jump;
+      try {
+        const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+        for (const g of pads) {
+          if (!g) continue;
+          const ax = g.axes[0] || 0;
+          const gl = ax < -0.35 || (g.buttons[14] && g.buttons[14].pressed), gr = ax > 0.35 || (g.buttons[15] && g.buttons[15].pressed);
+          const gj = (g.buttons[0] && g.buttons[0].pressed) || (g.buttons[12] && g.buttons[12].pressed);
+          if (gl || gr || gj) this.lastHuman = performance.now();
+          left = left || gl; right = right || gr; jump = jump || gj;
+        }
+      } catch (e) { }
+      const jp = jump && !this.prevJump; this.prevJump = jump;
+      return { left: left ? 1 : 0, right: right ? 1 : 0, jumpPressed: jp, jumpHeld: !!jump };
+    }
+    idleFor() { return performance.now() - this.lastHuman; }
+  }
+
+  /* ---------- mask → "what the machine sees" image ---------- */
+  function machineImage(mask, img, pal) {
+    const d = img.data;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = y * W + x, o = i * 4; let c;
+      if (mask[i]) c = (y > 0 && !mask[i - W]) ? pal.top : pal.solid;
+      else c = ((x % UNIT === 0) || (y % UNIT === 0)) ? pal.grid : pal.empty;
+      d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255;
+    }
+    return img;
+  }
+
+  return { W, H, UNIT, HW, wallPx: (x, y, k = 1) => toPx([x, y], k), P, hull, box, defaultScene, randomBlock, shadowPolys, fillPolys, footprints, toWorld, project, homography, otsu, Vision, Plato, Pilot, Input, machineImage, solidAt };
+})();
+
+</script>
+<script>
+(() => {
+  const { W, H } = CAVE;
+  const $ = id => document.getElementById(id);
+  const stage = $('stage'), sctx = stage.getContext('2d');
+  const SW = 960, SH = 540, K = SW / W;
+  const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+  const low = mk(W, H), lctx = low.getContext('2d', { willReadFrequently: true });
+  const mach = mk(W, H), mctx = mach.getContext('2d'), machImg = mctx.createImageData(W, H);
+  const colr = mk(W, H), cctx = colr.getContext('2d');
+  const srcC = mk(640, 360), srcX = srcC.getContext('2d', { willReadFrequently: true });
+  const plan = $('plan'), pctx = plan.getContext('2d');
+
+  const S = {
+    mode: 'sim', scene: CAVE.defaultScene(), spin: true, wipe: 0.62,
+    vision: new CAVE.Vision(), plato: new CAVE.Plato(), pilot: new CAVE.Pilot(), input: new CAVE.Input(),
+    src: null, srcKind: null, pins: null, pinning: false, pinPts: [], dragWipe: false, dragLamp: false,
+    frame: 0, fpsT: performance.now(), fpsN: 0, fps: 0, event: null, eventT: 0, focused: false, anim: null,
+  };
+  const PAL = { empty: [14, 12, 22], grid: [24, 21, 36], solid: [52, 46, 96], top: [88, 219, 106] };
+  const DST = [[0, 0], [W, 0], [W, H], [0, H]];
+
+  /* ---------- sim render ---------- */
+  function renderSimLow() {
+    lctx.filter = 'none'; lctx.fillStyle = '#ddd5ea'; lctx.fillRect(0, 0, W, H);
+    lctx.filter = 'blur(0.5px)'; lctx.fillStyle = '#2a2457';
+    CAVE.fillPolys(lctx, CAVE.shadowPolys(S.scene, 1)); lctx.filter = 'none';
+    S.vision.ingest(lctx.getImageData(0, 0, W, H), null, null);
+  }
+  function drawWallSim() {
+    const L = S.scene.light, [hx, hy] = CAVE.wallPx(L.x, L.y, K);
+    const g = sctx.createRadialGradient(hx, hy, 20, hx, hy, SW * 0.75);
+    g.addColorStop(0, '#efe9f6'); g.addColorStop(0.55, '#d8cfe6'); g.addColorStop(1, '#9f95b6');
+    sctx.fillStyle = g; sctx.fillRect(0, 0, SW, SH);
+    sctx.save(); sctx.filter = 'blur(1.4px)'; sctx.fillStyle = '#2a2457';
+    CAVE.fillPolys(sctx, CAVE.shadowPolys(S.scene, K)); sctx.restore();
+  }
+  function drawWallFootage() {
+    if (!S.src) { sctx.fillStyle = '#16131d'; sctx.fillRect(0, 0, SW, SH); return; }
+    cctx.putImageData(S.vision.color, 0, 0);
+    sctx.imageSmoothingEnabled = true; sctx.drawImage(colr, 0, 0, SW, SH);
+  }
+  function drawMachine() {
+    CAVE.machineImage(S.vision.mask, machImg, PAL); mctx.putImageData(machImg, 0, 0);
+    sctx.imageSmoothingEnabled = false; sctx.drawImage(mach, 0, 0, SW, SH); sctx.imageSmoothingEnabled = true;
+    const p = S.plato;
+    sctx.strokeStyle = '#58db6a'; sctx.lineWidth = 2; sctx.strokeRect(p.x * K, p.y * K, 6 * K, 6 * K);
+    if (p.goal) { sctx.strokeStyle = '#f2d48a'; sctx.setLineDash([4, 3]); sctx.strokeRect(p.goal.x * K, p.goal.y * K, 6 * K, 6 * K); sctx.setLineDash([]); }
+  }
+  function drawSprites() {
+    const p = S.plato, t = performance.now() / 1000;
+    if (p.goal) {
+      const gx = p.goal.x * K, gy = p.goal.y * K, s = 6 * K, pulse = 2 + Math.sin(t * 4) * 2;
+      sctx.strokeStyle = 'rgba(255,255,255,.95)'; sctx.lineWidth = 2;
+      sctx.strokeRect(gx - pulse, gy - pulse, s + pulse * 2, s + pulse * 2);
+    }
+    sctx.save(); sctx.shadowColor = 'rgba(88,219,106,.8)'; sctx.shadowBlur = 14;
+    sctx.fillStyle = '#58db6a'; sctx.fillRect(p.x * K, p.y * K, 6 * K, 6 * K); sctx.restore();
+  }
+  function drawPinView() {
+    sctx.fillStyle = '#000'; sctx.fillRect(0, 0, SW, SH);
+    const f = fitRect(); sctx.drawImage(srcC, 0, 0, srcC.width, srcC.height, f.x, f.y, f.w, f.h);
+    sctx.fillStyle = '#58db6a'; sctx.strokeStyle = '#58db6a'; sctx.lineWidth = 2;
+    const pts = S.pinPts.map(q => [f.x + q[0] / srcC.width * f.w, f.y + q[1] / srcC.height * f.h]);
+    sctx.beginPath(); pts.forEach((q, i) => i ? sctx.lineTo(q[0], q[1]) : sctx.moveTo(q[0], q[1])); sctx.stroke();
+    pts.forEach(q => { sctx.beginPath(); sctx.arc(q[0], q[1], 7, 0, 7); sctx.fill(); });
+    const names = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
+    banner('Click the ' + names[S.pinPts.length] + ' corner of the wall (' + (S.pinPts.length + 1) + ' of 4)');
+  }
+  function banner(txt) {
+    sctx.font = '500 20px "IBM Plex Mono", monospace'; const w = sctx.measureText(txt).width + 28;
+    sctx.fillStyle = 'rgba(17,15,23,.85)'; sctx.fillRect(SW / 2 - w / 2, 18, w, 40);
+    sctx.fillStyle = '#e8e3f0'; sctx.textAlign = 'center'; sctx.textBaseline = 'middle'; sctx.fillText(txt, SW / 2, 38); sctx.textAlign = 'left';
+  }
+  function fitRect() {
+    const sw = srcC.width, sh = srcC.height, s = Math.min(SW / sw, SH / sh);
+    return { x: (SW - sw * s) / 2, y: (SH - sh * s) / 2, w: sw * s, h: sh * s };
+  }
+  function drawDivider() {
+    const x = S.wipe * SW;
+    sctx.fillStyle = '#ddd5ea'; sctx.fillRect(x - 1, 0, 2, SH);
+    sctx.beginPath(); sctx.arc(x, SH / 2, 13, 0, 7); sctx.fill();
+    sctx.fillStyle = '#2a2457'; sctx.font = '600 13px "IBM Plex Mono", monospace'; sctx.textAlign = 'center'; sctx.textBaseline = 'middle'; sctx.fillText('↔', x, SH / 2 + 1);
+    sctx.font = '500 13px "IBM Plex Mono", monospace'; sctx.textBaseline = 'top';
+    if (S.wipe > 0.2) { sctx.textAlign = 'left'; tag('WALL · what you see', 14, 14, 'left'); }
+    if (S.wipe < 0.8) { tag('MASK · what Plato stands on', SW - 14, 14, 'right'); }
+    sctx.textAlign = 'left';
+  }
+  function tag(t, x, y, al) {
+    const w = sctx.measureText(t).width + 16, bx = al === 'right' ? x - w : x;
+    sctx.fillStyle = 'rgba(17,15,23,.78)'; sctx.fillRect(bx, y, w, 24);
+    sctx.fillStyle = '#e8e3f0'; sctx.textAlign = 'left'; sctx.fillText(t, bx + 8, y + 6);
+  }
+
+  /* ---------- plan view ---------- */
+  const PW = plan.width, PH = plan.height;
+  const PX = 7; const px = x => 30 + (x + PX) / (2 * PX) * (PW - 60);
+  const pz = z => 40 + z / 13.5 * (PH - 70);
+  function drawPlan() {
+    const c = pctx, L = S.scene.light, T = S.scene.table;
+    c.fillStyle = '#110f17'; c.fillRect(0, 0, PW, PH);
+    // beam: lamp to wall edges
+    c.fillStyle = 'rgba(242,212,138,.07)'; c.beginPath(); c.moveTo(px(L.x), pz(L.z)); c.lineTo(px(-CAVE.HW), pz(0)); c.lineTo(px(CAVE.HW), pz(0)); c.closePath(); c.fill();
+    // wall
+    c.fillStyle = '#ddd5ea'; c.fillRect(px(-CAVE.HW), pz(0) - 8, px(CAVE.HW) - px(-CAVE.HW), 8);
+    c.fillStyle = '#9b94ab'; c.font = '500 18px "IBM Plex Mono", monospace'; c.textBaseline = 'top'; c.fillText('WALL', px(-CAVE.HW), pz(0) + 8);
+    // books + turntable
+    c.fillStyle = '#2b2636'; c.fillRect(px(T.x - S.scene.books.w / 2), pz(T.z - S.scene.books.d / 2), px(S.scene.books.w / 2) - px(-S.scene.books.w / 2), pz(S.scene.books.d) - pz(0));
+    c.fillStyle = '#1c1924'; c.strokeStyle = '#4a4360'; c.lineWidth = 2;
+    c.beginPath(); c.ellipse(px(T.x), pz(T.z), px(T.r) - px(0), pz(T.r) - pz(0), 0, 0, 7); c.fill(); c.stroke();
+    const a = S.scene.angle; c.strokeStyle = '#4a4360'; c.beginPath(); c.moveTo(px(T.x), pz(T.z)); c.lineTo(px(T.x + Math.sin(a) * T.r), pz(T.z + Math.cos(a) * T.r)); c.stroke();
+    // pieces
+    for (const f of CAVE.footprints(S.scene)) {
+      c.fillStyle = f.color; c.beginPath(); f.pts.forEach((q, i) => i ? c.lineTo(px(q[0]), pz(q[1])) : c.moveTo(px(q[0]), pz(q[1]))); c.closePath(); c.fill();
+    }
+    // lamp
+    c.save(); c.shadowColor = 'rgba(242,212,138,.9)'; c.shadowBlur = 18; c.fillStyle = '#f2d48a';
+    c.fillRect(px(L.x) - 16, pz(L.z) - 10, 32, 20); c.restore();
+    c.fillStyle = '#9b94ab'; c.fillText('PROJECTOR', px(L.x) - 44, pz(L.z) + 16);
+  }
+
+  /* ---------- loop ---------- */
+  let last = performance.now(), acc = 0;
+  function tick(now) {
+    const dt = Math.min(0.1, (now - last) / 1000); last = now; acc += dt;
+    if (S.anim) { const k = Math.min(1, (now - S.anim.t0) / 700), e = 1 - Math.pow(1 - k, 3); S.scene.angle = S.anim.a0 + (S.anim.a1 - S.anim.a0) * e; if (k >= 1) S.anim = null; syncAngle(); }
+    else if (S.mode === 'sim' && S.spin) { S.scene.angle = (S.scene.angle + dt * 0.14) % (Math.PI * 2); syncAngle(); }
+    // sense
+    if (S.mode === 'sim') renderSimLow();
+    else if (S.src) { grabSource(); if (!S.pinning) S.vision.ingest(srcX.getImageData(0, 0, srcC.width, srcC.height), DST, S.pins); }
+    // act (fixed 60 Hz)
+    const human = S.input.idleFor() < 6000;
+    while (acc >= 1 / 60) {
+      acc -= 1 / 60;
+      if (S.mode === 'foot' && (!S.src || S.pinning)) break;
+      const inp = human ? S.input.read() : (S.input.read(), S.pilot.input(S.plato));
+      const ev = S.plato.step(S.vision.mask, inp);
+      if (ev) { S.event = ev; S.eventT = now; }
+    }
+    // draw
+    if (S.pinning && S.src) drawPinView();
+    else {
+      if (S.mode === 'sim') drawWallSim(); else drawWallFootage();
+      if (S.mode === 'sim' || S.src) drawSprites();
+      sctx.save(); sctx.beginPath(); sctx.rect(S.wipe * SW, 0, SW, SH); sctx.clip(); drawMachine(); sctx.restore();
+      drawDivider();
+      if (S.mode === 'foot' && !S.src) banner('Load a photo or video of a shadow wall →');
+      if (S.event && now - S.eventT < 1100) { const m = { exit: 'Exit found', fell: 'Fell. Respawn.', crushed: 'Crushed. Respawn.' }[S.event]; if (m) banner(m); }
+    }
+    if (S.mode === 'sim' && S.frame % 2 === 0) drawPlan();
+    if (S.frame % 4 === 0) drawStrip();
+    if (S.frame % 6 === 0) readout(human);
+    S.frame++; S.fpsN++;
+    if (now - S.fpsT > 1000) { S.fps = S.fpsN * 1000 / (now - S.fpsT); S.fpsN = 0; S.fpsT = now; }
+    requestAnimationFrame(tick);
+  }
+  function readout(human) {
+    const p = S.plato, v = S.vision;
+    $('r-th').textContent = v.thresh + (v.auto ? ' auto' : '');
+    $('r-sol').textContent = (v.solidFraction() * 100).toFixed(1) + '%';
+    $('r-xy').textContent = p.x + ', ' + p.y;
+    $('r-st').textContent = p.lift ? 'lifted ' + p.lift + 'px' : (p.ground ? 'grounded' : 'airborne');
+    $('r-ex').textContent = p.exits;
+    $('r-fps').textContent = S.fps.toFixed(0) + ' fps';
+    $('p3t').textContent = v.thresh;
+    $('chip').innerHTML = human ? '<i>You’re driving</i> · ← → Space' : (S.focused ? 'Press ← → or Space to take over' : 'Autopilot · <i>click the wall</i>, then ← → Space');
+  }
+  function syncAngle() { const d = Math.round(((S.scene.angle * 180 / Math.PI) % 360 + 360) % 360); $('s-ang').value = d; $('o-ang').textContent = d + '°'; }
+
+  /* ---------- pipeline strip ---------- */
+  const strip = [1, 2, 3, 4].map(i => $('p' + i).getContext('2d'));
+  const sImg = [0, 1, 2, 3].map(() => new ImageData(W, H));
+  function drawStrip() {
+    const v = S.vision, a = sImg[0].data, b = sImg[1].data, c = sImg[2].data;
+    if (S.mode === 'sim') strip[0].drawImage(low, 0, 0); else strip[0].putImageData(v.color, 0, 0);
+    for (let i = 0; i < W * H; i++) {
+      const o = i * 4, y = v.lum[i], m = v.mask[i] ? 0 : 255;
+      b[o] = b[o + 1] = b[o + 2] = y; b[o + 3] = 255;
+      c[o] = c[o + 1] = c[o + 2] = m; c[o + 3] = 255;
+    }
+    strip[1].putImageData(sImg[1], 0, 0); strip[2].putImageData(sImg[2], 0, 0);
+    strip[3].putImageData(CAVE.machineImage(v.mask, sImg[3], PAL), 0, 0);
+    const p = S.plato; strip[3].fillStyle = '#58db6a'; strip[3].fillRect(p.x, p.y, 6, 6);
+  }
+
+  /* ---------- footage ---------- */
+  function grabSource() {
+    const s = S.src, sw = s.videoWidth || s.naturalWidth, sh = s.videoHeight || s.naturalHeight;
+    if (!sw) return;
+    const w = Math.min(640, sw), h = Math.round(w * sh / sw);
+    if (srcC.width !== w || srcC.height !== h) { srcC.width = w; srcC.height = h; }
+    srcX.drawImage(s, 0, 0, w, h);
+  }
+  function loadFile(file) {
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    if (file.type.startsWith('video')) {
+      const v = document.createElement('video'); v.muted = true; v.loop = true; v.playsInline = true; v.src = url;
+      v.onloadeddata = () => { S.src = v; S.pins = null; v.play().catch(() => { }); S.plato.spawn(S.vision.mask); };
+    } else {
+      const im = new Image(); im.onload = () => { S.src = im; S.pins = null; setTimeout(() => S.plato.spawn(S.vision.mask), 60); }; im.src = url;
+    }
+    setMode('foot');
+  }
+
+  /* ---------- controls ---------- */
+  function setMode(m) {
+    S.mode = m; $('m-sim').setAttribute('aria-pressed', m === 'sim'); $('m-foot').setAttribute('aria-pressed', m === 'foot');
+    $('g-sim').hidden = m !== 'sim'; $('g-foot').hidden = m !== 'foot';
+    S.vision.auto = m === 'sim' ? true : $('c-auto').checked;
+    S.vision.invert = m === 'sim' ? false : $('c-inv').checked;
+    S.pinning = false;
+    if (m === 'sim') setTimeout(() => S.plato.spawn(S.vision.mask), 40);
+  }
+  $('m-sim').onclick = () => setMode('sim');
+  $('m-foot').onclick = () => setMode('foot');
+  $('s-ang').oninput = e => { S.spin = false; $('c-spin').checked = false; S.scene.angle = e.target.value * Math.PI / 180; $('o-ang').textContent = e.target.value + '°'; };
+  $('c-spin').onchange = e => S.spin = e.target.checked;
+  $('s-ly').oninput = e => { S.scene.light.y = +e.target.value; $('o-ly').textContent = (+e.target.value).toFixed(2); };
+  $('s-lz').oninput = e => { S.scene.light.z = +e.target.value; $('o-lz').textContent = (+e.target.value).toFixed(1); };
+  $('b-add').onclick = () => S.scene.pieces.push(CAVE.randomBlock());
+  $('b-pop').onclick = () => { if (S.scene.pieces.length) S.scene.pieces.pop(); };
+  $('b-reset').onclick = () => { S.scene = CAVE.defaultScene(); syncLamp(); S.plato.spawn(S.vision.mask); };
+  function syncLamp() { const L = S.scene.light; $('s-ly').value = L.y; $('o-ly').textContent = L.y.toFixed(2); $('s-lz').value = L.z; $('o-lz').textContent = L.z.toFixed(1); }
+  $('f-src').onchange = e => loadFile(e.target.files[0]);
+  $('b-pin').onclick = () => { if (!S.src) return; S.pinning = true; S.pinPts = []; };
+  $('b-unpin').onclick = () => { S.pins = null; S.pinning = false; };
+  $('s-th').oninput = e => { S.vision.thresh = +e.target.value; $('o-th').textContent = e.target.value; $('c-auto').checked = false; S.vision.auto = false; };
+  $('c-auto').onchange = e => S.vision.auto = e.target.checked;
+  $('c-inv').onchange = e => S.vision.invert = e.target.checked;
+  $('c-desp').onchange = e => S.vision.despeckle = e.target.checked;
+  $('s-wipe').oninput = e => { S.wipe = e.target.value / 100; $('o-wipe').textContent = e.target.value + '%'; };
+
+  // operators (step 05)
+  document.querySelectorAll('[data-op]').forEach(b => b.onclick = () => {
+    if (S.mode !== 'sim') setMode('sim');
+    const sc = S.scene, op = b.dataset.op;
+    if (op === 'rot') { S.spin = false; $('c-spin').checked = false; S.anim = { a0: sc.angle, a1: sc.angle + Math.PI / 2, t0: performance.now() }; }
+    if (op === 'closer') { sc.light.z = Math.max(6.5, sc.light.z - 1.6); syncLamp(); }
+    if (op === 'higher') { sc.light.y = Math.min(4.6, sc.light.y + 0.6); syncLamp(); }
+    if (op === 'block') sc.pieces.push(CAVE.randomBlock());
+    if (op === 'dowel') { const a = Math.random() * 6.28, r = 1.4; sc.pieces.push({ name: 'dowel', color: '#c9a96a', verts: CAVE.hull ? rodPiece(a, r) : [] }); }
+    if (op === 'hand') sc.pieces.push({ name: 'hand', color: '#d9a58a', verts: CAVE.box(0.2, 1.1, 1.7, 1.5, 0.35, 0.5) });
+    $('stagewrap').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+  });
+  function rodPiece(a, r) {
+    const p0 = [Math.cos(a) * r, 0.05, Math.sin(a) * r], p1 = [-Math.cos(a) * 0.3, 1.6, -Math.sin(a) * 0.3];
+    const v = []; for (const e of [p0, p1]) for (const dx of [-0.05, 0.05]) for (const dz of [-0.05, 0.05]) v.push([e[0] + dx, e[1], e[2] + dz]); return v;
+  }
+
+  // stage pointer: drag divider, pin corners, focus
+  const sw = $('stagewrap');
+  function toStage(e) { const r = stage.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * SW, (e.clientY - r.top) / r.height * SH]; }
+  sw.addEventListener('pointerdown', e => {
+    const [x, y] = toStage(e);
+    if (S.pinning && S.src) {
+      const f = fitRect(); const u = (x - f.x) / f.w * srcC.width, v = (y - f.y) / f.h * srcC.height;
+      if (u >= 0 && v >= 0 && u <= srcC.width && v <= srcC.height) { S.pinPts.push([u, v]); if (S.pinPts.length === 4) { S.pins = S.pinPts.slice(); S.pinning = false; setTimeout(() => S.plato.spawn(S.vision.mask), 60); } }
+      return;
+    }
+    if (Math.abs(x - S.wipe * SW) < 40) { S.dragWipe = true; sw.setPointerCapture(e.pointerId); }
+  });
+  sw.addEventListener('pointermove', e => { if (!S.dragWipe) return; const [x] = toStage(e); S.wipe = Math.max(0, Math.min(1, x / SW)); $('s-wipe').value = Math.round(S.wipe * 100); $('o-wipe').textContent = Math.round(S.wipe * 100) + '%'; });
+  sw.addEventListener('pointerup', () => S.dragWipe = false);
+  sw.addEventListener('focus', () => S.focused = true);
+  sw.addEventListener('blur', () => S.focused = false);
+  sw.addEventListener('keydown', e => {
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code)) e.preventDefault();
+    S.input.down(e.code);
+  });
+  sw.addEventListener('keyup', e => S.input.up(e.code));
+  sw.addEventListener('dragover', e => e.preventDefault());
+  sw.addEventListener('drop', e => { e.preventDefault(); loadFile(e.dataTransfer.files[0]); });
+  // touch pad
+  for (const [id, key] of [['tl', 'left'], ['tr', 'right'], ['tj', 'jump']]) {
+    const b = $(id);
+    b.addEventListener('pointerdown', e => { e.preventDefault(); S.input.touch[key] = 1; S.input.lastHuman = performance.now(); });
+    for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => S.input.touch[key] = 0);
+  }
+  // plan: drag lamp
+  function toPlan(e) { const r = plan.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * PW, (e.clientY - r.top) / r.height * PH]; }
+  plan.addEventListener('pointerdown', e => { const [x, y] = toPlan(e), L = S.scene.light; if (Math.hypot(x - px(L.x), y - pz(L.z)) < 50) { S.dragLamp = true; plan.setPointerCapture(e.pointerId); plan.style.cursor = 'grabbing'; } });
+  plan.addEventListener('pointermove', e => {
+    if (!S.dragLamp) return; const [x, y] = toPlan(e), L = S.scene.light;
+    L.x = Math.max(-4, Math.min(4, (x - 30) / (PW - 60) * 2 * PX - PX)); L.z = Math.max(6.5, Math.min(13, (y - 40) / (PH - 70) * 13.5)); syncLamp();
+  });
+  plan.addEventListener('pointerup', () => { S.dragLamp = false; plan.style.cursor = 'grab'; });
+
+  /* ---------- field notes (this browser only) ---------- */
+  const NK = 'cave-rig-notes';
+  let notes = {}; try { notes = JSON.parse(localStorage.getItem(NK) || '{}'); } catch (e) { }
+  for (let i = 1; i <= 6; i++) {
+    const t = $('n' + i); t.value = notes['n' + i] || '';
+    t.addEventListener('input', () => { notes['n' + i] = t.value; try { localStorage.setItem(NK, JSON.stringify(notes)); } catch (e) { } });
+  }
+  async function copy(text, btn) {
+    const old = btn.textContent;
+    try { await navigator.clipboard.writeText(text); btn.textContent = 'Copied'; }
+    catch (e) { const r = document.createRange(); r.selectNodeContents($('json')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'Selected · press ⌘C'; }
+    setTimeout(() => btn.textContent = old, 1600);
+  }
+  $('b-notes').onclick = e => {
+    const prompts = [...document.querySelectorAll('.note p')].map(p => p.textContent);
+    const out = { manual: 'The Cave Rig', notes: prompts.map((q, i) => ({ step: i + 1, prompt: q, answer: ($('n' + (i + 1)).value || '').trim() })) };
+    copy(JSON.stringify(out, null, 2), e.target);
+  };
+
+  /* ---------- spec ---------- */
+  const P = CAVE.P;
+  const SPEC = {
+    technique: 'real-shadow platformer (projector-camera loop)',
+    after: { work: 'Plato', artist: 'Tee Ken Ng', source: 'https://www.tiktok.com/t/ZPLRrsvFs/' },
+    provenance: {
+      status: 'reconstructed',
+      basis: ['one video frame', 'caption: "Using real shadows to make a video game. You control Plato, a little gre…"', "Ng's earlier Godot + MadMapper projection game (80.lv): invisible colliders + player sprite"],
+      unverified: ['camera-detected collision vs hand-authored colliders', 'engine', 'controller', 'whether the projector is the shadow light'],
+    },
+    core_idea: 'The level is the set of wall pixels the projector cannot reach. One bit per pixel: dark = solid.',
+    rig: {
+      projector: { roles: ['key light that casts the level', 'display for sprite and goal'], placement: 'square to wall', consequence: 'sprite is light, so it only renders on lit wall; physics keeps it out of solid pixels → always visible' },
+      camera: { placement: 'beside projector lens (minimize parallax)', lock: ['exposure', 'white_balance', 'focus'], fps: 30 },
+      stage: { base: 'lazy susan on a book stack', objects: ['blocks', 'half-round caps', 'dowels', 'hands'], prefer: 'convex shapes' },
+      room: { wall: 'pale, matte', ambient: 'dark' },
+    },
+    raster: { width: W, height: H, scene_unit_px: CAVE.UNIT },
+    pipeline: [
+      { stage: 'capture', out: 'RGB frame' },
+      { stage: 'warp', op: 'homography', from: 'camera quad (4 clicked points)', to: `projector raster ${W}x${H}`, solve: '8x8 linear system (DLT, h33 = 1)' },
+      { stage: 'luminance', op: 'Y = (77R + 150G + 29B) >> 8' },
+      { stage: 'threshold', op: 'Otsu, or manual t ∈ [0,255]', out: 'mask[x,y] = Y < t' },
+      { stage: 'clean', op: '3x3 majority vote (≥5 of 9)', optional: true },
+      { stage: 'physics', op: 'pixel-AABB platformer on mask', params: { player_px: P.size, gravity: P.gravity, max_fall: P.maxFall, run: P.run, accel: P.accel, jump_velocity: P.jump, step_up_px: P.stepUp, depenetrate_px: P.depen, coyote_frames: P.coyote, jump_buffer_frames: P.buffer, tick_hz: 60 } },
+      { stage: 'render', target: 'projector', layers: ['lit field', 'sprite', 'goal outline'], constraint: 'every projected pixel brighter than t; dark UI reads as floor' },
+    ],
+    calibration: { markers: 4, marker_inset_px: 8, order: ['top-left', 'top-right', 'bottom-right', 'bottom-left'], redo_when: ['camera moves', 'projector moves', 'zoom changes'], free: ['turntable', 'objects', 'hands'] },
+    shadow_math: { model: 'point light L, wall plane z = 0', projection: 'S = L + (Lz / (Lz − Pz)) · (P − L)', silhouette: 'convex hull of projected vertices per convex solid; level = union' },
+    level_operators: [
+      { op: 'rotate turntable', effect: 'continuous geometry rewrite; floors become walls' },
+      { op: 'lamp closer', effect: 'magnification Lz/(Lz−Pz) rises; level scales up' },
+      { op: 'lamp higher', effect: 'shadows drop on the wall' },
+      { op: 'stack', effect: 'towers, ledges, overhangs' },
+      { op: 'lean dowel', effect: 'ramp or beam' },
+      { op: 'hand', effect: 'live platform or crusher' },
+    ],
+    rules_that_set_genre: { shadow_grows_into_player: `lift up to ${P.depen}px (elevator); else nudge sideways 6px; else respawn`, fall_off_bottom: 'respawn on leftmost floor', goal: 'random floor column ≥70px away; re-pick if buried for 40 ticks' },
+    failure_modes: [
+      { symptom: 'floors flicker', cause: 'camera auto-exposure', fix: 'lock exposure' },
+      { symptom: 'Plato floats or sinks off the shadow', cause: 'stale calibration or parallax', fix: 'recalibrate; move camera closer to lens' },
+      { symptom: 'ghost floors', cause: 'ambient light or wall texture', fix: 'darken room, adjust t, enable despeckle' },
+      { symptom: 'UI becomes terrain', cause: 'dark pixels projected', fix: 'project only bright pixels' },
+      { symptom: 'Plato lags the level', cause: 'loop latency > ~100ms (estimate)', fix: 'lower camera resolution; keep raster small' },
+    ],
+    controls: { keyboard: ['←/A', '→/D', 'Space/↑/W'], gamepad: ['left stick or d-pad', 'A / button 0'], touch: ['◀', 'Jump', '▶'] },
+  };
+  function hi(json) {
+    return json.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))
+      .replace(/("(?:[^"\\]|\\.)*")(\s*:)?|\b(-?\d+(?:\.\d+)?)\b/g, (m, s, colon, n) => s ? (colon ? `<span class="k">${s}</span>${colon}` : `<span class="s">${s}</span>`) : `<span class="n">${n}</span>`);
+  }
+  const specText = JSON.stringify(SPEC, null, 2);
+  $('json').innerHTML = hi(specText);
+  $('b-copy').onclick = e => copy(specText, e.target);
+
+  renderSimLow(); S.plato.spawn(S.vision.mask); syncLamp();
+  requestAnimationFrame(tick);
+})();
+</script>
+
+</body></html>

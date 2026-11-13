@@ -7,11 +7,14 @@
 (function () {
   'use strict';
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-  const shown = (w, el) => { const r = el.getBoundingClientRect(), s = w.getComputedStyle(el); return r.width > 4 && r.height > 4 && s.visibility !== 'hidden' && s.display !== 'none'; };
+  const shown = (w, el) => { const r = el.getBoundingClientRect(); if (r.width < 4 || r.height < 4 || r.right < 0 || r.left > w.innerWidth) return false;
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) { const s = w.getComputedStyle(n); if (s.visibility === 'hidden' || s.display === 'none' || +s.opacity < 0.05) return false; } return true; };
   document.querySelectorAll('.cell').forEach(setup);
 
   function setup(cell) {
     const f = cell.querySelector('iframe'); const L = JSON.parse(cell.dataset.l || '{}');
+    /* a window cut to the figure's own rect: nothing around the figure on its page shows */
+    const win = document.createElement('div'); win.className = 'win'; cell.insertBefore(win, f); win.appendChild(f);
     let w = null, d = null, el = null, placed = false;
     f.addEventListener('load', async () => {
       try { w = f.contentWindow; d = f.contentDocument; } catch (e) { return fail('cross-origin'); }
@@ -27,7 +30,7 @@
       // a figure on a slide: bring the slide forward
       if (L.slide >= 0 && !shown(w, el)) {
         if (L.sid) { try { w.location.hash = '#' + L.sid; } catch (e) {} await sleep(500); }
-        for (let k = 0; k < 40 && !shown(w, el); k++) { const ev = { key: 'ArrowRight', code: 'ArrowRight', keyCode: 39, which: 39, bubbles: true }; d.dispatchEvent(new w.KeyboardEvent('keydown', ev)); w.dispatchEvent(new w.KeyboardEvent('keydown', ev)); await sleep(260); }
+        for (let k = 0; k < 40 && !shown(w, el); k++) { const ev = { key: 'ArrowRight', code: 'ArrowRight', keyCode: 39, which: 39, bubbles: true }; d.dispatchEvent(new w.KeyboardEvent('keydown', ev)); /* bubbles to window: one step per press */ await sleep(260); }
       }
       // page chrome that floats over everything (fixed or sticky) is hidden, unless it is the figure or holds it
       for (const n of d.body.querySelectorAll('*')) { const p = w.getComputedStyle(n).position; if ((p === 'fixed' || p === 'sticky') && !n.contains(el) && !el.contains(n)) n.style.setProperty('visibility', 'hidden', 'important'); }
@@ -45,8 +48,9 @@
       if (top < 0 || bot > vh) { w.scrollTo(0, w.scrollY + top - Math.max(0, (vh - (bot - top)) / 2)); r = el.getBoundingClientRect(); }
       const x0 = r.left + r.width * c[0], y0 = r.top + r.height * c[1], rw = r.width * (c[2] - c[0]), rh = r.height * (c[3] - c[1]);
       if (rw < 2 || rh < 2) return;
-      const cw = cell.clientWidth, ch = cell.clientHeight, s = Math.min(cw / rw, ch / rh);
-      f.style.transform = `translate(${(cw - rw * s) / 2 - x0 * s}px,${(ch - rh * s) / 2 - y0 * s}px) scale(${s})`;
+      const cw = cell.clientWidth, ch = cell.clientHeight, s = Math.min(cw / rw, ch / rh), ww = rw * s, wh = rh * s;
+      Object.assign(win.style, { left: (cw - ww) / 2 + 'px', top: (ch - wh) / 2 + 'px', width: ww + 'px', height: wh + 'px' });
+      f.style.transform = `translate(${-x0 * s}px,${-y0 * s}px) scale(${s})`;
       placed = true;
     }
     function fail(why) { cell.classList.add('still'); cell.title = 'Still: ' + why; f.remove(); }

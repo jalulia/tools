@@ -1,0 +1,818 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Garden Ink Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f4f6f3; --plate:#fbfcfa; --ink:#18211c; --ink-2:#5a655e; --ink-3:#8b958e;
+  --line:#e2e8e3; --line-2:#cfd8d1; --canon:#3d7d8f; --bound:#b5793a;
+  --f-disp:"Space Grotesk",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-disp);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1220px;margin:0 auto;padding:34px 24px 90px}
+
+.mast{border-bottom:1px solid var(--line-2);padding-bottom:16px}
+.mast .wm{font-family:var(--f-mono);font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-3)}
+.mast h1{font-weight:500;font-size:27px;letter-spacing:-.01em;margin:8px 0 4px}
+.mast p{max-width:700px;color:var(--ink-2);font-size:13px;line-height:1.6;margin:0}
+.mast p em{font-style:normal;color:var(--ink);border-bottom:1px solid var(--line-2)}
+
+/* ontology diagram */
+.onto{display:flex;gap:9px;margin:16px 0 4px;flex-wrap:wrap}
+.olayer{flex:1;min-width:150px;border:1px solid var(--line-2);border-radius:5px;background:var(--plate);padding:11px 12px;position:relative}
+.olayer h4{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin:0 0 5px}
+.olayer p{font-size:11px;line-height:1.45;color:var(--ink-2);margin:0}
+.otag{position:absolute;top:10px;right:11px;font-family:var(--f-mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;border-radius:9px}
+.otag.canon{color:var(--canon);border:1px solid var(--canon)}
+.otag.bound{color:var(--bound);border:1px solid var(--bound)}
+
+/* controls — grouped by job */
+.panels{position:sticky;top:0;z-index:30;background:rgba(244,246,243,.96);backdrop-filter:blur(7px);
+  border-bottom:1px solid var(--line-2);margin:20px -24px 26px;padding:15px 24px;display:flex;flex-wrap:wrap;gap:18px 30px;align-items:flex-start}
+.panel{display:flex;flex-direction:column;gap:11px}
+.panel > .plabel{display:flex;align-items:center;gap:8px;font-family:var(--f-disp);font-size:13px;font-weight:600;letter-spacing:-.01em;color:var(--ink)}
+.plabel .ptag{font-family:var(--f-mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;padding:2px 6px;border-radius:9px}
+.plabel .ptag.canon{color:var(--canon);border:1px solid var(--canon)}
+.plabel .ptag.bound{color:var(--bound);border:1px solid var(--bound)}
+.plabel .psub{font-family:var(--f-mono);font-size:8.5px;font-weight:400;letter-spacing:.03em;color:var(--ink-3)}
+.prow{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.pgrp{display:flex;flex-direction:column;gap:7px;padding-right:18px;border-right:1px dotted var(--line-2)}
+.pgrp:last-child{border-right:0;padding-right:0}
+.pgrp .gcap{font-family:var(--f-mono);font-size:7.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3)}
+.pgrp .grow{display:flex;gap:13px;align-items:flex-end}
+.ctl{display:flex;flex-direction:column;gap:5px}
+.ctl label{font-family:var(--f-mono);font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2)}
+.ctl .val{color:var(--ink);font-weight:500}
+.ctl input[type=range]{width:98px;accent-color:var(--canon);height:16px}
+.seg{display:flex;border:1px solid var(--line-2);border-radius:5px;overflow:hidden}
+.seg button{font-family:var(--f-mono);font-size:9.5px;padding:6px 9px;border:0;background:var(--plate);color:var(--ink-2);cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:var(--ink);color:#fff}
+.tgl,.btn{font-family:var(--f-mono);font-size:9.5px;padding:6px 11px;border:1px solid var(--line-2);border-radius:5px;background:var(--plate);color:var(--ink-2);cursor:pointer}
+.tgl.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn{color:var(--ink)} .btn:hover{border-color:var(--ink)}
+.btn.key{border-color:var(--canon);color:var(--canon);font-weight:500}
+.btn.key:hover{background:var(--canon);color:#fff;border-color:var(--canon)}
+
+.shead{font-family:var(--f-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+  margin:34px 0 12px;display:flex;align-items:center;gap:12px}
+.shead::after{content:"";flex:1;height:1px;background:var(--line)}
+.shead .tag{font-family:var(--f-mono);font-size:8px;letter-spacing:.1em;padding:2px 7px;border-radius:9px}
+.shead .tag.canon{color:var(--canon);border:1px solid var(--canon)}
+.shead .tag.bound{color:var(--bound);border:1px solid var(--bound)}
+.shead .note{letter-spacing:.02em;text-transform:none;color:var(--ink-3);font-size:10px}
+.shead .note a{color:var(--ink);border-bottom:1px solid var(--line-2);cursor:pointer}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:13px}
+.grid.wide{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.grid.g3{grid-template-columns:repeat(auto-fill,minmax(206px,1fr))}
+.plate{border:1px solid var(--line-2);border-radius:4px;background:var(--plate);overflow:hidden;display:flex;flex-direction:column}
+.plate .art{background:var(--paper);display:flex;align-items:center;justify-content:center;padding:12px 8px;min-height:186px}
+.plate .art svg{display:block;width:100%;height:auto;max-width:146px}
+.plate.wide .art svg{max-width:246px}
+.cap{padding:8px 11px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.cap b{font-family:var(--f-mono);font-size:9.5px;letter-spacing:.05em;color:var(--ink);font-weight:500;text-transform:lowercase}
+.cap span{font-family:var(--f-mono);font-size:8px;color:var(--ink-3);letter-spacing:.03em;text-align:right;line-height:1.4}
+.cap.bad b{color:#b5462f} .cap.good b{color:#3f7d4a}
+
+/* encoding matrix */
+.matrix{border:1px solid var(--line-2);border-radius:5px;overflow:hidden;background:var(--plate)}
+.mrow{display:grid;grid-template-columns:118px repeat(3,1fr);border-bottom:1px solid var(--line)}
+.mrow:last-child{border-bottom:0}
+.mrow.head .mh{font-family:var(--f-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);padding:9px 10px;text-align:center;border-left:1px solid var(--line)}
+.mrow.head .mcorner{padding:9px 10px;font-family:var(--f-mono);font-size:8.5px;color:var(--ink-3);display:flex;align-items:flex-end}
+.mrow.head .mcorner b{color:var(--bound)}
+.rowlab{padding:10px;display:flex;flex-direction:column;justify-content:center;gap:2px;background:var(--paper)}
+.rowlab b{font-family:var(--f-mono);font-size:10px;color:var(--ink);font-weight:500}
+.rowlab span{font-family:var(--f-mono);font-size:8px;color:var(--ink-3)}
+.mcell{border-left:1px solid var(--line);background:var(--paper);display:flex;align-items:center;justify-content:center;padding:6px;min-height:132px}
+.mcell svg{width:100%;height:auto;max-width:96px}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:60;background:rgba(30,36,30,.4);display:none;align-items:center;justify-content:center;padding:24px}
+.modal.on{display:flex}
+.modal .card{background:var(--plate);border:1px solid var(--line-2);border-radius:6px;max-width:520px;width:100%;overflow:hidden}
+.modal .mh2{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.modal .mh2 b{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.modal .mx{cursor:pointer;color:var(--ink-3)}
+.modal textarea{width:100%;border:0;font-family:var(--f-mono);font-size:11px;padding:14px 16px;min-height:230px;color:var(--ink);background:var(--plate);resize:none}
+.modal .mf{padding:10px 16px;border-top:1px solid var(--line);display:flex;justify-content:flex-end}
+
+.foot{margin-top:40px;border-top:1px solid var(--line-2);padding-top:16px;color:var(--ink-3);font-family:var(--f-mono);font-size:10px;letter-spacing:.05em;line-height:1.9}
+.defs{position:absolute;width:0;height:0;overflow:hidden}
+
+/* motion */
+@keyframes sway{0%,100%{transform:rotate(-1.2deg)}50%{transform:rotate(1.2deg)}}
+@keyframes gstem{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
+@keyframes gpart{0%{opacity:0;transform:scale(.3)}60%{opacity:1}100%{opacity:1;transform:scale(1)}}
+@keyframes gbloom{0%{opacity:0;transform:scale(.08)}55%{opacity:1;transform:scale(1.1)}75%{transform:scale(.97)}100%{transform:scale(1)}}
+@keyframes breatheOpen{0%{transform:scale(.35);opacity:.55}30%{transform:scale(1.04);opacity:1}55%{transform:scale(1)}80%{transform:scale(1);opacity:1}100%{transform:scale(.35);opacity:.55}}
+@keyframes drip{0%,100%{transform:translateY(0);opacity:.95}50%{transform:translateY(5px);opacity:.4}}
+@keyframes curl{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+.mo .sway{transform-box:fill-box;transform-origin:bottom center;animation:sway 6.5s ease-in-out infinite}
+.mo .g-stem{stroke-dasharray:100;animation:gstem 1.5s ease-out forwards}
+.mo .g-leaf{transform-box:fill-box;transform-origin:center;opacity:0;animation:gpart .6s ease-out forwards}
+.mo .g-bloom{transform-box:fill-box;transform-origin:center;opacity:0;animation:gbloom .85s ease-out forwards;animation-delay:1.6s}
+.mo .g-all{transform-box:fill-box;transform-origin:bottom center;animation:sway 6.5s ease-in-out 2.7s infinite}
+.mo .bloomo{transform-box:fill-box;transform-origin:center;animation:breatheOpen 5s ease-in-out infinite}
+.mo .drip{transform-box:fill-box;transform-origin:center;animation:drip 2.3s ease-in-out infinite}
+.mo .curl{transform-box:fill-box;transform-origin:center;animation:curl 3.8s ease-in-out infinite}
+.mo .breathe{transform-box:fill-box;transform-origin:bottom center;animation:breathe 4.6s ease-in-out infinite}
+.mo.paused *{animation-play-state:paused !important}
+@media(prefers-reduced-motion:reduce){.mo *{animation:none !important}.mo .g-stem{stroke-dasharray:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mast">
+    <div class="wm">Encyclopedia Garden · illustration system</div>
+    <h1>Drawing the garden</h1>
+    <p>A plant is a chart mark — how the garden is drawn is set once; what each plant means is read from its data.</p>
+  </div>
+
+  <div class="panels" id="panels">
+    <div class="panel">
+      <div class="plabel">Ink <span class="ptag canon">canon</span><span class="psub">the pen · all drawn line</span></div>
+      <div class="prow"><div class="pgrp"><div class="grow">
+        <div class="ctl"><label>weight · <span class="val" id="vLine">0.8</span></label><input type="range" id="cLine" min="0.35" max="1.6" step="0.05" value="0.8"></div>
+        <div class="ctl"><label>waver</label><button class="tgl" id="cWaver">off</button></div>
+      </div></div></div>
+    </div>
+    <div class="panel">
+      <div class="plabel">Plants <span class="ptag canon">canon</span><span class="psub">the figure · plants only</span></div>
+      <div class="prow">
+        <div class="pgrp"><div class="gcap">fill &amp; colour</div><div class="grow">
+          <div class="ctl"><label>fill</label><div class="seg" id="cFill"><button data-v="ink">outline</button><button data-v="mixed" class="on">mixed</button><button data-v="fill">filled</button></div></div>
+          <div class="ctl"><label>colour</label><div class="seg" id="cInter"><button data-v="clean">clean</button><button data-v="print" class="on">print</button></div></div>
+        </div></div>
+        <div class="pgrp"><div class="gcap">screen</div><div class="grow">
+          <div class="ctl"><label>kind</label><div class="seg" id="cTex"><button data-v="none">none</button><button data-v="grain" class="on">grain</button><button data-v="riso">riso</button><button data-v="dots">dots</button></div></div>
+          <div class="ctl"><label>spread</label><div class="seg" id="cDist"><button data-v="cover" class="on">cover</button><button data-v="falloff">falloff</button></div></div>
+        </div></div>
+        <div class="pgrp"><div class="gcap">density</div><div class="grow">
+          <div class="ctl"><label>amount · <span class="val" id="vAmt">0.5</span></label><input type="range" id="cAmt" min="0.1" max="1" step="0.05" value="0.5"></div>
+          <div class="ctl"><label>fineness · <span class="val" id="vFine">fine</span></label><input type="range" id="cFine" min="1" max="5" step="1" value="4"></div>
+        </div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="plabel">Ground <span class="ptag canon">canon</span><span class="psub">the beds · soil &amp; wood only</span></div>
+      <div class="prow"><div class="pgrp"><div class="grow">
+        <div class="ctl"><label>soil</label><div class="seg" id="cSoil"><button data-v="loam" class="on">loam</button><button data-v="clay">clay</button><button data-v="sand">sand</button></div></div>
+        <div class="ctl"><label>grit · <span class="val" id="vGrit">0.55</span></label><input type="range" id="cGrit" min="0" max="1" step="0.05" value="0.55"></div>
+        <div class="ctl"><label>wood</label><div class="seg" id="cWood"><button data-v="cedar" class="on">cedar</button><button data-v="pine">pine</button><button data-v="driftwood">drift</button></div></div>
+      </div></div></div>
+    </div>
+    <div class="panel">
+      <div class="plabel">Form <span class="ptag bound">bound</span><span class="psub">structure</span></div>
+      <div class="prow"><div class="pgrp"><div class="grow">
+        <div class="ctl"><label>leaf detail</label><div class="seg" id="cDetail"><button data-v="flat">flat</button><button data-v="vein" class="on">veined</button><button data-v="serrate">serrate</button></div></div>
+        <div class="ctl"><label>seed</label><button class="btn" id="cSeed">↻ reseed</button></div>
+      </div></div></div>
+    </div>
+    <div class="panel">
+      <div class="plabel">Export</div>
+      <div class="prow"><div class="pgrp"><div class="grow">
+        <div class="ctl"><label>garden.json</label><button class="btn key" id="cCopy">⧉ copy tokens</button></div>
+      </div></div></div>
+    </div>
+  </div>
+
+  <div class="shead">encoding · the chart language <span class="tag bound">bound</span> <span class="note">— bloom = section (rows) · height = lifecycle (columns). two channels, crossed.</span></div>
+  <div class="matrix" id="matrix"></div>
+
+  <div class="shead">state, split <span class="tag bound">bound</span> <span class="note">— lifecycle is height; attention is a separate overlay; harvested is terminal. “growing + blocked” is now drawable.</span></div>
+  <div class="grid" id="gState"></div>
+
+  <div class="shead">kind · the body <span class="tag bound">bound</span> <span class="note">— silhouette encodes what it is, independent of section &amp; state</span></div>
+  <div class="grid" id="gKind"></div>
+
+  <div class="shead">material · colour interplay <span class="tag canon">canon</span></div>
+  <div class="grid wide" id="gColor"></div>
+
+  <div class="shead">form · organic shapes &amp; fine detail <span class="note">— still being refined; fixing a primitive fixes every plant</span></div>
+  <div class="grid g3" id="gOrganic"></div>
+
+  <div class="shead">the gardener — variations</div>
+  <div class="grid g3" id="gGardeners"></div>
+
+  <div class="shead">motion — staged, bound to lifecycle <span class="note" id="moNote"></span></div>
+  <div class="grid g3 mo" id="gMotion"></div>
+
+  <div class="shead">scene mode · the same plants, grounded <span class="note">— specimen → map: drawn beds, soil clipped to the bed, cast shadows, staked signs</span></div>
+  <div class="grid wide" id="gScene"></div>
+
+  <div class="shead">the map · geography encodes the workflow <span class="note">— a plan, not a scatter: intake at the gate → beds → the border; compost in the corner</span></div>
+  <div id="gPlan"></div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<div class="modal" id="modal"><div class="card">
+  <div class="mh2"><b>material tokens · garden.json</b><span class="mx" id="modalX">✕</span></div>
+  <textarea id="modalText" readonly></textarea>
+  <div class="mf"><button class="btn key" id="modalCopy">copy to clipboard</button></div>
+</div></div>
+
+<svg class="defs" id="defs"></svg>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function hash(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+
+const SPOT={
+  techniques:"#e0a52c", atoms:"#d76a37", styles:"#9b5fbf", sound:"#3d8fe0",
+  optics:"#12a891", explorations:"#d76392", leaf:"#7bab54", leaf2:"#9cc06a",
+  stem:"#4f6c39", harvest:"#e6b21f", center:"#f0efe6", earth:"#c69a6a", hat:"#e0a52c", shell:"#d98a4a",
+  soil:"#d9cdb0", wood:"#b98a52"
+};
+const INK="#18211c";
+
+/* ============ MATERIAL (canon tokens) + FORM (structure) ============ */
+const M={ line:0.8, waver:false, fill:"mixed", inter:"print", texture:"grain", dist:"cover", amt:0.5, fine:4 };  // INK (the pen) + PLANT (the figure)
+const G={ soil:"loam", grit:0.55, wood:"cedar" };                                                               // GROUND (beds & soil) — its own knobs, never the plant's
+const SOILS={ loam:"#cdb891", clay:"#c6a373", sand:"#ddd3b6" };
+const WOODS={ cedar:"#b98a52", pine:"#c69a5a", driftwood:"#a89f8b" };
+const FORM={ detail:"vein" };
+let SEED=7;
+function shade(hex,f){const n=parseInt(hex.slice(1),16),r=Math.round((n>>16&255)*f),g=Math.round((n>>8&255)*f),b=Math.round((n&255)*f);return "#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);}
+
+function buildDefs(){
+  const gFreq=(0.35+M.fine*0.14).toFixed(3);
+  const dPitch=(6.2-M.fine).toFixed(2);
+  const dR=(0.34+M.amt*0.5).toFixed(2);
+  const waverS=(M.line*0.9).toFixed(2);
+  const risoFreq=(0.42+M.fine*0.15).toFixed(3);
+  const GA=(1.05+M.amt*0.55).toFixed(2), GB=(1-(1.05+M.amt*0.55)*0.55).toFixed(3);
+  $("#defs").innerHTML=`
+    <filter id="grainF" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="${gFreq}" numOctaves="2" seed="${SEED}" stitchTiles="stitch" result="t"/><feColorMatrix in="t" type="matrix" values="0 0 0 0 0.09  0 0 0 0 0.12  0 0 0 0 0.10  0.85 0 0 0 -0.34"/></filter>
+    <pattern id="grain" width="150" height="150" patternUnits="userSpaceOnUse"><rect width="150" height="150" fill="#fff" filter="url(#grainF)"/></pattern>
+    <filter id="soilGrainF" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.62" numOctaves="2" seed="${SEED}" stitchTiles="stitch" result="t"/><feColorMatrix in="t" type="matrix" values="0 0 0 0 0.31  0 0 0 0 0.22  0 0 0 0 0.13  0.92 0 0 0 -0.42"/></filter>
+    <pattern id="soilGrain" width="150" height="150" patternUnits="userSpaceOnUse"><rect width="150" height="150" fill="#fff" filter="url(#soilGrainF)"/></pattern>
+    <pattern id="dots" width="${dPitch}" height="${dPitch}" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><circle cx="${(dPitch/2).toFixed(2)}" cy="${(dPitch/2).toFixed(2)}" r="${dR}" fill="${INK}"/></pattern>
+    <linearGradient id="foGrad" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#fff"/><stop offset="0.55" stop-color="#fff" stop-opacity="0.55"/><stop offset="1" stop-color="#000"/></linearGradient>
+    <mask id="falloff" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="url(#foGrad)"/></mask>
+    <filter id="riso" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="${risoFreq}" numOctaves="2" seed="${SEED}" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 ${GA} ${GB}" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter>
+    <filter id="keyInk" x="-15%" y="-15%" width="130%" height="130%"><feTurbulence type="fractalNoise" baseFrequency="0.018 0.021" numOctaves="1" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="${waverS}" xChannelSelector="R" yChannelSelector="G"/></filter>`;
+}
+function texMask(){ return M.dist==="falloff" ? ' mask="url(#falloff)"' : ''; }
+function blend(){ return M.inter==="print" ? ' style="mix-blend-mode:multiply"' : ''; }
+function mrn(){ return M.inter==="print" ? 0.7 : 0; }
+function inkT(){ const m=mrn(); return m? ` transform="translate(${m} ${(m*0.75).toFixed(2)})"`:''; }
+
+/* ---------- GROUND material (substrate) — soil + wood, wholly separate from plant ink ---------- */
+function soilCol(){ return SOILS[G.soil]||"#cdb891"; }
+function woodCol(){ return WOODS[G.wood]||"#b98a52"; }
+function groundSoil(x,y,w,h,rx,clipId){            // rectangular bed: soil tone + its OWN grit; no plant screen, no misregister
+  const r=(rx==null?4:rx);
+  let s=`<clipPath id="${clipId}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}"/></clipPath>`;
+  s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${soilCol()}"/>`;
+  s+=`<g clip-path="url(#${clipId})"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#soilGrain)" opacity="${G.grit.toFixed(2)}" style="mix-blend-mode:multiply"/></g>`;
+  return s;}
+function groundSoilPath(d,clipId){                 // soil on an arbitrary face (e.g. an isometric top)
+  let s=`<clipPath id="${clipId}"><path d="${d}"/></clipPath>`;
+  s+=`<path d="${d}" fill="${soilCol()}"/>`;
+  s+=`<g clip-path="url(#${clipId})"><rect x="0" y="0" width="1200" height="720" fill="url(#soilGrain)" opacity="${G.grit.toFixed(2)}" style="mix-blend-mode:multiply"/></g>`;
+  return s;}
+function woodFill(d,tone){ return `<path d="${d}" fill="${tone||woodCol()}"/>`; }   // flat wood tone; outline drawn separately with the pen
+
+/* ---------- draw helpers (read M) ---------- */
+function texOverlay(d){
+  if(M.texture==="grain") return `<path d="${d}" fill="url(#grain)" opacity="${M.amt.toFixed(2)}" style="mix-blend-mode:multiply"${texMask()}/>`;
+  if(M.texture==="dots")  return `<path d="${d}" fill="url(#dots)"${texMask()}/>`;
+  return "";
+}
+function fillShape(d, spot, role){
+  const mode=M.fill; let s=""; const showFill=mode!=="ink";
+  let showKey; if(mode==="ink"||mode==="fill") showKey=true; else showKey=(role==="petal"||role==="center"||role==="berry"||role==="pod");
+  if(showFill){
+    if(M.texture==="riso") s+=`<path d="${d}" fill="${spot}" filter="url(#riso)"${blend()}/>`;
+    else { s+=`<path d="${d}" fill="${spot}"${blend()}/>`; s+=texOverlay(d); }
+  }
+  if(showKey) s+=`<path d="${d}" fill="none" stroke="${INK}" stroke-width="${M.line}" stroke-linejoin="round" stroke-linecap="round"${M.waver?' filter="url(#keyInk)"':''}${inkT()}/>`;
+  return s;
+}
+function inkPath(d, w){ return `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${(w||M.line).toFixed(2)}" stroke-linejoin="round" stroke-linecap="round"${M.waver?' filter="url(#keyInk)"':''}${inkT()}/>`; }
+function inkPathC(d, w, col){ return `<path d="${d}" fill="none" stroke="${col}" stroke-width="${(w||M.line).toFixed(2)}" stroke-linejoin="round" stroke-linecap="round"${M.waver?' filter="url(#keyInk)"':''}${inkT()}/>`; }
+function inkLine(x1,y1,x2,y2,w){return inkPath(`M${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)}`,w);}
+function circShape(cx,cy,r,spot,role){ const d=`M ${(cx-r).toFixed(1)} ${cy.toFixed(1)} a ${r} ${r} 0 1 0 ${(2*r).toFixed(1)} 0 a ${r} ${r} 0 1 0 ${(-2*r).toFixed(1)} 0 Z`; return fillShape(d,spot,role); }
+function ellD(cx,cy,rx,ry){ return `M ${(cx-rx).toFixed(1)} ${cy.toFixed(1)} a ${rx} ${ry} 0 1 0 ${(2*rx).toFixed(1)} 0 a ${rx} ${ry} 0 1 0 ${(-2*rx).toFixed(1)} 0 Z`; }
+
+/* ---------- FORM · leaf ---------- */
+function rp(x,y,ang,a,p){return [ +(x+Math.cos(ang)*a - Math.sin(ang)*p).toFixed(2), +(y+Math.sin(ang)*a + Math.cos(ang)*p).toFixed(2) ];}
+function leafShape(x,y,ang,len){
+  const w=len*0.30, N=18, bend=len*0.13, serr=FORM.detail==="serrate";
+  function edge(sign){const pts=[];for(let i=0;i<=N;i++){const t=i/N;const env=Math.sin(Math.PI*Math.pow(t,0.72));
+    let width=w*env*(sign>0?1:0.9); if(serr) width*=(1+0.12*Math.sin(t*20+(sign>0?0:1.6)));
+    const cam=Math.sin(Math.PI*t)*bend; pts.push(rp(x,y,ang,t*len,sign*width+cam));} return pts;}
+  const all=edge(1).concat(edge(-1).reverse());
+  if(serr) return "M"+all.map(p=>p.join(" ")).join(" L")+" Z";
+  let d="M"+all[0].join(" ");
+  for(let i=1;i<all.length-1;i++){const mx=((all[i][0]+all[i+1][0])/2).toFixed(1),my=((all[i][1]+all[i+1][1])/2).toFixed(1);d+=` Q${all[i][0]} ${all[i][1]} ${mx} ${my}`;}
+  return d+" Z";
+}
+function leafVeins(x,y,ang,len){
+  const bend=len*0.13; let s=""; const N=8,mp=[];
+  for(let i=0;i<=N;i++){const t=i/N;mp.push(rp(x,y,ang,t*len,Math.sin(Math.PI*t)*bend));}
+  let d="M"+mp[0].join(" ");for(let i=1;i<mp.length;i++)d+=" L"+mp[i].join(" ");
+  s+=inkPath(d,M.line*0.62);
+  if(FORM.detail==="flat") return s;
+  for(let k=1;k<=4;k++){const t=k/5;const cam=Math.sin(Math.PI*t)*bend;const base=rp(x,y,ang,t*len,cam);
+    const ww=len*0.28*Math.sin(Math.PI*Math.pow(t,0.72));
+    s+=inkPath(`M${base.join(" ")} L${rp(x,y,ang,t*len+len*0.11,ww*0.85+cam).join(" ")}`,M.line*0.48);
+    s+=inkPath(`M${base.join(" ")} L${rp(x,y,ang,t*len+len*0.11,-ww*0.85+cam).join(" ")}`,M.line*0.48);}
+  return s;
+}
+function drawLeaf(x,y,ang,len,col){ return fillShape(leafShape(x,y,ang,len),col,"leaf")+leafVeins(x,y,ang,len); }
+// a light leaflet fill (respects outline mode, skips heavy grain) — for many-tiny-leaflet subjects
+function plainLeaf(d,col){ let s=""; if(M.fill!=="ink") s+=`<path d="${d}" fill="${col}"${blend()}/>`; s+=inkPathC(d,M.line*(M.fill==="ink"?0.6:0.42),M.fill==="ink"?INK:shade(col,0.7)); return s; }
+
+/* ---------- FORM · blooms ---------- */
+function bloom(section,cx,cy,r,rng,spotOverride){
+  const col=spotOverride||SPOT[section]||"#8a8a5a"; let s="";
+  if(section==="optics"){
+    for(let i=0;i<8;i++){const a=i/8*Math.PI*2;const ex=cx+Math.cos(a)*r*0.72,ey=cy+Math.sin(a)*r*0.72;
+      s+=`<g transform="rotate(${(a*180/Math.PI).toFixed(0)} ${ex.toFixed(1)} ${ey.toFixed(1)})">${fillShape(ellD(ex,ey,r*0.5,r*0.2),col,"petal")}</g>`;}
+    s+=circShape(cx,cy,r*0.46,SPOT.techniques,"center");
+  } else if(section==="techniques"){
+    for(let i=0;i<7;i++){const a=(-0.62+i*0.205)-1.57;s+=inkPath(`M${cx} ${cy} L${(cx+Math.cos(a)*r*1.28).toFixed(1)} ${(cy+Math.sin(a)*r*1.28).toFixed(1)}`,M.line*1.0);}
+    s+=circShape(cx,cy,r*0.52,col,"pod");
+  } else if(section==="atoms"){
+    [[0,0],[-0.62,-0.3],[0.6,-0.22],[-0.34,0.5],[0.42,0.46]].forEach(([dx,dy])=>{s+=circShape(cx+dx*r,cy+dy*r,r*0.42,col,"berry");});
+  } else if(section==="styles"){
+    for(let i=0;i<6;i++){const a=i/6*Math.PI*2;const ex=cx+Math.cos(a)*r*0.5,ey=cy+Math.sin(a)*r*0.5;
+      s+=`<g transform="rotate(${(a*180/Math.PI).toFixed(0)} ${ex.toFixed(1)} ${ey.toFixed(1)})">${fillShape(ellD(ex,ey,r*0.58,r*0.32),col,"petal")}</g>`;}
+    s+=circShape(cx,cy,r*0.36,SPOT.center,"center");
+  } else if(section==="sound"){
+    for(let i=3;i>=1;i--){const rr=r*0.46*i;s+=inkPath(`M ${cx-rr} ${cy} a ${rr} ${rr} 0 1 0 ${2*rr} 0 a ${rr} ${rr} 0 1 0 ${-2*rr} 0`,M.line*0.85);}
+    s+=circShape(cx,cy,r*0.26,col,"center");
+  } else {
+    for(let i=0;i<8;i++){const a=i/8*Math.PI*2;const ex=cx+Math.cos(a)*r*0.7,ey=cy+Math.sin(a)*r*0.7;
+      s+=`<g transform="rotate(${(a*180/Math.PI).toFixed(0)} ${ex.toFixed(1)} ${ey.toFixed(1)})">${fillShape(ellD(ex,ey,r*0.5,r*0.19),col,"petal")}</g>`;}
+    s+=circShape(cx,cy,r*0.34,SPOT.harvest,"center");
+  }
+  return s;
+}
+function pompom(cx,cy,r,rng,col){let s="";const N=52; const green=SPOT.leaf;   // dimensional: filaments vary in opacity + mix purple/green
+  const fila=[];
+  for(let i=0;i<N;i++){const a=-Math.PI+(i/(N-1))*Math.PI+(rng()-0.5)*0.05;const ll=r*(0.7+rng()*0.62);
+    const ex=cx+Math.cos(a)*ll,ey=cy+Math.sin(a)*ll*0.92;
+    const depth=rng();                         // 0 = far/back (dim), 1 = near/front (bright)
+    const fc = depth<0.3 ? green : col;        // ~a third read green, giving purple/green interplay
+    const op=(0.3+depth*0.62);
+    const w=(M.line*(0.32+depth*0.42));
+    const qx=(cx+Math.cos(a)*ll*0.55+(rng()-0.5)*3).toFixed(1), qy=(cy+Math.sin(a)*ll*0.5).toFixed(1);
+    fila.push({d:`M${cx.toFixed(1)} ${cy.toFixed(1)} Q ${qx} ${qy} ${ex.toFixed(1)} ${ey.toFixed(1)}`,ex:ex.toFixed(1),ey:ey.toFixed(1),fc,op:op.toFixed(2),w:w.toFixed(2),tr:(0.8+depth*0.7).toFixed(2),depth});}
+  fila.sort((a,b)=>a.depth-b.depth);           // paint back-to-front so bright filaments sit on top
+  fila.forEach(f=>{ s+=`<path d="${f.d}" fill="none" stroke="${f.fc}" stroke-width="${f.w}" stroke-linecap="round" opacity="${f.op}"/>`;
+    s+=`<circle cx="${f.ex}" cy="${f.ey}" r="${f.tr}" fill="${f.fc}" opacity="${f.op}"/>`;});
+  return s;}
+function feather(x,y,ang,len,col){let s="";const N=11;const rp2=(a,p)=>rp(x,y,ang,a,p);
+  const green=col||SPOT.leaf, rachis=SPOT.stem;                       // leaflets are GREEN, rachis a darker green
+  const mp=[];for(let i=0;i<=N;i++){const t=i/N;mp.push(rp2(t*len,Math.sin(Math.PI*t)*len*0.08));}
+  let d="M"+mp[0].join(" ");for(let i=1;i<mp.length;i++)d+=" L"+mp[i].join(" ");s+=inkPathC(d,M.line*0.62,rachis);
+  for(let k=1;k<=N-1;k++){const t=k/N;const cam=Math.sin(Math.PI*t)*len*0.08;const b=rp2(t*len,cam),ll=len*0.16*Math.sin(Math.PI*t);
+    s+=inkPathC(`M${b.join(" ")} L${rp2(t*len+ll*0.5,cam+ll).join(" ")}`,M.line*0.42,green);
+    s+=inkPathC(`M${b.join(" ")} L${rp2(t*len+ll*0.5,cam-ll).join(" ")}`,M.line*0.42,green);}
+  return s;}
+
+/* ---------- ENCODING · compose(datum) ---------- */
+// datum: {section, kind, lifecycle:'seedling|growing|established', attention:[], harvested, conn, bed}
+function heightFor(lifecycle,conn){ return lifecycle==="seedling"?92 : lifecycle==="established"?176+conn*8 : 150; }
+function growBody(d, baseX, baseY){
+  const {section="explorations", lifecycle="growing", conn=0}=d;
+  const rng=mulberry32(hash(section+lifecycle+conn+(d.kind||"")+"::"+SEED));
+  const bx=baseX, by=baseY, H=heightFor(lifecycle,conn);
+  const sway=(rng()-0.5)*30, topx=bx+sway*0.7, topy=by-H;
+  const stemD=`M${bx} ${by} C ${(bx+sway*0.4).toFixed(1)} ${(by-H*0.4).toFixed(1)} ${(bx+sway).toFixed(1)} ${(by-H*0.7).toFixed(1)} ${topx.toFixed(1)} ${topy.toFixed(1)}`;
+  const roots=inkPath(`M${bx} ${by} q -7 22 -3 40 M${bx} ${by} q 8 20 3 42`,M.line*0.72);
+  const stem=inkPath(stemD,M.line*1.1);
+  const nLeaf=lifecycle==="seedling"?2:3+conn; const leaves=[];
+  for(let i=0;i<nLeaf;i++){const t=0.24+i/(nLeaf)*0.7;const lx=bx+sway*0.4*t,ly=by-H*t;const side=i%2?1:-1;
+    const len=lifecycle==="seedling"?16:22+conn*1.5;
+    leaves.push(drawLeaf(lx,ly,(side>0?-0.5:Math.PI+0.5)+(rng()-0.5)*0.28,len,rng()>0.5?SPOT.leaf:SPOT.leaf2));}
+  if(lifecycle==="established"&&conn>0){const by2=by-H*0.55,bx2=bx+sway*0.35;
+    leaves.push(inkPath(`M${bx2.toFixed(1)} ${by2.toFixed(1)} q 18 -7 27 -24`,M.line*0.9)+drawLeaf(bx2+27,by2-24,-1.0,17,SPOT.leaf));}
+  let head;
+  if(lifecycle==="seedling") head=drawLeaf(topx,topy,-2.1,16,SPOT.leaf2)+drawLeaf(topx,topy,-1.0,16,SPOT.leaf2)+circShape(topx,topy,3,SPOT.optics,"center");
+  else head=bloom(section,topx,topy,11+conn*1.1,rng, d.harvested?SPOT.harvest:null);
+  return {roots,stem,stemD,leaves,head,topx,topy,H,bx,by};
+}
+// attention + terminal overlays, drawn ON TOP of the lifecycle plant
+function overlays(g, attention, harvested, anim){
+  let s="";
+  if(attention.includes("water")){
+    const drop=`<path d="M${g.topx} ${g.topy-26} q 6 10 0 16 q -6 -6 0 -16 z" fill="${SPOT.sound}"/>`;
+    s+= anim? `<g class="drip">${drop}</g>` : `<g>${drop}</g>`;
+  }
+  if(attention.includes("prune")){
+    s+=`<circle cx="${g.bx}" cy="${(g.by-g.H*0.5).toFixed(0)}" r="26" fill="none" stroke="${SPOT.prune||'#e58a17'}" stroke-dasharray="3 4" stroke-width="1.3"/>`;
+    s+=inkPath(`M${g.bx-10} ${(g.by-g.H*0.5).toFixed(0)} l20 14 M${g.bx+10} ${(g.by-g.H*0.5).toFixed(0)} l-20 14`,M.line*0.9);
+  }
+  if(harvested){
+    s+=`<circle cx="${g.topx}" cy="${g.topy}" r="20" fill="${SPOT.harvest}" opacity="0.16"/>`;
+    s+=`<g transform="translate(${g.bx},${g.by+16})">${fillShape('M-10 0 a10 10 0 0 1 20 0 z',SPOT.earth,'pod')}<path d="M-11 0 h22" stroke="${INK}" stroke-width="${M.line}" /></g>`;
+  }
+  return s;
+}
+SPOT.prune="#e58a17";
+function stumpBody(d,bx,by){ let s=inkPath(`M${bx} ${by} q -6 16 -2 30`,M.line*0.7);
+  s+=fillShape(`M${bx-15} ${by} h30 v-24 a15 6 0 0 0 -30 0 z`,"#bcb6a4","pod");
+  s+=`<ellipse cx="${bx}" cy="${by-24}" rx="15" ry="6" fill="#a7a08b"/>`;
+  s+=inkPath(`M${bx-9} ${by-24} a9 3.6 0 1 0 18 0`,M.line*0.7)+inkPath(`M${bx-4} ${by-24} a4 1.6 0 1 0 8 0`,M.line*0.6);
+  if(d.lifecycle==="seedling") s+=inkPath(`M${bx+4} ${by-24} q 10 -14 4 -30`,M.line)+drawLeaf(bx+6,by-42,-1.2,11,"#37b23a");
+  return s;}
+function taskBody(d,bx,by){const H=64;let s=inkLine(bx,by,bx,by-H,M.line*1.4);
+  const col=d.attention&&d.attention.includes("water")?SPOT.sound:SPOT.prune;
+  s+=fillShape(`M${bx-2} ${by-H-2} h26 v16 h-26 z`,"#fbfdfc","pod");
+  s+=`<text x="${bx+11}" y="${by-H+10}" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" fill="${INK}">${d.attention&&d.attention.includes('water')?'H₂O':'✂'}</text>`;
+  return s;}
+function moundInner(anim,legs){const cx=100,cy=170;let s="";
+  if(legs){                                             // the gardener stands on two little legs
+    s+=`<ellipse cx="${cx}" cy="${cy+36}" rx="34" ry="6" fill="${INK}" opacity="0.07"/>`;
+    s+=inkPath(`M${cx-13} ${cy-6} l0 28`,M.line*1.7)+inkPath(`M${cx+13} ${cy-6} l0 28`,M.line*1.7);
+    s+=fillShape(`M${cx-24} ${cy+22} q -2 9 9 9 h9 v-9 z`,SPOT.stem,"pod");
+    s+=fillShape(`M${cx+24} ${cy+22} q 2 9 -9 9 h-9 v-9 z`,SPOT.stem,"pod");
+  }
+  s+=fillShape(`M${cx-42} ${cy} Q ${cx-50} ${cy-74} ${cx} ${cy-84} Q ${cx+50} ${cy-74} ${cx+42} ${cy} Z`,SPOT.stem,"leaf");
+  for(let i=0;i<9;i++){const a=-2.6+i*0.34;s+=inkPath(`M${cx} ${cy-10} L${(cx+Math.cos(a)*40).toFixed(0)} ${(cy-10+Math.sin(a)*40).toFixed(0)}`,M.line*0.75);}
+  if(legs){                                             // a small face so the creature reads
+    s+=`<circle cx="${cx-9}" cy="${cy-42}" r="2.1" fill="${INK}"/><circle cx="${cx+9}" cy="${cy-42}" r="2.1" fill="${INK}"/>`;
+    s+=inkPath(`M${cx-6} ${cy-35} q 6 5 12 0`,M.line*0.8);
+    s+=`<circle cx="${cx-15}" cy="${cy-36}" r="2.4" fill="#e58bb0" opacity="0.5"/><circle cx="${cx+15}" cy="${cy-36}" r="2.4" fill="#e58bb0" opacity="0.5"/>`;
+  }
+  const curl=inkPath(`M${cx+12} ${cy-98} a 12 12 0 1 0 -4 9`,M.line*1.15)+inkPath(`M${cx+12} ${cy-106} L${cx+12} ${cy-97} L${cx+3} ${cy-99}`,M.line*1.15);
+  s+= anim? `<g class="curl">${curl}</g>` : curl; return s;}
+function groveInner(){const rng=mulberry32(hash("grove"+SEED));const bx=100,by=244;let s="";
+  for(let i=0;i<11;i++){const gx=bx+(i-5)*13+(rng()-0.5)*7;const gh=60+rng()*70;
+    s+=inkPath(`M${gx.toFixed(1)} ${by} q ${(rng()*10-5).toFixed(1)} ${(-gh*0.6).toFixed(1)} ${(rng()*8-4).toFixed(1)} ${(-gh).toFixed(1)}`,M.line*0.85);
+    s+=drawLeaf(gx,by-gh*0.6,-1.9+rng(),11+rng()*6,rng()>0.5?SPOT.leaf:SPOT.leaf2);
+    s+=circShape(gx,by-gh,2.6+rng()*1.5,SPOT.techniques,"berry");}
+  return s;}
+
+function svgWrap(inner,vb){return `<svg viewBox="${vb||'0 0 200 260'}" preserveAspectRatio="xMidYMid meet">${inner}</svg>`;}
+// full specimen from a datum
+function compose(d, baseX, baseY){
+  const bx=baseX||100, by=baseY||244;
+  const kind=d.kind||"atom";
+  if(kind==="grove") return groveInner();
+  if(kind==="stump") return stumpBody(d,bx,by);
+  if(kind==="task")  return taskBody(d,bx,by);
+  if(kind==="perennial") return moundInner(false);
+  const g=growBody(d,bx,by);
+  let inner=g.roots+g.stem+g.leaves.join("")+g.head+overlays(g,d.attention||[],d.harvested,false);
+  if(d.harvested) inner=`<g opacity="0.62">${inner}</g>`;
+  return inner;
+}
+function specimen(d,vb){return svgWrap(compose(d),vb);}
+
+/* ---------- organic specimens ---------- */
+function mimosa(){const rng=mulberry32(hash("mimosa"+SEED));const bx=100,by=244,H=170;const topx=bx+8,topy=by-H;
+  let s=inkPathC(`M${bx} ${by} q -6 20 -3 38 M${bx} ${by} q 7 18 3 40`,M.line*0.7,SPOT.stem);
+  s+=inkPathC(`M${bx} ${by} C ${bx-8} ${by-H*0.4} ${bx+10} ${by-H*0.72} ${topx} ${topy+14}`,M.line*1.05,SPOT.stem);
+  for(let i=0;i<4;i++){const t=0.3+i*0.16;const ly=by-H*t,lx=bx+(i%2?6:-6);s+=feather(lx,ly,(i%2?-0.35:Math.PI+0.35),40+rng()*10,SPOT.leaf);}
+  // three pom-poms at different maturities + one unopened bud — nuance, not a single bloom
+  s+=pompom(topx,topy+8,18,rng,SPOT.styles);
+  s+=pompom(topx-17,topy+22,12,rng,"#7b4fae");
+  s+=pompom(topx+13,topy+20,9,rng,"#9b6fca");
+  const budx=topx+3,budy=topy-13;
+  for(let i=0;i<7;i++){const a=rng()*6.28,r=3+rng()*2.4;s+=`<circle cx="${(budx+Math.cos(a)*r).toFixed(1)}" cy="${(budy+Math.sin(a)*r*0.9).toFixed(1)}" r="1.5" fill="${rng()>0.55?SPOT.leaf:"#8a5fb0"}" opacity="0.82"/>`;}
+  s+=inkPathC(`M${budx} ${budy+7} q -2 -6 0 -10`,M.line*0.5,SPOT.stem);
+  return svgWrap(s);}
+// a pinna: a midrib bearing real oval leaflets (pinnules) that shrink to a capped tip — bipinnate structure
+function fernPinna(x,y,ang,len,col,rng){
+  let s=""; const rp2=(a,p)=>rp(x,y,ang,a,p); const arc=len*0.10;
+  const mp=[];for(let i=0;i<=8;i++){const t=i/8;mp.push(rp2(t*len,Math.sin(Math.PI*t)*arc));}
+  let d="M"+mp[0].join(" ");for(let i=1;i<mp.length;i++)d+=" L"+mp[i].join(" ");
+  s+=inkPathC(d,M.line*0.5,SPOT.stem);
+  const N=Math.max(4,Math.round(len/9));
+  for(let i=1;i<=N;i++){const t=i/(N+0.4);const cam=Math.sin(Math.PI*t)*arc;const base=rp2(t*len,cam);
+    const ll=len*0.27*(1-t*0.66); if(ll<2.4) break;
+    s+=plainLeaf(leafShape(base[0],base[1],ang-0.9,ll),col);
+    s+=plainLeaf(leafShape(base[0],base[1],ang+0.9,ll),col);}
+  const tip=rp2(len,0); s+=plainLeaf(leafShape(tip[0],tip[1],ang,len*0.15),col);
+  return s;}
+function fernFrond(){const rng=mulberry32(hash("fern"+SEED));const bx=100,by=248,H=198;const topx=bx+8,topy=by-H;
+  const P=[[bx,by],[bx-6,by-H*0.4],[bx+18,by-H*0.72],[topx,topy]];
+  const cb=t=>{const m=1-t;return [m*m*m*P[0][0]+3*m*m*t*P[1][0]+3*m*t*t*P[2][0]+t*t*t*P[3][0], m*m*m*P[0][1]+3*m*m*t*P[1][1]+3*m*t*t*P[2][1]+t*t*t*P[3][1]];};
+  let s=inkPathC(`M${bx} ${by} q -5 16 -2 30`,M.line*0.6,SPOT.stem);
+  s+=inkPathC(`M${P[0].join(" ")} C ${P[1].join(" ")} ${P[2].join(" ")} ${P[3].join(" ")}`,M.line*0.95,SPOT.stem);
+  const NP=9;
+  for(let i=0;i<NP;i++){const t=0.1+i/NP*0.82;const b=cb(t);const side=i%2?1:-1;
+    const plen=(58*(1-t*0.7))*(0.9+rng()*0.2);
+    const ang=(side>0?0.55:Math.PI-0.55)-0.12+(rng()-0.5)*0.18;
+    s+=fernPinna(b[0],b[1],ang,plen,rng()>0.5?SPOT.leaf:SPOT.leaf2,rng);}
+  s+=inkPathC(`M${topx} ${topy+7} a 7 7 0 1 1 -6 -4`,M.line*0.9,SPOT.stem);   // crozier tip
+  return svgWrap(s);}
+function trailingVine(){const rng=mulberry32(hash("vine"+SEED));const bx=104,by=36;
+  const P=[[bx,by],[bx+46,by+54],[bx-44,by+118],[bx+16,by+196]];
+  const cb=t=>{const m=1-t;return [m*m*m*P[0][0]+3*m*m*t*P[1][0]+3*m*t*t*P[2][0]+t*t*t*P[3][0], m*m*m*P[0][1]+3*m*m*t*P[1][1]+3*m*t*t*P[2][1]+t*t*t*P[3][1]];};
+  const tan=t=>{const m=1-t;const dx=3*m*m*(P[1][0]-P[0][0])+6*m*t*(P[2][0]-P[1][0])+3*t*t*(P[3][0]-P[2][0]);const dy=3*m*m*(P[1][1]-P[0][1])+6*m*t*(P[2][1]-P[1][1])+3*t*t*(P[3][1]-P[2][1]);return Math.atan2(dy,dx);};
+  let s=inkPathC(`M${P[0].join(" ")} C ${P[1].join(" ")} ${P[2].join(" ")} ${P[3].join(" ")}`,M.line*1.05,SPOT.stem);
+  const nodes=[];const NN=7;
+  for(let i=0;i<NN;i++){const t=0.12+i/NN*0.82;const b=cb(t);const side=i%2?1:-1;const out=tan(t)+side*1.4;
+    nodes.push({b,out,side,size:19+rng()*8});}
+  nodes.sort((a,b)=>a.size-b.size);   // small (far) leaves behind, large (near) in front
+  nodes.forEach(n=>{const px=n.b[0]+Math.cos(n.out)*7,py=n.b[1]+Math.sin(n.out)*7;
+    s+=inkPathC(`M${n.b[0]} ${n.b[1]} L${px} ${py}`,M.line*0.7,SPOT.stem);   // petiole — the leaf is ATTACHED, not floating
+    s+=drawLeaf(px,py,n.out,n.size,n.side>0?SPOT.leaf:SPOT.leaf2);});
+  const tp=cb(0.98); s+=inkPathC(`M${tp[0]} ${tp[1]} q 13 6 11 -8 a 6 6 0 1 1 -9 3`,M.line*0.8,SPOT.stem);  // tendril
+  return svgWrap(s);}
+function seedPod(){const rng=mulberry32(hash("pod"+SEED));const bx=100,by=250,H=150;const topx=bx+4,topy=by-H;
+  const podCol="#c7a06a", podDk="#a97e46", seedCol="#6d5433", silk="#efe9dc";
+  let s=inkPathC(`M${bx} ${by} q 6 16 2 32`,M.line*0.6,SPOT.stem);
+  s+=inkPathC(`M${bx} ${by} C ${bx-6} ${by-H*0.5} ${bx+8} ${by-H*0.82} ${topx} ${topy}`,M.line*1.05,SPOT.stem);
+  s+=plainLeaf(leafShape(bx-2,by-H*0.42,Math.PI+0.5,22),SPOT.leaf)+plainLeaf(leafShape(bx+3,by-H*0.64,-0.5,19),SPOT.leaf2);
+  // pod body — an ovoid follicle, envelope with faint warts, drawn from one function
+  const cx=topx,cy=topy-2,ph=66,pw=17;
+  const L=[],R=[],NB=20;
+  for(let i=0;i<=NB;i++){const t=i/NB;const yy=cy-ph*0.5+ph*t;const w=pw*Math.sin(Math.PI*Math.pow(t,0.72))*(1+0.05*Math.sin(t*22));
+    L.push([+(cx-w).toFixed(1),+yy.toFixed(1)]);R.push([+(cx+w).toFixed(1),+yy.toFixed(1)]);}
+  const podD="M"+L[0].join(" ")+L.slice(1).map(p=>"L"+p.join(" ")).join("")+R.reverse().map(p=>"L"+p.join(" ")).join("")+"Z";
+  s+=`<path d="${podD}" fill="${podCol}"/>`;
+  // axis grain — follows the pod's own axis, not the page
+  for(let k=-2;k<=2;k++){if(!k)continue;const gx=cx+k*4;s+=inkPathC(`M${gx} ${cy-ph*0.38} q ${k} ${(ph*0.38).toFixed(0)} 0 ${(ph*0.76).toFixed(0)}`,M.line*0.28,shade(podCol,0.72));}
+  // the split: a valve curling back on the right, revealing the cavity
+  s+=`<path d="M${cx} ${cy-ph*0.42} C ${cx+pw*0.7} ${cy-ph*0.22} ${cx+pw*0.7} ${cy+ph*0.22} ${cx} ${cy+ph*0.42} Z" fill="${shade(podCol,0.62)}"/>`;
+  for(let i=0;i<6;i++){const yy=cy-ph*0.3+i*(ph*0.6/5);s+=`<path d="${ellD(cx+5,yy,4.6,3)}" fill="${seedCol}"/>`+inkPathC(ellD(cx+5,yy,4.6,3),M.line*0.3,shade(seedCol,0.7));}
+  for(let i=0;i<7;i++){const yy=cy-ph*0.28+rng()*ph*0.56;s+=inkPathC(`M${cx+7} ${yy.toFixed(1)} q 12 -2 18 -10`,M.line*0.26,silk);}
+  s+=`<path d="M${cx} ${cy-ph*0.42} C ${cx+pw*1.7} ${cy-ph*0.18} ${cx+pw*1.7} ${cy+ph*0.18} ${cx} ${cy+ph*0.42}" fill="none" stroke="${podDk}" stroke-width="${(M.line*0.7).toFixed(2)}" stroke-linejoin="round"/>`;
+  s+=inkPathC(`M${cx} ${cy-ph*0.5} L${cx} ${cy+ph*0.5}`,M.line*0.42,podDk);      // seam
+  s+=inkPathC(podD,M.line*0.95,podDk);                                            // outline last
+  s+=inkPathC(`M${cx} ${cy-ph*0.5} q 1 -10 -3 -16`,M.line*0.8,SPOT.stem);         // beak
+  return svgWrap(s);}
+function serratedSprig(){const bx=100,by=244,H=150;const save=FORM.detail;FORM.detail="serrate";
+  let s=inkPath(`M${bx} ${by} q -5 18 -2 34`,M.line*0.7);s+=inkPath(`M${bx} ${by} C ${bx-6} ${by-H*0.5} ${bx+8} ${by-H*0.8} ${bx+4} ${by-H}`,M.line*1.05);
+  for(let i=0;i<5;i++){const t=0.22+i*0.16;const ly=by-H*t;const side=i%2?1:-1;s+=drawLeaf(bx+(i%2?4:-4),ly,side>0?-0.35:Math.PI+0.35,24,i%2?SPOT.leaf:SPOT.leaf2);}
+  s+=drawLeaf(bx+4,by-H,-1.57,24,SPOT.leaf);FORM.detail=save;return svgWrap(s);}
+
+/* ---------- gardeners (reuse) ---------- */
+function spiralPath(cx,cy,rMax,turns){let d="";const N=Math.round(turns*26);
+  for(let i=0;i<=N;i++){const t=i/N;const ang=t*turns*Math.PI*2-1.6;const r=rMax*Math.pow(t,0.92);d+=(i?" L":"M")+(cx+Math.cos(ang)*r).toFixed(1)+" "+(cy+Math.sin(ang)*r).toFixed(1);}return d;}
+function gMound(){return svgWrap(moundInner(false,true),"0 0 200 224");}
+function gTender(){const cx=100,cy=140;let s="";
+  s+=fillShape(`M${cx-26} ${cy+70} Q ${cx-30} ${cy} ${cx} ${cy-4} Q ${cx+30} ${cy} ${cx+26} ${cy+70} Z`,SPOT.stem,"petal");
+  s+=circShape(cx,cy-16,18,"#e9d9c2","berry");
+  s+=`<circle cx="${cx-6}" cy="${cy-18}" r="1.6" fill="${INK}"/><circle cx="${cx+6}" cy="${cy-18}" r="1.6" fill="${INK}"/>`;
+  s+=inkPath(`M${cx-5} ${cy-11} q 5 4 10 0`,M.line*0.8);
+  s+=fillShape(`M${cx-30} ${cy-30} Q ${cx} ${cy-24} ${cx+30} ${cy-30} Q ${cx} ${cy-20} ${cx-30} ${cy-30} Z`,SPOT.hat,"petal");
+  s+=fillShape(`M${cx-13} ${cy-30} Q ${cx-11} ${cy-46} ${cx} ${cy-47} Q ${cx+11} ${cy-46} ${cx+13} ${cy-30} Z`,SPOT.hat,"petal");
+  s+=inkPath(`M${cx+22} ${cy+18} q 16 2 22 -10`,M.line*1.0)+fillShape(`M${cx+44} ${cy+4} l6 -10 l4 3 l-6 10 z`,SPOT.earth,"pod");
+  s+=inkPath(`M${cx-40} ${cy+72} q 0 -14 -6 -22`,M.line*0.8)+drawLeaf(cx-46,cy+50,-1.9,13,SPOT.leaf);return svgWrap(s,"0 0 200 230");}
+function gSprite(){const cx=100,cy=150;let s="";
+  s+=inkPath(`M${cx} ${cy+70} C ${cx-8} ${cy+30} ${cx+8} ${cy} ${cx} ${cy-16}`,M.line*1.3);
+  s+=fillShape(ellD(cx,cy+30,20,30),SPOT.leaf,"petal");
+  s+=`<circle cx="${cx-6}" cy="${cy+24}" r="2" fill="${INK}"/><circle cx="${cx+6}" cy="${cy+24}" r="2" fill="${INK}"/>`;
+  s+=inkPath(`M${cx-5} ${cy+32} q 5 5 10 0`,M.line*0.9);
+  s+=`<circle cx="${cx-11}" cy="${cy+30}" r="2.4" fill="#e58bb0" opacity="0.6"/><circle cx="${cx+11}" cy="${cy+30}" r="2.4" fill="#e58bb0" opacity="0.6"/>`;
+  s+=drawLeaf(cx-18,cy+34,Math.PI-0.2,16,SPOT.leaf2)+drawLeaf(cx+18,cy+34,0.2,16,SPOT.leaf2);
+  s+=drawLeaf(cx,cy-14,-2.2,18,SPOT.leaf)+drawLeaf(cx,cy-14,-0.9,18,SPOT.leaf);return svgWrap(s,"0 0 200 240");}
+function gSnail(){const cx=98,cy=152;const bodyCol="#e6d5b4";const shcx=cx-10,shcy=cy-18,shr=33;let s="";
+  s+=`<ellipse cx="${cx}" cy="${cy+40}" rx="60" ry="6" fill="${INK}" opacity="0.06"/>`;
+  s+=fillShape(`M ${cx-56} ${cy+30} C ${cx-72} ${cy+22} ${cx-66} ${cy+4} ${cx-46} ${cy+6} C ${cx-18} ${cy} ${cx+30} ${cy} ${cx+54} ${cy+10} C ${cx+72} ${cy+17} ${cx+74} ${cy+32} ${cx+60} ${cy+36} C ${cx+50} ${cy+39} ${cx+46} ${cy+38} ${cx+38} ${cy+38} L ${cx-44} ${cy+38} C ${cx-54} ${cy+38} ${cx-56} ${cy+36} ${cx-56} ${cy+30} Z`,bodyCol,"petal");
+  s+=circShape(shcx,shcy,shr,SPOT.shell,"berry");
+  s+=`<path d="M ${shcx-shr*0.5} ${shcy-shr*0.4} a ${shr*0.6} ${shr*0.6} 0 0 1 ${shr*0.7} ${-shr*0.2}" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity="0.28"/>`;
+  s+=inkPath(spiralPath(shcx,shcy,shr*0.8,2.7),M.line*0.9);
+  s+=inkPath(`M${shcx+2} ${shcy-shr+2} q -1 -8 -5 -12`,M.line*0.7)+drawLeaf(shcx-3,shcy-shr-10,-2.0,11,SPOT.leaf)+drawLeaf(shcx-3,shcy-shr-10,-1.15,9,SPOT.leaf2);
+  const hx=cx+52,hy=cy+14;                              // shorter, sturdier eye-stalks — eyes sit close to the head
+  s+=inkPath(`M${hx-2} ${hy+4} Q ${hx-6} ${hy-8} ${hx-7} ${hy-18}`,M.line*1.0)+inkPath(`M${hx+7} ${hy+4} Q ${hx+11} ${hy-9} ${hx+13} ${hy-20}`,M.line*1.0);
+  s+=`<circle cx="${hx-7}" cy="${hy-20}" r="4.6" fill="${INK}"/><circle cx="${hx-5.4}" cy="${hy-21.6}" r="1.5" fill="#fff"/>`;
+  s+=`<circle cx="${hx+13}" cy="${hy-22}" r="4.6" fill="${INK}"/><circle cx="${hx+14.6}" cy="${hy-23.6}" r="1.5" fill="#fff"/>`;
+  s+=`<circle cx="${hx+2}" cy="${hy+11}" r="3.6" fill="#e58bb0" opacity="0.55"/>`+inkPath(`M${hx-3} ${hy+12} q 6 6 12 0`,M.line*0.9);return svgWrap(s,"0 0 200 220");}
+function gWaterCan(){const cx=96,cy=150;let s="";
+  s+=fillShape(`M${cx-24} ${cy} h44 v40 q 0 8 -8 8 h-28 q -8 0 -8 -8 z`,SPOT.sound,"petal");
+  s+=fillShape(`M${cx-24} ${cy+8} l-22 -10 l4 -7 l20 9 z`,SPOT.sound,"pod")+fillShape(`M${cx-46} ${cy-2} l-8 -4 l3 -6 l8 4 z`,SPOT.sound,"pod");
+  s+=inkPath(`M${cx-6} ${cy} q 8 -20 24 -2`,M.line*1.1)+inkPath(`M${cx+8} ${cy} q 8 -12 12 0`,M.line*1.0);
+  for(let i=0;i<4;i++)s+=inkPath(`M${cx-52-i*3} ${cy-4} l-3 12`,M.line*0.55);
+  s+=inkPath(`M${cx-64} ${cy+58} q 0 -12 -4 -20`,M.line*0.8)+drawLeaf(cx-68,cy+40,-1.9,13,SPOT.leaf)+drawLeaf(cx-68,cy+40,-1.2,11,SPOT.leaf2);return svgWrap(s,"0 0 200 230");}
+function gHedgehog(){const cx=100,cy=158;let s="";
+  s+=fillShape(`M${cx-46} ${cy+34} q -2 -34 40 -36 q 34 -2 40 20 q 4 16 -14 20 q -40 8 -66 -4 z`,SPOT.earth,"petal");
+  s+=`<circle cx="${cx+34}" cy="${cy+8}" r="2" fill="${INK}"/><circle cx="${cx+44}" cy="${cy+16}" r="2.6" fill="${INK}"/>`;
+  const rng=mulberry32(hash("hog"+SEED));
+  for(let i=0;i<12;i++){const t=i/11;const bxp=cx-40+t*66,byp=cy+(Math.sin(t*Math.PI)*-22)+6;s+=drawLeaf(bxp,byp,-1.9+(t-0.5)*1.2,12+rng()*6,i%2?SPOT.leaf:SPOT.leaf2);}
+  s+=inkLine(cx-28,cy+30,cx-28,cy+38,M.line)+inkLine(cx+6,cy+32,cx+6,cy+40,M.line);return svgWrap(s,"0 0 200 230");}
+
+/* ---------- close-ups + colour interplay ---------- */
+function bigLeaf(){const cx=100,cy=95,len=150;return svgWrap(drawLeaf(cx-len/2,cy,0,len,SPOT.leaf),"0 0 200 190");}
+function bigPetal(){const cx=100,cy=98;let s="";for(let i=0;i<6;i++){const a=i/6*Math.PI*2;const ex=cx+Math.cos(a)*30,ey=cy+Math.sin(a)*30;
+  s+=`<g transform="rotate(${(a*180/Math.PI).toFixed(0)} ${ex.toFixed(1)} ${ey.toFixed(1)})">${fillShape(ellD(ex,ey,42,24),SPOT.styles,"petal")}</g>`;}
+  s+=circShape(cx,cy,20,SPOT.center,"center");return svgWrap(s,"0 0 200 190");}
+function detail(kind,tex){const s=M.texture;M.texture=tex;buildDefs();const svg=kind==="leaf"?bigLeaf():bigPetal();M.texture=s;buildDefs();return svg;}
+function interDemo(inter,tex){const sI=M.inter,sT=M.texture;M.inter=inter;M.texture=tex;buildDefs();
+  const cx=100,cy=120;let s=drawLeaf(cx-6,cy+52,Math.PI+0.7,46,SPOT.leaf)+drawLeaf(cx+6,cy+52,-0.5,44,SPOT.leaf2);
+  s+=bloom("styles",cx,cy,26,mulberry32(9),null);M.inter=sI;M.texture=sT;buildDefs();return svgWrap(s,"0 0 200 200");}
+
+/* ---------- SCENE MODE ---------- */
+// a drawn raised bed with soil clipped grain, grounded plants + cast shadows, a signpost
+// one grounded, upright plant scaled about its own base — with a cast shadow
+function scenePlant(px,py,sec,lc,sc){
+  const g=growBody({section:sec,lifecycle:lc,conn:lc==="established"?2:0},100,244);
+  const inner=g.roots+g.stem+g.leaves.join("")+g.head;
+  return `<ellipse cx="${px}" cy="${(py+3).toFixed(1)}" rx="${(30*sc).toFixed(1)}" ry="4" fill="${INK}" opacity="0.09"/>`+
+    `<g transform="translate(${px} ${py}) scale(${sc.toFixed(3)}) translate(-100 -244)">${inner}</g>`;
+}
+function bedVignette(){                                  // GREENHOUSE — plants under a drawn glass house
+  const W=284,H=250; const bx=26,by=150,bw=232,bh=52;
+  let s="";
+  // glass house behind the planting — the distinguishing structure
+  const gx0=bx-4,gx1=bx+bw+4,eave=by-86,apex=by-124,ridgeX=(gx0+gx1)/2;
+  s+=`<path d="M${gx0} ${by} L${gx0} ${eave} L${ridgeX} ${apex} L${gx1} ${eave} L${gx1} ${by}" fill="#e9f2ee" opacity="0.5"/>`;
+  s+=inkPath(`M${gx0} ${by} L${gx0} ${eave} L${ridgeX} ${apex} L${gx1} ${eave} L${gx1} ${by}`,M.line*1.15);
+  s+=inkPath(`M${gx0} ${eave} L${gx1} ${eave}`,M.line*0.9);
+  for(let vx=gx0+36;vx<gx1-12;vx+=36)s+=inkPath(`M${vx} ${eave} L${vx} ${by}`,M.line*0.5);
+  s+=inkPath(`M${(gx0+ridgeX)/2} ${(eave+apex)/2} L${(gx1+ridgeX)/2} ${(eave+apex)/2}`,M.line*0.45);
+  // soil + grain clipped to the bed
+  s+=groundSoil(bx,by,bw,bh,4,"bedclip");
+  // plants — staggered in depth (each on its own baseline), painted back-to-front
+  const plants=[[bx+56,by+18,"styles","seedling",0.5],[bx+150,by+40,"optics","growing",0.66],[bx+100,by+44,"techniques","established",0.74],[bx+198,by+28,"atoms","growing",0.58]];
+  plants.sort((a,b)=>a[1]-b[1]).forEach(([px,py,sec,lc,sc])=>{s+=scenePlant(px,py,sec,lc,sc);});
+  // front wall over the plant bases, then rails
+  s+=woodFill(`M${bx} ${by+bh} h${bw} v16 h${-bw} z`);
+  s+=inkPath(`M${bx} ${by} h${bw} M${bx} ${by+bh} h${bw} M${bx} ${by} v${bh+16} M${bx+bw} ${by} v${bh+16}`,M.line*0.9);
+  s+=`<text x="${bx+bw/2}" y="${by+bh+11}" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="8" letter-spacing="1.5" fill="#fdfdfb">GREENHOUSE · LAB</text>`;
+  return svgWrap(s,`0 0 ${W} ${H}`);
+}
+function bedVignette2(){                                 // COMPONENTS — an OPEN raised bed with a back trellis (no glass)
+  const W=284,H=250; const bx=26,by=150,bw=232,bh=52;
+  let s="";
+  // back trellis — a different structure from the greenhouse glass
+  const ty=by-2;
+  for(let vx=bx+20;vx<bx+bw;vx+=32)s+=inkPath(`M${vx} ${ty} v-74`,M.line*0.7);
+  for(let hy=ty-16;hy>ty-74;hy-=19)s+=inkPath(`M${bx+12} ${hy} h${bw-24}`,M.line*0.55);
+  // a climber on the trellis, top-left
+  s+=inkPathC(`M${bx+36} ${ty} C ${bx+30} ${ty-24} ${bx+50} ${ty-40} ${bx+40} ${ty-64}`,M.line*0.9,SPOT.stem);
+  s+=drawLeaf(bx+30,ty-34,Math.PI-0.3,15,SPOT.leaf)+drawLeaf(bx+52,ty-52,0.3,14,SPOT.leaf2);
+  // soil + grain
+  s+=groundSoil(bx,by,bw,bh,4,"bedclip2");
+  // plants — staggered, painted back-to-front, a different section mix
+  const plants=[[bx+52,by+16,"techniques","growing",0.5],[bx+126,by+42,"explorations","established",0.74],[bx+190,by+26,"sound","growing",0.58],[bx+156,by+16,"styles","seedling",0.46]];
+  plants.sort((a,b)=>a[1]-b[1]).forEach(([px,py,sec,lc,sc])=>{s+=scenePlant(px,py,sec,lc,sc);});
+  s+=woodFill(`M${bx} ${by+bh} h${bw} v16 h${-bw} z`);
+  s+=inkPath(`M${bx} ${by} h${bw} M${bx} ${by+bh} h${bw} M${bx} ${by} v${bh+16} M${bx+bw} ${by} v${bh+16}`,M.line*0.9);
+  s+=`<text x="${bx+bw/2}" y="${by+bh+11}" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="8" letter-spacing="1.5" fill="#fdfdfb">COMPONENTS</text>`;
+  return svgWrap(s,`0 0 ${W} ${H}`);
+}
+// a top-view plant for the plan — a small rosette of leaves + a bloom dot (lightweight, no texture)
+function topPlant(x,y,r,bloomCol,rng){let s="";const n=5+Math.floor(rng()*3);
+  for(let i=0;i<n;i++){const a=(i/n*360+rng()*40).toFixed(0);const col=rng()>0.5?SPOT.leaf:SPOT.leaf2;
+    const d=ellD(x,y-r*0.62,r*0.5,r*0.22);
+    s+=`<g transform="rotate(${a} ${x.toFixed(1)} ${y.toFixed(1)})"><path d="${d}" fill="${col}"${blend()}/><path d="${d}" fill="none" stroke="${INK}" stroke-width="${(M.line*0.5).toFixed(2)}"/></g>`;}
+  s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r*0.34).toFixed(1)}" fill="${bloomCol}"${blend()}/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r*0.34).toFixed(1)}" fill="none" stroke="${INK}" stroke-width="${(M.line*0.6).toFixed(2)}"/>`;
+  return s;}
+// a drawn raised bed seen from above — soil, grain, wood frame, planted rows
+function planBed(x,y,w,h,glass,seedk){const rng=mulberry32(hash(seedk+SEED));const cid="pb"+hash(seedk);let s="";
+  s+=groundSoil(x,y,w,h,4,cid);
+  const palette=[SPOT.techniques,SPOT.styles,SPOT.optics,SPOT.atoms,SPOT.sound,SPOT.explorations];
+  const cols=Math.max(2,Math.round(w/74)),rows=Math.max(1,Math.round(h/58));
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const px=x+(c+0.5)/cols*w+(rng()-0.5)*8,py=y+(r+0.5)/rows*h+(rng()-0.5)*6;
+    s+=topPlant(px,py,9+rng()*4,palette[Math.floor(rng()*palette.length)],rng);}
+  if(glass){s+=`<g clip-path="url(#${cid})">`;for(let gx=x-h;gx<x+w;gx+=15)s+=inkPath(`M${gx} ${y+h} L${gx+h} ${y}`,M.line*0.4);s+=`</g>`;}
+  s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="none" stroke="${woodCol()}" stroke-width="3.5"/>`;
+  s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="none" stroke="${INK}" stroke-width="${M.line}"/>`;
+  return s;}
+// a small staked sign
+function planTag(x,y,text){return inkLine(x,y,x,y-12,M.line)+`<text x="${(x+5).toFixed(0)}" y="${(y-14).toFixed(0)}" font-family="'JetBrains Mono',monospace" font-size="10.5" letter-spacing="0.5" fill="${INK}">${text}</text>`;}
+// the map — a drawn garden, top-down; geography IS the workflow
+function gardenPlan(){
+  const W=1000,H=452;let s="";
+  s+=`<rect x="14" y="14" width="${W-28}" height="${H-28}" rx="12" fill="none" stroke="${INK}" stroke-width="${(M.line*1.4).toFixed(2)}" stroke-dasharray="2 7"/>`;
+  s+=`<path d="M${W/2} ${H-18} L${W/2} 306 M${W/2} 306 L 250 306 M${W/2} 306 L 750 306 M${W/2} 306 L${W/2} 104" fill="none" stroke="${INK}" stroke-width="${M.line}" stroke-dasharray="3 6" opacity="0.6"/>`;
+  s+=planBed(44,62,W-88,44,false,"border");        s+=planTag(56,60,"PERENNIAL BORDER — recurring");
+  s+=planBed(96,158,318,124,false,"projectbeds");   s+=planTag(108,156,"PROJECT BEDS — Components · Ki");
+  s+=planBed(600,158,318,124,true,"greenhouse");    s+=planTag(612,156,"GREENHOUSE · LAB — drafts under glass");
+  s+=planBed(W/2-152,320,304,58,false,"nursery");   s+=planTag(W/2-140,318,"NURSERY — everything starts here");
+  // compost bin (drawn wood box + scraps), corner
+  const cx0=W-196,cy0=H-104;
+  s+=woodFill(`M${cx0} ${cy0} h156 v70 h-156 z`);
+  s+=inkPath(`M${cx0} ${cy0} h156 v70 h-156 z M${cx0} ${cy0+23} h156 M${cx0} ${cy0+46} h156`,M.line*0.8);
+  const rc=mulberry32(hash("compost"+SEED));for(let i=0;i<10;i++)s+=`<circle cx="${(cx0+18+rc()*130).toFixed(0)}" cy="${(cy0+12+rc()*50).toFixed(0)}" r="${(2+rc()*3).toFixed(1)}" fill="${SPOT.stem}" opacity="0.5"/>`;
+  s+=planTag(cx0+6,cy0-2,"COMPOST — scraps");
+  // gate + bench at the bottom (the opening in the fence)
+  s+=`<rect x="${W/2-48}" y="${H-30}" width="96" height="18" fill="var(--paper)"/>`;
+  s+=inkPath(`M${W/2-48} ${H-12} l0 -22 M${W/2+48} ${H-12} l0 -22 M${W/2-48} ${H-34} l96 0`,M.line*1.3);
+  s+=woodFill(`M${W/2-30} ${H-56} h60 v11 h-60 z`)+inkPath(`M${W/2-24} ${H-45} v10 M${W/2+24} ${H-45} v10`,M.line);
+  s+=planTag(W/2+58,H-30,"THE GATE · BENCH — intake");
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;border:1px solid var(--line-2);border-radius:6px;background:var(--paper)">${s}</svg>`;
+}
+
+/* ---------- motion ---------- */
+function moPlant(section,lifecycle,cls,conn){const g=growBody({section,lifecycle,conn:conn||0},100,244);
+  return svgWrap(`<g class="${cls}">${g.roots+g.stem+g.leaves.join("")+g.head}</g>`,"0 0 200 260");}
+function moGrow(){const g=growBody({section:"optics",lifecycle:"established",conn:2},100,244);
+  let inner=`<g class="g-all">`+g.roots;
+  inner+=`<path d="${g.stemD}" fill="none" stroke="${INK}" stroke-width="${(M.line*1.1).toFixed(2)}" stroke-linejoin="round" stroke-linecap="round" pathLength="100" class="g-stem"/>`;
+  g.leaves.forEach((lf,i)=>{inner+=`<g class="g-leaf" style="animation-delay:${(0.85+i*0.22).toFixed(2)}s">${lf}</g>`;});
+  inner+=`<g class="g-bloom">${g.head}</g></g>`;return svgWrap(inner,"0 0 200 260");}
+function moBloomOpen(){const rng=mulberry32(hash("bo"+SEED));const bx=100,by=244,H=150;const topx=bx+6,topy=by-H;
+  let s=inkPath(`M${bx} ${by} q -6 18 -2 34`,M.line*0.7)+inkPath(`M${bx} ${by} C ${bx-6} ${by-H*0.5} ${bx+8} ${by-H*0.8} ${topx} ${topy}`,M.line*1.1);
+  s+=drawLeaf(bx-2,by-H*0.45,Math.PI+0.5,22,SPOT.leaf)+drawLeaf(bx+3,by-H*0.66,-0.5,20,SPOT.leaf2);
+  s+=`<g class="bloomo">${bloom("styles",topx,topy,13,rng,null)}</g>`;return svgWrap(s,"0 0 200 260");}
+function moDrip(){const rng=mulberry32(hash("dr"+SEED));const g=growBody({section:"sound",lifecycle:"growing",conn:0},100,244);
+  let s=g.roots+g.stem+g.leaves.join("")+g.head;
+  s+=`<g class="drip"><path d="M${g.topx} ${g.topy-26} q 6 10 0 16 q -6 -6 0 -16 z" fill="${SPOT.sound}"/></g>`;return svgWrap(s,"0 0 200 260");}
+function moGardener(){return svgWrap(`<g class="breathe">${moundInner(true,true)}</g>`,"0 0 200 224");}
+
+/* ---------- board data ---------- */
+const SECTIONS=[["optics","interference burst"],["techniques","seed-head"],["atoms","berry cluster"],["styles","layered petals"],["sound","concentric rings"],["explorations","loose daisy"]];
+const LIFE=["seedling","growing","established"];
+const ORGANIC=[[mimosa,"mimosa","pom-pom of fine filaments"],[fernFrond,"fern frond","bipinnate hairlines"],[trailingVine,"trailing vine","asymmetric grower"],[seedPod,"seed pod","dry pod, seeds inside"],[serratedSprig,"serrated sprig","toothed edge"],[()=>specimen({section:"styles",lifecycle:"growing"}),"refined bloom","organic leaves + veins"]];
+const GARDENERS=[[gMound,"01 · mound","abstract baseline — evergreen + ⟳"],[gTender,"02 · sun-hat tender","round body, wide hat, a trowel"],[gSprite,"03 · sprout sprite","a seedling with a face"],[gSnail,"04 · garden snail","plump, big eyes, a leaf hitchhiker"],[gWaterCan,"05 · watering can","the act, not the actor"],[gHedgehog,"06 · leaf hedgehog","a forager, spined with leaves"]];
+const KINDS=[[{section:"optics",kind:"technique",lifecycle:"growing"},"technique","a full plant"],[{kind:"grove"},"grove","a thicket — one mark, many"],[{kind:"stump",lifecycle:"established"},"stump","a known-failure, kept"],[{kind:"task",lifecycle:"growing",attention:["prune"]},"task","a stake + tag"],[{kind:"perennial"},"perennial","evergreen mound"]];
+const STATEDEMO=[[{section:"styles",lifecycle:"growing"},"growing","clean lifecycle"],[{section:"styles",lifecycle:"growing",attention:["water"]},"growing + water","attention overlay"],[{section:"styles",lifecycle:"growing",attention:["prune"]},"growing + prune","conflict overlay"],[{section:"styles",lifecycle:"growing",attention:["water","prune"]},"growing + both","two overlays at once"],[{section:"styles",lifecycle:"established",harvested:true},"harvested","terminal · faded + basket"]];
+const MOTION=[[moGrow,"grow-in","stem draws up · leaves unfurl · bloom springs"],[()=>moPlant("styles","growing","sway"),"idle sway","the resting breath"],[moBloomOpen,"bloom breathes","opens and eases closed"],[moDrip,"needs water","attention, bobbing"],[moGardener,"gardener returns","mound breathes, curl turns"]];
+
+function plate(inner,title,note,cls){return `<div class="plate ${cls==='wide'?'wide':''}"><div class="art">${inner}</div><div class="cap ${cls==='bad'?'bad':cls==='good'?'good':''}"><b>${title}</b><span>${note}</span></div></div>`;}
+
+function ontoDiagram(){
+  const L=[["form","the anatomy — root · stem · leaf · bloom · bodies. fix a primitive → fix every plant.","bound"],
+    ["encoding","what a mark means. bloom=section · height=lifecycle · overlay=attention · body=kind.","bound"],
+    ["material","how it's drawn. line · fill · colour · texture. set once, re-themes all.","canon"],
+    ["motion","behaviour. idle sway · staged growth · attention. some bound to lifecycle.","bound"]];
+  $("#onto").innerHTML=L.map(([h,p,tag])=>`<div class="olayer"><span class="otag ${tag}">${tag}</span><h4>${h}</h4><p>${p}</p></div>`).join("");
+}
+// the encoding, as an isometric raised bed: section = rows (depth), lifecycle = columns (across)
+function matrixHTML(){
+  const W=1000,H=580;
+  const BLx=250,BRx=750,BY=150, FLx=86,FRx=914,FY=440, wallH=44;   // trapezoid top face (perspective)
+  let s="";
+  const face=`M${BLx} ${BY} L${BRx} ${BY} L${FRx} ${FY} L${FLx} ${FY} Z`;
+  s+=groundSoilPath(face,"isoface");
+  // wood walls (front + two sides) give the bed its depth
+  s+=woodFill(`M${FLx} ${FY} L${FRx} ${FY} L${FRx} ${FY+wallH} L${FLx} ${FY+wallH} Z`);
+  s+=woodFill(`M${FRx} ${FY} L${BRx} ${BY} L${BRx} ${BY+wallH} L${FRx} ${FY+wallH} Z`,shade(woodCol(),0.8));
+  s+=woodFill(`M${FLx} ${FY} L${BLx} ${BY} L${BLx} ${BY+wallH} L${FLx} ${FY+wallH} Z`,shade(woodCol(),0.8));
+  s+=inkPath(`${face} M${FLx} ${FY} L${FLx} ${FY+wallH} L${FRx} ${FY+wallH} L${FRx} ${FY} M${FRx} ${FY+wallH} L${BRx} ${BY+wallH} M${FLx} ${FY+wallH} L${BLx} ${BY+wallH}`,M.line*1.0);
+  // plants on a section(row) × lifecycle(col) grid, painted back-to-front
+  const R=SECTIONS.length, cells=[];
+  for(let r=0;r<R;r++){const t=(r+0.5)/R, y=BY+(FY-BY)*t, lx=BLx+(FLx-BLx)*t, rx=BRx+(FRx-BRx)*t, sc=0.30+0.20*t;
+    for(let c=0;c<3;c++){cells.push({sec:SECTIONS[r][0],lc:LIFE[c],x:lx+((c+0.5)/3)*(rx-lx),y,sc});}}
+  cells.forEach(cc=>{
+    s+=`<ellipse cx="${cc.x.toFixed(1)}" cy="${(cc.y+2).toFixed(1)}" rx="${(26*cc.sc).toFixed(1)}" ry="4" fill="${INK}" opacity="0.08"/>`;
+    const g=growBody({section:cc.sec,lifecycle:cc.lc,conn:cc.lc==="established"?2:0},100,244);
+    s+=`<g transform="translate(${cc.x.toFixed(1)} ${cc.y.toFixed(1)}) scale(${cc.sc.toFixed(3)}) translate(-100 -244)">${g.roots+g.stem+g.leaves.join("")+g.head}</g>`;
+  });
+  const mono=(x,y,t,anc,sz,op)=>`<text x="${x.toFixed(0)}" y="${y.toFixed(0)}" text-anchor="${anc||'start'}" font-family="'JetBrains Mono',monospace" font-size="${sz||11}" letter-spacing="0.5" fill="${INK}"${op?` opacity="${op}"`:''}>${t}</text>`;
+  for(let c=0;c<3;c++)s+=mono(FLx+((c+0.5)/3)*(FRx-FLx),FY+wallH+22,LIFE[c].toUpperCase(),'middle',11);
+  s+=mono((FLx+FRx)/2,FY+wallH+38,"lifecycle → height",'middle',9,0.55);
+  for(let r=0;r<R;r++){const t=(r+0.5)/R,y=BY+(FY-BY)*t,lx=BLx+(FLx-BLx)*t;
+    s+=inkLine(lx-6,y,lx-16,y,M.line*0.6)+mono(lx-22,y+3,SECTIONS[r][0],'end',10.5);}
+  s+=`<g transform="rotate(-90 34 ${((BY+FY)/2).toFixed(0)})">${mono(34,(BY+FY)/2,'section → bloom type','middle',9,0.55)}</g>`;
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;background:var(--paper)">${s}</svg>`;
+}
+
+let playing=true;
+function render(){
+  buildDefs();
+  $("#matrix").innerHTML=matrixHTML();
+  $("#gState").innerHTML=STATEDEMO.map(([d,t,n])=>plate(specimen(d),t,n)).join("");
+  $("#gKind").innerHTML=KINDS.map(([d,t,n])=>plate(specimen(d),t,n)).join("");
+  $("#gColor").innerHTML=
+    plate(interDemo("clean","none"),"✗ flat blocks","no interaction — characterless",'bad')+
+    plate(interDemo("print","none"),"✓ overprint + misregister","overlaps darken; keyline off the fill",'good')+
+    plate(interDemo("print","riso"),"✓ riso coverage","the colour itself breaks up",'good');
+  $("#gOrganic").innerHTML=ORGANIC.map(([fn,t,n])=>plate(fn(),t,n)).join("");
+  $("#gGardeners").innerHTML=GARDENERS.map(([fn,t,n])=>plate(fn(),t,n)).join("");
+  renderMotion();
+  $("#gScene").innerHTML=plate(bedVignette(),"greenhouse bed","drafts under glass — soil grain clipped to the bed")+plate(bedVignette2(),"components bed","established plantings, one grounded scene");
+  $("#gPlan").innerHTML=gardenPlan();
+  $("#foot").innerHTML="material tokens: line "+M.line.toFixed(2)+" · "+M.fill+" · "+M.inter+" · "+M.texture+"/"+M.dist+" @ "+M.amt.toFixed(2)+" · fineness "+M.fine+(M.waver?" · waver":"")+" · leaf:"+FORM.detail;
+}
+function renderMotion(){$("#gMotion").innerHTML=MOTION.map(([fn,t,n])=>plate(fn(),t,n)).join("");$("#gMotion").classList.toggle("paused",!playing);}
+
+/* ---------- controls ---------- */
+$("#cLine").oninput=e=>{M.line=+e.target.value;$("#vLine").textContent=M.line.toFixed(2);render();};
+$("#cAmt").oninput=e=>{M.amt=+e.target.value;$("#vAmt").textContent=M.amt.toFixed(2);render();};
+$("#cFine").oninput=e=>{M.fine=+e.target.value;$("#vFine").textContent=["coarse","","medium","fine","very fine"][M.fine-1]||"fine";render();};
+$("#cGrit").oninput=e=>{G.grit=+e.target.value;$("#vGrit").textContent=G.grit.toFixed(2);render();};
+$("#cWaver").onclick=e=>{M.waver=!M.waver;e.target.classList.toggle("on",M.waver);e.target.textContent=M.waver?"on":"off";render();};
+$("#cSeed").onclick=()=>{SEED=Math.floor(Math.random()*9999);render();};
+function seg(id,obj,key){document.querySelectorAll("#"+id+" button").forEach(b=>b.onclick=()=>{obj[key]=b.dataset.v;document.querySelectorAll("#"+id+" button").forEach(x=>x.classList.toggle("on",x===b));render();});}
+seg("cFill",M,"fill");seg("cInter",M,"inter");seg("cTex",M,"texture");seg("cDist",M,"dist");seg("cDetail",FORM,"detail");
+seg("cSoil",G,"soil");seg("cWood",G,"wood");
+// copy tokens
+$("#cCopy").onclick=()=>{const tokens={ink:{line:M.line,waver:M.waver},plant:{fill:M.fill,colour:M.inter,screen:M.texture,spread:M.dist,amount:M.amt,fineness:M.fine},ground:{soil:G.soil,grit:G.grit,wood:G.wood},form:{leafDetail:FORM.detail}};
+  $("#modalText").value=JSON.stringify(tokens,null,2);$("#modal").classList.add("on");};
+$("#modalX").onclick=()=>$("#modal").classList.remove("on");
+$("#modalCopy").onclick=async()=>{try{await navigator.clipboard.writeText($("#modalText").value);$("#modalCopy").textContent="copied ✓";setTimeout(()=>$("#modalCopy").textContent="copy to clipboard",1400);}catch(e){$("#modalText").select();}};
+// motion note
+function setMoNote(){$("#moNote").innerHTML="— "+(playing?"playing":"paused")+" · <a id='moToggle'>"+(playing?"pause":"play")+"</a> · <a id='moReplay'>↻ replay</a>";
+  $("#moToggle").onclick=()=>{playing=!playing;$("#gMotion").classList.toggle("paused",!playing);setMoNote();};
+  $("#moReplay").onclick=()=>{playing=true;renderMotion();setMoNote();};}
+render();setMoNote();
+</script>
+</body>
+</html>
+
+</body></html>

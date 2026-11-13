@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Garden Kit — sample</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../visual-system/tokens.css">
+<link rel="stylesheet" href="../visual-system/motion.css">
+<style>
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-disp);padding:32px}
+  h1{font-weight:500;font-size:22px;margin:0 0 2px}
+  p.sub{font-family:var(--f-mono);font-size:11px;color:var(--ink-3);letter-spacing:.04em;margin:0 0 24px}
+  h2{font-family:var(--f-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin:28px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+  .cell{border:1px solid var(--line-2);border-radius:4px;background:var(--plate);padding:8px}
+  .cell svg{display:block;width:120px;height:auto}
+  .cell.wide svg{width:250px}
+  .cap{font-family:var(--f-mono);font-size:8.5px;color:var(--ink-3);margin-top:6px;text-align:center}
+  .controls{font-family:var(--f-mono);font-size:11px;color:var(--ink-2);margin-bottom:8px}
+  button{font-family:var(--f-mono);font-size:10px;padding:5px 10px;border:1px solid var(--line-2);border-radius:4px;background:#fff;cursor:pointer}
+</style>
+</head>
+<body>
+  <h1>Garden Kit — sample harness</h1>
+  <p class="sub">renderer/garden.js · one engine, fed data · change material → re-theme all</p>
+
+  <div class="controls">
+    material:
+    <button data-set='{"texture":"grain"}'>grain</button>
+    <button data-set='{"texture":"riso"}'>riso</button>
+    <button data-set='{"texture":"dots"}'>dots</button>
+    <button data-set='{"inter":"clean"}'>clean</button>
+    <button data-set='{"inter":"print"}'>print</button>
+    <button data-set='{"fill":"outline"}'>outline</button>
+    <button data-set='{"fill":"mixed"}'>mixed</button>
+    &nbsp;·&nbsp; <button id="reseed">↻ reseed</button>
+  </div>
+
+  <h2>encoding · section × lifecycle</h2>
+  <div class="row mo" id="matrix"></div>
+
+  <h2>state, split · lifecycle + attention[] + harvested</h2>
+  <div class="row" id="state"></div>
+
+  <h2>scene mode · a drawn bed</h2>
+  <div class="row" id="scene"></div>
+
+  <h2>gardeners</h2>
+  <div class="row" id="gardeners"></div>
+
+  <script src="../renderer/garden.js"></script>
+  <script>
+    const $=s=>document.querySelector(s);
+    const cell=(svg,cap,wide)=>`<div class="cell ${wide?'wide':''}">${svg}<div class="cap">${cap}</div></div>`;
+    const SECTIONS=["optics","techniques","atoms","styles","sound","explorations"];
+    const LIFE=["seedling","growing","established"];
+    function draw(){
+      Garden.setMaterial({}); // no-op; ensures defs current
+      $("#matrix").innerHTML = SECTIONS.map(sec=>
+        LIFE.map(l=>cell(Garden.specimen({section:sec,lifecycle:l,conn:l==="established"?2:0}), sec+" · "+l)).join("")
+      ).join("");
+      $("#state").innerHTML =
+        cell(Garden.specimen({section:"styles",lifecycle:"growing"}),"growing")+
+        cell(Garden.specimen({section:"styles",lifecycle:"growing",attention:["water"]}),"+ water")+
+        cell(Garden.specimen({section:"styles",lifecycle:"growing",attention:["prune"]}),"+ prune")+
+        cell(Garden.specimen({section:"styles",lifecycle:"growing",attention:["water","prune"]}),"+ both")+
+        cell(Garden.specimen({section:"styles",lifecycle:"established",harvested:true}),"harvested");
+      $("#scene").innerHTML =
+        cell(Garden.bed({label:"GREENHOUSE · LAB",plants:[["styles","growing"],["optics","established"],["atoms","seedling"]]}),"greenhouse bed",true)+
+        cell(Garden.bed({label:"COMPONENTS",plants:[["techniques","established"],["sound","growing"],["explorations","seedling"]]}),"components bed",true);
+      $("#gardeners").innerHTML = ["mound","tender","sprite","snail","hedgehog"].map(g=>cell(Garden.gardeners[g](),g)).join("");
+      // inject one shared <defs> at page level so every svg can reference it
+      if(!$("#shareddefs")){document.body.insertAdjacentHTML("afterbegin",`<svg id="shareddefs" width="0" height="0" style="position:absolute">${Garden.defs()}</svg>`);}
+      else $("#shareddefs").innerHTML=Garden.defs();
+    }
+    document.querySelectorAll("[data-set]").forEach(b=>b.onclick=()=>{Garden.setMaterial(JSON.parse(b.dataset.set));draw();});
+    $("#reseed").onclick=()=>{Garden.seed();draw();};
+    draw();
+  </script>
+</body>
+</html>

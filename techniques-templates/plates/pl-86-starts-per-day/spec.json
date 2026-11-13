@@ -1,0 +1,130 @@
+{
+  "id": "pl-86-starts-per-day",
+  "code": "PL-86",
+  "title": "Starts per day",
+  "section": "plates",
+  "variants": [
+    {
+      "id": "ink",
+      "label": "Ink",
+      "swatches": [
+        "#101014",
+        "#FFFFFF",
+        "#ADADAD",
+        "#FDFDFD"
+      ]
+    },
+    {
+      "id": "white",
+      "label": "White",
+      "swatches": [
+        "#FFFFFF",
+        "#FFFFFF",
+        "#ADADAD",
+        "#FDFDFD"
+      ]
+    }
+  ],
+  "reference": {
+    "file": null,
+    "px": [
+      1000,
+      459
+    ],
+    "grammar": ""
+  },
+  "units": "design units, 1000 = plate width",
+  "palette": {
+    "grounds": [
+      "#000000"
+    ],
+    "inks": [
+      "#FFFFFF",
+      "#ADADAD",
+      "#FDFDFD",
+      "#F9F9F9"
+    ]
+  },
+  "techniques": [
+    {
+      "id": "field-model",
+      "short": "FMLD",
+      "name": "Field model",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "fields-optics"
+      ],
+      "params": {
+        "figures": 1,
+        "family": "fields-optics",
+        "panels": [
+          {
+            "title": "Starts per day",
+            "coverage": 0.023,
+            "ground": "#000000"
+          }
+        ]
+      },
+      "implementation": "Points move in a field bent by wells; counts per day sit beside it as a line."
+    },
+    {
+      "id": "ink-palette",
+      "short": "INK",
+      "name": "Measured inks",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "palette"
+      ],
+      "params": {
+        "inks": [
+          {
+            "hex": "#FFFFFF",
+            "weight": 0.0079
+          },
+          {
+            "hex": "#ADADAD",
+            "weight": 0.0053
+          },
+          {
+            "hex": "#FDFDFD",
+            "weight": 0.0038
+          },
+          {
+            "hex": "#F9F9F9",
+            "weight": 0.0034
+          }
+        ]
+      },
+      "implementation": "solid ink pixels of each figure, read at full resolution, are clustered to five colors; a color is kept when it holds at least 4% of the ink."
+    },
+    {
+      "id": "figure-ground",
+      "short": "GRND",
+      "name": "Figure and ground",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "ground",
+        "coverage"
+      ],
+      "params": {
+        "grounds": [
+          "#000000"
+        ],
+        "ink_threshold": 40,
+        "coverage_mean": 0.023
+      },
+      "implementation": "The ground is the most common border color of a figure; ink is every pixel more than 40 levels from it."
+    }
+  ],
+  "pass_order": [
+    "ground · plate",
+    "figure · from its source page",
+    "read · points measured from the figure"
+  ],
+  "notes": [
+    "Sources: github.com/jalulia/massive · Stats/v02.html (https://jalulia.github.io/massive/Stats/v02.html)"
+  ]
+}

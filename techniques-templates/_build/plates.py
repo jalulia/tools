@@ -98,9 +98,9 @@ def plate(p):
         r = REC.get(pid, {}); row = WROW.get(pid, {})
         src = row.get('href') or ''
         x, y, w, h = box[i]
-        panels.append({'src': os.path.basename(figs[i]), 'id': pid, 'acc': r.get('acc'), 'title': clip(r.get('title') or row.get('title') or pid, 80),
+        panels.append({'src': os.path.basename(figs[i]), 'id': pid, 'acc': r.get('acc'), 'title': clip(row.get('title') or r.get('title') or pid, 80),
                        'x': round(x, 2), 'y': round(y, 2), 'w': round(w, 2), 'h': round(h, 2), 'source': row.get('sub_source') or row.get('source') or '', 'href': src,
-                       'a': round(m['w'] / m['h'], 5), 'ground': m['ground'], 'coverage': m['coverage'], 'inks': m['inks']})
+                       'a': round(m['w'] / m['h'], 5), 'ground': m['ground'], 'coverage': m['coverage'], 'inks': m['inks'], 'lift': (p.get('lift') or {}).get(pid)})
     U = lambda x: round(x / W_U, 4); V = lambda y: round(y / H, 4)
     rid, rname = p['read']['id'], p['read']['name']; sh = short4(rname)
     pts = []
@@ -115,7 +115,7 @@ def plate(p):
     # the layout point sits in the first gutter (or the top margin when the first row holds one figure)
     b0 = panels[0]; same = [pn for pn in panels if abs(pn['y'] - b0['y']) < 0.5]
     lu = (b0['x'] + b0['w'] + GUT / 2) if len(same) > 1 else W_U / 2; lv = (b0['y'] + b0['h'] / 2) if len(same) > 1 else MARGIN / 2
-    pts.append({'lay': 1, 'u': U(lu), 'v': V(lv), 'd': 'LAYT', 'label': f"Margin {int(MARGIN)} u · gutter {int(GUT)} u", 't': 'plate-layout', 'dir': [1, 1]})
+    if n > 1: pts.append({'u': U(lu), 'v': V(lv), 'd': 'LAYT', 'label': f"Margin {int(MARGIN)} u · gutter {int(GUT)} u", 't': 'plate-layout', 'dir': [1, 1]})
     # inks across the plate
     allinks = {}
     for m in M:
@@ -128,8 +128,10 @@ def plate(p):
         s = pn['source'] or ''
         if s and s not in [x['source'] for x in sources]: sources.append({'source': s, 'href': pn['href']})
     meanc = sum(m['coverage'] for m in M) / n
+    live = sum(1 for pn in panels if pn['lift'])
     body = [p['read']['implementation'],
-            f"{n} figure{'s' if n != 1 else ''}, kept at their own proportions and set in justified rows. Ink covers {round(meanc * 100)}% of a figure on average; the lead inks are {', '.join(h for h, _ in lead[:3])}."]
+            (f"{'It runs' if n == 1 else 'They run'} from {'its' if n == 1 else 'their'} source page, so hover, drag and click work as they do there. " if live == n else (f"{live} of {n} run from their source pages; the rest are stills. " if live else "A still: the source page is not published. "))
+            + f"Ink covers {round(meanc * 100)}% of the {'figure' if n == 1 else 'figures'}; the lead inks are {', '.join(h for h, _ in lead[:3])}."]
     spec = {
         'reference': {'file': None, 'px': [int(W_U), int(round(H))], 'grammar': p['lede']},
         'units': 'design units, 1000 = plate width',
@@ -145,17 +147,21 @@ def plate(p):
              'params': {'grounds': grounds, 'ink_threshold': 40, 'coverage_mean': round(meanc, 3)},
              'implementation': 'The ground is the most common border color of a figure; ink is every pixel more than 40 levels from it.'},
             {'id': 'plate-layout', 'short': 'LAYT', 'name': 'Justified plate', 'layer': 3, 'pass': 3, 'atoms': ['grid'],
-             'params': {'row_height_u': {'value': target, 'range': [120, 600], 'step': 1}, 'gutter_u': {'value': GUT, 'range': [0, 80], 'step': 1},
-                        'margin_u': {'value': MARGIN, 'range': [0, 120], 'step': 1}, 'rule_u': {'value': 0.8, 'range': [0, 4], 'step': 0.1}, 'height_u': round(H, 1)},
+             'params': {'row_height_u': target, 'gutter_u': GUT, 'margin_u': MARGIN, 'height_u': round(H, 1)},
              'implementation': 'Figures keep their proportions and share a row height; each row fills the plate width. Every split of the figures into rows is tried, and the one whose row heights sit closest to the target wins.',
-             'limits': 'Margin, gutter and row height re-lay the plate; the plate keeps its height, so a taller layout is scaled down to fit.'}],
-        'pass_order': ['ground · plate', 'figures · justified rows', 'read · points measured from each figure'],
+}],
+        'pass_order': ['ground · plate', 'figures · justified rows', 'read · points measured from each figure'] if n > 1 else ['ground · plate', 'figure · from its source page', 'read · points measured from the figure'],
         'notes': ['Sources: ' + '; '.join(x['source'] + (' (' + x['href'] + ')' if x['href'] else '') for x in sources)] if sources else []}
+    lede = p['lede'] or re.split(r'(?<=[.;])\s', p['read']['implementation'])[0].rstrip(';') + ('' if p['read']['implementation'].endswith('.') else '.')
+    if n == 1: spec['techniques'] = [t for t in spec['techniques'] if t['id'] != 'plate-layout']
     data = {'id': p['slug'], 'code': p['code'], 'fig': '4.' + str(int(p['code'][3:])), 'title': p['title'], 'kicker': p['code'] + ' · ' + p['family'], 'family': p['family'],
-            'lede': p['lede'], 'body': body, 'source': (sources[0]['source'] if sources else 'Isolated figures') + (f" and {len(sources) - 1} more" if len(sources) > 1 else ''),
+            'lede': lede, 'body': body, 'source': (sources[0]['source'] if sources else 'Isolated figures') + (f" and {len(sources) - 1} more" if len(sources) > 1 else ''),
             'spot': [int(lead[0][0][i:i + 2], 16) for i in (1, 3, 5)] if lead else [20, 20, 20], 'ref': {'w': int(W_U), 'h': int(round(H))},
             'variantLabel': 'Ground',
-            'refHint': 'The figures are the reference: each is shown as found, at its own proportions. Their sources are in the spec.',
+            'refHint': 'The figure is its own reference: it runs from its source page. The source is named in the spec.',
+            'liveOnLoad': live > 0, 'liveLabel': 'From the source',
+            'liveHint': 'The figure runs on its own code from its source page: hover it, drag it, click it. Turn this off to see the filed still.',
+            'paramsHint': 'The figure keeps its own controls: hover, drag and click it on the plate.' if live else 'A still has no parameters.',
             'colorHint': 'Paper is the plate ground; Rule is the hairline around each figure.',
             'variants': [{'id': 'white', 'label': 'White', 'sw': ['#FFFFFF'] + [h for h, _ in lead[:3]], 'spot': [20, 20, 20], 'paper': '#FFFFFF', 'rule': '#D9D9DC'},
                          {'id': 'ink', 'label': 'Ink', 'sw': ['#101014'] + [h for h, _ in lead[:3]], 'spot': [240, 240, 240], 'paper': '#101014', 'rule': '#2A2A30'}],
@@ -167,40 +173,30 @@ def plate(p):
     return data, sources
 
 RENDER = r"""(function(S){
-  /* the figures are loaded once and drawn at their boxes; margin, gutter and row height re-lay the plate here with the
-     same row search _build/plates.py uses, so the defaults reproduce the measured layout exactly */
-  var cache={}, P=null, H0=S.ref.h;
+  /* the still: each figure's filed picture at its box. The live layer (S.live) lifts each figure from its source page. */
+  var cache={};
   function load(src){ if(!cache[src])cache[src]=new Promise(function(res){ var im=new Image(); im.onload=function(){ res(im); }; im.onerror=function(){ res(null); }; im.src=src; }); return cache[src]; }
-  var LP=(S.spec.techniques.filter(function(t){ return t.id==='plate-layout'; })[0]||{}).params||{};
-  function val(o,k){ return o&&typeof o[k]==='number'?o[k]:(LP[k]&&typeof LP[k]==='object'?LP[k].value:LP[k]); }
-  function layout(o){
-    var g=val(o,'gutter_u'), m=val(o,'margin_u'), tg=val(o,'row_height_u'), A=S.panels.map(function(p){ return p.a; }), n=A.length, W=Math.max(40,1000-2*m), best=null;
-    for(var mask=0;mask<(1<<(n-1));mask++){ var rows=[], row=[0];
-      for(var i=1;i<n;i++){ if(mask>>(i-1)&1){ rows.push(row); row=[i]; } else row.push(i); } rows.push(row);
-      var hs=rows.map(function(r){ var sa=0; r.forEach(function(k){ sa+=A[k]; }); return (W-g*(r.length-1))/sa; });
-      if(hs.some(function(h){ return h<=1; }))continue;
-      var Ht=hs.reduce(function(s,h){ return s+h; },0)+g*(rows.length-1)+2*m;
-      var cost=hs.reduce(function(s,h){ return s+Math.abs(Math.log(h/tg)); },0)+0.6*Math.max(0,Math.log(Ht/1000/1.6))+0.6*Math.max(0,Math.log(0.55*1000/Ht));
-      if(!best||cost<best.cost-1e-9)best={cost:cost,rows:rows,hs:hs,H:Ht}; }
-    var B=[], y=m; best.rows.forEach(function(r,j){ var x=m, h=best.hs[j]; r.forEach(function(k){ B[k]={x:x,y:y,w:A[k]*h,h:h}; x+=A[k]*h+g; }); y+=h+g; });
-    var s=Math.abs(best.H-H0)<1.5?1:Math.min(1,H0/best.H), ox=(1000-1000*s)/2, oy=s<1?0:(H0-best.H)/2; if(Math.abs(best.H-H0)<1.5)oy=0;
-    B=B.map(function(b){ return {x:b.x*s+ox,y:b.y*s+oy,w:b.w*s,h:b.h*s}; });
-    return {B:B,g:g*s,m:m,rows:best.rows};
-  }
-  function movePoints(L,o){ if(!P)return; (S.points||[]).slice(0,P.length).forEach(function(q,i){ var p=P[i];
-      if(q.pi!=null){ var b=L.B[q.pi]; p.u=(b.x+b.w*q.ru)/1000; p.v=(b.y+b.h*q.rv)/H0; }
-      else if(q.lay){ var r0=L.rows[0], b0=L.B[r0[0]]; if(r0.length>1){ p.u=(b0.x+b0.w+L.g/2)/1000; p.v=(b0.y+b0.h/2)/H0; } else { p.u=0.5; p.v=Math.max(0.01,b0.y/2/H0); }
-        p.label='Margin '+Math.round(val(o,'margin_u'))+' u · gutter '+Math.round(val(o,'gutter_u'))+' u'; } }); }
-  S.onPoints=function(arr){ P=arr; };
-  S.relayPoints=function(O){ var o=(O&&O['plate-layout'])||{}; movePoints(layout(o),o); };
-  S.render=function(canvas,w,h,dpr,V,done,O){
-    var x=canvas.getContext('2d'), W=canvas.width, H=canvas.height, u=W/1000, v=H/H0, o=(O&&O['plate-layout'])||{}, L=layout(o), rule=val(o,'rule_u');
+  S.render=function(canvas,w,h,dpr,V,done){
+    var x=canvas.getContext('2d'), W=canvas.width, H=canvas.height, u=W/1000, v=H/S.ref.h;
     x.setTransform(1,0,0,1,0,0); x.fillStyle=V.paper; x.fillRect(0,0,W,H);
     Promise.all(S.panels.map(function(p){ return load(p.src); })).then(function(ims){
       x.imageSmoothingEnabled=true; x.imageSmoothingQuality='high';
-      S.panels.forEach(function(p,i){ var im=ims[i], b=L.B[i]; var X=Math.round(b.x*u), Y=Math.round(b.y*v), PW=Math.round(b.w*u), PH=Math.round(b.h*v);
-        if(im)x.drawImage(im,X,Y,PW,PH); if(rule>0){ x.strokeStyle=V.rule; x.lineWidth=Math.max(1,u*rule); x.strokeRect(X+0.5,Y+0.5,PW-1,PH-1); } });
+      S.panels.forEach(function(p,i){ var im=ims[i]; var X=Math.round(p.x*u), Y=Math.round(p.y*v), PW=Math.round(p.w*u), PH=Math.round(p.h*v);
+        if(im)x.drawImage(im,X,Y,PW,PH); x.strokeStyle=V.rule; x.lineWidth=Math.max(1,u*0.8); x.strokeRect(X+0.5,Y+0.5,PW-1,PH-1); });
       if(done)done(); });
+  };
+  var lifted=S.panels.some(function(p){ return p.lift; });
+  if(lifted)S.live=function(V){
+    var q=function(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); };
+    var cells=S.panels.map(function(p){ var st='left:'+(p.x/10)+'%;top:'+(p.y/S.ref.h*100)+'%;width:'+(p.w/10)+'%;height:'+(p.h/S.ref.h*100)+'%;background-image:url('+p.src+')';
+      if(!p.lift)return '<div class="cell still" style="'+st+'"></div>';
+      var L=p.lift, hh=Math.max(900,Math.ceil((L.h||0)+40));
+      return '<div class="cell" style="'+st+'" data-l="'+q(JSON.stringify(L))+'"><iframe src="'+q(L.rt+(L.slide>=0&&L.sid?'#'+L.sid:''))+'" width="1440" height="'+hh+'" scrolling="no" title="'+q(p.title)+'"></iframe></div>'; }).join('');
+    return '<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;overflow:hidden;background:'+V.paper+'}'
+      +'.cell{position:absolute;overflow:hidden;background-size:100% 100%;box-shadow:0 0 0 1px '+V.rule+'}'
+      +'.cell .win{position:absolute;overflow:hidden}.cell iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0;opacity:0;transition:opacity .35s;background:transparent}'
+      +'.cell.on{background:'+V.paper+'!important;box-shadow:none}.cell.on iframe{opacity:1}</style></head><body>'
+      +cells+'<script src="../../_shared/lift.js"><\/script></body></html>';
   };
 })(window.STUDY);
 """
@@ -211,8 +207,8 @@ def main():
         data, sources = plate(p)
         entries.append("    { id:%s, section:'plates', code:%s, family:%s, path:%s, title:%s, sub:%s, techniques:%s, variants:%s }" % (
             json.dumps(p['slug']), json.dumps(p['code']), json.dumps(p['family']), json.dumps('plates/' + p['slug'] + '/'), json.dumps(p['title'], ensure_ascii=False),
-            json.dumps(p['lede'] + ' ' + str(len(p['panels'])) + (' figures.' if len(p['panels']) != 1 else ' figure.'), ensure_ascii=False),
-            json.dumps([p['read']['id'], 'ink-palette', 'figure-ground', 'plate-layout']), json.dumps([v['sw'] for v in data['variants']])))
+            json.dumps(data['lede'] + (' ' + str(len(p['panels'])) + ' figures.' if len(p['panels']) != 1 else ''), ensure_ascii=False),
+            json.dumps([p['read']['id'], 'ink-palette', 'figure-ground'] + (['plate-layout'] if len(p['panels']) > 1 else [])), json.dumps([v['sw'] for v in data['variants']])))
         mapping.setdefault(p['read']['id'], {'name': p['read']['name'], 'family': p['family']})
         for pid in p['panels']:
             row = WROW.get(pid)

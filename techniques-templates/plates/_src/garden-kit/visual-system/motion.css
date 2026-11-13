@@ -1,0 +1,30 @@
+/* Garden motion — CSS-driven, keyed to lifecycle where bound.
+   Wrap a rendered plant's parts in the classed groups (see garden.js growBody
+   parts, or the sketchbook's moGrow) and add the container class `mo`.
+   Rules: subtle by default; growth is STAGED (stem draws up -> leaves unfurl ->
+   bloom springs -> settle to sway), never a scaleY squish. Respects
+   prefers-reduced-motion. */
+
+@keyframes sway        {0%,100%{transform:rotate(-1.2deg)} 50%{transform:rotate(1.2deg)}}
+@keyframes gstem       {from{stroke-dashoffset:100} to{stroke-dashoffset:0}}
+@keyframes gpart       {0%{opacity:0;transform:scale(.3)} 60%{opacity:1} 100%{opacity:1;transform:scale(1)}}
+@keyframes gbloom      {0%{opacity:0;transform:scale(.08)} 55%{opacity:1;transform:scale(1.1)} 75%{transform:scale(.97)} 100%{transform:scale(1)}}
+@keyframes breatheOpen {0%{transform:scale(.35);opacity:.55} 30%{transform:scale(1.04);opacity:1} 55%{transform:scale(1)} 80%{transform:scale(1);opacity:1} 100%{transform:scale(.35);opacity:.55}}
+@keyframes drip        {0%,100%{transform:translateY(0);opacity:.95} 50%{transform:translateY(5px);opacity:.4}}
+@keyframes curl        {0%,100%{transform:rotate(-7deg)} 50%{transform:rotate(7deg)}}
+@keyframes breathe     {0%,100%{transform:scale(1)} 50%{transform:scale(1.035)}}
+
+.mo .sway    {transform-box:fill-box;transform-origin:bottom center;animation:sway 6.5s ease-in-out infinite}
+/* staged growth: stem draws on, leaves unfurl (stagger via inline animation-delay), bloom springs, then whole plant sways */
+.mo .g-stem  {stroke-dasharray:100;animation:gstem 1.5s ease-out forwards}
+.mo .g-leaf  {transform-box:fill-box;transform-origin:center;opacity:0;animation:gpart .6s ease-out forwards}
+.mo .g-bloom {transform-box:fill-box;transform-origin:center;opacity:0;animation:gbloom .85s ease-out forwards;animation-delay:1.6s}
+.mo .g-all   {transform-box:fill-box;transform-origin:bottom center;animation:sway 6.5s ease-in-out 2.7s infinite}
+/* attention + terminal */
+.mo .bloomo  {transform-box:fill-box;transform-origin:center;animation:breatheOpen 5s ease-in-out infinite}
+.mo .drip    {transform-box:fill-box;transform-origin:center;animation:drip 2.3s ease-in-out infinite}   /* water overlay */
+.mo .curl    {transform-box:fill-box;transform-origin:center;animation:curl 3.8s ease-in-out infinite}   /* gardener idle */
+.mo .breathe {transform-box:fill-box;transform-origin:bottom center;animation:breathe 4.6s ease-in-out infinite}
+
+.mo.paused * {animation-play-state:paused !important}
+@media(prefers-reduced-motion:reduce){ .mo *{animation:none !important} .mo .g-stem{stroke-dasharray:none} }

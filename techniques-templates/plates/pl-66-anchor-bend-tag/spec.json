@@ -1,0 +1,169 @@
+{
+  "id": "pl-66-anchor-bend-tag",
+  "code": "PL-66",
+  "title": "Anchor, bend, tag",
+  "section": "plates",
+  "variants": [
+    {
+      "id": "white",
+      "label": "White",
+      "swatches": [
+        "#FFFFFF",
+        "#0A0907",
+        "#F2592D",
+        "#63392B"
+      ]
+    },
+    {
+      "id": "ink",
+      "label": "Ink",
+      "swatches": [
+        "#101014",
+        "#0A0907",
+        "#F2592D",
+        "#63392B"
+      ]
+    }
+  ],
+  "reference": {
+    "file": null,
+    "px": [
+      1000,
+      700
+    ],
+    "grammar": "A leader line anchored, bent and tagged, in three states."
+  },
+  "units": "design units, 1000 = plate width",
+  "palette": {
+    "grounds": [
+      "#F7F6F2",
+      "#FDF8F5"
+    ],
+    "inks": [
+      "#0A0907",
+      "#F2592D",
+      "#63392B",
+      "#EF5B2D",
+      "#090806",
+      "#080705"
+    ]
+  },
+  "techniques": [
+    {
+      "id": "leader-tag",
+      "short": "LATD",
+      "name": "Leader and tag",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "layout-ephemera"
+      ],
+      "params": {
+        "figures": 3,
+        "family": "layout-ephemera",
+        "panels": [
+          {
+            "title": "Anchor, bend, tag · 3",
+            "coverage": 0.046,
+            "ground": "#FDF8F5"
+          },
+          {
+            "title": "Anchor, bend, tag · 4",
+            "coverage": 0.06,
+            "ground": "#F7F6F2"
+          },
+          {
+            "title": "Anchor, bend, tag · 5",
+            "coverage": 0.023,
+            "ground": "#FDF8F5"
+          }
+        ]
+      },
+      "implementation": "A frame, a leader line that bends once and a numbered tag; the rules for each are drawn as the example."
+    },
+    {
+      "id": "ink-palette",
+      "short": "INK",
+      "name": "Measured inks",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "palette"
+      ],
+      "params": {
+        "inks": [
+          {
+            "hex": "#0A0907",
+            "weight": 0.0316
+          },
+          {
+            "hex": "#F2592D",
+            "weight": 0.0178
+          },
+          {
+            "hex": "#63392B",
+            "weight": 0.0172
+          },
+          {
+            "hex": "#EF5B2D",
+            "weight": 0.0149
+          },
+          {
+            "hex": "#090806",
+            "weight": 0.0146
+          },
+          {
+            "hex": "#080705",
+            "weight": 0.0091
+          }
+        ]
+      },
+      "implementation": "solid ink pixels of each figure, read at full resolution, are clustered to five colors; a color is kept when it holds at least 4% of the ink."
+    },
+    {
+      "id": "figure-ground",
+      "short": "GRND",
+      "name": "Figure and ground",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "ground",
+        "coverage"
+      ],
+      "params": {
+        "grounds": [
+          "#F7F6F2",
+          "#FDF8F5"
+        ],
+        "ink_threshold": 40,
+        "coverage_mean": 0.043
+      },
+      "implementation": "The ground is the most common border color of a figure; ink is every pixel more than 40 levels from it."
+    },
+    {
+      "id": "plate-layout",
+      "short": "LAYT",
+      "name": "Justified plate",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "grid"
+      ],
+      "params": {
+        "row_height_u": 270,
+        "gutter_u": 14,
+        "margin_u": 30,
+        "height_u": 700.2
+      },
+      "implementation": "Figures keep their proportions and share a row height; each row fills the plate width. Every split of the figures into rows is tried, and the one whose row heights sit closest to the target wins."
+    }
+  ],
+  "pass_order": [
+    "ground · plate",
+    "figures · justified rows",
+    "read · points measured from each figure"
+  ],
+  "notes": [
+    "Sources: github.com/jalulia/AC-Pico--V2CD · Style Guide.html (https://jalulia.github.io/AC-Pico--V2CD/Style%20Guide.html)"
+  ]
+}

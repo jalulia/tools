@@ -113,6 +113,7 @@ body.edit{height:100vh;overflow:hidden}
 <main id="app"></main>
 <div class="view" id="view" hidden role="dialog" aria-modal="true" aria-label="Piece"></div>
 <script src="../library/catalog.js"></script>
+<script src="moved.js"></script>
 <script>
 (function(){
 "use strict";
@@ -133,9 +134,13 @@ const line=r=>[r.call,(r.kind||'').replace(/-/g,' '),(r.family||'').replace(/-/g
 const lsGet=(k,d)=>{ try{ const v=JSON.parse(localStorage.getItem(k)); return v==null?d:v; }catch(e){ return d; } };
 const lsSet=(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
 
+/* a piece that was split into one plate per design opens as the new pieces, in its place */
+const MOVED=window.SET_MOVED||{};
+const fixK=ks=>{ const o=[]; for(const k of ks)for(const x of (MOVED[k]||[k]))if(!o.includes(x))o.push(x); return o; };
+
 /* state <-> hash */
 let st={t:'',n:'',k:[],e:false};
-function read(){ const P=new URLSearchParams(location.hash.slice(1)); st={t:P.get('t')||'',n:P.get('n')||'',k:(P.get('k')||'').split(',').map(s=>s.trim()).filter(Boolean),e:P.get('e')==='1'}; if(!st.k.length&&!location.hash)st.e=true; }
+function read(){ const P=new URLSearchParams(location.hash.slice(1)); st={t:P.get('t')||'',n:P.get('n')||'',k:fixK((P.get('k')||'').split(',').map(s=>s.trim()).filter(Boolean)),e:P.get('e')==='1'}; if(!st.k.length&&!location.hash)st.e=true; }
 function hashOf(s,edit){ const p=[]; if(edit)p.push('e=1'); if(s.t)p.push('t='+encodeURIComponent(s.t)); if(s.n)p.push('n='+encodeURIComponent(s.n)); p.push('k='+s.k.join(',')); return '#'+p.join('&'); }
 function write(){ const h=hashOf(st,st.e); if(location.hash!==h)history.replaceState(null,'',h); lsSet('set-draft',{t:st.t,n:st.n,k:st.k}); }
 const shareUrl=()=>location.href.split('#')[0]+hashOf(st,false);
@@ -220,7 +225,7 @@ function sync(){ write(); const o=document.getElementById('bOpen'); if(o){ o.hre
   ['bCopy','bDl','bSave','bClr'].forEach(id=>{ const b=document.getElementById(id); if(b)b.disabled=!st.k.length; }); }
 function drawSaved(){ const S=lsGet('set-saved',[]); const el=document.getElementById('saved'); if(!el)return;
   el.innerHTML=S.length?`<details><summary>Saved sets · ${S.length}</summary><ul>${S.map((x,i)=>`<li><span class="n">${esc(x.t||'Untitled')} <small>${x.k.length} pieces · ${esc(x.d||'')}</small></span><button type="button" class="btn" data-ld="${i}">Edit</button><button type="button" class="btn" data-dl="${i}">×</button></li>`).join('')}</ul></details>`:'';
-  el.querySelectorAll('[data-ld]').forEach(b=>b.onclick=()=>{ const x=lsGet('set-saved',[])[+b.dataset.ld]; if(!x)return; st={t:x.t||'',n:x.n||'',k:[...x.k],e:true}; write(); maker(); });
+  el.querySelectorAll('[data-ld]').forEach(b=>b.onclick=()=>{ const x=lsGet('set-saved',[])[+b.dataset.ld]; if(!x)return; st={t:x.t||'',n:x.n||'',k:fixK(x.k),e:true}; write(); maker(); });
   el.querySelectorAll('[data-dl]').forEach(b=>b.onclick=()=>{ const S2=lsGet('set-saved',[]); S2.splice(+b.dataset.dl,1); lsSet('set-saved',S2); drawSaved(); }); }
 let flT=null; function flash(m){ const f=document.getElementById('fl'); if(!f)return; f.textContent=m; clearTimeout(flT); flT=setTimeout(()=>f.textContent='',2600); }
 function copy(t){ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>flash('Link copied'),()=>flash(t)); else flash(t); }
@@ -242,7 +247,7 @@ app.querySelectorAll('.piece').forEach(b=>b.onclick=()=>open(+b.dataset.i));addE
 <\/script></body></html>`;
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([page],{type:'text/html'})); a.download=(st.t||'set').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-').toLowerCase()+'.html'; document.body.appendChild(a); a.click(); a.remove(); flash('Downloaded'); }
 
-function route(){ read(); if(!st.k.length&&st.e){ const d=lsGet('set-draft',null); if(d&&d.k&&d.k.length&&!location.hash.includes('k=')){ st.t=d.t||''; st.n=d.n||''; st.k=d.k; } } close(); if(st.e)maker(); else sheet(); }
+function route(){ read(); if(!st.k.length&&st.e){ const d=lsGet('set-draft',null); if(d&&d.k&&d.k.length&&!location.hash.includes('k=')){ st.t=d.t||''; st.n=d.n||''; st.k=fixK(d.k); } } close(); if(st.e)maker(); else sheet(); }
 addEventListener('hashchange',route); route();
 })();
 </script>

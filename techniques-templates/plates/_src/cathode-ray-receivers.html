@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Cathode-Ray Receivers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600&family=Fragment+Mono&family=Noto+Sans+JP:wght@400&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;--paper:#F5F3ED;--ink:#1A1A1D;--faint:#8B887F}
+html,body{background:#F5F3ED;margin:0}
+body{font-family:Archivo,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+.wrap{max-width:920px;margin:0 auto;padding:0 28px}
+header{padding:15vh 0 10vh}
+h1{font-size:clamp(40px,7vw,74px);line-height:.98;letter-spacing:-.015em;font-weight:600;margin:0}
+.jp{font-family:'Noto Sans JP',sans-serif;font-size:14px;letter-spacing:.55em;color:var(--faint);margin-top:22px}
+.sub{font-family:'Fragment Mono',monospace;font-size:11px;letter-spacing:.22em;color:var(--faint);margin-top:8px}
+.plate{min-height:88vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:6vh 0}
+.plate svg{width:100%;height:auto;display:block}
+.cap{font-family:'Fragment Mono',monospace;font-size:10.5px;letter-spacing:.3em;color:var(--faint);margin-top:34px;text-align:center}
+.cap b{color:var(--ink);font-weight:400}
+footer{padding:8vh 0 12vh;text-align:center}
+footer .sub{margin:0}
+@media(max-width:680px){header{padding:11vh 0 7vh}.plate{min-height:70vh}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Cathode-Ray<br>Receivers</h1>
+  <div class="jp">ブラウン管受像機</div>
+  <div class="sub">JAPAN · 1980–1993 · LINE ONLY</div>
+</header>
+<div id="plates"></div>
+<footer><div class="sub">TD·2608 · REV B</div></footer>
+</div>
+<script>
+const NS="http://www.w3.org/2000/svg", INK="#1A1A1D";
+const MAIN=1.5, FINE=1.0;
+function el(t,a={}){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e}
+function path(d,o={}){return el("path",{d,fill:"none",stroke:o.stroke||INK,"stroke-width":o.w||MAIN,"stroke-linecap":"round","stroke-linejoin":"round",...(o.dash?{"stroke-dasharray":o.dash}:{}),...(o.op?{opacity:o.op}:{})})}
+function line(x1,y1,x2,y2,o={}){return el("line",{x1,y1,x2,y2,stroke:o.stroke||INK,"stroke-width":o.w||MAIN,"stroke-linecap":"round",...(o.dash?{"stroke-dasharray":o.dash}:{}),...(o.op?{opacity:o.op}:{})})}
+function rrect(x,y,w,h,r){return `M ${x+r} ${y} H ${x+w-r} Q ${x+w} ${y} ${x+w} ${y+r} V ${y+h-r} Q ${x+w} ${y+h} ${x+w-r} ${y+h} H ${x+r} Q ${x} ${y+h} ${x} ${y+h-r} V ${y+r} Q ${x} ${y} ${x+r} ${y} Z`}
+// CRT face: bowed edges
+function crt(x,y,w,h,b=0.035,r=14){
+  const bx=w*b, by=h*b;
+  return `M ${x+r} ${y} Q ${x+w/2} ${y-by} ${x+w-r} ${y} Q ${x+w} ${y} ${x+w} ${y+r}`+
+         ` Q ${x+w+bx} ${y+h/2} ${x+w} ${y+h-r} Q ${x+w} ${y+h} ${x+w-r} ${y+h}`+
+         ` Q ${x+w/2} ${y+h+by} ${x+r} ${y+h} Q ${x} ${y+h} ${x} ${y+h-r}`+
+         ` Q ${x-bx} ${y+h/2} ${x} ${y+r} Q ${x} ${y} ${x+r} ${y} Z`;
+}
+function shade(g,x,y,w,h,cr){
+  let ts;
+  if(h<60)ts=[-0.8,0.8];
+  else if(h<140)ts=[-0.92,-0.76,0.76,0.92];
+  else ts=[-0.965,-0.885,-0.77,0.77,0.885,0.965];
+  for(const t of ts){
+    const cy=y+h/2, dy=Math.abs(t)*h/2; let pad=4;
+    if(dy>h/2-cr){const d=dy-(h/2-cr);pad=cr-Math.sqrt(Math.max(0,cr*cr-d*d))+4}
+    g.appendChild(line(x+pad,cy+t*h/2,x+w-pad,cy+t*h/2,{w:FINE,op:.32}));
+  }
+}
+function knob(g,cx,cy,r,ang=-40){
+  g.appendChild(el("circle",{cx,cy,r,fill:"none",stroke:INK,"stroke-width":FINE}));
+  const a=ang*Math.PI/180;
+  g.appendChild(line(cx+Math.cos(a)*r*.35,cy+Math.sin(a)*r*.35,cx+Math.cos(a)*r,cy+Math.sin(a)*r,{w:FINE}));
+}
+function dial(g,cx,cy,r){ // large rotary tuner
+  g.appendChild(el("circle",{cx,cy,r,fill:"none",stroke:INK,"stroke-width":MAIN}));
+  g.appendChild(el("circle",{cx,cy,r:r*.32,fill:"none",stroke:INK,"stroke-width":FINE,opacity:.8}));
+  for(let a=0;a<360;a+=30){
+    const rad=a*Math.PI/180, r0=r*.8;
+    g.appendChild(line(cx+Math.cos(rad)*r0,cy+Math.sin(rad)*r0,cx+Math.cos(rad)*(r-3),cy+Math.sin(rad)*(r-3),{w:FINE,op:.75}));
+  }
+}
+function dots(g,x,y,cols,rows,gap){
+  for(let i=0;i<cols;i++)for(let j=0;j<rows;j++){
+    if((i+j)%2)continue;
+    g.appendChild(el("circle",{cx:x+i*gap,cy:y+j*gap,r:1.1,fill:INK,opacity:.7}));
+  }
+}
+function slots(g,x,y,n,len,gap,vert){
+  for(let i=0;i<n;i++){
+    if(vert)g.appendChild(line(x+i*gap,y,x+i*gap,y+len,{w:FINE,op:.6}));
+    else g.appendChild(line(x,y+i*gap,x+len,y+i*gap,{w:FINE,op:.6}));
+  }
+}
+function feet(g,x,y,w){g.appendChild(path(`M ${x} ${y} L ${x+3} ${y+9} L ${x+w-3} ${y+9} L ${x+w} ${y} Z`,{w:FINE}))}
+
+function plate(id,vbW,vbH,cap,build){
+  const sec=document.createElement("section");sec.className="plate";
+  const svg=el("svg",{viewBox:`0 0 ${vbW} ${vbH}`});
+  const g=el("g");svg.appendChild(g);
+  build(g,svg);
+  sec.appendChild(svg);
+  const c=document.createElement("div");c.className="cap";c.innerHTML=cap;
+  sec.appendChild(c);
+  document.getElementById("plates").appendChild(sec);
+}
+
+/* 01 · PROFEEL 1980 — cube with carrying rails */
+plate("p1",900,560,"<b>01 PROFEEL</b> · 1980",(g)=>{
+  const W=430,H=370,fx=(900-W)/2,fy=70;
+  g.appendChild(path(rrect(fx,fy,W,H,7)));
+  for(const rx of[fx-13,fx+W+5]){
+    g.appendChild(path(rrect(rx,fy+9,8,H-18,4),{w:MAIN}));
+    g.appendChild(line(rx+4,fy+22,rx+4,fy+H-22,{w:FINE,op:.45}));
+  }
+  g.appendChild(path(rrect(fx+18,fy+16,W-36,H-96,6),{w:FINE,op:.75}));
+  const sx=fx+34,sy=fy+30,sw=W-68,sh=H-124;
+  g.appendChild(path(crt(sx,sy,sw,sh,.03,16)));
+  shade(g,sx,sy,sw,sh,16);
+  g.appendChild(line(fx+18,fy+H-62,fx+W-18,fy+H-62,{w:FINE,op:.5}));
+  for(let i=0;i<2;i++)g.appendChild(path(rrect(fx+188+i*30,fy+H-46,17,9,1.5),{w:FINE}));
+  for(let i=0;i<3;i++)knob(g,fx+296+i*33,fy+H-41,7,-30-i*35);
+  feet(g,fx+34,fy+H,44);feet(g,fx+W-78,fy+H,44);
+});
+
+/* 02 · WATCHMAN 1982 — vertical handheld */
+plate("p2",900,640,"<b>02 WATCHMAN</b> · 1982",(g)=>{
+  const W=210,H=490,fx=(900-W)/2,fy=90;
+  g.appendChild(path(rrect(fx,fy,W,H,17)));
+  g.appendChild(path(rrect(fx+31,fy+34,W-62,120,12),{w:FINE,op:.75}));
+  const sx=fx+43,sy=fy+45,sw=W-86,sh=98;
+  g.appendChild(path(crt(sx,sy,sw,sh,.05,12)));
+  shade(g,sx,sy,sw,sh,12);
+  for(let i=0;i<2;i++)g.appendChild(path(rrect(fx+42+i*72,fy+188,34,13,2.5),{w:FINE}));
+  g.appendChild(line(fx+28,fy+232,fx+W-28,fy+232,{w:FINE,op:.4}));
+  dots(g,fx+62,fy+296,8,10,12.5);
+  // antenna: stub + phantom extension
+  g.appendChild(path(rrect(fx+W-56,fy-7,26,7,3),{w:FINE}));
+  g.appendChild(line(fx+W-43,fy-7,fx+W+30,fy-72,{w:FINE,dash:"7 4",op:.8}));
+  g.appendChild(el("circle",{cx:fx+W+30,cy:fy-72,r:3,fill:"none",stroke:INK,"stroke-width":FINE,opacity:.8}));
+});
+
+/* 03 · PORTABLE 1984 — handle, twin tuner dials */
+plate("p3",900,600,"<b>03 PORTABLE</b> · 1984",(g)=>{
+  const W=470,H=330,fx=(900-W)/2,fy=170;
+  g.appendChild(path(rrect(fx,fy,W,H,10)));
+  // handle
+  g.appendChild(path(`M ${fx+118} ${fy} V ${fy-46} Q ${fx+118} ${fy-64} ${fx+136} ${fy-64} H ${fx+W-136} Q ${fx+W-118} ${fy-64} ${fx+W-118} ${fy-46} V ${fy}`,{w:MAIN}));
+  g.appendChild(path(`M ${fx+130} ${fy} V ${fy-44} Q ${fx+130} ${fy-52} ${fx+138} ${fy-52} H ${fx+W-138} Q ${fx+W-130} ${fy-52} ${fx+W-130} ${fy-44} V ${fy}`,{w:FINE,op:.6}));
+  // screen left
+  g.appendChild(path(rrect(fx+20,fy+18,300,H-36,8),{w:FINE,op:.75}));
+  const sx=fx+34,sy=fy+31,sw=272,sh=H-62;
+  g.appendChild(path(crt(sx,sy,sw,sh,.04,15)));
+  shade(g,sx,sy,sw,sh,15);
+  // right column: two dials + slots
+  dial(g,fx+W-70,fy+66,34);
+  dial(g,fx+W-70,fy+150,26);
+  slots(g,fx+W-108,fy+206,5,76,9,false);
+  feet(g,fx+30,fy+H,42);feet(g,fx+W-72,fy+H,42);
+});
+
+/* 04 · PVM 1985 — broadcast monitor */
+plate("p4",900,590,"<b>04 PVM</b> · 1985",(g)=>{
+  const W=430,H=400,fx=(900-W)/2,fy=80;
+  g.appendChild(path(rrect(fx,fy,W,H,6)));
+  g.appendChild(path(rrect(fx+15,fy+13,W-30,H-84,5),{w:FINE,op:.75}));
+  const sx=fx+30,sy=fy+26,sw=W-60,sh=H-110;
+  g.appendChild(path(crt(sx,sy,sw,sh,.028,17)));
+  shade(g,sx,sy,sw,sh,17);
+  const stripY=fy+H-56;
+  g.appendChild(line(fx+15,stripY,fx+W-15,stripY,{w:FINE,op:.45}));
+  for(let i=0;i<3;i++)knob(g,fx+38+i*30,stripY+27,7,-25-i*30);
+  for(let i=0;i<6;i++)g.appendChild(path(rrect(fx+142+i*22,stripY+21,14,11,1.5),{w:FINE}));
+  // operable power switch + tally (silent)
+  const pw={x:fx+W-56,y:stripY+20,w:22,h:13};
+  const pb=el("g",{style:"cursor:pointer"});
+  pb.appendChild(path(rrect(pw.x,pw.y,pw.w,pw.h,2),{w:MAIN}));
+  pb.appendChild(path(rrect(pw.x+4,pw.y+3,pw.w-8,pw.h-6,1.2),{w:FINE,op:.6}));
+  g.appendChild(pb);
+  const tally=el("circle",{cx:pw.x-16,cy:pw.y+pw.h/2,r:4,fill:"none",stroke:INK,"stroke-width":FINE});
+  g.appendChild(tally);
+  const raster=el("g",{opacity:0});
+  for(let i=0;i<5;i++)raster.appendChild(line(sx+22,sy+34+i*((sh-68)/4),sx+sw-22,sy+34+i*((sh-68)/4),{w:FINE,dash:"9 6",op:.5}));
+  g.appendChild(raster);
+  let on=false;
+  pb.addEventListener("click",()=>{on=!on;
+    tally.setAttribute("fill",on?INK:"none");
+    raster.setAttribute("opacity",on?1:0);
+    try{const AC=window.__ac||(window.__ac=new (window.AudioContext||window.webkitAudioContext)());
+      const o=AC.createOscillator(),ga=AC.createGain();
+      o.frequency.value=on?2300:1700;ga.gain.setValueAtTime(.06,AC.currentTime);
+      ga.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+.05);
+      o.connect(ga).connect(AC.destination);o.start();o.stop(AC.currentTime+.05);}catch(e){}
+  });
+  feet(g,fx+30,fy+H,46);feet(g,fx+W-76,fy+H,46);
+});
+
+/* 05 · CUBE 1986 — kitchen set, big tuner, antenna */
+plate("p5",900,600,"<b>05 CUBE</b> · 1986",(g)=>{
+  const W=340,H=330,fx=(900-W)/2,fy=170;
+  g.appendChild(path(rrect(fx,fy,W,H,14)));
+  g.appendChild(path(rrect(fx+18,fy+18,222,H-36,10),{w:FINE,op:.75}));
+  const sx=fx+31,sy=fy+31,sw=196,sh=H-62;
+  g.appendChild(path(crt(sx,sy,sw,sh,.045,14)));
+  shade(g,sx,sy,sw,sh,14);
+  dial(g,fx+W-52,fy+72,32);
+  knob(g,fx+W-52,fy+140,10,-45);
+  knob(g,fx+W-52,fy+176,10,20);
+  slots(g,fx+W-82,fy+216,4,60,9.5,false);
+  // telescopic antenna, angled, phantom
+  g.appendChild(path(rrect(fx+W-84,fy-7,22,7,3),{w:FINE}));
+  g.appendChild(line(fx+W-73,fy-7,fx+W+8,fy-96,{w:MAIN,op:.9}));
+  g.appendChild(line(fx+W+8,fy-96,fx+W+62,fy-148,{w:FINE,dash:"7 4",op:.8}));
+  g.appendChild(el("circle",{cx:fx+W+62,cy:fy-148,r:3,fill:"none",stroke:INK,"stroke-width":FINE,opacity:.8}));
+  feet(g,fx+24,fy+H,40);feet(g,fx+W-64,fy+H,40);
+});
+
+/* 06 · POCKET 1989 — flat landscape */
+plate("p6",900,420,"<b>06 POCKET</b> · 1989",(g)=>{
+  const W=330,H=200,fx=(900-W)/2,fy=110;
+  g.appendChild(path(rrect(fx,fy,W,H,13)));
+  const sx=fx+22,sy=fy+20,sw=214,sh=H-40;
+  g.appendChild(path(crt(sx,sy,sw,sh,.05,12)));
+  shade(g,sx,sy,sw,sh,12);
+  for(let i=0;i<3;i++)g.appendChild(path(rrect(fx+W-70,fy+26+i*26,40,12,2),{w:FINE}));
+  dots(g,fx+W-64,fy+124,5,5,8.5);
+  g.appendChild(line(fx+26,fy-6,fx+64,fy-6,{w:FINE,op:.6}));
+});
+
+/* 07 · PVM-4300 1989 — the giant */
+plate("p7",900,700,"<b>07 PVM-4300</b> · 1989",(g)=>{
+  const W=640,H=565,fx=(900-W)/2,fy=60;
+  g.appendChild(path(rrect(fx,fy,W,H,8)));
+  g.appendChild(path(rrect(fx+22,fy+18,W-44,H-104,7),{w:FINE,op:.75}));
+  const sx=fx+42,sy=fy+35,sw=W-84,sh=H-138;
+  g.appendChild(path(crt(sx,sy,sw,sh,.025,26)));
+  shade(g,sx,sy,sw,sh,26);
+  const bandY=fy+H-66;
+  g.appendChild(line(fx+22,bandY,fx+W-22,bandY,{w:FINE,op:.45}));
+  g.appendChild(path(rrect(fx+W-150,bandY+14,104,36,4),{w:FINE,op:.8}));
+  g.appendChild(line(fx+W-70,bandY+32,fx+W-58,bandY+32,{w:FINE,op:.7}));
+  feet(g,fx+52,fy+H,58);feet(g,fx+W-110,fy+H,58);
+});
+
+/* 08 · WIDE 1993 — widescreen Trinitron */
+plate("p8",900,560,"<b>08 WIDE</b> · 1993",(g)=>{
+  const W=620,H=400,fx=(900-W)/2,fy=70;
+  g.appendChild(path(rrect(fx,fy,W,H,9)));
+  const sx=fx+26,sy=fy+22,sw=W-52,sh=H-116;
+  g.appendChild(path(crt(sx,sy,sw,sh,.022,22)));
+  shade(g,sx,sy,sw,sh,22);
+  const bandY=fy+H-74;
+  g.appendChild(line(fx+26,bandY,fx+W-26,bandY,{w:FINE,op:.45}));
+  slots(g,fx+40,bandY+14,16,44,7.5,true);
+  slots(g,fx+W-40-15*7.5,bandY+14,16,44,7.5,true);
+  for(let i=0;i<4;i++)g.appendChild(path(rrect(fx+W/2-52+i*28,bandY+26,16,10,1.5),{w:FINE}));
+  // pedestal
+  g.appendChild(path(`M ${fx+W/2-110} ${fy+H} L ${fx+W/2-96} ${fy+H+26} H ${fx+W/2+96} L ${fx+W/2+110} ${fy+H} Z`,{w:MAIN}));
+});
+
+/* 09 · lineup, common scale */
+plate("p9",900,470,"COMMON SCALE",(g)=>{
+  const base=380,S=0.30;
+  g.appendChild(line(50,base+.5,850,base+.5,{w:FINE,op:.6}));
+  const items=[
+    {W:87,H:198,k:"hand"},{W:340,H:330,k:"tv"},{W:450,H:430,k:"tv"},{W:1050,H:925,k:"big"}
+  ];
+  let x=90;const gap=56;
+  for(const it of items){
+    const w=it.W*S,h=it.H*S,y=base-h;
+    g.appendChild(path(rrect(x,y,w,h,3),{w:FINE}));
+    if(it.k==="hand"){
+      const sw2=w*.62,sh2=h*.3,sx2=x+(w-sw2)/2,sy2=y+h*.13;
+      g.appendChild(path(crt(sx2,sy2,sw2,sh2,.05,4),{w:FINE}));
+    }else{
+      const sw2=w*.82,sh2=h*.66,sx2=x+(w-sw2)/2,sy2=y+h*.08;
+      g.appendChild(path(crt(sx2,sy2,sw2,sh2,.03,8),{w:FINE}));
+      g.appendChild(line(x+w*.1,y+h*.84,x+w*.9,y+h*.84,{w:FINE,op:.4}));
+    }
+    x+=w+gap;
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,549 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Shannon 1948</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,300;1,9..144,500&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a technical report read down a single column. Each idea is one figure box, numbered like
+   the paper's figures, with a live instrument inside and a short read beside it. A thin section rail
+   sits left on wide screens. Color lives only in the figures: blue is signal, red is noise. */
+:root{
+  --paper:#ffffff; --ink:#15171c; --mute:#60646c; --rule:#d9dad8; --wash:#f3f3f1; --field:#fafaf8;
+  --signal:#1f4bd8; --noise:#e4452b; --signal-soft:#dde5fb; --noise-soft:#fbe1dc;
+  --f-display:'Fraunces',Georgia,'Times New Roman',serif;
+  --f-text:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --paper:#101216; --ink:#ebe9e3; --mute:#9a9ea8; --rule:#2d3037; --wash:#171a1f; --field:#14161b; --signal:#7b96ff; --noise:#ff7a5e; --signal-soft:#1d2746; --noise-soft:#46231c; color-scheme:dark } }
+:root[data-theme="dark"]{ --paper:#101216; --ink:#ebe9e3; --mute:#9a9ea8; --rule:#2d3037; --wash:#171a1f; --field:#14161b; --signal:#7b96ff; --noise:#ff7a5e; --signal-soft:#1d2746; --noise-soft:#46231c; color-scheme:dark }
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{background:var(--paper);color:var(--ink);font:400 16px/1.55 var(--f-text);padding-block:0 96px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.page{max-width:1160px;margin:0 auto;display:grid;grid-template-columns:168px minmax(0,1fr);gap:0 40px}
+.rail{position:sticky;top:24px;align-self:start;padding-top:40px;display:grid;gap:4px;font:400 12px/1.4 var(--f-mono);color:var(--mute)}
+.rail a{color:inherit;text-decoration:none;display:grid;grid-template-columns:34px minmax(0,1fr);gap:8px;padding:5px 0;border-top:1px solid var(--rule)}
+.rail a:first-child{border-top:0}
+.rail a b{font-weight:400;color:var(--ink)}
+.rail a.on b{color:var(--signal)}
+.rail a:hover b{text-decoration:underline}
+.rail .src{margin-top:18px;font-size:11px;line-height:1.5}
+.rail .src a{display:block;border:0;padding:0;color:var(--mute)}
+main{min-width:0;display:grid;gap:0}
+.head{padding:48px 0 36px;border-bottom:1px solid var(--ink);display:grid;gap:18px}
+.kicker{font:400 12px/1.4 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+h1{font:300 clamp(40px,6.2vw,76px)/.98 var(--f-display);font-variation-settings:'opsz' 144;letter-spacing:-.02em;margin:0;text-wrap:balance;max-width:14ch}
+h1 i{font-style:italic;font-weight:300}
+.lede{font:400 19px/1.45 var(--f-text);max-width:56ch;margin:0}
+.lede b{font-weight:500}
+.bar{display:flex;flex-wrap:wrap;gap:8px 24px;font:400 12px/1.5 var(--f-mono);color:var(--mute)}
+section.ch{padding:56px 0 8px;display:grid;gap:22px;scroll-margin-top:12px}
+.ch h2{font:500 clamp(26px,3.4vw,38px)/1.08 var(--f-display);font-variation-settings:'opsz' 72;letter-spacing:-.015em;margin:0;text-wrap:balance;max-width:24ch}
+.ch h2 i{font-style:italic;font-weight:300}
+.ref{font:400 12px/1.5 var(--f-mono);color:var(--mute)}
+.ref b{font-weight:400;color:var(--ink)}
+.two{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:28px;align-items:start}
+.two.wide{grid-template-columns:minmax(0,1fr)}
+.two.wide .copy{max-width:none;columns:2;column-gap:36px;display:block}
+.two.wide .copy p{break-inside:avoid;margin:0 0 12px}
+@media (max-width:700px){.two.wide .copy{columns:1}}
+.copy{display:grid;gap:12px;max-width:52ch;min-width:0}
+.copy p{margin:0}
+.copy p.aside{color:var(--mute);font-size:14.5px}
+.copy .eq{font:400 15px/1.5 var(--f-mono);padding:10px 12px;background:var(--wash);border-left:2px solid var(--ink);overflow-x:auto}
+.fig{border:1px solid var(--ink);background:var(--field);display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-width:0}
+.fig .fh{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border-bottom:1px solid var(--rule);font:400 11.5px/1.4 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.fig .fh b{font-weight:500;color:var(--ink)}
+.fig .fb{padding:14px 12px;display:grid;gap:12px;min-width:0}
+.fig .fc{padding:9px 12px;border-top:1px solid var(--rule);font:400 12.5px/1.5 var(--f-mono);color:var(--mute);min-height:40px}
+.fig .fc b{font-weight:500;color:var(--ink)}
+canvas{display:block;width:100%;height:auto;max-width:100%}
+.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px}
+.ctl label{display:grid;gap:4px;font:400 11.5px/1.4 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
+.ctl label span{display:flex;justify-content:space-between;gap:8px}
+.ctl label output{color:var(--ink);font-variant-numeric:tabular-nums;text-transform:none;letter-spacing:0}
+input[type=range]{width:100%;margin:0;accent-color:var(--signal);height:18px}
+input[type=text]{font:400 14px/1.4 var(--f-mono);color:var(--ink);background:var(--paper);border:1px solid var(--rule);padding:7px 9px;border-radius:0;width:100%;min-width:0}
+input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+button{font:400 12px/1 var(--f-mono);color:var(--ink);background:var(--paper);border:1px solid var(--ink);padding:8px 10px;cursor:pointer;border-radius:0}
+button:hover{background:var(--wash)}
+button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.tape{font:400 13px/1.9 var(--f-mono);white-space:pre-wrap;word-break:break-all;background:var(--paper);border:1px solid var(--rule);padding:10px 12px;min-height:66px;max-height:180px;overflow:auto}
+.tape .n{color:var(--noise);background:var(--noise-soft)}
+.tape .s{color:var(--signal)}
+.tape .k{color:var(--mute)}
+.stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule)}
+.stat div{background:var(--paper);padding:9px 10px;display:grid;gap:2px}
+.stat .l{font:400 10.5px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.stat .v{font:500 20px/1.1 var(--f-display);font-variation-settings:'opsz' 36;font-variant-numeric:tabular-nums}
+.stat .v small{font:400 12px/1 var(--f-mono);color:var(--mute);margin-left:4px}
+.stat .v.sig{color:var(--signal)} .stat .v.noi{color:var(--noise)}
+.bars{display:grid;gap:6px}
+.bar-row{display:grid;grid-template-columns:28px minmax(0,1fr) 92px;gap:10px;align-items:center;font:400 12.5px/1.3 var(--f-mono)}
+.bar-row .tr{position:relative;height:22px;background:var(--wash);cursor:ew-resize;touch-action:none}
+.bar-row .tr i{position:absolute;left:0;top:0;bottom:0;background:var(--signal)}
+.bar-row .tr em{position:absolute;left:0;top:0;bottom:0;border-right:2px solid var(--ink);font-style:normal}
+.bar-row .code{color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.bar-row .code small{color:var(--mute)}
+.ham{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;max-width:360px}
+.ham button{aspect-ratio:1;display:grid;place-items:center;font:500 16px/1 var(--f-mono);padding:0;border-color:var(--rule);background:var(--paper)}
+.ham button.d{border-color:var(--ink)}
+.ham button.flip{background:var(--noise-soft);border-color:var(--noise);color:var(--noise)}
+.ham button.fix{background:var(--signal-soft);border-color:var(--signal);color:var(--signal)}
+.hamlab{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;max-width:360px;font:400 10px/1.2 var(--f-mono);color:var(--mute);text-align:center;letter-spacing:.04em}
+.close{padding:64px 0 0;border-top:1px solid var(--ink);margin-top:56px;display:grid;gap:18px;max-width:60ch}
+.close h2{font:500 clamp(26px,3.4vw,38px)/1.08 var(--f-display);margin:0;letter-spacing:-.015em}
+.close p{margin:0}
+.close ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.sources{margin-top:28px;font:400 12.5px/1.6 var(--f-mono);color:var(--mute);display:grid;gap:4px}
+.sources a{color:var(--ink)}
+@media (max-width:900px){
+  .page{grid-template-columns:minmax(0,1fr)}
+  .rail{position:static;padding-top:28px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0 18px}
+  .rail a{border-top:0;border-bottom:1px solid var(--rule)}
+  .rail .src{grid-column:1/-1}
+  .two{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion: reduce){ .hero-note{display:none} }
+</style>
+
+<div class="page">
+  <nav class="rail" aria-label="Sections">
+    <a href="#fig1" data-s="fig1"><span>Fig. 1</span><b>The system</b></a>
+    <a href="#bits" data-s="bits"><span>§6</span><b>Information is surprise</b></a>
+    <a href="#source" data-s="source"><span>§2–3</span><b>A source has habits</b></a>
+    <a href="#redund" data-s="redund"><span>§7</span><b>Redundancy</b></a>
+    <a href="#code" data-s="code"><span>§9</span><b>Coding for a clean channel</b></a>
+    <a href="#noise" data-s="noise"><span>§12–17</span><b>Noise and its limit</b></a>
+    <a href="#cont" data-s="cont"><span>§25</span><b>The continuous channel</b></a>
+    <a href="#end" data-s="end"><span>—</span><b>What it leaves out</b></a>
+    <div class="src">Source: C. E. Shannon, “A Mathematical Theory of Communication,” Bell System Technical Journal 27 (1948). <a href="https://www.princeton.edu/~wbialek/rome/refs/shannon_48.pdf">The paper (PDF)</a></div>
+  </nav>
+
+  <main>
+    <header class="head">
+      <div class="kicker">Bell System Technical Journal · July and October 1948 · read with live figures</div>
+      <h1>A mathematical theory of <i>communication</i></h1>
+      <p class="lede">Claude Shannon’s 1948 paper did three things that had not been done before. It gave information a <b>unit</b>. It showed that any source of messages has a measurable <b>rate</b>, and any channel a measurable <b>capacity</b>. And it proved that noise, however bad, leaves a <b>limit</b> you can reach but never pass. Each figure below is one of those ideas, running.</p>
+      <div class="bar"><span>Blue is signal</span><span>Red is noise</span><span>Every slider is live</span><span>§ marks the section of the paper</span></div>
+    </header>
+
+    <!-- ============================================================ Fig. 1 -->
+    <section class="ch" id="fig1">
+      <div class="ref"><b>Fig. 1 in the paper</b> · Introduction</div>
+      <h2>Four boxes, one wire, and a <i>noise source</i></h2>
+      <div class="two wide">
+        <div class="fig">
+          <div class="fh"><span>Fig. 1 · a general communication system</span><b id="f1stat">running</b></div>
+          <div class="fb">
+            <canvas id="c1" width="1200" height="400"></canvas>
+            <div class="ctl">
+              <label for="f1noise"><span>Noise, bits flipped <output id="f1noiseO">2 %</output></span><input id="f1noise" type="range" min="0" max="30" step="1" value="2"></label>
+              <label for="f1msg"><span>Message</span><input id="f1msg" type="text" value="THE PAPER IS ABOUT CHOICE" maxlength="40" autocomplete="off" spellcheck="false"></label>
+            </div>
+          </div>
+          <div class="fc" id="f1cap">Source → transmitter → signal → receiver → destination. The one box nobody had drawn before is the noise source. Everything in the paper follows from taking it seriously.</div>
+        </div>
+        <div class="copy">
+          <p>Shannon’s first move is to draw the whole problem as one diagram. A source picks a message. A transmitter turns it into a signal. The signal crosses a channel, where noise is added. A receiver turns it back into a message for the destination.</p>
+          <p>The second move is to say what the problem is not about. Meaning is irrelevant to the engineering. The system has to work for every message the source could pick, so what matters is the set of possible messages and how likely each one is, never what any one of them says.</p>
+          <p class="aside">Raise the noise. The letters are sent as 5-bit teletype code, the way the paper counts them. Each flipped bit lands somewhere in a letter.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ §6 -->
+    <section class="ch" id="bits">
+      <div class="ref"><b>§6 Choice, uncertainty and entropy</b> · Fig. 7</div>
+      <h2>Information is <i>surprise</i>, and the unit is the bit</h2>
+      <div class="two">
+        <div class="fig">
+          <div class="fh"><span>Fig. 7 · entropy of a two-way choice</span><b id="f2stat">H = 1.000 bit</b></div>
+          <div class="fb">
+            <canvas id="c2" width="1200" height="620"></canvas>
+            <div class="ctl">
+              <label for="f2p"><span>Probability of heads <output id="f2pO">0.50</output></span><input id="f2p" type="range" min="0.01" max="0.99" step="0.01" value="0.5"></label>
+            </div>
+            <div class="tape" id="f2tape" aria-live="off"></div>
+          </div>
+          <div class="fc" id="f2cap">A fair coin carries one bit per flip. A coin that lands heads 9 times in 10 carries 0.469 bits, because you can mostly guess it.</div>
+        </div>
+        <div class="copy">
+          <p>Shannon asks: given a set of possible messages with known probabilities, how much choice is there? How uncertain is the outcome? He wants one number, and he lists what it must do. It should be largest when every outcome is equally likely. It should grow when there are more outcomes. And when a choice is made in two stages, the number for the whole should be the weighted sum of the numbers for the stages.</p>
+          <p>Only one formula satisfies all three. He calls it entropy, after the identical formula in physics.</p>
+          <div class="eq">H = −Σ p<sub>i</sub> log<sub>2</sub> p<sub>i</sub> &nbsp; bits per symbol</div>
+          <p>Two equally likely outcomes give 1 bit. Eight give 3 bits, because 2³ = 8. The log is what makes the unit add up: two independent choices carry the sum of their bits, not the product of their counts.</p>
+          <p class="aside">Drag the probability. The curve is Fig. 7 of the paper. The stream underneath is a coin with that bias, and its bits per flip are what the curve says.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ §2-3 -->
+    <section class="ch" id="source">
+      <div class="ref"><b>§2–3 The discrete source · the series of approximations to English</b></div>
+      <h2>A source is a set of <i>habits</i></h2>
+      <div class="two">
+        <div class="fig">
+          <div class="fh"><span>Approximations to English</span><b id="f3stat">order 0</b></div>
+          <div class="fb">
+            <div class="btns" id="f3btns">
+              <button type="button" data-o="0" aria-pressed="true">0 · random letters</button>
+              <button type="button" data-o="1" aria-pressed="false">1 · letter frequencies</button>
+              <button type="button" data-o="2" aria-pressed="false">2 · letter pairs</button>
+              <button type="button" data-o="3" aria-pressed="false">3 · letter triples</button>
+              <button type="button" data-o="4" aria-pressed="false">word frequencies</button>
+              <button type="button" data-o="5" aria-pressed="false">word pairs</button>
+              <button type="button" id="f3again">again</button>
+            </div>
+            <div class="tape" id="f3tape"></div>
+            <div class="stat">
+              <div><span class="l">Entropy of this model</span><span class="v sig" id="f3h">4.75<small>bits / letter</small></span></div>
+              <div><span class="l">Against 27 equal symbols</span><span class="v" id="f3rel">100<small>%</small></span></div>
+            </div>
+          </div>
+          <div class="fc" id="f3cap">Shannon built these by opening a book at random and copying what followed. Here they are built from a short corpus of plain English, written for this page.</div>
+        </div>
+        <div class="copy">
+          <p>A source that picked letters at random would be a terrible model of English. Real English has habits: E is common, Q is followed by U, THE is everywhere. Shannon models a source as a process with memory, where each symbol depends on the ones before it.</p>
+          <p>Then he shows what the habits buy. Each approximation adds one more layer of structure, and each one looks more like English than the last. The famous observation is that the fake text stays plausible for about twice the span its rule accounts for: pairs of letters give readable triples, pairs of words give readable phrases.</p>
+          <p>The entropy falls with every layer. Structure is predictability, and predictability is fewer bits. That is the whole reason a source has a rate at all.</p>
+          <p class="aside">The numbers are the entropy of each model, measured on the corpus. Shannon’s own estimates for printed English, counting structure out to about eight letters, come to roughly 2.3 bits per letter, and lower still at long range.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ §7 -->
+    <section class="ch" id="redund">
+      <div class="ref"><b>§7 The entropy of an information source</b> · redundancy</div>
+      <h2>English is about half <i>redundant</i></h2>
+      <div class="two">
+        <div class="fig">
+          <div class="fh"><span>Deleting letters</span><b id="f4stat">0 % removed</b></div>
+          <div class="fb">
+            <div class="tape" id="f4tape"></div>
+            <div class="ctl">
+              <label for="f4cut"><span>Letters removed <output id="f4cutO">0 %</output></span><input id="f4cut" type="range" min="0" max="80" step="5" value="0"></label>
+              <label for="f4txt"><span>Sentence</span><input id="f4txt" type="text" value="Redundancy is what lets you read this with half the letters gone." maxlength="90" autocomplete="off" spellcheck="false"></label>
+            </div>
+            <div class="btns"><button type="button" id="f4re">different letters</button></div>
+          </div>
+          <div class="fc" id="f4cap">Redundancy = 1 − (actual entropy ÷ the maximum for the alphabet). For English, Shannon puts it near 50 %.</div>
+        </div>
+        <div class="copy">
+          <p>If a letter of English carries about 2.3 bits but could carry 4.75, half of every letter is doing no work. Shannon calls that fraction redundancy, and he gives it a plain meaning: it is the share of the text you could delete and still recover.</p>
+          <p>He also points out that it cuts both ways. Redundancy is waste on a clean line, so a good code squeezes it out. On a noisy line it is protection, because the receiver can use it to repair damage. The rest of the paper is about doing both on purpose.</p>
+          <p class="aside">His aside about crosswords is a test of the number: at 50 % redundancy, large two-dimensional crosswords are just possible. At 33 %, three-dimensional ones would be.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ §9 -->
+    <section class="ch" id="code">
+      <div class="ref"><b>§9 The fundamental theorem for a noiseless channel</b> · the example in §10</div>
+      <h2>Short codes for common things, and a <i>floor</i> you cannot go under</h2>
+      <div class="two">
+        <div class="fig">
+          <div class="fh"><span>A four-symbol source and its best code</span><b id="f5stat">H = 1.750 bits</b></div>
+          <div class="fb">
+            <div class="bars" id="f5bars"></div>
+            <div class="tape" id="f5tape"></div>
+            <div class="stat">
+              <div><span class="l">Entropy H</span><span class="v sig" id="f5h">1.75<small>bits / symbol</small></span></div>
+              <div><span class="l">Best code, average</span><span class="v" id="f5avg">1.75<small>bits / symbol</small></span></div>
+              <div><span class="l">Fixed 2-bit code</span><span class="v" id="f5fix">2.00<small>bits / symbol</small></span></div>
+            </div>
+          </div>
+          <div class="fc" id="f5cap">Drag the bars to change the probabilities. The code is rebuilt each time; the average length can equal H when the probabilities are powers of ½, and never go below it.</div>
+        </div>
+        <div class="copy">
+          <p>Morse code already knew the trick: E is one dot. Shannon proves the general rule. A source with entropy H bits per symbol can be encoded into about H binary digits per symbol, as close as you like, and no code can do better. Common symbols get short codes, rare ones get long codes, and the average lands on H.</p>
+          <p>This is the paper’s first fundamental theorem. Capacity and entropy are in the same unit, so dividing one by the other tells you how fast a given source can go through a given channel.</p>
+          <div class="eq">symbols per second → C / H, and never more</div>
+          <p class="aside">The example is Shannon’s own, §10: four symbols with probabilities ½, ¼, ⅛, ⅛. The best code is 0, 10, 110, 111, and it averages exactly 1¾ bits.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ §12-17 -->
+    <section class="ch" id="noise">
+      <div class="ref"><b>§12 Equivocation and channel capacity · §13 the theorem · §17 an example of efficient coding</b></div>
+      <h2>Noise sets a <i>limit</i>, and the limit can be reached</h2>
+      <div class="two">
+        <div class="fig">
+          <div class="fh"><span>A binary channel that flips bits</span><b id="f6stat">C = 1.000</b></div>
+          <div class="fb">
+            <canvas id="c6" width="1200" height="520"></canvas>
+            <div class="ctl">
+              <label for="f6p"><span>Flip probability <output id="f6pO">5 %</output></span><input id="f6p" type="range" min="0" max="50" step="1" value="5"></label>
+            </div>
+            <div class="tape" id="f6tape"></div>
+            <div class="stat">
+              <div><span class="l">Equivocation</span><span class="v noi" id="f6eq">0.286<small>bits lost</small></span></div>
+              <div><span class="l">Capacity</span><span class="v sig" id="f6c">0.714<small>bits / bit sent</small></span></div>
+              <div><span class="l">Send 3×, vote</span><span class="v" id="f6rep">0.7<small>% wrong, rate ⅓</small></span></div>
+            </div>
+          </div>
+          <div class="fc" id="f6cap">Capacity is what is left after the receiver’s doubt is subtracted. At a 50 % flip rate nothing gets through; at 0 % every bit does.</div>
+        </div>
+        <div class="copy">
+          <p>Noise does not just add errors. It adds doubt: after the receiver sees a symbol, there is still some uncertainty about what was sent. Shannon measures that leftover uncertainty in bits and calls it equivocation. The rate of a noisy channel is what you sent minus what remains in doubt. Capacity is the best rate any source can reach.</p>
+          <div class="eq">C = max [ H(x) − H<sub>y</sub>(x) ]</div>
+          <p>The obvious defense is repetition: send every bit three times and take a vote. Errors drop, but the rate drops to a third, and to drive errors toward zero that way you would drive the rate toward zero too.</p>
+          <p>The theorem says otherwise. For any rate below C, there exist codes with error as small as you like. The limit is a line, and you can stand right next to it. Shannon’s proof picks codes at random and shows that almost all of them work, which is why the paper could prove the limit exists without being able to build a code that reaches it.</p>
+        </div>
+      </div>
+      <div class="two">
+        <div class="fig">
+          <div class="fh"><span>§17 · one error in seven, corrected</span><b id="f7stat">clean</b></div>
+          <div class="fb">
+            <div class="hamlab"><span>d1</span><span>d2</span><span>d3</span><span>d4</span><span>c1</span><span>c2</span><span>c3</span></div>
+            <div class="ham" id="f7ham"></div>
+            <div class="btns"><button type="button" id="f7rand">new data</button><button type="button" id="f7flip">flip a random bit</button><button type="button" id="f7fix">receiver corrects</button></div>
+            <div class="tape" id="f7tape"></div>
+          </div>
+          <div class="fc" id="f7cap">Four data bits, three check bits. Tap any bit to flip it in transit. The receiver recomputes the checks and the pattern of failures points at the damaged bit.</div>
+        </div>
+        <div class="copy">
+          <p>The paper ends Part II with one constructive example. If a channel damages at most one bit in every block of seven, four of the seven can carry data and three can carry checks, for a rate of 4⁄7. Each check watches a different subset of the data bits. Which checks fail tells the receiver which bit to flip back.</p>
+          <p class="aside">This is the code Hamming published two years later. Shannon describes it as an example and gives the rate; the full theory of such codes was still to come.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ §25 -->
+    <section class="ch" id="cont">
+      <div class="ref"><b>§25 Channel capacity with an average power limitation</b> · Theorem 17</div>
+      <h2>Bandwidth times the log of signal over <i>noise</i></h2>
+      <div class="two">
+        <div class="fig">
+          <div class="fh"><span>A continuous channel</span><b id="f8stat">29.9 kbit/s</b></div>
+          <div class="fb">
+            <canvas id="c8" width="1200" height="480"></canvas>
+            <div class="ctl">
+              <label for="f8w"><span>Bandwidth W <output id="f8wO">3.0 kHz</output></span><input id="f8w" type="range" min="0.3" max="40" step="0.1" value="3"></label>
+              <label for="f8s"><span>Signal to noise <output id="f8sO">30 dB</output></span><input id="f8s" type="range" min="-5" max="60" step="1" value="30"></label>
+            </div>
+            <div class="stat">
+              <div><span class="l">Capacity</span><span class="v sig" id="f8c">29.9<small>kbit/s</small></span></div>
+              <div><span class="l">Bits per second per Hz</span><span class="v" id="f8e">9.97</span></div>
+              <div><span class="l">Samples that matter</span><span class="v" id="f8n">6000<small>per second</small></span></div>
+            </div>
+          </div>
+          <div class="fc" id="f8cap">A telephone line, 3 kHz at 30 dB, comes to about 30 kbit/s. Doubling the bandwidth doubles capacity; doubling the signal power adds one bit per second per hertz.</div>
+        </div>
+        <div class="copy">
+          <p>Real channels carry waveforms, not symbols. Shannon gets from one to the other with the sampling theorem: a signal limited to bandwidth W is fully described by 2W numbers per second. A waveform of duration T is a point in a space of 2TW dimensions.</p>
+          <p>Then the argument becomes geometry. Signals with power P sit in a sphere. Noise with power N smears each point into a small sphere around it. The number of signals you can tell apart is the number of small spheres that fit inside the big one, and taking the log of that number per second gives the capacity.</p>
+          <div class="eq">C = W log<sub>2</sub> (P + N) / N &nbsp; bits per second</div>
+          <p>Every modem rating since is a reading of this formula. It also says what the best signal looks like: to reach the limit, the transmitted waveform should be statistically like white noise.</p>
+          <p class="aside">The drawn waveform is a band-limited signal with noise added at the chosen ratio; the dots are the 2W samples per second that carry it.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ close -->
+    <section class="close" id="end">
+      <div class="ref"><b>What the paper leaves out, on purpose</b></div>
+      <h2>Meaning</h2>
+      <p>Shannon’s measure counts choices, not content. A page of nonsense and a page of poetry with the same letter statistics carry the same number of bits. This is the price of the theory and the reason it works: because it ignores meaning, it applies to every message, every language, every channel.</p>
+      <p>Three things to carry out of the paper:</p>
+      <ul>
+        <li>Information is measured by how much it removes uncertainty, in bits, and the measure is the log of the number of equally likely possibilities.</li>
+        <li>A source has a rate and a channel has a capacity, in the same unit, so the question “how fast can this go through that?” has a numerical answer.</li>
+        <li>Noise sets a limit on the rate, and the limit is reachable with vanishing error. Above it, nothing helps; below it, there is always a code.</li>
+      </ul>
+      <p>Part V, which this page does not draw, asks the next question: if the receiver will accept some distortion, how many bits does the source really need? That is the beginning of lossy compression, and of every audio and image format you use.</p>
+      <div class="sources">
+        <span>Source</span>
+        <a href="https://www.princeton.edu/~wbialek/rome/refs/shannon_48.pdf">C. E. Shannon, “A Mathematical Theory of Communication,” Bell System Technical Journal, vol. 27, pp. 379–423 and 623–656, July and October 1948.</a>
+        <span>Figures, equations and the worked examples (§10, §12, §17, §25) are from the paper. The English approximations here are generated from a corpus written for this page, not from Shannon’s samples. His redundancy estimate, the crossword remark and the noise-like-signal result are paraphrased.</span>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const log2=x=>Math.log(x)/Math.LN2;
+const Hb=p=>(p<=0||p>=1)?0:-(p*log2(p)+(1-p)*log2(1-p));
+const fmt=(v,d)=>v.toFixed(d);
+let seed=1948; const rnd=()=>{ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; };
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function fitCanvas(c){ const r=c.getBoundingClientRect(); const dpr=Math.min(2,devicePixelRatio||1); const w=Math.max(10,Math.round(r.width)), h=Math.round(w*c.height/c.width); if(c.dataset.w!==w+'x'+dpr){ c.dataset.w=w+'x'+dpr; c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); c.style.height=h+'px'; } const x=c.getContext('2d'); x.setTransform(dpr,0,0,dpr,0,0); return {x,w,h}; }
+const MONO=s=>`${s}px "IBM Plex Mono",ui-monospace,Menlo,monospace`;
+const T=()=>({ink:css('--ink'),mute:css('--mute'),rule:css('--rule'),sig:css('--signal'),noi:css('--noise'),sigs:css('--signal-soft'),nois:css('--noise-soft'),paper:css('--paper'),wash:css('--wash')});
+
+/* ------------------------------------------------------------ Fig. 1 */
+const ALPHA=' ABCDEFGHIJKLMNOPQRSTUVWXYZ.,?\'-';
+(function(){
+  const c=$('c1'); let msg='THE PAPER IS ABOUT CHOICE', noise=0.02, t0=performance.now(), bits=[], recv='';
+  const encode=m=>{ const out=[]; for(const ch of m){ let k=ALPHA.indexOf(ch); if(k<0)k=0; for(let b=4;b>=0;b--)out.push((k>>b)&1); } return out; };
+  const decode=bs=>{ let s=''; for(let i=0;i+4<bs.length;i+=5){ let k=0; for(let b=0;b<5;b++)k=(k<<1)|bs[i+b]; s+=ALPHA[k]||'?'; } return s; };
+  let flips=[]; const reseed=()=>{ const enc=encode(msg); flips=enc.map(()=>rnd()<noise?1:0); bits=enc; recv=decode(enc.map((b,i)=>b^flips[i])); };
+  reseed();
+  function draw(now){ const narrow=c.getBoundingClientRect().width<640; const wantH=narrow?440:400; if(+c.getAttribute('height')!==wantH){ c.setAttribute('height',String(wantH)); c.dataset.w=''; } const {x,w,h}=fitCanvas(c), th=T(); x.clearRect(0,0,w,h);
+    const fs=narrow?8:Math.max(8.5,Math.min(12,w/80)); const boxes=narrow?[['INFO\nSOURCE',0.0],['TRANS-\nMITTER',0.17],['RECEIVER',0.68],['DESTIN-\nATION',0.85]]:[['INFORMATION\nSOURCE',0.02],['TRANSMITTER',0.20],['RECEIVER',0.64],['DESTINATION',0.82]]; const bw=w*(narrow?0.15:0.16), bh=Math.max(40,Math.min(70,w*0.075)), by=h*(narrow?0.20:0.24);
+    x.font=MONO(fs); x.textAlign='center'; x.textBaseline='middle'; x.lineWidth=1;
+    boxes.forEach(([lab,u])=>{ const bx=u*w; x.fillStyle=th.paper; x.fillRect(bx,by,bw,bh); x.strokeStyle=th.ink; x.strokeRect(bx+0.5,by+0.5,bw,bh); x.fillStyle=th.ink; lab.split('\n').forEach((l,k,a)=>x.fillText(l,bx+bw/2,by+bh/2+(k-(a.length-1)/2)*(fs+2))); });
+    const wy=by+bh/2; const arrow=(a,b)=>{ x.strokeStyle=th.ink; x.lineWidth=1; x.beginPath(); x.moveTo(a,wy+0.5); x.lineTo(b-6,wy+0.5); x.stroke(); x.beginPath(); x.moveTo(b,wy+0.5); x.lineTo(b-7,wy-3.5); x.lineTo(b-7,wy+4.5); x.closePath(); x.fillStyle=th.ink; x.fill(); };
+    arrow(boxes[0][1]*w+bw,boxes[1][1]*w); arrow(boxes[1][1]*w+bw,boxes[2][1]*w); arrow(boxes[2][1]*w+bw,boxes[3][1]*w);
+    const x0=boxes[1][1]*w+bw, x1=boxes[2][1]*w, mx=(x0+x1)/2; // the wire is the channel; noise enters at its middle
+    const nbw=narrow?bw*1.3:bw*0.8, nby=by+bh+h*(narrow?0.26:0.30); x.fillStyle=th.paper; x.fillRect(mx-nbw/2,nby,nbw,bh*0.85); x.strokeStyle=th.noi; x.strokeRect(mx-nbw/2+0.5,nby+0.5,nbw,bh*0.85); x.fillStyle=th.noi; x.font=MONO(fs); x.fillText('NOISE',mx,nby+bh*0.425-(fs+2)/2); x.fillText('SOURCE',mx,nby+bh*0.425+(fs+2)/2);
+    x.strokeStyle=th.noi; x.beginPath(); x.moveTo(mx+0.5,nby); x.lineTo(mx+0.5,wy+8); x.stroke(); x.beginPath(); x.moveTo(mx+0.5,wy+2); x.lineTo(mx-3.5,wy+9); x.lineTo(mx+4.5,wy+9); x.closePath(); x.fill();
+    x.fillStyle=th.mute; x.font=MONO(fs-1); x.textBaseline='bottom'; if(narrow){ x.fillText('SIGNAL',(x0+mx)/2,wy-14); x.fillText('RECEIVED',(mx+x1)/2,wy-14); } else { x.fillText('MESSAGE',(boxes[0][1]*w+bw+boxes[1][1]*w)/2,wy-14); x.fillText('SIGNAL',(x0+mx)/2-10,wy-14); x.fillText('RECEIVED SIGNAL',(mx+x1)/2+10,wy-14); x.fillText('MESSAGE',(boxes[2][1]*w+bw+boxes[3][1]*w)/2,wy-14); }
+    // bits on the wire: squares above the line for 1, below for 0; after the noise point a flipped bit turns red
+    const period=reduced?1e9:9000, ph=reduced?0.62:((now-t0)%period)/period; const n=bits.length; const span=x1-x0-8; const cell=Math.max(3,Math.min(7,span/Math.max(16,n*0.5)));
+    for(let k=0;k<n;k++){ const p=ph*1.6-k/n*0.6; if(p<0||p>1)continue; const px=x0+4+p*span; const past=px>=mx; const v=bits[k]^(past&&flips[k]?1:0); x.fillStyle=(past&&flips[k])?th.noi:th.sig; const yy=wy+(v?-cell*1.1:cell*1.1); x.fillRect(px-cell/2,yy-cell/2,cell,cell); }
+    // the message in, and the message out with wrong letters in red
+    const ty=by+bh+fs*2.2; x.font=MONO(Math.max(10,fs+1)); x.textBaseline='top'; x.textAlign='left'; x.fillStyle=th.ink;
+    const wrap=(str,maxw)=>{ const lines=[]; let cur=''; for(const word of str.split(' ')){ const t=cur?cur+' '+word:word; if(x.measureText(t).width>maxw&&cur){ lines.push(cur); cur=word; } else cur=t; } lines.push(cur); return lines; };
+    const lines=wrap(msg,narrow?w*0.42:bw*2.1); lines.forEach((l,k)=>x.fillText(l,boxes[0][1]*w,ty+k*(fs+5)));
+    x.textAlign='right'; let pos=0; lines.forEach((l,k)=>{ let rx=boxes[3][1]*w+bw; const n2=l.length; for(let q=n2-1;q>=0;q--){ const gi=pos+q; const ch=recv[gi]||' '; x.fillStyle=ch!==msg[gi]?th.noi:th.ink; const cw=x.measureText(ch).width; x.fillText(ch,rx,ty+k*(fs+5)); rx-=cw; } pos+=n2+1; });
+    const nerr=[...recv].filter((ch,k)=>ch!==msg[k]).length; $('f1stat').textContent=nerr?`${nerr} of ${msg.length} letters wrong`:'every letter arrived';
+    if(!reduced)requestAnimationFrame(draw); }
+  $('f1noise').addEventListener('input',e=>{ noise=+e.target.value/100; $('f1noiseO').textContent=Math.round(noise*100)+' %'; reseed(); if(reduced)draw(0); });
+  $('f1msg').addEventListener('input',e=>{ msg=e.target.value.toUpperCase().replace(/[^A-Z .,?'-]/g,'').slice(0,40)||' '; reseed(); if(reduced)draw(0); });
+  requestAnimationFrame(draw); if(reduced)draw(0);
+})();
+
+/* ------------------------------------------------------------ Fig. 7 */
+(function(){
+  const c=$('c2'); let p=0.5;
+  function draw(){ const {x,w,h}=fitCanvas(c), th=T(); x.clearRect(0,0,w,h); const L=44,R=18,Tp=18,B=40; const pw=w-L-R, ph=h-Tp-B;
+    x.strokeStyle=th.rule; x.lineWidth=1; x.beginPath(); for(let i=0;i<=4;i++){ const yy=Tp+ph*i/4; x.moveTo(L,yy+0.5); x.lineTo(L+pw,yy+0.5); } for(let i=0;i<=10;i++){ const xx=L+pw*i/10; x.moveTo(xx+0.5,Tp); x.lineTo(xx+0.5,Tp+ph); } x.stroke();
+    x.fillStyle=th.mute; x.font=MONO(10); x.textAlign='right'; x.textBaseline='middle'; for(let i=0;i<=4;i++)x.fillText((1-i/4).toFixed(2),L-8,Tp+ph*i/4); x.textAlign='center'; x.textBaseline='top'; for(let i=0;i<=10;i+=2)x.fillText((i/10).toFixed(1),L+pw*i/10,Tp+ph+8);
+    x.fillText('p, probability of heads',L+pw/2,Tp+ph+22); x.save(); x.translate(12,Tp+ph/2); x.rotate(-Math.PI/2); x.fillText('H  bits',0,0); x.restore();
+    x.strokeStyle=th.sig; x.lineWidth=2; x.beginPath(); for(let i=0;i<=200;i++){ const q=i/200, yy=Tp+ph*(1-Hb(q)); if(i===0)x.moveTo(L+pw*q,yy); else x.lineTo(L+pw*q,yy); } x.stroke();
+    const px=L+pw*p, py=Tp+ph*(1-Hb(p)); x.strokeStyle=th.ink; x.lineWidth=1; x.setLineDash([3,4]); x.beginPath(); x.moveTo(px+0.5,py); x.lineTo(px+0.5,Tp+ph); x.moveTo(L,py+0.5); x.lineTo(px,py+0.5); x.stroke(); x.setLineDash([]);
+    x.fillStyle=th.paper; x.beginPath(); x.arc(px,py,5,0,7); x.fill(); x.strokeStyle=th.sig; x.lineWidth=2; x.stroke();
+    x.fillStyle=th.ink; x.font=MONO(11); x.textAlign=p>0.6?'right':'left'; x.textBaseline='bottom'; x.fillText(`H(${p.toFixed(2)}) = ${Hb(p).toFixed(3)} bits`,px+(p>0.6?-10:10),py-8); }
+  function tape(){ seed=7; let s=''; let heads=0; for(let i=0;i<120;i++){ const hd=rnd()<p; heads+=hd?1:0; s+=hd?'<span class="s">H</span>':'T'; } $('f2tape').innerHTML=s+`<span class="k">  ·  ${heads} heads in 120 · ${(120*Hb(p)).toFixed(0)} bits of information in the whole run</span>`; }
+  function upd(){ draw(); tape(); $('f2stat').textContent='H = '+Hb(p).toFixed(3)+(Hb(p)===1?' bit':' bits'); $('f2cap').textContent=p===0.5?'A fair coin carries one bit per flip. Nothing is more uncertain than a fair coin.':`A coin that lands heads ${Math.round(p*100)} times in 100 carries ${Hb(p).toFixed(3)} bits per flip, because you can ${p>0.5?'mostly guess heads':'mostly guess tails'}.`; }
+  $('f2p').addEventListener('input',e=>{ p=+e.target.value; $('f2pO').textContent=p.toFixed(2); upd(); }); upd(); addEventListener('resize',draw);
+})();
+
+/* ------------------------------------------------------------ §2-3 approximations */
+const CORPUS=`a message is a choice made from a set of possible messages and the set is what the engineer has to carry not the one message chosen the line does not know what you mean it knows how often each letter turns up and which letter tends to follow which and that is enough to build a code that fits the line like a hand in a glove when the line is quiet the code should be short and plain and spend nothing on repeating itself when the line is noisy the code should repeat itself on purpose so that the receiver can tell a damaged letter from a clean one and put the damaged one right the surprising part is that the two aims do not fight each other there is a rate for every source and a capacity for every channel and as long as the rate stays under the capacity there is a way to send the message with as few mistakes as you care to allow the limit is a line you can walk up to but never cross and the paper that drew the line was written at the bell telephone laboratories in nineteen forty eight by a young engineer who liked to juggle and ride a unicycle down the hall the words you are reading now are plain english written for this page so that the machine can count the letters and the pairs of letters and the words and then write something back in the same habits the longer the habit it copies the more the result reads like a sentence and the fewer bits each letter is worth that is the whole idea in one breath structure is predictability and predictability is fewer bits a telegraph key a teletype a telephone line and a radio link all turn out to be the same problem seen from different distances and the same number tells you how much any of them can carry the number is measured in bits and a bit is the amount of information in one fair coin toss which is to say one clean choice between two things that were equally likely before you looked`;
+(function(){
+  const words=CORPUS.split(/\s+/).filter(Boolean), text=words.join(' ');
+  const L=' abcdefghijklmnopqrstuvwxyz'; const n1=new Float64Array(27), n2=[], n3={}, w1={}, w2={};
+  for(let i=0;i<27;i++)n2.push(new Float64Array(27));
+  for(let i=0;i<text.length;i++){ const a=L.indexOf(text[i]); if(a<0)continue; n1[a]++; if(i+1<text.length){ const b=L.indexOf(text[i+1]); if(b>=0)n2[a][b]++; } if(i+2<text.length){ const k=text.slice(i,i+2), ch=text[i+2]; if(L.indexOf(ch)>=0){ (n3[k]=n3[k]||{})[ch]=(n3[k][ch]||0)+1; } } }
+  words.forEach((w,i)=>{ w1[w]=(w1[w]||0)+1; if(i+1<words.length)(w2[w]=w2[w]||{})[words[i+1]]=(w2[w][words[i+1]]||0)+1; });
+  const pick=(tbl)=>{ let tot=0; for(const k in tbl)tot+=tbl[k]; let r=rnd()*tot; for(const k in tbl){ r-=tbl[k]; if(r<=0)return k; } return Object.keys(tbl)[0]; };
+  const pickArr=arr=>{ let tot=0; for(const v of arr)tot+=v; let r=rnd()*tot; for(let i=0;i<arr.length;i++){ r-=arr[i]; if(r<=0)return i; } return 0; };
+  const Hof=tbl=>{ let tot=0,h=0; for(const k in tbl)tot+=tbl[k]; for(const k in tbl){ const q=tbl[k]/tot; h-=q*log2(q); } return h; };
+  const H1=(()=>{ let tot=0,h=0; for(const v of n1)tot+=v; for(const v of n1)if(v){ const q=v/tot; h-=q*log2(q); } return h; })();
+  const H2=(()=>{ let tot=0; for(const v of n1)tot+=v; let h=0; for(let a=0;a<27;a++){ let ta=0; for(let b=0;b<27;b++)ta+=n2[a][b]; if(!ta)continue; let ha=0; for(let b=0;b<27;b++)if(n2[a][b]){ const q=n2[a][b]/ta; ha-=q*log2(q); } h+=(n1[a]/tot)*ha; } return h; })();
+  const H3=(()=>{ let tot=0,h=0; for(const k in n3){ let t=0; for(const ch in n3[k])t+=n3[k][ch]; tot+=t; } for(const k in n3){ let t=0; for(const ch in n3[k])t+=n3[k][ch]; h+=(t/tot)*Hof(n3[k]); } return h; })();
+  const avgWordLen=text.length/words.length;
+  const Hw1=Hof(w1)/avgWordLen;
+  const Hw2=(()=>{ let tot=0,h=0; for(const k in w2){ let t=0; for(const v in w2[k])t+=w2[k][v]; tot+=t; } for(const k in w2){ let t=0; for(const v in w2[k])t+=w2[k][v]; h+=(t/tot)*Hof(w2[k]); } return h/avgWordLen; })();
+  const Hs=[log2(27),H1,H2,H3,Hw1,Hw2];
+  const caps=['Every one of the 27 symbols is equally likely. This is the source with no habits at all.','Letters drawn one at a time with the frequencies of the corpus: E, T, A and the space come up as often as they should, but nothing follows anything.','Each letter is drawn from the letters that followed the previous one in the corpus. Pairs are right; words begin to appear.','Each letter is drawn from what followed the previous two. Shannon noted the text stays sensible for about twice the span the rule covers.','Whole words drawn with their frequencies, independent of their neighbors.','Each word drawn from the words that followed the previous one. Phrases are right; the sentence is not.'];
+  let order=0;
+  function gen(){ let out='';
+    if(order===0){ for(let i=0;i<220;i++)out+=L[Math.floor(rnd()*27)]; }
+    else if(order===1){ for(let i=0;i<220;i++)out+=L[pickArr(n1)]; }
+    else if(order===2){ let a=L.indexOf('t'); for(let i=0;i<220;i++){ out+=L[a]; a=pickArr(n2[a]); } }
+    else if(order===3){ const keys=Object.keys(n3); let k=keys[Math.floor(rnd()*keys.length)]; out=k; for(let i=0;i<220;i++){ const t=n3[k]; if(!t)break; const ch=pick(t); out+=ch; k=out.slice(-2); } }
+    else if(order===4){ const ws=[]; for(let i=0;i<40;i++)ws.push(pick(w1)); out=ws.join(' '); }
+    else { let w=pick(w1); const ws=[w]; for(let i=0;i<40;i++){ const t=w2[w]; if(!t)break; w=pick(t); ws.push(w); } out=ws.join(' '); }
+    $('f3tape').textContent=out.toUpperCase(); $('f3h').innerHTML=Hs[order].toFixed(2)+'<small>bits / letter</small>'; $('f3rel').innerHTML=Math.round(Hs[order]/log2(27)*100)+'<small>%</small>'; $('f3stat').textContent=['order 0','order 1','order 2','order 3','words, order 1','words, order 2'][order]; $('f3cap').textContent=caps[order]; }
+  $('f3btns').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return; if(b.id==='f3again'){ gen(); return; } order=+b.dataset.o; [...$('f3btns').querySelectorAll('[data-o]')].forEach(q=>q.setAttribute('aria-pressed',String(q===b))); gen(); });
+  gen();
+})();
+
+/* ------------------------------------------------------------ §7 redundancy */
+(function(){
+  let cut=0, salt=3;
+  function upd(){ const s=$('f4txt').value; seed=salt*101+cut; const letters=[...s].map((ch,i)=>/[a-z]/i.test(ch)?i:-1).filter(i=>i>=0); const k=Math.round(letters.length*cut/100); const idx=letters.slice().sort(()=>rnd()-0.5).slice(0,k); const gone=new Set(idx);
+    $('f4tape').innerHTML=[...s].map((ch,i)=>gone.has(i)?'<span class="n">·</span>':esc(ch)).join(''); $('f4stat').textContent=cut+' % removed'; $('f4cutO').textContent=cut+' %';
+    $('f4cap').textContent=cut===0?'Redundancy = 1 − (actual entropy ÷ the maximum for the alphabet). For English, Shannon puts it near 50 %.':cut<=50?`${k} of ${letters.length} letters gone. Around here most readers can still restore the sentence, which is Shannon’s point about 50 %.`:`${k} of ${letters.length} letters gone. Past the redundancy of the language the sentence stops being recoverable; the deleted letters carried real information.`; }
+  $('f4cut').addEventListener('input',e=>{ cut=+e.target.value; upd(); }); $('f4txt').addEventListener('input',upd); $('f4re').addEventListener('click',()=>{ salt++; upd(); }); upd();
+})();
+
+/* ------------------------------------------------------------ §9 coding */
+(function(){
+  const names=['A','B','C','D']; let p=[0.5,0.25,0.125,0.125];
+  function huffman(pr){ let nodes=pr.map((q,i)=>({p:q,i})); const code=['','','','']; while(nodes.length>1){ nodes.sort((a,b)=>a.p-b.p); const a=nodes.shift(), b=nodes.shift(); const walk=(n,bit)=>{ if(n.i!==undefined)code[n.i]=bit+code[n.i]; else { walk(n.l,bit); walk(n.r,bit); } }; walk(a,'0'); walk(b,'1'); nodes.push({p:a.p+b.p,l:a,r:b}); } return code; }
+  function upd(){ const code=huffman(p); const H=-p.reduce((s,q)=>s+(q>0?q*log2(q):0),0); const avg=p.reduce((s,q,i)=>s+q*code[i].length,0);
+    $('f5bars').innerHTML=p.map((q,i)=>`<div class="bar-row"><span>${names[i]}</span><div class="tr" data-i="${i}" title="drag"><i style="width:${(q*100).toFixed(1)}%"></i><em style="width:${(q*100).toFixed(1)}%"></em></div><span class="code">${code[i]} <small>${(q*100).toFixed(0)} %</small></span></div>`).join('');
+    seed=5; let tape='', bitsOut=''; for(let i=0;i<36;i++){ let r=rnd(), k=0; for(;k<3;k++){ r-=p[k]; if(r<=0)break; } tape+=names[k]; bitsOut+=`<span class="${k%2?'s':''}">${code[k]}</span>`; }
+    $('f5tape').innerHTML=`<span class="k">source   </span>${tape}\n<span class="k">encoded  </span>${bitsOut}`;
+    $('f5h').innerHTML=H.toFixed(2)+'<small>bits / symbol</small>'; $('f5avg').innerHTML=avg.toFixed(2)+'<small>bits / symbol</small>'; $('f5stat').textContent='H = '+H.toFixed(3)+' bits';
+    $('f5cap').textContent=Math.abs(avg-H)<0.005?'The probabilities are powers of ½, so the best code lands exactly on H. This is Shannon’s §10 example when the bars read 50, 25, 12.5, 12.5.':`The best whole-bit code averages ${avg.toFixed(2)} bits against an entropy of ${H.toFixed(2)}. Coding pairs or triples of symbols at once closes that gap; the theorem says you can get as close to H as you like.`; }
+  let drag=null;
+  const setFrom=(i,el,clientX)=>{ const r=el.getBoundingClientRect(); let v=Math.min(0.97,Math.max(0.01,(clientX-r.left)/r.width)); const others=p.reduce((s,q,j)=>j===i?s:s+q,0); const rest=1-v; const np=p.map((q,j)=>j===i?v:(others>0?q/others*rest:rest/3)); p=np.map(q=>Math.max(0.005,q)); const tot=p.reduce((s,q)=>s+q,0); p=p.map(q=>q/tot); upd(); };
+  $('f5bars').addEventListener('pointerdown',e=>{ const el=e.target.closest('.tr'); if(!el)return; drag={i:+el.dataset.i,el}; el.setPointerCapture(e.pointerId); setFrom(drag.i,el,e.clientX); });
+  $('f5bars').addEventListener('pointermove',e=>{ if(!drag)return; const el=$('f5bars').querySelector(`.tr[data-i="${drag.i}"]`); if(el)setFrom(drag.i,el,e.clientX); });
+  const end=()=>{ drag=null; }; $('f5bars').addEventListener('pointerup',end); $('f5bars').addEventListener('pointercancel',end);
+  upd();
+})();
+
+/* ------------------------------------------------------------ §12-13 noisy channel */
+(function(){
+  const c=$('c6'); let p=0.05;
+  function draw(){ const {x,w,h}=fitCanvas(c), th=T(); x.clearRect(0,0,w,h); const L=44,R=18,Tp=18,B=40; const pw=w-L-R, ph=h-Tp-B;
+    x.strokeStyle=th.rule; x.lineWidth=1; x.beginPath(); for(let i=0;i<=4;i++){ const yy=Tp+ph*i/4; x.moveTo(L,yy+0.5); x.lineTo(L+pw,yy+0.5); } for(let i=0;i<=10;i++){ const xx=L+pw*i/10; x.moveTo(xx+0.5,Tp); x.lineTo(xx+0.5,Tp+ph); } x.stroke();
+    x.fillStyle=th.mute; x.font=MONO(10); x.textAlign='right'; x.textBaseline='middle'; for(let i=0;i<=4;i++)x.fillText((1-i/4).toFixed(2),L-8,Tp+ph*i/4); x.textAlign='center'; x.textBaseline='top'; for(let i=0;i<=10;i+=2)x.fillText((i/20).toFixed(2),L+pw*i/10,Tp+ph+8); x.fillText('flip probability',L+pw/2,Tp+ph+22);
+    const cap=q=>1-Hb(q);
+    x.strokeStyle=th.noi; x.lineWidth=1.5; x.beginPath(); for(let i=0;i<=200;i++){ const q=i/400, yy=Tp+ph*(1-Hb(q)); if(i===0)x.moveTo(L+pw*i/200,yy); else x.lineTo(L+pw*i/200,yy); } x.stroke();
+    x.strokeStyle=th.sig; x.lineWidth=2; x.beginPath(); for(let i=0;i<=200;i++){ const q=i/400, yy=Tp+ph*(1-cap(q)); if(i===0)x.moveTo(L+pw*i/200,yy); else x.lineTo(L+pw*i/200,yy); } x.stroke();
+    x.font=MONO(10.5); x.textAlign='left'; x.textBaseline='bottom'; x.fillStyle=th.sig; x.fillText('capacity  C = 1 − H(p)',L+8,Tp+ph*0.42); x.fillStyle=th.noi; x.fillText('equivocation  H(p)',L+pw*0.55,Tp+ph*0.62);
+    const px=L+pw*(p/0.5), py=Tp+ph*(1-cap(p)); x.strokeStyle=th.ink; x.lineWidth=1; x.setLineDash([3,4]); x.beginPath(); x.moveTo(px+0.5,py); x.lineTo(px+0.5,Tp+ph); x.stroke(); x.setLineDash([]); x.fillStyle=th.paper; x.beginPath(); x.arc(px,py,5,0,7); x.fill(); x.strokeStyle=th.sig; x.lineWidth=2; x.stroke(); }
+  function upd(){ draw(); const eq=Hb(p), C=1-eq; $('f6stat').textContent='C = '+C.toFixed(3); $('f6eq').innerHTML=eq.toFixed(3)+'<small>bits lost</small>'; $('f6c').innerHTML=C.toFixed(3)+'<small>bits / bit sent</small>'; const rep=3*p*p*(1-p)+p*p*p; $('f6rep').innerHTML=(rep*100).toFixed(rep<0.01?2:1)+'<small>% wrong, rate ⅓</small>';
+    seed=11; let a='',b=''; let wrong=0; for(let i=0;i<96;i++){ const v=rnd()<0.5?1:0; const f=rnd()<p; a+=v; b+=f?`<span class="n">${v^1}</span>`:v; wrong+=f?1:0; } $('f6tape').innerHTML=`<span class="k">sent     </span>${a}\n<span class="k">received </span>${b}\n<span class="k">${wrong} of 96 flipped · after the receiver reads them, ${(96*eq).toFixed(1)} bits are still in doubt</span>`;
+    $('f6pO').textContent=Math.round(p*100)+' %'; $('f6cap').textContent=p===0?'A clean channel: every bit sent is a bit received. Capacity is 1.':p>=0.5?'At a 50 % flip rate the received bit says nothing about the sent one. Capacity is 0, and no code can help.':`At ${Math.round(p*100)} % flips, ${(eq*100).toFixed(1)} % of every bit is lost to doubt. Repeating three times and voting gets ${(rep*100).toFixed(1)} % wrong at a third of the rate; the theorem promises near-zero error at any rate up to ${C.toFixed(2)}.`; }
+  $('f6p').addEventListener('input',e=>{ p=+e.target.value/100; upd(); }); upd(); addEventListener('resize',draw);
+})();
+
+/* ------------------------------------------------------------ §17 Hamming (7,4) */
+(function(){
+  let d=[1,0,1,1], sent=[], recv=[], fixed=false;
+  const encode=dd=>{ const [d1,d2,d3,d4]=dd; return [d1,d2,d3,d4,d1^d2^d4,d1^d3^d4,d2^d3^d4]; };
+  const syndrome=r=>{ const [d1,d2,d3,d4,c1,c2,c3]=r; return [(d1^d2^d4)!==c1, (d1^d3^d4)!==c2, (d2^d3^d4)!==c3]; };
+  const POS={ '100':4,'010':5,'001':6,'110':0,'101':1,'011':3,'111':2 };
+  function render(){ const s=syndrome(recv), key=s.map(v=>v?1:0).join(''), bad=key==='000'?-1:POS[key];
+    $('f7ham').innerHTML=recv.map((b,i)=>`<button type="button" data-i="${i}" class="${i<4?'d':''} ${b!==sent[i]?'flip':''} ${fixed&&i===bad?'fix':''}" title="flip bit ${i+1} in transit">${b}</button>`).join('');
+    const diff=recv.filter((b,i)=>b!==sent[i]).length;
+    $('f7stat').textContent=diff===0?'clean':diff===1?'one bit damaged':`${diff} bits damaged`;
+    $('f7tape').innerHTML=`<span class="k">sent      </span>${sent.join('')}\n<span class="k">received  </span>${recv.map((b,i)=>b!==sent[i]?`<span class="n">${b}</span>`:b).join('')}\n<span class="k">checks    </span>c1 ${s[0]?'<span class="n">fails</span>':'ok'} · c2 ${s[1]?'<span class="n">fails</span>':'ok'} · c3 ${s[2]?'<span class="n">fails</span>':'ok'}${bad>=0?`  → bit ${bad+1}`:'  → nothing to fix'}${diff>1?'\n<span class="k">two errors fool the code: it points at the wrong bit. One per seven is the promise.</span>':''}`; }
+  const reset=()=>{ sent=encode(d); recv=sent.slice(); fixed=false; render(); };
+  $('f7ham').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return; const i=+b.dataset.i; recv[i]^=1; fixed=false; render(); });
+  $('f7rand').addEventListener('click',()=>{ d=d.map(()=>Math.random()<0.5?1:0); reset(); });
+  $('f7flip').addEventListener('click',()=>{ recv=sent.slice(); recv[Math.floor(Math.random()*7)]^=1; fixed=false; render(); });
+  $('f7fix').addEventListener('click',()=>{ const s=syndrome(recv), key=s.map(v=>v?1:0).join(''); if(key!=='000'){ const bad=POS[key]; recv[bad]^=1; fixed=true; } render(); if(fixed){ const bad=sent.findIndex((b,i)=>b!==recv[i]); $('f7stat').textContent=bad<0?'corrected':'wrong correction'; } });
+  reset();
+})();
+
+/* ------------------------------------------------------------ §25 continuous channel */
+(function(){
+  const c=$('c8'); let W=3, snr=30;
+  function draw(){ const {x,w,h}=fitCanvas(c), th=T(); x.clearRect(0,0,w,h); const L=14,R=14,Tp=16,B=28; const pw=w-L-R, ph=h-Tp-B; const mid=Tp+ph/2;
+    x.strokeStyle=th.rule; x.beginPath(); x.moveTo(L,mid+0.5); x.lineTo(L+pw,mid+0.5); x.stroke();
+    // a band-limited signal: sum of sines up to W, drawn over a fixed window; samples at 2W per unit
+    const nComp=6; seed=21; const comps=[]; for(let i=0;i<nComp;i++)comps.push({f:(0.2+0.8*rnd())*W, a:rnd()*0.8+0.3, ph:rnd()*6.28});
+    const amp=ph*0.3; const sig=t=>{ let s=0; for(const k of comps)s+=k.a*Math.sin(6.2832*k.f*t+k.ph); return s/nComp*1.8; };
+    const span=6/W; const P=1; const Nr=Math.pow(10,-snr/10)*P; const nAmp=Math.sqrt(Nr)*0.9;
+    seed=33; x.strokeStyle=th.noi; x.lineWidth=1; x.beginPath(); for(let i=0;i<=pw;i++){ const t=i/pw*span; const v=sig(t)+(rnd()*2-1)*nAmp*1.7; const yy=mid-v*amp; if(i===0)x.moveTo(L+i,yy); else x.lineTo(L+i,yy); } x.stroke();
+    x.strokeStyle=th.sig; x.lineWidth=2; x.beginPath(); for(let i=0;i<=pw;i++){ const t=i/pw*span; const yy=mid-sig(t)*amp; if(i===0)x.moveTo(L+i,yy); else x.lineTo(L+i,yy); } x.stroke();
+    const ns=Math.round(2*W*span); for(let i=0;i<=ns;i++){ const t=i/(2*W); const xx=L+t/span*pw, yy=mid-sig(t)*amp; x.fillStyle=th.paper; x.beginPath(); x.arc(xx,yy,3.5,0,7); x.fill(); x.strokeStyle=th.ink; x.lineWidth=1; x.stroke(); }
+    x.fillStyle=th.mute; x.font=MONO(10); x.textAlign='left'; x.textBaseline='top'; x.fillText(`${span.toFixed(1)} ms window at W = ${W.toFixed(1)} kHz · ${ns+1} samples`,L,Tp); x.textAlign='right'; x.fillStyle=th.noi; x.fillText('signal + noise',L+pw,Tp); }
+  function upd(){ const Wh=W*1000, ratio=Math.pow(10,snr/10); const C=Wh*log2(1+ratio); $('f8c').innerHTML=(C>=1e6?(C/1e6).toFixed(2)+'<small>Mbit/s</small>':(C/1e3).toFixed(1)+'<small>kbit/s</small>'); $('f8e').textContent=log2(1+ratio).toFixed(2); $('f8n').innerHTML=(2*Wh).toLocaleString('en-US')+'<small>per second</small>'; $('f8stat').textContent=C>=1e6?(C/1e6).toFixed(2)+' Mbit/s':(C/1e3).toFixed(1)+' kbit/s'; $('f8wO').textContent=W.toFixed(1)+' kHz'; $('f8sO').textContent=snr+' dB';
+    $('f8cap').textContent=(W===3&&snr===30)?'A telephone line, 3 kHz at 30 dB, comes to about 30 kbit/s. Doubling the bandwidth doubles capacity; doubling the signal power adds one bit per second per hertz.':`${W.toFixed(1)} kHz at ${snr} dB: ${log2(1+ratio).toFixed(2)} bits per second for every hertz, ${(C/1e3).toFixed(1)} kbit/s in all. The waveform is sampled ${(2*Wh).toLocaleString('en-US')} times a second, and each sample can be told apart from about ${Math.sqrt(1+ratio).toFixed(1)} others.`; draw(); }
+  $('f8w').addEventListener('input',e=>{ W=+e.target.value; upd(); }); $('f8s').addEventListener('input',e=>{ snr=+e.target.value; upd(); }); upd(); addEventListener('resize',draw);
+})();
+
+/* ------------------------------------------------------------ rail */
+(function(){ const links=[...document.querySelectorAll('.rail a[data-s]')]; const secs=links.map(a=>$(a.dataset.s)).filter(Boolean); if(!('IntersectionObserver' in window))return;
+  const io=new IntersectionObserver(es=>{ es.forEach(en=>{ if(en.isIntersecting){ links.forEach(a=>a.classList.toggle('on',a.dataset.s===en.target.id)); } }); },{rootMargin:'-20% 0px -60% 0px'}); secs.forEach(s=>io.observe(s)); })();
+addEventListener('resize',()=>{});
+})();
+</script>
+
+</body></html>

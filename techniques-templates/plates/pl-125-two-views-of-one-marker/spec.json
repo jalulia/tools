@@ -1,0 +1,164 @@
+{
+  "id": "pl-125-two-views-of-one-marker",
+  "code": "PL-125",
+  "title": "Two views of one marker",
+  "section": "plates",
+  "variants": [
+    {
+      "id": "ink",
+      "label": "Ink",
+      "swatches": [
+        "#101014",
+        "#B6891B",
+        "#EB960B",
+        "#86B8B6"
+      ]
+    },
+    {
+      "id": "white",
+      "label": "White",
+      "swatches": [
+        "#FFFFFF",
+        "#B6891B",
+        "#EB960B",
+        "#86B8B6"
+      ]
+    }
+  ],
+  "reference": {
+    "file": null,
+    "px": [
+      1000,
+      501
+    ],
+    "grammar": "One marker seen two ways through a crystal."
+  },
+  "units": "design units, 1000 = plate width",
+  "palette": {
+    "grounds": [
+      "#09090B",
+      "#0B0B0D"
+    ],
+    "inks": [
+      "#B6891B",
+      "#EB960B",
+      "#86B8B6",
+      "#56AA95",
+      "#F7F1E5",
+      "#FFFFFF"
+    ]
+  },
+  "techniques": [
+    {
+      "id": "optic-trace",
+      "short": "RTYT",
+      "name": "Ray trace",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "fields-optics"
+      ],
+      "params": {
+        "figures": 2,
+        "family": "fields-optics",
+        "panels": [
+          {
+            "title": "Two Views of One Marker · 1",
+            "coverage": 0.027,
+            "ground": "#09090B"
+          },
+          {
+            "title": "Two Views of One Marker · 2",
+            "coverage": 0.026,
+            "ground": "#0B0B0D"
+          }
+        ]
+      },
+      "implementation": "Rays and markers traced through a crystal model on black, with a color plate beside them."
+    },
+    {
+      "id": "ink-palette",
+      "short": "INK",
+      "name": "Measured inks",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "palette"
+      ],
+      "params": {
+        "inks": [
+          {
+            "hex": "#B6891B",
+            "weight": 0.0092
+          },
+          {
+            "hex": "#EB960B",
+            "weight": 0.009
+          },
+          {
+            "hex": "#86B8B6",
+            "weight": 0.0077
+          },
+          {
+            "hex": "#56AA95",
+            "weight": 0.0076
+          },
+          {
+            "hex": "#F7F1E5",
+            "weight": 0.0062
+          },
+          {
+            "hex": "#FFFFFF",
+            "weight": 0.0044
+          }
+        ]
+      },
+      "implementation": "solid ink pixels of each figure, read at full resolution, are clustered to five colors; a color is kept when it holds at least 4% of the ink."
+    },
+    {
+      "id": "figure-ground",
+      "short": "GRND",
+      "name": "Figure and ground",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "ground",
+        "coverage"
+      ],
+      "params": {
+        "grounds": [
+          "#09090B",
+          "#0B0B0D"
+        ],
+        "ink_threshold": 40,
+        "coverage_mean": 0.026
+      },
+      "implementation": "The ground is the most common border color of a figure; ink is every pixel more than 40 levels from it."
+    },
+    {
+      "id": "plate-layout",
+      "short": "LAYT",
+      "name": "Justified plate",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "grid"
+      ],
+      "params": {
+        "row_height_u": 330,
+        "gutter_u": 14,
+        "margin_u": 30,
+        "height_u": 500.6
+      },
+      "implementation": "Figures keep their proportions and share a row height; each row fills the plate width. Every split of the figures into rows is tried, and the one whose row heights sit closest to the target wins."
+    }
+  ],
+  "pass_order": [
+    "ground · plate",
+    "figures · justified rows",
+    "read · points measured from each figure"
+  ],
+  "notes": [
+    "Sources: Local file · The Third Root · Trirefringence, Grounded II"
+  ]
+}

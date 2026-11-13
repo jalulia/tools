@@ -1,0 +1,178 @@
+{
+  "id": "pl-149-counted-fields",
+  "code": "PL-149",
+  "title": "Counted fields",
+  "section": "plates",
+  "variants": [
+    {
+      "id": "white",
+      "label": "White",
+      "swatches": [
+        "#FFFFFF",
+        "#20A989",
+        "#164031",
+        "#2B5245"
+      ]
+    },
+    {
+      "id": "ink",
+      "label": "Ink",
+      "swatches": [
+        "#101014",
+        "#20A989",
+        "#164031",
+        "#2B5245"
+      ]
+    }
+  ],
+  "reference": {
+    "file": null,
+    "px": [
+      1000,
+      665
+    ],
+    "grammar": "Tone set as a count of single dots, in a dark green and a teal on white."
+  },
+  "units": "design units, 1000 = plate width",
+  "palette": {
+    "grounds": [
+      "#F6F7F7",
+      "#FDFDFD",
+      "#FEFEFE",
+      "#FFFFFF"
+    ],
+    "inks": [
+      "#20A989",
+      "#164031",
+      "#2B5245",
+      "#46BB9F",
+      "#44675B",
+      "#1F473A"
+    ]
+  },
+  "techniques": [
+    {
+      "id": "counted-stipple",
+      "short": "CSNT",
+      "name": "Counted stipple",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "screen-tone"
+      ],
+      "params": {
+        "figures": 4,
+        "family": "screen-tone",
+        "panels": [
+          {
+            "title": "Stipple ramp, light to dark",
+            "coverage": 0.463,
+            "ground": "#F6F7F7"
+          },
+          {
+            "title": "Two-ink stipple ramp",
+            "coverage": 0.468,
+            "ground": "#FDFDFD"
+          },
+          {
+            "title": "Two ring screens, multiplied",
+            "coverage": 0.211,
+            "ground": "#FEFEFE"
+          },
+          {
+            "title": "Nine counted tiles",
+            "coverage": 0.286,
+            "ground": "#FFFFFF"
+          }
+        ]
+      },
+      "implementation": "Tone is printed as a count of one-pixel dots per cell, so density carries the value and nothing is blended; two screens multiplied make the rings."
+    },
+    {
+      "id": "ink-palette",
+      "short": "INK",
+      "name": "Measured inks",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "palette"
+      ],
+      "params": {
+        "inks": [
+          {
+            "hex": "#20A989",
+            "weight": 0.1292
+          },
+          {
+            "hex": "#164031",
+            "weight": 0.1162
+          },
+          {
+            "hex": "#2B5245",
+            "weight": 0.1125
+          },
+          {
+            "hex": "#46BB9F",
+            "weight": 0.1058
+          },
+          {
+            "hex": "#44675B",
+            "weight": 0.1051
+          },
+          {
+            "hex": "#1F473A",
+            "weight": 0.1048
+          }
+        ]
+      },
+      "implementation": "solid ink pixels of each figure, read at full resolution, are clustered to five colors; a color is kept when it holds at least 4% of the ink."
+    },
+    {
+      "id": "figure-ground",
+      "short": "GRND",
+      "name": "Figure and ground",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "ground",
+        "coverage"
+      ],
+      "params": {
+        "grounds": [
+          "#F6F7F7",
+          "#FDFDFD",
+          "#FEFEFE",
+          "#FFFFFF"
+        ],
+        "ink_threshold": 40,
+        "coverage_mean": 0.357
+      },
+      "implementation": "The ground is the most common border color of a figure; ink is every pixel more than 40 levels from it."
+    },
+    {
+      "id": "plate-layout",
+      "short": "LAYT",
+      "name": "Justified plate",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "grid"
+      ],
+      "params": {
+        "row_height_u": 270,
+        "gutter_u": 14,
+        "margin_u": 30,
+        "height_u": 665
+      },
+      "implementation": "Figures keep their proportions and share a row height; each row fills the plate width. Every split of the figures into rows is tried, and the one whose row heights sit closest to the target wins."
+    }
+  ],
+  "pass_order": [
+    "ground · plate",
+    "figures · justified rows",
+    "read · points measured from each figure"
+  ],
+  "notes": [
+    "Sources: Private project · isolated figure"
+  ]
+}

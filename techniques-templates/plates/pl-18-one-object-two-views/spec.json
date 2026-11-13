@@ -1,0 +1,164 @@
+{
+  "id": "pl-18-one-object-two-views",
+  "code": "PL-18",
+  "title": "One object, two views",
+  "section": "plates",
+  "variants": [
+    {
+      "id": "white",
+      "label": "White",
+      "swatches": [
+        "#FFFFFF",
+        "#0D1C7E",
+        "#3E4999",
+        "#0A157C"
+      ]
+    },
+    {
+      "id": "ink",
+      "label": "Ink",
+      "swatches": [
+        "#101014",
+        "#0D1C7E",
+        "#3E4999",
+        "#0A157C"
+      ]
+    }
+  ],
+  "reference": {
+    "file": null,
+    "px": [
+      1000,
+      493
+    ],
+    "grammar": "The same strands seen from above and pressed in ink."
+  },
+  "units": "design units, 1000 = plate width",
+  "palette": {
+    "grounds": [
+      "#FBFBFB",
+      "#FFFFFF"
+    ],
+    "inks": [
+      "#0D1C7E",
+      "#3E4999",
+      "#0A157C",
+      "#33439D",
+      "#031578",
+      "#161C6B"
+    ]
+  },
+  "techniques": [
+    {
+      "id": "node-ring",
+      "short": "NRDR",
+      "name": "Node ring",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "line"
+      ],
+      "params": {
+        "figures": 2,
+        "family": "line",
+        "panels": [
+          {
+            "title": "Reflection at 0°",
+            "coverage": 0.02,
+            "ground": "#FFFFFF"
+          },
+          {
+            "title": "Pressed, the same strands in ink",
+            "coverage": 0.028,
+            "ground": "#FBFBFB"
+          }
+        ]
+      },
+      "implementation": "Points on a ring are joined to their neighbors by straight edges; the edge count makes the weight of the ring."
+    },
+    {
+      "id": "ink-palette",
+      "short": "INK",
+      "name": "Measured inks",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "palette"
+      ],
+      "params": {
+        "inks": [
+          {
+            "hex": "#0D1C7E",
+            "weight": 0.0065
+          },
+          {
+            "hex": "#3E4999",
+            "weight": 0.0061
+          },
+          {
+            "hex": "#0A157C",
+            "weight": 0.006
+          },
+          {
+            "hex": "#33439D",
+            "weight": 0.0056
+          },
+          {
+            "hex": "#031578",
+            "weight": 0.0054
+          },
+          {
+            "hex": "#161C6B",
+            "weight": 0.0047
+          }
+        ]
+      },
+      "implementation": "solid ink pixels of each figure, read at full resolution, are clustered to five colors; a color is kept when it holds at least 4% of the ink."
+    },
+    {
+      "id": "figure-ground",
+      "short": "GRND",
+      "name": "Figure and ground",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "ground",
+        "coverage"
+      ],
+      "params": {
+        "grounds": [
+          "#FBFBFB",
+          "#FFFFFF"
+        ],
+        "ink_threshold": 40,
+        "coverage_mean": 0.024
+      },
+      "implementation": "The ground is the most common border color of a figure; ink is every pixel more than 40 levels from it."
+    },
+    {
+      "id": "plate-layout",
+      "short": "LAYT",
+      "name": "Justified plate",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "grid"
+      ],
+      "params": {
+        "row_height_u": 330,
+        "gutter_u": 14,
+        "margin_u": 30,
+        "height_u": 492.5
+      },
+      "implementation": "Figures keep their proportions and share a row height; each row fills the plate width. Every split of the figures into rows is tried, and the one whose row heights sit closest to the target wins."
+    }
+  ],
+  "pass_order": [
+    "ground · plate",
+    "figures · justified rows",
+    "read · points measured from each figure"
+  ],
+  "notes": [
+    "Sources: Private project · isolated figure"
+  ]
+}

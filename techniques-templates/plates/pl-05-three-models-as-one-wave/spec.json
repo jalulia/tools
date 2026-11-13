@@ -1,0 +1,130 @@
+{
+  "id": "pl-05-three-models-as-one-wave",
+  "code": "PL-05",
+  "title": "Three models as one wave",
+  "section": "plates",
+  "variants": [
+    {
+      "id": "white",
+      "label": "White",
+      "swatches": [
+        "#FFFFFF",
+        "#243CB5",
+        "#191E3B",
+        "#5B71D1"
+      ]
+    },
+    {
+      "id": "ink",
+      "label": "Ink",
+      "swatches": [
+        "#101014",
+        "#243CB5",
+        "#191E3B",
+        "#5B71D1"
+      ]
+    }
+  ],
+  "reference": {
+    "file": null,
+    "px": [
+      1000,
+      767
+    ],
+    "grammar": ""
+  },
+  "units": "design units, 1000 = plate width",
+  "palette": {
+    "grounds": [
+      "#EEEEEC"
+    ],
+    "inks": [
+      "#243CB5",
+      "#191E3B",
+      "#5B71D1",
+      "#414F97"
+    ]
+  },
+  "techniques": [
+    {
+      "id": "dot-record",
+      "short": "ODPC",
+      "name": "One dot per character",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "data-display"
+      ],
+      "params": {
+        "figures": 1,
+        "family": "data-display",
+        "panels": [
+          {
+            "title": "Three models as one wave",
+            "coverage": 0.11,
+            "ground": "#EEEEEC"
+          }
+        ]
+      },
+      "implementation": "Every character of a record is one dot; position comes from the model, tone from who wrote it."
+    },
+    {
+      "id": "ink-palette",
+      "short": "INK",
+      "name": "Measured inks",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "palette"
+      ],
+      "params": {
+        "inks": [
+          {
+            "hex": "#243CB5",
+            "weight": 0.0343
+          },
+          {
+            "hex": "#191E3B",
+            "weight": 0.0303
+          },
+          {
+            "hex": "#5B71D1",
+            "weight": 0.0229
+          },
+          {
+            "hex": "#414F97",
+            "weight": 0.0209
+          }
+        ]
+      },
+      "implementation": "solid ink pixels of each figure, read at full resolution, are clustered to five colors; a color is kept when it holds at least 4% of the ink."
+    },
+    {
+      "id": "figure-ground",
+      "short": "GRND",
+      "name": "Figure and ground",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "ground",
+        "coverage"
+      ],
+      "params": {
+        "grounds": [
+          "#EEEEEC"
+        ],
+        "ink_threshold": 40,
+        "coverage_mean": 0.11
+      },
+      "implementation": "The ground is the most common border color of a figure; ink is every pixel more than 40 levels from it."
+    }
+  ],
+  "pass_order": [
+    "ground · plate",
+    "figure · from its source page",
+    "read · points measured from the figure"
+  ],
+  "notes": [
+    "Sources: Private project · isolated figure"
+  ]
+}
