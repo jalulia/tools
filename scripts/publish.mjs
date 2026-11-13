@@ -61,7 +61,7 @@ for (let round = 1; round <= 3; round++) {
   const norm = (s) => STAMP.reduce((a, [r, w]) => a.replace(r, w), s);
   for (const f of sh('git diff --name-only').split('\n').filter(Boolean)) {
     if (!generated(f)) continue; let before; try { before = sh(`git show HEAD:"${f}"`, { maxBuffer: 1 << 28 }); } catch { continue; }
-    if (norm(before) === norm(fs.readFileSync(path.join(ROOT, f), 'utf8'))) sh(`git checkout -- "${f}"`);
+    if (norm(before).trimEnd() === norm(fs.readFileSync(path.join(ROOT, f), 'utf8')).trimEnd()) sh(`git checkout -- "${f}"`);
   }
   if (sh('git status --porcelain')) { sh('git add -A'); commit('Rebuild generated files and census' + (trailers ? '\n\n' + trailers : '')); }
   try { sh('git -c push.negotiate=true push -q origin HEAD:main'); console.log('publish · pushed ' + sh('git log --oneline -1')); process.exit(0); }
