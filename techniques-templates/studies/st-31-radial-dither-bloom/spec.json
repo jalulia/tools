@@ -17,7 +17,7 @@
     "published": false,
     "note": "held locally; this page carries statistics measured from it and none of its pixels"
   },
-  "summary": "A light field of a beveled panel, bead-chain capsules and a corner light, sampled once per 2.21 px cell and printed as a diagonal checker of two inks, breaks placed by a hash.",
+  "summary": "A light field of a beveled panel, bead-chain capsules and a corner light, sampled once per 2.21 px cell and printed as a diagonal checker of two neighboring inks.",
   "units": "reference pixels; the plate is 735 × 920 and every length scales with the canvas",
   "palette": {
     "key": "measured",
@@ -147,8 +147,8 @@
       "does": "Size of one dither cell. The reference's checkerboard peaks at 0.227 cycles per px, a 2.21 px cell."
     },
     "depth": {
-      "value": 1,
-      "default": 1,
+      "value": 1.3,
+      "default": 1.3,
       "range": [
         0,
         2
@@ -156,11 +156,11 @@
       "step": 0.01,
       "unit": "×",
       "group": "Dither",
-      "does": "How far apart the two checker phases print: 0 posterizes each cell to its nearest ink, 1 splits mid-tones into a full two-ink checker."
+      "does": "How far apart the two checker phases print: 0 posterizes each cell to its nearest ink, 1.3 splits mid-tones into a full checker of neighboring inks."
     },
     "grain": {
-      "value": 0.02,
-      "default": 0.02,
+      "value": 0.005,
+      "default": 0.005,
       "range": [
         0,
         1
@@ -168,7 +168,7 @@
       "step": 0.01,
       "unit": null,
       "group": "Dither",
-      "does": "Share of cells that swap checker phase. 0 keeps the diagonal checker exact; 1 is a random dither."
+      "does": "Share of cells that swap checker phase. 0.005 keeps the diagonal checker nearly exact; 1 is a random dither."
     },
     "enlarge": {
       "value": 0.8,
@@ -207,8 +207,8 @@
       "does": "Where the light sits around the center. 225 is the upper left corner, 270 straight up."
     },
     "falloff": {
-      "value": 1.1,
-      "default": 1.1,
+      "value": 1.2,
+      "default": 1.2,
       "range": [
         0.3,
         2.5
@@ -255,11 +255,11 @@
       "does": "Beads chained along each capsule, growing outward; the last carries the cap."
     },
     "dark": {
-      "value": 1.6,
-      "default": 1.6,
+      "value": 2.2,
+      "default": 2.2,
       "range": [
         0,
-        3
+        3.5
       ],
       "step": 0.01,
       "unit": "×",
@@ -526,7 +526,7 @@
       "pass": 4,
       "params": {
         "cell": 2.21,
-        "dark": 1.6,
+        "dark": 2.2,
         "cap": 1.15,
         "ring": 48,
         "petals": 12,
@@ -543,12 +543,12 @@
       "layer": 1,
       "pass": 2,
       "params": {
-        "depth": 1,
-        "grain": 0.02,
+        "depth": 1.3,
+        "grain": 0.005,
         "light": 230,
         "warm": 1.1,
         "beads": 4,
-        "dark": 1.6,
+        "dark": 2.2,
         "halo": 0.92
       },
       "implementation": "Bead chain on the pale ground: the dark phase prints indigo and the light phase lilac, inside a yellow and olive checker."
@@ -560,17 +560,17 @@
       "layer": 2,
       "pass": 5,
       "params": {
-        "grain": 0.02
+        "grain": 0.005
       },
-      "implementation": "At 4x: the pale ground is a diagonal checker of yellow and olive, the olive phase broken to yellow at hashed cells, 2.21 px per cell."
+      "implementation": "At 4x: the pale ground is a diagonal checker of yellow and olive, the olive phase broken to yellow on an ordered lattice, 2.21 px per cell."
     }
   ],
   "pass_order": [
     "light field per dither cell: a radial light from the upper left corner (tone falls with distance, warm only where it is bright), a square panel inset 55 to 68 px, a halo that ramps from the panel edge to black over 50 px with mitered corners",
-    "capsules: 17 rays, each a chain of four overlapping beads growing outward; on the pale ground a bead pushes darker, on the dark ground lighter, so the same chain reads as indigo beads up top and white-cored lobes below",
+    "capsules: 17 rays, each a chain of four overlapping beads growing outward. A bead over the pale panel is a smooth gaussian dark spot (sigma 0.72 of its radius, indigo at the core, cool and saturated); over the dark panel it is a soft bright capsule, white in the core. Neither carries noise",
     "caps: the outer bead ends in a pale yellow disc with a hard inner arc that spills past the panel at 0.9 opacity",
     "center: a dark collar, a lilac disc, a zigzag of 12 yellow teeth, a black hole at 0.36 of the ring radius",
-    "dither, checker first: each cell belongs to one phase of the diagonal checker; the light phase quantizes T + h and the dark phase T − h (h = depth × min(T − floor, 1 − T)) along the cell's ink ladder (warm: black, olive, yellow; gray: black, indigo, white; saturated: black, indigo, lilac, white, chosen by hashed draws against warmth and saturation); cells that break to the next rung are placed by a per-cell hash, so no row or tile pattern appears",
+    "dither, checker first: each cell belongs to one phase of the diagonal checker; the light phase quantizes T + h and the dark phase T − h, floored at the rung under T, along a warm, saturated or gray ladder; rung breaks and ladder picks use a 4 × 4 ordered threshold on the checker's diagonal lattice; phase breaks 0.005",
     "print: the 2.21 px cell grid is enlarged to the page with 0.8 linear interpolation between cell centers; one-pixel lilac dust lands on the bare black"
   ],
   "measured": {
@@ -664,7 +664,7 @@
     "setup": {
       "palette": "measured",
       "overrides": {},
-      "note": "The rays are generated, so the bead chain, bright lobe, panel field and dark ground rects were re-picked after the rebuild and again after the checker-first dither (panel field picked on autocorrelation in the mid-tone zone), with search.py's window scan, each restricted to the matching zone of the render (bead chain in the lit upper half, lobe and dark ground in the lower right). The bevel corner and the whole plate compare in place.",
+      "note": "The rays are generated, so the bead chain, bright lobe, panel field and dark ground rects were re-picked after the rebuild and again after the checker-first dither and the dark-bead rebuild (panel field picked on autocorrelation in the mid-tone zone), with search.py's window scan, each restricted to the matching zone of the render (bead chain in the lit upper half, lobe and dark ground in the lower right). The bevel corner and the whole plate compare in place.",
       "patches": [
         {
           "name": "bead chain",
@@ -675,7 +675,7 @@
             128
           ],
           "render_rect": [
-            204,
+            264,
             60,
             128,
             128
@@ -699,8 +699,8 @@
             128
           ],
           "render_rect": [
-            576,
-            556,
+            276,
+            652,
             96,
             128
           ],
@@ -723,8 +723,8 @@
             96
           ],
           "render_rect": [
-            216,
-            540,
+            168,
+            348,
             128,
             96
           ],
@@ -808,12 +808,12 @@
     }
   },
   "limits": [
-    "Bench mean 0.919, under 98 %. The lowest metric is the bead chain tone histogram (0.76): the reference file's cells were enlarged and JPEG-softened, so its histograms carry a continuous spread between inks that the render's 0.8 linear enlarge only partly makes. The panel field contrast scores 0.79 for the same reason (σ 53 against 67); enlarge 0.65 lifts it to 0.89, the panel autocorrelation from 0.865 to 0.929 and the mean to 0.924, but the brief keeps the measured 0.8.",
+    "Bench mean 0.913, under 98 %. The lowest metric is the dark ground contrast (0.66): the render's black between lobes is cleaner than the reference's (σ 10.8 against 16.3), which carries JPEG ringing off the lobe edges. Panel field contrast scores 0.75 (enlarged cells average toward the mean); enlarge 0.65 lifts it to 0.87 and the mean to 0.917, but the brief keeps the measured 0.8.",
     "The bevel corner's indigo class scores 0.82: the reference's top bevel dark cells are olive-black, and the render's bevel still mixes in indigo where the halo cools toward the sides.",
     "The rays are generated, not traced. Searched windows compare a lobe of the render with a lobe of the reference, not the same lobe, so tone shares differ with where each lobe sits under the light.",
     "Cell edges at 3 to 5x are soft by design (enlarge 0.8) because the reference's are; enlarge 0 gives hard square cells.",
-    "Lobe cores on the pale ground can print short indigo runs on both phases where bead depth pushes the tone under the light rung; the reference's cores keep the light phase lighter.",
-    "The dark ground's mean scores 0.85 (6.5 against 5.5 levels): 3 % indigo cells at the lobe rims against the reference's 2.5 %."
+    "The bead chain tone histogram scores 0.76: the reference's pale ground is JPEG-softened into a continuous spread between yellow and olive that the render's enlarge only partly makes.",
+    "The lower right quarter averages 74 against the reference's 69; the dark ground patch itself scores 0.96 on its mean (5.8 against 5.5)."
   ],
   "keys": {
     "S": "spec",
