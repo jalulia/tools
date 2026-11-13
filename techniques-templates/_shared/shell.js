@@ -4,6 +4,7 @@
    and the control panel (right: View, Callouts, Motion, Color, Parameters, Export — same order on every page).
    Design notes: _shared/PLATE-UI.md. Everything is generated at runtime; the only bitmap is the inlined reference. */
 (function(){
+if(/[?&]embed\b/.test(location.search))document.body.classList.add('embed');
 "use strict";
 const S=window.STUDY; if(!S){document.body.textContent='no STUDY';return;}
 /* S.ui: a study page (studies/) brings its own instrument; _shared/st-adapter.js maps it onto these modules.
@@ -40,7 +41,7 @@ const ICON={ chev:'<svg class="chev" viewBox="0 0 10 10" aria-hidden="true"><pat
   const sents=(S.body||[]).join(' ').split(/(?<=[.!?])\s+(?=[A-Z0-9“"(])/); const bodyShort=sents.slice(0,3).join(' '), bodyMore=sents.slice(3).join(' ');
   const vrows=T.map(t=>`<li class="vr"><button type="button" data-t="${esc(t.id)}" title="Show where ${esc(t.name.toLowerCase())} was measured"><span class="vn">${esc(t.name)}</span><span class="vid">${esc(t.id)}</span></button><span class="at">${(t.atoms||[]).map(a=>`<a href="${ROOT}index.html#techniques?a=${encodeURIComponent(a)}" title="Every entry that uses ${esc(a)}">${esc(a)}</a>`).join('')}${S.techniques&&S.techniques[t.id]?`<a class="mod" href="lib/${esc(t.id)}.js" title="The lifted module">lib/${esc(t.id)}.js</a>`:''}</span></li>`).join('');
   const ef=!!(UI&&UI.engineFirst), refOK=!!(window.__REF&&window.__REF.data), nPal=UI?(UI.palettes?UI.palettes.list.length:0):(S.variants||[]).length, hasMo=UI?!!UI.motion:!!S.motion, hasLv=UI?!!UI.interactive:IFRAME;
-  const keys=[['R',refOK?'Plate, reference, compare':null],['V',!ef&&nPal>1?'Next palette':null],['M',!ef&&hasMo?'Play or pause motion':null],['L',!ef&&hasLv?(S.liveLabel||'Interactive version'):null],['Space','Replay the build'],['S','Open the spec'],['F','Expand the plate'],[', .',ef?null:'Previous, next study'],['/','Back to the index'],...((UI&&UI.keys)||[])].filter(k=>k[1]);
+  const keys=[['R',refOK?'Plate, reference, compare':null],['V',!ef&&nPal>1?'Next palette':null],['M',!ef&&hasMo?'Play or pause motion':null],['L',!ef&&hasLv?(S.liveLabel||'Interactive version'):null],['S','Open the spec'],['F','Expand the plate'],[', .',ef?null:'Previous, next study'],['/','Back to the index'],...((UI&&UI.keys)||[])].filter(k=>k[1]);
   const nParams=UI?UI.params.length:((window.ART.paramLeaves?window.ART.paramLeaves(S.spec).length:0));
   const motDesc=UI?[UI.motion?'loop':'',UI.interactive?UI.interactive.label.toLowerCase():'',UI.pointerHint?'pointer':''].filter(Boolean).join(' · '):[S.motion?'loop':'',S.live?(S.liveLabel||'interactive').toLowerCase():''].filter(Boolean).join(' · ');
   const acc=(id,title,body,open)=>`<details class="acc" name="notes" id="${id}"${open?' open':''}><summary><span>${title}</span>${ICON.chev}</summary><div class="ab">${body}</div></details>`;
@@ -144,12 +145,12 @@ const rows=P.map(t=>{ const r=document.createElement('div'); r.className='r blan
 function rowText(r,t,uv,done){ const s=r.children; s[0].textContent=String(t.num); s[1].textContent=done?t.d:'—'; s[2].textContent=done?t.label:''; s[3].textContent=uv?uv[0].toFixed(2)+' · '+uv[1].toFixed(2):''; r.classList.toggle('blank',!done); r.title=done?`${t.label} · ${techName(t.t)}`:''; }
 rows.forEach((r,i)=>rowText(r,P[i],null,false));
 if(!P.length){ $('mNote').hidden=true; }
-let hover=null, selected=null, dirty=true, noteOn=true;
+let hover=null, selected=null, dirty=true, noteOn=false;   /* callouts are off until asked for */
 function setHover(t){ hover=t; rows.forEach((r,i)=>r.classList.toggle('on',P[i]===(hover||selected))); showRead(hover||selected); dirty=true; }
 function select(t){ selected=(selected===t)?null:t; rows.forEach((r,i)=>r.classList.toggle('on',P[i]===(hover||selected))); showRead(selected||hover); if(selected&&selected.t)hlTech(selected.t); dirty=true; }
 function showRead(t){ if(!t){ readTxt.textContent='Hover or select a point.'; readCode.textContent=''; return; } const tech=(S.spec.techniques||[]).find(q=>q.id===t.t); readTxt.innerHTML=`<b>${t.num} · ${esc(t.label)}</b>${tech?`<span>${esc(tech.name)}</span>`:''}`; const show=v=>window.ART.isLeaf(v)?`${v.value}${v.unit?' '+v.unit:''}`:(typeof v==='object'?JSON.stringify(v):v); readCode.textContent=tech&&tech.params?Object.entries(tech.params).slice(0,6).map(([k,v])=>`${k}  ${show(v)}`).join('\n'):''; }
 function setNotes(o){ noteOn=o; $('tNote').checked=o; document.body.classList.toggle('no-callouts',!o); dirty=true; }
-$('tNote').onchange=()=>setNotes($('tNote').checked);
+$('tNote').onchange=()=>setNotes($('tNote').checked); document.body.classList.add('no-callouts');
 $('bPoints').onclick=()=>{ const p=$('pts'); p.hidden=!p.hidden; $('bPoints').setAttribute('aria-expanded',String(!p.hidden));  };
 
 /* ---------- color module ---------- */
@@ -209,7 +210,7 @@ const decOf=st=>st>=1?0:Math.min(5,Math.max(0,-Math.floor(Math.log10(st)+1e-9)))
 /* limits are written with raw keys at sentence starts ("gap under ~0.1 …"): capitalize each sentence */
 const sent=t=>String(t||'').replace(/(^|[.!?]\s+)([a-z])/g,(m,a,b)=>a+b.toUpperCase());
 (function(){ if(UI){ uiParams(); return; } const leaves=window.ART.paramLeaves?window.ART.paramLeaves(S.spec):[]; const host=$('prail');
-  if(!leaves.length){ host.innerHTML='<p class="empty">This study has no adjustable values yet. Its numbers are in the spec.</p>'; $('mParams').classList.add('none'); $('mParams').querySelector('.hint').hidden=true; return; }
+  if(!leaves.length){ host.innerHTML='<p class="empty">'+esc(S.paramsHint||'This study has no adjustable values yet. Its numbers are in the spec.')+'</p>'; $('mParams').classList.add('none'); $('mParams').querySelector('.hint').hidden=true; return; }
   leaves.forEach(l=>{ l.st=stepOf(l); l.dec=decOf(l.st); l.unitS=l.unit||((/_deg$/.test(l.path))?'°':(/_u$/.test(l.path)?'u':(/_px$/.test(l.path)?'px':''))); });
   const decs=x=>{ const s=String(x); const i=s.indexOf('.'); return i<0?0:s.length-i-1; };
   leaves.forEach(l=>{ l.base=l.st>=1?0:Math.min(l.dec,Math.max(decs(l.value),decs(l.range[0]),decs(l.range[1]))); });
@@ -275,9 +276,9 @@ const refImg=new Image(); let refReady=false; const hasRef=!!(window.__REF&&wind
 refImg.onload=()=>{ refReady=true; dirty=true; computeFidelity(); };
 let mode=0, splitX=0.5;
 const VIEW_HINT=['The rebuild, drawn in code.','The source image the technique was measured from.','Reference on the left, rebuild on the right. Move across the plate to slide the split.'];
-if(hasRef)refImg.src=window.__REF.data; else { document.querySelectorAll('#segView button[data-m="1"],#segView button[data-m="2"]').forEach(b=>{ b.disabled=true; b.title='The reference is held locally and not published'; }); $('viewHint').textContent=S.refHint||'The reference is held locally and not published, so only the rebuild is shown.'; fidEl.innerHTML=S.refHint?`<p class="none">${esc(S.refHint)}</p>`:'<p class="none">Reference held locally, not published. No match score.</p>'; }
-function setMode(m){ if(!hasRef)m=0; mode=(m+3)%3; document.querySelectorAll('#segView button').forEach(b=>{ const on=+b.dataset.m===mode; b.classList.toggle('on',on); b.setAttribute('aria-checked',String(on)); }); if(hasRef)$('viewHint').textContent=VIEW_HINT[mode]+(mode!==0&&fidelity?` Match ${Math.round(fidelity.sum*100)} %.`:''); dirty=true; }
-document.querySelectorAll('#segView button').forEach(b=>b.onclick=()=>setMode(+b.dataset.m));
+if(hasRef)refImg.src=window.__REF.data; else { if($('tCompare')){ $('tCompare').disabled=true; $('cmpTog').classList.add('off'); $('cmpTog').title='No published reference to compare'; } $('viewHint').textContent=S.refHint||'The reference is held locally and not published, so only the rebuild is shown.'; fidEl.innerHTML=S.refHint?`<p class="none">${esc(S.refHint)}</p>`:'<p class="none">Reference held locally, not published. No match score.</p>'; }
+function setMode(m){ if(!hasRef)m=0; mode=m===2?2:0; if($('tCompare'))$('tCompare').checked=mode===2; if(hasRef)$('viewHint').textContent=VIEW_HINT[mode]+(mode!==0&&fidelity?` Match ${Math.round(fidelity.sum*100)} %.`:''); dirty=true; }
+if($('tCompare'))$('tCompare').onchange=()=>setMode($('tCompare').checked?2:0);
 let readoutEl=null;
 if(UI){ const mv=$('mView');
   if((UI.view||[]).length){ const box=document.createElement('div'); box.className='vsw'; box.innerHTML=UI.view.map((v,i)=>`<label class="sw-toggle"><input type="checkbox" data-v="${i}"><span class="tr" aria-hidden="true"></span><span class="tl">${esc(v.label)}</span></label>`).join(''); mv.appendChild(box);
@@ -387,7 +388,7 @@ function drawHover(){ if(pointer&&mode!==2){ ctx.strokeStyle=INK30; ctx.lineWidt
 /* ---------- loop ---------- */
 function startRead(){ for(const t of P)t.lock=-1; rows.forEach((r,i)=>rowText(r,P[i],null,false)); ctrEl.textContent=`0 / ${P.length}`; phase='read'; pt=0; dirty=true; }
 function frame(now){ requestAnimationFrame(frame); const dt=Math.min(0.05,(now-lastNow)/1000); lastNow=now; let work=false;
-  if(phase==='pre'){ if(artDone)startRead(); }
+  if(phase==='pre'){ if(artDone){ phase='hold'; pt=1; for(const t of P)t.lock=0; rows.forEach((r,i)=>rowText(r,P[i],[P[i].u,P[i].v],true)); ctrEl.textContent=`${P.length} / ${P.length}`; dirty=true; } }
   if(phase==='read'){ pt+=dt; work=true; const y=fig.y+fig.h*headPos(pt); let n=0; for(const t of P){ if(t.lock<0&&t.y<=y)t.lock=pt; if(t.lock>=0)n++; } ctrEl.textContent=`${n} / ${P.length}`;
     rows.forEach((r,i)=>{ const t=P[i]; if(t.lock<0)return; const e=clamp((pt-t.lock)/0.24,0,1); rowText(r,t,[t.u*e,t.v*e],e>=1); });
     if(pt>=READ+0.3){ phase='hold'; for(const t of P)if(t.lock<0)t.lock=pt; rows.forEach((r,i)=>rowText(r,P[i],[P[i].u,P[i].v],true)); ctrEl.textContent=`${P.length} / ${P.length}`; dirty=true; } }
@@ -418,7 +419,6 @@ cv.addEventListener('contextmenu',e=>{ if(LV()&&uvOf(e).inside)e.preventDefault(
 addEventListener('keyup',e=>{ const L=ENG(); if(L&&L.keyup)L.keyup(e); });
 addEventListener('blur',()=>{ const L=ENG(); if(L&&L.blur)L.blur(); });
 cv.addEventListener('click',()=>{ if(hover)select(hover); });
-$('bReplay').onclick=()=>{ if(!noteOn)setNotes(true); startRead(); };
 $('bSpec').onclick=()=>openSpec(!specEl.classList.contains('open')); $('specclose').onclick=()=>openSpec(false);
 $('speccopy').onclick=async()=>{ refreshSpec(); try{ await navigator.clipboard.writeText(specJSON); $('speccopy').textContent='Copied'; setTimeout(()=>$('speccopy').textContent='Copy',1200);}catch(e){} };
 /* expand (F): the notes column folds away and the plate takes its width; remembered per browser */
@@ -429,16 +429,54 @@ addEventListener('keydown',e=>{ if(e.target&&/INPUT|TEXTAREA|SELECT/.test(e.targ
   const L=ENG(); const toEngine=()=>{ if(L&&L.key&&L.key(e)){ e.preventDefault(); setTimeout(()=>{ uiSyncRows(); uiColorDraw(); motionState(); },30); dirty=true; return true; } return false; };
   /* an instrument page (ST-09…11) owns its keys first; the shell keeps R, S, F, space, Escape and / */
   if(UI&&UI.engineFirst&&!['r','s','/','escape',' '].includes(k)&&toEngine())return;
-  if(k==='r'&&hasRef)setMode(mode+1); else if(k==='s')openSpec(!specEl.classList.contains('open'));
+  if(k==='r'&&hasRef)setMode(mode===2?0:2); else if(k==='s')openSpec(!specEl.classList.contains('open'));
   else if(k==='v'&&(UI?(UI.palettes&&UI.palettes.list.length>1):variants.length>1))setVariant(vi+1);
   else if(k==='m'&&(UI?UI.motion:S.motion)){ if(UI){ UI.motion.set(!UI.motion.on()); motionState(); dirty=true; } else setMotion(!motionOn); }
   else if(k==='l'&&(UI?UI.interactive:IFRAME)){ if(UI){ UI.interactive.set(!UI.interactive.on()); motionState(); dirty=true; } else setLive(!liveOn); }
-  else if(e.key===' '&&!(e.target&&/BUTTON|SUMMARY/.test(e.target.tagName))){ e.preventDefault(); if(!noteOn)setNotes(true); startRead(); } else if(e.key==='Escape')openSpec(false);
+  else if(e.key==='Escape')openSpec(false);
   else if(e.key===','&&!(UI&&UI.engineFirst)&&sib[idx-1])location.href=ROOT+sib[idx-1].path+'index.html'; else if(e.key==='.'&&!(UI&&UI.engineFirst)&&sib[idx+1])location.href=ROOT+sib[idx+1].path+'index.html'; else if(e.key==='/')location.href=ROOT+'index.html';
   else toEngine(); });
 let rto=null; addEventListener('resize',()=>{ clearTimeout(rto); rto=setTimeout(()=>{ layout(); dirty=true; },120); });
 /* wait for the inlined fonts before the first render (art modules draw type) */
-let started=false; const go=()=>{ if(started)return; started=true; layout(); dirty=true; };
+let started=false; const go=()=>{ if(started)return; started=true; layout(); dirty=true; if(S.liveOnLoad&&S.live&&!liveOn)setLive(true); };
 if(document.fonts){ Promise.all(['700 20px Archivo','400 12px Inter','400 12px "JetBrains Mono"'].map(f=>document.fonts.load(f).catch(()=>{}))).then(go); setTimeout(go,2500); } else go();
+/* ---------- your presets: palette, inks and every parameter, saved by name; one can load on open ----------
+   Kept in this browser (localStorage). "Copy link" puts the preset in the address (#preset=…), so anyone who opens it sees it. */
+(function(){ const host=$('mypre'); if(!host)return; const KEY='tt-presets:'+(S.id||S.code);
+  const load=()=>{ try{ return JSON.parse(localStorage.getItem(KEY))||[]; }catch(e){ return []; } }, save=L=>{ try{ localStorage.setItem(KEY,JSON.stringify(L)); }catch(e){} };
+  const P=()=>window.__study_params||{};
+  function capture(){ if(UI){ const pal=UI.palettes; return { m:'ui', p:pal?pal.current():0, inks:pal&&pal.inks?pal.inks().filter(k=>k.hex!==k.base).map(k=>[k.key,k.hex]):[], r:(UI.params||[]).map(r=>[r.id,r.get()]) }; }
+    return { m:'ts', v:vi, inks:Object.assign({},inkEdits[vi]||{}), o:JSON.parse(JSON.stringify(overrides)) }; }
+  function apply(d){ if(!d)return; try{
+    if(d.m==='ui'&&UI){ const pal=UI.palettes; if(pal){ pal.set(d.p||0); if(pal.setInk&&d.inks){ const inks=pal.inks?pal.inks():[]; for(const [k,v] of d.inks){ const ink=inks.find(x=>x.key===k); if(ink)pal.setInk(ink,v); } } }
+      for(const [id,v] of d.r||[])if(P().set)P().set(id,v); setTimeout(()=>{ try{ uiSyncRows(); uiColorDraw(); }catch(e){} },30); }
+    else if(d.m==='ts'){ if(typeof d.v==='number'&&d.v!==vi&&variants[d.v]){ vi=d.v; palEl.querySelectorAll('button').forEach((b,k)=>{ b.classList.toggle('on',k===vi); b.setAttribute('aria-checked',String(k===vi)); }); }
+      inkEdits[vi]=Object.assign({},d.inks||{}); drawInks();
+      const rb=$('bParamReset'); if(rb&&!rb.hidden)rb.click();
+      for(const [tech,o] of Object.entries(d.o||{}))for(const [path,v] of Object.entries(o))if(P().set)P().set(tech,path,v);
+      refresh(); }
+    dirty=true; }catch(e){ console.error(e); } }
+  const enc=d=>btoa(unescape(encodeURIComponent(JSON.stringify(d)))).replace(/=+$/,''), dec=t=>{ try{ return JSON.parse(decodeURIComponent(escape(atob(t)))); }catch(e){ return null; } };
+  let naming=false, note='';
+  function draw(){ const L=load();
+    host.innerHTML=`<div class="mph"><span>Your presets${L.length?` · ${L.length}`:''}</span><button type="button" class="ghost" id="bPreNew">${naming?'Cancel':'Save current'}</button></div>`
+      +(naming?`<div class="mpn"><input id="preName" type="text" maxlength="40" placeholder="Name this preset" aria-label="Preset name"><label class="sw-toggle"><input type="checkbox" id="preOn"><span class="tr" aria-hidden="true"></span><span class="tl">On load</span></label><button type="button" class="btn" id="bPreOk">Save</button></div>`:'')
+      +(L.length?`<ul>${L.map((x,i)=>`<li><button type="button" class="pn" data-a="${i}" title="Apply">${esc(x.name)}</button><label class="ol" title="Open this study with this preset"><input type="radio" name="preOnload" data-o="${i}"${x.onload?' checked':''}><span>On load</span></label><button type="button" class="ic" data-l="${i}" title="Copy a link that opens with this preset">Link</button><button type="button" class="ic" data-d="${i}" title="Delete" aria-label="Delete ${esc(x.name)}">×</button></li>`).join('')}</ul>`:'')
+      +(L.some(x=>x.onload)?`<button type="button" class="ghost clr" id="bPreOff">Open with the defaults</button>`:'')+`<p class="mpnote" aria-live="polite">${esc(note)}</p>`;
+    $('bPreNew').onclick=()=>{ naming=!naming; note=''; draw(); if(naming)$('preName').focus(); };
+    if(naming){ const ok=()=>{ const n=$('preName').value.trim()||('Preset '+(L.length+1)); const on=$('preOn').checked; const L2=load().map(x=>on?Object.assign(x,{onload:false}):x); L2.push({name:n,onload:on,d:capture()}); save(L2); naming=false; note=on?`Saved. "${n}" opens on load in this browser.`:`Saved "${n}".`; draw(); };
+      $('bPreOk').onclick=ok; $('preName').onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); ok(); } else if(e.key==='Escape'){ naming=false; draw(); } }; }
+    host.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{ apply(load()[+b.dataset.a].d); note=`Applied "${load()[+b.dataset.a].name}".`; draw(); });
+    host.querySelectorAll('[data-o]').forEach(r=>r.onchange=()=>{ const L2=load().map((x,k)=>Object.assign(x,{onload:k===+r.dataset.o})); save(L2); note=`"${L2[+r.dataset.o].name}" opens on load in this browser.`; draw(); });
+    host.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{ const x=load()[+b.dataset.l]; const u=location.href.split('#')[0]+'#preset='+enc(x.d); const done=()=>{ note='Link copied: it opens with "'+x.name+'".'; draw(); };
+      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(done,()=>{ note=u; draw(); }); else { note=u; draw(); } });
+    host.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{ const L2=load(); L2.splice(+b.dataset.d,1); save(L2); draw(); });
+    const off=$('bPreOff'); if(off)off.onclick=()=>{ save(load().map(x=>Object.assign(x,{onload:false}))); note='Opens with the defaults.'; draw(); }; }
+  draw();
+  /* on open: a preset in the address wins, then the one marked on load */
+  const fromUrl=(location.hash.match(/[#&]preset=([^&]+)/)||[])[1];
+  const first=fromUrl?dec(fromUrl):((load().find(x=>x.onload)||{}).d);
+  if(first){ let tries=0; const go=()=>{ if(window.__study_params||++tries>40){ apply(first); } else setTimeout(go,50); }; setTimeout(go,60); }
+})();
 window.__study={S,fig:()=>fig,art:()=>art,fidelity:()=>fidelity,setMode,setVariant,setMotion,setLive,setNotes,variants,variant,inks:()=>inksOf(variants[vi]),setInk:(h,v)=>{ (inkEdits[vi]??={})[norm(h)]=norm(v); drawInks(); refresh(); }};
 })();

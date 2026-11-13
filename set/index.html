@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="only light">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:,">
+<title>A set</title>
+<link rel="stylesheet" href="../techniques-templates/_shared/fonts.css">
+<style>
+/* A set: a page made from picked pieces. Two states share one URL format:
+   #t=<title>&n=<note>&k=<accession tails>        the page people receive: the pieces, nothing that links back
+   #e=1&…                                          the maker: pick from the whole library, order, name, share, download */
+:root{--ink:#101014;--ink-2:#3B3B42;--grey:#6B6B72;--grey-2:#A1A1A8;--grey-3:#C8C8CE;--hair:#E2E2E7;--hair-2:#EDEDF0;--sunken:#F4F4F6;--accent:#F4551E;--blue:#2F5AE6;
+  --disp:'Archivo','Helvetica Neue',Arial,sans-serif;--text:'Inter','Helvetica Neue',Arial,sans-serif;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace;--g:16px}
+*{box-sizing:border-box}html,body{margin:0;background:#fff;color:var(--ink)}
+body{font-family:var(--text);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:inherit}button,input,textarea{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:1.5px solid var(--blue);outline-offset:2px}
+.k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--grey)}
+.btn{height:30px;padding:0 12px;border:1px solid var(--hair);background:#fff;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink)}
+.btn:hover{border-color:var(--ink)}.btn.pri{background:var(--ink);color:#fff;border-color:var(--ink)}.btn[disabled]{opacity:.4;pointer-events:none}
+
+/* ---------- the page people receive ---------- */
+.sheet{max-width:1520px;margin:0 auto;padding:clamp(28px,6vw,72px) clamp(16px,4vw,48px) 96px}
+.sheet header{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px 40px;align-items:end;padding-bottom:28px;border-bottom:1px solid var(--ink)}
+.sheet h1{margin:0;font-family:var(--disp);font-weight:600;font-size:clamp(34px,5.4vw,76px);line-height:.96;letter-spacing:-.035em;max-width:16ch}
+.sheet .note{margin:16px 0 0;font-size:15px;line-height:1.55;max-width:60ch;color:var(--ink-2);white-space:pre-line}
+.sheet .count{text-align:right}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:56px 28px;padding-top:40px}
+.piece{display:block;text-align:left;border:0;background:none;padding:0;min-width:0}
+.piece .pv{display:flex;align-items:center;justify-content:center;aspect-ratio:4/3;background:var(--sunken);overflow:hidden;position:relative}
+.piece .pv img{max-width:100%;max-height:100%;width:auto;height:auto;display:block;object-fit:contain}
+.piece .pv .run{position:absolute;right:10px;top:10px;font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;background:#fff;border:1px solid var(--hair);padding:4px 7px;color:var(--ink)}
+.piece .l1{display:flex;justify-content:space-between;gap:10px;margin-top:12px}
+.piece h2{margin:4px 0 0;font-family:var(--disp);font-weight:600;font-size:18px;line-height:1.2;letter-spacing:-.015em}
+.piece p{margin:4px 0 0;color:var(--grey);font-size:13px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.piece:hover .pv{outline:1px solid var(--ink);outline-offset:-1px}
+.empty{padding:60px 0;color:var(--grey);font-size:15px}
+
+/* viewer: one piece at full size; studies and plates run in place */
+.view{position:fixed;inset:0;background:#fff;z-index:50;display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+.view[hidden]{display:none}
+.view .vb{display:flex;align-items:center;gap:14px;padding:12px var(--g);border-bottom:1px solid var(--hair)}
+.view .vb .t{flex:1;min-width:0;font-family:var(--disp);font-weight:600;font-size:16px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.view .stage{position:relative;min-height:0;display:flex;align-items:center;justify-content:center;background:var(--sunken)}
+.view .stage img{max-width:calc(100% - 48px);max-height:calc(100% - 48px);display:block}
+.view .stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+.view .cap{padding:14px var(--g) 18px;border-top:1px solid var(--hair);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 24px}
+.view .cap p{margin:0;max-width:90ch;color:var(--ink-2)}
+.view .nv{width:36px;height:30px;border:1px solid var(--hair);background:#fff;font-family:var(--mono)}
+.view .nv:hover{border-color:var(--ink)}
+
+/* ---------- the maker ---------- */
+body.edit{height:100vh;overflow:hidden}
+.maker{display:grid;grid-template-columns:minmax(0,1fr) 400px;height:100vh}
+.pick{display:grid;grid-template-rows:auto auto minmax(0,1fr);min-width:0;border-right:1px solid var(--ink)}
+.pick .ph{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:18px var(--g) 12px}
+.pick .ph b{font-family:var(--disp);font-weight:600;font-size:22px;letter-spacing:-.02em}
+.pick .bar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:0 var(--g) 12px;border-bottom:1px solid var(--hair)}
+.pick .find{flex:1 1 260px;display:flex;align-items:center;gap:8px;border:1px solid var(--hair);height:32px;padding:0 10px}
+.pick .find:focus-within{border-color:var(--ink)}
+.pick .find input{flex:1;border:0;outline:0;background:none;font-family:var(--mono);font-size:11.5px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chips button{border:1px solid var(--hair);background:#fff;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:5px 8px;color:var(--grey)}
+.chips button i{font-style:normal;color:var(--grey-2);margin-left:5px}
+.chips button.on{background:var(--ink);border-color:var(--ink);color:#fff}.chips button.on i{color:var(--grey-3)}
+.pool{overflow:auto;padding:16px var(--g) 80px;display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:22px 14px;align-content:start}
+.pc{position:relative;border:0;background:none;padding:0;text-align:left;min-width:0}
+.pc .pv{display:flex;align-items:center;justify-content:center;aspect-ratio:4/3;background:var(--sunken);overflow:hidden}
+.pc .pv img{max-width:100%;max-height:100%;display:block}
+.pc .c{display:block;margin-top:6px;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--grey)}
+.pc .n{display:block;font-size:12px;line-height:1.3;margin-top:1px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pc::after{content:'';position:absolute;left:8px;top:8px;width:18px;height:18px;box-sizing:border-box;border:1.5px solid var(--ink);background:#fff}
+.pc.on::after{background:var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.2l2.9 2.9 6-6.2' fill='none' stroke='%23fff' stroke-width='1.8'/%3E%3C/svg%3E") center/14px no-repeat}
+.pc.on .pv{outline:2px solid var(--ink);outline-offset:-2px}
+.pc:hover .pv{outline:1px solid var(--ink);outline-offset:-1px}
+.side{display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-width:0;min-height:0}
+.side .sh{padding:18px var(--g) 14px;border-bottom:1px solid var(--hair);display:grid;gap:10px}
+.side .ti{border:0;border-bottom:1px solid var(--hair);font-family:var(--disp);font-weight:600;font-size:24px;letter-spacing:-.02em;padding:2px 0 6px;outline:0;width:100%}
+.side .ti:focus,.side .no:focus{border-color:var(--ink)}
+.side .no{border:1px solid var(--hair);resize:vertical;min-height:58px;padding:8px;font-size:13px;outline:0;width:100%}
+.side ol{list-style:none;margin:0;padding:6px 0;overflow:auto}
+.side li{display:grid;grid-template-columns:22px 56px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px var(--g);border-bottom:1px solid var(--hair-2);background:#fff}
+.side li.drag{opacity:.4}.side li.over{box-shadow:inset 0 2px 0 var(--ink)}
+.side li .h{cursor:grab;color:var(--grey-2);font-family:var(--mono);text-align:center;user-select:none}
+.side li img{width:56px;height:42px;object-fit:contain;background:var(--sunken);display:block}
+.side li .n{font-size:12.5px;line-height:1.3;min-width:0}.side li .n small{display:block;font-family:var(--mono);font-size:9.5px;color:var(--grey);letter-spacing:.06em}
+.side li .x{display:flex;gap:2px}.side li .x button{width:24px;height:24px;border:1px solid transparent;background:none;color:var(--grey);font-family:var(--mono)}
+.side li .x button:hover{border-color:var(--hair);color:var(--ink)}
+.side .none{padding:22px var(--g);color:var(--grey)}
+.side .sf{padding:12px var(--g) 16px;border-top:1px solid var(--ink);display:grid;gap:10px}
+.side .acts{display:flex;flex-wrap:wrap;gap:6px}
+.side .fl{font-family:var(--mono);font-size:10px;color:var(--grey);min-height:14px;word-break:break-all}
+.side details summary{cursor:pointer;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--grey)}
+.side details ul{list-style:none;margin:6px 0 0;padding:0;max-height:140px;overflow:auto}
+.side details li{grid-template-columns:minmax(0,1fr) auto auto;padding:4px 0}
+@media (max-width:860px){body.edit{height:auto;overflow:auto}.maker{grid-template-columns:1fr;height:auto}.pick{border-right:0;border-bottom:1px solid var(--ink)}.pool{max-height:60vh}.side ol{max-height:50vh}
+  .sheet header{grid-template-columns:1fr}.sheet .count{text-align:left}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div class="view" id="view" hidden role="dialog" aria-modal="true" aria-label="Piece"></div>
+<script src="../library/catalog.js"></script>
+<script>
+(function(){
+"use strict";
+const L=window.LIBRARY||{records:[],collections:[]};
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const app=document.getElementById('app'), view=document.getElementById('view');
+const COL=new Map((L.collections||[]).map(c=>[c.id,c.title]));
+/* every public work with a picture can go in a set; a piece is keyed by the tail of its accession number */
+const POOL=(L.records||[]).filter(r=>r.access==='public'&&!r.role&&r.thumb&&r.acc);
+const tail=r=>String(r.acc).split('.').pop(), BY=new Map(POOL.map(r=>[tail(r),r]));
+const fromLib=p=>!p?'':(/^(https?:|\.\.\/)/.test(p)?p:'../library/'+p);
+const pic=r=>fromLib(r.thumb_2x&&(!r.thumb_2x_w||r.thumb_2x_w<=1600)?r.thumb_2x:r.thumb);
+const small=r=>fromLib(r.thumb);
+/* studies and plates run in place (their page in embed mode: the figure alone); everything else is shown as its picture */
+const runs=r=>(r.collection==='techniques-templates'||r.collection==='technique-studies')&&r.href&&/^\.\.\/techniques-templates\//.test(r.href);
+const runUrl=r=>r.href.replace(/\/?$/,'/')+'index.html?embed';
+const line=r=>[r.call,(r.kind||'').replace(/-/g,' '),(r.family||'').replace(/-/g,' ')].filter(Boolean).join(' · ');
+const lsGet=(k,d)=>{ try{ const v=JSON.parse(localStorage.getItem(k)); return v==null?d:v; }catch(e){ return d; } };
+const lsSet=(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
+
+/* state <-> hash */
+let st={t:'',n:'',k:[],e:false};
+function read(){ const P=new URLSearchParams(location.hash.slice(1)); st={t:P.get('t')||'',n:P.get('n')||'',k:(P.get('k')||'').split(',').map(s=>s.trim()).filter(Boolean),e:P.get('e')==='1'}; if(!st.k.length&&!location.hash)st.e=true; }
+function hashOf(s,edit){ const p=[]; if(edit)p.push('e=1'); if(s.t)p.push('t='+encodeURIComponent(s.t)); if(s.n)p.push('n='+encodeURIComponent(s.n)); p.push('k='+s.k.join(',')); return '#'+p.join('&'); }
+function write(){ const h=hashOf(st,st.e); if(location.hash!==h)history.replaceState(null,'',h); lsSet('set-draft',{t:st.t,n:st.n,k:st.k}); }
+const shareUrl=()=>location.href.split('#')[0]+hashOf(st,false);
+
+/* ---------- the page people receive ---------- */
+let list=[];
+function sheet(){
+  document.body.classList.remove('edit'); list=st.k.map(k=>BY.get(k)).filter(Boolean);
+  document.title=st.t||'A set';
+  app.innerHTML=`<div class="sheet"><header><div><h1>${esc(st.t||'A set')}</h1>${st.n?`<p class="note">${esc(st.n)}</p>`:''}</div><div class="count k">${list.length} ${list.length===1?'piece':'pieces'}</div></header>
+<div class="grid">${list.map((r,i)=>`<button type="button" class="piece" data-i="${i}"><span class="pv"><img src="${esc(pic(r))}" alt="" loading="lazy">${runs(r)?'<span class="run">Runs</span>':''}</span><span class="l1"><span class="k">${esc(line(r))}</span><span class="k">${String(i+1).padStart(2,'0')}</span></span><h2>${esc(r.title)}</h2>${r.sub?`<p>${esc(r.sub)}</p>`:''}</button>`).join('')}</div>
+${list.length?'':'<div class="empty">This link names no pieces.</div>'}</div>`;
+  app.querySelectorAll('.piece').forEach(b=>b.onclick=()=>open(+b.dataset.i));
+}
+let cur=-1;
+function open(i){ cur=(i+list.length)%list.length; const r=list[cur];
+  view.innerHTML=`<div class="vb"><span class="k">${String(cur+1).padStart(2,'0')} / ${String(list.length).padStart(2,'0')}</span><span class="t">${esc(r.title)}</span><button class="nv" data-d="-1" aria-label="Previous">←</button><button class="nv" data-d="1" aria-label="Next">→</button><button class="nv" data-x aria-label="Close">×</button></div>
+<div class="stage">${runs(r)?`<iframe src="${esc(runUrl(r))}" title="${esc(r.title)}" allow="fullscreen"></iframe>`:`<img src="${esc(pic(r))}" alt="${esc(r.title)}">`}</div>
+<div class="cap"><div><span class="k">${esc(line(r))}</span>${r.sub?`<p>${esc(r.sub)}</p>`:''}</div><span class="k">${runs(r)?'Hover and drag: it runs here':''}</span></div>`;
+  view.hidden=false; document.body.style.overflow='hidden';
+  view.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>open(cur+ +b.dataset.d)); view.querySelector('[data-x]').onclick=close; view.querySelector('[data-x]').focus(); }
+function close(){ view.hidden=true; view.innerHTML=''; document.body.style.overflow=''; const b=app.querySelector(`.piece[data-i="${cur}"]`); if(b)b.focus(); }
+addEventListener('keydown',e=>{ if(view.hidden)return; if(e.key==='Escape')close(); else if(e.key==='ArrowRight')open(cur+1); else if(e.key==='ArrowLeft')open(cur-1); });
+
+/* ---------- the maker ---------- */
+let q='', col='', kind='';
+function maker(){
+  document.body.classList.add('edit'); document.title='Make a set';
+  const cols=[...new Set(POOL.map(r=>r.collection))].map(id=>({id,t:COL.get(id)||id,n:POOL.filter(r=>r.collection===id).length})).sort((a,b)=>b.n-a.n);
+  app.innerHTML=`<div class="maker"><section class="pick" aria-label="Library"><div class="ph"><b>Pick pieces</b><span class="k" id="pn"></span></div>
+<div class="bar"><label class="find"><span aria-hidden="true">⌕</span><input id="q" type="search" placeholder="title, code, technique, family" value="${esc(q)}" aria-label="Find pieces"></label>
+<div class="chips" id="cols"><button type="button" data-c="" class="${col?'':'on'}">all<i>${POOL.length}</i></button>${cols.map(c=>`<button type="button" data-c="${esc(c.id)}" class="${col===c.id?'on':''}">${esc(c.t)}<i>${c.n}</i></button>`).join('')}</div></div>
+<div class="pool" id="pool"></div></section>
+<aside class="side" aria-label="The set"><div class="sh"><span class="k">Your set · <b id="sn"></b></span><input class="ti" id="ti" placeholder="Name the set" value="${esc(st.t)}" aria-label="Title" maxlength="90"><textarea class="no" id="no" placeholder="A line for the people you send it to (optional)" aria-label="Note">${esc(st.n)}</textarea></div>
+<ol id="ol"></ol>
+<div class="sf"><div class="acts"><button type="button" class="btn pri" id="bCopy">Copy link</button><a class="btn" id="bOpen" target="_blank" rel="noopener">Open ↗</a><button type="button" class="btn" id="bDl">Download page</button><button type="button" class="btn" id="bSave">Save</button><button type="button" class="btn" id="bClr">Clear</button></div><span class="fl" id="fl" aria-live="polite"></span><div id="saved"></div></div></aside></div>`;
+  const qi=document.getElementById('q'); qi.oninput=()=>{ q=qi.value; drawPool(); };
+  document.querySelectorAll('#cols button').forEach(b=>b.onclick=()=>{ col=b.dataset.c; document.querySelectorAll('#cols button').forEach(x=>x.classList.toggle('on',x===b)); drawPool(); });
+  const ti=document.getElementById('ti'), no=document.getElementById('no'); ti.oninput=()=>{ st.t=ti.value; sync(); }; no.oninput=()=>{ st.n=no.value; sync(); };
+  document.getElementById('bCopy').onclick=()=>copy(shareUrl());
+  document.getElementById('bDl').onclick=download;
+  document.getElementById('bSave').onclick=()=>{ const S=lsGet('set-saved',[]); const it={t:st.t,n:st.n,k:[...st.k],d:new Date().toISOString().slice(0,10)}; const i=S.findIndex(x=>(x.t||'')===(st.t||'')); if(i>=0)S[i]=it; else S.unshift(it); lsSet('set-saved',S.slice(0,60)); drawSaved(); flash('Saved in this browser'); };
+  document.getElementById('bClr').onclick=()=>{ st.k=[]; sync(); drawPool(); drawSet(); };
+  drawPool(); drawSet(); drawSaved(); sync();
+}
+function hay(r){ return [r.call,r.title,r.sub,r.kind,r.family,COL.get(r.collection),...(r.techniques||[])].join(' ').toLowerCase(); }
+function drawPool(){ const ws=q.toLowerCase().split(/\s+/).filter(Boolean); const on=new Set(st.k);
+  const rs=POOL.filter(r=>(!col||r.collection===col)&&ws.every(w=>hay(r).includes(w)));
+  document.getElementById('pn').textContent=`${rs.length} of ${POOL.length}`;
+  const pool=document.getElementById('pool');
+  pool.innerHTML=rs.map(r=>`<button type="button" class="pc${on.has(tail(r))?' on':''}" data-k="${tail(r)}" aria-pressed="${on.has(tail(r))}" title="${esc(r.title)}"><span class="pv"><img src="${esc(small(r))}" alt="" loading="lazy"></span><span class="c">${esc([r.call,COL.get(r.collection)].filter(Boolean).join(' · '))}</span><span class="n">${esc(r.title)}</span></button>`).join('')||'<div class="empty">Nothing matches.</div>';
+  pool.querySelectorAll('.pc').forEach(b=>b.onclick=()=>{ toggle(b.dataset.k); b.classList.toggle('on',st.k.includes(b.dataset.k)); b.setAttribute('aria-pressed',String(st.k.includes(b.dataset.k))); }); }
+function toggle(k){ const i=st.k.indexOf(k); if(i>=0)st.k.splice(i,1); else st.k.push(k); drawSet(); sync(); }
+let dragI=-1;
+function drawSet(){ const ol=document.getElementById('ol'); const rs=st.k.map(k=>[k,BY.get(k)]).filter(x=>x[1]);
+  document.getElementById('sn').textContent=`${rs.length} ${rs.length===1?'piece':'pieces'}`;
+  ol.innerHTML=rs.length?rs.map(([k,r],i)=>`<li draggable="true" data-i="${i}"><span class="h" aria-hidden="true">⋮⋮</span><img src="${esc(small(r))}" alt=""><span class="n">${esc(r.title)}<small>${esc(line(r))}</small></span><span class="x"><button type="button" data-u="${i}" aria-label="Move up">↑</button><button type="button" data-dn="${i}" aria-label="Move down">↓</button><button type="button" data-rm="${k}" aria-label="Remove">×</button></span></li>`).join(''):'<li class="none" style="display:block">Click pieces on the left to add them. Drag to reorder.</li>';
+  const mv=(a,b)=>{ if(b<0||b>=st.k.length)return; const [x]=st.k.splice(a,1); st.k.splice(b,0,x); drawSet(); sync(); };
+  ol.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>mv(+b.dataset.u,+b.dataset.u-1));
+  ol.querySelectorAll('[data-dn]').forEach(b=>b.onclick=()=>mv(+b.dataset.dn,+b.dataset.dn+1));
+  ol.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{ toggle(b.dataset.rm); drawPool(); });
+  ol.querySelectorAll('li[draggable]').forEach(li=>{ li.ondragstart=e=>{ dragI=+li.dataset.i; li.classList.add('drag'); e.dataTransfer.effectAllowed='move'; };
+    li.ondragend=()=>{ li.classList.remove('drag'); ol.querySelectorAll('.over').forEach(x=>x.classList.remove('over')); };
+    li.ondragover=e=>{ e.preventDefault(); li.classList.add('over'); }; li.ondragleave=()=>li.classList.remove('over');
+    li.ondrop=e=>{ e.preventDefault(); const to=+li.dataset.i; if(dragI>=0&&dragI!==to)mv(dragI,to); dragI=-1; }; }); }
+function sync(){ write(); const o=document.getElementById('bOpen'); if(o){ o.href=shareUrl(); o.toggleAttribute('aria-disabled',!st.k.length); }
+  ['bCopy','bDl','bSave','bClr'].forEach(id=>{ const b=document.getElementById(id); if(b)b.disabled=!st.k.length; }); }
+function drawSaved(){ const S=lsGet('set-saved',[]); const el=document.getElementById('saved'); if(!el)return;
+  el.innerHTML=S.length?`<details><summary>Saved sets · ${S.length}</summary><ul>${S.map((x,i)=>`<li><span class="n">${esc(x.t||'Untitled')} <small>${x.k.length} pieces · ${esc(x.d||'')}</small></span><button type="button" class="btn" data-ld="${i}">Edit</button><button type="button" class="btn" data-dl="${i}">×</button></li>`).join('')}</ul></details>`:'';
+  el.querySelectorAll('[data-ld]').forEach(b=>b.onclick=()=>{ const x=lsGet('set-saved',[])[+b.dataset.ld]; if(!x)return; st={t:x.t||'',n:x.n||'',k:[...x.k],e:true}; write(); maker(); });
+  el.querySelectorAll('[data-dl]').forEach(b=>b.onclick=()=>{ const S2=lsGet('set-saved',[]); S2.splice(+b.dataset.dl,1); lsSet('set-saved',S2); drawSaved(); }); }
+let flT=null; function flash(m){ const f=document.getElementById('fl'); if(!f)return; f.textContent=m; clearTimeout(flT); flT=setTimeout(()=>f.textContent='',2600); }
+function copy(t){ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>flash('Link copied'),()=>flash(t)); else flash(t); }
+
+/* download: one HTML file that stands alone. Pictures are written into it; studies and plates keep running from their published pages. */
+async function download(){ const rs=st.k.map(k=>BY.get(k)).filter(Boolean); if(!rs.length)return; flash('Building the page…');
+  const data=async u=>{ try{ const b=await (await fetch(u)).blob(); return await new Promise(res=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.readAsDataURL(b); }); }catch(e){ return ''; } };
+  const abs=u=>new URL(u,location.href).href;
+  const items=[]; for(const r of rs)items.push({t:r.title,s:r.sub||'',l:line(r),p:await data(pic(r)),run:runs(r)?abs(runUrl(r)):''});
+  const page=`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${esc(st.t||'A set')}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap">
+<style>${document.querySelector('style').textContent.split('/* ---------- the maker ---------- */')[0]}</style></head><body><main id="app"></main><div class="view" id="view" hidden></div>
+<script>const T=${JSON.stringify(st.t||'A set').replace(/</g,'\\u003c')},N=${JSON.stringify(st.n||'').replace(/</g,'\\u003c')},I=${JSON.stringify(items).replace(/</g,'\\u003c')};
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));const app=document.getElementById('app'),view=document.getElementById('view');let cur=-1;
+app.innerHTML='<div class="sheet"><header><div><h1>'+esc(T)+'</h1>'+(N?'<p class="note">'+esc(N)+'</p>':'')+'</div><div class="count k">'+I.length+(I.length===1?' piece':' pieces')+'</div></header><div class="grid">'+I.map((r,i)=>'<button type="button" class="piece" data-i="'+i+'"><span class="pv"><img src="'+r.p+'" alt="">'+(r.run?'<span class="run">Runs</span>':'')+'</span><span class="l1"><span class="k">'+esc(r.l)+'</span><span class="k">'+String(i+1).padStart(2,'0')+'</span></span><h2>'+esc(r.t)+'</h2>'+(r.s?'<p>'+esc(r.s)+'</p>':'')+'</button>').join('')+'</div></div>';
+function open(i){cur=(i+I.length)%I.length;const r=I[cur];view.innerHTML='<div class="vb"><span class="k">'+String(cur+1).padStart(2,'0')+' / '+String(I.length).padStart(2,'0')+'</span><span class="t">'+esc(r.t)+'</span><button class="nv" data-d="-1">←</button><button class="nv" data-d="1">→</button><button class="nv" data-x>×</button></div><div class="stage">'+(r.run?'<iframe src="'+r.run+'"></iframe>':'<img src="'+r.p+'" alt="">')+'</div><div class="cap"><div><span class="k">'+esc(r.l)+'</span>'+(r.s?'<p>'+esc(r.s)+'</p>':'')+'</div></div>';view.hidden=false;document.body.style.overflow='hidden';view.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>open(cur+ +b.dataset.d));view.querySelector('[data-x]').onclick=close;}
+function close(){view.hidden=true;view.innerHTML='';document.body.style.overflow='';}
+app.querySelectorAll('.piece').forEach(b=>b.onclick=()=>open(+b.dataset.i));addEventListener('keydown',e=>{if(view.hidden)return;if(e.key==='Escape')close();else if(e.key==='ArrowRight')open(cur+1);else if(e.key==='ArrowLeft')open(cur-1);});
+<\/script></body></html>`;
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([page],{type:'text/html'})); a.download=(st.t||'set').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-').toLowerCase()+'.html'; document.body.appendChild(a); a.click(); a.remove(); flash('Downloaded'); }
+
+function route(){ read(); if(!st.k.length&&st.e){ const d=lsGet('set-draft',null); if(d&&d.k&&d.k.length&&!location.hash.includes('k=')){ st.t=d.t||''; st.n=d.n||''; st.k=d.k; } } close(); if(st.e)maker(); else sheet(); }
+addEventListener('hashchange',route); route();
+})();
+</script>
+</body>
+</html>
