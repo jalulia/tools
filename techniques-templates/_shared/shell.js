@@ -98,7 +98,8 @@ function layout(){ if(mobile()){ const w0=wrap.clientWidth; wrap.style.height=Ma
   fig={x:Math.round(left+(bw-fw)/2),y:Math.round(top+(bh-fh)/2),w:Math.round(fw),h:Math.round(fh)};
   ensureArt(); placePoints(); placeLive(); }
 let overrides={}; /* parameter overrides: { 'technique-id': { 'path': value } } */
-function ensureArt(){ const k=fig.w+'x'+fig.h+'@'+DPR+'#'+variant().id+'#'+JSON.stringify(overrides); if(k===artKey&&art)return; artKey=k; if(artCache[k]){ art=artCache[k]; artDone=true; dirty=true; computeFidelity(); return; } renderArt(k); }
+function ensureArt(){ if(typeof S.relayPoints==='function'){ S.relayPoints(overrides); placePoints(); try{ if(phase==='hold')rows.forEach((r,i)=>rowText(r,P[i],[P[i].u,P[i].v],true)); }catch(e){} }   /* a study whose layout follows its parameters moves its points first */
+  const k=fig.w+'x'+fig.h+'@'+DPR+'#'+variant().id+'#'+JSON.stringify(overrides); if(k===artKey&&art)return; artKey=k; if(artCache[k]){ art=artCache[k]; artDone=true; dirty=true; computeFidelity(); return; } renderArt(k); }
 function renderArt(key){ const c=document.createElement('canvas'); c.width=Math.round(fig.w*DPR); c.height=Math.round(fig.h*DPR); const x=c.getContext('2d'); x.setTransform(DPR,0,0,DPR,0,0); x.fillStyle='#fff'; x.fillRect(0,0,fig.w,fig.h); artDone=false; dirty=true; busy(true);
   const t0=performance.now();
   const finish=()=>{ if(key!==artKey)return; artCache[key]=c; art=c; artDone=true; dirty=true; busy(false); console.info(`[${S.id}] ${variant().id} rendered in ${Math.round(performance.now()-t0)} ms`); computeFidelity(); };
@@ -107,6 +108,7 @@ function busy(o){ document.body.classList.toggle('drawing',o); }
 
 /* ---------- points ---------- */
 const P=(S.points||[]).slice(0,10).map((p,i)=>({num:10+i*2,u:p.u,v:p.v,d:p.d||'—',label:p.label||'',t:p.t||null,dir:p.dir||null,lock:-1,x:0,y:0}));
+if(typeof S.onPoints==='function')S.onPoints(P);   /* a study that re-lays its plate (PL plates) moves its points */
 let links=[];
 function placePoints(){ const Sz=9; for(const t of P){ t.x=fig.x+t.u*fig.w; t.y=fig.y+t.v*fig.h; }
   for(const t of P){ let dx,dy; if(t.dir){ dx=t.dir[0]; dy=t.dir[1]; } else { dx=t.u<0.5?-1:1; dy=t.v<0.35?-1:(t.v>0.65?1:0); }
@@ -189,7 +191,7 @@ const refImg=new Image(); let refReady=false; const hasRef=!!(window.__REF&&wind
 refImg.onload=()=>{ refReady=true; dirty=true; computeFidelity(); };
 let mode=0, splitX=0.5;
 const VIEW_HINT=['The rebuild, drawn in code.','The source image the technique was measured from.','Reference on the left, rebuild on the right. Move across the plate to slide the split.'];
-if(hasRef)refImg.src=window.__REF.data; else { document.querySelectorAll('#segView button[data-m="1"],#segView button[data-m="2"]').forEach(b=>{ b.disabled=true; b.title='The reference is held locally and not published'; }); $('viewHint').textContent='The reference is held locally and not published, so only the rebuild is shown.'; fidEl.innerHTML='<p class="none">Reference held locally, not published. No match score.</p>'; }
+if(hasRef)refImg.src=window.__REF.data; else { document.querySelectorAll('#segView button[data-m="1"],#segView button[data-m="2"]').forEach(b=>{ b.disabled=true; b.title='The reference is held locally and not published'; }); $('viewHint').textContent=S.refHint||'The reference is held locally and not published, so only the rebuild is shown.'; fidEl.innerHTML=S.refHint?`<p class="none">${esc(S.refHint)}</p>`:'<p class="none">Reference held locally, not published. No match score.</p>'; }
 function setMode(m){ if(!hasRef)m=0; mode=(m+3)%3; document.querySelectorAll('#segView button').forEach(b=>{ const on=+b.dataset.m===mode; b.classList.toggle('on',on); b.setAttribute('aria-checked',String(on)); }); if(hasRef)$('viewHint').textContent=VIEW_HINT[mode]+(mode!==0&&fidelity?` Match ${Math.round(fidelity.sum*100)} %.`:''); dirty=true; }
 document.querySelectorAll('#segView button').forEach(b=>b.onclick=()=>setMode(+b.dataset.m));
 

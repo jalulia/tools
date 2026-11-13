@@ -174,7 +174,9 @@ const READERS = {
       if (!reads.length) for (const id of e.techniques || []) reads.push({ scheme: 'tt', id, name: id, atoms: [] });
       let refWithheld = null;
       if (exists(dir + 'ref.js')) refWithheld = /"data"\s*:\s*null/.test(read(join(ROOT, dir + 'ref.js')).slice(0, 200));
-      const isStudy = e.section === 'techniques';
+      const isPlate = e.section === 'plates', isStudy = e.section === 'techniques' || isPlate;
+      let npts = isStudy ? 10 : 0;
+      if (isPlate && exists(dir + 'study.js')) { const m = read(join(ROOT, dir + 'study.js')).match(/window\.STUDY=(\{.*\});\n/); try { npts = JSON.parse(m[1]).points.length; } catch {} }
       out.push({
         id: `tt:${e.id}`, slug: e.id, call: e.code, title: e.title, sub: line(e.sub || ''),
         kind: isStudy ? 'study' : 'template', collection: col.id, section: e.section, section_title: secs.get(e.section)?.title || e.section,
@@ -182,11 +184,11 @@ const READERS = {
         href: dir, thumbSrc: exists(dir + 'thumb.png') ? dir + 'thumb.png' : null,
         source: exists(dir + 'study.js') ? dir + 'study.js' : dir + 'index.html', dirs: [dir],
         spec_href: spec ? dir + 'spec.json' : (exists(dir + 'template.json') ? dir + 'template.json' : null),
-        plate: { spec: !!spec || exists(dir + 'template.json'), points: isStudy ? 10 : 0, variants: (e.variants || []).length, motion: !!e.motion, live: !!e.live,
+        plate: { spec: !!spec || exists(dir + 'template.json'), points: npts, variants: (e.variants || []).length, motion: !!e.motion, live: !!e.live,
           modules: reads.filter((r) => r.module).length, compare: refWithheld === false },
         reads, rel: [], governed_by: [],
-        provenance: { kind: isStudy ? 'reference-study' : 'original', title: spec?.reference?.grammar || null, author: null, date: null, license: null, url: null,
-          rights: refWithheld === true ? 'reference-withheld' : refWithheld === false ? 'first-party' : null },
+        provenance: { kind: isPlate ? 'original' : isStudy ? 'reference-study' : 'original', title: isPlate ? `${col.path}/${e.path}` : (spec?.reference?.grammar || null), author: null, date: null, license: null, url: null,
+          rights: isPlate ? 'first-party' : refWithheld === true ? 'reference-withheld' : refWithheld === false ? 'first-party' : null },
         swatches: (e.variants && e.variants[0]) || null,
         access: 'public', tags: [], order: i
       });

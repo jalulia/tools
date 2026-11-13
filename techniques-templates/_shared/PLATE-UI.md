@@ -65,5 +65,7 @@ No cream or warm off-white anywhere in the chrome; no oxblood. Neutral greys onl
 
 ## Study fields the shell reads (beyond the v2 contract)
 
-`lede`, `body[]`, `motionHint`, `liveLabel`, `liveHint`, `colorHint`, and `family` on the manifest entry
+`lede`, `body[]`, `motionHint`, `liveLabel`, `liveHint`, `colorHint`, `refHint` (the View hint when there is no published reference),
+`onPoints(P)` (called once with the live point array) and `relayPoints(overrides)` (called before every draw, so a study
+whose layout follows its parameters can move its points), and `family` on the manifest entry
 (`_shared/entries.js`).

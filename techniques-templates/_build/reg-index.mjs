@@ -33,6 +33,8 @@ for(const { e } of ORDER.sort((a,b)=>a.n-b.n||a.i-b.i)){
 const POS=new Map(reg.entries.map((e,i)=>[e.id,i])); out.sort((a,b)=>POS.get(a.id)-POS.get(b.id));
 const fam=reg.families.map(f=>({ id:f.id, blurb:f.blurb, n:out.filter(e=>e.family===f.id).length }));
 // the Techniques tab also shows every other pictured technique piece in the library, grouped, each linked live
+// a card's key in a shared set: its call number, or a short hash of its record id
+const fnv=s=>{ let h=0x811c9dc5; for(const ch of String(s)){ h^=ch.codePointAt(0); h=Math.imul(h,0x01000193)>>>0; } return h.toString(36); };
 const LIBPATH=p=>p?(p.startsWith('../')?SITE+p.replace(/^\.\.\//,''):SITE+'library/'+p):null;
 const GROUPS=[
   { id:'st', title:'Technique studies', blurb:'One reference, one technique, rebuilt and measured. ST series.', test:r=>r.collection==='technique-studies' },
@@ -43,7 +45,7 @@ const GROUPS=[
   { id:'more', title:'Instruments and explorations', blurb:'Tools and explorations on other sites.', test:r=>['instrument','exploration'].includes(r.kind) } ];
 const LIB=cat.records.filter(r=>!r.role&&r.thumb&&r.access==='public'&&r.collection!=='techniques-templates'&&r.kind!=='document');
 const COLT=new Map(cat.collections.map(c=>[c.id,c.title]));
-const seen=new Set(); const groups=GROUPS.map(g=>{ const cards=LIB.filter(r=>!seen.has(r.id)&&g.test(r)).map(r=>{ seen.add(r.id); return { code:r.call||'', title:r.title, sub:r.kind==='plate'?(COLT.get(r.collection)||''):(r.sub||'').slice(0,140), href:recHref(r), pic:LIBPATH(r.thumb_2x&&r.thumb_2x_w<=1400?r.thumb_2x:r.thumb), kind:r.kind, family:r.family||'' }; });
+const seen=new Set(); const groups=GROUPS.map(g=>{ const cards=LIB.filter(r=>!seen.has(r.id)&&g.test(r)).map(r=>{ seen.add(r.id); return { key:r.call||('x'+fnv(r.id)), code:r.call||'', title:r.title, sub:r.kind==='plate'?(COLT.get(r.collection)||''):(r.sub||'').slice(0,140), href:recHref(r), pic:LIBPATH(r.thumb_2x&&r.thumb_2x_w<=1400?r.thumb_2x:r.thumb), kind:r.kind, family:r.family||'' }; });
   if(g.id==='plates')cards.reverse();   // newest filed first
   if(g.id==='st')cards.sort((a,b)=>parseInt(a.code.replace(/\D/g,''),10)-parseInt(b.code.replace(/\D/g,''),10));   // studies in number order
   return { id:g.id, title:g.title, blurb:g.blurb, cards }; }).filter(g=>g.cards.length);

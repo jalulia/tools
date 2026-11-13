@@ -230,7 +230,8 @@
   /* A small control on a tile: the work's page in a new window, or its picture when it has no page. */
   var NW_SVG = '<svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M5 2.5H2.5v7h7V7M7 2.5h2.5V5M9.5 2.5 5.5 6.5" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>';
   /* Every pictured record opens something: its own page, or the plate page that shows its picture at full size. */
-  function openUrl(r) { return r.href || (r.thumb ? 'plate.html?r=' + encodeURIComponent(r.acc) : ''); }
+  // a figure lifted into a read plate opens the plate it belongs to
+  function openUrl(r) { var w = r.work && byId[r.work]; return r.href || (r.role === 'part' && w && w.href ? w.href : '') || (r.thumb ? 'plate.html?r=' + encodeURIComponent(r.acc) : ''); }
   function nw(r) {
     var u = openUrl(r); if (!u) return '';
     return '<span class="nw" role="button" tabindex="-1" data-open="' + e(u) + '" title="' + (r.href ? 'Open in a new window' : 'Open the plate in a new window') + '">' + NW_SVG + '</span>';
