@@ -73,7 +73,7 @@ export const spec={
     "measured_px": "pink +3,+2 · yellow −2,+1 relative to blue"
   },
   "limits": "Past ~8 u a plate leaves its keyline and reads as a second drawing. With all three offsets equal there is no fringe and the print reads as flat digital color.",
-  "implementation": "Each plate canvas is drawn translated by its own vector; the keyline sits on all three plates, so the offsets show as coloured fringes on every edge and the overprint of all three is the near-black line."
+  "implementation": "Each plate canvas is drawn translated by its own vector; the keyline sits on all three plates, so the offsets show as colored fringes on every edge and the overprint of all three is the near-black line."
 };
 export const params={
   "yellow": {

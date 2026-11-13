@@ -2,11 +2,8 @@ window.STUDY={
   id:'ts-17-warped-ring-cells', code:'TS-17', fig:'1.17',
   title:'Warped ring cells',
   kicker:'Technique · TS-17',
-  lede:'A grid of rounded cells on a pulled sheet, inked in pools, printed as single pixels.',
-  body:[
-    'A square grid of rounded cells, pitch 52 u, lies on a sheet that is pulled at four points. A pull moves the sheet by a vector that falls off as a gaussian. Cells behind a pull stretch to nearly three times their length; cells ahead of it shrink. Thirteen pools of ink sit over the sheet. A pool fills the cells, outlines them, or fills the gutters between them.',
-    'Nothing is drawn as a line and nothing is blurred. Each pixel takes an ink with a chance equal to the coverage there, drawn in proportion to the pools that reach it, and otherwise shows stock. 12 % of pixels near a pool take a stray ink. Motion swings the pulls. Live adds a pull under the pointer.'
-  ],
+  lede:'Rounded cells on a sheet pulled at four points, inked by thirteen pools, printed as single pixels.',
+  body:['A 52 u grid of rounded cells sits on a sheet pulled at four points; each pull falls off as a gaussian, so cells behind it stretch to nearly three times their length. Each ink pool fills cells, outlines them or fills the gutters. Every pixel takes one ink with a chance equal to the coverage there, or shows stock; nothing is blurred.'], motionHint:'Play swings the pulls on a 16 s loop and the pools on a 22 s loop.', liveLabel:'Follow pointer', liveHint:'Follow pointer adds a fifth pull under your cursor.',
   source:'Reference 17 · warped grid of grainy color cells, 735 × 956',
   spot:[10,185,241], ref:{w:735,h:956},
   variantLabel:'Inks',

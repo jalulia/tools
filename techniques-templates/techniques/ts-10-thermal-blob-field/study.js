@@ -3,10 +3,7 @@ window.STUDY={
   title:'Thermal blob field',
   kicker:'Technique · TS-10',
   lede:'Blurred blobs mapped through a ramp with one dark stop at the rim.',
-  body:[
-    'One luminance field through one color ramp. Four blob shapes fill white on black and blur wide, so every edge becomes a smooth S. The ramp reads that profile: paper low, a light blue as it rises, a dark navy stop just under mid, then plum, red, orange, and yellow only where the field saturates deep inside a blob.',
-    'Because the navy stop sits on the steepest part of the profile it renders as a thin band — the rim looks drawn but is only mapped. Over the sheet: mono grain and a faint mottle, two hairline rules, a mono caption and a two-line label.'
-  ],
+  body:['Four blob shapes are filled white on black and blurred wide, so each edge becomes a smooth S. The ramp runs paper, light blue, a navy stop just under mid, then plum, red, orange and yellow. The navy stop lands on the steepest part of that S, so it prints as a thin band that reads as a drawn rim.'], motionHint:'Play drifts the blobs on a 12 s loop; the rim follows them.',
   source:'Reference 10 · blurred blob background with a dark rim, 1200 × 800',
   spot:[247,171,23], ref:{w:1200,h:800},
   variantLabel:'Color',
@@ -49,7 +46,7 @@ window.STUDY={
         params:{ lut:'256 entries', stops_ref:'0.28 paper · 0.37 blue · 0.41 (53,80,126) · 0.44–0.48 navy · 0.53 plum · 0.64 red · 0.70 orange · 0.82 (245,140,30) · 1.0 yellow', measured_edge_px:'paper→blue 12 · blue→navy 12 · navy 20 · plum→red 25 · red→orange 15 (at 1200 px)',
           shift:{ value:0, range:[-0.2,0.2], note:'slides the field under the ramp' }, contrast:{ value:1, range:[0.5,2.5], note:'scales the field around 0.5 before the ramp' } },
         limits:'The ramp is read at 256 levels; contrast above ~2 leaves fewer than 6 levels across the rim and it stair-steps. A shift past ±0.15 moves the paper stop into the blobs or the core out of range.',
-        implementation:'Every pixel of the field is replaced by LUT[field]; the ramp is the only place color enters, so all four colourways share one field.' },
+        implementation:'Every pixel of the field is replaced by LUT[field]; the ramp is the only place color enters, so all four colorways share one field.' },
       { id:'rim-stop', short:'RIM', name:'Dark rim stop', layer:2, pass:2, atoms:['lut-stop','edge-band'],
         params:{ from:{ value:0.44, range:[0.415,0.5], note:'field value where the dark stop starts' }, to:{ value:0.48, range:[0.44,0.53], note:'field value where it ends' }, stops_at:[5,6], color:'#160F14', band_px_ref:'≈ 20 at 1200 px', halo:'blue 0.335–0.41 outside the stop' },
         limits:'from must stay below to, and both inside 0.41–0.53 (the stops on either side). A band wider than ~0.07 reads as a dark fill, not an outline.',
@@ -65,7 +62,7 @@ window.STUDY={
         implementation:'Two 1 u ink rules across the sheet; the caption is set right-aligned 12 u under the first rule, the two-line studio label under the second.' }
     ],
     pass_order:['field · four blobs white on black at 1/3 res, blur σ 46 u','upscale · field to device res','map · LUT[field] per pixel (rim stop 0.44)','tooth · mono grain 0.03, perlin mottle 0.012','ledger · two rules, caption, two-line label'],
-    notes:['Measured on ref.png: paper (240,236,233) std 3.3; one edge at y = 300 runs (92,166,219) → (22,15,20) → (69,35,51) → (175,78,67) → (238,97,63) over 70 px; core (244,137,20); rules at y = 380 and 740 of 800, x 14 → 1185.','Seed 1010. Motion: blob centres drift on perlin over a 12 s loop; field recomputed at half resolution per frame.']
+    notes:['Measured on ref.png: paper (240,236,233) std 3.3; one edge at y = 300 runs (92,166,219) → (22,15,20) → (69,35,51) → (175,78,67) → (238,97,63) over 70 px; core (244,137,20); rules at y = 380 and 740 of 800, x 14 → 1185.','Seed 1010. Motion: blob centers drift on perlin over a 12 s loop; field recomputed at half resolution per frame.']
   },
   /* v2 · techniques as functions — one per spec id, pure, composed by render() and motion() in pass order. */
   techniques:{

@@ -2,11 +2,8 @@ window.STUDY={
   id:'ts-15-banknote-engraving', code:'TS-15', fig:'1.15',
   title:'Banknote engraving',
   kicker:'Technique · TS-15',
-  lede:'A picture printed as swelling lines, hatch, guilloche and one kept hue.',
-  body:[
-    'One ink on paper. Tone is carried by line width, not by gray: a 6 u line screen whose lines swell from 6 % to 88 % of the pitch as the picture darkens, break into dashes in the highlights and stop at paper. The line phase is pushed by a blurred copy of the picture, so the lines bend around forms. Past 58 % darkness a second line set crosses the first at 62°.',
-    'Smooth areas in the upper 40 % of the sheet drop the straight lines for a guilloche — two mirrored sine-line families that braid. Pixels within 30° of one chosen hue print in an ink of their own hue; everything else prints in the main ink. The picture is a parameter: Live (L) runs the same seven functions on any image you drop in.'
-  ],
+  lede:'A picture reprinted as one-ink intaglio: swelling lines, crosshatch, guilloche and one kept hue.',
+  body:['Tone is line width, not gray: a 6 u screen whose lines swell from 6 % to 88 % of the pitch, break into dashes in the highlights and bend around forms. Past 58 % darkness a second set crosses at 62°, and smooth areas in the upper 40 % switch to a braided guilloche. Pixels within 30° of one chosen hue print in an ink of their own.'], liveLabel:'Use your image', liveHint:'Use your image runs the same functions on a picture you drop in.',
   source:'Reference 15 · Figma community file “$Dollar Bill texture shader” — the Banknote Engraving effect (Line Relief Studio), read from its Shader and Instruction pages at 214 %',
   spot:[19,71,87], ref:{w:900,h:1240},
   variantLabel:'Inks',
@@ -26,13 +23,13 @@ window.STUDY={
     {u:0.64,v:0.20,d:'HKEY',label:'Kept hue · rust band within 30° of 22° prints in its own hue',t:'hue-key',dir:[1,-1]},
     {u:0.44,v:0.38,d:'TONE',label:'Tone curve · exposure +0.1 stop, contrast 1.25 about mid-gray',t:'tone-curve',dir:[-1,-1]},
     {u:0.70,v:0.86,d:'SRC',label:'Tone field · the picture as data: noise sea, lit from the left',t:'tone-field',dir:[1,1]},
-    {u:0.50,v:0.96,d:'GRAIN',label:'Paper grain · ±3 % on 1.4 u cells, after the ink',t:'paper-grain',dir:[1,1]}
+    {u:0.50,v:0.96,d:'GRAIN',label:'Paper grain · ±3 % on 0.6 u cells, after the ink',t:'paper-grain',dir:[1,1]}
   ],
   spec:{
     reference:{ file:null, px:null, url:'https://www.figma.com/design/NYBMQibG1CYhkzkf0mYfO6/-Dollar-Bill-texture-shader',
       grammar:'image effect: a photograph reprinted as one-ink intaglio — tone as line width, crosshatch in the shadows, lines that bend with the form, a looping guilloche in smooth upper areas, one hue range kept as a second ink, paper grain',
       read_from:'canvas at 214 % (Instruction page, “Rome · terracotta accent”) and the settings panel on the Shader page; shader source not read (view-only file)',
-      figma_panel:{ main_ink:'#134757', paper:'#F5EEDD', preserve_selected_hue:true, selected_hue:52, hue_tolerance:30, hue_feather:18, minimum_saturation:18, accent_strength:80, keep_shadows:65, accent_colour:'Original hue · printed ink', custom_accent:'#B24F1F', engraving_spacing:3.2, line_weight:94, engraving_angle:0, contour_flow:65, shadow_crosshatch:65, guilloche_strength:69, guilloche_placement:'Upper smooth regions', upper_region:40, guilloche_scale:103, guilloche_curvature:155, exposure:0.1, contrast:1.25 } },
+      figma_panel:{ main_ink:'#134757', paper:'#F5EEDD', preserve_selected_hue:true, selected_hue:52, hue_tolerance:30, hue_feather:18, minimum_saturation:18, accent_strength:80, keep_shadows:65, accent_color:'Original hue · printed ink', custom_accent:'#B24F1F', engraving_spacing:3.2, line_weight:94, engraving_angle:0, contour_flow:65, shadow_crosshatch:65, guilloche_strength:69, guilloche_placement:'Upper smooth regions', upper_region:40, guilloche_scale:103, guilloche_curvature:155, exposure:0.1, contrast:1.25 } },
     units:'design units, 1000 = sheet width',
     palette:{ paper:'#F4F5F3', ink:'#134757', kept_hue_ink:'hsl(source hue, 62 %, 40 %)', reference_paper_not_used:'#F5EEDD' },
     techniques:[
@@ -65,7 +62,7 @@ window.STUDY={
         limits:'tolerance + feather above ~90° keys most warm pictures whole; min_sat under ~8 % keys neutral grays by their noise hue.',
         implementation:'Mask = 1 inside tolerance of the chosen hue, feathered to 0, gated by saturation, scaled by strength and pulled back toward the main ink in the shadows by keep_shadows. It changes ink color only — line width is unchanged.' },
       { id:'paper-grain', short:'GRAIN', name:'Paper grain', layer:4, pass:7, atoms:['grain','stock'],
-        params:{ amp:{ value:0.03, range:[0,0.12] }, cell_u:{ value:1.4, range:[0.5,4], unit:'u' }, corr:{ value:0.35, range:[0,0.8] }, seed:{ value:15, range:[1,9999], step:1 } },
+        params:{ amp:{ value:0.03, range:[0,0.12] }, cell_u:{ value:0.6, range:[0.25,4], unit:'u', note:'grain cell; one device pixel at the default' }, corr:{ value:0.35, range:[0,0.8] }, seed:{ value:15, range:[1,9999], step:1 } },
         limits:'Above ~0.06 the grain reads before the line; this pass is the last thing to add and the first to remove.',
         implementation:'One multiplicative monochrome noise pass over paper and ink together, on cells of 1.4 u with lag-1 correlation.' }
     ],

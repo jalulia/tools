@@ -4,23 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="only light">
-<meta name="description" content="TS-17 · Warped ring cells — A grid of rounded cells on a pulled sheet, inked in pools, printed as single pixels.">
+<meta name="description" content="TS-17 · Warped ring cells — Rounded cells on a sheet pulled at four points, inked by thirteen pools, printed as single pixels.">
 <link rel="icon" href="data:,">
-<title>TS-17 — Warped ring cells · Techniques &amp; Templates · ø co.</title>
+<title>TS-17 · Warped ring cells · Techniques &amp; Templates</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
-<link rel="stylesheet" href="../../_shared/shell.css?v=202611121940">
+<link rel="stylesheet" href="../../_shared/shell.css?v=202611130318">
 <link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
-<!-- <a class="brand" href="../../index.html" title="Index"><svg class="o" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-554.33,-11.46)" fill="currentColor" fill-rule="evenodd"><path d="M682.33,35.81c-57.24,0-103.65,46.4-103.65,103.65s46.4,103.65,103.65,103.65,103.65-46.4,103.65-103.65-46.4-103.65-103.65-103.65ZM682.33,187.75c-26.67,0-48.29-21.62-48.29-48.29s21.62-48.29,48.29-48.29,48.29,21.62,48.29,48.29-21.62,48.29-48.29,48.29Z"/><rect x="666.18" y="-5.46" width="32.29" height="289.83" transform="translate(298.46 -441.63) rotate(45)"/></g></svg><span class="wm">IMP<i>Ø</i>SSIBLE</span></a>
-  <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Warped ring cells</b><span class="code">TS-17</span></span>
-  <span class="pager"><a href="../../techniques/ts-16-stipple-cloud-bank/index.html" title="Stipple bank and dot burst">← TS-16</a><a href="../../index.html#techniques"><span class="n">17</span>&nbsp;/ 19</a><a href="../../techniques/ts-19-arc-bundle-field/index.html" title="Arc bundles on a dashed globe">TS-19 →</a></span> <p class="kicker">Technique · TS-17</p><h1 class="lede">A grid of rounded cells on a pulled sheet, inked in pools, printed as single pixels.</h1><div class="body"><p>A square grid of rounded cells, pitch 52 u, lies on a sheet that is pulled at four points. A pull moves the sheet by a vector that falls off as a gaussian. Cells behind a pull stretch to nearly three times their length; cells ahead of it shrink. Thirteen pools of ink sit over the sheet. A pool fills the cells, outlines them, or fills the gutters between them.</p><p>Nothing is drawn as a line and nothing is blurred. Each pixel takes an ink with a chance equal to the coverage there, drawn in proportion to the pools that reach it, and otherwise shows stock. 12 % of pixels near a pool take a stray ink. Motion swings the pulls. Live adds a pull under the pointer.</p></div>
-  <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>margin</b> · paper</div></li><li><div><b>pulls</b> · pixel to sample point</div></li><li><div><b>cells</b> · solid, outline and gutter coverage</div></li><li><div><b>pools</b> · strength per pixel, ink by share</div></li><li><div><b>print</b> · one ink or stock per pixel</div></li></ol></div>
-  <div class="meta"><div class="full"><h2>Vocabulary · a technique highlights its reads · an atom finds every use</h2><div class="vocab" id="chips"><div class="vr"><span data-t="paper-margin" title="Plain margin"><b>EDGE</b>paper-margin</span><span class="at"><a href="../../index.html#techniques?a=margin">margin</a><i>·</i><a href="../../index.html#techniques?a=stock">stock</a></span></div><div class="vr"><span data-t="sheet-pull" title="Gaussian sheet pulls"><b>PULL</b>sheet-pull</span><span class="at"><a href="../../index.html#techniques?a=domain-warp">domain-warp</a><i>·</i><a href="../../index.html#techniques?a=gaussian">gaussian</a><i>·</i><a href="../../index.html#techniques?a=displacement">displacement</a></span></div><div class="vr"><span data-t="ring-cell" title="Rounded cell"><b>CELL</b>ring-cell</span><span class="at"><a href="../../index.html#techniques?a=grid">grid</a><i>·</i><a href="../../index.html#techniques?a=superellipse">superellipse</a><i>·</i><a href="../../index.html#techniques?a=ring">ring</a></span></div><div class="vr"><span data-t="ink-pool" title="Ink pools"><b>POOL</b>ink-pool</span><span class="at"><a href="../../index.html#techniques?a=palette-field">palette-field</a><i>·</i><a href="../../index.html#techniques?a=gaussian">gaussian</a><i>·</i><a href="../../index.html#techniques?a=per-cell">per-cell</a></span></div><div class="vr"><span data-t="stochastic-speckle" title="Noise-threshold print"><b>GRAIN</b>stochastic-speckle</span><span class="at"><a href="../../index.html#techniques?a=dither">dither</a><i>·</i><a href="../../index.html#techniques?a=grain">grain</a><i>·</i><a href="../../index.html#techniques?a=speckle">speckle</a></span></div></div></div>
-  <div><h2>Reference</h2><div class="ro">Reference 17 · warped grid of grainy color cells, 735 × 956</div></div><div><h2>Study</h2><div class="nm">Warped ring cells</div><div class="ro">TS-17 · Techniques · 17 / 19</div></div></div>
-  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>paper-margin</b> · Plain margin — Flat paper fill; the print sits inset on every side. <span class="ro">Limits · Above ~120 u the margin crops the stretched band.</span> <a href="lib/paper-margin.js">lib/paper-margin.js</a></div></li><li><div><b>sheet-pull</b> · Gaussian sheet pulls — Each pixel is sampled at its own position minus every pull vector times exp(−d² / r²). The grid is read at the sample point, so the sheet stretches behind a pull and bunches ahead of it. <span class="ro">Limits · A pull folds the sheet when 0.86 × vector length exceeds its radius; at strength 1 the largest ratio is 0.65. Pitch under ~24 u puts a cell below ten pixels and the outline closes.</span> <a href="lib/sheet-pull.js">lib/sheet-pull.js</a></div></li><li><div><b>ring-cell</b> · Rounded cell — The distance from the cell center is a superellipse. Three shapes are read from it: the solid cell, an outline band, and the gutter past it. <span class="ro">Limits · cell_at above gutter_at removes the stock band between a cell and its gutter. edge above ~0.2 thins every shape to a haze.</span> <a href="lib/ring-cell.js">lib/ring-cell.js</a></div></li><li><div><b>ink-pool</b> · Ink pools — Each pool has an ink, a center, a gaussian radius and a mode. Its strength is 2.4 × the gaussian, read per pixel and clipped at 1, so the middle of a pool is solid; the mode says which shape of the cell it colors. <span class="ro">Limits · size above ~2 merges the pools into one field and no region reads. gain under ~0.4 leaves only the stray pixels.</span> <a href="lib/ink-pool.js">lib/ink-pool.js</a></div></li><li><div><b>stochastic-speckle</b> · Noise-threshold print — Per pixel: ink if a random number is under the coverage, with the ink drawn in proportion to each pool’s share; otherwise stock, or a stray ink pixel. <span class="ro">Limits · stray above ~0.25 lifts the stock to a tint. Any soften above 0 turns the pixels into tone and the print reads as blurred.</span> <a href="lib/stochastic-speckle.js">lib/stochastic-speckle.js</a></div></li></ol></div>
-  <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>PULL</b> · Behind the pull · cells 2.9 × as tall <span class="ro">u 0.47 · v 0.33 · sheet-pull</span></div></li><li><div><b>PULL</b> · Ahead of the pull · cells shrink <span class="ro">u 0.50 · v 0.05 · sheet-pull</span></div></li><li><div><b>PULL</b> · Side pull · cells lean along the vector <span class="ro">u 0.80 · v 0.38 · sheet-pull</span></div></li><li><div><b>POOL</b> · Cell pool · teal fills the cells <span class="ro">u 0.28 · v 0.10 · ink-pool</span></div></li><li><div><b>POOL</b> · Gutter pool · blue fills between the cells <span class="ro">u 0.52 · v 0.58 · ink-pool</span></div></li><li><div><b>POOL</b> · Outline pool · yellow outlines the cells <span class="ro">u 0.88 · v 0.60 · ink-pool</span></div></li><li><div><b>CELL</b> · Solid cell · superellipse, exponent 2.8 <span class="ro">u 0.38 · v 0.82 · ring-cell</span></div></li><li><div><b>CELL</b> · Outline · band at 0.34 of the cell <span class="ro">u 0.64 · v 0.49 · ring-cell</span></div></li><li><div><b>GRAIN</b> · One pixel, one ink · no blur <span class="ro">u 0.18 · v 0.66 · stochastic-speckle</span></div></li><li><div><b>EDGE</b> · Margin · 34 u, no rule <span class="ro">u 0.50 · v 0.01 · paper-margin</span></div></li></ol></div>
-  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>F</b> expand · <b>space</b> re-read · <b>M</b> motion · <b>L</b> live</span><span>ø co. · 2026</span></div> {
+<!-- <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Warped ring cells</b><span class="code">TS-17</span></span>
+  <span class="pager"><a href="../../techniques/ts-16-stipple-cloud-bank/index.html" title="Previous: TS-16 Stipple bank and dot burst">← TS-16</a><a class="pos" href="../../index.html#techniques"><span class="n">17</span>&nbsp;of 19</a><a href="../../techniques/ts-19-arc-bundle-field/index.html" title="Next: TS-19 Arc bundles on a dashed globe">TS-19 →</a></span> <p class="kicker"><span>TS-17</span><span>screen tone</span></p><h1 class="title">Warped ring cells</h1><p class="lede">Rounded cells on a sheet pulled at four points, inked by thirteen pools, printed as single pixels.</p><div class="body"><p>A 52 u grid of rounded cells sits on a sheet pulled at four points; each pull falls off as a gaussian, so cells behind it stretch to nearly three times their length. Each ink pool fills cells, outlines them or fills the gutters. Every pixel takes one ink with a chance equal to the coverage there, or shows stock; nothing is blurred.</p></div>
+  <div class="accs">
+  <details class="acc" name="notes" id="aBuild" open><summary><span>How it is built</span></summary><div class="ab"><ol class="steps"><li><b>margin</b><span>paper</span></li><li><b>pulls</b><span>pixel to sample point</span></li><li><b>cells</b><span>solid, outline and gutter coverage</span></li><li><b>pools</b><span>strength per pixel, ink by share</span></li><li><b>print</b><span>one ink or stock per pixel</span></li></ol></div></details>
+  <details class="acc" name="notes" id="aTech"><summary><span>Techniques <i>5</i></span></summary><div class="ab"><ul class="vocab" id="chips"><li class="vr"><button type="button" data-t="paper-margin"><span class="vn">Plain margin</span><span class="vid">paper-margin</span></button><span class="at"><a href="../../index.html#techniques?a=margin">margin</a><a href="../../index.html#techniques?a=stock">stock</a><a class="mod" href="lib/paper-margin.js">lib/paper-margin.js</a></span><p class="ah">Flat paper fill; the print sits inset on every side.</p></li><li class="vr"><button type="button" data-t="sheet-pull"><span class="vn">Gaussian sheet pulls</span><span class="vid">sheet-pull</span></button><span class="at"><a href="../../index.html#techniques?a=domain-warp">domain-warp</a><a href="../../index.html#techniques?a=gaussian">gaussian</a><a href="../../index.html#techniques?a=displacement">displacement</a><a class="mod" href="lib/sheet-pull.js">lib/sheet-pull.js</a></span><p class="ah">Each pixel is sampled at its own position minus every pull vector times exp(−d² / r²). The grid is read at the sample point, so the sheet stretches behind a pull and bunches ahead of it.</p></li><li class="vr"><button type="button" data-t="ring-cell"><span class="vn">Rounded cell</span><span class="vid">ring-cell</span></button><span class="at"><a href="../../index.html#techniques?a=grid">grid</a><a href="../../index.html#techniques?a=superellipse">superellipse</a><a href="../../index.html#techniques?a=ring">ring</a><a class="mod" href="lib/ring-cell.js">lib/ring-cell.js</a></span><p class="ah">The distance from the cell center is a superellipse. Three shapes are read from it: the solid cell, an outline band, and the gutter past it.</p></li><li class="vr"><button type="button" data-t="ink-pool"><span class="vn">Ink pools</span><span class="vid">ink-pool</span></button><span class="at"><a href="../../index.html#techniques?a=palette-field">palette-field</a><a href="../../index.html#techniques?a=gaussian">gaussian</a><a href="../../index.html#techniques?a=per-cell">per-cell</a><a class="mod" href="lib/ink-pool.js">lib/ink-pool.js</a></span><p class="ah">Each pool has an ink, a center, a gaussian radius and a mode. Its strength is 2.4 × the gaussian, read per pixel and clipped at 1, so the middle of a pool is solid; the mode says which shape of the cell it colors.</p></li><li class="vr"><button type="button" data-t="stochastic-speckle"><span class="vn">Noise-threshold print</span><span class="vid">stochastic-speckle</span></button><span class="at"><a href="../../index.html#techniques?a=dither">dither</a><a href="../../index.html#techniques?a=grain">grain</a><a href="../../index.html#techniques?a=speckle">speckle</a><a class="mod" href="lib/stochastic-speckle.js">lib/stochastic-speckle.js</a></span><p class="ah">Per pixel: ink if a random number is under the coverage, with the ink drawn in proportion to each pool’s share; otherwise stock, or a stray ink pixel.</p></li></ul></div></details>
+  <details class="acc" name="notes" id="aRef"><summary><span>Reference and match</span></summary><div class="ab"><p class="src">Reference 17 · warped grid of grainy color cells, 735 × 956</p><div class="fid" id="fid"></div></div></details>
+  <details class="acc" name="notes" id="aStudy"><summary><span>Study</span></summary><div class="ab"><dl class="kv"><dt>Code</dt><dd>TS-17</dd><dt>Section</dt><dd>Techniques · 17 of 19</dd><dt>Family</dt><dd>screen tone</dd><dt>Spec</dt><dd><a href="spec.json">spec.json</a></dd></dl></div></details>
+  <details class="acc" name="notes" id="aPts"><summary><span>Callouts <i>10</i></span></summary><div class="ab"><ol class="steps"><li><b>PULL · Behind the pull · cells 2.9 × as tall</b><span>u 0.47 · v 0.33 · sheet-pull</span></li><li><b>PULL · Ahead of the pull · cells shrink</b><span>u 0.50 · v 0.05 · sheet-pull</span></li><li><b>PULL · Side pull · cells lean along the vector</b><span>u 0.80 · v 0.38 · sheet-pull</span></li><li><b>POOL · Cell pool · teal fills the cells</b><span>u 0.28 · v 0.10 · ink-pool</span></li><li><b>POOL · Gutter pool · blue fills between the cells</b><span>u 0.52 · v 0.58 · ink-pool</span></li><li><b>POOL · Outline pool · yellow outlines the cells</b><span>u 0.88 · v 0.60 · ink-pool</span></li><li><b>CELL · Solid cell · superellipse, exponent 2.8</b><span>u 0.38 · v 0.82 · ring-cell</span></li><li><b>CELL · Outline · band at 0.34 of the cell</b><span>u 0.64 · v 0.49 · ring-cell</span></li><li><b>GRAIN · One pixel, one ink · no blur</b><span>u 0.18 · v 0.66 · stochastic-speckle</span></li><li><b>EDGE · Margin · 34 u, no rule</b><span>u 0.50 · v 0.01 · paper-margin</span></li></ol></div></details>
+  <details class="acc" name="notes" id="aRel"><summary><span>Related</span></summary><div class="ab"><div class="rel" id="rel"></div></div></details>
+  </div> {
   &quot;id&quot;: &quot;ts-17-warped-ring-cells&quot;,
   &quot;code&quot;: &quot;TS-17&quot;,
   &quot;title&quot;: &quot;Warped ring cells&quot;,
@@ -557,45 +558,68 @@
     &quot;Measured on ref.png: stock (215,215,182); pale tint (160,209,194); blue (10,185,241); teal (10,242,209); cell pitch ≈ 38 px at the center (52 u); tallest cells ≈ 110 px; margin ≈ 25 px.&quot;,
     &quot;The subject is new: the pulls and pools are a mirror of the reference layout.&quot;
   ]
-} are BAKED here by `node _build/build.mjs` from study.js — a static read for readers that
+} are BAKED here by `node _build/build.mjs` from study.js: a static read for readers that
      cannot run scripts. shell.js redraws all of it on load. Edit study.js or _build/, never the generated index.html. -->
 <nav class="nav" id="nav" aria-label="Site navigation">{{NAV}}</nav>
 <main class="plate">
-  <section class="notes" id="copy">{{NOTES}}</section>
-  <section class="figure" id="stage">
-    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"><img src="thumb.png" alt="TS-17 rebuild, still frame" loading="lazy"></canvas></div>
+  <section class="notes" id="copy" aria-label="About this technique">{{NOTES}}</section>
+  <section class="figure" id="stage" aria-label="Plate">
+    <div class="cvwrap"><canvas id="cv" aria-label="TS-17 plate"><img src="thumb.png" alt="TS-17 rebuild, still frame" loading="lazy"></canvas></div>
     <div class="live" id="live"></div>
-    <div class="log" id="log">
-      <div class="ctl">
-        <button id="bRead" type="button" class="on" title="toggle the read overlay">Read</button>
-        <button id="bReplay" type="button" title="re-run the read (space)">↻ Replay</button>
-        <button id="bMode" type="button" title="cycle rebuild / reference / split (R)">Rebuild</button>
-        <button id="bMotion" type="button" hidden title="run the motion version (M)">Motion</button>
-        <button id="bLive" type="button" hidden title="open the live DOM version (L)">Live</button>
-        <button id="bWide" type="button" title="fold the notes away and fill the page (F)">Expand</button>
-        <button id="bSpec" type="button" title="open the machine-readable spec (S)">Spec ⇥</button>
-      </div>
-      <div class="vtabs" id="vtabs"></div>
-      <div class="prail" id="prail" hidden></div>
-      <div class="lbody">
-        <div class="lh"><span>Track log</span><span id="ctr">0 / 10</span></div>
-        <div class="rows" id="rows"></div>
-        <div class="read" id="read"><b>Read</b><span id="readtxt">Hover or select a point.</span><code id="readcode"></code></div>
-        <div class="fid" id="fid"></div>
-      </div>
-    </div>
-    <div class="rel" id="rel"></div>
   </section>
+  <aside class="panel" id="panel" aria-label="Controls">
+    <section class="mod" id="mView" aria-labelledby="hView">
+      <header><h2 id="hView">View</h2><button type="button" class="ghost" id="bWide" title="Hide the side columns (F)"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1 4.5V1h3.5M11 4.5V1H7.5M1 7.5V11h3.5M11 7.5V11H7.5"/></svg><span>Expand</span></button></header>
+      <div class="seg" id="segView" role="radiogroup" aria-label="What the plate shows">
+        <button type="button" role="radio" aria-checked="true" data-m="0">Plate</button><button type="button" role="radio" aria-checked="false" data-m="1">Reference</button><button type="button" role="radio" aria-checked="false" data-m="2">Compare</button>
+      </div>
+      <p class="hint" id="viewHint">The rebuild, drawn in code.</p>
+    </section>
+    <section class="mod" id="mNote" aria-labelledby="hNote">
+      <header><h2 id="hNote">Callouts</h2><label class="sw-toggle"><input type="checkbox" id="tNote" checked><span class="tr" aria-hidden="true"></span><span class="tl">Show</span></label></header>
+      <p class="hint">Numbered points mark where each technique was measured. Hover one on the plate to read it.</p>
+      <div class="row2"><button type="button" class="btn" id="bReplay" title="Draw the plate again, top to bottom (space)"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M10.2 6.3A4.2 4.2 0 1 1 8.9 3"/><path d="M9.4 1v2.4H7"/></svg><span>Replay the build</span></button></div>
+      <button type="button" class="disc" id="bPoints" aria-expanded="false" aria-controls="pts"><span>Point list</span><b id="ctr">0 / 10</b><svg class="chev" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 3.8L5 6.3l2.5-2.5"/></svg></button>
+      <div class="pts" id="pts" hidden>
+        <div class="rows" id="rows"></div>
+        <div class="read" id="read"><span id="readtxt">Hover or select a point.</span><code id="readcode"></code></div>
+      </div>
+    </section>
+    <section class="mod" id="mMotion" aria-labelledby="hMotion">
+      <header><h2 id="hMotion">Motion</h2><span class="state" id="motionState">Still</span></header>
+      <div class="row2" id="motionRow">
+        <button type="button" class="btn" id="bMotion" aria-pressed="false" title="Play or pause the motion version (M)"><svg class="i-play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.6v8.8L10.2 6z"/></svg><svg class="i-pause" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5h2v9H3zM7 1.5h2v9H7z"/></svg><span>Play</span></button>
+        <button type="button" class="btn" id="bLive" aria-pressed="false" title="Open the interactive version (L)"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.5l7.5 4-3.3 1 1.9 3.6-1.3.7-1.9-3.6L2.5 9.6z"/></svg><span id="liveLabel">Interactive</span></button>
+      </div>
+      <p class="hint" id="motionHint"></p>
+    </section>
+    <section class="mod" id="mColor" aria-labelledby="hColor">
+      <header><h2 id="hColor">Color</h2><button type="button" class="ghost warn" id="bInkReset" hidden>Reset inks</button></header>
+      <p class="hint" id="colorHint">Pick a palette. Click any ink to change it; the plate redraws.</p>
+      <div class="pal" id="pal" role="radiogroup" aria-label="Palettes"></div>
+      <div class="inks" id="inks"></div>
+    </section>
+    <section class="mod" id="mParams" aria-labelledby="hParams">
+      <header><h2 id="hParams">Parameters</h2><button type="button" class="ghost warn" id="bParamReset" hidden>Reset all</button></header>
+      <p class="hint">Every value is editable. Drag a slider or type a number, then Enter. Arrow keys step; Shift ×10, Alt ×0.1. The plate redraws.</p>
+      <div class="pgroups" id="prail"></div>
+    </section>
+    <section class="mod" id="mExport" aria-labelledby="hExport">
+      <header><h2 id="hExport">Export</h2></header>
+      <div class="row3"><button type="button" class="btn" id="bCopy" title="Copy the spec as JSON">Copy spec</button><button type="button" class="btn" id="bSpec" title="Open the spec (S)">Open spec</button><button type="button" class="btn" id="bPng" title="Save the plate as it is drawn now">Save PNG</button></div>
+      <p class="hint">The spec holds every measured number, its range and the module that draws it.</p>
+    </section>
+  </aside>
 </main>
-<aside class="spec" id="spec" aria-hidden="true">
-  <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
+<aside class="spec" id="spec" aria-hidden="true" aria-label="Technique spec">
+  <div class="sh"><span>Spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
   <pre id="specpre">{{SPEC}}</pre>
 </aside>
-<script src="../../_shared/entries.js?v=202611121940"></script>
-<script src="../../_shared/vocab.js?v=202611121940"></script>
-<script src="../../_shared/art.js?v=202611121940"></script>
+<script src="../../_shared/entries.js?v=202611130318"></script>
+<script src="../../_shared/vocab.js?v=202611130318"></script>
+<script src="../../_shared/art.js?v=202611130318"></script>
 <script src="ref.js"></script>
 <script src="study.js"></script>
-<script src="../../_shared/shell.js?v=202611121940"></script>
+<script src="../../_shared/shell.js?v=202611130318"></script>
 </body>
 </html>

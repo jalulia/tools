@@ -24,12 +24,13 @@ export const spec={
       ]
     },
     "cell_u": {
-      "value": 1.4,
+      "value": 0.6,
       "range": [
-        0.5,
+        0.25,
         4
       ],
-      "unit": "u"
+      "unit": "u",
+      "note": "grain cell; one device pixel at the default"
     },
     "corr": {
       "value": 0.35,
@@ -52,7 +53,7 @@ export const spec={
 };
 export const params={
   "amp": 0.03,
-  "cell_u": 1.4,
+  "cell_u": 0.6,
   "corr": 0.35,
   "seed": 15
 };

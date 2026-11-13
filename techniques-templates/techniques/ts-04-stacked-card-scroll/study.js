@@ -2,11 +2,8 @@ window.STUDY={
   id:'ts-04-stacked-card-scroll', code:'TS-04', fig:'1.4',
   title:'Stacked card scroll',
   kicker:'Technique · TS-04',
-  lede:'Rounded cards pin to the top and stack; each one a different ground.',
-  body:[
-    'A column of full-height cards on black. Every card is sticky at the same top offset, so the card on screen holds while the next slides over it; the covered card clips at the incoming edge and shrinks a few percent. Each card is one flat color, 36 u corners, 24 u margin, and carries one thing — a headline panel, a specimen grid, a blurred plate.',
-    'The still draws the stacked state as one frame: card 1 cut short by card 2, card 2 full, cards 3 and 4 arriving from the bottom. Press L for the live scroll.'
-  ],
+  lede:'Full-height rounded cards that pin to one top offset and stack as the page scrolls.',
+  body:['Each card is one flat color with 36 u corners and a 24 u margin, and holds one thing: a headline, a specimen grid or a blurred plate. The covered card clips at the incoming edge and shrinks a few percent. The still shows the stack mid-scroll.'], liveLabel:'Scroll version', liveHint:'Scroll version opens the page itself; scroll inside the plate to stack the cards.',
   source:'Reference 04 · phone-height screenshot of a stacked card page, 670 × 1666',
   spot:[201,56,46], ref:{w:670,h:1666},
   variantLabel:'Color',

@@ -21,24 +21,24 @@ const techIndex={}, atomIndex={}; const LIFTED=[];
 const ART_SRC=(()=>{ const out={}; let cur=null; for(const ln of fs.readFileSync('_shared/art.js','utf8').split('\n')){ const m=ln.match(/^A\.(\w+)=/); if(m){ cur=m[1]; out[cur]=ln; continue; } if(/^return A;/.test(ln))cur=null; else if(cur&&!/^\/\*/.test(ln))out[cur]+='\n'+ln; } return out; })();
 const helpersFor=src=>{ const need=new Set(); const scan=t=>{ for(const m of t.matchAll(/\bA\.(\w+)\b/g)){ const n=m[1]; if(ART_SRC[n]&&!need.has(n)){ need.add(n); scan(ART_SRC[n]); } } }; scan(src); return [...need]; };
 const plateNav=(S,e)=>{ const section=TT.sections.find(s=>s.id===e.section)||{id:e.section,title:e.section}; const sib=TT.entries.filter(x=>x.section===e.section); const idx=sib.findIndex(x=>x.id===e.id); const prev=sib[idx-1], next=sib[idx+1]; const R='../../';
-  return `<a class="brand" href="${R}index.html" title="Index">${TT.mark||''}<span class="wm">IMP<i>Ø</i>SSIBLE</span></a>
-  <span class="crumb"><a href="${R}index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="${R}index.html#${esc(section.id)}">${esc(section.title)}</a><span class="sep">/</span><b>${esc(S.title)}</b><span class="code">${esc(S.code)}</span></span>
-  <span class="pager">${prev?`<a href="${R}${prev.path}index.html" title="${esc(prev.title)}">← ${esc(prev.code)}</a>`:'<a class="off">←</a>'}<a href="${R}index.html#${esc(section.id)}"><span class="n">${idx+1}</span>&nbsp;/ ${sib.length}</a>${next?`<a href="${R}${next.path}index.html" title="${esc(next.title)}">${esc(next.code)} →</a>`:'<a class="off">→</a>'}</span>`; };
-// Mirrors shell.js's notes column, then adds what only exists on the canvas at runtime: the techniques with their
-// one-line implementations and the ten numbered reads. shell.js replaces all of this once it runs.
-const plateNotes=(S,e)=>{ const section=TT.sections.find(s=>s.id===e.section)||{id:e.section,title:e.section}; const sib=TT.entries.filter(x=>x.section===e.section); const idx=sib.findIndex(x=>x.id===e.id); const T=S.spec.techniques||[];
-  const chips=T.map(t=>`<span data-t="${esc(t.id)}" title="${esc(t.name)}">${esc(t.id)}</span>`).join('');
-  const vrows=T.map(t=>`<div class="vr"><span data-t="${esc(t.id)}" title="${esc(t.name)}"><b>${esc(t.short)}</b>${esc(t.id)}</span><span class="at">${(t.atoms||[]).map(a=>`<a href="../../index.html#techniques?a=${encodeURIComponent(a)}">${esc(a)}</a>`).join('<i>·</i>')}</span></div>`).join('');
-  const steps=(S.spec.pass_order||[]).map(s=>`<li><div><b>${esc(s.split(' · ')[0])}</b>${s.includes(' · ')?' · '+esc(s.split(' · ').slice(1).join(' · ')):''}</div></li>`).join('');
-  const techs=T.map(t=>`<li><div><b>${esc(t.id)}</b> · ${esc(t.name)}${t.implementation?` — ${esc(t.implementation)}`:''}${t.limits?` <span class="ro">Limits · ${esc(t.limits)}</span>`:''}${S.techniques&&S.techniques[t.id]?` <a href="lib/${esc(t.id)}.js">lib/${esc(t.id)}.js</a>`:''}</div></li>`).join('');
-  const reads=(S.points||[]).map(p=>`<li><div><b>${esc(p.d)}</b> · ${esc(p.label)} <span class="ro">u ${(+p.u).toFixed(2)} · v ${(+p.v).toFixed(2)}${p.t?` · ${esc(p.t)}`:''}</span></div></li>`).join('');
-  return `<p class="kicker">${esc(S.kicker||section.title+' · '+S.code)}</p><h1 class="lede">${esc(S.lede||S.title)}</h1><div class="body">${(S.body||[]).map(p=>`<p>${esc(p)}</p>`).join('')}</div>
-  ${steps?`<div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps">${steps}</ol></div>`:''}
-  <div class="meta"><div class="full"><h2>Vocabulary · a technique highlights its reads · an atom finds every use</h2><div class="vocab" id="chips">${vrows}</div></div>
-  <div><h2>Reference</h2><div class="ro">${esc(S.source)}</div></div><div><h2>Study</h2><div class="nm">${esc(S.title)}</div><div class="ro">${esc(S.code)} · ${esc(section.title)} · ${idx+1} / ${sib.length}</div></div></div>
-  ${techs?`<div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps">${techs}</ol></div>`:''}
-  ${reads?`<div class="meta static" style="display:block"><h2>${(S.points||[]).length} reads · u, v on the sheet</h2><ol class="steps">${reads}</ol></div>`:''}
-  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>F</b> expand · <b>space</b> re-read${S.motion?' · <b>M</b> motion':''}${S.live?' · <b>L</b> live':''}</span><span>ø co. · 2026</span></div>`; };
+  return `<span class="crumb"><a href="${R}index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="${R}index.html#${esc(section.id)}">${esc(section.title)}</a><span class="sep">/</span><b>${esc(S.title)}</b><span class="code">${esc(S.code)}</span></span>
+  <span class="pager">${prev?`<a href="${R}${prev.path}index.html" title="Previous: ${esc(prev.code)} ${esc(prev.title)}">← ${esc(prev.code)}</a>`:'<a class="off" aria-disabled="true">←</a>'}<a class="pos" href="${R}index.html#${esc(section.id)}"><span class="n">${idx+1}</span>&nbsp;of ${sib.length}</a>${next?`<a href="${R}${next.path}index.html" title="Next: ${esc(next.code)} ${esc(next.title)}">${esc(next.code)} →</a>`:'<a class="off" aria-disabled="true">→</a>'}</span>`; };
+// The static read: mirrors shell.js's notes column (title, description, accordion as native <details>), then adds what
+// only exists on the canvas at runtime: the ten numbered points. shell.js replaces all of this once it runs.
+const plateNotes=(S,e)=>{ const section=TT.sections.find(s=>s.id===e.section)||{id:e.section,title:e.section}; const sib=TT.entries.filter(x=>x.section===e.section); const idx=sib.findIndex(x=>x.id===e.id); const T=S.spec.techniques||[]; const fam=String(e.family||'').replace(/-/g,' ');
+  const steps=(S.spec.pass_order||[]).map(s=>`<li><b>${esc(s.split(' · ')[0])}</b>${s.includes(' · ')?`<span>${esc(s.split(' · ').slice(1).join(' · '))}</span>`:''}</li>`).join('');
+  const vrows=T.map(t=>`<li class="vr"><button type="button" data-t="${esc(t.id)}"><span class="vn">${esc(t.name)}</span><span class="vid">${esc(t.id)}</span></button><span class="at">${(t.atoms||[]).map(a=>`<a href="../../index.html#techniques?a=${encodeURIComponent(a)}">${esc(a)}</a>`).join('')}${S.techniques&&S.techniques[t.id]?`<a class="mod" href="lib/${esc(t.id)}.js">lib/${esc(t.id)}.js</a>`:''}</span>${t.implementation?`<p class="ah">${esc(t.implementation)}</p>`:''}</li>`).join('');
+  const reads=(S.points||[]).map(p=>`<li><b>${esc(p.d)} · ${esc(p.label)}</b><span>u ${(+p.u).toFixed(2)} · v ${(+p.v).toFixed(2)}${p.t?` · ${esc(p.t)}`:''}</span></li>`).join('');
+  const acc=(id,title,body,open)=>`<details class="acc" name="notes" id="${id}"${open?' open':''}><summary><span>${title}</span></summary><div class="ab">${body}</div></details>`;
+  return `<p class="kicker"><span>${esc(S.code)}</span>${fam?`<span>${esc(fam)}</span>`:''}</p><h1 class="title">${esc(S.title)}</h1>${S.lede?`<p class="lede">${esc(S.lede)}</p>`:''}<div class="body">${(S.body||[]).map(p=>`<p>${esc(p)}</p>`).join('')}</div>
+  <div class="accs">
+  ${steps?acc('aBuild','How it is built',`<ol class="steps">${steps}</ol>`,true):''}
+  ${acc('aTech',`Techniques <i>${T.length}</i>`,`<ul class="vocab" id="chips">${vrows}</ul>`,!steps)}
+  ${acc('aRef','Reference and match',`<p class="src">${esc(S.source||'—')}</p><div class="fid" id="fid"></div>`)}
+  ${acc('aStudy','Study',`<dl class="kv"><dt>Code</dt><dd>${esc(S.code)}</dd><dt>Section</dt><dd>${esc(section.title)} · ${idx+1} of ${sib.length}</dd>${fam?`<dt>Family</dt><dd>${esc(fam)}</dd>`:''}<dt>Spec</dt><dd><a href="spec.json">spec.json</a></dd></dl>`)}
+  ${reads?acc('aPts',`Callouts <i>${(S.points||[]).length}</i>`,`<ol class="steps">${reads}</ol>`):''}
+  ${acc('aRel','Related','<div class="rel" id="rel"></div>')}
+  </div>`; };
 for(const e of TT.entries){ if(only.length&&!only.some(o=>e.id.includes(o)))continue; const dir=path.join(root,e.path); if(!fs.existsSync(path.join(dir,'study.js'))){ console.warn('skip (no study.js):',e.id); continue; }
   // reference → ref.js
   const refSrc=['ref.png','ref.jpg'].map(f=>path.join(dir,f)).find(fs.existsSync);
@@ -89,7 +89,7 @@ if(!only.length){ fs.writeFileSync('techniques.json',JSON.stringify({generated:n
   const libN=REG.lib.groups.reduce((n,g)=>n+g.cards.length,0);
   const count=s=>s==='all'?REG.data.entries.length:TT.entries.filter(e=>e.section===s).length+(s==='techniques'?libN:0);
   const TERMS=[]; for(const [id,ents] of Object.entries(byTechnique))TERMS.push({id,kind:'t',name:names[id]||'',n:ents.length}); for(const [id,ents] of Object.entries(byAtom))TERMS.push({id,kind:'a',name:'',n:ents.length}); TERMS.sort((a,b)=>b.n-a.n||a.id.localeCompare(b.id)); const SHARED=TERMS.filter(t=>t.n>1);
-  const nav=`<a class="brand" href="index.html">${TT.mark}<span class="wm">IMP<i>Ø</i>SSIBLE</span></a><span class="crumb"><b>Techniques &amp; Templates</b></span><span class="pager"><span><span class="n">${TT.entries.length}</span>&nbsp;entries</span><a href="techniques.json" title="every technique, keyed by id">techniques.json</a></span>`;
+  const nav=`<span class="crumb"><b>Techniques &amp; Templates</b></span><span class="pager"><span><span class="n">${TT.entries.length}</span>&nbsp;entries</span><a href="techniques.json" title="every technique, keyed by id">techniques.json</a></span>`;
   const tabs=TT.sections.map((s,i)=>`<a href="#${s.id}" class="${i===0?'on':''}">${esc(s.title)} <i>${count(s.id)}</i></a>`).join('');
   const bar=`<div class="find"><label class="in"><span class="glyph" aria-hidden="true">⌕</span><input type="search" placeholder="find a technique, an atom, a title" value="" aria-label="find entries, techniques and atoms" autocomplete="off" spellcheck="false" aria-expanded="false"></label><span class="n">${TT.entries.length} entries</span></div>`;
   const vocab=`<div class="vocab"><span class="vh">Shared vocabulary <i>${SHARED.length}</i></span>${['t','a'].map(k=>`<span class="grp"><b>${k==='t'?'techniques':'atoms'}</b>${SHARED.filter(t=>t.kind===k).map(t=>`<a href="#techniques?${k}=${encodeURIComponent(t.id)}" class="w${t.n>=6?3:t.n>=3?2:1}"${t.name?` title="${esc(t.name)}"`:''}>${esc(t.id)}<i>${t.n}</i></a>`).join('')}</span>`).join('')}</div>`;

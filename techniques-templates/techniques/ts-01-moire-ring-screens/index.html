@@ -4,23 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="only light">
-<meta name="description" content="TS-01 · Moiré from two ring screens — Two ring gratings multiplied, screened as two inks, one hot core.">
+<meta name="description" content="TS-01 · Moiré from two ring screens — Two ring gratings multiplied into a moiré, printed as blue and red around one hot core.">
 <link rel="icon" href="data:,">
-<title>TS-01 — Moiré from two ring screens · Techniques &amp; Templates · ø co.</title>
+<title>TS-01 · Moiré from two ring screens · Techniques &amp; Templates</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
-<link rel="stylesheet" href="../../_shared/shell.css?v=202611121940">
+<link rel="stylesheet" href="../../_shared/shell.css?v=202611130318">
 <link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
-<!-- <a class="brand" href="../../index.html" title="Index"><svg class="o" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-554.33,-11.46)" fill="currentColor" fill-rule="evenodd"><path d="M682.33,35.81c-57.24,0-103.65,46.4-103.65,103.65s46.4,103.65,103.65,103.65,103.65-46.4,103.65-103.65-46.4-103.65-103.65-103.65ZM682.33,187.75c-26.67,0-48.29-21.62-48.29-48.29s21.62-48.29,48.29-48.29,48.29,21.62,48.29,48.29-21.62,48.29-48.29,48.29Z"/><rect x="666.18" y="-5.46" width="32.29" height="289.83" transform="translate(298.46 -441.63) rotate(45)"/></g></svg><span class="wm">IMP<i>Ø</i>SSIBLE</span></a>
-  <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Moiré from two ring screens</b><span class="code">TS-01</span></span>
-  <span class="pager"><a class="off">←</a><a href="../../index.html#techniques"><span class="n">1</span>&nbsp;/ 19</a><a href="../../techniques/ts-02-four-ink-spot-illustration/index.html" title="Four-ink spot illustration">TS-02 →</a></span> <p class="kicker">Technique · TS-01</p><h1 class="lede">Two ring gratings multiplied, screened as two inks, one hot core.</h1><div class="body"><p>Two ink plates. Blue is the product of two concentric-ring gratings — centers apart, pitches 68 and 60 u. Where the rings cross they make a dot lattice; the 8 u pitch difference beats into the long fringes. Red is a radial falloff from the core, shaped by grating A so the rings carry through it.</p><p>Each ink is thresholded per pixel against white noise: every mid-tone is a mix of paper, blue, red and overprint. That mix is the grain, not a layer on top. A 34 u cream margin frames the sheet.</p></div>
-  <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>margin</b> · cream sheet</div></li><li><div><b>gratings</b> · A and B evaluated per pixel</div></li><li><div><b>coverage</b> · blue = product, red = radial × A</div></li><li><div><b>screen</b> · random threshold per ink, overprint where both</div></li><li><div><b>soften</b> · 0.6 px blur</div></li></ol></div>
-  <div class="meta"><div class="full"><h2>Vocabulary · a technique highlights its reads · an atom finds every use</h2><div class="vocab" id="chips"><div class="vr"><span data-t="ring-screen" title="Concentric ring grating"><b>SCRN</b>ring-screen</span><span class="at"><a href="../../index.html#techniques?a=grating">grating</a><i>·</i><a href="../../index.html#techniques?a=radial">radial</a></span></div><div class="vr"><span data-t="moire-product" title="Grating product (moiré)"><b>MOIR</b>moire-product</span><span class="at"><a href="../../index.html#techniques?a=moire">moire</a><i>·</i><a href="../../index.html#techniques?a=interference">interference</a></span></div><div class="vr"><span data-t="radial-heat" title="Radial red core"><b>HEAT</b>radial-heat</span><span class="at"><a href="../../index.html#techniques?a=radial">radial</a><i>·</i><a href="../../index.html#techniques?a=falloff">falloff</a></span></div><div class="vr"><span data-t="stochastic-grain" title="Stochastic two-ink screen"><b>GRAIN</b>stochastic-grain</span><span class="at"><a href="../../index.html#techniques?a=dither">dither</a><i>·</i><a href="../../index.html#techniques?a=grain">grain</a><i>·</i><a href="../../index.html#techniques?a=overprint">overprint</a></span></div><div class="vr"><span data-t="paper-margin" title="Cream margin"><b>EDGE</b>paper-margin</span><span class="at"><a href="../../index.html#techniques?a=margin">margin</a><i>·</i><a href="../../index.html#techniques?a=stock">stock</a></span></div></div></div>
-  <div><h2>Reference</h2><div class="ro">Reference 01 · red-and-blue moiré print, 735 × 956</div></div><div><h2>Study</h2><div class="nm">Moiré from two ring screens</div><div class="ro">TS-01 · Techniques · 1 / 19</div></div></div>
-  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>ring-screen</b> · Concentric ring grating — g(p) = 0.5+0.5·cos(2π·|p−c|/pitch) for each grating; the floor keeps a base blue coverage so the field never drops to paper. <span class="ro">Limits · Pitches within ~4 u of each other push the beat fringe past the sheet; equal pitches collapse the moiré to one ring set. Below ~30 u the rings alias into the screen.</span> <a href="lib/ring-screen.js">lib/ring-screen.js</a></div></li><li><div><b>moire-product</b> · Grating product (moiré) — Multiplying the two gratings gives a dot lattice where both are high and long beat fringes where their phases drift; nothing is drawn as a dot — the lattice is the product. <span class="ro">Limits · knee_lo ≥ knee_hi inverts the smoothstep. gamma below ~0.8 fills the lattice to a flat tint; above ~2.5 the dots shrink to specks.</span> <a href="lib/moire-product.js">lib/moire-product.js</a></div></li><li><div><b>radial-heat</b> · Radial red core — Red coverage is a clipped gaussian of distance from the core; inside it the blue lattice overprints as a lighter pink, which is how the rings read through the red. <span class="ro">Limits · gain above ~2 saturates the core to a flat disc; sigma above ~700 u floods the sheet and the blue lattice no longer reads through.</span> <a href="lib/radial-heat.js">lib/radial-heat.js</a></div></li><li><div><b>stochastic-grain</b> · Stochastic two-ink screen — For each device pixel: blue if r1 &lt; blue_coverage, red if r2 &lt; red_coverage; both → overprint; neither → paper tint. A 0.6 px blur softens the pixel edges the way the reference’s scan does. <span class="ro">Limits · soften above ~1.5 px dissolves the lattice into tone; cell_px is fixed at 1 in this rebuild (a coarser cell needs a hash per cell, not per pixel).</span> <a href="lib/stochastic-grain.js">lib/stochastic-grain.js</a></div></li><li><div><b>paper-margin</b> · Cream margin — Flat cream fill; the print sits inset by 34 u on every side. <span class="ro">Limits · Above ~120 u the margin crops the beat fringe at the left edge.</span> <a href="lib/paper-margin.js">lib/paper-margin.js</a></div></li></ol></div>
-  <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>HEAT</b> · Red core · clipped gaussian, σ 0.33 W, off-center left <span class="ro">u 0.44 · v 0.49 · radial-heat</span></div></li><li><div><b>SCRN</b> · Ring grating A · center at the core, pitch 68 u <span class="ro">u 0.30 · v 0.36 · ring-screen</span></div></li><li><div><b>SCRN</b> · Ring grating B · center off-sheet top-right, pitch 60 u <span class="ro">u 0.74 · v 0.22 · ring-screen</span></div></li><li><div><b>MOIR</b> · Dot lattice · product of the two gratings <span class="ro">u 0.62 · v 0.62 · moire-product</span></div></li><li><div><b>MOIR</b> · Beat fringe · pitch difference 8 u makes the long curves <span class="ro">u 0.20 · v 0.72 · moire-product</span></div></li><li><div><b>GRAIN</b> · Stochastic screen · random threshold per ink per pixel <span class="ro">u 0.14 · v 0.20 · stochastic-grain</span></div></li><li><div><b>GRAIN</b> · Overprint pixels · both inks on → plum far out, pink in the core <span class="ro">u 0.86 · v 0.86 · stochastic-grain</span></div></li><li><div><b>EDGE</b> · Cream margin · 34 u, no rule <span class="ro">u 0.50 · v 0.08 · paper-margin</span></div></li><li><div><b>HEAT</b> · Heat tail · red coverage falls below 0.1 here <span class="ro">u 0.40 · v 0.94 · radial-heat</span></div></li><li><div><b>SCRN</b> · Ring A at the rim · coverage floor 0.42 keeps the field blue <span class="ro">u 0.88 · v 0.45 · ring-screen</span></div></li></ol></div>
-  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>F</b> expand · <b>space</b> re-read</span><span>ø co. · 2026</span></div> {
+<!-- <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Moiré from two ring screens</b><span class="code">TS-01</span></span>
+  <span class="pager"><a class="off" aria-disabled="true">←</a><a class="pos" href="../../index.html#techniques"><span class="n">1</span>&nbsp;of 19</a><a href="../../techniques/ts-02-four-ink-spot-illustration/index.html" title="Next: TS-02 Four-ink spot illustration">TS-02 →</a></span> <p class="kicker"><span>TS-01</span><span>screen tone</span></p><h1 class="title">Moiré from two ring screens</h1><p class="lede">Two ring gratings multiplied into a moiré, printed as blue and red around one hot core.</p><div class="body"><p>Blue is the product of two concentric ring gratings at 68 u and 60 u pitch; the 8 u difference beats into the long fringes. Red falls off from the core and is shaped by the first grating. Each ink is thresholded per pixel against noise, so the grain is the print itself, not a layer on top.</p></div>
+  <div class="accs">
+  <details class="acc" name="notes" id="aBuild" open><summary><span>How it is built</span></summary><div class="ab"><ol class="steps"><li><b>margin</b><span>cream sheet</span></li><li><b>gratings</b><span>A and B evaluated per pixel</span></li><li><b>coverage</b><span>blue = product, red = radial × A</span></li><li><b>screen</b><span>random threshold per ink, overprint where both</span></li><li><b>soften</b><span>0.6 px blur</span></li></ol></div></details>
+  <details class="acc" name="notes" id="aTech"><summary><span>Techniques <i>5</i></span></summary><div class="ab"><ul class="vocab" id="chips"><li class="vr"><button type="button" data-t="ring-screen"><span class="vn">Concentric ring grating</span><span class="vid">ring-screen</span></button><span class="at"><a href="../../index.html#techniques?a=grating">grating</a><a href="../../index.html#techniques?a=radial">radial</a><a class="mod" href="lib/ring-screen.js">lib/ring-screen.js</a></span><p class="ah">g(p) = 0.5+0.5·cos(2π·|p−c|/pitch) for each grating; the floor keeps a base blue coverage so the field never drops to paper.</p></li><li class="vr"><button type="button" data-t="moire-product"><span class="vn">Grating product (moiré)</span><span class="vid">moire-product</span></button><span class="at"><a href="../../index.html#techniques?a=moire">moire</a><a href="../../index.html#techniques?a=interference">interference</a><a class="mod" href="lib/moire-product.js">lib/moire-product.js</a></span><p class="ah">Multiplying the two gratings gives a dot lattice where both are high and long beat fringes where their phases drift; nothing is drawn as a dot — the lattice is the product.</p></li><li class="vr"><button type="button" data-t="radial-heat"><span class="vn">Radial red core</span><span class="vid">radial-heat</span></button><span class="at"><a href="../../index.html#techniques?a=radial">radial</a><a href="../../index.html#techniques?a=falloff">falloff</a><a class="mod" href="lib/radial-heat.js">lib/radial-heat.js</a></span><p class="ah">Red coverage is a clipped gaussian of distance from the core; inside it the blue lattice overprints as a lighter pink, which is how the rings read through the red.</p></li><li class="vr"><button type="button" data-t="stochastic-grain"><span class="vn">Stochastic two-ink screen</span><span class="vid">stochastic-grain</span></button><span class="at"><a href="../../index.html#techniques?a=dither">dither</a><a href="../../index.html#techniques?a=grain">grain</a><a href="../../index.html#techniques?a=overprint">overprint</a><a class="mod" href="lib/stochastic-grain.js">lib/stochastic-grain.js</a></span><p class="ah">For each device pixel: blue if r1 &lt; blue_coverage, red if r2 &lt; red_coverage; both → overprint; neither → paper tint. A 0.6 px blur softens the pixel edges the way the reference’s scan does.</p></li><li class="vr"><button type="button" data-t="paper-margin"><span class="vn">Cream margin</span><span class="vid">paper-margin</span></button><span class="at"><a href="../../index.html#techniques?a=margin">margin</a><a href="../../index.html#techniques?a=stock">stock</a><a class="mod" href="lib/paper-margin.js">lib/paper-margin.js</a></span><p class="ah">Flat cream fill; the print sits inset by 34 u on every side.</p></li></ul></div></details>
+  <details class="acc" name="notes" id="aRef"><summary><span>Reference and match</span></summary><div class="ab"><p class="src">Reference 01 · red-and-blue moiré print, 735 × 956</p><div class="fid" id="fid"></div></div></details>
+  <details class="acc" name="notes" id="aStudy"><summary><span>Study</span></summary><div class="ab"><dl class="kv"><dt>Code</dt><dd>TS-01</dd><dt>Section</dt><dd>Techniques · 1 of 19</dd><dt>Family</dt><dd>screen tone</dd><dt>Spec</dt><dd><a href="spec.json">spec.json</a></dd></dl></div></details>
+  <details class="acc" name="notes" id="aPts"><summary><span>Callouts <i>10</i></span></summary><div class="ab"><ol class="steps"><li><b>HEAT · Red core · clipped gaussian, σ 0.33 W, off-center left</b><span>u 0.44 · v 0.49 · radial-heat</span></li><li><b>SCRN · Ring grating A · center at the core, pitch 68 u</b><span>u 0.30 · v 0.36 · ring-screen</span></li><li><b>SCRN · Ring grating B · center off-sheet top-right, pitch 60 u</b><span>u 0.74 · v 0.22 · ring-screen</span></li><li><b>MOIR · Dot lattice · product of the two gratings</b><span>u 0.62 · v 0.62 · moire-product</span></li><li><b>MOIR · Beat fringe · pitch difference 8 u makes the long curves</b><span>u 0.20 · v 0.72 · moire-product</span></li><li><b>GRAIN · Stochastic screen · random threshold per ink per pixel</b><span>u 0.14 · v 0.20 · stochastic-grain</span></li><li><b>GRAIN · Overprint pixels · both inks on → plum far out, pink in the core</b><span>u 0.86 · v 0.86 · stochastic-grain</span></li><li><b>EDGE · Cream margin · 34 u, no rule</b><span>u 0.50 · v 0.08 · paper-margin</span></li><li><b>HEAT · Heat tail · red coverage falls below 0.1 here</b><span>u 0.40 · v 0.94 · radial-heat</span></li><li><b>SCRN · Ring A at the rim · coverage floor 0.42 keeps the field blue</b><span>u 0.88 · v 0.45 · ring-screen</span></li></ol></div></details>
+  <details class="acc" name="notes" id="aRel"><summary><span>Related</span></summary><div class="ab"><div class="rel" id="rel"></div></div></details>
+  </div> {
   &quot;id&quot;: &quot;ts-01-moire-ring-screens&quot;,
   &quot;code&quot;: &quot;TS-01&quot;,
   &quot;title&quot;: &quot;Moiré from two ring screens&quot;,
@@ -289,45 +290,68 @@
     &quot;Measured on ref.png: ring pitch ≈ 50 px at 735 px (68 u); grain std ≈ 20/255 in flat regions; hot red (241,57,29) 3.6 % of pixels; saturated blue (72,130,183) 11.5 %.&quot;,
     &quot;Seed 101.&quot;
   ]
-} are BAKED here by `node _build/build.mjs` from study.js — a static read for readers that
+} are BAKED here by `node _build/build.mjs` from study.js: a static read for readers that
      cannot run scripts. shell.js redraws all of it on load. Edit study.js or _build/, never the generated index.html. -->
 <nav class="nav" id="nav" aria-label="Site navigation">{{NAV}}</nav>
 <main class="plate">
-  <section class="notes" id="copy">{{NOTES}}</section>
-  <section class="figure" id="stage">
-    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"><img src="thumb.png" alt="TS-01 rebuild, still frame" loading="lazy"></canvas></div>
+  <section class="notes" id="copy" aria-label="About this technique">{{NOTES}}</section>
+  <section class="figure" id="stage" aria-label="Plate">
+    <div class="cvwrap"><canvas id="cv" aria-label="TS-01 plate"><img src="thumb.png" alt="TS-01 rebuild, still frame" loading="lazy"></canvas></div>
     <div class="live" id="live"></div>
-    <div class="log" id="log">
-      <div class="ctl">
-        <button id="bRead" type="button" class="on" title="toggle the read overlay">Read</button>
-        <button id="bReplay" type="button" title="re-run the read (space)">↻ Replay</button>
-        <button id="bMode" type="button" title="cycle rebuild / reference / split (R)">Rebuild</button>
-        <button id="bMotion" type="button" hidden title="run the motion version (M)">Motion</button>
-        <button id="bLive" type="button" hidden title="open the live DOM version (L)">Live</button>
-        <button id="bWide" type="button" title="fold the notes away and fill the page (F)">Expand</button>
-        <button id="bSpec" type="button" title="open the machine-readable spec (S)">Spec ⇥</button>
-      </div>
-      <div class="vtabs" id="vtabs"></div>
-      <div class="prail" id="prail" hidden></div>
-      <div class="lbody">
-        <div class="lh"><span>Track log</span><span id="ctr">0 / 10</span></div>
-        <div class="rows" id="rows"></div>
-        <div class="read" id="read"><b>Read</b><span id="readtxt">Hover or select a point.</span><code id="readcode"></code></div>
-        <div class="fid" id="fid"></div>
-      </div>
-    </div>
-    <div class="rel" id="rel"></div>
   </section>
+  <aside class="panel" id="panel" aria-label="Controls">
+    <section class="mod" id="mView" aria-labelledby="hView">
+      <header><h2 id="hView">View</h2><button type="button" class="ghost" id="bWide" title="Hide the side columns (F)"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1 4.5V1h3.5M11 4.5V1H7.5M1 7.5V11h3.5M11 7.5V11H7.5"/></svg><span>Expand</span></button></header>
+      <div class="seg" id="segView" role="radiogroup" aria-label="What the plate shows">
+        <button type="button" role="radio" aria-checked="true" data-m="0">Plate</button><button type="button" role="radio" aria-checked="false" data-m="1">Reference</button><button type="button" role="radio" aria-checked="false" data-m="2">Compare</button>
+      </div>
+      <p class="hint" id="viewHint">The rebuild, drawn in code.</p>
+    </section>
+    <section class="mod" id="mNote" aria-labelledby="hNote">
+      <header><h2 id="hNote">Callouts</h2><label class="sw-toggle"><input type="checkbox" id="tNote" checked><span class="tr" aria-hidden="true"></span><span class="tl">Show</span></label></header>
+      <p class="hint">Numbered points mark where each technique was measured. Hover one on the plate to read it.</p>
+      <div class="row2"><button type="button" class="btn" id="bReplay" title="Draw the plate again, top to bottom (space)"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M10.2 6.3A4.2 4.2 0 1 1 8.9 3"/><path d="M9.4 1v2.4H7"/></svg><span>Replay the build</span></button></div>
+      <button type="button" class="disc" id="bPoints" aria-expanded="false" aria-controls="pts"><span>Point list</span><b id="ctr">0 / 10</b><svg class="chev" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 3.8L5 6.3l2.5-2.5"/></svg></button>
+      <div class="pts" id="pts" hidden>
+        <div class="rows" id="rows"></div>
+        <div class="read" id="read"><span id="readtxt">Hover or select a point.</span><code id="readcode"></code></div>
+      </div>
+    </section>
+    <section class="mod" id="mMotion" aria-labelledby="hMotion">
+      <header><h2 id="hMotion">Motion</h2><span class="state" id="motionState">Still</span></header>
+      <div class="row2" id="motionRow">
+        <button type="button" class="btn" id="bMotion" aria-pressed="false" title="Play or pause the motion version (M)"><svg class="i-play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.6v8.8L10.2 6z"/></svg><svg class="i-pause" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5h2v9H3zM7 1.5h2v9H7z"/></svg><span>Play</span></button>
+        <button type="button" class="btn" id="bLive" aria-pressed="false" title="Open the interactive version (L)"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.5l7.5 4-3.3 1 1.9 3.6-1.3.7-1.9-3.6L2.5 9.6z"/></svg><span id="liveLabel">Interactive</span></button>
+      </div>
+      <p class="hint" id="motionHint"></p>
+    </section>
+    <section class="mod" id="mColor" aria-labelledby="hColor">
+      <header><h2 id="hColor">Color</h2><button type="button" class="ghost warn" id="bInkReset" hidden>Reset inks</button></header>
+      <p class="hint" id="colorHint">Pick a palette. Click any ink to change it; the plate redraws.</p>
+      <div class="pal" id="pal" role="radiogroup" aria-label="Palettes"></div>
+      <div class="inks" id="inks"></div>
+    </section>
+    <section class="mod" id="mParams" aria-labelledby="hParams">
+      <header><h2 id="hParams">Parameters</h2><button type="button" class="ghost warn" id="bParamReset" hidden>Reset all</button></header>
+      <p class="hint">Every value is editable. Drag a slider or type a number, then Enter. Arrow keys step; Shift ×10, Alt ×0.1. The plate redraws.</p>
+      <div class="pgroups" id="prail"></div>
+    </section>
+    <section class="mod" id="mExport" aria-labelledby="hExport">
+      <header><h2 id="hExport">Export</h2></header>
+      <div class="row3"><button type="button" class="btn" id="bCopy" title="Copy the spec as JSON">Copy spec</button><button type="button" class="btn" id="bSpec" title="Open the spec (S)">Open spec</button><button type="button" class="btn" id="bPng" title="Save the plate as it is drawn now">Save PNG</button></div>
+      <p class="hint">The spec holds every measured number, its range and the module that draws it.</p>
+    </section>
+  </aside>
 </main>
-<aside class="spec" id="spec" aria-hidden="true">
-  <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
+<aside class="spec" id="spec" aria-hidden="true" aria-label="Technique spec">
+  <div class="sh"><span>Spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
   <pre id="specpre">{{SPEC}}</pre>
 </aside>
-<script src="../../_shared/entries.js?v=202611121940"></script>
-<script src="../../_shared/vocab.js?v=202611121940"></script>
-<script src="../../_shared/art.js?v=202611121940"></script>
+<script src="../../_shared/entries.js?v=202611130318"></script>
+<script src="../../_shared/vocab.js?v=202611130318"></script>
+<script src="../../_shared/art.js?v=202611130318"></script>
 <script src="ref.js"></script>
 <script src="study.js"></script>
-<script src="../../_shared/shell.js?v=202611121940"></script>
+<script src="../../_shared/shell.js?v=202611130318"></script>
 </body>
 </html>

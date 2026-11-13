@@ -2,11 +2,8 @@ window.STUDY={
   id:'ts-22-capsule-rain', code:'TS-22', fig:'1.22',
   title:'Capsule system',
   kicker:'Technique · TS-22',
-  lede:'One capsule, used as field, helix, dial, control and icon.',
-  body:[
-    'One primitive, a capsule, drawn by one function. Columns of capsules grow along an axis from 2 u dots to 78 u pills, lean 12° and take five inks in bands. The same capsule stands as the 46 rungs of a helix, the 54 spokes of a dial, the strokes of eight icons and the parts of five controls.',
-    'Each variant is an alternate treatment. Flat: vector capsules that multiply where they overlap. Stipple: every pixel is on or off by coverage, a capsule fades along its length, and a field loses coverage over the last 5 u before its clip edge. The color variants are a complement pair, a primary triad and a split complement. Motion lets the columns fall and turns the helix and the dial. Live slides the inks and the slider.'
-  ],
+  lede:'One capsule, drawn by one function, used as a field, a helix, a dial, controls and icons.',
+  body:['Capsule columns grow along an axis from 2 u dots to 78 u pills, lean 12° and take five inks in bands. The same capsule makes the 46 rungs of the helix, the 54 spokes of the dial, the parts of five controls and the strokes of eight icons. The palettes switch the treatment as well as the inks: flat capsules that multiply, or one-pixel stipple by coverage.'], motionHint:'Play lets the columns fall and turns the helix and the dial.', liveLabel:'Follow pointer', liveHint:'Follow pointer: across slides the ink bands, up and down bends the wedge.',
   source:'Reference 22 · identity board built from colored capsule columns, 1080 × 1350',
   spot:[230,0,126], ref:{w:1080,h:1350},
   variantLabel:'Alternate',

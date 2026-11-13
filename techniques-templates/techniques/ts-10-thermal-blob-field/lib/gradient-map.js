@@ -37,7 +37,7 @@ export const spec={
     }
   },
   "limits": "The ramp is read at 256 levels; contrast above ~2 leaves fewer than 6 levels across the rim and it stair-steps. A shift past ±0.15 moves the paper stop into the blobs or the core out of range.",
-  "implementation": "Every pixel of the field is replaced by LUT[field]; the ramp is the only place color enters, so all four colourways share one field."
+  "implementation": "Every pixel of the field is replaced by LUT[field]; the ramp is the only place color enters, so all four colorways share one field."
 };
 export const params={
   "lut": "256 entries",

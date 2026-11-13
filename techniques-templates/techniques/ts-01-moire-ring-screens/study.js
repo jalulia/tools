@@ -2,11 +2,8 @@ window.STUDY={
   id:'ts-01-moire-ring-screens', code:'TS-01', fig:'1.1',
   title:'Moiré from two ring screens',
   kicker:'Technique · TS-01',
-  lede:'Two ring gratings multiplied, screened as two inks, one hot core.',
-  body:[
-    'Two ink plates. Blue is the product of two concentric-ring gratings — centers apart, pitches 68 and 60 u. Where the rings cross they make a dot lattice; the 8 u pitch difference beats into the long fringes. Red is a radial falloff from the core, shaped by grating A so the rings carry through it.',
-    'Each ink is thresholded per pixel against white noise: every mid-tone is a mix of paper, blue, red and overprint. That mix is the grain, not a layer on top. A 34 u cream margin frames the sheet.'
-  ],
+  lede:'Two ring gratings multiplied into a moiré, printed as blue and red around one hot core.',
+  body:['Blue is the product of two concentric ring gratings at 68 u and 60 u pitch; the 8 u difference beats into the long fringes. Red falls off from the core and is shaped by the first grating. Each ink is thresholded per pixel against noise, so the grain is the print itself, not a layer on top.'],
   source:'Reference 01 · red-and-blue moiré print, 735 × 956',
   spot:[224,64,45], ref:{w:735,h:956},
   variantLabel:'Inks',

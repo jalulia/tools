@@ -2,11 +2,8 @@ window.STUDY={
   id:'ts-03-iridescent-chrome', code:'TS-03', fig:'1.3',
   title:'Iridescent chrome on black',
   kicker:'Technique · TS-03',
-  lede:'A bent slab, normals mapped through a spectral LUT, film grain, split type.',
-  body:[
-    'Normal shading. A 300 × 160 u slab with 30 u fillets is swept along an L, twisted 31° and tilted 29° to camera, then rasterized to a per-pixel normal buffer. Each pixel reflects a 1-D environment: the vertical component of the reflected ray indexes a spectral LUT, so the fillets sweep the whole table in a few pixels and each flat face holds one band. Grazing normals take the edge color; a specular lobe adds white.',
-    'Film grain sits over it — multiplicative on the chrome, additive on the black so the ground is never clean. The headline is Archivo 900 at width 62, each word drawn three times in red, green and blue with a lighter blend, offset 2.5 u: overlaps sum to white, edges fringe.'
-  ],
+  lede:'A bent chrome slab shaded through a spectral lookup table, with film grain and split-channel type.',
+  body:['The slab is rasterized to one normal per pixel, and the vertical part of each reflected ray picks a color from a ten-stop spectral table, so the fillets sweep the whole table in a few pixels. Grazing normals take the edge color and a specular lobe adds white. The headline is drawn three times in red, green and blue, 2.5 u apart, so overlaps add to white and the edges fringe.'],
   source:'Reference 03 · chrome slab poster, black ground, 1644 × 1568',
   spot:[110,199,209], ref:{w:1644,h:1568},
   variantLabel:'Color',
@@ -39,16 +36,16 @@ window.STUDY={
         params:{ stops:10, order:'navy 0 · blue 0.10 · cyan 0.22 · white 0.34 · yellow 0.44 · orange 0.54 · pink 0.64 · magenta 0.76 · blue 0.88 · navy 1', measured_ref:'(56,110,178) (110,199,209) (242,241,242) (235,233,94) (214,153,172) (170,108,160)' },
         implementation:'ART.lut(stops) gives 256 colors; the shading pass indexes it with the environment coordinate t, so color is a function of normal direction only.' },
       { id:'normal-shading', short:'NRML', name:'Normal-buffer shading of a swept slab', layer:2, pass:1, atoms:['mesh','normal','zbuffer','sweep','twist'],
-        params:{ section:'rounded rectangle 300 × 160 u, fillet 30 u, 56 points', sweep:'L path (−200,1040) → (330,470) → (1200,780), bend radius 230 u, 260 steps', twist_rad:'−0.22 + 0.55·s', tilt_rad:'0.5 about the screen x axis through y = 740 u', env:'t = clamp(0.5 + 0.40·r.y + 0.16·r.x), r = reflect(view, n)', wobble:'n += 0.20–0.22·sin/cos fields of period 260–420 u plus 0.06–0.08 at 90–120 u, then normalise' },
+        params:{ section:'rounded rectangle 300 × 160 u, fillet 30 u, 56 points', sweep:'L path (−200,1040) → (330,470) → (1200,780), bend radius 230 u, 260 steps', twist_rad:'−0.22 + 0.55·s', tilt_rad:'0.5 about the screen x axis through y = 740 u', env:'t = clamp(0.5 + 0.40·r.y + 0.16·r.x), r = reflect(view, n)', wobble:'n += 0.20–0.22·sin/cos fields of period 260–420 u plus 0.06–0.08 at 90–120 u, then normalize' },
         implementation:'Vertices P = C(s) + a·e1 + b·e2 with the section basis rotated by the twist; normals from the cross product of finite differences; triangles rasterized with edge functions into normal + depth buffers; per pixel the reflected ray of the orthographic view picks LUT[t].' },
       { id:'edge-highlight', short:'EDGE', name:'Edge band and specular lobe', layer:2, pass:3, atoms:['rim','specular','band'],
-        params:{ band_center_nz:0.34, band_width:0.06, band_colour:'#F0DC6A', band_mix:1, light:'(−0.35,−0.60,0.72)', spec_power:60, spec_mix:0.85 },
+        params:{ band_center_nz:0.34, band_width:0.06, band_color:'#F0DC6A', band_mix:1, light:'(−0.35,−0.60,0.72)', spec_power:60, spec_mix:0.85 },
         implementation:'band = exp(−((|n.z|−0.34)/0.06)²) mixes the edge color in; spec = (n·h)^60 mixes white in; both read from the same normal buffer as the LUT.' },
       { id:'film-grain', short:'GRN', name:'Per-channel film grain', layer:4, pass:5, atoms:['grain','noise','film'],
         params:{ multiplicative:'ART.grain amp 0.10, pitch 1 px, mono:false, seed 303', additive:'σ 14/255 per channel on the ground, hashed per pixel, seed 304', soften_px:0.7 },
         implementation:'ART.grain multiplies RGB by 1 + 0.10·n per channel (visible on the chrome and the type); a second pass adds signed noise of 14/255 so the black ground carries grain too, as film does.' },
       { id:'channel-split-type', short:'SPLT', name:'RGB channel-split lettering', layer:3, pass:4, atoms:['type','channel','offset','additive'],
-        params:{ offsets_u:{ R:[-2.5,0], G:[0,0], B:[2.5,0] }, small_offsets_u:{ R:[-4,0], G:[0,0.8], B:[4,0] }, blend:'lighter on a transparent layer', type_colour:'#F3F3F3 (the three channels sum to white)' },
+        params:{ offsets_u:{ R:[-2.5,0], G:[0,0], B:[2.5,0] }, small_offsets_u:{ R:[-4,0], G:[0,0.8], B:[4,0] }, blend:'lighter on a transparent layer', type_color:'#F3F3F3 (the three channels sum to white)' },
         implementation:'Each word is filled three times in #FF0000, #00FF00, #0000FF with globalCompositeOperation lighter on a transparent layer, offset per channel; where all three overlap the sum is white, at the edges one or two channels show; the layer is drawn under the chrome.' },
       { id:'display-headline', short:'TYPE', name:'Condensed display headline', layer:3, pass:4, atoms:['type','headline','condensed'],
         params:{ font:'Archivo 900, font-stretch 62 %', cap_u:142, line_pitch_u:175, left_u:38, top_u:28, figure:'right-aligned on line 2, 962 u', small:'Archivo 700, 30 u, 2 columns × 3 rows at x 660 / 840, baselines 372 / 402 / 432' },
@@ -133,7 +130,7 @@ window.STUDY={
     cx.putImageData(cid,0,0);
     const soft=A.blur(cl,0.7*dpr); x.drawImage(soft,0,0);
     /* ---------- grain ---------- */
-    A.grain(x,{amp:0.10,pitch:1,mono:false,seed:303});
+    A.grain(x,{amp:0.07,pitch:1,mono:false,seed:303});
     { const id=x.getImageData(0,0,W,H); const d=id.data; const seed=304;
       const hash=(x_,y_,k)=>{ let n=(x_*374761393+y_*668265263+k*1274126177+seed*2246822519)|0; n=(n^(n>>>13))*1274126177|0; n=n^(n>>>16); return ((n>>>0)/4294967296)*2-1; };
       const sig=14*1.73;

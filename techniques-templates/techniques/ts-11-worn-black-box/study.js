@@ -2,18 +2,15 @@ window.STUDY={
   id:'ts-11-worn-black-box', code:'TS-11', fig:'1.11',
   title:'Worn black box',
   kicker:'Technique · TS-11',
-  lede:'Two board panels, abraded at every edge, with stickers and a barcode.',
-  body:[
-    'A black-board box, front and back. Each panel is a flat fill with a low mottle and sparse one-pixel speckle. Wear is a per-pixel threshold: the chance of a lighter pixel falls off exponentially with distance from the silhouette, a fold and a corner, gated by a patch field so some runs of edge are heavy and others clean.',
-    'On the board sit the printed layers — a cream flap and label, a torn orange price sticker, a round foil sticker, a white barcode block, rows of small mono metadata. One grain pass ties them together.'
-  ],
+  lede:'A black board box, front and back, worn at every edge, with stickers and a barcode.',
+  body:['Wear is a per-pixel threshold: the chance of a lighter pixel falls off exponentially with distance from the silhouette, the fold and the corners, gated by a patch field so some edges are heavy and others clean. On the board sit a light flap and label, a torn orange price sticker, a foil sticker, a barcode block and rows of mono metadata.'],
   source:'Reference 11 · worn black cardboard box mock-up, front and back, 1200 × 800',
   spot:[240,138,28], ref:{w:1200,h:800},
   variantLabel:'Color',
   variants:[
-    { id:'ref',   label:'As reference', sw:['#111111','#D9D0B8','#F08A1C'], spot:[240,138,28], ground:'#000000', board:'#151819', scuff:'#FFFFFF', ink:'#FFFFFF', flap:'#D9D0B8', flapInk:'#1A1712', flapScuff:'#6E6654', sticker:'#F08A1C', stickerInk:'#1A1712', label:'#F2F0EA', labelInk:'#141414', holo:true },
-    { id:'io',    label:'Ø ink',        sw:['#101014','#FFFFFF','#F4551E'], spot:[244,85,30], ground:'#000000', board:'#101014', scuff:'#FFFFFF', ink:'#FFFFFF', flap:'#FFFFFF', flapInk:'#101014', flapScuff:'#8A8A90', sticker:'#F4551E', stickerInk:'#101014', label:'#FFFFFF', labelInk:'#101014', holo:true },
-    { id:'paper', label:'Paper',        sw:['#F6F5F2','#101014','#2F5AE6'], spot:[47,90,230], ground:'#B9B6AE', board:'#F6F5F2', scuff:'#101014', ink:'#101014', flap:'#101014', flapInk:'#F6F5F2', flapScuff:'#F6F5F2', sticker:'#2F5AE6', stickerInk:'#FFFFFF', label:'#101014', labelInk:'#F6F5F2', holo:false, wear:0.4 }
+    { id:'ref',   label:'As reference', sw:['#111111','#D9D0B8','#F08A1C'], spot:[240,138,28], ground:'#000000', board:'#151819', scuff:'#FFFFFF', ink:'#FFFFFF', flap:'#D9D0B8', flapInk:'#1A1712', flapScuff:'#6E6654', sticker:'#F08A1C', stickerInk:'#1A1712', labelPaper:'#F2F0EA', labelInk:'#141414', holo:true },
+    { id:'io',    label:'Ø ink',        sw:['#101014','#FFFFFF','#F4551E'], spot:[244,85,30], ground:'#000000', board:'#101014', scuff:'#FFFFFF', ink:'#FFFFFF', flap:'#FFFFFF', flapInk:'#101014', flapScuff:'#8A8A90', sticker:'#F4551E', stickerInk:'#101014', labelPaper:'#FFFFFF', labelInk:'#101014', holo:true },
+    { id:'paper', label:'Paper',        sw:['#F6F5F2','#101014','#2F5AE6'], spot:[47,90,230], ground:'#B9B6AE', board:'#F6F5F2', scuff:'#101014', ink:'#101014', flap:'#101014', flapInk:'#F6F5F2', flapScuff:'#F6F5F2', sticker:'#2F5AE6', stickerInk:'#FFFFFF', labelPaper:'#101014', labelInk:'#F6F5F2', holo:false, wear:0.4 }
   ],
   points:[
     {u:0.40,v:0.42,d:'BORD',label:'Board · flat fill, mottle ±3 %, speckle 0.06 % of pixels',t:'board-panel',dir:[1,-1]},
@@ -48,7 +45,7 @@ window.STUDY={
         params:{ box_u:[88,39], bars:46, bar_w_u:'0.7–2.4 random (seed 1103)', gap_u:'0.6–1.6', digits:'JetBrains Mono 3.2 u under the bars', mini:{ bars:24, box_u:[31,16] } },
         implementation:'A white box, then random-width dark bars from a seeded sequence; the digit row is mono type below the bars.' },
       { id:'edge-metadata', short:'META', name:'Edge metadata', layer:2, pass:3, atoms:['type','rotate','mono'],
-        params:{ headline:'Archivo 700, 32 u, 4 lines, pitch 37 u, at (340, 322)', flap_line:'Archivo 700, 6 u caps, centred', back_title:'Archivo 700, 10 u', body:'Inter 400, 4.6 u, 15 lines, width 92 u', meta_rows:'JetBrains Mono 3.6 u, two rows with boxed keys', spine:'Archivo 700, 8 u, rotated −90° on both spines', marks:'4-point star, globe, QR block, star box' },
+        params:{ headline:'Archivo 700, 32 u, 4 lines, pitch 37 u, at (340, 322)', flap_line:'Archivo 700, 6 u caps, centered', back_title:'Archivo 700, 10 u', body:'Inter 400, 4.6 u, 15 lines, width 92 u', meta_rows:'JetBrains Mono 3.6 u, two rows with boxed keys', spine:'Archivo 700, 8 u, rotated −90° on both spines', marks:'4-point star, globe, QR block, star box' },
         implementation:'All lettering is live type in the three inlined fonts with invented plain words; spine text is drawn on a rotated context.' }
     ],
     pass_order:['ground · flat fill','board · region test, mottle, shade, speckle per pixel','scuff · distance transform, corner and fold distances, threshold per pixel','crease · blurred strokes','print · flap label, headline, spine type, body text, meta rows','stickers · price, foil, label, with shadows','barcode · box, bars, digits, icon row','grain · mono, amp 0.05'],
@@ -108,7 +105,7 @@ window.STUDY={
       const B=A.blur(L,1.5*dpr); x.setTransform(1,0,0,1,0,0); x.drawImage(B,0,0); }
     /* ---- print layer (design units) ---- */
     x.setTransform(u,0,0,u,0,0); x.lineCap='round'; x.lineJoin='round';
-    const ink=V.ink, flapInk=V.flapInk, stk=V.sticker, stkInk=V.stickerInk, lab=V.label, labInk=V.labelInk;
+    const ink=V.ink, flapInk=V.flapInk, stk=V.sticker, stkInk=V.stickerInk, lab=V.labelPaper, labInk=V.labelPaperInk;
     const F=(wt,s,fam)=>`${wt} ${s}px ${fam||'Archivo'}`;
     const star=(cx,cy,r,col)=>{ x.beginPath(); for(let k=0;k<8;k++){ const a=k*Math.PI/4-Math.PI/2; const rr=k%2?r*0.22:r; x.lineTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr); } x.closePath(); x.fillStyle=col; x.fill(); };
     const globe=(cx,cy,r,col,lw)=>{ x.strokeStyle=col; x.lineWidth=lw; x.beginPath(); x.ellipse(cx,cy,r*1.35,r,0,0,6.2832); x.stroke(); for(const f of [0.25,0.55,0.85]){ x.beginPath(); x.ellipse(cx,cy,r*1.35*f,r,0,0,6.2832); x.stroke(); } x.beginPath(); x.moveTo(cx-r*1.35,cy); x.lineTo(cx+r*1.35,cy); x.moveTo(cx,cy-r); x.lineTo(cx,cy+r); x.stroke(); };
@@ -133,7 +130,7 @@ window.STUDY={
     x.font=F(400,3.2,'"JetBrains Mono"'); x.fillText('packed by hand · north yard',695,504); x.fillText('side b · 22 min',695,509);
     // cream flap print: globe + stars, label sticker
     star(590,106,4.5,flapInk); star(640,106,4.5,flapInk); globe(615,106,6.5,flapInk,0.8);
-    x.save(); x.translate(562,155); x.rotate(-0.01); x.shadowColor='rgba(0,0,0,0.35)'; x.shadowBlur=2*u; x.shadowOffsetY=0.8*u; x.fillStyle=A.rgb(A.mix(A.hex(V.label),A.hex(V.flap),0.35),0.92); A.rrect(x,-43,-17,86,34,1.5); x.fill(); x.restore();
+    x.save(); x.translate(562,155); x.rotate(-0.01); x.shadowColor='rgba(0,0,0,0.35)'; x.shadowBlur=2*u; x.shadowOffsetY=0.8*u; x.fillStyle=A.rgb(A.mix(A.hex(V.labelPaper),A.hex(V.flap),0.35),0.92); A.rrect(x,-43,-17,86,34,1.5); x.fill(); x.restore();
     x.fillStyle=flapInk; x.font=F(900,10); x.fillText('north tape',524,151); bars(524,155,30,10,22,flapInk,1105); x.font=F(400,3.4,'"JetBrains Mono"'); x.fillText('S. HARROW / EDIT / FT',558,158); x.fillText('LISBON · PORTUGAL',558,163); x.fillText('2 / c. 2021',685,158);
     /* ---- stickers ---- */
     // price sticker (torn)

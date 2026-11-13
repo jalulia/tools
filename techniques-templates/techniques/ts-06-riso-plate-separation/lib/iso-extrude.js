@@ -57,7 +57,7 @@ export const spec={
     "probe_px": "(±2,+1)"
   },
   "limits": "The drop is a column scan, so a depth past the gap to the object below it paints over that object’s top face. Shapes thinner than 4 px have no interior for the ±2 px probe and get no side faces.",
-  "implementation": "Each object is a top-face mask drawn in the plane transform; a column scan drops every boundary pixel whose +x or +y probe is empty by the depth, labelling right or left face, top always winning; later objects overwrite earlier ones."
+  "implementation": "Each object is a top-face mask drawn in the plane transform; a column scan drops every boundary pixel whose +x or +y probe is empty by the depth, labeling right or left face, top always winning; later objects overwrite earlier ones."
 };
 export const params={
   "axes": "x → (cos30, sin30), y → (−cos30, sin30), z → (0, −1)",

@@ -2,11 +2,8 @@ window.STUDY={
   id:'ts-07-gradient-map-blur-type', code:'TS-07', fig:'1.7',
   title:'Gradient-mapped blur type',
   kicker:'Technique · TS-07',
-  lede:'Type and blobs in one mask, blurred, mapped through a four-stop ramp.',
-  body:[
-    'One luminance mask. Hard-edged blobs sit on black; six heavy words draw over them with a difference composite, so a letter is white on a black field and black on a white field. The whole mask blurs, then every pixel is replaced by a ramp read at its luminance — black, deep red, red, pink, light gray.',
-    'The edge halo is that ramp read down the blur falloff; stops at 0, 0.09, 0.30, 0.70 and 0.92 make the pink band wide and the drop to black short. In motion the blur breathes between 4 and 28 u over 8 s and the blobs drift — the words hold still.'
-  ],
+  lede:'Type and blobs merged into one mask, blurred, then mapped through a ramp from black to light gray.',
+  body:['Six heavy words are drawn over hard-edged blobs with a difference composite, so each letter flips between black and white. The whole mask blurs, then each pixel takes the ramp color at its luminance; stops at 0, 0.09, 0.30, 0.70 and 0.92 make the pink band wide and the drop to black short.'], motionHint:'Play breathes the blur between 4 and 28 u over 8 s while the words hold still.',
   source:'Reference 07 · frame from an 8 s motion piece, gradient-mapped blurred type, 1000 × 1296',
   spot:[235,62,37], ref:{w:1000,h:1296},
   variantLabel:'Color',
@@ -36,11 +33,11 @@ window.STUDY={
     palette:{ black:'#000000', deep_red:'#460A05', red:'#EB3E25', pink:'#EDA1E3', light:'#DAD9D9' },
     techniques:[
       { id:'blob-field', short:'BLOB', name:'Metaball blob field', layer:0, pass:0, atoms:['metaball','threshold','radial'],
-        params:{ count:10, radius_u:[105,230], field:'Σ (r_i / |p − c_i|_e)⁴, |·|_e an elliptic distance (ratio 1.3–1.6, seeded angle)', threshold:1.0, centres_u:[[30,240],[450,20],[930,230],[10,560],[320,640],[960,870],[30,1160],[470,890],[730,1280],[650,420]], eval_scale:'1/2 (render) · 1/4 (motion)' },
-        implementation:'Sum of inverse-fourth elliptic fields from 10 seeded centres; pixels above 1.0 are white, the rest black, so nearby blobs merge into one shape with a hard edge.' },
+        params:{ count:10, radius_u:[105,230], field:'Σ (r_i / |p − c_i|_e)⁴, |·|_e an elliptic distance (ratio 1.3–1.6, seeded angle)', threshold:1.0, centers_u:[[30,240],[450,20],[930,230],[10,560],[320,640],[960,870],[30,1160],[470,890],[730,1280],[650,420]], eval_scale:'1/2 (render) · 1/4 (motion)' },
+        implementation:'Sum of inverse-fourth elliptic fields from 10 seeded centers; pixels above 1.0 are white, the rest black, so nearby blobs merge into one shape with a hard edge.' },
       { id:'display-stack', short:'TYPE', name:'Stacked display words', layer:1, pass:1, atoms:['lettering','stack','difference'],
         params:{ font:'Archivo 900, font-stretch semi-condensed (wdth 87.5)', lines:6, size_u:225, pitch_u:205, cap_height_u:155, align:'center', composite:'difference' },
-        implementation:'Six words centred at 225 u (the six-letter word spans 0.92 W), drawn white with globalCompositeOperation difference so each letter inverts the blob field under it.' },
+        implementation:'Six words centered at 225 u (the six-letter word spans 0.92 W), drawn white with globalCompositeOperation difference so each letter inverts the blob field under it.' },
       { id:'blur-field', short:'BLUR', name:'Whole-mask gaussian blur', layer:2, pass:2, atoms:['blur','gaussian','falloff'],
         params:{ sigma_u:16, sigma_px_ref:'≈20 at 1000 px', edge:'mask padded 40 u so the frame edge does not darken' },
         implementation:'One CSS blur over the full mask after the type is composited, so type edges and blob edges get the same falloff.' },

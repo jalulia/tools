@@ -4,23 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="only light">
-<meta name="description" content="TS-07 · Gradient-mapped blur type — Type and blobs in one mask, blurred, mapped through a four-stop ramp.">
+<meta name="description" content="TS-07 · Gradient-mapped blur type — Type and blobs merged into one mask, blurred, then mapped through a ramp from black to light gray.">
 <link rel="icon" href="data:,">
-<title>TS-07 — Gradient-mapped blur type · Techniques &amp; Templates · ø co.</title>
+<title>TS-07 · Gradient-mapped blur type · Techniques &amp; Templates</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
-<link rel="stylesheet" href="../../_shared/shell.css?v=202611121940">
+<link rel="stylesheet" href="../../_shared/shell.css?v=202611130318">
 <link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
-<!-- <a class="brand" href="../../index.html" title="Index"><svg class="o" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-554.33,-11.46)" fill="currentColor" fill-rule="evenodd"><path d="M682.33,35.81c-57.24,0-103.65,46.4-103.65,103.65s46.4,103.65,103.65,103.65,103.65-46.4,103.65-103.65-46.4-103.65-103.65-103.65ZM682.33,187.75c-26.67,0-48.29-21.62-48.29-48.29s21.62-48.29,48.29-48.29,48.29,21.62,48.29,48.29-21.62,48.29-48.29,48.29Z"/><rect x="666.18" y="-5.46" width="32.29" height="289.83" transform="translate(298.46 -441.63) rotate(45)"/></g></svg><span class="wm">IMP<i>Ø</i>SSIBLE</span></a>
-  <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Gradient-mapped blur type</b><span class="code">TS-07</span></span>
-  <span class="pager"><a href="../../techniques/ts-06-riso-plate-separation/index.html" title="Riso three-plate separation">← TS-06</a><a href="../../index.html#techniques"><span class="n">7</span>&nbsp;/ 19</a><a href="../../techniques/ts-08-flat-color-card-set/index.html" title="Flat-color card set">TS-08 →</a></span> <p class="kicker">Technique · TS-07</p><h1 class="lede">Type and blobs in one mask, blurred, mapped through a four-stop ramp.</h1><div class="body"><p>One luminance mask. Hard-edged blobs sit on black; six heavy words draw over them with a difference composite, so a letter is white on a black field and black on a white field. The whole mask blurs, then every pixel is replaced by a ramp read at its luminance — black, deep red, red, pink, light gray.</p><p>The edge halo is that ramp read down the blur falloff; stops at 0, 0.09, 0.30, 0.70 and 0.92 make the pink band wide and the drop to black short. In motion the blur breathes between 4 and 28 u over 8 s and the blobs drift — the words hold still.</p></div>
-  <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>mask</b> · black ground, metaballs thresholded at 1.0</div></li><li><div><b>type</b> · six words in difference over the mask</div></li><li><div><b>blur</b> · gaussian σ 16 u (4–28 u in motion), padded canvas</div></li><li><div><b>map</b> · LUT[luminance] per pixel</div></li><li><div><b>frame</b> · crop the padding</div></li></ol></div>
-  <div class="meta"><div class="full"><h2>Vocabulary · a technique highlights its reads · an atom finds every use</h2><div class="vocab" id="chips"><div class="vr"><span data-t="blob-field" title="Metaball blob field"><b>BLOB</b>blob-field</span><span class="at"><a href="../../index.html#techniques?a=metaball">metaball</a><i>·</i><a href="../../index.html#techniques?a=threshold">threshold</a><i>·</i><a href="../../index.html#techniques?a=radial">radial</a></span></div><div class="vr"><span data-t="display-stack" title="Stacked display words"><b>TYPE</b>display-stack</span><span class="at"><a href="../../index.html#techniques?a=lettering">lettering</a><i>·</i><a href="../../index.html#techniques?a=stack">stack</a><i>·</i><a href="../../index.html#techniques?a=difference">difference</a></span></div><div class="vr"><span data-t="blur-field" title="Whole-mask gaussian blur"><b>BLUR</b>blur-field</span><span class="at"><a href="../../index.html#techniques?a=blur">blur</a><i>·</i><a href="../../index.html#techniques?a=gaussian">gaussian</a><i>·</i><a href="../../index.html#techniques?a=falloff">falloff</a></span></div><div class="vr"><span data-t="gradient-map" title="Five-stop gradient map"><b>MAP</b>gradient-map</span><span class="at"><a href="../../index.html#techniques?a=lut">lut</a><i>·</i><a href="../../index.html#techniques?a=luminance">luminance</a><i>·</i><a href="../../index.html#techniques?a=ramp">ramp</a></span></div><div class="vr"><span data-t="breath-motion" title="Breathing blur"><b>BRTH</b>breath-motion</span><span class="at"><a href="../../index.html#techniques?a=loop">loop</a><i>·</i><a href="../../index.html#techniques?a=sine">sine</a><i>·</i><a href="../../index.html#techniques?a=drift">drift</a></span></div></div></div>
-  <div><h2>Reference</h2><div class="ro">Reference 07 · frame from an 8 s motion piece, gradient-mapped blurred type, 1000 × 1296</div></div><div><h2>Study</h2><div class="nm">Gradient-mapped blur type</div><div class="ro">TS-07 · Techniques · 7 / 19</div></div></div>
-  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>blob-field</b> · Metaball blob field — Sum of inverse-fourth elliptic fields from 10 seeded centres; pixels above 1.0 are white, the rest black, so nearby blobs merge into one shape with a hard edge.</div></li><li><div><b>display-stack</b> · Stacked display words — Six words centred at 225 u (the six-letter word spans 0.92 W), drawn white with globalCompositeOperation difference so each letter inverts the blob field under it.</div></li><li><div><b>blur-field</b> · Whole-mask gaussian blur — One CSS blur over the full mask after the type is composited, so type edges and blob edges get the same falloff.</div></li><li><div><b>gradient-map</b> · Five-stop gradient map — 256-entry LUT from the stops; every pixel of the blurred mask is replaced by LUT[luminance], which turns the blur falloff into the red-and-pink halo.</div></li><li><div><b>breath-motion</b> · Breathing blur — Each frame recomputes the blobs at quarter scale, composites the cached text mask, blurs at the current σ and gradient-maps on a 512 px work canvas that is drawn up to plate size.</div></li></ol></div>
-  <div class="meta static" style="display:block"><h2>10 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>BLOB</b> · Blob 1 · metaball, radius 210 u, ratio 1.35, cut by the frame edge <span class="ro">u 0.08 · v 0.20 · blob-field</span></div></li><li><div><b>BLOB</b> · Blob 6 · field threshold 1.0 gives a hard edge before the blur <span class="ro">u 0.92 · v 0.66 · blob-field</span></div></li><li><div><b>BLOB</b> · Blobs 5 + 10 · two fields sum and merge into one shape <span class="ro">u 0.34 · v 0.48 · blob-field</span></div></li><li><div><b>TYPE</b> · Line 1 · Archivo 900 semi-condensed, 225 u, cap 155 u <span class="ro">u 0.50 · v 0.12 · display-stack</span></div></li><li><div><b>TYPE</b> · Line 4 · pitch 205 u, six lines, difference composite over the blobs <span class="ro">u 0.50 · v 0.60 · display-stack</span></div></li><li><div><b>TYPE</b> · Line 6 · black letter over a white blob, white letter over black ground <span class="ro">u 0.20 · v 0.92 · display-stack</span></div></li><li><div><b>BLUR</b> · Blur · gaussian, σ 16 u on the whole mask; the halo width is 2σ <span class="ro">u 0.66 · v 0.36 · blur-field</span></div></li><li><div><b>MAP</b> · Ramp on the falloff · light → pink → red → deep red → black <span class="ro">u 0.14 · v 0.74 · gradient-map</span></div></li><li><div><b>MAP</b> · Flat white region → light gray stop at 0.92 <span class="ro">u 0.84 · v 0.06 · gradient-map</span></div></li><li><div><b>BRTH</b> · Breath · σ = 4 + 24·(0.5+0.5·sin 2πt/8) u; blobs drift ±40 u on perlin(t) <span class="ro">u 0.50 · v 0.80 · breath-motion</span></div></li></ol></div>
-  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>F</b> expand · <b>space</b> re-read · <b>M</b> motion</span><span>ø co. · 2026</span></div> {
+<!-- <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Gradient-mapped blur type</b><span class="code">TS-07</span></span>
+  <span class="pager"><a href="../../techniques/ts-06-riso-plate-separation/index.html" title="Previous: TS-06 Riso three-plate separation">← TS-06</a><a class="pos" href="../../index.html#techniques"><span class="n">7</span>&nbsp;of 19</a><a href="../../techniques/ts-08-flat-color-card-set/index.html" title="Next: TS-08 Flat-color card set">TS-08 →</a></span> <p class="kicker"><span>TS-07</span><span>light gradient</span></p><h1 class="title">Gradient-mapped blur type</h1><p class="lede">Type and blobs merged into one mask, blurred, then mapped through a ramp from black to light gray.</p><div class="body"><p>Six heavy words are drawn over hard-edged blobs with a difference composite, so each letter flips between black and white. The whole mask blurs, then each pixel takes the ramp color at its luminance; stops at 0, 0.09, 0.30, 0.70 and 0.92 make the pink band wide and the drop to black short.</p></div>
+  <div class="accs">
+  <details class="acc" name="notes" id="aBuild" open><summary><span>How it is built</span></summary><div class="ab"><ol class="steps"><li><b>mask</b><span>black ground, metaballs thresholded at 1.0</span></li><li><b>type</b><span>six words in difference over the mask</span></li><li><b>blur</b><span>gaussian σ 16 u (4–28 u in motion), padded canvas</span></li><li><b>map</b><span>LUT[luminance] per pixel</span></li><li><b>frame</b><span>crop the padding</span></li></ol></div></details>
+  <details class="acc" name="notes" id="aTech"><summary><span>Techniques <i>5</i></span></summary><div class="ab"><ul class="vocab" id="chips"><li class="vr"><button type="button" data-t="blob-field"><span class="vn">Metaball blob field</span><span class="vid">blob-field</span></button><span class="at"><a href="../../index.html#techniques?a=metaball">metaball</a><a href="../../index.html#techniques?a=threshold">threshold</a><a href="../../index.html#techniques?a=radial">radial</a></span><p class="ah">Sum of inverse-fourth elliptic fields from 10 seeded centers; pixels above 1.0 are white, the rest black, so nearby blobs merge into one shape with a hard edge.</p></li><li class="vr"><button type="button" data-t="display-stack"><span class="vn">Stacked display words</span><span class="vid">display-stack</span></button><span class="at"><a href="../../index.html#techniques?a=lettering">lettering</a><a href="../../index.html#techniques?a=stack">stack</a><a href="../../index.html#techniques?a=difference">difference</a></span><p class="ah">Six words centered at 225 u (the six-letter word spans 0.92 W), drawn white with globalCompositeOperation difference so each letter inverts the blob field under it.</p></li><li class="vr"><button type="button" data-t="blur-field"><span class="vn">Whole-mask gaussian blur</span><span class="vid">blur-field</span></button><span class="at"><a href="../../index.html#techniques?a=blur">blur</a><a href="../../index.html#techniques?a=gaussian">gaussian</a><a href="../../index.html#techniques?a=falloff">falloff</a></span><p class="ah">One CSS blur over the full mask after the type is composited, so type edges and blob edges get the same falloff.</p></li><li class="vr"><button type="button" data-t="gradient-map"><span class="vn">Five-stop gradient map</span><span class="vid">gradient-map</span></button><span class="at"><a href="../../index.html#techniques?a=lut">lut</a><a href="../../index.html#techniques?a=luminance">luminance</a><a href="../../index.html#techniques?a=ramp">ramp</a></span><p class="ah">256-entry LUT from the stops; every pixel of the blurred mask is replaced by LUT[luminance], which turns the blur falloff into the red-and-pink halo.</p></li><li class="vr"><button type="button" data-t="breath-motion"><span class="vn">Breathing blur</span><span class="vid">breath-motion</span></button><span class="at"><a href="../../index.html#techniques?a=loop">loop</a><a href="../../index.html#techniques?a=sine">sine</a><a href="../../index.html#techniques?a=drift">drift</a></span><p class="ah">Each frame recomputes the blobs at quarter scale, composites the cached text mask, blurs at the current σ and gradient-maps on a 512 px work canvas that is drawn up to plate size.</p></li></ul></div></details>
+  <details class="acc" name="notes" id="aRef"><summary><span>Reference and match</span></summary><div class="ab"><p class="src">Reference 07 · frame from an 8 s motion piece, gradient-mapped blurred type, 1000 × 1296</p><div class="fid" id="fid"></div></div></details>
+  <details class="acc" name="notes" id="aStudy"><summary><span>Study</span></summary><div class="ab"><dl class="kv"><dt>Code</dt><dd>TS-07</dd><dt>Section</dt><dd>Techniques · 7 of 19</dd><dt>Family</dt><dd>light gradient</dd><dt>Spec</dt><dd><a href="spec.json">spec.json</a></dd></dl></div></details>
+  <details class="acc" name="notes" id="aPts"><summary><span>Callouts <i>10</i></span></summary><div class="ab"><ol class="steps"><li><b>BLOB · Blob 1 · metaball, radius 210 u, ratio 1.35, cut by the frame edge</b><span>u 0.08 · v 0.20 · blob-field</span></li><li><b>BLOB · Blob 6 · field threshold 1.0 gives a hard edge before the blur</b><span>u 0.92 · v 0.66 · blob-field</span></li><li><b>BLOB · Blobs 5 + 10 · two fields sum and merge into one shape</b><span>u 0.34 · v 0.48 · blob-field</span></li><li><b>TYPE · Line 1 · Archivo 900 semi-condensed, 225 u, cap 155 u</b><span>u 0.50 · v 0.12 · display-stack</span></li><li><b>TYPE · Line 4 · pitch 205 u, six lines, difference composite over the blobs</b><span>u 0.50 · v 0.60 · display-stack</span></li><li><b>TYPE · Line 6 · black letter over a white blob, white letter over black ground</b><span>u 0.20 · v 0.92 · display-stack</span></li><li><b>BLUR · Blur · gaussian, σ 16 u on the whole mask; the halo width is 2σ</b><span>u 0.66 · v 0.36 · blur-field</span></li><li><b>MAP · Ramp on the falloff · light → pink → red → deep red → black</b><span>u 0.14 · v 0.74 · gradient-map</span></li><li><b>MAP · Flat white region → light gray stop at 0.92</b><span>u 0.84 · v 0.06 · gradient-map</span></li><li><b>BRTH · Breath · σ = 4 + 24·(0.5+0.5·sin 2πt/8) u; blobs drift ±40 u on perlin(t)</b><span>u 0.50 · v 0.80 · breath-motion</span></li></ol></div></details>
+  <details class="acc" name="notes" id="aRel"><summary><span>Related</span></summary><div class="ab"><div class="rel" id="rel"></div></div></details>
+  </div> {
   &quot;id&quot;: &quot;ts-07-gradient-map-blur-type&quot;,
   &quot;code&quot;: &quot;TS-07&quot;,
   &quot;title&quot;: &quot;Gradient-mapped blur type&quot;,
@@ -91,7 +92,7 @@
         ],
         &quot;field&quot;: &quot;Σ (r_i / |p − c_i|_e)⁴, |·|_e an elliptic distance (ratio 1.3–1.6, seeded angle)&quot;,
         &quot;threshold&quot;: 1,
-        &quot;centres_u&quot;: [
+        &quot;centers_u&quot;: [
           [
             30,
             240
@@ -135,7 +136,7 @@
         ],
         &quot;eval_scale&quot;: &quot;1/2 (render) · 1/4 (motion)&quot;
       },
-      &quot;implementation&quot;: &quot;Sum of inverse-fourth elliptic fields from 10 seeded centres; pixels above 1.0 are white, the rest black, so nearby blobs merge into one shape with a hard edge.&quot;
+      &quot;implementation&quot;: &quot;Sum of inverse-fourth elliptic fields from 10 seeded centers; pixels above 1.0 are white, the rest black, so nearby blobs merge into one shape with a hard edge.&quot;
     },
     {
       &quot;id&quot;: &quot;display-stack&quot;,
@@ -157,7 +158,7 @@
         &quot;align&quot;: &quot;center&quot;,
         &quot;composite&quot;: &quot;difference&quot;
       },
-      &quot;implementation&quot;: &quot;Six words centred at 225 u (the six-letter word spans 0.92 W), drawn white with globalCompositeOperation difference so each letter inverts the blob field under it.&quot;
+      &quot;implementation&quot;: &quot;Six words centered at 225 u (the six-letter word spans 0.92 W), drawn white with globalCompositeOperation difference so each letter inverts the blob field under it.&quot;
     },
     {
       &quot;id&quot;: &quot;blur-field&quot;,
@@ -249,45 +250,68 @@
     &quot;Edge width light → black: 16 px in the sharpest frame (ref-c, 1120 px), 26 px (ref-b), 80 px (ref.png) — the blur breathes over the 8 s loop.&quot;,
     &quot;Word block in ref.png: line pitch ≈ 203 u, cap height ≈ 155 u, DARK width / cap = 4.0 (Archivo 900 semi-condensed: 4.04), six-letter word ≈ 0.90 W. Seed 7.&quot;
   ]
-} are BAKED here by `node _build/build.mjs` from study.js — a static read for readers that
+} are BAKED here by `node _build/build.mjs` from study.js: a static read for readers that
      cannot run scripts. shell.js redraws all of it on load. Edit study.js or _build/, never the generated index.html. -->
 <nav class="nav" id="nav" aria-label="Site navigation">{{NAV}}</nav>
 <main class="plate">
-  <section class="notes" id="copy">{{NOTES}}</section>
-  <section class="figure" id="stage">
-    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"><img src="thumb.png" alt="TS-07 rebuild, still frame" loading="lazy"></canvas></div>
+  <section class="notes" id="copy" aria-label="About this technique">{{NOTES}}</section>
+  <section class="figure" id="stage" aria-label="Plate">
+    <div class="cvwrap"><canvas id="cv" aria-label="TS-07 plate"><img src="thumb.png" alt="TS-07 rebuild, still frame" loading="lazy"></canvas></div>
     <div class="live" id="live"></div>
-    <div class="log" id="log">
-      <div class="ctl">
-        <button id="bRead" type="button" class="on" title="toggle the read overlay">Read</button>
-        <button id="bReplay" type="button" title="re-run the read (space)">↻ Replay</button>
-        <button id="bMode" type="button" title="cycle rebuild / reference / split (R)">Rebuild</button>
-        <button id="bMotion" type="button" hidden title="run the motion version (M)">Motion</button>
-        <button id="bLive" type="button" hidden title="open the live DOM version (L)">Live</button>
-        <button id="bWide" type="button" title="fold the notes away and fill the page (F)">Expand</button>
-        <button id="bSpec" type="button" title="open the machine-readable spec (S)">Spec ⇥</button>
-      </div>
-      <div class="vtabs" id="vtabs"></div>
-      <div class="prail" id="prail" hidden></div>
-      <div class="lbody">
-        <div class="lh"><span>Track log</span><span id="ctr">0 / 10</span></div>
-        <div class="rows" id="rows"></div>
-        <div class="read" id="read"><b>Read</b><span id="readtxt">Hover or select a point.</span><code id="readcode"></code></div>
-        <div class="fid" id="fid"></div>
-      </div>
-    </div>
-    <div class="rel" id="rel"></div>
   </section>
+  <aside class="panel" id="panel" aria-label="Controls">
+    <section class="mod" id="mView" aria-labelledby="hView">
+      <header><h2 id="hView">View</h2><button type="button" class="ghost" id="bWide" title="Hide the side columns (F)"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1 4.5V1h3.5M11 4.5V1H7.5M1 7.5V11h3.5M11 7.5V11H7.5"/></svg><span>Expand</span></button></header>
+      <div class="seg" id="segView" role="radiogroup" aria-label="What the plate shows">
+        <button type="button" role="radio" aria-checked="true" data-m="0">Plate</button><button type="button" role="radio" aria-checked="false" data-m="1">Reference</button><button type="button" role="radio" aria-checked="false" data-m="2">Compare</button>
+      </div>
+      <p class="hint" id="viewHint">The rebuild, drawn in code.</p>
+    </section>
+    <section class="mod" id="mNote" aria-labelledby="hNote">
+      <header><h2 id="hNote">Callouts</h2><label class="sw-toggle"><input type="checkbox" id="tNote" checked><span class="tr" aria-hidden="true"></span><span class="tl">Show</span></label></header>
+      <p class="hint">Numbered points mark where each technique was measured. Hover one on the plate to read it.</p>
+      <div class="row2"><button type="button" class="btn" id="bReplay" title="Draw the plate again, top to bottom (space)"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M10.2 6.3A4.2 4.2 0 1 1 8.9 3"/><path d="M9.4 1v2.4H7"/></svg><span>Replay the build</span></button></div>
+      <button type="button" class="disc" id="bPoints" aria-expanded="false" aria-controls="pts"><span>Point list</span><b id="ctr">0 / 10</b><svg class="chev" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 3.8L5 6.3l2.5-2.5"/></svg></button>
+      <div class="pts" id="pts" hidden>
+        <div class="rows" id="rows"></div>
+        <div class="read" id="read"><span id="readtxt">Hover or select a point.</span><code id="readcode"></code></div>
+      </div>
+    </section>
+    <section class="mod" id="mMotion" aria-labelledby="hMotion">
+      <header><h2 id="hMotion">Motion</h2><span class="state" id="motionState">Still</span></header>
+      <div class="row2" id="motionRow">
+        <button type="button" class="btn" id="bMotion" aria-pressed="false" title="Play or pause the motion version (M)"><svg class="i-play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.6v8.8L10.2 6z"/></svg><svg class="i-pause" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5h2v9H3zM7 1.5h2v9H7z"/></svg><span>Play</span></button>
+        <button type="button" class="btn" id="bLive" aria-pressed="false" title="Open the interactive version (L)"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.5l7.5 4-3.3 1 1.9 3.6-1.3.7-1.9-3.6L2.5 9.6z"/></svg><span id="liveLabel">Interactive</span></button>
+      </div>
+      <p class="hint" id="motionHint"></p>
+    </section>
+    <section class="mod" id="mColor" aria-labelledby="hColor">
+      <header><h2 id="hColor">Color</h2><button type="button" class="ghost warn" id="bInkReset" hidden>Reset inks</button></header>
+      <p class="hint" id="colorHint">Pick a palette. Click any ink to change it; the plate redraws.</p>
+      <div class="pal" id="pal" role="radiogroup" aria-label="Palettes"></div>
+      <div class="inks" id="inks"></div>
+    </section>
+    <section class="mod" id="mParams" aria-labelledby="hParams">
+      <header><h2 id="hParams">Parameters</h2><button type="button" class="ghost warn" id="bParamReset" hidden>Reset all</button></header>
+      <p class="hint">Every value is editable. Drag a slider or type a number, then Enter. Arrow keys step; Shift ×10, Alt ×0.1. The plate redraws.</p>
+      <div class="pgroups" id="prail"></div>
+    </section>
+    <section class="mod" id="mExport" aria-labelledby="hExport">
+      <header><h2 id="hExport">Export</h2></header>
+      <div class="row3"><button type="button" class="btn" id="bCopy" title="Copy the spec as JSON">Copy spec</button><button type="button" class="btn" id="bSpec" title="Open the spec (S)">Open spec</button><button type="button" class="btn" id="bPng" title="Save the plate as it is drawn now">Save PNG</button></div>
+      <p class="hint">The spec holds every measured number, its range and the module that draws it.</p>
+    </section>
+  </aside>
 </main>
-<aside class="spec" id="spec" aria-hidden="true">
-  <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
+<aside class="spec" id="spec" aria-hidden="true" aria-label="Technique spec">
+  <div class="sh"><span>Spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
   <pre id="specpre">{{SPEC}}</pre>
 </aside>
-<script src="../../_shared/entries.js?v=202611121940"></script>
-<script src="../../_shared/vocab.js?v=202611121940"></script>
-<script src="../../_shared/art.js?v=202611121940"></script>
+<script src="../../_shared/entries.js?v=202611130318"></script>
+<script src="../../_shared/vocab.js?v=202611130318"></script>
+<script src="../../_shared/art.js?v=202611130318"></script>
 <script src="ref.js"></script>
 <script src="study.js"></script>
-<script src="../../_shared/shell.js?v=202611121940"></script>
+<script src="../../_shared/shell.js?v=202611130318"></script>
 </body>
 </html>

@@ -2,11 +2,8 @@ window.STUDY={
   id:'ts-16-stipple-cloud-bank', code:'TS-16', fig:'1.16',
   title:'Stipple bank and dot burst',
   kicker:'Technique · TS-16',
-  lede:'One dot lattice. Tone fields shade the banks and draw the burst.',
-  body:[
-    'Every dot sits on one jittered lattice, pitch 5 u, and is drawn on whole pixels so its edge is hard. A tone field keeps or drops each dot. On the sky the field is a burst: a soft core and 26 tapered rays. On a dark bank it is dense at the scalloped rim and fades inward. On a light bank it is empty at the rim and builds inward in wisps, from a noise field stretched 3.2 to 1 along the bank.',
-    'The same tone field is printed under the dots as single pixels of a second color, clipped to its bank, so each flat shape carries a gradient with no blur. Motion sways the burst and shimmers the dots. Live puts the burst under the pointer. A weave and a 3 % grain cover the sheet.'
-  ],
+  lede:'One jittered dot lattice. Tone fields shade the banks and draw the burst.',
+  body:['Every dot sits on one lattice at 5 u pitch and is drawn in whole pixels, so its edge is hard. On the sky the tone field is a soft core with 26 tapered rays; on dark banks it is dense at the scalloped rim; on light banks it builds inward in wisps. The same field prints under the dots as single pixels of a second color, so each flat shape carries a gradient with no blur.'], motionHint:'Play sways the burst ±8° and shimmers the dots.', liveLabel:'Follow pointer', liveHint:'Follow pointer moves the burst to your cursor.',
   source:'Reference 16 · stippled cloud print with a dotted sunburst, 736 × 1308',
   spot:[98,152,193], ref:{w:1000,h:1200},
   variantLabel:'Color',
@@ -108,8 +105,10 @@ window.STUDY={
     return { B, lat, burst, tooth, base, dots }; },
   paintDots(x,sc,V,turn,grow,shim,t){ const d=sc.dots, r=sc.lat.r, sw=sc.lat.swell, n=sc.B.length+1; const G=[]; for(let i=0;i<n*3;i++)G.push([]);
     for(let i=0;i<d.length;i+=5){ const reg=d[i+3]; let k=d[i+2]; if(shim)k+=shim*Math.sin(t*1.9+k*61.7); const D=reg<0?sc.burst.density(d[i],d[i+1],turn,grow):d[i+4]; if(k<D)G[(reg+1)*3+(D>0.8?2:(D>0.45?1:0))].push(d[i],d[i+1]); }
-    /* under 2.4 px radius a dot is a whole-pixel square of the same area, so its edge is hard */
-    const put=(arr,color,rr)=>{ if(!arr.length)return; x.fillStyle=color; x.beginPath(); if(rr<2.4){ const s=Math.max(1,Math.round(rr*1.77)); for(let j=0;j<arr.length;j+=2)x.rect(Math.round(arr[j]-s/2),Math.round(arr[j+1]-s/2),s,s); } else for(let j=0;j<arr.length;j+=2){ x.moveTo(arr[j]+rr,arr[j+1]); x.arc(arr[j],arr[j+1],rr,0,6.2832); } x.fill(); };
+    /* under 2.4 px radius a dot is a pixel-quantized disc of the same area (rows of whole pixels), so its edge is hard
+       and it still reads round at 2x; under ~0.9 px it is one pixel */
+    const stamp=rr=>{ const R=Math.ceil(rr), out=[]; for(let dy=-R;dy<=R;dy++){ let m=-1; for(let dx=0;dx<=R;dx++)if(dx*dx+dy*dy<=rr*rr+0.3)m=dx; if(m>=0)out.push(dy,m); } return out.length?out:[0,0]; };
+    const put=(arr,color,rr)=>{ if(!arr.length)return; x.fillStyle=color; x.beginPath(); if(rr<2.4){ const st=rr<0.9?[0,0]:stamp(rr); for(let j=0;j<arr.length;j+=2){ const cx=Math.round(arr[j]), cy=Math.round(arr[j+1]); for(let q=0;q<st.length;q+=2)x.rect(cx-st[q+1],cy+st[q],2*st[q+1]+1,1); } } else for(let j=0;j<arr.length;j+=2){ x.moveTo(arr[j]+rr,arr[j+1]); x.arc(arr[j],arr[j+1],rr,0,6.2832); } x.fill(); };
     for(let g=0;g<n;g++){ const color=g===0?V.ray:V.banks[sc.B[g-1].fill].dot; for(let z=0;z<3;z++)put(G[g*3+z],color,r*(1+sw*z*0.5)); } },
   render(canvas,w,h,dpr,V,done,O){ const S=window.STUDY; const W=canvas.width, H=canvas.height; const x=canvas.getContext('2d'); x.setTransform(1,0,0,1,0,0); const sc=S.scene(W,H,V,O); x.drawImage(sc.base,0,0); S.paintDots(x,sc,V,0,1,0,0); sc.tooth.apply(x); if(done)done(); },
   /* motion: the burst sways ±8° and its rays breathe; the dot thresholds shimmer. Fills and wash are painted once. */

@@ -2,11 +2,8 @@ window.STUDY={
   id:'ts-12-perforated-stamp', code:'TS-12', fig:'1.12',
   title:'Perforated stamp with halftone title',
   kicker:'Technique · TS-12',
-  lede:'A red stamp bitten round the edge, a rotated title filled with dots.',
-  body:[
-    'One red stamp on black. A rectangle with semicircular bites at fixed pitch along every edge, corner to corner; the red carries tooth and a faint mottle. A display title runs up the left edge, quarter-turned, and overhangs the top so the perforation cuts it.',
-    'The title is not a flat fill: a dark texture is screened as a 45° dot grid, dot size following the texture, shown only inside the letters. A white script credit sits right of center. A soft shadow lifts the stamp off the ground.'
-  ],
+  lede:'A red stamp with a bitten perforation and a rotated title filled with a dot screen.',
+  body:['Semicircular bites run at one pitch along every edge, corner to corner. The title runs up the left edge, turned a quarter, and overhangs the top so the perforation cuts it. Inside the letters a dark texture is screened as a 45° dot grid whose dot size follows the texture.'],
   source:'Reference 12 · red perforated stamp poster, 736 × 920',
   spot:[232,36,27], ref:{w:736,h:920},
   variantLabel:'Color',
@@ -33,7 +30,7 @@ window.STUDY={
     palette:{ ground:'#000000', stamp:'#E8241B', halftone_dark:'#1C1812', halftone_light:'#A08A4A', credit:'#FFFFFF' },
     techniques:[
       { id:'perforation', short:'PERF', name:'Scalloped perforation', layer:1, pass:1, atoms:['clip','bite','pitch'],
-        params:{ stamp_u:[158,125,683,993], pitch_u:62, bite_radius_u:19, bites:'12 across × 17 down, one centred on each corner', ref_px:{pitch:45.6,radius:14} },
+        params:{ stamp_u:[158,125,683,993], pitch_u:62, bite_radius_u:19, bites:'12 across × 17 down, one centered on each corner', ref_px:{pitch:45.6,radius:14} },
         implementation:'The stamp is painted as a rectangle on its own layer, then a circle at every pitch step along all four edges is punched out with destination-out; the punched layer is the clip for everything on the stamp.' },
       { id:'halftone-fill', short:'HALF', name:'Halftone texture fill', layer:3, pass:3, atoms:['screen','dot','fbm'],
         params:{ screen_angle_deg:45, pitch_u:7, texture:'perlin fbm, 4 octaves, scale 70 u', dot_radius:'0.5·pitch·(0.22 + 0.9·t), t = clamp(0.5 + 3·fbm)', color:'lut dark→mid→light by lightness', ref_px:{pitch:'≈4.5'} },
@@ -42,8 +39,8 @@ window.STUDY={
         params:{ font:'Archivo 900, wdth 62.5 (extra-condensed; substitute for the reference condensed serif)', angle_deg:-90, cap_height_u:'≈ 215 (size fitted so the run is 1003 u)', baseline_x_u:400, start_y_u:1088, overhang:'run ends 40 u above the stamp top' },
         implementation:'The title is drawn once into a mask canvas rotated −90° about its start point; the halftone is composited through it with destination-in, then the result is drawn on the stamp layer under the perforation clip.' },
       { id:'script-credit', short:'SCRP', name:'Script credit', layer:4, pass:4, atoms:['type','skew'],
-        params:{ font:'Inter 500 (no script face inlined), skew −12°', size_u:30, lines:2, centre_u:[620,560], line_gap_u:34, color:'#FFFFFF' },
-        implementation:'Two invented lines centred on a point right of the middle, skewed −12° to stand in for the italic script; drawn after the grain so the white stays clean.' },
+        params:{ font:'Inter 500 (no script face inlined), skew −12°', size_u:30, lines:2, center_u:[620,560], line_gap_u:34, color:'#FFFFFF' },
+        implementation:'Two invented lines centered on a point right of the middle, skewed −12° to stand in for the italic script; drawn after the grain so the white stays clean.' },
       { id:'paper-tooth', short:'TOOTH', name:'Paper tooth and mottle', layer:2, pass:2, atoms:['grain','mottle'],
         params:{ grain:'mono, amp 0.05, pitch 1 device px, seed 12', mottle:'fbm 3 octaves, scale 260 u, ±0.04 multiply', ref_px:{red_std:'≈9/255 in R'} },
         implementation:'Before the perforation punch the stamp layer is multiplied by a low-frequency fbm and then by ART.grain, so both tooth and mottle follow the stamp and stop at the bites.' }
@@ -66,7 +63,7 @@ window.STUDY={
       for(let j=0;j<rows;j++)for(let i=0;i<cols;i++)M[j*cols+i]=1+0.04*P.fbm(i*step*sc,j*step*sc,3,0.55)*2;
       for(let yy=0;yy<ch;yy++){ const j=(yy/step)|0; for(let xx=0;xx<cw;xx++){ const i=(yy*cw+xx)*4; const m=M[j*cols+((xx/step)|0)]; d[i]*=m; d[i+1]*=m; d[i+2]*=m; } }
       lx.putImageData(id,S[0]|0,S[1]|0); }
-    A.grain(lx,{amp:0.05,pitch:Math.max(1,Math.round(dpr)),seed:12,mono:true});
+    A.grain(lx,{amp:0.04,pitch:1,seed:12,mono:true});
     // title mask: Archivo 900 rotated -90°
     const baseX=400*u, startY=(S[1]+S[3]-30*u); const word='River Towns'; const runLen=S[3]-30*u+40*u;
     const Mk=A.off(W,H); const mx=Mk.getContext('2d');

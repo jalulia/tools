@@ -2,11 +2,8 @@ window.STUDY={
   id:'ts-05-line-screen-type', code:'TS-05', fig:'1.5',
   title:'Vertical line-screen type',
   kicker:'Technique · TS-05',
-  lede:'Heavy type cut into vertical bars; bar width follows a phase field.',
-  body:[
-    'One ink on warm paper. Four lines of display type are set with leading shorter than the ascender, so each line overlaps the one above. The type is not printed as type — it prints through a vertical line screen at fixed pitch, and a bar exists only where the letter mask is on. Where two lines overlap the mask doubles and the bars swell to solid.',
-    'A low phase field shifts each bar a few units sideways and steps some regions by half a pitch, so bars break against each other at letter edges. A 0.7 px bleed rounds the bar ends, interiors print a shade darker, and the sheet carries tooth and a faint mottle.'
-  ],
+  lede:'Heavy type printed through a vertical line screen whose bar width follows a phase field.',
+  body:['Four lines of display type overlap because the leading is shorter than the ascender. A bar prints only inside a letter, and where two lines overlap the bars swell to solid. A low phase field shifts bars sideways and steps some regions by half a pitch, so bars break at letter edges; a 0.7 px bleed rounds their ends.'],
   source:'Reference 05 · line-screened slab-serif type on gray stock, 1448 × 936',
   spot:[81,77,74], ref:{w:1448,h:936},
   variantLabel:'Color',
@@ -38,7 +35,7 @@ window.STUDY={
         implementation:'For every screen column x_k = k·pitch, walk down the page one device pixel at a time, read the summed letter mask at (x_k + phase, y), map it to a bar width and fill each continuous run as one polygon with a left and a right edge per y.' },
       { id:'phase-field', short:'PHSE', name:'Phase field', layer:1, pass:1, atoms:['perlin','offset','quantise'],
         params:{ period_u:260, octaves:2, shift_u:2.4, quantise:'+0.5 pitch where fbm > 0.35', seed:505 },
-        implementation:'phase(x,y) = 2.4·fbm(x/260, y/260) plus half a pitch in regions where the field is high; the bar center is x_k + phase, so bars in neighbouring regions step against each other.' },
+        implementation:'phase(x,y) = 2.4·fbm(x/260, y/260) plus half a pitch in regions where the field is high; the bar center is x_k + phase, so bars in neighboring regions step against each other.' },
       { id:'ink-bleed', short:'BLED', name:'Ink bleed', layer:2, pass:3, atoms:['blur','gain','darken'],
         params:{ blur_px:0.7, gain:1.15, interior_darken:'ink → ink_deep (#3E3A38) where mask > 0.9, ramp from 0.6', threshold_soft:'0.26 → 0.60' },
         implementation:'The bar layer is blurred 0.8 px, its alpha is pushed through a soft threshold so the edge swells outward, and the ink color shifts toward ink_deep inside the letters.' },
@@ -91,7 +88,7 @@ window.STUDY={
     x.setTransform(u,0,0,u,0,0); x.fillStyle=V.caption; x.textBaseline='alphabetic'; x.textAlign='left';
     try{ x.fontStretch='condensed'; }catch(e){}
     x.font='800 condensed 18px Archivo';
-    const tl=['A PLAIN WORD SET','IN ONE INK ON','GREY STOCK,','SCREENED.'], tr=['FOUR LINES, TIGHT','LEADING, BARS','AT A FIXED','PITCH.'];
+    const tl=['A PLAIN WORD SET','IN ONE INK ON','GRAY STOCK,','SCREENED.'], tr=['FOUR LINES, TIGHT','LEADING, BARS','AT A FIXED','PITCH.'];
     tl.forEach((s,i)=>x.fillText(s,83,72+i*20)); tr.forEach((s,i)=>x.fillText(s,698,72+i*20));
     x.fillText('SET BY HAND',680,491);
     x.font='700 14px "JetBrains Mono"'; const words=['A','ROW','OF','WORDS','SPACED','TO','THE','EDGE.']; const x0=83,x1=922;

@@ -104,7 +104,7 @@ export const spec={
     }
   },
   "limits": "floor + gain above 1 clips fills to full coverage and the edge thinning disappears. stochastic above ~0.7 breaks the keyline into specks. A mottle scale under ~20 u reads as a second grain, not as uneven inking.",
-  "implementation": "Before colouring, coverage is multiplied by a blurred copy of itself so fills thin toward their edges, and by a slow perlin mottle; after colouring ART.grain runs mono on the plate and paper pixels are reset to white."
+  "implementation": "Before coloring, coverage is multiplied by a blurred copy of itself so fills thin toward their edges, and by a slow perlin mottle; after coloring ART.grain runs mono on the plate and paper pixels are reset to white."
 };
 export const params={
   "amp": [

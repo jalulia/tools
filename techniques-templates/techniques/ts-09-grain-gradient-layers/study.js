@@ -2,11 +2,8 @@ window.STUDY={
   id:'ts-09-grain-gradient-layers', code:'TS-09', fig:'1.9',
   title:'Grain gradient layers',
   kicker:'Technique · TS-09',
-  lede:'Three gradient panels, one soft mask, one ripple band, one grain.',
-  body:[
-    'Three portrait panels. The first is a vertical two-stop gradient with a black shape blurred in from the left; the same shape blurred far wider tints the field crimson as it nears the black. The second is a blue field of stacked dark arcs at one pitch, darkest inside a window and cut off below it — each peak slides left down the stack, and the arcs taper to points where the window ends. The third runs black through red to pink on a 66° diagonal.',
-    'Everything draws flat, then one additive grain crosses all three panels at once — heavier in the darks, lighter in the lights. Captions sit in the corners.'
-  ],
+  lede:'Three gradient panels with one soft mask, one ripple band and one grain across all three.',
+  body:['Panel one is a two-stop gradient with a black shape blurred in from the left. Panel two stacks dark arcs at one pitch inside a window; panel three runs black through red to pink on a 66° diagonal. Everything is drawn flat, then one additive color grain crosses all three panels, heavier in the darks.'],
   source:'Reference 09 · three grained gradient panels, 1200 × 800',
   spot:[242,106,27], ref:{w:1200,h:800},
   variantLabel:'Color',
@@ -48,7 +45,7 @@ window.STUDY={
         params:{ A:{axis:'vertical',stops:[[0,'#FA8F17'],[1,'#F5701F']]}, B:{axis:'vertical',stops:[[0,'#23B5F2'],[0.6,'#137AD7']]}, C:{axis_deg:66, length_u:743, stops:[[0.15,'#080909'],[0.34,'#7D1315'],[0.45,'#D72532'],[0.56,'#F05277'],[0.67,'#F39FB6'],[1,'#DEC2D1']]} },
         implementation:'Each panel starts as a canvas linear gradient; C runs from the panel top-left along 66° from horizontal, with knee stops so black holds to 0.15 and pink holds from 0.67.' },
       { id:'soft-mask', short:'MASK', name:'Blurred shape mask', layer:1, pass:1, atoms:['mask','blur','shape'],
-        params:{ shape:'closed spline through 13 measured contour points, off-panel to the left and below', edge_sigma_u:33, halo_sigma_u:110, halo_colour:'#D71E3D', halo_strength:'four source-over passes of the wide blur: 1 − (1 − h)⁴', mask_colour:'#080808' },
+        params:{ shape:'closed spline through 13 measured contour points, off-panel to the left and below', edge_sigma_u:33, halo_sigma_u:110, halo_color:'#D71E3D', halo_strength:'four source-over passes of the wide blur: 1 − (1 − h)⁴', mask_color:'#080808' },
         implementation:'The shape is drawn twice on padded offscreens: once in crimson and blurred wide (σ 110 u), drawn four times to tint the field; once in black and blurred σ 33 u, drawn over. The wide blur is the halo that reddens the gradient near the black.' },
       { id:'ripple-band', short:'RIPL', name:'Concentric ripple band', layer:1, pass:2, atoms:['grating','radial','envelope','blur'],
         params:{ arc:'y = q + (x − cx(q))² / 2R, R 750 u, cx(q) = 217 − 0.8·max(0, q − 233) u (panel-local)', pitch_u:32, phase_zero_u:262, dark_profile:'sstep(t0, t0+0.3, 0.5+0.5·cos 2π(q−q0)/pitch), t0 = 0.72 − 0.5·e', envelope:'e = 0.15 + 0.85·sstep(0, 250, q)^1.2 above q 250; 1 for q 250–433; falls to 0.1 over 433–467', right_cut:'e fades where x > 333 − 2·max(0, q − 296), over 150 u', light_stripes:'(0.7·e in the band, 0.15 above)·(1−s)^2.5 toward #78BCEC', blur_u:3.3, dark:'#090B43', light:'#78BCEC' },
@@ -100,7 +97,7 @@ window.STUDY={
     x.textAlign='right'; x.fillStyle=V.cap[1]; x.fillText('Plate two of three',px0[2]-16*k,732*k);
     x.fillStyle=V.cap[2]; x.fillText('Forty layered sheets',W-16*k,207*k);
     // ---- pass 4 · film grain (whole sheet)
-    A.grain(x,{amp:0.05,pitch:1,seed:909,mono:false});
+    A.grain(x,{amp:0.04,pitch:1,seed:909,mono:false});
     { const id=x.getImageData(0,0,W,H); const d=id.data; const seed=909;
       const hash=(X,Y)=>{ let n=(X*374761393+Y*668265263+seed*2246822519)|0; n=(n^(n>>>13))*1274126177|0; n=n^(n>>>16); return ((n>>>0)/4294967296)*2-1; };
       const N=new Float32Array(W*H); for(let y=0;y<H;y++)for(let X=0;X<W;X++){ N[y*W+X]=0.78*hash(X,y)+0.22*0.5*(hash(X-1,y)+hash(X,y-1)); }

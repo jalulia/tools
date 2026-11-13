@@ -2,11 +2,8 @@ window.STUDY={
   id:'ts-13-glyph-field-animation', code:'TS-13', fig:'1.13',
   title:'ASCII glyph-field animations',
   kicker:'Technique · TS-13',
-  lede:'Type glyphs as particles: a helix, a wave, an orbit and a pulse, drawn with fillText.',
-  body:[
-    'Four canvases, one method. Every mark is a monospace glyph placed with fillText — no sprites, no shapes. A glyph vocabulary of dots, rules, arrows and three-digit numbers is read by index, so the field looks typeset rather than drawn. Depth is alpha and size only: the helix projects 150 glyphs through a pinhole at 800 u and sorts them far-to-near, so near glyphs sit on top at 0.89 alpha and far ones fade to 0.04. Every 18th glyph is a palette label in its own color with a soft glow, so the animation names the system it decorates.',
-    'The field cedes the middle: a CSS radial mask (ellipse 44 % × 40 %) clears the helix behind the title. The wave is a 70 × 8 cell grid whose glyph is chosen by a sine phase and whose alpha falls off from a sine centerline. The orbit is 52 glyphs on a 0.4-ratio ellipse whose radius breathes ±10 %. The pulse is 18 glyphs lit by the positive half of one travelling sine. Each frame clears and redraws; reduced-motion draws the frame once and stops.'
-  ],
+  lede:'Monospace glyphs as particles: a helix, a wave, an orbit and a pulse, all drawn with fillText.',
+  body:['Every mark is a glyph read by index from one vocabulary of dots, rules, arrows and numbers, so the field looks set rather than drawn. The helix projects 150 glyphs through a pinhole at 800 u; depth is alpha and size only, from 0.89 near to 0.04 far, and every 18th glyph is a palette label in its own color.'], motionHint:'Play runs all four glyph fields.', liveLabel:'Page version', liveHint:'Page version runs the four canvases as they ship in the component library.',
   source:'Reference 13 · four canvases from the Ink and Signal component library (hero helix, wave figure, inline pulse, orbit atmosphere), composited at t = 5.9 s, 1000 × 1250',
   spot:[124,196,255], ref:{w:1000,h:1250},
   variantLabel:'Color',
@@ -64,7 +61,7 @@ window.STUDY={
         implementation:'A 70 × 8 grid where one sine phase picks both the glyph (from a five-step ramp) and the alpha (by distance to a sine centerline), so a two-wavelength band of laminar glyphs rolls across the frame.' },
       { id:'pulse-row', short:'PULS', name:'Half-wave pulse row', layer:2, pass:3, atoms:['row','sine','half-wave'],
         params:{ count:18, canvas_u:[250,30], font:'JetBrains Mono 400 11 px', wave:'w = sin(1.6 · t − 0.12 · i)', drawn:'only w > 0', alpha:'w · 0.5', x:'14 + i · (W − 28) / 18', head:'▸ at x 4, alpha .5', color:'#2B8EF5' },
-        implementation:'Eighteen glyphs along a line lit by the positive half of one travelling sine, so a soft blue pulse runs left to right behind a fixed ▸ head; it lives inline under a dialogue turn.' },
+        implementation:'Eighteen glyphs along a line lit by the positive half of one traveling sine, so a soft blue pulse runs left to right behind a fixed ▸ head; it lives inline under a dialogue turn.' },
       { id:'orbit-ring', short:'ORBT', name:'Breathing glyph orbit', layer:2, pass:3, atoms:['ring','ellipse','breath','sine'],
         params:{ count:52, radius_u:'min(0.3 W, 0.42 H)', ratio:0.4, spin:'a = 2π · i/52 + 0.3 · t', breath:'r = R · (1 + 0.1 · sin(0.6 · t + 0.3 · i))', alpha:'0.1 + 0.6 · (sin a + 1) / 2', glyph:'ø every 6th, else ·', center:'Ø at alpha .55', canvas_opacity:0.3, font:'JetBrains Mono 400 11 px', color:'#F6F1E4' },
         implementation:'52 glyphs on a flattened ellipse, each with its own breathing radius and an alpha that peaks at the bottom of the orbit; the canvas is held at 30 % under a pull quote.' },
@@ -194,7 +191,7 @@ h1{font-family:var(--disp);font-stretch:condensed;font-weight:400;font-size:100p
 <section class="pulsep"><div class="turn"><div class="mt">System</div><canvas class="inline-c" data-anim="pulse"></canvas></div></section>
 <section class="atmo"><canvas id="atm-orbit"></canvas><div class="pull"><blockquote>The field is drawn, not placed.</blockquote><div class="at">Component · Atmosphere</div></div></section>
 </div><script>
-/* the four animations, verbatim from the reference; colours read from the variant */
+/* the four animations, verbatim from the reference; colors read from the variant */
 const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
 (document.fonts?document.fonts.ready:Promise.resolve()).then(()=>{ for(const [sel,max,start] of [['h1',540,100],['blockquote',380,38]]){ const el=document.querySelector(sel); let z=start; el.style.fontSize=z+'px'; const r=document.createRange(); r.selectNodeContents(el); const sc=()=>r.getBoundingClientRect().width/(parseFloat(document.getElementById('plate').dataset.s)||1); for(let i=0;i<40&&sc()>max;i++){ z*=.94; el.style.fontSize=z+'px'; } } });
 function fit(){ const s=Math.min(innerWidth/1000,innerHeight/1250); const p=document.getElementById('plate'); p.style.transform='scale('+s+')'; p.dataset.s=s; p.style.left=((innerWidth-1000*s)/2)+'px'; p.style.top=((innerHeight-1250*s)/2)+'px'; p.style.position='absolute'; } fit(); addEventListener('resize',fit);

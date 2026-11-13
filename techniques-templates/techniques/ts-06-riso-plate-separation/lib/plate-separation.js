@@ -51,7 +51,7 @@ export const spec={
     "max_coverage": 1
   },
   "limits": "Keylines past ~8 u close the counters of the letters. The wash is one radial falloff from the lower-left corner; past radius 1.3 it covers the whole sheet and reads as a yellow stock.",
-  "implementation": "Face labels become three coverage rasters; each raster is coloured mix(white, ink, coverage) on its own canvas and multiplied onto the stock in plate order."
+  "implementation": "Face labels become three coverage rasters; each raster is colored mix(white, ink, coverage) on its own canvas and multiplied onto the stock in plate order."
 };
 export const params={
   "yellow": "top faces + corner wash + marker strokes",

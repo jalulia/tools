@@ -2,11 +2,8 @@ window.STUDY={
   id:'ts-08-flat-color-card-set', code:'TS-08', fig:'1.8',
   title:'Flat-color card set',
   kicker:'Technique · TS-08',
-  lede:'Six flat cards, condensed type at two scales, mono at the edges.',
-  body:[
-    'A 3 × 2 grid of rounded portrait cards on black; the middle column sits 57 u high. Each card is one flat fill. Display type is a heavy condensed grotesk — Archivo, width 62, weight 800–900 — at two scales: all-caps lines at 29 u, and single words fitted to the card at 95–165 u with leading under 0.8 so they touch.',
-    'Metadata sits in 8–9 u mono pinned to the edges, in two or three columns. One card runs a gradient plate with a line drawing where the reference had a photo; one is a ledger of four events on dotted rules; one carries a barcode strip and a ticket row.'
-  ],
+  lede:'Six flat-color cards with condensed type at two scales and mono metadata at the edges.',
+  body:['A 3 × 2 grid of rounded cards on black; the middle column sits 57 u higher. Display type is Archivo at width 62 and weight 800 to 900: caps lines at 29 u, and single words fitted to the card at 95 to 165 u with leading under 0.8. Metadata is 8 to 9 u mono pinned to the card edges.'], liveLabel:'Page version', liveHint:'Page version rebuilds the cards in HTML and CSS.',
   source:'Reference 08 · six flat-color typographic cards on black, 736 × 928',
   spot:[252,24,0], ref:{w:736,h:928},
   variantLabel:'Color',
@@ -69,14 +66,14 @@ window.STUDY={
   /* ---------- shared layout (used by render and live) ---------- */
   _L:{ W:1000, H:1261, CW:269, CH:537, GX:27, GY:26, X0:71, Y0:110, MID:-57, R:15, PAD:14 },
   _copy:{
-    para:'THE SHOP OPENS AT NINE AND CLOSES AT SIX. WE CUT, FOLD AND PRESS BY HAND. NO RUSH ORDERS, NO #4 STOCK, NO {GLOSS} FINISH. PLAIN SHEETS, PLAIN INK, ONE COLOUR PER RUN. IF A SHEET TEARS* WE PRINT IT AGAIN AND SAY SO. THE WORK© IS SLOW AND IT SHOWS.',
+    para:'THE SHOP OPENS AT NINE AND CLOSES AT SIX. WE CUT, FOLD AND PRESS BY HAND. NO RUSH ORDERS, NO #4 STOCK, NO {GLOSS} FINISH. PLAIN SHEETS, PLAIN INK, ONE COLOR PER RUN. IF A SHEET TEARS* WE PRINT IT AGAIN AND SAY SO. THE WORK© IS SLOW AND IT SHOWS.',
     paraMeta:[['Plain (March 03)','Ed.— 41920775']], paraBig:['TURIN','MARCH.03.27'],
     plateMeta:['HARBOUR LIGHT','ATELIER NORTH','OSLO'], plateUrl:'harbour.no', plateEd:'Ed.— 20611844',
     plateLines:['LOW TIDE','— R. AUGUST VANE','OSLO.11.02/'], plateLines2:['SMALL & STEADY®','A. REPORT.'], plateBig:'N.312', plateMail:'R.VANE@HARBOUR.NO', plateTel:'(047)210-4481',
     words:['SLATE','RIVER','PLAIN','NORTH','STONE','FIELD'], wordsMeta:['Field Report — 0312'],
     greenTop:[['(Ed.—0312.7)','Experience'],['Porto','Lisbon, Faro'],['Est. 1958','Paper']], greenBig1:['PORTO','NORTE.'], greenUrl:'//PORTOLINE.CO', greenBar:'8 041955 300121 4', greenBig2:['THE*','SMALL','—PRESS.'], greenBot:[['Copyright©','P.N.'],['03/09','Ana Moura'],['Info','Overview']],
     mintPairs:[['HAUS MERLE','STUDIO ORO'],['  ATELIER KOLB®','NINE'],['PRESS—     OFFICE','LOAM'],['      VORN*','03.11.2027'],['HOUSE OF LINDT!','ARBO']], mintBig:['OCT','NOV'], mintTicket:['Neu Haus','OCT','B.04412','NOV','Grotesk'], mintStamp:['2024','{QUIET PRINT PRIZE®}','PORTO'], mintStampSide:['EST.','1931'], mintLines:['OCTOBER BATCH NO. 1180425','ED.—— 55021873 HAND PRESSED','FLAT SHEET'],
-    blueTop:['Edition (04)','Display','2027'], events:[['THE STILL*** ROOM! MAR.02','DIRECTED BY: ANNIKA HOLT','OLD MILL, PORTO'],['GREY® LINE APR.19','DIRECTED BY: TOMAS VELDE','VENUE: SALT STORE, BERGEN'],['NEXT FIELD VII MAY.27','DIRECTED BY: IRIS KALDER','VENUE: THE PUMP HOUSE,','TURIN']
+    blueTop:['Edition (04)','Display','2027'], events:[['THE STILL*** ROOM! MAR.02','DIRECTED BY: ANNIKA HOLT','OLD MILL, PORTO'],['GRAY® LINE APR.19','DIRECTED BY: TOMAS VELDE','VENUE: SALT STORE, BERGEN'],['NEXT FIELD VII MAY.27','DIRECTED BY: IRIS KALDER','VENUE: THE PUMP HOUSE,','TURIN']
       ,['OPEN & CLOSE! JUL.08','DIRECTED BY: OLA FINSEN','VENUE: BACK ROOM GALLERY,','OSLO']], blueBig:['OFF©','DUTY!'], blueBot:['March','Variable','Condensed']
   },
   _cards(){ const L=this._L; const xs=[L.X0,L.X0+L.CW+L.GX,L.X0+2*(L.CW+L.GX)]; const out=[]; for(let r=0;r<2;r++)for(let c=0;c<3;c++){ out.push({i:r*3+c,x:xs[c],y:L.Y0+r*(L.CH+L.GY)+(c===1?L.MID:0),w:L.CW,h:L.CH}); } return out; },

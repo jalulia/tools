@@ -8,7 +8,7 @@ window.CHROMA=(function(){
   const planck=(l,T)=>Math.pow(l*1e-9,-5)/(Math.exp(14387770/(l*T))-1);
   const M=[[3.2406,-1.5372,-0.4986],[-0.9689,1.8758,0.0415],[0.0557,-0.2040,1.0570]];
   /* Michel-Lévy chart for a crossed polariscope: color(δ) for δ = 0 … N−1 nm.
-     opts: T (K), wb (0..1 partial von Kries to D65), exposure, sat, blueRoll (desaturate δ>480), grade (hue compression 0..1 toward warm/cool anchors, applied in display space), gdip (green dip of the source), leak (unpolarized leak through the analyser: imperfect extinction lifts the dark bands to crimson), warm/cool (anchor hues, deg) */
+     opts: T (K), wb (0..1 partial von Kries to D65), exposure, sat, blueRoll (desaturate δ>480), grade (hue compression 0..1 toward warm/cool anchors, applied in display space), gdip (green dip of the source), leak (unpolarized leak through the analyzer: imperfect extinction lifts the dark bands to crimson), warm/cool (anchor hues, deg) */
   C.chart=function(o){ o=Object.assign({T:3000,wb:0.6,exposure:0.8,sat:1.4,blueRoll:0.85,grade:0.75,gdip:0.1,leak:0.06,warm:6,cool:196,N:1600},o||{});
     const lam=[]; for(let l=380;l<=720;l+=4)lam.push(l); const S=[],CM=[]; let smax=0;
     for(const l of lam){ let s=planck(l,o.T); s*=1-o.gdip*Math.exp(-((l-548)/48)*((l-548)/48)); S.push(s); if(s>smax)smax=s; CM.push(cmf(l)); }
@@ -63,11 +63,8 @@ window.STUDY={
   id:'ts-14-deep-space-chroma', code:'TS-14', fig:'1.14',
   title:'Deep Space Chroma · birefringence',
   kicker:'Technique · TS-14',
-  lede:'A stressed birefringent sheet between polarizers, integrated over the spectrum.',
-  body:[
-    'Twenty-one key visuals, one instrument: a polariscope. A birefringent material splits light into two rays with a retardation δ between them; between crossed polarizers each wavelength is transmitted as sin²(πδ/λ), so integrating a tungsten source through the CIE color-matching functions gives the Michel-Lévy sequence — black, grey, warm white, amber, orange, red, mauve, blue, cyan — as a function of δ alone. Where the material’s slow axis lines up with a polarizer the light is cut regardless of δ: those are the isoclinics, the black wedges through every focus.',
-    'What varies between plates is only the retardation field and the axis field: an oriented sheet whose δ oscillates around a focus, point loads (Flamant), a uniaxial conoscopic figure (δ ∝ r², a Maltese cross), a biaxial one (δ ∝ |p−A|·|p−B|, hyperbolic isogyres), a ribbon, a ring. The plate look is the camera on top of the physics: partial white balance, a green dip, a teal-and-orange hue compression, a film shoulder that blows the cores to pink-white, a 1.2 % defocus and mono grain. Rotating the polarizer sweeps the isoclinics; breathing δ moves the fringes.'
-  ],
+  lede:'A stressed birefringent sheet between crossed polarizers, integrated over the visible spectrum.',
+  body:['Each wavelength passes as sin²(πδ/λ), so a tungsten source read through the CIE color-matching functions gives the Michel-Lévy colors as a function of the retardation δ alone. Where the slow axis lines up with a polarizer the light is cut, which draws the black wedges. The palettes are presets: each changes the retardation and axis fields, not the inks.'], colorHint:'Each preset is a different stress field. The colors come from the optics, so there are no inks to edit.', motionHint:'Play turns the polarizer, which sweeps the black wedges, and breathes the retardation.', liveLabel:'Engine', liveHint:'Engine opens the full polariscope with its own controls.',
   source:'Reference 14 · Deep Space Chroma 09 (ø co. key visual set, 21 plates, 5000 × 3500 each), 1000 × 700',
   spot:[232,143,94], ref:{w:1000,h:700},
   variantLabel:'Field',
@@ -105,7 +102,7 @@ window.STUDY={
     techniques:[
       { id:'michel-levy-chart', short:'CHRT', name:'Spectral Michel-Lévy chart', layer:0, pass:1, atoms:['spectrum','planck','cmf','lut'],
         params:{ source:'Planck 3000 K, green dip .1 at 548 ± 48 nm', integration:'380–720 nm, 4 nm steps, Wyman–Sloan–Shirley CMF fit', white_balance:'von Kries toward D65, strength .6', exposure:0.8, N:1600 },
-        implementation:'For every δ from 0 to 1599 nm the transmitted spectrum sin²(πδ/λ)·S(λ) is integrated against the color-matching functions; the 1600 colors are the LUT the field is shaded with. Order 1 (0–560 nm) is where the plates live: black → grey → warm white → amber → orange → red; the mauve and blue of 560–700 are the cool lanes.' },
+        implementation:'For every δ from 0 to 1599 nm the transmitted spectrum sin²(πδ/λ)·S(λ) is integrated against the color-matching functions; the 1600 colors are the LUT the field is shaded with. Order 1 (0–560 nm) is where the plates live: black → gray → warm white → amber → orange → red; the mauve and blue of 560–700 are the cool lanes.' },
       { id:'retardation-field', short:'RETD', name:'Retardation field', layer:0, pass:0, atoms:['field','retardation','oscillation'],
         params:{ sheet:'δ = (d0 + A · sign(c)|c|^shape) · (1 + pin/r), c = cos(k · θw + ph + flow · t); shape for the peaks (blue), shapeN for the dips (pale) — the pale lanes are the narrow ones', ref:{ d0:520, A:200, shape:2, shapeN:3.5, k:7, ph:1.0, rad:-80, pin:0 }, radial:'+ rad · r — orange near the focus, red far out', load:'δ = K · |σ1 − σ2| from Σ Flamant point loads (σr = −2F cos(θ−α)/(π r^decay)) + a uniform stress', uniaxial:'δ = d0 + c · r²', biaxial:'δ = d0 + c · |p − A| · |p − B| (Cassini ovals)', ribbon:'δ = d0 + A · tanh(d / period) — a ramp across the ribbon: white, orange, red, blue in order', ring:'δ = d0 + A · tanh((r − R) / period)' },
         implementation:'Each family is one expression for δ. The sheet keeps δ in the orange-red most of the time (shape 2.4 dwells near d0) and dips to white or peaks to blue briefly; the load family is real plane-stress mechanics; the conoscopes are the textbook interference figures.' },
@@ -123,7 +120,7 @@ window.STUDY={
         implementation:'Applied to the chart once (1600 entries), so per-pixel cost is a lookup; this is the step that turns a textbook chart into the plate palette.' },
       { id:'soft-focus', short:'BLUR', name:'Post defocus', layer:3, pass:4, atoms:['blur','gaussian'],
         params:{ sigma:'0.004 · W', measured:'p99 horizontal gradient 12/255 per px at 1600 px' },
-        implementation:'One gaussian over the finished color image; blurring after the chart is what mixes neighboring lanes into the grey-mauve transitions.' },
+        implementation:'One gaussian over the finished color image; blurring after the chart is what mixes neighboring lanes into the gray-mauve transitions.' },
       { id:'film-grain', short:'GRN', name:'Mono grain', layer:4, pass:5, atoms:['grain','noise'],
         params:{ amp:0.02, pitch_px:'1 at 1600 px', mono:true, measured:'black-region std 5.3/255; R/G/B high-pass correlation .96 / .95' },
         implementation:'Multiplicative hashed noise, identical across channels.' },
@@ -143,7 +140,7 @@ window.STUDY={
   _frame(ctx,W,H,V,t,scale,grainSeed){ const A=window.ART; const ww=Math.max(32,Math.round(W*scale)), hh=Math.max(32,Math.round(H*scale)); const pw=Math.ceil(0.03*ww); const work=A.off(ww+2*pw,hh+2*pw); this._paint(work,V,t,pw); const PW=pw/scale;
     ctx.setTransform(1,0,0,1,0,0); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high'; ctx.filter=`blur(${((V.P.blur!==undefined?V.P.blur:0.004)*W).toFixed(1)}px)`; ctx.drawImage(work,-PW,-PW,W+2*PW,H+2*PW); ctx.filter='none';
     const bl=(V.P.bloom!==undefined?V.P.bloom:0.35); if(bl>0){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=bl; ctx.filter=`blur(${(0.05*W).toFixed(1)}px) brightness(0.8) contrast(2.5)`; ctx.drawImage(work,-PW,-PW,W+2*PW,H+2*PW); ctx.restore(); ctx.filter='none'; }
-    A.grain(ctx,{amp:0.02,pitch:Math.max(1,Math.round(W/1000)),seed:grainSeed||14,mono:true}); },
+    A.grain(ctx,{amp:0.02,pitch:1,seed:grainSeed||14,mono:true}); },
   render(canvas,w,h,dpr,V,done){ const x=canvas.getContext('2d',{willReadFrequently:true}); this._frame(x,canvas.width,canvas.height,V,0,1,14); done&&done(); return false; },
   motion(canvas,w,h,dpr,V,t,ctx){ const W=canvas.width,H=canvas.height; this._frame(ctx,W,H,V,t,Math.min(1,400/W),14+((t*8)|0)); },
   live(V){ return `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;background:#0e0d0c;overflow:hidden}iframe{border:0;width:100%;height:100%;display:block}</style></head><body><iframe src="engine.html?preset=${encodeURIComponent(V.id)}&embed=1" title="Deep Space Chroma engine"></iframe></body></html>`; }

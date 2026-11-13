@@ -3,10 +3,7 @@ window.STUDY={
   title:'Arc bundles on a dashed globe',
   kicker:'Technique · TS-19',
   lede:'Bundles of thin arcs leave one hub as a trunk and fan apart at the far end.',
-  body:[
-    'Twelve bundles leave one hub. Every strand of a bundle shares its first direction: the control point of its curve sits on one ray from the hub. The far ends are spread over 0.2 to 0.6 rad and turned by up to 1.1 rad, so a bundle starts as one trunk and opens into separate arcs. Most run off the sheet.',
-    'Color runs along each strand through three inks and strands add where they cross, so the trunk is the brightest part. Behind them sit eleven dashed meridians of one sphere and one solid axis; square nodes carry a number. Motion sways the bundles and sends a pulse down each strand. Live moves the hub.'
-  ],
+  body:['Twelve bundles leave one hub, and every strand in a bundle shares its first direction. The far ends spread over 0.2 to 0.6 rad and turn by up to 1.1 rad, so each bundle opens from one trunk into separate arcs. Color runs along each strand through three inks and adds where strands cross, over eleven dashed meridians and numbered square nodes.'], motionHint:'Play sways the bundles and runs a pulse down each strand.', liveLabel:'Follow pointer', liveHint:'Follow pointer moves the hub to your cursor.',
   source:'Reference 19 · arc-bundle data picture on black, 702 × 405 crop',
   spot:[30,107,255], ref:{w:702,h:405},
   variantLabel:'Inks',

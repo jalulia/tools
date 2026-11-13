@@ -4,23 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="only light">
-<meta name="description" content="TS-05 · Vertical line-screen type — Heavy type cut into vertical bars; bar width follows a phase field.">
+<meta name="description" content="TS-05 · Vertical line-screen type — Heavy type printed through a vertical line screen whose bar width follows a phase field.">
 <link rel="icon" href="data:,">
-<title>TS-05 — Vertical line-screen type · Techniques &amp; Templates · ø co.</title>
+<title>TS-05 · Vertical line-screen type · Techniques &amp; Templates</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
-<link rel="stylesheet" href="../../_shared/shell.css?v=202611121940">
+<link rel="stylesheet" href="../../_shared/shell.css?v=202611130318">
 <link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
-<!-- <a class="brand" href="../../index.html" title="Index"><svg class="o" viewBox="0 0 256 256" aria-hidden="true"><g transform="translate(-554.33,-11.46)" fill="currentColor" fill-rule="evenodd"><path d="M682.33,35.81c-57.24,0-103.65,46.4-103.65,103.65s46.4,103.65,103.65,103.65,103.65-46.4,103.65-103.65-46.4-103.65-103.65-103.65ZM682.33,187.75c-26.67,0-48.29-21.62-48.29-48.29s21.62-48.29,48.29-48.29,48.29,21.62,48.29,48.29-21.62,48.29-48.29,48.29Z"/><rect x="666.18" y="-5.46" width="32.29" height="289.83" transform="translate(298.46 -441.63) rotate(45)"/></g></svg><span class="wm">IMP<i>Ø</i>SSIBLE</span></a>
-  <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Vertical line-screen type</b><span class="code">TS-05</span></span>
-  <span class="pager"><a href="../../techniques/ts-04-stacked-card-scroll/index.html" title="Stacked card scroll">← TS-04</a><a href="../../index.html#techniques"><span class="n">5</span>&nbsp;/ 19</a><a href="../../techniques/ts-06-riso-plate-separation/index.html" title="Riso three-plate separation">TS-06 →</a></span> <p class="kicker">Technique · TS-05</p><h1 class="lede">Heavy type cut into vertical bars; bar width follows a phase field.</h1><div class="body"><p>One ink on warm paper. Four lines of display type are set with leading shorter than the ascender, so each line overlaps the one above. The type is not printed as type — it prints through a vertical line screen at fixed pitch, and a bar exists only where the letter mask is on. Where two lines overlap the mask doubles and the bars swell to solid.</p><p>A low phase field shifts each bar a few units sideways and steps some regions by half a pitch, so bars break against each other at letter edges. A 0.7 px bleed rounds the bar ends, interiors print a shade darker, and the sheet carries tooth and a faint mottle.</p></div>
-  <div class="meta" style="display:block"><h2>Pass order</h2><ol class="steps"><li><div><b>paper</b> · flat fill + mottle</div></li><li><div><b>mask</b> · four text lines summed into a luminance layer, blurred 1.2 px</div></li><li><div><b>phase</b> · perlin offset per (column, y)</div></li><li><div><b>bars</b> · one polygon per continuous run per column</div></li><li><div><b>bleed</b> · 0.7 px blur, soft threshold, interior darkening</div></li><li><div><b>captions</b> · corner blocks, credit, word row</div></li><li><div><b>tooth</b> · mono grain 0.04</div></li></ol></div>
-  <div class="meta"><div class="full"><h2>Vocabulary · a technique highlights its reads · an atom finds every use</h2><div class="vocab" id="chips"><div class="vr"><span data-t="line-screen" title="Vertical line screen"><b>LINE</b>line-screen</span><span class="at"><a href="../../index.html#techniques?a=grating">grating</a><i>·</i><a href="../../index.html#techniques?a=mask">mask</a><i>·</i><a href="../../index.html#techniques?a=clip">clip</a></span></div><div class="vr"><span data-t="phase-field" title="Phase field"><b>PHSE</b>phase-field</span><span class="at"><a href="../../index.html#techniques?a=perlin">perlin</a><i>·</i><a href="../../index.html#techniques?a=offset">offset</a><i>·</i><a href="../../index.html#techniques?a=quantise">quantise</a></span></div><div class="vr"><span data-t="ink-bleed" title="Ink bleed"><b>BLED</b>ink-bleed</span><span class="at"><a href="../../index.html#techniques?a=blur">blur</a><i>·</i><a href="../../index.html#techniques?a=gain">gain</a><i>·</i><a href="../../index.html#techniques?a=darken">darken</a></span></div><div class="vr"><span data-t="paper-tooth" title="Paper tooth"><b>TOOTH</b>paper-tooth</span><span class="at"><a href="../../index.html#techniques?a=grain">grain</a><i>·</i><a href="../../index.html#techniques?a=mottle">mottle</a></span></div><div class="vr"><span data-t="caption-label" title="Caption blocks"><b>CAPT</b>caption-label</span><span class="at"><a href="../../index.html#techniques?a=type">type</a><i>·</i><a href="../../index.html#techniques?a=justify">justify</a></span></div></div></div>
-  <div><h2>Reference</h2><div class="ro">Reference 05 · line-screened slab-serif type on gray stock, 1448 × 936</div></div><div><h2>Study</h2><div class="nm">Vertical line-screen type</div><div class="ro">TS-05 · Techniques · 5 / 19</div></div></div>
-  <div class="meta static" style="display:block"><h2>Techniques · <a href="spec.json">spec.json</a></h2><ol class="steps"><li><div><b>line-screen</b> · Vertical line screen — For every screen column x_k = k·pitch, walk down the page one device pixel at a time, read the summed letter mask at (x_k + phase, y), map it to a bar width and fill each continuous run as one polygon with a left and a right edge per y.</div></li><li><div><b>phase-field</b> · Phase field — phase(x,y) = 2.4·fbm(x/260, y/260) plus half a pitch in regions where the field is high; the bar center is x_k + phase, so bars in neighbouring regions step against each other.</div></li><li><div><b>ink-bleed</b> · Ink bleed — The bar layer is blurred 0.8 px, its alpha is pushed through a soft threshold so the edge swells outward, and the ink color shifts toward ink_deep inside the letters.</div></li><li><div><b>paper-tooth</b> · Paper tooth — Luminance is multiplied by 1 + mottle before the bars land and by ART.grain after, so ink and paper share one tooth.</div></li><li><div><b>caption-label</b> · Caption blocks — Plain fills in the caption color; the word row divides the leftover width equally between the words.</div></li></ol></div>
-  <div class="meta static" style="display:block"><h2>11 reads · u, v on the sheet</h2><ol class="steps"><li><div><b>LINE</b> · Line screen · pitch 6.9 u, bar 0.66 pitch inside a letter <span class="ro">u 0.50 · v 0.24 · line-screen</span></div></li><li><div><b>LINE</b> · Bar ends · the mask clips each bar; no bar on bare paper <span class="ro">u 0.20 · v 0.44 · line-screen</span></div></li><li><div><b>MERG</b> · Overlap · two lines of type, density 2, bars merge to solid <span class="ro">u 0.69 · v 0.47 · line-screen</span></div></li><li><div><b>PHSE</b> · Phase field · perlin, period 260 u, shift ± 2.4 u <span class="ro">u 0.36 · v 0.36 · phase-field</span></div></li><li><div><b>PHSE</b> · Half-pitch step · field quantised where |n| &gt; 0.35 <span class="ro">u 0.76 · v 0.66 · phase-field</span></div></li><li><div><b>BLED</b> · Ink bleed · 0.7 px blur, gain 1.15, corners soften <span class="ro">u 0.30 · v 0.72 · ink-bleed</span></div></li><li><div><b>BLED</b> · Interior darkening · ink → ink_deep where mask density &gt; 0.9 <span class="ro">u 0.62 · v 0.80 · ink-bleed</span></div></li><li><div><b>TOOTH</b> · Paper tooth · mono grain amp 0.04 on 1 px cells <span class="ro">u 0.90 · v 0.12 · paper-tooth</span></div></li><li><div><b>TOOTH</b> · Mottle · perlin at 60 u, ± 3.5 % luminance <span class="ro">u 0.08 · v 0.60 · paper-tooth</span></div></li><li><div><b>CAPT</b> · Caption block · Archivo 800 caps, 18 u, four lines <span class="ro">u 0.16 · v 0.15 · caption-label</span></div></li><li><div><b>CAPT</b> · Word row · JetBrains Mono 14 u, justified across 840 u <span class="ro">u 0.50 · v 0.93 · caption-label</span></div></li></ol></div>
-  <div class="foot"><span><b>R</b> compare · <b>V</b> variant · <b>S</b> spec · <b>F</b> expand · <b>space</b> re-read</span><span>ø co. · 2026</span></div> {
+<!-- <span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#techniques">Techniques</a><span class="sep">/</span><b>Vertical line-screen type</b><span class="code">TS-05</span></span>
+  <span class="pager"><a href="../../techniques/ts-04-stacked-card-scroll/index.html" title="Previous: TS-04 Stacked card scroll">← TS-04</a><a class="pos" href="../../index.html#techniques"><span class="n">5</span>&nbsp;of 19</a><a href="../../techniques/ts-06-riso-plate-separation/index.html" title="Next: TS-06 Riso three-plate separation">TS-06 →</a></span> <p class="kicker"><span>TS-05</span><span>screen tone</span></p><h1 class="title">Vertical line-screen type</h1><p class="lede">Heavy type printed through a vertical line screen whose bar width follows a phase field.</p><div class="body"><p>Four lines of display type overlap because the leading is shorter than the ascender. A bar prints only inside a letter, and where two lines overlap the bars swell to solid. A low phase field shifts bars sideways and steps some regions by half a pitch, so bars break at letter edges; a 0.7 px bleed rounds their ends.</p></div>
+  <div class="accs">
+  <details class="acc" name="notes" id="aBuild" open><summary><span>How it is built</span></summary><div class="ab"><ol class="steps"><li><b>paper</b><span>flat fill + mottle</span></li><li><b>mask</b><span>four text lines summed into a luminance layer, blurred 1.2 px</span></li><li><b>phase</b><span>perlin offset per (column, y)</span></li><li><b>bars</b><span>one polygon per continuous run per column</span></li><li><b>bleed</b><span>0.7 px blur, soft threshold, interior darkening</span></li><li><b>captions</b><span>corner blocks, credit, word row</span></li><li><b>tooth</b><span>mono grain 0.04</span></li></ol></div></details>
+  <details class="acc" name="notes" id="aTech"><summary><span>Techniques <i>5</i></span></summary><div class="ab"><ul class="vocab" id="chips"><li class="vr"><button type="button" data-t="line-screen"><span class="vn">Vertical line screen</span><span class="vid">line-screen</span></button><span class="at"><a href="../../index.html#techniques?a=grating">grating</a><a href="../../index.html#techniques?a=mask">mask</a><a href="../../index.html#techniques?a=clip">clip</a></span><p class="ah">For every screen column x_k = k·pitch, walk down the page one device pixel at a time, read the summed letter mask at (x_k + phase, y), map it to a bar width and fill each continuous run as one polygon with a left and a right edge per y.</p></li><li class="vr"><button type="button" data-t="phase-field"><span class="vn">Phase field</span><span class="vid">phase-field</span></button><span class="at"><a href="../../index.html#techniques?a=perlin">perlin</a><a href="../../index.html#techniques?a=offset">offset</a><a href="../../index.html#techniques?a=quantise">quantise</a></span><p class="ah">phase(x,y) = 2.4·fbm(x/260, y/260) plus half a pitch in regions where the field is high; the bar center is x_k + phase, so bars in neighboring regions step against each other.</p></li><li class="vr"><button type="button" data-t="ink-bleed"><span class="vn">Ink bleed</span><span class="vid">ink-bleed</span></button><span class="at"><a href="../../index.html#techniques?a=blur">blur</a><a href="../../index.html#techniques?a=gain">gain</a><a href="../../index.html#techniques?a=darken">darken</a></span><p class="ah">The bar layer is blurred 0.8 px, its alpha is pushed through a soft threshold so the edge swells outward, and the ink color shifts toward ink_deep inside the letters.</p></li><li class="vr"><button type="button" data-t="paper-tooth"><span class="vn">Paper tooth</span><span class="vid">paper-tooth</span></button><span class="at"><a href="../../index.html#techniques?a=grain">grain</a><a href="../../index.html#techniques?a=mottle">mottle</a></span><p class="ah">Luminance is multiplied by 1 + mottle before the bars land and by ART.grain after, so ink and paper share one tooth.</p></li><li class="vr"><button type="button" data-t="caption-label"><span class="vn">Caption blocks</span><span class="vid">caption-label</span></button><span class="at"><a href="../../index.html#techniques?a=type">type</a><a href="../../index.html#techniques?a=justify">justify</a></span><p class="ah">Plain fills in the caption color; the word row divides the leftover width equally between the words.</p></li></ul></div></details>
+  <details class="acc" name="notes" id="aRef"><summary><span>Reference and match</span></summary><div class="ab"><p class="src">Reference 05 · line-screened slab-serif type on gray stock, 1448 × 936</p><div class="fid" id="fid"></div></div></details>
+  <details class="acc" name="notes" id="aStudy"><summary><span>Study</span></summary><div class="ab"><dl class="kv"><dt>Code</dt><dd>TS-05</dd><dt>Section</dt><dd>Techniques · 5 of 19</dd><dt>Family</dt><dd>screen tone</dd><dt>Spec</dt><dd><a href="spec.json">spec.json</a></dd></dl></div></details>
+  <details class="acc" name="notes" id="aPts"><summary><span>Callouts <i>11</i></span></summary><div class="ab"><ol class="steps"><li><b>LINE · Line screen · pitch 6.9 u, bar 0.66 pitch inside a letter</b><span>u 0.50 · v 0.24 · line-screen</span></li><li><b>LINE · Bar ends · the mask clips each bar; no bar on bare paper</b><span>u 0.20 · v 0.44 · line-screen</span></li><li><b>MERG · Overlap · two lines of type, density 2, bars merge to solid</b><span>u 0.69 · v 0.47 · line-screen</span></li><li><b>PHSE · Phase field · perlin, period 260 u, shift ± 2.4 u</b><span>u 0.36 · v 0.36 · phase-field</span></li><li><b>PHSE · Half-pitch step · field quantised where |n| &gt; 0.35</b><span>u 0.76 · v 0.66 · phase-field</span></li><li><b>BLED · Ink bleed · 0.7 px blur, gain 1.15, corners soften</b><span>u 0.30 · v 0.72 · ink-bleed</span></li><li><b>BLED · Interior darkening · ink → ink_deep where mask density &gt; 0.9</b><span>u 0.62 · v 0.80 · ink-bleed</span></li><li><b>TOOTH · Paper tooth · mono grain amp 0.04 on 1 px cells</b><span>u 0.90 · v 0.12 · paper-tooth</span></li><li><b>TOOTH · Mottle · perlin at 60 u, ± 3.5 % luminance</b><span>u 0.08 · v 0.60 · paper-tooth</span></li><li><b>CAPT · Caption block · Archivo 800 caps, 18 u, four lines</b><span>u 0.16 · v 0.15 · caption-label</span></li><li><b>CAPT · Word row · JetBrains Mono 14 u, justified across 840 u</b><span>u 0.50 · v 0.93 · caption-label</span></li></ol></div></details>
+  <details class="acc" name="notes" id="aRel"><summary><span>Related</span></summary><div class="ab"><div class="rel" id="rel"></div></div></details>
+  </div> {
   &quot;id&quot;: &quot;ts-05-line-screen-type&quot;,
   &quot;code&quot;: &quot;TS-05&quot;,
   &quot;title&quot;: &quot;Vertical line-screen type&quot;,
@@ -108,7 +109,7 @@
         &quot;quantise&quot;: &quot;+0.5 pitch where fbm &gt; 0.35&quot;,
         &quot;seed&quot;: 505
       },
-      &quot;implementation&quot;: &quot;phase(x,y) = 2.4·fbm(x/260, y/260) plus half a pitch in regions where the field is high; the bar center is x_k + phase, so bars in neighbouring regions step against each other.&quot;
+      &quot;implementation&quot;: &quot;phase(x,y) = 2.4·fbm(x/260, y/260) plus half a pitch in regions where the field is high; the bar center is x_k + phase, so bars in neighboring regions step against each other.&quot;
     },
     {
       &quot;id&quot;: &quot;ink-bleed&quot;,
@@ -178,45 +179,68 @@
     &quot;The reference type is a slab serif; no serif is inlined, so the rebuild sets Archivo 900 at condensed width (font-stretch 75 %), which keeps the stroke weight and the tight leading but not the slabs.&quot;,
     &quot;Words are invented. Seed 505.&quot;
   ]
-} are BAKED here by `node _build/build.mjs` from study.js — a static read for readers that
+} are BAKED here by `node _build/build.mjs` from study.js: a static read for readers that
      cannot run scripts. shell.js redraws all of it on load. Edit study.js or _build/, never the generated index.html. -->
 <nav class="nav" id="nav" aria-label="Site navigation">{{NAV}}</nav>
 <main class="plate">
-  <section class="notes" id="copy">{{NOTES}}</section>
-  <section class="figure" id="stage">
-    <div class="cvwrap"><canvas id="cv" aria-label="technique study, read"><img src="thumb.png" alt="TS-05 rebuild, still frame" loading="lazy"></canvas></div>
+  <section class="notes" id="copy" aria-label="About this technique">{{NOTES}}</section>
+  <section class="figure" id="stage" aria-label="Plate">
+    <div class="cvwrap"><canvas id="cv" aria-label="TS-05 plate"><img src="thumb.png" alt="TS-05 rebuild, still frame" loading="lazy"></canvas></div>
     <div class="live" id="live"></div>
-    <div class="log" id="log">
-      <div class="ctl">
-        <button id="bRead" type="button" class="on" title="toggle the read overlay">Read</button>
-        <button id="bReplay" type="button" title="re-run the read (space)">↻ Replay</button>
-        <button id="bMode" type="button" title="cycle rebuild / reference / split (R)">Rebuild</button>
-        <button id="bMotion" type="button" hidden title="run the motion version (M)">Motion</button>
-        <button id="bLive" type="button" hidden title="open the live DOM version (L)">Live</button>
-        <button id="bWide" type="button" title="fold the notes away and fill the page (F)">Expand</button>
-        <button id="bSpec" type="button" title="open the machine-readable spec (S)">Spec ⇥</button>
-      </div>
-      <div class="vtabs" id="vtabs"></div>
-      <div class="prail" id="prail" hidden></div>
-      <div class="lbody">
-        <div class="lh"><span>Track log</span><span id="ctr">0 / 10</span></div>
-        <div class="rows" id="rows"></div>
-        <div class="read" id="read"><b>Read</b><span id="readtxt">Hover or select a point.</span><code id="readcode"></code></div>
-        <div class="fid" id="fid"></div>
-      </div>
-    </div>
-    <div class="rel" id="rel"></div>
   </section>
+  <aside class="panel" id="panel" aria-label="Controls">
+    <section class="mod" id="mView" aria-labelledby="hView">
+      <header><h2 id="hView">View</h2><button type="button" class="ghost" id="bWide" title="Hide the side columns (F)"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1 4.5V1h3.5M11 4.5V1H7.5M1 7.5V11h3.5M11 7.5V11H7.5"/></svg><span>Expand</span></button></header>
+      <div class="seg" id="segView" role="radiogroup" aria-label="What the plate shows">
+        <button type="button" role="radio" aria-checked="true" data-m="0">Plate</button><button type="button" role="radio" aria-checked="false" data-m="1">Reference</button><button type="button" role="radio" aria-checked="false" data-m="2">Compare</button>
+      </div>
+      <p class="hint" id="viewHint">The rebuild, drawn in code.</p>
+    </section>
+    <section class="mod" id="mNote" aria-labelledby="hNote">
+      <header><h2 id="hNote">Callouts</h2><label class="sw-toggle"><input type="checkbox" id="tNote" checked><span class="tr" aria-hidden="true"></span><span class="tl">Show</span></label></header>
+      <p class="hint">Numbered points mark where each technique was measured. Hover one on the plate to read it.</p>
+      <div class="row2"><button type="button" class="btn" id="bReplay" title="Draw the plate again, top to bottom (space)"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M10.2 6.3A4.2 4.2 0 1 1 8.9 3"/><path d="M9.4 1v2.4H7"/></svg><span>Replay the build</span></button></div>
+      <button type="button" class="disc" id="bPoints" aria-expanded="false" aria-controls="pts"><span>Point list</span><b id="ctr">0 / 10</b><svg class="chev" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 3.8L5 6.3l2.5-2.5"/></svg></button>
+      <div class="pts" id="pts" hidden>
+        <div class="rows" id="rows"></div>
+        <div class="read" id="read"><span id="readtxt">Hover or select a point.</span><code id="readcode"></code></div>
+      </div>
+    </section>
+    <section class="mod" id="mMotion" aria-labelledby="hMotion">
+      <header><h2 id="hMotion">Motion</h2><span class="state" id="motionState">Still</span></header>
+      <div class="row2" id="motionRow">
+        <button type="button" class="btn" id="bMotion" aria-pressed="false" title="Play or pause the motion version (M)"><svg class="i-play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.6v8.8L10.2 6z"/></svg><svg class="i-pause" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5h2v9H3zM7 1.5h2v9H7z"/></svg><span>Play</span></button>
+        <button type="button" class="btn" id="bLive" aria-pressed="false" title="Open the interactive version (L)"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.5l7.5 4-3.3 1 1.9 3.6-1.3.7-1.9-3.6L2.5 9.6z"/></svg><span id="liveLabel">Interactive</span></button>
+      </div>
+      <p class="hint" id="motionHint"></p>
+    </section>
+    <section class="mod" id="mColor" aria-labelledby="hColor">
+      <header><h2 id="hColor">Color</h2><button type="button" class="ghost warn" id="bInkReset" hidden>Reset inks</button></header>
+      <p class="hint" id="colorHint">Pick a palette. Click any ink to change it; the plate redraws.</p>
+      <div class="pal" id="pal" role="radiogroup" aria-label="Palettes"></div>
+      <div class="inks" id="inks"></div>
+    </section>
+    <section class="mod" id="mParams" aria-labelledby="hParams">
+      <header><h2 id="hParams">Parameters</h2><button type="button" class="ghost warn" id="bParamReset" hidden>Reset all</button></header>
+      <p class="hint">Every value is editable. Drag a slider or type a number, then Enter. Arrow keys step; Shift ×10, Alt ×0.1. The plate redraws.</p>
+      <div class="pgroups" id="prail"></div>
+    </section>
+    <section class="mod" id="mExport" aria-labelledby="hExport">
+      <header><h2 id="hExport">Export</h2></header>
+      <div class="row3"><button type="button" class="btn" id="bCopy" title="Copy the spec as JSON">Copy spec</button><button type="button" class="btn" id="bSpec" title="Open the spec (S)">Open spec</button><button type="button" class="btn" id="bPng" title="Save the plate as it is drawn now">Save PNG</button></div>
+      <p class="hint">The spec holds every measured number, its range and the module that draws it.</p>
+    </section>
+  </aside>
 </main>
-<aside class="spec" id="spec" aria-hidden="true">
-  <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
+<aside class="spec" id="spec" aria-hidden="true" aria-label="Technique spec">
+  <div class="sh"><span>Spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
   <pre id="specpre">{{SPEC}}</pre>
 </aside>
-<script src="../../_shared/entries.js?v=202611121940"></script>
-<script src="../../_shared/vocab.js?v=202611121940"></script>
-<script src="../../_shared/art.js?v=202611121940"></script>
+<script src="../../_shared/entries.js?v=202611130318"></script>
+<script src="../../_shared/vocab.js?v=202611130318"></script>
+<script src="../../_shared/art.js?v=202611130318"></script>
 <script src="ref.js"></script>
 <script src="study.js"></script>
-<script src="../../_shared/shell.js?v=202611121940"></script>
+<script src="../../_shared/shell.js?v=202611130318"></script>
 </body>
 </html>

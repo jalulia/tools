@@ -2,11 +2,8 @@ window.STUDY={
   id:'ts-02-four-ink-spot-illustration', code:'TS-02', fig:'1.2',
   title:'Four-ink spot illustration',
   kicker:'Technique · TS-02',
-  lede:'Black keyline, three flat spot inks slipped 2 u, hatch and dot tints on cream.',
-  body:[
-    'A letterpress catalogue sheet. Eight objects, each a closed shape filled flat on one of three plates — red, yellow, blue — and outlined on a black plate. Green is yellow under blue; pink and sky are red and blue screened as a 5 u dot tint. Every color plate prints 1–2.5 u down-right of the black, so a paper sliver opens on one edge and color spills the line on the other.',
-    'Shadow sides carry a 45° broken hatch on the black plate at 6 u pitch. The stock is cream with a low mottle and a 1 px grain; a 0.35 px blur stands in for the scan. Captions run under each object in mono.'
-  ],
+  lede:'A black keyline and three flat spot inks, slipped 1 to 2.5 u off register, with hatch and dot tints.',
+  body:['Eight objects are filled flat on red, yellow and blue plates and outlined on black. Green is yellow under blue; pink and sky are 5 u dot tints. Shadow sides carry a 45° broken hatch at 6 u pitch, on off-white stock with a low mottle and one-pixel grain.'],
   source:'Reference 02 · textbook spot-illustration sheet, 1006 × 1390',
   spot:[223,97,82], ref:{w:1006,h:1390},
   variantLabel:'Inks',
@@ -61,7 +58,7 @@ window.STUDY={
         implementation:'Cream flat, then a low-frequency perlin multiply, a 0.35 px blur for the scan, then mono grain over everything including the inks.' },
       { id:'caption-label', short:'CAPT', name:'Caption label', layer:3, pass:3, atoms:['lettering','mono','caps'],
         params:{ font:'JetBrains Mono 700', size_u:21, tracking_u:1.5, case:'upper', title_u:26, folio_u:24 },
-        implementation:'One caption centred under each object on the black plate; a sheet title at the top and a folio at the foot.' }
+        implementation:'One caption centered under each object on the black plate; a sheet title at the top and a folio at the foot.' }
     ],
     pass_order:['stock · cream flat','color plates · flat fills, tints, knockouts per shape','composite · yellow, red, blue plates multiplied at their offsets','black plate · keylines, hatch, captions in register','age · mottle multiply, 0.35 px blur, mono grain'],
     notes:['Measured on ref.png: keyline dark runs 1–3 px at 1006 px (2.2 u); tint dot pitch 4–5 px; fill slip ≈ 2 px down-right; paper (247,237,227) σ 4.5, 72 % of pixels.','Seed 202.']
@@ -204,6 +201,6 @@ window.STUDY={
     mx.putImageData(md,0,0); x.imageSmoothingEnabled=true; x.imageSmoothingQuality='high'; x.drawImage(mc,0,0,mw,mh,0,0,W,H);
     x.globalCompositeOperation='source-over';
     const soft=A.blur(canvas,0.35*dpr); x.drawImage(soft,0,0);
-    A.grain(x,{amp:V.grain,pitch:Math.max(1,Math.round(dpr)),seed:202,mono:true,corr:0.2});
+    A.grain(x,{amp:V.grain,pitch:1,seed:202,mono:true,corr:0.2});
   }
 };
