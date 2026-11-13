@@ -53,40 +53,243 @@
   "techniques": [
     {
       "id": "counted-stipple",
-      "short": "CSNT",
-      "name": "Counted stipple",
+      "short": "CNT",
+      "name": "Counted screen",
       "layer": 1,
       "pass": 1,
       "atoms": [
-        "screen-tone"
+        "screen-tone",
+        "stipple"
       ],
       "params": {
-        "figures": 4,
-        "family": "screen-tone",
-        "panels": [
-          {
-            "title": "Stipple ramp, light to dark",
-            "coverage": 0.463,
-            "ground": "#F6F7F7"
-          },
-          {
-            "title": "Two-ink stipple ramp",
-            "coverage": 0.468,
-            "ground": "#FDFDFD"
-          },
-          {
-            "title": "Two ring screens, multiplied",
-            "coverage": 0.211,
-            "ground": "#FEFEFE"
-          },
-          {
-            "title": "Nine counted tiles",
-            "coverage": 0.286,
-            "ground": "#FFFFFF"
-          }
-        ]
+        "cell": {
+          "value": 3.4,
+          "range": [
+            2,
+            8
+          ],
+          "step": 0.1,
+          "label": "Cell",
+          "note": "Side of one screen cell, in screen pixels. Held at this size at any plate size, so a larger plate prints more dots, not bigger ones.",
+          "unit": "px"
+        },
+        "dot": {
+          "value": 1.5,
+          "range": [
+            1,
+            3
+          ],
+          "step": 0.05,
+          "label": "Dot",
+          "note": "Side of one dot, in screen pixels. Dots print as whole pixels; a fractional size is kept by thinning the count, so tone does not jump.",
+          "unit": "px"
+        },
+        "perCell": {
+          "value": 3,
+          "range": [
+            1,
+            6
+          ],
+          "step": 1,
+          "label": "Dots per cell",
+          "note": "Most dots one cell can hold. Tone is the count: density times this, the remainder kept by the hash."
+        },
+        "jitter": {
+          "value": 1,
+          "range": [
+            0,
+            1
+          ],
+          "step": 0.01,
+          "label": "Scatter",
+          "note": "Where a dot may land in its cell. 1 is anywhere (the stochastic screen); 0 stacks every dot on the cell center, an ordered screen."
+        },
+        "round": {
+          "value": 2.5,
+          "range": [
+            1.5,
+            4
+          ],
+          "step": 0.05,
+          "label": "Round from",
+          "note": "Dots this size and larger print round; smaller ones are square pixels.",
+          "unit": "px"
+        },
+        "seed": {
+          "value": 11,
+          "range": [
+            1,
+            99
+          ],
+          "step": 1,
+          "label": "Seed",
+          "note": "Re-rolls every hash: which dots are kept and where they land."
+        }
       },
-      "implementation": "Tone is printed as a count of one-pixel dots per cell, so density carries the value and nothing is blended; two screens multiplied make the rings."
+      "implementation": "Each cell of a jittered grid prints up to N dots at hashed positions and keeps the last one with probability equal to the remainder, so density is carried by the count of marks and nothing is blended."
+    },
+    {
+      "id": "stipple-ramp",
+      "short": "RAMP",
+      "name": "Stipple ramps",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "ramp"
+      ],
+      "params": {
+        "gamma": {
+          "value": 1.15,
+          "range": [
+            0.4,
+            3
+          ],
+          "step": 0.01,
+          "label": "Ramp curve",
+          "note": "First figure: density = floor + (top - floor) · x^curve across the width."
+        },
+        "gamma2": {
+          "value": 1.4,
+          "range": [
+            0.4,
+            3
+          ],
+          "step": 0.01,
+          "label": "Split ramp curve",
+          "note": "Second figure: the same ramp, printed dark green over teal."
+        },
+        "split": {
+          "value": 0.5,
+          "range": [
+            0.15,
+            0.85
+          ],
+          "step": 0.01,
+          "label": "Split",
+          "note": "Where the second figure turns from dark green to teal, with a hairline on the seam."
+        },
+        "floor": {
+          "value": 0,
+          "range": [
+            0,
+            0.3
+          ],
+          "step": 0.005,
+          "label": "Floor",
+          "note": "Density where the ramps start."
+        },
+        "top": {
+          "value": 0.97,
+          "range": [
+            0.5,
+            1
+          ],
+          "step": 0.005,
+          "label": "Top",
+          "note": "Density where they end."
+        }
+      },
+      "implementation": "density = floor + (top - floor) · (x / W)^curve, screened by the counted screen; the split ramp prints the top in dark green and the bottom in teal."
+    },
+    {
+      "id": "ring-interference",
+      "short": "RING",
+      "name": "Ring interference",
+      "layer": 2,
+      "pass": 3,
+      "atoms": [
+        "interference"
+      ],
+      "params": {
+        "pitchA": {
+          "value": 44,
+          "range": [
+            12,
+            90
+          ],
+          "step": 0.1,
+          "label": "Pitch, you",
+          "note": "Ring pitch of the first source, in figure units.",
+          "unit": "u"
+        },
+        "pitchB": {
+          "value": 38.6,
+          "range": [
+            12,
+            90
+          ],
+          "step": 0.1,
+          "label": "Pitch, Mir",
+          "note": "Ring pitch of the second source. Close to the first, the beat between them opens into wide lozenges.",
+          "unit": "u"
+        },
+        "gain": {
+          "value": 0.85,
+          "range": [
+            0.3,
+            1.2
+          ],
+          "step": 0.01,
+          "label": "Gain",
+          "note": "Density at a shared crest: (0.02 + gain · (A·B)^1.25) under the falloff."
+        },
+        "reach": {
+          "value": 0.42,
+          "range": [
+            0.2,
+            0.9
+          ],
+          "step": 0.01,
+          "label": "Reach",
+          "note": "Width of the falloff that fades the rings toward the edges, as a share of the figure width."
+        },
+        "peak": {
+          "value": 0.93,
+          "range": [
+            0.8,
+            1
+          ],
+          "step": 0.005,
+          "label": "Purple peak",
+          "note": "Where both crests stand above this near the first source, the cell prints one purple count. 1 removes it."
+        }
+      },
+      "implementation": "Two ring screens A = ½ + ½cos(2π dA / pA) and B likewise; their product, under a gaussian falloff, is the density; the cell takes dark green where A leads and teal where B does."
+    },
+    {
+      "id": "counted-cells",
+      "short": "CELL",
+      "name": "Counted letters",
+      "layer": 2,
+      "pass": 4,
+      "atoms": [
+        "count"
+      ],
+      "params": {
+        "tone": {
+          "value": 1,
+          "range": [
+            0.4,
+            1.2
+          ],
+          "step": 0.01,
+          "label": "Tone",
+          "note": "Each letter prints its digit (1 to 9, from its place in the alphabet) as density digit/9 times this.",
+          "unit": "×"
+        },
+        "inset": {
+          "value": 4,
+          "range": [
+            0,
+            14
+          ],
+          "step": 0.5,
+          "label": "Inset",
+          "note": "Margin of white inside each cell, in figure units.",
+          "unit": "u"
+        }
+      },
+      "implementation": "The words are spelled one letter per cell; each letter maps to a digit 1 to 9 and the cell prints that count as its tone, in the ink of its channel."
     },
     {
       "id": "ink-palette",
@@ -169,8 +372,9 @@
   ],
   "pass_order": [
     "ground · plate",
-    "figures · justified rows",
-    "read · points measured from each figure"
+    "counted screen · cells at screen size",
+    "ramps · rings · counted letters, one density field each",
+    "read · points measured from the filed figures"
   ],
   "notes": [
     "Sources: Private project · isolated figure"
