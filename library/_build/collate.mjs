@@ -198,9 +198,10 @@ const READERS = {
   /** Technique Studies: each plate is a standalone page with window.STUDY inside. */
   'st-plates'(col) {
     const out = [];
-    const files = readdirSync(join(ROOT, col.path)).filter((f) => /^st-\d+.*\.html$/.test(f)).sort();
+    // one folder per study: <path>/st-NN-slug/index.html (+ thumb.png)
+    const files = readdirSync(join(ROOT, col.path)).filter((f) => /^st-\d+/.test(f) && exists(`${col.path}/${f}/index.html`)).sort();
     files.forEach((f, i) => {
-      const file = `${col.path}/${f}`;
+      const file = `${col.path}/${f}/index.html`;
       const html = read(join(ROOT, file));
       const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
       const art = scripts.find((s) => /window\.STUDY\s*=/.test(s));
@@ -225,13 +226,13 @@ const READERS = {
         return { scheme: 'st', id, name: b.name || (p ? p.label.split(' · ')[0] : id), short: p ? p.d : (b.short || null), implementation: b.implementation || (p ? p.label : null), atoms: b.atoms || [] };
       });
       const refNull = /window\.__REF\s*=\s*\{[^}]{0,60}"data"\s*:\s*null/.test(html);
-      const thumb = `gallery/thumbs/ts-st${n}.png`;
+      const own = `${col.path}/${f}/thumb.png`, thumb = exists(own) ? own : `gallery/thumbs/ts-st${n}.png`;
       out.push({
-        id: `st:st-${n}`, slug: f.replace(/\.html$/, ''), call: pick('code') || `ST-${n}`, title: pick('title') || plain((html.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || f),
+        id: `st:st-${n}`, slug: f, call: pick('code') || `ST-${n}`, title: pick('title') || plain((html.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || f),
         sub: line(pick('lede') || pick('method') || ''),
         kind: 'study', collection: col.id, section: 'plates', section_title: 'Read plates',
         status: null, lane: 'canvas2d', layer: null, style: null,
-        href: file, thumbSrc: exists(thumb) ? thumb : null, source: file, dirs: [file],
+        href: `${col.path}/${f}/`, thumbSrc: exists(thumb) ? thumb : null, source: file, dirs: [`${col.path}/${f}`, `technique-studies/${f}.html`],
         plate: { spec: !!(S && S.spec), points: points.length, compare: !refNull },
         reads, rel: [], governed_by: [],
         provenance: { kind: 'reference-study', title: pick('source'), author: null, date: null, license: null, url: null, rights: refNull ? 'reference-withheld' : 'reference-published' },
@@ -349,6 +350,8 @@ for (const f of ['works.json', 'works-private.json']) {
   const seen = new Set();
   for (const r of raw) { if (seen.has(r.id)) problems.push(`duplicate record id ${r.id}`); seen.add(r.id); }
 }
+/* hidden: the page stays at its address, but no index, sheet or gallery lists it. collections.json `hidden`: { id: reason } */
+for (const r of raw) { const why = (CFG.hidden || {})[r.id]; if (why) { r.role = 'hidden'; r.hidden_why = why; } }
 
 /* dates + fixity ---------------------------------------------------------- */
 const fixity = {};
@@ -702,7 +705,7 @@ const out = (r) => {
   };
   for (const k of ['spec_href', 'thumb_master']) if (r[k]) o[k] = k === 'spec_href' ? `../${r[k]}` : r[k];
   for (const k of ['governed_by', 'tags']) if (r[k] && r[k].length) o[k] = r[k];
-  for (const k of ['swatches', 'ruling', 'proposed_grade', 'atom_kind', 'location', 'target', 'pic_group', 'no_pic', 'work', 'role', 'part_of', 'versions', 'parts', 'thumb_from', 'family', 'form']) if (r[k]) o[k] = r[k];
+  for (const k of ['swatches', 'ruling', 'proposed_grade', 'atom_kind', 'location', 'target', 'pic_group', 'no_pic', 'work', 'role', 'hidden_why', 'part_of', 'versions', 'parts', 'thumb_from', 'family', 'form']) if (r[k]) o[k] = r[k];
   if (r.thumb_kind === 'snapshot') o.thumb_kind = 'snapshot';
   if (r.private) o.private = true;
   if (r.pic) {

@@ -424,7 +424,8 @@
       (r.spec_href ? '<a href="' + e(r.spec_href) + '">Spec JSON ↗</a>' : '') + '<button type="button" data-copy="record">Copy record</button>' + (PREVIEW ? '' : '<button type="button" data-copy="link">Copy link</button>') + '</div>';
     var rows = [];
     var of = r.work ? byId[r.work] : null;
-    if (r.role) rows.push([r.role === 'version' ? 'Version of' : 'Part of', of ? '<a href="' + recHref(of) + '" data-r="' + of.acc + '">' + e(label(of)) + '</a>' : e(cap(r.part_of || ''))]);
+    if (r.role === 'hidden') rows.push(['Hidden', e(r.hidden_why || 'Not listed.')]);
+    else if (r.role) rows.push([r.role === 'version' ? 'Version of' : 'Part of', of ? '<a href="' + recHref(of) + '" data-r="' + of.acc + '">' + e(label(of)) + '</a>' : e(cap(r.part_of || ''))]);
     rows.push(['Kind', '<span class="gl">' + glyph(r.kind, r.status, r.access) + e(r.kind) + (r.atom_kind ? ' · ' + e(r.atom_kind) : '') + '</span>']);
     rows.push(['Status', r.status ? e(r.status.replace('-', ' ')) + (r.ruling ? ' <small>· ruled by ' + e(r.ruling.by) + (r.ruling.date ? ', ' + e(r.ruling.date) : '') + '</small>' : '') + (r.proposed_grade ? ' <small>· proposed grade ' + e(r.proposed_grade) + '</small>' : '') : '<small>none recorded</small>']);
     if (r.access !== 'public') rows.push(['Access', e(cap(r.access)) + ' <small>· ' + e(L.vocabulary.access[r.access]) + (r.target ? ' For ' + e(r.target) + '.' : '') + '</small>']);
