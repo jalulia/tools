@@ -1,0 +1,803 @@
+{
+  "id": "ap-28-respiration-rail",
+  "code": "AP-28",
+  "title": "Respiration rail · 13 of 21 breaths, stitched",
+  "section": "applications",
+  "variants": [
+    {
+      "id": "set",
+      "label": "As drawn",
+      "swatches": []
+    }
+  ],
+  "usage": {
+    "id": "c-respiration",
+    "job": "concept",
+    "title": "Respiration rail · 13 of 21 breaths, stitched",
+    "aspect": "9/16",
+    "uses": [
+      "fx-10-embroidery",
+      "fx-02-ink-edge",
+      "fx-04-weave"
+    ]
+  },
+  "reference": {
+    "grammar": "The RESPIRATION reading stood on end and sewn into white shirting: 21 breath cells, breath 1 at the bottom. The 13 taken are satin-filled in --c258, the color the product gives a lit respiration cell. The 8 still to come are not stitched at all. They are the transfer pattern, a dashed gray outline printed on the cloth before work begins: the part not yet worked. The rail renews at 21. The count is a placeholder, and the labels keep the product's 7 px caps grammar, scaled up to read."
+  },
+  "techniques": [
+    {
+      "id": "fx-10-embroidery",
+      "name": "Satin embroidery",
+      "short": "FX-10",
+      "atoms": [
+        "stitch",
+        "deform",
+        "reflect"
+      ],
+      "params": {
+        "size": {
+          "value": 0.74,
+          "range": [
+            0.15,
+            1
+          ],
+          "label": "Size",
+          "step": 0.01,
+          "note": "motif height as a share of the plate"
+        },
+        "count": {
+          "value": 38,
+          "range": [
+            8,
+            60
+          ],
+          "label": "Stitch count",
+          "step": 0.5,
+          "unit": "/100px",
+          "note": "satin threads per 100 CSS px, across the stitch direction"
+        },
+        "angle": {
+          "value": 82,
+          "range": [
+            -90,
+            90
+          ],
+          "label": "Stitch angle",
+          "step": 1,
+          "unit": "°",
+          "note": "direction of the floats; threads gleam most when they run across the light"
+        },
+        "maxFloat": {
+          "value": 72,
+          "range": [
+            8,
+            400
+          ],
+          "label": "Max float",
+          "step": 1,
+          "unit": "px",
+          "note": "longest stitch before it splits into rows (split satin); the split points stagger like brickwork"
+        },
+        "stagger": {
+          "value": 0.15,
+          "range": [
+            0,
+            1
+          ],
+          "label": "End stagger",
+          "step": 0.01,
+          "note": "how unevenly the stitch ends land along the motif edge (alternating needle points + jitter)"
+        },
+        "oLen": {
+          "value": 4,
+          "range": [
+            1.5,
+            14
+          ],
+          "label": "Outline stitch",
+          "step": 0.1,
+          "unit": "px",
+          "note": "stitch (or chain link) length"
+        },
+        "loft": {
+          "value": 0.5,
+          "range": [
+            0.2,
+            1.6
+          ],
+          "label": "Thread loft",
+          "step": 0.01,
+          "note": "thread height ÷ thread radius: round (1) or flattened (.4)"
+        },
+        "twist": {
+          "value": 0.32,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Thread twist",
+          "step": 0.01,
+          "note": "ply twist: helical ridges along each float and the angle of the filaments that carry the gleam (rayon low, cotton floss high)"
+        },
+        "sheen": {
+          "value": 0.36,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Sheen",
+          "step": 0.01,
+          "note": "anisotropic gleam along the thread: polyester / rayon ≈ .8, cotton ≈ .15"
+        },
+        "pull": {
+          "value": 0.06,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Pull / pucker",
+          "step": 0.01,
+          "note": "how hard the stitches draw the ground: ridges along the pull at the stitch ends and a crease at the edge"
+        },
+        "yL": {
+          "value": 0.542,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Thread · L",
+          "step": 0.005,
+          "note": "OKLCH lightness (0 black … 1 white)"
+        },
+        "yC": {
+          "value": 0.226,
+          "range": [
+            0,
+            0.37
+          ],
+          "label": "Thread · C",
+          "step": 0.002,
+          "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+        },
+        "yh": {
+          "value": 311.4,
+          "range": [
+            0,
+            360
+          ],
+          "label": "Thread · h",
+          "step": 0.5,
+          "unit": "°",
+          "note": "OKLCH hue angle"
+        },
+        "seed": {
+          "value": 29,
+          "range": [
+            1,
+            999
+          ],
+          "label": "Seed",
+          "step": 1,
+          "note": "every random draw in the effect derives from this one number"
+        }
+      },
+      "implementation": "Motif → exact signed distance. Satin: centerlines across the motif at the stitch angle, one per 100 / stitch count px; each centerline is marched against the motif to find where the needle goes in and out (concave motifs give several floats per row). Ends stagger (alternating needle points + jitter); floats longer than the max split into rows at brick-staggered points. Each float: a capsule whose cross-section is rounded (flatter when long), sinking into its needle hole at both ends, with an S-twist ridge along it. Floats are z-buffered by height (neighbors overlap like real satin); an optional split, running or chain stitch is traced along the motif edge (marching-squares contour, real arc length) and laid on top. Cloth (FX-04 live): pucker ridges run along the pull direction at the stitch ends, decaying away from the edge; a crease dimples just outside the satin; needle holes darken it. Its own lighting is kept and multiplied by the pucker's Lambert. Thread light: Lambert on the thread normals + an anisotropic gleam (Kajiya–Kay along the twisted filament direction × a lobe across the cylinder), from the sheet light; a height-field shadow and cavity occlusion from the stitched relief fall onto the cloth and between floats. Color: OKLCH.",
+      "limits": "stitch count > 45 /100 px: threads under ~2 px: the fill reads as a smooth sheet at 1× (fine at 2×+). stitch count < 12 /100 px: gaps open between floats. max float > 200 px: floats too long to hold: they would snag; read as a ribbon. sheen > .9 with low twist: reads as plastic. pull > .7: the ground reads crumpled, not stitched"
+    },
+    {
+      "id": "fx-02-ink-edge",
+      "name": "Roller run-out",
+      "short": "FX-02",
+      "atoms": [
+        "deposit"
+      ],
+      "params": {
+        "streak": {
+          "value": 1.25,
+          "range": [
+            1,
+            10
+          ],
+          "label": "Streak",
+          "step": 0.1,
+          "note": "film-split clumps stretched along the stroke: a dry roller, a dragged brush"
+        },
+        "pressure": {
+          "value": 1,
+          "range": [
+            0.4,
+            1
+          ],
+          "label": "Roller pressure",
+          "step": 0.01,
+          "note": "pressure in the solid; below 1 the body starts to open up"
+        },
+        "angle": {
+          "value": 0,
+          "range": [
+            0,
+            360
+          ],
+          "label": "Stroke angle",
+          "step": 1,
+          "unit": "°",
+          "note": "direction the roller travels (it runs out along this vector)"
+        },
+        "edge": {
+          "value": 1.7,
+          "range": [
+            0,
+            1.7
+          ],
+          "label": "Edge position",
+          "step": 0.005,
+          "note": "where the run-out is centered across the plate"
+        },
+        "width": {
+          "value": 4,
+          "range": [
+            1,
+            420
+          ],
+          "label": "Transition",
+          "step": 1,
+          "unit": "px",
+          "note": "width of the run-out band"
+        },
+        "wAmp": {
+          "value": 18,
+          "range": [
+            0,
+            90
+          ],
+          "label": "Edge warp",
+          "step": 0.5,
+          "unit": "px",
+          "note": "how far the edge line wanders"
+        },
+        "wScale": {
+          "value": 90,
+          "range": [
+            8,
+            400
+          ],
+          "label": "Warp scale",
+          "step": 1,
+          "unit": "px",
+          "note": "wavelength of the wander"
+        },
+        "wOct": {
+          "value": 3,
+          "range": [
+            1,
+            5
+          ],
+          "label": "Warp octaves",
+          "step": 1,
+          "unit": "oct",
+          "note": "detail in the wander"
+        },
+        "bite": {
+          "value": 0.2,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Stock bite",
+          "step": 0.01,
+          "note": "how much the stock height (vs film-splitting noise) decides where ink lands"
+        },
+        "breakup": {
+          "value": 0.55,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Break-up ↔ thin",
+          "step": 0.01,
+          "note": "1 = ink film breaks into marks on the peaks as pressure falls; 0 = the film stays whole and thins to tone"
+        },
+        "starve": {
+          "value": 0,
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Starve",
+          "step": 0.002,
+          "note": "the lowest share of the surface never takes ink. Pinholes in the solid, placed by the paper's valleys and pits"
+        },
+        "wick": {
+          "value": 0.03,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Wick",
+          "step": 0.01,
+          "note": "ink carried along fibers into the run-out (hairline feathering)"
+        },
+        "mottle": {
+          "value": 0,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Mottle",
+          "step": 0.01,
+          "note": "paper formation (its low-frequency cloudiness) varying the film thickness"
+        },
+        "split": {
+          "value": 1.1,
+          "range": [
+            0.5,
+            10
+          ],
+          "label": "Film split",
+          "step": 0.1,
+          "unit": "px",
+          "note": "clump size of the film-splitting noise (the roller's own speckle)"
+        },
+        "iL": {
+          "value": 0.2,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Ink · L",
+          "step": 0.005,
+          "note": "OKLCH lightness (0 black … 1 white)"
+        },
+        "iC": {
+          "value": 0.004,
+          "range": [
+            0,
+            0.37
+          ],
+          "label": "Ink · C",
+          "step": 0.002,
+          "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+        },
+        "ih": {
+          "value": 280,
+          "range": [
+            0,
+            360
+          ],
+          "label": "Ink · h",
+          "step": 0.5,
+          "unit": "°",
+          "note": "OKLCH hue angle"
+        },
+        "density": {
+          "value": 1.5,
+          "range": [
+            0.2,
+            2
+          ],
+          "label": "Film thickness",
+          "step": 0.01,
+          "note": "ink film at full pressure (Beer–Lambert: thicker = deeper, more saturated)"
+        },
+        "mInset": {
+          "value": 14,
+          "range": [
+            0,
+            120
+          ],
+          "label": "Inset",
+          "step": 1,
+          "unit": "px",
+          "note": "distance from the plate edge to the mask edge"
+        },
+        "mAmp": {
+          "value": 5,
+          "range": [
+            0,
+            40
+          ],
+          "label": "Edge wander",
+          "step": 0.5,
+          "unit": "px",
+          "note": "how far noise pushes the edge in and out"
+        },
+        "mScale": {
+          "value": 60,
+          "range": [
+            4,
+            240
+          ],
+          "label": "Wander scale",
+          "step": 1,
+          "unit": "px",
+          "note": "wavelength of the wander; small = ragged, large = drifting"
+        },
+        "mRough": {
+          "value": 4,
+          "range": [
+            1,
+            6
+          ],
+          "label": "Roughness",
+          "step": 1,
+          "unit": "oct",
+          "note": "octaves of edge noise: adds fine teeth without moving the large shape"
+        },
+        "mFeather": {
+          "value": 14,
+          "range": [
+            0.5,
+            60
+          ],
+          "label": "Feather",
+          "step": 0.5,
+          "unit": "px",
+          "note": "width over which coverage falls from 1 to 0"
+        },
+        "mBite": {
+          "value": 0.2,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Bite",
+          "step": 0.01,
+          "note": "clumped dropouts that grow more likely toward the edge"
+        },
+        "seed": {
+          "value": 9,
+          "range": [
+            1,
+            999
+          ],
+          "label": "Seed",
+          "step": 1,
+          "note": "every random draw in the effect derives from this one number"
+        }
+      },
+      "implementation": "Pressure = dropoff curve of the signed distance to a warped edge line (stroke direction, transition width), × the mask. Ink chain: the stock height under the inked area (blended with film-splitting noise, clumped and streaked along the stroke) is ranked to percentiles; pressure P inks exactly the top P of the surface, peaks first. Starve: valleys below the threshold never take ink. Wick: fibers carry ink past the edge. Mottle: paper formation thins the film. Film thickness thins with pressure unless the film breaks up; color = Beer–Lambert film in linear light. Light last: × the stock's shading. The ink sits in the tooth, not on top of it.",
+      "limits": "transition < 4 px: reads as a hard vector edge: no run-out to see. break-up < .3: the edge becomes a gradient: the \"AI gradient\" failure. stock bite < .3: speckle stops following the paper and reads as digital dither. streak > 6: marks read as scanlines unless the angle is off-axis"
+    },
+    {
+      "id": "fx-04-weave",
+      "name": "Weave",
+      "short": "FX-04",
+      "atoms": [
+        "form"
+      ],
+      "params": {
+        "warp": {
+          "value": 66,
+          "range": [
+            3,
+            80
+          ],
+          "label": "Warp count",
+          "step": 0.5,
+          "unit": "/100px",
+          "note": "vertical threads per 100 CSS px"
+        },
+        "weft": {
+          "value": 62,
+          "range": [
+            3,
+            80
+          ],
+          "label": "Weft count",
+          "step": 0.5,
+          "unit": "/100px",
+          "note": "horizontal threads per 100 CSS px. Set it apart from warp for an unbalanced cloth"
+        },
+        "fill": {
+          "value": 0.96,
+          "range": [
+            0.35,
+            1
+          ],
+          "label": "Fill",
+          "step": 0.01,
+          "note": "thread width ÷ pitch: the gutters"
+        },
+        "slub": {
+          "value": 0,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Slub",
+          "step": 0.01,
+          "note": "thread width variation along its length"
+        },
+        "slubScale": {
+          "value": 11,
+          "range": [
+            3,
+            90
+          ],
+          "label": "Slub length",
+          "step": 0.5,
+          "unit": "px",
+          "note": "distance between thick and thin"
+        },
+        "hair": {
+          "value": 0.03,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Hair",
+          "step": 0.01,
+          "note": "fine fiber texture along each thread (linen is hairy)"
+        },
+        "irregular": {
+          "value": 0.02,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Irregularity",
+          "step": 0.01,
+          "note": "thread spacing and thickness jitter"
+        },
+        "wear": {
+          "value": 0,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Wear",
+          "step": 0.01,
+          "note": "probability a float is worn (thinned, flattened, faded) at the worn end"
+        },
+        "wAngle": {
+          "value": 90,
+          "range": [
+            0,
+            360
+          ],
+          "label": "Wear direction",
+          "step": 1,
+          "unit": "°",
+          "note": "wear increases toward this direction"
+        },
+        "depth": {
+          "value": 0.35,
+          "range": [
+            0,
+            3
+          ],
+          "label": "Relief",
+          "step": 0.01,
+          "note": "thread relief relative to pitch: how much the light models each float"
+        },
+        "twist": {
+          "value": 0.11,
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Ply twist",
+          "step": 0.005,
+          "note": "the S-twist ridge along each float; it only appears once a thread is about 5 device px wide, so it matters in close-ups"
+        },
+        "diffuse": {
+          "value": 0.85,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Diffuse share",
+          "step": 0.01,
+          "note": "share of light from the sheet light vs flat ambient fill"
+        },
+        "shadow": {
+          "value": 0.3,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Cast shadow",
+          "step": 0.01,
+          "note": "floats shading into gaps and onto under-threads, plus occlusion in the gaps"
+        },
+        "wL": {
+          "value": 0.94,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Warp · L",
+          "step": 0.005,
+          "note": "OKLCH lightness (0 black … 1 white)"
+        },
+        "wC": {
+          "value": 0.003,
+          "range": [
+            0,
+            0.37
+          ],
+          "label": "Warp · C",
+          "step": 0.002,
+          "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+        },
+        "wh": {
+          "value": 250,
+          "range": [
+            0,
+            360
+          ],
+          "label": "Warp · h",
+          "step": 0.5,
+          "unit": "°",
+          "note": "OKLCH hue angle"
+        },
+        "fL": {
+          "value": 0.96,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Weft · L",
+          "step": 0.005,
+          "note": "OKLCH lightness (0 black … 1 white)"
+        },
+        "fC": {
+          "value": 0.002,
+          "range": [
+            0,
+            0.37
+          ],
+          "label": "Weft · C",
+          "step": 0.002,
+          "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+        },
+        "fh": {
+          "value": 250,
+          "range": [
+            0,
+            360
+          ],
+          "label": "Weft · h",
+          "step": 0.5,
+          "unit": "°",
+          "note": "OKLCH hue angle"
+        },
+        "cL": {
+          "value": 0.5,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Accent · L",
+          "step": 0.005,
+          "note": "OKLCH lightness (0 black … 1 white)"
+        },
+        "cC": {
+          "value": 0.075,
+          "range": [
+            0,
+            0.37
+          ],
+          "label": "Accent · C",
+          "step": 0.002,
+          "note": "OKLCH chroma; reduced at constant L/h if it leaves sRGB"
+        },
+        "ch": {
+          "value": 186,
+          "range": [
+            0,
+            360
+          ],
+          "label": "Accent · h",
+          "step": 0.5,
+          "unit": "°",
+          "note": "OKLCH hue angle"
+        },
+        "accent": {
+          "value": 0,
+          "range": [
+            0,
+            0.3
+          ],
+          "label": "Accent rate",
+          "step": 0.005,
+          "note": "share of floats (flecks) or threads dyed the accent"
+        },
+        "dye": {
+          "value": 0,
+          "range": [
+            0,
+            0.12
+          ],
+          "label": "Dye lot",
+          "step": 0.002,
+          "unit": "ΔL",
+          "note": "per-thread lightness spread"
+        },
+        "mInset": {
+          "value": 22,
+          "range": [
+            0,
+            120
+          ],
+          "label": "Inset",
+          "step": 1,
+          "unit": "px",
+          "note": "distance from the plate edge to the mask edge"
+        },
+        "mAmp": {
+          "value": 3,
+          "range": [
+            0,
+            40
+          ],
+          "label": "Edge wander",
+          "step": 0.5,
+          "unit": "px",
+          "note": "how far noise pushes the edge in and out"
+        },
+        "mScale": {
+          "value": 40,
+          "range": [
+            4,
+            240
+          ],
+          "label": "Wander scale",
+          "step": 1,
+          "unit": "px",
+          "note": "wavelength of the wander; small = ragged, large = drifting"
+        },
+        "mRough": {
+          "value": 4,
+          "range": [
+            1,
+            6
+          ],
+          "label": "Roughness",
+          "step": 1,
+          "unit": "oct",
+          "note": "octaves of edge noise: adds fine teeth without moving the large shape"
+        },
+        "fray": {
+          "value": 6,
+          "range": [
+            0,
+            40
+          ],
+          "label": "Fray",
+          "step": 0.5,
+          "unit": "px",
+          "note": "how far individual threads run past the cut"
+        },
+        "lift": {
+          "value": 0,
+          "range": [
+            0,
+            4
+          ],
+          "label": "Swatch lift",
+          "step": 0.05,
+          "unit": "px",
+          "note": "cloth thickness: sizes its shadow on the page"
+        },
+        "seed": {
+          "value": 33,
+          "range": [
+            1,
+            999
+          ],
+          "label": "Seed",
+          "step": 1,
+          "note": "every random draw in the effect derives from this one number"
+        }
+      },
+      "implementation": "Warp columns and weft rows at their own counts (threads / 100 CSS px); each thread: jittered center, thickness, dye-lot L, fray length, accent. Interlacing decides the top thread per crossing; a float is the run where it stays on top. Height = cylinder across the thread × arch along the float; under-threads sit low; hair = fine noise along the thread. Albedo in OKLab: under-thread, then top thread by AA coverage; accent as flecks (single floats, as in the source) or whole threads. Light: Lambert from the height gradient + a height-field shadow march toward the sheet light, so floats shade into the gaps; ambient occlusion darkens the gaps. Cut: the mask's signed distance plus each thread's own fray length, so threads end raggedly, not on a line. The swatch casts onto the page.",
+      "limits": "count > 50 /100 px at 1×: threads under 2 CSS px alias against a 1× display: moiré (fine on 2×/3×). count < 18 /100 px: threads over ~5 px read as a woven-texture graphic, not cloth. fill < .5: reads as a grid of strokes, not cloth. fill > .97: gutters close; the weave flattens to a check. accent rate > .15: accents stop being accents"
+    }
+  ],
+  "pass_order": [
+    "Satin embroidery · A satin fill: long thread floats laid side by side across the motif at one angle, each a slightly rounded body whose filaments gleam along their length, so the fill lights up or goes dark as the sheet light turns.",
+    "Roller run-out · A solid that runs out.",
+    "Weave · Cloth built as cloth: warp and weft at their own counts, a real interlacing, slubbed and hairy threads, every float a raised body lit by the sheet light and casting into the gaps."
+  ]
+}

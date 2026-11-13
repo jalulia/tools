@@ -222,8 +222,11 @@ def main():
     s = re.sub(r"\n    \{ id:[\'\"]pl-[^\n]*", '', s)
     if "id:'plates'" not in s:
         s = s.replace("    { id:'templates',", "    { id:'plates',     title:'Plates', blurb:'Figures lifted out of pages across the work, grouped and read: each plate is measured for ground, ink and placement, and every figure links to its source.' },\n    { id:'templates',", 1)
-    i = s.rindex('\n  ]'); s = s[:i] + ',\n' + ',\n'.join(entries) + s[i:]
+    i = s.rindex('\n  ]'); head = s[:i]
+    bare = re.sub(r'(\s*/\*[^*]*\*/)+\s*$', '', head).rstrip()   # a block may end in a marker comment
+    s = head + ('\n' if bare.endswith(',') or bare.endswith('[') else ',\n') + ',\n'.join(entries) + s[i:]
     s = s.replace('},,\n', '},\n')
+    s = re.sub(r'(applications:end \*/),', r'\1', s)
     open(ep, 'w', encoding='utf8').write(s)
     # registry map: the plate terms
     rp = os.path.join(HERE, 'registry-map.json'); R = json.load(open(rp)); E = R['entries']

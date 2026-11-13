@@ -1251,7 +1251,7 @@ const MG_POSE = {
 (function () {
   const REF = { w: 736, h: 736 };
   function render(cv, P, pal, scale) {
-    const s = scale || 1, W = Math.round(REF.w * s), H = Math.round(REF.h * s), u = s, n = W * H, C = pal.c;
+    const s = scale || 1, W = Math.round(REF.w * s), H = Math.round(REF.h * s), u = s, tu = Math.min(s, 1), n = W * H, C = pal.c;
     cv.width = W; cv.height = H;
     const rnd = mulberry(P.seed * 8191 + 3), nR = vnoise(P.seed + 41), nD = vnoise(P.seed + 97), nW = vnoise(P.seed + 131);
     const cx = W * .51 + (rnd() - .5) * 16 * u, cy = H * .495 + (rnd() - .5) * 16 * u, ph = P.phase * 2 * Math.PI;
@@ -1267,7 +1267,7 @@ const MG_POSE = {
        toward the orbit's inside while the width runs out */
     const pass = (o, off, ph0, ph1, wid, seedOff, hookA, hookB) => {
       const pt = f => { const wv = (nR(Math.cos(f) * 1.7 + o.k, Math.sin(f) * 1.7 + o.k) - .5) * 2 * P.wobble * u + off * (.6 + .8 * nW(f * 1.3 + seedOff, o.k)); const ex = o.a * Math.cos(f), ey = o.b * Math.sin(f), nx = o.b * Math.cos(f), ny = o.a * Math.sin(f), nl = Math.hypot(nx, ny) || 1, lx = ex + nx / nl * wv, ly = ey + ny / nl * wv; return [cx + lx * o.ca - ly * o.sa, cy + lx * o.sa + ly * o.ca]; };
-      const L = Math.abs(ph1 - ph0) * (o.a + o.b) * .5, N = Math.max(8, Math.ceil(L / (1.1 * u))), sw = P.swell;
+      const L = Math.abs(ph1 - ph0) * (o.a + o.b) * .5, N = Math.max(8, Math.ceil(L / (1.1 * tu))), sw = P.swell;
       for (let i = 0; i <= N; i++) { const t = i / N, f = ph0 + (ph1 - ph0) * t, [x, y] = pt(f), [x2, y2] = pt(f + .002), tl = Math.hypot(x2 - x, y2 - y) || 1, nx = -(y2 - y) / tl, ny = (x2 - x) / tl;
         const taper = Math.min(1, t / .06, (1 - t) / .06), pq = sstep(.22, .78, nD(f * 1.9 + seedOff, o.k * 3)), pr = clamp((1 - sw * .55 + sw * .7 * pq) * (.35 + .65 * Math.pow(taper, .6)), .12, 1.2), R = Math.max(.7 * u, wid * pr * .5);
         const sp = sstep(.66, .78, nW(f * 1.5 + seedOff + 20, o.k + 7)) * P.split;   /* the pass splits into two lines for a stretch */
@@ -1275,7 +1275,7 @@ const MG_POSE = {
         else stampE(x, y, R, pr); }
       /* hooks at the chosen ends */
       const hook = (end) => { const f = end ? ph1 : ph0, d = end ? Math.sign(ph1 - ph0) : -Math.sign(ph1 - ph0), [x0, y0] = pt(f), [x1, y1] = pt(f + d * .01); let hx = x0, hy = y0, hd = Math.atan2(y1 - y0, x1 - x0);
-        const toC = Math.atan2(cy - hy, cx - hx), turn = Math.sin(toC - hd) > 0 ? 1 : -1, Lh = P.hook * u * (.8 + .4 * hashI(o.k * 7, end, P.seed)), steps = Math.ceil(Lh / (1 * u)), w0 = wid * (.75 + .25 * sw);
+        const toC = Math.atan2(cy - hy, cx - hx), turn = Math.sin(toC - hd) > 0 ? 1 : -1, Lh = P.hook * u * (.8 + .4 * hashI(o.k * 7, end, P.seed)), steps = Math.ceil(Lh / (1 * tu)), w0 = wid * (.75 + .25 * sw);
         for (let i = 1; i <= steps; i++) { const q = i / steps, kap = turn * (P.curl * 2 * Math.PI / Lh) * (.45 + 1.1 * q); hd += kap * u; hx += Math.cos(hd) * u; hy += Math.sin(hd) * u; stampE(hx, hy, Math.max(.7 * u, w0 * .5 * (1 - .55 * q) * (1 - .2 * Math.sin(q * 7))), .9 - .3 * q); } };
       if (hookA) hook(false); if (hookB) hook(true);
     };
@@ -1297,24 +1297,24 @@ const MG_POSE = {
     for (let y = 0, k = 0, j = 0; y < H; y++) for (let x = 0; x < W; x++, k++, j += 4) {
       const dx = x + .5 - cx, dy = y + .5 - cy, rr = Math.hypot(dx, dy);
       /* ground: dark with vivid blue clumps stretched 2:1 along the scan */
-      const gn = U(nG(x / (4.6 * u), y / (2.6 * u)) * .6 + nS(x / (2.2 * u) + 91, y / (1.5 * u)) * .34 + hashI(x, y, sd) * .06);
+      const gn = U(nG(x / (4.6 * tu), y / (2.6 * tu)) * .6 + nS(x / (2.2 * tu) + 91, y / (1.5 * tu)) * .34 + hashI(x, y, sd) * .06);
       r = C.ground[0]; g = C.ground[1]; b = C.ground[2]; mix(C.blue, sstep(1 - gsh - .06, 1 - gsh + .06, gn));
       /* glow: the ground tints green toward the core, e-fold 60 px past the 60 px ring */
       const gb = Math.min(1, Math.exp(-(rr - ro) / (60 * gs))), gt = Math.min(1, Math.exp(-(rr - ro) / (85 * gs))); mix(C.base, gt * P.halo * .55);
       /* speck field: density e-folds over `reach` from the ring, floor `far`; specks coarsen toward the core */
       const rho = far + Math.exp(-(rr - 74 * gs) / reach) * P.halo, gc = sstep(.15, .7, gb);
-      const sn = U((nS(x / (3 * u), y / (1.9 * u)) * (1 - gc) + nW(x / (3.6 * u) + 40, y / (3 * u)) * gc) * .92 + hashI(x, y, sd + 1) * .08);
+      const sn = U((nS(x / (3 * tu), y / (1.9 * tu)) * (1 - gc) + nW(x / (3.6 * tu) + 40, y / (3 * tu)) * gc) * .92 + hashI(x, y, sd + 1) * .08);
       if (sn > 1 - rho) { /* speck color: far specks lavender, near ones green, inside the ring the glow ramp; brightness per speck */
-        const e = sstep(1 - rho - .06, 1 - rho + .22, sn), lv = (.5 + 1.2 * Math.pow(nM(x / (2.4 * u), y / (1.6 * u)), 2)) * (1 - gb) + (.8 + .4 * nM(x / (3 * u), y / (3 * u))) * gb, fr = rr / (100 * gs);
+        const e = sstep(1 - rho - .06, 1 - rho + .22, sn), lv = (.5 + 1.2 * Math.pow(nM(x / (2.4 * tu), y / (1.6 * tu)), 2)) * (1 - gb) + (.8 + .4 * nM(x / (3 * tu), y / (3 * tu))) * gb, fr = rr / (100 * gs);
         let sc0, sc1, sc2;
-        if (fr < 1) { let i = 0; while (i < nGL - 2 && fr * 100 > GL[i + 1][0]) i++; const A = GL[i], B = GL[i + 1], t = clamp((fr * 100 - A[0]) / (B[0] - A[0]), 0, 1); sc0 = A[1][0] + (B[1][0] - A[1][0]) * t; sc1 = A[1][1] + (B[1][1] - A[1][1]) * t; sc2 = A[1][2] + (B[1][2] - A[1][2]) * t; const wb = sstep(.55, .75, nM(x / (4 * u) + 17, y / (4 * u))) * sstep(.3, .5, fr) * sstep(.85, .65, fr) * P.halo; sc0 += (C.glowHot[0] - sc0) * wb; sc1 += (C.glowHot[1] - sc1) * wb; sc2 += (C.glowHot[2] - sc2) * wb; }
+        if (fr < 1) { let i = 0; while (i < nGL - 2 && fr * 100 > GL[i + 1][0]) i++; const A = GL[i], B = GL[i + 1], t = clamp((fr * 100 - A[0]) / (B[0] - A[0]), 0, 1); sc0 = A[1][0] + (B[1][0] - A[1][0]) * t; sc1 = A[1][1] + (B[1][1] - A[1][1]) * t; sc2 = A[1][2] + (B[1][2] - A[1][2]) * t; const wb = sstep(.55, .75, nM(x / (4 * tu) + 17, y / (4 * tu))) * sstep(.3, .5, fr) * sstep(.85, .65, fr) * P.halo; sc0 += (C.glowHot[0] - sc0) * wb; sc1 += (C.glowHot[1] - sc1) * wb; sc2 += (C.glowHot[2] - sc2) * wb; }
         else { const t = Math.min(1, Math.exp(-(rr - 100 * gs) / (210 * gs))), dimb = sstep(1.05, .6, lv) * (1 - t); sc0 = C.speckFar[0] + (C.speckNear[0] - C.speckFar[0]) * t; sc1 = C.speckFar[1] + (C.speckNear[1] - C.speckFar[1]) * t; sc2 = C.speckFar[2] + (C.speckNear[2] - C.speckFar[2]) * t; sc0 += (C.speckDim[0] - sc0) * dimb; sc1 += (C.speckDim[1] - sc1) * dimb; sc2 += (C.speckDim[2] - sc2) * dimb; }
         if (fr >= 1 && hashI(x >> 1, y >> 1, sd + 9) < (P.warm ?? .15) * (1 - gb)) { sc0 = C.speckWarm[0]; sc1 = C.speckWarm[1]; sc2 = C.speckWarm[2]; }
         mix([sc0 * lv, sc1 * lv, sc2 * lv], e);
       }
       /* magenta and lavender pockets just outside the gem, in angular sectors */
       if (rr < R0 * 2.3 && rr > R0 * .9) { const th = Math.atan2(dy, dx) + facetA, fs = (th / 6.2832 + 1) * nf * 2, sec = Math.floor(fs) % (nf * 2), fe = Math.min(fs - Math.floor(fs), Math.ceil(fs) - fs) * rr * 6.2832 / (nf * 2) / u, rad = sstep(R0 * 2.3, R0 * 2.05, rr) * sstep(R0 * .9, R0 * 1.05, rr) * sstep(.5, 1.6, fe);
-        if (sec % 2) mix(sec % 4 === 1 ? C.gem2 : C.lav, rad * (sec % 4 === 1 ? .92 : .6) * (.8 + .2 * nM(x / (3 * u), y / (3 * u)))); }
+        if (sec % 2) mix(sec % 4 === 1 ? C.gem2 : C.lav, rad * (sec % 4 === 1 ? .92 : .6) * (.8 + .2 * nM(x / (3 * tu), y / (3 * tu)))); }
       /* the gem: an nf-sided polygon, one blue face lit from the upper left, a violet facet on the right */
       const th0 = Math.atan2(dy, dx) - facetA, pr = Math.cos(Math.PI / nf) / Math.cos(((th0 % (6.2832 / nf)) + 6.2832 / nf) % (6.2832 / nf) - Math.PI / nf);
       if (rr < R0 * pr) { const edge = sstep(R0 * pr - 3.2 * u, R0 * pr - 1.2 * u, rr), side = Math.cos(Math.atan2(dy, dx) - .2) > .55 && rr > R0 * .45 ? 1 : 0; r = C.gem[0]; g = C.gem[1]; b = C.gem[2]; if (side) mix(C.gem3, .75); mix(C.gemEdge, edge * .9); }
@@ -1324,12 +1324,12 @@ const MG_POSE = {
          2 to 4 px in and throws detached flecks up to 2 px out; then the speck field and the blue clumps under the
          stroke knock pits in it, dark or tinted by what is beneath */
       const E = PROF[k];
-      if (E > -ER) { const pq = PRS[k], T = nT(x / (2.8 * u), y / (2.8 * u)) * .5 + nQ(x / (1.2 * u), y / (1.2 * u)) * .3 + hashI(x, y, sd + 5) * .2, Tu = U(T),
-          dep = E / u + 3.6 * tooth * (Tu * (.55 + .55 * pq) - .5) - .1, ps = U(nQ(x / (1.1 * u) + 30, y / (1.1 * u)) * .65 + hashI(x, y, sd + 12) * .35), pit = Math.max(sstep(1 - P.bite, 1 - P.bite + .06, ps), sstep(.93, .99, gn) * .5) * sstep(-1, 1.5, E / u);
+      if (E > -ER) { const pq = PRS[k], T = nT(x / (2.8 * tu), y / (2.8 * tu)) * .5 + nQ(x / (1.2 * tu), y / (1.2 * tu)) * .3 + hashI(x, y, sd + 5) * .2, Tu = U(T),
+          dep = E / u + 3.6 * tooth * (Tu * (.55 + .55 * pq) - .5) - .1, ps = U(nQ(x / (1.1 * tu) + 30, y / (1.1 * tu)) * .65 + hashI(x, y, sd + 12) * .35), pit = Math.max(sstep(1 - P.bite, 1 - P.bite + .06, ps), sstep(.93, .99, gn) * .5) * sstep(-1, 1.5, E / u);
         let cov = sstep(-.2, .35, dep) * (1 - .45 * Math.min(1, pit));
-        if (cov > 0) { const de = Math.max(0, E / u), sr = C.stroke, lv = .9 + .2 * hashI(x, y >> 1, sd + 6), A = de < 2.2 ? sr[0] : de < 4.5 ? sr[1] : sr[2], B = de < 2.2 ? sr[1] : de < 4.5 ? sr[2] : sr[3], t = de < 2.2 ? de / 2.2 : de < 4.5 ? (de - 2.2) / 2.3 : Math.min(1, (de - 4) / 3) * sstep(.4, .7, nM(x / (5 * u), y / (5 * u)) + .15);
+        if (cov > 0) { const de = Math.max(0, E / u), sr = C.stroke, lv = .9 + .2 * hashI(x, y >> 1, sd + 6), A = de < 2.2 ? sr[0] : de < 4.5 ? sr[1] : sr[2], B = de < 2.2 ? sr[1] : de < 4.5 ? sr[2] : sr[3], t = de < 2.2 ? de / 2.2 : de < 4.5 ? (de - 2.2) / 2.3 : Math.min(1, (de - 4) / 3) * sstep(.4, .7, nM(x / (5 * tu), y / (5 * tu)) + .15);
           mix([(A[0] + (B[0] - A[0]) * t) * lv, (A[1] + (B[1] - A[1]) * t) * lv, (A[2] + (B[2] - A[2]) * t) * lv], cov);
-          if (de > 2.5) mix(sr[4], sstep(.56, .7, nT(x / (3.2 * u) + 50, y / (3.2 * u))) * sstep(2.5, 4.5, de) * .85 * cov); } }   /* pale blotches where the crayon pressed hardest */
+          if (de > 2.5) mix(sr[4], sstep(.56, .7, nT(x / (3.2 * tu) + 50, y / (3.2 * tu))) * sstep(2.5, 4.5, de) * .85 * cov); } }   /* pale blotches where the crayon pressed hardest */
       /* scan line */
       if ((P.scanK ?? .7) > 0) { const sl = Math.exp(-((y + .5 - scanY) ** 2) / (.8 * u * u)) * (P.scanK ?? .7) * (.5 + .5 * hashI(x >> 2, 0, sd + 7)); mix(C.hairOut, sl * .55); }
       const nz = (hashI(x, y, sd + 8) - .5) * gr; d[j] = r + nz; d[j + 1] = g + nz; d[j + 2] = b + nz * 1.2; d[j + 3] = 255;
