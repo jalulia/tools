@@ -210,7 +210,7 @@ def main():
         entries.append("    { id:%s, section:'plates', code:%s, family:%s, path:%s, title:%s, sub:%s, techniques:%s, variants:%s }" % (
             json.dumps(p['slug']), json.dumps(p['code']), json.dumps(p['family']), json.dumps('plates/' + p['slug'] + '/'), json.dumps(p['title'], ensure_ascii=False),
             json.dumps(data['lede'] + (' ' + str(len(p['panels'])) + ' figures.' if len(p['panels']) != 1 else ''), ensure_ascii=False),
-            json.dumps([p['read']['id'], 'ink-palette', 'figure-ground'] + (['plate-layout'] if len(p['panels']) > 1 else [])), json.dumps([v['sw'] for v in data['variants']])))
+            json.dumps([p['read']['id']] + p.get('engine_techniques', []) + ['ink-palette', 'figure-ground'] + (['plate-layout'] if len(p['panels']) > 1 else [])), json.dumps([v['sw'] for v in data['variants']])))
         mapping.setdefault(p['read']['id'], {'name': p['read']['name'], 'family': p['family']})
         for pid in p['panels']:
             row = WROW.get(pid)

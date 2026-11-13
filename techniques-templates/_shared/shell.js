@@ -472,7 +472,8 @@ addEventListener('keydown',e=>{ if(e.target&&/INPUT|TEXTAREA|SELECT/.test(e.targ
   else toEngine(); });
 let rto=null; addEventListener('resize',()=>{ clearTimeout(rto); rto=setTimeout(()=>{ layout(); dirty=true; },120); });
 /* wait for the inlined fonts before the first render (art modules draw type) */
-let started=false; const go=()=>{ if(started)return; started=true; layout(); dirty=true; if(S.liveOnLoad&&S.live&&!liveOn)setLive(true); };
+let started=false; const go=()=>{ if(started)return; started=true; layout(); dirty=true; if(S.liveOnLoad&&S.live&&!liveOn)setLive(true); if(!UI&&S.motionOnLoad&&S.motion&&!motionOn&&!EMBED_STILL()&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))setMotion(true); };
+function EMBED_STILL(){ return /[?&]still\b/.test(location.search); }
 if(document.fonts){ Promise.all(['700 20px Archivo','400 12px Inter','400 12px "JetBrains Mono"'].map(f=>document.fonts.load(f).catch(()=>{}))).then(go); setTimeout(go,2500); } else go();
 /* ---------- your presets: palette, inks and every parameter, saved by name; one can load on open ----------
    Kept in this browser (localStorage). "Copy link" puts the preset in the address (#preset=…), so anyone who opens it sees it. */
