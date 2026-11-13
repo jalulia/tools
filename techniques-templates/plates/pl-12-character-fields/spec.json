@@ -1,0 +1,164 @@
+{
+  "id": "pl-12-character-fields",
+  "code": "PL-12",
+  "title": "Fields of characters",
+  "section": "plates",
+  "variants": [
+    {
+      "id": "ink",
+      "label": "Ink",
+      "swatches": [
+        "#101014",
+        "#121713",
+        "#131614",
+        "#2F391E"
+      ]
+    },
+    {
+      "id": "white",
+      "label": "White",
+      "swatches": [
+        "#FFFFFF",
+        "#121713",
+        "#131614",
+        "#2F391E"
+      ]
+    }
+  ],
+  "reference": {
+    "file": null,
+    "px": [
+      1000,
+      338
+    ],
+    "grammar": "Letters and marks laid out as fields."
+  },
+  "units": "design units, 1000 = plate width",
+  "palette": {
+    "grounds": [
+      "#27282B",
+      "#728A37"
+    ],
+    "inks": [
+      "#121713",
+      "#131614",
+      "#2F391E",
+      "#667543",
+      "#4F5536",
+      "#899E55"
+    ]
+  },
+  "techniques": [
+    {
+      "id": "character-field",
+      "short": "CFHR",
+      "name": "Character field",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "type"
+      ],
+      "params": {
+        "figures": 2,
+        "family": "type",
+        "panels": [
+          {
+            "title": "Text spiral",
+            "coverage": 0.016,
+            "ground": "#27282B"
+          },
+          {
+            "title": "Listening field",
+            "coverage": 0.961,
+            "ground": "#728A37"
+          }
+        ]
+      },
+      "implementation": "Characters are placed as a field: a spiral of letters, an ellipse of marks."
+    },
+    {
+      "id": "ink-palette",
+      "short": "INK",
+      "name": "Measured inks",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "palette"
+      ],
+      "params": {
+        "inks": [
+          {
+            "hex": "#121713",
+            "weight": 0.7755
+          },
+          {
+            "hex": "#131614",
+            "weight": 0.0759
+          },
+          {
+            "hex": "#2F391E",
+            "weight": 0.0702
+          },
+          {
+            "hex": "#667543",
+            "weight": 0.0053
+          },
+          {
+            "hex": "#4F5536",
+            "weight": 0.0035
+          },
+          {
+            "hex": "#899E55",
+            "weight": 0.0031
+          }
+        ]
+      },
+      "implementation": "Ink pixels of each figure are clustered to five colors; a color is kept when it holds at least 4 % of the ink."
+    },
+    {
+      "id": "figure-ground",
+      "short": "GRND",
+      "name": "Figure and ground",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "ground",
+        "coverage"
+      ],
+      "params": {
+        "grounds": [
+          "#27282B",
+          "#728A37"
+        ],
+        "ink_threshold": 40,
+        "coverage_mean": 0.488
+      },
+      "implementation": "The ground is the most common border color of a figure; ink is every pixel more than 40 levels from it."
+    },
+    {
+      "id": "plate-layout",
+      "short": "LAYT",
+      "name": "Justified plate",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "grid"
+      ],
+      "params": {
+        "row_height_u": 330,
+        "gutter_u": 14,
+        "margin_u": 30,
+        "height_u": 337.5
+      },
+      "implementation": "Figures keep their proportions and share a row height; each row fills the plate width."
+    }
+  ],
+  "pass_order": [
+    "ground · plate",
+    "figures · justified rows",
+    "read · points measured from each figure"
+  ],
+  "notes": [
+    "Sources: Private project · isolated figure"
+  ]
+}

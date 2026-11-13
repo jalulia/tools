@@ -1,0 +1,176 @@
+{
+  "id": "pl-20-massive-fields",
+  "code": "PL-20",
+  "title": "MASSIVE fields and counts",
+  "section": "plates",
+  "variants": [
+    {
+      "id": "ink",
+      "label": "Ink",
+      "swatches": [
+        "#101014",
+        "#B2A68C",
+        "#B3ADA1",
+        "#9F9685"
+      ]
+    },
+    {
+      "id": "white",
+      "label": "White",
+      "swatches": [
+        "#FFFFFF",
+        "#B2A68C",
+        "#B3ADA1",
+        "#9F9685"
+      ]
+    }
+  ],
+  "reference": {
+    "file": null,
+    "px": [
+      1000,
+      641
+    ],
+    "grammar": "A field bent by wells, a lattice and a count per day."
+  },
+  "units": "design units, 1000 = plate width",
+  "palette": {
+    "grounds": [
+      "#000000",
+      "#191919",
+      "#1D1D1B"
+    ],
+    "inks": [
+      "#B2A68C",
+      "#B3ADA1",
+      "#9F9685",
+      "#746E63",
+      "#3D3B3B",
+      "#595959"
+    ]
+  },
+  "techniques": [
+    {
+      "id": "field-model",
+      "short": "FMLD",
+      "name": "Field model",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "fields-optics"
+      ],
+      "params": {
+        "figures": 4,
+        "family": "fields-optics",
+        "panels": [
+          {
+            "title": "MASSIVE · field model",
+            "coverage": 0.013,
+            "ground": "#191919"
+          },
+          {
+            "title": "Starts per day",
+            "coverage": 0.023,
+            "ground": "#000000"
+          },
+          {
+            "title": "MASSIVE · lattice bent by two wells",
+            "coverage": 0.025,
+            "ground": "#000000"
+          },
+          {
+            "title": "Possibility Field v0.3 · figure 1",
+            "coverage": 0.452,
+            "ground": "#1D1D1B"
+          }
+        ]
+      },
+      "implementation": "Points move in a field bent by wells; counts per day sit beside it as a line."
+    },
+    {
+      "id": "ink-palette",
+      "short": "INK",
+      "name": "Measured inks",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "palette"
+      ],
+      "params": {
+        "inks": [
+          {
+            "hex": "#B2A68C",
+            "weight": 0.1957
+          },
+          {
+            "hex": "#B3ADA1",
+            "weight": 0.0936
+          },
+          {
+            "hex": "#9F9685",
+            "weight": 0.0863
+          },
+          {
+            "hex": "#746E63",
+            "weight": 0.0646
+          },
+          {
+            "hex": "#3D3B3B",
+            "weight": 0.0067
+          },
+          {
+            "hex": "#595959",
+            "weight": 0.0063
+          }
+        ]
+      },
+      "implementation": "Ink pixels of each figure are clustered to five colors; a color is kept when it holds at least 4 % of the ink."
+    },
+    {
+      "id": "figure-ground",
+      "short": "GRND",
+      "name": "Figure and ground",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "ground",
+        "coverage"
+      ],
+      "params": {
+        "grounds": [
+          "#000000",
+          "#191919",
+          "#1D1D1B"
+        ],
+        "ink_threshold": 40,
+        "coverage_mean": 0.128
+      },
+      "implementation": "The ground is the most common border color of a figure; ink is every pixel more than 40 levels from it."
+    },
+    {
+      "id": "plate-layout",
+      "short": "LAYT",
+      "name": "Justified plate",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "grid"
+      ],
+      "params": {
+        "row_height_u": 270,
+        "gutter_u": 14,
+        "margin_u": 30,
+        "height_u": 641.2
+      },
+      "implementation": "Figures keep their proportions and share a row height; each row fills the plate width."
+    }
+  ],
+  "pass_order": [
+    "ground · plate",
+    "figures · justified rows",
+    "read · points measured from each figure"
+  ],
+  "notes": [
+    "Sources: github.com/jalulia/massive · Stats/index.html (https://jalulia.github.io/massive/Stats/); github.com/jalulia/massive · Stats/v02.html (https://jalulia.github.io/massive/Stats/v02.html); github.com/jalulia/massive · Stats/v03/index.html (https://jalulia.github.io/massive/Stats/v03/); Local file · Possibility Field v0.3"
+  ]
+}

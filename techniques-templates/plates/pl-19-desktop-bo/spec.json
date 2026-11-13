@@ -1,0 +1,178 @@
+{
+  "id": "pl-19-desktop-bo",
+  "code": "PL-19",
+  "title": "Desktop Bo, states and scenes",
+  "section": "plates",
+  "variants": [
+    {
+      "id": "white",
+      "label": "White",
+      "swatches": [
+        "#FFFFFF",
+        "#FBFBFB",
+        "#FEFEFE",
+        "#222222"
+      ]
+    },
+    {
+      "id": "ink",
+      "label": "Ink",
+      "swatches": [
+        "#101014",
+        "#FBFBFB",
+        "#FEFEFE",
+        "#222222"
+      ]
+    }
+  ],
+  "reference": {
+    "file": null,
+    "px": [
+      1000,
+      565
+    ],
+    "grammar": "A desktop pet: its states, its frames and its yard."
+  },
+  "units": "design units, 1000 = plate width",
+  "palette": {
+    "grounds": [
+      "#AEB1AF",
+      "#AFB0AF",
+      "#AFB2B0",
+      "#AFB2B1"
+    ],
+    "inks": [
+      "#FBFBFB",
+      "#FEFEFE",
+      "#222222",
+      "#846247",
+      "#737B67",
+      "#313D38"
+    ]
+  },
+  "techniques": [
+    {
+      "id": "sprite-scene",
+      "short": "SSPR",
+      "name": "Sprite states",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "pixel-sprite"
+      ],
+      "params": {
+        "figures": 4,
+        "family": "pixel-sprite",
+        "panels": [
+          {
+            "title": "States in six groups around the idle hub",
+            "coverage": 0.901,
+            "ground": "#AEB1AF"
+          },
+          {
+            "title": "Bo at 2×, and the same frame with every ball center ringed",
+            "coverage": 0.715,
+            "ground": "#AFB0AF"
+          },
+          {
+            "title": "The backyard",
+            "coverage": 0.923,
+            "ground": "#AFB2B0"
+          },
+          {
+            "title": "The staged contact sheet (test/moments.js)",
+            "coverage": 0.918,
+            "ground": "#AFB2B1"
+          }
+        ]
+      },
+      "implementation": "A character is drawn as a set of states around an idle hub and placed into scenes."
+    },
+    {
+      "id": "ink-palette",
+      "short": "INK",
+      "name": "Measured inks",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "palette"
+      ],
+      "params": {
+        "inks": [
+          {
+            "hex": "#FBFBFB",
+            "weight": 0.9217
+          },
+          {
+            "hex": "#FEFEFE",
+            "weight": 0.369
+          },
+          {
+            "hex": "#222222",
+            "weight": 0.2993
+          },
+          {
+            "hex": "#846247",
+            "weight": 0.2892
+          },
+          {
+            "hex": "#737B67",
+            "weight": 0.2797
+          },
+          {
+            "hex": "#313D38",
+            "weight": 0.2326
+          }
+        ]
+      },
+      "implementation": "Ink pixels of each figure are clustered to five colors; a color is kept when it holds at least 4 % of the ink."
+    },
+    {
+      "id": "figure-ground",
+      "short": "GRND",
+      "name": "Figure and ground",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "ground",
+        "coverage"
+      ],
+      "params": {
+        "grounds": [
+          "#AEB1AF",
+          "#AFB0AF",
+          "#AFB2B0",
+          "#AFB2B1"
+        ],
+        "ink_threshold": 40,
+        "coverage_mean": 0.864
+      },
+      "implementation": "The ground is the most common border color of a figure; ink is every pixel more than 40 levels from it."
+    },
+    {
+      "id": "plate-layout",
+      "short": "LAYT",
+      "name": "Justified plate",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "grid"
+      ],
+      "params": {
+        "row_height_u": 270,
+        "gutter_u": 14,
+        "margin_u": 30,
+        "height_u": 565
+      },
+      "implementation": "Figures keep their proportions and share a row height; each row fills the plate width."
+    }
+  ],
+  "pass_order": [
+    "ground · plate",
+    "figures · justified rows",
+    "read · points measured from each figure"
+  ],
+  "notes": [
+    "Sources: github.com/jalulia/bo · index.html (https://jalulia.github.io/bo/)"
+  ]
+}

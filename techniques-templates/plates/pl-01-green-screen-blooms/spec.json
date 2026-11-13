@@ -1,0 +1,178 @@
+{
+  "id": "pl-01-green-screen-blooms",
+  "code": "PL-01",
+  "title": "Green screen-tone blooms",
+  "section": "plates",
+  "variants": [
+    {
+      "id": "white",
+      "label": "White",
+      "swatches": [
+        "#FFFFFF",
+        "#F6F7F1",
+        "#E6E8DF",
+        "#2B5C42"
+      ]
+    },
+    {
+      "id": "ink",
+      "label": "Ink",
+      "swatches": [
+        "#101014",
+        "#F6F7F1",
+        "#E6E8DF",
+        "#2B5C42"
+      ]
+    }
+  ],
+  "reference": {
+    "file": null,
+    "px": [
+      1000,
+      869
+    ],
+    "grammar": "Four blooms printed as one green ink through a dot screen."
+  },
+  "units": "design units, 1000 = plate width",
+  "palette": {
+    "grounds": [
+      "#13693E",
+      "#AEB7A2",
+      "#CCD3C3",
+      "#D0ED61"
+    ],
+    "inks": [
+      "#F6F7F1",
+      "#E6E8DF",
+      "#2B5C42",
+      "#F4F5EF",
+      "#F4F6F0",
+      "#EDEFE6"
+    ]
+  },
+  "techniques": [
+    {
+      "id": "dot-screen-bloom",
+      "short": "DBTS",
+      "name": "Dot-screen bloom",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "screen-tone"
+      ],
+      "params": {
+        "figures": 4,
+        "family": "screen-tone",
+        "panels": [
+          {
+            "title": "Pixel ring",
+            "coverage": 0.931,
+            "ground": "#13693E"
+          },
+          {
+            "title": "Ring on lime",
+            "coverage": 0.23,
+            "ground": "#D0ED61"
+          },
+          {
+            "title": "Bloom, early",
+            "coverage": 0.9,
+            "ground": "#CCD3C3"
+          },
+          {
+            "title": "Bloom, full",
+            "coverage": 0.95,
+            "ground": "#AEB7A2"
+          }
+        ]
+      },
+      "implementation": "A scatter of marks is printed through a coarse dot screen; dot size carries the density, so the bloom fades at its edge without a gradient."
+    },
+    {
+      "id": "ink-palette",
+      "short": "INK",
+      "name": "Measured inks",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "palette"
+      ],
+      "params": {
+        "inks": [
+          {
+            "hex": "#F6F7F1",
+            "weight": 0.956
+          },
+          {
+            "hex": "#E6E8DF",
+            "weight": 0.3165
+          },
+          {
+            "hex": "#2B5C42",
+            "weight": 0.2546
+          },
+          {
+            "hex": "#F4F5EF",
+            "weight": 0.2322
+          },
+          {
+            "hex": "#F4F6F0",
+            "weight": 0.2204
+          },
+          {
+            "hex": "#EDEFE6",
+            "weight": 0.2197
+          }
+        ]
+      },
+      "implementation": "Ink pixels of each figure are clustered to five colors; a color is kept when it holds at least 4 % of the ink."
+    },
+    {
+      "id": "figure-ground",
+      "short": "GRND",
+      "name": "Figure and ground",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "ground",
+        "coverage"
+      ],
+      "params": {
+        "grounds": [
+          "#13693E",
+          "#AEB7A2",
+          "#CCD3C3",
+          "#D0ED61"
+        ],
+        "ink_threshold": 40,
+        "coverage_mean": 0.753
+      },
+      "implementation": "The ground is the most common border color of a figure; ink is every pixel more than 40 levels from it."
+    },
+    {
+      "id": "plate-layout",
+      "short": "LAYT",
+      "name": "Justified plate",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "grid"
+      ],
+      "params": {
+        "row_height_u": 270,
+        "gutter_u": 14,
+        "margin_u": 30,
+        "height_u": 869
+      },
+      "implementation": "Figures keep their proportions and share a row height; each row fills the plate width."
+    }
+  ],
+  "pass_order": [
+    "ground · plate",
+    "figures · justified rows",
+    "read · points measured from each figure"
+  ],
+  "notes": [
+    "Sources: Private project · isolated figure"
+  ]
+}

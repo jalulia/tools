@@ -1,0 +1,176 @@
+{
+  "id": "pl-04-node-rings",
+  "code": "PL-04",
+  "title": "Node rings on white",
+  "section": "plates",
+  "variants": [
+    {
+      "id": "white",
+      "label": "White",
+      "swatches": [
+        "#FFFFFF",
+        "#A1A1A1",
+        "#030303",
+        "#3B3B3B"
+      ]
+    },
+    {
+      "id": "ink",
+      "label": "Ink",
+      "swatches": [
+        "#101014",
+        "#A1A1A1",
+        "#030303",
+        "#3B3B3B"
+      ]
+    }
+  ],
+  "reference": {
+    "file": null,
+    "px": [
+      1000,
+      867
+    ],
+    "grammar": "The same ring of nodes, from black ink to a thin blue net."
+  },
+  "units": "design units, 1000 = plate width",
+  "palette": {
+    "grounds": [
+      "#FBFBFB",
+      "#FDFDFD",
+      "#FFFFFF"
+    ],
+    "inks": [
+      "#A1A1A1",
+      "#030303",
+      "#3B3B3B",
+      "#0A0A0A",
+      "#A2AAD2",
+      "#B4BBDC"
+    ]
+  },
+  "techniques": [
+    {
+      "id": "node-ring",
+      "short": "NRDR",
+      "name": "Node ring",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "line"
+      ],
+      "params": {
+        "figures": 4,
+        "family": "line",
+        "panels": [
+          {
+            "title": "Node ring, black on white",
+            "coverage": 0.092,
+            "ground": "#FDFDFD"
+          },
+          {
+            "title": "Reflection at 0°",
+            "coverage": 0.02,
+            "ground": "#FFFFFF"
+          },
+          {
+            "title": "Pressed, the same strands in ink",
+            "coverage": 0.028,
+            "ground": "#FBFBFB"
+          },
+          {
+            "title": "Ring network on white",
+            "coverage": 0.04,
+            "ground": "#FFFFFF"
+          }
+        ]
+      },
+      "implementation": "Points on a ring are joined to their neighbors by straight edges; the edge count makes the weight of the ring."
+    },
+    {
+      "id": "ink-palette",
+      "short": "INK",
+      "name": "Measured inks",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "palette"
+      ],
+      "params": {
+        "inks": [
+          {
+            "hex": "#A1A1A1",
+            "weight": 0.0224
+          },
+          {
+            "hex": "#030303",
+            "weight": 0.0199
+          },
+          {
+            "hex": "#3B3B3B",
+            "weight": 0.0189
+          },
+          {
+            "hex": "#0A0A0A",
+            "weight": 0.0155
+          },
+          {
+            "hex": "#A2AAD2",
+            "weight": 0.0114
+          },
+          {
+            "hex": "#B4BBDC",
+            "weight": 0.0095
+          }
+        ]
+      },
+      "implementation": "Ink pixels of each figure are clustered to five colors; a color is kept when it holds at least 4 % of the ink."
+    },
+    {
+      "id": "figure-ground",
+      "short": "GRND",
+      "name": "Figure and ground",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "ground",
+        "coverage"
+      ],
+      "params": {
+        "grounds": [
+          "#FBFBFB",
+          "#FDFDFD",
+          "#FFFFFF"
+        ],
+        "ink_threshold": 40,
+        "coverage_mean": 0.045
+      },
+      "implementation": "The ground is the most common border color of a figure; ink is every pixel more than 40 levels from it."
+    },
+    {
+      "id": "plate-layout",
+      "short": "LAYT",
+      "name": "Justified plate",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "grid"
+      ],
+      "params": {
+        "row_height_u": 270,
+        "gutter_u": 14,
+        "margin_u": 30,
+        "height_u": 867.3
+      },
+      "implementation": "Figures keep their proportions and share a row height; each row fills the plate width."
+    }
+  ],
+  "pass_order": [
+    "ground · plate",
+    "figures · justified rows",
+    "read · points measured from each figure"
+  ],
+  "notes": [
+    "Sources: Private project · isolated figure"
+  ]
+}
