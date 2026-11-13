@@ -26,7 +26,8 @@ def fit(im, edge):
     s = min(1.0, edge / max(w, h))
     if s == 1.0:
         return im
-    return im.resize((max(1, round(w * s)), max(1, round(h * s))), Image.LANCZOS)
+    # box-reduce first (reducing_gap): fine rulings and grain average out instead of folding into moiré
+    return im.resize((max(1, round(w * s)), max(1, round(h * s))), Image.LANCZOS, reducing_gap=2.0)
 
 
 def save(im, path):
