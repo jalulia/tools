@@ -1,0 +1,317 @@
+{
+  "id": "st-06",
+  "code": "ST-06",
+  "title": "MASSIVE · source instrument",
+  "section": "studies",
+  "reference": {
+    "w": 1736,
+    "h": 1280,
+    "what": "Mode Mode FIG 02 · OBJECTS V1, MASSIVE (P-02), held state, captured at 2×",
+    "source_image": "bundled MASSIVE hero, 1200×1622 JPEG (FALLBACK[0])",
+    "analysed_at": {
+      "tw": 392,
+      "th": 530,
+      "scale": 0.7,
+      "rule": "tw = 560 for a portrait source × 0.7 (figure 1, first pass)"
+    },
+    "plate_rect_frame": {
+      "x": 0.2642,
+      "y": 0.0926,
+      "w": 0.5114,
+      "h": 0.9375
+    }
+  },
+  "palette": {
+    "ink": "#15140F",
+    "spot": "#1E6FE0",
+    "spot_rgb": [
+      30,
+      111,
+      224
+    ],
+    "paper": "#FFFFFF"
+  },
+  "ground": {
+    "colour": "#FFFFFF",
+    "texture": "none; bare paper outside the mask"
+  },
+  "techniques": [
+    {
+      "id": "luma",
+      "short": "LUMA",
+      "name": "Luminance, stretched + local contrast",
+      "layer": "source",
+      "pass": 1,
+      "params": {
+        "luma": "rec (0.299 R + 0.587 G + 0.114 B)",
+        "stretch": "2nd → 0, 98th → 1 percentile, 1024-bin histogram",
+        "local": 0.6,
+        "local_sigma": 8,
+        "boost": {
+          "region": "MQ marquee",
+          "k": 2.5,
+          "rule": "0.5 + (L − mean) / (sd · k)"
+        }
+      },
+      "implementation": "Rec.601 luminance stretched between its 2nd and 98th percentiles, an unsharp mask of 0.6 × (L − G₈(L)), and the marquee panel z-normalized at k 2.5 so the lettering separates."
+    },
+    {
+      "id": "mask",
+      "short": "MASK",
+      "name": "Background mask",
+      "layer": "source",
+      "pass": 2,
+      "params": {
+        "type": "all",
+        "keep": "MSIL silhouette polygon (8 vertices)",
+        "drop": [
+          [
+            0.79,
+            0.76
+          ],
+          [
+            0.89,
+            0.76
+          ],
+          [
+            0.89,
+            0.9
+          ],
+          [
+            0.79,
+            0.9
+          ]
+        ],
+        "erode": 4
+      },
+      "implementation": "A binary keep-mask rasterized from the hand-set silhouette polygon, the drop rectangle cleared, then eroded 4 px (dilate of the inverse with a disc of radius 4); nothing is drawn outside it."
+    },
+    {
+      "id": "etf",
+      "short": "ETF",
+      "name": "Edge tangent flow (Kang 2007)",
+      "layer": "field",
+      "pass": 3,
+      "params": {
+        "gradient": "central differences of G₁(L)",
+        "seedDir_deg": 45,
+        "etfR": 5,
+        "etfIters": 2,
+        "weight": "sign(t·t′) · |t·t′| · ½(1 + tanh(2(m′ − m) − 1))",
+        "separable": true
+      },
+      "implementation": "Tangents (−gy, gx) normalized, flat pixels seeded at 45°, then two iterations of the separable Kang ETF: each tangent replaced by the weighted sum of its neighbors over ±5 px in x then y, weighted by tangent alignment and the magnitude difference through a tanh table."
+    },
+    {
+      "id": "structure",
+      "short": "STRUCT",
+      "name": "Hand-set structure",
+      "layer": "key",
+      "pass": 4,
+      "params": {
+        "lines": 17,
+        "primitives": "closed(MSIL), closed(MQ), closed(MS), 5 seams, 4 circles r 0.013, 4 stems",
+        "width_css_px": 0.9,
+        "taper_px": 7,
+        "structClear_px": 7,
+        "circle_segments": 32
+      },
+      "implementation": "Normalized polylines drawn on the key plate as tapered ribbons (0.25 → 1 over 7 px at each free end) at 0.9 px; the pipeline rasterizes the same lines into a mask dilated 7 px and cuts its own chains wherever they touch it."
+    },
+    {
+      "id": "fdog-key",
+      "short": "FDOG",
+      "name": "Flow-based DoG key with NMS",
+      "layer": "key",
+      "pass": 5,
+      "params": {
+        "sigma_c": 1,
+        "sigma_s": 1.6,
+        "sigma_m": 3,
+        "rho": 0.985,
+        "tau": 0.5,
+        "fdogIters": 2,
+        "nms": "±1, ±2 px along the flow normal",
+        "pinhole_close": 1,
+        "zhangSuen_iters": 10,
+        "bridge_gap_px": 3,
+        "minChain": 14,
+        "bbox_min_px": 6,
+        "dpEps": 0.5,
+        "structTh": 2.6,
+        "width_structure": 0.9,
+        "width_detail": 0.6,
+        "width_mod": "0.85 + 0.15 · clamp(thickness / 4)",
+        "keyDrop": [
+          "MQ",
+          "MS"
+        ]
+      },
+      "implementation": "DoG across the flow normal (σc 1.0, σs 1.6, ρ 0.985) sampled bilinearly, integrated along the ETF streamline with a σm 3 Gaussian, thresholded 1 + tanh(40 H) < 0.5, two iterations with ink fed back; non-maximum suppression across the normal keeps one ridge per edge, Zhang–Suen thins it, chains are followed with junction splitting, bridged over 3 px gaps, split clear of the structure and the marquee/screen, Douglas–Peucker simplified at 0.5 px, and weighted 0.9 (structure, thickness ≥ 2.6) or 0.6 (detail)."
+    },
+    {
+      "id": "darkkey-marquee",
+      "short": "MEDIAL",
+      "name": "Medial-axis key · marquee lettering",
+      "layer": "key",
+      "pass": 6,
+      "params": {
+        "region": "MQ",
+        "t": 0.6,
+        "invert": true,
+        "source": "L (boosted)",
+        "open": 1,
+        "minArea": 10,
+        "tMax": 4,
+        "massMin": 40,
+        "minChain": 6,
+        "wMin": 1.4,
+        "spur": 1,
+        "dpEps": 0.6,
+        "zhangSuen_iters": 40,
+        "mass_outline_width": 0.9
+      },
+      "implementation": "Pixels brighter than 0.60 inside the marquee form a stroke mask, opened 1 px and cleaned of components under 10 px; parts thicker than tMax 4 (an opening of radius 2, ≥ 40 px) are masses traced as marching-squares outlines at 0.9 px, the rest is Zhang–Suen thinned to one centerline per stroke, chained, spurs shorter than 1.0 × thickness dropped, and drawn at its chamfer-measured thickness clamped to [1.4, 4]."
+    },
+    {
+      "id": "darkkey-screen",
+      "short": "MEDIAL",
+      "name": "Medial-axis key · screen content",
+      "layer": "key",
+      "pass": 6,
+      "params": {
+        "region": "MS",
+        "t": 0.2,
+        "invert": true,
+        "source": "L0 (raw, pre-boost)",
+        "close": 1,
+        "minArea": 8,
+        "tMax": 4,
+        "massMin": 60,
+        "minChain": 6,
+        "wMin": 1.1,
+        "knockout": true,
+        "dpEps": 0.6
+      },
+      "implementation": "Same medial-axis pass on the raw luminance inside the screen polygon: bright game pixels > 0.20, closed 1 px, skeletonised and drawn at thickness [1.1, 4]; masses become outlines and are also written into the knock-out mask that the spot plate honors."
+    },
+    {
+      "id": "hatch",
+      "short": "HATCH",
+      "name": "Streamline hatch on the flow",
+      "layer": "hatch",
+      "pass": 7,
+      "params": {
+        "tone": "G₄(L)",
+        "form_gate": "ridge density (3 × box 20) > 0.006",
+        "bands": [
+          0.46,
+          0.3,
+          0.16
+        ],
+        "forceBand": {
+          "region": "side face polygon",
+          "band": 1
+        },
+        "plates": [
+          {
+            "angle": 60
+          },
+          {
+            "angle": 60,
+            "ruled": true,
+            "region": "side face"
+          }
+        ],
+        "cohLo": 0.25,
+        "cohHi": 0.65,
+        "dsep_px": [
+          0,
+          7,
+          4.5,
+          3.2
+        ],
+        "minHatch": 12,
+        "turn_cos": 0.866,
+        "cross_deg": 60,
+        "cross_dsep": 3.68,
+        "cross_band": 3,
+        "noHatch": [
+          "MS",
+          "MQ"
+        ],
+        "ink_clear_px": 2.5,
+        "stroke_css_px": 0.6,
+        "cap": "round",
+        "simplify_eps": 0.35
+      },
+      "implementation": "A direction field blends the 60° plate angle toward the ETF by structure-tensor coherence (smoothstep 0.25 → 0.65; the side face is ruled, coherence ignored); tone bands from a σ4 blur assign dsep 7 / 4.5 / 3.2 px, and Jobard–Lefer evenly-spaced streamlines are traced from ridge-adjacent seeds and a 5 px lattice with a spatial-hash separation test, breaking at 30° turns, then a 60° cross pass on the darkest band; strokes are Catmull-Rom smoothed and drawn at 0.6 px."
+    },
+    {
+      "id": "spot-plate",
+      "short": "SPOT",
+      "name": "Vector spot plate, knocked out, off register",
+      "layer": "spot",
+      "pass": 8,
+      "params": {
+        "region": "MS",
+        "band": [
+          0,
+          0.36
+        ],
+        "source": "L0",
+        "gate": false,
+        "close": 3,
+        "open": 2,
+        "knockout": true,
+        "minFrac": 0.01,
+        "dpEps": 0.6,
+        "colour": "#1E6FE0",
+        "fill_rule": "evenodd",
+        "trap_stroke_css_px": 1,
+        "offset_css_px": [
+          1.5,
+          1
+        ]
+      },
+      "implementation": "Screen pixels with raw luminance ≤ 0.36 are closed 3 px and opened 2 px, the screen masses knocked out, components under 1 % of the frame dropped, then traced by marching squares (holes kept), simplified at 0.6 px, Catmull-Rom smoothed and filled evenodd in the core color with a 1 px spread trap; the plate prints 1.5 px right and 1.0 px down of the key."
+    },
+    {
+      "id": "composite",
+      "short": "MULT",
+      "name": "Plate compositing",
+      "layer": "composite",
+      "pass": 9,
+      "params": {
+        "order": [
+          "spot (offset)",
+          "hatch",
+          "key"
+        ],
+        "mode": "multiply",
+        "ground": "#FFFFFF",
+        "plate_dpr": "device",
+        "key_smoothing": "Catmull-Rom, ≤ 6 subdivisions per 1.5 px"
+      },
+      "implementation": "Three offscreen plates at device resolution are drawn onto white paper with globalCompositeOperation multiply, spot first (offset), then hatch, then key, so ink over color reads as printed overprint."
+    }
+  ],
+  "pass_order": [
+    "luma",
+    "mask",
+    "etf",
+    "structure",
+    "fdog-key",
+    "darkkey-marquee",
+    "darkkey-screen",
+    "hatch",
+    "spot-plate",
+    "composite"
+  ],
+  "notes": [
+    "Verbatim lift: runPipeline and its helpers, FigRaster.plates, PRESETS.massive, MQ/MS/MSIL, FALLBACK[0], analyze() crop/scale and drawPlates() are copied from the source page unchanged; only the Worker transport (self.onmessage / postMessage) is replaced by a direct call.",
+    "The reference capture is the instrument’s first read of figure 1, analyzed at 0.7 × width (392 × 530 px); the study runs the same pass, so hatch pitch and stroke widths land where the capture has them.",
+    "Points 20 and 24 are not preset trackers: the preset repeats the button ring and the hand-set seam, so those two are replaced by the read’s single surviving FDoG chain (base tick) and a hatch streamline on the side face, both taken from the pipeline output.",
+    "The tracker overlays baked into the reference (numbered boxes, leaders) are the FIG 02 chrome, not the drawing; the study shell draws its own."
+  ]
+}

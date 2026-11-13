@@ -83,7 +83,7 @@ const html=`<!DOCTYPE html>
 </head>
 <body class="fs-page">
 <!-- build output of build-sheet.mjs — edit set.js / sheet.js / sheet.css / build-sheet.mjs, then rebuild. -->
-<nav class="nav" id="nav" aria-label="Site navigation"><a class="brand" href="../../index.html"><span class="wm">T&amp;T</span></a><span class="crumb"><a href="../../index.html#templates">Techniques &amp; Templates</a><span class="sep">/</span><b>${esc(SET.title)}</b><span class="code">${esc(SET.code)}</span></span><span class="pager"><span>${esc(SET.code)} · template</span><a href="../../index.html#templates">index</a></span></nav>
+<nav class="nav" id="nav" aria-label="Site navigation"><span class="crumb"><a href="../../index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="../../index.html#templates">Templates</a><span class="sep">/</span><b>${esc(SET.title)}</b><span class="code">${esc(SET.code)}</span></span><span class="pager"><span>${esc(SET.code)} · template</span><a href="../../index.html#templates">index</a></span></nav>
 <main class="fs">
   <header class="fs-hd">
     <div><span class="code">${esc(SET.code)} · Effect set · ${SET.effects.length} effects · <a href="#usages">${UORD.length} usages ↓</a>${CORD.length?` · <a href="#concept">${CORD.length} concepts ↓</a>`:''}</span><h1>${esc(SET.short)}</h1><p class="premise">${esc(SET.premise)}</p></div>

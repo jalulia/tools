@@ -69,3 +69,30 @@ No cream or warm off-white anywhere in the chrome; no oxblood. Neutral greys onl
 `onPoints(P)` (called once with the live point array) and `relayPoints(overrides)` (called before every draw, so a study
 whose layout follows its parameters can move its points), and `family` on the manifest entry
 (`_shared/entries.js`).
+
+## Study pages (studies/, ST-01 on)
+
+The Technique Studies run on this shell too. Each `studies/st-NN-slug/index.html` keeps its own inline scripts (the
+engine, `window.STUDY`, and from ST-13 the measured-plate bridge `window.__MP`) and loads `entries.js`, `vocab.js`,
+`art.js`, `studies.js`, `st-adapter.js`, `shell.js`. `node _build/studies.mjs` writes the page around those scripts
+(head, body from `_build/page.html`, static read, spec.json) and `_shared/studies.js` (the Studies manifest; hidden
+studies such as ST-08 stay at their address and drop out of the pager). Run it again after editing a study.
+
+`st-adapter.js` files the study under the section "Studies" and fills `S.ui`, which the shell reads in place of the TS
+contract:
+
+| `S.ui` | What it maps |
+| --- | --- |
+| `params[]` | the study's own values: `{id,label,group,why,type:'range'/'text'/'choice',min,max,step,value,unit,get(),set(v,quick),commit()}`; rows look and behave like TS rows, grouped by the study's group names |
+| `actions[]`, `presets[]` | New seed, Shuffle, Grain, MIDI…; the plate's presets as chips. Both sit at the top of Parameters |
+| `palettes` | the study's palettes (`list`, `current()`, `set(i)`) and the inks of the one in use (`inks()`, `setInk(key,hex)`, `resetInks()`). None: the Color module says why (`S.colorHint`) |
+| `motion`, `interactive` | Play and the study's drag or draw mode (`on()`, `set(on)`, label); `pointerHint` when the plate always takes the pointer |
+| `view[]` | display switches under View (ST-10 Handles) |
+| `status()`, `message()` | the readout under View; a short message flashes in the plate's caption |
+| `bench()` | the measured-plate benchmark, drawn into Reference and match |
+| `spec()`, `save()` | the spec as it stands now; the study's own full-size PNG |
+| `engineFirst` | ST-09…11: the instrument takes keys first; the shell keeps R, S, F, space, Escape, / |
+
+Shell rules that came with the port: the left column shows at most three sentences of description; anything longer
+opens the "How it is built" section. Pass-order lines split on " · " or on a leading "name:". An ink whose name is only
+a number takes a color name ("Ink 3" → "Amber"). Group limits are sentence-cased at render.

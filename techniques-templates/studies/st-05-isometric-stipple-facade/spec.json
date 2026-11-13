@@ -1,0 +1,359 @@
+{
+  "id": "st-05",
+  "code": "ST-05",
+  "title": "Dimetric stipple loggia",
+  "section": "studies",
+  "reference": {
+    "file": "ref-05.png",
+    "px": [
+      1200,
+      1999
+    ],
+    "measured_at": 540,
+    "grammar": "flat four-ink façade fragment, black brush contour, black spatter stipple for shading, near-frontal dimetric construction",
+    "measured": {
+      "axes_deg": {
+        "facade": -12,
+        "depth": 30,
+        "verticals": 90,
+        "method": "structure-tensor orientation histogram of dark edges at 540 px: peaks at 10–15° (down-right) and 145–150° (up-right 30°)"
+      },
+      "stroke_px_540": {
+        "mortar": 2,
+        "detail": "2–2.5",
+        "contour": "4–5",
+        "swell": "5.7–8 at shadow sides and joins",
+        "ridge_width_percentiles": "p25 4, p50 4, p90 5.7, p97 8"
+      },
+      "stipple": {
+        "dot_px_540": 1,
+        "density": {
+          "blue_front": "0.07–0.10",
+          "yellow_return": "0.15 mid, 0.40–0.45 at the edges",
+          "shaft_edge": "0.55–0.70",
+          "pink_floor": 0.05,
+          "red_panels": 0.33
+        }
+      },
+      "black_area": 0.372,
+      "line_share_96px": 0.357
+    }
+  },
+  "palette": {
+    "black": "#000000",
+    "blue": "#D2F1F3",
+    "yellow": "#FFFF01",
+    "pink": "#FF868F",
+    "red": "#FF4C01"
+  },
+  "ground": {
+    "colour": "none: the picture is edge-to-edge fills, and the blue wall (#D2F1F3) acts as ground",
+    "area_ref": {
+      "black_incl_stipple": 0.372,
+      "blue": 0.27,
+      "yellow": 0.15,
+      "stippled_yellow": 0.12,
+      "pink": 0.05,
+      "red": 0.02
+    }
+  },
+  "units": "design units, 1000 = plate width, frame 1000 × 1666; scene units × 0.85 (1 u = 0.54 ref px at 540, 1.2 px at 1200)",
+  "techniques": [
+    {
+      "id": "contour",
+      "short": "KEY",
+      "name": "Brush-ink contour",
+      "layer": 4,
+      "pass": 4,
+      "params": {
+        "colour": "#000000",
+        "box_silhouette_u": 8,
+        "box_inner_edge_u": 6.9,
+        "column_edge_u": [
+          9,
+          6.5
+        ],
+        "detail_u": 4.5,
+        "mortar_u": 4.2,
+        "hairline_u": 3.6,
+        "ref_equiv_px_540": {
+          "silhouette": "4.3 (+50 % shadow side, +35 % joins → 6.5–8.7)",
+          "detail": 2.4,
+          "mortar": 2.3
+        },
+        "shadow_swell": "×(1 + 0.5·max(0, −n·light))",
+        "join_swell": "×(1 + 0.35·(1 − d/12 u)) within 12 u of a corner > 23°",
+        "light_dir": [
+          0.71,
+          -0.71
+        ],
+        "width_noise": 0.22,
+        "waver_amp_u": 0.9,
+        "waver_freq": 0.02,
+        "taper": "open lines: soft (to 55 % over min(14 u, 25 %)); flutes, spirals, bars: full taper to 0 over min(30 u, 30 %), exponent 0.6",
+        "ref_px_540": {
+          "mortar": 2,
+          "detail": "2–2.5",
+          "contour": "4–5",
+          "swell": "5.7–8"
+        },
+        "join": "round",
+        "ends": "tapered"
+      },
+      "implementation": "Every edge is resampled at 7 u, displaced along its normal by a 3-octave sine noise (0.9 u), then filled as a variable-width ribbon (outer + inner offset polylines, even-odd) whose width = base·(1+0.22·noise)·taper·(1+0.5·max(0,−n·light))·(1+0.35·cornerProximity), so edges facing down-left and every corner run heavier; the ink layer under every later face is erased (destination-out) so occluded lines vanish."
+    },
+    {
+      "id": "stipple-cylinder",
+      "short": "MARK",
+      "name": "Fluted-shaft stipple",
+      "layer": 3,
+      "pass": 3,
+      "params": {
+        "dot_radius_u": "1.2 × (0.82–1.18), 10 % clumps ×1.45",
+        "dot_diameter_u": "≈ 2.6 (1.4 px at 540, 3.1 px at 1200)",
+        "coverage": "λ = 0.62·d + 4·max(0,d−0.75)² expected black area per px, dots placed as a Poisson process p = λ / mean dot area",
+        "modulation": "value noise on an 8 u grid, ×(0.75 … 1.25)",
+        "crisp": "plate-pixel coverage a → smoothstep((a − 0.16)/0.30): a dot covering ≥ 46 % of a plate pixel prints solid, matching the reference’s hard 1-px dots",
+        "shaft_ramp": "0.34·(1−u)^3 across the apparent width (u = 0 at the shadow/left edge) + 0.14 rim at u > 0.7",
+        "flute_sawtooth": "10 flutes between 9 lines at k = −0.8 … 0.8 of the half-width; each flute 0.34·(1−0.8·t)·(1−v)^2.6, v = 0 at its left line, t = 0 at the shadow side",
+        "neck_bands": "0.3 → 0 over 38 u under the astragal, 0.15 → 0 over 30 u above the base",
+        "torus_ramp": "0.5 → 0 pow 1.5 + 0.35 → 0 under the belly",
+        "capital": {
+          "astragal": "r 60, Z 1130…1142",
+          "echinus": "r 66, Z 1142…1180, ramp 0.38 → 0",
+          "volute_block": "rounded slab in the shaft-front plane, Z 1180…1240, half-width hw + 30, end radius 25, 0.4 → 0 band at the shadow end, two 1.75-turn spirals 4.5 u tapered, two 3.6 u fillets",
+          "abacus": "box 140 × 144 × 22"
+        },
+        "apparent_half_width": "1.199·r (dimetric horizontal circle), cap semi-minor 0.451·r",
+        "fluting_lines": "9 × 4.5 u, full taper",
+        "mask": "density painted inside the face clip only",
+        "supersample": "work canvas scaled so a dot is ≥ 2.6 px, then box-filtered down"
+      },
+      "implementation": "The shaft is filled blue and a horizontal gray gradient plus ten per-flute sawtooth gradients are painted into the density map inside the shaft clip; the global pass reads the map (upscaled so dots stay ≥ 2.6 px), keeps each work pixel with probability λ/dotArea and stamps an anti-aliased disc, then the dot layer is box-filtered to the plate, crisped with a smoothstep on coverage and composited as black."
+    },
+    {
+      "id": "stipple-field",
+      "short": "TEX",
+      "name": "Half-lit front field",
+      "layer": 3,
+      "pass": 3,
+      "params": {
+        "density_front": 0.1,
+        "density_wall": 0.11,
+        "on": [
+          "wall (X = 0)",
+          "+X faces of every box (blue and yellow)",
+          "risers",
+          "recess backs 0.6",
+          "reveals 0.15"
+        ],
+        "lit_faces": "tops 0 (yellow), floor 0.05",
+        "pier_corner": "0.25 → 0 over 40 u beside the return edge",
+        "column_halo": "0.4 → 0 over 48 u on the shadow side, 0.25 → 0 over 30 u lit side",
+        "under_beam": "0.5 → 0 over 110 u",
+        "under_cornice": "0.4 → 0 over 34 u on the frieze, 0.25 → 0 over 16 u on the architrave",
+        "under_sill": "0.3 → 0 over 22 u",
+        "wall_base": "0.3 → 0 over 40 u",
+        "ashlar": "courses every 70 (4.2 u), staggered joints every 150"
+      },
+      "implementation": "Half-lit faces get a uniform 0.10–0.11 in the density map; additive (lighter) gradient bands are laid from 3-D edges with bandE(), which takes the edge and an into-face direction and builds the band perpendicular to the projected edge so its iso-lines stay parallel to the edge."
+    },
+    {
+      "id": "flat-fill",
+      "short": "FILL",
+      "name": "Flat ink face",
+      "layer": 1,
+      "pass": 1,
+      "params": {
+        "inks": {
+          "blue": "#D2F1F3",
+          "yellow": "#FFFF01",
+          "pink": "#FF868F",
+          "red": "#FF4C01"
+        },
+        "assignment": "blue = wall, fronts of piers/base/architrave/frieze, shafts, capitals, plinths, risers, relief-panel field; yellow = every top, every right-hand return (−Y) face, cornice, dentil row, string course, sills, lintels, jambs, rails, newel, medallion ring, reveals; pink = floor, balusters; red = shutters and door",
+        "shutter": {
+          "leaf_depth": 10,
+          "panels": 3,
+          "mouldings_u": [
+            4.5,
+            3.6
+          ]
+        },
+        "door": {
+          "leaf": "red, X = −40, 2 × 3 panels, 0.4 band inside each panel",
+          "transom": "dark 0.6 with 6 tapered bars"
+        }
+      },
+      "implementation": "Each face is a closed polygon filled with one of the four hexes; the ink layer under it is erased so occluded lines vanish, then the face paints its own density before its own detail lines are drawn."
+    },
+    {
+      "id": "yellow-return",
+      "short": "TONE",
+      "name": "Stippled yellow return",
+      "layer": 3,
+      "pass": 3,
+      "params": {
+        "base": 0.14,
+        "front_edge_band": "0.42 → 0 over min(70 u, half the face width), pow 1.3",
+        "back_edge_band": "0.32 → 0 over 0.8 × that",
+        "top_band": "0.25 → 0 over min(40 u, 40 % of the height)",
+        "course_bands": "0.3 → 0 over 12 u under every pier course (60 u pitch)",
+        "on": "every −Y (right-facing) return: both piers, step returns, rail and newel ends, jamb/lintel/sill ends, shutter edges (red, 0.2)",
+        "reads_as": "olive: yellow under 25–45 % black",
+        "tops": "0 (sunlit) except cast bands"
+      },
+      "implementation": "box() resolves a {ret:true} face spec into the yellow fill plus a uniform 0.14 and three additive edge bands laid with bandE() from the face’s own 3-D edges, so the spatter is densest against the contour and thins toward the middle of the face."
+    },
+    {
+      "id": "projection",
+      "short": "FORM",
+      "name": "Near-frontal dimetric",
+      "layer": 0,
+      "pass": 0,
+      "params": {
+        "type": "parallel dimetric, verticals vertical (not the 30°/30° isometric the AD assumed; the pixels disagree)",
+        "screen": "sx = 945 − (Y·cos12° + X·cos30°·0.8)·0.85, sy = 1300 + (X·sin30°·0.8 − Y·sin12° − Z)·0.85",
+        "axes_deg": {
+          "Y_facade": "−12 (runs left along the façade, rising 12°; a façade horizontal falls 12° to the right)",
+          "X_depth": "+30 (toward the viewer, down-left at 30°; the receding depth rises 30° to the right)",
+          "Z": "90 (vertical)"
+        },
+        "foreshortening": {
+          "X": 0.8,
+          "Y": 1,
+          "Z": 1,
+          "scale": 0.85
+        },
+        "visible_faces": [
+          "top (+Z)",
+          "front (+X, faces the viewer down-left)",
+          "return (−Y, the right-hand side of every mass)"
+        ],
+        "hidden": "−X backs, +Y left sides, undersides",
+        "circles": "horizontal circle → tilted ellipse: apparent half-width 1.199 r, semi-minor 0.451 r, left tangent at circle angle atan2(cos12°, cos30°·0.8) = 54.7°",
+        "measured": "reference orientation peaks at 10–15° (façade horizontals, down-right) and 145–150° (depth, up-right 30°) on the floor, balustrade, slab and base; the upper façade drifts toward horizontal by hand (5–20°); foreshortening 0.8 estimated from the floor tiles",
+        "scene": {
+          "wall": "X = 0",
+          "piers": "X 0…300 at Y −60…100 (right) and 1000…1080 (left)",
+          "columns": "axis X = 150, Y = 280 and 640, r 55, Z 200…1262",
+          "window": "Y 470…600, Z 520…940, reveal X −40",
+          "door": "Y 850…980, Z 200…900, leaf X −40",
+          "string_course": "X 0…22, Z 1010…1040",
+          "relief_panel": "Y 850…980, Z 1070…1200, X −14",
+          "floor": "Z = 200, X 0…300, Y 100…1000",
+          "balustrade": "X 250…290, Y 200…600, newel 160…200",
+          "entablature": "architrave/frieze X 0…220, dentils 0…236, cornice 0…246, Z 1262…1444",
+          "steps": "X 300…450 in 75 × 75 treads, Y 700…900",
+          "base": "Z −800…150 with arch r 120/162 at Y 480"
+        }
+      },
+      "implementation": "One iso(X,Y,Z) maps every point; boxes are three parallelograms (top, +X front, −Y return) drawn back to front, then a hexagonal silhouette contour and three inner edges from the interior vertex (X1, Y0, Z1); cylinders are the projected front arc at the base, two vertical tangents at ±1.199 r and the projected back arc at the top."
+    },
+    {
+      "id": "palette",
+      "short": "COL",
+      "name": "Four-ink color system",
+      "layer": 1,
+      "pass": 1,
+      "params": {
+        "black": "#000000",
+        "blue": "#D2F1F3",
+        "yellow": "#FFFF01",
+        "pink": "#FF868F",
+        "red": "#FF4C01",
+        "rule": "black stipple over any ink where the face is shaded or half-lit; only tops and the clean trims stay pure",
+        "medallion": {
+          "ring": "#FFFF01 oval rY 52 / rZ 64 in the frieze plane (X = 220), 6.5 u contour + 3.6 u inner line",
+          "dial": "#D2F1F3 rY 38 / rZ 47, diagonal ramp 0.55 → 0",
+          "ticks": "12 × 3.6 u",
+          "hands": "tapered black ribbons 6→0 (27 u) and 5→0 (37 u), hub r 4"
+        }
+      },
+      "implementation": "No mixed colors anywhere; every midtone in the picture is black dots over a flat ink, so the color histogram stays five-peaked."
+    },
+    {
+      "id": "baluster",
+      "short": "MARK",
+      "name": "Turned baluster",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "colour": "#FF868F",
+        "pitch": 55,
+        "count": 7,
+        "height": 114,
+        "axis": "X = 270, Y 230…560",
+        "half_widths": "top 11, neck 7 @0.12, belly 17 @0.58, waist 8 @0.85, foot 12 (×1.199 apparent)",
+        "density": "0.04 + 0.35 → 0 across, pow 1.4",
+        "contour_u": 5,
+        "rings": "4.2 u at t 0.09, 0.38, 0.86",
+        "rails": "Z 200…236 and 350…380, yellow, 4.2 u molding line, returns stippled",
+        "newel": "50 × 40 × 200 with a 60 × 50 × 20 cap, 3.6 u panel line",
+        "floor_band": "0.3 → 0 over 30 u behind the rail"
+      },
+      "implementation": "A vase profile r(t) (smoothstep between knots) is mirrored into a closed polygon about the axis’ projected x, filled pink with a left-heavy horizontal density ramp; the pink floor behind the row carries a cast band."
+    },
+    {
+      "id": "floor-grid",
+      "short": "GRND",
+      "name": "Pink tile floor",
+      "layer": 1,
+      "pass": 1,
+      "params": {
+        "colour": "#FF868F",
+        "density": 0.05,
+        "line_u": 4.5,
+        "set_x": "lines along X every 60 units (30° family)",
+        "set_y": "lines along Y every 60 (−12° family)",
+        "clip": "top face of the slab (Z = 200)",
+        "wall_shadow": "0.25 over 26 u along the wall base",
+        "slab_edge": "yellow +X band Z 150…200 with 4.2 u and 3.6 u molding lines, 0.10 field"
+      },
+      "implementation": "The slab top is filled pink, then two families of axis lines are ribbon-stroked with the ink clipped to the face polygon; later faces erase what they cover."
+    },
+    {
+      "id": "rustication",
+      "short": "KEY",
+      "name": "Rusticated base",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "colour": "#D2F1F3",
+        "base_density": 0.1,
+        "course": 90,
+        "block": 180,
+        "stagger": 90,
+        "joint_u": 5,
+        "bevel_line_u": "3.6, 12 u inside the joint",
+        "chamfer": "0.5 → 0 over 22 u below each course",
+        "arch": {
+          "r_in": 120,
+          "r_out": 162,
+          "extrados_line": "4.2 u at r 150",
+          "voussoir_joints": 13,
+          "jamb_joints": "every 90",
+          "recess_density": "0.55 + 0.3 band",
+          "ring_density": 0.1
+        },
+        "pier_grid": "courses every 60, blocks 160 (front) / 100 (return), staggered, 4.2 u, on both visible pier faces",
+        "wall_ashlar": "courses every 70, 4.2 u, joints staggered every 150",
+        "dentils": "solid ink gaps 12 × 19 u every 30 u under the cornice"
+      },
+      "implementation": "Course joints and staggered verticals are ribbon lines (5 u) doubled by a 3.6 u bevel line over a sparse blue face; under each course a gradient band in the density map makes the stipple read as a chamfer; the arch is an annulus sector of yellow with radial joints over a dark stippled recess."
+    }
+  ],
+  "pass_order": [
+    "faces back-to-front (wall + ashlar, loggia window + shutters, door, string course + relief panel, base + arch, slab/floor, columns, balustrade + newel, piers, entablature + medallion + dentils, steps); each fills color, erases ink beneath, paints density inside its own clip, draws its own detail lines",
+    "density map → per-pixel Poisson spatter on a supersampled work canvas (dot ≥ 2.6 px)",
+    "dot layer box-filtered to the plate, crisped, composited as black",
+    "ink layer (contours, fluting, joints, dentils, moldings, spirals, hands) composited last"
+  ],
+  "notes": [
+    "Reference measured at 540 px wide: mortar 2 px (3.7 u), contours 4–5 px (7–9 u), swell to 8 px, stipple dots 1 px, black area 0.372, line share at 96 px 0.357.",
+    "Pass 3 rebuild: projection re-measured (façade −12°, depth +30°, ×0.8; not true isometric); every right-hand return is yellow under spatter; fronts 0.10; fluting 9 lines + per-flute sawtooth; Ionic volute capitals; dentils, fasciae, string course, relief panel; ashlar on every masonry face; join swell + soft taper on contours; dot layer crisped so spatter prints as hard dots.",
+    "Rebuild measured the same way: black area 0.39, line share at 96 px 0.30.",
+    "Line widths scale with the plate: at 700 css px @ dpr 2 a 4.5 u detail line is 6.3 px, a dot 3.6 px.",
+    "Seed 505."
+  ]
+}

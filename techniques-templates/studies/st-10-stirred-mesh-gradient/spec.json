@@ -1,0 +1,322 @@
+{
+  "id": "st-10",
+  "code": "ST-10",
+  "title": "Stirred mesh gradient",
+  "section": "studies",
+  "reference": {
+    "files": [
+      "ref-10-mmeshy-yoo-sung-lee.png"
+    ],
+    "px": [
+      1920,
+      1000
+    ],
+    "source": "Yoo Sung Lee, published to the mmeshy community gallery; mmeshy is a free mesh-gradient editor by Isaiah Trotter",
+    "grammar": "soft color sources on a canvas, no stops; a grain pass; the editor’s own blend mode and softness",
+    "tool_state_read": {
+      "softness": 0.42,
+      "blend_mode": "Overlay",
+      "grain": {
+        "kind": "Mono",
+        "opacity": 0.33,
+        "size": 4.3,
+        "density": 2
+      },
+      "filter": {
+        "hue": 5,
+        "saturation": 1.08,
+        "brightness": 1.16,
+        "temperature": 37
+      }
+    },
+    "node_colors_read": [
+      "#066dce",
+      "#fdd1de",
+      "#d37e28",
+      "#574f3a",
+      "#131d15",
+      "#37493d",
+      "#fde2e8",
+      "#0063c3",
+      "#a33f0a",
+      "#01060c",
+      "#929ec5",
+      "#19231a"
+    ]
+  },
+  "units": "frame widths; the frame is 1 wide and 0.521 tall; v on the plate is y / 0.521",
+  "palette": {
+    "blue": "#0b47b2",
+    "sky": "#2f7fdc",
+    "pink": "#f1d6e6",
+    "pale": "#f3dde6",
+    "rust": "#e04e0e",
+    "orange": "#ee9a4e",
+    "hot_edge": "#ef5a08",
+    "ochre": "#b08a5a",
+    "olive": "#5f6446",
+    "green": "#2f3c2d",
+    "black_green": "#111a12"
+  },
+  "ground": {
+    "colour": "none; the sources cover the frame",
+    "share": "1.0"
+  },
+  "sources": [
+    {
+      "kind": "point",
+      "at": [
+        0.5,
+        -0.08
+      ],
+      "color": "#0b47b2",
+      "reach": 0.3
+    },
+    {
+      "kind": "point",
+      "at": [
+        0.5,
+        0.16
+      ],
+      "color": "#2f7fdc",
+      "reach": 0.21
+    },
+    {
+      "kind": "point",
+      "at": [
+        -0.02,
+        0.1
+      ],
+      "color": "#f1d6e6",
+      "reach": 0.17
+    },
+    {
+      "kind": "point",
+      "at": [
+        1.02,
+        0.1
+      ],
+      "color": "#f1d6e6",
+      "reach": 0.17
+    },
+    {
+      "kind": "line",
+      "v": 0.47,
+      "bow": -0.45,
+      "color": "#f3dde6",
+      "reach": 0.1
+    },
+    {
+      "kind": "line",
+      "v": 0.565,
+      "bow": -0.06,
+      "color": "#e04e0e",
+      "reach": 0.03
+    },
+    {
+      "kind": "point",
+      "at": [
+        -0.03,
+        0.58
+      ],
+      "color": "#ef5a08",
+      "reach": 0.14
+    },
+    {
+      "kind": "point",
+      "at": [
+        1.03,
+        0.58
+      ],
+      "color": "#ef5a08",
+      "reach": 0.14
+    },
+    {
+      "kind": "line",
+      "v": 0.61,
+      "bow": -0.05,
+      "color": "#ee9a4e",
+      "reach": 0.045
+    },
+    {
+      "kind": "line",
+      "v": 0.67,
+      "bow": 0,
+      "color": "#b08a5a",
+      "reach": 0.05
+    },
+    {
+      "kind": "line",
+      "v": 0.75,
+      "bow": 0,
+      "color": "#5f6446",
+      "reach": 0.06
+    },
+    {
+      "kind": "line",
+      "v": 0.86,
+      "bow": 0,
+      "color": "#2f3c2d",
+      "reach": 0.1
+    },
+    {
+      "kind": "line",
+      "v": 0.99,
+      "bow": 0,
+      "color": "#111a12",
+      "reach": 0.14
+    }
+  ],
+  "techniques": [
+    {
+      "id": "pull",
+      "short": "KEY",
+      "name": "Gaussian pull",
+      "layer": 0,
+      "pass": 1,
+      "params": {
+        "weight": "exp(−d² / reach²)",
+        "d": "distance from the pixel to the source, in frame widths",
+        "reach": "per source, 0.03 to 0.28",
+        "count": 13
+      },
+      "implementation": "Each source is a position, an OKLab color and a reach. Its weight at a pixel is a gaussian of the distance; nothing is clamped, so every source touches every pixel a little."
+    },
+    {
+      "id": "line",
+      "short": "FORM",
+      "name": "Line source with bow",
+      "layer": 0,
+      "pass": 1,
+      "params": {
+        "distance": "|y − (v + bow · (u − 0.5)²)|",
+        "bow": "−0.50 to 0, negative lifts the ends",
+        "lines": 7
+      },
+      "implementation": "A horizontal source is a parabola in u; the distance is vertical. The bow is what makes the bands rise toward the edges instead of running flat."
+    },
+    {
+      "id": "blend",
+      "short": "KEY",
+      "name": "Normalized OKLab mix",
+      "layer": 0,
+      "pass": 2,
+      "params": {
+        "normalize": "weights divided by their sum, with the largest exponent factored out for precision",
+        "space": "OKLab",
+        "out": "OKLab → linear sRGB → sRGB, plus 1/255 dither"
+      },
+      "implementation": "The pixel is the weight-average of the thirteen OKLab colors; converting back to sRGB only at the end keeps the transitions out of gray."
+    },
+    {
+      "id": "grain",
+      "short": "TEX",
+      "name": "Lightness grain",
+      "layer": 1,
+      "pass": 3,
+      "params": {
+        "amplitude_L": 0.04,
+        "cell_px": 1,
+        "hash": "fract(sin-free integer hash of the cell)",
+        "where": "added to L before the sRGB conversion"
+      },
+      "implementation": "A hashed value per 2-px cell nudges OKLab L up or down; since it rides on L it darkens and lightens without shifting hue."
+    },
+    {
+      "id": "warp",
+      "short": "TEX",
+      "name": "Curl stir",
+      "layer": 0,
+      "pass": 0,
+      "params": {
+        "amount": 0,
+        "note": "the instrument stirs the field with two octaves of curl noise; the reference is unstirred, so this plate sets it to zero"
+      },
+      "implementation": "When non-zero, the sample position is displaced by a divergence-free curl of value noise before the pulls are evaluated, so color is carried and never pinched."
+    }
+  ],
+  "pass_order": [
+    "(warp the sample position; 0 here)",
+    "gaussian weight per source",
+    "normalize and mix in OKLab",
+    "grain on L",
+    "to sRGB"
+  ],
+  "coupling": "One reach per source sets both how far its color travels and how soft its edge is; the two cannot be tuned apart, which is what keeps a mesh gradient from looking like stacked blobs.",
+  "measured": {
+    "reference_px": [
+      1920,
+      1000
+    ],
+    "center_column": {
+      "0.02": "#2056bc",
+      "0.10": "#4080dc",
+      "0.27": "#92bfef",
+      "0.40": "#dbd9eb",
+      "0.50": "#eed9e0",
+      "0.60": "#e69e70",
+      "0.70": "#b9906a",
+      "0.80": "#626356",
+      "0.98": "#1d2820"
+    },
+    "edge_column": {
+      "0.10": "#dac2dc",
+      "0.33": "#f4dae6",
+      "0.556": "#cb7b43",
+      "0.60": "#e25f10",
+      "0.80": "#40412e"
+    },
+    "grain_std_8bit": 6.9
+  },
+  "inferred": [
+    "the source kinds and bows: the editor shows handles, not the strokes they belong to",
+    "reach values",
+    "that the editor blends in a perceptual space; its Overlay mode and the filter pass are not reproduced"
+  ],
+  "hand": {
+    "drag a source": "moves it; a line moves up and down; let go while moving and it glides",
+    "drag the field": "stirs; sources near the stroke are carried along",
+    "scroll": "on a source its reach, on the field the marbling, with the ring open the lightness",
+    "hold": "opens the ring: around for hue, outward for chroma; hold on the field to add a source",
+    "drag off": "past the margin removes it"
+  },
+  "keys": {
+    "1-9": "select",
+    "arrows": "push (shift harder)",
+    "[ ]": "reach",
+    ", .": "hue",
+    "; '": "chroma",
+    "- =": "lightness",
+    "a": "add",
+    "delete": "remove",
+    "m n": "marbling",
+    "g": "grain",
+    "h": "handles",
+    "d": "drift",
+    "l": "turn a point into a line and back"
+  },
+  "controller": {
+    "left_stick": "push the selected source",
+    "right_stick": "angle is hue, throw is chroma",
+    "triggers": "reach",
+    "bumpers": "previous, next",
+    "A B X Y": "add, remove, shuffle, drift"
+  },
+  "midi": {
+    "order": [
+      "hue",
+      "chroma",
+      "lightness",
+      "reach",
+      "marbling",
+      "grain"
+    ],
+    "note": "turn six knobs in that order to claim them; any pad selects a source"
+  },
+  "notes": [
+    "Seed 1010 for the grain hash offset.",
+    "Sources are tuned by eye against the reference in split view; the numbers under measured are what they were tuned to.",
+    "The editor’s node colors are listed under reference; the plate’s sources are the colors read from the rendered reference, which already carry the filter pass.",
+    "The spec drawer re-reads the live sources when it opens, so a stirred state can be copied out as JSON."
+  ]
+}

@@ -1,0 +1,215 @@
+{
+  "id": "st-11",
+  "code": "ST-11",
+  "title": "Gradient by number",
+  "section": "studies",
+  "reference": {
+    "files": [
+      "ref-11-nodi-4.7s.png"
+    ],
+    "px": [
+      576,
+      716
+    ],
+    "source": "Antonin Waterkeyn (@antonin.work), shown in a Nodi post; frames read from the 576 × 716 stream",
+    "grammar": "a letterform rasterized to square cells on white graph paper; each inked cell flat-filled in one of five inks (red, blue-violet, pink, yellow, dark green) with one digit 1–8 centered in it; the black grid runs over everything"
+  },
+  "units": "plate widths; the plate is 1 wide and 1.243 tall, y down",
+  "palette": {
+    "paper": "#ffffff",
+    "grid": "#0a0a0b",
+    "red": "#d03010",
+    "violet": "#7070d0",
+    "pink": "#f090b0",
+    "yellow": "#d0d030",
+    "green": "#2f3a22",
+    "digit": "#3e4027"
+  },
+  "ground": {
+    "colour": "#ffffff",
+    "tooth": "none, screen piece",
+    "share": "≈0.68 of the plate"
+  },
+  "grid": {
+    "cols": 39,
+    "rows": 48,
+    "cell": "square, 1/39 w",
+    "line": "#0a0a0b at 75 % alpha, max(1 px, w/700), drawn after the fills"
+  },
+  "glyph": {
+    "char": "9",
+    "source": "ST-09 control points",
+    "brush_half_width": 0.075,
+    "depth": "max(0, 1 − d / half_width), d = distance to the centerline"
+  },
+  "light": {
+    "center": [
+      0.5,
+      0.625
+    ],
+    "at": [
+      1.04,
+      0.509
+    ],
+    "m": "1 − smoothstep(0.26, 0.74, r), r squeezed 0.70 across the light direction"
+  },
+  "techniques": [
+    {
+      "id": "grid",
+      "short": "GRND",
+      "name": "Graph paper",
+      "layer": 0,
+      "pass": 0,
+      "params": {
+        "cols": 39,
+        "rows": 48,
+        "paper": "#ffffff",
+        "line": "rgba(10,10,11,0.75)",
+        "width": "max(1, w/700)",
+        "order": "last"
+      },
+      "implementation": "White fill; the grid is stroked after every cell so the fills never cover it, which is the one thing that makes the cells read as paper squares instead of pixels."
+    },
+    {
+      "id": "ink",
+      "short": "KEY",
+      "name": "Cell inking",
+      "layer": 1,
+      "pass": 1,
+      "params": {
+        "samples": 5,
+        "offsets": "center and ±0.3 cell on both diagonals",
+        "rule": "center counts 2; ink when the sum reaches 3",
+        "inked_cells": 515
+      },
+      "implementation": "Five depth samples per cell vote on whether the cell is inside the stroke, so a thin pass through a cell corner does not ink it and a cell straddling the edge does."
+    },
+    {
+      "id": "depth",
+      "short": "KEY",
+      "name": "Depth field under a light",
+      "layer": 1,
+      "pass": 1,
+      "params": {
+        "depth": "1 − d / 0.075",
+        "power": 0.8,
+        "light": "0.42 + 0.58 · m",
+        "f": "depth^0.8 · light",
+        "light_at": [
+          1.04,
+          0.509
+        ]
+      },
+      "implementation": "One scalar per cell: how deep the cell center sits in the stroke, scaled by the same elliptical light field as ST-09, so the right side of the 9 runs to the top of the ramp and the left stays low."
+    },
+    {
+      "id": "digit",
+      "short": "MARK",
+      "name": "Quantize to a digit",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "levels": 9,
+        "k": "min(9, 1 + floor(f · 9))",
+        "face": "Geist Mono 500",
+        "size": "0.58 cell",
+        "ink": "#3e4027 when the cell’s OKLab L > 0.55, else L + 0.42"
+      },
+      "implementation": "The digit is the level index. It is drawn after the fill in a single ink read from the reference, lifted only on the dark green cells where it would vanish."
+    },
+    {
+      "id": "cell",
+      "short": "TEX",
+      "name": "Per-cell gradient on the slope",
+      "layer": 1,
+      "pass": 2,
+      "params": {
+        "stops": "ramp((k − 1)/9) → ramp(k/9)",
+        "direction": "∇f from the four neighbors, empty neighbors read 0",
+        "fallback": "flat ramp((k − 0.5)/9) when the slope is zero",
+        "facet": 1
+      },
+      "implementation": "A linear gradient across the cell from the low side to the high side of its level; the direction is the discrete gradient of f, so neighboring cells chain into a continuous ramp while each one stays a square."
+    },
+    {
+      "id": "ramp",
+      "short": "COL",
+      "name": "Five inks, one ramp",
+      "layer": 1,
+      "pass": 2,
+      "params": {
+        "stops": [
+          "#d03010",
+          "#7070d0",
+          "#f090b0",
+          "#d0d030",
+          "#2f3a22"
+        ],
+        "space": "OKLab",
+        "lut": 256
+      },
+      "implementation": "The reference’s five flat inks, in the order they occur from the edge of a stroke to its spine, become stops of a continuous OKLab ramp; level 1 sits at the first stop and level 9 at the last."
+    }
+  ],
+  "pass_order": [
+    "paper",
+    "field f per cell (depth × light)",
+    "per cell: gradient fill, then digit",
+    "grid over everything"
+  ],
+  "coupling": "f alone decides which cells ink, the digit, both fill colors and the fill direction, so a digit can never disagree with its color.",
+  "measured": {
+    "video": "576 × 716, 22.7 s",
+    "grid": "about 39 × 49 square cells",
+    "inks": [
+      "#d03010",
+      "#7070d0",
+      "#5050b0",
+      "#f090b0",
+      "#d0d030",
+      "#303090"
+    ],
+    "digit_ink": "#3e4027",
+    "digits": "1 to 8",
+    "paper": "#fdfdfd"
+  },
+  "inferred": [
+    "how the source assigns digits (they vary inside one color band)",
+    "the reference’s tool; the fills there are flat"
+  ],
+  "departure": "The reference fills each cell flat and its digits do not read as a measurement. Here the fill slopes and the digit measures it; that is the technique this plate adds.",
+  "ramps": {
+    "inks": [
+      "#d03010",
+      "#7070d0",
+      "#f090b0",
+      "#d0d030",
+      "#2f3a22"
+    ],
+    "carousel": [
+      "#ff1800",
+      "#ff6a9a",
+      "#ffb5ff",
+      "#8088e6",
+      "#4a5320"
+    ],
+    "heat": [
+      "#2a1a6e",
+      "#8a1f8f",
+      "#e8386a",
+      "#ff8a2a",
+      "#ffe9a6"
+    ],
+    "paper": [
+      "#ededed",
+      "#bdbdbd",
+      "#858585",
+      "#474747",
+      "#0a0a0b"
+    ]
+  },
+  "notes": [
+    "Seedless; the render is deterministic for a given light position.",
+    "A typed glyph is rasterized in Geist 600 and read through an exact Euclidean distance transform; the inking, the digits and the fills follow."
+  ]
+}

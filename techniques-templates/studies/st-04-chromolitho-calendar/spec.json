@@ -1,0 +1,640 @@
+{
+  "id": "st-04",
+  "code": "ST-04",
+  "title": "Chromolitho calendar plate",
+  "section": "studies",
+  "reference": {
+    "file": "ref-04.png",
+    "px": [
+      622,
+      900
+    ],
+    "grammar": "chromolithograph scan: flat tint plates ~1 px out of register against a soft dark olive-brown keyline; tiled ornament border cut by an arc; botanical panels; typeset calendar"
+  },
+  "units": "design units, 1000 = plate width (ref 622 px ⇒ 1 u = 0.622 ref px; 1 ref px = 1.61 u); plate is 1000 × 1447 u",
+  "palette": {
+    "paper": "#F1E5CB",
+    "keyline": "#3A3016",
+    "ochre": "#E3CA5B",
+    "ochre_light": "#E4D189",
+    "sage": "#C5BB7F",
+    "olive": "#ABA65E",
+    "slate": "#9DA694",
+    "pale_grey": "#D3D0BC",
+    "peach": "#EBD5AA",
+    "salmon": "#E0B48C",
+    "salmon_dot": "#C6845A",
+    "cream_yellow": "#E3D6A5",
+    "pale_yellow": "#E1D298",
+    "tan": "#AD834C",
+    "rust": "#B8764B",
+    "black": "#050505",
+    "month_fill": "#B9BA8C",
+    "month_outline": "#7C8654",
+    "text_red": "#A8452B"
+  },
+  "ground": {
+    "colour": "#F1E5CB",
+    "tooth": "±1.1 % per-pixel noise before the softness pass (ref paper L std 1.6)",
+    "area_ref": "≈0.44 of the sheet at 96 px"
+  },
+  "techniques": [
+    {
+      "id": "keyline",
+      "short": "KEY",
+      "name": "Olive-brown keyline",
+      "layer": 9,
+      "pass": 9,
+      "params": {
+        "colour": "#3A3016",
+        "width_u": 2.3,
+        "width_ref_px": 1.4,
+        "ref_integrated_width_px": 2.7,
+        "waver_amp_u": 0.7,
+        "waver_freq": 0.05,
+        "width_jitter": 0.15,
+        "rule_width_u": 1.6,
+        "tile_keyline_u": [
+          1.7,
+          2.2
+        ],
+        "cap": "round",
+        "join": "round",
+        "register_offset": "none; the keyline is the reference plate"
+      },
+      "implementation": "Every silhouette and rule is a polyline displaced by 3-octave sine noise of arc length (amp 0.7 u) and stroked in 8-point runs whose width varies ±15 %, into one keyline canvas multiplied over the sheet last."
+    },
+    {
+      "id": "misregister",
+      "short": "COL",
+      "name": "Plate register offset + knockout",
+      "layer": 1,
+      "pass": 8,
+      "params": {
+        "offsets_u": {
+          "ochre": [
+            1.6,
+            -1
+          ],
+          "ochre_light": [
+            1.2,
+            -1.4
+          ],
+          "sage": [
+            -1.2,
+            1.4
+          ],
+          "olive": [
+            -0.6,
+            1.8
+          ],
+          "slate": [
+            1,
+            1.6
+          ],
+          "pale_grey": [
+            -1.6,
+            0.6
+          ],
+          "peach": [
+            1.8,
+            0.8
+          ],
+          "salmon": [
+            1.8,
+            0.8
+          ],
+          "yellow": [
+            -0.8,
+            -1.6
+          ],
+          "cream": [
+            -0.8,
+            -1.6
+          ],
+          "tan": [
+            1.4,
+            1.2
+          ],
+          "rust": [
+            -1.4,
+            -0.8
+          ],
+          "black": [
+            0.6,
+            1.2
+          ],
+          "green": [
+            1.2,
+            1
+          ],
+          "red": [
+            -1,
+            0.8
+          ]
+        },
+        "magnitude_ref_px": "≈1.2",
+        "composite": "multiply",
+        "ink": "measured color ÷ paper per channel",
+        "knockout": "every fill erases its shape (destination-out) from all other plates and the keyline canvas, so plates do not overprint; the offsets then leave paper slivers and overlaps at every edge"
+      },
+      "implementation": "Each tint plate is an offscreen canvas whose base transform is translated by its offset; a fill knocks its polygon out of the other plates, then all plates are multiplied onto a white sheet, mottled, and multiplied onto the paper."
+    },
+    {
+      "id": "flat-plate",
+      "short": "FILL",
+      "name": "Flat tint plate",
+      "layer": 1,
+      "pass": 1,
+      "params": {
+        "gradient": "none",
+        "shading": "none",
+        "mottle": "see print-mottle"
+      },
+      "implementation": "Polygons filled with the plate ink at full opacity, with no gradients or tone; the keyline does all the modeling."
+    },
+    {
+      "id": "print-mottle",
+      "short": "TEX",
+      "name": "Print mottle on inks",
+      "layer": 8,
+      "pass": 8,
+      "params": {
+        "amp": 0.022,
+        "cell_u": 1.8,
+        "cell_ref_px": 1.1,
+        "on": "ink pixels only",
+        "ref_tint_L_std": "3–7"
+      },
+      "implementation": "ImageData pass over the composited sheet: every non-white pixel is multiplied by 1 ± 0.022·hash(⌊x/cell⌋,⌊y/cell⌋); white (paper) pixels are untouched."
+    },
+    {
+      "id": "scan-softness",
+      "short": "TEX",
+      "name": "Scan softness",
+      "layer": 10,
+      "pass": 11,
+      "params": {
+        "kernel": "[1,2,1]/4 separable",
+        "passes": "round(0.6 u · S · dpr / 0.7), min 1 (1 at 700 css px @ dpr 2)",
+        "equivalent_ref_px": "≈1 px scanner blur",
+        "measured_on_ref": "keyline runs 1–2 px dark but 2.7 px integrated darkness"
+      },
+      "implementation": "After compositing, one ImageData pass applies a horizontal then vertical 3-tap binomial blur so keylines and dot screens carry the reference scan’s soft edges instead of crisp anti-aliasing."
+    },
+    {
+      "id": "tile-scallop",
+      "short": "TEX",
+      "name": "Scallop (fish-scale) tile",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "ground": "#E4D189",
+        "pitch_u": 22,
+        "row_u": 11,
+        "arc_r_u": 11,
+        "keyline_u": 1.9,
+        "dot_r_u": 1.5,
+        "ref_pitch_px": 14,
+        "field_u": [
+          310,
+          62,
+          800,
+          118
+        ]
+      },
+      "implementation": "Staggered rows of keyline semicircles (r = pitch/2) over a light-ochre field, a keyline dot at each arc center, clipped to the band; rust rule beneath."
+    },
+    {
+      "id": "tile-spiral",
+      "short": "TEX",
+      "name": "Spiral tile",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "ground": "#D3D0BC",
+        "spiral": "#9DA694",
+        "pitch_u": 52,
+        "row_u": 44.7,
+        "turns": [
+          1.3,
+          1.5
+        ],
+        "r_max_u": [
+          15,
+          19
+        ],
+        "r_start_u": 3.5,
+        "ribbon_w_u": "5.2 × (0.7→1.0)",
+        "position_jitter_u": 4,
+        "keyline_u": 1.7,
+        "dots": "black r 1.8 between spirals",
+        "ref_pitch_px": 29,
+        "field_u": [
+          800,
+          406,
+          952,
+          600
+        ]
+      },
+      "implementation": "On a hex-staggered 52 u grid each spiral is an Archimedean polyline (r = 3.5 → r_max over 1.3–1.5 turns) offset along its normals into a ribbon, knocked out of the pale plate, filled slate and keylined; a black dot sits in each gap."
+    },
+    {
+      "id": "tile-squares",
+      "short": "TEX",
+      "name": "Square-and-dot tile",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "ground": "#E3CA5B",
+        "square_u": 10.5,
+        "pitch_u": 22.5,
+        "stagger": "half pitch",
+        "dot_r_u": 1.7,
+        "keyline_u": 2.2,
+        "ref_pitch_px": 14,
+        "where": "inside the arc, r < 246 u"
+      },
+      "implementation": "Ochre field with paper squares cut out (destination-out on the plate), each square keylined with a wavered outline, keyline dots on the half-pitch lattice."
+    },
+    {
+      "id": "tile-hearts",
+      "short": "TEX",
+      "name": "Heart tile",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "ground": "#E4D189",
+        "heart_u": 13,
+        "pitch_u": 24,
+        "row_u": 26,
+        "black_square_u": 6,
+        "keyline_u": 2.2,
+        "ref_pitch_px": 15,
+        "field_u": [
+          310,
+          790,
+          800,
+          850
+        ]
+      },
+      "implementation": "Light-ochre field with paper hearts (two arcs and a point) cut out and keylined; a row of black squares alternates between heart rows."
+    },
+    {
+      "id": "tile-scroll",
+      "short": "TEX",
+      "name": "Running-scroll band",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "ground": "#D3D0BC",
+        "pitch_u": 60,
+        "spiral_r_u": 17,
+        "turns": 1.5,
+        "ribbon_w_u": 5.2,
+        "link": "4.6 u slate wave ribbon",
+        "keyline_u": 1.5,
+        "field_u": [
+          310,
+          872,
+          800,
+          940
+        ]
+      },
+      "implementation": "Slate ribbon spirals every 60 u joined by a quadratic wave ribbon, each knocked out of the pale ground and keylined, black dot in the trough."
+    },
+    {
+      "id": "tile-wave",
+      "short": "TEX",
+      "name": "Wave band",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "ground": "#D3D0BC",
+        "line": "#9DA694",
+        "wavelength_u": 30,
+        "amp_u": 4,
+        "line_w_u": 5,
+        "lines": 2,
+        "keyline_u": 1.4,
+        "vertical_variant": "7 lines at 21.7 u pitch, wavelength 30 u, amp 4 u, 4 u ribbon, in the right column 626–1160 u",
+        "ref_wavelength_px": 16
+      },
+      "implementation": "Sine polylines stroked as slate ribbons on pale gray, each with a thin keyline along one edge."
+    },
+    {
+      "id": "dot-screen",
+      "short": "TEX",
+      "name": "Salmon dot screen",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "ground": "#E0B48C",
+        "dot": "#C6845A",
+        "dot_r_u": [
+          2.8,
+          3.8
+        ],
+        "pitch_u": 9.5,
+        "lattice": "hex, jitter ±1.8 u",
+        "coverage": "≈0.45",
+        "ref_mean": "#CF9468",
+        "ref_pitch_px": 5,
+        "field_u": [
+          60,
+          1222,
+          952,
+          1302
+        ]
+      },
+      "implementation": "Salmon field, then a darker salmon plate of jittered discs on a 9.5 u hex lattice knocked out of the ground, both under the keyline."
+    },
+    {
+      "id": "tile-zigzag",
+      "short": "TEX",
+      "name": "Rust zigzag rule",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "colour": "#B8764B",
+        "pitch_u": 13,
+        "amp_u": 5,
+        "line_w_u": 2.6,
+        "rules": "2 × 2.2 u rust rules",
+        "where": [
+          "310–800 × 852–870",
+          "800–952 × 384–402",
+          "800–952 × 604–622"
+        ]
+      },
+      "implementation": "A rust polyline zigzag between two rust rules, on the rust plate, over paper."
+    },
+    {
+      "id": "tile-checker",
+      "short": "TEX",
+      "name": "Checker band",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "cell_u": 12,
+        "colours": [
+          "#050505",
+          "paper"
+        ],
+        "field_u": [
+          310,
+          944,
+          800,
+          968
+        ]
+      },
+      "implementation": "Alternate 12 u cells filled on the black plate; keyline rules top and bottom."
+    },
+    {
+      "id": "tile-stars",
+      "short": "TEX",
+      "name": "Star-sprig lunette",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "ground": "#EBD5AA",
+        "pitch_u": 30,
+        "row_u": 24,
+        "sprig": "6 keyline rays 3.5→8–10.5 u round a dot",
+        "keyline_u": 1.6,
+        "field": "arched lunette 60–300 × 332–420 u"
+      },
+      "implementation": "Peach plate clipped to the arch, keyline star sprigs on a staggered lattice with a dot between."
+    },
+    {
+      "id": "arc",
+      "short": "FORM",
+      "name": "Great arc",
+      "layer": 3,
+      "pass": 3,
+      "params": {
+        "centre_u": [
+          992,
+          1160
+        ],
+        "r_u": 300,
+        "visible": "upper-left quadrant, clipped to 600–952 × 700–1160",
+        "rings": [
+          {
+            "r": [
+              286,
+              300
+            ],
+            "tile": "sawtooth: 120 black triangles on pale"
+          },
+          {
+            "r": [
+              272,
+              286
+            ],
+            "tile": "plain salmon, rust rule at 279"
+          },
+          {
+            "r": [
+              246,
+              272
+            ],
+            "tile": "ring-and-dot on pale gray, pitch 20 u, ring r 6.2"
+          },
+          {
+            "r": [
+              0,
+              246
+            ],
+            "tile": "square-and-dot on ochre"
+          }
+        ],
+        "keylines_u": [
+          2.2,
+          1.8,
+          1.8,
+          2.2
+        ]
+      },
+      "implementation": "Concentric clip discs drawn over the right column and the calendar bands (each ground knocked out of what lies beneath): inner ochre square tile, ring-and-dot band, a salmon band, a sawtooth ring of black triangles, each ring keylined."
+    },
+    {
+      "id": "botanical",
+      "short": "FORM",
+      "name": "Keyline botanical",
+      "layer": 4,
+      "pass": 4,
+      "params": {
+        "asters": {
+          "petals": [
+            15,
+            17
+          ],
+          "R_u": [
+            34,
+            64
+          ],
+          "petal_w": "0.19 R",
+          "petal": "two quads base→tip→base, wavered",
+          "fill": "#D3D0BC",
+          "disc": "0.30 R ochre, 34 keyline stipple dots r 1.2",
+          "side_view": "9 petals over 180°, sage calyx"
+        },
+        "goldenrod": {
+          "branches": 9,
+          "floret_r_u": [
+            3.2,
+            5
+          ],
+          "florets_per_branch": "2–3 per 4 u of branch",
+          "crescent": "keyline arc 1.4 u over 2.4 rad",
+          "leaves": 5
+        },
+        "leaves": "lanceolate, width sin(πt)^0.8, length 85–160 u, width 13–20 u, keyline midrib 1.6 u",
+        "stems": "sage ribbon 4.5–7 u, keylined 2.2 u"
+      },
+      "implementation": "Each organ is a closed polyline built from cubics/quads, knocked out of the plates beneath, filled on its plate and keylined; asters are 15–17 two-quad petals round an ochre disc; goldenrod plumes are arcs of ochre dots with keyline crescents."
+    },
+    {
+      "id": "hop-frieze",
+      "short": "FORM",
+      "name": "Hop frieze",
+      "layer": 4,
+      "pass": 4,
+      "params": {
+        "cones": {
+          "silhouette": "ovoid, half-width = w/2·sin(π(0.08+0.92t))^0.7",
+          "w_u": [
+            46,
+            60
+          ],
+          "h_u": [
+            72,
+            92
+          ],
+          "rows": 6,
+          "bracts_per_row": [
+            2,
+            3
+          ],
+          "bract": "keyline scallop pointing down",
+          "fill": "#E1D298"
+        },
+        "leaves": "3-lobed serrate hop leaf, #AD834C, size 44–70 u, keyline veins",
+        "bines": "sage ribbon 4.5–5 u keylined, tendril spiral r 10",
+        "repeats": 4,
+        "pitch_u": 222,
+        "band": "dot screen 1222–1302 u, wave band 1306–1342 u"
+      },
+      "implementation": "Hop cones rise above the salmon band as ovoid pale-yellow silhouettes carrying six rows of downward keyline bract scallops; tan lobed leaves and sage bines cross the dot screen."
+    },
+    {
+      "id": "cartouche",
+      "short": "FORM",
+      "name": "Zodiac cartouche (Virgo)",
+      "layer": 4,
+      "pass": 4,
+      "params": {
+        "box_u": [
+          60,
+          62,
+          300,
+          330
+        ],
+        "rules": "2.4 u outer, 1.4 u inner at +8",
+        "sky": "#E3D6A5",
+        "horizon_u": 258,
+        "ground": "#C5BB7F strip with 1.3 u keyline grass hatch every 6 u",
+        "rays": "30 keyline rays 1.1 u α0.55 from r 70–90 to 150–190 round (180,236)",
+        "sheaf": {
+          "body": "pale-yellow hourglass 104 u wide at base, 24 u at the waist, 168 u at the ears",
+          "stalks": 13,
+          "ears": 13,
+          "ear_len_u": 40,
+          "grain": "ochre ovals 9×3.6 u in pairs, awns 20 u",
+          "band": "tan ribbon 13 u"
+        },
+        "tab": "cream box 140×46 u at y 14, ochre bosses r 9, ♍ from three arches + looped tail in 3 u keyline"
+      },
+      "implementation": "Double-ruled square; sky plate, horizon strip, rays from a point behind the sheaf; the sheaf body is one knocked-out polygon with keyline stalks fanning through it, bound by a tan band, each stalk ending in an ear of alternating ochre grains with thin awns."
+    },
+    {
+      "id": "calendar-type",
+      "short": "TYPE",
+      "name": "Typeset calendar",
+      "layer": 6,
+      "pass": 6,
+      "params": {
+        "face": "'Georgia','Times New Roman',serif",
+        "month": {
+          "text": "September",
+          "size_u": 70,
+          "weight": 700,
+          "fill": "#B9BA8C",
+          "outline": "#7C8654 1.7 u",
+          "baseline_u": 236
+        },
+        "weekdays": {
+          "size_u": 27,
+          "letters": "S M T W T F S",
+          "separators": "1.4 u keyline bars",
+          "baseline_u": 296
+        },
+        "numbers": {
+          "size_u": 27,
+          "colour": "keyline plate",
+          "col_pitch_u": 56,
+          "row_pitch_u": 43,
+          "first_row_u": 352,
+          "red": "#A8452B on 7 and 22"
+        },
+        "list": {
+          "size_u": 25,
+          "colour": "#A8452B",
+          "lines": [
+            "7 - labor day",
+            "22 - equinox"
+          ],
+          "baselines_u": [
+            602,
+            638
+          ]
+        },
+        "ref_cap_height_px": 11
+      },
+      "implementation": "canvas fillText/strokeText on the green, dark-green, red and keyline plates (each with its own register offset); the month is a light green fill with a dark green outline like the reference’s decorated serif."
+    },
+    {
+      "id": "paper",
+      "short": "GRND",
+      "name": "Cream paper",
+      "layer": 0,
+      "pass": 0,
+      "params": {
+        "colour": "#F1E5CB",
+        "lab": "L 91.3 a −0.1 b 14",
+        "noise": "±1.1 % per pixel, hashed, before the softness pass",
+        "share": "≈0.40 at 96 px (ref 0.44)"
+      },
+      "implementation": "Flat fill plus a hashed per-pixel brightness noise; nothing else is drawn on the paper except ink."
+    }
+  ],
+  "pass_order": [
+    "paper + paper noise",
+    "tile fields (clipped to rules) on their plates",
+    "arc rings over the column and bands",
+    "botanicals: left panel, top-right cluster, bottom-left bine, frieze",
+    "cartouche + symbol tab",
+    "calendar text",
+    "composite plates with offsets in multiply onto white",
+    "print mottle on ink pixels",
+    "multiply sheet onto paper",
+    "keyline plate in multiply",
+    "scan-softness blur"
+  ],
+  "notes": [
+    "Colors are per-region k-means centers on ref-04.png (paper is the modal pixel 241,229,203); keyline width from 266 line crossings (2.7 px integrated darkness incl. scan blur ⇒ ≈1.4–1.7 px ink).",
+    "Reference shares at 96 px: paper 0.44, black ≈0.024, light ochres ≈0.10; mean L 190.",
+    "Seed 4404; layout 1000 × 1447 u: left column 60–300, calendar 310–790, right column 800–952, frieze 1170–1342, frame 48–962 × 30–1372."
+  ]
+}

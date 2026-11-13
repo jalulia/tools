@@ -1,0 +1,271 @@
+{
+  "id": "st-09",
+  "code": "ST-09",
+  "title": "Glow nine",
+  "section": "studies",
+  "reference": {
+    "files": [
+      "ref-09-glow-2.25s.png"
+    ],
+    "px": [
+      640,
+      800
+    ],
+    "source": "Antonin Waterkeyn, glow.mp4, Typographic Animations workshop, scenery.io/workshop; made in Cavalry",
+    "grammar": "one pink monoline numeral on a red card; one pink light orbits the card and, where it passes, the stroke blurs into white and thins to nothing"
+  },
+  "units": "card widths; the card is 1 wide and 1.25 tall, y down; u,v on the plate are x / 1 and y / 1.25",
+  "palette": {
+    "red": "#ff1800",
+    "pink": "#ffb5ff",
+    "deep_pink": "#ff91ec",
+    "stroke": "#ffbbff",
+    "glow": "#ffffff"
+  },
+  "ground": {
+    "ramp": [
+      [
+        0,
+        "#ff1800"
+      ],
+      [
+        0.3,
+        "#ff3a1c"
+      ],
+      [
+        0.5,
+        "#ff5a55"
+      ],
+      [
+        0.66,
+        "#ff84c6"
+      ],
+      [
+        0.82,
+        "#ff91ec"
+      ],
+      [
+        1,
+        "#ffb5ff"
+      ]
+    ],
+    "mixing": "linear in sRGB between stops, by m"
+  },
+  "light": {
+    "center": [
+      0.5,
+      0.625
+    ],
+    "orbit_radii": [
+      0.55,
+      0.62
+    ],
+    "period_s": 9.96,
+    "direction": "counterclockwise on screen, top at t = 0",
+    "still_t_s": 2.25,
+    "still_light": [
+      -0.044,
+      0.531
+    ]
+  },
+  "glyph": {
+    "char": "9",
+    "construction": "monoline; Catmull-Rom through 19 control points, 4 samples per span, 72 segments",
+    "half_weight": 0.027,
+    "control_points": [
+      [
+        0.762,
+        0.585
+      ],
+      [
+        0.64,
+        0.7
+      ],
+      [
+        0.47,
+        0.74
+      ],
+      [
+        0.33,
+        0.7
+      ],
+      [
+        0.255,
+        0.55
+      ],
+      [
+        0.3,
+        0.388
+      ],
+      [
+        0.41,
+        0.281
+      ],
+      [
+        0.535,
+        0.25
+      ],
+      [
+        0.66,
+        0.294
+      ],
+      [
+        0.75,
+        0.4
+      ],
+      [
+        0.775,
+        0.512
+      ],
+      [
+        0.755,
+        0.625
+      ],
+      [
+        0.7,
+        0.75
+      ],
+      [
+        0.61,
+        0.875
+      ],
+      [
+        0.52,
+        0.944
+      ],
+      [
+        0.43,
+        0.969
+      ],
+      [
+        0.33,
+        0.95
+      ],
+      [
+        0.26,
+        0.902
+      ],
+      [
+        0.235,
+        0.869
+      ]
+    ]
+  },
+  "techniques": [
+    {
+      "id": "field",
+      "short": "KEY",
+      "name": "Orbiting light field",
+      "layer": 0,
+      "pass": 1,
+      "params": {
+        "r": "length(vec2(dot(q,u), 0.70 · dot(q,v))), q = p − light, u toward the card center, v across",
+        "m": "1 − smoothstep(0.26, 0.74, r)",
+        "plateau_w": 0.26,
+        "zero_w": 0.74,
+        "across_scale": 0.7
+      },
+      "implementation": "One vec2 uniform. Every other value on the plate is a function of r, the squeezed distance to it."
+    },
+    {
+      "id": "ramp",
+      "short": "COL",
+      "name": "Ground ramp",
+      "layer": 0,
+      "pass": 1,
+      "params": {
+        "stops": 6,
+        "from": "#ff1800",
+        "to": "#ffb5ff",
+        "by": "m"
+      },
+      "implementation": "Six-stop ramp evaluated per pixel from m; the pink plateau and red far field are the same gradient read at its ends."
+    },
+    {
+      "id": "stroke",
+      "short": "FORM",
+      "name": "Centerline distance",
+      "layer": 1,
+      "pass": 2,
+      "params": {
+        "segments": 72,
+        "half_weight_w": 0.027,
+        "caps": "round (a min over segments gives them for free)",
+        "color": "#ffbbff"
+      },
+      "implementation": "d = min over 72 segment distances, unrolled into the fragment shader at build time."
+    },
+    {
+      "id": "blur",
+      "short": "KEY",
+      "name": "Closed-form variable blur",
+      "layer": 1,
+      "pass": 3,
+      "params": {
+        "sigma_max_w": 0.065,
+        "sigma": "sigma_max × (1 − smoothstep(0.34, 0.74, r))",
+        "coverage": "b = ½ (erf((h − d)/(√2 σ)) + erf((h + d)/(√2 σ)))",
+        "erf": "Abramowitz–Stegun 7.1.27, 4 terms",
+        "floor": "σ ≥ 0.6 px so the crisp case stays antialiased"
+      },
+      "implementation": "A stripe of half-width h convolved with a gaussian is two erfs; evaluating them per pixel gives a blur whose radius follows the light with no pyramid and no second pass."
+    },
+    {
+      "id": "taper",
+      "short": "KEY",
+      "name": "Blur-driven taper",
+      "layer": 1,
+      "pass": 4,
+      "params": {
+        "t": "clamp(σ / σ_max / 0.45, 0, 1)",
+        "core_half": "h (1 − t²) − aa · t",
+        "aa": "0.75 px + 0.012 w · t",
+        "tip": "where σ reaches 0.45 σ_max"
+      },
+      "implementation": "The stroke core is a second threshold on the same distance d, with a half-width that shrinks as the blur rises, so the needle point and the glow are one decision."
+    },
+    {
+      "id": "glow",
+      "short": "TEX",
+      "name": "White glow",
+      "layer": 2,
+      "pass": 4,
+      "params": {
+        "gain": 10,
+        "curve": "1 − exp(−gain · b^1.5)",
+        "fade": "× smoothstep(0.02, 0.25, σ / σ_max)",
+        "color": "#ffffff"
+      },
+      "implementation": "The blurred coverage b, pushed through a saturating curve and mixed toward white under the stroke; faded out where σ is near zero so the crisp stroke carries no halo."
+    }
+  ],
+  "pass_order": [
+    "field r and m",
+    "ground = ramp(m)",
+    "d = centerline distance",
+    "σ from r; b = blurred coverage",
+    "glow: mix toward white by f(b)",
+    "stroke core: threshold on d with the tapered half-width, drawn last"
+  ],
+  "coupling": "r decides the ground color, the blur radius and the taper, so the three cannot disagree about where the light is.",
+  "measured": {
+    "video": "640 × 800, 9.96 s loop",
+    "red": "#ff1800",
+    "pink": "#ffb5ff",
+    "deep_pink": "#ff91ec",
+    "stroke": "#ffbbff",
+    "glow": "#ffffff",
+    "stroke_weight": "about 5.8 % of width",
+    "light_path": "top at 0 s, left at 2.25 s, bottom near 5 s, right near 7.5 s"
+  },
+  "inferred": [
+    "field shape and falloff numbers",
+    "the erf blur model and the taper curve; the Cavalry node setup was not seen",
+    "glow gain",
+    "intermediate ramp stops"
+  ],
+  "notes": [
+    "Seedless. The still is deterministic: light at [−0.044, 0.531].",
+    "A pyramid blur would be the route for filled type; the closed form only holds for a stroke."
+  ]
+}

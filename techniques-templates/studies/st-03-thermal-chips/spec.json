@@ -1,0 +1,278 @@
+{
+  "id": "st-03",
+  "code": "ST-03",
+  "title": "Thermal die-cut chips",
+  "section": "studies",
+  "reference": {
+    "file": "ref-03.png",
+    "px": [
+      736,
+      917
+    ],
+    "measured_at": [
+      722,
+      900
+    ],
+    "grammar": "die-cut chips on warm gray stock; 1.5 px plum outline misregistered from a white-backed fill; heat-map gradient interiors with liquid sub-layers; two flat orange/black pieces with cut windows and dash-row text; monochrome print grain"
+  },
+  "palette": {
+    "paper": "#DED9D5",
+    "backing": "#F3F0EC",
+    "keyline": "#2A2634",
+    "orange": "#F65C1E",
+    "orange_hot": "#F8641F",
+    "orange_rim": "#FFA46E",
+    "blue_flat": "#1475BE",
+    "blue": "#0B85C5",
+    "black": "#06070A",
+    "pink": "#F6879E",
+    "pale_pink": "#EBB2BB",
+    "white": "#DAD5D0",
+    "cool_white": "#CDD6CF",
+    "yellow": "#F0C550",
+    "lemon": "#E4C022",
+    "cyan": "#7ED6E5",
+    "mint": "#39B66B",
+    "teal": "#2AAAD0",
+    "lilac": "#9C86C7"
+  },
+  "ground": {
+    "colour": "#DED9D5",
+    "L_std_ref": 3,
+    "vignette": "1.5 % radial darkening, corners only",
+    "area_ref": 0.39
+  },
+  "units": "design units, 1000 = plate width (ref 722 px ⇒ 1 u = 0.722 ref px, 1 ref px = 1.385 u)",
+  "techniques": [
+    {
+      "id": "keyline",
+      "short": "KEY",
+      "name": "Misregistered keyline",
+      "layer": 4,
+      "pass": 4,
+      "params": {
+        "colour": "#2A2634",
+        "alpha": 0.92,
+        "width_u": 2.1,
+        "width_ref_px": 1.5,
+        "fill_offset_u": [
+          1.4,
+          1.4
+        ],
+        "backing_expand_u": 1.4,
+        "fill_shrink_u": 1.4,
+        "backing": "#F3F0EC",
+        "waver_amp_u": 0.25,
+        "waver_freq": 0.05,
+        "join": "round",
+        "cap": "round"
+      },
+      "implementation": "Every chip is a set of rings; the backing ring is offset +1.4 u along its normals and translated (+1.4,+1.4), the fill ring is offset −1.4 u and translated the same, and the plum line is stroked on the unmoved ring at 2.1 u so a pale hairline shows inside the top-left edges and outside the bottom-right ones."
+    },
+    {
+      "id": "thermal",
+      "short": "TONE",
+      "name": "Warped thermal ramp",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "noise": "2-D Perlin, gradient table seeded 3303",
+        "base_freq_u": [
+          0.0019230769230769232,
+          0.0012195121951219512
+        ],
+        "warp_octaves": 2,
+        "warp_amp": [
+          1,
+          1.5
+        ],
+        "field_octaves": 2,
+        "second_octave_gain": 0.3,
+        "lacunarity": 2.03,
+        "contrast": [
+          1.6,
+          1.8
+        ],
+        "linear_term": [
+          0.5,
+          0.9
+        ],
+        "edge_term": "exp(−d/60–70 u) × ±0.12–0.32 on the dial, tab and wedge",
+        "liquid_contour": "one per chip: local slope ×(1+2.5–3·e^(−g²/0.012)) at ramp value 0.36–0.62",
+        "pale_share": "ramps carry 45–55 % pale stops (#DAD5D0, #CDD6CF, #EBB2BB, #E4DEC0)",
+        "sample_pitch_u": 1.6,
+        "per_chip": "own noise offset (ox,oy) and own ramp subset: pink/white/blue arch, yellow/white/blue tab, blue/white lens, white/pink dial, mostly-blue wedge"
+      },
+      "implementation": "For each chip an ImageData at 1.6 u pitch evaluates f = perlin(p + warp·q) + 0.3·perlin(2p + …) with q a 2-octave warp, adds a linear ramp along the chip and an optional edge-distance term, stretches by the contrast, steepens the slope locally around one ramp value so a single liquid contour hardens, and looks the result up in a 256-entry pale-biased ramp LUT; the bitmap is drawn smoothed into the fill clip."
+    },
+    {
+      "id": "diecut",
+      "short": "FORM",
+      "name": "Die-cut rings",
+      "layer": 1,
+      "pass": 1,
+      "params": {
+        "builder": "polygon vertices with per-corner radius → arcs at 3 u step",
+        "corner_r_u": [
+          6,
+          110
+        ],
+        "holes": "evenodd rings (keyhole r 34 + slot 26×110, corners r 6)",
+        "silhouettes": [
+          "arch with notch",
+          "stepped card",
+          "keyhole tab",
+          "lens",
+          "pac-dial",
+          "folder tab",
+          "double-notched capsule",
+          "device slab",
+          "quarter wedge",
+          "disc",
+          "pill"
+        ]
+      },
+      "implementation": "Each silhouette is a vertex list with corner radii; corners are replaced by tangent-point arcs and the ring is sampled at ~3 u so the same polyline feeds fill, clip, normal offset and stroke."
+    },
+    {
+      "id": "flat-plate",
+      "short": "FILL",
+      "name": "Flat plate",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "colour": "#F65C1E",
+        "blue_plate": "#1475BE",
+        "device_black": "#06070A",
+        "hairline": "#39B66B 1.5 u mint rule",
+        "dots": "2 white 3 u, 2 orange 5 u",
+        "L_std_ref": 3.1
+      },
+      "implementation": "Solid orange fill through the same backing/offset machinery; no gradient, only the closing grain; a mint 1.5 u rule and 3 u dots as fittings."
+    },
+    {
+      "id": "cutout",
+      "short": "FORM",
+      "name": "Cut window with pale rim",
+      "layer": 3,
+      "pass": 3,
+      "params": {
+        "black": "#06070A",
+        "rim": "#FFA46E",
+        "rim_expand_u": 1.4,
+        "offset_u": [
+          1.4,
+          1.4
+        ],
+        "corner_r_u": 8,
+        "gradient": "blue #0477C8 → black over the top 45 % of the window, only on the large window"
+      },
+      "implementation": "Cut windows reuse the chip rings: a pale-orange rim ring +1.4 u, then the black (or blue-to-black thermal) fill −1.4 u translated (+1.4,+1.4), so a light hairline sits on the top-left of every cut."
+    },
+    {
+      "id": "ground",
+      "short": "GRND",
+      "name": "Warm gray stock",
+      "layer": 0,
+      "pass": 0,
+      "params": {
+        "colour": "#DED9D5",
+        "vignette_alpha": 0.015,
+        "grain": "shared closing grain"
+      },
+      "implementation": "Flat fill plus a radial 1.5 % darkening from 55 % radius to the corners; the grain pass gives it its tooth."
+    },
+    {
+      "id": "liquid-layer",
+      "short": "COL",
+      "name": "Liquid layer blob",
+      "layer": 3,
+      "pass": 3,
+      "params": {
+        "shape": "r(θ)=R(1+Σ a_k sin(kθ+φ_k)), k=2..4, a 0.10–0.22",
+        "fill_ramps": [
+          "white [#F3F0EC,#DDE6EA,#F6E9EE]",
+          "orange [#F0C550,#FA6A21,#F6879E]",
+          "blue [#0477C8,#1FA3CB,#7ED6E5]"
+        ],
+        "outline": {
+          "colour": "#2A2634",
+          "width_u": 1.7,
+          "alpha": 0.8,
+          "offset_u": [
+            1.4,
+            1.4
+          ]
+        }
+      },
+      "implementation": "A Fourier-radius blob clipped to the chip fill, filled with its own low-contrast thermal ramp, then outlined with the same slipped keyline so it reads as a second cut layer of liquid."
+    },
+    {
+      "id": "grain",
+      "short": "TEX",
+      "name": "Print grain",
+      "layer": 5,
+      "pass": 5,
+      "params": {
+        "pitch_u": 1.385,
+        "amp_uniform": 0.042,
+        "L_std_ref_target": 3,
+        "lag1_autocorr": 0.35,
+        "mono": true,
+        "on": "everything, paper included",
+        "hash": "xorshift of (cx·374761393 + cy·668265263)"
+      },
+      "implementation": "One ImageData pass over the composite multiplies R, G and B by 1 + 0.042·(0.6·n(c) + 0.2·n(c−x) + 0.2·n(c−y)) with n a signed hash on 1.385 u cells, giving mono grain with a 0.35 lag-1 correlation like the reference’s."
+    },
+    {
+      "id": "marbling",
+      "short": "TONE",
+      "name": "Ridged marbling",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "field": "2-octave warped Perlin at 1/170 u, contrast 2.0",
+        "weight": "0.65 × smoothstep((u−0.5)·3 − 0.55 + 0.5); only the right ~25 % of the capsule",
+        "ramp": "[#0B85C5,#2AAAD0,#8FB4C4,#CDD6CF,#DAD5D0,#E4DEC0,#F0C550]",
+        "blend": "color-space mix with the base ramp"
+      },
+      "implementation": "On the capsule a second, smaller-scale warped field with its own blue/pale/yellow ramp is mixed in by color where the weight rises along the length, so the right end breaks into a few soft blue and yellow pools while the left stays a smooth pink-to-white plateau."
+    },
+    {
+      "id": "dash-rows",
+      "short": "MARK",
+      "name": "Dash-row micro text",
+      "layer": 3,
+      "pass": 3,
+      "params": {
+        "colour": "#F46629",
+        "dash_h_u": 6,
+        "dash_w_u": [
+          7,
+          26
+        ],
+        "gap_u": 4,
+        "row_pitch_u": 11,
+        "rows": 5,
+        "align": "right",
+        "jitter": "±1 u"
+      },
+      "implementation": "Right-aligned rows of 3–6 orange rectangles of random width with a 4 u gap and 11 u pitch stand in for text; nothing is typed."
+    }
+  ],
+  "pass_order": [
+    "paper + vignette",
+    "chip backing rings (offset +1.4 u, slipped)",
+    "chip fills: thermal ImageData or flat, clipped to the shrunk slipped ring",
+    "liquid layers, cut windows, fittings, dash rows",
+    "keylines on the unmoved rings",
+    "print grain ImageData pass over all"
+  ],
+  "orange_budget": "one flat orange card (#F65C1E), one orange/black device, one small orange disc; every other chip is a gradient with no orange stop",
+  "notes": [
+    "All numbers measured on ref-03.png at 722 px and scaled ×1.385 to 1000 design units.",
+    "Reference area shares (k-means): paper 0.39, blue 0.14, orange 0.08, pink 0.06, black 0.05, pale pink 0.04, yellow 0.02, mint 0.015.",
+    "Outline profile: 1.5 px dark, white hairline 1 px inside on top/left, 1 px outside on bottom/right ⇒ fill and backing slipped +1 px.",
+    "Seed 3303."
+  ]
+}

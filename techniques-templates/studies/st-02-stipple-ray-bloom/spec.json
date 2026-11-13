@@ -1,0 +1,377 @@
+{
+  "id": "st-02",
+  "code": "ST-02",
+  "title": "Stipple-ray bloom",
+  "section": "studies",
+  "reference": {
+    "file": "ref-02.png",
+    "px": [
+      1152,
+      2048
+    ],
+    "measured_at": 506,
+    "grammar": "dotted-ray flower heads seen as tilted bowls, dot-screen leaves, dry-pen vines, cream paper; no fills, no outlines, no shading"
+  },
+  "palette": {
+    "ground": "#EEE6D5",
+    "ground_top_right": "#DAD2C1",
+    "ray_rim": "#95A3E8",
+    "ray_mid": "#5566DF",
+    "ray_deep": "#3343D6",
+    "spot": "#2B3AD1",
+    "ray_tip": "#1622C8",
+    "rim_bead": "#4A5BDC",
+    "inner_ray": "#8E9DE8 → #C8CFF1",
+    "corolla_dot": "#F6EEDA",
+    "white": "#FFFFFF",
+    "cream": "#F7F0DC",
+    "gold": "#E2B84E",
+    "leaf_dark": "#27432D",
+    "leaf_pale": "#8FA282",
+    "vine": "#2A4830"
+  },
+  "ground": {
+    "colour": "#EEE6D5",
+    "mottle": "hash noise 3.4 u cells ±0.8 %, plus bilinear value noise 28 u and 87 u cells ±0.6 % each",
+    "vignette": "1 − 0.085·exp(−d_TR²/0.30) − 0.03·exp(−d_BR²/0.25), d in frame widths",
+    "area_ref": 0.75
+  },
+  "units": "design units, 1000 = plate width (ref 1152 px ⇒ 1 u = 1.152 ref px; measured on the 506 px copy, 1 u = 0.506 px)",
+  "techniques": [
+    {
+      "id": "ray",
+      "short": "MARK",
+      "name": "Outer ray (burr)",
+      "layer": 3,
+      "pass": 3,
+      "params": {
+        "rays_per_head": [
+          100,
+          116
+        ],
+        "bead_pitch_u": 6,
+        "bead_pitch_ref_px": 6.9,
+        "bead_d_u": [
+          4,
+          5.3
+        ],
+        "bead_d_ref_px": [
+          4.6,
+          6.1
+        ],
+        "start": "rim ellipse (Rr = 0.5 R)",
+        "length_u": "(R − Rr)·(1 − 0.42·sinθ·sinφ); far side 1.4×, near side 0.6× on the edge-on head",
+        "length_mod": "0.16·(sin2φ + 0.6 sin3φ + 0.4 sin5φ)/2 ± 9 % per ray, 8 % of rays 1.12–1.24× (the burr silhouette)",
+        "angular_jitter": "±6 % of pitch",
+        "twist_rad": 0.09,
+        "waver": "0.018 rad · 3-sine noise",
+        "droop": "0.5·sinθ·L·s^2.2·(0.3 + 0.7·max(0, sinφ)) toward the near side",
+        "near_side_darkening": "ramp parameter + 0.22·sinφ·sinθ",
+        "ramp": [
+          [
+            0,
+            "#95A3E8"
+          ],
+          [
+            0.06,
+            "#5566DF"
+          ],
+          [
+            0.16,
+            "#3343D6"
+          ],
+          [
+            0.36,
+            "#2B3AD1"
+          ],
+          [
+            1,
+            "#1622C8"
+          ]
+        ],
+        "alpha": 1
+      },
+      "implementation": "Each ray starts on the rim ellipse, heads along the ellipse normal with a 0.09 rad twist and a near-side droop, and is walked at 1 u steps; every 6.0 u of arc one solid disc is placed whose Ø and color are read from the ramp at the ray parameter."
+    },
+    {
+      "id": "bowl",
+      "short": "FORM",
+      "name": "Tilted bowl",
+      "layer": 3,
+      "pass": 3,
+      "params": {
+        "tilts_deg": [
+          72,
+          50,
+          38,
+          10,
+          3
+        ],
+        "bud_deg": 77,
+        "R_u": [
+          188,
+          202,
+          198,
+          214,
+          208
+        ],
+        "centres_u": [
+          [
+            700,
+            300
+          ],
+          [
+            300,
+            600
+          ],
+          [
+            705,
+            880
+          ],
+          [
+            300,
+            1200
+          ],
+          [
+            680,
+            1520
+          ]
+        ],
+        "rim_r": "0.50·R",
+        "corolla_r": "(0.22 + 0.08·cosθ)·R",
+        "bowl_depth": "corolla center displaced 0.35·Rr·sinθ toward the near side",
+        "rim_ellipse": "(Rr, Rr·cosθ) rotated by roll",
+        "roll_deg": [
+          -8,
+          -24,
+          18,
+          -10,
+          0
+        ],
+        "ray_direction": "atan2(sinφ, cosθ·cosφ), the ellipse normal",
+        "order": "far outer rays → calyx → inner rays (far half + sides) → rim → corolla → near rim over the corolla edge → near outer rays"
+      },
+      "implementation": "The head is one bowl in local coordinates with y scaled by cosθ: a rim ellipse, a corolla sunk toward the near side, inner rays converging from rim to corolla, and outer rays leaving the rim along its normal, so a flat rim sends a crown up and a fringe down while a top-down head reads as a full disc."
+    },
+    {
+      "id": "rim",
+      "short": "MARK",
+      "name": "Rim ellipse",
+      "layer": 3,
+      "pass": 3,
+      "params": {
+        "bead_d_u": [
+          2.6,
+          3.3
+        ],
+        "bead_d_ref_px": [
+          3,
+          3.8
+        ],
+        "pitch_u": 2.4,
+        "pitch_ref_px": 2.8,
+        "rows": "1 on the ellipse (±2 u jitter) + 1 outside it (1.5–5 u), second row kept 20–100 % toward the near side",
+        "keep": "strength·(0.35 + 0.55·near) + (1 − strength)·0.08, strength = smoothstep(9° … 40°) of tilt",
+        "colour": "#4A5BDC (→ #95A3E8 on flat heads) mixed with #3343D6 by 0.55·near·strength",
+        "over_corolla": "near half restroked after the corolla"
+      },
+      "implementation": "Beads are placed around the projected rim at 2.4 u pitch, thinned on the far side and doubled and darkened on the near side; on top-down heads 92 % of the rim beads are dropped so the rays read as one continuous fan."
+    },
+    {
+      "id": "inner-ray",
+      "short": "TONE",
+      "name": "Bowl interior rays",
+      "layer": 3,
+      "pass": 3,
+      "params": {
+        "from": "rim point",
+        "to": "corolla edge at 0.98·Rc, sunk by the bowl depth",
+        "bead_pitch_u": 5,
+        "bead_d_u": [
+          3,
+          2.6
+        ],
+        "bow": "0.06·L sine bow in the twist direction",
+        "ramp": [
+          [
+            0,
+            "#8E9DE8"
+          ],
+          [
+            0.5,
+            "#B0BAEC"
+          ],
+          [
+            1,
+            "#C8CFF1"
+          ]
+        ],
+        "visible": "far half and sides (sinφ < 0.35), all around on top-down heads",
+        "min_length_u": 8
+      },
+      "implementation": "Straight beaded runs from each rim point inward to the corolla edge, slightly bowed, pale blue and converging; the near wall is seen from outside so its inner rays are skipped."
+    },
+    {
+      "id": "corolla",
+      "short": "MARK",
+      "name": "Corolla dot cloud",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "radius_u": "(0.22 + 0.08 cosθ)·R ≈ 48–64 u",
+        "lobes": "Rc·(0.82 + 0.26·|sin 2.5φ|^0.9 + 0.03 cos3φ), five lobes",
+        "dot_colour": "#F6EEDA (15 % #FFFFFF)",
+        "dot_d_u": 3.5,
+        "ring_pitch_u": 4.2,
+        "jitter_u": 1,
+        "fringe": "white dots Ø 1.8–2.8 u, pitch 3.6 u, 2–8 u outside the lobe",
+        "speckle": {
+          "colour": "#E2B84E",
+          "n": 1100,
+          "d_u": [
+            1.5,
+            2.5
+          ],
+          "sigma": "0.38·Rc",
+          "alpha": [
+            0.7,
+            0.95
+          ]
+        }
+      },
+      "implementation": "Concentric jittered rings of cream dots at 4.2 u pitch fill the lobed outline (foreshortened by cosθ and sunk to the bowl bottom); a sparse white ring sits outside it and 1100 gaussian gold dots, densest at the middle, are rejected outside the lobe."
+    },
+    {
+      "id": "calyx",
+      "short": "FILL",
+      "name": "Calyx funnel",
+      "layer": 2,
+      "pass": 2,
+      "params": {
+        "colours": "#F7F0DC 45 %, #FFFFFF 55 %",
+        "dot_d_u": [
+          1.6,
+          3
+        ],
+        "length": "1.4·R·sinθ below the near rim",
+        "width": "2.0·Rc at the rim → 6 % at the tip",
+        "density": "0.11 per u² × (1 − 0.6 t)",
+        "edge": "none",
+        "on": "heads tilted > 17°"
+      },
+      "implementation": "A downward triangle under tilted heads, in the head’s roll frame, filled only with cream and white dots whose density fades toward the tip; drawn after the far rays and before the near fringe."
+    },
+    {
+      "id": "leaf-screen",
+      "short": "TEX",
+      "name": "Coarse dot screen",
+      "layer": 1,
+      "pass": 1,
+      "params": {
+        "colour": "#27432D",
+        "grid_pitch_u": 8.6,
+        "grid_pitch_ref_px": 9.9,
+        "rotation_deg": [
+          7,
+          -11,
+          19
+        ],
+        "dot_d_u_max": 5.2,
+        "dot_d_ref_px": 6,
+        "position_jitter_u": 0.6,
+        "size_jitter": "±10 %",
+        "margin_falloff": "Ø · smoothstep(−2 … +10 u inside the edge) → nothing outside",
+        "interior": "Ø × (1 − 0.4·smoothstep(30 … 80 u depth))",
+        "pale_screen": {
+          "colour": "#8FA282",
+          "pitch_u": 8.6,
+          "offset": "half cell",
+          "d_u": 2.4,
+          "alpha": 0.55
+        },
+        "silhouette": "cordate outline from 24 hand-set vertices (width 1.31 × height 1.76, sinus 0.34 deep, drawn-out apex), Catmull-Rom smoothed, left/right widths ×0.86–1.06 (asymmetry), midrib bent by curl·(y+0.76)²·0.32, ±2 % edge noise; heights 350+200 (overlapping pair) / 300 / 260 u"
+      },
+      "implementation": "An asymmetric cordate polygon per leaf is sampled on a rotated square grid; each dot’s Ø is full in the margin band, shrinks toward the middle, and smoothsteps to zero across the last 10 u inside the edge so no outline forms; a paler half-cell-offset screen is added."
+    },
+    {
+      "id": "leaf-stipple",
+      "short": "TEX",
+      "name": "Interior stipple",
+      "layer": 1,
+      "pass": 1,
+      "params": {
+        "dark": "#27432D α0.85 (62 %)",
+        "pale": "#8FA282 α0.7 (38 %)",
+        "d_u": [
+          0.9,
+          1.8
+        ],
+        "candidates_per_1000u2": 150,
+        "keep": "(0.12 + 0.88·smoothstep(4 … 42 u depth)) × (0.25 + 0.75·noise 44 u) × (0.55 + 0.45·noise 12 u)"
+      },
+      "implementation": "Random fine dots whose keep-probability grows with depth inside the leaf and is modulated by two value-noise scales, giving the blotchy dark middle."
+    },
+    {
+      "id": "vine",
+      "short": "KEY",
+      "name": "Dry-pen vine",
+      "layer": 4,
+      "pass": 4,
+      "params": {
+        "colour": "#2A4830 α0.97",
+        "curve": "ONE cubic (980,−40)→(620,520)→(560,1140)→(40,1800), plus one thin vine (−40,140)→(380,640)→(640,1180)→(1040,1790) crossing it",
+        "width_u": {
+          "stem": [
+            6.2,
+            1.6
+          ],
+          "tendril": [
+            4.4,
+            1.6
+          ]
+        },
+        "width_ref_px": [
+          7.1,
+          1.8
+        ],
+        "taper": "sin(π·t)^0.6 over the run",
+        "roughness": "width × (1 + 0.22·noise(0.11 s) + 0.08·noise(0.9 s))",
+        "flecks": "2 tries per 4 u step at 70 %, Ø 0.9–1.8 u, 0.5–2.2 u outside the edge, α 0.3–0.8",
+        "cap": "round",
+        "join": "round",
+        "order": "stroked behind all heads, then t 0.44–1.0 re-stroked in front (thin vine from t 0.42)"
+      },
+      "implementation": "One cubic centerline is stroked in 4 u segments whose width is a tapered base times 1-D noise; small flecks are scattered along both edges to dry the line, and the lower run is re-stroked over the heads so the same vine passes both behind and in front."
+    },
+    {
+      "id": "ground",
+      "short": "GRND",
+      "name": "Paper mottle",
+      "layer": 0,
+      "pass": 0,
+      "params": {
+        "colour": "#EEE6D5",
+        "hf": "hash noise, 3.4 u cell, ±0.8 %",
+        "lf": "bilinear value noise on an 8 px lattice, 28 u and 87 u cells, ±0.6 % each",
+        "vignette": "−8.5 % gaussian toward the top-right corner (σ² 0.30 frame widths), −3 % toward the bottom-right (σ² 0.25)",
+        "corner_top_right": "#DAD2C1"
+      },
+      "implementation": "One ImageData pass: ground color × vignette × (1 + hf + lf) per pixel."
+    }
+  ],
+  "pass_order": [
+    "ground ImageData",
+    "leaves (coarse screen, pale screen, interior stipple)",
+    "both vines behind the heads",
+    "heads top to bottom: far outer rays, calyx, inner rays, rim, corolla rings, white fringe, gold speckle, near rim, near outer rays",
+    "bud (rim + burr only, 60 rays)",
+    "main vine re-stroked in front from t 0.44",
+    "thin vine re-stroked in front from t 0.42"
+  ],
+  "notes": [
+    "All numbers measured on ref-02.png at 506 px and scaled ×1.976 to design units (1000 = 1152 ref px).",
+    "Reference: ground (236,228,211) center, (225,213,189) top-right corner, block std 1.2–3.8; ray-dot NN pitch 3.0 px (5.9 u), dot eq. Ø 2.2 px (4.3 u); ≈90 rays crossing r = 100 px; leaf grid NN 3.9–4.5 px (7.7–8.9 u), dot eq. Ø 2.5 px (4.9 u); vine 3 px (5.9 u).",
+    "Reference area shares: ground 0.75, blue 0.09, dark green 0.03; reference ray tips measured (20,36,202) in the top decile, deeper than the #2B3AD1 spot, so the tip is #1622C8.",
+    "Seed 2202."
+  ]
+}
