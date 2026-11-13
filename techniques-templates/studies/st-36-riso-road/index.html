@@ -214,6 +214,127 @@ function hex(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >
 function rgbHex(c) { return "#" + c.map(v => clamp(Math.round(v), 0, 255).toString(16).padStart(2, "0")).join(""); }
 function css(c, a) { return a === undefined ? `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})` : `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`; }
 const PLATES = [];
+/* ===== MINDGUT ROBOT · one construction, posed by angles or by IK targets =====
+   Drawn into a plate system, not as an image: each part fills its own ink plate(s) and strokes the key.
+   Parts go back to front; every part first erases the key under its own silhouette, so lines behind it vanish
+   the way a drawn figure's hidden lines do.
+   Local frame: origin at the hip center, unit s (= height / 9.6), +x to the robot's right as drawn, +y down.
+
+   mgRobot({
+     x, y,              world position of the hip center
+     h,                 overall height, antenna ball to boot sole
+     rot,               whole-body rotation (rad), flip: 1 | -1 (mirror)
+     head: tilt (rad), look: -1..1 (eyes shift),
+     arms: [back, front], legs: [back, front]  each { a, b } angles (rad, 0 = straight down, + = toward +x)
+                                               or { to:[wx, wy], bend: 1|-1 } an IK target in world space
+                                               plus { front: bool } to draw a limb in front of the torso
+     plates: { body, light, accent, dark, shadow }  each { g, style, op? }   (op "destination-out" erases)
+     key: { g, style, w },  shadow: [dx, dy] (world px) or null,  detail: 0..1
+   })                                                                                                     */
+function mgRobot(o) {
+  const S = o.h / 9.6, rot = o.rot || 0, fl = o.flip || 1, K = o.key, kw = K.w, det = o.detail == null ? 1 : o.detail;
+  const cr = Math.cos(rot), sr = Math.sin(rot);
+  const toLocal = (wx, wy) => { const dx = wx - o.x, dy = wy - o.y; return [(dx * cr + dy * sr) / (S * fl), (-dx * sr + dy * cr) / S]; };
+  const T = g => { g.save(); g.translate(o.x, o.y); g.rotate(rot); g.scale(fl * S, S); };
+  const plate = (name, path) => { const p = o.plates && o.plates[name]; if (!p) return false; const g = p.g; T(g); g.globalCompositeOperation = p.op || "source-over"; g.fillStyle = p.style; path(g); g.fill(); g.restore(); return true; };
+  const key = (path, w, fill) => { const g = K.g; T(g); g.lineJoin = "round"; g.lineCap = "round"; g.strokeStyle = K.style; g.fillStyle = K.style; g.lineWidth = (w || kw) / S; path(g); fill ? g.fill() : g.stroke(); g.restore(); };
+  const hide = path => { const g = K.g; T(g); g.globalCompositeOperation = "destination-out"; g.fillStyle = "#000"; path(g); g.fill(); g.restore(); };
+  /* a part: erase key under it, fill its plate, stroke its outline */
+  const part = (path, ink) => { hide(path); plate(ink || "body", path); key(path); };
+  const rr = (x, y, w, h, r) => g => { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, r); else g.rect(x, y, w, h); };
+  const circ = (x, y, r) => g => { g.beginPath(); g.arc(x, y, r, 0, 6.2832); };
+  const capsule = (A, B, w) => g => { const dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy) || 1e-6, nx = -dy / L * w / 2, ny = dx / L * w / 2, a = Math.atan2(dy, dx); g.beginPath(); g.moveTo(A[0] + nx, A[1] + ny); g.lineTo(B[0] + nx, B[1] + ny); g.arc(B[0], B[1], w / 2, a + Math.PI / 2, a - Math.PI / 2, true); g.lineTo(A[0] - nx, A[1] - ny); g.arc(A[0], A[1], w / 2, a - Math.PI / 2, a + Math.PI / 2, true); g.closePath(); };
+  /* geometry, in s */
+  const torso = { w: 3.1, wb: 2.75, h: 3.0, top: -3.0, r: .55 }, neck = { w: .9, h: .32 }, head = { w: 3.5, h: 2.45, r: .85 };
+  const headY = torso.top - neck.h - head.h, shoulderY = torso.top + .55;
+  const LIMB = { arm: [1.3, 1.2, .62], leg: [1.08, 1.02, .7] };
+  /* a limb's three points from angles or an IK target (local frame) */
+  const limb = (root, spec, kind, side) => {
+    const [a, b] = LIMB[kind];
+    if (spec && spec.to) {
+      let [tx, ty] = toLocal(spec.to[0], spec.to[1]); let dx = tx - root[0], dy = ty - root[1], d = Math.hypot(dx, dy);
+      const dm = Math.min(a + b - .02, Math.max(Math.abs(a - b) + .02, d)); if (d > dm) { tx = root[0] + dx / d * dm; ty = root[1] + dy / d * dm; d = dm; }
+      const th = Math.atan2(ty - root[1], tx - root[0]), al = Math.acos(clamp((a * a + d * d - b * b) / (2 * a * d), -1, 1)) * (spec.bend || side);
+      const e = [root[0] + Math.cos(th + al) * a, root[1] + Math.sin(th + al) * a]; return [root, e, [tx, ty]];
+    }
+    const s0 = (spec && spec.a) || 0, s1 = s0 + ((spec && spec.b) || 0), d0 = Math.PI / 2 - s0, d1 = Math.PI / 2 - s1;
+    const e = [root[0] + Math.cos(d0) * a, root[1] + Math.sin(d0) * a]; return [root, e, [e[0] + Math.cos(d1) * b, e[1] + Math.sin(d1) * b]];
+  };
+  const st = o.stance == null ? 1 : o.stance;   /* 1 = frontal; toward 0 the limbs root nearer the center line, for three-quarter poses */
+  const arms = (o.arms || [{ a: -.25, b: -.15 }, { a: .25, b: .15 }]).map((sp, i) => ({ sp, pts: limb([(i ? 1.62 : -1.62) * (.45 + .55 * st), shoulderY], sp, "arm", i ? -1 : 1), side: i ? 1 : -1 }));
+  const legs = (o.legs || [{ a: -.05, b: 0 }, { a: .05, b: 0 }]).map((sp, i) => ({ sp, pts: limb([(i ? .78 : -.78) * (.25 + .75 * st), -.05], sp, "leg", i ? 1 : -1), side: i ? 1 : -1 }));
+  /* segmented tube: rings across the tube every .36 s, a light joint disc at the elbow or knee */
+  const tube = (A, B, w) => {
+    const path = capsule(A, B, w); part(path);
+    if (det > .2) { const dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy), n = Math.max(1, Math.floor(L / .34)), nx = -dy / L, ny = dx / L;
+      key(g => { g.beginPath(); for (let k = 1; k < n; k++) { const t = k / n, cx = A[0] + dx * t, cy = A[1] + dy * t; g.moveTo(cx + nx * w * .5, cy + ny * w * .5); g.quadraticCurveTo(cx + nx * 0 + dx / L * .09, cy + dy / L * .09, cx - nx * w * .5, cy - ny * w * .5); } }, kw * .62); }
+  };
+  const joint = (P, r) => part(circ(P[0], P[1], r), o.plates.accent ? "accent" : "light");
+  const hand = (E, W, side) => { /* a C-claw, opening along the forearm */
+    const a = Math.atan2(W[1] - E[1], W[0] - E[0]), r = .5, gap = .9;
+    const path = g => { g.beginPath(); g.arc(W[0] + Math.cos(a) * r * .5, W[1] + Math.sin(a) * r * .5, r, a + gap / 2, a - gap / 2 + 6.2832); g.arc(W[0] + Math.cos(a) * r * .5, W[1] + Math.sin(a) * r * .5, r * .42, a - gap / 2 + 6.2832, a + gap / 2, true); g.closePath(); };
+    part(path);
+  };
+  const foot = (K2, A2, side) => { /* boot: toe points away from the body's center line */
+    const dir = side, x0 = K2[0] - .55 + dir * .18, y0 = K2[1] - .12;
+    part(rr(x0, y0, 1.1 + .25, .62, [.34, .34, .14, .14]));
+    if (det > .2) { part(rr(x0 + (dir > 0 ? .78 : 0), y0, .57, .62, dir > 0 ? [.1, .34, .14, .1] : [.34, .1, .1, .14]), o.plates.accent ? "accent" : "light"); key(g => { g.beginPath(); g.moveTo(x0 + .05, y0 + .5); g.lineTo(x0 + 1.3, y0 + .5); }, kw * .6); }
+  };
+  const drawArm = A => { const [S0, E, Wr] = A.pts; tube(S0, E, LIMB.arm[2]); tube(E, Wr, LIMB.arm[2] * .92); if (det > .2) joint(E, .36); hand(E, Wr, A.side); };
+  const drawLeg = A => { const [S0, Kn, F] = A.pts; tube(S0, Kn, LIMB.leg[2]); tube(Kn, F, LIMB.leg[2] * .92); if (det > .2) joint(Kn, .4); foot(F, Kn, A.side); };
+  /* cast shadow: the whole silhouette, offset, before anything else */
+  if (o.shadow && o.pass !== "figure") { const sh = o.plates.shadow || { g: K.g, style: K.style }; const g = sh.g; g.save(); g.translate(o.shadow[0], o.shadow[1]); T(g); g.fillStyle = sh.style; g.globalCompositeOperation = sh.op || "source-over";
+    const sil = [rr(-torso.w / 2, torso.top, torso.w, torso.h, torso.r), rr(-head.w / 2, headY, head.w, head.h, head.r)]; arms.concat(legs).forEach(L => { sil.push(capsule(L.pts[0], L.pts[1], .75)); sil.push(capsule(L.pts[1], L.pts[2], .7)); });
+    legs.forEach(L => sil.push(rr(L.pts[2][0] - .7, L.pts[2][1] - .12, 1.5, .62, .3))); for (const p of sil) { p(g); g.fill(); } g.restore(); g.restore(); }
+  if (o.pass === "shadow") return null;
+  /* back to front */
+  arms.filter(A => !(A.sp && A.sp.front)).forEach(drawArm);
+  legs.filter(L => !(L.sp && L.sp.front)).forEach(drawLeg);
+  /* torso: a slightly tapered box with a chest panel carrying a small double helix and a dial */
+  const torsoPath = g => { const t = torso, y0 = t.top, y1 = t.top + t.h, r = t.r; g.beginPath(); g.moveTo(-t.w / 2 + r, y0); g.lineTo(t.w / 2 - r, y0); g.quadraticCurveTo(t.w / 2, y0, t.w / 2, y0 + r); g.lineTo(t.wb / 2, y1 - r); g.quadraticCurveTo(t.wb / 2, y1, t.wb / 2 - r, y1); g.lineTo(-t.wb / 2 + r, y1); g.quadraticCurveTo(-t.wb / 2, y1, -t.wb / 2, y1 - r); g.lineTo(-t.w / 2, y0 + r); g.quadraticCurveTo(-t.w / 2, y0, -t.w / 2 + r, y0); g.closePath(); };
+  part(torsoPath);
+  if (det > .2) {
+    const px = -.95, py = torso.top + .55, pw = 1.9, ph = 1.35;
+    part(rr(px, py, pw, ph, .28), "light");
+    key(g => { g.beginPath(); for (let s2 = 0; s2 < 2; s2++) { for (let k = 0; k <= 16; k++) { const t = k / 16, x = px + .28 + t * (pw * .62), y = py + ph / 2 + Math.sin(t * 6.2832 + s2 * Math.PI) * ph * .26; k ? g.lineTo(x, y) : g.moveTo(x, y); } } }, kw * .7);
+    key(g => { g.beginPath(); for (const t of [.125, .375, .625, .875]) { const x = px + .28 + t * pw * .62, y = py + ph / 2, dy = Math.abs(Math.sin(t * 6.2832)) * ph * .26 * .8; g.moveTo(x, y - dy); g.lineTo(x, y + dy); } }, kw * .45);
+    part(circ(px + pw - .32, py + ph / 2, .2), o.plates.accent ? "accent" : "body");
+    key(g => { g.beginPath(); g.moveTo(-1.0, torso.top + 2.35); g.lineTo(1.0, torso.top + 2.35); }, kw * .55);
+    [-.6, 0, .6].forEach(xx => part(circ(xx, torso.top + 2.62, .1), "light"));
+  }
+  legs.filter(L => L.sp && L.sp.front).forEach(drawLeg);
+  /* neck and head */
+  part(rr(-neck.w / 2, torso.top - neck.h - .05, neck.w, neck.h + .15, .08));
+  const ht = (o.head || 0); const HG = g => { g.translate(0, headY + head.h); g.rotate(ht); g.translate(0, -(headY + head.h)); };
+  const headPart = (path, ink) => part(g => { HG(g); path(g); }, ink);
+  const headKey = (path, w, fill) => key(g => { HG(g); path(g); }, w, fill);
+  /* antenna: a stem and a ball, the ball is the one dot */
+  headKey(g => { g.beginPath(); g.moveTo(.15, headY); g.quadraticCurveTo(.25, headY - .45, .05, headY - .85); }, kw * 1.05);
+  headPart(circ(.05, headY - 1.08, .3), o.plates.accent ? "accent" : "light");
+  /* ears */
+  [-1, 1].forEach(sd => headPart(rr(sd > 0 ? head.w / 2 - .15 : -head.w / 2 - .32, headY + head.h * .32, .47, .85, .2), o.plates.accent ? "accent" : "light"));
+  headPart(rr(-head.w / 2, headY, head.w, head.h, head.r));
+  /* visor and face */
+  const vx = -1.25, vy = headY + .45, vw = 2.5, vh = 1.42, lk = (o.look || 0) * .18;
+  headPart(rr(vx, vy, vw, vh, .5), "light");
+  [-.58, .58].forEach(ex => { headKey(circ(ex + lk, vy + .62, .3), 0, true); const gl = o.plates.light; if (gl && det > .2) { const g = gl.g; T(g); HG(g); g.fillStyle = gl.style; g.globalCompositeOperation = "source-over"; circ(ex + lk - .1, vy + .52, .08)(g); g.fill(); g.restore(); const kg = K.g; T(kg); HG(kg); kg.globalCompositeOperation = "destination-out"; circ(ex + lk - .1, vy + .52, .085)(kg); kg.fill(); kg.restore(); } });
+  headKey(g => { g.beginPath(); g.arc(lk * .6, vy + .86, .3, .35, Math.PI - .35); }, kw * .75);
+  if (det > .2) headKey(g => { g.beginPath(); g.moveTo(-head.w / 2 + .32, headY + .35); g.quadraticCurveTo(-head.w / 2 + .32, headY + .18, -head.w / 2 + .62, headY + .18); }, kw * .6);
+  /* front arms last */
+  arms.filter(A => A.sp && A.sp.front).forEach(drawArm);
+  /* world-space anchor points the caller may want (hands, feet, head top) */
+  const W = (p) => [o.x + (p[0] * fl * S) * cr - (p[1] * S) * sr, o.y + (p[0] * fl * S) * sr + (p[1] * S) * cr];
+  return { hands: arms.map(A => W(A.pts[2])), feet: legs.map(L => W(L.pts[2])), top: W([0, headY - 1.4]), s: S };
+}
+/* named poses, angles in radians; IK limbs are added by callers */
+const MG_POSE = {
+  stand: { arms: [{ a: -.22, b: -.12 }, { a: .22, b: .12 }], legs: [{ a: -.06, b: .02 }, { a: .06, b: -.02 }] },
+  wave: { arms: [{ a: -.25, b: -.2 }, { a: 2.5, b: .55, front: true }], legs: [{ a: -.06, b: .02 }, { a: .06, b: -.02 }], head: -.06, look: .5 },
+  walk: { arms: [{ a: -.5, b: -.35 }, { a: .5, b: .45, front: true }], legs: [{ a: -.28, b: .12 }, { a: .62, b: -.95, front: true }], head: .04, look: .7 },
+  run: { arms: [{ a: -1.0, b: -1.3 }, { a: 1.15, b: 1.2, front: true }], legs: [{ a: -.75, b: -.85 }, { a: 1.35, b: -1.55, front: true }], head: .12, look: 1 },
+  dash: { stance: .35, arms: [{ a: -.75, b: -.35 }, { a: -.45, b: -.55, front: true }], legs: [{ a: -.7, b: -.75 }, { a: 1.2, b: -1.45, front: true }], head: -.12, look: 1 },
+  cheer: { arms: [{ a: -2.55, b: .2 }, { a: 2.55, b: -.2, front: true }], legs: [{ a: -.18, b: .1 }, { a: .18, b: -.1 }], head: -.08 }
+};
 </script>
 <script>
 /* engine: src/p25.js */
@@ -253,20 +374,16 @@ const PLATES = [];
     /* ---------- objects: smoke clouds, two robots, stars, motion ticks ---------- */
     const ids = { green: "#010000", blue: "#020000", orange: "#030000", white: "#040000", dark: "#050000", gray: "#060000" };
     const cloud = (cx, cy, R, n) => { if (R <= kw) return; const cs = []; for (let i = 0; i < n; i++) { const a = rnd() * 6.28, r = R * (.35 + rnd() * .35); cs.push([cx + Math.cos(a) * R * .75 * rnd() + (i / n - .5) * R * 2.2 * ex, cy + Math.sin(a) * R * .35 + (i / n - .5) * R * 2.2 * ey * .6, r]); } kg.lineWidth = kw; for (const [x, y, r] of cs) { kg.beginPath(); kg.arc(x, y, r, 0, 6.3); kg.stroke(); } og.fillStyle = ids.white; for (const [x, y, r] of cs) { og.beginPath(); og.arc(x, y, r, 0, 6.3); og.fill(); kg.save(); kg.globalCompositeOperation = "destination-out"; kg.beginPath(); kg.arc(x, y, Math.max(0, r - kw * .2), 0, 6.3); kg.fill(); kg.restore(); } for (let i = 0; i < 3; i++) { const [x, y, r] = cs[(i * 2) % cs.length]; kg.beginPath(); kg.arc(x + r * .2, y + r * .1, r * .45, 2.6, 4.2); kg.stroke(); } };
-    const robot = (x, y, h, id, lean) => { const bw = h * .42, bh = h * .5, hw = h * .3, hh = h * .26, hy = y - bh * .1 - hh * .55; const paths = (g, fill) => { g.save(); g.translate(x, y); g.rotate(lean); g.translate(-x, -y);
-        g.beginPath(); g.roundRect ? g.roundRect(x - bw / 2, y - bh * .1, bw, bh, 14 * u) : g.rect(x - bw / 2, y - bh * .1, bw, bh); fill ? g.fill() : g.stroke();
-        g.beginPath(); g.moveTo(x - hw / 2, y - bh * .1 - 8 * u); g.lineTo(x - hw / 2, hy); g.arc(x, hy, hw / 2, 3.1416, 0); g.lineTo(x + hw / 2, y - bh * .1 - 8 * u); g.closePath(); fill ? g.fill() : g.stroke();
-        const legY = y - bh * .1 + bh; [[-1, .5], [1, -.35]].forEach(([sg2, sw]) => { g.beginPath(); g.moveTo(x + sg2 * bw * .22 - 9 * u, legY - 2 * u); g.lineTo(x + sg2 * bw * .22 + 9 * u, legY - 2 * u); g.lineTo(x + sg2 * bw * .22 + 9 * u + sw * 40 * u, legY + h * .17); g.lineTo(x + sg2 * bw * .22 - 9 * u + sw * 40 * u, legY + h * .17); g.closePath(); fill ? g.fill() : g.stroke(); g.beginPath(); g.rect(x + sg2 * bw * .22 - 16 * u + sw * 40 * u, legY + h * .15, 32 * u, 9 * u); fill ? g.fill() : g.stroke(); });
-        g.lineWidth = fill ? 16 * u : kw; g.lineCap = "round"; [[-1, -.5], [1, .2]].forEach(([sg2, up]) => { g.beginPath(); g.moveTo(x + sg2 * bw / 2, y + bh * .1); g.lineTo(x + sg2 * (bw / 2 + 34 * u), y + bh * .1 + up * 60 * u); g.stroke(); });
-        g.lineWidth = fill ? 6 * u : kw; g.beginPath(); g.moveTo(x, hy - hw / 2); g.lineTo(x, hy - hw / 2 - 22 * u); g.stroke(); g.beginPath(); g.arc(x, hy - hw / 2 - 27 * u, 6 * u, 0, 6.3); fill ? g.fill() : g.stroke(); g.restore(); };
-      og.fillStyle = id; og.strokeStyle = id; paths(og, true); kg.lineWidth = kw; paths(kg, false);
-      kg.save(); kg.translate(x, y); kg.rotate(lean); kg.translate(-x, -y); [-1, 1].forEach(sg2 => { kg.beginPath(); kg.arc(x + sg2 * hw * .2, hy - 2 * u, 7 * u, 0, 6.3); kg.fill(); }); kg.lineWidth = kw * .8; for (let k = 0; k < 3; k++) { kg.beginPath(); kg.moveTo(x - bw * .22, y + bh * .18 + k * 12 * u); kg.lineTo(x + bw * .22, y + bh * .18 + k * 12 * u); kg.stroke(); } kg.restore(); };
+    /* Mindgut's robot, running: the shared construction in the run pose, leaning 0.2 rad into the stride */
+    const robot = (x, y, h, id, lean, acc) => { const S = h / 9.6, fl = ex >= 0 ? 1 : -1;
+      mgRobot(Object.assign({}, MG_POSE.dash, { x: x, y: y - 2.0 * S, h, rot: .42 * fl + lean * .5, flip: fl, detail: 1,
+        plates: { body: { g: og, style: id }, light: { g: og, style: ids.white }, accent: { g: og, style: acc || ids.orange } }, key: { g: kg, style: "#000", w: kw } })); };
     const star = (x, y, r, id) => { const n = 8; og.fillStyle = id; og.beginPath(); kg.beginPath(); for (let k = 0; k < n * 2; k++) { const a = k / (n * 2) * 6.283 + rnd() * .1, rr = k % 2 ? r * .38 : r * (.8 + rnd() * .3); const X = x + Math.cos(a) * rr, Y = y + Math.sin(a) * rr; k ? (og.lineTo(X, Y), kg.lineTo(X, Y)) : (og.moveTo(X, Y), kg.moveTo(X, Y)); } og.closePath(); kg.closePath(); og.fill(); kg.lineWidth = kw * .85; kg.stroke(); };
     const ticks = (x, y, n, len) => { kg.lineWidth = kw; for (let i = 0; i < n; i++) { const ox = (rnd() - .5) * 60 * u, oy = i * 16 * u - n * 8 * u; kg.beginPath(); kg.moveTo(x + ox - ex * len, y + oy - ey * len); kg.lineTo(x + ox - ex * len * (.3 + rnd() * .3), y + oy - ey * len * (.3 + rnd() * .3)); kg.stroke(); } };
     /* two racers on the road, back one first */
-    const rh = 380 * u * P.robotSize;
-    const racers = [{ t: .66, d: laneD - 60 * u, id: ids.green, lean: -.1 }, { t: .3, d: laneD + 330 * u, id: ids.blue, lean: -.1 }];
-    for (const r of racers) { const a = -W * .1 + W * 1.1 * r.t, x = a * ex + r.d * nx, y = wallY + a * ey + r.d * ny; if (y < -rh || y > H + rh) continue; cloud(x - ex * rh * .55 - 110 * u, y - ey * rh * .55 - rh * .25, rh * .36 * P.smoke, 7); robot(x, y, rh, r.id, r.lean); ticks(x - rh * .25, y + rh * .1, 3, 70 * u); const ns = Math.round(P.stars); for (let k = 0; k < ns; k++) { const a = rnd() * 6.28, rr = rh * (.55 + rnd() * .35); star(x + Math.cos(a) * rr * 1.1, y + Math.sin(a) * rr * .8, (12 + rnd() * 14) * u, k % 2 ? ids.orange : ids.white); } }
+    const rh = 500 * u * P.robotSize;
+    const racers = [{ t: .64, d: laneD - 40 * u, id: ids.green, acc: ids.orange, lean: -.1 }, { t: .4, d: laneD + 470 * u, id: ids.blue, acc: ids.orange, lean: -.1 }, { t: .16, d: laneD + 1020 * u, id: ids.orange, acc: ids.blue, lean: -.1 }];
+    for (const r of racers) { const a = -W * .1 + W * 1.1 * r.t, x = a * ex + r.d * nx, y = wallY + a * ey + r.d * ny; if (y < -rh || y > H + rh) continue; cloud(x - ex * rh * .55 - 110 * u, y - ey * rh * .55 - rh * .25, rh * .36 * P.smoke, 7); robot(x, y, rh, r.id, r.lean, r.acc); ticks(x - rh * .25, y + rh * .1, 3, 70 * u); const ns = Math.round(P.stars); for (let k = 0; k < ns; k++) { const a = rnd() * 6.28, rr = rh * (.55 + rnd() * .35); star(x + Math.cos(a) * rr * 1.1, y + Math.sin(a) * rr * .8, (12 + rnd() * 14) * u, k % 2 ? ids.orange : ids.white); } }
     /* read plates */
     const eb = .6 * u, RD = gblur(chan(rg, W, H, 3), W, H, eb), WL = gblur(chan(wg, W, H, 3), W, H, eb), ST = gblur(chan(sg, W, H, 3), W, H, eb), OB = oc.getContext("2d").getImageData(0, 0, W, H).data, KY = gblur(chan(kg, W, H, 3), W, H, eb);
     /* ---------- one grain: hashed, blurred, smeared along the feed direction ---------- */
@@ -324,11 +441,11 @@ const PLATES = [];
       { id: "mono", name: "Black and red", c: { paper: [248, 248, 248], road: [205, 205, 205], curb: [224, 224, 224], wall: [120, 120, 120], yellow: [235, 50, 50], green: [60, 60, 60], blue: [170, 170, 170], orange: [235, 50, 50], smoke: [248, 248, 248], dark: [40, 40, 40], gray: [180, 180, 180], key: [10, 10, 10] }, sw: ["#cdcdcd", "#787878", "#eb3232", "#3c3c3c"] },
       { id: "violet", name: "Violet and lime", c: { paper: [247, 246, 250], road: [196, 190, 210], curb: [214, 208, 226], wall: [120, 70, 200], yellow: [200, 240, 80], green: [40, 160, 110], blue: [250, 140, 170], orange: [255, 200, 60], smoke: [247, 246, 250], dark: [50, 40, 70], gray: [176, 170, 190], key: [20, 14, 36] }, sw: ["#c4bed2", "#7846c8", "#c8f050", "#28a06e"] }
     ],
-    bench: { palette: "measured", params: {}, note: "The scene is generated; patches sit on the same ink in both: open road gray, the pink wall, a stripe edge with its key, a smoke cloud edge, the whole sheet for ink shares.", items: [
-      { name: "road gray", ref: [840, 1680, 200, 200], out: [900, 1680, 200, 200], m: ["hist", "mean", "std", "spec", "ac", "ink"], lags: 8, inks: [[210, 211, 203]], inkNames: ["gray"] },
+    bench: { palette: "measured", params: {}, note: "The scene is generated; render-side windows were placed with search.py after the 2026-11-12 robot redraw. Patches sit on the same ink in both: open road gray, the pink wall, a stripe edge with its key, a smoke cloud edge, the whole sheet for ink shares.", items: [
+      { name: "road gray", ref: [840, 1680, 200, 200], out: [1080, 1368, 200, 200], m: ["hist", "mean", "std", "spec", "ac", "ink"], lags: 8, inks: [[210, 211, 203]], inkNames: ["gray"] },
       { name: "pink wall", ref: [100, 100, 200, 200], out: [100, 100, 200, 200], m: ["hist", "mean", "std", "spec", "ac", "ink"], lags: 8, inks: [[247, 173, 226]], inkNames: ["pink"] },
-      { name: "stripe edge", ref: [1150, 560, 200, 200], out: [350, 1330, 200, 200], m: ["hist", "mean", "std", "spec", "ink", "share"], inks: [[210, 211, 203], [253, 250, 163], [8, 11, 10]], inkNames: ["gray", "yellow", "key"] },
-      { name: "smoke edge", ref: [1100, 250, 200, 200], out: [480, 440, 200, 200], m: ["hist", "mean", "std", "spec", "ink", "share"], inks: [[210, 211, 203], [252, 248, 241], [8, 11, 10]], inkNames: ["gray", "white", "key"] },
+      { name: "stripe edge", ref: [1150, 560, 200, 200], out: [768, 360, 200, 200], m: ["hist", "mean", "std", "spec", "ink", "share"], inks: [[210, 211, 203], [253, 250, 163], [8, 11, 10]], inkNames: ["gray", "yellow", "key"] },
+      { name: "smoke edge", ref: [1100, 250, 200, 200], out: [552, 1608, 200, 200], m: ["hist", "mean", "std", "spec", "ink", "share"], inks: [[210, 211, 203], [252, 248, 241], [8, 11, 10]], inkNames: ["gray", "white", "key"] },
       { name: "whole plate", ref: [0, 0, 1440, 1920], out: [0, 0, 1440, 1920], m: ["hist", "ink", "share"], inks: [[210, 211, 203], [8, 11, 10], [129, 186, 239], [251, 177, 230], [252, 248, 241], [253, 250, 163], [18, 135, 70]], inkNames: ["gray", "key", "blue", "pink", "white", "yellow", "green"] }
     ] },
     passes: ["geometry: a road direction at 32°, the wall line, the curb strip, the lightning stripes as zigzag bands with pointed ends", "object plate by id: puff clouds (circles stroked on the key, filled and cut from the key so only the outer scallop stays), two robots, star marks, motion ticks", "one grain: a hashed field blurred 0.45 px and smeared 1 px along the feed", "per pixel: paper, road plate, wall plate, curb, stripe plate, object inks, each sampled at its own offset, each edge broken by the grain, each tone mottled by it; the key last at its own offset"],
@@ -697,17 +814,12 @@ window.STUDY={
       setup:{
         palette:'measured',
         overrides:{},
-        note:'The scene is generated; patches sit on the same ink in both: open road gray, the pink wall, a stripe edge with its key, a smoke cloud edge, the whole sheet for ink shares.',
+        note:'The scene is generated; render-side windows were placed with search.py after the 2026-11-12 robot redraw. Patches sit on the same ink in both: open road gray, the pink wall, a stripe edge with its key, a smoke cloud edge, the whole sheet for ink shares.',
         patches:[
-          { name:'road gray', reference_rect:[840,1680,200,200], render_rect:[900,1680,200,200], metrics:['hist','mean','std','spec','ac','ink'] },
+          { name:'road gray', reference_rect:[840,1680,200,200], render_rect:[1080,1368,200,200], metrics:['hist','mean','std','spec','ac','ink'] },
           { name:'pink wall', reference_rect:[100,100,200,200], render_rect:[100,100,200,200], metrics:['hist','mean','std','spec','ac','ink'] },
-          {
-            name:'stripe edge',
-            reference_rect:[1150,560,200,200],
-            render_rect:[350,1330,200,200],
-            metrics:['hist','mean','std','spec','ink','share']
-          },
-          { name:'smoke edge', reference_rect:[1100,250,200,200], render_rect:[480,440,200,200], metrics:['hist','mean','std','spec','ink','share'] },
+          { name:'stripe edge', reference_rect:[1150,560,200,200], render_rect:[768,360,200,200], metrics:['hist','mean','std','spec','ink','share'] },
+          { name:'smoke edge', reference_rect:[1100,250,200,200], render_rect:[552,1608,200,200], metrics:['hist','mean','std','spec','ink','share'] },
           { name:'whole plate', reference_rect:[0,0,1440,1920], render_rect:[0,0,1440,1920], metrics:['hist','ink','share'] }
         ]
       }
