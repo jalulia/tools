@@ -60,7 +60,7 @@ for (let round = 1; round <= 3; round++) {
   const STAMP = [[/([?&]v=)\d{8,14}/g, '$1'], [/"(source_commit|library_commit)":\s*"[0-9a-f]{7,40}"/g, '"$1":""'], [/Built \d{4}-\d{2}-\d{2} from [0-9a-f]{7,40}/g, 'Built'], [/"generated":\s*"[^"]*"/g, '"generated":""']];
   const norm = (s) => STAMP.reduce((a, [r, w]) => a.replace(r, w), s);
   for (const f of sh('git diff --name-only').split('\n').filter(Boolean)) {
-    if (!generated(f)) continue; let before; try { before = sh(`git show HEAD:"${f}"`, { maxBuffer: 1 << 28 }); } catch { continue; }
+    let before; try { before = sh(`git show HEAD:"${f}"`, { maxBuffer: 1 << 28 }); } catch { continue; }
     if (norm(before).trimEnd() === norm(fs.readFileSync(path.join(ROOT, f), 'utf8')).trimEnd()) sh(`git checkout -- "${f}"`);
   }
   if (sh('git status --porcelain')) { sh('git add -A'); commit('Rebuild generated files and census' + (trailers ? '\n\n' + trailers : '')); }
