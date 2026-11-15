@@ -1,6 +1,6 @@
 # The library CMS
 
-Version 1 (Phase 1), 2026-11-15. Page: https://jalulia.github.io/tools/library/ → **Edit** (top right).
+Version 2, 2026-11-15. Page: https://jalulia.github.io/tools/library/ → **Edit** (top right).
 
 ## What it does
 | Action | Effect | Undo |
@@ -13,6 +13,21 @@ Version 1 (Phase 1), 2026-11-15. Page: https://jalulia.github.io/tools/library/ 
 
 Every save is one commit to `main` (message names the records), so the site is updated by the next deploy, about two
 minutes. Saves go one after another; a save that meets a newer file retries on top of it.
+
+## Mine and Shared
+With a token, a switch next to Edit: **Mine** shows everything, private work included; **Shared** shows exactly what
+anyone with the link sees. Edit always works in Mine. The choice is remembered in that browser (`tools.view`).
+
+## Sharing with specific people (proposal, not built)
+Built on Supabase; the public site stays on GitHub Pages. Not checked against current Supabase docs yet.
+1. In Edit, **Share** on a project, a tag or picked cards → name it ("For Matt"), choose whether private work is
+   included, an optional expiry and an optional passcode → a link with an unguessable code.
+2. The viewer opens the library with that code; the page asks Supabase (a function that takes only the code) for the
+   allowed records, and private files come from a private storage bucket as short-lived signed links. A banner names
+   the share.
+3. **Shares** in Edit lists every link with its last view; revoke or change it there.
+Tables: `shares` (code hash, name, scope, expiry, passcode hash, revoked), `share_views`; private files in a private
+bucket; row-level security so nothing is readable without a valid code or Julia's sign-in.
 
 ## What it does not do (yet)
 - **Private is not secret.** Private records are left out of listings, but their files and catalog entries stay in this
@@ -48,6 +63,11 @@ folders), `gallery/_build/build.mjs` and `set/index.html` (leave out archived an
 (reads `_shared/hidden.js`).
 
 ## Changelog
+- 2 · 2026-11-15 · Top nav by kind (Library · Techniques · Examples · Templates · Galleries; Ledger and Audit only while
+  editing; Shelves and Atoms still open by address); one header per project with the archived count as a link;
+  one Family row; Refine (type, status, build) on the left in place of More filters; Mine / Shared switch; Undo after
+  archive and private; the injected site bar is one ø mark with a start menu (hover or tap), and the grab / cue / export
+  bar is no longer injected; T&T page crumbs go to the library.
 - 1 · 2026-11-15 · Projects down the left (public, Private, Retiring); kinds and families on top; cards open their page
   in the same tab, details behind the small i; Edit with Archive, Make private, Remove, Restore, Move to project, tags,
   title, kind; instant saves to GitHub.

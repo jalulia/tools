@@ -22,7 +22,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const SITE_DIR = join(ROOT, '_site');
 const TEMPLATE = join(__dirname, 'index-template.html');
-const GRABBER = readFileSync(join(__dirname, 'grabber.js'), 'utf8');
 
 // Tools live directly at the repo root as subfolders (e.g. meshviz/, halftone/).
 // We skip well-known non-tool dirs.
@@ -160,37 +159,47 @@ function injectNav(name, meta, allTools) {
     }
   }
 
-  const galleryChip = onGallery ? '' : '<a class="tn-lnk" href="../gallery/">gallery</a>';
+  // One small mark in the corner; hover or tap opens a start-menu list of the site (Julia, 2026-11-15).
+  // The grab / cue / export bar (scripts/grabber.js) is no longer injected: it was out of date.
   const nav = `
-<nav id="tn" aria-label="Site navigation">
-  <a class="tn-lnk tn-home" href="../" title="All tools">◂ tools</a>
-  ${galleryChip}
-  <button id="tn-btn" type="button" aria-expanded="false" aria-controls="tn-menu">index ▾</button>
-  <span class="tn-cur" title="${curLabel}">${curLabel}</span>
+<nav id="tn" aria-label="Site menu">
+  <button id="tn-btn" type="button" aria-expanded="false" aria-controls="tn-menu" title="Site menu">ø</button>
+  <div id="tn-menu" hidden>
+    <div class="tn-band" aria-hidden="true">jalulia/tools</div>
+    <div class="tn-list">
+      <div class="tn-sec">Here: ${curLabel}</div>
+      <a href="../library/"${name === 'library' ? ' aria-current="page"' : ''}>Library</a>
+      <a href="../gallery/"${onGallery ? ' aria-current="page"' : ''}>Gallery</a>
+      <a href="../">All tools</a>
+      <div class="tn-div"></div>
+      <div class="tn-scroll">${items}</div>
+    </div>
+  </div>
 </nav>
-<div id="tn-menu" hidden role="menu" aria-label="Jump to tool">
-  <div class="tn-mhdr">Jump to</div>
-  ${items}
-  <div class="tn-div"></div>
-  <a class="tn-all" href="../">All tools ▸</a>
-</div>
 <style>
-#tn{position:fixed;left:16px;bottom:16px;z-index:2147483000;display:flex;align-items:stretch;font:600 12px/1.2 -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:#fff;color:#111;border:1px solid #cfcfcf;box-shadow:0 3px 14px rgba(0,0,0,.14);border-radius:3px;overflow:hidden}
-#tn a,#tn button{padding:9px 12px;color:#111;text-decoration:none;background:none;border:0;border-right:1px solid #ededed;font:inherit;cursor:pointer;letter-spacing:.02em}
-#tn button:hover,#tn a:hover{background:#f4f4f2}
-#tn .tn-cur{padding:9px 12px;color:#8a8a8a;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-right:0}
-#tn-menu{position:fixed;left:16px;bottom:58px;z-index:2147483000;min-width:250px;max-width:300px;background:#fff;color:#111;border:1px solid #cfcfcf;box-shadow:0 8px 30px rgba(0,0,0,.20);border-radius:4px;padding:6px;font:500 13px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif}
-#tn-menu .tn-mhdr,#tn-menu .tn-sec{font:700 9.5px/1 'Space Mono',ui-monospace,monospace;letter-spacing:.16em;color:#9a9a9a;text-transform:uppercase;padding:9px 10px 5px}
-#tn-menu .tn-sec{padding-top:11px}
-#tn-menu a{display:flex;justify-content:space-between;gap:10px;padding:8px 10px;color:#141414;text-decoration:none;border-radius:3px}
-#tn-menu a:hover{background:#f2f2f0}
-#tn-menu a[aria-current="page"]{background:#111;color:#fff}
-#tn-menu .tn-div{height:1px;background:#ececec;margin:8px 6px}
-#tn-menu .tn-all{color:#666;font-size:12px}
-@media (max-width:520px){#tn .tn-cur{display:none}}
+#tn{position:fixed;left:10px;bottom:10px;z-index:2147483000;font:500 13px/1.3 'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif}
+#tn-btn{width:28px;height:28px;display:grid;place-items:center;padding:0;border:1px solid #101014;background:#fff;color:#101014;font:800 15px/1 'Archivo',Helvetica,Arial,sans-serif;cursor:pointer}
+#tn-btn:hover,#tn-btn[aria-expanded="true"]{background:#101014;color:#fff}
+#tn-menu{position:absolute;left:0;bottom:34px;display:flex;min-width:240px;max-width:300px;background:#fff;color:#101014;border:1px solid #101014;box-shadow:4px 4px 0 rgba(16,16,20,.12)}
+#tn-menu[hidden]{display:none}
+#tn-menu .tn-band{writing-mode:vertical-rl;transform:rotate(180deg);background:#101014;color:#fff;padding:10px 5px;font:500 9.5px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.2em;text-transform:uppercase}
+#tn-menu .tn-list{flex:1;min-width:0;padding:4px 0}
+#tn-menu .tn-scroll{max-height:min(46vh,380px);overflow:auto}
+#tn-menu .tn-sec{font:500 9.5px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.14em;color:#8a8a8e;text-transform:uppercase;padding:9px 12px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tn-menu a{display:block;padding:7px 12px;color:#101014;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tn-menu a:hover,#tn-menu a:focus-visible{background:#101014;color:#fff;outline:0}
+#tn-menu a[aria-current="page"]{box-shadow:inset 3px 0 0 #101014;font-weight:600}
+#tn-menu .tn-div{height:1px;background:#e2e2e4;margin:4px 0}
+body.editing #tn{display:none}
+@media print{#tn{display:none}}
 </style>
-<script>(function(){var b=document.getElementById('tn-btn'),m=document.getElementById('tn-menu');if(!b||!m)return;function set(o){m.hidden=!o;b.setAttribute('aria-expanded',o?'true':'false');}b.addEventListener('click',function(e){e.stopPropagation();set(m.hidden);});document.addEventListener('click',function(e){if(!m.hidden&&!m.contains(e.target)&&e.target!==b)set(false);});document.addEventListener('keydown',function(e){if(e.key==='Escape')set(false);});})();</script>
-<script>${GRABBER}</script>`;
+<script>(function(){var n=document.getElementById('tn'),b=document.getElementById('tn-btn'),m=document.getElementById('tn-menu'),t;if(!n||!b||!m)return;
+function set(o){clearTimeout(t);m.hidden=!o;b.setAttribute('aria-expanded',o?'true':'false');}
+var hover=window.matchMedia&&matchMedia('(hover:hover)').matches;
+if(hover){n.addEventListener('mouseenter',function(){set(true);});n.addEventListener('mouseleave',function(){t=setTimeout(function(){set(false);},260);});}
+b.addEventListener('click',function(e){e.stopPropagation();set(hover?true:m.hidden);});
+document.addEventListener('click',function(e){if(!m.hidden&&!n.contains(e.target))set(false);});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!m.hidden){set(false);b.focus();}});})();</script>`;
   let html = readFileSync(file, 'utf8');
   html = /<\/body>/i.test(html) ? html.replace(/<\/body>/i, nav + '\n</body>') : html + nav;
   writeFileSync(file, html);

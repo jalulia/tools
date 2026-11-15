@@ -34,7 +34,9 @@
   var PROJ = {}, PROJ_IDS = []; CMSD.projects.forEach(function (p) { PROJ[p.id] = p; PROJ_IDS.push(p.id); });
   var KIND3 = ['technique', 'example', 'template'], KIND3_LABEL = { technique: 'Techniques', example: 'Examples', template: 'Templates' };
   var ED = { on: false, unlocked: !!(window.LibCMS && window.LibCMS.token()), archive: null, sel: {}, busy: '', status: '', confirm: null, removed: CMSD.removed.slice() };
-  function visible(r) { return !r._gone && (r.visibility !== 'private' || ED.unlocked); }
+  try { ED.shared = localStorage.getItem('tools.view') === 'shared'; } catch (err) {}
+  function mine() { return ED.unlocked && !ED.shared; }
+  function visible(r) { return !r._gone && (r.visibility !== 'private' || mine()); }
   var KINDS = ['technique', 'atom', 'exploration', 'coupling', 'study', 'template', 'instrument', 'document', 'plate'].filter(function (k) { return (k !== 'document' && k !== 'plate') || R.some(function (r) { return r.kind === k; }); });
   var STATUSES = ['canonical', 'exploration', 'proposed', 'unsorted', 'known-failure', 'historical', ''];
   var ACCESS = ['public', 'staged', 'local', 'private'].filter(function (a) { return a !== 'private' || R.some(function (r) { return r.access === 'private'; }); });
@@ -195,35 +197,56 @@
 
   /* ---------------------------------------------------------------- bar + rail */
   function drawBar() {
-    var n = { plates: WORKS.length, shelves: L.collections.length, techniques: L.authority.techniques.length, atoms: L.authority.atoms.length, audit: L.audit.filter(function (a) { return a.level !== 'note'; }).length };
-    $views.innerHTML = VIEWS.map(function (v) {
-      return '<button type="button" data-view="' + v[0] + '"' + (S.view === v[0] ? ' aria-current="page"' : '') + '>' + v[1] + (n[v[0]] != null ? '<i>' + n[v[0]] + '</i>' : '') + '</button>';
-    }).join('');
+    var k = S.f.kind3.length === 1 ? S.f.kind3[0] : '', on = function (x) { return x ? ' aria-current="page"' : ''; };
+    var nT = L.authority.techniques.length, nA = base().length, kc = {};
+    WORKS.forEach(function (r) { if (visible(r) && r.state !== 'archived') kc[r.kind3] = (kc[r.kind3] || 0) + 1; });
+    var h = '<button type="button" data-nav=""' + on(S.view === 'plates' && !k) + '>Library<i>' + nA + '</i></button>' +
+      '<button type="button" data-nav="technique"' + on(S.view === 'techniques') + ' title="Every method, with the work that uses it">Techniques<i>' + nT + '</i></button>' +
+      '<button type="button" data-nav="example"' + on(S.view === 'plates' && k === 'example') + '>Examples<i>' + (kc.example || 0) + '</i></button>' +
+      '<button type="button" data-nav="template"' + on(S.view === 'plates' && k === 'template') + '>Templates<i>' + (kc.template || 0) + '</i></button>' +
+      '<a href="' + e(BASE) + 'gallery/" title="Galleries: tag bundles come in Phase 2; this is the current gallery">Galleries</a>';
+    if (ED.on || S.view === 'ledger' || S.view === 'audit' || S.view === 'shelves' || S.view === 'atoms') {
+      var n = { ledger: R.length, audit: L.audit.filter(function (a) { return a.level !== 'note'; }).length, shelves: L.collections.length, atoms: L.authority.atoms.length };
+      h += '<span class="vsep" aria-hidden="true"></span>' + ['ledger', 'audit'].concat(S.view === 'shelves' || S.view === 'atoms' ? [S.view] : []).map(function (v) {
+        return '<button type="button" class="upk" data-view="' + v + '"' + on(S.view === v) + '>' + cap(v) + '<i>' + n[v] + '</i></button>';
+      }).join('');
+    }
+    $views.innerHTML = h;
+    drawViewSwitch();
   }
+  // Mine / Shared: what you see, and what anyone you send the link to sees
+  var $vsw = document.createElement('div'); $vsw.id = 'vsw'; $vsw.setAttribute('role', 'group'); $vsw.setAttribute('aria-label', 'Whose view');
+  function drawViewSwitch() {
+    if (!$vsw.parentNode) { var b = document.getElementById('bar'), c = document.getElementById('cmsbtn'); if (c) b.insertBefore($vsw, c); else b.appendChild($vsw); }
+    $vsw.hidden = !ED.unlocked;
+    $vsw.innerHTML = '<button type="button" data-cms="view-mine" aria-pressed="' + !ED.shared + '" title="Everything, private work included (only in this browser)">Mine</button><button type="button" data-cms="view-shared" aria-pressed="' + !!ED.shared + '" title="Exactly what anyone you send the link to sees">Shared</button>';
+  }
+
   function drawRail() {
     var railed = S.view === 'plates' || S.view === 'ledger' || S.view === 'shelves';
     $frame.classList.toggle('norail', !railed);
     if (!railed) { $rail.innerHTML = ''; return; }
-    var tk = tokens(), on = FACETS.reduce(function (n, F) { return n + S.f[F.k].length; }, 0);
-    var h = '<button type="button" class="railtog" data-railtog aria-expanded="' + $rail.classList.contains('open') + '">' + (S.f.project.length ? e(PROJ[S.f.project[0]] ? PROJ[S.f.project[0]].title : 'Projects') : 'All projects') + (on - S.f.project.length ? ' · ' + (on - S.f.project.length) + ' filters' : '') + '<span>' + ($rail.classList.contains('open') ? '–' : '+') + '</span></button>';
-    h += projectNav(tk);
-    var more = S.open.more || ['kind', 'collection', 'status', 'access', 'lane'].some(function (k) { return S.f[k].length; });
-    h += '<button type="button" class="morebtn" data-fd="more" aria-expanded="' + !!more + '">More filters<span>' + (more ? '–' : '+') + '</span></button>';
-    if (more) FACETS.forEach(function (F) {
-      if (F.k === 'project' || F.k === 'kind3' || F.k === 'family') return;
-      var counts = {};
-      base().forEach(function (r) { if (match(r, F.k, tk)) { var v = r[F.k] == null ? '' : r[F.k]; counts[v] = (counts[v] || 0) + 1; } });
-      var vals = F.values.filter(function (v) { return counts[v] || S.f[F.k].indexOf(v) >= 0 || F.k !== 'lane'; });
-      if (!vals.length) return;
-      h += '<section class="fg' + (F.k === 'collection' ? ' code' : '') + '"><h2><span class="k">' + F.title + '</span>' + (S.f[F.k].length ? '<button type="button" data-clear="' + F.k + '">Clear</button>' : '') + '</h2><div class="fvs">';
-      vals.forEach(function (v) {
-        var n = counts[v] || 0, tip = F.tip && F.tip(v);
-        h += '<button type="button" class="fv' + (n ? '' : ' zero') + '" data-f="' + F.k + '" data-v="' + e(v) + '" aria-pressed="' + (S.f[F.k].indexOf(v) >= 0) + '"' + (tip ? ' title="' + e(tip) + '"' : '') + '>' +
-          '<span>' + F.mark(v) + '</span><span class="lb">' + e(F.label(v)) + '</span><span class="ct">' + n + '</span></button>';
-      });
-      h += '</div></section>';
-    });
+    var tk = tokens(), nref = REFINE.reduce(function (n, x) { return n + S.f[x[0]].length; }, 0), open = $rail.classList.contains('open');
+    var h = '<button type="button" class="railtog" data-railtog aria-expanded="' + open + '">' + (S.f.project.length ? e(PROJ[S.f.project[0]] ? PROJ[S.f.project[0]].title : 'Projects') : 'All projects') + (nref ? ' · ' + nref + ' refined' : '') + '<span>' + (open ? '–' : '+') + '</span></button>';
+    h += projectNav(tk) + refineNav(tk);
     $rail.innerHTML = h;
+  }
+  /* The useful part of the old filter panel: type, status and how it is built. Collection and access are covered by projects and Mine/Shared. */
+  var REFINE = [['kind', 'Type'], ['status', 'Status'], ['lane', 'Build']];
+  function refineNav(tk) {
+    var any = false, g = '';
+    REFINE.forEach(function (x) {
+      var F = FACETS.filter(function (f) { return f.k === x[0]; })[0], counts = {};
+      base().forEach(function (r) { if (match(r, F.k, tk)) { var v = r[F.k] == null ? '' : r[F.k]; counts[v] = (counts[v] || 0) + 1; } });
+      var vals = F.values.filter(function (v) { return counts[v] || S.f[F.k].indexOf(v) >= 0; });
+      if (vals.length < 2 && !S.f[F.k].length) return;
+      if (S.f[F.k].length) any = true;
+      g += '<div class="rg"><span class="k">' + x[1] + '</span><div class="rcs">' + vals.map(function (v) {
+        var tip = F.tip && F.tip(v);
+        return '<button type="button" class="rc" data-f="' + F.k + '" data-v="' + e(v) + '" aria-pressed="' + (S.f[F.k].indexOf(v) >= 0) + '"' + (tip ? ' title="' + e(tip) + '"' : '') + '>' + e(F.label(v)) + '<i>' + (counts[v] || 0) + '</i></button>';
+      }).join('') + '</div></div>';
+    });
+    return g ? '<section class="fg ref"><h2><span class="k">Refine</span>' + (any ? '<button type="button" data-clearref>Clear</button>' : '') + '</h2>' + g + '</section>' : '';
   }
   /* Projects down the left: public, then Private (only in this browser, with the token), then what is retiring. */
   function projectNav(tk) {
@@ -235,23 +258,22 @@
     }
     var pub = CMSD.projects.filter(function (p) { return !p.private && !p.retiring; }), prv = CMSD.projects.filter(function (p) { return p.private; }), ret = CMSD.projects.filter(function (p) { return p.retiring && !p.private; });
     var h = '<section class="fg pjs"><h2><span class="k">Projects</span></h2><div class="fvs">' + row('', 'All', all) + pub.map(function (p) { return row(p.id, p.title, counts[p.id] || 0, p.note); }).join('') + '</div></section>';
-    if (ED.unlocked && prv.length) h += '<section class="fg pjs"><h2><span class="k">Private</span><span class="k only" title="Shown only in this browser, with your token">only you</span></h2><div class="fvs">' + prv.map(function (p) { return row(p.id, p.title, counts[p.id] || 0, p.note); }).join('') + '</div></section>';
+    if (mine() && prv.length) h += '<section class="fg pjs"><h2><span class="k">Private</span><span class="k only" title="Shown only in this browser, with your token">only you</span></h2><div class="fvs">' + prv.map(function (p) { return row(p.id, p.title, counts[p.id] || 0, p.note); }).join('') + '</div></section>';
     if (ret.length) h += '<section class="fg pjs ret"><h2><span class="k">Retiring</span></h2><div class="fvs">' + ret.map(function (p) { return row(p.id, p.title, counts[p.id] || 0, p.note); }).join('') + '</div></section>';
     return h;
   }
-  /* Kinds and families on top of the cards. Families are grouping tags; any other tag is found with Find. */
-  function topChips(tk) {
-    var kc = {}, fc = {}, b = base();
-    b.forEach(function (r) { if (match(r, 'kind3', tk)) kc[r.kind3] = (kc[r.kind3] || 0) + 1; if (match(r, 'family', tk) && r.family) fc[r.family] = (fc[r.family] || 0) + 1; });
-    var nAll = KIND3.reduce(function (n, k) { return n + (kc[k] || 0); }, 0);
-    var kinds = '<div class="seg kinds" role="group" aria-label="Kind"><button type="button" data-kind3="" aria-pressed="' + !S.f.kind3.length + '">All <i>' + nAll + '</i></button>' + KIND3.map(function (k) {
-      return '<button type="button" data-kind3="' + k + '" aria-pressed="' + (S.f.kind3.length === 1 && S.f.kind3[0] === k) + '"' + (kc[k] ? '' : ' class="zero"') + ' title="' + e((L.vocabulary.kind3 || {})[k] || '') + '">' + KIND3_LABEL[k] + ' <i>' + (kc[k] || 0) + '</i></button>';
-    }).join('') + '</div>';
-    var fams = Object.keys(L.vocabulary.family || {}).filter(function (f) { return fc[f] || S.f.family.indexOf(f) >= 0; });
-    var chips = fams.length ? '<div class="fams" role="group" aria-label="Families">' + fams.map(function (f) {
-      return '<button type="button" class="fam" data-f="family" data-v="' + e(f) + '" aria-pressed="' + (S.f.family.indexOf(f) >= 0) + '" title="' + e(L.vocabulary.family[f] || '') + '">' + e(cap(f.replace(/-/g, ' '))) + ' <i>' + (fc[f] || 0) + '</i></button>';
-    }).join('') + '</div>' : '';
-    return '<div class="tops">' + kinds + chips + '</div>';
+  /* One row above the cards: families (grouping tags), then whatever else is filtering, each removable. */
+  function filterRow(tk) {
+    var fc = {}; base().forEach(function (r) { if (match(r, 'family', tk) && r.family) fc[r.family] = (fc[r.family] || 0) + 1; });
+    var fams = Object.keys(L.vocabulary.family || {}).filter(function (f) { return fc[f] || S.f.family.indexOf(f) >= 0; }).sort(function (a, b) { return (fc[b] || 0) - (fc[a] || 0); });
+    var act = '';
+    if (S.q) act += '<button type="button" class="chip" data-unq>“' + e(S.q) + '”</button>';
+    FACETS.forEach(function (F) { if (F.k === 'project' || F.k === 'kind3' || F.k === 'family') return; S.f[F.k].forEach(function (v) { act += '<button type="button" class="chip" data-f="' + F.k + '" data-v="' + e(v) + '">' + e(F.label(v)) + '</button>'; }); });
+    var any = act || S.f.family.length;
+    if (!fams.length && !act) return '';
+    return '<div class="frow"><span class="k">Family</span><div class="fams">' + fams.map(function (f) {
+      return '<button type="button" class="fam" data-f="family" data-v="' + e(f) + '" aria-pressed="' + (S.f.family.indexOf(f) >= 0) + '" title="' + e(L.vocabulary.family[f] || '') + '">' + e(cap(f.replace(/-/g, ' '))) + '<i>' + (fc[f] || 0) + '</i></button>';
+    }).join('') + '</div>' + (act ? '<div class="act-f">' + act + '</div>' : '') + (any ? '<button type="button" class="clear" data-clearfilt>Clear</button>' : '') + '</div>';
   }
 
   /* ---------------------------------------------------------------- shared pieces */
@@ -344,15 +366,20 @@
       : S.d === 's' ? '<div class="sheet">' + strip(list, phone() ? 76 : 104) + '</div>'
       : S.d === 't' ? '<div class="tabs">' + list.filter(function (r) { return r.thumb; }).map(tab).join('') + '</div>' + unpictured(list.filter(function (r) { return !r.thumb; }))
       : '<div class="cards">' + list.filter(function (r) { return r.thumb; }).map(card).join('') + '</div>' + unpictured(list.filter(function (r) { return !r.thumb; }));
-    var pj = S.f.project.length ? PROJ[S.f.project[0]] : null;
-    $lib.innerHTML = '<h1 class="vh">' + e(pj ? pj.title : 'All projects') + '</h1>' + toolbar(tools, list.length, base().length) + topChips(tokens()) + body + archiveFold() + removedFold() + foot();
+    var pj = S.f.project.length ? PROJ[S.f.project[0]] : null, k = S.f.kind3.length === 1 ? S.f.kind3[0] : '', arch = archivedShown();
+    var noun = k ? KIND3_LABEL[k].toLowerCase() : 'works'; if (list.length === 1) noun = noun.replace(/s$/, '');
+    if (!list.length && arch.length) { S.open.arch = true; body = '<div class="empty">Nothing live matches. ' + arch.length + ' archived, below.</div>'; }
+    var head = '<header class="lh"><div class="lh1"><h1>' + e(pj ? pj.title : k ? KIND3_LABEL[k] : 'Library') + '</h1><p class="meta"><b>' + list.length + '</b> ' + noun +
+      (pj && pj.note ? ' · ' + e(pj.note) : '') + (pj && pj.private ? ' · <span class="pv">private: only you see this</span>' : '') +
+      (arch.length ? ' · <button type="button" class="lnk" data-goarch>' + arch.length + ' archived ↓</button>' : '') + '</p></div><div class="lh2">' + tools + '</div></header>';
+    $lib.innerHTML = head + filterRow(tokens()) + body + archiveFold() + removedFold() + foot();
   }
 
   /* Archived work sits at the foot of its project, folded. In Edit it can be picked and restored. */
   function archiveFold() {
     var a = archivedShown(); if (!a.length) return '';
     var open = !!S.open.arch;
-    return '<section class="fold arch"><button type="button" class="foldbtn" data-fd="arch" aria-expanded="' + open + '"><span class="k">Archived</span><b>' + a.length + '</b><span>' + (open ? '–' : '+') + '</span></button>' +
+    return '<section class="fold arch" id="archived"><button type="button" class="foldbtn" data-fd="arch" aria-expanded="' + open + '"><span class="fh">Archived</span><b>' + a.length + '</b><span class="fx">Out of every listing; the pages still work.' + (ED.on ? ' Pick to restore.' : '') + '</span><span class="tg">' + (open ? 'Hide' : 'Show') + '</span></button>' +
       (open ? '<div class="cards">' + a.filter(function (r) { return r.thumb; }).map(card).join('') + '</div>' + unpictured(a.filter(function (r) { return !r.thumb; })) : '') + '</section>';
   }
   function removedFold() {
@@ -591,7 +618,7 @@
   function drawSel() {
     if (!ED.on) { $sel.hidden = true; selh(); return; }
     var rs = selected(), n = rs.length, allArch = n && rs.every(function (r) { return r.state === 'archived'; }), allPriv = n && rs.every(function (r) { return r.visibility === 'private'; });
-    var st = ED.status ? '<span class="st ' + ED.stKind + '" role="status">' + e(ED.status) + '</span>' : '<span class="st" role="status">' + (n ? '' : 'Pick cards to edit them. Shift-click picks a run.') + '</span>';
+    var st = ED.status ? '<span class="st ' + ED.stKind + '" role="status">' + e(ED.status) + (ED.stKind === 'ok' && ED.undo ? ' <button type="button" class="lnk" data-cms="undo">Undo</button>' : '') + '</span>' : '<span class="st" role="status">' + (n ? '' : 'Pick cards to edit them. Shift-click picks a run.') + '</span>';
     if (ED.confirm) {
       var c = ED.confirm;
       $sel.innerHTML = '<div class="conf"><p><b>Remove ' + c.recs.length + ' from the site?</b> ' + e(names(c.recs)) + '. ' + (c.recs.length > 1 ? 'They leave' : 'It leaves') + ' every listing' + (c.folders.length ? ', ' + c.folders.length + ' page folder' + (c.folders.length > 1 ? 's stop' : ' stops') + ' deploying, and a copy goes to the private repo ' + e(LibCMS.archive) : ' (it has no page folder of its own to copy)') + '. The files stay in this repo. Restore any time under Removed.</p>' +
@@ -606,7 +633,8 @@
         '<button type="button" class="act" data-cms="' + (allPriv ? 'public' : 'private') + '">' + (allPriv ? 'Make public' : 'Make private') + '</button>' +
         '<button type="button" class="act" data-cms="tag">Add tag…</button>' +
         '<button type="button" class="act danger" data-cms="remove">Remove…</button>' : '') +
-      '</div>' + st;
+      '</div>';
+    $sel.innerHTML = st + $sel.innerHTML;
     $sel.hidden = false; selh();
   }
   // the drawer and the page stop above the bar
@@ -643,13 +671,15 @@
     ED.q = ED.q.then(function () {
       return LibCMS.save({ op: op, ids: ids, patch: patch, per: per }, message).then(function (x) {
         ids.forEach(function (id) { if (byId[id] && x.E.records[id]) applyEntry(byId[id], x.E.records[id]); });
-        status('Saved: ' + message + '. Live after the next build, about two minutes.', 'ok'); render(); if (after) after(x);
+        ED.undo = UNDO[op] ? { op: UNDO[op], ids: ids } : null;
+        status('Saved: ' + message + '. On the site after the next build, about two minutes.', 'ok'); render(); if (after) after(x);
       }, function (err) {
         unsnap(sv); render();
         status('Not saved: ' + err.message + (err.status === 401 ? '. The token was refused; lock and paste it again.' : ''), 'bad');
       });
     });
   }
+  var UNDO = { archive: 'unarchive', unarchive: 'archive', private: 'public', public: 'private' };
   function act(name, rs) {
     var n = names(rs);
     if (name === 'archive') return commit(rs, 'archive', { state: 'archived' }, 'Archive ' + n);
@@ -715,17 +745,25 @@
     ED.sel[acc] = !ED.sel[acc]; ED.last = acc; repick();
   }
   function repick() {
+    ED.undo = null;
     var els = document.querySelectorAll('[data-pick]');
     for (var i = 0; i < els.length; i++) els[i].setAttribute('aria-pressed', !!ED.sel[els[i].getAttribute('data-pick')]);
     ED.status = ''; drawSel();
   }
   function cms(name) {
-    if (name === 'toggle') { if (!ED.unlocked) return drawPanel(); ED.on = !ED.on; ED.sel = {}; ED.confirm = null; ED.status = ''; drawCmsBtn(); return render(); }
+    if (name === 'toggle') { if (!ED.unlocked) return drawPanel(); if (!ED.on && ED.shared) { ED.shared = false; try { localStorage.setItem('tools.view', 'mine'); } catch (err) {} } ED.on = !ED.on; ED.sel = {}; ED.confirm = null; ED.status = ''; drawCmsBtn(); return render(); }
     if (name === 'panel-close') { $pan.hidden = true; return; }
+    if (name === 'view-mine' || name === 'view-shared') {
+      ED.shared = name === 'view-shared'; try { localStorage.setItem('tools.view', ED.shared ? 'shared' : 'mine'); } catch (err) {}
+      if (ED.shared && ED.on) { ED.on = false; ED.sel = {}; drawCmsBtn(); }
+      if (ED.shared && S.f.project.length && PROJ[S.f.project[0]] && PROJ[S.f.project[0]].private) { var fs = {}; for (var a3 in S.f) fs[a3] = S.f[a3]; fs.project = []; return go({ f: fs }); }
+      return render();
+    }
     if (name === 'lock') { LibCMS.setToken(''); ED.unlocked = ED.on = false; ED.sel = {}; drawCmsBtn(); return render(); }
     if (name === 'all') { LIST.concat(S.open.arch ? archivedShown() : []).forEach(function (r) { ED.sel[r.acc] = true; }); return repick(); }
     if (name === 'clear') { ED.sel = {}; return repick(); }
     if (name === 'remove-go') return removeGo();
+    if (name === 'undo') { var u = ED.undo; ED.undo = null; if (!u) return; return act(u.op, u.ids.map(function (id) { return byId[id]; }).filter(Boolean)); }
     if (name === 'remove-cancel') { ED.confirm = null; return drawSel(); }
     if (name === 'tag') {
       ED.tagging = true; var rs0 = selected();
@@ -798,7 +836,7 @@
   document.addEventListener('click', function (ev) {
     var pk = ED.on && ev.target.closest && !ev.target.closest('.nw') && ev.target.closest('[data-pick]');
     if (pk) { ev.preventDefault(); pick(pk.getAttribute('data-pick'), ev.shiftKey); return; }
-    var t = ev.target.closest('[data-cms],[data-proj],[data-kind3],[data-restore],[data-view],[data-f],[data-clear],[data-clearall],[data-unq],[data-d],[data-r],[data-close],[data-term],[data-scheme],[data-ts],[data-ls],[data-fd],[data-copy],[data-railtog]');
+    var t = ev.target.closest('[data-cms],[data-proj],[data-kind3],[data-restore],[data-nav],[data-goarch],[data-clearref],[data-clearfilt],[data-view],[data-f],[data-clear],[data-clearall],[data-unq],[data-d],[data-r],[data-close],[data-term],[data-scheme],[data-ts],[data-ls],[data-fd],[data-copy],[data-railtog]');
     if (!t) {
       // a link to another view is routed here, so it works where the host owns the address bar
       var a = ev.target.closest('a[href^="#/"]');
@@ -812,6 +850,13 @@
     if ('proj' in d) { ev.preventDefault(); var fp = {}; for (var y in S.f) fp[y] = S.f[y]; fp.project = d.proj ? [d.proj] : []; $rail.classList.remove('open'); return go({ f: fp, view: S.view === 'ledger' || S.view === 'shelves' ? S.view : 'plates', r: null }); }
     if ('kind3' in d) { ev.preventDefault(); var fk = {}; for (var z in S.f) fk[z] = S.f[z]; fk.kind3 = d.kind3 ? [d.kind3] : []; return go({ f: fk }); }
     if ('restore' in d) { ev.preventDefault(); return restoreRemoved(d.restore); }
+    if ('nav' in d) {
+      ev.preventDefault(); if (d.nav === 'technique') return go({ view: 'techniques', term: null, r: null, scheme: '' });
+      var fn = {}; for (var a1 in S.f) fn[a1] = S.f[a1]; fn.kind3 = d.nav ? [d.nav] : []; return go({ view: 'plates', f: fn, term: null, r: null, scheme: '' });
+    }
+    if ('goarch' in d) { ev.preventDefault(); S.open.arch = true; render(); var ae = document.getElementById('archived'); if (ae) ae.scrollIntoView({ block: 'start' }); return; }
+    if ('clearref' in d) { ev.preventDefault(); var fr = {}; for (var a2 in S.f) fr[a2] = S.f[a2]; REFINE.concat([['collection'], ['access']]).forEach(function (x) { fr[x[0]] = []; }); return go({ f: fr }); }
+    if ('clearfilt' in d) { ev.preventDefault(); $q.value = ''; var fc2 = noF(); fc2.project = S.f.project.slice(); fc2.kind3 = S.f.kind3.slice(); return go({ q: '', f: fc2 }); }
     if ('railtog' in d) { $rail.classList.toggle('open'); drawRail(); return; }
     if ('copy' in d) {
       var r = byAcc[S.r], o = {}; for (var k in r) if (k.charAt(0) !== '_') o[k] = r[k];

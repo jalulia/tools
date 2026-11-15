@@ -32,8 +32,9 @@ const ICON={ chev:'<svg class="chev" viewBox="0 0 10 10" aria-hidden="true"><pat
 /* ---------- nav: crumb + pager (no brand) ---------- */
 const EMBED=document.body.classList.contains('embed');
 (function(){ const n=$('nav'); if(!n)return; if(EMBED){ n.remove(); return; } const prev=sib[idx-1], next=sib[idx+1];
-  n.innerHTML=`<span class="crumb"><a href="${ROOT}index.html">Techniques &amp; Templates</a><span class="sep">/</span><a href="${ROOT}index.html#${esc(secHash)}">${esc(section.title)}</a><span class="sep">/</span><b>${esc(S.title)}</b><span class="code">${esc(S.code)}</span></span>
-  <span class="pager">${prev?`<a href="${ROOT}${prev.path}index.html" title="Previous: ${esc(prev.code)} ${esc(prev.title)} (,)">← ${esc(prev.code)}</a>`:'<a class="off" aria-disabled="true">←</a>'}<a class="pos" href="${ROOT}index.html#${esc(secHash)}" title="All ${esc(section.title.toLowerCase())}"><span class="n">${idx+1}</span>&nbsp;of ${sib.length}</a>${next?`<a href="${ROOT}${next.path}index.html" title="Next: ${esc(next.code)} ${esc(next.title)} (.)">${esc(next.code)} →</a>`:'<a class="off" aria-disabled="true">→</a>'}</span>`; })();
+  const k3=section.id==='techniques'?'technique':section.id==='templates'?'template':'example', K3={technique:'Techniques',template:'Templates',example:'Examples'}[k3], LIB=ROOT+'../library/'; /* the library is home (2026-11-15) */
+  n.innerHTML=`<span class="crumb"><a href="${LIB}">Library</a><span class="sep">/</span><a href="${LIB}#/plates?kind3=${k3}">${K3}</a><span class="sep">/</span><b>${esc(S.title)}</b><span class="code">${esc(S.code)}</span></span>
+  <span class="pager">${prev?`<a href="${ROOT}${prev.path}index.html" title="Previous: ${esc(prev.code)} ${esc(prev.title)} (,)">← ${esc(prev.code)}</a>`:'<a class="off" aria-disabled="true">←</a>'}<a class="pos" href="${LIB}#/plates?kind3=${k3}" title="All ${K3.toLowerCase()} in the library"><span class="n">${idx+1}</span>&nbsp;of ${sib.length}</a>${next?`<a href="${ROOT}${next.path}index.html" title="Next: ${esc(next.code)} ${esc(next.title)} (.)">${esc(next.code)} →</a>`:'<a class="off" aria-disabled="true">→</a>'}</span>`; })();
 
 /* ---------- notes column: title, description, one accordion ---------- */
 (function(){ const el=$('copy'); const T=S.spec.techniques||[];
