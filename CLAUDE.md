@@ -5,4 +5,5 @@ Read `docs/AGENTS.md` before changing anything. In short:
 - never hand-edit generated files (GitHub rebuilds them on every deploy);
 - nothing new goes on tools without parameters, and nothing in `library/census.json` disappears without a
   quarantine manifest row (the guard blocks the deploy);
-- quarantine, never delete.
+- quarantine, never delete;
+- archive, remove, projects and tags are set in the library CMS (`docs/CMS.md`), never by hand.

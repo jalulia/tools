@@ -24,8 +24,9 @@ Agreed with Julia on 2026-11-13 (library CMS brief: https://claude.ai/artifact/W
 ## Removing things
 - Quarantine only: move files to `.quarantine/<YYYY-MM-DD>/` and add a manifest row. Never delete. Julia does the
   final pass.
-- Once the CMS ships, Archive and Remove are hers, in the CMS. Its edits file (`library/_build/edits.json`) is applied
-  last by every build; never edit it by hand.
+- Archive, Remove, projects, kinds and tags are Julia's, in the library CMS (`docs/CMS.md`). Its edits file
+  (`library/_build/edits.json`) is applied last by every build; never edit it by hand, and never change a record's
+  project, state or visibility any other way. A session that needs one changed asks Julia to do it in the CMS.
 
 ## Sources
 - Study engine sources live in `sources/technique-studies/` (reference images stay private, outside the repo).

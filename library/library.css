@@ -25,7 +25,7 @@ button{background:none;border:0;padding:0;cursor:pointer;text-align:left}
 /* ---------------------------------------------------------------- bar */
 body::before{content:"";position:fixed;inset:0 0 auto;height:var(--gut);background:#fff;z-index:55}
 #bar{position:fixed;top:var(--gut);left:var(--gut);right:var(--gut);height:var(--bar-h);z-index:60;background:#fff;border:1px solid var(--hair);
-  display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:stretch;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase}
+  display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:stretch;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase}
 #bar>*{display:flex;align-items:center;min-width:0}
 #bar .wm{padding:0 18px;border-right:1px solid var(--hair);font-family:var(--disp);font-weight:800;font-size:15px;letter-spacing:.02em;font-stretch:112%;text-transform:none}
 #views{border-right:1px solid var(--hair);overflow-x:auto;scrollbar-width:none}
@@ -386,4 +386,101 @@ a:hover>.fr,a:hover .cell .fr{outline-color:var(--ink)}
 .tb-c .strip2 .nw{position:static;grid-column:2;grid-row:3;align-self:end;width:20px;height:20px;margin:0 -3px -3px 0;opacity:1;color:inherit;border-color:transparent;background:none}
 .tb-c:hover .strip2 .nw:hover,.tb-c[aria-current="true"] .strip2 .nw:hover{background:#fff;color:var(--ink)}
 .tb-c .strip2 .nw:hover{background:var(--ink);color:#fff}
-@media (hover:none){.pl .nw,.cdx .nw{display:none}}
+@media (hover:none){.pl .nw,.cdx .nw{opacity:1}} /* touch: the tile opens its page, so details needs a visible control */
+
+/* ---------------------------------------------------------------- CMS (library/cms.js · docs/CMS.md)
+   Projects down the left; kinds and families on top; Edit picks cards and saves straight to GitHub. */
+#cmsbtn{padding:0 16px;border-left:1px solid var(--hair);white-space:nowrap;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase}
+#cmsbtn:hover{background:var(--sunken)}
+#cmsbtn[aria-pressed="true"]{background:var(--ink);color:#fff}
+.pjs .fv span:first-child{display:none}
+.pjs .fv{grid-template-columns:minmax(0,1fr) auto}
+.pjs h2 .only{color:var(--flag);letter-spacing:.1em}
+.pjs.ret .fv:not([aria-pressed="true"]){color:var(--grey)}
+.morebtn{display:flex;justify-content:space-between;width:calc(100% - 28px);margin:2px 14px 12px;padding:9px 6px 0;border-top:1px solid var(--hair-2);font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--grey)}
+.morebtn:hover{color:var(--ink)}
+.tops{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:12px var(--pad) 14px;border-bottom:1px solid var(--hair)}
+.tops .seg button{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+.tops .seg i,.fam i{font-style:normal;color:var(--grey);margin-left:4px;letter-spacing:.04em}
+.tops .seg button[aria-pressed="true"] i{color:#fff}
+.tops .seg button.zero:not([aria-pressed="true"]){color:var(--grey-2)}
+.fams{display:flex;flex-wrap:wrap;gap:6px}
+.fam{border:1px solid var(--hair);padding:5px 8px;font-size:12px;line-height:1.2;white-space:nowrap}
+.fam:hover{border-color:var(--ink)}
+.fam[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.fam[aria-pressed="true"] i{color:#fff}
+/* a mark in the corner of a tile: private or archived; picked when editing */
+.mk{position:absolute;left:5px;top:5px;z-index:2;font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;background:#fff;border:1px solid var(--flag);padding:1px 4px;line-height:1.3;pointer-events:none}
+.mk.ar{border-color:var(--grey);color:var(--grey)}
+.mk.pv+.mk.ar{top:23px}
+.tb-c .mk{top:8px;left:8px}
+.bare a .mk{position:static;margin-left:8px}
+[data-state="archived"] .fr img{opacity:.55}
+.tick{position:absolute;right:5px;bottom:5px;z-index:2;width:18px;height:18px;border:1px solid var(--ink);background:#fff;pointer-events:none}
+.pl .tick{bottom:calc(5px + 1.2em + 4px)}
+.bare a .tick{position:static;display:inline-block;width:13px;height:13px;margin-left:8px;vertical-align:-2px}
+[data-pick][aria-pressed="true"] .tick{background:var(--ink);box-shadow:inset 0 0 0 3px #fff}
+[data-pick][aria-pressed="true"]>.fr,[data-pick][aria-pressed="true"] .cell .fr{outline:2px solid var(--ink)}
+[data-pick][aria-pressed="true"] .tb-c .face,.tb-c[data-pick][aria-pressed="true"] .strip2{background:var(--ink);color:#fff}
+.bare a[data-pick][aria-pressed="true"]{background:var(--sunken)}
+body.editing #lib{padding-bottom:calc(var(--selh,0px) + 24px)}
+body.editing #drawer{bottom:var(--selh,0px)}
+body.editing .nw{opacity:1}
+.fold{margin:28px var(--pad) 0;border-top:1px solid var(--ink)}
+.foldbtn{display:flex;align-items:baseline;gap:10px;width:100%;padding:10px 0}
+.foldbtn b{font-family:var(--mono);font-size:10px;font-weight:400;color:var(--grey)}
+.foldbtn span:last-child{margin-left:auto;font-family:var(--mono);color:var(--grey)}
+.foldbtn:hover .k{color:var(--ink)}
+.fold .cards{padding:6px 0 0}
+.remlist .rrow{display:grid;grid-template-columns:92px minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:6px 0;border-top:1px solid var(--hair-2)}
+.remlist .m{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--grey);white-space:nowrap}
+.remlist .ti{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.remlist .note{margin:10px 0 0;color:var(--grey);font-size:12px;max-width:62ch}
+.act{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--hair);background:#fff;padding:8px 11px;line-height:1;white-space:nowrap}
+.act:hover{border-color:var(--ink)}
+.act.danger{border-color:var(--flag)}
+.act.danger:hover{background:var(--flag);color:#fff}
+select.act{padding:6px 8px}
+#selbar[hidden],#cmspanel[hidden]{display:none}
+#selbar{position:fixed;left:var(--gut);right:var(--gut);bottom:var(--gut);z-index:75;background:#fff;border:1px solid var(--ink);padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+#selbar .row{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+#selbar .n b{font-weight:500;margin-right:4px}
+#selbar .sp{flex:1 1 12px}
+#selbar .st{text-transform:none;letter-spacing:.02em;font-size:11px;color:var(--grey)}
+#selbar .st:empty{display:none}
+#selbar .st.ok{color:var(--ink)}
+#selbar .st.bad{color:var(--flag)}
+#selbar .conf p{margin:0 0 8px;font-family:var(--text);font-size:13px;letter-spacing:0;text-transform:none;max-width:80ch}
+#selbar .tagf{display:inline-flex;gap:6px}
+#selbar .tagf input{border:1px solid var(--ink);padding:6px 8px;font-family:var(--mono);font-size:11px;width:150px}
+#cmspanel{position:fixed;top:calc(var(--top) + 8px);right:var(--gut);z-index:80;width:min(420px,calc(100vw - 2*var(--gut)));background:#fff;border:1px solid var(--ink);padding:14px 16px 16px;font-size:13px}
+#cmspanel .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-family:var(--disp);font-size:15px}
+#cmspanel .ph button{font-size:18px;line-height:1;padding:0 4px}
+#cmspanel p{margin:0 0 10px;max-width:62ch}
+#cmspanel form{display:flex;gap:6px;margin:0 0 10px}
+#cmspanel input{flex:1;min-width:0;border:1px solid var(--ink);padding:8px;font-family:var(--mono);font-size:12px}
+#cmspanel .msg{color:var(--flag)}
+#cmspanel .fine{color:var(--grey);font-size:12px;margin:0}
+.dsec.ed{border:1px solid var(--ink);padding:12px}
+.edf{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.edf label{display:flex;flex-direction:column;gap:4px;min-width:0}
+.edf label:first-child,.edf label:last-child{grid-column:1/-1}
+.edf input,.edf select{border:1px solid var(--hair);padding:7px 8px;font-size:13px;min-width:0;background:#fff}
+.edf input:focus,.edf select:focus{border-color:var(--ink);outline:0}
+.edacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+@media (max-width:720px){
+  #cmsbtn{padding:0 12px}
+  .tops{padding:10px var(--pad)}
+  .tops .seg{overflow-x:auto;max-width:100%}
+  .fams{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
+  #selbar{left:0;right:0;bottom:0;border-width:1px 0 0;padding-bottom:max(10px,env(safe-area-inset-bottom,0px))}
+  .remlist .rrow{grid-template-columns:76px minmax(0,1fr) auto}
+  .remlist .rrow .m:nth-child(3){display:none}
+  .edf{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:980px){
+  #bar{grid-template-columns:auto minmax(0,1fr) auto}
+  #views{grid-column:2/-1}
+  .find{grid-column:1/3}
+  #cmsbtn{grid-column:3;grid-row:2;border-top:1px solid var(--hair)}
+}

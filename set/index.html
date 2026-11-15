@@ -123,7 +123,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;',
 const app=document.getElementById('app'), view=document.getElementById('view');
 const COL=new Map((L.collections||[]).map(c=>[c.id,c.title]));
 /* every public work with a picture can go in a set; a piece is keyed by the tail of its accession number */
-const POOL=(L.records||[]).filter(r=>r.access==='public'&&!r.role&&r.thumb&&r.acc);
+const POOL=(L.records||[]).filter(r=>r.access==='public'&&!r.role&&r.thumb&&r.acc&&r.state!=='archived'&&r.visibility!=='private'); /* archived and private records leave sets (library CMS) */
 const tail=r=>String(r.acc).split('.').pop(), BY=new Map(POOL.map(r=>[tail(r),r]));
 /* techniques picked on the T&T "All techniques" tab travel as R:<id>: they show as their own picture and open their own page */
 const ttp=p=>!p?'':(/^(https?:|\.\.\/)/.test(p)?p:'../techniques-templates/'+p);

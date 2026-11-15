@@ -19,7 +19,7 @@ const stStudy = (file) => {
   box.window = box; try { vm.runInNewContext(art, vm.createContext(box), { timeout: 5000 }); } catch { return null; } return box.STUDY || null;
 };
 
-const recs = cat.records.filter((r) => r.access === 'public' && !r.role);
+const recs = cat.records.filter((r) => r.access === 'public' && !r.role && r.state !== 'archived' && r.visibility !== 'private'); // the library CMS: archived and private records leave the gallery
 const byId = new Map(recs.map((r) => [r.id, r]));
 const ttById = new Map(TT.entries.map((e) => [e.id, e]));
 

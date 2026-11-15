@@ -97,6 +97,19 @@ function buildTool(name) {
   cpSync(dist, out, { recursive: true });
 }
 
+// Records removed in the CMS (library/_build/edits.json, state "removed") stay in the repo but are never deployed:
+// their page folder and their library thumbnails are skipped. A copy is in the private repo jalulia/tools-archive.
+const REMOVED = (() => {
+  const f = join(ROOT, 'library/_build/edits.json'); if (!existsSync(f)) return { paths: [], accs: [] };
+  const E = JSON.parse(readFileSync(f, 'utf8')), rs = Object.values(E.records || {}).filter((r) => r && r.state === 'removed');
+  return { paths: rs.map((r) => r.path).filter((p) => p && p.split('/').filter(Boolean).length >= 2).map((p) => p.replace(/\/?$/, '/')), accs: rs.map((r) => r.acc).filter(Boolean) };
+})();
+function removedByCms(src) {
+  const rel = src.slice(ROOT.length + 1) + '/';
+  if (REMOVED.paths.some((p) => rel.startsWith(p))) return true;
+  const m = /^library\/thumbs\/(\d{4}\.\d{4})/.exec(rel); return !!(m && REMOVED.accs.includes(m[1]));
+}
+
 // Static tools: a folder with index.html and no build step. Copy as-is.
 function copyStaticTool(name) {
   const cwd = join(ROOT, name);
@@ -108,6 +121,7 @@ function copyStaticTool(name) {
       const base = src.split('/').pop();
       // a folder holding a .private marker stays in the repo but is never deployed
       if (existsSync(join(src, '.private'))) { console.log(`   private, not deployed: ${src.slice(ROOT.length + 1)}`); return false; }
+      if (removedByCms(src)) { console.log(`   removed in the CMS, not deployed: ${src.slice(ROOT.length + 1)}`); return false; }
       return !['tool.json', 'package.json', 'node_modules', '.git', 'dist', '_site'].includes(base);
     },
   });

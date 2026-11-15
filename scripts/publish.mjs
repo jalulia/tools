@@ -23,7 +23,7 @@ const GENERATED = [
   /^library\/(catalog\.js|catalog\.json|fixity\.json|index\.html|llms\.txt|accessions\.json|census\.json|thumbs\/index\.json)$/,
   /^library\/_build\/editions\.json$/,
   /^techniques-templates\/(registry\.json|techniques\.json|atoms\.json)$/,
-  /^techniques-templates\/_shared\/(reg-index\.js|vocab\.js)$/,
+  /^techniques-templates\/_shared\/(reg-index\.js|vocab\.js|hidden\.js)$/,
   /^techniques-templates\/(techniques|plates|applications|templates)\/[^/]+\/index\.html$/,
   /^gallery\/index\.html$/,
 ];

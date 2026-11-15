@@ -28,13 +28,22 @@
   });
   WORKS.forEach(function (w) { members(w, 'versions').concat(members(w, 'parts')).forEach(function (m) { w._hay += ' ' + [m.acc, m.call, m.title].join(' ').toLowerCase(); }); });
 
+  /* The CMS (library/cms.js, docs/CMS.md): projects down the left, three kinds, archived and private records. */
+  window.__R_ALL = R;
+  var CMSD = L.cms || { projects: [], removed: [], counts: {} };
+  var PROJ = {}, PROJ_IDS = []; CMSD.projects.forEach(function (p) { PROJ[p.id] = p; PROJ_IDS.push(p.id); });
+  var KIND3 = ['technique', 'example', 'template'], KIND3_LABEL = { technique: 'Techniques', example: 'Examples', template: 'Templates' };
+  var ED = { on: false, unlocked: !!(window.LibCMS && window.LibCMS.token()), archive: null, sel: {}, busy: '', status: '', confirm: null, removed: CMSD.removed.slice() };
+  function visible(r) { return !r._gone && (r.visibility !== 'private' || ED.unlocked); }
   var KINDS = ['technique', 'atom', 'exploration', 'coupling', 'study', 'template', 'instrument', 'document', 'plate'].filter(function (k) { return (k !== 'document' && k !== 'plate') || R.some(function (r) { return r.kind === k; }); });
   var STATUSES = ['canonical', 'exploration', 'proposed', 'unsorted', 'known-failure', 'historical', ''];
   var ACCESS = ['public', 'staged', 'local', 'private'].filter(function (a) { return a !== 'private' || R.some(function (r) { return r.access === 'private'; }); });
   var LANES = []; R.forEach(function (r) { if (r.lane && LANES.indexOf(r.lane) < 0) LANES.push(r.lane); }); LANES.sort();
   var VIEWS = [['plates', 'Plates'], ['shelves', 'Shelves'], ['techniques', 'Techniques'], ['atoms', 'Atoms'], ['ledger', 'Ledger'], ['audit', 'Audit']];
   var FACETS = [
-    { k: 'kind', title: 'Kind', values: KINDS, label: cap, mark: function (v) { return glyph(v, 'canonical'); }, tip: function (v) { return L.vocabulary.kind[v]; } },
+    { k: 'project', title: 'Project', values: PROJ_IDS, label: function (v) { return PROJ[v] ? PROJ[v].title : v; }, mark: function () { return ''; } },
+    { k: 'kind3', title: 'Kind', values: KIND3, label: function (v) { return KIND3_LABEL[v]; }, mark: function () { return ''; }, tip: function (v) { return (L.vocabulary.kind3 || {})[v]; } },
+    { k: 'kind', title: 'Kind (detail)', values: KINDS, label: cap, mark: function (v) { return glyph(v, 'canonical'); }, tip: function (v) { return L.vocabulary.kind[v]; } },
     { k: 'collection', title: 'Collection', values: L.collections.map(function (c) { return c.id; }), label: function (v) { return COL[v].title; }, mark: function (v) { return '<span class="cd">' + COL[v].code + '</span>'; }, tip: function (v) { return COL[v].note; } },
     { k: 'status', title: 'Status', values: STATUSES, label: function (v) { return v ? cap(v.replace('-', ' ')) : 'No status'; }, mark: function (v) { return glyph('study', v); }, tip: function (v) { return L.vocabulary.status[v]; } },
     { k: 'access', title: 'Access', values: ACCESS, label: cap, mark: function (v) { return glyph('study', '', v); }, tip: function (v) { return L.vocabulary.access[v]; } },
@@ -42,10 +51,11 @@
     { k: 'lane', title: 'Lane', values: LANES, label: function (v) { return v; }, mark: function () { return ''; } }
   ];
   var SCHEME_LABEL = { enc: 'ENC', 'enc.read': 'ENC·R', tt: 'TT', st: 'ST', hld: 'HLD' };
-  var NOFILTER = { kind: [], collection: [], status: [], access: [], family: [], lane: [] };
+  function noF() { var o = {}; FACETS.forEach(function (F) { o[F.k] = []; }); return o; }
+  var NOFILTER = noF();
 
   /* ---------------------------------------------------------------- state */
-  var S = { view: 'plates', q: '', f: { kind: [], collection: [], status: [], access: [], family: [], lane: [] }, d: 's', sort: 'modified', r: null, term: null, scheme: '', tsort: 'n', ls: 'acc', ld: 1, open: {} };
+  var S = { view: 'plates', q: '', f: noF(), d: 's', sort: 'modified', r: null, term: null, scheme: '', tsort: 'n', ls: 'acc', ld: 1, open: {} };
   var LIST = R;   // the records the drawer pages through
   var MEM = null; // the route, kept here when the host does not let the page write its own address
   var BASE = L.base || '../', PREVIEW = !!L.preview;
@@ -142,8 +152,8 @@
   }
   function tile(g, h) {
     var r = g.r, lay = shape(r), all = [r.acc].concat(g.more.map(function (x) { return x.acc; })), nv = (r.versions || []).length, n = g.more.length + nv;
-    return '<a class="pl" style="--ar:' + lay.toFixed(4) + '" href="' + recHref(r) + '" data-r="' + r.acc + '" data-rs="' + all.join(' ') + '" title="' + e(label(r) + (nv ? ' · ' + (nv + 1) + ' versions' : '') + (g.more.length ? ' · and ' + g.more.length + ' more with this picture' : '')) + '"' +
-      (S.r && all.indexOf(S.r) >= 0 ? ' aria-current="true"' : '') + '>' + pic(r, Math.round(lay * h * 1.5) + 'px') + '<span class="c' + (r.call ? '' : ' t') + '"><b>' + e(r.call || r.title) + '</b>' + (n ? '<s>+' + n + '</s>' : '') + '</span>' + nw(r) + '</a>';
+    return '<a class="pl" style="--ar:' + lay.toFixed(4) + '"' + tileAttrs(r) + ' data-rs="' + all.join(' ') + '" title="' + e(label(r) + (nv ? ' · ' + (nv + 1) + ' versions' : '') + (g.more.length ? ' · and ' + g.more.length + ' more with this picture' : '')) + '"' +
+      (S.r && all.indexOf(S.r) >= 0 ? ' aria-current="true"' : '') + '>' + pic(r, Math.round(lay * h * 1.5) + 'px') + '<span class="c' + (r.call ? '' : ' t') + '"><b>' + e(r.call || r.title) + '</b>' + (n ? '<s>+' + n + '</s>' : '') + '</span>' + nw(r) + marks(r) + '</a>';
   }
   /* Only a work with a picture gets a frame. The rest are listed by name. */
   function strip(list, h) {
@@ -153,7 +163,7 @@
   function unpictured(list) {
     if (!list.length) return '';
     return '<div class="bare"><h4 class="k">Not pictured · ' + list.length + '</h4>' + list.map(function (r) {
-      return '<a href="' + recHref(r) + '" data-r="' + r.acc + '"' + (S.r === r.acc ? ' aria-current="true"' : '') + '><span class="m">' + e(r.call || r.acc) + '</span><span class="ti">' + e(r.title) + '</span><span class="m why">' + e(r.no_pic && r.no_pic.why ? r.no_pic.why : r.access !== 'public' ? cap(r.access) : '') + '</span></a>';
+      return '<a' + tileAttrs(r) + (S.r === r.acc ? ' aria-current="true"' : '') + '><span class="m">' + e(r.call || r.acc) + '</span><span class="ti">' + e(r.title) + '</span><span class="m why">' + e(r.no_pic && r.no_pic.why ? r.no_pic.why : r.access !== 'public' ? cap(r.access) : '') + '</span></a>';
     }).join('') + '</div>';
   }
   function partsLine(list) {
@@ -179,7 +189,8 @@
     else if (S.sort === 'shelf') out.sort(function (a, b) { return COL[a.collection]._i - COL[b.collection]._i || (SHELF[a.id] || 0) - (SHELF[b.id] || 0); });
     return out;
   }
-  function base() { return S.view === 'ledger' ? R : WORKS; }
+  function base() { return S.view === 'ledger' ? R.filter(visible) : WORKS.filter(function (r) { return visible(r) && r.state !== 'archived'; }); }
+  function archivedShown() { var tk = tokens(); return WORKS.filter(function (r) { return visible(r) && r.state === 'archived' && match(r, null, tk); }); }
   function anyFilter() { return S.q || FACETS.some(function (F) { return S.f[F.k].length; }); }
 
   /* ---------------------------------------------------------------- bar + rail */
@@ -194,8 +205,12 @@
     $frame.classList.toggle('norail', !railed);
     if (!railed) { $rail.innerHTML = ''; return; }
     var tk = tokens(), on = FACETS.reduce(function (n, F) { return n + S.f[F.k].length; }, 0);
-    var h = '<button type="button" class="railtog" data-railtog aria-expanded="' + $rail.classList.contains('open') + '">Filters' + (on ? ' · ' + on : '') + '<span>' + ($rail.classList.contains('open') ? '–' : '+') + '</span></button>';
-    FACETS.forEach(function (F) {
+    var h = '<button type="button" class="railtog" data-railtog aria-expanded="' + $rail.classList.contains('open') + '">' + (S.f.project.length ? e(PROJ[S.f.project[0]] ? PROJ[S.f.project[0]].title : 'Projects') : 'All projects') + (on - S.f.project.length ? ' · ' + (on - S.f.project.length) + ' filters' : '') + '<span>' + ($rail.classList.contains('open') ? '–' : '+') + '</span></button>';
+    h += projectNav(tk);
+    var more = S.open.more || ['kind', 'collection', 'status', 'access', 'lane'].some(function (k) { return S.f[k].length; });
+    h += '<button type="button" class="morebtn" data-fd="more" aria-expanded="' + !!more + '">More filters<span>' + (more ? '–' : '+') + '</span></button>';
+    if (more) FACETS.forEach(function (F) {
+      if (F.k === 'project' || F.k === 'kind3' || F.k === 'family') return;
       var counts = {};
       base().forEach(function (r) { if (match(r, F.k, tk)) { var v = r[F.k] == null ? '' : r[F.k]; counts[v] = (counts[v] || 0) + 1; } });
       var vals = F.values.filter(function (v) { return counts[v] || S.f[F.k].indexOf(v) >= 0 || F.k !== 'lane'; });
@@ -210,12 +225,40 @@
     });
     $rail.innerHTML = h;
   }
+  /* Projects down the left: public, then Private (only in this browser, with the token), then what is retiring. */
+  function projectNav(tk) {
+    var counts = {}, all = 0;
+    base().forEach(function (r) { if (match(r, 'project', tk)) { counts[r.project] = (counts[r.project] || 0) + 1; all++; } });
+    var cur = S.f.project[0] || '';
+    function row(id, title, n, note) {
+      return '<button type="button" class="fv pj' + (n ? '' : ' zero') + '" data-proj="' + e(id) + '" aria-pressed="' + (cur === id) + '"' + (note ? ' title="' + e(note) + '"' : '') + '><span></span><span class="lb">' + e(title) + '</span><span class="ct">' + n + '</span></button>';
+    }
+    var pub = CMSD.projects.filter(function (p) { return !p.private && !p.retiring; }), prv = CMSD.projects.filter(function (p) { return p.private; }), ret = CMSD.projects.filter(function (p) { return p.retiring && !p.private; });
+    var h = '<section class="fg pjs"><h2><span class="k">Projects</span></h2><div class="fvs">' + row('', 'All', all) + pub.map(function (p) { return row(p.id, p.title, counts[p.id] || 0, p.note); }).join('') + '</div></section>';
+    if (ED.unlocked && prv.length) h += '<section class="fg pjs"><h2><span class="k">Private</span><span class="k only" title="Shown only in this browser, with your token">only you</span></h2><div class="fvs">' + prv.map(function (p) { return row(p.id, p.title, counts[p.id] || 0, p.note); }).join('') + '</div></section>';
+    if (ret.length) h += '<section class="fg pjs ret"><h2><span class="k">Retiring</span></h2><div class="fvs">' + ret.map(function (p) { return row(p.id, p.title, counts[p.id] || 0, p.note); }).join('') + '</div></section>';
+    return h;
+  }
+  /* Kinds and families on top of the cards. Families are grouping tags; any other tag is found with Find. */
+  function topChips(tk) {
+    var kc = {}, fc = {}, b = base();
+    b.forEach(function (r) { if (match(r, 'kind3', tk)) kc[r.kind3] = (kc[r.kind3] || 0) + 1; if (match(r, 'family', tk) && r.family) fc[r.family] = (fc[r.family] || 0) + 1; });
+    var nAll = KIND3.reduce(function (n, k) { return n + (kc[k] || 0); }, 0);
+    var kinds = '<div class="seg kinds" role="group" aria-label="Kind"><button type="button" data-kind3="" aria-pressed="' + !S.f.kind3.length + '">All <i>' + nAll + '</i></button>' + KIND3.map(function (k) {
+      return '<button type="button" data-kind3="' + k + '" aria-pressed="' + (S.f.kind3.length === 1 && S.f.kind3[0] === k) + '"' + (kc[k] ? '' : ' class="zero"') + ' title="' + e((L.vocabulary.kind3 || {})[k] || '') + '">' + KIND3_LABEL[k] + ' <i>' + (kc[k] || 0) + '</i></button>';
+    }).join('') + '</div>';
+    var fams = Object.keys(L.vocabulary.family || {}).filter(function (f) { return fc[f] || S.f.family.indexOf(f) >= 0; });
+    var chips = fams.length ? '<div class="fams" role="group" aria-label="Families">' + fams.map(function (f) {
+      return '<button type="button" class="fam" data-f="family" data-v="' + e(f) + '" aria-pressed="' + (S.f.family.indexOf(f) >= 0) + '" title="' + e(L.vocabulary.family[f] || '') + '">' + e(cap(f.replace(/-/g, ' '))) + ' <i>' + (fc[f] || 0) + '</i></button>';
+    }).join('') + '</div>' : '';
+    return '<div class="tops">' + kinds + chips + '</div>';
+  }
 
   /* ---------------------------------------------------------------- shared pieces */
   function toolbar(tools, n, total, noFacets) {
     var chips = '';
     if (S.q) chips += '<button type="button" class="chip" data-unq>“' + e(S.q) + '”</button>';
-    if (!noFacets) FACETS.forEach(function (F) { S.f[F.k].forEach(function (v) { chips += '<button type="button" class="chip" data-f="' + F.k + '" data-v="' + e(v) + '">' + e(F.label(v)) + '</button>'; }); });
+    if (!noFacets) FACETS.forEach(function (F) { if (F.k === 'project' || F.k === 'kind3' || F.k === 'family') return; S.f[F.k].forEach(function (v) { chips += '<button type="button" class="chip" data-f="' + F.k + '" data-v="' + e(v) + '">' + e(F.label(v)) + '</button>'; }); });
     var flt = chips || n !== total ? '<div class="flt"><span class="n"><b>' + n + '</b> of ' + total + '</span>' + chips + (chips ? '<button type="button" class="clear" data-clearall>Clear</button>' : '') + '</div>' : '';
     return tools || flt ? '<div class="tb">' + (tools || '') + flt + '</div>' : '';
   }
@@ -232,15 +275,21 @@
   /* Every pictured record opens something: its own page, or the plate page that shows its picture at full size. */
   // a figure lifted into a read plate opens the plate it belongs to
   function openUrl(r) { var w = r.work && byId[r.work]; return r.href || (r.role === 'part' && w && w.href ? w.href : '') || (r.thumb ? 'plate.html?r=' + encodeURIComponent(r.acc) : ''); }
-  function nw(r) {
-    var u = openUrl(r); if (!u) return '';
-    return '<span class="nw" role="button" tabindex="-1" data-open="' + e(u) + '" title="' + (r.href ? 'Open in a new window' : 'Open the plate in a new window') + '">' + NW_SVG + '</span>';
+  /* A tile opens its page, in this tab (Julia: no new tabs, no step in between). The small i opens the record's details. */
+  var INFO_SVG = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M6 5.2v3.6M6 3.3v.9" stroke="currentColor" stroke-width="1.2"/></svg>';
+  function nw(r) { return '<span class="nw" role="button" tabindex="0" data-r="' + r.acc + '" title="Details" aria-label="Details for ' + e(r.title) + '">' + INFO_SVG + '</span>'; }
+  function tileHref(r) { return ED.on ? recHref(r) : (openUrl(r) || recHref(r)); }
+  function tileAttrs(r) {
+    var sel = ED.on && ED.sel[r.acc];
+    return ' href="' + e(tileHref(r)) + '"' + (ED.on ? ' data-pick="' + r.acc + '" aria-pressed="' + !!sel + '"' : openUrl(r) ? ' data-acc="' + r.acc + '"' : ' data-r="' + r.acc + '"') +
+      (r.state === 'archived' ? ' data-state="archived"' : '') + (r.visibility === 'private' ? ' data-vis="private"' : '');
   }
+  function marks(r) { return (r.visibility === 'private' ? '<span class="mk pv">Private</span>' : '') + (r.state === 'archived' ? '<span class="mk ar">Archived</span>' : '') + (ED.on ? '<span class="tick" aria-hidden="true"></span>' : ''); }
   function card(r) {
     var st = r.status ? r.status.replace('-', ' ') : '';
     var has = r.access !== 'public' ? '<span class="not">' + r.access + '</span>'
       : r.plate && r.plate.modules ? '<span class="has" title="Has modules to lift">lift</span>' : r.plate && r.plate.spec ? '<span class="has" title="Has a spec">spec</span>' : '';
-    return '<a class="cdx" href="' + recHref(r) + '" data-r="' + r.acc + '" title="' + e(label(r)) + '"' + (S.r === r.acc ? ' aria-current="true"' : '') + '><span class="cell">' + pic(r, '(max-width:720px) 46vw, 240px', r.access !== 'public') + nw(r) + '</span>' +
+    return '<a class="cdx"' + tileAttrs(r) + ' title="' + e(label(r)) + '"' + (S.r === r.acc ? ' aria-current="true"' : '') + '><span class="cell">' + pic(r, '(max-width:720px) 46vw, 240px', r.access !== 'public') + nw(r) + marks(r) + '</span>' +
       '<span class="l1"><b class="call">' + e(r.call || r.acc) + '</b><span class="col">' + COL[r.collection].code + '</span></span>' +
       '<span class="tt">' + e(r.title) + '</span>' +
       '<span class="l3">' + glyph(r.kind, r.status, r.access) + '<span class="st">' + e(r.kind) + (st ? ' · ' + e(st) : '') + (r.versions ? ' · ' + (r.versions.length + 1) + ' versions' : '') + (r.parts ? ' · ' + r.parts.length + ' parts' : '') + '</span>' + has + '</span></a>';
@@ -255,14 +304,15 @@
   var CUT = { technique: 'arch', atom: 'arch', plate: 'arch', study: 'step', exploration: 'step', coupling: 'step', template: 'tab', instrument: 'tab', document: 'tab' };
   function tab(r) {
     var tail = r.kind === 'plate' && /\/(\d{2})$/.exec(r.id), num = r.call || (tail ? tail[1] : r.acc.slice(5).replace(/^0+/, '')), st = r.access !== 'public' ? r.access : r.status ? r.status.replace('-', ' ') : (r.family || '').replace(/-/g, ' ');
-    return '<a class="tb-c cut-' + (FCUT[r.family] || CUT[r.kind] || 'step') + (r.access !== 'public' ? ' off' : '') + '" href="' + recHref(r) + '" data-r="' + r.acc + '" title="' + e(label(r)) + '"' + (S.r === r.acc ? ' aria-current="true"' : '') + '>' +
+    return '<a class="tb-c cut-' + (FCUT[r.family] || CUT[r.kind] || 'step') + (r.access !== 'public' ? ' off' : '') + '"' + tileAttrs(r) + ' title="' + e(label(r)) + '"' + (S.r === r.acc ? ' aria-current="true"' : '') + '>' +
       '<span class="edge"><span class="face"><img src="' + e(r.thumb_2x && r.thumb_2x_w <= 1200 ? r.thumb_2x : r.thumb) + '" alt="" loading="lazy" decoding="async">' +
-      '<span class="strip2"><span class="k">' + e(r.kind) + '</span><b' + (num.length > 5 ? ' class="long"' : '') + '>' + e(num) + '</b><span class="k st">' + e(st || COL[r.collection].code) + '</span>' + (nw(r) || '<i>↗</i>') + '</span></span></span>' +
+      '<span class="strip2"><span class="k">' + e(r.kind) + '</span><b' + (num.length > 5 ? ' class="long"' : '') + '>' + e(num) + '</b><span class="k st">' + e(st || COL[r.collection].code) + '</span>' + nw(r) + '</span>' + marks(r) + '</span></span>' +
       '<span class="nm">' + e(r.title) + '</span></a>';
   }
 
   /* ---------------------------------------------------------------- arrival chart: one mark per record, a row per collection, on whole pixels */
   function lanes(list) {
+    var R = window.__R_ALL.filter(visible); // only the records you can see
     var W = Math.max(320, $lib.clientWidth - 40), gut = 34, n = R.length, step = Math.max(1, Math.floor((W - gut) / n)), mw = Math.max(1, step - 1), rowH = 11, rows = L.collections.length, top = rows * rowH;
     var inSet = {}; list.forEach(function (r) { inSet[r.id] = 1; });
     var s = '<div class="lanes"><svg width="' + (gut + n * step) + '" height="' + (top + 18) + '" role="img" aria-label="Records in order of arrival, one row per collection">';
@@ -294,7 +344,26 @@
       : S.d === 's' ? '<div class="sheet">' + strip(list, phone() ? 76 : 104) + '</div>'
       : S.d === 't' ? '<div class="tabs">' + list.filter(function (r) { return r.thumb; }).map(tab).join('') + '</div>' + unpictured(list.filter(function (r) { return !r.thumb; }))
       : '<div class="cards">' + list.filter(function (r) { return r.thumb; }).map(card).join('') + '</div>' + unpictured(list.filter(function (r) { return !r.thumb; }));
-    $lib.innerHTML = '<h1 class="vh">Plates</h1>' + toolbar(tools, list.length, WORKS.length) + body + foot();
+    var pj = S.f.project.length ? PROJ[S.f.project[0]] : null;
+    $lib.innerHTML = '<h1 class="vh">' + e(pj ? pj.title : 'All projects') + '</h1>' + toolbar(tools, list.length, base().length) + topChips(tokens()) + body + archiveFold() + removedFold() + foot();
+  }
+
+  /* Archived work sits at the foot of its project, folded. In Edit it can be picked and restored. */
+  function archiveFold() {
+    var a = archivedShown(); if (!a.length) return '';
+    var open = !!S.open.arch;
+    return '<section class="fold arch"><button type="button" class="foldbtn" data-fd="arch" aria-expanded="' + open + '"><span class="k">Archived</span><b>' + a.length + '</b><span>' + (open ? '–' : '+') + '</span></button>' +
+      (open ? '<div class="cards">' + a.filter(function (r) { return r.thumb; }).map(card).join('') + '</div>' + unpictured(a.filter(function (r) { return !r.thumb; })) : '') + '</section>';
+  }
+  function removedFold() {
+    if (!ED.on || !ED.removed.length) return '';
+    var open = !!S.open.rem, pj = S.f.project[0];
+    var list = ED.removed.filter(function (x) { return !pj || x.project === pj; }); if (!list.length) return '';
+    return '<section class="fold rem"><button type="button" class="foldbtn" data-fd="rem" aria-expanded="' + open + '"><span class="k">Removed</span><b>' + list.length + '</b><span>' + (open ? '–' : '+') + '</span></button>' +
+      (open ? '<div class="remlist">' + list.map(function (x) {
+        return '<div class="rrow"><span class="m">' + e(x.call || x.acc) + '</span><span class="ti">' + e(x.title) + '</span><span class="m">' + e((x.at || '').slice(0, 10)) + (x.pending ? ' · saving' : '') + '</span>' +
+          (x.restored ? '<span class="m">Restored · back after the next build</span>' : '<button type="button" class="act" data-restore="' + e(x.id) + '">Restore</button>') + '</div>';
+      }).join('') + '<p class="note">Removed work is off the site. Its files stay in this repo, and a copy is in the private repo ' + e(window.LibCMS ? LibCMS.archive : 'tools-archive') + '.</p></div>' : '') + '</section>';
   }
 
   function vShelves() {
@@ -304,8 +373,8 @@
       var secs = '', n = 0;
       c.sections.forEach(function (s) {
         var all = s.records.map(function (id) { return byId[id]; });
-        var recs = all.filter(function (r) { return !r.role && (!any || match(r, null, tk)); });
-        var parts = any ? [] : all.filter(function (r) { return r.role === 'part'; });
+        var recs = all.filter(function (r) { return r && !r.role && visible(r) && r.state !== 'archived' && (!any || match(r, null, tk)); });
+        var parts = any ? [] : all.filter(function (r) { return r && r.role === 'part' && visible(r); });
         if (!recs.length && !parts.length) return;
         n += recs.length; LIST = LIST.concat(recs);
         secs += '<div class="sec"><h3>' + e(s.title) + '<span>' + recs.length + '</span></h3>' + strip(recs, phone() ? 56 : 64) + partsLine(parts) + '</div>';
@@ -421,16 +490,18 @@
     var h = '<div class="dh"><span class="id">' + (r.call ? '<b>' + e(r.call) + '</b>' : '') + r.acc + '</span><span>' + (i >= 0 ? (i + 1) + ' / ' + LIST.length : '') + '</span>' +
       '<button type="button" data-r="' + (prev ? prev.acc : '') + '"' + (prev ? '' : ' disabled') + ' aria-label="Previous record">←</button><button type="button" data-r="' + (next ? next.acc : '') + '"' + (next ? '' : ' disabled') + ' aria-label="Next record">→</button><button type="button" data-close aria-label="Close">×</button></div><div class="db">';
     h += pic(r, '(max-width:720px) 92vw, 500px') + '<h1>' + e(r.title) + '</h1>' + (r.sub ? '<p class="sub">' + e(r.sub) + '</p>' : '');
-    h += '<div class="acts">' + (openUrl(r) ? '<a class="pri" href="' + e(openUrl(r)) + '">Open ↗</a>' : '<span>' + (r.access === 'private' || r.access === 'local' ? 'Local file' : 'Not published') + '</span>') +
+    h += '<div class="acts">' + (openUrl(r) ? '<a class="pri" href="' + e(openUrl(r)) + '">Open</a>' : '<span>' + (r.access === 'private' || r.access === 'local' ? 'Local file' : 'Not published') + '</span>') +
       (r.spec_href ? '<a href="' + e(r.spec_href) + '">Spec JSON ↗</a>' : '') + '<button type="button" data-copy="record">Copy record</button>' + (PREVIEW ? '' : '<button type="button" data-copy="link">Copy link</button>') + '</div>';
+    if (ED.on) h += editSection(r);
     var rows = [];
     var of = r.work ? byId[r.work] : null;
     if (r.role === 'hidden') rows.push(['Hidden', e(r.hidden_why || 'Not listed.')]);
     else if (r.role) rows.push([r.role === 'version' ? 'Version of' : 'Part of', of ? '<a href="' + recHref(of) + '" data-r="' + of.acc + '">' + e(label(of)) + '</a>' : e(cap(r.part_of || ''))]);
-    rows.push(['Kind', '<span class="gl">' + glyph(r.kind, r.status, r.access) + e(r.kind) + (r.atom_kind ? ' · ' + e(r.atom_kind) : '') + '</span>']);
+    rows.push(['Project', e(PROJ[r.project] ? PROJ[r.project].title : r.project || '') + (r.visibility === 'private' ? ' <small>· private</small>' : '') + (r.state === 'archived' ? ' <small>· archived' + (r.state_at ? ' ' + e(r.state_at.slice(0, 10)) : '') + '</small>' : '')]);
+    rows.push(['Kind', '<span class="gl">' + e(r.kind3 || '') + ' · </span><span class="gl">' + glyph(r.kind, r.status, r.access) + e(r.kind) + (r.atom_kind ? ' · ' + e(r.atom_kind) : '') + '</span>']);
     rows.push(['Status', r.status ? e(r.status.replace('-', ' ')) + (r.ruling ? ' <small>· ruled by ' + e(r.ruling.by) + (r.ruling.date ? ', ' + e(r.ruling.date) : '') + '</small>' : '') + (r.proposed_grade ? ' <small>· proposed grade ' + e(r.proposed_grade) + '</small>' : '') : '<small>none recorded</small>']);
     if (r.access !== 'public') rows.push(['Access', e(cap(r.access)) + ' <small>· ' + e(L.vocabulary.access[r.access]) + (r.target ? ' For ' + e(r.target) + '.' : '') + '</small>']);
-    rows.push(['Collection', '<a href="' + hash({ view: 'shelves', r: null, term: null, q: '', f: { kind: [], collection: [r.collection], status: [], access: [], family: [], lane: [] } }) + '">' + e(c.title) + '</a> <small>· ' + e(r.section_title) + '</small>']);
+    rows.push(['Collection', '<a href="' + hash({ view: 'shelves', r: null, term: null, q: '', f: Object.assign(noF(), { collection: [r.collection] }) }) + '">' + e(c.title) + '</a> <small>· ' + e(r.section_title) + '</small>']);
     rows.push(['Dates', 'Arrived ' + e(r.dates.accessioned) + (r.dates.modified && r.dates.modified !== r.dates.accessioned ? ' <small>· changed ' + e(r.dates.modified) + '</small>' : '')]);
     if (r.family) rows.push(['Family', '<a href="' + e(BASE) + 'techniques-templates/">' + e(cap(r.family.replace(/-/g, ' '))) + '</a>' + (r.form ? ' <small>· ' + e(r.form) + '</small>' : '')]);
     var mk = [r.lane, r.layer && r.layer.toLowerCase(), r.style].filter(Boolean);
@@ -487,7 +558,7 @@
     for (i = 0; i < els.length; i++) els[i].removeAttribute('aria-current');
     els = document.querySelectorAll('.lanes .m.sel'); for (i = 0; i < els.length; i++) els[i].classList.remove('sel');
     if (!S.r) return;
-    els = document.querySelectorAll('.pl[data-rs~="' + S.r + '"],.cdx[data-r="' + S.r + '"],.ledger tr[data-r="' + S.r + '"]'); for (i = 0; i < els.length; i++) els[i].setAttribute('aria-current', 'true');
+    els = document.querySelectorAll('.pl[data-rs~="' + S.r + '"],.cdx[data-r="' + S.r + '"],.cdx[data-acc="' + S.r + '"],.cdx[data-pick="' + S.r + '"],.ledger tr[data-r="' + S.r + '"]'); for (i = 0; i < els.length; i++) els[i].setAttribute('aria-current', 'true');
     els = document.querySelectorAll('.lanes .m[data-r="' + S.r + '"]'); for (i = 0; i < els.length; i++) els[i].classList.add('sel');
   }
 
@@ -500,9 +571,221 @@
     else if (S.view === 'techniques' || S.view === 'atoms') vTerms(S.view);
     else if (S.view === 'ledger') vLedger();
     else vAudit();
-    syncDrawer();
+    syncDrawer(); drawSel();
     document.title = (S.r && byAcc[S.r] ? byAcc[S.r].title + ' · ' : '') + 'Library';
   }
+
+  /* ---------------------------------------------------------------- CMS: edit, archive, remove (library/cms.js does the saving) */
+  var $bar = document.getElementById('bar'), $sel = document.createElement('div'), $pan = document.createElement('div');
+  $sel.id = 'selbar'; $sel.hidden = true; $pan.id = 'cmspanel'; $pan.hidden = true; document.body.appendChild($sel); document.body.appendChild($pan);
+  var $btn = document.createElement('button'); $btn.type = 'button'; $btn.id = 'cmsbtn'; $btn.setAttribute('data-cms', 'toggle'); $bar.appendChild($btn);
+  ED.q = Promise.resolve();
+  function drawCmsBtn() { $btn.textContent = ED.on ? 'Done' : 'Edit'; $btn.setAttribute('aria-pressed', ED.on); $btn.title = ED.unlocked ? (ED.on ? 'Stop editing' : 'Edit the library: archive, remove, projects, tags') : 'Edit the library (needs your GitHub token)'; document.body.classList.toggle('editing', ED.on); }
+  function selected() { return Object.keys(ED.sel).filter(function (a) { return ED.sel[a] && byAcc[a] && !byAcc[a]._gone; }).map(function (a) { return byAcc[a]; }); }
+  function names(rs) { var n = rs.map(function (r) { return r.call || r.acc; }); return n.length > 4 ? n.slice(0, 4).join(', ') + ' and ' + (n.length - 4) + ' more' : n.join(', '); }
+  function status(msg, kind) { ED.status = msg; ED.stKind = kind || ''; drawSel(); if (!ED.on && msg) toast(msg); }
+
+  function projOptions(cur, blank) {
+    return (blank ? '<option value="">Move to project…</option>' : '') + CMSD.projects.map(function (p) { return '<option value="' + e(p.id) + '"' + (cur === p.id ? ' selected' : '') + '>' + e(p.title) + (p.private ? ' (private)' : p.retiring ? ' (retiring)' : '') + '</option>'; }).join('');
+  }
+  function drawSel() {
+    if (!ED.on) { $sel.hidden = true; selh(); return; }
+    var rs = selected(), n = rs.length, allArch = n && rs.every(function (r) { return r.state === 'archived'; }), allPriv = n && rs.every(function (r) { return r.visibility === 'private'; });
+    var st = ED.status ? '<span class="st ' + ED.stKind + '" role="status">' + e(ED.status) + '</span>' : '<span class="st" role="status">' + (n ? '' : 'Pick cards to edit them. Shift-click picks a run.') + '</span>';
+    if (ED.confirm) {
+      var c = ED.confirm;
+      $sel.innerHTML = '<div class="conf"><p><b>Remove ' + c.recs.length + ' from the site?</b> ' + e(names(c.recs)) + '. ' + (c.recs.length > 1 ? 'They leave' : 'It leaves') + ' every listing' + (c.folders.length ? ', ' + c.folders.length + ' page folder' + (c.folders.length > 1 ? 's stop' : ' stops') + ' deploying, and a copy goes to the private repo ' + e(LibCMS.archive) : ' (it has no page folder of its own to copy)') + '. The files stay in this repo. Restore any time under Removed.</p>' +
+        '<div class="row"><button type="button" class="act danger" data-cms="remove-go">Remove ' + c.recs.length + '</button><button type="button" class="act" data-cms="remove-cancel">Cancel</button></div></div>';
+      $sel.hidden = false; selh(); return;
+    }
+    $sel.innerHTML = '<div class="row"><span class="n"><b>' + n + '</b> picked</span>' +
+      '<button type="button" class="act" data-cms="all">Pick all shown</button>' + (n ? '<button type="button" class="act" data-cms="clear">Clear</button>' : '') +
+      '<span class="sp"></span>' +
+      (n ? '<select class="act" data-bulk="project" aria-label="Move to project">' + projOptions('', true) + '</select>' +
+        '<button type="button" class="act" data-cms="' + (allArch ? 'unarchive' : 'archive') + '">' + (allArch ? 'Restore from archive' : 'Archive') + '</button>' +
+        '<button type="button" class="act" data-cms="' + (allPriv ? 'public' : 'private') + '">' + (allPriv ? 'Make public' : 'Make private') + '</button>' +
+        '<button type="button" class="act" data-cms="tag">Add tag…</button>' +
+        '<button type="button" class="act danger" data-cms="remove">Remove…</button>' : '') +
+      '</div>' + st;
+    $sel.hidden = false; selh();
+  }
+  // the drawer and the page stop above the bar
+  function selh() { document.documentElement.style.setProperty('--selh', $sel.hidden ? '0px' : ($sel.offsetHeight + (phone() ? 0 : 18)) + 'px'); }
+  function drawPanel(msg) {
+    $pan.innerHTML = '<div class="ph"><b>Edit the library</b><button type="button" data-cms="panel-close" aria-label="Close">×</button></div>' +
+      '<p>Paste your GitHub token. It stays in this browser and is sent only to api.github.com. Saves go straight to ' + e(LibCMS.repo) + ' and are live after the next build, about two minutes.</p>' +
+      '<form data-cmsform><input type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" aria-label="GitHub token"><button type="submit" class="act">Unlock</button></form>' +
+      (msg ? '<p class="msg">' + e(msg) + '</p>' : '') + '<p class="fine">Needs Contents read and write on ' + e(LibCMS.repo) + ', and on ' + e(LibCMS.archive) + ' for Remove.</p>';
+    $pan.hidden = false; var i = $pan.querySelector('input'); if (i) i.focus();
+  }
+
+  /* one record's edits, the same way library/_build/cms.mjs applies them on the next build */
+  function applyEntry(r, ed) {
+    if (!r || !ed) return;
+    if (ed.project && PROJ[ed.project]) r.project = ed.project;
+    if (ed.kind && KIND3.indexOf(ed.kind) >= 0) r.kind3 = ed.kind;
+    if (ed.title) r.title = ed.title;
+    if (Array.isArray(ed.tags)) { if (ed.tags.length) r.tags = ed.tags.slice(); else delete r.tags; }
+    if (ed.state === 'archived') r.state = 'archived'; else delete r.state;
+    if (ed.visibility === 'private' || (ed.visibility !== 'public' && PROJ[r.project] && PROJ[r.project].private)) r.visibility = 'private'; else delete r.visibility;
+    if (ed.state === 'removed') { r._gone = true; R.forEach(function (x) { if (x.work === r.id) x._gone = true; }); }
+    r._hay = r._hay.split(' · cms')[0] + ' · cms ' + [r.title, (r.tags || []).join(' '), PROJ[r.project] ? PROJ[r.project].title : ''].join(' ').toLowerCase();
+  }
+  function snap(rs) { return rs.map(function (r) { return { r: r, v: { project: r.project, kind3: r.kind3, title: r.title, tags: r.tags, state: r.state, visibility: r.visibility, _gone: r._gone } }; }); }
+  function unsnap(sv) { sv.forEach(function (x) { for (var k in x.v) { if (x.v[k] === undefined) delete x.r[k]; else x.r[k] = x.v[k]; } }); }
+
+  /* every change is one commit; they go one after another */
+  function commit(rs, op, patch, message, per, after) {
+    if (!rs.length) return;
+    var ids = rs.map(function (r) { return r.id; }), sv = snap(rs);
+    rs.forEach(function (r) { var ed = {}; for (var k in patch) if (patch[k] != null) ed[k] = patch[k]; if (per && per[r.id]) for (var j in per[r.id]) ed[j] = per[r.id][j]; ed.project = ed.project || r.project; if (!('kind' in ed)) ed.kind = r.kind3; if (!('tags' in ed)) ed.tags = r.tags || []; if (!('visibility' in ed)) { var pp = PROJ[ed.project] && PROJ[ed.project].private; if (r.visibility === 'private' && !pp) ed.visibility = 'private'; else if (r.visibility !== 'private' && pp) ed.visibility = 'public'; } if (!('state' in ed) && r.state === 'archived' && op !== 'unarchive') ed.state = 'archived'; applyEntry(r, ed); });
+    ED.sel = {}; render(); status('Saving: ' + message + '…');
+    ED.q = ED.q.then(function () {
+      return LibCMS.save({ op: op, ids: ids, patch: patch, per: per }, message).then(function (x) {
+        ids.forEach(function (id) { if (byId[id] && x.E.records[id]) applyEntry(byId[id], x.E.records[id]); });
+        status('Saved: ' + message + '. Live after the next build, about two minutes.', 'ok'); render(); if (after) after(x);
+      }, function (err) {
+        unsnap(sv); render();
+        status('Not saved: ' + err.message + (err.status === 401 ? '. The token was refused; lock and paste it again.' : ''), 'bad');
+      });
+    });
+  }
+  function act(name, rs) {
+    var n = names(rs);
+    if (name === 'archive') return commit(rs, 'archive', { state: 'archived' }, 'Archive ' + n);
+    if (name === 'unarchive') return commit(rs, 'unarchive', { state: null }, 'Restore ' + n + ' from the archive');
+    if (name === 'private') return commit(rs, 'private', { visibility: 'private' }, 'Make ' + n + ' private');
+    if (name === 'public') return commit(rs, 'public', { visibility: 'public' }, 'Make ' + n + ' public');
+    if (name === 'remove') { var folders = rs.map(function (r) { return safeFolder(r, rs); }).filter(Boolean); ED.confirm = { recs: rs, folders: folders }; return drawSel(); }
+  }
+
+  /* Remove: the page folder and thumbnails are copied to the private repo, then the record is marked removed.
+     build-site.mjs then stops deploying the folder. Nothing is deleted from this repo. */
+  function folderOf(r) {
+    var h = r.href || ''; if (!h || /^https?:/.test(h)) return '';
+    var p = h.replace(/^(\.\.\/)+/, '').replace(/[?#].*$/, '').replace(/index\.html$/, ''), parts = p.split('/').filter(Boolean);
+    return parts.length >= 2 ? parts.join('/') + '/' : '';
+  }
+  function safeFolder(r, removing) {
+    var f = folderOf(r); if (!f) return '';
+    if (L.collections.some(function (c) { return c.path && c.path.replace(/\/?$/, '/') === f; })) return '';
+    var ids = {}; removing.forEach(function (x) { ids[x.id] = 1; });
+    var clash = R.some(function (x) { if (ids[x.id] || x._gone || x.work === r.id) return false; var g = folderOf(x); return g && (g.indexOf(f) === 0 || f.indexOf(g) === 0); });
+    return clash ? '' : f;
+  }
+  function removeGo() {
+    var c = ED.confirm; ED.confirm = null; if (!c) return;
+    var rs = c.recs, date = new Date().toISOString().slice(0, 10), prefix = 'removed/' + date + '/', n = names(rs);
+    if (!ED.archive) { status('Not removed: this token cannot write to ' + LibCMS.archive + ' yet. Archive works without it.', 'bad'); return; }
+    status('Copying ' + n + ' to the private repo…');
+    var per = {}, extra = {};
+    ED.q = ED.q.then(function () {
+      return Promise.all(rs.map(function (r) {
+        var f = safeFolder(r, rs), thumbs = [r.thumb, r.thumb_2x].filter(function (t) { return t && /^thumbs\//.test(t); }).map(function (t) { return 'library/' + t; });
+        per[r.id] = { path: f || null, acc: r.acc, call: r.call || null, title_was: r.title };
+        var snapR = {}; for (var k in r) if (k.charAt(0) !== '_') snapR[k] = r[k]; extra['records/' + r.acc + '.json'] = { removed: new Date().toISOString(), from: LibCMS.repo, folder: f || null, record: snapR };
+        return Promise.all([f ? LibCMS.listFolder(f) : Promise.resolve([])].concat(thumbs.map(LibCMS.fileAt))).then(function (ls) { return [].concat.apply([], ls); });
+      })).then(function (lists) {
+        var files = [].concat.apply([], lists);
+        if (files.length > 600) throw new Error(files.length + ' files is more than one removal should copy; nothing was removed');
+        return LibCMS.copyToArchive(files, prefix, extra, 'Removed from ' + LibCMS.repo + ' by the library CMS: ' + n, function (i, t) { if (i % 5 === 0 || i === t) status('Copying ' + n + ' to the private repo · ' + i + ' of ' + t + ' files'); });
+      }).then(function (sha) {
+        rs.forEach(function (r) { per[r.id].archive = LibCMS.archive + '@' + sha.slice(0, 10) + ':' + prefix; });
+        commit(rs, 'remove', { state: 'removed' }, 'Remove ' + n, per, function () {
+          rs.forEach(function (r) { ED.removed.unshift({ id: r.id, acc: r.acc, call: r.call, title: r.title, project: r.project, path: per[r.id].path || '', at: new Date().toISOString(), archive: per[r.id].archive }); });
+          render();
+        });
+      }).catch(function (err) { status('Not removed: ' + err.message, 'bad'); });
+    });
+  }
+  function restoreRemoved(id) {
+    var x = ED.removed.filter(function (y) { return y.id === id; })[0]; if (!x) return;
+    x.pending = true; render(); status('Saving: restore ' + (x.call || x.acc) + '…');
+    ED.q = ED.q.then(function () {
+      return LibCMS.save({ op: 'restore', ids: [id], patch: { state: null, path: null } }, 'Restore ' + (x.call || x.acc) + ' (removed)').then(function () {
+        x.pending = false; x.restored = true; status('Saved: ' + (x.call || x.acc) + ' is back after the next build, about two minutes.', 'ok'); render();
+      }, function (err) { x.pending = false; status('Not saved: ' + err.message, 'bad'); render(); });
+    });
+  }
+  function pick(acc, range) {
+    if (range && ED.last && ED.last !== acc) {
+      var list = LIST.concat(archivedShown()), a = list.indexOf(byAcc[ED.last]), b = list.indexOf(byAcc[acc]);
+      if (a >= 0 && b >= 0) { list.slice(Math.min(a, b), Math.max(a, b) + 1).forEach(function (r) { ED.sel[r.acc] = true; }); ED.last = acc; return repick(); }
+    }
+    ED.sel[acc] = !ED.sel[acc]; ED.last = acc; repick();
+  }
+  function repick() {
+    var els = document.querySelectorAll('[data-pick]');
+    for (var i = 0; i < els.length; i++) els[i].setAttribute('aria-pressed', !!ED.sel[els[i].getAttribute('data-pick')]);
+    ED.status = ''; drawSel();
+  }
+  function cms(name) {
+    if (name === 'toggle') { if (!ED.unlocked) return drawPanel(); ED.on = !ED.on; ED.sel = {}; ED.confirm = null; ED.status = ''; drawCmsBtn(); return render(); }
+    if (name === 'panel-close') { $pan.hidden = true; return; }
+    if (name === 'lock') { LibCMS.setToken(''); ED.unlocked = ED.on = false; ED.sel = {}; drawCmsBtn(); return render(); }
+    if (name === 'all') { LIST.concat(S.open.arch ? archivedShown() : []).forEach(function (r) { ED.sel[r.acc] = true; }); return repick(); }
+    if (name === 'clear') { ED.sel = {}; return repick(); }
+    if (name === 'remove-go') return removeGo();
+    if (name === 'remove-cancel') { ED.confirm = null; return drawSel(); }
+    if (name === 'tag') {
+      ED.tagging = true; var rs0 = selected();
+      $sel.querySelector('.row').insertAdjacentHTML('beforeend', '<form class="tagf" data-tagform><input aria-label="Tag to add" placeholder="tag" spellcheck="false"><button type="submit" class="act">Add to ' + rs0.length + '</button></form>');
+      return $sel.querySelector('.tagf input').focus();
+    }
+    var dr = /^d-(.*)/.exec(name), rs = dr ? [byAcc[S.r]].filter(Boolean) : selected();
+    if (dr && name === 'd-remove') { ED.sel = {}; ED.sel[S.r] = true; return act('remove', rs); }
+    return act(dr ? dr[1] : name, rs);
+  }
+  function editSection(r) {
+    var tags = (r.tags || []).join(', ');
+    return '<section class="dsec ed"><h2 class="k">Edit</h2><div class="edf">' +
+      '<label><span class="k">Title</span><input data-edf="title" value="' + e(r.title) + '" spellcheck="true"></label>' +
+      '<label><span class="k">Project</span><select data-edf="project">' + projOptions(r.project) + '</select></label>' +
+      '<label><span class="k">Kind</span><select data-edf="kind">' + KIND3.map(function (k) { return '<option value="' + k + '"' + (r.kind3 === k ? ' selected' : '') + '>' + KIND3_LABEL[k].replace(/s$/, '') + '</option>'; }).join('') + '</select></label>' +
+      '<label><span class="k">Tags</span><input data-edf="tags" value="' + e(tags) + '" placeholder="comma, separated" spellcheck="false"></label></div>' +
+      '<div class="edacts"><button type="button" class="act" data-cms="d-' + (r.state === 'archived' ? 'unarchive' : 'archive') + '">' + (r.state === 'archived' ? 'Restore from archive' : 'Archive') + '</button>' +
+      '<button type="button" class="act" data-cms="d-' + (r.visibility === 'private' ? 'public' : 'private') + '">' + (r.visibility === 'private' ? 'Make public' : 'Make private') + '</button>' +
+      '<button type="button" class="act danger" data-cms="d-remove">Remove…</button></div></section>';
+  }
+  function editField(el) {
+    var r = byAcc[S.r]; if (!r) return;
+    var f = el.getAttribute('data-edf'), v = el.value.trim();
+    if (f === 'title') { if (!v || v === r.title) return; return commit([r], 'title', { title: v }, 'Retitle ' + (r.call || r.acc) + ' as “' + v + '”'); }
+    if (f === 'project') { if (v === r.project) return; return commit([r], 'project', { project: v }, 'Move ' + (r.call || r.acc) + ' to ' + PROJ[v].title); }
+    if (f === 'kind') { if (v === r.kind3) return; return commit([r], 'kind', { kind: v }, 'Make ' + (r.call || r.acc) + ' a ' + v); }
+    if (f === 'tags') { var t = v.split(',').map(function (x) { return x.trim(); }).filter(Boolean); if (t.join(',') === (r.tags || []).join(',')) return; return commit([r], 'tags', { tags: t }, 'Tag ' + (r.call || r.acc) + ': ' + (t.join(', ') || 'none')); }
+  }
+  // what changed on GitHub since this page was built
+  function overlay() {
+    if (!ED.unlocked || !window.LibCMS) return;
+    LibCMS.check(LibCMS.token()).then(function (c) { ED.archive = c.archive; if (!c.tools) { ED.unlocked = ED.on = false; drawCmsBtn(); status('The saved token was refused. Edit to paste it again.', 'bad'); render(); } });
+    LibCMS.readEdits().then(function (x) {
+      var seen = {}; ED.removed.forEach(function (y) { seen[y.id] = y; });
+      Object.keys(x.E.records || {}).forEach(function (id) {
+        var ed = x.E.records[id];
+        if (byId[id]) applyEntry(byId[id], ed);
+        if (ed.state === 'removed' && !seen[id]) ED.removed.unshift({ id: id, acc: ed.acc || '', call: ed.call || '', title: ed.title_was || id, project: byId[id] ? byId[id].project : '', path: ed.path || '', at: ed.at || '', archive: ed.archive || '' });
+      });
+      ED.removed.forEach(function (y) { var ed = (x.E.records || {})[y.id]; if (!ed || ed.state !== 'removed') y.restored = true; });
+      render();
+    }, function () {});
+  }
+  $pan.addEventListener('submit', function (ev) {
+    ev.preventDefault(); var i = $pan.querySelector('input'), t = i && i.value.trim(); if (!t) return;
+    drawPanel('Checking…'); 
+    LibCMS.check(t).then(function (c) {
+      if (!c.tools) return drawPanel('GitHub refused this token for ' + LibCMS.repo + '.');
+      LibCMS.setToken(t); ED.unlocked = true; ED.on = true; ED.archive = c.archive; $pan.hidden = true; drawCmsBtn();
+      status(c.archive ? 'Editing. Pick cards, or open one for its details.' : 'Editing. This token cannot reach ' + LibCMS.archive + ', so Remove is off; Archive works.', c.archive ? '' : 'bad');
+      render(); overlay();
+    }, function (err) { drawPanel('Could not reach GitHub: ' + err.message); });
+  });
+  $sel.addEventListener('submit', function (ev) {
+    ev.preventDefault(); var i = $sel.querySelector('.tagf input'), t = i && i.value.trim(); if (!t) return;
+    var rs = selected(), per = {}; rs.forEach(function (r) { var a = (r.tags || []).slice(); if (a.indexOf(t) < 0) a.push(t); per[r.id] = { tags: a }; });
+    commit(rs, 'tag', {}, 'Tag ' + names(rs) + ': ' + t, per);
+  });
+  drawCmsBtn();
 
   /* ---------------------------------------------------------------- events */
   function toggle(k, v) { var a = S.f[k].slice(), i = a.indexOf(v); if (i < 0) a.push(v); else a.splice(i, 1); var f = {}; for (var x in S.f) f[x] = S.f[x]; f[k] = a; go({ f: f }); }
@@ -513,9 +796,9 @@
     function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (err) { toast('Copy failed'); } ta.remove(); }
   }
   document.addEventListener('click', function (ev) {
-    var nwEl = ev.target.closest && ev.target.closest('.nw');
-    if (nwEl) { ev.preventDefault(); ev.stopPropagation(); window.open(nwEl.getAttribute('data-open'), '_blank', 'noopener'); return; }
-    var t = ev.target.closest('[data-view],[data-f],[data-clear],[data-clearall],[data-unq],[data-d],[data-r],[data-close],[data-term],[data-scheme],[data-ts],[data-ls],[data-fd],[data-copy],[data-railtog]');
+    var pk = ED.on && ev.target.closest && !ev.target.closest('.nw') && ev.target.closest('[data-pick]');
+    if (pk) { ev.preventDefault(); pick(pk.getAttribute('data-pick'), ev.shiftKey); return; }
+    var t = ev.target.closest('[data-cms],[data-proj],[data-kind3],[data-restore],[data-view],[data-f],[data-clear],[data-clearall],[data-unq],[data-d],[data-r],[data-close],[data-term],[data-scheme],[data-ts],[data-ls],[data-fd],[data-copy],[data-railtog]');
     if (!t) {
       // a link to another view is routed here, so it works where the host owns the address bar
       var a = ev.target.closest('a[href^="#/"]');
@@ -525,6 +808,10 @@
     }
     if (ev.metaKey || ev.ctrlKey || ev.shiftKey) return;
     var d = t.dataset;
+    if (d.cms) { ev.preventDefault(); return cms(d.cms); }
+    if ('proj' in d) { ev.preventDefault(); var fp = {}; for (var y in S.f) fp[y] = S.f[y]; fp.project = d.proj ? [d.proj] : []; $rail.classList.remove('open'); return go({ f: fp, view: S.view === 'ledger' || S.view === 'shelves' ? S.view : 'plates', r: null }); }
+    if ('kind3' in d) { ev.preventDefault(); var fk = {}; for (var z in S.f) fk[z] = S.f[z]; fk.kind3 = d.kind3 ? [d.kind3] : []; return go({ f: fk }); }
+    if ('restore' in d) { ev.preventDefault(); return restoreRemoved(d.restore); }
     if ('railtog' in d) { $rail.classList.toggle('open'); drawRail(); return; }
     if ('copy' in d) {
       var r = byAcc[S.r], o = {}; for (var k in r) if (k.charAt(0) !== '_') o[k] = r[k];
@@ -537,7 +824,7 @@
     if ('r' in d) { if (d.r) go({ r: d.r === S.r && !t.closest('#drawer') ? null : d.r }); return; }
     if (d.f) return toggle(d.f, d.v);
     if (d.clear) { var f = {}; for (var x in S.f) f[x] = S.f[x]; f[d.clear] = []; return go({ f: f }); }
-    if ('clearall' in d) { $q.value = ''; return go({ q: '', f: { kind: [], collection: [], status: [], access: [], family: [], lane: [] } }); }
+    if ('clearall' in d) { $q.value = ''; return go({ q: '', f: noF() }); }
     if ('unq' in d) { $q.value = ''; return go({ q: '' }); }
     if (d.d) return go({ d: d.d });
     if ('term' in d) return go({ term: S.term === d.term ? null : d.term });
@@ -546,7 +833,12 @@
     if (d.ls) { if (S.ls === d.ls) S.ld = -S.ld; else { S.ls = d.ls; S.ld = 1; } return render(); }
     if (d.fd) { S.open[d.fd] = !S.open[d.fd]; return render(); }
   });
-  document.addEventListener('change', function (ev) { if (ev.target.matches('[data-sort]')) go({ sort: ev.target.value }); });
+  document.addEventListener('change', function (ev) {
+    if (ev.target.matches('[data-sort]')) go({ sort: ev.target.value });
+    else if (ev.target.matches('[data-edf]')) editField(ev.target);
+    else if (ev.target.matches('[data-bulk="project"]') && ev.target.value) { var v = ev.target.value, rs = selected(); commit(rs, 'project', { project: v }, 'Move ' + names(rs) + ' to ' + PROJ[v].title); }
+  });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && ev.target.matches && ev.target.matches('input[data-edf]')) { ev.preventDefault(); ev.target.blur(); } }, true);
   var qt; $q.addEventListener('input', function () { clearTimeout(qt); qt = setTimeout(function () { go({ q: $q.value.trim(), term: null }, true); }, 90); });
   document.addEventListener('keydown', function (ev) {
     var typing = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName);
@@ -577,5 +869,5 @@
   window.addEventListener('popstate', function () { MEM = null; parse(); render(); });
   window.addEventListener('hashchange', function () { MEM = null; parse(); render(); });
 
-  parse(); render();
+  parse(); render(); overlay();
 })();
