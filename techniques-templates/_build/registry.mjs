@@ -15,6 +15,7 @@ const root = process.cwd();
 const CHECK = process.argv.includes('--check'), PRIVATE = process.argv.includes('--private');
 const read = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
 const CAT = read(path.join(root, '..', 'library', 'catalog.json'));
+const GONE = new Set((CAT.cms && CAT.cms.gone_calls) || []), dropped = [], orphaned = [];
 const MAP = read(path.join(root, '_build', 'registry-map.json'));
 const problems = [];
 
@@ -52,9 +53,10 @@ for (const [id, e] of Object.entries(MAP.entries)) {
   if (!MAP.families[e.family]) problems.push(`${id}: unknown family "${e.family}"`);
   for (const k of e.members) claim(k, id);
   const members = e.members.map(member);
-  const lifts = (e.lifts || []).map((c) => { const r = recByCall.get(c); if (!r) problems.push(`${id}: lift "${c}" is not a record call`); return r ? { call: c, record: r.id, title: r.title, href: r.href } : { call: c }; });
+  // a lift whose record was removed in the library CMS is dropped, not an error (catalog.cms.gone_calls)
+  const lifts = (e.lifts || []).filter((c) => { if (GONE.has(c) && !recByCall.get(c)) { dropped.push(`${id}: ${c}`); return false; } return true; }).map((c) => { const r = recByCall.get(c); if (!r) problems.push(`${id}: lift "${c}" is not a record call`); return r ? { call: c, record: r.id, title: r.title, href: r.href } : { call: c }; });
   const used = [...new Set([...members.flatMap((m) => m.used_in), ...(studyUses[id] || [])])];
-  if (!members.length && !lifts.length && !used.length) problems.push(`${id}: no member, lift or use`);
+  if (!members.length && !lifts.length && !used.length) { if ((e.lifts || []).some((c) => GONE.has(c))) orphaned.push(id); else problems.push(`${id}: no member, lift or use`); } // its only examples were removed: kept, and listed
   entries.push({
     id, name: e.name, family: e.family, kind: 'technique', liftable: true,
     aliases: e.members, members, lifts,
@@ -91,6 +93,8 @@ const registry = {
   unassigned_explorations: unassigned
 };
 
+if (orphaned.length) console.log('registry · ' + orphaned.length + ' technique(s) whose only examples were removed: ' + orphaned.join(', '));
+if (dropped.length) console.log('registry · ' + dropped.length + ' lift(s) to removed records dropped: ' + dropped.join(', '));
 if (problems.length) { console.error('registry · ' + problems.length + ' problem(s)\n  ' + problems.join('\n  ')); process.exit(1); }
 const body = JSON.stringify(registry, null, 1) + '\n', file = path.join(root, 'registry.json');
 if (CHECK) { if (!fs.existsSync(file) || fs.readFileSync(file, 'utf8') !== body) { console.error('registry · registry.json is stale; run node _build/registry.mjs'); process.exit(1); } }

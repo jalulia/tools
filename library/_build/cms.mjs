@@ -98,6 +98,8 @@ export function applyEdits(records, root, plates = []) {
     note: 'From library/_build/edits.json, written by the CMS. Removed records are left out of this catalog; the list below is what the CMS needs to restore them.',
     projects: E.projects,
     removed: removed.map((id) => { const ed = E.records[id]; return { id, acc: ed.acc || byId.get(id)?.acc || '', call: ed.call || byId.get(id)?.call || '', title: ed.title_was || byId.get(id)?.title || id, project: byId.get(id)?.project || '', path: ed.path || '', at: ed.at || '', archive: ed.archive || '' }; }),
+    // call numbers of every record that left the catalog (removed ones and their parts), so links to them can be dropped
+    gone_calls: [...gone].map((id) => byId.get(id)?.call).filter(Boolean).sort(),
     counts: { archived: archived.length, removed: removed.length, private: new Set(priv).size },
     edits: E.log.length
   };
