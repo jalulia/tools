@@ -9,6 +9,7 @@ Version 2, 2026-11-15. Page: https://jalulia.github.io/tools/library/ → **Edit
 | Make private | Hidden from the public listings; shown only in a browser holding the token (**Private** on the left). | Make public |
 | Remove | Copies the page folder and its library thumbnails to the private repo `jalulia/tools-archive` (`removed/<date>/<path>`, plus `records/<acc>.json`), then marks the record removed. It leaves the catalog and every listing, and `scripts/build-site.mjs` stops deploying its folder. | Restore, under **Removed** (Edit mode) |
 | Move to project | Sets the record's project. | Move again |
+| New project, rename, private project, delete | On the left while editing: + New project, or the pencil next to a project. A project can be deleted once it has nothing in it; a private project hides everything in it from Shared. | Edit again |
 | Title, kind, tags | Edited in the record's details (the small i on a card) while editing. | Edit again |
 
 Every save is one commit to `main` (message names the records), so the site is updated by the next deploy, about two
@@ -63,6 +64,7 @@ folders), `gallery/_build/build.mjs` and `set/index.html` (leave out archived an
 (reads `_shared/hidden.js`).
 
 ## Changelog
+- 3 · 2026-11-16 · Projects are edited in the CMS: new, rename, note, private, delete when empty (`projectDef` ops in `edits.json`).
 - 2 · 2026-11-15 · Top nav by kind (Library · Techniques · Examples · Templates · Galleries; Ledger and Audit only while
   editing; Shelves and Atoms still open by address); one header per project with the archived count as a link;
   one Family row; Refine (type, status, build) on the left in place of More filters; Mine / Shared switch; Undo after

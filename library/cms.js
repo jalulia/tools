@@ -58,7 +58,18 @@
       if (o.per && o.per[id]) for (k in o.per[id]) { if (o.per[id][k] == null) delete cur[k]; else cur[k] = o.per[id][k]; }
       if (Object.keys(cur).filter(function (x) { return x !== 'at'; }).length) { cur.at = at; E.records[id] = cur; } else delete E.records[id];
     });
-    E.log.push({ at: at, op: o.op, ids: o.ids, patch: o.patch, note: o.note || undefined, by: 'cms' });
+    // a project: { id, set: { title, private, note } } adds or changes it; { id, drop: true } deletes it (only when empty)
+    if (o.projectDef) {
+      var P = E.projects = E.projects || [], d = o.projectDef, i = -1;
+      P.forEach(function (x, j) { if (x.id === d.id) i = j; });
+      if (d.drop) { if (i >= 0) P.splice(i, 1); }
+      else {
+        var cur = i >= 0 ? P[i] : { id: d.id };
+        for (var k in d.set) { if (d.set[k] == null || d.set[k] === false || d.set[k] === '') delete cur[k]; else cur[k] = d.set[k]; }
+        if (i < 0) { var at2 = -1; P.forEach(function (x, j) { if (!x.private && !x.retiring) at2 = j; }); P.splice(cur.private || cur.retiring ? P.length : at2 + 1, 0, cur); }
+      }
+    }
+    E.log.push({ at: at, op: o.op, ids: o.ids, patch: o.patch, project: o.projectDef || undefined, note: o.note || undefined, by: 'cms' });
   }
 
   /** Saves one op as one commit. Retries when the file moved under us. Resolves the commit sha. */

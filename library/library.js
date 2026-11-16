@@ -254,14 +254,51 @@
     base().forEach(function (r) { if (match(r, 'project', tk)) { counts[r.project] = (counts[r.project] || 0) + 1; all++; } });
     var cur = S.f.project[0] || '';
     function row(id, title, n, note) {
-      return '<button type="button" class="fv pj' + (n ? '' : ' zero') + '" data-proj="' + e(id) + '" aria-pressed="' + (cur === id) + '"' + (note ? ' title="' + e(note) + '"' : '') + '><span></span><span class="lb">' + e(title) + '</span><span class="ct">' + n + '</span></button>';
+      if (ED.on && ED.pjf && ED.pjf.id === id) return pjForm(PROJ[id]);
+      var b = '<button type="button" class="fv pj' + (n ? '' : ' zero') + '" data-proj="' + e(id) + '" aria-pressed="' + (cur === id) + '"' + (note ? ' title="' + e(note) + '"' : '') + '><span></span><span class="lb">' + e(title) + '</span><span class="ct">' + n + '</span></button>';
+      return ED.on && id ? '<div class="pjrow">' + b + '<button type="button" class="pjed" data-pjedit="' + e(id) + '" title="Rename, make private, or delete ' + e(title) + '" aria-label="Edit project ' + e(title) + '">' + PEN_SVG + '</button></div>' : b;
     }
     var pub = CMSD.projects.filter(function (p) { return !p.private && !p.retiring; }), prv = CMSD.projects.filter(function (p) { return p.private; }), ret = CMSD.projects.filter(function (p) { return p.retiring && !p.private; });
-    var h = '<section class="fg pjs"><h2><span class="k">Projects</span></h2><div class="fvs">' + row('', 'All', all) + pub.map(function (p) { return row(p.id, p.title, counts[p.id] || 0, p.note); }).join('') + '</div></section>';
+    var h = '<section class="fg pjs"><h2><span class="k">Projects</span></h2><div class="fvs">' + row('', 'All', all) + pub.map(function (p) { return row(p.id, p.title, counts[p.id] || 0, p.note); }).join('') +
+      (ED.on ? (ED.pjf && ED.pjf.id === '' ? pjForm(null) : '<button type="button" class="pjnew" data-pjedit="">+ New project</button>') : '') + '</div></section>';
     if (mine() && prv.length) h += '<section class="fg pjs"><h2><span class="k">Private</span><span class="k only" title="Shown only in this browser, with your token">only you</span></h2><div class="fvs">' + prv.map(function (p) { return row(p.id, p.title, counts[p.id] || 0, p.note); }).join('') + '</div></section>';
     if (ret.length) h += '<section class="fg pjs ret"><h2><span class="k">Retiring</span></h2><div class="fvs">' + ret.map(function (p) { return row(p.id, p.title, counts[p.id] || 0, p.note); }).join('') + '</div></section>';
     return h;
   }
+  /* Projects are edited in place on the left while editing: new, rename, private, delete when empty. */
+  var PEN_SVG = '<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M2 10l.6-2.4L8.3 1.9l1.8 1.8L4.4 9.4zM7.4 2.8l1.8 1.8" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>';
+  function pjAll(id) { return R.filter(function (r) { return !r._gone && r.project === id; }).length; }
+  function pjForm(p) {
+    var n = p ? pjAll(p.id) : 0;
+    return '<form class="pjf" data-pjform="' + e(p ? p.id : '') + '"><input name="t" value="' + e(p ? p.title : '') + '" placeholder="Project name" aria-label="Project name" spellcheck="true">' +
+      '<input name="n" value="' + e(p && p.note || '') + '" placeholder="Note (optional)" aria-label="Note">' +
+      '<label class="pv"><input type="checkbox" name="p"' + (p && p.private ? ' checked' : '') + '> Private <small>only you see it</small></label>' +
+      '<div class="pjb"><button type="submit" class="act">' + (p ? 'Save' : 'Create') + '</button><button type="button" class="act" data-pjcancel>Cancel</button>' +
+      (p ? (n ? '<span class="nd" title="Move its ' + n + ' records to another project first">' + n + ' in it</span>' : '<button type="button" class="act danger" data-pjdrop="' + e(p.id) + '">Delete</button>') : '') + '</div></form>';
+  }
+  function slug(t) { var b = String(t).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'project', id = b, i = 2; while (PROJ[id]) id = b + '-' + i++; return id; }
+  function saveProject(def, message) {
+    var prevP = CMSD.projects.slice(), prevMap = {}; for (var k in PROJ) prevMap[k] = PROJ[k];
+    applyProjectLocal(def); ED.pjf = null; render(); status('Saving: ' + message + '…');
+    ED.q = ED.q.then(function () {
+      return LibCMS.save({ op: def.drop ? 'project-delete' : 'project', ids: [], patch: {}, projectDef: def }, message).then(function (x) {
+        CMSD.projects = x.E.projects || CMSD.projects; syncProjects(); status('Saved: ' + message + '. On the site after the next build, about two minutes.', 'ok'); render();
+      }, function (err) { CMSD.projects = prevP; syncProjects(); render(); status('Not saved: ' + err.message, 'bad'); });
+    });
+  }
+  function applyProjectLocal(def) {
+    var P = CMSD.projects, i = -1; P.forEach(function (x, j) { if (x.id === def.id) i = j; });
+    if (def.drop) { if (i >= 0) P.splice(i, 1); }
+    else { var cur = i >= 0 ? P[i] : { id: def.id }; for (var k in def.set) { if (def.set[k] == null || def.set[k] === false || def.set[k] === '') delete cur[k]; else cur[k] = def.set[k]; } if (i < 0) { var at = -1; P.forEach(function (x, j) { if (!x.private && !x.retiring) at = j; }); P.splice(cur.private || cur.retiring ? P.length : at + 1, 0, cur); } }
+    syncProjects();
+  }
+  // the project list drives the rail, the facet, the selects and private visibility
+  function syncProjects() {
+    for (var k in PROJ) delete PROJ[k]; PROJ_IDS.length = 0;
+    CMSD.projects.forEach(function (p) { PROJ[p.id] = p; PROJ_IDS.push(p.id); });
+    R.forEach(function (r) { if (!PROJ[r.project]) return; var ed = r._ed || {}; if (PROJ[r.project].private && ed.visibility !== 'public') r.visibility = 'private'; else if (r.visibility === 'private' && ed.visibility !== 'private' && !PROJ[r.project].private) delete r.visibility; });
+  }
+
   /* One row above the cards: families (grouping tags), then whatever else is filtering, each removable. */
   function filterRow(tk) {
     var fc = {}; base().forEach(function (r) { if (match(r, 'family', tk) && r.family) fc[r.family] = (fc[r.family] || 0) + 1; });
@@ -650,6 +687,7 @@
   /* one record's edits, the same way library/_build/cms.mjs applies them on the next build */
   function applyEntry(r, ed) {
     if (!r || !ed) return;
+    r._ed = ed;
     if (ed.project && PROJ[ed.project]) r.project = ed.project;
     if (ed.kind && KIND3.indexOf(ed.kind) >= 0) r.kind3 = ed.kind;
     if (ed.title) r.title = ed.title;
@@ -751,7 +789,7 @@
     ED.status = ''; drawSel();
   }
   function cms(name) {
-    if (name === 'toggle') { if (!ED.unlocked) return drawPanel(); if (!ED.on && ED.shared) { ED.shared = false; try { localStorage.setItem('tools.view', 'mine'); } catch (err) {} } ED.on = !ED.on; ED.sel = {}; ED.confirm = null; ED.status = ''; drawCmsBtn(); return render(); }
+    if (name === 'toggle') { if (!ED.unlocked) return drawPanel(); if (!ED.on && ED.shared) { ED.shared = false; try { localStorage.setItem('tools.view', 'mine'); } catch (err) {} } ED.on = !ED.on; ED.sel = {}; ED.confirm = null; ED.status = ''; ED.pjf = null; drawCmsBtn(); return render(); }
     if (name === 'panel-close') { $pan.hidden = true; return; }
     if (name === 'view-mine' || name === 'view-shared') {
       ED.shared = name === 'view-shared'; try { localStorage.setItem('tools.view', ED.shared ? 'shared' : 'mine'); } catch (err) {}
@@ -818,6 +856,19 @@
       render(); overlay();
     }, function (err) { drawPanel('Could not reach GitHub: ' + err.message); });
   });
+  document.addEventListener('submit', function (ev) {
+    var f = ev.target.closest && ev.target.closest('[data-pjform]'); if (!f) return;
+    ev.preventDefault();
+    var id = f.getAttribute('data-pjform'), t = f.t.value.trim(), note = f.n.value.trim(), pv = f.p.checked, p = id ? PROJ[id] : null;
+    if (!t) { f.t.focus(); return; }
+    if (!p) return saveProject({ id: slug(t), set: { title: t, note: note, private: pv } }, 'New project ' + t + (pv ? ' (private)' : ''));
+    var set = {}, said = [];
+    if (t !== p.title) { set.title = t; said.push('rename ' + p.title + ' to ' + t); }
+    if (note !== (p.note || '')) { set.note = note; said.push('note'); }
+    if (pv !== !!p.private) { set.private = pv; said.push(pv ? 'make private' : 'make public'); }
+    if (!said.length) { ED.pjf = null; return drawRail(); }
+    saveProject({ id: id, set: set }, 'Project ' + p.title + ': ' + said.join(', '));
+  });
   $sel.addEventListener('submit', function (ev) {
     ev.preventDefault(); var i = $sel.querySelector('.tagf input'), t = i && i.value.trim(); if (!t) return;
     var rs = selected(), per = {}; rs.forEach(function (r) { var a = (r.tags || []).slice(); if (a.indexOf(t) < 0) a.push(t); per[r.id] = { tags: a }; });
@@ -836,6 +887,13 @@
   document.addEventListener('click', function (ev) {
     var pk = ED.on && ev.target.closest && !ev.target.closest('.nw') && ev.target.closest('[data-pick]');
     if (pk) { ev.preventDefault(); pick(pk.getAttribute('data-pick'), ev.shiftKey); return; }
+    var pe = ev.target.closest && ev.target.closest('[data-pjedit],[data-pjcancel],[data-pjdrop]');
+    if (pe) {
+      ev.preventDefault(); ev.stopPropagation();
+      if (pe.hasAttribute('data-pjcancel')) { ED.pjf = null; return drawRail(); }
+      if (pe.hasAttribute('data-pjdrop')) { var dp = PROJ[pe.getAttribute('data-pjdrop')]; if (dp && !pjAll(dp.id)) { if (S.f.project[0] === dp.id) S.f.project = []; saveProject({ id: dp.id, drop: true }, 'Delete the project ' + dp.title); } return; }
+      ED.pjf = { id: pe.getAttribute('data-pjedit') }; drawRail(); var fi = $rail.querySelector('.pjf input[name="t"]'); if (fi) { fi.focus(); fi.select(); } return;
+    }
     var t = ev.target.closest('[data-cms],[data-proj],[data-kind3],[data-restore],[data-nav],[data-goarch],[data-clearref],[data-clearfilt],[data-view],[data-f],[data-clear],[data-clearall],[data-unq],[data-d],[data-r],[data-close],[data-term],[data-scheme],[data-ts],[data-ls],[data-fd],[data-copy],[data-railtog]');
     if (!t) {
       // a link to another view is routed here, so it works where the host owns the address bar
