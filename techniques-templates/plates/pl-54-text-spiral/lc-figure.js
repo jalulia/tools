@@ -1,0 +1,2 @@
+/* PL-54 · Text spiral · drawn by its source page's own code: Mindgut-Worlds-V2.html #record-object. Dials and inks measured by _build/qa/lift-probe.mjs. See _build/engines/lift-canvas.js. */
+window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "sel": "#record-object", "w": 766, "h": 538, "ground": "#181a1c", "dials": ["ink", "type"], "inks": ["#d3ff5c", "#ff664b", "#181a1c"], "t0": 2, "crop": [0, 0, 1, 1]};

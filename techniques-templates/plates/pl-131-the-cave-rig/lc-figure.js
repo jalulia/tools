@@ -1,0 +1,2 @@
+/* PL-131 · The Cave Rig · drawn by its source page's own code: cave-rig.html #stage. Dials and inks measured by _build/qa/lift-probe.mjs. See _build/engines/lift-canvas.js. */
+window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/cave-rig.html", "sel": "#stage", "w": 840, "h": 473, "ground": "#000000", "dials": ["weight", "type", "moment"], "inks": ["#2a2457", "#58db6a", "#ddd5ea", "#110f17", "#e8e3f0", "#ffffff", "#f2d48a", "#efe9f6"], "t0": 2, "crop": [0, 0, 1, 1]};

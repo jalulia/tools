@@ -1,0 +1,2 @@
+/* PL-132 · Wall, turntable and projector · plan · drawn by its source page's own code: cave-rig.html #plan. Dials and inks measured by _build/qa/lift-probe.mjs. See _build/engines/lift-canvas.js. */
+window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/cave-rig.html", "sel": "#plan", "w": 270, "h": 270, "ground": "#110f17", "dials": ["weight", "type", "moment"], "inks": ["#f2d48a", "#9b94ab", "#4a4360", "#110f17", "#ddd5ea", "#2b2636", "#1c1924", "#efe9de"], "t0": 2, "crop": [0, 0, 1, 1]};

@@ -1,0 +1,2 @@
+/* PL-125 · Two views of one marker · drawn by its source page's own code: trirefringence_third_root.html #polar. Dials and inks measured by _build/qa/lift-probe.mjs. See _build/engines/lift-canvas.js. */
+window.LC_FIG={"src": "/tools/mindgut/files/Mindgut/outputs/trirefringence_third_root.html", "sel": "#polar", "w": 585, "h": 520, "ground": "#09090b", "dials": ["weight", "type"], "inks": ["#f59e0b", "#ffffff", "#7cc4ff", "#10b981", "#09090b"], "t0": 2, "crop": [0, 0, 1, 1]};

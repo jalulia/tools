@@ -1,0 +1,2 @@
+/* PL-145 · Information is surprise, and the unit is the bit · drawn by its source page's own code: shannon-1948.html #c2. Dials and inks measured by _build/qa/lift-probe.mjs. See _build/engines/lift-canvas.js. */
+window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/shannon-1948.html", "sel": "#c2", "w": 505, "h": 261, "ground": "#fafaf8", "dials": ["weight", "type"], "inks": ["#1f4bd8", "#15171c", "#d9dad8", "#60646c", "#ffffff"], "t0": 2, "crop": [0, 0, 1, 1]};

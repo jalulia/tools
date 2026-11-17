@@ -1,0 +1,2 @@
+/* PL-53 · Channel balance as waves · drawn by its source page's own code: Mindgut-Worlds-V2.html #record-art. Dials and inks measured by _build/qa/lift-probe.mjs. See _build/engines/lift-canvas.js. */
+window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "sel": "#record-art", "w": 636, "h": 557, "ground": "#101213", "dials": ["mark", "ink", "type", "moment"], "inks": ["#d3ff5c", "#ff664b", "#61676a", "#101213", "#252a24"], "t0": 2, "crop": [0, 0, 1, 1]};

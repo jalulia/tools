@@ -1,0 +1,2 @@
+/* PL-56 · One-point illusion · drawn by its source page's own code: A09_mir-from-one-place.html #cv. Dials and inks measured by _build/qa/lift-probe.mjs. See _build/engines/lift-canvas.js. */
+window.LC_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A09_mir-from-one-place.html", "sel": "#cv", "w": 1184, "h": 665, "ground": "#ffffff", "dials": ["weight", "mark", "ink", "type", "moment"], "inks": ["#111111", "#8c8c8c", "#ffffff", "#9933cc", "#f0f0f0", "#0088cc", "#cc6600", "#22a884"], "t0": 2, "crop": [0, 0, 1, 1]};

@@ -1,0 +1,2 @@
+/* PL-55 · Listening field · drawn by its source page's own code: Mindgut-Worlds-V2.html #presence. Dials and inks measured by _build/qa/lift-probe.mjs. See _build/engines/lift-canvas.js. */
+window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "sel": "#presence", "w": 709, "h": 370, "ground": "#121714", "dials": ["mark"], "inks": ["#d3ff5c", "#121714"], "t0": 2, "crop": [0, 0, 1, 1]};

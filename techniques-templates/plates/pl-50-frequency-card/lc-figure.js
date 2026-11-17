@@ -1,0 +1,2 @@
+/* PL-50 · Frequency card · drawn by its source page's own code: Mindgut-Worlds-V2.html #thumb-frequency. Dials and inks measured by _build/qa/lift-probe.mjs. See _build/engines/lift-canvas.js. */
+window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "sel": "#thumb-frequency", "w": 432, "h": 208, "ground": "#16171b", "dials": ["mark"], "inks": ["#88b82b", "#ff5032", "#ff6640", "#ff7046", "#ff6841", "#ff6e45", "#ff6b43", "#ff653f"], "t0": 2, "crop": [0, 0, 1, 1]};

@@ -1,0 +1,2 @@
+/* PL-147 · Bandwidth times the log of signal over noise · drawn by its source page's own code: shannon-1948.html #c8. Dials and inks measured by _build/qa/lift-probe.mjs. See _build/engines/lift-canvas.js. */
+window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/shannon-1948.html", "sel": "#c8", "w": 505, "h": 202, "ground": "#fafaf8", "dials": ["weight", "type"], "inks": ["#ffffff", "#15171c", "#e4452b", "#d9dad8", "#1f4bd8", "#60646c"], "t0": 2, "crop": [0, 0, 1, 1]};

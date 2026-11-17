@@ -1,0 +1,2 @@
+/* PL-37 · Resonance · ring moiré · drawn by its source page's own code: A08_skin-worlds.html #field > canvas:nth-child(1). Dials and inks measured by _build/qa/lift-probe.mjs. See _build/engines/lift-canvas.js. */
+window.LC_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A08_skin-worlds.html", "sel": "#field > canvas:nth-child(1)", "w": 1320, "h": 512, "ground": "#f5f7f0", "dials": ["weight", "mark", "ink", "type"], "inks": ["#eef2e7", "#0c0e0d", "#000000", "#126b3d", "#d9462f", "#6c46b8", "#151b17"], "t0": 2, "crop": [0, 0, 1, 1]};
