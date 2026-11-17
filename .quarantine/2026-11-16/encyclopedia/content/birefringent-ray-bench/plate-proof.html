@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="only light">
+<title>ENCYCLOPEDIA · A5 · Birefringent ray-bench (plate proof · E10)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: only light;
+  --ground:#FFFFFF; --ink:#15140F; --grey:#7E7D75; --grey-2:#B6B5AD;
+  --hair:rgba(18,16,12,.17); --hair-2:rgba(18,16,12,.08); --sunken:#F4F3EE;
+  --disp:'Geist','Helvetica Neue',Arial,sans-serif;
+  --text:'Geist','Helvetica Neue',Arial,sans-serif;
+  --mono:'Geist Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --accent:#C40021; --ok:#0A6E2F;
+  --ray-o:#087f97; --ray-e:#be3d72; --ray-mix:#d39316;
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; height:100%; background:#fff; }
+body{ font-family:var(--text); color:var(--ink); background:var(--ground); font-size:14px; line-height:1.68; overflow:hidden; -webkit-font-smoothing:antialiased; }
+button{ font:inherit; }
+
+/* GLOBAL NAV — breadcrumb shell as Julia specified: brand + section path + entry, one row.
+   The plate below carries body/meta/techniques on the left, drawing + log + related on the right. */
+.nav{ position:fixed; top:18px; left:18px; right:18px; height:44px; border:1px solid var(--hair); border-bottom:0; background:#fff; display:grid; grid-template-columns:auto 1fr auto auto; align-items:center; column-gap:22px; padding:0 18px; font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--grey); z-index:100; }
+.nav .brand{ color:var(--ink); font-weight:500; letter-spacing:.22em; }
+.nav .crumb{ color:var(--grey); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+.nav .crumb a{ color:var(--grey); text-decoration:none; }
+.nav .crumb a:hover{ color:var(--ink); }
+.nav .crumb .sep{ color:var(--grey-2); padding:0 8px; }
+.nav .crumb b{ color:var(--ink); font-weight:500; letter-spacing:.14em; text-transform:none; font-family:var(--disp); font-size:13px; }
+.nav .cov{ padding:3px 8px; font-size:9px; letter-spacing:.16em; background:var(--ok); color:#fff; white-space:nowrap; }
+.nav .cov.fail{ background:var(--accent); }
+.nav .pager{ display:flex; gap:2px; align-items:center; }
+.nav .pager button, .nav .pager .idx{ all:unset; cursor:pointer; padding:4px 10px; border:1px solid var(--hair); color:var(--grey); font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; }
+.nav .pager button:hover, .nav .pager .idx:hover{ color:var(--ink); border-color:var(--ink); }
+.nav .pager .idx{ margin:0 2px; }
+
+.plate{ position:fixed; top:62px; left:18px; right:18px; bottom:18px; border:1px solid var(--hair); display:grid; grid-template-columns:440px 1fr; grid-template-rows:minmax(0,1fr); background:#fff; }
+
+/* NOTES COLUMN */
+.notes{ border-right:1px solid var(--hair); padding:32px 32px 24px 32px; display:flex; flex-direction:column; gap:16px; min-width:0; min-height:0; overflow:hidden auto; scrollbar-width:none; }
+.notes::-webkit-scrollbar{ display:none; }
+.kicker{ font-family:var(--mono); font-size:10px; letter-spacing:.26em; text-transform:uppercase; color:var(--accent); margin:0; }
+.lede{ font-family:var(--disp); font-weight:600; font-size:clamp(20px,min(2vw,3.4vh),24px); line-height:1.14; letter-spacing:-.015em; margin:0; max-width:26ch; }
+.body{ font-size:12.5px; line-height:1.55; max-width:44ch; color:var(--ink); margin:0; }
+.body p{ margin:0 0 8px; } .body p:last-child{ margin:0; }
+.meta{ padding-top:12px; border-top:1px solid var(--hair); display:grid; grid-template-columns:1fr 1fr; gap:10px 18px; margin:0; }
+.meta h2{ margin:0 0 6px; font-family:var(--mono); font-weight:400; font-size:9.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--grey); }
+.meta .nm{ font-family:var(--disp); font-weight:600; font-size:15px; letter-spacing:-.01em; line-height:1.15; }
+.meta .ro{ font-family:var(--mono); font-size:11px; color:var(--grey); letter-spacing:.04em; margin-top:2px; line-height:1.5; }
+.meta .tags{ display:flex; flex-wrap:wrap; gap:4px 6px; margin-top:6px; }
+.meta .tags span{ font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; text-transform:lowercase; color:var(--ink); border:1px solid var(--hair); padding:2px 6px; cursor:pointer; user-select:none; }
+.meta .tags span:hover{ border-color:var(--ink); }
+.meta .tags span.on{ color:#fff; background:var(--ink); border-color:var(--ink); }
+.crossover{ margin-top:12px; padding-top:10px; border-top:1px dashed var(--hair); font-family:var(--mono); font-size:10px; letter-spacing:.02em; line-height:1.55; color:var(--grey); }
+.crossover b{ display:block; font-weight:500; letter-spacing:.16em; text-transform:uppercase; font-size:9.5px; color:var(--grey); margin-bottom:4px; }
+.crossover .row{ margin-bottom:2px; }
+.crossover .row em{ font-style:normal; color:var(--grey); }
+.crossover .row span{ color:var(--ink); }
+
+/* LOG rail — top-right of the figure, contextually next to the plate. Carries the scan
+   controls (Read/Replay/Spec) — Julia, E10 v4: "this should be by the log, top right." */
+.log{ position:absolute; right:24px; top:34px; width:264px; font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink); line-height:18px; font-variant-numeric:tabular-nums; z-index:3; }
+.log .log-ctl{ display:flex; gap:4px; margin-bottom:10px; flex-wrap:wrap; }
+.log .log-ctl button{ all:unset; cursor:pointer; font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--grey); border:1px solid var(--hair); padding:5px 8px; line-height:1; display:inline-flex; align-items:center; gap:5px; background:#fff; }
+.log .log-ctl button:hover, .log .log-ctl button:focus-visible{ color:var(--ink); border-color:var(--ink); }
+.log .log-ctl button.on{ color:#fff; background:var(--ink); border-color:var(--ink); }
+.log .log-ctl button .dot{ width:5px; height:5px; border-radius:50%; background:var(--grey-2); display:inline-block; }
+.log .log-ctl button.on .dot{ background:var(--accent); }
+.log .log-body{ transition:opacity .18s; }
+.log.off .log-body{ display:none; }
+.log .lh{ display:flex; justify-content:space-between; align-items:baseline; color:var(--grey); letter-spacing:.2em; margin-bottom:6px; }
+.log .rows .r{ display:grid; grid-template-columns:22px 40px 40px 36px 1fr; gap:0 8px; white-space:nowrap; cursor:pointer; outline:none; margin:0 -6px; padding:0 6px; transition:opacity .2s; }
+.log .rows .r span{ overflow:hidden; text-overflow:ellipsis; }
+.log .rows .r span:nth-child(n+2){ color:var(--grey); }
+.log .rows .r.on{ background:var(--hair-2); }
+.log .rows .r.on span:nth-child(5){ color:var(--ink); font-weight:500; text-transform:none; letter-spacing:.02em; }
+.log .rows .r.blank span{ color:var(--grey-2); }
+.log .read-tail{ margin-top:10px; padding-top:8px; border-top:1px solid var(--hair); text-transform:none; letter-spacing:0; font-family:var(--text); font-size:11.5px; line-height:1.45; color:var(--ink); min-height:34px; }
+.log .read-tail b{ display:block; font-family:var(--mono); font-weight:400; letter-spacing:.16em; text-transform:uppercase; font-size:9.5px; color:var(--grey); margin-bottom:3px; }
+
+/* (control buttons moved into the .log rail — see .log .log-ctl above) */
+
+/* FIGURE COLUMN — log rail rides on the right (top-right), related block on bottom-right. */
+.figure{ position:relative; min-width:0; min-height:0; }
+.cvwrap{ position:absolute; inset:0; padding:60px 316px 200px 60px; }
+.cvwrap svg{ display:block; width:100%; height:100%; }
+
+/* SVG semantic classes */
+.axis      { stroke:var(--grey-2); stroke-width:1; stroke-dasharray:2 5; }
+.constr    { stroke:var(--grey-2); stroke-width:1; fill:none; }
+.constr-d  { stroke:var(--grey-2); stroke-width:1; stroke-dasharray:3 3; fill:none; }
+.glass     { fill:none; stroke:var(--ink); stroke-width:1.4; }
+.glass-fill{ fill:var(--sunken); stroke:var(--ink); stroke-width:1.4; }
+.hatch     { stroke:var(--ink); stroke-width:.9; }
+.ray-inline{ fill:none; stroke:var(--ink); stroke-width:1.5; }
+.ray-o     { fill:none; stroke:var(--ray-o); stroke-width:2.2; }
+.ray-e     { fill:none; stroke:var(--ray-e); stroke-width:2.2; stroke-dasharray:7 4; }
+.ray-out   { fill:none; stroke:url(#recombined-spectrum); stroke-width:3; }
+.dim       { stroke:var(--grey); stroke-width:1; }
+.arrowfill { fill:var(--grey); }
+.pol-e     { fill:none; stroke:var(--ink); stroke-width:1.3; }
+.pol-dot   { fill:var(--ink); }
+.t-mono    { font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; fill:var(--grey); }
+.t-mono-k  { font-family:var(--mono); font-size:11px; letter-spacing:.08em; fill:var(--ink); }
+.t-serif-i { font-family:var(--disp); font-style:italic; font-weight:500; font-size:15px; fill:var(--ink); }
+.ray-o-txt { fill:var(--ray-o); font-weight:600; }
+.ray-e-txt { fill:var(--ray-e); font-weight:600; }
+.stage     { fill:var(--grey-2); }
+
+/* Highlight state — technique focus flashes red on the corresponding drawing elements */
+svg.hi-hairline-construction .axis,
+svg.hi-hairline-construction .constr,
+svg.hi-hairline-construction .constr-d{ stroke:var(--accent); }
+svg.hi-glass-body .glass-fill,
+svg.hi-glass-body .glass{ stroke:var(--accent); }
+svg.hi-glass-body .hatch{ stroke:var(--accent); }
+svg.hi-phase-key-ray .ray-o,
+svg.hi-phase-key-ray .ray-e,
+svg.hi-phase-key-ray .ray-out{ stroke-width:3.4; }
+svg.hi-phase-key-ray .ray-inline{ opacity:.35; }
+svg.hi-walk-off-geometry .walk-marker { stroke:var(--accent); }
+svg.hi-walk-off-geometry .ray-e{ stroke-width:3.4; }
+svg.hi-dimension-band .dim-group *{ stroke:var(--accent); }
+svg.hi-dimension-band .dim-group .arrowfill{ fill:var(--accent); stroke:none; }
+svg.hi-dimension-band .dim-group text{ fill:var(--accent); stroke:none; }
+svg.hi-polarization-state-glyph .pol-e{ stroke:var(--accent); }
+svg.hi-polarization-state-glyph .pol-dot{ fill:var(--accent); }
+svg.hi-stage-rule-legend .stage-rule{ stroke:var(--accent); }
+svg.hi-stage-rule-legend .stage{ fill:var(--accent); }
+
+/* Read head + point markers */
+.rh{ stroke:var(--accent); stroke-width:1; stroke-dasharray:1 3; opacity:.55; }
+.pt-lead{ stroke:var(--grey-2); stroke-width:.9; }
+.pt-box{ fill:#fff; stroke:var(--ink); stroke-width:1; }
+.pt-dot{ fill:var(--ink); }
+.pt-lbl{ font-family:var(--mono); font-size:8.5px; fill:var(--ink); letter-spacing:.08em; }
+.pt-on .pt-box{ fill:var(--accent); }
+.pt-on .pt-dot{ fill:#fff; }
+.pt-on .pt-lbl{ fill:var(--accent); font-weight:600; }
+.pt-blank .pt-box, .pt-blank .pt-dot, .pt-blank .pt-lbl, .pt-blank .pt-lead{ opacity:0; }
+
+/* (log rail moved into notes column — see .log-block above) */
+
+/* RELATED entries — replaces the old title block; the entry identity is in the top header now,
+   the technique chain in the chips + spec panel, so the bottom-right corner does discovery instead
+   of restating identity. Julia, E10-review: "is that the best use of that space." */
+.tb{ position:absolute; right:0; bottom:0; width:min(420px, calc(100% - 40px)); border-left:1px solid var(--hair); border-top:1px solid var(--hair); background:#fff; font-family:var(--mono); color:var(--grey); z-index:4; }
+.tb .th{ display:flex; justify-content:space-between; align-items:baseline; padding:9px 14px; border-bottom:1px solid var(--hair); font-size:9.5px; letter-spacing:.2em; text-transform:uppercase; }
+.tb .th b{ color:var(--ink); font-weight:500; letter-spacing:.2em; }
+.tb .th .count{ color:var(--grey-2); }
+.tb .rel{ display:block; }
+.tb .rel .r{ display:grid; grid-template-columns:1fr auto; align-items:baseline; column-gap:14px; padding:7px 14px; border-bottom:1px solid var(--hair-2); font-size:11px; cursor:pointer; text-decoration:none; color:inherit; }
+.tb .rel .r:last-child{ border-bottom:0; }
+.tb .rel .r:hover{ background:var(--hair-2); }
+.tb .rel .r .name{ color:var(--ink); font-family:var(--disp); font-size:12.5px; letter-spacing:-.005em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tb .rel .r .via{ font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--grey); white-space:nowrap; }
+.tb .rel .r .via.tech{ color:var(--accent); }
+.tb .rel .r .via.rel{ color:var(--ink); }
+.tb .rel .r .via.atom{ color:var(--grey); }
+
+/* Spec panel */
+.spec{ position:fixed; inset:74px 18px 18px auto; width:min(560px,60vw); background:#fff; border-left:1px solid var(--hair); border-top:1px solid var(--hair); z-index:50; display:flex; flex-direction:column; transform:translateX(102%); transition:transform .25s cubic-bezier(.2,.7,.2,1); }
+.spec.open{ transform:none; }
+.spec .sh{ display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--hair); font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--grey); }
+.spec .sh span b{ font-weight:400; color:var(--ink); }
+.spec .sh button{ all:unset; cursor:pointer; color:var(--grey); letter-spacing:.18em; text-transform:uppercase; font-size:10px; padding:4px 0 4px 14px; }
+.spec .sh button:hover{ color:var(--ink); }
+.spec pre{ margin:0; padding:18px; overflow:auto; font-family:var(--mono); font-size:11px; line-height:1.55; color:var(--ink); flex:1; white-space:pre; tab-size:2; }
+.spec pre .k{ color:var(--grey); }
+.spec pre .s{ color:var(--accent); }
+.spec pre .n{ color:#1E6FE0; }
+.spec pre .hl{ background:rgba(196,0,33,.09); display:block; }
+
+@media (max-width:960px){
+  body{ overflow:auto; }
+  .nav{ position:static; margin:12px 12px 0; }
+  .plate{ position:static; margin:0 12px 12px; display:block; top:auto; left:auto; right:auto; bottom:auto; }
+  .notes{ border-right:0; border-bottom:1px solid var(--hair); padding:22px; overflow:visible; }
+  .figure{ display:flex; flex-direction:column; }
+  .cvwrap{ position:relative; padding:24px; }
+  .tb{ grid-template-columns:1fr; border-left:0; font-size:8.5px; width:100%; }
+  .tb .mark{ grid-column:1 !important; }
+  .tb div{ white-space:normal; padding:6px 22px; border-right:0; }
+  .tb .method{ padding:6px 22px; }
+  .spec{ width:100vw; inset:0; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Encyclopedia navigation">
+  <span class="brand">Encyclopedia</span>
+  <span class="crumb" id="crumb">
+    <a href="#/explorations">Explorations</a><span class="sep">/</span><a href="#/section/optics">Optics</a><span class="sep">/</span><b id="crumbEntry">A5 · Birefringent ray-bench</b>
+  </span>
+  <span class="cov" id="cov">— coverage —</span>
+  <span class="pager">
+    <button type="button" title="Previous entry (,)">← A4</button>
+    <button type="button" class="idx" title="Index (/)">Index</button>
+    <button type="button" title="Next entry (.)">A6 →</button>
+  </span>
+</nav>
+
+<main class="plate">
+  <section class="notes" id="copy"></section>
+  <section class="figure" id="stage">
+    <div class="cvwrap">
+      <svg id="svg" viewBox="0 205 1040 315" role="img" aria-label="Birefringent ray-bench: source, polarizer, calcite crystal splitting ordinary and extraordinary rays, crossed analyzer, image plane">
+        <defs>
+          <linearGradient id="recombined-spectrum" x1="733" y1="284" x2="898" y2="284" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#087f97"/><stop offset=".46" stop-color="#7e4a9b"/><stop offset=".76" stop-color="#be3d72"/><stop offset="1" stop-color="#d39316"/>
+          </linearGradient>
+          <linearGradient id="image-spectrum" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#087f97"/><stop offset=".32" stop-color="#7760ad"/><stop offset=".62" stop-color="#be3d72"/><stop offset="1" stop-color="#e0a52c"/>
+          </linearGradient>
+        </defs>
+
+        <!-- optical axis -->
+        <line class="axis" x1="30" y1="300" x2="1010" y2="300"/>
+
+        <!-- SOURCE -->
+        <g>
+          <circle class="glass" cx="72" cy="300" r="15"/>
+          <g class="hatch">
+            <line x1="72" y1="277" x2="72" y2="270"/><line x1="72" y1="330" x2="72" y2="323"/>
+            <line x1="49" y1="300" x2="42" y2="300"/>
+            <line x1="56" y1="284" x2="51" y2="279"/><line x1="88" y1="284" x2="93" y2="279"/>
+            <line x1="56" y1="316" x2="51" y2="321"/><line x1="88" y1="316" x2="93" y2="321"/>
+          </g>
+          <text class="t-mono" x="72" y="248" text-anchor="middle">SOURCE</text>
+          <text class="t-mono" x="72" y="262" text-anchor="middle" style="fill:var(--grey-2)">unpolarized</text>
+        </g>
+        <line class="ray-inline" x1="88" y1="300" x2="210" y2="300"/>
+
+        <!-- POLARIZER P -->
+        <g>
+          <rect class="glass-fill" x="210" y="238" width="13" height="124" rx="1.5"/>
+          <g class="hatch"><line x1="216.5" y1="246" x2="216.5" y2="354"/></g>
+          <text class="t-mono-k" x="216" y="228" text-anchor="middle">P</text>
+          <text class="t-mono" x="216" y="382" text-anchor="middle">POLARIZER</text>
+          <text class="t-mono" x="216" y="395" text-anchor="middle" style="fill:var(--grey-2)">axis ‖ 0°</text>
+          <g transform="translate(283,300)">
+            <line class="pol-e" x1="0" y1="-16" x2="0" y2="16"/>
+            <path class="pol-e" d="M -4 -12 L 0 -17 L 4 -12"/>
+            <path class="pol-e" d="M -4 12 L 0 17 L 4 12"/>
+            <text class="t-mono" x="0" y="34" text-anchor="middle" style="fill:var(--grey-2)">E</text>
+          </g>
+        </g>
+        <line class="ray-inline" x1="223" y1="300" x2="372" y2="300"/>
+
+        <!-- CALCITE -->
+        <g>
+          <path class="glass-fill" d="M 372 246 L 560 246 L 528 356 L 340 356 Z"/>
+          <line class="constr-d" x1="392" y1="345" x2="512" y2="258"/>
+          <text class="t-serif-i" x="516" y="256">c</text>
+          <text class="t-mono-k" x="450" y="234" text-anchor="middle">CALCITE</text>
+          <text class="t-mono" x="450" y="376" text-anchor="middle" style="fill:var(--grey-2)">uniaxial (−) · optic axis c</text>
+        </g>
+
+        <!-- rays -->
+        <path class="ray-o" d="M 372 300 L 528 300 L 720 300"/>
+        <path class="ray-e" d="M 372 300 L 528 268 L 720 268"/>
+
+        <!-- polarization-state glyphs on rays -->
+        <g transform="translate(628,300)">
+          <circle class="pol-e" cx="0" cy="0" r="9"/><circle class="pol-dot" cx="0" cy="0" r="2.1"/>
+          <text class="t-mono ray-o-txt" x="0" y="26" text-anchor="middle">o · nₒ 1.658</text>
+        </g>
+        <g transform="translate(628,268)">
+          <line class="pol-e" x1="-11" y1="6" x2="11" y2="-6"/>
+          <path class="pol-e" d="M 6 -9 L 12 -7 L 9 -1"/>
+          <path class="pol-e" d="M -6 9 L -12 7 L -9 1"/>
+          <text class="t-mono ray-e-txt" x="0" y="-16" text-anchor="middle">e · nₑ 1.486</text>
+        </g>
+
+        <!-- walk-off marker -->
+        <path class="walk-marker constr" d="M 562 300 A 30 30 0 0 0 560 290"/>
+        <text class="t-mono" x="566" y="284" text-anchor="middle" style="fill:var(--grey-2)">ρ ≈ 6.2°</text>
+
+        <!-- ANALYZER A -->
+        <g>
+          <rect class="glass-fill" x="720" y="238" width="13" height="124" rx="1.5"/>
+          <g class="hatch">
+            <line x1="724" y1="284" x2="729" y2="284"/>
+            <line x1="722" y1="300" x2="731" y2="300"/>
+            <line x1="724" y1="316" x2="729" y2="316"/>
+          </g>
+          <text class="t-mono-k" x="726" y="228" text-anchor="middle">A</text>
+          <text class="t-mono" x="726" y="382" text-anchor="middle">ANALYZER</text>
+          <text class="t-mono" x="726" y="395" text-anchor="middle" style="fill:var(--grey-2)">axis ⟂ P · 90°</text>
+        </g>
+
+        <!-- recombined output -->
+        <line class="ray-out" x1="733" y1="284" x2="898" y2="284"/>
+
+        <!-- IMAGE PLANE -->
+        <g>
+          <rect x="896" y="240" width="9" height="120" fill="url(#image-spectrum)" opacity=".9"/>
+          <line class="glass" x1="900" y1="240" x2="900" y2="360"/>
+          <g class="constr">
+            <line x1="900" y1="240" x2="912" y2="228"/>
+            <line x1="900" y1="300" x2="912" y2="288"/>
+            <line x1="900" y1="360" x2="912" y2="348"/>
+          </g>
+          <text class="t-mono" x="900" y="382" text-anchor="middle">IMAGE PLANE</text>
+          <text class="t-mono-k" x="900" y="220" text-anchor="middle">Γ = d·Δn</text>
+        </g>
+
+        <!-- dimension band d -->
+        <g class="dim-group">
+          <line class="constr-d" x1="372" y1="356" x2="372" y2="430"/>
+          <line class="constr-d" x1="528" y1="356" x2="528" y2="430"/>
+          <line class="dim" x1="372" y1="422" x2="528" y2="422"/>
+          <path class="arrowfill" d="M 372 422 l 9 -3.4 v 6.8 z"/>
+          <path class="arrowfill" d="M 528 422 l -9 -3.4 v 6.8 z"/>
+          <text class="t-serif-i" x="450" y="416" text-anchor="middle">d</text>
+          <text class="t-mono" x="450" y="444" text-anchor="middle" style="fill:var(--grey-2)">retardation Γ = d (nₑ − nₒ)</text>
+        </g>
+
+        <!-- Δ -->
+        <g class="dim-group">
+          <line class="constr-d" x1="700" y1="300" x2="762" y2="300"/>
+          <line class="constr-d" x1="700" y1="268" x2="762" y2="268"/>
+          <line class="dim" x1="752" y1="300" x2="752" y2="268"/>
+          <path class="arrowfill" d="M 752 300 l -3.4 -9 h 6.8 z"/>
+          <path class="arrowfill" d="M 752 268 l -3.4 9 h 6.8 z"/>
+          <text class="t-serif-i" x="770" y="288">Δ</text>
+          <text class="t-mono" x="806" y="256" style="fill:var(--grey-2)">Δ exaggerated</text>
+        </g>
+
+        <!-- stage rule -->
+        <line class="stage-rule constr" x1="30" y1="486" x2="1010" y2="486"/>
+        <g text-anchor="middle">
+          <text class="t-mono stage" x="72"  y="506">I · EMIT</text>
+          <text class="t-mono stage" x="216" y="506">II · POLARIZE</text>
+          <text class="t-mono stage" x="450" y="506">III · SPLIT</text>
+          <text class="t-mono stage" x="726" y="506">IV · CROSS</text>
+          <text class="t-mono stage" x="900" y="506">V · IMAGE</text>
+        </g>
+
+        <!-- point markers + read head (drawn by JS) -->
+        <g id="points"></g>
+        <g id="readhead"></g>
+      </svg>
+    </div>
+    <div class="log" id="log">
+      <div class="log-ctl">
+        <button id="bRead" type="button" class="on" title="toggle scan on/off (r)"><span class="dot"></span>Read</button>
+        <button id="bReplay" type="button" title="re-run the sweep (space)">↻ Replay</button>
+        <button id="bSpec" type="button" title="open the machine-readable spec (S)">Spec ⇥</button>
+      </div>
+      <div class="log-body">
+        <div class="lh"><span>Track log</span><span id="ctr">0 / 10</span></div>
+        <div class="rows" id="rows"></div>
+        <div class="read-tail" id="readtail"><b>Read</b><span id="readtxt">Hover a point on the plate or a chip on the left.</span></div>
+      </div>
+    </div>
+    <div class="tb" id="tb"></div>
+  </section>
+</main>
+
+<aside class="spec" id="spec" aria-hidden="true">
+  <div class="sh"><span>Technique spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
+  <pre id="specpre"></pre>
+</aside>
+
+<script>
+window.STUDY = {
+  id: 'birefringent-ray-bench',
+  code: 'A5',
+  sheet: 5,
+  of: 173,
+  fig: '2.5',
+  series: 'EXPLORATIONS · OPTICS',
+  title: 'Birefringent ray-bench',
+  kicker: 'EXPLORATION · A5 · document-system',
+  lede: 'An apparatus for seeing seeing — the crossed-polariser bench under which interference colour exists at all.',
+  body: [
+    'A uniaxial calcite crystal splits one polarised ray into an ordinary ray and an extraordinary ray; the crossed analyser recombines their components. The plate draws the CONDITIONS under which interference colour exists at all — the framing is the specimen. Drawn, not reproduced. A persistent chromatic key (cyan solid, magenta dashed) distinguishes the two phase paths without inventing colour where none exists inside the crystal.'
+  ],
+  method: null,
+  source: 'Original — written for the archive by the Gardener (2026)',
+  ref: { w: 1040, h: 315 },
+  points: [
+    { u: 0.029, v: 0.302, d: 'GRND', label: 'Optical axis · dashed hairline, 2-5 pitch construction', t: 'hairline-construction', dir: [ 1, -1] },
+    { u: 0.069, v: 0.302, d: 'FORM', label: 'Source ring · glass body Ø 30, unpolarised radiating ticks', t: 'glass-body', dir: [-1, -1] },
+    { u: 0.272, v: 0.270, d: 'KEY',  label: 'E-field after P · vertical double arrow, axis ‖ 0°', t: 'polarization-state-glyph', dir: [ 1, -1] },
+    { u: 0.540, v: 0.270, d: 'TEX',  label: 'Walk-off angle ρ ≈ 6.2° · arc marker at crystal exit', t: 'walk-off-geometry', dir: [ 1, -1] },
+    { u: 0.596, v: 0.200, d: 'MARK', label: 'Extraordinary path · dashed #be3d72 (7-4), nₑ 1.486', t: 'phase-key-ray', dir: [ 1, -1] },
+    { u: 0.596, v: 0.302, d: 'MARK', label: 'Ordinary path · solid #087f97, nₒ 1.658', t: 'phase-key-ray', dir: [ 1,  1] },
+    { u: 0.698, v: 0.302, d: 'FORM', label: 'Crossed analyser A · axis ⟂ P, horizontal transmission hatch', t: 'glass-body', dir: [-1,  1] },
+    { u: 0.784, v: 0.251, d: 'MARK', label: 'Recombined image · gradient stroke o → e → mix', t: 'phase-key-ray', dir: [ 1, -1] },
+    { u: 0.433, v: 0.689, d: 'FLD',  label: 'Crystal thickness d · dashed extension, arrow band, italic serif', t: 'dimension-band', dir: [-1,  1] },
+    { u: 0.865, v: 0.956, d: 'TYPE', label: 'Stage rule · V · IMAGE mono beneath each apparatus centre', t: 'stage-rule-legend', dir: [-1, -1] }
+  ],
+  related: [
+    { entry: 'crx01-instrument-typology', title: 'CRX-01 · Instrument typology', relation: 'variant-of' },
+    { entry: 'c5-spec-sheet',             title: 'C5 · Spec sheet',              relation: 'technique-of' }
+  ],
+  crossover: {
+    also_uses: [
+      { id: 'hairline-construction', in: ['three-rays-not-two', 'two-poles-never-one', 'crx01-instrument-typology'] },
+      { id: 'phase-key-ray',         in: ['caustic-refraction-web'] },
+      { id: 'dimension-band',        in: ['crx01-instrument-typology'] }
+    ],
+    shares_atom: [
+      { atom: 'hairline',            count: 12 },
+      { atom: 'dimension-arrow',     count: 4 },
+      { atom: 'transmission-hatch',  count: 2 }
+    ]
+  },
+  spec: {
+    id: 'birefringent-ray-bench',
+    palette: {
+      ground: '#FFFFFF',
+      ink: '#15140F',
+      grey: '#7E7D75',
+      grey_2: '#B6B5AD',
+      sunken: '#F4F3EE',
+      ray_o: '#087f97',
+      ray_e: '#be3d72',
+      ray_mix: '#d39316',
+      spectrum_o_e_mix: ['#087f97', '#7e4a9b', '#be3d72', '#d39316'],
+      image_plane_gradient: ['#087f97', '#7760ad', '#be3d72', '#e0a52c']
+    },
+    ground: { colour: '#FFFFFF', tooth: 'none — technical-doc, no raster, no grain', area_ref: 1.00 },
+    units: 'SVG viewBox units, 0 205 1040 315 (1 u ≈ 1 CSS pixel at native render)',
+    techniques: [
+      {
+        id: 'hairline-construction', short: 'GRND', name: 'Hairline construction',
+        layer: 'GRAPHIC COMPOSITION', pass: 1,
+        params: {
+          axis:                { colour: '#B6B5AD', width: 1, dash: '2 5', use: 'optical axis, no arrowheads' },
+          construction_solid:  { colour: '#B6B5AD', width: 1, dash: 'none', use: 'short connectors, image-plate ticks' },
+          construction_dashed: { colour: '#B6B5AD', width: 1, dash: '3 3', use: 'invisible geometry — optic axis c, dimension extensions' }
+        },
+        implementation: 'Every geometric relationship the picture needs but the object does not embody is drawn once as a hairline in a low-contrast neutral. The optical axis runs the full plate width at 1 pt and a 2-5 pitch dash so it disappears against the eye and reappears at the read head.',
+        atoms: ['hairline', 'construction'],
+        produces: ['drafting silence — geometry present but never louder than the object']
+      },
+      {
+        id: 'glass-body', short: 'FORM', name: 'Optical glass body',
+        layer: 'GRAPHIC COMPOSITION', pass: 2,
+        params: {
+          fill: '#F4F3EE',
+          stroke: '#15140F',
+          stroke_width: 1.4,
+          corner_radius: 1.5,
+          polarizer_chamber: { rect: [210, 238, 13, 124], transmission_hatch: 'vertical line at midpoint x, from y+8 to y+8+108' },
+          analyzer_chamber:  { rect: [720, 238, 13, 124], transmission_hatch: 'three horizontal ticks at y=284, 300, 316; x from ±5 of midpoint' },
+          calcite_rhomb:     { path: 'M 372 246 L 560 246 L 528 356 L 340 356 Z', shear_deg: -16.3, shows_optic_axis: true },
+          source_ring:       { cx: 72, cy: 300, r: 15, radiating_ticks: 6, tick_len: 7 }
+        },
+        implementation: 'Each apparatus chamber is a filled rectangle or shear rhomb in the warm-neutral fill with a 1.4 pt near-black stroke. The transmission axis of each polarizer is hatched inside the chamber — vertical for P, horizontal for A. Nothing else lives inside a chamber; every notation about a chamber sits outside it.',
+        atoms: ['glass', 'filled-body', 'transmission-hatch'],
+        produces: ['apparatus reads as physical', 'crossed-polariser identity is visible from the hatch pattern alone']
+      },
+      {
+        id: 'phase-key-ray', short: 'MARK', name: 'Phase-key ray',
+        layer: 'GRAPHIC COMPOSITION', pass: 3,
+        params: {
+          ordinary:      { colour: '#087f97', width: 2.2, dash: 'none' },
+          extraordinary: { colour: '#be3d72', width: 2.2, dash: '7 4' },
+          recombined:    { gradient: [[0.00, '#087f97'], [0.46, '#7e4a9b'], [0.76, '#be3d72'], [1.00, '#d39316']], width: 3, dash: 'none' },
+          image_plate:   { gradient: [[0.00, '#087f97'], [0.32, '#7760ad'], [0.62, '#be3d72'], [1.00, '#e0a52c']], width: 9 },
+          encoding_rule: 'HUE encodes phase path, not literal beam colour inside the crystal. DASH preserves the encoding in B&W. Selection changes weight and opacity, never adds a colour.'
+        },
+        implementation: 'Two rays leave the crystal in a persistent two-key chromatic system: cyan solid for the ordinary path, magenta dashed for the extraordinary. Where the analyser recombines their components, the stroke carries a gradient through both hues to the recombination mid-tone. In B&W the dash still separates the two paths; the encoding survives print.',
+        atoms: ['dash-encoding', 'hue-key', 'gradient-stroke'],
+        produces: ['two invisible phase paths become legible without inventing coloured beams']
+      },
+      {
+        id: 'walk-off-geometry', short: 'TEX', name: 'Walk-off geometry',
+        layer: 'STRUCTURE', pass: 3,
+        params: {
+          entry: [372, 300],
+          inside_turn: [528, 268],
+          exit: [720, 268],
+          walk_off_angle_deg: 6.2,
+          angle_marker: { arc_start: [562, 300], radius: 30, arc_end: [560, 290], label: 'ρ ≈ 6.2°', label_offset: [6, -16] },
+          exaggeration_note: 'Δ (lateral displacement) is exaggerated for legibility; every plate that shows walk-off must annotate this beside the dimension arrow.'
+        },
+        implementation: 'The extraordinary ray enters the calcite at the same point as the ordinary but bends inside toward the optic axis, then leaves parallel to the entrance ray and displaced by Δ. The angle marker is a short arc at the exit; its numeric label sits above the arc. The diagram never lets the reader forget Δ is drawn larger than physical.',
+        atoms: ['angle-marker', 'annotated-exaggeration'],
+        produces: ['double refraction is diagrammatic and honest at once']
+      },
+      {
+        id: 'dimension-band', short: 'FLD', name: 'Dimension band',
+        layer: 'GRAPHIC COMPOSITION', pass: 4,
+        params: {
+          extension_line: { colour: '#B6B5AD', width: 1, dash: '3 3', length: 74 },
+          dim_line:       { colour: '#7E7D75', width: 1, dash: 'none' },
+          arrowhead:      { fill: '#7E7D75', size_x: 9, size_y: 6.8, style: 'filled triangle, pointing outward at each end' },
+          label:          { font: 'serif italic', size: 15, colour: '#15140F', pos: 'above the dim line at midpoint' },
+          caption:        { font: 'mono', size: 10.5, colour: '#B6B5AD', pos: '22 below the dim line' }
+        },
+        implementation: 'Two dashed hairline extensions drop from the object being dimensioned. A solid dimension line runs between them with a filled triangle at each end. The dimension letter (italic serif, single character) sits at the middle above the line; the formula or note (mono, low contrast) sits below.',
+        atoms: ['dashed-extension', 'dimension-arrow', 'serif-italic-letter'],
+        produces: ['engineering dimension band — object measured without being covered']
+      },
+      {
+        id: 'polarization-state-glyph', short: 'KEY', name: 'Polarization-state glyph',
+        layer: 'GRAPHIC COMPOSITION', pass: 4,
+        params: {
+          vertical_linear:    { double_arrow_half_len: 16, head: '4x5', label: 'E' },
+          out_of_page:        { circle_r: 9, circle_weight: 1.3, dot_r: 2.1 },
+          in_principal_plane: { slanted_half_len: 12, dy_dx: -0.55, head: '6x3' },
+          colour: '#15140F',
+          label_offset: 34
+        },
+        implementation: 'At each stage where the polarization state is knowable, a compact glyph names it — a vertical double-arrow after P, a dot-in-circle on the ordinary ray, a slanted double-arrow on the extraordinary. Each glyph carries a mono E label if the state is not obvious from context.',
+        atoms: ['state-glyph', 'mono-e-label'],
+        produces: ['every arrow on the plate is a testable claim about the field']
+      },
+      {
+        id: 'stage-rule-legend', short: 'TYPE', name: 'Stage-rule legend',
+        layer: 'GRAPHIC COMPOSITION', pass: 5,
+        params: {
+          rule: { colour: '#B6B5AD', width: 1, from_x: 30, to_x: 1010, y: 486 },
+          labels: {
+            font: 'mono', size: 10.5, colour: '#B6B5AD', y: 506, letter_spacing: '.14em', text_anchor: 'middle',
+            stages: [
+              { x: 72,  text: 'I · EMIT' },
+              { x: 216, text: 'II · POLARIZE' },
+              { x: 450, text: 'III · SPLIT' },
+              { x: 726, text: 'IV · CROSS' },
+              { x: 900, text: 'V · IMAGE' }
+            ]
+          }
+        },
+        implementation: 'A single hairline rule sits below the drawing; a mono stage label rides beneath each apparatus centre, roman numeral + name. Reading the rule top-down, the bench and the process become one row.',
+        atoms: ['bottom-rule', 'roman-stage-label'],
+        produces: ['picture reads as a process, not a still life']
+      }
+    ],
+    pass_order: [
+      'optical axis + construction hairlines',
+      'chambers + calcite rhomb + source ring',
+      'rays + walk-off geometry',
+      'polarization state glyphs + dimension bands',
+      'stage rule + labels'
+    ],
+    notes: [
+      'All numbers measured in SVG viewBox units.',
+      'The two-key chromatic system MUST survive print: cyan solid vs magenta dashed carries the encoding without hue.',
+      'Δ is exaggerated for legibility; every plate that shows walk-off must annotate this.',
+      'No raster, no grain. The apparatus is the subject and the drafting language is the substance.'
+    ]
+  }
+};
+</script>
+
+<script>
+(function(){
+const S = window.STUDY;
+const esc = x => (x==null?'':String(x)).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const SVG = document.getElementById('svg');
+const VB = SVG.viewBox.baseVal;
+const uvToSvg = (u, v) => [ VB.x + u * VB.width, VB.y + v * VB.height ];
+
+/* ---------- COVERAGE CHECK (manifest-time equivalent) ---------- */
+const covered = new Set(S.points.map(p => p.t));
+const missing = S.spec.techniques.filter(t => !covered.has(t.id)).map(t => t.id);
+const orphan  = [...covered].filter(id => !S.spec.techniques.find(t => t.id === id));
+const cov = document.getElementById('cov');
+if (missing.length === 0 && orphan.length === 0) {
+  cov.textContent = `✓ Coverage · ${S.spec.techniques.length}/${S.spec.techniques.length} techniques pointed`;
+} else {
+  cov.classList.add('fail');
+  const bits = [];
+  if (missing.length) bits.push(`uncovered ${missing.join(', ')}`);
+  if (orphan.length)  bits.push(`orphan-point ${orphan.join(', ')}`);
+  cov.textContent = `✗ Coverage FAIL · ${bits.join(' · ')}`;
+}
+
+/* ---------- METHOD LINE ---------- */
+const method = S.method || S.spec.techniques.map(t => t.name).join(' · ');
+
+/* ---------- NOTES COLUMN ---------- */
+const tagsHTML = S.spec.techniques.map(t => `<span data-tid="${t.id}">${esc(t.id)}</span>`).join('');
+const alsoUses = (S.crossover && S.crossover.also_uses || []).filter(x => x.in && x.in.length);
+const sharesAtom = (S.crossover && S.crossover.shares_atom || []).filter(x => x.count > 0);
+const alsoUsesHTML   = alsoUses.map(x => `<em>${esc(x.id)}</em> <span>(${x.in.length})</span>`).join(' · ');
+const sharesAtomHTML = sharesAtom.map(x => `<em>${esc(x.atom)}</em> <span>(${x.count})</span>`).join(' · ');
+const crossoverEmpty = !alsoUsesHTML && !sharesAtomHTML;
+// Entry identity is rendered as a breadcrumb in the nav
+document.getElementById('crumbEntry').textContent = `${S.code} · ${S.title}`;
+
+document.getElementById('copy').innerHTML = `
+  <div class="body">${S.body.map(p => `<p>${p}</p>`).join('')}</div>
+  <div class="meta">
+    <div style="grid-column:1/3"><h2>Source</h2><div class="ro">${esc(S.source)}</div></div>
+    <div style="grid-column:1/3">
+      <h2>Techniques read</h2>
+      <div class="tags" id="tags">${tagsHTML}</div>
+      ${crossoverEmpty ? '' : `<div class="crossover">
+        <b>Crossover</b>
+        ${alsoUsesHTML   ? `<div class="row">Also uses ${alsoUsesHTML}</div>` : ''}
+        ${sharesAtomHTML ? `<div class="row">Shares atom ${sharesAtomHTML}</div>` : ''}
+      </div>`}
+    </div>
+  </div>`;
+
+/* ---------- RELATED BLOCK (bottom-right, replaces old title block) ---------- */
+// Assemble related entries from three sources: the entry's own related[] (relations like
+// variant-of, technique-of), spec.crossover.also_uses (shared technique-id), and
+// spec.crossover.shares_atom (shared atom). Dedupe by entry id.
+const relSeen = new Set();
+const relRows = [];
+(S.related||[]).forEach(r => {
+  if (relSeen.has(r.entry)) return;
+  relSeen.add(r.entry);
+  relRows.push({ entry: r.entry, title: r.title || r.entry, via: r.relation, kind: 'rel' });
+});
+(S.crossover && S.crossover.also_uses || []).forEach(x => {
+  (x.in||[]).forEach(eid => {
+    if (relSeen.has(eid)) return;
+    relSeen.add(eid);
+    relRows.push({ entry: eid, title: eid, via: `shares ${x.id}`, kind: 'tech' });
+  });
+});
+const relLimit = 5;
+const relShown = relRows.slice(0, relLimit);
+document.getElementById('tb').innerHTML = `
+  <div class="th"><b>Related</b><span class="count">${relRows.length}</span></div>
+  <div class="rel">
+    ${relShown.map(r => `<a class="r" href="#/entry/${esc(r.entry)}" title="${esc(r.title)} — ${esc(r.via)}">
+      <span class="name">${esc(r.title)}</span>
+      <span class="via ${esc(r.kind)}">${esc(r.via)}</span>
+    </a>`).join('')}
+  </div>`;
+
+/* ---------- POINT MARKERS ---------- */
+const pointsG = document.getElementById('points');
+S.points.forEach((p, i) => {
+  const [x, y] = uvToSvg(p.u, p.v);
+  const lx = x + p.dir[0] * 34;
+  const ly = y + p.dir[1] * 22;
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.setAttribute('class', 'pt pt-blank');
+  g.setAttribute('data-idx', i);
+  g.style.cursor = 'pointer';
+  g.innerHTML =
+    `<line class="pt-lead" x1="${x}" y1="${y}" x2="${lx}" y2="${ly}"/>` +
+    `<rect class="pt-box" x="${lx - 8}" y="${ly - 8}" width="16" height="16"/>` +
+    `<rect class="pt-dot" x="${lx - 1.6}" y="${ly - 1.6}" width="3.2" height="3.2"/>` +
+    `<text class="pt-lbl" x="${lx + (p.dir[0] >= 0 ? 12 : -12)}" y="${ly + 3.2}" text-anchor="${p.dir[0] >= 0 ? 'start' : 'end'}">${String(i+1).padStart(2,'0')}</text>`;
+  pointsG.appendChild(g);
+  g.addEventListener('click', () => selectPoint(i));
+  g.addEventListener('mouseenter', () => hoverPoint(i));
+});
+
+/* ---------- LOG ROWS ---------- */
+const rowsEl = document.getElementById('rows');
+S.points.forEach((p, i) => {
+  const row = document.createElement('div');
+  row.className = 'r blank';
+  row.dataset.idx = i;
+  row.tabIndex = 0;
+  row.innerHTML = `<span>${String(i+1).padStart(2,'0')}</span><span>${p.u.toFixed(3)}</span><span>${p.v.toFixed(3)}</span><span>${esc(p.d)}</span><span title="${esc(p.label)}">${esc(p.label)}</span>`;
+  row.addEventListener('click', () => selectPoint(i));
+  row.addEventListener('mouseenter', () => hoverPoint(i));
+  rowsEl.appendChild(row);
+});
+const rowEls = [...rowsEl.querySelectorAll('.r')];
+const pointEls = [...pointsG.querySelectorAll('.pt')];
+const ctrEl = document.getElementById('ctr');
+const logEl = document.getElementById('log');
+const readTxt = document.getElementById('readtxt');
+
+/* ---------- SPEC PANEL ---------- */
+const specEl = document.getElementById('spec');
+const specPre = document.getElementById('specpre');
+const specId = document.getElementById('specid');
+function paintSpec(hlId){
+  const json = JSON.stringify(S.spec, null, 2);
+  const lines = json.split('\n');
+  let out = '';
+  let inHl = false;
+  let hlDepth = 0;
+  for (const raw of lines) {
+    let ln = esc(raw);
+    ln = ln.replace(/&quot;([^&]+?)&quot;(:)/g, '<span class="k">&quot;$1&quot;</span>$2');
+    ln = ln.replace(/: (&quot;.*?&quot;)/g, ': <span class="s">$1</span>');
+    ln = ln.replace(/: (-?\d+(?:\.\d+)?)/g, ': <span class="n">$1</span>');
+    if (hlId) {
+      if (!inHl && raw.includes(`"id": "${hlId}"`)) {
+        inHl = true;
+        hlDepth = (raw.match(/^ */)||[''])[0].length;
+      }
+      if (inHl) {
+        out += `<span class="hl">${ln}</span>\n`;
+        const indent = (raw.match(/^ */)||[''])[0].length;
+        if (raw.trim().startsWith('}') && indent === hlDepth) inHl = false;
+      } else {
+        out += ln + '\n';
+      }
+    } else {
+      out += ln + '\n';
+    }
+  }
+  specPre.innerHTML = out;
+  specId.textContent = hlId || S.id;
+  if (hlId) {
+    const first = specPre.querySelector('.hl');
+    if (first) first.scrollIntoView({ block:'center' });
+  }
+}
+paintSpec();
+document.getElementById('bSpec').addEventListener('click', () => toggleSpec());
+document.getElementById('specclose').addEventListener('click', () => toggleSpec(false));
+document.getElementById('speccopy').addEventListener('click', () => {
+  navigator.clipboard.writeText(JSON.stringify(S.spec, null, 2));
+  const b = document.getElementById('speccopy');
+  const t = b.textContent; b.textContent = 'Copied ✓';
+  setTimeout(() => b.textContent = t, 1200);
+});
+function toggleSpec(open) {
+  const willOpen = (open === undefined) ? !specEl.classList.contains('open') : open;
+  specEl.classList.toggle('open', willOpen);
+}
+
+/* Tag chip interactions — Julia, E10 v4: hover previews the highlight; click locks it and
+   opens the spec panel. Second click clears. */
+let lockedTid = null;
+const tagsEl = document.getElementById('tags');
+tagsEl.addEventListener('mouseover', e => {
+  const s = e.target.closest('span[data-tid]'); if (!s) return;
+  if (lockedTid) return;                        // don't fight a locked selection
+  highlightSvg(s.dataset.tid);
+});
+tagsEl.addEventListener('mouseleave', () => {
+  if (lockedTid) return;
+  highlightSvg(null);
+});
+tagsEl.addEventListener('click', e => {
+  const s = e.target.closest('span[data-tid]'); if (!s) return;
+  const tid = s.dataset.tid;
+  if (lockedTid === tid) {                      // click the locked chip → unlock
+    lockedTid = null;
+    document.querySelectorAll('#tags span').forEach(x => x.classList.remove('on'));
+    highlightSvg(null);
+    paintSpec();
+    toggleSpec(false);
+  } else {                                      // click a chip → lock it
+    lockedTid = tid;
+    document.querySelectorAll('#tags span').forEach(x => x.classList.toggle('on', x === s));
+    highlightSvg(tid);
+    paintSpec(tid);
+    toggleSpec(true);
+  }
+});
+
+/* ---------- SVG HIGHLIGHT ---------- */
+function highlightSvg(tid){
+  SVG.classList.forEach(c => { if (c.startsWith('hi-')) SVG.classList.remove(c); });
+  if (tid) SVG.classList.add('hi-' + tid);
+}
+
+/* ---------- POINT SELECTION ---------- */
+let selIdx = -1;
+function hoverPoint(i){
+  rowEls.forEach((r, j) => r.classList.toggle('on', j === i));
+  const p = S.points[i];
+  readTxt.textContent = `${String(i+1).padStart(2,'0')} · ${p.d} — ${p.label}`;
+}
+function selectPoint(i){
+  selIdx = i;
+  const p = S.points[i];
+  rowEls.forEach((r, j) => r.classList.toggle('on', j === i));
+  pointEls.forEach((g, j) => g.classList.toggle('pt-on', j === i));
+  readTxt.textContent = `${String(i+1).padStart(2,'0')} · ${p.d} — ${p.label}`;
+  highlightSvg(p.t);
+  paintSpec(p.t);
+  document.querySelectorAll('#tags span').forEach(x => x.classList.toggle('on', x.dataset.tid === p.t));
+}
+
+/* ---------- READ TOGGLE (scan on/off) ---------- */
+let readOn = true;
+const readBtn = document.getElementById('bRead');
+const replayBtn = document.getElementById('bReplay');
+const svgPointsG = pointsG;
+function setRead(on){
+  readOn = on;
+  readBtn.classList.toggle('on', on);
+  logEl.classList.toggle('off', !on);
+  svgPointsG.style.display = on ? '' : 'none';
+  replayBtn.style.opacity = on ? '1' : '.35';
+  replayBtn.style.pointerEvents = on ? 'auto' : 'none';
+  if (on) reread(); else { rhEl.innerHTML = ''; }
+}
+readBtn.addEventListener('click', () => setRead(!readOn));
+
+/* ---------- READ HEAD SWEEP ---------- */
+const rhEl = document.getElementById('readhead');
+let sweptTo = -1;
+let sweepStart = 0;
+let sweepRAF = 0;
+const SWEEP_MS = 3800;
+function drawSweep(t){
+  if (!sweepStart) sweepStart = t;
+  const dt = t - sweepStart;
+  const prog = Math.min(dt / SWEEP_MS, 1);
+  const y = VB.y + prog * VB.height;
+  rhEl.innerHTML = `<line class="rh" x1="${VB.x}" y1="${y}" x2="${VB.x + VB.width}" y2="${y}"/>`;
+  let n = 0;
+  for (const p of S.points) if (VB.y + p.v * VB.height <= y) n++;
+  const newSwept = n - 1;
+  if (newSwept > sweptTo) {
+    sweptTo = newSwept;
+    ctrEl.textContent = `${sweptTo + 1} / ${S.points.length}`;
+    rowEls.forEach((r, j) => r.classList.toggle('blank', j > sweptTo));
+    pointEls.forEach((g, j) => g.classList.toggle('pt-blank', j > sweptTo));
+  }
+  if (prog < 1) sweepRAF = requestAnimationFrame(drawSweep);
+  else { rhEl.innerHTML = ''; }
+}
+function reread(){
+  cancelAnimationFrame(sweepRAF);
+  sweepStart = 0; sweptTo = -1;
+  ctrEl.textContent = `0 / ${S.points.length}`;
+  rowEls.forEach(r => { r.classList.add('blank'); r.classList.remove('on'); });
+  pointEls.forEach(g => { g.classList.add('pt-blank'); g.classList.remove('pt-on'); });
+  sweepRAF = requestAnimationFrame(drawSweep);
+}
+replayBtn.addEventListener('click', () => { if (readOn) reread(); });
+reread();
+
+/* ---------- KEYS ---------- */
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 's' || e.key === 'S') { e.preventDefault(); toggleSpec(); }
+  else if (e.key === 'r' || e.key === 'R') { e.preventDefault(); setRead(!readOn); }
+  else if (e.key === ' ')             { e.preventDefault(); if (readOn) reread(); }
+  else if (e.key === 'Escape')        { toggleSpec(false); highlightSvg(null); paintSpec(); lockedTid = null; document.querySelectorAll('#tags span').forEach(x => x.classList.remove('on')); }
+});
+})();
+</script>
+</body>
+</html>

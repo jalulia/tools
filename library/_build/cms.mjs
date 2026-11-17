@@ -24,7 +24,7 @@ export function readEdits(root) {
 }
 
 // A collection that is one piece of work names its project. Everything else is Studio unless its sources say otherwise.
-const BY_COLLECTION = { massive: 'massive', 'mad-money': 'mad-money', 'desktop-bo': 'desktop-bo', 'mode-mode': 'mode-mode', reliquary: 'reliquary', garden: 'garden', 'printed-matter': 'printed-matter', encyclopedia: 'encyclopedia' };
+const BY_COLLECTION = { massive: 'massive', 'mad-money': 'mad-money', 'desktop-bo': 'desktop-bo', 'mode-mode': 'mode-mode', reliquary: 'reliquary', garden: 'garden', 'printed-matter': 'printed-matter', encyclopedia: 'studio' }; // the Encyclopedia was retired 2026-11-16; what was kept is Studio unless moved
 // read from a T&T plate's lifted sources or an entry's text
 const BY_SOURCE = [[/\/mindgut\/|\bmindgut\b|\bhelix\b/i, 'mindgut'], [/massive/i, 'massive'], [/desktop[-_ ]?bo\b/i, 'desktop-bo'], [/\/garden\b/i, 'garden'], [/mad[-_ ]?money/i, 'mad-money']];
 

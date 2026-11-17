@@ -593,9 +593,11 @@ const resolves = (ref) => {
   if (type === 'atom') return atoms.has(key);
   return false;
 };
-const see = [];
+const see = [], retiredLinks = [];
 for (const l of XW.links) {
   const bad = [l.a, l.b].filter((x) => !resolves(x));
+  // a link to an Encyclopedia item that was not kept when it was retired (2026-11-16) is dropped, not a problem
+  if (bad.length && bad.every((x) => /^(record|technique|atom):enc[.:]/.test(x))) { retiredLinks.push(`${l.a} ↔ ${l.b}`); continue; }
   if (bad.length) { problems.push(`crosswalk.json: ${bad.join(', ')} does not resolve`); continue; }
   if (!XW.relations[l.relation]) problems.push(`crosswalk.json: unknown relation "${l.relation}"`);
   see.push(l);

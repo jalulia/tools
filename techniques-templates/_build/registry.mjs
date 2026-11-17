@@ -15,7 +15,11 @@ const root = process.cwd();
 const CHECK = process.argv.includes('--check'), PRIVATE = process.argv.includes('--private');
 const read = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
 const CAT = read(path.join(root, '..', 'library', 'catalog.json'));
-const GONE = new Set((CAT.cms && CAT.cms.gone_calls) || []), dropped = [], orphaned = [];
+const GONE = new Set((CAT.cms && CAT.cms.gone_calls) || []), dropped = [], orphaned = [], retiredEntries = [];
+// a lift that resolved in the last registry and no longer does was removed (CMS) or retired (the Encyclopedia):
+// it is dropped with a note. A lift that never resolved is still an error.
+const WAS = (() => { try { const old = JSON.parse(fs.readFileSync(path.join(root, 'registry.json'), 'utf8')); const m = new Set(); for (const e of old.entries || []) for (const l of e.lifts || []) if (l.record) m.add(l.call); return m; } catch { return new Set(); } })();
+for (const c of WAS) GONE.add(c);
 const MAP = read(path.join(root, '_build', 'registry-map.json'));
 const problems = [];
 
@@ -51,12 +55,17 @@ for (const [rec, ids] of Object.entries(MAP.study_uses || {})) {
 const entries = [];
 for (const [id, e] of Object.entries(MAP.entries)) {
   if (!MAP.families[e.family]) problems.push(`${id}: unknown family "${e.family}"`);
-  for (const k of e.members) claim(k, id);
-  const members = e.members.map(member);
+  // terms of the retired Encyclopedia (enc:, enc.read:) that were not kept are dropped (2026-11-16)
+  const retiredKeys = e.members.filter((k) => /^enc(\.read)?:/.test(k) && !terms.has(k)), liveKeys = e.members.filter((k) => !retiredKeys.includes(k));
+  for (const k of liveKeys) claim(k, id);
+  const members = liveKeys.map(member);
   // a lift whose record was removed in the library CMS is dropped, not an error (catalog.cms.gone_calls)
   const lifts = (e.lifts || []).filter((c) => { if (GONE.has(c) && !recByCall.get(c)) { dropped.push(`${id}: ${c}`); return false; } return true; }).map((c) => { const r = recByCall.get(c); if (!r) problems.push(`${id}: lift "${c}" is not a record call`); return r ? { call: c, record: r.id, title: r.title, href: r.href } : { call: c }; });
   const used = [...new Set([...members.flatMap((m) => m.used_in), ...(studyUses[id] || [])])];
-  if (!members.length && !lifts.length && !used.length) { if ((e.lifts || []).some((c) => GONE.has(c))) orphaned.push(id); else problems.push(`${id}: no member, lift or use`); } // its only examples were removed: kept, and listed
+  if (!members.length && !lifts.length && !used.length) {
+    if (retiredKeys.length) { retiredEntries.push(id); continue; } // it lived only in the Encyclopedia: it goes with it
+    if ((e.lifts || []).some((c) => GONE.has(c))) orphaned.push(id); else problems.push(`${id}: no member, lift or use`);
+  } // its only examples were removed: kept, and listed
   entries.push({
     id, name: e.name, family: e.family, kind: 'technique', liftable: true,
     aliases: e.members, members, lifts,
@@ -93,6 +102,7 @@ const registry = {
   unassigned_explorations: unassigned
 };
 
+if (retiredEntries.length) console.log('registry · ' + retiredEntries.length + ' technique(s) that lived only in the retired Encyclopedia left out: ' + retiredEntries.join(', '));
 if (orphaned.length) console.log('registry · ' + orphaned.length + ' technique(s) whose only examples were removed: ' + orphaned.join(', '));
 if (dropped.length) console.log('registry · ' + dropped.length + ' lift(s) to removed records dropped: ' + dropped.join(', '));
 if (problems.length) { console.error('registry · ' + problems.length + ' problem(s)\n  ' + problems.join('\n  ')); process.exit(1); }
