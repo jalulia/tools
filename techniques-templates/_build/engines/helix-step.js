@@ -35,8 +35,16 @@
      injected into the page reassigns them (with the shades each block face needs) before every draw. */
   var CRY = FIG.id === 'c-cryst';
   function mix(a, b, t) { var A = [1, 3, 5].map(function (i) { return parseInt(a.substr(i, 2), 16); }), B = [1, 3, 5].map(function (i) { return parseInt(b.substr(i, 2), 16); }); return '#' + A.map(function (v, i) { return Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0'); }).join(''); }
+  /* the robot is the brand character from the green landing page (A07 = the 16 Nov microsite): its colorway's inks
+     sit with the figure's, so the Color tab recolors it too. FIG.robot is the page's colorway index (0 Forest, 1 Violet). */
+  var BOT = FIG.robot == null ? null : FIG.robot;
+  var ROB = {
+    mindgut: [{ head: '#fbfcf7', brain: '#d0ec60', suit: '#126b3d', tip: '#d0ec60' }, { head: '#fbfcf7', brain: '#d9cdf7', suit: '#6c46b8', tip: '#d0ec60' }],
+    night: [{ head: '#fbfcf7', brain: '#d0ec60', suit: '#2f9a5c', tip: '#d0ec60' }, { head: '#fbfcf7', brain: '#d9cdf7', suit: '#b79cf2', tip: '#d0ec60' }],
+    cobalt: [{ head: '#f8f9fc', brain: '#93a8ea', suit: '#1b3bd4', tip: '#93a8ea' }, { head: '#f8f9fc', brain: '#c9d2f5', suit: '#0e1122', tip: '#93a8ea' }]
+  };
   var PAL = CRY ? function (id, label, k) { return { id: id, label: label, sw: [k.ground, k.ink, k.muted, k.accent, k.green], spot: [240, 240, 240], paper: k.ground, rule: mix(k.ground, k.ink, .16), inks: k }; }
-    : function (id, label, k) { return { id: id, label: label, sw: [k.paper, k.block, k.model, k.sun, k.line], spot: [20, 20, 20], paper: k.paper, rule: mix(k.paper, k.line, .16), inks: k }; };
+    : function (id, label, k) { if (BOT != null && ROB[id]) k.robot = ROB[id][BOT] || ROB[id][0]; return { id: id, label: label, sw: [k.paper, k.block, k.model, k.sun, k.line], spot: [20, 20, 20], paper: k.paper, rule: mix(k.paper, k.line, .16), inks: k }; };
   S.variants = CRY ? [
     PAL('mindgut', 'Mindgut', { ground: '#101311', ink: '#f5f7f0', muted: '#b9c3b1', accent: '#d0ec60', green: '#3fb36c' }),
     PAL('cobalt', 'Cobalt', { ground: '#0e1122', ink: '#eef0f6', muted: '#a9aec4', accent: '#93a8ea', green: '#1b3bd4' }),
@@ -47,15 +55,17 @@
     PAL('cobalt', 'Cobalt', { paper: '#f3f5f8', block: '#1b3bd4', model: '#f8f9fc', sun: '#93a8ea', line: '#0e1122', ember: '#ef4a2b', violet: '#0e1122' })
   ];
   S.variantLabel = 'Palette';
-  S.colorHint = 'Pick a palette; click an ink to change it. Each ink is one of the figure\u2019s own colors; block faces are shaded from it.';
+  S.colorHint = 'Pick a palette; click an ink to change it. Each ink is one of the figure\u2019s own colors; block faces are shaded from it.' + (BOT != null ? ' The robot\u2019s head, brain, suit and antenna tip are here too.' : '');
   function setInks(win, k) {
     if (CRY) { win.__CRY = { ink: k.ink, dim: k.muted, acc: k.accent, gy: k.green }; return; }
+    if (BOT != null && k.robot && win.__ROBOTS && win.__ROBOTS[BOT]) { var r = win.__ROBOTS[BOT], c = k.robot; r.head = c.head; r.brain = r.cupc = c.brain; r.suit = r.cup = r.curl = c.suit; r.tip = c.tip; }
     if (!win.__setInk) return;
     win.__setInk({ line: k.line, block: k.block, blockS: [k.block, mix(k.block, '#000000', .16), mix(k.block, '#000000', .32)], modelS: [k.model, mix(k.model, k.line, .1), mix(k.model, k.line, .2)],
       sun: k.sun, sunS: [k.sun, mix(k.sun, '#000000', .1), mix(k.sun, '#000000', .22)], litS: [mix(k.sun, '#ffffff', .72), mix(k.sun, '#ffffff', .55), mix(k.sun, '#ffffff', .4)],
       ember: k.ember, violet: k.violet, paper: k.paper, paleS: [mix(k.paper, k.line, .03), mix(k.paper, k.line, .06), mix(k.paper, k.line, .11)] });
   }
   var PATCH = [
+    ['var ROBOTS=[', 'var ROBOTS=window.__ROBOTS=['],
     ["GHO=['#f5f7f0','#f5f7f0','#eef2e7'];", "GHO=['#f5f7f0','#f5f7f0','#eef2e7'];window.__setInk=function(o){if(o.line){VOID=MIST=_kINK=o.line}if(o.block){COBALT=FOREST=o.block;_kYOU=o.blockS}if(o.modelS)_kMOD=o.modelS;if(o.sun){ACID=o.sun;LIVY=o.sunS;LIVM=o.litS}if(o.ember)EMBER=o.ember;if(o.violet)VIOLET=o.violet;if(o.paper){NIGHTP=SHEET=o.paper;PALE=o.paleS;GHO=[o.paper,o.paper,o.paleS[0]]}};"],
     ["ink='#f5f7f0',dim='#b9c3b1',acc='#d0ec60',GY='#3fb36c'", "ink=(window.__CRY||{}).ink||'#f5f7f0',dim=(window.__CRY||{}).dim||'#b9c3b1',acc=(window.__CRY||{}).acc||'#d0ec60',GY=(window.__CRY||{}).gy||'#3fb36c'"],
     ["function plate(id,draw,opt){var cv=typeof id==='string'?$(id):id;if(!cv)return null;opt=opt||{};", "function plate(id,draw,opt){var cv=typeof id==='string'?$(id):id;if(!cv)return null;opt=opt||{};(window.__DRAWS=window.__DRAWS||{})[typeof id==='string'?id:(cv.id||'')]=draw;"],

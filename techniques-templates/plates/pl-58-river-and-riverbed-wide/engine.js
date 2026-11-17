@@ -1,4 +1,4 @@
-/* PL-58 · River and riverbed — engine. Appended to study.js by _build/plates.py ("engine" in plates.json); edit this file.
+/* PL-58 · River and riverbed — engine. The robots on the banks are the page's own: the Mindgut brand character from the green landing page, colorways on the Color tab. Appended to study.js by _build/plates.py ("engine" in plates.json); edit this file.
    The painted river from the A07 microsite runs here with its dials. The page's own script is read, its river code is
    given a parameter object (RVP) in place of its fixed numbers, and it runs in a hidden frame; its draw function paints
    straight into this plate. Nothing in the source file changes. Grain is laid at screen pixels, not page pixels. */
@@ -55,8 +55,27 @@
     dusk: { LR: ['#0d1630', '#1a2a4a', '#2c4660', '#4d6a78', '#7e9a8e', '#b8c9a8'], WR: ['#070b2a', '#141f5a', '#28388f', '#5d5fb8', '#d6b8e8'], CAN: ['#060c1c', '#0e1a30', '#1c3046', '#2f4c5e', '#5c7a7a'] },
     frost: { LR: ['#3a4a5c', '#5d7184', '#8aa0b2', '#b5c6d2', '#d9e3ea', '#f2f6f9'], WR: ['#14244a', '#25407a', '#3d64a8', '#7fa2d2', '#e2eef8'], CAN: ['#1e2c3a', '#33475a', '#56708a', '#8aa4ba', '#c6d6e2'] }
   };
-  var sw = function (k) { var s = SEASONS[k]; return s ? [s.LR[2], s.LR[4], (s.WR || ['#2857c0', '#2857c0', '#2857c0'])[2], s.CAN[1]] : ['#27744b', '#86b96b', '#2857c0', '#0e463b']; };
-  S.variants = [['park', 'Park'], ['late', 'Late summer'], ['dusk', 'Dusk'], ['frost', 'Frost']].map(function (v) { return { id: v[0], label: v[1], sw: sw(v[0]), spot: [20, 20, 20], paper: '#FFFFFF', rule: '#D9D9DC' }; });
+  /* the robots are the Mindgut brand character from the green landing page, in the page's seven colorways (ROBOTS) */
+  var CW = ['forest', 'violet', 'lilac', 'acid', 'mint', 'ink', 'plum'];
+  var ROBOTS = {
+    forest: { head: '#fbfcf7', brain: '#d0ec60', suit: '#126b3d', cup: '#126b3d', cupc: '#d0ec60', curl: '#126b3d', tip: '#d0ec60' },
+    violet: { head: '#fbfcf7', brain: '#d9cdf7', suit: '#6c46b8', cup: '#6c46b8', cupc: '#d9cdf7', curl: '#6c46b8', tip: '#d0ec60' },
+    lilac: { head: '#fbfcf7', brain: '#fbfcf7', suit: '#b79cf2', cup: '#6c46b8', cupc: '#b79cf2', curl: '#6c46b8', tip: '#d0ec60' },
+    acid: { head: '#fbfcf7', brain: '#fbfcf7', suit: '#d0ec60', cup: '#126b3d', cupc: '#d0ec60', curl: '#126b3d', tip: '#d0ec60' },
+    mint: { head: '#fbfcf7', brain: '#d0ec60', suit: '#8fdc9b', cup: '#0a4528', cupc: '#8fdc9b', curl: '#0a4528', tip: '#d0ec60' },
+    ink: { head: '#fbfcf7', brain: '#d0ec60', suit: '#151b17', cup: '#6c46b8', cupc: '#d0ec60', curl: '#151b17', tip: '#d0ec60' },
+    plum: { head: '#fbfcf7', brain: '#f0a9a0', suit: '#44297f', cup: '#b79cf2', cupc: '#44297f', curl: '#44297f', tip: '#d0ec60' }
+  };
+  /* the page's own inks: land, water and canopy ramps (dark to light), the two glows of the record, the flowers */
+  var PARK = { LR: ['#103a3c', '#17573f', '#27744b', '#4a955a', '#86b96b', '#cfdc8c'], WR: ['#0f1d5e', '#1a3996', '#2857c0', '#5a8fdc', '#cfe4f6'], CAN: ['#0b2a3c', '#0e463b', '#186645', '#3c8f57', '#a3ca78'] };
+  var SRC_REC = { you: ['#8fe6a6', '#e6fbd6'], model: ['#eef3ff', '#cdd6fb'] }, SRC_FL = ['#e79ab0', '#f4efc4', '#8f7ad6'];
+  function season(id) { var s = SEASONS[id] || {}; return { land: (s.LR || PARK.LR).slice(), water: (s.WR || PARK.WR).slice(), canopy: (s.CAN || PARK.CAN).slice() }; }
+  S.variants = [['park', 'Park'], ['late', 'Late summer'], ['dusk', 'Dusk'], ['frost', 'Frost']].map(function (v) {
+    var k = season(v[0]);
+    return { id: v[0], label: v[1], sw: [k.land[2], k.land[4], k.water[2], k.canopy[1], ROBOTS.violet.suit], spot: [20, 20, 20], paper: '#FFFFFF', rule: '#D9D9DC',
+      land: k.land, water: k.water, canopy: k.canopy, record: JSON.parse(JSON.stringify(SRC_REC)), flowers: SRC_FL.slice(), robots: JSON.parse(JSON.stringify(ROBOTS)) };
+  });
+  S.colorHint = 'Pick a season; click an ink to change it. The inks are the river\u2019s own: land, water and canopy ramps (dark to light), the two glows of the record, the flowers, and each robot colorway.';
   S.variantLabel = 'Season';
 
   /* ---- the river's code, given dials ---- */
@@ -85,14 +104,14 @@
       PATCH.forEach(function (q) { var n = sec.split(q[0]).length - 1; if (n !== 1) { missed.push(q[0]); return; } sec = sec.replace(q[0], q[1]); });
       sec = sec.replace('var RV={rec:', 'var RV=window.__RV={rec:').replace("plate('c-river',function(x,w,h,P,dt,d){", "plate('c-river',window.__RIVER=function(x,w,h,P,dt,d){");
       var head = "(function(){\n'use strict';";
-      var src = html.slice(0, a) + sec + html.slice(b);
+      var src = (html.slice(0, a) + sec + html.slice(b)).replace('var ROBOTS=[', 'var ROBOTS=window.__ROBOTS=[');
       if (src.indexOf(head) < 0) throw new Error('script head not found');
       src = src.replace(head, head + 'var RVP=window.RVP=window.RVP||{width:1,meander:1,sun:1,light:1,speck:1,fray:1,grass:1,current:1,bank:1,record:1,flowers:1,k:1};');
       src = src.replace(/<head>/i, '<head><base href="' + new URL(SRC, location.href).href + '">');
       if (missed.length) console.info('[PL-58] dials not wired:', missed);
       return new Promise(function (res, rej) {
         var f = document.createElement('iframe'); f.setAttribute('aria-hidden', 'true'); f.tabIndex = -1; f.title = 'river engine';
-        f.style.cssText = 'display:none'; f.onload = function () { var w = f.contentWindow; if (w && w.__RIVER && w.__RV) { w.__DEF = { LR: w.__RV.LR.slice(), WR: w.__RV.WR.slice(), CAN: w.__RV.CAN.slice() }; WIN = w; res(w); } else rej(new Error('river did not start')); };
+        f.style.cssText = 'display:none'; f.onload = function () { var w = f.contentWindow; if (w && w.__RIVER && w.__RV) { w.__DEF = { LR: w.__RV.LR.slice(), WR: w.__RV.WR.slice(), CAN: w.__RV.CAN.slice(), YOU: w.__RV.YOU.slice(), MOD: w.__RV.MOD.slice() }; WIN = w; res(w); } else rej(new Error('river did not start')); };
         f.srcdoc = src; document.body.appendChild(f);
       });
     });
@@ -102,7 +121,9 @@
   function setUp(w, A, V, dpr) {
     var G = A[TECH[0].id], R = A['river-form'], H = A['river-hand'], k = Math.max(1, dpr / Math.max(.5, G.grain));
     var P = w.RVP; P.width = R.width; P.meander = R.meander; P.sun = R.sun; P.light = R.light; P.speck = G.speck; P.fray = G.fray; P.flowers = G.flowers; P.record = G.record; P.grass = H.grass; P.current = H.current; P.bank = H.bank; P.k = k;
-    var sea = SEASONS[V && V.id] || null, D = w.__DEF; w.__RV.LR = (sea && sea.LR) || D.LR; w.__RV.WR = (sea && sea.WR) || D.WR; w.__RV.CAN = (sea && sea.CAN) || D.CAN;
+    var D = w.__DEF; V = V || {}; w.__RV.LR = V.land || D.LR; w.__RV.WR = V.water || D.WR; w.__RV.CAN = V.canopy || D.CAN;
+    if (V.record) { w.__RV.YOU = V.record.you || D.YOU; w.__RV.MOD = V.record.model || D.MOD; } if (V.flowers) w.__RV.FL = V.flowers;
+    if (V.robots && w.__ROBOTS) CW.forEach(function (n, i) { var r = w.__ROBOTS[i], c = V.robots[n]; if (r && c) Object.keys(c).forEach(function (f) { r[f] = c[f]; }); });
     var key = JSON.stringify([P, V && V.id]); if (key !== lastKey) { w.__RV.c = null; lastKey = key; }
     return k;
   }
