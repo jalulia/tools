@@ -39,7 +39,8 @@ window.STUDY={"id": "pl-157-the-parade", "code": "PL-157", "fig": "4.157", "titl
   var SRC = '/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A07_microsite.html', FW = 1440, FH = 189;
   var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
   var read = (S.spec.techniques || [])[0] || {};
-  var TECH = [{ id: 'robot-parade', short: 'PRD', name: 'Robot parade', layer: 1, pass: 1, atoms: ['sprite', 'walk cycle', 'ground line'],
+  var TID = read.id || 'sprite-scene';
+  var TECH = [{ id: TID, short: 'PRD', name: 'Robot parade', layer: 1, pass: 1, atoms: ['sprite', 'walk cycle', 'ground line'],
     params: {
       size: leaf(1, 0.5, 1.15, 0.01, 'Size', '×', 'Height of every figure against the strip. At 1 the tallest robot is the page’s 150 px.'),
       spacing: leaf(1, 0.6, 1.8, 0.01, 'Spacing', '×', 'Gap between one walker and the next. Smaller closes the line up; the line still wraps around the strip.'),
@@ -48,7 +49,7 @@ window.STUDY={"id": "pl-157-the-parade", "code": "PL-157", "fig": "4.157", "titl
       moment: leaf(3, 0, 60, 0.1, 'Moment', 's', 'Where in the walk the line is shown. 3 is the page’s still frame (its reduced-motion frame).')
     },
     implementation: (read.implementation || 'A character is drawn as a set of states around an idle hub and placed into scenes.') + ' Drawn by the source page’s own code: the robot is the brand character (the logomark head on a small body) in its seven colorways, walking with a hound, a hen and a Siamese.' }];
-  S.spec.techniques = TECH.concat((S.spec.techniques || []).filter(function (t) { return t.id !== (read.id || 'sprite-scene'); }));
+  S.spec.techniques = TECH.concat((S.spec.techniques || []).filter(function (t) { return t.id !== TID; }));
   S.spec.pass_order = ['ground', 'ground line', 'walkers · each placed by the clock, drawn from its own walk cycle'];
   S.body = [S.body[0], 'The parade is drawn here by its source page’s own code. Every robot is the Mindgut brand character from the green landing page, in the seven colorways the page defines. Dials set the size, spacing, size spread and pace of the line; Play walks it; the Color tab recolors the ground, the line, each colorway and the animals.'];
   S.paramsHint = 'Dials on the page’s own drawing. Multiples are of the page’s numbers.';
@@ -136,14 +137,14 @@ window.STUDY={"id": "pl-157-the-parade", "code": "PL-157", "fig": "4.157", "titl
     });
   }
   S.render = function (canvas, w, h, dpr, V, done, overrides) {
-    var A = window.ART.params(S.spec, overrides || {}), Q = A['robot-parade'] || {};
+    var A = window.ART.params(S.spec, overrides || {}), Q = A[TID] || {};
     load().then(function (E) { paint(E, canvas, canvas.getContext('2d'), V, Q, dpr, +Q.moment || 0); if (done) done(); },
       function (err) { console.error('[parade]', err); if (done) done(); });
     return false;
   };
   S.motion = function (canvas, w, h, dpr, V, t, ctx, overrides) {
     if (!WIN) { load().catch(function () {}); return; }
-    var A = window.ART.params(S.spec, overrides || {}), Q = A['robot-parade'] || {};
+    var A = window.ART.params(S.spec, overrides || {}), Q = A[TID] || {};
     paint(WIN, canvas, ctx || canvas.getContext('2d'), V, Q, dpr, (+Q.moment || 0) + t);
   };
 })(window.STUDY);
