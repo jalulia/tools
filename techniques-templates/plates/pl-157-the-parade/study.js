@@ -67,6 +67,9 @@ window.STUDY={"id": "pl-157-the-parade", "code": "PL-157", "fig": "4.157", "titl
   S.motionHint = 'Play walks the line at its pace.';
   S.refHint = 'The figure is its own reference: it runs from the page’s code. The source is named in the spec.';
   S.liveOnLoad = false; delete S.live;
+  /* the page's strip is 1440 × 189; filed at full width its walkers were 40 px tall on a phone. The plate shows a
+     3 : 1 window of the same line, so the figures read at any width; the line still wraps through it. */
+  if (S.panels && S.panels.length === 1) { var p0 = S.panels[0]; p0.h = +(p0.w / 3).toFixed(2); S.ref = { w: 1000, h: Math.round(p0.y * 2 + p0.h) }; }
 
   /* the inks. ROBOTS order is the page's: Forest, Violet, Lilac, Acid, Mint, Ink, Plum. */
   var CW = ['forest', 'violet', 'lilac', 'acid', 'mint', 'ink', 'plum'];
