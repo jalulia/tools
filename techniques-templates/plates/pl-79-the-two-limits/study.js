@@ -69,9 +69,9 @@ window.RD_FIG=[{"vb":[0,0,1000,300],"ground":[255,255,255],"prims":[{"t":"poly",
   /* the plate is cut to the figure: one panel takes the figure's own shape, so nothing of the old screenshot's caption and controls is left as empty sheet */
   if (S.panels.length === 1 && FIGS[0]) { var p0 = S.panels[0], vb0 = FIGS[0].vb; p0.h = +(p0.w * vb0[3] / vb0[2]).toFixed(2); S.ref = { w: 1000, h: Math.round(p0.y * 2 + p0.h) }; }
   var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
-  var read = (S.spec.techniques || [])[0] || {};
+  var read = (S.spec.techniques || [])[0] || {}, RID = read.id || 'reading-diagram';
   var TECH = [
-    { id: 'reading-diagram', short: 'DOAA', name: 'Diagram of an argument', layer: 1, pass: 1, atoms: ['line', 'box', 'arrow', 'label'],
+    { id: RID, short: RID === 'reading-diagram' ? 'DOAA' : 'DRW', name: read.name || 'Diagram of an argument', layer: 1, pass: 1, atoms: ['line', 'box', 'arrow', 'label'],
       params: {
         weight: leaf(1, 0.4, 3, 0.05, 'Line weight', '×', 'Every stroke of the figure at this multiple of its measured width.'),
         hand: leaf(0, 0, 4, 0.05, 'Hand', 'u', 'How far a line may wander from its ruled path, in figure units. 0 is ruled; higher redraws every line, box and pole by hand.'),
@@ -85,7 +85,7 @@ window.RD_FIG=[{"vb":[0,0,1000,300],"ground":[255,255,255],"prims":[{"t":"poly",
       },
       implementation: (read.implementation || 'Each claim of the text is drawn as boxes, poles and arrows with a numbered caption.') + ' The geometry is measured from the source figure; the engine redraws it with weight, hand, corners, arrowheads, hatched tone and type size as dials.' }
   ];
-  var keep = (S.spec.techniques || []).filter(function (t) { return t.id !== 'reading-diagram'; });
+  var keep = (S.spec.techniques || []).filter(function (t) { return t.id !== RID; });
   S.spec.techniques = TECH.concat(keep);
   S.spec.pass_order = ['ground · plate', 'tone · fills, solid or hatched', 'line · every stroke, ruled or by hand', 'arrowheads', 'labels'];
   S.body = [S.body[0], 'The figure is redrawn here from its own geometry, measured from the source page: every box, pole, arrow and label. The dials change how it is drawn: line weight, a ruled or hand line, box corners, arrowhead size, tone as solid fill or hatching, and type size.'];
@@ -116,7 +116,7 @@ window.RD_FIG=[{"vb":[0,0,1000,300],"ground":[255,255,255],"prims":[{"t":"poly",
   function lum(c) { return (.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) / 255; }
 
   S.render = function (canvas, w, h, dpr, V, done, overrides) {
-    var A = window.ART.params(S.spec, overrides || {}), Q = A['reading-diagram'];
+    var A = window.ART.params(S.spec, overrides || {}), Q = A[RID];
     var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
     var paper = V.paper || '#FFFFFF', VI = V.inks || [], GR = V.ground || paper;
     var rgbOf = function (h) { var n = parseInt(String(h).slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
@@ -136,16 +136,19 @@ window.RD_FIG=[{"vb":[0,0,1000,300],"ground":[255,255,255],"prims":[{"t":"poly",
         if (e.t === 'text') return;
         var pts = e.t === 'ell' ? ellPts(e) : (e.box ? roundRect(e.p, Math.max(e.rx || 0, Q.corner)) : e.p);
         var hp = wobble(pts, e.c, Q.hand, seed + n * 17);
-        var path = function (q, cl) { x.beginPath(); q.forEach(function (pt, j) { if (j) x.lineTo(pt[0], pt[1]); else x.moveTo(pt[0], pt[1]); }); if (cl) x.closePath(); };
+        var ring = function (q, cl) { q.forEach(function (pt, j) { if (j) x.lineTo(pt[0], pt[1]); else x.moveTo(pt[0], pt[1]); }); if (cl) x.closePath(); };
+        /* a compound path (letters, cut-outs, several strokes in one) carries its other rings in e.h, drawn with its own fill rule */
+        var path = function (q, cl) { x.beginPath(); ring(q, cl); if (e.h) e.h.forEach(function (r) { ring(r, cl); }); };
+        var rule = e.fr === 'evenodd' ? 'evenodd' : 'nonzero';
         /* tone: solid, hatched, or both */
         if (e.f && e.c) {
           var solid = 1 - Q.hatch, fo = (e.fo == null ? 1 : e.fo) * e.o;
           var light = e.fi === -1;   /* paper-colored fills stay solid: they knock out what is behind */
           var bbx = hp.reduce(function (m, q) { return [Math.min(m[0], q[0]), Math.min(m[1], q[1]), Math.max(m[2], q[0]), Math.max(m[3], q[1])]; }, [1e9, 1e9, -1e9, -1e9]);
           if (Math.min(bbx[2] - bbx[0], bbx[3] - bbx[1]) < Q.gap * 3) solid = 1;   /* a dot or a tick is too small to hatch: it stays a mark */
-          if (light || solid > 0) { path(hp, true); x.fillStyle = col(e.f, light ? fo : fo * solid, e.fi); x.fill(); }
+          if (light || solid > 0) { path(hp, true); x.fillStyle = col(e.f, light ? fo : fo * solid, e.fi); x.fill(rule); }
           if (!light && solid < 1) {
-            x.save(); path(hp, true); x.clip();
+            x.save(); path(hp, true); x.clip(rule);
             var xs = hp.map(function (q) { return q[0]; }), ys = hp.map(function (q) { return q[1]; }), mx = Math.min.apply(null, xs), Mx = Math.max.apply(null, xs), my = Math.min.apply(null, ys), My = Math.max.apply(null, ys);
             var cx = (mx + Mx) / 2, cy = (my + My) / 2, R = Math.hypot(Mx - mx, My - my) / 2 + 2, a = Q.angle * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a), g = Q.gap;
             x.strokeStyle = col(e.f, fo * Q.hatch, e.fi); x.lineWidth = Math.max(minW, Math.min(g * .45, 1.1 * Q.weight)); x.beginPath();
