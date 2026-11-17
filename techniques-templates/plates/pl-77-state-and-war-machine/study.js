@@ -27,3 +27,125 @@ window.STUDY={"id": "pl-77-state-and-war-machine", "code": "PL-77", "fig": "4.77
       +cells+'<script src="../../_shared/lift.js"><\/script></body></html>';
   };
 })(window.STUDY);
+
+/* PL-77 · State and war machine · the figure measured from jalulia.github.io/capschiz (31 primitives, viewBox 0 0 1000 320). Measured by a headless read of the live page, 2026-11-17; see _build/engines/reading-diagram.js. */
+window.RD_FIG=[{"vb":[0,0,1000,320],"ground":[255,255,255],"prims":[{"t":"text","x":250.23,"y":44,"a":"middle","txt":"THE STATE APPARATUS","fs":14,"fw":"600","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,42,42],"o":1},{"t":"text","x":250,"y":62,"a":"middle","txt":"interiority \u00b7 capture \u00b7 striation","fs":10,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"text","x":750,"y":44,"a":"middle","txt":"THE WAR MACHINE","fs":14,"fw":"600","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,42,42],"o":1},{"t":"text","x":750,"y":62,"a":"middle","txt":"exteriority \u00b7 flight \u00b7 smoothing","fs":10,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"poly","p":[[500,36],[500,296]],"c":false,"s":[22,22,26],"f":[0,0,0],"w":1.2,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[120,95],[380,95],[380,255],[120,255]],"c":true,"box":1,"s":[22,22,26],"f":[251,251,251],"w":1.3,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[163,95],[163,255]],"c":false,"s":[230,230,232],"f":[0,0,0],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[206,95],[206,255]],"c":false,"s":[230,230,232],"f":[0,0,0],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[249,95],[249,255]],"c":false,"s":[230,230,232],"f":[0,0,0],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[292,95],[292,255]],"c":false,"s":[230,230,232],"f":[0,0,0],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[335,95],[335,255]],"c":false,"s":[230,230,232],"f":[0,0,0],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[120,135],[380,135]],"c":false,"s":[230,230,232],"f":[0,0,0],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[120,175],[380,175]],"c":false,"s":[230,230,232],"f":[0,0,0],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[120,215],[380,215]],"c":false,"s":[230,230,232],"f":[0,0,0],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"ell","p":[],"c":true,"cx":200,"cy":135,"rx":13,"ry":13,"s":null,"f":[22,22,26],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"text","x":200.25,"y":118,"a":"middle","txt":"magician-king","fs":9,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"ell","p":[],"c":true,"cx":300,"cy":135,"rx":13,"ry":13,"s":[22,22,26],"f":null,"w":1.6,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"text","x":300.25,"y":118,"a":"middle","txt":"jurist-priest","fs":9,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"text","x":250,"y":245,"a":"middle","txt":"royal science: theorem, model, reproduce","fs":10,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"poly","p":[[600,110],[602.69,111.32],[605.4,112.6],[608.12,113.83],[610.87,115.02],[613.63,116.17],[616.42,117.27],[619.22,118.33],[622.04,119.33],[624.88,120.29],[627.73,121.19],[630.6,122.05],[633.49,122.85],[636.38,123.6],[639.3,124.29],[642.22,124.92],[645.16,125.5],[648.11,126.02],[651.07,126.48],[654.03,126.88],[657.01,127.22],[659.99,127.5],[662.98,127.72],[665.97,127.87],[668.96,127.97],[671.95,128],[674.95,127.97],[677.94,127.88],[680.93,127.72],[683.91,127.51],[686.89,127.23],[689.87,126.89],[692.84,126.49],[695.8,126.03],[698.74,125.52],[701.68,124.94],[704.61,124.31],[707.52,123.62],[710.42,122.87],[713.31,122.08],[716.18,121.22],[719.03,120.32],[721.88,119.38],[724.73,118.48],[727.59,117.61],[730.47,116.77],[733.35,115.97],[736.25,115.21],[739.15,114.48],[742.07,113.79],[744.99,113.15],[747.92,112.53],[750.86,111.96],[753.8,111.43],[756.76,110.94],[759.72,110.49],[762.68,110.07],[765.65,109.7],[768.63,109.37],[771.61,109.09],[774.59,108.84],[777.58,108.64],[780.57,108.47],[783.56,108.35],[786.55,108.27],[789.55,108.24],[792.54,108.24],[795.54,108.29],[798.53,108.38],[801.52,108.52],[804.51,108.69],[807.49,108.91],[810.48,109.17],[813.46,109.47],[816.43,109.81],[819.4,110.2],[822.36,110.62],[825.32,111.08],[828.27,111.59],[831.22,112.13],[834.15,112.72],[837.08,113.34],[840,114]],"c":false,"s":[216,216,220],"f":null,"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[600,150],[602.83,149.08],[605.68,148.21],[608.53,147.39],[611.41,146.61],[614.29,145.89],[617.19,145.21],[620.1,144.59],[623.02,144.02],[625.95,143.5],[628.89,143.04],[631.84,142.63],[634.79,142.27],[637.75,141.97],[640.72,141.72],[643.69,141.54],[646.66,141.4],[649.63,141.33],[652.61,141.31],[655.58,141.34],[658.56,141.44],[661.53,141.58],[664.5,141.79],[667.46,142.05],[670.42,142.37],[673.37,142.74],[676.32,143.17],[679.25,143.65],[682.18,144.18],[685.1,144.77],[688,145.41],[690.9,146.09],[693.78,146.83],[696.65,147.62],[699.5,148.46],[702.35,149.35],[705.17,150.28],[707.98,151.25],[710.78,152.28],[713.56,153.34],[716.32,154.45],[719.06,155.6],[721.8,156.77],[724.55,157.89],[727.32,158.97],[730.12,160],[732.93,160.97],[735.76,161.9],[738.6,162.76],[741.47,163.57],[744.35,164.33],[747.24,165.02],[750.15,165.65],[753.07,166.23],[756,166.74],[758.94,167.19],[761.89,167.57],[764.85,167.89],[767.81,168.15],[770.78,168.33],[773.75,168.46],[776.73,168.51],[779.7,168.5],[782.68,168.43],[785.65,168.29],[788.62,168.08],[791.58,167.8],[794.54,167.46],[797.49,167.06],[800.42,166.59],[803.35,166.07],[806.27,165.47],[809.17,164.82],[812.06,164.11],[814.93,163.34],[817.79,162.51],[820.63,161.63],[823.46,160.69],[826.26,159.7],[829.05,158.66],[831.82,157.57],[834.57,156.42],[837.29,155.24],[840,154]],"c":false,"s":[216,216,220],"f":null,"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[600,190],[602.75,191.16],[605.52,192.27],[608.31,193.33],[611.12,194.34],[613.95,195.29],[616.79,196.18],[619.66,197.02],[622.54,197.79],[625.44,198.51],[628.35,199.16],[631.27,199.75],[634.21,200.27],[637.16,200.73],[640.12,201.13],[643.08,201.45],[646.06,201.71],[649.03,201.9],[652.02,202.02],[655,202.07],[657.98,202.05],[660.97,201.96],[663.95,201.81],[666.92,201.58],[669.89,201.29],[672.85,200.93],[675.81,200.5],[678.75,200.01],[681.68,199.45],[684.6,198.83],[687.5,198.14],[690.39,197.39],[693.26,196.59],[696.12,195.72],[698.96,194.8],[701.78,193.82],[704.58,192.79],[707.36,191.7],[710.11,190.56],[712.85,189.37],[715.57,188.14],[718.26,186.86],[720.94,185.54],[723.63,184.25],[726.35,183.02],[729.09,181.84],[731.86,180.73],[734.66,179.69],[737.47,178.71],[740.31,177.79],[743.18,176.95],[746.06,176.18],[748.96,175.48],[751.88,174.86],[754.81,174.32],[757.76,173.85],[760.72,173.47],[763.69,173.17],[766.66,172.95],[769.65,172.82],[772.63,172.77],[775.61,172.8],[778.59,172.92],[781.57,173.12],[784.54,173.4],[787.5,173.77],[790.45,174.21],[793.39,174.74],[796.31,175.34],[799.22,176.03],[802.1,176.78],[804.97,177.61],[807.82,178.51],[810.64,179.48],[813.44,180.51],[816.21,181.61],[818.96,182.77],[821.69,183.99],[824.38,185.26],[827.05,186.59],[829.7,187.98],[832.31,189.41],[834.9,190.9],[837.47,192.43],[840,194]],"c":false,"s":[216,216,220],"f":null,"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[600,230],[602.88,229.25],[605.78,228.54],[608.68,227.87],[611.59,227.25],[614.51,226.66],[617.44,226.11],[620.37,225.6],[623.32,225.14],[626.27,224.72],[629.22,224.34],[632.18,224.01],[635.15,223.72],[638.11,223.47],[641.09,223.26],[644.06,223.1],[647.04,222.99],[650.01,222.92],[652.99,222.89],[655.97,222.91],[658.95,222.97],[661.93,223.07],[664.9,223.22],[667.87,223.42],[670.84,223.66],[673.81,223.94],[676.77,224.26],[679.73,224.63],[682.68,225.04],[685.62,225.5],[688.56,225.99],[691.49,226.53],[694.41,227.11],[697.32,227.73],[700.23,228.39],[703.12,229.09],[706.01,229.83],[708.88,230.6],[711.75,231.42],[714.6,232.27],[717.45,233.17],[720.28,234.09],[723.11,235.01],[725.96,235.88],[728.82,236.71],[731.69,237.5],[734.58,238.24],[737.47,238.93],[740.38,239.58],[743.3,240.18],[746.23,240.74],[749.16,241.24],[752.11,241.69],[755.06,242.1],[758.01,242.46],[760.98,242.76],[763.95,243.02],[766.92,243.22],[769.89,243.37],[772.87,243.47],[775.85,243.52],[778.83,243.52],[781.8,243.46],[784.78,243.35],[787.76,243.19],[790.73,242.98],[793.69,242.72],[796.66,242.41],[799.61,242.05],[802.56,241.64],[805.51,241.18],[808.44,240.67],[811.37,240.11],[814.28,239.5],[817.19,238.85],[820.08,238.15],[822.97,237.4],[825.84,236.61],[828.7,235.77],[831.55,234.89],[834.38,233.97],[837.2,233.01],[840,232]],"c":false,"s":[216,216,220],"f":null,"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"ell","p":[],"c":true,"cx":650,"cy":150,"rx":4,"ry":4,"s":null,"f":[138,42,42],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"ell","p":[],"c":true,"cx":690,"cy":135,"rx":4,"ry":4,"s":null,"f":[138,42,42],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"ell","p":[],"c":true,"cx":720,"cy":165,"rx":4,"ry":4,"s":null,"f":[138,42,42],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"ell","p":[],"c":true,"cx":760,"cy":145,"rx":4,"ry":4,"s":null,"f":[138,42,42],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"ell","p":[],"c":true,"cx":800,"cy":170,"rx":4,"ry":4,"s":null,"f":[138,42,42],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"ell","p":[],"c":true,"cx":840,"cy":150,"rx":4,"ry":4,"s":null,"f":[138,42,42],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"text","x":750,"y":250,"a":"middle","txt":"nomad science: problem, follow, vary","fs":10,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":500,"y":290,"a":"middle","txt":"the State perpetually tries to capture the machine; the machine perpetually escapes","fs":10,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1}]}];
+
+/* reading-diagram · shared engine for the "Diagram of an argument" plates (PL-67…80). Appended to each plate's study.js
+   by _build/plates.py after that plate's rd-figure.js (window.RD_FIG: the figure measured from jalulia.github.io/capschiz
+   by its own geometry: every line, box, pole, arrow and label, in the figure's viewBox units).
+   The engine redraws that geometry with the technique's dials: how heavy the lines are, how ruled or hand-drawn,
+   how round the boxes, how big the arrowheads, whether tones are solid or hatched, and how large the type. */
+(function (S) {
+  'use strict';
+  var FIGS = window.RD_FIG || [];
+  /* the plate is cut to the figure: one panel takes the figure's own shape, so nothing of the old screenshot's caption and controls is left as empty sheet */
+  if (S.panels.length === 1 && FIGS[0]) { var p0 = S.panels[0], vb0 = FIGS[0].vb; p0.h = +(p0.w * vb0[3] / vb0[2]).toFixed(2); S.ref = { w: 1000, h: Math.round(p0.y * 2 + p0.h) }; }
+  var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
+  var read = (S.spec.techniques || [])[0] || {};
+  var TECH = [
+    { id: 'reading-diagram', short: 'DOAA', name: 'Diagram of an argument', layer: 1, pass: 1, atoms: ['line', 'box', 'arrow', 'label'],
+      params: {
+        weight: leaf(1, 0.4, 3, 0.05, 'Line weight', '×', 'Every stroke of the figure at this multiple of its measured width.'),
+        hand: leaf(0, 0, 4, 0.05, 'Hand', 'u', 'How far a line may wander from its ruled path, in figure units. 0 is ruled; higher redraws every line, box and pole by hand.'),
+        corner: leaf(0, 0, 24, 0.5, 'Box corners', 'u', 'Corner radius of every box, in figure units. A box drawn round in the source keeps at least its own.'),
+        arrow: leaf(1, 0.4, 3, 0.05, 'Arrowheads', '×', 'Size of the arrowheads on directed lines, as a multiple of a head 7 strokes long.'),
+        hatch: leaf(0, 0, 1, 0.01, 'Tone as hatching', '', '0 fills every toned shape solid; 1 lays the same tone as hatching; between, both.'),
+        gap: leaf(4, 1.5, 14, 0.25, 'Hatch spacing', 'u', 'Distance between hatch lines, in figure units.'),
+        angle: leaf(45, 0, 180, 1, 'Hatch angle', '°', 'Direction of the hatch lines.'),
+        type: leaf(1, 0.7, 1.6, 0.01, 'Type size', '×', 'Every label at this multiple of its measured size, from its own anchor.'),
+        seed: leaf(7, 1, 99, 1, 'Seed', '', 'Re-rolls the hand: where each line wanders.')
+      },
+      implementation: (read.implementation || 'Each claim of the text is drawn as boxes, poles and arrows with a numbered caption.') + ' The geometry is measured from the source figure; the engine redraws it with weight, hand, corners, arrowheads, hatched tone and type size as dials.' }
+  ];
+  var keep = (S.spec.techniques || []).filter(function (t) { return t.id !== 'reading-diagram'; });
+  S.spec.techniques = TECH.concat(keep);
+  S.spec.pass_order = ['ground · plate', 'tone · fills, solid or hatched', 'line · every stroke, ruled or by hand', 'arrowheads', 'labels'];
+  S.body = [S.body[0], 'The figure is redrawn here from its own geometry, measured from the source page: every box, pole, arrow and label. The dials change how it is drawn: line weight, a ruled or hand line, box corners, arrowhead size, tone as solid fill or hatching, and type size.'];
+  S.paramsHint = 'How the diagram is drawn. Figure units are the source figure’s own.';
+  S.liveOnLoad = false; delete S.live;
+
+  /* seeded smooth noise along a line */
+  function hash(n, s) { var h = Math.imul((n | 0) ^ Math.imul(s | 0, 0x9E3779B1), 0x85EBCA6B); h ^= h >>> 13; h = Math.imul(h, 0xC2B2AE35); h ^= h >>> 16; return (h >>> 0) / 4294967296 * 2 - 1; }
+  function noise(x, s) { var i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return hash(i, s) * (1 - u) + hash(i + 1, s) * u; }
+  /* a polyline redrawn by hand: subdivided every ~5 units and pushed off its path along the normal */
+  function wobble(pts, closed, amt, seed) {
+    if (!amt) return pts;
+    var out = [], acc = 0, n = pts.length, segs = closed ? n : n - 1;
+    for (var k = 0; k < segs; k++) {
+      var A = pts[k], B = pts[(k + 1) % n], dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, m = Math.max(1, Math.ceil(L / 5));
+      for (var j = 0; j < m; j++) { var t = j / m, d = acc + L * t, o = noise(d / 22, seed) * amt + noise(d / 7, seed + 9) * amt * .35; out.push([A[0] + dx * t + nx * o, A[1] + dy * t + ny * o]); }
+      acc += L;
+    }
+    if (!closed) { var Z = pts[n - 1], o2 = noise(acc / 22, seed) * amt; var P = pts[n - 2] || Z, dx2 = Z[0] - P[0], dy2 = Z[1] - P[1], L2 = Math.hypot(dx2, dy2) || 1; out.push([Z[0] - dy2 / L2 * o2, Z[1] + dx2 / L2 * o2]); }
+    return out;
+  }
+  function roundRect(p, r) { /* p: 4 corners of a rect, clockwise from top-left */
+    var x0 = Math.min(p[0][0], p[2][0]), y0 = Math.min(p[0][1], p[2][1]), x1 = Math.max(p[0][0], p[2][0]), y1 = Math.max(p[0][1], p[2][1]); r = Math.min(r, (x1 - x0) / 2, (y1 - y0) / 2);
+    if (r <= 0.3) return p; var out = [], arc = function (cx, cy, a0) { for (var i = 0; i <= 6; i++) { var a = a0 + i / 6 * Math.PI / 2; out.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } };
+    arc(x1 - r, y0 + r, -Math.PI / 2); arc(x1 - r, y1 - r, 0); arc(x0 + r, y1 - r, Math.PI / 2); arc(x0 + r, y0 + r, Math.PI); return out;
+  }
+  function ellPts(e) { var out = [], n = Math.max(24, Math.min(96, Math.round((e.rx + e.ry) * .6))); for (var i = 0; i < n; i++) { var a = i / n * Math.PI * 2; out.push([e.cx + Math.cos(a) * e.rx, e.cy + Math.sin(a) * e.ry]); } return out; }
+  function lum(c) { return (.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) / 255; }
+
+  S.render = function (canvas, w, h, dpr, V, done, overrides) {
+    var A = window.ART.params(S.spec, overrides || {}), Q = A['reading-diagram'];
+    var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
+    var paper = V.paper || '#FFFFFF', pr = parseInt(paper.slice(1), 16), dark = lum([pr >> 16 & 255, pr >> 8 & 255, pr & 255]) < .45;
+    var col = function (c, a) { if (!c) return null; var r = c[0], g = c[1], b = c[2]; if (dark) { r = 255 - r; g = 255 - g; b = 255 - b; } return 'rgba(' + r + ',' + g + ',' + b + ',' + ((c.length > 3 ? c[3] : 1) * (a == null ? 1 : a)).toFixed(3) + ')'; };
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = paper; x.fillRect(0, 0, W, H);
+    S.panels.forEach(function (p, i) {
+      var F = FIGS[i]; if (!F) return;
+      var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, vb = F.vb, k = Math.min(bw / vb[2], bh / vb[3]), ox = bx + (bw - vb[2] * k) / 2 - vb[0] * k, oy = by + (bh - vb[3] * k) / 2 - vb[1] * k;
+      x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip();
+      if (F.ground && !dark) { x.fillStyle = col(F.ground); x.fillRect(bx, by, bw, bh); }
+      x.setTransform(k, 0, 0, k, ox, oy); x.lineJoin = 'round';
+      var seed = Q.seed | 0, minW = 0.6 / k;
+      F.prims.forEach(function (e, n) {
+        if (e.t === 'text') return;
+        var pts = e.t === 'ell' ? ellPts(e) : (e.box ? roundRect(e.p, Math.max(e.rx || 0, Q.corner)) : e.p);
+        var hp = wobble(pts, e.c, Q.hand, seed + n * 17);
+        var path = function (q, cl) { x.beginPath(); q.forEach(function (pt, j) { if (j) x.lineTo(pt[0], pt[1]); else x.moveTo(pt[0], pt[1]); }); if (cl) x.closePath(); };
+        /* tone: solid, hatched, or both */
+        if (e.f && e.c) {
+          var solid = 1 - Q.hatch, fo = (e.fo == null ? 1 : e.fo) * e.o;
+          var light = lum(e.f) > .93;   /* paper-colored fills stay solid: they knock out what is behind */
+          var bbx = hp.reduce(function (m, q) { return [Math.min(m[0], q[0]), Math.min(m[1], q[1]), Math.max(m[2], q[0]), Math.max(m[3], q[1])]; }, [1e9, 1e9, -1e9, -1e9]);
+          if (Math.min(bbx[2] - bbx[0], bbx[3] - bbx[1]) < Q.gap * 3) solid = 1;   /* a dot or a tick is too small to hatch: it stays a mark */
+          if (light || solid > 0) { path(hp, true); x.fillStyle = col(e.f, light ? fo : fo * solid); x.fill(); }
+          if (!light && solid < 1) {
+            x.save(); path(hp, true); x.clip();
+            var xs = hp.map(function (q) { return q[0]; }), ys = hp.map(function (q) { return q[1]; }), mx = Math.min.apply(null, xs), Mx = Math.max.apply(null, xs), my = Math.min.apply(null, ys), My = Math.max.apply(null, ys);
+            var cx = (mx + Mx) / 2, cy = (my + My) / 2, R = Math.hypot(Mx - mx, My - my) / 2 + 2, a = Q.angle * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a), g = Q.gap;
+            x.strokeStyle = col(e.f, fo * Q.hatch); x.lineWidth = Math.max(minW, Math.min(g * .45, 1.1 * Q.weight)); x.beginPath();
+            for (var t = -R; t <= R; t += g) { var px = cx - dy * t, py = cy + dx * t; x.moveTo(px - dx * R, py - dy * R); x.lineTo(px + dx * R, py + dy * R); }
+            x.stroke(); x.restore();
+          }
+        }
+        /* line */
+        if (e.s && e.w > 0) {
+          path(hp, e.c); x.strokeStyle = col(e.s, (e.so == null ? 1 : e.so) * e.o); x.lineWidth = Math.max(minW, e.w * Q.weight); x.lineCap = e.cap || 'butt';
+          x.setLineDash(e.d ? e.d.map(function (d) { return d * Math.max(.5, Q.weight); }) : []); x.stroke(); x.setLineDash([]);
+          /* arrowheads, where the source marked the line */
+          var head = function (P, B) { var dx = P[0] - B[0], dy = P[1] - B[1], L = Math.hypot(dx, dy) || 1, s = Math.max(5, e.w * 7) * Q.arrow * .8, ux = dx / L, uy = dy / L;
+            x.beginPath(); x.moveTo(P[0], P[1]); x.lineTo(P[0] - ux * s - uy * s * .45, P[1] - uy * s + ux * s * .45); x.lineTo(P[0] - ux * s + uy * s * .45, P[1] - uy * s - ux * s * .45); x.closePath(); x.fillStyle = col(e.s, e.o); x.fill(); };
+          if (e.me && hp.length > 1) head(hp[hp.length - 1], hp[Math.max(0, hp.length - 3)]);
+          if (e.ms && hp.length > 1) head(hp[0], hp[Math.min(hp.length - 1, 2)]);
+        }
+      });
+      /* labels last, over the lines */
+      F.prims.forEach(function (e) {
+        if (e.t !== 'text') return;
+        var fam = e.ff === 'mono' ? '"JetBrains Mono", ui-monospace, monospace' : e.ff === 'serif' ? 'Georgia, "Times New Roman", serif' : 'Inter, "Helvetica Neue", Arial, sans-serif';
+        x.save(); x.translate(e.x, e.y); if (e.rot) x.rotate(e.rot * Math.PI / 180);
+        x.font = (e.it ? 'italic ' : '') + (e.fw || 400) + ' ' + (e.fs * Q.type).toFixed(2) + 'px ' + fam; x.textAlign = e.a === 'middle' ? 'center' : e.a === 'end' ? 'right' : 'left'; x.textBaseline = 'alphabetic';
+        if ('letterSpacing' in x) x.letterSpacing = (e.ls * Q.type).toFixed(2) + 'px';
+        x.fillStyle = col(e.f || [21, 20, 24], e.o); x.fillText(e.tt === 'uppercase' ? e.txt.toUpperCase() : e.txt, 0, 0); x.restore();
+      });
+      x.setTransform(1, 0, 0, 1, 0, 0); x.restore();
+      x.strokeStyle = V.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
+    });
+    if (done) done();
+    return false;
+  };
+})(window.STUDY);

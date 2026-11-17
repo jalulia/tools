@@ -27,3 +27,125 @@ window.STUDY={"id": "pl-75-the-three-lines-of-a-life", "code": "PL-75", "fig": "
       +cells+'<script src="../../_shared/lift.js"><\/script></body></html>';
   };
 })(window.STUDY);
+
+/* PL-75 · The three lines of a life · the figure measured from jalulia.github.io/capschiz (17 primitives, viewBox 0 0 1000 360). Measured by a headless read of the live page, 2026-11-17; see _build/engines/reading-diagram.js. */
+window.RD_FIG=[{"vb":[0,0,1000,360],"ground":[255,255,255],"prims":[{"t":"text","x":60,"y":70,"a":"start","txt":"RIGID \u00b7 MOLAR","fs":11,"fw":"600","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,42,42],"o":1},{"t":"poly","p":[[60,78],[210,78],[210,102],[60,102]],"c":true,"box":1,"s":[22,22,26],"f":[255,255,255],"w":1.3,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[210,78],[360,78],[360,102],[210,102]],"c":true,"box":1,"s":[22,22,26],"f":[255,255,255],"w":1.3,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[360,78],[510,78],[510,102],[360,102]],"c":true,"box":1,"s":[22,22,26],"f":[255,255,255],"w":1.3,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[510,78],[660,78],[660,102],[510,102]],"c":true,"box":1,"s":[22,22,26],"f":[255,255,255],"w":1.3,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[660,78],[810,78],[810,102],[660,102]],"c":true,"box":1,"s":[22,22,26],"f":[255,255,255],"w":1.3,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"poly","p":[[810,78],[940,78],[940,102],[810,102]],"c":true,"box":1,"s":[22,22,26],"f":[255,255,255],"w":1.3,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"text","x":940.19,"y":130,"a":"end","txt":"well-cut blocks \u00b7 the State sorts you into one","fs":9.5,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"text","x":60,"y":170,"a":"start","txt":"SUPPLE \u00b7 MOLECULAR","fs":11,"fw":"600","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,42,42],"o":1},{"t":"poly","p":[[60,200],[62.65,198.59],[65.34,197.26],[68.06,196.01],[70.83,194.85],[73.63,193.78],[76.47,192.81],[79.34,191.93],[82.24,191.17],[85.17,190.51],[88.12,189.97],[91.09,189.55],[94.07,189.24],[97.07,189.06],[100.06,189],[103.06,189.06],[106.06,189.25],[109.04,189.56],[112.01,189.99],[114.96,190.54],[117.89,191.2],[120.78,191.97],[123.65,192.85],[126.49,193.82],[129.29,194.9],[132.05,196.06],[134.78,197.32],[137.47,198.65],[140.11,200.06],[142.76,201.47],[145.45,202.8],[148.18,204.04],[150.95,205.2],[153.75,206.26],[156.59,207.23],[159.47,208.1],[162.37,208.86],[165.29,209.51],[168.25,210.05],[171.22,210.47],[174.2,210.77],[177.2,210.95],[180.19,211],[183.19,210.93],[186.19,210.74],[189.17,210.42],[192.14,209.99],[195.09,209.44],[198.01,208.77],[200.91,207.99],[203.78,207.11],[206.61,206.13],[209.41,205.05],[212.17,203.88],[214.9,202.63],[217.58,201.29],[220.22,199.87],[222.82,198.37],[225.47,196.96],[228.17,195.64],[230.91,194.42],[233.69,193.31],[236.52,192.31],[239.38,191.42],[242.29,190.66],[245.22,190.04],[248.18,189.54],[251.16,189.19],[254.15,188.99],[257.15,188.92],[260.15,189.01],[263.14,189.24],[266.12,189.61],[269.07,190.12],[272,190.77],[274.9,191.55],[277.76,192.45],[280.58,193.47],[283.36,194.6],[286.09,195.84],[288.78,197.17],[291.42,198.59],[294.01,200.1],[296.56,201.69],[299.06,203.35],[301.53,205.05],[304.05,206.67],[306.62,208.21],[309.26,209.65],[311.94,210.98],[314.69,212.19],[317.48,213.28],[320.33,214.23],[323.22,215.03],[326.15,215.68],[329.11,216.17],[332.09,216.49],[335.09,216.63],[338.09,216.61],[341.08,216.41],[344.05,216.04],[347.01,215.5],[349.92,214.8],[352.8,213.95],[355.63,212.96],[358.41,211.84],[361.14,210.59],[363.81,209.22],[366.43,207.75],[368.98,206.19],[371.49,204.53],[373.93,202.8],[376.33,200.99],[378.67,199.11],[381.11,198.6],[383.78,199.98],[386.48,201.28],[389.22,202.49],[392.01,203.61],[394.82,204.64],[397.68,205.57],[400.56,206.4],[403.47,207.12],[406.41,207.73],[409.37,208.22],[412.34,208.6],[415.33,208.85],[418.33,208.98],[421.33,208.99],[424.33,208.87],[427.32,208.63],[430.29,208.27],[433.26,207.79],[436.2,207.2],[439.11,206.49],[442,205.67],[444.85,204.75],[447.67,203.73],[450.46,202.62],[453.21,201.42],[455.92,200.13],[458.59,198.76],[461.23,197.34],[463.89,195.97],[466.6,194.68],[469.36,193.48],[472.14,192.38],[474.97,191.38],[477.83,190.48],[480.73,189.69],[483.65,189.01],[486.6,188.46],[489.57,188.02],[492.55,187.71],[495.54,187.53],[498.54,187.48],[501.54,187.56],[504.53,187.76],[507.52,188.09],[510.48,188.55],[513.42,189.13],[516.34,189.83],[519.23,190.64],[522.08,191.56],[524.9,192.58],[527.69,193.7],[530.43,194.92],[533.13,196.22],[535.79,197.6],[538.41,199.07],[541.04,199.49],[543.75,198.21],[546.5,197.01],[549.29,195.9],[552.1,194.86],[554.95,193.92],[557.83,193.07],[560.73,192.32],[563.66,191.67],[566.61,191.12],[569.58,190.68],[572.56,190.35],[575.55,190.12],[578.55,190.01],[581.55,190.01],[584.54,190.13],[587.54,190.35],[590.52,190.69],[593.48,191.14],[596.43,191.69],[599.36,192.34],[602.26,193.1],[605.14,193.95],[607.99,194.9],[610.8,195.93],[613.58,197.05],[616.33,198.25],[619.05,199.53],[621.74,200.85],[624.46,202.11],[627.22,203.28],[630.01,204.38],[632.84,205.39],[635.7,206.31],[638.58,207.13],[641.49,207.86],[644.42,208.48],[647.38,209],[650.35,209.42],[653.33,209.72],[656.33,209.92],[659.33,210],[662.33,209.97],[665.32,209.82],[668.31,209.57],[671.29,209.2],[674.25,208.73],[677.19,208.15],[680.12,207.47],[683.01,206.69],[685.88,205.81],[688.72,204.84],[691.53,203.79],[694.3,202.65],[697.04,201.42],[699.74,200.13],[702.54,200.96],[705.38,201.92],[708.26,202.77],[711.16,203.53],[714.08,204.2],[717.03,204.78],[719.98,205.29],[722.95,205.73],[725.93,206.09],[728.91,206.4],[731.9,206.64],[734.9,206.83],[737.89,206.97],[740.89,207.06],[743.89,207.11],[746.89,207.11],[749.89,207.07],[752.89,206.99],[755.89,206.87],[758.88,206.72],[761.88,206.54],[764.87,206.33],[767.86,206.09],[770.85,205.81],[773.83,205.52],[776.82,205.19],[779.8,204.85],[782.77,204.47],[785.75,204.08],[788.72,203.67],[791.68,203.23],[794.65,202.77],[797.61,202.3],[800.57,201.81],[803.53,201.3],[806.48,200.77],[809.43,200.22],[812.38,199.66],[815.32,199.09],[818.26,198.5],[821.2,197.89],[824.14,197.28],[827.07,196.64],[830,196]],"c":false,"s":[85,85,92],"f":null,"w":1.6,"o":1,"so":1,"fo":1,"d":[1,0],"cap":"butt","me":false,"ms":false},{"t":"ell","p":[],"c":true,"cx":300,"cy":196,"rx":2.5,"ry":2.5,"s":null,"f":[138,138,146],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"ell","p":[],"c":true,"cx":540,"cy":206,"rx":2.5,"ry":2.5,"s":null,"f":[138,138,146],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"ell","p":[],"c":true,"cx":700,"cy":198,"rx":2.5,"ry":2.5,"s":null,"f":[138,138,146],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"text","x":940.19,"y":232,"a":"end","txt":"micro-cracks & becomings slip between the blocks","fs":9.5,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"text","x":60,"y":290,"a":"start","txt":"LINE OF FLIGHT","fs":11,"fw":"600","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,42,42],"o":1},{"t":"poly","p":[[60,320],[63,319.9],[65.99,319.8],[68.99,319.7],[71.99,319.6],[74.99,319.5],[77.98,319.4],[80.98,319.3],[83.98,319.2],[86.97,319.1],[89.97,319],[92.97,318.9],[95.97,318.8],[98.96,318.7],[101.96,318.6],[104.96,318.5],[107.95,318.4],[110.95,318.3],[113.95,318.2],[116.94,318.1],[119.94,318],[122.94,317.9],[125.94,317.8],[128.93,317.7],[131.93,317.6],[134.93,317.5],[137.92,317.4],[140.92,317.3],[143.92,317.2],[146.92,317.1],[149.91,317],[152.91,316.9],[155.91,316.8],[158.9,316.7],[161.9,316.6],[164.9,316.5],[167.9,316.4],[170.89,316.3],[173.89,316.2],[176.89,316.1],[179.88,316],[182.88,315.9],[185.88,315.8],[188.87,315.7],[191.87,315.6],[194.87,315.5],[197.87,315.4],[200.86,315.3],[203.86,315.2],[206.86,315.1],[209.85,315],[212.85,314.9],[215.85,314.81],[218.85,314.71],[221.84,314.61],[224.84,314.51],[227.84,314.41],[230.83,314.31],[233.83,314.21],[236.83,314.11],[239.83,314.01],[242.82,313.91],[245.82,313.81],[248.82,313.71],[251.81,313.61],[254.81,313.51],[257.81,313.41],[260.8,313.31],[263.8,313.21],[266.8,313.11],[269.8,313.01],[272.79,312.91],[275.79,312.81],[278.79,312.71],[281.78,312.61],[284.78,312.51],[287.78,312.41],[290.78,312.31],[293.77,312.21],[296.77,312.11],[299.77,312.01],[302.76,311.92],[305.76,311.84],[308.76,311.75],[311.76,311.66],[314.75,311.56],[317.75,311.46],[320.75,311.36],[323.75,311.26],[326.74,311.15],[329.74,311.04],[332.74,310.93],[335.73,310.82],[338.73,310.7],[341.72,310.58],[344.72,310.45],[347.72,310.33],[350.71,310.19],[353.71,310.06],[356.7,309.92],[359.7,309.78],[362.69,309.64],[365.69,309.5],[368.69,309.35],[371.68,309.19],[374.67,309.04],[377.67,308.88],[380.66,308.72],[383.66,308.55],[386.65,308.38],[389.65,308.21],[392.64,308.04],[395.63,307.86],[398.63,307.68],[401.62,307.5],[404.61,307.31],[407.6,307.12],[410.6,306.92],[413.59,306.73],[416.58,306.53],[419.57,306.32],[422.56,306.11],[425.56,305.9],[428.55,305.69],[431.54,305.47],[434.53,305.25],[437.52,305.03],[440.51,304.8],[443.5,304.57],[446.49,304.33],[449.48,304.09],[452.47,303.85],[455.46,303.61],[458.44,303.36],[461.43,303.11],[464.42,302.85],[467.41,302.59],[470.39,302.33],[473.38,302.06],[476.37,301.79],[479.35,301.52],[482.34,301.24],[485.33,300.96],[488.31,300.68],[491.3,300.39],[494.28,300.1],[497.26,299.8],[500.25,299.5],[503.23,299.2],[506.22,298.89],[509.2,298.58],[512.18,298.27],[515.16,297.95],[518.14,297.63],[521.12,297.3],[524.1,296.98],[527.09,296.64],[530.06,296.31],[533.04,295.96],[536.02,295.62],[539,295.27],[541.98,294.92],[544.96,294.56],[547.93,294.2],[550.91,293.84],[553.89,293.47],[556.86,293.1],[559.84,292.72],[562.81,292.34],[565.79,291.96],[568.76,291.57],[571.73,291.18],[574.7,290.78],[577.68,290.38],[580.65,289.98],[583.62,289.57],[586.59,289.15],[589.56,288.74],[592.53,288.32],[595.5,287.89],[598.46,287.46],[601.43,287.03],[604.4,286.59],[607.36,286.15],[610.33,285.7],[613.29,285.25],[616.26,284.79],[619.22,284.33],[622.18,283.87],[625.15,283.4],[628.11,282.93],[631.07,282.45],[634.03,281.97],[636.99,281.48],[639.94,280.99],[642.9,280.5],[645.86,280],[648.81,279.49],[651.77,278.98],[654.72,278.47],[657.68,277.95],[660.63,277.43],[663.58,276.9],[666.53,276.37],[669.48,275.83],[672.43,275.29],[675.38,274.75],[678.33,274.2],[681.28,273.64],[684.22,273.08],[687.17,272.52],[690.11,271.95],[693.06,271.37],[696,270.8],[698.94,270.21],[701.88,269.62],[704.82,269.02],[707.76,268.42],[710.69,267.8],[713.62,267.18],[716.56,266.55],[719.49,265.91],[722.41,265.26],[725.34,264.6],[728.26,263.94],[731.18,263.26],[734.1,262.58],[737.02,261.89],[739.94,261.18],[742.85,260.47],[745.76,259.75],[748.67,259.02],[751.58,258.28],[754.48,257.53],[757.38,256.77],[760.28,256],[763.17,255.22],[766.07,254.43],[768.96,253.64],[771.85,252.83],[774.73,252.01],[777.61,251.18],[780.49,250.34],[783.37,249.49],[786.24,248.63],[789.11,247.75],[791.97,246.87],[794.84,245.98],[797.7,245.08],[800.55,244.16],[803.4,243.23],[806.25,242.3],[809.1,241.35],[811.94,240.39],[814.77,239.41],[817.61,238.43],[820.43,237.43],[823.26,236.43],[826.08,235.41],[828.89,234.37],[831.71,233.33],[834.51,232.27],[837.31,231.21],[840.11,230.12],[842.9,229.03],[845.69,227.92],[848.47,226.8],[851.25,225.67],[854.02,224.52],[856.79,223.37],[859.55,222.19],[862.3,221.01],[865.05,219.81],[867.79,218.6],[870.53,217.37],[873.26,216.13],[875.98,214.87],[878.7,213.6],[881.41,212.32],[884.11,211.02],[886.81,209.71],[889.5,208.38],[892.18,207.04],[894.85,205.69],[897.52,204.32],[900.18,202.93],[902.83,201.53],[905.47,200.11],[908.11,198.68],[910.73,197.23],[913.35,195.77],[915.96,194.29],[918.56,192.79],[921.15,191.28],[923.73,189.76],[926.3,188.21],[928.87,186.66],[931.42,185.08],[933.96,183.49],[936.49,181.88],[939.01,180.25],[941.52,178.61],[944.02,176.95],[946.5,175.28],[948.98,173.58],[951.44,171.87],[953.89,170.15],[956.33,168.4],[958.76,166.64],[961.17,164.86],[963.57,163.07],[965.96,161.25],[968.34,159.42],[970.7,157.57],[973.05,155.71],[975.38,153.82],[977.7,151.92],[980,150]],"c":false,"s":[138,42,42],"f":null,"w":1.8,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":true,"ms":false},{"t":"text","x":430,"y":338,"a":"start","txt":"absolute deterritorialization \u2014 shoots off the field entirely","fs":9.5,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1}]}];
+
+/* reading-diagram · shared engine for the "Diagram of an argument" plates (PL-67…80). Appended to each plate's study.js
+   by _build/plates.py after that plate's rd-figure.js (window.RD_FIG: the figure measured from jalulia.github.io/capschiz
+   by its own geometry: every line, box, pole, arrow and label, in the figure's viewBox units).
+   The engine redraws that geometry with the technique's dials: how heavy the lines are, how ruled or hand-drawn,
+   how round the boxes, how big the arrowheads, whether tones are solid or hatched, and how large the type. */
+(function (S) {
+  'use strict';
+  var FIGS = window.RD_FIG || [];
+  /* the plate is cut to the figure: one panel takes the figure's own shape, so nothing of the old screenshot's caption and controls is left as empty sheet */
+  if (S.panels.length === 1 && FIGS[0]) { var p0 = S.panels[0], vb0 = FIGS[0].vb; p0.h = +(p0.w * vb0[3] / vb0[2]).toFixed(2); S.ref = { w: 1000, h: Math.round(p0.y * 2 + p0.h) }; }
+  var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
+  var read = (S.spec.techniques || [])[0] || {};
+  var TECH = [
+    { id: 'reading-diagram', short: 'DOAA', name: 'Diagram of an argument', layer: 1, pass: 1, atoms: ['line', 'box', 'arrow', 'label'],
+      params: {
+        weight: leaf(1, 0.4, 3, 0.05, 'Line weight', '×', 'Every stroke of the figure at this multiple of its measured width.'),
+        hand: leaf(0, 0, 4, 0.05, 'Hand', 'u', 'How far a line may wander from its ruled path, in figure units. 0 is ruled; higher redraws every line, box and pole by hand.'),
+        corner: leaf(0, 0, 24, 0.5, 'Box corners', 'u', 'Corner radius of every box, in figure units. A box drawn round in the source keeps at least its own.'),
+        arrow: leaf(1, 0.4, 3, 0.05, 'Arrowheads', '×', 'Size of the arrowheads on directed lines, as a multiple of a head 7 strokes long.'),
+        hatch: leaf(0, 0, 1, 0.01, 'Tone as hatching', '', '0 fills every toned shape solid; 1 lays the same tone as hatching; between, both.'),
+        gap: leaf(4, 1.5, 14, 0.25, 'Hatch spacing', 'u', 'Distance between hatch lines, in figure units.'),
+        angle: leaf(45, 0, 180, 1, 'Hatch angle', '°', 'Direction of the hatch lines.'),
+        type: leaf(1, 0.7, 1.6, 0.01, 'Type size', '×', 'Every label at this multiple of its measured size, from its own anchor.'),
+        seed: leaf(7, 1, 99, 1, 'Seed', '', 'Re-rolls the hand: where each line wanders.')
+      },
+      implementation: (read.implementation || 'Each claim of the text is drawn as boxes, poles and arrows with a numbered caption.') + ' The geometry is measured from the source figure; the engine redraws it with weight, hand, corners, arrowheads, hatched tone and type size as dials.' }
+  ];
+  var keep = (S.spec.techniques || []).filter(function (t) { return t.id !== 'reading-diagram'; });
+  S.spec.techniques = TECH.concat(keep);
+  S.spec.pass_order = ['ground · plate', 'tone · fills, solid or hatched', 'line · every stroke, ruled or by hand', 'arrowheads', 'labels'];
+  S.body = [S.body[0], 'The figure is redrawn here from its own geometry, measured from the source page: every box, pole, arrow and label. The dials change how it is drawn: line weight, a ruled or hand line, box corners, arrowhead size, tone as solid fill or hatching, and type size.'];
+  S.paramsHint = 'How the diagram is drawn. Figure units are the source figure’s own.';
+  S.liveOnLoad = false; delete S.live;
+
+  /* seeded smooth noise along a line */
+  function hash(n, s) { var h = Math.imul((n | 0) ^ Math.imul(s | 0, 0x9E3779B1), 0x85EBCA6B); h ^= h >>> 13; h = Math.imul(h, 0xC2B2AE35); h ^= h >>> 16; return (h >>> 0) / 4294967296 * 2 - 1; }
+  function noise(x, s) { var i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return hash(i, s) * (1 - u) + hash(i + 1, s) * u; }
+  /* a polyline redrawn by hand: subdivided every ~5 units and pushed off its path along the normal */
+  function wobble(pts, closed, amt, seed) {
+    if (!amt) return pts;
+    var out = [], acc = 0, n = pts.length, segs = closed ? n : n - 1;
+    for (var k = 0; k < segs; k++) {
+      var A = pts[k], B = pts[(k + 1) % n], dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, m = Math.max(1, Math.ceil(L / 5));
+      for (var j = 0; j < m; j++) { var t = j / m, d = acc + L * t, o = noise(d / 22, seed) * amt + noise(d / 7, seed + 9) * amt * .35; out.push([A[0] + dx * t + nx * o, A[1] + dy * t + ny * o]); }
+      acc += L;
+    }
+    if (!closed) { var Z = pts[n - 1], o2 = noise(acc / 22, seed) * amt; var P = pts[n - 2] || Z, dx2 = Z[0] - P[0], dy2 = Z[1] - P[1], L2 = Math.hypot(dx2, dy2) || 1; out.push([Z[0] - dy2 / L2 * o2, Z[1] + dx2 / L2 * o2]); }
+    return out;
+  }
+  function roundRect(p, r) { /* p: 4 corners of a rect, clockwise from top-left */
+    var x0 = Math.min(p[0][0], p[2][0]), y0 = Math.min(p[0][1], p[2][1]), x1 = Math.max(p[0][0], p[2][0]), y1 = Math.max(p[0][1], p[2][1]); r = Math.min(r, (x1 - x0) / 2, (y1 - y0) / 2);
+    if (r <= 0.3) return p; var out = [], arc = function (cx, cy, a0) { for (var i = 0; i <= 6; i++) { var a = a0 + i / 6 * Math.PI / 2; out.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } };
+    arc(x1 - r, y0 + r, -Math.PI / 2); arc(x1 - r, y1 - r, 0); arc(x0 + r, y1 - r, Math.PI / 2); arc(x0 + r, y0 + r, Math.PI); return out;
+  }
+  function ellPts(e) { var out = [], n = Math.max(24, Math.min(96, Math.round((e.rx + e.ry) * .6))); for (var i = 0; i < n; i++) { var a = i / n * Math.PI * 2; out.push([e.cx + Math.cos(a) * e.rx, e.cy + Math.sin(a) * e.ry]); } return out; }
+  function lum(c) { return (.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) / 255; }
+
+  S.render = function (canvas, w, h, dpr, V, done, overrides) {
+    var A = window.ART.params(S.spec, overrides || {}), Q = A['reading-diagram'];
+    var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
+    var paper = V.paper || '#FFFFFF', pr = parseInt(paper.slice(1), 16), dark = lum([pr >> 16 & 255, pr >> 8 & 255, pr & 255]) < .45;
+    var col = function (c, a) { if (!c) return null; var r = c[0], g = c[1], b = c[2]; if (dark) { r = 255 - r; g = 255 - g; b = 255 - b; } return 'rgba(' + r + ',' + g + ',' + b + ',' + ((c.length > 3 ? c[3] : 1) * (a == null ? 1 : a)).toFixed(3) + ')'; };
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = paper; x.fillRect(0, 0, W, H);
+    S.panels.forEach(function (p, i) {
+      var F = FIGS[i]; if (!F) return;
+      var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, vb = F.vb, k = Math.min(bw / vb[2], bh / vb[3]), ox = bx + (bw - vb[2] * k) / 2 - vb[0] * k, oy = by + (bh - vb[3] * k) / 2 - vb[1] * k;
+      x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip();
+      if (F.ground && !dark) { x.fillStyle = col(F.ground); x.fillRect(bx, by, bw, bh); }
+      x.setTransform(k, 0, 0, k, ox, oy); x.lineJoin = 'round';
+      var seed = Q.seed | 0, minW = 0.6 / k;
+      F.prims.forEach(function (e, n) {
+        if (e.t === 'text') return;
+        var pts = e.t === 'ell' ? ellPts(e) : (e.box ? roundRect(e.p, Math.max(e.rx || 0, Q.corner)) : e.p);
+        var hp = wobble(pts, e.c, Q.hand, seed + n * 17);
+        var path = function (q, cl) { x.beginPath(); q.forEach(function (pt, j) { if (j) x.lineTo(pt[0], pt[1]); else x.moveTo(pt[0], pt[1]); }); if (cl) x.closePath(); };
+        /* tone: solid, hatched, or both */
+        if (e.f && e.c) {
+          var solid = 1 - Q.hatch, fo = (e.fo == null ? 1 : e.fo) * e.o;
+          var light = lum(e.f) > .93;   /* paper-colored fills stay solid: they knock out what is behind */
+          var bbx = hp.reduce(function (m, q) { return [Math.min(m[0], q[0]), Math.min(m[1], q[1]), Math.max(m[2], q[0]), Math.max(m[3], q[1])]; }, [1e9, 1e9, -1e9, -1e9]);
+          if (Math.min(bbx[2] - bbx[0], bbx[3] - bbx[1]) < Q.gap * 3) solid = 1;   /* a dot or a tick is too small to hatch: it stays a mark */
+          if (light || solid > 0) { path(hp, true); x.fillStyle = col(e.f, light ? fo : fo * solid); x.fill(); }
+          if (!light && solid < 1) {
+            x.save(); path(hp, true); x.clip();
+            var xs = hp.map(function (q) { return q[0]; }), ys = hp.map(function (q) { return q[1]; }), mx = Math.min.apply(null, xs), Mx = Math.max.apply(null, xs), my = Math.min.apply(null, ys), My = Math.max.apply(null, ys);
+            var cx = (mx + Mx) / 2, cy = (my + My) / 2, R = Math.hypot(Mx - mx, My - my) / 2 + 2, a = Q.angle * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a), g = Q.gap;
+            x.strokeStyle = col(e.f, fo * Q.hatch); x.lineWidth = Math.max(minW, Math.min(g * .45, 1.1 * Q.weight)); x.beginPath();
+            for (var t = -R; t <= R; t += g) { var px = cx - dy * t, py = cy + dx * t; x.moveTo(px - dx * R, py - dy * R); x.lineTo(px + dx * R, py + dy * R); }
+            x.stroke(); x.restore();
+          }
+        }
+        /* line */
+        if (e.s && e.w > 0) {
+          path(hp, e.c); x.strokeStyle = col(e.s, (e.so == null ? 1 : e.so) * e.o); x.lineWidth = Math.max(minW, e.w * Q.weight); x.lineCap = e.cap || 'butt';
+          x.setLineDash(e.d ? e.d.map(function (d) { return d * Math.max(.5, Q.weight); }) : []); x.stroke(); x.setLineDash([]);
+          /* arrowheads, where the source marked the line */
+          var head = function (P, B) { var dx = P[0] - B[0], dy = P[1] - B[1], L = Math.hypot(dx, dy) || 1, s = Math.max(5, e.w * 7) * Q.arrow * .8, ux = dx / L, uy = dy / L;
+            x.beginPath(); x.moveTo(P[0], P[1]); x.lineTo(P[0] - ux * s - uy * s * .45, P[1] - uy * s + ux * s * .45); x.lineTo(P[0] - ux * s + uy * s * .45, P[1] - uy * s - ux * s * .45); x.closePath(); x.fillStyle = col(e.s, e.o); x.fill(); };
+          if (e.me && hp.length > 1) head(hp[hp.length - 1], hp[Math.max(0, hp.length - 3)]);
+          if (e.ms && hp.length > 1) head(hp[0], hp[Math.min(hp.length - 1, 2)]);
+        }
+      });
+      /* labels last, over the lines */
+      F.prims.forEach(function (e) {
+        if (e.t !== 'text') return;
+        var fam = e.ff === 'mono' ? '"JetBrains Mono", ui-monospace, monospace' : e.ff === 'serif' ? 'Georgia, "Times New Roman", serif' : 'Inter, "Helvetica Neue", Arial, sans-serif';
+        x.save(); x.translate(e.x, e.y); if (e.rot) x.rotate(e.rot * Math.PI / 180);
+        x.font = (e.it ? 'italic ' : '') + (e.fw || 400) + ' ' + (e.fs * Q.type).toFixed(2) + 'px ' + fam; x.textAlign = e.a === 'middle' ? 'center' : e.a === 'end' ? 'right' : 'left'; x.textBaseline = 'alphabetic';
+        if ('letterSpacing' in x) x.letterSpacing = (e.ls * Q.type).toFixed(2) + 'px';
+        x.fillStyle = col(e.f || [21, 20, 24], e.o); x.fillText(e.tt === 'uppercase' ? e.txt.toUpperCase() : e.txt, 0, 0); x.restore();
+      });
+      x.setTransform(1, 0, 0, 1, 0, 0); x.restore();
+      x.strokeStyle = V.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
+    });
+    if (done) done();
+    return false;
+  };
+})(window.STUDY);
