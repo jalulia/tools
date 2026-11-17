@@ -69,7 +69,14 @@
         if (i < 0) { var at2 = -1; P.forEach(function (x, j) { if (!x.private && !x.retiring) at2 = j; }); P.splice(cur.private || cur.retiring ? P.length : at2 + 1, 0, cur); }
       }
     }
-    E.log.push({ at: at, op: o.op, ids: o.ids, patch: o.patch, project: o.projectDef || undefined, note: o.note || undefined, by: 'cms' });
+    // a gallery: { id, set: { title, tag, items, note, private } } adds or changes it; { id, drop: true } deletes it (its tags stay on the records)
+    if (o.galleryDef) {
+      var G = E.galleries = E.galleries || [], gd = o.galleryDef, gi = -1;
+      G.forEach(function (x, j) { if (x.id === gd.id) gi = j; });
+      if (gd.drop) { if (gi >= 0) G.splice(gi, 1); }
+      else { var gc = gi >= 0 ? G[gi] : { id: gd.id }; for (var gk in gd.set) { if (gd.set[gk] == null || gd.set[gk] === false || gd.set[gk] === '') delete gc[gk]; else gc[gk] = gd.set[gk]; } if (gi < 0) G.push(gc); }
+    }
+    E.log.push({ at: at, op: o.op, ids: o.ids, patch: o.patch, gallery: o.galleryDef || undefined, project: o.projectDef || undefined, note: o.note || undefined, by: 'cms' });
   }
 
   /** Saves one op as one commit. Retries when the file moved under us. Resolves the commit sha. */

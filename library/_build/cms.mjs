@@ -18,9 +18,9 @@ const readJson = (p) => JSON.parse(readFileSync(p, 'utf8'));
 /** The edits file, or an empty one. */
 export function readEdits(root) {
   const f = join(root, 'library/_build/edits.json');
-  if (!existsSync(f)) return { schema: EDITS_SCHEMA, projects: [], records: {}, log: [] };
+  if (!existsSync(f)) return { schema: EDITS_SCHEMA, projects: [], galleries: [], records: {}, log: [] };
   const E = readJson(f);
-  return { schema: E.schema || EDITS_SCHEMA, projects: E.projects || [], records: E.records || {}, log: E.log || [] };
+  return { schema: E.schema || EDITS_SCHEMA, projects: E.projects || [], galleries: E.galleries || [], records: E.records || {}, log: E.log || [] };
 }
 
 // A collection that is one piece of work names its project. Everything else is Studio unless its sources say otherwise.
@@ -97,6 +97,7 @@ export function applyEdits(records, root, plates = []) {
     schema: E.schema,
     note: 'From library/_build/edits.json, written by the CMS. Removed records are left out of this catalog; the list below is what the CMS needs to restore them.',
     projects: E.projects,
+    galleries: E.galleries, // { id, title, tag?, items?: ['R:<technique>' | record id | call], note?, private? }
     removed: removed.map((id) => { const ed = E.records[id]; return { id, acc: ed.acc || byId.get(id)?.acc || '', call: ed.call || byId.get(id)?.call || '', title: ed.title_was || byId.get(id)?.title || id, project: byId.get(id)?.project || '', path: ed.path || '', at: ed.at || '', archive: ed.archive || '' }; }),
     // call numbers of every record that left the catalog (removed ones and their parts), so links to them can be dropped
     gone_calls: [...gone].map((id) => byId.get(id)?.call).filter(Boolean).sort(),

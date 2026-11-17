@@ -15,6 +15,15 @@ Version 2, 2026-11-15. Page: https://jalulia.github.io/tools/library/ → **Edit
 Every save is one commit to `main` (message names the records), so the site is updated by the next deploy, about two
 minutes. Saves go one after another; a save that meets a newer file retries on top of it.
 
+## Galleries
+A gallery is a tag bundle (Julia, 2026-11-13). **Galleries** in the top nav lists them; a gallery's link (`#/galleries/<id>`)
+can be sent as is, and each card opens the work's own page, where its dials are. In Edit: pick cards → **Gallery…** →
+an existing gallery or **New gallery…** (adds the gallery's tag to each piece); in a gallery, **×** takes a piece out;
+**Rename or delete** edits the name, note and privacy (deleting leaves the tags on the pieces). Stored in
+`edits.json → galleries` as `{ id, title, tag, items, note, private }`: members are every record with the tag plus any
+`items` listed by hand (`R:<technique>` for a technique page, or a record id or call). Archived and private pieces leave
+a gallery for anyone in Shared. Seeded with the two sets saved in Chrome (Front End Exploration, Mir Front-End Exploration).
+
 ## Mine and Shared
 With a token, a switch next to Edit: **Mine** shows everything, private work included; **Shared** shows exactly what
 anyone with the link sees. Edit always works in Mine. The choice is remembered in that browser (`tools.view`).
@@ -64,6 +73,7 @@ folders), `gallery/_build/build.mjs` and `set/index.html` (leave out archived an
 (reads `_shared/hidden.js`).
 
 ## Changelog
+- 6 · 2026-11-16 · Galleries: a Galleries view, gallery pages with a link to send, Gallery… in Edit (new, add, take out, rename, private, delete); seeded with the two Chrome sets.
 - 5 · 2026-11-16 · The Encyclopedia is retired: the 44 items kept in the CMS live in `library/items/` (same ids); the rest, with the Components and Book of Shaders shells, is in `.quarantine/2026-11-16/` (MANIFEST.md there). The Retiring project is gone.
 - 4 · 2026-11-16 · Edit shows the last deploy (updating · up to date · failed, with a link to why); the Edit button is underlined in orange when it failed. Read from GitHub's public run list, no token needed.
 - 3 · 2026-11-16 · Projects are edited in the CMS: new, rename, note, private, delete when empty (`projectDef` ops in `edits.json`).

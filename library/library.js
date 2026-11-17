@@ -41,7 +41,7 @@
   var STATUSES = ['canonical', 'exploration', 'proposed', 'unsorted', 'known-failure', 'historical', ''];
   var ACCESS = ['public', 'staged', 'local', 'private'].filter(function (a) { return a !== 'private' || R.some(function (r) { return r.access === 'private'; }); });
   var LANES = []; R.forEach(function (r) { if (r.lane && LANES.indexOf(r.lane) < 0) LANES.push(r.lane); }); LANES.sort();
-  var VIEWS = [['plates', 'Plates'], ['shelves', 'Shelves'], ['techniques', 'Techniques'], ['atoms', 'Atoms'], ['ledger', 'Ledger'], ['audit', 'Audit']];
+  var VIEWS = [['galleries', 'Galleries'], ['plates', 'Plates'], ['shelves', 'Shelves'], ['techniques', 'Techniques'], ['atoms', 'Atoms'], ['ledger', 'Ledger'], ['audit', 'Audit']];
   var FACETS = [
     { k: 'project', title: 'Project', values: PROJ_IDS, label: function (v) { return PROJ[v] ? PROJ[v].title : v; }, mark: function () { return ''; } },
     { k: 'kind3', title: 'Kind', values: KIND3, label: function (v) { return KIND3_LABEL[v]; }, mark: function () { return ''; }, tip: function (v) { return (L.vocabulary.kind3 || {})[v]; } },
@@ -204,7 +204,7 @@
       '<button type="button" data-nav="technique"' + on(S.view === 'techniques') + ' title="Every method, with the work that uses it">Techniques<i>' + nT + '</i></button>' +
       '<button type="button" data-nav="example"' + on(S.view === 'plates' && k === 'example') + '>Examples<i>' + (kc.example || 0) + '</i></button>' +
       '<button type="button" data-nav="template"' + on(S.view === 'plates' && k === 'template') + '>Templates<i>' + (kc.template || 0) + '</i></button>' +
-      '<a href="' + e(BASE) + 'gallery/" title="Galleries: tag bundles come in Phase 2; this is the current gallery">Galleries</a>';
+      '<button type="button" data-view="galleries"' + on(S.view === 'galleries') + '>Galleries<i>' + galleries().length + '</i></button>';
     if (ED.on || S.view === 'ledger' || S.view === 'audit' || S.view === 'shelves' || S.view === 'atoms') {
       var n = { ledger: R.length, audit: L.audit.filter(function (a) { return a.level !== 'note'; }).length, shelves: L.collections.length, atoms: L.authority.atoms.length };
       h += '<span class="vsep" aria-hidden="true"></span>' + ['ledger', 'audit'].concat(S.view === 'shelves' || S.view === 'atoms' ? [S.view] : []).map(function (v) {
@@ -633,6 +633,7 @@
     if (S.view === 'plates') vPlates();
     else if (S.view === 'shelves') vShelves();
     else if (S.view === 'techniques' || S.view === 'atoms') vTerms(S.view);
+    else if (S.view === 'galleries') vGalleries();
     else if (S.view === 'ledger') vLedger();
     else vAudit();
     syncDrawer(); drawSel();
@@ -689,6 +690,7 @@
       (n ? '<select class="act" data-bulk="project" aria-label="Move to project">' + projOptions('', true) + '</select>' +
         '<button type="button" class="act" data-cms="' + (allArch ? 'unarchive' : 'archive') + '">' + (allArch ? 'Restore from archive' : 'Archive') + '</button>' +
         '<button type="button" class="act" data-cms="' + (allPriv ? 'public' : 'private') + '">' + (allPriv ? 'Make public' : 'Make private') + '</button>' +
+        '<select class="act" data-bulk="gallery" aria-label="Add to gallery"><option value="">Gallery…</option>' + (CMSD.galleries || []).map(function (g) { return '<option value="' + e(g.id) + '">' + e(g.title) + '</option>'; }).join('') + '<option value="__new">New gallery…</option></select>' +
         '<button type="button" class="act" data-cms="tag">Add tag…</button>' +
         '<button type="button" class="act danger" data-cms="remove">Remove…</button>' : '') +
       '</div><div class="depw">' + depLine() + '</div>';
@@ -858,6 +860,8 @@
     watchDeploy(0);
     LibCMS.check(LibCMS.token()).then(function (c) { ED.archive = c.archive; if (!c.tools) { ED.unlocked = ED.on = false; drawCmsBtn(); status('The saved token was refused. Edit to paste it again.', 'bad'); render(); } });
     LibCMS.readEdits().then(function (x) {
+      if (x.E.galleries) CMSD.galleries = x.E.galleries;
+      if (x.E.projects && x.E.projects.length) { CMSD.projects = x.E.projects; syncProjects(); }
       var seen = {}; ED.removed.forEach(function (y) { seen[y.id] = y; });
       Object.keys(x.E.records || {}).forEach(function (id) {
         var ed = x.E.records[id];
@@ -879,6 +883,13 @@
     }, function (err) { drawPanel('Could not reach GitHub: ' + err.message); });
   });
   document.addEventListener('submit', function (ev) {
+    var gf = ev.target.closest && ev.target.closest('[data-galform]');
+    if (gf) {
+      ev.preventDefault(); var gid = gf.getAttribute('data-galform'), gt = gf.t.value.trim(), gn = gf.n.value.trim(), gp = gf.p.checked; if (!gt) return gf.t.focus();
+      if (!gid) return saveGallery({ id: gslug(gt), set: { title: gt, tag: gt, note: gn, private: gp } }, [], {}, 'New gallery ' + gt);
+      var g0 = (CMSD.galleries || []).filter(function (x) { return x.id === gid; })[0];
+      return saveGallery({ id: gid, set: { title: gt, note: gn, private: gp } }, [], {}, 'Gallery ' + (g0 ? g0.title : gid) + (g0 && gt !== g0.title ? ': rename to ' + gt : ': details'));
+    }
     var f = ev.target.closest && ev.target.closest('[data-pjform]'); if (!f) return;
     ev.preventDefault();
     var id = f.getAttribute('data-pjform'), t = f.t.value.trim(), note = f.n.value.trim(), pv = f.p.checked, p = id ? PROJ[id] : null;
@@ -892,12 +903,101 @@
     saveProject({ id: id, set: set }, 'Project ' + p.title + ': ' + said.join(', '));
   });
   $sel.addEventListener('submit', function (ev) {
+    var ng = ev.target.closest && ev.target.closest('[data-newgal]');
+    if (ng) { ev.preventDefault(); ev.stopImmediatePropagation(); var nm = ng.querySelector('input').value.trim(); if (!nm) return; var rsn = selected(), pern = {}; rsn.forEach(function (r) { var a = (r.tags || []).slice(); if (a.indexOf(nm) < 0) a.push(nm); pern[r.id] = { tags: a }; }); return saveGallery({ id: gslug(nm), set: { title: nm, tag: nm } }, rsn, pern, 'New gallery ' + nm + ' with ' + names(rsn)); }
     ev.preventDefault(); var i = $sel.querySelector('.tagf input'), t = i && i.value.trim(); if (!t) return;
     var rs = selected(), per = {}; rs.forEach(function (r) { var a = (r.tags || []).slice(); if (a.indexOf(t) < 0) a.push(t); per[r.id] = { tags: a }; });
     commit(rs, 'tag', {}, 'Tag ' + names(rs) + ': ' + t, per);
   });
   drawCmsBtn();
 
+  /* ---------------------------------------------------------------- galleries (2026-11-16)
+     A gallery is a tag bundle: every record carrying its tag, plus any items listed by hand (techniques as R:<id>,
+     records by id or call). Its cards open the work's own page, where the dials are. Saved in edits.json → galleries. */
+  var REG = null, regLoading = false;
+  function needReg() {
+    if (REG || regLoading) return;
+    regLoading = true; var s = document.createElement('script'); s.src = BASE + 'techniques-templates/_shared/reg-index.js';
+    s.onload = function () { var R0 = window.TT_REG || { entries: [] }; REG = {}; R0.entries.forEach(function (x) { REG[x.id] = x; }); if (S.view === 'galleries') render(); };
+    s.onerror = function () { REG = {}; }; document.head.appendChild(s);
+  }
+  var byCall = {}; R.forEach(function (r) { if (r.call && !byCall[r.call]) byCall[r.call] = r; });
+  function ttp(p) { return !p ? '' : /^(https?:|\.\.\/)/.test(p) ? p : BASE + 'techniques-templates/' + p; }
+  function galleries() { return (CMSD.galleries || []).filter(function (g) { return !g.private || mine(); }); }
+  function galMembers(g) {
+    var out = [], seen = {};
+    (g.items || []).forEach(function (k) {
+      if (/^R:/.test(k)) { var t = REG && REG[k.slice(2)]; if (t && t.href && !seen[k]) { seen[k] = 1; out.push({ key: k, t: t }); } return; }
+      var r = byId[k] || byCall[k]; if (r && visible(r) && r.state !== 'archived' && !seen[r.id]) { seen[r.id] = 1; out.push({ key: k, r: r }); }
+    });
+    if (g.tag) WORKS.forEach(function (r) { if (visible(r) && r.state !== 'archived' && (r.tags || []).indexOf(g.tag) >= 0 && !seen[r.id]) { seen[r.id] = 1; out.push({ key: r.id, r: r, byTag: true }); } });
+    return out;
+  }
+  function galPic(m) { return m.r ? (m.r.thumb || '') : ttp(m.t.pic); }
+  function regCard(m, g) {
+    var t = m.t, fam = (t.family || '').replace(/-/g, ' ');
+    return '<a class="cdx" href="' + e(ttp(t.href)) + '" title="' + e(t.name) + '"><span class="cell"><span class="fr fit" style="--ar:1.3333"><img src="' + e(ttp(t.pic)) + '" alt="" loading="lazy" decoding="async"></span>' + (ED.on ? galRm(g, m) : '') + '</span>' +
+      '<span class="l1"><b class="call">' + e((t.studies && t.studies[0] && t.studies[0].code) || 'Technique') + '</b><span class="col">' + e(fam) + '</span></span><span class="tt">' + e(t.name) + '</span><span class="l3"><span class="st">technique</span></span></a>';
+  }
+  function galRm(g, m) { return '<span class="galrm" role="button" tabindex="0" data-galrm="' + e(m.key) + '" data-gal="' + e(g.id) + '" title="Take out of this gallery" aria-label="Take ' + e(m.r ? m.r.title : m.t.name) + ' out of this gallery">×</span>'; }
+  function galCard(g) {
+    var ms = galMembers(g), pics = ms.map(galPic).filter(Boolean).slice(0, 4);
+    return '<a class="gcard" href="#/galleries/' + encodeURIComponent(g.id) + '"><span class="mos n' + pics.length + '">' + pics.map(function (p) { return '<img src="' + e(p) + '" alt="" loading="lazy" decoding="async">'; }).join('') + '</span>' +
+      '<span class="gt">' + e(g.title) + (g.private ? ' <i class="pv">private</i>' : '') + '</span><span class="gm">' + ms.length + ' ' + (ms.length === 1 ? 'piece' : 'pieces') + (g.note ? ' · ' + e(g.note) : '') + '</span></a>';
+  }
+  function vGalleries() {
+    needReg();
+    var g = S.term ? (CMSD.galleries || []).filter(function (x) { return x.id === S.term && (!x.private || mine()); })[0] : null;
+    if (S.term && !g) { $lib.innerHTML = '<div class="empty">No gallery called “' + e(S.term) + '”. <a href="#/galleries">All galleries</a></div>' + foot(); return; }
+    if (g) {
+      var ms = galMembers(g); LIST = ms.filter(function (m) { return m.r; }).map(function (m) { return m.r; });
+      var head = '<header class="lh"><div class="lh1"><p class="meta"><a class="lnk" href="#/galleries">Galleries</a></p><h1>' + e(g.title) + '</h1><p class="meta"><b>' + ms.length + '</b> ' + (ms.length === 1 ? 'piece' : 'pieces') + (g.note ? ' · ' + e(g.note) : '') + (g.tag ? ' · tag “' + e(g.tag) + '”' : '') + (g.private ? ' · <span class="pv">private: only you see this</span>' : '') + '</p></div>' +
+        '<div class="lh2"><button type="button" class="act" data-galcopy>Copy link</button>' + (ED.on ? '<button type="button" class="act" data-galedit="' + e(g.id) + '">Rename or delete</button>' : '') + '</div></header>';
+      var form = ED.on && ED.galf === g.id ? galForm(g) : '';
+      var cards = ms.map(function (m) { return m.r ? card(m.r).replace('</span><span class="l1">', (ED.on ? galRm(g, m) : '') + '</span><span class="l1">') : regCard(m, g); }).join('');
+      var none = !ms.length ? '<div class="empty">' + (REG ? 'Nothing in this gallery yet.' + (ED.on ? ' Pick cards in the library and choose Gallery → ' + e(g.title) + '.' : '') : 'Loading…') + '</div>' : '';
+      $lib.innerHTML = head + form + (cards ? '<div class="cards gal">' + cards + '</div>' : none) + foot();
+      return;
+    }
+    var gs = galleries();
+    var head2 = '<header class="lh"><div class="lh1"><h1>Galleries</h1><p class="meta"><b>' + gs.length + '</b> ' + (gs.length === 1 ? 'gallery' : 'galleries') + ' · a gallery is a tag: pick cards in Edit, then Gallery</p></div>' +
+      (ED.on ? '<div class="lh2"><button type="button" class="act" data-galnew>+ New gallery</button></div>' : '') + '</header>';
+    $lib.innerHTML = head2 + (ED.on && ED.galf === '' ? galForm(null) : '') + (gs.length ? '<div class="gals">' + gs.map(galCard).join('') + '</div>' : '<div class="empty">No galleries yet.</div>') + foot();
+  }
+  function galForm(g) {
+    return '<form class="pjf galf" data-galform="' + e(g ? g.id : '') + '"><input name="t" value="' + e(g ? g.title : '') + '" placeholder="Gallery name" aria-label="Gallery name" spellcheck="true">' +
+      '<input name="n" value="' + e(g && g.note || '') + '" placeholder="Note (optional)" aria-label="Note">' +
+      '<label class="pv"><input type="checkbox" name="p"' + (g && g.private ? ' checked' : '') + '> Private <small>only you see it</small></label>' +
+      '<div class="pjb"><button type="submit" class="act">' + (g ? 'Save' : 'Create') + '</button><button type="button" class="act" data-galcancel>Cancel</button>' + (g ? '<button type="button" class="act danger" data-galdrop="' + e(g.id) + '">Delete gallery</button><span class="nd">tags stay on the pieces</span>' : '') + '</div></form>';
+  }
+  function gslug(t) { var b = String(t).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'gallery', id = b, i = 2; while ((CMSD.galleries || []).some(function (x) { return x.id === id; })) id = b + '-' + i++; return id; }
+  function galLocal(def) {
+    var G = CMSD.galleries = CMSD.galleries || [], i = -1; G.forEach(function (x, j) { if (x.id === def.id) i = j; });
+    if (def.drop) { if (i >= 0) G.splice(i, 1); return; }
+    var cur = i >= 0 ? G[i] : { id: def.id }; for (var k in def.set) { if (def.set[k] == null || def.set[k] === false || def.set[k] === '') delete cur[k]; else cur[k] = def.set[k]; } if (i < 0) G.push(cur);
+  }
+  // one commit: the gallery definition, and the tags on any pieces it touches
+  function saveGallery(def, rs, per, message) {
+    var prev = JSON.parse(JSON.stringify(CMSD.galleries || [])), sv = snap(rs || []);
+    galLocal(def); (rs || []).forEach(function (r) { if (per && per[r.id]) applyEntry(r, Object.assign({}, r._ed || {}, per[r.id], { project: r.project, kind: r.kind3 })); });
+    ED.galf = null; ED.sel = {}; render(); status('Saving: ' + message + '…');
+    ED.q = ED.q.then(function () {
+      return LibCMS.save({ op: def.drop ? 'gallery-delete' : 'gallery', ids: (rs || []).map(function (r) { return r.id; }), patch: {}, per: per, galleryDef: def }, message).then(function (x) {
+        CMSD.galleries = x.E.galleries || CMSD.galleries; status('Saved: ' + message + '. On the site after the next build, about two minutes.', 'ok'); render(); watchDeploy(6000);
+      }, function (err) { CMSD.galleries = prev; unsnap(sv); render(); status('Not saved: ' + err.message, 'bad'); });
+    });
+  }
+  function addToGallery(g, rs) {
+    var tag = g.tag || g.title, per = {};
+    rs.forEach(function (r) { var a = (r.tags || []).slice(); if (a.indexOf(tag) < 0) a.push(tag); per[r.id] = { tags: a }; });
+    saveGallery({ id: g.id, set: g.tag ? {} : { tag: tag } }, rs, per, 'Add ' + names(rs) + ' to the gallery ' + g.title);
+  }
+  function takeOut(gid, key) {
+    var g = (CMSD.galleries || []).filter(function (x) { return x.id === gid; })[0]; if (!g) return;
+    var items = (g.items || []).filter(function (k) { return k !== key; }), r = byId[key] || byCall[key], rs = [], per = {};
+    if (r && g.tag && (r.tags || []).indexOf(g.tag) >= 0) { rs = [r]; per[r.id] = { tags: (r.tags || []).filter(function (t) { return t !== g.tag; }) }; }
+    saveGallery({ id: gid, set: { items: items.length ? items : null } }, rs, per, 'Take ' + (r ? (r.call || r.acc) : key.replace(/^R:/, '')) + ' out of ' + g.title);
+  }
   /* ---------------------------------------------------------------- events */
   function toggle(k, v) { var a = S.f[k].slice(), i = a.indexOf(v); if (i < 0) a.push(v); else a.splice(i, 1); var f = {}; for (var x in S.f) f[x] = S.f[x]; f[k] = a; go({ f: f }); }
   function toast(msg) { var t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 1400); }
@@ -907,8 +1007,18 @@
     function fallback() { var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (err) { toast('Copy failed'); } ta.remove(); }
   }
   document.addEventListener('click', function (ev) {
-    var pk = ED.on && ev.target.closest && !ev.target.closest('.nw') && ev.target.closest('[data-pick]');
+    var pk = ED.on && ev.target.closest && !ev.target.closest('.nw,.galrm') && ev.target.closest('[data-pick]');
     if (pk) { ev.preventDefault(); pick(pk.getAttribute('data-pick'), ev.shiftKey); return; }
+    var gx = ev.target.closest && ev.target.closest('[data-galrm],[data-galnew],[data-galedit],[data-galcancel],[data-galdrop],[data-galcopy]');
+    if (gx) {
+      ev.preventDefault(); ev.stopPropagation(); var gd = gx.dataset;
+      if (gd.galrm) return takeOut(gd.gal, gd.galrm);
+      if ('galnew' in gd) { ED.galf = ''; return render(); }
+      if (gd.galedit) { ED.galf = gd.galedit; return render(); }
+      if ('galcancel' in gd) { ED.galf = null; return render(); }
+      if (gd.galdrop) { var gq = (CMSD.galleries || []).filter(function (x) { return x.id === gd.galdrop; })[0]; S.term = null; setHash(hash({ view: 'galleries', term: null })); return saveGallery({ id: gd.galdrop, drop: true }, [], {}, 'Delete the gallery ' + (gq ? gq.title : gd.galdrop)); }
+      if ('galcopy' in gd) return copy(location.href.split('#')[0] + hash({ view: 'galleries', term: S.term, q: '', f: noF(), r: null }), 'Link copied');
+    }
     var pe = ev.target.closest && ev.target.closest('[data-pjedit],[data-pjcancel],[data-pjdrop]');
     if (pe) {
       ev.preventDefault(); ev.stopPropagation();
@@ -961,6 +1071,11 @@
   document.addEventListener('change', function (ev) {
     if (ev.target.matches('[data-sort]')) go({ sort: ev.target.value });
     else if (ev.target.matches('[data-edf]')) editField(ev.target);
+    else if (ev.target.matches('[data-bulk="gallery"]') && ev.target.value) {
+      var gv = ev.target.value, rsg = selected();
+      if (gv === '__new') { $sel.querySelector('.row').insertAdjacentHTML('beforeend', '<form class="tagf" data-newgal><input aria-label="New gallery name" placeholder="Gallery name" spellcheck="true"><button type="submit" class="act">Make gallery of ' + rsg.length + '</button></form>'); $sel.querySelector('[data-newgal] input').focus(); return; }
+      var gg = (CMSD.galleries || []).filter(function (x) { return x.id === gv; })[0]; if (gg) addToGallery(gg, rsg);
+    }
     else if (ev.target.matches('[data-bulk="project"]') && ev.target.value) { var v = ev.target.value, rs = selected(); commit(rs, 'project', { project: v }, 'Move ' + names(rs) + ' to ' + PROJ[v].title); }
   });
   document.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && ev.target.matches && ev.target.matches('input[data-edf]')) { ev.preventDefault(); ev.target.blur(); } }, true);
