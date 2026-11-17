@@ -1,0 +1,84 @@
+/* helix-step · shared engine for the helix-step plates drawn by Mindgut's A07 microsite (PL-20…25, PL-155, PL-156).
+   Appended to each plate's study.js by _build/plates.py after that plate's hx-figure.js (window.HX_FIG: source page,
+   canvas id, and which dials act on that figure). The page's own code draws the figure: it is loaded once into a hidden
+   frame with its canvas helper and its step, shard, sun and crystal helpers given a dial object (window.__P), and the
+   figure's draw function paints straight into this plate. Moment 0 is the page's own still (its reduced-motion frame). */
+(function (S) {
+  'use strict';
+  var FIG = window.HX_FIG || {}, ON = {}; (FIG.dials || []).forEach(function (k) { ON[k] = 1; });
+  var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
+  var ALL = {
+    curl: leaf(1, 0.5, 2, 0.01, 'Curl', '×', 'Radius of the helix the steps climb: smaller winds the flight tighter, larger opens it toward a straight stair.'),
+    turn: leaf(0, -40, 40, 1, 'Turn', '°', 'Where on the helix the flight starts: turns the whole stair about its axis.'),
+    rise: leaf(1, 0.6, 1.8, 0.01, 'Rise', '×', 'Height of each step, as a multiple of the page’s.'),
+    tread: leaf(1, 0.6, 1.6, 0.01, 'Tread', '×', 'Depth of each step along the helix, as a multiple of the page’s.'),
+    block: leaf(1, 0.6, 1.3, 0.01, 'Block size', '×', 'Size of every step block against the spacing of the flight.'),
+    yaw: leaf(0, -0.6, 0.6, 0.01, 'Yaw', 'rad', 'Turns every block about its own vertical axis.'),
+    pitch: leaf(1, 0.5, 1.6, 0.01, 'Pitch', '×', 'How steeply the blocks are seen from above.'),
+    sun: leaf(1, 0, 1.6, 0.01, 'Sun', '×', 'Size of the sun disc behind the stair; 0 takes it away.'),
+    crystal: leaf(1, 0.4, 1.8, 0.01, 'Crystal size', '×', 'Size of each crystal the record sets into.'),
+    length: leaf(1, 0.3, 2.5, 0.01, 'Message length', '×', 'How many characters the example exchange has: every count in the figure follows it.'),
+    dotp: leaf(1, 0.6, 1.6, 0.01, 'Dot pitch', '×', 'Spacing of the counted dots.'),
+    moment: leaf(0, 0, 24, 0.1, 'Moment', 's', 'Where in its loop the figure is shown. 0 is the page’s own still.')
+  };
+  var P0 = {}; Object.keys(ALL).forEach(function (k) { if (ON[k]) P0[k] = ALL[k]; });
+  var read = (S.spec.techniques || [])[0] || {};
+  var TECH = [{ id: 'helix-step', short: 'HLX', name: 'Helix step', layer: 1, pass: 1, atoms: ['isometric', 'stair', 'block'], params: P0,
+    implementation: (read.implementation || 'The record as a stair of blocks climbing a helix, one block to an exchange.') + ' Drawn by the source page’s own code, with its stair, block, sun and crystal helpers given dials.' }];
+  S.spec.techniques = TECH.concat((S.spec.techniques || []).filter(function (t) { return t.id !== (read.id || 'helix-step'); }));
+  S.spec.pass_order = ['ground · plate', 'sun disc', 'flight · one block to an exchange, on the helix', 'figures · walker, robot, pets, crystals', 'labels'];
+  S.body = [S.body[0], 'The figure is drawn here by its source page’s own code, with dials on how it is built: the helix the steps climb, the size and angle of each block, the sun, the crystals, and the moment in its loop. At the default dials it is the page’s own still.'];
+  S.paramsHint = 'Dials on the page’s own drawing. Multiples are of the page’s numbers.';
+  S.liveOnLoad = false; delete S.live;
+
+  var PATCH = [
+    ["function plate(id,draw,opt){var cv=typeof id==='string'?$(id):id;if(!cv)return null;opt=opt||{};", "function plate(id,draw,opt){var cv=typeof id==='string'?$(id):id;if(!cv)return null;opt=opt||{};(window.__DRAWS=window.__DRAWS||{})[typeof id==='string'?id:(cv.id||'')]=draw;"],
+    ["RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;", "RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;window.__setRM=function(v){RM=v};"],
+    ["var Rr=o.R||4.6,ac=(o.ac==null?86:o.ac)*Math.PI/180", "var __P=window.__P||{},Rr=(o.R||4.6)*(__P.curl||1),ac=((o.ac==null?86:o.ac)+(__P.turn||0))*Math.PI/180"],
+    ["v:-(k-(n-1)/2)*.27*c2", "v:-(k-(n-1)/2)*.27*(__P.rise||1)*c2"],
+    [".46/Rr", ".46*(__P.tread||1)/Rr", 2],
+    ["function _kShard(x,cx,cy,S,kind,e,yaw,rot,q){q=q||{};", "function _kShard(x,cx,cy,S,kind,e,yaw,rot,q){q=q||{};var __P=window.__P||{};S*=(__P.block||1);yaw+=(__P.yaw||0);if(__P.pitch&&__P.pitch!==1)q=Object.assign({},q,{pit:(q.pit==null?_kPIT:q.pit)*__P.pitch});"],
+    ["function sunDisc(x,cx,cy,R,col){", "function sunDisc(x,cx,cy,R,col){R*=((window.__P||{}).sun==null?1:window.__P.sun);if(R<1)return;"],
+    ["function crystal(x,cx,cy,R,form,t,o){o=o||{};", "function crystal(x,cx,cy,R,form,t,o){o=o||{};R*=((window.__P||{}).crystal||1);"],
+    ["function howFig(x,w,h,t,o){o=o||{};", "function howFig(x,w,h,t,o){o=o||{};var __Lm=((window.__P||{}).length||1),__L=function(v){return Math.max(1,Math.round(v*__Lm))};"],
+    ["CY=[14,19,13],CM=[33,46,39],NY=46,NM=118", "CY=[14,19,13].map(__L),CM=[33,46,39].map(__L),NY=__L(46),NM=__L(118)"],
+    ["p=Math.max(3.2,Math.min(10,", "p=((window.__P||{}).dotp||1)*Math.max(3.2,Math.min(10,"],
+    ["var JN={who:0,", "var JN=window.__JN={who:0,"]
+  ];
+  var boot = null;
+  function load() {
+    if (boot) return boot;
+    boot = fetch(FIG.src).then(function (r) { if (!r.ok) throw new Error('source ' + r.status); return r.text(); }).then(function (html) {
+      var miss = [];
+      PATCH.forEach(function (q) { var n = html.split(q[0]).length - 1; if (n !== (q[2] || 1)) { miss.push(q[0]); return; } html = html.split(q[0]).join(q[1]); });
+      if (miss.length) console.info('[helix-step] not wired:', miss);
+      html = html.replace(/<head>/i, '<head><base href="' + new URL(FIG.src, location.href).href + '">');
+      return new Promise(function (res, rej) {
+        var f = document.createElement('iframe'); f.setAttribute('aria-hidden', 'true'); f.tabIndex = -1; f.title = 'helix-step engine';
+        f.style.cssText = 'position:fixed;left:-4000px;top:0;width:1440px;height:900px;visibility:hidden';
+        f.onload = function () { var w = f.contentWindow, tries = 0; (function wait() { var d = (w.__DRAWS || {})[FIG.id]; if (d) { w.__T0 = w.__JN ? w.__JN.T : 0; res({ w: w, draw: d }); } else if (++tries < 100) setTimeout(wait, 100); else rej(new Error('figure not found: ' + FIG.id)); })(); };
+        f.srcdoc = html; document.body.appendChild(f);
+      });
+    });
+    return boot;
+  }
+  S.render = function (canvas, w, h, dpr, V, done, overrides) {
+    var A = window.ART.params(S.spec, overrides || {}), Q = A['helix-step'] || {};
+    var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = V.paper || '#FFFFFF'; x.fillRect(0, 0, W, H);
+    load().then(function (E) {
+      var win = E.w, P = {}; Object.keys(ALL).forEach(function (k) { P[k] = k in Q ? Q[k] : ALL[k].value; }); win.__P = P;
+      var m = +Q.moment || 0; if (win.__setRM) win.__setRM(m === 0); if (win.__JN) win.__JN.T = m === 0 ? win.__T0 : m;
+      S.panels.forEach(function (p) {
+        var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, cw = bw / dpr, ch = bh / dpr;
+        x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip(); x.fillStyle = FIG.ground || '#f5f7f0'; x.fillRect(bx, by, bw, bh);
+        x.setTransform(dpr, 0, 0, dpr, bx, by);
+        try { E.draw(x, cw, ch, { cv: null, t: m, vis: true, live: true, ptr: null, down: false }, 0, dpr); } catch (err) { console.error('[helix-step]', err); }
+        x.setTransform(1, 0, 0, 1, 0, 0); x.restore();
+        x.strokeStyle = V.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
+      });
+      if (done) done();
+    }, function (err) { console.error('[helix-step]', err); if (done) done(); });
+    return false;
+  };
+})(window.STUDY);
