@@ -1,0 +1,2 @@
+/* PL-28 · Helix as cut ribbon · drawn by its source page's own code: A01_reflection-identity.html #spec7 > div:nth-child(7) > canvas:nth-child(1). See _build/engines/mg-figure.js. */
+window.MG_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A01_reflection-identity.html", "pick": ["#spec7 canvas", 3], "family": "light", "dials": ["tilt", "spin", "rise", "focus", "moment"], "w": 187, "h": 470};

@@ -27,3 +27,140 @@ window.STUDY={"id": "pl-33-bar-ramp-three-models", "code": "PL-33", "fig": "4.33
       +cells+'<script src="../../_shared/lift.js"><\/script></body></html>';
   };
 })(window.STUDY);
+
+/* PL-33 · Bar ramp, three models · drawn by its source page's own code: A01_reflection-identity.html #c-r1. See _build/engines/mg-figure.js. */
+window.MG_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A01_reflection-identity.html", "id": "c-r1", "family": "light", "dials": ["bars", "height", "depth"], "w": 308, "h": 231};
+
+/* mg-figure · shared engine for plates drawn by Mindgut's A01 Reflection Identity page (PL-26…35): the helix studies
+   and the count bars. Appended to each plate's study.js by _build/plates.py after that plate's mg-figure.js
+   (window.MG_FIG: source page, canvas, which dials act on it, which palette family it takes).
+   The page's own code draws the figure. It is loaded once into a hidden frame; its camera, step, focus and bar
+   code is given a dial object (window.__P) and its inks a setter, and the figure's draw function paints straight
+   into this plate at the figure's own size. Nothing in the source file changes. */
+(function (S) {
+  'use strict';
+  var FIG = window.MG_FIG || {}, ON = {}; (FIG.dials || []).forEach(function (k) { ON[k] = 1; });
+  var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
+  var ALL = {
+    tilt: leaf(0, -40, 15, 0.5, 'Tilt', '°', 'Tips the helix toward or away from you, added to the page’s own angle. Negative looks more from the side.'),
+    spin: leaf(0, -3.15, 3.15, 0.01, 'Turn', 'rad', 'Turns the helix about its axis.'),
+    rise: leaf(1, 0.4, 2.2, 0.01, 'Rise', '×', 'How tall the helix stands for its number of steps: low packs the turns, high opens them.'),
+    focus: leaf(5, 0, 12, 1, 'In focus', 'exchanges', 'How many of the newest exchanges are lit as in focus. The page holds 4 to 7; it draws 5.'),
+    bars: leaf(1, 0.34, 2, 0.01, 'Bars', '×', 'Number of bars, as a multiple of the page’s 30. The model handoffs move with them.'),
+    height: leaf(1, 0.4, 1.6, 0.01, 'Height', '×', 'Height of every bar against the frame.'),
+    depth: leaf(1, 0, 3, 0.01, 'Depth', '×', 'How deep each bar is drawn: 0 flattens it to its front face.'),
+    ring: leaf(1, 0.4, 2, 0.01, 'Mark size', '×', 'Size of the state mark over each bar: the ring, the dashed ring, the open arc and the stroke.'),
+    ex: leaf(21, 7, 42, 1, 'Exchanges', '', 'Exchanges in the turn. The page’s turn is 21: 7 breaths of 3.'),
+    moment: leaf(0, 0, 60, 0.1, 'Moment', 's', 'The figure’s clock. 0 is the page’s still.')
+  };
+  var P0 = {}; Object.keys(ALL).forEach(function (k) { if (ON[k]) P0[k] = ALL[k]; });
+  var read = (S.spec.techniques || [])[0] || {}, TID = read.id || 'helix-form';
+  var TECH = [{ id: TID, short: TID === 'count-bars' ? 'BAR' : 'HLX', name: read.name || 'Helix form', layer: 1, pass: 1, atoms: TID === 'count-bars' ? ['bar', 'isometric', 'count'] : ['helix', 'step', 'camera'], params: P0,
+    implementation: (read.implementation || '') + ' Drawn by the source page’s own code, with its camera, steps, focus and bars given dials.' }];
+  S.spec.techniques = TECH.concat((S.spec.techniques || []).filter(function (t) { return t.id !== TID; }));
+  S.body = [S.body[0], 'The figure is drawn here by its source page’s own code (Mindgut, Reflection Identity), with dials on how it is built. At the default dials it is the page’s own drawing. The Color tab edits the figure’s inks: line, yours, the model’s, in focus, recalled, now and the ground.'];
+  S.paramsHint = 'Dials on the page’s own drawing. Multiples are of the page’s numbers.';
+  S.liveOnLoad = false; delete S.live;
+
+  function mix(a, b, t) { var A = [1, 3, 5].map(function (i) { return parseInt(a.substr(i, 2), 16); }), B = [1, 3, 5].map(function (i) { return parseInt(b.substr(i, 2), 16); }); return '#' + A.map(function (v, i) { return Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0'); }).join(''); }
+  /* palettes by family: light (the page's paper), dark (its black bands), lime (the ribbon on lime) */
+  var FAM = {
+    light: [
+      ['mindgut', 'Mindgut', { ground: '#f5f7f0', line: '#151b17', you: '#126b3d', model: '#fbfcf7', focus: '#d0ec60', recall: '#6c46b8', now: '#d9462f' }],
+      ['night', 'Night', { ground: '#151b17', line: '#eef2e7', you: '#6fcf90', model: '#2c3a30', focus: '#d0ec60', recall: '#b79cf2', now: '#ef4a2b' }],
+      ['cobalt', 'Cobalt', { ground: '#f3f5f8', line: '#0e1122', you: '#1b3bd4', model: '#f8f9fc', focus: '#93a8ea', recall: '#0e1122', now: '#ef4a2b' }]
+    ],
+    dark: [
+      ['mindgut', 'Mindgut', { ground: '#0c0e0d', line: '#0c0e0d', you: '#6fcf90', model: '#f5f7f0', focus: '#d0ec60', recall: '#b79cf2', now: '#d9462f' }],
+      ['forest', 'Forest', { ground: '#0a2a1a', line: '#0a2a1a', you: '#8fdc9b', model: '#eef2e7', focus: '#d0ec60', recall: '#d9cdf7', now: '#f2a444' }],
+      ['cobalt', 'Cobalt', { ground: '#0e1122', line: '#0e1122', you: '#93a8ea', model: '#eef0f6', focus: '#ef4a2b', recall: '#c9d2f5', now: '#ef4a2b' }]
+    ],
+    lime: [
+      ['mindgut', 'Mindgut', { ground: '#d0ec60', line: '#151b17', you: '#126b3d', model: '#f5f7f0', focus: '#cfdcc0', recall: '#6c46b8', now: '#d9462f' }],
+      ['violet', 'Violet', { ground: '#d9cdf7', line: '#151b17', you: '#6c46b8', model: '#fbfcf7', focus: '#b79cf2', recall: '#44297f', now: '#d9462f' }],
+      ['ink', 'Ink', { ground: '#151b17', line: '#d0ec60', you: '#126b3d', model: '#f5f7f0', focus: '#cfdcc0', recall: '#b79cf2', now: '#ef4a2b' }]
+    ]
+  };
+  var fam = FAM[FIG.family] || FAM.light;
+  S.variants = fam.map(function (f) { var k = f[2]; return { id: f[0], label: f[1], sw: [k.ground, k.you, k.model, k.focus, k.recall], spot: [20, 20, 20], paper: k.ground, rule: mix(k.ground, k.line === k.ground ? k.model : k.line, .16), inks: JSON.parse(JSON.stringify(k)) }; });
+  S.variantLabel = 'Palette';
+  S.colorHint = 'Pick a palette; click an ink to change it. Each ink is one of the figure’s own: the line, your steps, the model’s, in focus, recalled, now and the ground. Faces are shaded from each.';
+
+  /* the inks go in through one setter, placed after the page's box inks so every palette variable is in reach */
+  var SETTER = "window.__setInk=function(o){var R=function(c){return rgb(c)},sh=function(c,t){var a=[1,3,5].map(function(i){return parseInt(c.substr(i,2),16)});return '#'+a.map(function(v){return Math.round(v*(1-t)).toString(16).padStart(2,'0')}).join('')},ti=function(c,t){var a=[1,3,5].map(function(i){return parseInt(c.substr(i,2),16)});return '#'+a.map(function(v){return Math.round(v+(255-v)*t).toString(16).padStart(2,'0')}).join('')},mx=function(c,d,t){var a=[1,3,5].map(function(i){return parseInt(c.substr(i,2),16)}),b=[1,3,5].map(function(i){return parseInt(d.substr(i,2),16)});return '#'+a.map(function(v,i){return Math.round(v+(b[i]-v)*t).toString(16).padStart(2,'0')}).join('')};"
+    + "var ln=o.dark?'#151b17':o.line;VOID=MIST=ln;FOREST=COBALT=o.you;ACID=o.focus;EMBER=o.now;VIOLET=o.recall;"
+    + "BX.you=[o.you,sh(o.you,.2),sh(o.you,.38)];BX.model=[o.model,mx(o.model,o.you,.12),mx(o.model,o.you,.24)];BX.live=[o.focus,sh(o.focus,.1),sh(o.focus,.22)];BX.rec=[o.recall,sh(o.recall,.2),sh(o.recall,.36)];BX.pale=[mx(o.ground,o.you,.1),mx(o.ground,o.you,.18),mx(o.ground,o.you,.26)];"
+    + "['light','dark'].forEach(function(m){var P=STP[m];P.c=[o.you,sh(o.you,.2),sh(o.you,.38),sh(o.you,.52)].map(R);P.s=[o.model,mx(o.model,o.you,.12),mx(o.model,o.you,.24),mx(o.model,o.you,.34)].map(R);P.lc=[o.focus,sh(o.focus,.1),sh(o.focus,.22),sh(o.focus,.32)].map(R);P.ls=[ti(o.focus,.6),ti(o.focus,.4),ti(o.focus,.25),ti(o.focus,.1)].map(R);P.rc=[o.recall,sh(o.recall,.2),sh(o.recall,.36),sh(o.recall,.48)].map(R);P.hv=[o.now,sh(o.now,.2),sh(o.now,.36),sh(o.now,.48)].map(R);P.bg=o.ground;P.bgc=R(o.ground);if(m==='light'){P.key=o.line;P.keyc=R(o.line)}else{P.key=o.ground;P.keyc=R(o.ground)}});"
+    + "window.__GBG=o.ground;window.__FAR=sh(o.you,.38);window.__LFAR=sh(o.focus,.22);window.__VHP={near:o.line,far:o.you,live:o.model,liveFar:mx(o.model,o.you,.18),ink:o.line,bg:o.ground}};";
+  var Pq = "(window.__P||{})";
+  var PATCH = [
+    ["function plate(id,draw,opt){var cv=typeof id==='string'?$(id):id;", "function plate(id,draw,opt){var cv=typeof id==='string'?$(id):id;if(cv){(window.__DRAWS=window.__DRAWS||{})[typeof id==='string'?id:(cv.id||'')]=draw;(window.__DRAWL=window.__DRAWL||[]).push([cv,draw])}"],
+    ["function clock(){return RM?0:performance.now()/1000}", "function clock(){return window.__T!=null?window.__T:(RM?0:performance.now()/1000)}"],
+    ["function cam(rec,tilt,spin,asp,upto,cxo,cyo,zoom){var N=upto||rec.N,H=Math.min(Math.max(N,42)*.2,HC),", "function cam(rec,tilt,spin,asp,upto,cxo,cyo,zoom){var __P=" + Pq + ";tilt=Math.max(.5,Math.min(89.5,tilt+(__P.tilt||0)));spin+=(__P.spin||0);var N=upto||rec.N,H=Math.min(Math.max(N,42)*.2,HC)*(__P.rise||1),"],
+    ["k,b=5,lim=N-2*b,hs=o.hs||9", "k,b=(" + Pq + ".focus!=null?" + Pq + ".focus:5),lim=N-2*b,hs=o.hs||9"],
+    ["b=o.b||0,lim=N-2*b", "b=(o.b&&" + Pq + ".focus!=null)?" + Pq + ".focus:(o.b||0),lim=N-2*b"],
+    ["{dark:true,bg:'#0c0e0d',wire:true", "{dark:true,bg:(window.__GBG||'#0c0e0d'),wire:true"],
+    ["{dark:true,bg:'#0c0e0d',tilt:78", "{dark:true,bg:(window.__GBG||'#0c0e0d'),tilt:78"],
+    ["pal=o.pal||{near:FOREST,far:'#0a4528',live:ACID,liveFar:'#a2bf36',ink:VOID,bg:'#f5f7f0'}", "pal=o.pal||{near:FOREST,far:(window.__FAR||'#0a4528'),live:ACID,liveFar:(window.__LFAR||'#a2bf36'),ink:VOID,bg:(window.__GBG||'#f5f7f0')}"],
+    ["pal:{near:'#151b17',far:FOREST,live:'#f5f7f0',liveFar:'#cfdcc0',ink:'#151b17',bg:ACID}", "pal:(window.__VHP||{near:'#151b17',far:FOREST,live:'#f5f7f0',liveFar:'#cfdcc0',ink:'#151b17',bg:ACID})"],
+    /* the count bars */
+    ["var u=w/100,n=30,", "var u=w/100,n=Math.max(4,Math.round(30*(" + Pq + ".bars||1))),"],
+    ["seg=[[1,'MODEL I'],[11,'MODEL II'],[21,'MODEL III']]", "seg=[[1,'MODEL I'],[1+Math.round(10*n/30),'MODEL II'],[1+Math.round(20*n/30),'MODEL III']]"],
+    ["box(x,x0+(k-1)*bw,base,bw,(8+k*.82+S.amp*70)*u,3.6*u,", "box(x,x0+(k-1)*bw,base,bw,(8+k*.82*30/n+S.amp*70)*u*(" + Pq + ".height||1),3.6*u*(" + Pq + ".depth==null?1:" + Pq + ".depth),"],
+    ["bh=[19,13,23,16][i]*u,", "bh=[19,13,23,16][i]*u*(" + Pq + ".height||1),"],
+    ["R=4.4*u;", "R=4.4*u*(" + Pq + ".ring||1);"],
+    ["box(x,px,base,bw,bh,5*u,", "box(x,px,base,bw,bh,5*u*(" + Pq + ".depth==null?1:" + Pq + ".depth),"],
+    ["M=21,cw=(w-22*u)/M,base=h*.86,uh=(h*.58)/M", "M=Math.round(" + Pq + ".ex||21),cw=(w-22*u)/M,base=h*.86,uh=(h*.58)/M*(" + Pq + ".height||1)"],
+    ["box(x,X,base,cw*.84,sp*uh,cw*.5,", "box(x,X,base,cw*.84,sp*uh,cw*.5*(" + Pq + ".depth==null?1:" + Pq + ".depth),"],
+    ["box(x,X,base-sp*uh,cw*.84,b*uh,cw*.5,", "box(x,X,base-sp*uh,cw*.84,b*uh,cw*.5*(" + Pq + ".depth==null?1:" + Pq + ".depth),"],
+    ["'21 EXCHANGES / ONE TURN'", "M+' EXCHANGES / ONE TURN'"]
+  ];
+  var boot = null;
+  function load() {
+    if (boot) return boot;
+    boot = fetch(FIG.src).then(function (r) { if (!r.ok) throw new Error('source ' + r.status); return r.text(); }).then(function (html) {
+      var miss = [];
+      PATCH.forEach(function (q) { var n = html.split(q[0]).length - 1; if (n !== 1) { miss.push(q[0].slice(0, 50) + ' ×' + n); return; } html = html.split(q[0]).join(q[1]); });
+      var a = html.indexOf('var BX={'), b = a < 0 ? -1 : html.indexOf('};', a);
+      if (b > 0) html = html.slice(0, b + 2) + SETTER + html.slice(b + 2); else miss.push('ink setter');
+      if (miss.length) console.info('[mg-figure] not wired:', miss);
+      html = html.replace(/<head>/i, '<head><base href="' + new URL(FIG.src, location.href).href + '">');
+      return new Promise(function (res, rej) {
+        var f = document.createElement('iframe'); f.setAttribute('aria-hidden', 'true'); f.tabIndex = -1; f.title = 'mg-figure engine';
+        f.style.cssText = 'position:fixed;left:-4000px;top:0;width:1440px;height:900px;visibility:hidden';
+        f.onload = function () {
+          var w = f.contentWindow, tries = 0;
+          (function wait() {
+            var d = null;
+            if (FIG.pick) { var cv = w.document.querySelectorAll(FIG.pick[0])[FIG.pick[1]]; (w.__DRAWL || []).forEach(function (e) { if (e[0] === cv) d = e[1]; }); }
+            else d = (w.__DRAWS || {})[FIG.id];
+            if (d && w.__setInk) res({ w: w, draw: d }); else if (++tries < 100) setTimeout(wait, 100); else rej(new Error('figure not found: ' + (FIG.id || FIG.pick)));
+          })();
+        };
+        f.srcdoc = html; document.body.appendChild(f);
+      });
+    });
+    return boot;
+  }
+  function paint(E, canvas, x, V, Q, dpr, t) {
+    var W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h, win = E.w, P = {};
+    Object.keys(ALL).forEach(function (k) { P[k] = k in Q ? Q[k] : ALL[k].value; }); if (!ON.focus) delete P.focus; win.__P = P;
+    var K = Object.assign({}, V.inks || S.variants[0].inks, { dark: FIG.family === 'dark' }); try { win.__setInk(K); } catch (e) { console.error('[mg-figure] inks', e); }
+    win.__T = t; x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = V.paper || '#FFFFFF'; x.fillRect(0, 0, W, H);
+    S.panels.forEach(function (p) {
+      var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, cw = bw / dpr, ch = bh / dpr;
+      x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip(); x.fillStyle = K.ground; x.fillRect(bx, by, bw, bh);
+      var fw = FIG.w || cw, fh = FIG.h || ch, k = Math.min(cw / fw, ch / fh), ox = bx + (bw - fw * k * dpr) / 2, oy = by + (bh - fh * k * dpr) / 2;
+      x.setTransform(dpr * k, 0, 0, dpr * k, ox, oy);
+      try { E.draw(x, fw, fh, { cv: null, t: t, vis: true, live: true, ptr: null, down: false }, 0, dpr * k); } catch (err) { console.error('[mg-figure]', err); }
+      x.setTransform(1, 0, 0, 1, 0, 0); x.restore();
+      x.strokeStyle = V.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
+    });
+  }
+  S.render = function (canvas, w, h, dpr, V, done, overrides) {
+    var A = window.ART.params(S.spec, overrides || {}), Q = A[TID] || {};
+    load().then(function (E) { paint(E, canvas, canvas.getContext('2d'), V, Q, dpr, +Q.moment || 0); if (done) done(); },
+      function (err) { console.error('[mg-figure]', err); if (done) done(); });
+    return false;
+  };
+})(window.STUDY);
