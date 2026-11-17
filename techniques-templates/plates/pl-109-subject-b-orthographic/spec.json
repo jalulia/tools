@@ -5,13 +5,25 @@
   "section": "plates",
   "variants": [
     {
-      "id": "white",
-      "label": "White",
+      "id": "source",
+      "label": "Source",
       "swatches": [
-        "#FFFFFF",
-        "#262626",
-        "#606060",
-        "#0F0F10"
+        "#fcfcfa",
+        "#17171a",
+        "#000000",
+        "#a3a3a9",
+        "#75757c"
+      ]
+    },
+    {
+      "id": "cobalt",
+      "label": "Cobalt",
+      "swatches": [
+        "#f8f8f6",
+        "#0e1122",
+        "#0e1122",
+        "#5b74de",
+        "#1b3bd4"
       ]
     },
     {
@@ -19,9 +31,10 @@
       "label": "Ink",
       "swatches": [
         "#101014",
-        "#262626",
-        "#606060",
-        "#0F0F10"
+        "#eaeae7",
+        "#ffffff",
+        "#696964",
+        "#93938d"
       ]
     }
   ],
@@ -50,30 +63,116 @@
   "techniques": [
     {
       "id": "orthographic-set",
-      "short": "OSTH",
+      "short": "DRW",
       "name": "Orthographic set",
       "layer": 1,
       "pass": 1,
       "atoms": [
-        "line"
+        "line",
+        "box",
+        "arrow",
+        "label"
       ],
       "params": {
-        "figures": 2,
-        "family": "line",
-        "panels": [
-          {
-            "title": "Subject B · Orthographic · 1",
-            "coverage": 0.029,
-            "ground": "#FCFCFA"
-          },
-          {
-            "title": "Subject B · Orthographic · 2",
-            "coverage": 0.026,
-            "ground": "#FCFCFA"
-          }
-        ]
+        "weight": {
+          "value": 1,
+          "range": [
+            0.4,
+            3
+          ],
+          "step": 0.05,
+          "label": "Line weight",
+          "note": "Every stroke of the figure at this multiple of its measured width.",
+          "unit": "×"
+        },
+        "hand": {
+          "value": 0,
+          "range": [
+            0,
+            4
+          ],
+          "step": 0.05,
+          "label": "Hand",
+          "note": "How far a line may wander from its ruled path, in figure units. 0 is ruled; higher redraws every line, box and pole by hand.",
+          "unit": "u"
+        },
+        "corner": {
+          "value": 0,
+          "range": [
+            0,
+            24
+          ],
+          "step": 0.5,
+          "label": "Box corners",
+          "note": "Corner radius of every box, in figure units. A box drawn round in the source keeps at least its own.",
+          "unit": "u"
+        },
+        "arrow": {
+          "value": 1,
+          "range": [
+            0.4,
+            3
+          ],
+          "step": 0.05,
+          "label": "Arrowheads",
+          "note": "Size of the arrowheads on directed lines, as a multiple of a head 7 strokes long.",
+          "unit": "×"
+        },
+        "hatch": {
+          "value": 0,
+          "range": [
+            0,
+            1
+          ],
+          "step": 0.01,
+          "label": "Tone as hatching",
+          "note": "0 fills every toned shape solid; 1 lays the same tone as hatching; between, both."
+        },
+        "gap": {
+          "value": 4,
+          "range": [
+            1.5,
+            14
+          ],
+          "step": 0.25,
+          "label": "Hatch spacing",
+          "note": "Distance between hatch lines, in figure units.",
+          "unit": "u"
+        },
+        "angle": {
+          "value": 45,
+          "range": [
+            0,
+            180
+          ],
+          "step": 1,
+          "label": "Hatch angle",
+          "note": "Direction of the hatch lines.",
+          "unit": "°"
+        },
+        "type": {
+          "value": 1,
+          "range": [
+            0.7,
+            1.6
+          ],
+          "step": 0.01,
+          "label": "Type size",
+          "note": "Every label at this multiple of its measured size, from its own anchor.",
+          "unit": "×"
+        },
+        "seed": {
+          "value": 7,
+          "range": [
+            1,
+            99
+          ],
+          "step": 1,
+          "label": "Seed",
+          "note": "Re-rolls the hand: where each line wanders."
+        }
       },
-      "implementation": "A subject drawn front, side and top in thin line, with its sources beside it."
+      "implementation": "A subject drawn front, side and top in thin line, with its sources beside it. The geometry is measured from the source figure; the engine redraws it with weight, hand, corners, arrowheads, hatched tone and type size as dials."
     },
     {
       "id": "ink-palette",
@@ -153,8 +252,10 @@
   ],
   "pass_order": [
     "ground · plate",
-    "figures · justified rows",
-    "read · points measured from each figure"
+    "tone · fills, solid or hatched",
+    "line · every stroke, ruled or by hand",
+    "arrowheads",
+    "labels"
   ],
   "notes": [
     "Sources: Local file · FIDELITY TEST · TWO SUBJECTS (https://jalulia.github.io/tools/fidelity-test/)"
