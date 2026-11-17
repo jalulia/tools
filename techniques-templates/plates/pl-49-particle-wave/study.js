@@ -27,3 +27,294 @@ window.STUDY={"id": "pl-49-particle-wave", "code": "PL-49", "fig": "4.49", "titl
       +cells+'<script src="../../_shared/lift.js"><\/script></body></html>';
   };
 })(window.STUDY);
+
+/* PL-49 · Particle wave · drawn by its source page's own code: Mindgut-Worlds-V2.html #hero-art. Dials and inks measured by _build/qa/lift-probe.mjs; see _build/engines/lift-canvas.js. */
+window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "sel": "#hero-art", "w": 1195, "h": 850, "crop": [0.42, 0.0, 1.0, 1.0], "ground": "#101113", "dials": ["turn", "tilt", "tube", "twist", "density", "coral", "mark"], "inks": ["#88b82b", "#ff5032", "#ff6640", "#8fbe30", "#ff6841", "#d2fe63", "#ff653f", "#ff5d3a"], "t0": 2, "extra": {"turn": {"value": 0, "range": [-1.5, 1.5], "step": 0.01, "label": "Turn", "note": "How far the loop is turned about its axis, added to the page’s own angle.", "unit": "rad"}, "tilt": {"value": 0, "range": [-0.8, 0.8], "step": 0.01, "label": "Tilt", "note": "How far the loop leans toward you, added to the page’s 0.85 rad.", "unit": "rad"}, "tube": {"value": 1, "range": [0.2, 2.2], "step": 0.01, "label": "Tube", "note": "Thickness of the ring’s tube, as a multiple of the page’s 0.32.", "unit": "×"}, "twist": {"value": 1, "range": [0, 4], "step": 0.01, "label": "Twist", "note": "Height of the three-lobed twist along the ring, as a multiple of the page’s own.", "unit": "×"}, "density": {"value": 1, "range": [0.35, 1.4], "step": 0.01, "label": "Mark density", "note": "How many of the ring’s 13,500 sample points are kept as marks. 1 is the page’s own thinning.", "unit": "×"}, "coral": {"value": 0.175, "range": [0, 0.5], "step": 0.005, "label": "Coral share", "note": "How much of the ring turns coral where it catches the light. 0 is all lime."}, "rings": {"value": 45, "range": [6, 90], "step": 1, "label": "Rings", "note": "How many afterimage ellipses are drawn."}, "spacing": {"value": 1, "range": [0.4, 2.5], "step": 0.01, "label": "Ring spacing", "note": "Gap between rings, as a multiple of the page’s 5 px.", "unit": "×"}, "squash": {"value": 1, "range": [0.3, 1.6], "step": 0.01, "label": "Squash", "note": "Height of each ring against its width, as a multiple of the page’s 0.64.", "unit": "×"}, "rotate": {"value": 0, "range": [-1.6, 1.6], "step": 0.01, "label": "Rotation", "note": "Turn of the rings, added to the page’s −0.4 rad.", "unit": "rad"}, "freq": {"value": 1, "range": [0.3, 3], "step": 0.01, "label": "Wave frequency", "note": "How many beats each exchange’s wave packs in, as a multiple of what its letters give.", "unit": "×"}, "amp": {"value": 1, "range": [0.2, 1.6], "step": 0.01, "label": "Amplitude", "note": "Height of each wave in its row, as a multiple of the page’s own.", "unit": "×"}, "env": {"value": 0.7, "range": [0.1, 3], "step": 0.01, "label": "Envelope", "note": "How the wave swells from its ends: the power on the page’s sine envelope. Low is full width, high pinches to the middle."}, "pitch": {"value": 2, "range": [1, 8], "step": 1, "label": "Bar pitch", "note": "Spacing of the vertical bars that build each wave, in px.", "unit": "px"}, "oturn": {"value": 0, "range": [-3.1, 3.1], "step": 0.01, "label": "Turn", "note": "Turn of the helix, added to the angle you set by dragging across it.", "unit": "rad"}, "radius": {"value": 1, "range": [0.3, 1.6], "step": 0.01, "label": "Radius", "note": "Width of the helix, as a multiple of the page’s 0.28 of the frame.", "unit": "×"}, "glyphs": {"value": 120, "range": [10, 240], "step": 1, "label": "Glyphs per strand", "note": "Most letters each strand may set (its count of letters, up to this)."}, "gstep": {"value": 1, "range": [0.2, 3], "step": 0.01, "label": "Coil", "note": "How far each letter turns along its strand, as a multiple of the page’s 0.045 rad.", "unit": "×"}}, "patches": [["function sculpture(x,w,h,phase=.3,small=false){", "function sculpture(x,w,h,phase=.3,small=false){phase+=((window.__P||{}).turn==null?0:window.__P.turn);"], ["r=1+.32*Math.cos(v)", "r=1+.32*((window.__P||{}).tube==null?1:window.__P.tube)*Math.cos(v)"], ["pz=.32*Math.sin(v)", "pz=.32*((window.__P||{}).tube==null?1:window.__P.tube)*Math.sin(v)"], ["yy=py*Math.cos(.85)-pz*Math.sin(.85),zz=py*Math.sin(.85)+pz*Math.cos(.85)", "TL=.85+((window.__P||{}).tilt==null?0:window.__P.tilt),yy=py*Math.cos(TL)-pz*Math.sin(TL),zz=py*Math.sin(TL)+pz*Math.cos(TL)"], ["tw=.18*Math.sin(u*3)", "tw=.18*((window.__P||{}).twist==null?1:window.__P.twist)*Math.sin(u*3)"], ["if(hash(p.i,p.j)>p.light*.82+.16)continue;", "if(hash(p.i,p.j)>(p.light*.82+.16)*((window.__P||{}).density==null?1:window.__P.density))continue;"], ["let hot=Math.sin(p.u+phase*1.2)>.65;", "let hot=Math.sin(p.u+phase*1.2)>1-2*((window.__P||{}).coral==null?0.175:window.__P.coral);"], ["for(let i=0;i<45;i++){x.beginPath();x.ellipse(w*.75,h*.6,i*5,i*3.2,-.4,0,TAU);x.stroke()}", "for(let i=0;i<((window.__P||{}).rings==null?45:window.__P.rings);i++){x.beginPath();x.ellipse(w*.75,h*.6,i*5*((window.__P||{}).spacing==null?1:window.__P.spacing),i*3.2*((window.__P||{}).spacing==null?1:window.__P.spacing)*((window.__P||{}).squash==null?1:window.__P.squash),-.4+((window.__P||{}).rotate==null?0:window.__P.rotate),0,TAU);x.stroke()}"], ["val=Math.sin(f*TAU*(c.f[0]*9+2))*Math.sin(f*TAU*(c.f[1]*11+1))", "val=Math.sin(f*TAU*(c.f[0]*9+2)*((window.__P||{}).freq==null?1:window.__P.freq))*Math.sin(f*TAU*(c.f[1]*11+1)*((window.__P||{}).freq==null?1:window.__P.freq))"], ["amp=(row*.37)*env*", "amp=(row*.37*((window.__P||{}).amp==null?1:window.__P.amp))*env*"], ["env=Math.sin(f*Math.PI)**.7", "env=Math.sin(f*Math.PI)**((window.__P||{}).env==null?0.7:window.__P.env)"], ["for(let j=0;j<width;j+=2){", "for(let j=0;j<width;j+=((window.__P||{}).pitch==null?2:window.__P.pitch)){"], ["let a=i*.62+j*.045+objectAngle,px=w*.57+Math.cos(a)*w*.28", "let a=i*.62+j*.045*((window.__P||{}).gstep==null?1:window.__P.gstep)+objectAngle+((window.__P||{}).oturn==null?0:window.__P.oturn),px=w*.57+Math.cos(a)*w*.28*((window.__P||{}).radius==null?1:window.__P.radius)"], ["for(let j=0;j<Math.min(c.n,120);j++){", "for(let j=0;j<Math.min(c.n,((window.__P||{}).glyphs==null?120:window.__P.glyphs));j++){"]], "overlay": true};
+
+/* lift-canvas · shared engine for plates whose figure is one canvas or one SVG on its source page.
+   Appended to each plate's study.js by _build/plates.py after that plate's lc-figure.js (window.LC_FIG: source page,
+   CSS path to the figure, its size, and which dials and inks were measured to act on it).
+   The source page runs in a hidden frame on a clock this plate drives, so a moment is the same every time. Its canvas
+   drawing calls pass through the dials: line weight (every stroke), mark size (dots and pixel marks), ink strength
+   (every alpha), type size (every font). Its colors pass through the Color tab: each ink is a color the figure itself
+   uses, measured by _build/qa/lift-probe.mjs (lc-head.js there is a copy of the HEAD function below; keep them in step), which also keeps only the dials that change this figure's pixels.
+   An SVG figure is serialized with its computed styles; its strokes, type and colors take the same dials and inks.
+   With composite, every layer the page stacks over the figure is copied (see layersOf); with overlay, its HTML type too.
+   Nothing in the source file changes. */
+(function (S) {
+  'use strict';
+  /* until the source page has loaded, the panel shows the figure as filed (its f01 still), not an empty frame */
+  var READY = false;
+  function placeholder(canvas, V) {
+    var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = (V && V.paper) || '#FFFFFF'; x.fillRect(0, 0, W, H);
+    (S.panels || []).forEach(function (p) {
+      if (!p.src) return; var im = new Image();
+      im.onload = function () { if (READY) return; var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, k = Math.min(bw / im.width, bh / im.height); x.save(); x.globalAlpha = .9; x.drawImage(im, bx + (bw - im.width * k) / 2, by + (bh - im.height * k) / 2, im.width * k, im.height * k); x.restore(); };
+      im.src = p.src;
+    });
+  }
+  var FIG = window.LC_FIG || {}, ON = {}; (FIG.dials || []).forEach(function (k) { ON[k] = 1; });
+  var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
+  var ALL = {
+    weight: leaf(1, 0.25, 3, 0.01, 'Line weight', '×', 'Weight of every line the figure draws, as a multiple of its own.'),
+    mark: leaf(1, 0.3, 2.5, 0.01, 'Mark size', '×', 'Size of every dot and pixel mark the figure lays down (marks up to 6 px across).'),
+    ink: leaf(1, 0.2, 2.5, 0.01, 'Ink strength', '×', 'Every transparency the figure uses, multiplied: below 1 thins the inks, above 1 builds them toward solid.'),
+    type: leaf(1, 0.6, 1.8, 0.01, 'Type size', '×', 'Size of every label the figure sets.'),
+    blur: leaf(1, 0, 3, 0.01, 'Focus blur', '×', 'Every blur the figure lays (its depth of field), as a multiple of its own. 0 brings every layer into focus.'),
+    moment: leaf(FIG.t0 || 2, 0, 12, 0.1, 'Moment', 's', 'Where in its motion the figure is shown, in seconds from the start of its clock.')
+  };
+  /* dials particular to one source page: FIG.extra holds their leaves, FIG.patches the string patches that wire them (window.__P.<key>) */
+  Object.keys(FIG.extra || {}).forEach(function (k) { var e = FIG.extra[k]; ALL[k] = leaf(e.value, e.range[0], e.range[1], e.step, e.label, e.unit, e.note); });
+  var P0 = {}; (FIG.dials || []).forEach(function (k) { if (ALL[k]) P0[k] = ALL[k]; });
+  var read = (S.spec.techniques || [])[0] || {}, TID = read.id || 'lift';
+  S.spec.techniques = [{ id: TID, short: (read.short || 'FIG'), name: read.name || 'Figure', layer: 1, pass: 1, atoms: read.atoms || [], params: P0,
+    implementation: (read.implementation || '') + ' Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials.' }]
+    .concat((S.spec.techniques || []).filter(function (t) { return t.id !== TID; }));
+  S.body = [S.body[0], 'The figure is drawn here by its source page’s own code. The dials act on what that code draws: every line, every dot, every transparency and every label, and the moment of its clock. Only dials measured to change this figure are shown. The Color tab lists the colors the figure itself uses.'];
+  S.paramsHint = 'Dials on the page’s own drawing, kept only where they change this figure. Multiples are of the page’s own values.';
+  S.liveOnLoad = false; delete S.live;
+
+  /* inks: the figure's own colors, most used first. Source keeps them; One ink proofs every ink as a gray of the same lightness. */
+  var INK = FIG.inks || [];
+  function lum(h) { var c = [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16) / 255; }); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; }
+  function gray(h) { var v = Math.round(Math.pow(lum(h), 1 / 2.2) * 255).toString(16).padStart(2, '0'); return '#' + v + v + v; }
+  function V(id, label, list) { var inks = {}; INK.forEach(function (h, i) { inks['ink' + (i + 1)] = list[i]; }); return { id: id, label: label, sw: list.slice(0, 5), spot: [20, 20, 20], paper: FIG.ground || '#FFFFFF', rule: '#D9D9DC', inks: inks, src: INK }; }
+  S.variants = INK.length ? [V('source', 'Source', INK.slice()), V('one-ink', 'One ink', INK.map(gray))] : [{ id: 'source', label: 'Source', sw: [], spot: [20, 20, 20], paper: FIG.ground || '#FFFFFF', rule: '#D9D9DC' }];
+  S.variantLabel = 'Palette';
+  S.colorHint = 'Each ink is a color the figure itself uses, most used first. Click one to change it everywhere the figure uses it.';
+
+  var HEAD = '<script>(' + function () {
+    var W = window, q = [], n = 0, d0 = Date.now();
+    /* a page that keeps its place in the URL (history.replaceState) cannot inside a frame of another address: let it pass */
+    ['replaceState', 'pushState'].forEach(function (k) { var o = history[k]; history[k] = function () { try { return o.apply(history, arguments); } catch (e) {} }; });
+    W.__NOW = 0; W.__P = W.__P0 || {}; W.__MAP = W.__MAP0 || {}; W.__MAPK = JSON.stringify(W.__MAP); W.__UC = new WeakMap(); W.__UO = { lw: 0, mark: 0, al: 0, font: 0, img: 0, col: {} };
+    var UU = function (ctx) { var c = ctx && ctx.canvas; if (!c || !c.isConnected) return W.__UO; var o = W.__UC.get(c); if (!o) { o = { lw: 0, mark: 0, al: 0, font: 0, img: 0, col: {} }; W.__UC.set(c, o); } return o; };
+    if (W.__REAL) W.__step = function () {}; else {
+    W.requestAnimationFrame = function (cb) { q.push([++n, cb]); return n; };
+    W.cancelAnimationFrame = function (i) { q = q.filter(function (e) { return e[0] !== i; }); };
+    performance.now = function () { return W.__NOW; }; Date.now = function () { return d0 + W.__NOW; };
+    W.__step = function (dt) { W.__NOW += dt * 1000; var c = q; q = []; c.forEach(function (e) { try { e[1](W.__NOW); } catch (err) { console.error(err); } }); }; }
+    W.__pending = function () { return q.length; };
+    var mm = W.matchMedia; W.matchMedia = function (s) { if (/reduced-motion/.test(s)) return { matches: false, media: s, addListener: function () {}, removeListener: function () {}, addEventListener: function () {}, removeEventListener: function () {} }; return mm.call(W, s); };
+    var C = CanvasRenderingContext2D.prototype, sc = document.createElement('canvas').getContext('2d'), FS = Object.getOwnPropertyDescriptor(C, 'fillStyle'), cache = new Map();
+    function norm(v) { FS.set.call(sc, '#000'); FS.set.call(sc, v); return FS.get.call(sc); }
+    function hex2(v) { return ('0' + (v | 0).toString(16)).slice(-2); }
+    function mapc(v, ctx) {
+      if (typeof v !== 'string') return v;
+      var key = v + '|' + W.__MAPK, hit = cache.get(key); if (hit !== undefined) { if (hit[1]) { var u0 = UU(ctx); u0.col[hit[1]] = (u0.col[hit[1]] || 0) + 1; } return hit[0]; }
+      var s = norm(v), m, hx, a = 1;
+      if (s[0] === '#') hx = s; else if ((m = s.match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?/))) { hx = '#' + hex2(m[1]) + hex2(m[2]) + hex2(m[3]); a = m[4] == null ? 1 : +m[4]; } else { cache.set(key, [v, '']); return v; }
+      var to = W.__MAP[hx], out = v;
+      if (to) { out = a >= 1 ? to : 'rgba(' + parseInt(to.substr(1, 2), 16) + ',' + parseInt(to.substr(3, 2), 16) + ',' + parseInt(to.substr(5, 2), 16) + ',' + a + ')'; }
+      cache.set(key, [out, hx]); var u1 = UU(ctx); u1.col[hx] = (u1.col[hx] || 0) + 1; return out;
+    }
+    function wrap(name, setf, getf) { var d = Object.getOwnPropertyDescriptor(C, name); Object.defineProperty(C, name, { configurable: true, get: function () { var v = d.get.call(this); return getf ? getf(v) : v; }, set: function (v) { d.set.call(this, setf(v, this)); } }); }
+    var P = function (k, dflt) { var v = W.__P[k]; return v == null ? dflt : v; };
+    wrap('lineWidth', function (v, c) { UU(c).lw++; return v * P('weight', 1); }, function (v) { return v / P('weight', 1); });
+    wrap('globalAlpha', function (v, c) { UU(c).al++; return Math.max(0, Math.min(1, v * P('ink', 1))); });
+    wrap('filter', function (v) { var b = P('blur', 1); return b === 1 || typeof v !== 'string' ? v : v.replace(/blur\(([\d.]+)px\)/g, function (m, x) { return 'blur(' + (+x * b) + 'px)'; }); });
+    wrap('font', function (v, c) { UU(c).font++; var f = P('type', 1); return f === 1 ? v : String(v).replace(/([\d.]+)px/, function (s, x) { return (+x * f) + 'px'; }); });
+    ['fillStyle', 'strokeStyle', 'shadowColor'].forEach(function (k) { wrap(k, mapc); });
+    var di = C.drawImage; C.drawImage = function () { UU(this).img++; return di.apply(this, arguments); };
+    var G = CanvasGradient.prototype, acs = G.addColorStop; G.addColorStop = function (o, c) { return acs.call(this, o, mapc(c, null)); };
+    var arc = C.arc; C.arc = function (x, y, r, a0, a1, cc) { if (r <= 3) { UU(this).mark++; r *= P('mark', 1); } return arc.call(this, x, y, r, a0, a1, cc); };
+    var ell = C.ellipse; C.ellipse = function (x, y, rx, ry, ro, a0, a1, cc) { if (rx <= 3 && ry <= 3) { UU(this).mark++; var k = P('mark', 1); rx *= k; ry *= k; } return ell.call(this, x, y, rx, ry, ro, a0, a1, cc); };
+    var fr = C.fillRect; C.fillRect = function (x, y, w, h) { if (w <= 6 && h <= 6 && w > 0 && h > 0) { UU(this).mark++; var k = P('mark', 1); x += w * (1 - k) / 2; y += h * (1 - k) / 2; w *= k; h *= k; } return fr.call(this, x, y, w, h); };
+  }.toString() + ')();<\/script>';
+  var cached = null, frame = null, gen = 0;
+  function fetchSrc() { if (!cached) cached = fetch(FIG.src).then(function (r) { if (!r.ok) throw new Error('source ' + r.status); return r.text(); }); return cached; }
+  function start(Q, MAP) {
+    var my = ++gen;
+    return fetchSrc().then(function (html) {
+      (FIG.patches || []).forEach(function (q) { var n = html.split(q[0]).length - 1; if (n < 1) { if (/debug/.test(location.search)) console.info('[lift-canvas] not wired:', q[0]); return; } html = html.split(q[0]).join(q[1]); });
+      /* the dials are in place before the page's own scripts run, so a figure drawn once at load is drawn with them */
+      var PRE = '<script>window.__P0=' + JSON.stringify(Q) + ';window.__MAP0=' + JSON.stringify(MAP) + ';' + (FIG.real ? 'window.__REAL=1;' : '') + (FIG.sid ? 'try{location.hash=' + JSON.stringify(FIG.sid) + '}catch(e){}' : '') + '<\/script>';
+      html = html.replace(/<head[^>]*>/i, function (m) { return m + '<base href="' + new URL(FIG.src, location.href).href + '">' + PRE + HEAD; });
+      return new Promise(function (res, rej) {
+        if (frame) frame.remove();
+        var f = frame = document.createElement('iframe'); f.setAttribute('aria-hidden', 'true'); f.tabIndex = -1; f.title = 'lift engine';
+        f.style.cssText = 'position:fixed;left:0;top:0;width:1440px;height:1000px;opacity:0;pointer-events:none;z-index:-1';
+        f.onload = function () {
+          var w = f.contentWindow; w.__P = Q; w.__MAP = MAP; w.__MAPK = JSON.stringify(MAP);
+          var tries = 0, d = w.document, nav = 0;
+          var shown = function (el) { var r = el.getBoundingClientRect(); if (r.width < 4 || r.height < 4) return false; for (var n = el; n && n.nodeType === 1; n = n.parentElement) { var cs = w.getComputedStyle(n); if (cs.visibility === 'hidden' || cs.display === 'none' || +cs.opacity < .05) return false; } return true; };
+          /* a figure on a tab or a later slide of a deck: open the tab, go to the slide (its hash, else the arrow key) */
+          if (FIG.tab) setTimeout(function () { var b = [].slice.call(d.querySelectorAll('button,a,[role=tab]')).find(function (e) { var t = e.textContent.trim(); return t.replace(/^\d+/, '').indexOf(FIG.tab) === 0 && t.length < 60; }); if (b) b.click(); }, 300);
+          (function wait() {
+            if (my !== gen) return rej(new Error('superseded'));
+            var el = d.querySelector(FIG.sel);
+            if (el && FIG.slide >= 0 && !shown(el) && tries < 120) {
+              if (!nav++ && FIG.sid) w.location.hash = '#' + FIG.sid; else if (nav > 4) d.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowRight', code: 'ArrowRight', keyCode: 39, which: 39, bubbles: true }));
+              w.__step(1 / 30); w.__step(1 / 30); tries++; return setTimeout(wait, 150);
+            }
+            if (el) {
+              try { el.scrollIntoView({ block: 'center' }); } catch (e) {}
+              if (FIG.real) return setTimeout(function () { res({ w: w, el: el }); }, FIG.settle || 1500);
+              var T = Q.moment != null ? Q.moment : (FIG.t0 || 2), steps = Math.round(T * 30) + 2, i = 0;
+              (function run() { for (var j = 0; j < 30 && i < steps; j++, i++) w.__step(1 / 30); if (i < steps) setTimeout(run, 0); else res({ w: w, el: el }); })();
+            } else if (++tries < 80) setTimeout(wait, 100); else rej(new Error('figure not found: ' + FIG.sel));
+          })();
+        };
+        f.srcdoc = html; document.body.appendChild(f);
+      });
+    });
+  }
+  function svgImage(w, el) {
+    var c = el.cloneNode(true), r = el.getBoundingClientRect(), Q = w.__P || {}, MAP = w.__MAP || {};
+    c.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); c.setAttribute('width', r.width * 2); c.setAttribute('height', r.height * 2);
+    if (!c.getAttribute('viewBox')) { var vb = el.viewBox && el.viewBox.baseVal; c.setAttribute('viewBox', vb && vb.width ? [vb.x, vb.y, vb.width, vb.height].join(' ') : '0 0 ' + r.width + ' ' + r.height); }
+    var PROPS = ['display', 'visibility', 'opacity', 'fill', 'fill-opacity', 'stroke', 'stroke-opacity', 'stroke-width', 'stroke-dasharray', 'stroke-linecap', 'stroke-linejoin', 'font-size', 'font-family', 'font-weight', 'font-style', 'letter-spacing', 'text-anchor', 'dominant-baseline', 'paint-order', 'mix-blend-mode', 'stop-color', 'stop-opacity', 'filter', 'transform', 'transform-origin', 'transform-box'];
+    var A = [el].concat([].slice.call(el.querySelectorAll('*'))), B = [c].concat([].slice.call(c.querySelectorAll('*')));
+    function col(v) { var m = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/.exec(v); if (!m) return v; var hx = '#' + [m[1], m[2], m[3]].map(function (x) { return ('0' + (+x | 0).toString(16)).slice(-2); }).join(''); var to = MAP[hx]; if (!to) return v; return m[4] != null ? 'rgba(' + [1, 3, 5].map(function (i) { return parseInt(to.substr(i, 2), 16); }).join(',') + ',' + m[4] + ')' : to; }
+    A.forEach(function (n, i) {
+      var cs = w.getComputedStyle(n), st = PROPS.map(function (k) {
+        var v = cs.getPropertyValue(k); if (!v || ((k === 'filter' || k === 'transform') && v === 'none') || ((k === 'transform-origin' || k === 'transform-box') && !n.style[k === 'transform-origin' ? 'transformOrigin' : 'transformBox'] && cs.getPropertyValue('transform') === 'none')) return '';
+        if (n === el && (k === 'transform' || k === 'transform-origin' || k === 'opacity' || k === 'mix-blend-mode' || k === 'filter')) return '';
+        if (k === 'stroke-width') { var px = parseFloat(v); if (!isNaN(px)) v = (px * (Q.weight == null ? 1 : Q.weight)) + 'px'; }
+        if (k === 'font-size') { var fz = parseFloat(v); if (!isNaN(fz)) v = (fz * (Q.type == null ? 1 : Q.type)) + 'px'; }
+        if (k === 'fill-opacity' || k === 'stroke-opacity') v = String(Math.min(1, parseFloat(v) * (Q.ink == null ? 1 : Q.ink)));
+        if (k === 'fill' || k === 'stroke' || k === 'stop-color') v = col(v);
+        if (v.indexOf('url(') >= 0) v = v.replace(/url\((['"]?)[^'")#]*#([^'")]+)\1\)/g, 'url(#$2)');
+        return k + ':' + v;
+      }).filter(Boolean).join(';');
+      B[i].setAttribute('style', st); B[i].removeAttribute('class');
+    });
+    /* patterns, filters and gradients the figure points to may live in a shared <defs> elsewhere on the page: bring them along */
+    var defs = null, seen = {}, refs = function (root) { var str = new XMLSerializer().serializeToString(root), out = [], m, re = /url\(#([^)'"]+)\)|href="#([^"]+)"/g; while ((m = re.exec(str))) out.push(m[1] || m[2]); return out; };
+    (function pull(list) { list.forEach(function (id) { if (seen[id]) return; seen[id] = 1; if (c.querySelector('[id="' + id.replace(/"/g, '') + '"]')) return; var src = w.document.getElementById(id); if (!src) return;
+      if (!defs) { defs = w.document.createElementNS('http://www.w3.org/2000/svg', 'defs'); c.insertBefore(defs, c.firstChild); } var cp = src.cloneNode(true); defs.appendChild(cp);
+      [cp].concat([].slice.call(cp.querySelectorAll('*'))).forEach(function (e) { ['fill', 'stroke', 'stop-color', 'flood-color'].forEach(function (a) { var v = e.getAttribute(a); if (v && MAP[v.toLowerCase()]) e.setAttribute(a, MAP[v.toLowerCase()]); }); });
+      pull(refs(cp)); }); })(refs(c));
+    return svgFonts(w, el).then(function (css) {
+      if (css) { var st = w.document.createElementNS('http://www.w3.org/2000/svg', 'style'); st.textContent = css; c.insertBefore(st, c.firstChild); }
+      var url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(c));
+      return new Promise(function (res) { var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = url; });
+    });
+  }
+  /* An SVG drawn as an image cannot reach the page's web fonts, so the faces its type uses are carried inside it:
+     the page's @font-face rules (its own and its font service's), only the faces and unicode ranges the figure sets, as data. */
+  var FACES = null, DATA = {};
+  function faceRules(w) {
+    if (FACES) return FACES; var own = '', hrefs = [];
+    [].forEach.call(w.document.styleSheets, function (sh) { var rules; try { rules = sh.cssRules; } catch (e) { if (sh.href) hrefs.push(sh.href); return; } var bh = sh.href || new URL(FIG.src, location.href).href;
+      [].forEach.call(rules || [], function (r) { if (r.type === 5) own += r.cssText.replace(/url\((['"]?)([^'")]+)\1\)/g, function (m, q, u) { return /^data:/.test(u) ? m : 'url("' + new URL(u, bh).href + '")'; }) + '\n'; else if (r.type === 3 && r.styleSheet) { try { r.styleSheet.cssRules; } catch (e) { hrefs.push(r.href && new URL(r.href, bh).href); } } }); });
+    FACES = Promise.all(hrefs.filter(Boolean).map(function (h) { return fetch(h).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) { return t.replace(/url\((['"]?)([^'")]+)\1\)/g, function (m, q, u) { return /^data:/.test(u) ? m : 'url("' + new URL(u, h).href + '")'; }); }).catch(function () { return ''; }); }))
+      .then(function (list) { return (own + list.join('\n')).match(/@font-face\s*\{[^}]*\}/g) || []; });
+    return FACES;
+  }
+  function inRange(ur, cps) { if (!ur) return true; return ur.split(',').some(function (part) { var m = /U\+([0-9a-f?]+)(?:-([0-9a-f]+))?/i.exec(part.trim()); if (!m) return false; var lo, hi; if (m[1].indexOf('?') >= 0) { lo = parseInt(m[1].replace(/\?/g, '0'), 16); hi = parseInt(m[1].replace(/\?/g, 'f'), 16); } else { lo = parseInt(m[1], 16); hi = m[2] ? parseInt(m[2], 16) : lo; } return cps.some(function (c) { return c >= lo && c <= hi; }); }); }
+  function asData(u) { if (!DATA[u]) DATA[u] = fetch(u).then(function (r) { return r.blob(); }).then(function (b) { return new Promise(function (res) { var fr = new FileReader(); fr.onload = function () { res(fr.result); }; fr.onerror = function () { res(null); }; fr.readAsDataURL(b); }); }).catch(function () { return null; }); return DATA[u]; }
+  function svgFonts(w, el) {
+    var fams = {}, txt = el.textContent || ''; if (!txt.trim()) return Promise.resolve('');
+    [].forEach.call(el.querySelectorAll('text, tspan, textPath'), function (n) { w.getComputedStyle(n).fontFamily.split(',').forEach(function (f) { fams[f.replace(/["']/g, '').trim().toLowerCase()] = 1; }); });
+    var cps = []; for (var i = 0; i < txt.length; i++) { var c = txt.codePointAt(i); if (c > 32 && cps.indexOf(c) < 0) cps.push(c); }
+    return faceRules(w).then(function (rules) {
+      var pick = rules.filter(function (b) { var f = /font-family:\s*['"]?([^;'"]+)/.exec(b); var ur = /unicode-range:\s*([^;}]+)/.exec(b); return f && fams[f[1].trim().toLowerCase()] && inRange(ur && ur[1], cps); });
+      return Promise.all(pick.map(function (b) { var m = /url\((['"]?)([^'")]+)\1\)/.exec(b); if (!m) return ''; return asData(m[2]).then(function (d) { return d ? b.replace(/src:[^;}]+/, 'src: url("' + d + '")') : ''; }); }));
+    }).then(function (list) { return list.join('\n'); });
+  }
+  /* Text the page sets over the figure in HTML (titles, captions, labels) is part of what the page shows: it is read
+     line by line with its computed style and set over the copied canvas, in the page's own faces (carried in under a prefix). */
+  var FONTS = null, FAMS = {};
+  function fontsFrom(w) {
+    if (FONTS) return FONTS; var css = '';
+    [].forEach.call(w.document.styleSheets, function (sh) {
+      var rules; try { rules = sh.cssRules; } catch (e) { return; } var bh = sh.href || new URL(FIG.src, location.href).href;
+      [].forEach.call(rules || [], function (r) {
+        if (r.type !== 5) return; var fam = (r.style.getPropertyValue('font-family') || '').replace(/["']/g, '').trim(); if (!fam) return; FAMS[fam.toLowerCase()] = 'lc-' + fam;
+        css += r.cssText.replace(/font-family:\s*([^;]+);/, 'font-family: "lc-' + fam + '";').replace(/url\((['"]?)([^'")]+)\1\)/g, function (m, q, u) { return /^data:/.test(u) ? m : 'url("' + new URL(u, bh).href + '")'; }) + '\n';
+      });
+    });
+    var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+    /* a font service's sheet (cross-origin, unreadable) is linked here as it is there, so its faces keep their names */
+    [].forEach.call(w.document.querySelectorAll('link[rel~="stylesheet"][href]'), function (l) { try { var u = new URL(l.getAttribute('href'), new URL(FIG.src, location.href)); if (u.origin === location.origin || document.querySelector('link[href="' + u.href + '"]')) return; var ln = document.createElement('link'); ln.rel = 'stylesheet'; ln.href = u.href; document.head.appendChild(ln); } catch (e) {} });
+    FONTS = new Promise(function (r) { setTimeout(r, 300); }).then(function () { return document.fonts && document.fonts.ready; }); return FONTS;
+  }
+  function famMap(list) { return list.split(',').map(function (f) { var k = f.replace(/["']/g, '').trim(); return FAMS[k.toLowerCase()] ? '"' + FAMS[k.toLowerCase()] + '"' : f.trim(); }).join(', '); }
+  function textOps(w, el) {
+    var d = w.document, R = el.getBoundingClientRect(), ops = [], tw = d.createTreeWalker(FIG.composite ? (el.closest('.plate') || el.parentElement || d.body) : d.body, 4), n, rng = d.createRange();
+    while ((n = tw.nextNode())) {
+      var t = n.nodeValue, pe = n.parentElement; if (!t || !t.trim() || !pe || el.contains(pe) || /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA|OPTION|TITLE|SELECT|PRE|CODE)$/.test(pe.tagName)) continue;
+      var dt = pe.closest('details'); if (dt && !dt.open && !pe.closest('summary')) continue;
+      rng.selectNodeContents(n); var br = rng.getBoundingClientRect(); if (!br.width || br.right < R.left || br.left > R.right || br.bottom < R.top || br.top > R.bottom) continue;
+      var cs = w.getComputedStyle(pe), op = 1, hid = false; for (var q = pe; q && q.nodeType === 1; q = q.parentElement) { var qs = w.getComputedStyle(q); op *= +qs.opacity; if (qs.visibility === 'hidden') hid = true; } if (hid || op < .05) continue;
+      var lines = [], cur = null;
+      for (var i = 0; i < t.length; i++) { if (!cur && /\s/.test(t[i])) continue; rng.setStart(n, i); rng.setEnd(n, i + 1); var cr = rng.getClientRects()[0]; if (!cr) continue;
+        if (!cur || Math.abs(cr.top - cur.top) > cr.height * .5) { if (/\s/.test(t[i])) { cur = null; continue; } cur = { top: cr.top, bottom: cr.bottom, left: cr.left, s: '' }; lines.push(cur); } cur.s += t[i]; }
+      lines.forEach(function (L) { var str = L.s.replace(/\s+/g, ' ').trim(); if (!str) return; if (cs.textTransform === 'uppercase') str = str.toUpperCase();
+        ops.push({ s: str, x: L.left - R.left, y: (L.top + L.bottom) / 2 - R.top, st: cs.fontStyle + ' ' + cs.fontWeight + ' ', px: parseFloat(cs.fontSize), fam: famMap(cs.fontFamily), color: cs.color, ls: cs.letterSpacing === 'normal' ? '0px' : cs.letterSpacing, a: op }); });
+    }
+    return ops;
+  }
+  function mapCol(v, MAP) { var m = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/.exec(v); if (!m) return v; var hx = '#' + [m[1], m[2], m[3]].map(function (x) { return ('0' + (+x | 0).toString(16)).slice(-2); }).join(''); var to = MAP[hx]; if (!to) return v; return m[4] != null ? 'rgba(' + [1, 3, 5].map(function (i) { return parseInt(to.substr(i, 2), 16); }).join(',') + ',' + m[4] + ')' : to; }
+  /* A plate the page builds from several layers (its canvas, an SVG of keylines, grain and dust veils laid over with a
+     blend mode, HTML type) is copied as the page shows it: every canvas, SVG and image over the figure's rect, in paint
+     order, each with its own opacity, blend mode and CSS filter, then the type. */
+  function layersOf(w, el) {
+    var root = el.closest('.plate') || el.parentElement || el, R = el.getBoundingClientRect(), out = [];
+    [].forEach.call(root.querySelectorAll('canvas, svg, img'), function (n, i) {
+      if (n.tagName.toLowerCase() === 'svg' && n.parentElement && n.parentElement.closest('svg')) return;
+      var r = n.getBoundingClientRect(); if (r.width < 2 || r.height < 2 || r.right <= R.left || r.left >= R.right || r.bottom <= R.top || r.top >= R.bottom) return;
+      var op = 1, hid = false, z = 0, zset = false, blend = 'normal', filt = 'none';
+      for (var q = n; q && q.nodeType === 1; q = q.parentElement) { var cs = w.getComputedStyle(q); op *= +cs.opacity; if (cs.visibility === 'hidden' || cs.display === 'none') hid = true;
+        if (!zset && cs.zIndex !== 'auto' && cs.position !== 'static') { z = +cs.zIndex || 0; zset = true; }
+        if (blend === 'normal' && cs.mixBlendMode !== 'normal') blend = cs.mixBlendMode; if (q === n && cs.filter !== 'none') filt = cs.filter; if (q === root) break; }
+      if (hid || op < .02) return;
+      out.push({ n: n, i: i, x: r.left - R.left, y: r.top - R.top, w: r.width, h: r.height, a: op, z: z, blend: blend, filter: filt });
+    });
+    out.sort(function (a, b) { return a.z - b.z || a.i - b.i; });
+    return Promise.all(out.map(function (L) { return L.n.tagName.toLowerCase() === 'svg' ? svgImage(w, L.n).then(function (im) { L.img = im; return L; }) : Promise.resolve((L.img = L.n, L)); }));
+  }
+  var lastKey = '', live = null;
+  /* one figure as the page shows it: the element itself, or (composite) every layer over it; (overlay) its HTML type */
+  function prep(E, el) {
+    var fig = { el: el };
+    return (FIG.composite ? Promise.resolve(null) : el.tagName.toLowerCase() === 'svg' ? svgImage(E.w, el) : Promise.resolve(el)).then(function (img) {
+      fig.img = img; if (!FIG.composite) return;
+      return layersOf(E.w, el).then(function (Ls) { fig.layers = Ls; var rb = E.w.getComputedStyle(el.closest('.plate') || el.parentElement || el).backgroundColor; fig.bg = /^rgba\(.*,\s*0\)$|transparent/.test(rb) ? null : rb; });
+    }).then(function () {
+      if (!FIG.overlay) return;
+      return fontsFrom(E.w).then(function () { fig.ops = textOps(E.w, el); var fs = fig.ops.map(function (o) { return o.st + o.px + 'px ' + o.fam; }); return Promise.all(fs.filter(function (f, i) { return fs.indexOf(f) === i; }).map(function (f) { return document.fonts.load(f).catch(function () {}); })); });
+    }).then(function () { return fig; });
+  }
+  S.render = function (canvas, cw, ch, dpr, Vt, done, overrides) {
+    if (!READY) placeholder(canvas, Vt);
+    var A = window.ART.params(S.spec, overrides || {}), Q = Object.assign({}, A[TID] || {}), MAP = {};
+    INK.forEach(function (h, i) { var to = (Vt.inks || {})['ink' + (i + 1)]; if (to && to.toLowerCase() !== h) MAP[h] = to.toLowerCase(); });
+    var key = JSON.stringify([Q, MAP]);
+    var go = key === lastKey && live ? Promise.resolve(live) : start(Q, MAP).then(function (E) { lastKey = key; live = E; return E; });
+    go.then(function (E) { READY = true;
+      /* a plate of several frames (FIG.sels) draws each panel from its own frame on the page */
+      if (!E.figs) { var els = FIG.sels ? FIG.sels.map(function (q) { return E.w.document.querySelector(q) || E.el; }) : [E.el]; E.figs = Promise.all(els.map(function (el) { return prep(E, el); })); }
+      return E.figs.then(function (figs) {
+        var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
+        x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = Vt.paper || '#FFFFFF'; x.fillRect(0, 0, W, H);
+        S.panels.forEach(function (p, pi) {
+          var F = figs[pi % figs.length], img = F.img, r0 = F.el.getBoundingClientRect(), cw0 = r0.width || 1, ch0 = r0.height || 1;
+          /* the lifted part of the figure: crop is [x0, y0, x1, y1] of the element, as filed (first frame only) */
+          var cr = (F === figs[0] && FIG.crop) || [0, 0, 1, 1];
+          var fw = FIG.composite ? cw0 : (F === figs[0] && FIG.w) || (img && (img.width || img.naturalWidth)) || 1, fh = FIG.composite ? ch0 : (F === figs[0] && FIG.h) || (img && (img.height || img.naturalHeight)) || 1;
+          var iw = fw * (cr[2] - cr[0]), ih = fh * (cr[3] - cr[1]), nw = img ? (img.naturalWidth || img.width) : 1, nh = img ? (img.naturalHeight || img.height) : 1;
+          var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, k = Math.min(bw / iw, bh / ih), ox = bx + (bw - iw * k) / 2, oy = by + (bh - ih * k) / 2;
+          x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip(); x.fillStyle = FIG.ground || Vt.paper || '#FFFFFF'; x.fillRect(bx, by, bw, bh);
+          x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+          if (F.layers) { var kl = fw * k / cw0;
+            x.save(); x.beginPath(); x.rect(ox, oy, iw * k, ih * k); x.clip(); if (F.bg) { x.fillStyle = mapCol(F.bg, MAP); x.fillRect(ox, oy, iw * k, ih * k); } x.translate(ox - cr[0] * cw0 * kl, oy - cr[1] * ch0 * kl);
+            F.layers.forEach(function (L) { if (!L.img) return; x.globalAlpha = Math.min(1, L.a); x.globalCompositeOperation = L.blend === 'normal' ? 'source-over' : L.blend;
+              x.filter = L.filter === 'none' ? 'none' : L.filter.replace(/blur\(([\d.]+)px\)/g, function (m, b) { return 'blur(' + (+b * kl) + 'px)'; });
+              try { x.drawImage(L.img, L.x * kl, L.y * kl, L.w * kl, L.h * kl); } catch (e) { console.error('[lift-canvas]', e); } });
+            x.restore(); x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; x.filter = 'none';
+          } else if (img) try { x.drawImage(img, cr[0] * nw, cr[1] * nh, (cr[2] - cr[0]) * nw, (cr[3] - cr[1]) * nh, ox, oy, iw * k, ih * k); } catch (e) { console.error('[lift-canvas]', e); }
+          if (F.ops && F.ops.length) { var ks = fw * k / cw0, ty = Q.type == null ? 1 : Q.type;
+            x.save(); x.beginPath(); x.rect(ox, oy, iw * k, ih * k); x.clip(); x.translate(ox - cr[0] * cw0 * ks, oy - cr[1] * ch0 * ks); x.scale(ks, ks); x.textBaseline = 'middle'; x.textAlign = 'left';
+            F.ops.forEach(function (o) { x.font = o.st + (o.px * ty) + 'px ' + o.fam; x.fillStyle = mapCol(o.color, MAP); x.globalAlpha = Math.min(1, o.a * (Q.ink == null ? 1 : Q.ink)); if ('letterSpacing' in x) x.letterSpacing = o.ls; x.fillText(o.s, o.x, o.y); });
+            x.restore(); }
+          x.restore(); x.strokeStyle = Vt.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
+        });
+        if (done) done();
+      });
+    }).catch(function (err) { if (err && err.message !== 'superseded') console.error('[lift-canvas]', err); if (done) done(); });
+    return false;
+  };
+})(window.STUDY);

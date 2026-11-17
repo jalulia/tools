@@ -1,11 +1,14 @@
 (function () {
     var W = window, q = [], n = 0, d0 = Date.now();
-    W.__NOW = 0; W.__P = {}; W.__MAP = {}; W.__UC = new WeakMap(); W.__UO = { lw: 0, mark: 0, al: 0, font: 0, img: 0, col: {} };
+    /* a page that keeps its place in the URL (history.replaceState) cannot inside a frame of another address: let it pass */
+    ['replaceState', 'pushState'].forEach(function (k) { var o = history[k]; history[k] = function () { try { return o.apply(history, arguments); } catch (e) {} }; });
+    W.__NOW = 0; W.__P = W.__P0 || {}; W.__MAP = W.__MAP0 || {}; W.__MAPK = JSON.stringify(W.__MAP); W.__UC = new WeakMap(); W.__UO = { lw: 0, mark: 0, al: 0, font: 0, img: 0, col: {} };
     var UU = function (ctx) { var c = ctx && ctx.canvas; if (!c || !c.isConnected) return W.__UO; var o = W.__UC.get(c); if (!o) { o = { lw: 0, mark: 0, al: 0, font: 0, img: 0, col: {} }; W.__UC.set(c, o); } return o; };
+    if (W.__REAL) W.__step = function () {}; else {
     W.requestAnimationFrame = function (cb) { q.push([++n, cb]); return n; };
     W.cancelAnimationFrame = function (i) { q = q.filter(function (e) { return e[0] !== i; }); };
     performance.now = function () { return W.__NOW; }; Date.now = function () { return d0 + W.__NOW; };
-    W.__step = function (dt) { W.__NOW += dt * 1000; var c = q; q = []; c.forEach(function (e) { try { e[1](W.__NOW); } catch (err) { console.error(err); } }); };
+    W.__step = function (dt) { W.__NOW += dt * 1000; var c = q; q = []; c.forEach(function (e) { try { e[1](W.__NOW); } catch (err) { console.error(err); } }); }; }
     W.__pending = function () { return q.length; };
     var mm = W.matchMedia; W.matchMedia = function (s) { if (/reduced-motion/.test(s)) return { matches: false, media: s, addListener: function () {}, removeListener: function () {}, addEventListener: function () {}, removeEventListener: function () {} }; return mm.call(W, s); };
     var C = CanvasRenderingContext2D.prototype, sc = document.createElement('canvas').getContext('2d'), FS = Object.getOwnPropertyDescriptor(C, 'fillStyle'), cache = new Map();
@@ -24,6 +27,7 @@
     var P = function (k, dflt) { var v = W.__P[k]; return v == null ? dflt : v; };
     wrap('lineWidth', function (v, c) { UU(c).lw++; return v * P('weight', 1); }, function (v) { return v / P('weight', 1); });
     wrap('globalAlpha', function (v, c) { UU(c).al++; return Math.max(0, Math.min(1, v * P('ink', 1))); });
+    wrap('filter', function (v) { var b = P('blur', 1); return b === 1 || typeof v !== 'string' ? v : v.replace(/blur\(([\d.]+)px\)/g, function (m, x) { return 'blur(' + (+x * b) + 'px)'; }); });
     wrap('font', function (v, c) { UU(c).font++; var f = P('type', 1); return f === 1 ? v : String(v).replace(/([\d.]+)px/, function (s, x) { return (+x * f) + 'px'; }); });
     ['fillStyle', 'strokeStyle', 'shadowColor'].forEach(function (k) { wrap(k, mapc); });
     var di = C.drawImage; C.drawImage = function () { UU(this).img++; return di.apply(this, arguments); };

@@ -10,9 +10,9 @@ const C = JSON.parse(fs.readFileSync(ROOT + '/techniques-templates/_build/plates
 const b = await chromium.launch(); const out = {};
 for (const p of C) {
   const l = Object.values(p.lift)[0];
-  const pg = await b.newPage({ viewport: { width: 1440, height: 1000 } }); await pg.addInitScript(HEADJS);
+  const pg = await b.newPage({ viewport: { width: 1440, height: 1000 } }); if (process.env.REAL) await pg.addInitScript('window.__REAL=1'); await pg.addInitScript(HEADJS);
   try {
-    await pg.goto(base + l.rt.replace(/^\/tools/, ''), { waitUntil: 'load', timeout: 25000 });
+    await pg.goto(base + l.rt.replace(/^\/tools/, '') + (l.sid ? '#' + l.sid : ''), { waitUntil: 'load', timeout: 25000 }); if (process.env.REAL) await pg.waitForTimeout(3000);
     const r = await pg.evaluate(async (sel) => {
       const W = window, sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       let el = null; for (let k = 0; k < 60 && !el; k++) { el = document.querySelector(sel); if (!el) await sleep(100); }
@@ -37,5 +37,5 @@ for (const p of C) {
   await pg.close();
 }
 await b.close(); close();
-fs.writeFileSync(new URL('./lift-probe.json', import.meta.url), JSON.stringify(out, null, 1));
+{ const f = new URL('./lift-probe.json', import.meta.url), prev = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f)) : {}; fs.writeFileSync(f, JSON.stringify(Object.assign(prev, out), null, 1)); }
 for (const [k, r] of Object.entries(out)) console.log(k, r.err || `${r.tag} own lw${r.U.own.lw} mark${r.U.own.mark} al${r.U.own.al} font${r.U.own.font} img${r.U.own.img} cols${Object.keys(r.U.own.col).length} | off lw${r.U.off.lw} mark${r.U.off.mark} al${r.U.off.al} font${r.U.off.font} cols${Object.keys(r.U.off.col).length} moved${r.moved} blank${r.blank} ${r.svg ? 'svg stroke' + r.svg.stroke + ' text' + r.svg.text + ' cols' + Object.keys(r.svg.cols).length : ''} ground ${r.ground} ${r.w}x${r.h}`);
