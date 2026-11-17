@@ -1,0 +1,2 @@
+/* PL-136 · The resonant box and the leading-edge vortex · drawn by its source page's own code: How a Moth Works.html, Plate p-mech. See _build/engines/moth.js. */
+window.MO_FIG={"src": "/tools/mindgut/files/Mindgut/How%20a%20Moth%20Works.html", "id": "p-mech"};
