@@ -282,7 +282,7 @@
     applyProjectLocal(def); ED.pjf = null; render(); status('Saving: ' + message + '…');
     ED.q = ED.q.then(function () {
       return LibCMS.save({ op: def.drop ? 'project-delete' : 'project', ids: [], patch: {}, projectDef: def }, message).then(function (x) {
-        CMSD.projects = x.E.projects || CMSD.projects; syncProjects(); status('Saved: ' + message + '. On the site after the next build, about two minutes.', 'ok'); render();
+        CMSD.projects = x.E.projects || CMSD.projects; syncProjects(); status('Saved: ' + message + '. On the site after the next build, about two minutes.', 'ok'); render(); watchDeploy(6000);
       }, function (err) { CMSD.projects = prevP; syncProjects(); render(); status('Not saved: ' + err.message, 'bad'); });
     });
   }
@@ -644,7 +644,28 @@
   $sel.id = 'selbar'; $sel.hidden = true; $pan.id = 'cmspanel'; $pan.hidden = true; document.body.appendChild($sel); document.body.appendChild($pan);
   var $btn = document.createElement('button'); $btn.type = 'button'; $btn.id = 'cmsbtn'; $btn.setAttribute('data-cms', 'toggle'); $bar.appendChild($btn);
   ED.q = Promise.resolve();
-  function drawCmsBtn() { $btn.textContent = ED.on ? 'Done' : 'Edit'; $btn.setAttribute('aria-pressed', ED.on); $btn.title = ED.unlocked ? (ED.on ? 'Stop editing' : 'Edit the library: archive, remove, projects, tags') : 'Edit the library (needs your GitHub token)'; document.body.classList.toggle('editing', ED.on); }
+  /* Deploy status: a save is only on the site once its deploy succeeds. A failed deploy is shown, not silent (2026-11-16). */
+  var DEP = { st: null, t: 0 };
+  function watchDeploy(soon) {
+    if (!ED.unlocked || !window.LibCMS || !LibCMS.deployState) return;
+    clearTimeout(DEP.t);
+    DEP.t = setTimeout(function () {
+      LibCMS.deployState().then(function (d) {
+        DEP.st = d; drawDep(); drawCmsBtn();
+        if (d && d.state === 'building') watchDeploy(30000);
+      }, function () { /* rate-limited or offline: try again later */ DEP.t = setTimeout(function () { watchDeploy(0); }, 120000); });
+    }, soon == null ? 4000 : soon);
+  }
+  function depLine() {
+    var d = DEP.st; if (!d) return '';
+    var when = d.at ? new Date(d.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+    if (d.state === 'building') return '<span class="dep b">Site updating…</span>';
+    if (d.state === 'failed') return '<span class="dep f">The last deploy failed (' + e(when) + '), so recent saves are not on the site. They are kept. <a href="' + e(d.url) + '">See why</a></span>';
+    if (d.state === 'live') return '<span class="dep ok">Site up to date · ' + e(when) + '</span>';
+    return '';
+  }
+  function drawDep() { var x = $sel.querySelector('.depw'); if (x) x.innerHTML = depLine(); }
+  function drawCmsBtn() { $btn.textContent = ED.on ? 'Done' : 'Edit'; $btn.classList.toggle('depfail', !!(DEP.st && DEP.st.state === 'failed')); $btn.setAttribute('aria-pressed', ED.on); $btn.title = ED.unlocked ? (ED.on ? 'Stop editing' : 'Edit the library: archive, remove, projects, tags') : 'Edit the library (needs your GitHub token)'; document.body.classList.toggle('editing', ED.on); }
   function selected() { return Object.keys(ED.sel).filter(function (a) { return ED.sel[a] && byAcc[a] && !byAcc[a]._gone; }).map(function (a) { return byAcc[a]; }); }
   function names(rs) { var n = rs.map(function (r) { return r.call || r.acc; }); return n.length > 4 ? n.slice(0, 4).join(', ') + ' and ' + (n.length - 4) + ' more' : n.join(', '); }
   function status(msg, kind) { ED.status = msg; ED.stKind = kind || ''; drawSel(); if (!ED.on && msg) toast(msg); }
@@ -670,7 +691,7 @@
         '<button type="button" class="act" data-cms="' + (allPriv ? 'public' : 'private') + '">' + (allPriv ? 'Make public' : 'Make private') + '</button>' +
         '<button type="button" class="act" data-cms="tag">Add tag…</button>' +
         '<button type="button" class="act danger" data-cms="remove">Remove…</button>' : '') +
-      '</div>';
+      '</div><div class="depw">' + depLine() + '</div>';
     $sel.innerHTML = st + $sel.innerHTML;
     $sel.hidden = false; selh();
   }
@@ -710,7 +731,7 @@
       return LibCMS.save({ op: op, ids: ids, patch: patch, per: per }, message).then(function (x) {
         ids.forEach(function (id) { if (byId[id] && x.E.records[id]) applyEntry(byId[id], x.E.records[id]); });
         ED.undo = UNDO[op] ? { op: UNDO[op], ids: ids } : null;
-        status('Saved: ' + message + '. On the site after the next build, about two minutes.', 'ok'); render(); if (after) after(x);
+        status('Saved: ' + message + '. On the site after the next build, about two minutes.', 'ok'); render(); if (after) after(x); watchDeploy(6000);
       }, function (err) {
         unsnap(sv); render();
         status('Not saved: ' + err.message + (err.status === 401 ? '. The token was refused; lock and paste it again.' : ''), 'bad');
@@ -771,7 +792,7 @@
     x.pending = true; render(); status('Saving: restore ' + (x.call || x.acc) + '…');
     ED.q = ED.q.then(function () {
       return LibCMS.save({ op: 'restore', ids: [id], patch: { state: null, path: null } }, 'Restore ' + (x.call || x.acc) + ' (removed)').then(function () {
-        x.pending = false; x.restored = true; status('Saved: ' + (x.call || x.acc) + ' is back after the next build, about two minutes.', 'ok'); render();
+        x.pending = false; x.restored = true; status('Saved: ' + (x.call || x.acc) + ' is back after the next build, about two minutes.', 'ok'); render(); watchDeploy(6000);
       }, function (err) { x.pending = false; status('Not saved: ' + err.message, 'bad'); render(); });
     });
   }
@@ -834,6 +855,7 @@
   // what changed on GitHub since this page was built
   function overlay() {
     if (!ED.unlocked || !window.LibCMS) return;
+    watchDeploy(0);
     LibCMS.check(LibCMS.token()).then(function (c) { ED.archive = c.archive; if (!c.tools) { ED.unlocked = ED.on = false; drawCmsBtn(); status('The saved token was refused. Edit to paste it again.', 'bad'); render(); } });
     LibCMS.readEdits().then(function (x) {
       var seen = {}; ED.removed.forEach(function (y) { seen[y.id] = y; });

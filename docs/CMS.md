@@ -64,6 +64,7 @@ folders), `gallery/_build/build.mjs` and `set/index.html` (leave out archived an
 (reads `_shared/hidden.js`).
 
 ## Changelog
+- 4 · 2026-11-16 · Edit shows the last deploy (updating · up to date · failed, with a link to why); the Edit button is underlined in orange when it failed. Read from GitHub's public run list, no token needed.
 - 3 · 2026-11-16 · Projects are edited in the CMS: new, rename, note, private, delete when empty (`projectDef` ops in `edits.json`).
 - 2 · 2026-11-15 · Top nav by kind (Library · Techniques · Examples · Templates · Galleries; Ledger and Audit only while
   editing; Shelves and Atoms still open by address); one header per project with the archived count as a link;

@@ -138,7 +138,17 @@
     });
   }
 
-  window.LibCMS = {
+  /** The last deploy of main, read without the token (a public repo's runs are public): { state: building|live|failed, url, at, title }. */
+  function deployState() {
+    return fetch(API + OWNER + '/' + REPO + '/actions/workflows/deploy.yml/runs?branch=' + BRANCH + '&per_page=1', { cache: 'no-store', headers: { Accept: 'application/vnd.github+json' } })
+      .then(function (res) { if (!res.ok) throw new Error('GitHub said ' + res.status); return res.json(); })
+      .then(function (j) {
+        var r = (j.workflow_runs || [])[0]; if (!r) return null;
+        return { state: r.status !== 'completed' ? 'building' : r.conclusion === 'success' ? 'live' : r.conclusion === 'cancelled' ? 'superseded' : 'failed', url: r.html_url, at: r.updated_at || r.created_at, title: r.display_title || '', sha: r.head_sha };
+      });
+  }
+
+  window.LibCMS = { deployState: deployState,
     token: token, setToken: function (t) { lsSet(LS_TOKEN, t); }, check: check,
     readEdits: readEdits, save: save, listFolder: listFolder, fileAt: fileAt, copyToArchive: copyToArchive,
     repo: OWNER + '/' + REPO, archive: OWNER + '/' + ARCHIVE
