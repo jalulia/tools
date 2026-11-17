@@ -29,7 +29,7 @@ window.STUDY={"id": "pl-155-change-models-halfway", "code": "PL-155", "fig": "4.
 })(window.STUDY);
 
 /* PL-155 · Change models halfway · the handoff on the steps · drawn by its source page's own code: A07_microsite.html #c-u2. See _build/engines/helix-step.js. */
-window.HX_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A07_microsite.html", "id": "c-u2", "dials": ["curl", "turn", "rise", "tread", "block", "yaw", "pitch", "sun", "crystal", "moment"]};
+window.HX_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A07_microsite.html", "id": "c-u2", "dials": ["curl", "turn", "rise", "tread", "block", "yaw", "pitch", "sun", "crystal", "moment"], "w": 414, "h": 311};
 
 /* helix-step · shared engine for the helix-step plates drawn by Mindgut's A07 microsite (PL-20…25, PL-155, PL-156).
    Appended to each plate's study.js by _build/plates.py after that plate's hx-figure.js (window.HX_FIG: source page,
@@ -64,7 +64,33 @@ window.HX_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
   S.paramsHint = 'Dials on the page’s own drawing. Multiples are of the page’s numbers.';
   S.liveOnLoad = false; delete S.live;
 
+  /* the figure's own inks, editable on the Color tab. The stair figures read the page's palette variables; a setter
+     injected into the page reassigns them (with the shades each block face needs) before every draw. */
+  var CRY = FIG.id === 'c-cryst';
+  function mix(a, b, t) { var A = [1, 3, 5].map(function (i) { return parseInt(a.substr(i, 2), 16); }), B = [1, 3, 5].map(function (i) { return parseInt(b.substr(i, 2), 16); }); return '#' + A.map(function (v, i) { return Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0'); }).join(''); }
+  var PAL = CRY ? function (id, label, k) { return { id: id, label: label, sw: [k.ground, k.ink, k.muted, k.accent, k.green], spot: [240, 240, 240], paper: k.ground, rule: mix(k.ground, k.ink, .16), inks: k }; }
+    : function (id, label, k) { return { id: id, label: label, sw: [k.paper, k.block, k.model, k.sun, k.line], spot: [20, 20, 20], paper: k.paper, rule: mix(k.paper, k.line, .16), inks: k }; };
+  S.variants = CRY ? [
+    PAL('mindgut', 'Mindgut', { ground: '#101311', ink: '#f5f7f0', muted: '#b9c3b1', accent: '#d0ec60', green: '#3fb36c' }),
+    PAL('cobalt', 'Cobalt', { ground: '#0e1122', ink: '#eef0f6', muted: '#a9aec4', accent: '#93a8ea', green: '#1b3bd4' }),
+    PAL('paper', 'Paper', { ground: '#f5f7f0', ink: '#151b17', muted: '#5d675f', accent: '#126b3d', green: '#3fb36c' })
+  ] : [
+    PAL('mindgut', 'Mindgut', { paper: '#f5f7f0', block: '#126b3d', model: '#fbfcf7', sun: '#d0ec60', line: '#151b17', ember: '#d9462f', violet: '#6c46b8' }),
+    PAL('night', 'Night', { paper: '#151b17', block: '#d0ec60', model: '#2c3a30', sun: '#126b3d', line: '#eef2e7', ember: '#d9462f', violet: '#b9a3f0' }),
+    PAL('cobalt', 'Cobalt', { paper: '#f3f5f8', block: '#1b3bd4', model: '#f8f9fc', sun: '#93a8ea', line: '#0e1122', ember: '#ef4a2b', violet: '#0e1122' })
+  ];
+  S.variantLabel = 'Palette';
+  S.colorHint = 'Pick a palette; click an ink to change it. Each ink is one of the figure\u2019s own colors; block faces are shaded from it.';
+  function setInks(win, k) {
+    if (CRY) { win.__CRY = { ink: k.ink, dim: k.muted, acc: k.accent, gy: k.green }; return; }
+    if (!win.__setInk) return;
+    win.__setInk({ line: k.line, block: k.block, blockS: [k.block, mix(k.block, '#000000', .16), mix(k.block, '#000000', .32)], modelS: [k.model, mix(k.model, k.line, .1), mix(k.model, k.line, .2)],
+      sun: k.sun, sunS: [k.sun, mix(k.sun, '#000000', .1), mix(k.sun, '#000000', .22)], litS: [mix(k.sun, '#ffffff', .72), mix(k.sun, '#ffffff', .55), mix(k.sun, '#ffffff', .4)],
+      ember: k.ember, violet: k.violet, paper: k.paper, paleS: [mix(k.paper, k.line, .03), mix(k.paper, k.line, .06), mix(k.paper, k.line, .11)] });
+  }
   var PATCH = [
+    ["GHO=['#f5f7f0','#f5f7f0','#eef2e7'];", "GHO=['#f5f7f0','#f5f7f0','#eef2e7'];window.__setInk=function(o){if(o.line){VOID=MIST=_kINK=o.line}if(o.block){COBALT=FOREST=o.block;_kYOU=o.blockS}if(o.modelS)_kMOD=o.modelS;if(o.sun){ACID=o.sun;LIVY=o.sunS;LIVM=o.litS}if(o.ember)EMBER=o.ember;if(o.violet)VIOLET=o.violet;if(o.paper){NIGHTP=SHEET=o.paper;PALE=o.paleS;GHO=[o.paper,o.paper,o.paleS[0]]}};"],
+    ["ink='#f5f7f0',dim='#b9c3b1',acc='#d0ec60',GY='#3fb36c'", "ink=(window.__CRY||{}).ink||'#f5f7f0',dim=(window.__CRY||{}).dim||'#b9c3b1',acc=(window.__CRY||{}).acc||'#d0ec60',GY=(window.__CRY||{}).gy||'#3fb36c'"],
     ["function plate(id,draw,opt){var cv=typeof id==='string'?$(id):id;if(!cv)return null;opt=opt||{};", "function plate(id,draw,opt){var cv=typeof id==='string'?$(id):id;if(!cv)return null;opt=opt||{};(window.__DRAWS=window.__DRAWS||{})[typeof id==='string'?id:(cv.id||'')]=draw;"],
     ["RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;", "RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;window.__setRM=function(v){RM=v};"],
     ["var Rr=o.R||4.6,ac=(o.ac==null?86:o.ac)*Math.PI/180", "var __P=window.__P||{},Rr=(o.R||4.6)*(__P.curl||1),ac=((o.ac==null?86:o.ac)+(__P.turn||0))*Math.PI/180"],
@@ -101,12 +127,15 @@ window.HX_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
     x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = V.paper || '#FFFFFF'; x.fillRect(0, 0, W, H);
     load().then(function (E) {
       var win = E.w, P = {}; Object.keys(ALL).forEach(function (k) { P[k] = k in Q ? Q[k] : ALL[k].value; }); win.__P = P;
+      var K = V.inks || S.variants[0].inks; setInks(win, K);
       var m = +Q.moment || 0; if (win.__setRM) win.__setRM(m === 0); if (win.__JN) win.__JN.T = m === 0 ? win.__T0 : m;
       S.panels.forEach(function (p) {
         var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, cw = bw / dpr, ch = bh / dpr;
-        x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip(); x.fillStyle = FIG.ground || '#f5f7f0'; x.fillRect(bx, by, bw, bh);
-        x.setTransform(dpr, 0, 0, dpr, bx, by);
-        try { E.draw(x, cw, ch, { cv: null, t: m, vis: true, live: true, ptr: null, down: false }, 0, dpr); } catch (err) { console.error('[helix-step]', err); }
+        x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip(); x.fillStyle = K.paper || K.ground || FIG.ground || '#f5f7f0'; x.fillRect(bx, by, bw, bh);
+        /* drawn at the source figure's own size, then scaled to the panel: every mark keeps its proportion to the figure */
+        var fw = FIG.w || cw, fh = FIG.h || ch, k = Math.min(cw / fw, ch / fh), ox = bx + (bw - fw * k * dpr) / 2, oy = by + (bh - fh * k * dpr) / 2;
+        x.setTransform(dpr * k, 0, 0, dpr * k, ox, oy);
+        try { E.draw(x, fw, fh, { cv: null, t: m, vis: true, live: true, ptr: null, down: false }, 0, dpr * k); } catch (err) { console.error('[helix-step]', err); }
         x.setTransform(1, 0, 0, 1, 0, 0); x.restore();
         x.strokeStyle = V.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
       });

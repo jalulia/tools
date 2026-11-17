@@ -29,7 +29,7 @@ window.STUDY={"id": "pl-10-scatter-field", "code": "PL-10", "fig": "4.10", "titl
 })(window.STUDY);
 
 /* PL-10 · Scatter field · the figure is drawn by its source page's own code: A04_directions-v1.html #a-method > div:nth-child(2) > figure:nth-child(3). See _build/engines/dot-record.js. */
-window.DR_FIG={"record": true, "src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A04_directions-v1.html", "sel": "#a-method > div:nth-child(2) > figure:nth-child(3)"};
+window.DR_FIG={"record": true, "src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A04_directions-v1.html", "sel": "#a-method > div:nth-child(2) > figure:nth-child(3)", "w": 555, "h": 484};
 
 /* dot-record · shared engine for the "dot record" plates drawn by Mindgut's A04 directions page (PL-04…10).
    Appended to each plate's study.js by _build/plates.py after that plate's dr-figure.js (window.DR_FIG: the source page
@@ -65,7 +65,17 @@ window.DR_FIG={"record": true, "src": "/tools/mindgut/files/Mindgut/Claude/colle
   S.paramsHint = 'Dials on the page’s own stipple. Multiples are of the page’s numbers.';
   S.liveOnLoad = false; delete S.live;
 
+  /* the figure's own inks, editable on the Color tab: they replace the page's INK object before every draw */
+  var PAL = function (id, label, k) { return { id: id, label: label, sw: [k.stock, k.you, k.model, k.night, k.ember], spot: [20, 20, 20], paper: k.stock, rule: k.rule, inks: k }; };
+  S.variants = [
+    PAL('mindgut', 'Mindgut A', { stock: '#f8f8f6', you: '#1b3bd4', model: '#93a8ea', night: '#0e1122', ember: '#ef4a2b', rule: '#c9cdda', label: '#474c63' }),
+    PAL('night', 'Night', { stock: '#0e1122', you: '#93a8ea', model: '#3b4cb4', night: '#eef0f6', ember: '#ef4a2b', rule: '#2c3150', label: '#a9aec4' }),
+    PAL('forest', 'Forest', { stock: '#f5f7f0', you: '#126b3d', model: '#a9cf94', night: '#151b17', ember: '#d9462f', rule: '#cfd6c8', label: '#3f4a42' })
+  ];
+  S.variantLabel = 'Palette';
+  S.colorHint = 'Pick a palette; click an ink to change it. You, Model, Night and Ember are the figure\u2019s inks; Stock is its paper.';
   var PATCH = [
+    ["INK={you:'#1b3bd4',model:'#93a8ea',night:'#0e1122',ember:'#ef4a2b',stock:'#f8f8f6',rule:'#c9cdda',ink2:'#474c63',ink3:'#666b82'}", "INK=window.__INK={you:'#1b3bd4',model:'#93a8ea',night:'#0e1122',ember:'#ef4a2b',stock:'#f8f8f6',rule:'#c9cdda',ink2:'#474c63',ink3:'#666b82'}"],
     ['function plate(cv,draw){', 'function plate(cv,draw){(window.__DRAWS=window.__DRAWS||[]).push({cv:cv,draw:draw});'],
     ['function recOf(i){if(RECS[i])return RECS[i];var sp=SP[i],', 'function recOf(i){var __s=(window.__P&&window.__P.seed)|0,__k=i+":"+__s;if(RECS[__k])return RECS[__k];var sp=__s?Object.assign({},SP[i],{seed:SP[i].seed+__s*97}):SP[i],'],
     ['return RECS[i]=r}', 'return RECS[__k]=r}'],
@@ -105,17 +115,20 @@ window.DR_FIG={"record": true, "src": "/tools/mindgut/files/Mindgut/Claude/colle
     var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
     x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = V.paper || '#FFFFFF'; x.fillRect(0, 0, W, H);
     load().then(function (E) {
-      var win = E.w; win.__P = { dot: Q.dot, density: Q.density, spread: Q.spread, scatter: Q.scatter, chords: Q.chords == null ? 1 : Q.chords, seed: Q.seed };
+      var win = E.w, K = V.inks || S.variants[0].inks; if (win.__INK) { Object.keys(K).forEach(function (k) { if (k !== 'label') win.__INK[k] = K[k]; }); win.__INK.ink2 = win.__INK.ink3 = K.label; }
+      win.__P = { dot: Q.dot, density: Q.density, spread: Q.spread, scatter: Q.scatter, chords: Q.chords == null ? 1 : Q.chords, seed: Q.seed };
       S.panels.forEach(function (p) {
         var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, cw = bw / dpr, ch = bh / dpr;
         x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip();
-        x.fillStyle = '#f8f8f6'; x.fillRect(bx, by, bw, bh);
+        x.fillStyle = K.stock || '#f8f8f6'; x.fillRect(bx, by, bw, bh);
         if (FIG.wave && win.__I && win.MG) { /* the Wave: crossings and seed on the page's own state */
           var I = win.__I, R = win.MG.recOf(2); if (Q.upto > R.N && win.MG.grow) win.MG.grow(R, Q.upto); I.rec = R; I.upto = Math.min(Q.upto, R.N); I.hov = -1;
         }
         win.__DN = 0;
-        x.setTransform(dpr, 0, 0, dpr, bx, by);
-        try { E.draw(x, cw, ch, { w: cw, h: ch, d: dpr, t: 0 }); } catch (err) { console.error('[dot-record]', err); }
+        /* drawn at the source figure's own size, then scaled to the panel: every mark keeps its proportion to the figure */
+        var fw = FIG.w || cw, fh = FIG.h || ch, k = Math.min(cw / fw, ch / fh), ox = bx + (bw - fw * k * dpr) / 2, oy = by + (bh - fh * k * dpr) / 2;
+        x.setTransform(dpr * k, 0, 0, dpr * k, ox, oy);
+        try { E.draw(x, fw, fh, { w: fw, h: fh, d: dpr * k, t: 0 }); } catch (err) { console.error('[dot-record]', err); }
         x.setTransform(1, 0, 0, 1, 0, 0); x.restore();
         x.strokeStyle = V.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
       });

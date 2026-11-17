@@ -39,6 +39,33 @@ window.RD_FIG=[{"vb":[0,0,680,320],"ground":[255,255,255],"prims":[{"t":"poly","
 (function (S) {
   'use strict';
   var FIGS = window.RD_FIG || [];
+  /* the figure's own inks: every stroke, fill and label color, merged where they are within a few steps of each other.
+     They go into the palettes, so the Color tab lists them and editing one recolors every mark that uses it. */
+  function hx(c) { return '#' + c.slice(0, 3).map(function (v) { return Math.round(v).toString(16).padStart(2, '0'); }).join(''); }
+  var INKS = [], used = [];
+  FIGS.forEach(function (F) { F.prims.forEach(function (e) { ['s', 'f'].forEach(function (k) {
+    var c = e[k]; if (!c) return; if (c.length > 3 && c[3] < .05) return; if ((.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) / 255 > .93) { e[k + 'i'] = -1; return; }  /* paper-white stays paper */
+    var best = -1, bd = 1e9; INKS.forEach(function (q, j) { var d = Math.abs(q[0] - c[0]) + Math.abs(q[1] - c[1]) + Math.abs(q[2] - c[2]); if (d < bd) { bd = d; best = j; } });
+    if (best < 0 || bd > 34) { INKS.push(c.slice(0, 3)); used.push(0); best = INKS.length - 1; }
+    used[best]++; e[k + 'i'] = best; }); }); });
+  /* the order of the list: most-used first */
+  var order = used.map(function (n, i) { return [n, i]; }).sort(function (a, b) { return b[0] - a[0]; }).map(function (x) { return x[1]; }), remap = {};
+  order.forEach(function (j, i) { remap[j] = i; }); INKS = order.map(function (j) { return INKS[j]; });
+  FIGS.forEach(function (F) { F.prims.forEach(function (e) { ['si', 'fi'].forEach(function (k) { if (e[k] != null && e[k] >= 0) e[k] = remap[e[k]]; }); }); });
+  var src = INKS.map(hx), lumOf = function (c) { return (.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) / 255; };
+  var sat = function (c) { var mx = Math.max.apply(null, c), mn = Math.min.apply(null, c); return mx ? (mx - mn) / mx : 0; };
+  var ground = FIGS[0] && FIGS[0].ground ? hx(FIGS[0].ground) : '#FFFFFF';
+  /* Cobalt: the neutrals become the cobalt ramp of Mindgut's stipple; a colored accent becomes ember */
+  var cob = INKS.map(function (c) { var L = lumOf(c); return sat(c) > .28 ? '#ef4a2b' : L < .25 ? '#0e1122' : L < .5 ? '#1b3bd4' : L < .75 ? '#5b74de' : '#93a8ea'; });
+  var inv = INKS.map(function (c) { return sat(c) > .28 ? hx(c.map(function (v) { return Math.min(255, v * 1.35 + 30); })) : hx(c.map(function (v) { return 255 - v * .92; })); });
+  S.variants = [
+    { id: 'source', label: 'Source', sw: [ground].concat(src.slice(0, 4)), spot: [20, 20, 20], paper: '#FFFFFF', rule: '#D9D9DC', ground: ground, inks: src },
+    { id: 'cobalt', label: 'Cobalt', sw: ['#f8f8f6'].concat(cob.slice(0, 4)), spot: [20, 20, 20], paper: '#FFFFFF', rule: '#D9D9DC', ground: '#f8f8f6', inks: cob },
+    { id: 'ink', label: 'Ink', sw: ['#101014'].concat(inv.slice(0, 4)), spot: [240, 240, 240], paper: '#101014', rule: '#2A2A30', ground: '#17171c', inks: inv }
+  ];
+  S.variantLabel = 'Palette';
+  S.colorHint = 'Pick a palette; click an ink to change it. Each ink is a color of the figure, measured from the source.';
+
   /* the plate is cut to the figure: one panel takes the figure's own shape, so nothing of the old screenshot's caption and controls is left as empty sheet */
   if (S.panels.length === 1 && FIGS[0]) { var p0 = S.panels[0], vb0 = FIGS[0].vb; p0.h = +(p0.w * vb0[3] / vb0[2]).toFixed(2); S.ref = { w: 1000, h: Math.round(p0.y * 2 + p0.h) }; }
   var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
@@ -91,14 +118,18 @@ window.RD_FIG=[{"vb":[0,0,680,320],"ground":[255,255,255],"prims":[{"t":"poly","
   S.render = function (canvas, w, h, dpr, V, done, overrides) {
     var A = window.ART.params(S.spec, overrides || {}), Q = A['reading-diagram'];
     var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
-    var paper = V.paper || '#FFFFFF', pr = parseInt(paper.slice(1), 16), dark = lum([pr >> 16 & 255, pr >> 8 & 255, pr & 255]) < .45;
-    var col = function (c, a) { if (!c) return null; var r = c[0], g = c[1], b = c[2]; if (dark) { r = 255 - r; g = 255 - g; b = 255 - b; } return 'rgba(' + r + ',' + g + ',' + b + ',' + ((c.length > 3 ? c[3] : 1) * (a == null ? 1 : a)).toFixed(3) + ')'; };
+    var paper = V.paper || '#FFFFFF', VI = V.inks || [], GR = V.ground || paper;
+    var rgbOf = function (h) { var n = parseInt(String(h).slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+    var GRc = rgbOf(GR), PAPc = lum(GRc) < .45 ? [255, 255, 255] : null;
+    /* an ink by its index in the palette; -1 is paper-white, which follows the ground */
+    var col = function (c, a, idx) { if (!c) return null; var al = (c.length > 3 ? c[3] : 1) * (a == null ? 1 : a), q = idx == null ? c : idx < 0 ? GRc.map(function (v) { return Math.min(255, v + (PAPc ? 14 : 0)); }) : rgbOf(VI[idx] || hx(c)); return 'rgba(' + q[0] + ',' + q[1] + ',' + q[2] + ',' + al.toFixed(3) + ')'; };
+    var dark = lum(GRc) < .45;
     x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = paper; x.fillRect(0, 0, W, H);
     S.panels.forEach(function (p, i) {
       var F = FIGS[i]; if (!F) return;
       var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, vb = F.vb, k = Math.min(bw / vb[2], bh / vb[3]), ox = bx + (bw - vb[2] * k) / 2 - vb[0] * k, oy = by + (bh - vb[3] * k) / 2 - vb[1] * k;
       x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip();
-      if (F.ground && !dark) { x.fillStyle = col(F.ground); x.fillRect(bx, by, bw, bh); }
+      x.fillStyle = GR; x.fillRect(bx, by, bw, bh);
       x.setTransform(k, 0, 0, k, ox, oy); x.lineJoin = 'round';
       var seed = Q.seed | 0, minW = 0.6 / k;
       F.prims.forEach(function (e, n) {
@@ -109,26 +140,26 @@ window.RD_FIG=[{"vb":[0,0,680,320],"ground":[255,255,255],"prims":[{"t":"poly","
         /* tone: solid, hatched, or both */
         if (e.f && e.c) {
           var solid = 1 - Q.hatch, fo = (e.fo == null ? 1 : e.fo) * e.o;
-          var light = lum(e.f) > .93;   /* paper-colored fills stay solid: they knock out what is behind */
+          var light = e.fi === -1;   /* paper-colored fills stay solid: they knock out what is behind */
           var bbx = hp.reduce(function (m, q) { return [Math.min(m[0], q[0]), Math.min(m[1], q[1]), Math.max(m[2], q[0]), Math.max(m[3], q[1])]; }, [1e9, 1e9, -1e9, -1e9]);
           if (Math.min(bbx[2] - bbx[0], bbx[3] - bbx[1]) < Q.gap * 3) solid = 1;   /* a dot or a tick is too small to hatch: it stays a mark */
-          if (light || solid > 0) { path(hp, true); x.fillStyle = col(e.f, light ? fo : fo * solid); x.fill(); }
+          if (light || solid > 0) { path(hp, true); x.fillStyle = col(e.f, light ? fo : fo * solid, e.fi); x.fill(); }
           if (!light && solid < 1) {
             x.save(); path(hp, true); x.clip();
             var xs = hp.map(function (q) { return q[0]; }), ys = hp.map(function (q) { return q[1]; }), mx = Math.min.apply(null, xs), Mx = Math.max.apply(null, xs), my = Math.min.apply(null, ys), My = Math.max.apply(null, ys);
             var cx = (mx + Mx) / 2, cy = (my + My) / 2, R = Math.hypot(Mx - mx, My - my) / 2 + 2, a = Q.angle * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a), g = Q.gap;
-            x.strokeStyle = col(e.f, fo * Q.hatch); x.lineWidth = Math.max(minW, Math.min(g * .45, 1.1 * Q.weight)); x.beginPath();
+            x.strokeStyle = col(e.f, fo * Q.hatch, e.fi); x.lineWidth = Math.max(minW, Math.min(g * .45, 1.1 * Q.weight)); x.beginPath();
             for (var t = -R; t <= R; t += g) { var px = cx - dy * t, py = cy + dx * t; x.moveTo(px - dx * R, py - dy * R); x.lineTo(px + dx * R, py + dy * R); }
             x.stroke(); x.restore();
           }
         }
         /* line */
         if (e.s && e.w > 0) {
-          path(hp, e.c); x.strokeStyle = col(e.s, (e.so == null ? 1 : e.so) * e.o); x.lineWidth = Math.max(minW, e.w * Q.weight); x.lineCap = e.cap || 'butt';
+          path(hp, e.c); x.strokeStyle = col(e.s, (e.so == null ? 1 : e.so) * e.o, e.si); x.lineWidth = Math.max(minW, e.w * Q.weight); x.lineCap = e.cap || 'butt';
           x.setLineDash(e.d ? e.d.map(function (d) { return d * Math.max(.5, Q.weight); }) : []); x.stroke(); x.setLineDash([]);
           /* arrowheads, where the source marked the line */
           var head = function (P, B) { var dx = P[0] - B[0], dy = P[1] - B[1], L = Math.hypot(dx, dy) || 1, s = Math.max(5, e.w * 7) * Q.arrow * .8, ux = dx / L, uy = dy / L;
-            x.beginPath(); x.moveTo(P[0], P[1]); x.lineTo(P[0] - ux * s - uy * s * .45, P[1] - uy * s + ux * s * .45); x.lineTo(P[0] - ux * s + uy * s * .45, P[1] - uy * s - ux * s * .45); x.closePath(); x.fillStyle = col(e.s, e.o); x.fill(); };
+            x.beginPath(); x.moveTo(P[0], P[1]); x.lineTo(P[0] - ux * s - uy * s * .45, P[1] - uy * s + ux * s * .45); x.lineTo(P[0] - ux * s + uy * s * .45, P[1] - uy * s - ux * s * .45); x.closePath(); x.fillStyle = col(e.s, e.o, e.si); x.fill(); };
           if (e.me && hp.length > 1) head(hp[hp.length - 1], hp[Math.max(0, hp.length - 3)]);
           if (e.ms && hp.length > 1) head(hp[0], hp[Math.min(hp.length - 1, 2)]);
         }
@@ -140,7 +171,7 @@ window.RD_FIG=[{"vb":[0,0,680,320],"ground":[255,255,255],"prims":[{"t":"poly","
         x.save(); x.translate(e.x, e.y); if (e.rot) x.rotate(e.rot * Math.PI / 180);
         x.font = (e.it ? 'italic ' : '') + (e.fw || 400) + ' ' + (e.fs * Q.type).toFixed(2) + 'px ' + fam; x.textAlign = e.a === 'middle' ? 'center' : e.a === 'end' ? 'right' : 'left'; x.textBaseline = 'alphabetic';
         if ('letterSpacing' in x) x.letterSpacing = (e.ls * Q.type).toFixed(2) + 'px';
-        x.fillStyle = col(e.f || [21, 20, 24], e.o); x.fillText(e.tt === 'uppercase' ? e.txt.toUpperCase() : e.txt, 0, 0); x.restore();
+        x.fillStyle = col(e.f || [21, 20, 24], e.o, e.fi); x.fillText(e.tt === 'uppercase' ? e.txt.toUpperCase() : e.txt, 0, 0); x.restore();
       });
       x.setTransform(1, 0, 0, 1, 0, 0); x.restore();
       x.strokeStyle = V.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
