@@ -1,0 +1,2 @@
+/* PL-08 · Helix as a zigzag of dots · the figure is drawn by its source page's own code: A04_directions-v1.html #a-wave > div:nth-child(2) > figure:nth-child(1). See _build/engines/dot-record.js. */
+window.DR_FIG={"record": true, "wave": true, "src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A04_directions-v1.html", "sel": "#a-wave > div:nth-child(2) > figure:nth-child(1)"};
