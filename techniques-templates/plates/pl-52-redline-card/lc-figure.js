@@ -1,2 +1,0 @@
-/* PL-52 · Redline card · drawn by its source page's own code: Mindgut-Worlds-V2.html #thumb-red. Dials and inks measured by _build/qa/lift-probe.mjs. See _build/engines/lift-canvas.js. */
-window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "sel": "#thumb-red", "w": 432, "h": 208, "ground": "#f04432", "dials": ["mark"], "inks": ["#ffa29a", "#141414", "#a82528"], "t0": 2, "crop": [0, 0, 1, 1]};

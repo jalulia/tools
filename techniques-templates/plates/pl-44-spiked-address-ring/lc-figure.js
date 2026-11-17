@@ -1,2 +1,0 @@
-/* PL-44 · Spiked address ring · drawn by its source page's own code: Mindgut_Deck_V03.html #s01 > canvas:nth-child(5). Dials and inks measured by _build/qa/lift-probe.mjs. See _build/engines/lift-canvas.js. */
-window.LC_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/presentation/Mindgut_Deck_V03.html", "sel": "#s01 > canvas:nth-child(5)", "w": 570, "h": 570, "ground": "#ffffff", "dials": ["weight", "mark", "ink", "moment"], "inks": ["#101014", "#545db7", "#515eb4", "#575ab7", "#475eb9", "#3360b7", "#425db1", "#4359b6"], "t0": 2, "crop": [0, 0, 1, 1]};

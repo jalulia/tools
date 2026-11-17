@@ -40,6 +40,17 @@ window.MG_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
    into this plate at the figure's own size. Nothing in the source file changes. */
 (function (S) {
   'use strict';
+  /* until the source page has loaded, the panel shows the figure as filed (its f01 still), not an empty frame */
+  var READY = false;
+  function placeholder(canvas, V) {
+    var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = (V && V.paper) || '#FFFFFF'; x.fillRect(0, 0, W, H);
+    (S.panels || []).forEach(function (p) {
+      if (!p.src) return; var im = new Image();
+      im.onload = function () { if (READY) return; var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, k = Math.min(bw / im.width, bh / im.height); x.save(); x.globalAlpha = .9; x.drawImage(im, bx + (bw - im.width * k) / 2, by + (bh - im.height * k) / 2, im.width * k, im.height * k); x.restore(); };
+      im.src = p.src;
+    });
+  }
   var FIG = window.MG_FIG || {}, ON = {}; (FIG.dials || []).forEach(function (k) { ON[k] = 1; });
   var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
   var ALL = {
@@ -177,7 +188,7 @@ window.MG_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
     S.panels.forEach(function (p) {
       var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, cw = bw / dpr, ch = bh / dpr;
       x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip(); x.fillStyle = K.ground; x.fillRect(bx, by, bw, bh);
-      var fw = FIG.w || cw, fh = FIG.h || ch, k = Math.min(cw / fw, ch / fh), ox = bx + (bw - fw * k * dpr) / 2, oy = by + (bh - fh * k * dpr) / 2;
+      var fw = FIG.w || cw, fh = FIG.h || ch, cr = FIG.crop || [0, 0, 1, 1], vw = fw * (cr[2] - cr[0]), vh = fh * (cr[3] - cr[1]), k = Math.min(cw / vw, ch / vh), ox = bx + (bw - vw * k * dpr) / 2 - cr[0] * fw * k * dpr, oy = by + (bh - vh * k * dpr) / 2 - cr[1] * fh * k * dpr; /* the filed crop of the figure fills the panel */
       x.setTransform(dpr * k, 0, 0, dpr * k, ox, oy);
       try { E.draw(x, fw, fh, { cv: null, t: t, vis: true, live: true, ptr: null, down: false }, 0, dpr * k); } catch (err) { console.error('[mg-figure]', err); }
       x.setTransform(1, 0, 0, 1, 0, 0); x.restore();
@@ -185,8 +196,9 @@ window.MG_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
     });
   }
   S.render = function (canvas, w, h, dpr, V, done, overrides) {
+    if (!READY) placeholder(canvas, V);
     var A = window.ART.params(S.spec, overrides || {}), Q = A[TID] || {};
-    load().then(function (E) { paint(E, canvas, canvas.getContext('2d'), V, Q, dpr, +Q.moment || 0); if (done) done(); },
+    load().then(function (E_) { READY = true; return E_; }).then(function (E) { paint(E, canvas, canvas.getContext('2d'), V, Q, dpr, +Q.moment || 0); if (done) done(); },
       function (err) { console.error('[mg-figure]', err); if (done) done(); });
     return false;
   };

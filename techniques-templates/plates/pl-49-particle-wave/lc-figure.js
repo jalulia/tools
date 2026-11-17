@@ -1,2 +1,0 @@
-/* PL-49 · Particle wave · drawn by its source page's own code: Mindgut-Worlds-V2.html #hero-art. Dials and inks measured by _build/qa/lift-probe.mjs. See _build/engines/lift-canvas.js. */
-window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "sel": "#hero-art", "w": 1195, "h": 850, "ground": "#101113", "dials": ["mark"], "inks": ["#88b82b", "#ff5032", "#ff6640", "#8fbe30", "#ff6841", "#d2fe63", "#ff653f", "#ff5d3a"], "t0": 2, "crop": [0.42, 0.0, 1.0, 1.0]};

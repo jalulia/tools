@@ -7,6 +7,17 @@
    plate. Nothing in the source file changes. */
 (function (S) {
   'use strict';
+  /* until the source page has loaded, the panel shows the figure as filed (its f01 still), not an empty frame */
+  var READY = false;
+  function placeholder(canvas, V) {
+    var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = (V && V.paper) || '#FFFFFF'; x.fillRect(0, 0, W, H);
+    (S.panels || []).forEach(function (p) {
+      if (!p.src) return; var im = new Image();
+      im.onload = function () { if (READY) return; var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, k = Math.min(bw / im.width, bh / im.height); x.save(); x.globalAlpha = .9; x.drawImage(im, bx + (bw - im.width * k) / 2, by + (bh - im.height * k) / 2, im.width * k, im.height * k); x.restore(); };
+      im.src = p.src;
+    });
+  }
   var FIG = window.MO_FIG || {};
   var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
   var read = (S.spec.techniques || [])[0] || {}, TID = read.id || 'field-guide-plate';
@@ -88,8 +99,9 @@
     return svgImage(P).then(function (im) { overlay = im; });
   }
   S.render = function (canvas, w, h, dpr, V, done, overrides) {
+    if (!READY) placeholder(canvas, V);
     var A = window.ART.params(S.spec, overrides || {}), Q = A[TID] || {};
-    load().then(function (E) { return build(E, Q, V).then(function () { return E; }); }).then(function (E) {
+    load().then(function (E_) { READY = true; return E_; }).then(function (E) { return build(E, Q, V).then(function () { return E; }); }).then(function (E) {
       var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h, P = E.P, K = V.inks || S.variants[0].inks;
       x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = V.paper; x.fillRect(0, 0, W, H);
       S.panels.forEach(function (p) {

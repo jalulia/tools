@@ -42,6 +42,17 @@ window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/cave-rig.html", "
    Nothing in the source file changes. */
 (function (S) {
   'use strict';
+  /* until the source page has loaded, the panel shows the figure as filed (its f01 still), not an empty frame */
+  var READY = false;
+  function placeholder(canvas, V) {
+    var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = (V && V.paper) || '#FFFFFF'; x.fillRect(0, 0, W, H);
+    (S.panels || []).forEach(function (p) {
+      if (!p.src) return; var im = new Image();
+      im.onload = function () { if (READY) return; var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, k = Math.min(bw / im.width, bh / im.height); x.save(); x.globalAlpha = .9; x.drawImage(im, bx + (bw - im.width * k) / 2, by + (bh - im.height * k) / 2, im.width * k, im.height * k); x.restore(); };
+      im.src = p.src;
+    });
+  }
   var FIG = window.LC_FIG || {}, ON = {}; (FIG.dials || []).forEach(function (k) { ON[k] = 1; });
   var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
   var ALL = {
@@ -153,11 +164,12 @@ window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/cave-rig.html", "
   }
   var lastKey = '', live = null;
   S.render = function (canvas, cw, ch, dpr, Vt, done, overrides) {
+    if (!READY) placeholder(canvas, Vt);
     var A = window.ART.params(S.spec, overrides || {}), Q = Object.assign({}, A[TID] || {}), MAP = {};
     var src = Vt.src || INK; INK.forEach(function (h, i) { var to = (Vt.inks || {})['ink' + (i + 1)]; if (to && to.toLowerCase() !== h) MAP[h] = to.toLowerCase(); });
     var key = JSON.stringify([Q, MAP]);
     var go = key === lastKey && live ? Promise.resolve(live) : start(Q, MAP).then(function (E) { lastKey = key; live = E; return E; });
-    go.then(function (E) {
+    go.then(function (E) { READY = true;
       return (E.el.tagName.toLowerCase() === 'svg' ? svgImage(E.w, E.el) : Promise.resolve(E.el)).then(function (img) {
         var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
         x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = Vt.paper || '#FFFFFF'; x.fillRect(0, 0, W, H);

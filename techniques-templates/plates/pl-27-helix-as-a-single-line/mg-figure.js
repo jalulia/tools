@@ -1,2 +1,0 @@
-/* PL-27 · Helix as a single line · drawn by its source page's own code: A01_reflection-identity.html #spec7 > div:nth-child(2) > canvas:nth-child(1). See _build/engines/mg-figure.js. */
-window.MG_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A01_reflection-identity.html", "pick": ["#spec7 canvas", 1], "family": "light", "dials": ["tilt", "spin", "rise", "focus", "moment"], "w": 187, "h": 470};

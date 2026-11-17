@@ -38,6 +38,17 @@ window.DR_FIG={"record": true, "src": "/tools/mindgut/files/Mindgut/Claude/colle
    straight into this plate. At the default dials the plate is the source figure, mark for mark. Nothing in the source changes. */
 (function (S) {
   'use strict';
+  /* until the source page has loaded, the panel shows the figure as filed (its f01 still), not an empty frame */
+  var READY = false;
+  function placeholder(canvas, V) {
+    var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = (V && V.paper) || '#FFFFFF'; x.fillRect(0, 0, W, H);
+    (S.panels || []).forEach(function (p) {
+      if (!p.src) return; var im = new Image();
+      im.onload = function () { if (READY) return; var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, k = Math.min(bw / im.width, bh / im.height); x.save(); x.globalAlpha = .9; x.drawImage(im, bx + (bw - im.width * k) / 2, by + (bh - im.height * k) / 2, im.width * k, im.height * k); x.restore(); };
+      im.src = p.src;
+    });
+  }
   var FIG = window.DR_FIG || {};
   var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
   var read = (S.spec.techniques || [])[0] || {};
@@ -111,10 +122,11 @@ window.DR_FIG={"record": true, "src": "/tools/mindgut/files/Mindgut/Claude/colle
     return boot;
   }
   S.render = function (canvas, w, h, dpr, V, done, overrides) {
+    if (!READY) placeholder(canvas, V);
     var A = window.ART.params(S.spec, overrides || {}), Q = A['dot-record'];
     var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
     x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = V.paper || '#FFFFFF'; x.fillRect(0, 0, W, H);
-    load().then(function (E) {
+    load().then(function (E_) { READY = true; return E_; }).then(function (E) {
       var win = E.w, K = V.inks || S.variants[0].inks; if (win.__INK) { Object.keys(K).forEach(function (k) { if (k !== 'label') win.__INK[k] = K[k]; }); win.__INK.ink2 = win.__INK.ink3 = K.label; }
       win.__P = { dot: Q.dot, density: Q.density, spread: Q.spread, scatter: Q.scatter, chords: Q.chords == null ? 1 : Q.chords, seed: Q.seed };
       S.panels.forEach(function (p) {
