@@ -1,6 +1,7 @@
 /* mg-figure · shared engine for plates drawn by Mindgut's A01 Reflection Identity page (PL-26…35): the helix studies
    and the count bars. Appended to each plate's study.js by _build/plates.py after that plate's mg-figure.js
    (window.MG_FIG: source page, canvas, which dials act on it, which palette family it takes).
+   Also the reflection-kit figures of the A07 microsite (PL-01, PL-02): record shown, lobe reach, dot pitch, line weight, focus, turn.
    The page's own code draws the figure. It is loaded once into a hidden frame; its camera, step, focus and bar
    code is given a dial object (window.__P) and its inks a setter, and the figure's draw function paints straight
    into this plate at the figure's own size. Nothing in the source file changes. */
@@ -19,7 +20,11 @@
     ring: leaf(1, 0.4, 2, 0.01, 'Mark size', '×', 'Size of the state mark over each bar: the ring, the dashed ring, the open arc and the stroke.'),
     width: leaf(1, 0.3, 1.4, 0.01, 'Bar width', '×', 'Width of each bar against its slot. Below 1 opens a gap between the bars.'),
     ex: leaf(21, 7, 42, 1, 'Exchanges', '', 'Exchanges in the turn. The page’s turn is 21: 7 breaths of 3.'),
-    moment: leaf(0, 0, 60, 0.1, 'Moment', 's', 'The figure’s clock. 0 is the page’s still.')
+    length: leaf(1, 0.1, 1, 0.01, 'Record shown', '×', 'How much of the record is drawn, oldest first. 1 is the whole record.'),
+    lobe: leaf(1, 0.4, 1.6, 0.01, 'Lobe reach', '×', 'How far each message’s lobe reaches from the center, as a multiple of the page’s.'),
+    pitch: leaf(1, 0.5, 2, 0.01, 'Dot pitch', '×', 'Spacing of the dots that fill the lobes. Smaller packs them; larger opens the screen.'),
+    weight: leaf(1, 0, 3, 0.01, 'Line weight', '×', 'Weight of the line that runs through the newest lobes.'),
+    moment: leaf(0, 0, 60, 0.1, 'Moment', 's', 's', 'The figure’s clock. 0 is the page’s still.')
   };
   var P0 = {}; Object.keys(ALL).forEach(function (k) { if (ON[k]) P0[k] = ALL[k]; });
   var read = (S.spec.techniques || [])[0] || {}, TID = read.id || 'helix-form';
@@ -43,6 +48,16 @@
       ['forest', 'Forest', { ground: '#0a2a1a', line: '#0a2a1a', you: '#8fdc9b', model: '#eef2e7', focus: '#d0ec60', recall: '#d9cdf7', now: '#f2a444' }],
       ['cobalt', 'Cobalt', { ground: '#0e1122', line: '#0e1122', you: '#93a8ea', model: '#eef0f6', focus: '#ef4a2b', recall: '#c9d2f5', now: '#ef4a2b' }]
     ],
+    kit: [
+      ['mindgut', 'Mindgut', { ground: '#f5f7f0', halo: '#b5d6a6', body: '#2f8a55', core: '#0e5933', line: '#0a4528', focus: '#d0ec60', now: '#d9462f' }],
+      ['violet', 'Violet', { ground: '#f3f1f8', halo: '#d9cdf7', body: '#8f6fe0', core: '#44297f', line: '#2c1b55', focus: '#b79cf2', now: '#d9462f' }],
+      ['night', 'Night', { ground: '#0c0e0d', halo: '#2f5a3e', body: '#6fcf90', core: '#d0ec60', line: '#cfdcc0', focus: '#d0ec60', now: '#ef4a2b' }]
+    ],
+    kitlime: [
+      ['mindgut', 'Mindgut', { ground: '#d0ec60', halo: '#a9c740', body: '#2f8a55', core: '#0e5933', line: '#0a4528', focus: '#f5f7f0', now: '#d9462f' }],
+      ['paper', 'Paper', { ground: '#f5f7f0', halo: '#cfe2b8', body: '#2f8a55', core: '#0e5933', line: '#0a4528', focus: '#d0ec60', now: '#d9462f' }],
+      ['ink', 'Ink', { ground: '#151b17', halo: '#2f5a3e', body: '#6fcf90', core: '#d0ec60', line: '#d0ec60', focus: '#f5f7f0', now: '#ef4a2b' }]
+    ],
     lime: [
       ['mindgut', 'Mindgut', { ground: '#d0ec60', line: '#151b17', you: '#126b3d', model: '#f5f7f0', focus: '#cfdcc0', recall: '#6c46b8', now: '#d9462f' }],
       ['violet', 'Violet', { ground: '#d9cdf7', line: '#151b17', you: '#6c46b8', model: '#fbfcf7', focus: '#b79cf2', recall: '#44297f', now: '#d9462f' }],
@@ -50,12 +65,12 @@
     ]
   };
   var fam = FAM[FIG.family] || FAM.light;
-  S.variants = fam.map(function (f) { var k = f[2]; return { id: f[0], label: f[1], sw: [k.ground, k.you, k.model, k.focus, k.recall], spot: [20, 20, 20], paper: k.ground, rule: mix(k.ground, k.line === k.ground ? k.model : k.line, .16), inks: JSON.parse(JSON.stringify(k)) }; });
+  S.variants = fam.map(function (f) { var k = f[2]; return { id: f[0], label: f[1], sw: k.halo ? [k.ground, k.halo, k.body, k.core, k.line] : [k.ground, k.you, k.model, k.focus, k.recall], spot: [20, 20, 20], paper: k.ground, rule: mix(k.ground, k.line === k.ground ? k.model : k.line, .16), inks: JSON.parse(JSON.stringify(k)) }; });
   S.variantLabel = 'Palette';
   S.colorHint = 'Pick a palette; click an ink to change it. Each ink is one of the figure’s own: the line, your steps, the model’s, in focus, recalled, now and the ground. Faces are shaded from each.';
 
   /* the inks go in through one setter, placed after the page's box inks so every palette variable is in reach */
-  var SETTER = "window.__setInk=function(o){var R=function(c){return rgb(c)},sh=function(c,t){var a=[1,3,5].map(function(i){return parseInt(c.substr(i,2),16)});return '#'+a.map(function(v){return Math.round(v*(1-t)).toString(16).padStart(2,'0')}).join('')},ti=function(c,t){var a=[1,3,5].map(function(i){return parseInt(c.substr(i,2),16)});return '#'+a.map(function(v){return Math.round(v+(255-v)*t).toString(16).padStart(2,'0')}).join('')},mx=function(c,d,t){var a=[1,3,5].map(function(i){return parseInt(c.substr(i,2),16)}),b=[1,3,5].map(function(i){return parseInt(d.substr(i,2),16)});return '#'+a.map(function(v,i){return Math.round(v+(b[i]-v)*t).toString(16).padStart(2,'0')}).join('')};"
+  var SETTER = "window.__setNow=function(c){EMBER=c};window.__setInk=function(o){var R=function(c){return rgb(c)},sh=function(c,t){var a=[1,3,5].map(function(i){return parseInt(c.substr(i,2),16)});return '#'+a.map(function(v){return Math.round(v*(1-t)).toString(16).padStart(2,'0')}).join('')},ti=function(c,t){var a=[1,3,5].map(function(i){return parseInt(c.substr(i,2),16)});return '#'+a.map(function(v){return Math.round(v+(255-v)*t).toString(16).padStart(2,'0')}).join('')},mx=function(c,d,t){var a=[1,3,5].map(function(i){return parseInt(c.substr(i,2),16)}),b=[1,3,5].map(function(i){return parseInt(d.substr(i,2),16)});return '#'+a.map(function(v,i){return Math.round(v+(b[i]-v)*t).toString(16).padStart(2,'0')}).join('')};"
     + "var ln=o.dark?'#151b17':o.line;VOID=MIST=ln;FOREST=COBALT=o.you;ACID=o.focus;EMBER=o.now;VIOLET=o.recall;"
     + "BX.you=[o.you,sh(o.you,.2),sh(o.you,.38)];BX.model=[o.model,mx(o.model,o.you,.12),mx(o.model,o.you,.24)];BX.live=[o.focus,sh(o.focus,.1),sh(o.focus,.22)];BX.rec=[o.recall,sh(o.recall,.2),sh(o.recall,.36)];BX.pale=[mx(o.ground,o.you,.1),mx(o.ground,o.you,.18),mx(o.ground,o.you,.26)];"
     + "['light','dark'].forEach(function(m){var P=STP[m];P.c=[o.you,sh(o.you,.2),sh(o.you,.38),sh(o.you,.52)].map(R);P.s=[o.model,mx(o.model,o.you,.12),mx(o.model,o.you,.24),mx(o.model,o.you,.34)].map(R);P.lc=[o.focus,sh(o.focus,.1),sh(o.focus,.22),sh(o.focus,.32)].map(R);P.ls=[ti(o.focus,.6),ti(o.focus,.4),ti(o.focus,.25),ti(o.focus,.1)].map(R);P.rc=[o.recall,sh(o.recall,.2),sh(o.recall,.36),sh(o.recall,.48)].map(R);P.hv=[o.now,sh(o.now,.2),sh(o.now,.36),sh(o.now,.48)].map(R);P.bg=o.ground;P.bgc=R(o.ground);if(m==='light'){P.key=o.line;P.keyc=R(o.line)}else{P.key=o.ground;P.keyc=R(o.ground)}});"
@@ -64,13 +79,20 @@
   var PATCH = [
     ["function plate(id,draw,opt){var cv=typeof id==='string'?$(id):id;", "function plate(id,draw,opt){var cv=typeof id==='string'?$(id):id;if(cv){(window.__DRAWS=window.__DRAWS||{})[typeof id==='string'?id:(cv.id||'')]=draw;(window.__DRAWL=window.__DRAWL||[]).push([cv,draw])}"],
     ["function clock(){return RM?0:performance.now()/1000}", "function clock(){return window.__T!=null?window.__T:(RM?0:performance.now()/1000)}"],
-    ["function cam(rec,tilt,spin,asp,upto,cxo,cyo,zoom){var N=upto||rec.N,H=Math.min(Math.max(N,42)*.2,HC),", "function cam(rec,tilt,spin,asp,upto,cxo,cyo,zoom){var __P=" + Pq + ";tilt=Math.max(.5,Math.min(89.5,tilt+(__P.tilt||0)));spin+=(__P.spin||0);var N=upto||rec.N,H=Math.min(Math.max(N,42)*.2,HC)*(__P.rise||1),"],
+    ["function cam(rec,tilt,spin,asp,upto,cxo,cyo,zoom){var N=upto||rec.N,H=Math.min(Math.max(N,42)*.2,HC),", "function cam(rec,tilt,spin,asp,upto,cxo,cyo,zoom){var __P=" + Pq + ";if(__P.tilt)tilt=Math.max(.5,Math.min(89.5,tilt+__P.tilt));spin+=(__P.spin||0);var N=upto||rec.N,H=Math.min(Math.max(N,42)*.2,HC)*(__P.rise||1),"],
     ["k,b=5,lim=N-2*b,hs=o.hs||9", "k,b=(" + Pq + ".focus!=null?" + Pq + ".focus:5),lim=N-2*b,hs=o.hs||9"],
     ["b=o.b||0,lim=N-2*b", "b=(o.b&&" + Pq + ".focus!=null)?" + Pq + ".focus:(o.b||0),lim=N-2*b"],
     ["{dark:true,bg:'#0c0e0d',wire:true", "{dark:true,bg:(window.__GBG||'#0c0e0d'),wire:true"],
     ["{dark:true,bg:'#0c0e0d',tilt:78", "{dark:true,bg:(window.__GBG||'#0c0e0d'),tilt:78"],
     ["pal=o.pal||{near:FOREST,far:'#0a4528',live:ACID,liveFar:'#a2bf36',ink:VOID,bg:'#f5f7f0'}", "pal=o.pal||{near:FOREST,far:(window.__FAR||'#0a4528'),live:ACID,liveFar:(window.__LFAR||'#a2bf36'),ink:VOID,bg:(window.__GBG||'#f5f7f0')}"],
     ["pal:{near:'#151b17',far:FOREST,live:'#f5f7f0',liveFar:'#cfdcc0',ink:'#151b17',bg:ACID}", "pal:(window.__VHP||{near:'#151b17',far:FOREST,live:'#f5f7f0',liveFar:'#cfdcc0',ink:'#151b17',bg:ACID})"],
+    /* the reflection kit: lobes of dots seen down the axis (A07 c-r4, c-wl) */
+    ["var N=Math.min(o.upto||rec.N,rec.N),pr=cam(rec,0,o.spin||0,1,Math.max(N,2)),T=N>0?lobes(rec,pr,N,.8):[],sc=sz/1000,P=o.pitch||clamp(6.4/sc,8,17),", "var __P=" + Pq + ",N=Math.max(1,Math.min(Math.round((o.upto||rec.N)*(__P.length||1)),rec.N)),pr=cam(rec,0,o.spin||0,1,Math.max(N,2)),T=N>0?lobes(rec,pr,N,.8*(__P.lobe||1)):[],sc=sz/1000,P=(o.pitch||clamp(6.4/sc,8,17))*(__P.pitch||1),"],
+    ["i,b=o.b||0,lim=N-2*b;T.sig=o.sig||null;", "i,b=(o.b&&__P.focus!=null)?__P.focus:(o.b||0),lim=N-2*b;T.sig=o.sig?o.sig+JSON.stringify(__P)+(window.__KSIG||''):null;"],
+    ["Tc.sig=o.sig?o.sig+'c':null;", "Tc.sig=T.sig?T.sig+'c':null;"],
+    ["x.lineWidth=(ps===1?5.5:ps===2?1.1:.7)/sc;", "x.lineWidth=(ps===1?5.5:ps===2?1.1:.7)*(__P.weight==null?1:__P.weight)/sc;"],
+    ["inks:{halo:'#b5d6a6',body:'#2f8a55',core:'#0e5933'},line:'#0a4528',bg:'#f5f7f0'}", "inks:(window.__KI||{halo:'#b5d6a6',body:'#2f8a55',core:'#0e5933'}),line:(window.__KL||'#0a4528'),bg:(window.__GBG||'#f5f7f0')}"],
+    ["inks:{halo:'#a9c740',body:'#2f8a55',core:'#0e5933'},line:'#0a4528',live:'#f5f7f0',bg:ACID}", "inks:(window.__KI||{halo:'#a9c740',body:'#2f8a55',core:'#0e5933'}),line:(window.__KL||'#0a4528'),live:(window.__KLIVE||'#f5f7f0'),bg:(window.__GBG||ACID)}"],
     /* the count bars */
     ["var u=w/100,n=30,", "var u=w/100,n=Math.max(4,Math.round(30*(" + Pq + ".bars||1))),"],
     ["seg=[[1,'MODEL I'],[11,'MODEL II'],[21,'MODEL III']]", "seg=[[1,'MODEL I'],[1+Math.round(10*n/30),'MODEL II'],[1+Math.round(20*n/30),'MODEL III']]"],
@@ -92,7 +114,8 @@
       PATCH.forEach(function (q) { var n = html.split(q[0]).length - 1; if (n !== 1) { miss.push(q[0].slice(0, 50) + ' ×' + n); return; } html = html.split(q[0]).join(q[1]); });
       var a = html.indexOf('var BX={'), b = a < 0 ? -1 : html.indexOf('};', a);
       if (b > 0) html = html.slice(0, b + 2) + SETTER + html.slice(b + 2); else miss.push('ink setter');
-      if (miss.length) console.info('[mg-figure] not wired:', miss);
+      /* the patch list covers two pages (A01, A07); a patch for the other page's figures is expected to miss. ?debug lists them. */
+      if (miss.length && /debug/.test(location.search)) console.info('[mg-figure] not wired:', miss);
       html = html.replace(/<head>/i, '<head><base href="' + new URL(FIG.src, location.href).href + '">');
       return new Promise(function (res, rej) {
         var f = document.createElement('iframe'); f.setAttribute('aria-hidden', 'true'); f.tabIndex = -1; f.title = 'mg-figure engine';
@@ -103,7 +126,7 @@
             var d = null;
             if (FIG.pick) { var cv = w.document.querySelectorAll(FIG.pick[0])[FIG.pick[1]]; (w.__DRAWL || []).forEach(function (e) { if (e[0] === cv) d = e[1]; }); }
             else d = (w.__DRAWS || {})[FIG.id];
-            if (d && w.__setInk) res({ w: w, draw: d }); else if (++tries < 100) setTimeout(wait, 100); else rej(new Error('figure not found: ' + (FIG.id || FIG.pick)));
+            if (d && (w.__setInk || w.__setNow)) res({ w: w, draw: d }); else if (++tries < 100) setTimeout(wait, 100); else rej(new Error('figure not found: ' + (FIG.id || FIG.pick)));
           })();
         };
         f.srcdoc = html; document.body.appendChild(f);
@@ -114,7 +137,9 @@
   function paint(E, canvas, x, V, Q, dpr, t) {
     var W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h, win = E.w, P = {};
     Object.keys(ALL).forEach(function (k) { P[k] = k in Q ? Q[k] : ALL[k].value; }); if (!ON.focus) delete P.focus; win.__P = P;
-    var K = Object.assign({}, V.inks || S.variants[0].inks, { dark: FIG.family === 'dark' }); try { win.__setInk(K); } catch (e) { console.error('[mg-figure] inks', e); }
+    var K = Object.assign({}, V.inks || S.variants[0].inks, { dark: FIG.family === 'dark' });
+    if (K.halo) { win.__KI = { halo: K.halo, body: K.body, core: K.core }; win.__KL = K.line; win.__KLIVE = K.focus; win.__GBG = K.ground; win.__KSIG = [K.halo, K.body, K.core, K.focus].join(''); if (win.__setNow) win.__setNow(K.now); }
+    else try { win.__setInk(K); } catch (e) { console.error('[mg-figure] inks', e); }
     win.__T = t; x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = V.paper || '#FFFFFF'; x.fillRect(0, 0, W, H);
     S.panels.forEach(function (p) {
       var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, cw = bw / dpr, ch = bh / dpr;
