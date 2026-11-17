@@ -17,6 +17,7 @@
     height: leaf(1, 0.4, 1.6, 0.01, 'Height', '×', 'Height of every bar against the frame.'),
     depth: leaf(1, 0, 3, 0.01, 'Depth', '×', 'How deep each bar is drawn: 0 flattens it to its front face.'),
     ring: leaf(1, 0.4, 2, 0.01, 'Mark size', '×', 'Size of the state mark over each bar: the ring, the dashed ring, the open arc and the stroke.'),
+    width: leaf(1, 0.3, 1.4, 0.01, 'Bar width', '×', 'Width of each bar against its slot. Below 1 opens a gap between the bars.'),
     ex: leaf(21, 7, 42, 1, 'Exchanges', '', 'Exchanges in the turn. The page’s turn is 21: 7 breaths of 3.'),
     moment: leaf(0, 0, 60, 0.1, 'Moment', 's', 'The figure’s clock. 0 is the page’s still.')
   };
@@ -73,13 +74,14 @@
     /* the count bars */
     ["var u=w/100,n=30,", "var u=w/100,n=Math.max(4,Math.round(30*(" + Pq + ".bars||1))),"],
     ["seg=[[1,'MODEL I'],[11,'MODEL II'],[21,'MODEL III']]", "seg=[[1,'MODEL I'],[1+Math.round(10*n/30),'MODEL II'],[1+Math.round(20*n/30),'MODEL III']]"],
-    ["box(x,x0+(k-1)*bw,base,bw,(8+k*.82+S.amp*70)*u,3.6*u,", "box(x,x0+(k-1)*bw,base,bw,(8+k*.82*30/n+S.amp*70)*u*(" + Pq + ".height||1),3.6*u*(" + Pq + ".depth==null?1:" + Pq + ".depth),"],
+    ["box(x,x0+(k-1)*bw,base,bw,(8+k*.82+S.amp*70)*u,3.6*u,", "box(x,x0+(k-1)*bw,base,bw*(" + Pq + ".width||1),(8+k*.82*30/n+S.amp*70)*u*(" + Pq + ".height||1),3.6*u*(" + Pq + ".depth==null?1:" + Pq + ".depth),"],
+    ["cx=(i+.5)/4*(w-16*u)+8*u,bw=8.5*u,", "cx=(i+.5)/4*(w-16*u)+8*u,bw=8.5*u*(" + Pq + ".width||1),"],
     ["bh=[19,13,23,16][i]*u,", "bh=[19,13,23,16][i]*u*(" + Pq + ".height||1),"],
     ["R=4.4*u;", "R=4.4*u*(" + Pq + ".ring||1);"],
     ["box(x,px,base,bw,bh,5*u,", "box(x,px,base,bw,bh,5*u*(" + Pq + ".depth==null?1:" + Pq + ".depth),"],
     ["M=21,cw=(w-22*u)/M,base=h*.86,uh=(h*.58)/M", "M=Math.round(" + Pq + ".ex||21),cw=(w-22*u)/M,base=h*.86,uh=(h*.58)/M*(" + Pq + ".height||1)"],
-    ["box(x,X,base,cw*.84,sp*uh,cw*.5,", "box(x,X,base,cw*.84,sp*uh,cw*.5*(" + Pq + ".depth==null?1:" + Pq + ".depth),"],
-    ["box(x,X,base-sp*uh,cw*.84,b*uh,cw*.5,", "box(x,X,base-sp*uh,cw*.84,b*uh,cw*.5*(" + Pq + ".depth==null?1:" + Pq + ".depth),"],
+    ["box(x,X,base,cw*.84,sp*uh,cw*.5,", "box(x,X,base,cw*.84*(" + Pq + ".width||1),sp*uh,cw*.5*(" + Pq + ".depth==null?1:" + Pq + ".depth),"],
+    ["box(x,X,base-sp*uh,cw*.84,b*uh,cw*.5,", "box(x,X,base-sp*uh,cw*.84*(" + Pq + ".width||1),b*uh,cw*.5*(" + Pq + ".depth==null?1:" + Pq + ".depth),"],
     ["'21 EXCHANGES / ONE TURN'", "M+' EXCHANGES / ONE TURN'"]
   ];
   var boot = null;
