@@ -205,6 +205,38 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!m.hidden){
   writeFileSync(file, html);
 }
 
+// Page views (Julia, 2026-11-17): cookieless, no IP, no visitor IDs. Each deployed page posts its path, its library
+// route (#/...), the referring site's host and a device class to the Supabase project "register", table
+// public.tools_views (insert-only for the public key; nothing can be read back with it). Not counted: pages inside
+// a frame (plates load source pages in hidden frames), automated browsers (QA), any browser holding the CMS token
+// (Julia), and any host other than jalulia.github.io. See docs/ANALYTICS.md.
+const COUNT = `<script>(function(){try{if(location.hostname!=='jalulia.github.io'||window.top!==window||navigator.webdriver)return;try{if(localStorage.getItem('tools.token'))return;}catch(e){}
+var U='https://ycolvxmvcmxfnuicgfay.supabase.co/rest/v1/tools_views',K='sb_publishable_J_oytCmrNIGz9kmbgY5zMA_a0Rjt17L',last='';
+function send(){var p=location.pathname.slice(0,300),h=location.hash,r=/^#\\//.test(h)?h.split(/[?&]/)[0].slice(0,200):'';if(p+r===last)return;last=p+r;
+var f='';try{var u=new URL(document.referrer);if(u.host!==location.host)f=u.host.slice(0,120);}catch(e){}
+var w=innerWidth,d=w<640?'phone':w<1024?'tablet':'desktop';
+fetch(U,{method:'POST',keepalive:true,headers:{apikey:K,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({path:p,route:r||null,ref:f||null,device:d})}).catch(function(){});}
+send();addEventListener('hashchange',send);}catch(e){}})();</script>`;
+function injectCount(dir) {
+  let n = 0;
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    const st = statSync(p);
+    if (st.isDirectory()) { n += injectCount(p); continue; }
+    if (!/\.html?$/i.test(name)) continue;
+    let html = readFileSync(p, 'utf8');
+    if (html.includes('tools_views')) continue;
+    const low = html.toLowerCase();
+    let at = low.lastIndexOf('</body>');
+    if (at < 0) at = low.lastIndexOf('</html>');
+    if (at < 0) continue; // fragments and templates are left alone
+    html = html.slice(0, at) + COUNT + html.slice(at);
+    writeFileSync(p, html);
+    n++;
+  }
+  return n;
+}
+
 const DL_ICON =
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
   '<path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 20h16"/></svg>';
@@ -317,6 +349,8 @@ function main() {
   renderIndex(tools);
   // Global cross-site nav on every tool page (not the landing).
   for (const t of tools) injectNav(t.name, t.meta, tools);
+  // Page views on every deployed page (see COUNT above).
+  console.log(`\n── page views: counter on ${injectCount(SITE_DIR)} pages ──`);
   // Prevent Jekyll processing.
   writeFileSync(join(SITE_DIR, '.nojekyll'), '');
   console.log(`\n✔ site assembled at ${SITE_DIR}`);
