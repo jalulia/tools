@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-17",
+  "generated": "2026-11-18",
   "note": "file by atom, read by technique — every entry in Techniques & Templates, keyed by technique id",
   "techniques": {
     "ring-screen": {
@@ -241,9 +241,27 @@
           "entry": "ts-02-four-ink-spot-illustration",
           "code": "TS-02",
           "params": {
-            "width_u": 2.2,
+            "width_u": {
+              "value": 2.2,
+              "range": [
+                0.6,
+                6
+              ],
+              "step": 0.1,
+              "unit": "u",
+              "note": "keyline weight on the black plate"
+            },
             "second_pass_u": 1.4,
-            "jitter_u": 0.6,
+            "jitter_u": {
+              "value": 0.6,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.05,
+              "unit": "u",
+              "note": "how far the second pass wanders off the first"
+            },
             "join": "round",
             "color": "#1C1A18"
           },
@@ -258,9 +276,33 @@
           "entry": "ts-02-four-ink-spot-illustration",
           "code": "TS-02",
           "params": {
-            "angle_deg": 45,
-            "pitch_u": 6,
-            "width_u": 1.3,
+            "angle_deg": {
+              "value": 45,
+              "range": [
+                0,
+                90
+              ],
+              "step": 1,
+              "unit": "°"
+            },
+            "pitch_u": {
+              "value": 6,
+              "range": [
+                3,
+                14
+              ],
+              "step": 0.5,
+              "unit": "u"
+            },
+            "width_u": {
+              "value": 1.3,
+              "range": [
+                0.4,
+                3
+              ],
+              "step": 0.05,
+              "unit": "u"
+            },
             "dash_u": [
               12,
               4
@@ -293,7 +335,16 @@
             "black_u": [
               0,
               0
-            ]
+            ],
+            "slip": {
+              "value": 1,
+              "range": [
+                0,
+                4
+              ],
+              "step": 0.05,
+              "note": "multiplies every plate offset; 0 prints in register"
+            }
           },
           "implementation": "Each color plate is composited with its own down-right offset before the black plate lands in register, so fills open a paper sliver on the top-left of the line and spill past it bottom-right."
         },
@@ -370,7 +421,15 @@
           "entry": "ts-02-four-ink-spot-illustration",
           "code": "TS-02",
           "params": {
-            "pitch_u": 5,
+            "pitch_u": {
+              "value": 5,
+              "range": [
+                3,
+                12
+              ],
+              "step": 0.5,
+              "unit": "u"
+            },
             "grid": "square, half-cell stagger per row",
             "coverage": {
               "pink": 0.42,
@@ -393,7 +452,25 @@
           "params": {
             "paper": "#F7EDE3",
             "mottle": "perlin fbm 3 oct, cell 120 u, ±3 % multiply",
+            "mottle_scale": {
+              "value": 1,
+              "range": [
+                0,
+                4
+              ],
+              "step": 0.05,
+              "note": "multiplies the stock mottle"
+            },
             "grain": "mono, 1 device px, amp 0.035",
+            "grain_scale": {
+              "value": 1,
+              "range": [
+                0,
+                4
+              ],
+              "step": 0.05,
+              "note": "multiplies the grain over everything"
+            },
             "blur_px": 0.35
           },
           "implementation": "Cream flat, then a low-frequency perlin multiply, a 0.35 px blur for the scan, then mono grain over everything including the inks."
@@ -460,6 +537,35 @@
             "sweep": "L path (−200,1040) → (330,470) → (1200,780), bend radius 230 u, 260 steps",
             "twist_rad": "−0.22 + 0.55·s",
             "tilt_rad": "0.5 about the screen x axis through y = 740 u",
+            "twist": {
+              "value": 0.55,
+              "range": [
+                -1,
+                1.5
+              ],
+              "step": 0.01,
+              "unit": "rad",
+              "note": "twist along the sweep (added to −0.22)"
+            },
+            "tilt": {
+              "value": 0.5,
+              "range": [
+                0,
+                1.2
+              ],
+              "step": 0.01,
+              "unit": "rad",
+              "note": "tilt of the slab toward you"
+            },
+            "wobble_scale": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.05,
+              "note": "multiplies the normal wobble"
+            },
             "env": "t = clamp(0.5 + 0.40·r.y + 0.16·r.x), r = reflect(view, n)",
             "wobble": "n += 0.20–0.22·sin/cos fields of period 260–420 u plus 0.06–0.08 at 90–120 u, then normalize"
           },
@@ -474,12 +580,33 @@
           "entry": "ts-03-iridescent-chrome",
           "code": "TS-03",
           "params": {
-            "band_center_nz": 0.34,
-            "band_width": 0.06,
+            "band_center_nz": {
+              "value": 0.34,
+              "range": [
+                0.1,
+                0.7
+              ],
+              "step": 0.01
+            },
+            "band_width": {
+              "value": 0.06,
+              "range": [
+                0.01,
+                0.2
+              ],
+              "step": 0.005
+            },
             "band_color": "#F0DC6A",
             "band_mix": 1,
             "light": "(−0.35,−0.60,0.72)",
-            "spec_power": 60,
+            "spec_power": {
+              "value": 60,
+              "range": [
+                5,
+                200
+              ],
+              "step": 1
+            },
             "spec_mix": 0.85
           },
           "implementation": "band = exp(−((|n.z|−0.34)/0.06)²) mixes the edge color in; spec = (n·h)^60 mixes white in; both read from the same normal buffer as the LUT."
@@ -494,7 +621,25 @@
           "code": "TS-03",
           "params": {
             "multiplicative": "ART.grain amp 0.10, pitch 1 px, mono:false, seed 303",
+            "amp": {
+              "value": 0.07,
+              "range": [
+                0,
+                0.3
+              ],
+              "step": 0.005,
+              "note": "multiplicative grain on the chrome and type"
+            },
             "additive": "σ 14/255 per channel on the ground, hashed per pixel, seed 304",
+            "sigma": {
+              "value": 14,
+              "range": [
+                0,
+                40
+              ],
+              "step": 1,
+              "note": "additive grain on the black ground, /255"
+            },
             "soften_px": 0.7
           },
           "implementation": "ART.grain multiplies RGB by 1 + 0.10·n per channel (visible on the chrome and the type); a second pass adds signed noise of 14/255 so the black ground carries grain too, as film does."
@@ -505,6 +650,24 @@
           "params": {
             "additive": "uniform ±21·(1 − 0.6·L)/255 per pixel, mono, lag-1 correlation 0.25",
             "multiplicative": "ART.grain mono:false amp 0.05 (color speckle)",
+            "additive_amp": {
+              "value": 21,
+              "range": [
+                0,
+                60
+              ],
+              "step": 1,
+              "note": "additive grain at black, /255"
+            },
+            "speckle": {
+              "value": 0.04,
+              "range": [
+                0,
+                0.2
+              ],
+              "step": 0.005,
+              "note": "colour speckle amplitude"
+            },
             "pitch_px": 1,
             "seed": 909,
             "measured_std": {
@@ -537,6 +700,15 @@
           "entry": "ts-03-iridescent-chrome",
           "code": "TS-03",
           "params": {
+            "split": {
+              "value": 1,
+              "range": [
+                0,
+                5
+              ],
+              "step": 0.05,
+              "note": "multiplies every channel offset; 0 sets clean white type"
+            },
             "offsets_u": {
               "R": [
                 -2.5,
@@ -930,7 +1102,16 @@
               ]
             },
             "C": {
-              "axis_deg": 66,
+              "axis_deg": {
+                "value": 66,
+                "range": [
+                  0,
+                  180
+                ],
+                "step": 1,
+                "unit": "°",
+                "note": "angle of the third panel’s gradient"
+              },
               "length_u": 743,
               "stops": [
                 [
@@ -972,8 +1153,24 @@
           "code": "TS-09",
           "params": {
             "shape": "closed spline through 13 measured contour points, off-panel to the left and below",
-            "edge_sigma_u": 33,
-            "halo_sigma_u": 110,
+            "edge_sigma_u": {
+              "value": 33,
+              "range": [
+                2,
+                90
+              ],
+              "step": 1,
+              "unit": "u"
+            },
+            "halo_sigma_u": {
+              "value": 110,
+              "range": [
+                20,
+                220
+              ],
+              "step": 1,
+              "unit": "u"
+            },
             "halo_color": "#D71E3D",
             "halo_strength": "four source-over passes of the wide blur: 1 − (1 − h)⁴",
             "mask_color": "#080808"
@@ -991,6 +1188,26 @@
           "params": {
             "arc": "y = q + (x − cx(q))² / 2R, R 750 u, cx(q) = 217 − 0.8·max(0, q − 233) u (panel-local)",
             "pitch_u": 32,
+            "pitch": {
+              "value": 38,
+              "range": [
+                16,
+                90
+              ],
+              "step": 1,
+              "unit": "ref px",
+              "note": "spacing of the ripple rings"
+            },
+            "radius": {
+              "value": 900,
+              "range": [
+                300,
+                2400
+              ],
+              "step": 10,
+              "unit": "ref px",
+              "note": "curvature radius of each ring"
+            },
             "phase_zero_u": 262,
             "dark_profile": "sstep(t0, t0+0.3, 0.5+0.5·cos 2π(q−q0)/pitch), t0 = 0.72 − 0.5·e",
             "envelope": "e = 0.15 + 0.85·sstep(0, 250, q)^1.2 above q 250; 1 for q 250–433; falls to 0.1 over 433–467",
@@ -1280,7 +1497,24 @@
           "code": "TS-12",
           "params": {
             "grain": "mono, amp 0.05, pitch 1 device px, seed 12",
+            "amp": {
+              "value": 0.04,
+              "range": [
+                0,
+                0.2
+              ],
+              "step": 0.005,
+              "note": "grain on the stamp"
+            },
             "mottle": "fbm 3 octaves, scale 260 u, ±0.04 multiply",
+            "mottle_amp": {
+              "value": 0.04,
+              "range": [
+                0,
+                0.2
+              ],
+              "step": 0.005
+            },
             "ref_px": {
               "red_std": "≈9/255 in R"
             }
@@ -1391,6 +1625,15 @@
           "entry": "ts-11-worn-black-box",
           "code": "TS-11",
           "params": {
+            "grain": {
+              "value": 0.05,
+              "range": [
+                0,
+                0.2
+              ],
+              "step": 0.005,
+              "note": "mono grain over the sheet"
+            },
             "front": {
               "spine_u": [
                 222,
@@ -1491,6 +1734,24 @@
           "entry": "ts-11-worn-black-box",
           "code": "TS-11",
           "params": {
+            "wear": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.05,
+              "note": "how worn every edge, corner and fold is"
+            },
+            "reach": {
+              "value": 1,
+              "range": [
+                0.3,
+                3
+              ],
+              "step": 0.05,
+              "note": "how far the scuff runs in from an edge"
+            },
             "edge": "1.1·exp(−d/2.5 u) + 0.1·exp(−d/10 u)",
             "haze": "continuous tint 0.14·exp(−d/3 u) + 0.12·exp(−dc/14 u) + 0.06·exp(−df/2.5 u) under the dots",
             "corner": "0.6·exp(−dc/16 u)",
@@ -1498,7 +1759,7 @@
             "gate": "0.15 + 0.85·smoothstep(0.3, 0.8, 0.5+0.5·fbm(p/18 u))",
             "clump": "2.2·smoothstep(0.3, 0.72, 0.5+0.5·fbm(x/2.4 u, y/1.6 u))",
             "dust": "0.006·exp(−d/10 u), speckle 0.0003",
-            "value": "t = 0.2 + 0.75·r^1.6 toward scuff color",
+            "tone": "t = 0.2 + 0.75·r^1.6 toward scuff color",
             "seed": 1101
           },
           "implementation": "A chamfer distance transform gives d to the silhouette; dc is the distance to the nearest convex corner or fold junction and df to the spine crease or flap fold. A pixel turns lighter where a uniform random is below the summed density times the patch gate, so the wear reads as clustered abrasion rather than a line."
@@ -1513,8 +1774,23 @@
           "code": "TS-11",
           "params": {
             "count_per_panel": 3,
-            "width_u": 0.9,
-            "alpha": 0.11,
+            "width_u": {
+              "value": 0.9,
+              "range": [
+                0.2,
+                3
+              ],
+              "step": 0.05,
+              "unit": "u"
+            },
+            "alpha": {
+              "value": 0.11,
+              "range": [
+                0,
+                0.45
+              ],
+              "step": 0.01
+            },
             "blur_px": 1.5,
             "path": "quadratic, 2 control points, length 120–220 u"
           },
@@ -1534,7 +1810,15 @@
                 55,
                 37
               ],
-              "rotate_deg": -6,
+              "rotate_deg": {
+                "value": -6,
+                "range": [
+                  -30,
+                  30
+                ],
+                "step": 1,
+                "unit": "°"
+              },
               "corner_u": 3,
               "tear": "jittered polygon, 2 u amplitude on the bottom and right edges",
               "shadow": "rgba(0,0,0,0.5) offset 2 u blur 3 u"
@@ -1576,7 +1860,14 @@
               88,
               39
             ],
-            "bars": 46,
+            "bars": {
+              "value": 46,
+              "range": [
+                10,
+                90
+              ],
+              "step": 1
+            },
             "bar_w_u": "0.7–2.4 random (seed 1103)",
             "gap_u": "0.6–1.6",
             "digits": "JetBrains Mono 3.2 u under the bars",
@@ -1624,8 +1915,24 @@
               683,
               993
             ],
-            "pitch_u": 62,
-            "bite_radius_u": 19,
+            "pitch_u": {
+              "value": 62,
+              "range": [
+                30,
+                140
+              ],
+              "step": 1,
+              "unit": "u"
+            },
+            "bite_radius_u": {
+              "value": 19,
+              "range": [
+                6,
+                40
+              ],
+              "step": 0.5,
+              "unit": "u"
+            },
             "bites": "12 across × 17 down, one centered on each corner",
             "ref_px": {
               "pitch": 45.6,
@@ -1643,8 +1950,33 @@
           "entry": "ts-12-perforated-stamp",
           "code": "TS-12",
           "params": {
-            "screen_angle_deg": 45,
-            "pitch_u": 7,
+            "screen_angle_deg": {
+              "value": 45,
+              "range": [
+                0,
+                90
+              ],
+              "step": 1,
+              "unit": "°"
+            },
+            "pitch_u": {
+              "value": 7,
+              "range": [
+                3,
+                20
+              ],
+              "step": 0.5,
+              "unit": "u"
+            },
+            "contrast": {
+              "value": 3,
+              "range": [
+                0,
+                8
+              ],
+              "step": 0.1,
+              "note": "how hard the fbm texture pushes the dots"
+            },
             "texture": "perlin fbm, 4 octaves, scale 70 u",
             "dot_radius": "0.5·pitch·(0.22 + 0.9·t), t = clamp(0.5 + 3·fbm)",
             "color": "lut dark→mid→light by lightness",
@@ -1702,8 +2034,33 @@
           "entry": "ts-13-glyph-field-animation",
           "code": "TS-13",
           "params": {
-            "count": 150,
-            "turns": 7,
+            "count": {
+              "value": 150,
+              "range": [
+                30,
+                400
+              ],
+              "step": 1,
+              "note": "glyphs on the helix"
+            },
+            "turns": {
+              "value": 7,
+              "range": [
+                1,
+                16
+              ],
+              "step": 0.5
+            },
+            "pinhole": {
+              "value": 800,
+              "range": [
+                300,
+                3000
+              ],
+              "step": 10,
+              "unit": "u",
+              "note": "perspective distance; low is wide-angle"
+            },
             "radius_u": "min(0.18 W, 0.24 H, 240)",
             "height_u": "min(0.78 H, 820)",
             "pinhole_u": 800,
@@ -1725,6 +2082,16 @@
           "code": "TS-13",
           "params": {
             "alpha": "0.04 + d^1.5 · 0.85",
+            "size": {
+              "value": 10.5,
+              "range": [
+                6,
+                20
+              ],
+              "step": 0.5,
+              "unit": "px",
+              "note": "glyph size at mid depth"
+            },
             "size_px": "round(10.5 · sc)",
             "size_range": "≈ 9 – 13 px",
             "font": "JetBrains Mono 400",
@@ -1938,6 +2305,16 @@
           "entry": "ts-13-glyph-field-animation",
           "code": "TS-13",
           "params": {
+            "moment": {
+              "value": 5.9,
+              "range": [
+                0,
+                30
+              ],
+              "step": 0.1,
+              "unit": "s",
+              "note": "the instant the still frame shows"
+            },
             "dpr": "min(devicePixelRatio, 2)",
             "resize": "canvas.width = clientWidth · dpr; setTransform(dpr)",
             "loop": "requestAnimationFrame, t = (now − t0) / 1000",
@@ -1974,6 +2351,16 @@
           "entry": "ts-14-deep-space-chroma",
           "code": "TS-14",
           "params": {
+            "retard_shift": {
+              "value": 0,
+              "range": [
+                -300,
+                300
+              ],
+              "step": 5,
+              "unit": "nm",
+              "note": "added to the base retardation: shifts every fringe color"
+            },
             "sheet": "δ = (d0 + A · sign(c)|c|^shape) · (1 + pin/r), c = cos(k · θw + ph + flow · t); shape for the peaks (blue), shapeN for the dips (pale) — the pale lanes are the narrow ones",
             "ref": {
               "d0": 520,
@@ -2023,6 +2410,34 @@
           "entry": "ts-14-deep-space-chroma",
           "code": "TS-14",
           "params": {
+            "beta_shift": {
+              "value": 0,
+              "range": [
+                -90,
+                90
+              ],
+              "step": 1,
+              "unit": "°",
+              "note": "turns the polarizer: the dark isoclinic arms move"
+            },
+            "sharp_scale": {
+              "value": 1,
+              "range": [
+                0.3,
+                4
+              ],
+              "step": 0.05,
+              "note": "how narrow the dark arms are"
+            },
+            "circular_shift": {
+              "value": 0,
+              "range": [
+                -1,
+                1
+              ],
+              "step": 0.05,
+              "note": "toward a circular polariscope (arms fade) or back"
+            },
             "term": "sin²(m · (ψ − β + skew · sin(ψ − β)))^sharp, sharp for the β arm and sharp2 for the β + 180° arm",
             "ref": {
               "m": 1,
@@ -2047,6 +2462,14 @@
           "params": {
             "pinch": "smoothstep(0, core, r), core .02",
             "vignette": "1 − .4 r²",
+            "vignette_scale": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.05
+            },
             "lobe_gain": ".8 + .2 · sin(2.3θ + .6)",
             "floor": [
               14,
@@ -2066,6 +2489,15 @@
           "entry": "ts-14-deep-space-chroma",
           "code": "TS-14",
           "params": {
+            "bloom_scale": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.05,
+              "note": "multiplies the highlight bloom"
+            },
             "hue_grade": "after gamma, hues pulled .75 of the way toward 6° (warm) or 196° (cool), whichever is nearer; saturation × 1.4 first",
             "bloom": "highlights (brightness .8, contrast 2.5 → a threshold near L .4) blurred at σ .05 W and added at .4 — the glow along the hot edges",
             "blue_roll": "saturation × (1 − .85 · ((δ − 480)/150)²) for δ > 480",
@@ -2083,6 +2515,15 @@
           "entry": "ts-14-deep-space-chroma",
           "code": "TS-14",
           "params": {
+            "blur_scale": {
+              "value": 1,
+              "range": [
+                0,
+                4
+              ],
+              "step": 0.05,
+              "note": "multiplies the soft focus"
+            },
             "sigma": "0.004 · W",
             "measured": "p99 horizontal gradient 12/255 per px at 1600 px"
           },
@@ -33723,22 +34164,73 @@
           "entry": "pl-03-bloom-early-and-full",
           "code": "PL-03",
           "params": {
-            "figures": 2,
-            "family": "screen-tone",
-            "panels": [
-              {
-                "title": "Bloom, early",
-                "coverage": 0.9,
-                "ground": "#CCD3C3"
-              },
-              {
-                "title": "Bloom, full",
-                "coverage": 0.95,
-                "ground": "#AEB7A2"
-              }
-            ]
+            "weight": {
+              "value": 1,
+              "range": [
+                0.25,
+                3
+              ],
+              "step": 0.01,
+              "label": "Line weight",
+              "note": "Weight of every line the figure draws, as a multiple of its own.",
+              "unit": "×"
+            },
+            "mark": {
+              "value": 1,
+              "range": [
+                0.3,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Mark size",
+              "note": "Size of every dot and pixel mark the figure lays down (marks up to 6 px across).",
+              "unit": "×"
+            },
+            "tilt": {
+              "value": 0,
+              "range": [
+                0,
+                80
+              ],
+              "step": 1,
+              "label": "View tilt",
+              "note": "Tilt of the record off straight down the axis.",
+              "unit": "°"
+            },
+            "spin": {
+              "value": 0,
+              "range": [
+                0,
+                3.14
+              ],
+              "step": 0.01,
+              "label": "Spin",
+              "note": "Turn of the record about its axis, added to its own.",
+              "unit": "rad"
+            },
+            "shown": {
+              "value": 1,
+              "range": [
+                0.05,
+                1
+              ],
+              "step": 0.01,
+              "label": "Crossings shown",
+              "note": "Share of the record’s crossings drawn, from the first. 1 is the whole record."
+            },
+            "pitch": {
+              "value": 1,
+              "range": [
+                0.6,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Dot pitch",
+              "note": "Spacing of the dot field each lobe is printed in, as a multiple of the page’s own.",
+              "unit": "×"
+            }
           },
-          "implementation": "A scatter of marks is printed through a coarse dot screen; dot size carries the density, so the bloom fades at its edge without a gradient."
+          "implementation": "A scatter of marks is printed through a coarse dot screen; dot size carries the density, so the bloom fades at its edge without a gradient. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         }
       ]
     },
@@ -40127,49 +40619,173 @@
           "entry": "pl-11-ring-over-standing-waves",
           "code": "PL-11",
           "params": {
-            "figures": 1,
-            "family": "screen-tone",
-            "panels": [
-              {
-                "title": "Ring over standing waves",
-                "coverage": 0.323,
-                "ground": "#1E2128"
-              }
-            ]
+            "weight": {
+              "value": 1,
+              "range": [
+                0.25,
+                3
+              ],
+              "step": 0.01,
+              "label": "Line weight",
+              "note": "Weight of every line the figure draws, as a multiple of its own.",
+              "unit": "×"
+            },
+            "mark": {
+              "value": 1,
+              "range": [
+                0.3,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Mark size",
+              "note": "Size of every dot and pixel mark the figure lays down (marks up to 6 px across).",
+              "unit": "×"
+            },
+            "ink": {
+              "value": 1,
+              "range": [
+                0.2,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Ink strength",
+              "note": "Every transparency the figure uses, multiplied: below 1 thins the inks, above 1 builds them toward solid.",
+              "unit": "×"
+            },
+            "tilt": {
+              "value": 0,
+              "range": [
+                0,
+                80
+              ],
+              "step": 1,
+              "label": "View tilt",
+              "note": "Tilt of the top view off straight down, in degrees (the side view below stays side-on).",
+              "unit": "°"
+            },
+            "shown": {
+              "value": 1,
+              "range": [
+                0.05,
+                1
+              ],
+              "step": 0.01,
+              "label": "Strands shown",
+              "note": "Share of the record’s strands drawn, from the first. 1 is the whole record."
+            }
           },
-          "implementation": "Dots on a ring are drawn with a soft halo on black; chords and waves sit under the ring as thin lines."
+          "implementation": "Dots on a ring are drawn with a soft halo on black; chords and waves sit under the ring as thin lines. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-12-ring-over-a-field-of-lines",
           "code": "PL-12",
           "params": {
-            "figures": 1,
-            "family": "screen-tone",
-            "panels": [
-              {
-                "title": "Ring over a field of lines",
-                "coverage": 0.189,
-                "ground": "#0D0E13"
-              }
-            ]
+            "weight": {
+              "value": 1,
+              "range": [
+                0.25,
+                3
+              ],
+              "step": 0.01,
+              "label": "Line weight",
+              "note": "Weight of every line the figure draws, as a multiple of its own.",
+              "unit": "×"
+            },
+            "mark": {
+              "value": 1,
+              "range": [
+                0.3,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Mark size",
+              "note": "Size of every dot and pixel mark the figure lays down (marks up to 6 px across).",
+              "unit": "×"
+            },
+            "ink": {
+              "value": 1,
+              "range": [
+                0.2,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Ink strength",
+              "note": "Every transparency the figure uses, multiplied: below 1 thins the inks, above 1 builds them toward solid.",
+              "unit": "×"
+            },
+            "tilt": {
+              "value": 0,
+              "range": [
+                0,
+                80
+              ],
+              "step": 1,
+              "label": "View tilt",
+              "note": "Tilt of the top view off straight down, in degrees (the side view below stays side-on).",
+              "unit": "°"
+            },
+            "shown": {
+              "value": 1,
+              "range": [
+                0.05,
+                1
+              ],
+              "step": 0.01,
+              "label": "Strands shown",
+              "note": "Share of the record’s strands drawn, from the first. 1 is the whole record."
+            }
           },
-          "implementation": "Dots on a ring are drawn with a soft halo on black; chords and waves sit under the ring as thin lines."
+          "implementation": "Dots on a ring are drawn with a soft halo on black; chords and waves sit under the ring as thin lines. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-13-two-rings-on-black",
           "code": "PL-13",
           "params": {
-            "figures": 1,
-            "family": "screen-tone",
-            "panels": [
-              {
-                "title": "Two rings on black",
-                "coverage": 0.061,
-                "ground": "#07080C"
-              }
-            ]
+            "tilt": {
+              "value": 72,
+              "range": [
+                0,
+                90
+              ],
+              "step": 1,
+              "label": "Tilt",
+              "note": "Angle of the right-hand view, held still: 0 is seen from above, 90 from the side. The page sweeps it over time.",
+              "unit": "°"
+            },
+            "strands": {
+              "value": 1,
+              "range": [
+                0.1,
+                2
+              ],
+              "step": 0.01,
+              "label": "Strands",
+              "note": "How many strands the record holds, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "breath": {
+              "value": 7,
+              "range": [
+                3,
+                9
+              ],
+              "step": 0.1,
+              "label": "Breath",
+              "note": "How much the lightness swells along the record (the page’s breath, 7 on this figure)."
+            },
+            "dot": {
+              "value": 1,
+              "range": [
+                0.4,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Dot size",
+              "note": "Size of every strand mark, as a multiple of the page’s own.",
+              "unit": "×"
+            }
           },
-          "implementation": "Dots on a ring are drawn with a soft halo on black; chords and waves sit under the ring as thin lines."
+          "implementation": "Dots on a ring are drawn with a soft halo on black; chords and waves sit under the ring as thin lines. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-14-dotted-ring-with-chords",
@@ -40260,17 +40876,62 @@
           "entry": "pl-16-seen-from-above-seen-from-the-side",
           "code": "PL-16",
           "params": {
-            "figures": 1,
-            "family": "screen-tone",
-            "panels": [
-              {
-                "title": "Seen from above, seen from the side",
-                "coverage": 0.109,
-                "ground": "#07080C"
-              }
-            ]
+            "vtilt": {
+              "value": 0,
+              "range": [
+                0,
+                80
+              ],
+              "step": 1,
+              "label": "View tilt",
+              "note": "Tilt of the upper view off straight down (the side view below stays side-on).",
+              "unit": "°"
+            },
+            "strands": {
+              "value": 1,
+              "range": [
+                0.1,
+                2
+              ],
+              "step": 0.01,
+              "label": "Strands",
+              "note": "How many strands the record holds, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "breath": {
+              "value": 7,
+              "range": [
+                3,
+                9
+              ],
+              "step": 0.1,
+              "label": "Breath",
+              "note": "How much the lightness swells along the record (the page’s breath, 7 on this figure)."
+            },
+            "dot": {
+              "value": 1,
+              "range": [
+                0.4,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Dot size",
+              "note": "Size of every strand mark, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "zoom": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.6
+              ],
+              "step": 0.01,
+              "label": "Zoom",
+              "note": "Scale of the upper view, as a multiple of the page’s 1.12.",
+              "unit": "×"
+            }
           },
-          "implementation": "Dots on a ring are drawn with a soft halo on black; chords and waves sit under the ring as thin lines."
+          "implementation": "Dots on a ring are drawn with a soft halo on black; chords and waves sit under the ring as thin lines. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         }
       ]
     },
@@ -41632,49 +42293,174 @@
           "entry": "pl-41-cutting-drawer-seven-contour-cards",
           "code": "PL-41",
           "params": {
-            "figures": 1,
-            "family": "layout-ephemera",
-            "panels": [
-              {
-                "title": "Cutting drawer, seven contour cards",
-                "coverage": 0.469,
-                "ground": "#F3F4EC"
-              }
-            ]
+            "contour": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Contour",
+              "note": "How hard the gradient field snaps into contour bands, as a multiple of the page’s own. 0 is a smooth blend.",
+              "unit": "×"
+            },
+            "grain": {
+              "value": 1,
+              "range": [
+                0,
+                4
+              ],
+              "step": 0.01,
+              "label": "Grain",
+              "note": "The per-pixel grain in the gradient field, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "warp": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Warp",
+              "note": "How far the noise folds the field back on itself, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            },
+            "weight": {
+              "value": 1,
+              "range": [
+                0.25,
+                3
+              ],
+              "step": 0.01,
+              "label": "Line weight",
+              "note": "Weight of every line the figure draws, as a multiple of its own.",
+              "unit": "×"
+            }
           },
-          "implementation": "A soft multi-stop gradient fills a card cut to an arch, a step or a notch; a large number sits in the cut."
+          "implementation": "A soft multi-stop gradient fills a card cut to an arch, a step or a notch; a large number sits in the cut. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-42-seven-die-cut-gradient-cards",
           "code": "PL-42",
           "params": {
-            "figures": 1,
-            "family": "layout-ephemera",
-            "panels": [
-              {
-                "title": "Seven die-cut gradient cards",
-                "coverage": 0.332,
-                "ground": "#E3E4E8"
-              }
-            ]
+            "contour": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Contour",
+              "note": "How hard the gradient field snaps into contour bands, as a multiple of the page’s own. 0 is a smooth blend.",
+              "unit": "×"
+            },
+            "grain": {
+              "value": 1,
+              "range": [
+                0,
+                4
+              ],
+              "step": 0.01,
+              "label": "Grain",
+              "note": "The per-pixel grain in the gradient field, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "warp": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Warp",
+              "note": "How far the noise folds the field back on itself, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            },
+            "weight": {
+              "value": 1,
+              "range": [
+                0.25,
+                3
+              ],
+              "step": 0.01,
+              "label": "Line weight",
+              "note": "Weight of every line the figure draws, as a multiple of its own.",
+              "unit": "×"
+            }
           },
-          "implementation": "A soft multi-stop gradient fills a card cut to an arch, a step or a notch; a large number sits in the cut."
+          "implementation": "A soft multi-stop gradient fills a card cut to an arch, a step or a notch; a large number sits in the cut. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-43-scattered-gradient-cards",
           "code": "PL-43",
           "params": {
-            "figures": 1,
-            "family": "layout-ephemera",
-            "panels": [
-              {
-                "title": "Scattered gradient cards",
-                "coverage": 0.408,
-                "ground": "#E8E9E4"
-              }
-            ]
+            "layout": {
+              "value": 1,
+              "range": [
+                1,
+                3
+              ],
+              "step": 1,
+              "label": "Layout",
+              "note": "The table’s own layouts: 1 working table (scatter), 2 aligned, 3 stacked."
+            },
+            "arr": {
+              "value": 0,
+              "range": [
+                0,
+                24
+              ],
+              "step": 1,
+              "label": "Arrangement",
+              "note": "Which arrangement of the scatter the table deals (its “Another arrangement”). 0 is the first."
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            },
+            "weight": {
+              "value": 1,
+              "range": [
+                0.25,
+                3
+              ],
+              "step": 0.01,
+              "label": "Line weight",
+              "note": "Weight of every line the figure draws, as a multiple of its own.",
+              "unit": "×"
+            }
           },
-          "implementation": "A soft multi-stop gradient fills a card cut to an arch, a step or a notch; a large number sits in the cut."
+          "implementation": "A soft multi-stop gradient fills a card cut to an arch, a step or a notch; a large number sits in the cut. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-44-spiked-address-ring",
@@ -41738,33 +42524,124 @@
           "entry": "pl-46-atlas-of-the-evening",
           "code": "PL-46",
           "params": {
-            "figures": 1,
-            "family": "data-display",
-            "panels": [
-              {
-                "title": "Atlas of the evening",
-                "coverage": 0.087,
-                "ground": "#F7FAF5"
-              }
-            ]
+            "route": {
+              "value": 1,
+              "range": [
+                1,
+                3
+              ],
+              "step": 1,
+              "label": "Route",
+              "note": "Which route the atlas traces: 1 A way in, 2 The room, 3 All crossings."
+            },
+            "zoom": {
+              "value": 1,
+              "range": [
+                0.8,
+                2.4
+              ],
+              "step": 0.1,
+              "label": "Zoom",
+              "note": "The atlas’s own zoom, 80–240%.",
+              "unit": "×"
+            },
+            "panx": {
+              "value": 0,
+              "range": [
+                -300,
+                300
+              ],
+              "step": 1,
+              "label": "Pan",
+              "note": "Slides the atlas sideways under its frame.",
+              "unit": "px"
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            },
+            "weight": {
+              "value": 1,
+              "range": [
+                0.25,
+                3
+              ],
+              "step": 0.01,
+              "label": "Line weight",
+              "note": "Weight of every line the figure draws, as a multiple of its own.",
+              "unit": "×"
+            }
           },
-          "implementation": "The same seven entries drawn as a planted plot, a route map, a timed agenda and a sphere of addresses."
+          "implementation": "The same seven entries drawn as a planted plot, a route map, a timed agenda and a sphere of addresses. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-47-agenda-as-gradient-columns",
           "code": "PL-47",
           "params": {
-            "figures": 1,
-            "family": "data-display",
-            "panels": [
-              {
-                "title": "Agenda as gradient columns",
-                "coverage": 0.545,
-                "ground": "#F0F0F0"
-              }
-            ]
+            "contour": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Contour",
+              "note": "How hard the gradient field snaps into contour bands, as a multiple of the page’s own. 0 is a smooth blend.",
+              "unit": "×"
+            },
+            "grain": {
+              "value": 1,
+              "range": [
+                0,
+                4
+              ],
+              "step": 0.01,
+              "label": "Grain",
+              "note": "The per-pixel grain in the gradient field, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "warp": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Warp",
+              "note": "How far the noise folds the field back on itself, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            },
+            "weight": {
+              "value": 1,
+              "range": [
+                0.25,
+                3
+              ],
+              "step": 0.01,
+              "label": "Line weight",
+              "note": "Weight of every line the figure draws, as a multiple of its own.",
+              "unit": "×"
+            }
           },
-          "implementation": "The same seven entries drawn as a planted plot, a route map, a timed agenda and a sphere of addresses."
+          "implementation": "The same seven entries drawn as a planted plot, a route map, a timed agenda and a sphere of addresses. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-48-sphere-with-seven-addresses",
@@ -41957,17 +42834,62 @@
           "entry": "pl-51-afterimage-card",
           "code": "PL-51",
           "params": {
-            "figures": 1,
-            "family": "light-gradient",
-            "panels": [
-              {
-                "title": "Afterimage card",
-                "coverage": 0.156,
-                "ground": "#254BFF"
-              }
-            ]
+            "rings": {
+              "value": 45,
+              "range": [
+                6,
+                90
+              ],
+              "step": 1,
+              "label": "Rings",
+              "note": "How many afterimage ellipses are drawn."
+            },
+            "spacing": {
+              "value": 1,
+              "range": [
+                0.4,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Ring spacing",
+              "note": "Gap between rings, as a multiple of the page’s 5 px.",
+              "unit": "×"
+            },
+            "squash": {
+              "value": 1,
+              "range": [
+                0.3,
+                1.6
+              ],
+              "step": 0.01,
+              "label": "Squash",
+              "note": "Height of each ring against its width, as a multiple of the page’s 0.64.",
+              "unit": "×"
+            },
+            "rotate": {
+              "value": 0,
+              "range": [
+                -1.6,
+                1.6
+              ],
+              "step": 0.01,
+              "label": "Rotation",
+              "note": "Turn of the rings, added to the page’s −0.4 rad.",
+              "unit": "rad"
+            },
+            "weight": {
+              "value": 1,
+              "range": [
+                0.25,
+                3
+              ],
+              "step": 0.01,
+              "label": "Line weight",
+              "note": "Weight of every line the figure draws, as a multiple of its own.",
+              "unit": "×"
+            }
           },
-          "implementation": "A field of dots or lines is set behind one word and a small arrow; the field carries the meaning of the word."
+          "implementation": "A field of dots or lines is set behind one word and a small arrow; the field carries the meaning of the word. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-52-redline-card",
@@ -41989,17 +42911,62 @@
           "entry": "pl-53-channel-balance-as-waves",
           "code": "PL-53",
           "params": {
-            "figures": 1,
-            "family": "light-gradient",
-            "panels": [
-              {
-                "title": "Channel balance as waves",
-                "coverage": 0.189,
-                "ground": "#111214"
-              }
-            ]
+            "freq": {
+              "value": 1,
+              "range": [
+                0.3,
+                3
+              ],
+              "step": 0.01,
+              "label": "Wave frequency",
+              "note": "How many beats each exchange’s wave packs in, as a multiple of what its letters give.",
+              "unit": "×"
+            },
+            "amp": {
+              "value": 1,
+              "range": [
+                0.2,
+                1.6
+              ],
+              "step": 0.01,
+              "label": "Amplitude",
+              "note": "Height of each wave in its row, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "env": {
+              "value": 0.7,
+              "range": [
+                0.1,
+                3
+              ],
+              "step": 0.01,
+              "label": "Envelope",
+              "note": "How the wave swells from its ends: the power on the page’s sine envelope. Low is full width, high pinches to the middle."
+            },
+            "pitch": {
+              "value": 2,
+              "range": [
+                1,
+                8
+              ],
+              "step": 1,
+              "label": "Bar pitch",
+              "note": "Spacing of the vertical bars that build each wave, in px.",
+              "unit": "px"
+            },
+            "ink": {
+              "value": 1,
+              "range": [
+                0.2,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Ink strength",
+              "note": "Every transparency the figure uses, multiplied: below 1 thins the inks, above 1 builds them toward solid.",
+              "unit": "×"
+            }
           },
-          "implementation": "A field of dots or lines is set behind one word and a small arrow; the field carries the meaning of the word."
+          "implementation": "A field of dots or lines is set behind one word and a small arrow; the field carries the meaning of the word. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         }
       ]
     },
@@ -42010,17 +42977,63 @@
           "entry": "pl-54-text-spiral",
           "code": "PL-54",
           "params": {
-            "figures": 1,
-            "family": "type",
-            "panels": [
-              {
-                "title": "Text spiral",
-                "coverage": 0.016,
-                "ground": "#27282B"
-              }
-            ]
+            "oturn": {
+              "value": 0,
+              "range": [
+                -3.1,
+                3.1
+              ],
+              "step": 0.01,
+              "label": "Turn",
+              "note": "Turn of the helix, added to the angle you set by dragging across it.",
+              "unit": "rad"
+            },
+            "radius": {
+              "value": 1,
+              "range": [
+                0.3,
+                1.6
+              ],
+              "step": 0.01,
+              "label": "Radius",
+              "note": "Width of the helix, as a multiple of the page’s 0.28 of the frame.",
+              "unit": "×"
+            },
+            "gstep": {
+              "value": 1,
+              "range": [
+                0.2,
+                3
+              ],
+              "step": 0.01,
+              "label": "Coil",
+              "note": "How far each letter turns along its strand, as a multiple of the page’s 0.045 rad.",
+              "unit": "×"
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            },
+            "ink": {
+              "value": 1,
+              "range": [
+                0.2,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Ink strength",
+              "note": "Every transparency the figure uses, multiplied: below 1 thins the inks, above 1 builds them toward solid.",
+              "unit": "×"
+            }
           },
-          "implementation": "Characters are placed as a field: a spiral of letters, an ellipse of marks."
+          "implementation": "Characters are placed as a field: a spiral of letters, an ellipse of marks. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-55-listening-field",
@@ -44798,17 +45811,84 @@
           "entry": "pl-100-texture-and-color-plates-screens-paper-groun",
           "code": "PL-100",
           "params": {
-            "figures": 1,
-            "family": "print-physics",
-            "panels": [
-              {
-                "title": "03Experiment · texture & colour — plates, screens, paper, ground · 4",
-                "coverage": 0.374,
-                "ground": "#146945"
-              }
-            ]
+            "weight": {
+              "value": 1,
+              "range": [
+                0.25,
+                3
+              ],
+              "step": 0.01,
+              "label": "Line weight",
+              "note": "Weight of every line the figure draws, as a multiple of its own.",
+              "unit": "×"
+            },
+            "bleed": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Ink bleed",
+              "note": "How far the page lets each ink wander off its edge (the displacement in its ink filter), as a multiple of its own. 0 prints a clean edge.",
+              "unit": "×"
+            },
+            "misreg": {
+              "value": 1,
+              "range": [
+                0,
+                4
+              ],
+              "step": 0.01,
+              "label": "Misregistration",
+              "note": "How far each riso plate shifts off true, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "grain": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Grain",
+              "note": "The dark grain veil the page lays over the plate, as a multiple of its own. 0 leaves the print clean.",
+              "unit": "×"
+            },
+            "dust": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Dust",
+              "note": "The white speckle where the ink skipped, as a multiple of its own. 0 clears it.",
+              "unit": "×"
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            },
+            "seed": {
+              "value": 0,
+              "range": [
+                0,
+                40
+              ],
+              "step": 1,
+              "label": "Seed",
+              "note": "Re-rolls every seeded choice the page makes: the paper, grain, dust and the ink filters’ noise. 0 is the page’s own print."
+            }
           },
-          "implementation": "Flat shapes inside a keyline, with a printed texture laid into each shape."
+          "implementation": "Flat shapes inside a keyline, with a printed texture laid into each shape. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         }
       ]
     },
@@ -44819,33 +45899,112 @@
           "entry": "pl-101-type-stroke-alphabet-justified-column-gold-s",
           "code": "PL-101",
           "params": {
-            "figures": 1,
-            "family": "type",
-            "panels": [
-              {
-                "title": "04Experiment · type — stroke alphabet, justified column, gold seal, stam… · 1",
-                "coverage": 0.408,
-                "ground": "#EC557A"
-              }
-            ]
+            "weight": {
+              "value": 1,
+              "range": [
+                0.25,
+                3
+              ],
+              "step": 0.01,
+              "label": "Line weight",
+              "note": "Weight of every line the figure draws, as a multiple of its own.",
+              "unit": "×"
+            },
+            "grain": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Grain",
+              "note": "The dark grain veil the page lays over the plate, as a multiple of its own. 0 leaves the print clean.",
+              "unit": "×"
+            },
+            "tooth": {
+              "value": 1,
+              "range": [
+                0,
+                2
+              ],
+              "step": 0.01,
+              "label": "Paper tooth",
+              "note": "Opacity of the paper texture multiplied over the plate. 0 is a smooth sheet.",
+              "unit": "×"
+            },
+            "seed": {
+              "value": 0,
+              "range": [
+                0,
+                40
+              ],
+              "step": 1,
+              "label": "Seed",
+              "note": "Re-rolls every seeded choice the page makes: the paper, grain, dust and the ink filters’ noise. 0 is the page’s own print."
+            }
           },
-          "implementation": "Condensed capitals set tight in two or three flat colors."
+          "implementation": "Condensed capitals set tight in two or three flat colors. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-102-type-stroke-alphabet-justified-column-gold-s",
           "code": "PL-102",
           "params": {
-            "figures": 1,
-            "family": "type",
-            "panels": [
-              {
-                "title": "04Experiment · type — stroke alphabet, justified column, gold seal, stam… · 2",
-                "coverage": 0.243,
-                "ground": "#146A45"
-              }
-            ]
+            "weight": {
+              "value": 1,
+              "range": [
+                0.25,
+                3
+              ],
+              "step": 0.01,
+              "label": "Line weight",
+              "note": "Weight of every line the figure draws, as a multiple of its own.",
+              "unit": "×"
+            },
+            "misreg": {
+              "value": 1,
+              "range": [
+                0,
+                4
+              ],
+              "step": 0.01,
+              "label": "Misregistration",
+              "note": "How far each riso plate shifts off true, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "grain": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Grain",
+              "note": "The dark grain veil the page lays over the plate, as a multiple of its own. 0 leaves the print clean.",
+              "unit": "×"
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            },
+            "seed": {
+              "value": 0,
+              "range": [
+                0,
+                40
+              ],
+              "step": 1,
+              "label": "Seed",
+              "note": "Re-rolls every seeded choice the page makes: the paper, grain, dust and the ink filters’ noise. 0 is the page’s own print."
+            }
           },
-          "implementation": "Condensed capitals set tight in two or three flat colors."
+          "implementation": "Condensed capitals set tight in two or three flat colors. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-103-type-stroke-alphabet-justified-column-gold-s",
@@ -44888,27 +46047,95 @@
           "entry": "pl-105-the-same-flower-in-three-frames",
           "code": "PL-105",
           "params": {
-            "figures": 3,
-            "family": "print-physics",
-            "panels": [
-              {
-                "title": "05Experiment · assembly — the same flower in three frames · 1",
-                "coverage": 0.621,
-                "ground": "#136944"
-              },
-              {
-                "title": "05Experiment · assembly — the same flower in three frames · 2",
-                "coverage": 0.994,
-                "ground": "#141616"
-              },
-              {
-                "title": "05Experiment · assembly — the same flower in three frames · 3",
-                "coverage": 0.936,
-                "ground": "#141517"
-              }
-            ]
+            "weight": {
+              "value": 1,
+              "range": [
+                0.25,
+                3
+              ],
+              "step": 0.01,
+              "label": "Line weight",
+              "note": "Weight of every line the figure draws, as a multiple of its own.",
+              "unit": "×"
+            },
+            "bleed": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Ink bleed",
+              "note": "How far the page lets each ink wander off its edge (the displacement in its ink filter), as a multiple of its own. 0 prints a clean edge.",
+              "unit": "×"
+            },
+            "misreg": {
+              "value": 1,
+              "range": [
+                0,
+                4
+              ],
+              "step": 0.01,
+              "label": "Misregistration",
+              "note": "How far each riso plate shifts off true, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "pitch": {
+              "value": 1,
+              "range": [
+                0.5,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Screen ruling",
+              "note": "Spacing of every dot and line screen, with its dots and lines grown to keep the same coverage.",
+              "unit": "×"
+            },
+            "grain": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Grain",
+              "note": "The dark grain veil the page lays over the plate, as a multiple of its own. 0 leaves the print clean.",
+              "unit": "×"
+            },
+            "tooth": {
+              "value": 1,
+              "range": [
+                0,
+                2
+              ],
+              "step": 0.01,
+              "label": "Paper tooth",
+              "note": "Opacity of the paper texture multiplied over the plate. 0 is a smooth sheet.",
+              "unit": "×"
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            },
+            "seed": {
+              "value": 0,
+              "range": [
+                0,
+                40
+              ],
+              "step": 1,
+              "label": "Seed",
+              "note": "Re-rolls every seeded choice the page makes: the paper, grain, dust and the ink filters’ noise. 0 is the page’s own print."
+            }
           },
-          "implementation": "Type, a botanical figure and a frame assembled into one sheet in three or four inks."
+          "implementation": "Type, a botanical figure and a frame assembled into one sheet in three or four inks. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-106-urip-iku-urup-screen-print-banner",
@@ -44930,33 +46157,156 @@
           "entry": "pl-107-gold-keyline-moth-and-peony-on-xuan",
           "code": "PL-107",
           "params": {
-            "figures": 1,
-            "family": "print-physics",
-            "panels": [
-              {
-                "title": "07Final · 花開富貴 — gold-keyline moth & peony on xuan",
-                "coverage": 0.331,
-                "ground": "#F3F2ED"
-              }
-            ]
+            "weight": {
+              "value": 1,
+              "range": [
+                0.25,
+                3
+              ],
+              "step": 0.01,
+              "label": "Line weight",
+              "note": "Weight of every line the figure draws, as a multiple of its own.",
+              "unit": "×"
+            },
+            "bleed": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Ink bleed",
+              "note": "How far the page lets each ink wander off its edge (the displacement in its ink filter), as a multiple of its own. 0 prints a clean edge.",
+              "unit": "×"
+            },
+            "tooth": {
+              "value": 1,
+              "range": [
+                0,
+                2
+              ],
+              "step": 0.01,
+              "label": "Paper tooth",
+              "note": "Opacity of the paper texture multiplied over the plate. 0 is a smooth sheet.",
+              "unit": "×"
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            },
+            "seed": {
+              "value": 0,
+              "range": [
+                0,
+                40
+              ],
+              "step": 1,
+              "label": "Seed",
+              "note": "Re-rolls every seeded choice the page makes: the paper, grain, dust and the ink filters’ noise. 0 is the page’s own print."
+            }
           },
-          "implementation": "Type, a botanical figure and a frame assembled into one sheet in three or four inks."
+          "implementation": "Type, a botanical figure and a frame assembled into one sheet in three or four inks. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-108-stillness-riso-lotus-poster-with-heron",
           "code": "PL-108",
           "params": {
-            "figures": 1,
-            "family": "print-physics",
-            "panels": [
-              {
-                "title": "08Final · STILLNESS — riso lotus poster with heron",
-                "coverage": 0.808,
-                "ground": "#3257ED"
-              }
-            ]
+            "weight": {
+              "value": 1,
+              "range": [
+                0.25,
+                3
+              ],
+              "step": 0.01,
+              "label": "Line weight",
+              "note": "Weight of every line the figure draws, as a multiple of its own.",
+              "unit": "×"
+            },
+            "bleed": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Ink bleed",
+              "note": "How far the page lets each ink wander off its edge (the displacement in its ink filter), as a multiple of its own. 0 prints a clean edge.",
+              "unit": "×"
+            },
+            "misreg": {
+              "value": 1,
+              "range": [
+                0,
+                4
+              ],
+              "step": 0.01,
+              "label": "Misregistration",
+              "note": "How far each riso plate shifts off true, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "pitch": {
+              "value": 1,
+              "range": [
+                0.5,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Screen ruling",
+              "note": "Spacing of every dot and line screen, with its dots and lines grown to keep the same coverage.",
+              "unit": "×"
+            },
+            "grain": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Grain",
+              "note": "The dark grain veil the page lays over the plate, as a multiple of its own. 0 leaves the print clean.",
+              "unit": "×"
+            },
+            "dust": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Dust",
+              "note": "The white speckle where the ink skipped, as a multiple of its own. 0 clears it.",
+              "unit": "×"
+            },
+            "tooth": {
+              "value": 1,
+              "range": [
+                0,
+                2
+              ],
+              "step": 0.01,
+              "label": "Paper tooth",
+              "note": "Opacity of the paper texture multiplied over the plate. 0 is a smooth sheet.",
+              "unit": "×"
+            },
+            "seed": {
+              "value": 0,
+              "range": [
+                0,
+                40
+              ],
+              "step": 1,
+              "label": "Seed",
+              "note": "Re-rolls every seeded choice the page makes: the paper, grain, dust and the ink filters’ noise. 0 is the page’s own print."
+            }
           },
-          "implementation": "Type, a botanical figure and a frame assembled into one sheet in three or four inks."
+          "implementation": "Type, a botanical figure and a frame assembled into one sheet in three or four inks. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         }
       ]
     },
@@ -45233,17 +46583,70 @@
           "entry": "pl-114-edge-and-focus-flat-feathered-velvet-depth-1",
           "code": "PL-114",
           "params": {
-            "figures": 1,
-            "family": "light-gradient",
-            "panels": [
-              {
-                "title": "02Experiment · edge & focus — flat, feathered, velvet, depth · 1",
-                "coverage": 0.329,
-                "ground": "#FBFBFB"
-              }
-            ]
+            "lobes": {
+              "value": 5,
+              "range": [
+                3,
+                9
+              ],
+              "step": 1,
+              "label": "Lobes",
+              "note": "How many lobes the blossom has."
+            },
+            "lobek": {
+              "value": 0.62,
+              "range": [
+                0.3,
+                0.9
+              ],
+              "step": 0.01,
+              "label": "Lobe fullness",
+              "note": "Radius of each lobe against the flower’s (the page’s 0.62). Low reads as separate petals, high as one round bloom."
+            },
+            "turn": {
+              "value": 0,
+              "range": [
+                -1.6,
+                1.6
+              ],
+              "step": 0.01,
+              "label": "Turn",
+              "note": "Turn of the blossom, added to the page’s own.",
+              "unit": "rad"
+            },
+            "stamens": {
+              "value": 22,
+              "range": [
+                0,
+                48
+              ],
+              "step": 1,
+              "label": "Stamens",
+              "note": "How many stamens rise from the core."
+            },
+            "reach": {
+              "value": 1,
+              "range": [
+                0.4,
+                1.6
+              ],
+              "step": 0.01,
+              "label": "Stamen reach",
+              "note": "Length of the stamens, as a multiple of the page’s 44 px.",
+              "unit": "×"
+            },
+            "seed": {
+              "value": 0,
+              "range": [
+                0,
+                40
+              ],
+              "step": 1,
+              "label": "Seed",
+              "note": "Re-rolls every seeded choice the page makes: the grain, the noise and where each mark falls. 0 is the page’s own drawing."
+            }
           },
-          "implementation": "Flowers and lights drawn in sharp line and then softened: blur, glow and bokeh over a flat ground."
+          "implementation": "Flowers and lights drawn in sharp line and then softened: blur, glow and bokeh over a flat ground. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-115-light-and-color-aura-rings-channel-split-fog",
@@ -45349,17 +46752,73 @@
           "entry": "pl-117-light-and-color-aura-rings-channel-split-fog",
           "code": "PL-117",
           "params": {
-            "figures": 1,
-            "family": "light-gradient",
-            "panels": [
-              {
-                "title": "03Experiment · light & colour — aura rings, channel split, fog, frosted… · 4",
-                "coverage": 0.341,
-                "ground": "#F4F5F7"
-              }
-            ]
+            "blur": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Focus blur",
+              "note": "Every blur the figure lays (its depth of field), as a multiple of its own. 0 brings every layer into focus.",
+              "unit": "×"
+            },
+            "frost": {
+              "value": 1,
+              "range": [
+                0,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Frost",
+              "note": "How white the glass is (its 28% white tint), as a multiple.",
+              "unit": "×"
+            },
+            "panel": {
+              "value": 1,
+              "range": [
+                0.4,
+                1.15
+              ],
+              "step": 0.01,
+              "label": "Panel width",
+              "note": "Width of the frosted panel, as a multiple of the page’s 270 px.",
+              "unit": "×"
+            },
+            "fruit": {
+              "value": 1,
+              "range": [
+                0.5,
+                1.5
+              ],
+              "step": 0.01,
+              "label": "Fruit size",
+              "note": "Size of every citrus slice behind the glass.",
+              "unit": "×"
+            },
+            "segs": {
+              "value": 9,
+              "range": [
+                4,
+                16
+              ],
+              "step": 1,
+              "label": "Segments",
+              "note": "Segments in each citrus slice."
+            },
+            "spark": {
+              "value": 1,
+              "range": [
+                0,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Sparkle size",
+              "note": "Size of the four-point sparkles on the glass. 0 removes them.",
+              "unit": "×"
+            }
           },
-          "implementation": "Flowers and lights drawn in sharp line and then softened: blur, glow and bokeh over a flat ground."
+          "implementation": "Flowers and lights drawn in sharp line and then softened: blur, glow and bokeh over a flat ground. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         }
       ]
     },
@@ -45370,81 +46829,362 @@
           "entry": "pl-118-type-and-sparkle-light-geometric-heavy-caps",
           "code": "PL-118",
           "params": {
-            "figures": 1,
-            "family": "light-gradient",
-            "panels": [
-              {
-                "title": "04Experiment · type & sparkle — light geometric, heavy caps + CJK, glow… · 2",
-                "coverage": 0.242,
-                "ground": "#FBFBFB"
-              }
-            ]
+            "blur": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Focus blur",
+              "note": "Every blur the figure lays (its depth of field), as a multiple of its own. 0 brings every layer into focus.",
+              "unit": "×"
+            },
+            "bloom": {
+              "value": 1,
+              "range": [
+                0.4,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Bloom size",
+              "note": "Size of the two blurred blooms behind the type.",
+              "unit": "×"
+            },
+            "glow": {
+              "value": 1,
+              "range": [
+                0.2,
+                1.4
+              ],
+              "step": 0.01,
+              "label": "Bloom strength",
+              "note": "Opacity of the blooms, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "drift": {
+              "value": 0,
+              "range": [
+                -160,
+                40
+              ],
+              "step": 1,
+              "label": "Bloom position",
+              "note": "Moves the blooms left (negative) or right across the sheet.",
+              "unit": "px"
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            }
           },
-          "implementation": "A soft field set behind or around crisp type and a single sharp subject."
+          "implementation": "A soft field set behind or around crisp type and a single sharp subject. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-119-type-and-sparkle-light-geometric-heavy-caps",
           "code": "PL-119",
           "params": {
-            "figures": 1,
-            "family": "light-gradient",
-            "panels": [
-              {
-                "title": "04Experiment · type & sparkle — light geometric, heavy caps + CJK, glow… · 4",
-                "coverage": 0.996,
-                "ground": "#0E0F11"
-              }
-            ]
+            "blur": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Focus blur",
+              "note": "Every blur the figure lays (its depth of field), as a multiple of its own. 0 brings every layer into focus.",
+              "unit": "×"
+            },
+            "spark": {
+              "value": 1,
+              "range": [
+                0,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Sparkle size",
+              "note": "Size of the four-point sparkles on the glass. 0 removes them.",
+              "unit": "×"
+            },
+            "bokeh": {
+              "value": 1,
+              "range": [
+                0,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Bokeh size",
+              "note": "Size of the out-of-focus discs. 0 removes them.",
+              "unit": "×"
+            },
+            "streak": {
+              "value": 1,
+              "range": [
+                0,
+                2.4
+              ],
+              "step": 0.01,
+              "label": "Streak length",
+              "note": "Length of the lens-flare streak.",
+              "unit": "×"
+            },
+            "crystal": {
+              "value": 1,
+              "range": [
+                0.3,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Crystal size",
+              "note": "Size of the small frost crystal.",
+              "unit": "×"
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            }
           },
-          "implementation": "A soft field set behind or around crisp type and a single sharp subject."
+          "implementation": "A soft field set behind or around crisp type and a single sharp subject. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-120-lotus-white-gallery-poster",
           "code": "PL-120",
           "params": {
-            "figures": 1,
-            "family": "light-gradient",
-            "panels": [
-              {
-                "title": "06Final · 六月 · 荷花 — lotus, white gallery poster",
-                "coverage": 0.389,
-                "ground": "#FAFAFA"
-              }
-            ]
+            "blur": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Focus blur",
+              "note": "Every blur the figure lays (its depth of field), as a multiple of its own. 0 brings every layer into focus.",
+              "unit": "×"
+            },
+            "grain": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Grain",
+              "note": "The grain the page lays over each plate, mono and chromatic, as a multiple of its own. 0 leaves the paint clean.",
+              "unit": "×"
+            },
+            "velvet": {
+              "value": 1,
+              "range": [
+                0,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Velvet",
+              "note": "Depth of the velvet noise multiplied into each soft shape. 0 lays the color flat.",
+              "unit": "×"
+            },
+            "seed": {
+              "value": 0,
+              "range": [
+                0,
+                40
+              ],
+              "step": 1,
+              "label": "Seed",
+              "note": "Re-rolls every seeded choice the page makes: the grain, the noise and where each mark falls. 0 is the page’s own drawing."
+            },
+            "lotus": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.3
+              ],
+              "step": 0.01,
+              "label": "Lotus size",
+              "note": "Size of the main lotus, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "pads": {
+              "value": 1,
+              "range": [
+                0,
+                2
+              ],
+              "step": 0.01,
+              "label": "Pad haze",
+              "note": "Opacity of the out-of-focus pads and washes behind the lotus. 0 leaves the sheet white.",
+              "unit": "×"
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            }
           },
-          "implementation": "A soft field set behind or around crisp type and a single sharp subject."
+          "implementation": "A soft field set behind or around crisp type and a single sharp subject. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-121-nocturne-night-garden-neon-aura-field",
           "code": "PL-121",
           "params": {
-            "figures": 1,
-            "family": "light-gradient",
-            "panels": [
-              {
-                "title": "07Final · NOCTURNE — night garden, neon aura field",
-                "coverage": 0.795,
-                "ground": "#040506"
-              }
-            ]
+            "blur": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Focus blur",
+              "note": "Every blur the figure lays (its depth of field), as a multiple of its own. 0 brings every layer into focus.",
+              "unit": "×"
+            },
+            "grain": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Grain",
+              "note": "The grain the page lays over each plate, mono and chromatic, as a multiple of its own. 0 leaves the paint clean.",
+              "unit": "×"
+            },
+            "seed": {
+              "value": 0,
+              "range": [
+                0,
+                40
+              ],
+              "step": 1,
+              "label": "Seed",
+              "note": "Re-rolls every seeded choice the page makes: the grain, the noise and where each mark falls. 0 is the page’s own drawing."
+            },
+            "specks": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Dust points",
+              "note": "How many of the page’s 700 dust points are scattered on the black, as a multiple.",
+              "unit": "×"
+            },
+            "fogtop": {
+              "value": 0,
+              "range": [
+                -0.3,
+                0.25
+              ],
+              "step": 0.01,
+              "label": "Fog line",
+              "note": "Moves where the fog starts: negative raises it over more of the heads."
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            }
           },
-          "implementation": "A soft field set behind or around crisp type and a single sharp subject."
+          "implementation": "A soft field set behind or around crisp type and a single sharp subject. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-122-blood-orange-spritz-frosted-product-page",
           "code": "PL-122",
           "params": {
-            "figures": 1,
-            "family": "light-gradient",
-            "panels": [
-              {
-                "title": "08Final · Blood Orange Spritz — frosted product page",
-                "coverage": 0.314,
-                "ground": "#F5F5F5"
-              }
-            ]
+            "blur": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Focus blur",
+              "note": "Every blur the figure lays (its depth of field), as a multiple of its own. 0 brings every layer into focus.",
+              "unit": "×"
+            },
+            "grain": {
+              "value": 1,
+              "range": [
+                0,
+                3
+              ],
+              "step": 0.01,
+              "label": "Grain",
+              "note": "The grain the page lays over each plate, mono and chromatic, as a multiple of its own. 0 leaves the paint clean.",
+              "unit": "×"
+            },
+            "frost": {
+              "value": 1,
+              "range": [
+                0,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Frost",
+              "note": "How white the glass is (its 28% white tint), as a multiple.",
+              "unit": "×"
+            },
+            "spark": {
+              "value": 1,
+              "range": [
+                0,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Sparkle size",
+              "note": "Size of the four-point sparkles on the glass. 0 removes them.",
+              "unit": "×"
+            },
+            "slices": {
+              "value": 10,
+              "range": [
+                4,
+                16
+              ],
+              "step": 1,
+              "label": "Segments",
+              "note": "Segments in each citrus round and wedge."
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            }
           },
-          "implementation": "A soft field set behind or around crisp type and a single sharp subject."
+          "implementation": "A soft field set behind or around crisp type and a single sharp subject. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         }
       ]
     },
@@ -45614,17 +47354,52 @@
           "entry": "pl-130-the-garden-read-as-a-sheet",
           "code": "PL-130",
           "params": {
-            "figures": 1,
-            "family": "subject-construction",
-            "panels": [
-              {
-                "title": "the garden, read as a sheet",
-                "coverage": 0.118,
-                "ground": "#FFFFFF"
-              }
-            ]
+            "weight": {
+              "value": 1,
+              "range": [
+                0.25,
+                3
+              ],
+              "step": 0.01,
+              "label": "Line weight",
+              "note": "Weight of every line the figure draws, as a multiple of its own.",
+              "unit": "×"
+            },
+            "mark": {
+              "value": 1,
+              "range": [
+                0.3,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Mark size",
+              "note": "Size of every dot and pixel mark the figure lays down (marks up to 6 px across).",
+              "unit": "×"
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            },
+            "moment": {
+              "value": 2,
+              "range": [
+                0,
+                12
+              ],
+              "step": 0.1,
+              "label": "Moment",
+              "note": "Where in its motion the figure is shown, in seconds from the start of its clock.",
+              "unit": "s"
+            }
           },
-          "implementation": "The garden drawn as a bed, a plan, an ink drawing and a sheet."
+          "implementation": "The garden drawn as a bed, a plan, an ink drawing and a sheet. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         }
       ]
     },
@@ -46609,65 +48384,234 @@
           "entry": "pl-151-the-strand-in-coarse-dots",
           "code": "PL-151",
           "params": {
-            "figures": 1,
-            "family": "data-display",
-            "panels": [
-              {
-                "title": "The strand in coarse dots",
-                "coverage": 0.101,
-                "ground": "#E3E9E7"
-              }
-            ]
+            "dot": {
+              "value": 1,
+              "range": [
+                0.4,
+                3
+              ],
+              "step": 0.01,
+              "label": "Dot size",
+              "note": "Size of every printed dot, as a multiple of the deck’s own.",
+              "unit": "×"
+            },
+            "cell": {
+              "value": 1,
+              "range": [
+                0.5,
+                3
+              ],
+              "step": 0.01,
+              "label": "Screen pitch",
+              "note": "Spacing of the cells each dot is printed in, as a multiple of the deck’s own. Larger is coarser.",
+              "unit": "×"
+            },
+            "den": {
+              "value": 1,
+              "range": [
+                0.2,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Density",
+              "note": "How many dots each cell prints for the count it carries, as a multiple of the deck’s own.",
+              "unit": "×"
+            },
+            "seed": {
+              "value": 0,
+              "range": [
+                0,
+                40
+              ],
+              "step": 1,
+              "label": "Seed",
+              "note": "Re-rolls where every dot falls. 0 is the deck’s own print."
+            }
           },
-          "implementation": "A ribbon twisted about its axis is filled with dots whose density follows the face turned toward you, one ink per side; the same dots print the bars and arcs."
+          "implementation": "A ribbon twisted about its axis is filled with dots whose density follows the face turned toward you, one ink per side; the same dots print the bars and arcs. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-152-a-ring-of-strokes",
           "code": "PL-152",
           "params": {
-            "figures": 1,
-            "family": "data-display",
-            "panels": [
-              {
-                "title": "A ring of strokes",
-                "coverage": 0.062,
-                "ground": "#FFFFFF"
-              }
-            ]
+            "dot": {
+              "value": 1,
+              "range": [
+                0.4,
+                3
+              ],
+              "step": 0.01,
+              "label": "Dot size",
+              "note": "Size of every printed dot, as a multiple of the deck’s own.",
+              "unit": "×"
+            },
+            "cell": {
+              "value": 1,
+              "range": [
+                0.5,
+                3
+              ],
+              "step": 0.01,
+              "label": "Screen pitch",
+              "note": "Spacing of the cells each dot is printed in, as a multiple of the deck’s own. Larger is coarser.",
+              "unit": "×"
+            },
+            "den": {
+              "value": 1,
+              "range": [
+                0.2,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Density",
+              "note": "How many dots each cell prints for the count it carries, as a multiple of the deck’s own.",
+              "unit": "×"
+            },
+            "count": {
+              "value": 1,
+              "range": [
+                0.2,
+                2
+              ],
+              "step": 0.01,
+              "label": "Strands",
+              "note": "How many strands (ring) or arcs are counted, as a multiple of the deck’s own.",
+              "unit": "×"
+            },
+            "seed": {
+              "value": 0,
+              "range": [
+                0,
+                40
+              ],
+              "step": 1,
+              "label": "Seed",
+              "note": "Re-rolls where every dot falls. 0 is the deck’s own print."
+            }
           },
-          "implementation": "A ribbon twisted about its axis is filled with dots whose density follows the face turned toward you, one ink per side; the same dots print the bars and arcs."
+          "implementation": "A ribbon twisted about its axis is filled with dots whose density follows the face turned toward you, one ink per side; the same dots print the bars and arcs. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-153-arcs-over-a-baseline",
           "code": "PL-153",
           "params": {
-            "figures": 1,
-            "family": "data-display",
-            "panels": [
-              {
-                "title": "Arcs over a baseline",
-                "coverage": 0.113,
-                "ground": "#FFFFFF"
-              }
-            ]
+            "dot": {
+              "value": 1,
+              "range": [
+                0.4,
+                3
+              ],
+              "step": 0.01,
+              "label": "Dot size",
+              "note": "Size of every printed dot, as a multiple of the deck’s own.",
+              "unit": "×"
+            },
+            "cell": {
+              "value": 1,
+              "range": [
+                0.5,
+                3
+              ],
+              "step": 0.01,
+              "label": "Screen pitch",
+              "note": "Spacing of the cells each dot is printed in, as a multiple of the deck’s own. Larger is coarser.",
+              "unit": "×"
+            },
+            "den": {
+              "value": 1,
+              "range": [
+                0.2,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Density",
+              "note": "How many dots each cell prints for the count it carries, as a multiple of the deck’s own.",
+              "unit": "×"
+            },
+            "count": {
+              "value": 1,
+              "range": [
+                0.2,
+                2
+              ],
+              "step": 0.01,
+              "label": "Strands",
+              "note": "How many strands (ring) or arcs are counted, as a multiple of the deck’s own.",
+              "unit": "×"
+            },
+            "seed": {
+              "value": 0,
+              "range": [
+                0,
+                40
+              ],
+              "step": 1,
+              "label": "Seed",
+              "note": "Re-rolls where every dot falls. 0 is the deck’s own print."
+            }
           },
-          "implementation": "A ribbon twisted about its axis is filled with dots whose density follows the face turned toward you, one ink per side; the same dots print the bars and arcs."
+          "implementation": "A ribbon twisted about its axis is filled with dots whose density follows the face turned toward you, one ink per side; the same dots print the bars and arcs. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         },
         {
           "entry": "pl-154-counts-printed-as-dots",
           "code": "PL-154",
           "params": {
-            "figures": 1,
-            "family": "data-display",
-            "panels": [
-              {
-                "title": "Counts printed as dots",
-                "coverage": 0.28,
-                "ground": "#F4F7F5"
-              }
-            ]
+            "dot": {
+              "value": 1,
+              "range": [
+                0.4,
+                3
+              ],
+              "step": 0.01,
+              "label": "Dot size",
+              "note": "Size of every printed dot, as a multiple of the deck’s own.",
+              "unit": "×"
+            },
+            "cell": {
+              "value": 1,
+              "range": [
+                0.5,
+                3
+              ],
+              "step": 0.01,
+              "label": "Screen pitch",
+              "note": "Spacing of the cells each dot is printed in, as a multiple of the deck’s own. Larger is coarser.",
+              "unit": "×"
+            },
+            "den": {
+              "value": 1,
+              "range": [
+                0.2,
+                2.5
+              ],
+              "step": 0.01,
+              "label": "Density",
+              "note": "How many dots each cell prints for the count it carries, as a multiple of the deck’s own.",
+              "unit": "×"
+            },
+            "seed": {
+              "value": 0,
+              "range": [
+                0,
+                40
+              ],
+              "step": 1,
+              "label": "Seed",
+              "note": "Re-rolls where every dot falls. 0 is the deck’s own print."
+            },
+            "type": {
+              "value": 1,
+              "range": [
+                0.6,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Type size",
+              "note": "Size of every label the figure sets.",
+              "unit": "×"
+            }
           },
-          "implementation": "A ribbon twisted about its axis is filled with dots whose density follows the face turned toward you, one ink per side; the same dots print the bars and arcs."
+          "implementation": "A ribbon twisted about its axis is filled with dots whose density follows the face turned toward you, one ink per side; the same dots print the bars and arcs. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
         }
       ]
     }
