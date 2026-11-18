@@ -28,83 +28,206 @@ window.STUDY={"id": "pl-72-the-tetravalent-assemblage", "code": "PL-72", "fig": 
   };
 })(window.STUDY);
 
-/* PL-72 · The tetravalent assemblage · the figure measured from jalulia.github.io/capschiz (29 primitives, viewBox 0 0 1000 480). Measured by a headless read of the live page, 2026-11-17; see _build/engines/reading-diagram.js. */
-window.RD_FIG=[{"vb":[0,0,1000,480],"ground":[255,255,255],"prims":[{"t":"poly","p":[[120,240],[880,240]],"c":false,"s":[22,22,26],"f":[0,0,0],"w":1.4,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":true,"ms":true},{"t":"poly","p":[[500,60],[500,430]],"c":false,"s":[22,22,26],"f":[0,0,0],"w":1.4,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":true,"ms":true},{"t":"text","x":140,"y":232,"a":"start","txt":"CONTENT","fs":11.5,"fw":"600","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,42,42],"o":1},{"t":"text","x":60,"y":248,"a":"start","txt":"bodies","fs":9.5,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"text","x":800.47,"y":232,"a":"end","txt":"EXPRESSION","fs":11.5,"fw":"600","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,42,42],"o":1},{"t":"text","x":900.18,"y":248,"a":"end","txt":"words","fs":9.5,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"text","x":500.23,"y":50,"a":"middle","txt":"DETERRITORIALIZATION","fs":11.5,"fw":"600","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,42,42],"o":1},{"t":"text","x":500.24,"y":448,"a":"middle","txt":"TERRITORY","fs":11.5,"fw":"600","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,42,42],"o":1},{"t":"poly","p":[[150,90],[450,90],[450,210],[150,210]],"c":true,"box":1,"s":[216,216,220],"f":[255,255,255],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"text","x":166,"y":112,"a":"start","txt":"\u27f6 machinic, fleeing","fs":10,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"text","x":166,"y":135,"a":"start","txt":"the charge breaks formation;","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":166,"y":156,"a":"start","txt":"horse + rider become speed,","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":166,"y":177,"a":"start","txt":"a line crossing open ground","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"poly","p":[[550,90],[850,90],[850,210],[550,210]],"c":true,"box":1,"s":[216,216,220],"f":[255,255,255],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"text","x":835.35,"y":112,"a":"end","txt":"enunciation, fleeing \u27f6","fs":10,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"text","x":834,"y":135,"a":"end","txt":"the war-cry, the broken oath,","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":834,"y":156,"a":"end","txt":"the song that outlives","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":835.06,"y":177,"a":"end","txt":"the order it disobeyed","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"poly","p":[[150,270],[450,270],[450,390],[150,390]],"c":true,"box":1,"s":[216,216,220],"f":[255,255,255],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"text","x":166,"y":292,"a":"start","txt":"\u27f6 machinic, settled","fs":10,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"text","x":166,"y":315,"a":"start","txt":"knight + horse + stirrup +","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":166,"y":336,"a":"start","txt":"lance; the fief, the land,","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":166,"y":357,"a":"start","txt":"the bodies bound to it","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"poly","p":[[550,270],[850,270],[850,390],[550,390]],"c":true,"box":1,"s":[216,216,220],"f":[255,255,255],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"text","x":835.35,"y":292,"a":"end","txt":"enunciation, settled \u27f6","fs":10,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"text","x":834,"y":315,"a":"end","txt":"the oath of fealty, heraldry,","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":834,"y":336,"a":"end","txt":"the juridical code that","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":834,"y":357,"a":"end","txt":"\"makes\" a vassal a vassal","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"ell","p":[],"c":true,"cx":500,"cy":240,"rx":6,"ry":6,"s":null,"f":[138,42,42],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false}]}];
+/* PL-72 · The tetravalent assemblage · the figure measured from jalulia.github.io/capschiz (29 primitives, viewBox 0 0 1000 480). Measured by a headless read of the live page, 2026-11-17; see _build/engines/reading-diagram.js.
+   grid: the still is drawn on graph paper, a 22 px square from the figure origin (32.45 figure units: the figure is set at 0.678).
+   "bodies" and "words" are set 8 units under their measured line (y 248 to 256): the source sets "words" on the axis arrowhead, and here they clear it at every arrowhead size. */
+window.RD_FIG=[{"vb":[0,0,1000,480],"ground":[255,255,255],"prims":[{"t":"poly","p":[[120,240],[880,240]],"c":false,"s":[22,22,26],"f":[0,0,0],"w":1.4,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":true,"ms":true},{"t":"poly","p":[[500,60],[500,430]],"c":false,"s":[22,22,26],"f":[0,0,0],"w":1.4,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":true,"ms":true},{"t":"text","x":140,"y":232,"a":"start","txt":"CONTENT","fs":11.5,"fw":"600","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,42,42],"o":1},{"t":"text","x":60,"y":256,"a":"start","txt":"bodies","fs":9.5,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"text","x":800.47,"y":232,"a":"end","txt":"EXPRESSION","fs":11.5,"fw":"600","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,42,42],"o":1},{"t":"text","x":900.18,"y":256,"a":"end","txt":"words","fs":9.5,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"text","x":500.23,"y":50,"a":"middle","txt":"DETERRITORIALIZATION","fs":11.5,"fw":"600","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,42,42],"o":1},{"t":"text","x":500.24,"y":448,"a":"middle","txt":"TERRITORY","fs":11.5,"fw":"600","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,42,42],"o":1},{"t":"poly","p":[[150,90],[450,90],[450,210],[150,210]],"c":true,"box":1,"s":[216,216,220],"f":[255,255,255],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"text","x":166,"y":112,"a":"start","txt":"\u27f6 machinic, fleeing","fs":10,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"text","x":166,"y":135,"a":"start","txt":"the charge breaks formation;","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":166,"y":156,"a":"start","txt":"horse + rider become speed,","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":166,"y":177,"a":"start","txt":"a line crossing open ground","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"poly","p":[[550,90],[850,90],[850,210],[550,210]],"c":true,"box":1,"s":[216,216,220],"f":[255,255,255],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"text","x":835.35,"y":112,"a":"end","txt":"enunciation, fleeing \u27f6","fs":10,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"text","x":834,"y":135,"a":"end","txt":"the war-cry, the broken oath,","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":834,"y":156,"a":"end","txt":"the song that outlives","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":835.06,"y":177,"a":"end","txt":"the order it disobeyed","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"poly","p":[[150,270],[450,270],[450,390],[150,390]],"c":true,"box":1,"s":[216,216,220],"f":[255,255,255],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"text","x":166,"y":292,"a":"start","txt":"\u27f6 machinic, settled","fs":10,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"text","x":166,"y":315,"a":"start","txt":"knight + horse + stirrup +","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":166,"y":336,"a":"start","txt":"lance; the fief, the land,","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":166,"y":357,"a":"start","txt":"the bodies bound to it","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"poly","p":[[550,270],[850,270],[850,390],[550,390]],"c":true,"box":1,"s":[216,216,220],"f":[255,255,255],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false},{"t":"text","x":835.35,"y":292,"a":"end","txt":"enunciation, settled \u27f6","fs":10,"fw":"400","ff":"mono","ls":0,"it":false,"tt":"none","rot":0,"f":[138,138,146],"o":1},{"t":"text","x":834,"y":315,"a":"end","txt":"the oath of fealty, heraldry,","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":834,"y":336,"a":"end","txt":"the juridical code that","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"text","x":834,"y":357,"a":"end","txt":"\"makes\" a vassal a vassal","fs":13,"fw":"400","ff":"mono","ls":0,"it":true,"tt":"none","rot":0,"f":[22,22,26],"o":1},{"t":"ell","p":[],"c":true,"cx":500,"cy":240,"rx":6,"ry":6,"s":null,"f":[138,42,42],"w":1,"o":1,"so":1,"fo":1,"d":null,"cap":"butt","me":false,"ms":false}],"grid":32.45}];
 
-/* reading-diagram · shared engine for the "Diagram of an argument" plates (PL-67…80). Appended to each plate's study.js
-   by _build/plates.py after that plate's rd-figure.js (window.RD_FIG: the figure measured from jalulia.github.io/capschiz
+/* reading-diagram · shared engine for the "Diagram of an argument" plates (PL-67…80) and the measured line plates (PL-96, PL-109, PL-110).
+   Appended to each plate's study.js by _build/plates.py after that plate's rd-figure.js (window.RD_FIG: the figure measured
    by its own geometry: every line, box, pole, arrow and label, in the figure's viewBox units).
-   The engine redraws that geometry with the technique's dials: how heavy the lines are, how ruled or hand-drawn,
-   how round the boxes, how big the arrowheads, whether tones are solid or hatched, and how large the type. */
+   The engine redraws that geometry with the decisions of the person drawing it: the sheet it is drawn on, how heavy and how
+   ruled the line is, how round the boxes, how long the dashes, how big the nodes and arrowheads, whether tones are solid or
+   hatched, and how the labels are set. A dial is offered only where the figure has the thing it changes. */
 (function (S) {
   'use strict';
   var FIGS = window.RD_FIG || [];
   /* the figure's own inks: every stroke, fill and label color, merged where they are within a few steps of each other.
      They go into the palettes, so the Color tab lists them and editing one recolors every mark that uses it. */
   function hx(c) { return '#' + c.slice(0, 3).map(function (v) { return Math.round(v).toString(16).padStart(2, '0'); }).join(''); }
+  var lumOf = function (c) { return (.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) / 255; };
   var INKS = [], used = [];
-  FIGS.forEach(function (F) { F.prims.forEach(function (e) { ['s', 'f'].forEach(function (k) {
-    var c = e[k]; if (!c) return; if (c.length > 3 && c[3] < .05) return; if ((.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) / 255 > .93) { e[k + 'i'] = -1; return; }  /* paper-white stays paper */
+  FIGS.forEach(function (F) { var G = F.ground || [255, 255, 255]; F.prims.forEach(function (e) { ['s', 'f', 'hc'].forEach(function (k) {
+    var c = e[k]; if (!c) return; if (c.length > 3 && c[3] < .05) return;
+    /* paper-white stays paper: a fill within a few steps of the sheet knocks out what is behind it and follows the ground; a pale tint (a shaded face, a gray box) stays an ink */
+    if (lumOf(c) > .93 && Math.abs(c[0] - G[0]) + Math.abs(c[1] - G[1]) + Math.abs(c[2] - G[2]) <= 6) { e[k + 'i'] = -1; return; }
     var best = -1, bd = 1e9; INKS.forEach(function (q, j) { var d = Math.abs(q[0] - c[0]) + Math.abs(q[1] - c[1]) + Math.abs(q[2] - c[2]); if (d < bd) { bd = d; best = j; } });
     if (best < 0 || bd > 34) { INKS.push(c.slice(0, 3)); used.push(0); best = INKS.length - 1; }
     used[best]++; e[k + 'i'] = best; }); }); });
   /* the order of the list: most-used first */
   var order = used.map(function (n, i) { return [n, i]; }).sort(function (a, b) { return b[0] - a[0]; }).map(function (x) { return x[1]; }), remap = {};
   order.forEach(function (j, i) { remap[j] = i; }); INKS = order.map(function (j) { return INKS[j]; });
-  FIGS.forEach(function (F) { F.prims.forEach(function (e) { ['si', 'fi'].forEach(function (k) { if (e[k] != null && e[k] >= 0) e[k] = remap[e[k]]; }); }); });
-  var src = INKS.map(hx), lumOf = function (c) { return (.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) / 255; };
+  FIGS.forEach(function (F) { F.prims.forEach(function (e) { ['si', 'fi', 'hci'].forEach(function (k) { if (e[k] != null && e[k] >= 0) e[k] = remap[e[k]]; }); }); });
+  /* house rule: oxblood never prints. A dark, blood-brown red measured from a source is re-inked to ember. */
+  var oxblood = function (c) { var L = lumOf(c); return c[0] > c[1] * 1.8 && c[0] > c[2] * 1.6 && c[0] < 200 && L < .32; };
+  INKS = INKS.map(function (c) { return oxblood(c) ? [244, 85, 30] : c; });
+  var src = INKS.map(hx);
   var sat = function (c) { var mx = Math.max.apply(null, c), mn = Math.min.apply(null, c); return mx ? (mx - mn) / mx : 0; };
-  var ground = FIGS[0] && FIGS[0].ground ? hx(FIGS[0].ground) : '#FFFFFF';
+  /* house rule: no cream grounds. A sheet is white or Paper (#FBFBF7): an off-white sheet measured from a source is laid on Paper */
+  var g0 = FIGS[0] && FIGS[0].ground, offWhite = function (c) { return lumOf(c) > .8 && !(c[0] >= 254 && c[1] >= 254 && c[2] >= 254); };
+  var ground = g0 ? (offWhite(g0) ? '#fbfbf7' : hx(g0)) : '#FFFFFF';
   /* Cobalt: the neutrals become the cobalt ramp of Mindgut's stipple; a colored accent becomes ember */
-  var cob = INKS.map(function (c) { var L = lumOf(c); return sat(c) > .28 ? '#ef4a2b' : L < .25 ? '#0e1122' : L < .5 ? '#1b3bd4' : L < .75 ? '#5b74de' : '#93a8ea'; });
+  var cob = INKS.map(function (c) { var L = lumOf(c); return sat(c) > .28 ? '#ef4a2b' : L < .25 ? '#0e1122' : L < .5 ? '#1b3bd4' : L < .75 ? '#5b74de' : L < .9 ? '#93a8ea' : '#eef0f8'; });
   var inv = INKS.map(function (c) { return sat(c) > .28 ? hx(c.map(function (v) { return Math.min(255, v * 1.35 + 30); })) : hx(c.map(function (v) { return 255 - v * .92; })); });
   S.variants = [
     { id: 'source', label: 'Source', sw: [ground].concat(src.slice(0, 4)), spot: [20, 20, 20], paper: '#FFFFFF', rule: '#D9D9DC', ground: ground, inks: src },
-    { id: 'cobalt', label: 'Cobalt', sw: ['#f8f8f6'].concat(cob.slice(0, 4)), spot: [20, 20, 20], paper: '#FFFFFF', rule: '#D9D9DC', ground: '#f8f8f6', inks: cob },
+    { id: 'cobalt', label: 'Cobalt', sw: ['#fbfbf7'].concat(cob.slice(0, 4)), spot: [20, 20, 20], paper: '#FFFFFF', rule: '#D9D9DC', ground: '#fbfbf7', inks: cob },
     { id: 'ink', label: 'Ink', sw: ['#101014'].concat(inv.slice(0, 4)), spot: [240, 240, 240], paper: '#101014', rule: '#2A2A30', ground: '#17171c', inks: inv }
   ];
   S.variantLabel = 'Palette';
   S.colorHint = 'Pick a palette; click an ink to change it. Each ink is a color of the figure, measured from the source.';
 
   /* the plate is cut to the figure: one panel takes the figure's own shape, so nothing of the old screenshot's caption and controls is left as empty sheet */
+  /* a plate filed as several screenshots of one figure (PL-109, PL-110) keeps one panel, across the plate's full width */
+  if (FIGS.length === 1 && S.panels.length > 1) { var pl = S.panels[0], pr = S.panels[S.panels.length - 1]; pl.w = +(pr.x + pr.w - pl.x).toFixed(2); S.panels = [pl]; (S.points || []).forEach(function (q) { q.pi = 0; }); }
   if (S.panels.length === 1 && FIGS[0]) { var p0 = S.panels[0], vb0 = FIGS[0].vb; p0.h = +(p0.w * vb0[3] / vb0[2]).toFixed(2); S.ref = { w: 1000, h: Math.round(p0.y * 2 + p0.h) }; }
+
+  /* what the figure has: each dial is offered only where its mark is drawn */
+  var span = function (q) { var xs = q.map(function (a) { return a[0]; }), ys = q.map(function (a) { return a[1]; }); return xs.length ? [Math.max.apply(null, xs) - Math.min.apply(null, xs), Math.max.apply(null, ys) - Math.min.apply(null, ys)] : [0, 0]; };
+  var HAS = { box: 0, arrow: 0, tone: 0, text: 0, node: 0, dash: 0, stack: 0, sec: 0, pro: 0 };
+  FIGS.forEach(function (F) {
+    var texts = [];
+    F.prims.forEach(function (e) {
+      if (e.t === 'text') { if (e.txt && String(e.txt).trim()) { HAS.text++; texts.push(e); } return; }
+      if (e.box && e.p) { var bs = span(e.p); if (Math.min(bs[0], bs[1]) >= 20) HAS.box++; }
+      if (e.me || e.ms) HAS.arrow++;
+      if (e.d && e.s && e.w > 0 && e.d.some(function (d, i) { return i % 2 && d > 0; })) HAS.dash++;   /* a pattern with no gap ("1 0") is a solid line */
+      if (e.sec) { HAS.sec++; return; }
+      if (e.pro) HAS.pro++;
+      if (e.f && e.c && e.fi !== -1) { var q = e.t === 'ell' ? [[e.cx - e.rx, e.cy - e.ry], [e.cx + e.rx, e.cy + e.ry]] : e.p || [], sp = span(q);
+        if (Math.min(sp[0], sp[1]) >= 40 && lumOf(e.f) < .8) HAS.tone++;   /* a toned pole or field large enough to show hatching; a pale shaded face is a tint, not a tone */
+        /* a node: a small solid dot, the mark a node-link diagram puts at each place a line meets */
+        if (e.t === 'ell' && Math.max(e.rx, e.ry) <= 10 && Math.max(e.rx, e.ry) >= 2) { e.node = 1; HAS.node++; } } });
+    /* a label of several lines: lines set one under the other on one anchor, the stack the leading spaces */
+    var stacks = [];
+    texts.forEach(function (t) { if (t.rot) return; var hit = null;
+      stacks.forEach(function (st) { var p = st[st.length - 1], fs = Math.max(p.fs, t.fs), dy = t.y - p.y; if (!hit && p.a === t.a && Math.abs((p.ax != null ? p.ax : p.x) - (t.ax != null ? t.ax : t.x)) <= 3 && dy >= fs * .9 && dy <= fs * 2.4) hit = st; });
+      if (hit) hit.push(t); else stacks.push([t]); });
+    stacks.forEach(function (st) { if (st.length < 2) return; HAS.stack++; st.forEach(function (t) { t.yc = st[0].y; }); });   /* the first line holds; the lines under it move */
+  });
+  var fam = (S.spec.techniques || [])[0] || {}, RID = fam.id || 'reading-diagram', drawing = RID !== 'reading-diagram';
+  var F0 = FIGS[0] || { vb: [0, 0, 1000, 400] };
+  /* type and leading are held to the sizes at which every label keeps its room. Each label's box (mono, 0.6 em a glyph, less
+     its side bearings) grows from its anchor a step at a time. Against every stroke, solid mark, other label and the sheet's
+     edge it must keep a clear gap of 6 units, or, where the source set it closer, 70% of the source's own gap.
+     A label in a ruled table (between two long rules) stays inside the rules' run. The last clear step is the top of the
+     range. A gap of 6 units is wider than the heaviest line weight and the hand together, so the dials can be mixed freely.
+     A figure can hold either lower still (F.typeMax, F.leadMax). */
+  var typeTop = 1.15, leadTop = 1.25;
+  (function () {
+    var F = FIGS[0]; if (!F) return;
+    var PAD = 6, vb = F.vb, segs = [], T = [], rules = [];
+    var edge = [[vb[0], vb[1]], [vb[0] + vb[2], vb[1]], [vb[0] + vb[2], vb[1] + vb[3]], [vb[0], vb[1] + vb[3]]];
+    edge.forEach(function (p, k) { segs.push([p, edge[(k + 1) % 4], 0, -1 - k]); });   /* the sheet's edge */
+    F.prims.forEach(function (e, n) {
+      if (e.t === 'text') { if (e.txt && String(e.txt).trim()) T.push(e); return; }
+      var dark = e.f && e.c && e.fi !== -1 && lumOf(e.f) < .8;
+      if (!(e.s && e.w > 0) && !dark) return;
+      var q = e.t === 'ell' ? ellPts(e, 1) : e.p || [], half = e.s && e.w > 0 ? e.w / 2 : 0, closed = e.c || e.t === 'ell';
+      for (var j = 1; j < q.length + (closed ? 1 : 0); j++) segs.push([q[j - 1], q[j % q.length], half, n]);
+      if (dark && q.length > 2) segs.push([null, q, 0, n]);   /* a solid mark: its area too (a pale shaded face is not a mark) */
+      /* a long horizontal rule: the run of a table */
+      if (!e.c && e.p && e.p.length === 2 && Math.abs(e.p[0][1] - e.p[1][1]) < .5 && Math.abs(e.p[0][0] - e.p[1][0]) >= vb[2] * .4) rules.push([Math.min(e.p[0][0], e.p[1][0]), Math.max(e.p[0][0], e.p[1][0]), e.p[0][1]]);
+    });
+    var boxOf = function (e, s, L) { var w = String(e.txt).length * (e.fs * .6 + (e.ls || 0)) - e.fs * .1, l = (e.a === 'middle' ? -w / 2 : e.a === 'end' ? -w - e.fs * .05 : e.fs * .05), an = e.ax != null ? e.ax : e.x, off = e.x - an, y = e.yc != null ? e.yc + (e.y - e.yc) * L : e.y;
+      var a = (e.rot || 0) * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
+      return [[l, -e.fs * .74], [l + w, -e.fs * .74], [l + w, e.fs * .2], [l, e.fs * .2]].map(function (c) { return [an + s * (off + c[0] * ca - c[1] * sa), y + s * (c[0] * sa + c[1] * ca)]; }); };
+    var inside = function (p, q) { var c = false; for (var i = 0, j = q.length - 1; i < q.length; j = i++) { if ((q[i][1] > p[1]) !== (q[j][1] > p[1]) && p[0] < (q[j][0] - q[i][0]) * (p[1] - q[i][1]) / (q[j][1] - q[i][1]) + q[i][0]) c = !c; } return c; };
+    var sd = function (p, a, b) { var dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy || 1, t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L)); return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy); };
+    var X = function (a, b, c, d) { var o = function (p, q, r) { return (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]); }; return o(a, b, c) * o(a, b, d) < 0 && o(c, d, a) * o(c, d, b) < 0; };
+    var edges = function (q) { return q.map(function (p, i) { return [p, q[(i + 1) % q.length]]; }); };
+    /* the clear gap between a label's box and a stroke (less half its weight), a mark's area, or another label's box; 0 where they meet */
+    var gapSeg = function (B, g) {
+      if (!g[0]) { if (B.some(function (p) { return inside(p, g[1]); }) || g[1].some(function (p) { return inside(p, B); })) return 0;
+        var m = 1e9; edges(g[1]).forEach(function (h) { m = Math.min(m, gapSeg(B, [h[0], h[1], 0])); }); return m; }
+      var a = g[0], b = g[1]; if (inside(a, B) || inside(b, B)) return 0; var m2 = 1e9;
+      edges(B).forEach(function (h) { if (X(a, b, h[0], h[1])) m2 = 0; m2 = Math.min(m2, sd(h[0], a, b), sd(a, h[0], h[1]), sd(b, h[0], h[1])); });
+      return Math.max(0, m2 - g[2]); };
+    var gapBox = function (A, B) { if (A.some(function (p) { return inside(p, B); }) || B.some(function (p) { return inside(p, A); })) return 0; var m = 1e9;
+      edges(A).forEach(function (h) { edges(B).forEach(function (k) { if (X(h[0], h[1], k[0], k[1])) m = 0; m = Math.min(m, sd(h[0], k[0], k[1]), sd(k[0], h[0], h[1])); }); }); return m; };
+    var aabb = function (q) { var xs = q.map(function (p) { return p[0]; }), ys = q.map(function (p) { return p[1]; }); return [Math.min.apply(null, xs), Math.min.apply(null, ys), Math.max.apply(null, xs), Math.max.apply(null, ys)]; };
+    var meet = function (a, b, m) { return a[0] - m <= b[2] && b[0] - m <= a[2] && a[1] - m <= b[3] && b[1] - m <= a[3]; };
+    /* only what lies near a label can bound it: each label's reach (its box at the largest size and leading, plus the gap) picks its candidates once */
+    var reach = T.map(function (e) { return aabb(boxOf(e, 1, 1).concat(boxOf(e, typeTop, leadTop), boxOf(e, typeTop, 1), boxOf(e, 1, leadTop))); });
+    segs.forEach(function (g) { g.bb = g[0] ? aabb([g[0], g[1]]) : aabb(g[1]); });
+    /* a label set on a knockout (a balloon, a box filled with paper) sits over what is drawn before that knockout: those lines are hidden under it */
+    var cover = T.map(function (e) { var c = -1, pt = [e.ax != null ? e.ax : e.x, e.y - e.fs * .3];
+      F.prims.forEach(function (o, n) { if (o.t === 'text' || !o.c || !o.f || o.fi !== -1) return; var q = o.t === 'ell' ? ellPts(o, 1) : o.p || []; if (q.length > 2 && inside(pt, q)) c = Math.max(c, n); }); return c; });
+    var near = reach.map(function (r, i) { return segs.filter(function (g) { return (g[3] < 0 || g[3] > cover[i]) && meet(r, g.bb, PAD + 2); }); });
+    var nearT = reach.map(function (r, i) { return T.map(function (f, j) { return j; }).filter(function (j) { return j !== i && meet(r, reach[j], PAD + 2); }); });
+    /* a label between two long rules is a table cell: its run is the rules' common run */
+    var run = T.map(function (e) { var b = aabb(boxOf(e, 1, 1)), up = null, dn = null;
+      rules.forEach(function (r) { if (e.x < r[0] || e.x > r[1]) return; if (r[2] <= b[1] && (!up || r[2] > up[2])) up = r; if (r[2] >= b[3] && (!dn || r[2] < dn[2])) dn = r; });
+      return up && dn ? [Math.max(up[0], dn[0]), Math.min(up[1], dn[1])] : null; });
+    var gaps = function (s, L) { return T.map(function (e, i) { var B = boxOf(e, s, L), g = {};
+      near[i].forEach(function (h) { var k = 's' + h[3], d = gapSeg(B, h); if (g[k] == null || d < g[k]) g[k] = d; });
+      nearT[i].forEach(function (j) { g['t' + j] = gapBox(B, boxOf(T[j], s, L)); });
+      if (run[i]) { var b = aabb(B); g.l = b[0] - run[i][0]; g.r = run[i][1] - b[2]; } return g; }); };
+    var g0 = gaps(1, 1), clear = function (s, L) { return gaps(s, L).every(function (g, i) { return Object.keys(g).every(function (k) {
+      var b = g0[i][k]; if (b == null) return g[k] >= PAD;
+      if (k === 'l' || k === 'r') return g[k] >= Math.min(b, 0) - .01;   /* inside the run, or no further out than the source set it */
+      return b <= 0 || g[k] >= Math.min(b * .7, PAD) - .01; }); }); };
+    for (var s = 1.01; s <= typeTop + 1e-6; s += .01) if (!clear(s, 1)) { typeTop = s - .01; break; }
+    if (HAS.stack >= 2) for (var L = 1.01; L <= leadTop + 1e-6; L += .01) if (!clear(1, L) || !clear(typeTop, L)) { leadTop = L - .01; break; }
+  })();
+  if (F0.typeMax) typeTop = Math.min(typeTop, F0.typeMax);
+  if (F0.leadMax) leadTop = Math.min(leadTop, F0.leadMax);
+  typeTop = Math.max(1, Math.floor(typeTop * 100 + 1e-6) / 100); leadTop = Math.max(1, Math.floor(leadTop * 100 + 1e-6) / 100);
+  /* graph paper: a still filed on graph paper keeps it; the pitch is the source's 22 px square, in the figure's own units */
+  var pitch0 = F0.grid || +(22 * F0.vb[2] / Math.min(F0.vb[2], 678)).toFixed(2);
+
   var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
-  var read = (S.spec.techniques || [])[0] || {}, RID = read.id || 'reading-diagram';
+  var gated = function (o, path, is) { o.when = { path: path, is: is }; return o; };
   var TECH = [
-    { id: RID, short: RID === 'reading-diagram' ? 'DOAA' : 'DRW', name: read.name || 'Diagram of an argument', layer: 1, pass: 1, atoms: ['line', 'box', 'arrow', 'label'],
-      params: {
-        weight: leaf(1, 0.4, 3, 0.05, 'Line weight', '×', 'Every stroke of the figure at this multiple of its measured width.'),
-        hand: leaf(0, 0, 4, 0.05, 'Hand', 'u', 'How far a line may wander from its ruled path, in figure units. 0 is ruled; higher redraws every line, box and pole by hand.'),
-        corner: leaf(0, 0, 24, 0.5, 'Box corners', 'u', 'Corner radius of every box, in figure units. A box drawn round in the source keeps at least its own.'),
-        arrow: leaf(1, 0.4, 3, 0.05, 'Arrowheads', '×', 'Size of the arrowheads on directed lines, as a multiple of a head 7 strokes long.'),
-        hatch: leaf(0, 0, 1, 0.01, 'Tone as hatching', '', '0 fills every toned shape solid; 1 lays the same tone as hatching; between, both.'),
-        gap: leaf(4, 1.5, 14, 0.25, 'Hatch spacing', 'u', 'Distance between hatch lines, in figure units.'),
-        angle: leaf(45, 0, 180, 1, 'Hatch angle', '°', 'Direction of the hatch lines.'),
-        type: leaf(1, 0.7, 1.6, 0.01, 'Type size', '×', 'Every label at this multiple of its measured size, from its own anchor.'),
-        seed: leaf(7, 1, 99, 1, 'Seed', '', 'Re-rolls the hand: where each line wanders.')
-      },
-      implementation: (read.implementation || 'Each claim of the text is drawn as boxes, poles and arrows with a numbered caption.') + ' The geometry is measured from the source figure; the engine redraws it with weight, hand, corners, arrowheads, hatched tone and type size as dials.' }
+    { id: RID, short: RID === 'reading-diagram' ? 'DOAA' : 'DRW', name: fam.name || 'Diagram of an argument', layer: 1, pass: 1, atoms: ['line', 'box', 'arrow', 'label'],
+      params: (function () { var P = {};
+        /* in pass order: the sheet, the tones, the line, the marks on the line, the labels */
+        P.ground = { value: F0.grid ? 1 : 0, options: [{ v: 0, label: 'Blank' }, { v: 1, label: 'Graph paper' }], label: 'Ground', note: 'What the figure is drawn on: a blank sheet or ruled graph paper.' };
+        P.pitch = gated(leaf(Math.round(pitch0 * 10) / 10, Math.round(pitch0 * .6), Math.round(pitch0 * 1.8), .5, 'Grid pitch', 'u', 'Graph-paper square, in figure units. Acts with Ground on Graph paper.'), 'ground', [1]);
+        if (HAS.sec) { P.sec = { value: 1, options: [{ v: 1, label: 'Hatched' }, { v: 0, label: 'Solid' }], label: 'Section', note: 'How a cut wall is filled: section lining, or solid black, the drafting convention for a thin wall.' };
+          P.sgap = gated(leaf(3, 2.5, 5, .1, 'Lining spacing', 'u', 'Distance between the section lines, in figure units, at the drafting standard of 45°. Acts with Section on Hatched.'), 'sec', [1]); }
+        if (HAS.tone) { P.hatch = { value: 0, options: [{ v: 0, label: 'Solid' }, { v: 1, label: 'Hatched' }], label: 'Tone', note: 'How a toned shape is filled: solid ink, or the same tone laid as hatching.' };
+          P.gap = gated(leaf(4, 3.5, 8, .25, 'Hatch spacing', 'u', 'Distance between hatch lines, in figure units. Acts with Tone on Hatched.'), 'hatch', [1]);
+          P.angle = gated(leaf(45, 0, 180, 1, 'Hatch angle', '°', 'Direction of the hatch lines. Acts with Tone on Hatched.'), 'hatch', [1]); }
+        P.weight = leaf(1, .6, 2, .05, 'Line weight', '×', 'Every stroke of the figure at this multiple of its measured width.');
+        if (HAS.pro) P.profile = leaf(1, 1, 2.4, .05, 'Profile line', '×', 'The silhouette of each object and the floor line, heavier than the lines inside it: the weight of the profile against the detail.');
+        P.hand = drawing ? leaf(0, 0, .6, .02, 'Hand', 'u', 'How far a line may wander from its ruled path, in figure units: 0 is drawn with instruments, higher is a freehand drawing of the same object, in long gentle strokes.')
+          : leaf(0, 0, 1.5, .05, 'Hand', 'u', 'How far a line may wander from its ruled path, in figure units. 0 is ruled; higher redraws every line, box and pole by hand.');
+        if (HAS.box && !drawing) P.corner = leaf(0, 0, 8, .25, 'Box corners', 'u', 'Corner radius of every box, in figure units. A box drawn round in the source keeps at least its own.');
+        if (HAS.dash) P.dash = leaf(1, .5, 2.5, .05, 'Dash length', '×', 'The dashes and gaps of every dashed line, as a multiple of the measured pattern.');
+        if (HAS.node >= 3) P.node = leaf(1, .6, 1.8, .05, 'Node size', '×', 'Radius of every node dot, as a multiple of its measured size.');
+        if (HAS.arrow) P.arrow = leaf(1, .6, 2, .05, 'Arrowheads', '×', 'Size of the arrowheads on directed lines, as a multiple of a head 7 strokes long.');
+        /* type is a dial where the figure is set in type: two corner headings are not enough for it to read */
+        if (HAS.text >= 4) P.type = leaf(1, .85, typeTop, .01, 'Type size', '×', 'Every label at this multiple of its measured size, from its own anchor. Held to the range where no label meets a line or the edge of the sheet.');
+        if (HAS.stack >= 2) P.lead = leaf(1, .85, leadTop, .01, 'Leading', '×', 'Line spacing inside a label of several lines, as a multiple of the measured spacing; the first line holds its place.');
+        return P; })(),
+      implementation: (fam.implementation || 'Each claim of the text is drawn as boxes, poles and arrows with a numbered caption.') + ' The geometry is measured from the source figure; the engine redraws it, and each dial is a decision of the drawing that the figure has: ground, line weight, hand, box corners, dashes, nodes, arrowheads, tone and the setting of the labels.' }
   ];
   var keep = (S.spec.techniques || []).filter(function (t) { return t.id !== RID; });
   S.spec.techniques = TECH.concat(keep);
-  S.spec.pass_order = ['ground · plate', 'tone · fills, solid or hatched', 'line · every stroke, ruled or by hand', 'arrowheads', 'labels'];
-  S.body = [S.body[0], 'The figure is redrawn here from its own geometry, measured from the source page: every box, pole, arrow and label. The dials change how it is drawn: line weight, a ruled or hand line, box corners, arrowhead size, tone as solid fill or hatching, and type size.'];
-  S.paramsHint = 'How the diagram is drawn. Figure units are the source figure’s own.';
+  S.spec.pass_order = ['ground · blank or graph paper', 'tone · fills, solid or hatched', 'line · every stroke, ruled or by hand', 'dashes, nodes and arrowheads', 'labels · size and leading'];
+  S.body = [S.body[0], 'The figure is redrawn here from its own geometry, measured from the source page: every box, pole, arrow and label. The dials are the decisions of the drawing, offered where the figure has the mark: the ground, the line’s weight and hand, box corners, dash length, node and arrowhead size, tone as solid fill or hatching, and the size and leading of the labels.'];
+  S.paramsHint = 'How the figure is drawn. Figure units are the source figure’s own.';
   S.liveOnLoad = false; delete S.live;
 
   /* seeded smooth noise along a line */
   function hash(n, s) { var h = Math.imul((n | 0) ^ Math.imul(s | 0, 0x9E3779B1), 0x85EBCA6B); h ^= h >>> 13; h = Math.imul(h, 0xC2B2AE35); h ^= h >>> 16; return (h >>> 0) / 4294967296 * 2 - 1; }
   function noise(x, s) { var i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return hash(i, s) * (1 - u) + hash(i + 1, s) * u; }
   /* a polyline redrawn by hand: subdivided every ~5 units and pushed off its path along the normal */
-  function wobble(pts, closed, amt, seed) {
+  function wobble(pts, closed, amt, seed, hf) {
     if (!amt) return pts;
-    var out = [], acc = 0, n = pts.length, segs = closed ? n : n - 1;
+    var out = [], acc = 0, n = pts.length, segs = closed ? n : n - 1, tot = 0;
+    for (var q = 0; q < segs; q++) tot += Math.hypot(pts[(q + 1) % n][0] - pts[q][0], pts[(q + 1) % n][1] - pts[q][1]);
+    /* the wander at distance d along the line: a long swell, and on a diagram a short tremor on top. A closed shape's wander
+       comes round to where it began, so the shape closes without a hook where its stroke starts and ends */
+    var raw = function (d) { return noise(d / 22, seed) + (hf ? noise(d / 7, seed + 9) * .35 : 0); };
+    var off = function (d) { if (!closed || !tot) return raw(d) * amt; var t = d / tot; return (raw(d) * (1 - t) + raw(d - tot) * t) * amt; };
     for (var k = 0; k < segs; k++) {
       var A = pts[k], B = pts[(k + 1) % n], dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, m = Math.max(1, Math.ceil(L / 5));
-      for (var j = 0; j < m; j++) { var t = j / m, d = acc + L * t, o = noise(d / 22, seed) * amt + noise(d / 7, seed + 9) * amt * .35; out.push([A[0] + dx * t + nx * o, A[1] + dy * t + ny * o]); }
+      for (var j = 0; j < m; j++) { var t = j / m, o = off(acc + L * t); out.push([A[0] + dx * t + nx * o, A[1] + dy * t + ny * o]); }
       acc += L;
     }
-    if (!closed) { var Z = pts[n - 1], o2 = noise(acc / 22, seed) * amt; var P = pts[n - 2] || Z, dx2 = Z[0] - P[0], dy2 = Z[1] - P[1], L2 = Math.hypot(dx2, dy2) || 1; out.push([Z[0] - dy2 / L2 * o2, Z[1] + dx2 / L2 * o2]); }
+    if (!closed) { var Z = pts[n - 1], o2 = off(acc); var P = pts[n - 2] || Z, dx2 = Z[0] - P[0], dy2 = Z[1] - P[1], L2 = Math.hypot(dx2, dy2) || 1; out.push([Z[0] - dy2 / L2 * o2, Z[1] + dx2 / L2 * o2]); }
     return out;
   }
   function roundRect(p, r) { /* p: 4 corners of a rect, clockwise from top-left */
@@ -112,11 +235,11 @@ window.RD_FIG=[{"vb":[0,0,1000,480],"ground":[255,255,255],"prims":[{"t":"poly",
     if (r <= 0.3) return p; var out = [], arc = function (cx, cy, a0) { for (var i = 0; i <= 6; i++) { var a = a0 + i / 6 * Math.PI / 2; out.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } };
     arc(x1 - r, y0 + r, -Math.PI / 2); arc(x1 - r, y1 - r, 0); arc(x0 + r, y1 - r, Math.PI / 2); arc(x0 + r, y0 + r, Math.PI); return out;
   }
-  function ellPts(e) { var out = [], n = Math.max(24, Math.min(96, Math.round((e.rx + e.ry) * .6))); for (var i = 0; i < n; i++) { var a = i / n * Math.PI * 2; out.push([e.cx + Math.cos(a) * e.rx, e.cy + Math.sin(a) * e.ry]); } return out; }
-  function lum(c) { return (.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) / 255; }
+  function ellPts(e, s) { var rx = e.rx * s, ry = e.ry * s, out = [], n = Math.max(24, Math.min(96, Math.round((rx + ry) * .6))); for (var i = 0; i < n; i++) { var a = i / n * Math.PI * 2; out.push([e.cx + Math.cos(a) * rx, e.cy + Math.sin(a) * ry]); } return out; }
+  function lum(c) { return lumOf(c); }
 
   S.render = function (canvas, w, h, dpr, V, done, overrides) {
-    var A = window.ART.params(S.spec, overrides || {}), Q = A[RID];
+    var A = window.ART.params(S.spec, overrides || {}), Q = Object.assign({ corner: 0, arrow: 1, hatch: 0, gap: 4, angle: 45, seed: 7, ground: 0, pitch: pitch0, type: 1, lead: 1, node: 1, dash: 1, profile: 1, sec: 1, sgap: 3 }, A[RID]);
     var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
     var paper = V.paper || '#FFFFFF', VI = V.inks || [], GR = V.ground || paper;
     var rgbOf = function (h) { var n = parseInt(String(h).slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
@@ -131,48 +254,65 @@ window.RD_FIG=[{"vb":[0,0,1000,480],"ground":[255,255,255],"prims":[{"t":"poly",
       x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip();
       x.fillStyle = GR; x.fillRect(bx, by, bw, bh);
       x.setTransform(k, 0, 0, k, ox, oy); x.lineJoin = 'round';
+      /* graph paper: even hairline squares at the pitch from the figure's origin, as the source's ruled ground */
+      if (+Q.ground === 1) { var g0 = Math.max(4, Q.pitch), gx0 = vb[0] - ((ox - bx) / k), gy0 = vb[1] - ((oy - by) / k), gx1 = gx0 + bw / k, gy1 = gy0 + bh / k;
+        x.strokeStyle = dark ? 'rgba(255,255,255,.075)' : 'rgba(18,18,30,.075)'; x.lineWidth = Math.max(1, dpr) / k; x.beginPath();
+        for (var gi = Math.ceil(gx0 / g0); gi * g0 <= gx1; gi++) { x.moveTo(gi * g0, gy0); x.lineTo(gi * g0, gy1); }
+        for (var gj = Math.ceil(gy0 / g0); gj * g0 <= gy1; gj++) { x.moveTo(gx0, gj * g0); x.lineTo(gx1, gj * g0); }
+        x.stroke(); }
       var seed = Q.seed | 0, minW = 0.6 / k;
+      var hatchIn = function (hp, rule, path, style, gap, ang, lw) {
+        /* a hatched shape is laid on paper first: what a solid fill would hide (a line run up to a pole, dashes into a hole) stays hidden */
+        path(hp, true); x.fillStyle = col([255, 255, 255], 1, -1); x.fill(rule);
+        x.save(); path(hp, true); x.clip(rule);
+        var xs = hp.map(function (q) { return q[0]; }), ys = hp.map(function (q) { return q[1]; }), mx = Math.min.apply(null, xs), Mx = Math.max.apply(null, xs), my = Math.min.apply(null, ys), My = Math.max.apply(null, ys);
+        var cx = (mx + Mx) / 2, cy = (my + My) / 2, R = Math.hypot(Mx - mx, My - my) / 2 + 2, a = ang * Math.PI / 180, dx = Math.cos(a), dy = -Math.sin(a);
+        x.strokeStyle = style; x.lineWidth = lw; x.beginPath();
+        for (var t = -R; t <= R; t += gap) { var px = cx - dy * t, py = cy + dx * t; x.moveTo(px - dx * R, py - dy * R); x.lineTo(px + dx * R, py + dy * R); }
+        x.stroke(); x.restore(); };
       F.prims.forEach(function (e, n) {
         if (e.t === 'text') return;
-        var pts = e.t === 'ell' ? ellPts(e) : (e.box ? roundRect(e.p, Math.max(e.rx || 0, Q.corner)) : e.p);
-        var hp = wobble(pts, e.c, Q.hand, seed + n * 17);
+        var pts = e.t === 'ell' ? ellPts(e, e.node ? Q.node : 1) : (e.box ? roundRect(e.p, Math.max(e.rx || 0, drawing ? 0 : Q.corner)) : e.p);
+        /* a hand keeps a small closed mark whole: a dot or a bar wanders by at most 7% of its width, so it stays a dot, not a blot */
+        var amt = Q.hand; if (amt && (e.c || e.t === 'ell')) { var s0 = span(pts); amt = Math.min(amt, .07 * Math.min(s0[0], s0[1])); }
+        /* the hand is seeded by where the mark is, so a fill and its outline drawn as two marks wander together */
+        var g0 = e.t === 'ell' ? [e.cx, e.cy] : (e.p && e.p[0]) || [0, 0], hp = wobble(pts, e.c || e.t === 'ell', amt, seed + Math.round(g0[0] * 7 + g0[1] * 13 + pts.length * 17), !drawing);
         var ring = function (q, cl) { q.forEach(function (pt, j) { if (j) x.lineTo(pt[0], pt[1]); else x.moveTo(pt[0], pt[1]); }); if (cl) x.closePath(); };
         /* a compound path (letters, cut-outs, several strokes in one) carries its other rings in e.h, drawn with its own fill rule */
         var path = function (q, cl) { x.beginPath(); ring(q, cl); if (e.h) e.h.forEach(function (r) { ring(r, cl); }); };
         var rule = e.fr === 'evenodd' ? 'evenodd' : 'nonzero';
-        /* tone: solid, hatched, or both */
-        if (e.f && e.c) {
-          var solid = 1 - Q.hatch, fo = (e.fo == null ? 1 : e.fo) * e.o;
+        /* a cut wall: section lining at its spacing and angle, or solid */
+        if (e.sec) {
+          if (+Q.sec === 1) hatchIn(hp, rule, path, col(e.f, e.o * .85, e.fi), Q.sgap, 45, Math.max(minW, .5 * Q.weight));
+          else { path(hp, true); x.fillStyle = col(e.f, e.o, e.fi); x.fill(rule); }
+        }
+        /* tone: solid or hatched */
+        else if (e.f && e.c) {
+          var hatched = +Q.hatch === 1, fo = (e.fo == null ? 1 : e.fo) * e.o;
           var light = e.fi === -1;   /* paper-colored fills stay solid: they knock out what is behind */
-          var bbx = hp.reduce(function (m, q) { return [Math.min(m[0], q[0]), Math.min(m[1], q[1]), Math.max(m[2], q[0]), Math.max(m[3], q[1])]; }, [1e9, 1e9, -1e9, -1e9]);
-          if (Math.min(bbx[2] - bbx[0], bbx[3] - bbx[1]) < Q.gap * 3) solid = 1;   /* a dot or a tick is too small to hatch: it stays a mark */
-          if (light || solid > 0) { path(hp, true); x.fillStyle = col(e.f, light ? fo : fo * solid, e.fi); x.fill(rule); }
-          if (!light && solid < 1) {
-            x.save(); path(hp, true); x.clip(rule);
-            var xs = hp.map(function (q) { return q[0]; }), ys = hp.map(function (q) { return q[1]; }), mx = Math.min.apply(null, xs), Mx = Math.max.apply(null, xs), my = Math.min.apply(null, ys), My = Math.max.apply(null, ys);
-            var cx = (mx + Mx) / 2, cy = (my + My) / 2, R = Math.hypot(Mx - mx, My - my) / 2 + 2, a = Q.angle * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a), g = Q.gap;
-            x.strokeStyle = col(e.f, fo * Q.hatch, e.fi); x.lineWidth = Math.max(minW, Math.min(g * .45, 1.1 * Q.weight)); x.beginPath();
-            for (var t = -R; t <= R; t += g) { var px = cx - dy * t, py = cy + dx * t; x.moveTo(px - dx * R, py - dy * R); x.lineTo(px + dx * R, py + dy * R); }
-            x.stroke(); x.restore();
-          }
+          var bb = span(hp);
+          if (e.node || Math.min(bb[0], bb[1]) < Q.gap * 3 || lum(e.f) >= .8) hatched = false;   /* a node, a dot or a tick stays a solid mark; a pale face stays a tint */
+          if (light || !hatched) { path(hp, true); x.fillStyle = col(e.f, fo, e.fi); x.fill(rule); }
+          else hatchIn(hp, rule, path, col(e.f, fo, e.fi), Q.gap, -Q.angle, Math.max(minW, Math.min(Q.gap * .45, 1.1 * Q.weight)));
         }
         /* line */
         if (e.s && e.w > 0) {
-          path(hp, e.c); x.strokeStyle = col(e.s, (e.so == null ? 1 : e.so) * e.o, e.si); x.lineWidth = Math.max(minW, e.w * Q.weight); x.lineCap = e.cap || 'butt';
-          x.setLineDash(e.d ? e.d.map(function (d) { return d * Math.max(.5, Q.weight); }) : []); x.stroke(); x.setLineDash([]);
+          path(hp, e.c); x.strokeStyle = col(e.s, (e.so == null ? 1 : e.so) * e.o, e.si); x.lineWidth = Math.max(minW, e.w * Q.weight * (e.pro ? Q.profile : 1)); x.lineCap = e.cap || 'butt';
+          x.setLineDash(e.d ? e.d.map(function (d) { return d * Math.max(.5, Q.weight) * Q.dash; }) : []); x.stroke(); x.setLineDash([]);
           /* arrowheads, where the source marked the line */
           var head = function (P, B) { var dx = P[0] - B[0], dy = P[1] - B[1], L = Math.hypot(dx, dy) || 1, s = Math.max(5, e.w * 7) * Q.arrow * .8, ux = dx / L, uy = dy / L;
-            x.beginPath(); x.moveTo(P[0], P[1]); x.lineTo(P[0] - ux * s - uy * s * .45, P[1] - uy * s + ux * s * .45); x.lineTo(P[0] - ux * s + uy * s * .45, P[1] - uy * s - ux * s * .45); x.closePath(); x.fillStyle = col(e.s, e.o, e.si); x.fill(); };
+            x.beginPath(); x.moveTo(P[0], P[1]); x.lineTo(P[0] - ux * s - uy * s * .45, P[1] - uy * s + ux * s * .45); x.lineTo(P[0] - ux * s + uy * s * .45, P[1] - uy * s - ux * s * .45); x.closePath(); x.fillStyle = e.hc ? col(e.hc, e.o, e.hci) : col(e.s, e.o, e.si); x.fill(); };
           if (e.me && hp.length > 1) head(hp[hp.length - 1], hp[Math.max(0, hp.length - 3)]);
           if (e.ms && hp.length > 1) head(hp[0], hp[Math.min(hp.length - 1, 2)]);
         }
       });
-      /* labels last, over the lines */
+      /* labels last, over the lines: each from its own anchor (a line set in several runs shares one), each stacked label led from its first line */
       F.prims.forEach(function (e) {
         if (e.t !== 'text') return;
-        var fam = e.ff === 'mono' ? '"JetBrains Mono", ui-monospace, monospace' : e.ff === 'serif' ? 'Georgia, "Times New Roman", serif' : 'Inter, "Helvetica Neue", Arial, sans-serif';
-        x.save(); x.translate(e.x, e.y); if (e.rot) x.rotate(e.rot * Math.PI / 180);
-        x.font = (e.it ? 'italic ' : '') + (e.fw || 400) + ' ' + (e.fs * Q.type).toFixed(2) + 'px ' + fam; x.textAlign = e.a === 'middle' ? 'center' : e.a === 'end' ? 'right' : 'left'; x.textBaseline = 'alphabetic';
+        var face = e.ff === 'mono' ? '"JetBrains Mono", ui-monospace, monospace' : e.ff === 'serif' ? 'Georgia, "Times New Roman", serif' : 'Inter, "Helvetica Neue", Arial, sans-serif';
+        var tx = e.ax != null ? e.ax + (e.x - e.ax) * Q.type : e.x, ty = e.yc != null ? e.yc + (e.y - e.yc) * Q.lead : e.y;
+        x.save(); x.translate(tx, ty); if (e.rot) x.rotate(e.rot * Math.PI / 180);
+        x.font = (e.it ? 'italic ' : '') + (e.fw || 400) + ' ' + (e.fs * Q.type).toFixed(2) + 'px ' + face; x.textAlign = e.a === 'middle' ? 'center' : e.a === 'end' ? 'right' : 'left'; x.textBaseline = 'alphabetic';
         if ('letterSpacing' in x) x.letterSpacing = (e.ls * Q.type).toFixed(2) + 'px';
         x.fillStyle = col(e.f || [21, 20, 24], e.o, e.fi); x.fillText(e.tt === 'uppercase' ? e.txt.toUpperCase() : e.txt, 0, 0); x.restore();
       });

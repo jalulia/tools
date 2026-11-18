@@ -1,7 +1,7 @@
 /* mg-figure · shared engine for plates drawn by Mindgut's A01 Reflection Identity page (PL-26…35): the helix studies
    and the count bars. Appended to each plate's study.js by _build/plates.py after that plate's mg-figure.js
    (window.MG_FIG: source page, canvas, which dials act on it, which palette family it takes).
-   Also the reflection-kit figures of the A07 microsite (PL-01, PL-02): record shown, lobe reach, dot pitch, line weight, focus, turn.
+   Also the reflection-kit figures of the A07 microsite (PL-01, PL-02): turn, focus, lobe reach, screen pitch, line weight.
    The page's own code draws the figure. It is loaded once into a hidden frame; its camera, step, focus and bar
    code is given a dial object (window.__P) and its inks a setter, and the figure's draw function paints straight
    into this plate at the figure's own size. Nothing in the source file changes. */
@@ -20,24 +20,26 @@
   }
   var FIG = window.MG_FIG || {}, ON = {}; (FIG.dials || []).forEach(function (k) { ON[k] = 1; });
   var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
+  var sw = function (value, opts, label, note) { return { value: value, options: opts.map(function (o, i) { return { v: i, label: o }; }), label: label, note: note }; };
   var ALL = {
-    tilt: leaf(0, -40, 15, 0.5, 'Tilt', '°', 'Tips the helix toward or away from you, added to the page’s own angle. Negative looks more from the side.'),
-    spin: leaf(0, -3.15, 3.15, 0.01, 'Turn', 'rad', 'Turns the helix about its axis.'),
-    rise: leaf(1, 0.4, 2.2, 0.01, 'Rise', '×', 'How tall the helix stands for its number of steps: low packs the turns, high opens them.'),
-    focus: leaf(5, 0, 12, 1, 'In focus', 'exchanges', 'How many of the newest exchanges are lit as in focus. The page holds 4 to 7; it draws 5.'),
-    bars: leaf(1, 0.34, 2, 0.01, 'Bars', '×', 'Number of bars, as a multiple of the page’s 30. The model handoffs move with them.'),
-    height: leaf(1, 0.4, 1.6, 0.01, 'Height', '×', 'Height of every bar against the frame.'),
-    depth: leaf(1, 0, 3, 0.01, 'Depth', '×', 'How deep each bar is drawn: 0 flattens it to its front face.'),
-    ring: leaf(1, 0.4, 2, 0.01, 'Mark size', '×', 'Size of the state mark over each bar: the ring, the dashed ring, the open arc and the stroke.'),
+    tilt: leaf(0, -20, 5, 0.5, 'Tilt', '°', 'Tips the helix toward or away from you, added to the page’s own angle. Held where the turns stay readable and inside the frame.'),
+    spin: leaf(0, -180, 180, 1, 'Turn', '°', 'Turns the helix about its axis.'),
+    rise: leaf(1, 0.8, 1.5, 0.01, 'Rise', '×', 'How tall the helix stands for its number of steps: low packs the turns, high opens them. Below 0.8 the turns collide; above 1.5 the stair thins to a thread in its card.'),
+    focus: leaf(5, 4, 7, 1, 'In focus', 'exchanges', 'How many of the newest exchanges are lit as in focus: the page holds 4 to 7.'),
+    bars: leaf(30, 10, 45, 1, 'Bars', '', 'How many bars stand in the ramp. The model handoffs move with them.'),
+    height: leaf(1, 0.65, 1.25, 0.01, 'Height', '×', 'Height of every bar against the frame: held clear of the brackets and the frame top, and tall enough to hold the frame.'),
+    depth: leaf(1, 0, 2, 0.01, 'Depth', '×', 'How deep each bar is drawn: 0 flattens it to its front face.'),
+    ring: leaf(1, 0.4, 1.4, 0.01, 'Mark size', '×', 'Size of the state mark over each bar: the ring, the dashed ring, the open arc and the stroke.'),
     width: leaf(1, 0.3, 1.4, 0.01, 'Bar width', '×', 'Width of each bar against its slot. Below 1 opens a gap between the bars.'),
     ex: leaf(21, 7, 42, 1, 'Exchanges', '', 'Exchanges in the turn. The page’s turn is 21: 7 breaths of 3.'),
-    length: leaf(1, 0.1, 1, 0.01, 'Record shown', '×', 'How much of the record is drawn, oldest first. 1 is the whole record.'),
-    lobe: leaf(1, 0.4, 1.6, 0.01, 'Lobe reach', '×', 'How far each message’s lobe reaches from the center, as a multiple of the page’s.'),
-    pitch: leaf(1, 0.5, 2, 0.01, 'Dot pitch', '×', 'Spacing of the dots that fill the lobes. Smaller packs them; larger opens the screen.'),
-    weight: leaf(1, 0, 3, 0.01, 'Line weight', '×', 'Weight of the line that runs through the newest lobes.'),
-    moment: leaf(0, 0, 60, 0.1, 'Moment', 's', 's', 'The figure’s clock. 0 is the page’s still.')
+    lobe: leaf(1, 0.7, 1.4, 0.01, 'Lobe reach', '×', 'How long each message’s lobe of dots is drawn along its reach, against the page’s own.'),
+    pitch: leaf(1, 0.75, 1.6, 0.01, 'Screen pitch', '×', 'Spacing of the halftone screen the lobes are printed through, against the filed figure’s own: smaller packs a finer screen, larger opens bold dots.'),
+    weight: leaf(1, 0.5, 1.4, 0.01, 'Line weight', '×', 'Weight of the two fine lines that wind through the newest lobes, with their halo.'),
+    fade: leaf(40, 0, 80, 1, 'Fade', '%', 'How far the oldest step of the turn fades toward the ground; the newest stays full. The page fades it 40%.'),
+    cdots: sw(1, ['Off', 'On'], 'Character dots', 'One dot per character typed, printed on the top of each step.'),
+    recall: sw(1, ['Off', 'On'], 'Recall', 'The steps the newest one recalls, in violet: one to the origin, three to the other carrier, three to its own.')
   };
-  var P0 = {}; Object.keys(ALL).forEach(function (k) { if (ON[k]) P0[k] = ALL[k]; });
+  var P0 = {}; (FIG.dials || []).forEach(function (k) { if (!ALL[k]) return; var l = JSON.parse(JSON.stringify(ALL[k])), o = (FIG.set || {})[k]; if (o) Object.keys(o).forEach(function (q) { l[q] = o[q]; }); P0[k] = l; });
   var read = (S.spec.techniques || [])[0] || {}, TID = read.id || 'helix-form';
   var TECH = [{ id: TID, short: TID === 'count-bars' ? 'BAR' : 'HLX', name: read.name || 'Helix form', layer: 1, pass: 1, atoms: TID === 'count-bars' ? ['bar', 'isometric', 'count'] : ['helix', 'step', 'camera'], params: P0,
     implementation: (read.implementation || '') + ' Drawn by the source page’s own code, with its camera, steps, focus and bars given dials.' }];
@@ -98,7 +100,28 @@
     ["pal=o.pal||{near:FOREST,far:'#0a4528',live:ACID,liveFar:'#a2bf36',ink:VOID,bg:'#f5f7f0'}", "pal=o.pal||{near:FOREST,far:(window.__FAR||'#0a4528'),live:ACID,liveFar:(window.__LFAR||'#a2bf36'),ink:VOID,bg:(window.__GBG||'#f5f7f0')}"],
     ["pal:{near:'#151b17',far:FOREST,live:'#f5f7f0',liveFar:'#cfdcc0',ink:'#151b17',bg:ACID}", "pal:(window.__VHP||{near:'#151b17',far:FOREST,live:'#f5f7f0',liveFar:'#cfdcc0',ink:'#151b17',bg:ACID})"],
     /* the reflection kit: lobes of dots seen down the axis (A07 c-r4, c-wl) */
-    ["var N=Math.min(o.upto||rec.N,rec.N),pr=cam(rec,0,o.spin||0,1,Math.max(N,2)),T=N>0?lobes(rec,pr,N,.8):[],sc=sz/1000,P=o.pitch||clamp(6.4/sc,8,17),", "var __P=" + Pq + ",N=Math.max(1,Math.min(Math.round((o.upto||rec.N)*(__P.length||1)),rec.N)),pr=cam(rec,0,o.spin||0,1,Math.max(N,2)),T=N>0?lobes(rec,pr,N,.8*(__P.lobe||1)):[],sc=sz/1000,P=(o.pitch||clamp(6.4/sc,8,17))*(__P.pitch||1),"],
+    ["var N=Math.min(o.upto||rec.N,rec.N),pr=cam(rec,0,o.spin||0,1,Math.max(N,2)),T=N>0?lobes(rec,pr,N,.8):[],sc=sz/1000,P=o.pitch||clamp(6.4/sc,8,17),", "var __P=" + Pq + ",N=Math.min(o.upto||rec.N,rec.N),pr=cam(rec,0,o.spin||0,1,Math.max(N,2)),T=N>0?lobes(rec,pr,N,.8):[],sc=sz/1000,P=__P.pitch?(window.__PB||17)*__P.pitch:(o.pitch||clamp(6.4/sc,8,17)),"],
+    /* the lobe: how long each message's lobe of dots runs along its reach (both pages) */
+    ["len=(.1+.0115*Math.sqrt(s.n))*p.sc*dn", "len=(.1+.0115*Math.sqrt(s.n))*p.sc*dn*(" + Pq + ".lobe||1)"],
+    /* the reflection kit card (A07 c-r4): its disc, scaled so the whole ring sits inside the card above its rule */
+    ["var u=w/100,ly=h*.76,sz=h*1.62,", "var u=w/100,ly=h*.76,sz=h*1.62*(window.__KZ||1),"],
+    /* the disc on lime (A07 c-wl): scaled (kz) to the filed still's disc */
+    ["var sz=w<600?Math.min(w,h)*1.04:Math.max(w,h)*1.12;", "var sz=(w<600?Math.min(w,h)*1.04:Math.max(w,h)*1.12)*(window.__KZ||1);"],
+    /* the ring of steps seen down the axis (A01 c-wave): the fade across the turn, the character dots */
+    ["age:function(k){return 1-(kE-k)/42*.4}", "age:function(k){return 1-(kE-k)/42*(" + Pq + ".fade!=null?" + Pq + ".fade/100:.4)}"],
+    ["dots:true,nonow:kE!==r.N,", "dots:" + Pq + ".cdots!==0,nonow:kE!==r.N,"],
+    /* struck type, set at the plate's own pixel density so numerals stay sharp when the figure is enlarged */
+    ["function strike(x,text,px,py,size,o){o=o||{};var d=Math.min(window.devicePixelRatio||1,2),", "function strike(x,text,px,py,size,o){o=o||{};var d=window.__SD||Math.min(window.devicePixelRatio||1,2),"],
+    /* one record, seven drawings (A01 spec7): the stair adds recall, as its caption says, and fills its card */
+    ["mode===4?{}", "mode===4?{ch:" + Pq + ".recall===0?null:chords(rec,b)}"],
+    ["tl=o.tilt||74,", "tl=o.tilt||window.__TL||74,"],
+    /* the ring of steps (A01 c-wave) lays the page's tooth over its canvas; a plate that lays its own tooth over the whole card turns it off */
+    ["{seed:fk+3});\ntiles();x.save();x.setTransform(1,0,0,1,0,0);x.fillStyle=x.createPattern(toothT,'repeat');x.fillRect(", "{seed:fk+3});\ntiles();x.save();x.setTransform(1,0,0,1,0,0);x.fillStyle=x.createPattern(toothT,'repeat');if(!window.__NOTOOTH)x.fillRect("],
+    /* the steps' keylines fade less than their faces where a plate asks (far steps keep their outline) */
+    ["keyc=cs(mixc(P.keyc,bgc,fade*.8),", "keyc=cs(mixc(P.keyc,bgc,fade*.8*(window.__KF==null?1:window.__KF)),"],
+    ["{fit:[wd?300:110,46,wd?700:890,hh-46]}", "{fit:[wd?300:(window.__FX||110),46,wd?700:1000-(window.__FX||110),hh-46]}"],
+    /* the grammar helix on black (A01 c-gram): its fit box, so the cage fills its card as filed */
+    ["fit:[70,w>700?84:150,930,hh-36],fitMax:5", "fit:window.__GF?[window.__GF[0],window.__GF[1],1000-window.__GF[0],hh-window.__GF[2]]:[70,w>700?84:150,930,hh-36],fitMax:5"],
     ["i,b=o.b||0,lim=N-2*b;T.sig=o.sig||null;", "i,b=(o.b&&__P.focus!=null)?__P.focus:(o.b||0),lim=N-2*b;T.sig=o.sig?o.sig+JSON.stringify(__P)+(window.__KSIG||''):null;"],
     ["Tc.sig=o.sig?o.sig+'c':null;", "Tc.sig=T.sig?T.sig+'c':null;"],
     ["x.lineWidth=(ps===1?5.5:ps===2?1.1:.7)/sc;", "x.lineWidth=(ps===1?5.5:ps===2?1.1:.7)*(__P.weight==null?1:__P.weight)/sc;"],
@@ -107,10 +130,10 @@
     /* the count bars */
     ["var u=w/100,n=30,", "var u=w/100,n=Math.max(4,Math.round(30*(" + Pq + ".bars||1))),"],
     ["seg=[[1,'MODEL I'],[11,'MODEL II'],[21,'MODEL III']]", "seg=[[1,'MODEL I'],[1+Math.round(10*n/30),'MODEL II'],[1+Math.round(20*n/30),'MODEL III']]"],
-    ["box(x,x0+(k-1)*bw,base,bw,(8+k*.82+S.amp*70)*u,3.6*u,", "box(x,x0+(k-1)*bw,base,bw*(" + Pq + ".width||1),(8+k*.82*30/n+S.amp*70)*u*(" + Pq + ".height||1),3.6*u*(" + Pq + ".depth==null?1:" + Pq + ".depth),"],
+    ["box(x,x0+(k-1)*bw,base,bw,(8+k*.82+S.amp*70)*u,3.6*u,", "box(x,x0+(k-1)*bw,base,bw*(" + Pq + ".width||1),(8+k*.82*30/n+S.amp*70)*u*(" + Pq + ".height||1),3.6*u*(" + Pq + ".depth==null?1:" + Pq + ".depth)*Math.min(1,30/n),"],
     ["cx=(i+.5)/4*(w-16*u)+8*u,bw=8.5*u,", "cx=(i+.5)/4*(w-16*u)+8*u,bw=8.5*u*(" + Pq + ".width||1),"],
     ["bh=[19,13,23,16][i]*u,", "bh=[19,13,23,16][i]*u*(" + Pq + ".height||1),"],
-    ["R=4.4*u;", "R=4.4*u*(" + Pq + ".ring||1);"],
+    ["R=4.4*u;", "R=4.4*u*(" + Pq + ".ring||1);gy-=(2.2*((" + Pq + ".depth==null?1:" + Pq + ".depth)-1)+4.4*((" + Pq + ".ring||1)-1))*u;"],
     ["box(x,px,base,bw,bh,5*u,", "box(x,px,base,bw,bh,5*u*(" + Pq + ".depth==null?1:" + Pq + ".depth),"],
     ["M=21,cw=(w-22*u)/M,base=h*.86,uh=(h*.58)/M", "M=Math.round(" + Pq + ".ex||21),cw=(w-22*u)/M,base=h*.86,uh=(h*.58)/M*(" + Pq + ".height||1)"],
     ["box(x,X,base,cw*.84,sp*uh,cw*.5,", "box(x,X,base,cw*.84*(" + Pq + ".width||1),sp*uh,cw*.5*(" + Pq + ".depth==null?1:" + Pq + ".depth),"],
@@ -145,27 +168,69 @@
     });
     return boot;
   }
+  /* the microsite's paper grain (A07): dark and light specks, denser in some places than others. Laid at the plate's
+     own pixels over the whole panel, so it never tiles. */
+  var GC = {};
+  function grain(W, H) {
+    var key = W + 'x' + H; if (GC[key]) return GC[key];
+    var c = document.createElement('canvas'); c.width = W; c.height = H;
+    var g = c.getContext('2d'), im = g.createImageData(W, H), d = im.data, a = 977, i, j, o = 0;
+    function r() { a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
+    for (j = 0; j < H; j++) for (i = 0; i < W; i++, o += 4) {
+      var dn = .88 + .12 * Math.sin(i / W * 7.3 + 1) * Math.sin(j / H * 5.1 + 2), q = r(), lt = r() < .4;
+      d[o] = d[o + 1] = d[o + 2] = lt ? 255 : 21; d[o + 3] = Math.pow(q, 2.4) * (lt ? 22 : 40) * dn;
+    }
+    g.putImageData(im, 0, 0); GC[key] = c; return c;
+  }
+  /* the Reflection Identity page's sheet (A01): a tooth of light and dark specks with faint fibers, which the page lays
+     over its figures. Generated here at the panel's own pixels, so it never tiles. */
+  var TC = {};
+  function tooth(W, H) {
+    var key = W + 'x' + H; if (TC[key]) return TC[key];
+    var c = document.createElement('canvas'); c.width = W; c.height = H;
+    var g = c.getContext('2d'), im = g.createImageData(W, H), d = im.data, a = 4421, i;
+    function r() { a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
+    for (i = 0; i < d.length; i += 4) { var v = r(); if (v > .5) { d[i] = d[i + 1] = d[i + 2] = 255; d[i + 3] = (v - .5) * 30; } else { d[i] = 24; d[i + 1] = 36; d[i + 2] = 22; d[i + 3] = (.5 - v) * 30; } }
+    g.putImageData(im, 0, 0); g.lineWidth = .6;
+    for (i = Math.round(30 * W * H / (192 * 192)); i > 0; i--) {
+      var fx = r() * W, fy = r() * H, fa = r() * Math.PI * 2, fl = 5 + r() * 11;
+      g.strokeStyle = 'rgba(70,92,60,' + (.04 + r() * .06) + ')'; g.beginPath(); g.moveTo(fx, fy);
+      g.quadraticCurveTo(fx + Math.cos(fa) * fl * .5 + (r() - .5) * 5, fy + Math.sin(fa) * fl * .5 + (r() - .5) * 5, fx + Math.cos(fa) * fl, fy + Math.sin(fa) * fl); g.stroke();
+    }
+    TC[key] = c; return c;
+  }
   function paint(E, canvas, x, V, Q, dpr, t) {
     var W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h, win = E.w, P = {};
-    Object.keys(ALL).forEach(function (k) { P[k] = k in Q ? Q[k] : ALL[k].value; }); if (!ON.focus) delete P.focus; win.__P = P;
+    Object.keys(ALL).forEach(function (k) { P[k] = k in Q ? Q[k] : ALL[k].value; }); if (!ON.focus) delete P.focus;
+    P.spin = (+P.spin || 0) * Math.PI / 180; P.bars = (+P.bars || 30) / 30;
+    ['lobe', 'pitch', 'weight', 'fade', 'cdots', 'recall'].forEach(function (k) { if (!ON[k]) delete P[k]; });
+    win.__P = P; win.__KZ = FIG.kz || 1; win.__FX = FIG.fx || 0; win.__GF = FIG.gf || null; win.__PB = FIG.pbase || 17; win.__TL = FIG.tl || 0; win.__NOTOOTH = !!FIG.tooth; win.__KF = FIG.kf == null ? null : FIG.kf;
     var K = Object.assign({}, V.inks || S.variants[0].inks, { dark: FIG.family === 'dark' });
     if (K.halo) { win.__KI = { halo: K.halo, body: K.body, core: K.core }; win.__KL = K.line; win.__KLIVE = K.focus; win.__GBG = K.ground; win.__KSIG = [K.halo, K.body, K.core, K.focus].join(''); if (win.__setNow) win.__setNow(K.now); }
     else try { win.__setInk(K); } catch (e) { console.error('[mg-figure] inks', e); }
     win.__T = t; x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = V.paper || '#FFFFFF'; x.fillRect(0, 0, W, H);
+    if (FIG.grain) x.drawImage(grain(W, H), 0, 0); /* the stock's grain runs to the plate's edge, margin and card alike */
     S.panels.forEach(function (p) {
       var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, cw = bw / dpr, ch = bh / dpr;
       x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip(); x.fillStyle = K.ground; x.fillRect(bx, by, bw, bh);
+      if (FIG.grain) x.drawImage(grain(Math.ceil(bw), Math.ceil(bh)), Math.floor(bx), Math.floor(by));
       var fw = FIG.w || cw, fh = FIG.h || ch, cr = FIG.crop || [0, 0, 1, 1], vw = fw * (cr[2] - cr[0]), vh = fh * (cr[3] - cr[1]), k = Math.min(cw / vw, ch / vh), ox = bx + (bw - vw * k * dpr) / 2 - cr[0] * fw * k * dpr, oy = by + (bh - vh * k * dpr) / 2 - cr[1] * fh * k * dpr; /* the filed crop of the figure fills the panel */
+      win.__SD = Math.min(8, Math.ceil(dpr * k));
+      if (FIG.crop) { x.beginPath(); x.rect(Math.floor(ox + cr[0] * fw * k * dpr) - 1, Math.floor(oy + cr[1] * fh * k * dpr) - 1, Math.ceil(vw * k * dpr) + 2, Math.ceil(vh * k * dpr) + 2); x.clip(); } /* nothing past the filed crop shows */
       x.setTransform(dpr * k, 0, 0, dpr * k, ox, oy);
       try { E.draw(x, fw, fh, { cv: null, t: t, vis: true, live: true, ptr: null, down: false }, 0, dpr * k); } catch (err) { console.error('[mg-figure]', err); }
       x.setTransform(1, 0, 0, 1, 0, 0); x.restore();
+    });
+    if (FIG.tooth) x.drawImage(tooth(W, H), 0, 0); /* the page lays its tooth over the figure: here over the whole plate, card and margin, past the crop */
+    S.panels.forEach(function (p) {
+      var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v;
       x.strokeStyle = V.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
     });
   }
   S.render = function (canvas, w, h, dpr, V, done, overrides) {
     if (!READY) placeholder(canvas, V);
     var A = window.ART.params(S.spec, overrides || {}), Q = A[TID] || {};
-    load().then(function (E_) { READY = true; return E_; }).then(function (E) { paint(E, canvas, canvas.getContext('2d'), V, Q, dpr, +Q.moment || 0); if (done) done(); },
+    load().then(function (E_) { READY = true; return E_; }).then(function (E) { paint(E, canvas, canvas.getContext('2d'), V, Q, dpr, 0); if (done) done(); },
       function (err) { console.error('[mg-figure]', err); if (done) done(); });
     return false;
   };

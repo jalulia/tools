@@ -84,7 +84,14 @@ def short4(name):
     if len(s) < 4: s = (s + re.sub(r'[AEIOU ]', '', ''.join(w))[1:])[:4]
     return (s + 'XXXX')[:4]
 
+US_WORDS = [('colour', 'color'), ('Colour', 'Color'), ('grey', 'gray'), ('Grey', 'Gray'), ('flavour', 'flavor'), ('Flavour', 'Flavor'), ('centre', 'center'), ('Centre', 'Center'), ('favour', 'favor'), ('behaviour', 'behavior')]
+def us(s):
+    """US English in every caption we write; source titles keep their words, not their spelling"""
+    if not isinstance(s, str): return s
+    for a, b in US_WORDS: s = re.sub(r'\b' + a + r'(s|ed|ing|ful)?\b', lambda m: b + (m.group(1) or ''), s)
+    return s
 def clip(s, n=46):
+    s = us(s)
     s = re.sub(r'\s+', ' ', s or '').strip(); return s if len(s) <= n else s[:n - 1].rstrip() + '…'
 
 def plate(p):
@@ -154,8 +161,8 @@ def plate(p):
         'notes': ['Sources: ' + '; '.join(x['source'] + (' (' + x['href'] + ')' if x['href'] else '') for x in sources)] if sources else []}
     lede = p['lede'] or re.split(r'(?<=[.;])\s', p['read']['implementation'])[0].rstrip(';') + ('' if p['read']['implementation'].endswith('.') else '.')
     if n == 1: spec['techniques'] = [t for t in spec['techniques'] if t['id'] != 'plate-layout']
-    data = {'id': p['slug'], 'code': p['code'], 'fig': '4.' + str(int(p['code'][3:])), 'title': p['title'], 'kicker': p['code'] + ' · ' + p['family'], 'family': p['family'],
-            'lede': lede, 'body': body, 'source': (sources[0]['source'] if sources else 'Isolated figures') + (f" and {len(sources) - 1} more" if len(sources) > 1 else ''),
+    data = {'id': p['slug'], 'code': p['code'], 'fig': '4.' + str(int(p['code'][3:])), 'title': us(p['title']), 'kicker': p['code'] + ' · ' + p['family'], 'family': p['family'],
+            'lede': us(lede), 'body': [us(b) for b in body] if isinstance(body, list) else us(body), 'source': (sources[0]['source'] if sources else 'Isolated figures') + (f" and {len(sources) - 1} more" if len(sources) > 1 else ''),
             'spot': [int(lead[0][0][i:i + 2], 16) for i in (1, 3, 5)] if lead else [20, 20, 20], 'ref': {'w': int(W_U), 'h': int(round(H))},
             'variantLabel': 'Ground',
             'refHint': 'The figure is its own reference: it runs from its source page. The source is named in the spec.',
@@ -209,7 +216,7 @@ def main():
     for p in CFG['plates']:
         data, sources = plate(p)
         entries.append("    { id:%s, section:'plates', code:%s, family:%s, path:%s, title:%s, sub:%s, techniques:%s, variants:%s }" % (
-            json.dumps(p['slug']), json.dumps(p['code']), json.dumps(p['family']), json.dumps('plates/' + p['slug'] + '/'), json.dumps(p['title'], ensure_ascii=False),
+            json.dumps(p['slug']), json.dumps(p['code']), json.dumps(p['family']), json.dumps('plates/' + p['slug'] + '/'), json.dumps(us(p['title']), ensure_ascii=False),
             json.dumps(data['lede'] + (' ' + str(len(p['panels'])) + ' figures.' if len(p['panels']) != 1 else ''), ensure_ascii=False),
             json.dumps([p['read']['id']] + p.get('engine_techniques', []) + ['ink-palette', 'figure-ground'] + (['plate-layout'] if len(p['panels']) > 1 else [])), json.dumps([v['sw'] for v in data['variants']])))
         mapping.setdefault(p['read']['id'], {'name': p['read']['name'], 'family': p['family']})

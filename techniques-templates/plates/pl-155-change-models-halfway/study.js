@@ -29,7 +29,7 @@ window.STUDY={"id": "pl-155-change-models-halfway", "code": "PL-155", "fig": "4.
 })(window.STUDY);
 
 /* PL-155 · Change models halfway · the handoff on the steps · drawn by its source page's own code: A07_microsite.html #c-u2. See _build/engines/helix-step.js. */
-window.HX_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A07_microsite.html", "id": "c-u2", "dials": ["curl", "turn", "rise", "tread", "block", "yaw", "pitch", "sun", "crystal", "moment"], "w": 414, "h": 311};
+window.HX_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A07_microsite.html", "id": "c-u2", "dials": ["curl", "turn", "rise", "tread", "block", "yaw", "pitch", "sun", "crystal"], "range": {"turn": [-30, 15]}, "w": 414, "h": 311, "t": 2.7};
 
 /* helix-step · shared engine for the helix-step plates drawn by Mindgut's A07 microsite (PL-20…25, PL-155, PL-156).
    Appended to each plate's study.js by _build/plates.py after that plate's hx-figure.js (window.HX_FIG: source page,
@@ -49,29 +49,48 @@ window.HX_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
       im.src = p.src;
     });
   }
+  /* the page's paper grain (its --grain, laid over every band of the page): light and dark specks, two in five light,
+     denser in some places than others. Made here per device pixel from a hash with a slow noise for the density, so it
+     stays fine however large the plate is drawn and never repeats (the page tiles a 180 px square). */
+  function hash(i, j) { var h = Math.imul(i | 0, 0x27d4eb2d) ^ Math.imul((j + 0x3c6ef372) | 0, 0x165667b1); h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d); h = Math.imul(h ^ (h >>> 12), 0x297a2d39); h ^= h >>> 15; return (h >>> 0) / 4294967296; }
+  function vnoise(px, py) { var i = Math.floor(px), j = Math.floor(py), fx = px - i, fy = py - j; fx = fx * fx * (3 - 2 * fx); fy = fy * fy * (3 - 2 * fy); var a = hash(i, j + 50021), b = hash(i + 1, j + 50021), c = hash(i, j + 50022), d = hash(i + 1, j + 50022); return a + (b - a) * fx + (c - a) * fy + (a - b - c + d) * fx * fy; }
+  var GRAIN = null;
+  function grain(W, H) {
+    if (GRAIN && GRAIN.width === W && GRAIN.height === H) return GRAIN;
+    var c = document.createElement('canvas'); c.width = W; c.height = H; var g = c.getContext('2d'), im = g.createImageData(W, H), d = im.data, i, j, o = 0;
+    for (j = 0; j < H; j++) for (i = 0; i < W; i++, o += 4) { var dn = .76 + .24 * vnoise(i / 90, j / 120), lt = hash(i + 104729, j) < .4; d[o] = d[o + 1] = d[o + 2] = lt ? 255 : 21; d[o + 3] = Math.pow(hash(i, j), 2.4) * (lt ? 22 : 40) * dn; }
+    g.putImageData(im, 0, 0); return (GRAIN = c);
+  }
   var FIG = window.HX_FIG || {}, ON = {}; (FIG.dials || []).forEach(function (k) { ON[k] = 1; });
   var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
   var ALL = {
-    curl: leaf(1, 0.5, 2, 0.01, 'Curl', '×', 'Radius of the helix the steps climb: smaller winds the flight tighter, larger opens it toward a straight stair.'),
-    turn: leaf(0, -40, 40, 1, 'Turn', '°', 'Where on the helix the flight starts: turns the whole stair about its axis.'),
-    rise: leaf(1, 0.6, 1.8, 0.01, 'Rise', '×', 'Height of each step, as a multiple of the page’s.'),
-    tread: leaf(1, 0.6, 1.6, 0.01, 'Tread', '×', 'Depth of each step along the helix, as a multiple of the page’s.'),
-    block: leaf(1, 0.6, 1.3, 0.01, 'Block size', '×', 'Size of every step block against the spacing of the flight.'),
-    yaw: leaf(0, -0.6, 0.6, 0.01, 'Yaw', 'rad', 'Turns every block about its own vertical axis.'),
-    pitch: leaf(1, 0.5, 1.6, 0.01, 'Pitch', '×', 'How steeply the blocks are seen from above.'),
-    sun: leaf(1, 0, 1.6, 0.01, 'Sun', '×', 'Size of the sun disc behind the stair; 0 takes it away.'),
-    crystal: leaf(1, 0.4, 1.8, 0.01, 'Crystal size', '×', 'Size of each crystal the record sets into.'),
+    curl: leaf(1, 0.6, 2, 0.01, 'Curl', '×', 'Radius of the helix the steps climb: smaller winds the flight tighter, larger opens it toward a straight stair.'),
+    turn: leaf(0, -30, 30, 1, 'Turn', '°', 'Where on the helix the flight starts: turns the whole stair about its axis.'),
+    rise: leaf(1, 0.8, 1.35, 0.01, 'Rise', '×', 'Height of each step against the page’s: held where the flight stays clear of its labels and inside the frame.'),
+    tread: leaf(1, 0.75, 1.15, 0.01, 'Tread', '×', 'Depth of each step along the helix, against the page’s: held where the steps still join into one flight.'),
+    block: leaf(1, 0.9, 1.15, 0.01, 'Block size', '×', 'Size of every step block against the spacing of the flight: held where the blocks neither part into chips nor overlap.'),
+    yaw: leaf(0, -0.3, 0.3, 0.01, 'Yaw', 'rad', 'Turns every block about its own vertical axis; past ±0.3 neighbors interpenetrate.'),
+    pitch: leaf(1, 0.5, 1.6, 0.01, 'Viewing angle', '×', 'How steeply the blocks are seen from above, against the page’s own view.'),
+    sun: leaf(1, 0, 1.1, 0.01, 'Sun', '×', 'Size of the sun disc behind the stair; 0 takes it away. Held below the frame top.'),
+    crystal: leaf(1, 0.6, 1.15, 0.01, 'Crystal size', '×', 'Size of each crystal the record sets into: held clear of the labels.'),
     length: leaf(1, 0.3, 2.5, 0.01, 'Message length', '×', 'How many characters the example exchange has: every count in the figure follows it.'),
-    dotp: leaf(1, 0.6, 1.6, 0.01, 'Dot pitch', '×', 'Spacing of the counted dots.'),
+    dotp: leaf(1, 0.6, 1.3, 0.01, 'Dot pitch', '×', 'Spacing of the counted dots: held inside each panel.'),
+    radius: leaf(1, 0.75, 1.3, 0.01, 'Helix radius', '×', 'Radius of the helix the record winds up, against the page’s: tighter, the turns stack into a column; wider, each turn swings out.'),
+    dots: leaf(1, 0.6, 1.5, 0.01, 'Dot size', '×', 'Size of each counted dot (one to a character), against the page’s: held where neighbors never touch.'),
+    form: { value: 0, options: [{ v: 0, label: 'I' }, { v: 1, label: 'II' }, { v: 2, label: 'III' }], label: 'Crystal', note: 'Which of the page’s three crystal forms the exchange sets into: one for each model (I, II, III).' },
+    lift: leaf(1, 0.4, 2, 0.01, 'Offered lift', '×', 'How high the offered strand floats off the line, against the page’s: low, it is barely offered; high, it is held out.'),
+    strike: leaf(22, 8, 50, 1, 'Strike angle', '°', 'The angle of the stroke drawn through the struck strand, from a flat cancel to a steep cross-out.'),
+    mark: leaf(1, 0.6, 1.5, 0.01, 'Mark size', '×', 'Size of the app’s four state marks above the strands (ring, dashed ring, open arc, stroke).'),
     moment: leaf(0, 0, 24, 0.1, 'Moment', 's', 'Where in its loop the figure is shown. 0 is the page’s own still.')
   };
-  var P0 = {}; Object.keys(ALL).forEach(function (k) { if (ON[k]) P0[k] = ALL[k]; });
+  /* each figure's dials, with the ranges where every value of that figure holds (FIG.range narrows a shared one) */
+  var P0 = {}, RG = FIG.range || {}; (FIG.dials || []).forEach(function (k) { if (!ALL[k]) return; var o = ALL[k]; if (RG[k]) { o = JSON.parse(JSON.stringify(o)); o.range = RG[k]; } P0[k] = o; });
   var read = (S.spec.techniques || [])[0] || {};
   var TECH = [{ id: 'helix-step', short: 'HLX', name: 'Helix step', layer: 1, pass: 1, atoms: ['isometric', 'stair', 'block'], params: P0,
     implementation: (read.implementation || 'The record as a stair of blocks climbing a helix, one block to an exchange.') + ' Drawn by the source page’s own code, with its stair, block, sun and crystal helpers given dials.' }];
   S.spec.techniques = TECH.concat((S.spec.techniques || []).filter(function (t) { return t.id !== (read.id || 'helix-step'); }));
   S.spec.pass_order = ['ground · plate', 'sun disc', 'flight · one block to an exchange, on the helix', 'figures · walker, robot, pets, crystals', 'labels'];
-  S.body = [S.body[0], 'The figure is drawn here by its source page’s own code, with dials on how it is built: the helix the steps climb, the size and angle of each block, the sun, the crystals, and the moment in its loop. At the default dials it is the page’s own still.'];
+  S.body = [S.body[0], 'The figure is drawn here by its source page’s own code, with dials on how it is built: the helix the steps climb, the size and angle of each block, the sun and the crystals. At the default dials it is the page’s own still.'];
   S.paramsHint = 'Dials on the page’s own drawing. Multiples are of the page’s numbers.';
   S.liveOnLoad = false; delete S.live;
 
@@ -98,6 +117,8 @@ window.HX_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
     PAL('night', 'Night', { paper: '#151b17', block: '#d0ec60', model: '#2c3a30', sun: '#126b3d', line: '#eef2e7', ember: '#d9462f', violet: '#b9a3f0' }),
     PAL('cobalt', 'Cobalt', { paper: '#f3f5f8', block: '#1b3bd4', model: '#f8f9fc', sun: '#93a8ea', line: '#0e1122', ember: '#ef4a2b', violet: '#0e1122' })
   ];
+  /* a figure filed on another ground (the hero sits on white) opens on that ground */
+  if (FIG.paper && !CRY) { S.variants[0].paper = S.variants[0].inks.paper = FIG.paper; S.variants[0].sw[0] = FIG.paper; S.variants[0].rule = mix(FIG.paper, S.variants[0].inks.line, .16); }
   S.variantLabel = 'Palette';
   S.colorHint = 'Pick a palette; click an ink to change it. Each ink is one of the figure\u2019s own colors; block faces are shaded from it.' + (BOT != null ? ' The robot\u2019s head, brain, suit and antenna tip are here too.' : '');
   function setInks(win, k) {
@@ -123,7 +144,18 @@ window.HX_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
     ["function howFig(x,w,h,t,o){o=o||{};", "function howFig(x,w,h,t,o){o=o||{};var __Lm=((window.__P||{}).length||1),__L=function(v){return Math.max(1,Math.round(v*__Lm))};"],
     ["CY=[14,19,13],CM=[33,46,39],NY=46,NM=118", "CY=[14,19,13].map(__L),CM=[33,46,39].map(__L),NY=__L(46),NM=__L(118)"],
     ["p=Math.max(3.2,Math.min(10,", "p=((window.__P||{}).dotp||1)*Math.max(3.2,Math.min(10,"],
-    ["var JN={who:0,", "var JN=window.__JN={who:0,"]
+    ["var JN={who:0,", "var JN=window.__JN={who:0,"],
+    /* the climb (#c-climb): the helix's radius */
+    ["Rr=3.07,st=TAU/42", "Rr=3.07*((window.__P||{}).radius||1),st=TAU/42"],
+    /* every exchange crystallizes (#c-cryst): the counted dots' size, the crystal's form */
+    ["lg=Math.max(7,1.25*p),r=p*.33", "lg=Math.max(7,1.25*p),r=p*.33*((window.__P||{}).dots||1)"],
+    ["var res=crystal(x,kx,ky,R,0,still?2.2:(t||0)", "var res=crystal(x,kx,ky,R,(window.__P||{}).form||0,still?2.2:(t||0)"],
+    /* the four states (#c-r2): how far Offered floats, the angle of the stroke through Struck, the size of the state marks */
+    ["fl=i===2?S*(.34+.05*Math.sin(t*1.4)):0", "fl=i===2?S*(.34+.05*Math.sin(t*1.4))*((window.__P||{}).lift||1):0"],
+    ["x.moveTo(cx-S*.6,cy+S*.22);x.lineTo(cx+S*.6,cy-S*.26)", "var __sa=((window.__P||{}).strike==null?21.8:window.__P.strike)*Math.PI/180,__sl=.646*S;x.moveTo(cx-Math.cos(__sa)*__sl,cy-.02*S+Math.sin(__sa)*__sl);x.lineTo(cx+Math.cos(__sa)*__sl,cy-.02*S-Math.sin(__sa)*__sl)"],
+    ["glyph(x,cx,h*.27,3.3*u,i)", "glyph(x,cx,h*.27,3.3*u*((window.__P||{}).mark||1),i)"],
+    /* a held moment shows its tags at full strength (in the loop they fade in as each phase begins) */
+    ["if(J.cur!==ci){J.cur=ci;J.since=T}", "if(J.cur!==ci||window.__HOLD){J.cur=ci;J.since=window.__HOLD?T-9:T}"]
   ];
   var boot = null;
   function load() {
@@ -148,9 +180,12 @@ window.HX_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
     var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
     x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = V.paper || '#FFFFFF'; x.fillRect(0, 0, W, H);
     load().then(function (E_) { READY = true; return E_; }).then(function (E) {
+      /* the filed still may have been laid in as a placeholder: clear it whole, so no edge of it shows past a panel */
+      x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = V.paper || '#FFFFFF'; x.fillRect(0, 0, W, H);
       var win = E.w, P = {}; Object.keys(ALL).forEach(function (k) { P[k] = k in Q ? Q[k] : ALL[k].value; }); win.__P = P;
       var K = V.inks || S.variants[0].inks; setInks(win, K);
-      var m = +Q.moment || 0; if (win.__setRM) win.__setRM(m === 0); if (win.__JN) win.__JN.T = m === 0 ? win.__T0 : m;
+      /* the moment of the filed still (FIG.t, seconds into the figure's own loop; 0 is the page's reduced-motion still) */
+      var m = Q.moment != null ? +Q.moment : (+FIG.t || 0); win.__HOLD = true; if (win.__setRM) win.__setRM(m === 0); if (win.__JN) win.__JN.T = m === 0 ? win.__T0 : m;
       S.panels.forEach(function (p) {
         var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, cw = bw / dpr, ch = bh / dpr;
         x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip(); x.fillStyle = K.paper || K.ground || FIG.ground || '#f5f7f0'; x.fillRect(bx, by, bw, bh);
@@ -158,7 +193,7 @@ window.HX_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
         var fw = FIG.w || cw, fh = FIG.h || ch, cr = FIG.crop || [0, 0, 1, 1], vw = fw * (cr[2] - cr[0]), vh = fh * (cr[3] - cr[1]), k = Math.min(cw / vw, ch / vh), ox = bx + (bw - vw * k * dpr) / 2 - cr[0] * fw * k * dpr, oy = by + (bh - vh * k * dpr) / 2 - cr[1] * fh * k * dpr; /* the filed crop of the figure fills the panel */
         x.setTransform(dpr * k, 0, 0, dpr * k, ox, oy);
         try { E.draw(x, fw, fh, { cv: null, t: m, vis: true, live: true, ptr: null, down: false }, 0, dpr * k); } catch (err) { console.error('[helix-step]', err); }
-        x.setTransform(1, 0, 0, 1, 0, 0); x.restore();
+        x.setTransform(1, 0, 0, 1, 0, 0); if (FIG.grain !== false) x.drawImage(grain(Math.ceil(bw), Math.ceil(bh)), Math.floor(bx), Math.floor(by)); x.restore();
         x.strokeStyle = V.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
       });
       if (done) done();

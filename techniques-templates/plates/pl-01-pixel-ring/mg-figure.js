@@ -1,2 +1,3 @@
-/* PL-01 · Pixel ring · drawn by its source page's own code: A07_microsite.html #c-r4. See _build/engines/mg-figure.js. */
-window.MG_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A07_microsite.html", "id": "c-r4", "family": "kit", "dials": ["spin", "length", "lobe", "pitch", "weight", "focus"], "w": 276, "h": 207};
+/* PL-01 · Pixel ring · drawn by its source page's own code: A07_microsite.html #c-r4, the card above its rule (the filed still's crop),
+   its disc scaled (kz) to fill the card's height as filed (the bloom crops at the top, as in the still), on the microsite's paper grain. See _build/engines/mg-figure.js. */
+window.MG_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A07_microsite.html", "id": "c-r4", "family": "kit", "dials": ["spin", "focus", "lobe", "pitch", "weight"], "w": 276, "h": 207, "crop": [0, 0, 1, 0.755], "kz": 0.95, "grain": true, "set": {"lobe": {"range": [0.7, 1.2]}}};

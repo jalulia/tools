@@ -1,2 +1,3 @@
-/* PL-08 · Helix as a zigzag of dots · the figure is drawn by its source page's own code: A04_directions-v1.html #a-wave > div:nth-child(2) > figure:nth-child(1). See _build/engines/dot-record.js. */
-window.DR_FIG={"record": true, "wave": true, "src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A04_directions-v1.html", "sel": "#a-wave > div:nth-child(2) > figure:nth-child(1)", "w": 383, "h": 654};
+/* PL-08 · Helix as a zigzag of dots · the figure is drawn by its source page's own code: A04_directions-v1.html #a-wave > div:nth-child(2) > figure:nth-child(1) (#a-side).
+   dials: the figure's own decisions it offers (see ALL in _build/engines/dot-record.js); set: per-plate ranges and notes. */
+window.DR_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A04_directions-v1.html", "sel": "#a-wave > div:nth-child(2) > figure:nth-child(1)", "w": 383, "h": 654, "record": true, "wave": true, "dials": ["dot", "density", "spread", "reach", "focus", "chords", "seed"], "set": {"dot": {"range": [0.8, 1.35]}, "density": {"range": [0.6, 1.5]}, "focus": {"value": 6}}};

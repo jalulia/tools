@@ -42,9 +42,10 @@ A.fitText=(x,str,font,maxW,startSize)=>{ let s=startSize; for(let i=0;i<40;i++){
    A technique's params may carry schema leaves: { value, range:[lo,hi], step?, unit?, note? } (v1 leaves — plain numbers,
    strings, arrays — are still accepted and passed through). A.params(spec, overrides) resolves every leaf to its plain
    value, applying overrides keyed 'technique-id' → { 'path.to.leaf': value }, and returns { 'technique-id': params }.
-   A.paramLeaves(spec) lists the sliderable leaves for the plate's param rail. */
+   A.paramLeaves(spec) lists the sliderable leaves for the plate's param rail. A leaf with options:[{v,label},…] is a named
+   choice (a style, a finish, a mode): the rail shows it as a switch with each option named, never as a slider. */
 A.isLeaf=v=>!!v&&typeof v==='object'&&!Array.isArray(v)&&'value' in v;
 A.params=(spec,O)=>{ const out={}; O=O||{}; for(const t of (spec.techniques||[])){ const ov=O[t.id]||{}; const walk=(v,path)=>{ if(A.isLeaf(v))return path in ov?ov[path]:v.value; if(v&&typeof v==='object'&&!Array.isArray(v)){ const o={}; for(const k of Object.keys(v))o[k]=walk(v[k],path?path+'.'+k:k); return o; } return v; }; out[t.id]=walk(t.params||{},''); } return out; };
-A.paramLeaves=spec=>{ const L=[]; for(const t of (spec.techniques||[])){ const walk=(v,path)=>{ if(A.isLeaf(v)){ if(Array.isArray(v.range)&&typeof v.value==='number')L.push(Object.assign({tech:t.id,short:t.short,path},v)); return; } if(v&&typeof v==='object'&&!Array.isArray(v))for(const k of Object.keys(v))walk(v[k],path?path+'.'+k:k); }; walk(t.params||{},''); } return L; };
+A.paramLeaves=spec=>{ const L=[]; for(const t of (spec.techniques||[])){ const walk=(v,path)=>{ if(A.isLeaf(v)){ if(Array.isArray(v.options)&&v.options.length&&typeof v.value==='number'){ const vs=v.options.map(o=>+o.v); L.push(Object.assign({tech:t.id,short:t.short,path},v,{kind:'choice',range:[Math.min(...vs),Math.max(...vs)]})); } else if(Array.isArray(v.range)&&typeof v.value==='number')L.push(Object.assign({tech:t.id,short:t.short,path},v)); return; } if(v&&typeof v==='object'&&!Array.isArray(v))for(const k of Object.keys(v))walk(v[k],path?path+'.'+k:k); }; walk(t.params||{},''); } return L; };
 return A;
 })();

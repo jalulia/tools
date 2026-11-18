@@ -1,0 +1,514 @@
+{
+  "id": "ts-26-seen-in-section",
+  "code": "TS-26",
+  "title": "Seen in section",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "Riverbank",
+      "swatches": [
+        "#0C6ADF",
+        "#B3C5D7",
+        "#9B7C56",
+        "#55A33A",
+        "#A592DE"
+      ]
+    },
+    {
+      "id": "mg",
+      "label": "Mindgut",
+      "swatches": [
+        "#183586",
+        "#126B3D",
+        "#0A4528",
+        "#D0EC60",
+        "#FBFBF7"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "Ø",
+      "swatches": [
+        "#2F5AE6",
+        "#F4551E",
+        "#101014",
+        "#FFFFFF"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      972,
+      540
+    ],
+    "grammar": "cross-section in gouache: white sky, far hills on the waterline, deep-blue water with white wave strokes over a pale gravel riverbed that wedges up under the bank; brown speckled soil with pale branching roots; a turf bank with irises, small flowers and round trees"
+  },
+  "units": "design units, 1000 = plate width; the plate is 1000 × 556",
+  "palette": {
+    "paper": "#FBFBF7",
+    "water": "#0B6AE0",
+    "water_deep": "#1552C2",
+    "gravel": "#B9CADB",
+    "soil": "#9B7C56",
+    "root": "#DFC796",
+    "grass": "#4E9E37",
+    "iris": "#A08ADC",
+    "tree": "#43923F"
+  },
+  "techniques": [
+    {
+      "id": "section-ground",
+      "short": "SKY",
+      "name": "Rendering and sky",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "ground",
+        "rendering",
+        "grain"
+      ],
+      "params": {
+        "rendering": {
+          "value": 1,
+          "options": [
+            {
+              "v": 1,
+              "label": "Gouache"
+            },
+            {
+              "v": 2,
+              "label": "Line section"
+            }
+          ],
+          "label": "Rendering",
+          "note": "Painted section, or a technical section with hatching and hairlines"
+        },
+        "sky": {
+          "value": 1,
+          "options": [
+            {
+              "v": 1,
+              "label": "Day"
+            },
+            {
+              "v": 2,
+              "label": "Night"
+            }
+          ],
+          "label": "Sky",
+          "note": "Day leaves the sky blank Paper as in the deck; Night turns it to Ink"
+        },
+        "grain_amp": 0.03,
+        "grain_seed": 26
+      },
+      "limits": "At night the hills, the water and the garden darken toward night blue while the cut face stays lit, so the section still reads. The gouache grain is fixed at 3 % mono; above ~4 % it shows as dirt on the flat sky. The line section has no grain.",
+      "implementation": "The ground is one flat color behind everything. Gouache paints each region per pixel and adds a 3 % one-pixel grain; at night it mixes the hills (66 %), the water (42 %), the trees (45 %) and the grass (52 %) toward night blue. The line section draws contacts, hatching and symbols as hairlines on the same geometry, light on the night sky.",
+      "module": "lib/section-ground.js"
+    },
+    {
+      "id": "bank-profile",
+      "short": "BANK",
+      "name": "Ground line",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "profile",
+        "section",
+        "smooth-min"
+      ],
+      "params": {
+        "slope_deg": {
+          "value": 48,
+          "range": [
+            22,
+            72
+          ],
+          "unit": "°",
+          "label": "Bank slope",
+          "note": "Angle of the bank face from the riverbed up to the crest"
+        },
+        "crest_u": [
+          480,
+          286
+        ],
+        "bed_u": 402,
+        "bed_rise": 0.00019,
+        "upland_rise_u": 72,
+        "toe_round_u": 18,
+        "crest_round_u": 14,
+        "profile": "S(x) = smin(riverbed, smax(face, upland)); face = crest_y + (crest_x − x)·tan(slope)"
+      },
+      "limits": "Below ~22° the face runs under half the river and the toe leaves the plate’s left third; above ~72° the bank reads as a wall and the toe fillet folds.",
+      "implementation": "The riverbed, the bank face and the upland are three curves joined by a smooth minimum at the toe and a smooth maximum at the crest, so the section has one continuous ground line with rounded corners.",
+      "module": "lib/bank-profile.js"
+    },
+    {
+      "id": "river-view",
+      "short": "WAVE",
+      "name": "Water and far hills",
+      "layer": 1,
+      "pass": 2,
+      "atoms": [
+        "water",
+        "stroke",
+        "haze"
+      ],
+      "params": {
+        "water_u": {
+          "value": 102,
+          "range": [
+            40,
+            108
+          ],
+          "unit": "u",
+          "label": "Water level",
+          "note": "Height of the water surface above the riverbed"
+        },
+        "strokes": {
+          "value": 12,
+          "range": [
+            1.5,
+            40
+          ],
+          "unit": "/10k u²",
+          "label": "Wave strokes",
+          "note": "White strokes on the water, per 10 000 u² of water"
+        },
+        "horizon_u": 300,
+        "ridge_seed": 31,
+        "ridges": [
+          {
+            "tone": 0,
+            "peaks": [
+              [
+                318,
+                36,
+                62
+              ],
+              [
+                236,
+                24,
+                46
+              ],
+              [
+                392,
+                15,
+                34
+              ]
+            ]
+          },
+          {
+            "tone": 0.55,
+            "peaks": [
+              [
+                105,
+                50,
+                70
+              ],
+              [
+                22,
+                24,
+                48
+              ]
+            ]
+          },
+          {
+            "tone": 0.8,
+            "peaks": [
+              [
+                182,
+                34,
+                78
+              ],
+              [
+                40,
+                12,
+                40
+              ],
+              [
+                296,
+                7,
+                40
+              ]
+            ]
+          },
+          {
+            "tone": 1,
+            "peaks": [
+              [
+                430,
+                40,
+                46
+              ],
+              [
+                372,
+                12,
+                30
+              ]
+            ]
+          }
+        ],
+        "stroke_seed": 7,
+        "drift_u_s": [
+          2.2,
+          4.8
+        ]
+      },
+      "limits": "Above 108 u the water would reach the bank crest; under ~40 u the river is a shallow strip over the gravel. Above ~40 strokes per 10 000 u² the water turns white-on-blue and loses its depth.",
+      "implementation": "Water fills every column whose ground lies below the level, from the left edge to the shoreline. Strokes are arched, tapered dashes placed uniformly in the water; deeper strokes are longer and thicker. The far hills are four ridges drawn back to front, teal far to green near, each with a fractal crest, light on the flanks that face the upper left, fine dabbed flecks and haze toward the waterline; they stand on the waterline at any level.",
+      "module": "lib/river-view.js"
+    },
+    {
+      "id": "gravel-body",
+      "short": "GRVL",
+      "name": "Gravel beds and clay floor",
+      "layer": 2,
+      "pass": 3,
+      "atoms": [
+        "bed",
+        "contact",
+        "pinch-out",
+        "worley"
+      ],
+      "params": {
+        "depth_u": {
+          "value": 46,
+          "range": [
+            16,
+            96
+          ],
+          "unit": "u",
+          "label": "Gravel bed depth",
+          "note": "Thickness of both gravel beds: the riverbed wedge and the bed under the garden"
+        },
+        "contact_x_u": [
+          330,
+          560
+        ],
+        "peak_u": 316,
+        "base_u": {
+          "at": [
+            339,
+            421
+          ],
+          "slope": 0.28,
+          "per_depth": 0.6,
+          "floor": [
+            472,
+            0.45
+          ],
+          "floor_round": 40
+        },
+        "deep_u": [
+          455,
+          0.62
+        ],
+        "deep_dip": 0.28,
+        "deep_dip_from_u": 640,
+        "clay_u": 515,
+        "pebble_u": 3.6,
+        "seed": 61,
+        "wedge": "top = max(ground, contact), the contact rising from the riverbed to 316 u at x 560; base = 421 + 0.6 · (depth − 46) − 0.28 · (x − 339), levelling under the river at 472 + 0.45 · (depth − 46) u through a 40 u smooth minimum; the wedge pinches out where its base meets the contact",
+        "deep_bed": "top = 455 − 0.62 · (depth − 46) u under the garden, dipping 0.28 to the left of x 640, parallel to the wedge base, so the soil between them keeps one thickness",
+        "clay": "floor at 515 u; it cuts any gravel below it"
+      },
+      "limits": "Under ~16 u the riverbed is a skin 9 u thick at the steepest toe and the wedge pinches out at x ≈ 600. Above ~96 u the soil under the river thins to 20 u over the clay and the soil between the two beds to 54 u.",
+      "implementation": "Two gravel beds over a clay floor. The riverbed gravel wedges up under the bank and pinches out where its base meets the contact; the deep bed runs under the garden and dips left parallel to the wedge base, so the soil between them never tapers into a tongue. Depth thickens both, moves the wedge tip right and raises the deep bed toward the roots. Pebbles are elliptical Worley cells lit from the upper left; the clay is laminated.",
+      "module": "lib/gravel-body.js"
+    },
+    {
+      "id": "soil-grain",
+      "short": "SOIL",
+      "name": "Soil grain",
+      "layer": 2,
+      "pass": 4,
+      "atoms": [
+        "speck",
+        "stipple",
+        "mottle"
+      ],
+      "params": {
+        "specks": {
+          "value": 4,
+          "range": [
+            0.6,
+            24
+          ],
+          "unit": "/1000 u²",
+          "label": "Soil grain",
+          "note": "Pale and dark specks in the soil, per 1000 u²"
+        },
+        "size_u": [
+          0.45,
+          1.25
+        ],
+        "pale_share": 0.66,
+        "seed": 19
+      },
+      "limits": "Under ~0.6 per 1000 u² the soil reads as flat paint; above ~24 the specks touch and the soil turns to sand.",
+      "implementation": "One speck per jittered cell, its size and its pale or dark ink drawn from a hash of the cell, over a two-scale mottle; nothing repeats.",
+      "module": "lib/soil-grain.js"
+    },
+    {
+      "id": "root-growth",
+      "short": "ROOT",
+      "name": "Root growth",
+      "layer": 3,
+      "pass": 5,
+      "atoms": [
+        "branching",
+        "tropism",
+        "taper"
+      ],
+      "params": {
+        "depth_pct": {
+          "value": 60,
+          "range": [
+            20,
+            100
+          ],
+          "unit": "%",
+          "label": "Root depth",
+          "note": "How far the roots reach toward the gravel; at 100 % the tips touch it"
+        },
+        "generations": {
+          "value": 4,
+          "range": [
+            2,
+            5
+          ],
+          "step": 1,
+          "label": "Root branching",
+          "note": "Generations of roots, from the main root to the finest forks"
+        },
+        "habit": {
+          "value": 3,
+          "options": [
+            {
+              "v": 1,
+              "label": "Taproot"
+            },
+            {
+              "v": 2,
+              "label": "Fibrous"
+            },
+            {
+              "v": 3,
+              "label": "Mixed"
+            }
+          ],
+          "label": "Root habit",
+          "note": "One deep main root, a fan of fine roots, or a main root with crown roots"
+        },
+        "crowns_u": [
+          612,
+          655,
+          728,
+          856,
+          944
+        ],
+        "step_u": 2.2,
+        "fork_rate": [
+          0.15,
+          0.12,
+          0.1,
+          0.08
+        ],
+        "child_width": 0.6,
+        "steps_per_crown": 2600,
+        "trop_main": 0.16,
+        "trop_lateral": 0.009,
+        "wander_main": 0.13,
+        "wander_lateral": 0.17,
+        "min_soil_u": 7,
+        "seed": 4
+      },
+      "limits": "Five generations is the most that still reads as separate roots at plate size; one generation is a bare stick, so the range starts at two. Under ~20 % depth the system is only the crown.",
+      "implementation": "Each root walks in 2.2 u steps, turning toward straight down and wandering; it forks at a per-generation rate into children 0.62 × its width. It stops on the envelope ground + depth × (gravel top − ground), never above the soil line, never in the gravel and never under water.",
+      "module": "lib/root-growth.js"
+    },
+    {
+      "id": "bank-garden",
+      "short": "GRDN",
+      "name": "Garden on the bank",
+      "layer": 4,
+      "pass": 6,
+      "atoms": [
+        "blade",
+        "flower",
+        "canopy"
+      ],
+      "params": {
+        "grass_u": {
+          "value": 58,
+          "range": [
+            14,
+            72
+          ],
+          "unit": "u",
+          "label": "Grass height",
+          "note": "Height of the tallest blades above the soil line"
+        },
+        "flowers": {
+          "value": 18,
+          "range": [
+            0,
+            48
+          ],
+          "step": 1,
+          "scale": "sqrt",
+          "label": "Flowers",
+          "note": "Irises and small blooms along the bank"
+        },
+        "trees": {
+          "value": 3,
+          "range": [
+            0,
+            3
+          ],
+          "step": 1,
+          "label": "Trees",
+          "note": "Round trees on the upland, largest first"
+        },
+        "tree_sites_u": [
+          [
+            768,
+            41
+          ],
+          [
+            866,
+            53
+          ],
+          [
+            958,
+            34
+          ]
+        ],
+        "mat_share": 0.48,
+        "blades_per_u": 14,
+        "seed": 12
+      },
+      "limits": "Above ~72 u the grass hides the irises and lifts the canopies off the plate top. Grass, flowers and trees stand only where soil is at the surface and above the water.",
+      "implementation": "A turf mat follows the soil line; blades grow from it along the surface normal and lean up. Flowers take fixed slots along the dry bank so the count adds or removes without reshuffling. Each tree stands on the soil line: a trunk forks into three branches under a crown of 10 to 15 seeded lobes, each lobe dabbed and lit from its upper left; a tree that would cross the plate edge moves inside it.",
+      "module": "lib/bank-garden.js"
+    }
+  ],
+  "pass_order": [
+    "sky · flat Paper by day, Ink at night",
+    "far hills · four ridges back to front on the waterline: crest light, flecks, haze toward the water",
+    "water · level fill, depth gradient, horizontal brush streaks",
+    "section · clay floor, gravel beds and soil per pixel; specks, pebbles, laminae",
+    "roots · grown, edge then fill",
+    "garden · turf mat, trees, back blades, flowers, front blades",
+    "strokes · wave dashes over the water (moving in Play)",
+    "finish · 3 % mono grain"
+  ],
+  "notes": [
+    "ref.png is the deck image (972 × 376) placed 49 px down in a 972 × 540 frame, so its geometry lines up with the plate; the clay floor and the deep bed below 437 u are not in the deck image.",
+    "Measured on the deck image (972 × 376), then moved 50 u down: water surface y 243 px (250 u); riverbed 338–348 px at the left (≈ 352 u); bank toe ≈ (387, 300) px; shoreline x 437 px; soil line 238 px at x 490 and 168 px at x 900; gravel wedge top 258 px at x 530, its base 305 px; canopies at x 745, 840, 935 px with radii ≈ 40, 52, 33 px; five root crowns at x ≈ 600, 634, 706, 832, 916 px.",
+    "Colors sampled from region means: water #1069DE, gravel #ABC0D3, soil #9D7E57, grass #63A841, root #B2986A. The sky is kept Paper, not the deck’s warm tone.",
+    "Seeds are fixed; the structure moves only with the parameters."
+  ]
+}

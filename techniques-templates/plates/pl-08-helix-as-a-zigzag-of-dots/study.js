@@ -28,14 +28,17 @@ window.STUDY={"id": "pl-08-helix-as-a-zigzag-of-dots", "code": "PL-08", "fig": "
   };
 })(window.STUDY);
 
-/* PL-08 · Helix as a zigzag of dots · the figure is drawn by its source page's own code: A04_directions-v1.html #a-wave > div:nth-child(2) > figure:nth-child(1). See _build/engines/dot-record.js. */
-window.DR_FIG={"record": true, "wave": true, "src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A04_directions-v1.html", "sel": "#a-wave > div:nth-child(2) > figure:nth-child(1)", "w": 383, "h": 654};
+/* PL-08 · Helix as a zigzag of dots · the figure is drawn by its source page's own code: A04_directions-v1.html #a-wave > div:nth-child(2) > figure:nth-child(1) (#a-side).
+   dials: the figure's own decisions it offers (see ALL in _build/engines/dot-record.js); set: per-plate ranges and notes. */
+window.DR_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A04_directions-v1.html", "sel": "#a-wave > div:nth-child(2) > figure:nth-child(1)", "w": 383, "h": 654, "record": true, "wave": true, "dials": ["dot", "density", "spread", "reach", "focus", "chords", "seed"], "set": {"dot": {"range": [0.8, 1.35]}, "density": {"range": [0.6, 1.5]}, "focus": {"value": 6}}};
 
 /* dot-record · shared engine for the "dot record" plates drawn by Mindgut's A04 directions page (PL-04…10).
-   Appended to each plate's study.js by _build/plates.py after that plate's dr-figure.js (window.DR_FIG: the source page
-   and the selector of the figure). The page's own code draws the figure: it is loaded once into a hidden frame with its
-   canvas helper and its stipple helpers given a dial object (window.__P), and the figure's own draw function then paints
-   straight into this plate. At the default dials the plate is the source figure, mark for mark. Nothing in the source changes. */
+   Appended to each plate's study.js by _build/plates.py after that plate's dr-figure.js (window.DR_FIG: the source page,
+   the selector of the figure, the figure's own size, and which of the stipple's decisions it offers as dials).
+   The page's own code draws the figure: it is loaded once into a hidden frame with its canvas helper, its stipple helpers
+   and the figure's own constants given a dial object (window.__P), and the figure's draw function then paints straight
+   into this plate on the page's stock, with the page's paper tooth. At the default dials the plate is the source figure,
+   mark for mark. Nothing in the source file changes. */
 (function (S) {
   'use strict';
   /* until the source page has loaded, the panel shows the figure as filed (its f01 still), not an empty frame */
@@ -51,29 +54,39 @@ window.DR_FIG={"record": true, "wave": true, "src": "/tools/mindgut/files/Mindgu
   }
   var FIG = window.DR_FIG || {};
   var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
+  var sw = function (value, opts, label, note) { return { value: value, options: opts.map(function (o, i) { return { v: i, label: o }; }), label: label, note: note }; };
+  /* every decision the stipple and its figures make; each plate offers the ones its figure uses (DR_FIG.dials),
+     with its own range or default where the figure needs one (DR_FIG.set) */
+  var ALL = {
+    dot: leaf(1, 0.7, 1.5, 0.01, 'Dot size', '×', 'Radius of every dot, against the page’s own. Held between a dot that still prints and one that still stands apart.'),
+    density: leaf(1, 0.6, 1.6, 0.01, 'Density', '×', 'Dots per character: more carry the same count at a finer grain, fewer leave it open.'),
+    spread: leaf(1, 0.7, 1.35, 0.01, 'Spread', '×', 'How wide each cluster is laid around its point.'),
+    reach: leaf(1, 0.4, 1.6, 0.01, 'Reach', '×', 'α, how far a message’s departure from the record’s center carries its cluster out: low lays the crossings on a clean path, high scatters them.'),
+    swing: leaf(1, 0.6, 1.3, 0.01, 'Swing', '×', 'How far the wave swings above and below its axis.'),
+    focus: leaf(5, 4, 7, 1, 'In focus', 'exchanges', 'How many of the newest exchanges are inked in night as in focus: the page breathes between 4 and 7.'),
+    chords: sw(1, ['Off', 'On'], 'Recall chords', 'The pen lines from the newest crossing to the ones it recalls, with a ring on each.'),
+    dash: leaf(3, 1.5, 6, 0.1, 'Dash', 'px', 'Length of each dash in the Parked ring; its gap keeps the page’s proportion.'),
+    open: leaf(100, 50, 150, 1, 'Opening', '°', 'How far the Offered ring stands open at the top.'),
+    ex: leaf(21, 14, 28, 1, 'Exchanges', '', 'Columns in the ramp, one per exchange. The page’s turn is 21.'),
+    win: leaf(7, 5, 9, 1, 'Window', 'exchanges', 'How far the focus inhales before it passes its oldest into the record. The page’s window is 7.'),
+    pass: leaf(3, 2, 4, 1, 'Passed', 'exchanges', 'How many exchanges the focus passes into the record at each breath. The page passes 3.'),
+    sweep: leaf(162, 110, 200, 1, 'Sweep', '°', 'How far round the breath’s arc of clusters runs.'),
+    scale: leaf(1, 0.7, 1.25, 0.01, 'Scale', '×', 'How far a message’s departure from the record’s center is drawn from the middle of the plane; the axes stay put.'),
+    axis: leaf(1, 0.7, 1, 0.01, 'Axis length', '×', 'Length of the three channel axes, 147, 258 and 369, with their labels at the ends, printed over the dots on a knockout of the stock. The page draws them to the edge of the plate.'),
+    car: sw(0, ['Both', 'Yours', 'The model’s'], 'Carriers', 'Which carrier’s dots are printed: both, yours in cobalt or the model’s in sky.'),
+    seed: leaf(0, 0, 99, 1, FIG.arr ? 'Arrangement' : 'Record', '', FIG.arr ? 'Deals a new well-spaced arrangement of the dots in each cluster. No. 0 is the page’s own.' : 'Deals a new simulated record from the same rules. No. 0 is the page’s own.')
+  };
+  var DIALS = FIG.dials || ['dot', 'density', 'spread', 'seed'], P0 = {};
+  DIALS.forEach(function (k) { if (!ALL[k]) return; var l = JSON.parse(JSON.stringify(ALL[k])), o = (FIG.set || {})[k]; if (o) Object.keys(o).forEach(function (q) { l[q] = o[q]; }); P0[k] = l; });
   var read = (S.spec.techniques || [])[0] || {};
   var TECH = [
-    { id: 'dot-record', short: 'DOT', name: 'Dot record', layer: 1, pass: 1, atoms: ['stipple', 'count'],
-      params: (function () {
-        var P = {
-          dot: leaf(1, 0.4, 2.5, 0.01, 'Dot size', '×', 'Radius of every dot, as a multiple of the page\u2019s own.'),
-          density: leaf(1, 0.25, 3, 0.01, 'Density', '×', 'Dots per cluster: more dots carry the same count at a finer grain; fewer leave it sparse.'),
-          spread: leaf(1, 0.4, 2, 0.01, 'Spread', '×', 'How wide each cluster of dots is laid around its point.'),
-          scatter: leaf(0, 0, 2.5, 0.01, 'Scatter', '×', 'How far each dot is knocked off its well-spaced place, in dot radii. 0 is the page\u2019s even stipple.')
-        };
-        if (FIG.wave) {
-          P.upto = leaf(336, 42, 420, 2, 'Crossings', '', 'How many crossings of the record are drawn. 42 make one turn.');
-          P.chords = leaf(1, 0, 1, 1, 'Recall chords', '', '1 draws the lines from the newest crossing to the ones it recalls; 0 leaves the dots alone.');
-        }
-        P.seed = leaf(0, 0, 99, 1, 'Seed', '', 'Re-rolls the scatter' + (FIG.record ? ', and shifts the seed of the simulated record: 0 is the page\u2019s own.' : '.'));
-        return P;
-      })(),
-      implementation: (read.implementation || 'A record drawn as dots: each crossing is a cluster whose count is its length.') + ' Drawn by the source page’s own code, with its helpers given dials.' }
+    { id: 'dot-record', short: 'DOT', name: 'Dot record', layer: 1, pass: 1, atoms: ['stipple', 'count'], params: P0,
+      implementation: (read.implementation || 'A record drawn as dots: each crossing is a cluster whose count is its length.') + ' Drawn by the source page’s own code, with its stipple and the figure’s own constants given dials.' }
   ];
   S.spec.techniques = TECH.concat((S.spec.techniques || []).filter(function (t) { return t.id !== 'dot-record'; }));
-  S.spec.pass_order = ['ground · plate', 'record · the page’s own simulation, seeded', 'stipple · clusters of whole dots, binned by ink', 'pen · axis, handoff ticks, recall chords, labels'];
-  S.body = [S.body[0], 'The figure is drawn here by its source page’s own code, with dials on its stipple: dot size, density, spread, how many crossings are shown, the recall chords and the record’s seed. At the default dials it is the source figure.'];
-  S.paramsHint = 'Dials on the page’s own stipple. Multiples are of the page’s numbers.';
+  S.spec.pass_order = ['ground · stock with its tooth', 'record · the page’s own simulation, seeded', 'stipple · clusters of whole dots, binned by ink', 'pen · axes, state marks, recall chords, labels'];
+  S.body = [S.body[0], 'The figure is drawn here by its source page’s own code, on the page’s stock and tooth, with dials on the decisions it makes: ' + DIALS.filter(function (k) { return ALL[k] && k !== 'seed'; }).map(function (k) { return ALL[k].label.toLowerCase(); }).join(', ') + '. At the default dials it is the source figure.'];
+  S.paramsHint = 'Dials on the figure’s own decisions. Multiples are of the page’s numbers.';
   S.liveOnLoad = false; delete S.live;
 
   /* the figure's own inks, editable on the Color tab: they replace the page's INK object before every draw */
@@ -84,23 +97,70 @@ window.DR_FIG={"record": true, "wave": true, "src": "/tools/mindgut/files/Mindgu
     PAL('forest', 'Forest', { stock: '#f5f7f0', you: '#126b3d', model: '#a9cf94', night: '#151b17', ember: '#d9462f', rule: '#cfd6c8', label: '#3f4a42' })
   ];
   S.variantLabel = 'Palette';
-  S.colorHint = 'Pick a palette; click an ink to change it. You, Model, Night and Ember are the figure\u2019s inks; Stock is its paper.';
+  S.colorHint = 'Pick a palette; click an ink to change it. You, Model, Night and Ember are the figure’s inks; Stock is its paper.';
+  var Pq = '(window.__P||{})';
   var PATCH = [
     ["INK={you:'#1b3bd4',model:'#93a8ea',night:'#0e1122',ember:'#ef4a2b',stock:'#f8f8f6',rule:'#c9cdda',ink2:'#474c63',ink3:'#666b82'}", "INK=window.__INK={you:'#1b3bd4',model:'#93a8ea',night:'#0e1122',ember:'#ef4a2b',stock:'#f8f8f6',rule:'#c9cdda',ink2:'#474c63',ink3:'#666b82'}"],
     ['function plate(cv,draw){', 'function plate(cv,draw){(window.__DRAWS=window.__DRAWS||[]).push({cv:cv,draw:draw});'],
+    /* the simulated records, seeded: No. 0 is the page's own */
     ['function recOf(i){if(RECS[i])return RECS[i];var sp=SP[i],', 'function recOf(i){var __s=(window.__P&&window.__P.seed)|0,__k=i+":"+__s;if(RECS[__k])return RECS[__k];var sp=__s?Object.assign({},SP[i],{seed:SP[i].seed+__s*97}):SP[i],'],
     ['return RECS[i]=r}', 'return RECS[__k]=r}'],
+    ['var seed=cast?(cast.sum*31+cast.n*7)%9000+100:412,', 'var seed=(cast?(cast.sum*31+cast.n*7)%9000+100:412)+((window.__P&&window.__P.seed)|0)*97,'],
+    ["o=drawRec(x,mine,HN,'axial',g,{dot:1.3,per:20,nolabel:true,nochord:true})", "o=drawRec(x,(window.__HS!==((window.__P&&window.__P.seed)|0)?(window.__HS=((window.__P&&window.__P.seed)|0),mine=MG.yours(cast,HN)):mine),HN,'axial',g,{dot:1.3,per:20,nolabel:true,nochord:true})"],
+    /* the stipple: density and spread of each cluster, its arrangement, and the dot */
     ['function cluster(B,key,cx,cy,m,su,sv,ang,rd,rot){', 'function cluster(B,key,cx,cy,m,su,sv,ang,rd,rot){var __P=window.__P||{};m=Math.max(1,Math.round(m*(__P.density||1)));su*=(__P.spread||1);sv*=(__P.spread||1);'],
-    ['Bins.prototype.dot=function(key,x,y,r){', 'Bins.prototype.dot=function(key,x,y,r){var __P=window.__P||{};r*=(__P.dot||1);if(__P.scatter){var __n=(window.__DN=(window.__DN||0)+1),__a=Math.sin(__n*12.9898+(__P.seed|0)*78.233)*43758.5453,__b=Math.sin(__n*39.3468+(__P.seed|0)*11.135)*24634.6345;__a-=Math.floor(__a);__b-=Math.floor(__b);x+=(__a-.5)*2*__P.scatter*r;y+=(__b-.5)*2*__P.scatter*r;}'],
-    ['function drawRec(x,rec,upto,view,g,o){o=o||{};', 'function drawRec(x,rec,upto,view,g,o){o=Object.assign({},o||{});var __P=window.__P||{};o.per=(o.per||34)/(__P.density||1);if(__P.chords===0)o.nochord=true;'],
-    ['var I={spec:2,rec:null,upto:336', 'var I=window.__I={spec:2,rec:null,upto:336']
+    ['for(var i=0;i<m;i++){var q=i%GN,', 'for(var i=0;i<m;i++){var q=(i+(__P.arr|0))%GN,'],
+    /* a dot that would land on its state mark's stroke is folded back inside the ring (four states) */
+    ['B.dot(key,cx+u*ca-v*sa,cy+u*sa+v*ca,rd)}}', 'var __x=cx+u*ca-v*sa,__y=cy+u*sa+v*ca,__c=window.__CL;if(__c){var __dx=__x-__c[0],__dy=__y-__c[1],__d=Math.hypot(__dx,__dy);if(__d>__c[2]){var __n=Math.max(__c[2]*.55,2*__c[2]-__d)/__d;__x=__c[0]+__dx*__n;__y=__c[1]+__dy*__n}}B.dot(key,__x,__y,rd)}}'],
+    ["cluster(B,(i===2?'model':'you')+'0',cx,cy,i===2?90:60,R*.36,R*.3,.4,1.15,i*3);", "window.__CL=i<3?[cx,cy,R-1.15*(" + Pq + ".dot||1)-1.15]:null;cluster(B,(i===2?'model':'you')+'0',cx,cy,i===2?90:60,R*.36,R*.3,.4,1.15,i*3);window.__CL=null;"],
+    ['Bins.prototype.dot=function(key,x,y,r){', 'Bins.prototype.dot=function(key,x,y,r){r*=((window.__P||{}).dot||1);'],
+    ['function drawRec(x,rec,upto,view,g,o){o=o||{};var N=Math.min(upto,rec.N),m=Math.ceil(N/2),b=MG.focus(m),', 'function drawRec(x,rec,upto,view,g,o){o=Object.assign({},o||{});var __P=window.__P||{};if(__P.chords===0)o.nochord=true;var N=Math.min(upto,rec.N),m=Math.ceil(N/2),b=__P.focus||MG.focus(m),'],
+    ['var I={spec:2,rec:null,upto:336', 'var I=window.__I={spec:2,rec:null,upto:336'],
+    /* three models as one wave: its swing and its focus */
+    ['y=h*.52-Math.sin(th)*h*.2*(MG.R0+MG.AL*s.amp)/1.4', 'y=h*.52-Math.sin(th)*h*.2*(' + Pq + '.swing||1)*(MG.R0+MG.AL*s.amp)/1.4'],
+    ["(k>N-10?'night'", "(k>N-2*(" + Pq + ".focus||5)?'night'"],
+    /* four states: the Parked ring's dash and the Offered ring's opening */
+    ['if(i===1){x.setLineDash([3,4]);x.arc(cx,cy,R,0,TAU)}if(i===2)x.arc(cx,cy,R,-.7,Math.PI+.7);', 'var __d=' + Pq + '.dash||3,__o=(' + Pq + '.open||100)*Math.PI/180;if(i===1){x.setLineDash([__d,__d*4/3]);x.arc(cx,cy,R,0,TAU)}if(i===2)x.arc(cx,cy,R,-Math.PI/2+__o/2,1.5*Math.PI-__o/2);'],
+    /* the dot ramp: exchanges in the turn, and the breath of the focus (inhale to the window, pass the oldest) */
+    ['var B=new Bins(),M=21,dx=(w-30)/M,dy=(h*.74)/M,m,i;for(m=1;m<=M;m++){var b=MG.focus(m);', 'var __P=' + Pq + ',B=new Bins(),M=__P.ex||21,dx=(w-30)/M,dy=(h*.74)/M,m,i,__W=__P.win||7,__Q=__P.pass||3;for(m=1;m<=M;m++){var b=m<=__W?m:(__W-__Q+1)+((m-__W-1)%__Q);'],
+    ["label(x,'In focus / 4 to 7',15,14);label(x,'21 exchanges',w-15,h*.97,'right');", "label(x,'In focus / '+(__W-__Q)+' to '+__W,15,14);label(x,M+' exchanges',w-15,h*.97,'right');"],
+    ["label(x,'In the record',15+dx*12,h*.9-dy*2.4)", "(function(){x.font='500 9.5px '+MONO;var lw=x.measureText('IN THE RECORD').width,ly=h*.9-dy*M*2.4/21,tp=ly-7.5,bt=ly+1.5,rr=Math.min(dx,dy)*.36*(__P.dot||1);"
+      + "function hit(lx){for(var m=1;m<=M;m++){var b=m<=__W?m:(__W-__Q+1)+((m-__W-1)%__Q),X=15+(m-.5)*dx;if(X+rr<lx-2||X-rr>lx+lw+2)continue;for(var i=m-b+1;i<=m;i++){var Y=h*.9-(i-.5)*dy;if(Y+rr>tp&&Y-rr<bt)return true}}return false}"
+      + "var l0=15+dx*M*12/21,mx=w-15-lw,c=[l0];for(var s=1;s<=2*M;s++){c.push(l0+s*dx*.5);c.push(l0-s*dx*.5)}"
+      + "for(var j=0;j<c.length;j++){if(c[j]<15||c[j]>mx)continue;if(!hit(c[j])){label(x,'In the record',c[j],ly);return}}label(x,'In the record',15,h*.97)})()"],
+    /* the breath, kept as an arc of clusters: how far round it runs, and how many are kept in focus */
+    ["if(i===6){for(k=0;k<9;k++){var a=-Math.PI*.95+k/8*Math.PI*.9;cluster(B,(k>3?'night':k%2?'model':'you')+'0',cx+Math.cos(a)*R*1.7,cy+R*.9+Math.sin(a)*R*1.7,34+k*5,R*.2,R*.13,a,k>3?1.3:1,k)}}",
+      "if(i===6){var __sw=(" + Pq + ".sweep||162)*Math.PI/180,__f=8-(" + Pq + ".focus||5);for(k=0;k<9;k++){var a=-Math.PI/2-__sw/2+k/8*__sw;cluster(B,(k>__f?'night':k%2?'model':'you')+'0',cx+Math.cos(a)*R*1.7,cy+R*.9+Math.sin(a)*R*1.7,34+k*5,R*.2,R*.13,a,k>__f?1.3:1,k)}}"],
+    /* the plane: its scale, its axes, and which carrier is printed */
+    ['S=Math.min(w,h)*2.6,k;', 'S=Math.min(w,h)*2.6*(' + Pq + '.scale||1),k,__S0=Math.min(w,h)*2.6,__AX=(' + Pq + '.axis||1);window.__LB=[];'],
+    ["x.lineTo(cx+Math.cos(a)*S*.16,cy-Math.sin(a)*S*.16);x.stroke();x.fillStyle=INK.ink2;x.textAlign='center';x.fillText(MG.CHN[j]+' / '+MG.CHNAME[j][0],cx+Math.cos(a)*S*.175,cy-Math.sin(a)*S*.175+3)",
+      "x.lineTo(cx+Math.cos(a)*__S0*.16*__AX,cy-Math.sin(a)*__S0*.16*__AX);x.stroke();x.fillStyle=INK.ink2;x.textAlign='center';window.__LB.push([MG.CHN[j]+' / '+MG.CHNAME[j][0],cx+Math.cos(a)*__S0*(.16*__AX+.015),cy-Math.sin(a)*__S0*(.16*__AX+.015)+3])"],
+    ["for(k=1;k<=r.N;k++){var s=r.S[k];B.dot((k%2?'you':'model')+'0',cx+s.vx*S,cy-s.vy*S,k%2?2:1.7)}", "for(k=1;k<=r.N;k++){var s=r.S[k],__c=" + Pq + ".car|0;if(__c&&((__c===1)!==(k%2===1)))continue;B.dot((k%2?'you':'model')+'0',cx+s.vx*S,cy-s.vy*S,k%2?2:1.7)}"],
+    ["B.fill(x,['model','you']);", "B.fill(x,['model','you']);x.save();x.lineJoin='round';x.lineWidth=3;x.textAlign='center';(window.__LB||[]).forEach(function(q){x.strokeStyle=INK.stock;x.strokeText(q[0],q[1],q[2]);x.fillStyle=INK.ink2;x.fillText(q[0],q[1],q[2])});x.restore();window.__LB=[];"]
   ];
+  /* the page's stock has tooth: a lit height field, light from the upper left, that can only take light away.
+     Laid here at the plate's own pixels over the whole panel, so it never tiles. */
+  var TC = {};
+  function tooth(W, H, d, col) {
+    var t = Math.max(1, Math.round(d)), n = Math.ceil(W / t) + 4, m = Math.ceil(H / t) + 2, key = [W, H, t, col].join('|');
+    if (TC[key]) return TC[key];
+    var Hf = new Float32Array(n * m), s = 1993, i, j;
+    for (i = 0; i < n * m; i++) { s = (s + 0x6D2B79F5) | 0; var q = Math.imul(s ^ (s >>> 15), 1 | s); q = (q + Math.imul(q ^ (q >>> 7), 61 | q)) ^ q; Hf[i] = ((q ^ (q >>> 14)) >>> 0) / 4294967296; }
+    var c = document.createElement('canvas'); c.width = n - 4; c.height = m - 2;
+    var g = c.getContext('2d'), im = g.createImageData(n - 4, m - 2), D = im.data, rgb = [1, 3, 5].map(function (o) { return parseInt(col.substr(o, 2), 16); });
+    for (j = 0; j < m - 2; j++) for (i = 0; i < n - 4; i++) {
+      var a = Hf[j * n + i], b = Hf[(j + 1) * n + i + 1], c2 = Hf[j * n + i + 3], v = Math.max(-1, Math.min(1, (a - b) * .6 + (a - c2) * .25)), o = (j * (n - 4) + i) * 4;
+      D[o] = rgb[0]; D[o + 1] = rgb[1]; D[o + 2] = rgb[2]; D[o + 3] = v > 0 ? v * 15 : 0;
+    }
+    g.putImageData(im, 0, 0); TC[key] = { c: c, t: t };
+    return TC[key];
+  }
   var boot = null, WIN = null;
   function load() {
     if (boot) return boot;
     boot = fetch(FIG.src).then(function (r) { if (!r.ok) throw new Error('source ' + r.status); return r.text(); }).then(function (html) {
       var miss = [];
-      PATCH.forEach(function (q) { if (html.split(q[0]).length !== 2) { miss.push(q[0]); return; } html = html.replace(q[0], q[1]); });
+      PATCH.forEach(function (q) { if (html.split(q[0]).length !== 2) { miss.push(q[0]); return; } html = html.replace(q[0], function () { return q[1]; }); });
       if (miss.length) console.info('[dot-record] not wired:', miss);
       html = html.replace(/<head>/i, '<head><base href="' + new URL(FIG.src, location.href).href + '">');
       return new Promise(function (res, rej) {
@@ -112,7 +172,7 @@ window.DR_FIG={"record": true, "wave": true, "src": "/tools/mindgut/files/Mindgu
             var d = w.document, el = d.querySelector(FIG.sel), cv = el && (el.tagName === 'CANVAS' ? el : el.querySelector('canvas'));
             if (cv && !(w.__DRAWS || []).some(function (q) { return q.cv === cv; }) && w.initA && !w.__inited) { w.__inited = 1; try { w.initA(d.querySelector('.dA') || d.body); } catch (e) {} }
             var hit = cv && (w.__DRAWS || []).filter(function (q) { return q.cv === cv; })[0];
-            if (hit) { WIN = w; res({ w: w, draw: hit.draw, aspect: cv.getBoundingClientRect().width / Math.max(1, cv.getBoundingClientRect().height) }); }
+            if (hit) { WIN = w; res({ w: w, draw: hit.draw, AL: w.MG ? w.MG.AL : 8 }); }
             else if (++tries < 80) setTimeout(wait, 100); else rej(new Error('figure not found: ' + FIG.sel));
           })();
         };
@@ -123,22 +183,29 @@ window.DR_FIG={"record": true, "wave": true, "src": "/tools/mindgut/files/Mindgu
   }
   S.render = function (canvas, w, h, dpr, V, done, overrides) {
     if (!READY) placeholder(canvas, V);
-    var A = window.ART.params(S.spec, overrides || {}), Q = A['dot-record'];
+    var A = window.ART.params(S.spec, overrides || {}), Q = A['dot-record'] || {};
     var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
-    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = V.paper || '#FFFFFF'; x.fillRect(0, 0, W, H);
     load().then(function (E_) { READY = true; return E_; }).then(function (E) {
+      x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = V.paper || '#FFFFFF'; x.fillRect(0, 0, W, H);
       var win = E.w, K = V.inks || S.variants[0].inks; if (win.__INK) { Object.keys(K).forEach(function (k) { if (k !== 'label') win.__INK[k] = K[k]; }); win.__INK.ink2 = win.__INK.ink3 = K.label; }
-      win.__P = { dot: Q.dot, density: Q.density, spread: Q.spread, scatter: Q.scatter, chords: Q.chords == null ? 1 : Q.chords, seed: Q.seed };
+      var P = {}; Object.keys(ALL).forEach(function (k) { if (k in Q) P[k] = Q[k]; });
+      if ('chords' in P) P.chords = +P.chords;
+      if (FIG.arr) { P.arr = ((P.seed | 0) * 53) % 420; P.seed = 0; }
+      win.__P = P;
+      if (win.MG) win.MG.AL = E.AL * (P.reach == null ? 1 : P.reach);
       S.panels.forEach(function (p) {
         var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, cw = bw / dpr, ch = bh / dpr;
         x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip();
         x.fillStyle = K.stock || '#f8f8f6'; x.fillRect(bx, by, bw, bh);
-        if (FIG.wave && win.__I && win.MG) { /* the Wave: crossings and seed on the page's own state */
-          var I = win.__I, R = win.MG.recOf(2); if (Q.upto > R.N && win.MG.grow) win.MG.grow(R, Q.upto); I.rec = R; I.upto = Math.min(Q.upto, R.N); I.hov = -1;
+        var st = /^#[0-9a-f]{6}$/i.test(K.stock || '') ? [1, 3, 5].map(function (o) { return parseInt(K.stock.substr(o, 2), 16); }) : [248, 248, 246], T = tooth(Math.ceil(bw), Math.ceil(bh), dpr, (.2126 * st[0] + .7152 * st[1] + .0722 * st[2]) < 90 ? '#000000' : '#0e0e22');
+        x.imageSmoothingEnabled = false; x.drawImage(T.c, Math.floor(bx), Math.floor(by), T.c.width * T.t, T.c.height * T.t); x.imageSmoothingEnabled = true;
+        if (FIG.wave && win.__I && win.MG) { /* the Wave: the page's own record at its own 336 crossings, seeded */
+          var I = win.__I, R = win.MG.recOf(2); I.rec = R; I.upto = Math.min(336, R.N); I.hov = -1;
         }
         win.__DN = 0;
         /* drawn at the source figure's own size, then scaled to the panel: every mark keeps its proportion to the figure */
-        var fw = FIG.w || cw, fh = FIG.h || ch, k = Math.min(cw / fw, ch / fh), ox = bx + (bw - fw * k * dpr) / 2, oy = by + (bh - fh * k * dpr) / 2;
+        var fw = FIG.w || cw, fh = FIG.h || ch, cr = FIG.crop || [0, 0, 1, 1], vw = fw * (cr[2] - cr[0]), vh = fh * (cr[3] - cr[1]), k = Math.min(cw / vw, ch / vh), ox = bx + (bw - vw * k * dpr) / 2 - cr[0] * fw * k * dpr, oy = by + (bh - vh * k * dpr) / 2 - cr[1] * fh * k * dpr; /* the filed crop of the figure fills the panel */
+        if (FIG.crop) { x.beginPath(); x.rect(ox + cr[0] * fw * k * dpr, oy + cr[1] * fh * k * dpr, vw * k * dpr, vh * k * dpr); x.clip(); } /* nothing past the filed crop shows */
         x.setTransform(dpr * k, 0, 0, dpr * k, ox, oy);
         try { E.draw(x, fw, fh, { w: fw, h: fh, d: dpr * k, t: 0 }); } catch (err) { console.error('[dot-record]', err); }
         x.setTransform(1, 0, 0, 1, 0, 0); x.restore();

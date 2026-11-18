@@ -1,7 +1,7 @@
 /* parade · engine for PL-157, the robot parade from Mindgut's A07 microsite (the green landing page, 16 Nov 2026).
    Appended to the plate's study.js by _build/plates.py ("engine" in plates.json). The page's own code draws the
-   parade: it is loaded once into a hidden frame, the parade's draw function is captured, and its spacing, size, pace
-   and size spread are given dials (window.__Q). The robot is the page's own (_abot, the logomark head on a small body),
+   parade: it is loaded once into a hidden frame, the parade's draw function is captured, and its walkers, company, spacing, size spread, stride and shadow
+   are given dials (window.__Q). The robot is the page's own (_abot, the logomark head on a small body),
    so this plate always draws the current brand character. The Color tab edits the figure's own inks: the ground, the
    ground line, every robot colorway (head, brain, suit, cups, antenna tip) and the hound, hen and cat. */
 (function (S) {
@@ -23,16 +23,17 @@
   var TID = read.id || 'sprite-scene';
   var TECH = [{ id: TID, short: 'PRD', name: 'Robot parade', layer: 1, pass: 1, atoms: ['sprite', 'walk cycle', 'ground line'],
     params: {
-      size: leaf(1, 0.5, 1.15, 0.01, 'Size', '×', 'Height of every figure against the strip. At 1 the tallest robot is the page’s 150 px.'),
-      spacing: leaf(1, 0.6, 1.8, 0.01, 'Spacing', '×', 'Gap between one walker and the next. Smaller closes the line up; the line still wraps around the strip.'),
-      spread: leaf(1, 0, 2.5, 0.01, 'Size spread', '×', 'How much the robots differ in height. 0 makes them one size; 1 is the page’s spread (80 to 110%).'),
-      pace: leaf(1, 0, 2.5, 0.01, 'Pace', '×', 'How far the line walks per second. Each step is taken at the stride the figure’s legs allow, so faster pace means faster steps.'),
-      moment: leaf(3, 0, 60, 0.1, 'Moment', 's', 'Where in the walk the line is shown. 3 is the page’s still frame (its reduced-motion frame).')
+      count: leaf(10, 3, 11, 1, 'Walkers', '', 'How many figures walk the line, from the head of the parade back. The whole line always fits the strip, so a longer line draws smaller.'),
+      company: { value: 1, options: [{ v: 1, label: 'Robots and animals' }, { v: 2, label: 'Robots only' }], label: 'Company', note: 'Whether the hound, the hen and the Siamese walk with the robots.' },
+      spacing: leaf(1, 0.8, 1.5, 0.01, 'Spacing', '×', 'Gap between one walker and the next, against their height. A closer line draws larger.'),
+      spread: leaf(1, 0, 2.5, 0.01, 'Size spread', '×', 'How much the robots differ in height. 0 makes them one size; 1 is the page’s spread.'),
+      stride: leaf(100, 0, 100, 1, 'Stride', '%', 'How far each leg swings, as a share of the page’s walk. 0 stands the line still.'),
+      shadow: Object.assign(leaf(1, 0.2, 1.8, 0.01, 'Shadow length', '×', 'How far each cast shadow reaches behind its walker. 1 is the page’s low sun.'), { scale: 'linear' })
     },
     implementation: (read.implementation || 'A character is drawn as a set of states around an idle hub and placed into scenes.') + ' Drawn by the source page’s own code: the robot is the brand character (the logomark head on a small body) in its seven colorways, walking with a hound, a hen and a Siamese.' }];
   S.spec.techniques = TECH.concat((S.spec.techniques || []).filter(function (t) { return t.id !== TID; }));
   S.spec.pass_order = ['ground', 'ground line', 'walkers · each placed by the clock, drawn from its own walk cycle'];
-  S.body = [S.body[0], 'The parade is drawn here by its source page’s own code. Every robot is the Mindgut brand character from the green landing page, in the seven colorways the page defines. Dials set the size, spacing, size spread and pace of the line; Play walks it; the Color tab recolors the ground, the line, each colorway and the animals.'];
+  S.body = [S.body[0], 'The parade is drawn here by its source page’s own code. Every robot is the Mindgut brand character from the green landing page, in the seven colorways the page defines. Dials set how many walk, who comes along, the spacing, the size spread, the stride and the shadows; Play walks the line across the strip; the Color tab recolors the ground, the line, each colorway and the animals.'];
   S.paramsHint = 'Dials on the page’s own drawing. Multiples are of the page’s numbers.';
   S.motionHint = 'Play walks the line at its pace.';
   S.refHint = 'The figure is its own reference: it runs from the page’s code. The source is named in the spec.';
@@ -67,16 +68,14 @@
   S.variantLabel = 'Palette';
   S.colorHint = 'Pick a palette; click an ink to change it. Each ink is one of the parade’s own colors: the ground, the line, every robot colorway and the animals.';
 
+  var __ORIG = "plate('c-parade',function(x,w,h,P){var t=RM?3:P.t,base=h*.8,H=Math.min(h*.86,150),rk=petK('robot',-1),i,L=[];if(rk<0)return;\n  x.strokeStyle=rgba(VOID,.35);x.lineWidth=1;x.beginPath();x.moveTo(0,base+.5);x.lineTo(w,base+.5);x.stroke();\n  var gap=Math.max(H*.62,w/11),span=Math.max(w+gap*3,gap*11),sp=H*.36,M2=[[rk,0],[rk,1],[0,-1],[rk,3],[rk,2],[petK('silkie',5),-1],[rk,4],[rk,6],[petK('siam',4),-1],[rk,5],[rk,1]];\n  M2.forEach(function(m,n){var px=((n*gap+t*sp)%span+span)%span-gap*1.5,pr=PRUN[m[0]]||[.154,'walk'],sc2=m[0]===rk?(.8+.3*h3(n,1,3)):1,o={kind:m[0],u:(n*gap+t*sp)/(pr[0]*H*sc2),gait:pr[1],g:RM?0:1,dir:1,t:t+n,bg:'#eef2e7'};if(m[1]>=0)o.variant=m[1];pet(x,px,base,H*sc2,o)})},{live:true});", __NEW = "plate('c-parade',function(x,w,h,P){var Q=window.__Q||{},t=RM?3:P.t,rk=petK('robot',-1);if(rk<0)return;\n  var M2=[[rk,0],[rk,1],[0,-1],[rk,3],[rk,2],[petK('silkie',5),-1],[rk,4],[rk,6],[petK('siam',4),-1],[rk,5],[rk,1]];\n  if(+Q.company===2)M2=M2.filter(function(m){return m[0]===rk});\n  var N=Math.max(1,Math.min(M2.length,Math.round(Q.count||M2.length)));M2=M2.slice(0,N);\n  var spr=Q.spread==null?1:+Q.spread,top=.95+.15*spr,H0=h*1.25,g0=H0*.62*(Q.spacing||1),need=(N-1)*g0+H0*top*.9,k=Math.min(1,w*.9/need),H=H0*k,gap=g0*k,\n      base=Math.min(h*.84,h*.5+H*top*.3),sp=H*.36,L0=(N-1)*gap,x0=(w-L0)/2,C=w+H*2+gap,off=(t-3)*sp,shd=Q.shadow==null?1:+Q.shadow,gt=Q.stride==null?1:+Q.stride/100;\n  x.strokeStyle=rgba(VOID,.35);x.lineWidth=1;x.beginPath();x.moveTo(0,base+.5);x.lineTo(w,base+.5);x.stroke();\n  M2.forEach(function(m,n){var px=x0+n*gap+off;px=((px+H)%C+C)%C-H;var pr=PRUN[m[0]]||[.154,'walk'],sc2=m[0]===rk?(.95+(.3*h3(n,1,3)-.15)*spr):1,o={kind:m[0],u:(n*gap+t*sp)/(pr[0]*H*sc2),gait:pr[1],g:RM?0:gt,dir:1,t:t+n,bg:(window.__PBG||'#eef2e7'),shadow:shd};if(m[1]>=0)o.variant=m[1];pet(x,px,base,H*sc2,o)})},{live:true});";
   var PATCH = [
     ['var ROBOTS=[', 'var ROBOTS=window.__ROBOTS=['],
     ['var PETS=[', 'var PETS=window.__PETS=['],
     ["function plate(id,draw,opt){var cv=typeof id==='string'?$(id):id;if(!cv)return null;opt=opt||{};", "function plate(id,draw,opt){var cv=typeof id==='string'?$(id):id;if(!cv)return null;opt=opt||{};(window.__DRAWS=window.__DRAWS||{})[typeof id==='string'?id:(cv.id||'')]=draw;"],
     ["RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;", "RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;window.__setRM=function(v){RM=v};"],
+    [__ORIG, __NEW],
     ["GHO=['#f5f7f0','#f5f7f0','#eef2e7'];", "GHO=['#f5f7f0','#f5f7f0','#eef2e7'];window.__setLine=function(c){VOID=c};"],
-    ["var t=RM?3:P.t,base=h*.8,H=Math.min(h*.86,150),rk=petK('robot',-1)", "var __Q=window.__Q||{},t=RM?3:P.t,base=h*.8,H=Math.min(h*.86,150)*(__Q.size||1),rk=petK('robot',-1)"],
-    ['var gap=Math.max(H*.62,w/11),span=Math.max(w+gap*3,gap*11),sp=H*.36,', 'var gap=Math.max(H*.62,w/11)*(__Q.spacing||1),span=Math.max(w+gap*3,gap*11),sp=H*.36*(__Q.pace==null?1:__Q.pace),'],
-    ['sc2=m[0]===rk?(.8+.3*h3(n,1,3)):1', 'sc2=m[0]===rk?(.95+(.3*h3(n,1,3)-.15)*(__Q.spread==null?1:__Q.spread)):1'],
-    ["dir:1,t:t+n,bg:'#eef2e7'}", "dir:1,t:t+n,bg:(window.__PBG||'#eef2e7')}"]
   ];
   var boot = null, WIN = null;
   function load() {
@@ -117,19 +116,19 @@
       x.setTransform(dpr * k, 0, 0, dpr * k, bx, by);
       try { E.draw(x, fw, FH, { cv: null, t: t, vis: true, live: true, ptr: null, down: false }, 0, dpr * k); } catch (err) { console.error('[parade]', err); }
       x.setTransform(1, 0, 0, 1, 0, 0); x.restore();
-      x.strokeStyle = V.rule; x.globalAlpha = .18; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1); x.globalAlpha = 1;
+      /* no panel keyline: the filed strip is full-bleed */
     });
   }
   S.render = function (canvas, w, h, dpr, V, done, overrides) {
     if (!READY) placeholder(canvas, V);
     var A = window.ART.params(S.spec, overrides || {}), Q = A[TID] || {};
-    load().then(function (E_) { READY = true; return E_; }).then(function (E) { paint(E, canvas, canvas.getContext('2d'), V, Q, dpr, +Q.moment || 0); if (done) done(); },
+    load().then(function (E_) { READY = true; return E_; }).then(function (E) { paint(E, canvas, canvas.getContext('2d'), V, Q, dpr, Q.moment == null ? 3 : +Q.moment); if (done) done(); },
       function (err) { console.error('[parade]', err); if (done) done(); });
     return false;
   };
   S.motion = function (canvas, w, h, dpr, V, t, ctx, overrides) {
     if (!WIN) { load().catch(function () {}); return; }
     var A = window.ART.params(S.spec, overrides || {}), Q = A[TID] || {};
-    paint(WIN, canvas, ctx || canvas.getContext('2d'), V, Q, dpr, (+Q.moment || 0) + t);
+    paint(WIN, canvas, ctx || canvas.getContext('2d'), V, Q, dpr, (Q.moment == null ? 3 : +Q.moment) + t);
   };
 })(window.STUDY);

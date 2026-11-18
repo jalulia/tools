@@ -1,2 +1,3 @@
-/* PL-06 · Four states in dots · the figure is drawn by its source page's own code: A04_directions-v1.html #a-w2. See _build/engines/dot-record.js. */
-window.DR_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A04_directions-v1.html", "sel": "#a-w2", "w": 294, "h": 220};
+/* PL-06 · Four states in dots · the figure is drawn by its source page's own code: A04_directions-v1.html #a-w2 (#a-w2).
+   dials: the figure's own decisions it offers (see ALL in _build/engines/dot-record.js); set: per-plate ranges and notes. */
+window.DR_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A04_directions-v1.html", "sel": "#a-w2", "w": 294, "h": 220, "arr": true, "dials": ["dot", "density", "spread", "dash", "open", "seed"], "set": {"dot": {"range": [0.7, 1.4]}, "spread": {"range": [0.6, 1.05], "note": "How wide each cluster is laid inside its state mark: held where every dot stays inside the ring."}, "density": {"range": [0.5, 1.6], "note": "Dots in each cluster: the page lays 60 in a state, 90 in the Offered one."}}};

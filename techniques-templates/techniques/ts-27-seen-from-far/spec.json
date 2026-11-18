@@ -1,0 +1,380 @@
+{
+  "id": "ts-27-seen-from-far",
+  "code": "TS-27",
+  "title": "Seen from far",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "Field green",
+      "swatches": [
+        "#FFFFFF",
+        "#86BC44",
+        "#2E8A52",
+        "#0D5531",
+        "#DB4B2D"
+      ]
+    },
+    {
+      "id": "mg",
+      "label": "Mindgut",
+      "swatches": [
+        "#FBFBF7",
+        "#D0EC60",
+        "#126B3D",
+        "#0A4528",
+        "#183586"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "Ø",
+      "swatches": [
+        "#FFFFFF",
+        "#2F5AE6",
+        "#101014",
+        "#F4551E"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      1040,
+      1040
+    ],
+    "grammar": "square AM screen of round dots on white: dot size and color follow density (lime fringe, green, deep core); a ring-shaped field with a ragged edge and gaps; a clean hole at the center with one orange dot in a lime ring; a polyline of turns joining nodes on the ring, thin dark core over a pale halo"
+  },
+  "units": "design units, 1000 = plate width; the plate is 1000 × 1000 and the clearing is drawn at the same scale",
+  "palette": {
+    "paper": "#FFFFFF",
+    "light_dot": "#86BC44",
+    "mid_dot": "#2E8A52",
+    "deep_dot": "#0D5531",
+    "line": "#0A4528",
+    "origin": "#DB4B2D",
+    "ring": "#D0EC60"
+  },
+  "techniques": [
+    {
+      "id": "step-back",
+      "short": "DIST",
+      "name": "Distance",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "cell-mosaic",
+        "handoff",
+        "screen-growth"
+      ],
+      "params": {
+        "distance": {
+          "value": 100,
+          "range": [
+            0,
+            100
+          ],
+          "step": 1,
+          "unit": "%",
+          "label": "Distance",
+          "note": "0 % up close, 100 % from far"
+        },
+        "pitch_near_u": 2.4,
+        "remap": [
+          [
+            0,
+            0.1,
+            0.25,
+            0.4,
+            0.5,
+            0.6,
+            0.75,
+            0.9,
+            1
+          ],
+          [
+            0,
+            0.156,
+            0.263,
+            0.353,
+            0.412,
+            0.439,
+            0.491,
+            0.665,
+            1
+          ]
+        ],
+        "stages": "on the inner track (the slider maps 25 → 24 %, 50 → 40 %, 75 → 50 %, 90 → 63 %): cells cut from the painting 1.5–7 % · cell pitch 2.4 u → far pitch on a log curve · cells part to show paper 8–42 % · empty ground clears from the corners inward 2–64 %, paced by cleared area · grown cells take the record 56–92 % by density · on the slider, the line comes in over 42–60 % and holds full contrast above"
+      },
+      "limits": "Steps back from the clearing: the trees go first, then the painting is cut into cells that part to paper and take the record’s dots.",
+      "implementation": "Distance sets the cell pitch, how far the cells part, and when each cell trades the painting for the record. A dot that still shows the painting shows the painting’s own pixels, so the plate is never a blurred copy; a cell with more growth trades later, so the empty ground clears first and the ring stays to the end. Trees go first: each leaves whole, canopy and shadow, one after another from the plate edge inward over 0.4–2.8 % of the slider, and the front starts after the last one.",
+      "module": "lib/step-back.js"
+    },
+    {
+      "id": "clearing",
+      "short": "CLR",
+      "name": "Clearing",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "top-down",
+        "illustration",
+        "grain",
+        "growth"
+      ],
+      "params": {
+        "days": {
+          "value": 60,
+          "note": "day of the record; Play runs it from 6 to 60"
+        },
+        "walk_days": 40,
+        "grow_days": 16,
+        "grain": 0.03,
+        "tree_ring_u": "reach + 70 … reach + 190",
+        "seed": 27
+      },
+      "limits": "The walk takes 40 days and growth 16 more, so day 60 is the full ring. The painting is drawn once per plate size and palette, and reused along the Distance track.",
+      "implementation": "The trees are drawn last, and the painting is kept once without them. The ground is a lookup from the record density (mown at zero, lawn, meadow, shrub) with 3 % per-pixel grain; dabs, grass ticks, the trodden path, sprouts, grass tufts and flowers where the record is dense, plantings at each turn and tree canopies are drawn over it.",
+      "module": "lib/clearing.js"
+    },
+    {
+      "id": "record-field",
+      "short": "FIELD",
+      "name": "Record field",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "ring",
+        "density",
+        "noise",
+        "lobe"
+      ],
+      "params": {
+        "hole_u": {
+          "value": 62,
+          "range": [
+            30,
+            130
+          ],
+          "unit": "u",
+          "label": "Hole at zero",
+          "note": "radius of the clean circle around the origin"
+        },
+        "reach_u": {
+          "value": 420,
+          "range": [
+            355,
+            470
+          ],
+          "unit": "u",
+          "label": "Field reach",
+          "note": "radius where the last fringe dots stop"
+        },
+        "ragged_u": {
+          "value": 50,
+          "range": [
+            0,
+            110
+          ],
+          "unit": "u",
+          "label": "Raggedness",
+          "note": "how far the edge wanders and how many gaps open in the ring"
+        },
+        "lobe_u": 36,
+        "skirt": 0.1,
+        "stretch": [
+          1.16,
+          0.95
+        ],
+        "sprout": 0.2,
+        "gaps": 0.92,
+        "plateau": 0.6,
+        "fringe": 0.15,
+        "seed": 31
+      },
+      "limits": "Shapes what grew: the clean hole at zero, how far the field reaches, how ragged its edge is. Past 110 u of raggedness the ring splits into islands.",
+      "implementation": "density = 1 − (1 − band)(1 − lobe): band rises over 24 u past the round hole, holds to 0.6 R and falls over 0.16 R on a radius stretched 1.16 across and 0.95 down, with the edge moved by noise; each turn adds a 36 u lobe with a flat top and a 0.1 skirt; the field tapers to nothing 445–478 u from the center on each axis, and nodes stay within 440 u, so nothing touches the plate edge; gaps are cut where a second noise passes 0.14–0.26. Growth by day is kept apart, so a new day costs one pass over the 4 u grid.",
+      "module": "lib/record-field.js"
+    },
+    {
+      "id": "am-screen",
+      "short": "SCRN",
+      "name": "AM screen",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "halftone",
+        "am-screen",
+        "dot-gain",
+        "ramp"
+      ],
+      "params": {
+        "pitch_u": {
+          "value": 11.1,
+          "range": [
+            8,
+            24
+          ],
+          "unit": "u",
+          "scale": "log",
+          "label": "Dot pitch",
+          "note": "cell size at 100 % distance"
+        },
+        "gain": {
+          "value": 0,
+          "range": [
+            -15,
+            25
+          ],
+          "unit": "%",
+          "label": "Dot gain",
+          "note": "added to a 50 % dot; above 20 % the deep dots join"
+        },
+        "angle_deg": {
+          "value": 0,
+          "range": [
+            0,
+            45
+          ],
+          "unit": "°",
+          "label": "Screen angle",
+          "note": "turns the cell grid about the origin"
+        },
+        "shape": {
+          "value": 1,
+          "options": [
+            {
+              "v": 1,
+              "label": "Round"
+            },
+            {
+              "v": 2,
+              "label": "Square"
+            },
+            {
+              "v": 3,
+              "label": "Line"
+            }
+          ],
+          "label": "Dot shape",
+          "note": "round dots, square dots, or lines whose width follows density"
+        },
+        "ink": {
+          "value": 1,
+          "options": [
+            {
+              "v": 1,
+              "label": "Ramp"
+            },
+            {
+              "v": 2,
+              "label": "Deep"
+            },
+            {
+              "v": 3,
+              "label": "Ink"
+            }
+          ],
+          "label": "Dot ink",
+          "note": "Ramp takes the light, mid or deep ink by dot area; Deep prints every dot in the deep ink; Ink prints every dot in the darkest ink"
+        },
+        "full_dot": 0.92,
+        "min_tone": 0.035,
+        "ramp": "light 0 · mid 0.4 · deep 0.8"
+      },
+      "limits": "Prints the record as dots: cell size, gain, angle, shape and ink. Under 8 u the dots read as a tint; past 25 % gain the core prints solid.",
+      "implementation": "Each cell takes one size and one color. Per pixel the four nearest cells add their coverage with a half-pixel edge and share the color by weight, so abutting squares and lines close without seams and dots stay round at any angle; a square or line that would leave a gap under 12 % of the cell fills it.",
+      "module": "lib/am-screen.js"
+    },
+    {
+      "id": "the-turns",
+      "short": "TURN",
+      "name": "The turns",
+      "layer": 4,
+      "pass": 4,
+      "atoms": [
+        "polyline",
+        "node",
+        "halo"
+      ],
+      "params": {
+        "turns": {
+          "value": 22,
+          "range": [
+            8,
+            28
+          ],
+          "step": 1,
+          "label": "Turns",
+          "note": "nodes on the ring; the walk visits them in order and closes the loop"
+        },
+        "line_u": {
+          "value": 1.9,
+          "range": [
+            1,
+            4.5
+          ],
+          "unit": "u",
+          "scale": "log",
+          "label": "Line weight",
+          "note": "core of the line; the halo is 4.2 times wider, up to 10 u"
+        },
+        "halo": 4.2,
+        "halo_max_u": 10,
+        "core_alpha": 0.85,
+        "halo_alpha": 0.13,
+        "chords": 0.3,
+        "start_deg": -150,
+        "seed": 22
+      },
+      "limits": "Draws the walk through the field: how many turns and how heavy the line. Over 28 turns the plantings merge into a band.",
+      "implementation": "Nodes sit at 0.54–0.95 of the reach (within 440 u of the center on each axis), one per turn with ±31 % angle jitter; the path joins them in order and 30 % of turns also cut across two or three nodes. The core and the halo are one path each, so crossings do not double the ink.",
+      "module": "lib/the-turns.js"
+    },
+    {
+      "id": "origin-dot",
+      "short": "ZERO",
+      "name": "Origin",
+      "layer": 5,
+      "pass": 5,
+      "atoms": [
+        "marker",
+        "dot"
+      ],
+      "params": {
+        "mark": {
+          "value": 2,
+          "options": [
+            {
+              "v": 1,
+              "label": "Off"
+            },
+            {
+              "v": 2,
+              "label": "On"
+            }
+          ],
+          "label": "Origin",
+          "note": "the origin dot in its ring at zero"
+        },
+        "dot_u": 12.5,
+        "ring_u": 18.5
+      },
+      "limits": "Marks zero with the origin dot in its ring, drawn last at every distance.",
+      "implementation": "One orange disc in a lime ring at zero; up close it casts a short shadow on the grass.",
+      "module": "lib/origin-dot.js"
+    }
+  ],
+  "pass_order": [
+    "clearing · ground lookup, grain, dabs, grass, path, sprouts, meadow, plantings, trees (drawn once, reused)",
+    "record · density per 4 u cell at the current day",
+    "screen · per cell size and color from the painting or the record; per pixel coverage from the four nearest cells",
+    "turns · halo then core, one path each",
+    "origin · lime ring, orange dot"
+  ],
+  "notes": [
+    "Measured on ref.png: pitch 11.56 px at 1040 px (11.1 u), 0° screen with a cell centered on zero; hole clear to 58 u; plateau coverage 0.56 from 77 u to 240 u, falling to 0 by 420 u; largest dots 0.92 of the pitch; field 77 % of the plate wide and 65 % tall (0.1–99.9 percentile of ink), so the ring is stretched 1.16 × 0.95 and the hole kept round; dot color by coverage (13,85,49) deep, (45,135,82) mid, (134,188,68) fringe.",
+    "Line: core 1.5–2 px of #0A4528 at 85 % (antialiased), halo 8 px of #0A4528 at 13 % (223,231,227 on white). Origin (217,72,48), 12.5 u, in a lime ring 18.5 u.",
+    "The clearing is not in the reference; it is built from the deck sequence \"Over time, a field of dots\" and drawn from above so that it lands on the emblem."
+  ]
+}

@@ -1,0 +1,294 @@
+{
+  "id": "ts-24-icon-on-its-grid",
+  "code": "TS-24",
+  "title": "Mir on its icon grid",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "Mindgut",
+      "swatches": [
+        "#FBFBF7",
+        "#151B17",
+        "#126B3D",
+        "#D0EC60",
+        "#0A4528"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "Ø",
+      "swatches": [
+        "#FFFFFF",
+        "#101014",
+        "#2F5AE6",
+        "#F4551E"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      1400,
+      1400
+    ],
+    "grammar": "icon construction sheet: rounded tile, 16 × 64 px grid, keyline circle and square, safe circle, diagonals, center cross, dimension lines and mono notes; the character in one line weight centered on the tile"
+  },
+  "units": "design units, 1000 = plate width; the plate is square. The sheet tile is 680 u for 1024 px.",
+  "palette": {
+    "sheet": "#FFFFFF",
+    "paper": "#FBFBF7",
+    "ink": "#151B17",
+    "green": "#126B3D",
+    "deep": "#0A4528",
+    "lime": "#D0EC60"
+  },
+  "techniques": [
+    {
+      "id": "icon-tile",
+      "short": "TILE",
+      "name": "Tile and corner",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "rounded-rect",
+        "superellipse",
+        "continuous-curvature"
+      ],
+      "params": {
+        "tile": {
+          "value": 3,
+          "options": [
+            {
+              "v": 1,
+              "label": "Accent"
+            },
+            {
+              "v": 2,
+              "label": "Deep"
+            },
+            {
+              "v": 3,
+              "label": "Light"
+            },
+            {
+              "v": 4,
+              "label": "Ink"
+            }
+          ],
+          "label": "Tile",
+          "note": "Tile ink, by role. Mir follows: ink line on accent and light, paper line on deep and ink; the cans keep the accent except on light, where Mir is line only."
+        },
+        "corner_pct": {
+          "value": 22.4,
+          "range": [
+            10,
+            32
+          ],
+          "unit": "%",
+          "label": "Corner radius",
+          "note": "Corner radius as a share of the tile side."
+        },
+        "smoothing": {
+          "value": 0,
+          "range": [
+            0,
+            100
+          ],
+          "unit": "%",
+          "label": "Corner smoothing",
+          "note": "0% is a circular arc; 100% is the most continuous curvature the radius allows; the track is front-loaded (square root), and the sheet shows the circular arc as a faint dashed ghost."
+        }
+      },
+      "limits": "A smoothed corner never runs past the middle of a side, so above a 25% radius the whole track maps onto the smaller range left (at 32%, up to 56%); the note on the sheet shows the smoothing drawn. The track follows a square root, so the first quarter already gives half the smoothing.",
+      "implementation": "Each corner is a circular arc of 90° × (1 − smoothing) between two cubic easings, the corner taking (1 + smoothing) × radius of each side (the Figma corner-smoothing construction).",
+      "module": "lib/icon-tile.js"
+    },
+    {
+      "id": "safe-area",
+      "short": "SAFE",
+      "name": "Safe area and keylines",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "keyline",
+        "grid",
+        "safe-area",
+        "center-cross"
+      ],
+      "params": {
+        "safe_pct": {
+          "value": 80,
+          "range": [
+            64,
+            92
+          ],
+          "unit": "%",
+          "label": "Safe area",
+          "note": "Diameter of the safe circle and side of the safe square, as a share of the tile."
+        },
+        "construction": {
+          "value": 3,
+          "options": [
+            {
+              "v": 1,
+              "label": "Off"
+            },
+            {
+              "v": 2,
+              "label": "Keylines"
+            },
+            {
+              "v": 3,
+              "label": "Full grid"
+            }
+          ],
+          "label": "Construction",
+          "note": "Off shows the tile alone. Keylines adds the circles, square, diagonals, center cross and notes. Full grid adds the 16 × 64 px grid."
+        },
+        "cells": 16,
+        "cell_px": 64
+      },
+      "limits": "Below 64% Mir becomes a badge in an empty tile; above 92% the safe circle meets the corner arcs.",
+      "implementation": "All keylines are drawn twice, clipped inside and outside the tile, so they keep contrast on dark tiles. Grid and keylines sit under Mir; the center cross and notes sit over it.",
+      "module": "lib/safe-area.js"
+    },
+    {
+      "id": "mir-lines",
+      "short": "MIR",
+      "name": "Mir in simple lines",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "sphere",
+        "cylinder",
+        "decal",
+        "single-weight"
+      ],
+      "params": {
+        "line_px": {
+          "value": 28,
+          "range": [
+            16,
+            40
+          ],
+          "unit": "px",
+          "label": "Line weight",
+          "note": "Mir’s line at 1024 px; folds take 0.55 of it, thinning to as little as half that when the rows cannot keep one stroke width apart."
+        },
+        "size_pct": {
+          "value": 87,
+          "range": [
+            70,
+            100
+          ],
+          "unit": "%",
+          "label": "Mir size",
+          "note": "Mir’s inked width as a share of the safe circle diameter, never under 56% of the tile; Mir is centered on its inked box."
+        },
+        "tilt_deg": 8,
+        "look_deg": [
+          18,
+          30
+        ],
+        "band_lat_deg": 12,
+        "fold_margin": 0.06,
+        "fold_clear": 1,
+        "splay_deg": 26.5,
+        "can_r": 0.46,
+        "antenna": 0.57,
+        "rod_r": 0.12,
+        "rows": 3,
+        "seed": 23
+      },
+      "limits": "Above 40 px the can faces and the glint start to close. Below 16 px the line reads as a hairline at 120 px and under. Mir’s inked width is held at 56% of the tile or more, so a small safe area and a small Mir never leave a badge in an empty tile.",
+      "implementation": "The TS-23 construction at turn 0°, tilt 8°: sphere, band at 12°, decal eyes and mouth, two cans splayed 26.5°, antenna tubes, scalloped folds. Its radius is solved so line plus geometry fills the target width.",
+      "module": "lib/mir-lines.js"
+    },
+    {
+      "id": "size-ladder",
+      "short": "LADR",
+      "name": "Size ladder",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "optical-size",
+        "pixel-grid",
+        "hinting"
+      ],
+      "params": {
+        "optical": {
+          "value": 80,
+          "range": [
+            0,
+            120
+          ],
+          "unit": "%",
+          "label": "Optical compensation",
+          "note": "How much thicker the line gets at 40 px than plain scaling gives (less at larger sizes); 0% scales the line with the icon."
+        },
+        "snapping": {
+          "value": 1,
+          "options": [
+            {
+              "v": 1,
+              "label": "Off"
+            },
+            {
+              "v": 2,
+              "label": "On"
+            }
+          ],
+          "label": "Pixel snapping",
+          "note": "On draws each size at its true pixel count with whole-pixel lines, and a loupe under the ladder shows the 40 px icon at a whole-number enlargement."
+        },
+        "sizes": [
+          180,
+          120,
+          80,
+          58,
+          40
+        ],
+        "fold_min_px": 7.5,
+        "cap": 0.24,
+        "min_w": 0.56
+      },
+      "limits": "The line is held under 0.24 of Mir’s radius at every size, so with a heavy line the compensation runs out early. Rungs keep their true relative sizes; the loupe is never under 2×.",
+      "implementation": "Each size keeps the same inked width share. line = weight × N / 1024 × (1 + c × (1024 / N − 1) / 24.6), held under 0.24 R; fold rows = ⌊dome height / max(2.8 × fold line, 7.5 px)⌋, held to 1–3.",
+      "module": "lib/size-ladder.js"
+    },
+    {
+      "id": "dimension-notes",
+      "short": "NOTE",
+      "name": "Dimension notes",
+      "layer": 4,
+      "pass": 4,
+      "atoms": [
+        "mono-caps",
+        "dimension-line",
+        "knockout"
+      ],
+      "params": {
+        "size_u": 14,
+        "caption_u": 14,
+        "rule_u": 1.1,
+        "tick_u": 10
+      },
+      "limits": "Notes knock out the lines under them, so they never sit on a keyline.",
+      "implementation": "JetBrains Mono capitals at 14 u on the sheet; ladder captions in Inter at 14 u (no dotted zeros); dimension lines with 10 u end ticks; each note sits on a box in the color under it. Inside a colored tile, notes and keylines are set in ink or paper.",
+      "module": "lib/dimension-notes.js"
+    }
+  ],
+  "pass_order": [
+    "sheet · white",
+    "tile · rounded path in the tile ink",
+    "keylines · grid, circles, square and diagonals, inside and outside the tile",
+    "Mir · fills, folds, band, decals, cans and antennae in one line",
+    "over · center cross, tile outline, dimension lines and notes",
+    "ladder · five sizes, vector or snapped pixels"
+  ],
+  "notes": [
+    "Measured on ref.png (1400 × 1400): tile 1100 px for 1024 (150 to 1250); corner profile matches a circular arc of radius 246 px (22.4%); safe circle 880 px; grid pitch 68.75 px = 64 icon px; Mir line 28 to 33 sheet px ≈ 28 icon px; Mir inked width 766 sheet px = 87% of the safe circle.",
+    "Ladder sizes 180, 120, 80, 58 and 40 px from the deck page."
+  ]
+}

@@ -29,7 +29,7 @@ window.STUDY={"id": "pl-130-the-garden-read-as-a-sheet", "code": "PL-130", "fig"
 })(window.STUDY);
 
 /* PL-130 · the garden, read as a sheet · drawn by its source page's own code: garden-sheet-g01.html #cv. Dials and inks measured by _build/qa/lift-probe.mjs; see _build/engines/lift-canvas.js. */
-window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.html", "sel": "#cv", "w": 962, "h": 819, "crop": [0, 0, 1, 1], "ground": "#ffffff", "dials": ["weight", "mark", "type", "moment"], "inks": ["#ffffff", "#000000", "#101014", "#d8d8d8", "#6f6e6a", "#f4551e", "#d859a3", "#8c8c8c"], "t0": 2, "settle": 2500, "patches": [["fetch(RAW+PATH+'?t='+Date.now(),{cache:'no-store'})", "fetch('/tools/techniques-templates/plates/pl-130-the-garden-read-as-a-sheet/garden-2026-09-06.json',{cache:'no-store'})"], ["fetch(RAW+'encyclopedia/manifest.js?t='+Date.now(),{cache:'no-store'})", "Promise.reject(new Error('snapshot'))"], ["const img=e?`<img src=\"${ROOT}encyclopedia/content/", "const img=false?`<img src=\"${ROOT}encyclopedia/content/"]]};
+window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.html", "sel": "#cv", "w": 958, "h": 915, "crop": [0.025, 0.04, 0.637, 0.715], "ground": "#ffffff", "inks": ["#ffffff", "#000000", "#101014", "#d8d8d8", "#6f6e6a", "#f4551e", "#d859a3", "#8c8c8c"], "t0": 2, "settle": 2500, "dials": ["plates", "misreg", "hatch", "grain"], "extra": {"plates": {"value": 0, "range": [0, 5], "step": 1, "label": "Plates", "note": "Which of the sheet’s four printing plates are shown, or its second ink set.", "options": [{"v": 0, "label": "All"}, {"v": 1, "label": "Yellow"}, {"v": 2, "label": "Blue"}, {"v": 3, "label": "Pink"}, {"v": 4, "label": "Key"}, {"v": 5, "label": "Ember"}]}, "misreg": {"value": 1, "range": [0, 3], "step": 0.01, "label": "Misregistration", "note": "How far the yellow, blue and pink plates sit off the key plate, as a multiple of the sheet’s own (3–4 units).", "unit": "×"}, "hatch": {"value": 1, "range": [0.6, 2], "step": 0.01, "label": "Hatch pitch", "note": "Spacing of the white dashed hatch cut into the beds and mounds, as a multiple of the sheet’s own.", "unit": "×"}, "grain": {"value": 1, "range": [0, 2], "step": 0.01, "label": "Grain", "note": "The grain each plate is printed with, as a multiple of the sheet’s own.", "unit": "×"}}, "patches": [["fetch(RAW+PATH+'?t='+Date.now(),{cache:'no-store'})", "fetch('/tools/techniques-templates/plates/pl-130-the-garden-read-as-a-sheet/garden-2026-09-06.json',{cache:'no-store'})"], ["fetch(RAW+'encyclopedia/manifest.js?t='+Date.now(),{cache:'no-store'})", "Promise.reject(new Error('snapshot'))"], ["const img=e?`<img src=\"${ROOT}encyclopedia/content/", "const img=false?`<img src=\"${ROOT}encyclopedia/content/"], ["let vi=0; const variant=()=>VARIANTS[vi];", "let vi=((window.__P||{}).plates==null?0:window.__P.plates)|0; const variant=()=>VARIANTS[vi];"], ["const OFFS=u=>[[-3*u,2*u],[1*u,-2*u],[4*u,3*u],[0,0]];", "const OFFS=u=>{u*=((window.__P||{}).misreg==null?1:window.__P.misreg);return [[-3*u,2*u],[1*u,-2*u],[4*u,3*u],[0,0]]};"], ["pitch=pitch||6;", "pitch=(pitch||6)*((window.__P||{}).hatch==null?1:window.__P.hatch);"], ["const amps=[0.10,0.12,0.11,0.05]", "const amps=[0.10,0.12,0.11,0.05].map(v=>v*((window.__P||{}).grain==null?1:window.__P.grain))"]], "fit": true};
 
 /* lift-canvas · shared engine for plates whose figure is one canvas or one SVG on its source page.
    Appended to each plate's study.js by _build/plates.py after that plate's lc-figure.js (window.LC_FIG: source page,
@@ -40,6 +40,8 @@ window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.
    uses, measured by _build/qa/lift-probe.mjs (lc-head.js there is a copy of the HEAD function below; keep them in step), which also keeps only the dials that change this figure's pixels.
    An SVG figure is serialized with its computed styles; its strokes, type and colors take the same dials and inks.
    With composite, every layer the page stacks over the figure is copied (see layersOf); with overlay, its HTML type too.
+   FIG.dpr: the pixel ratio the page draws at (as the filed still was captured), so its marks keep their measured size.
+   FIG.blurKeep (px): blurs this narrow or less are the subject in focus, and the Focus blur dial leaves them alone.
    Nothing in the source file changes. */
 (function (S) {
   'use strict';
@@ -55,6 +57,13 @@ window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.
     });
   }
   var FIG = window.LC_FIG || {}, ON = {}; (FIG.dials || []).forEach(function (k) { ON[k] = 1; });
+  /* FIG.fit: one figure whose live crop has another shape than the filed still: the plate takes the figure's shape (its
+     margins kept), so the figure fills its stage instead of floating in it; callouts on it move with it */
+  if (FIG.fit && S.panels && S.panels.length === 1 && FIG.w && FIG.h) (function () {
+    var c0 = FIG.crop || [0, 0, 1, 1], a = (FIG.w * (c0[2] - c0[0])) / (FIG.h * (c0[3] - c0[1])), p0 = S.panels[0], nh = Math.round(p0.w / a * 100) / 100, H1 = Math.round(p0.y * 2 + nh);
+    S.panels[0] = Object.assign({}, p0, { h: nh, a: Math.round(a * 1e5) / 1e5 }); S.ref = { w: S.ref.w, h: H1 };
+    (S.points || []).forEach(function (q) { if (q.pi === 0 && q.rv != null) q.v = Math.round((p0.y + nh * q.rv) / H1 * 1e4) / 1e4; });
+  })();
   var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
   var ALL = {
     weight: leaf(1, 0.25, 3, 0.01, 'Line weight', '×', 'Weight of every line the figure draws, as a multiple of its own.'),
@@ -65,7 +74,7 @@ window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.
     moment: leaf(FIG.t0 || 2, 0, 12, 0.1, 'Moment', 's', 'Where in its motion the figure is shown, in seconds from the start of its clock.')
   };
   /* dials particular to one source page: FIG.extra holds their leaves, FIG.patches the string patches that wire them (window.__P.<key>) */
-  Object.keys(FIG.extra || {}).forEach(function (k) { var e = FIG.extra[k]; ALL[k] = leaf(e.value, e.range[0], e.range[1], e.step, e.label, e.unit, e.note); });
+  Object.keys(FIG.extra || {}).forEach(function (k) { var e = FIG.extra[k]; ALL[k] = leaf(e.value, e.range[0], e.range[1], e.step, e.label, e.unit, e.note); if (e.options) ALL[k].options = e.options; if (e.scale) ALL[k].scale = e.scale; if (e.when) ALL[k].when = e.when; });
   var P0 = {}; (FIG.dials || []).forEach(function (k) { if (ALL[k]) P0[k] = ALL[k]; });
   var read = (S.spec.techniques || [])[0] || {}, TID = read.id || 'lift';
   S.spec.techniques = [{ id: TID, short: (read.short || 'FIG'), name: read.name || 'Figure', layer: 1, pass: 1, atoms: read.atoms || [], params: P0,
@@ -88,6 +97,8 @@ window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.
     var W = window, q = [], n = 0, d0 = Date.now();
     /* a page that keeps its place in the URL (history.replaceState) cannot inside a frame of another address: let it pass */
     ['replaceState', 'pushState'].forEach(function (k) { var o = history[k]; history[k] = function () { try { return o.apply(history, arguments); } catch (e) {} }; });
+    /* FIG.dpr: the page draws its canvases at this pixel ratio, as the filed still was captured */
+    if (W.__DPR) try { Object.defineProperty(W, 'devicePixelRatio', { configurable: true, get: function () { return W.__DPR; } }); } catch (e) {}
     W.__NOW = 0; W.__P = W.__P0 || {}; W.__MAP = W.__MAP0 || {}; W.__MAPK = JSON.stringify(W.__MAP); W.__UC = new WeakMap(); W.__UO = { lw: 0, mark: 0, al: 0, font: 0, img: 0, col: {} };
     var UU = function (ctx) { var c = ctx && ctx.canvas; if (!c || !c.isConnected) return W.__UO; var o = W.__UC.get(c); if (!o) { o = { lw: 0, mark: 0, al: 0, font: 0, img: 0, col: {} }; W.__UC.set(c, o); } return o; };
     if (W.__REAL) W.__step = function () {}; else {
@@ -113,7 +124,7 @@ window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.
     var P = function (k, dflt) { var v = W.__P[k]; return v == null ? dflt : v; };
     wrap('lineWidth', function (v, c) { UU(c).lw++; return v * P('weight', 1); }, function (v) { return v / P('weight', 1); });
     wrap('globalAlpha', function (v, c) { UU(c).al++; return Math.max(0, Math.min(1, v * P('ink', 1))); });
-    wrap('filter', function (v) { var b = P('blur', 1); return b === 1 || typeof v !== 'string' ? v : v.replace(/blur\(([\d.]+)px\)/g, function (m, x) { return 'blur(' + (+x * b) + 'px)'; }); });
+    wrap('filter', function (v) { var b = P('blur', 1); return b === 1 || typeof v !== 'string' ? v : v.replace(/blur\(([\d.]+)px\)/g, function (m, x) { return +x <= (W.__BK || 0) ? m : 'blur(' + (+x * b) + 'px)'; }); });
     wrap('font', function (v, c) { UU(c).font++; var f = P('type', 1); return f === 1 ? v : String(v).replace(/([\d.]+)px/, function (s, x) { return (+x * f) + 'px'; }); });
     ['fillStyle', 'strokeStyle', 'shadowColor'].forEach(function (k) { wrap(k, mapc); });
     var di = C.drawImage; C.drawImage = function () { UU(this).img++; return di.apply(this, arguments); };
@@ -129,7 +140,7 @@ window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.
     return fetchSrc().then(function (html) {
       (FIG.patches || []).forEach(function (q) { var n = html.split(q[0]).length - 1; if (n < 1) { if (/debug/.test(location.search)) console.info('[lift-canvas] not wired:', q[0]); return; } html = html.split(q[0]).join(q[1]); });
       /* the dials are in place before the page's own scripts run, so a figure drawn once at load is drawn with them */
-      var PRE = '<script>window.__P0=' + JSON.stringify(Q) + ';window.__MAP0=' + JSON.stringify(MAP) + ';' + (FIG.real ? 'window.__REAL=1;' : '') + (FIG.sid ? 'try{location.hash=' + JSON.stringify(FIG.sid) + '}catch(e){}' : '') + '<\/script>';
+      var PRE = '<script>window.__P0=' + JSON.stringify(Q) + ';window.__MAP0=' + JSON.stringify(MAP) + ';' + (FIG.real ? 'window.__REAL=1;' : '') + (FIG.blurKeep ? 'window.__BK=' + (+FIG.blurKeep) + ';' : '') + (FIG.dpr ? 'window.__DPR=' + (+FIG.dpr) + ';' : '') + (FIG.sid ? 'try{location.hash=' + JSON.stringify(FIG.sid) + '}catch(e){}' : '') + '<\/script>';
       html = html.replace(/<head[^>]*>/i, function (m) { return m + '<base href="' + new URL(FIG.src, location.href).href + '">' + PRE + HEAD; });
       return new Promise(function (res, rej) {
         if (frame) frame.remove();
@@ -240,11 +251,13 @@ window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.
       var dt = pe.closest('details'); if (dt && !dt.open && !pe.closest('summary')) continue;
       rng.selectNodeContents(n); var br = rng.getBoundingClientRect(); if (!br.width || br.right < R.left || br.left > R.right || br.bottom < R.top || br.top > R.bottom) continue;
       var cs = w.getComputedStyle(pe), op = 1, hid = false; for (var q = pe; q && q.nodeType === 1; q = q.parentElement) { var qs = w.getComputedStyle(q); op *= +qs.opacity; if (qs.visibility === 'hidden') hid = true; } if (hid || op < .05) continue;
-      var lines = [], cur = null;
+      var lines = [], cur = null, g0 = ops.length;
       for (var i = 0; i < t.length; i++) { if (!cur && /\s/.test(t[i])) continue; rng.setStart(n, i); rng.setEnd(n, i + 1); var cr = rng.getClientRects()[0]; if (!cr) continue;
         if (!cur || Math.abs(cr.top - cur.top) > cr.height * .5) { if (/\s/.test(t[i])) { cur = null; continue; } cur = { top: cr.top, bottom: cr.bottom, left: cr.left, s: '' }; lines.push(cur); } cur.s += t[i]; }
       lines.forEach(function (L) { var str = L.s.replace(/\s+/g, ' ').trim(); if (!str) return; if (cs.textTransform === 'uppercase') str = str.toUpperCase();
         ops.push({ s: str, x: L.left - R.left, y: (L.top + L.bottom) / 2 - R.top, st: cs.fontStyle + ' ' + cs.fontWeight + ' ', px: parseFloat(cs.fontSize), fam: famMap(cs.fontFamily), color: cs.color, ls: cs.letterSpacing === 'normal' ? '0px' : cs.letterSpacing, a: op }); });
+      /* the lines of one text keep their leading as type grows: each is placed from the first line's center */
+      for (var gi = g0; gi < ops.length; gi++) ops[gi].gy = ops[g0].y;
     }
     return ops;
   }
@@ -353,7 +366,7 @@ window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.
           } else if (img) try { x.drawImage(img, cr[0] * nw, cr[1] * nh, (cr[2] - cr[0]) * nw, (cr[3] - cr[1]) * nh, ox, oy, iw * k, ih * k); } catch (e) { console.error('[lift-canvas]', e); }
           if (F.ops && F.ops.length) { var ks = fw * k / cw0, ty = Q.type == null ? 1 : Q.type;
             x.save(); x.beginPath(); x.rect(ox, oy, iw * k, ih * k); x.clip(); x.translate(ox - cr[0] * cw0 * ks, oy - cr[1] * ch0 * ks); x.scale(ks, ks); x.textBaseline = 'middle'; x.textAlign = 'left';
-            F.ops.forEach(function (o) { x.font = o.st + (o.px * ty) + 'px ' + o.fam; x.fillStyle = mapCol(o.color, MAP); x.globalAlpha = Math.min(1, o.a * (Q.ink == null ? 1 : Q.ink)); if ('letterSpacing' in x) x.letterSpacing = o.ls; x.fillText(o.s, o.x, o.y); });
+            F.ops.forEach(function (o) { x.font = o.st + (o.px * ty) + 'px ' + o.fam; x.fillStyle = mapCol(o.color, MAP); x.globalAlpha = Math.min(1, o.a * (Q.ink == null ? 1 : Q.ink)); if ('letterSpacing' in x) x.letterSpacing = o.ls; x.fillText(o.s, o.x, o.gy == null ? o.y : o.gy + (o.y - o.gy) * ty); });
             x.restore(); }
           x.restore(); x.strokeStyle = Vt.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
         });

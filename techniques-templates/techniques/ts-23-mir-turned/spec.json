@@ -1,0 +1,431 @@
+{
+  "id": "ts-23-mir-turned",
+  "code": "TS-23",
+  "title": "Mir, turned",
+  "section": "techniques",
+  "variants": [
+    {
+      "id": "ref",
+      "label": "Mindgut",
+      "swatches": [
+        "#0A4528",
+        "#D0EC60",
+        "#FFFFFF",
+        "#126B3D",
+        "#151B17"
+      ]
+    },
+    {
+      "id": "io",
+      "label": "Ø",
+      "swatches": [
+        "#101014",
+        "#F4551E",
+        "#2F5AE6",
+        "#FFFFFF"
+      ]
+    }
+  ],
+  "reference": {
+    "file": "ref.png",
+    "px": [
+      1233,
+      945
+    ],
+    "grammar": "one character as a construction: sphere head with a band, dome of brain folds, two splayed cylinder cans with antenna tubes, decal eyes and mouth; one heavy line; flat inks"
+  },
+  "units": "design units, 1000 = plate width; the plate is 1000 × 766",
+  "palette": {
+    "white": "#FFFFFF",
+    "paper": "#FBFBF7",
+    "ink": "#151B17",
+    "deep": "#0A4528",
+    "green": "#126B3D",
+    "lime": "#D0EC60"
+  },
+  "techniques": [
+    {
+      "id": "ground-inks",
+      "short": "GND",
+      "name": "Ground and inks",
+      "layer": 0,
+      "pass": 0,
+      "atoms": [
+        "ground",
+        "palette",
+        "brand-rule"
+      ],
+      "params": {
+        "ground": {
+          "value": 1,
+          "options": [
+            {
+              "v": 1,
+              "label": "Light"
+            },
+            {
+              "v": 2,
+              "label": "Accent"
+            },
+            {
+              "v": 3,
+              "label": "Deep"
+            }
+          ],
+          "label": "Ground",
+          "note": "The sheet, by role. The line follows it: deep on light, ink on accent, paper on deep."
+        }
+      },
+      "limits": "The accent is never a line color. On the deep ground the face takes the second green so the head still reads as a volume.",
+      "implementation": "One switch picks five roles from the palette: sheet, line, face, accent and the one-ink color for Mono, Engraved and Pencil.",
+      "module": "lib/ground-inks.js"
+    },
+    {
+      "id": "head-sphere",
+      "short": "HEAD",
+      "name": "Head sphere, turned",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "sphere",
+        "rotation",
+        "orthographic",
+        "latitude-band"
+      ],
+      "params": {
+        "turn_deg": {
+          "value": 0,
+          "range": [
+            -35,
+            35
+          ],
+          "step": 1,
+          "unit": "°",
+          "label": "Turn",
+          "note": "Yaw of the whole head. From about ±20° the far can tucks behind the head; past ±26° its face turns away."
+        },
+        "tilt_deg": {
+          "value": 8,
+          "range": [
+            -10,
+            20
+          ],
+          "step": 1,
+          "unit": "°",
+          "label": "Tilt",
+          "note": "Chin up (+) or down (−). The band arches up as the chin lifts."
+        },
+        "radius_u": 300,
+        "center_u": [
+          500,
+          420
+        ],
+        "band_lat_deg": 12,
+        "light": [
+          -0.45,
+          0.62,
+          0.64
+        ]
+      },
+      "limits": "Turn is held to ±35°: past that the near can covers the near eye. Tilt below −10° hides the band behind the brow line.",
+      "implementation": "Every part is built in head space and taken to the view by one rotation, tilt about x then turn about y, and an orthographic projection. The band is the latitude circle at 12°; only its front half is drawn.",
+      "module": "lib/head-sphere.js"
+    },
+    {
+      "id": "headphone-cans",
+      "short": "CANS",
+      "name": "Cans and antennae",
+      "layer": 1,
+      "pass": 1,
+      "atoms": [
+        "cylinder",
+        "bevel",
+        "convex-hull",
+        "tube"
+      ],
+      "params": {
+        "can_u": {
+          "value": 138,
+          "range": [
+            100,
+            165
+          ],
+          "unit": "u",
+          "label": "Can size",
+          "note": "Radius of each can. Depth is 0.72 of it; the outer edge is rounded at 0.2 of it, the inner edge at 0.12."
+        },
+        "antenna_u": {
+          "value": 170,
+          "range": [
+            70,
+            200
+          ],
+          "unit": "u",
+          "label": "Antenna length",
+          "note": "How far each antenna stands above the top of its can."
+        },
+        "splay_deg": 26.5,
+        "mount": 1,
+        "tuck": 0.12,
+        "swap": 0.1,
+        "clear": 1.3,
+        "drop": -0.21,
+        "depth": 0.72,
+        "round_out": 0.2,
+        "round_in": 0.12,
+        "rim_n": 144,
+        "rod_r": 0.12,
+        "ant_at": 0.5
+      },
+      "limits": "Above 165 u the cans meet under the chin at full turn. Below 70 u the antennae hide behind the dome.",
+      "implementation": "A can is a puck: a cylinder with rounded edges, its inner face tangent to the sphere. Its outline is the convex hull of 14 rims sampled at 144 points, so ellipse arcs join by true tangent lines. A front can always stands out past the head’s silhouette by at least 1.3 line widths (it slides along the ear axis when the turn would bring the two outlines together), so the head line meets it in clean T-junctions. A can whose axis has turned to within 0.1 of edge-on is drawn behind the head (any overlap at that moment is thinner than the line) and slides up to 0.12 R into it, so it tucks behind the head instead of standing beside it as a slab.",
+      "module": "lib/headphone-cans.js"
+    },
+    {
+      "id": "brain-folds",
+      "short": "FOLD",
+      "name": "Dome and brain folds",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "scallop",
+        "latitude-rows",
+        "sphere-curve"
+      ],
+      "params": {
+        "rows": {
+          "value": 3,
+          "range": [
+            2,
+            4
+          ],
+          "step": 1,
+          "label": "Fold rows",
+          "note": "Rows of folds between the band and 80° latitude; each row is cut into long wavy strokes with a hook at one end."
+        },
+        "seed": 23,
+        "top_lat_deg": 80,
+        "margin": 0.06,
+        "amp": 0.075,
+        "bump": 0.28,
+        "arc": 0.8,
+        "gap": 0.18,
+        "drift": 0.4,
+        "hook": 0.055,
+        "clear": 1,
+        "min_len": 2.5
+      },
+      "limits": "Four rows is the most that stay apart at the heaviest line; one row reads as a hat brim, not a brain. Every fold keeps one stroke width clear of the outline, the band, the front cans and antennas, and every other fold; pieces shorter than 2.5 widths after that cut are dropped. With a heavy line the fold stroke thins, to half at most, until at least as many strokes as rows fit.",
+      "implementation": "Each fold is a curve on the sphere: latitude rises in √sin humps 0.075 R high every 0.28 R of arc and drifts by up to 0.4 of a row; one end curls down and back through 112° on a 0.055 R radius. Only the part facing the viewer and clear of the outline is drawn.",
+      "module": "lib/brain-folds.js"
+    },
+    {
+      "id": "face-decals",
+      "short": "FACE",
+      "name": "Eyes, look and mouth",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "decal",
+        "gaze",
+        "glint"
+      ],
+      "params": {
+        "look_across_deg": {
+          "value": 20,
+          "range": [
+            -40,
+            40
+          ],
+          "step": 1,
+          "unit": "°",
+          "label": "Look across",
+          "note": "Gaze left (−) or right (+) of where the head points. Moves the glint and shifts the eyes on the sphere."
+        },
+        "look_up_deg": {
+          "value": 30,
+          "range": [
+            -20,
+            45
+          ],
+          "step": 1,
+          "unit": "°",
+          "label": "Look up",
+          "note": "Gaze up (+) or down (−). The glint bites the top of the eye when Mir looks up."
+        },
+        "eye_lon_deg": 20,
+        "eye_lat_deg": -13.6,
+        "eye_r": [
+          0.25,
+          0.28
+        ],
+        "glint_r": 0.12,
+        "glint_k": 1.4,
+        "glint_max": 0.85,
+        "shift": 0.08,
+        "limb": 0.33,
+        "clear": 1,
+        "mouth_lat_deg": -35,
+        "mouth": [
+          0.11,
+          0.13
+        ]
+      },
+      "limits": "The glint offset is held to 0.85 of the eye radius and drawn only inside the eye. Both eyes shift together, as little as possible from where the look puts them, so that each stays at least one line width clear of the head’s outline and of a front can; if no shift fits, the eyes shrink by up to 28%.",
+      "implementation": "Eyes and mouth are shapes in the tangent plane at a point of the sphere, pushed back onto it. The glint offset is 1.4 × (sin across · cos up, sin up) of the eye radius, eased to at most 0.85.",
+      "module": "lib/face-decals.js"
+    },
+    {
+      "id": "brush-line",
+      "short": "LINE",
+      "name": "Brush line",
+      "layer": 3,
+      "pass": 3,
+      "atoms": [
+        "stroke",
+        "round-cap",
+        "single-weight"
+      ],
+      "params": {
+        "weight_u": {
+          "value": 30,
+          "range": [
+            14,
+            44
+          ],
+          "unit": "u",
+          "label": "Line weight",
+          "note": "One weight for every outline, rim and band. Folds take 0.6 of it (never more than a third of the row spacing); the can gloss 0.45, always in the light ink."
+        },
+        "fold_share": 0.6,
+        "gloss_share": 0.45
+      },
+      "limits": "Above 44 u the eye glint closes and the folds merge. Below 14 u the line no longer holds the flat fills.",
+      "implementation": "Round-capped, round-joined strokes of one width over the fills; eyes and mouth are filled in the line color.",
+      "module": "lib/brush-line.js"
+    },
+    {
+      "id": "finish",
+      "short": "FIN",
+      "name": "Finish",
+      "layer": 4,
+      "pass": 4,
+      "atoms": [
+        "stochastic-screen",
+        "engraving",
+        "graphite",
+        "per-pixel"
+      ],
+      "params": {
+        "finish": {
+          "value": 1,
+          "options": [
+            {
+              "v": 1,
+              "label": "Flat"
+            },
+            {
+              "v": 2,
+              "label": "Grain"
+            },
+            {
+              "v": 3,
+              "label": "Mono"
+            },
+            {
+              "v": 4,
+              "label": "Engraved"
+            },
+            {
+              "v": 5,
+              "label": "Pencil"
+            }
+          ],
+          "label": "Finish",
+          "note": "Flat color · Color + grain · Mono stamp · Engraved · Pencil. Each renders the same construction."
+        },
+        "grain": {
+          "value": 90,
+          "range": [
+            50,
+            100
+          ],
+          "unit": "%",
+          "label": "Grain amount",
+          "note": "Grain and Mono only: share of the shade printed as single-pixel dots; the rest is smooth tone.",
+          "when": {
+            "path": "finish",
+            "is": [
+              2,
+              3
+            ]
+          }
+        },
+        "hatch_angle_deg": {
+          "value": 35,
+          "range": [
+            -75,
+            75
+          ],
+          "step": 1,
+          "unit": "°",
+          "label": "Hatch angle",
+          "note": "Engraved only: tilt of the cutting planes on the head. The cans keep rings around their axis.",
+          "when": {
+            "path": "finish",
+            "is": [
+              4
+            ]
+          }
+        },
+        "hatch_u": {
+          "value": 6,
+          "range": [
+            5,
+            9
+          ],
+          "unit": "u",
+          "label": "Hatch spacing",
+          "note": "Engraved only: distance between cutting planes.",
+          "when": {
+            "path": "finish",
+            "is": [
+              4
+            ]
+          }
+        },
+        "pressure": {
+          "value": 60,
+          "range": [
+            25,
+            100
+          ],
+          "unit": "%",
+          "label": "Pencil pressure",
+          "note": "Pencil only: graphite darkness and stroke width.",
+          "when": {
+            "path": "finish",
+            "is": [
+              5
+            ]
+          }
+        }
+      },
+      "limits": "Hatch lines are box-filtered per pixel and fade to their mean tone below 3 px; spacing runs 5–9 u so a 1× screen does not beat, and the cross set ramps in over the darkest half of the tone. Grain amount starts at 0.5 so Mono stays a one-ink stamp. Each finish-only control is quiet outside its finish.",
+      "implementation": "Per pixel: tone = 1 − n·L, eased in past mid-shade. Grain keeps the part colors and screens only the shade, in the darkest ink; Mono screens one ink; Engraved inks a line where the plane phase falls within the tone; Pencil draws broken diagonal strokes thinned by paper tooth. On the deep ground the one ink is paper and prints the light, from 70% on the lit side down to none in the shade, so the paper line still reads.",
+      "module": "lib/finish.js"
+    }
+  ],
+  "pass_order": [
+    "ground · the sheet in the ground ink",
+    "form · sphere, cans and antennae rotated by Turn and Tilt; back can, head, front can",
+    "fill · per pixel from the surface normal: part, shade, finish",
+    "line · outline, band, folds and rims in one weight; eyes and mouth filled",
+    "finish · Pencil adds the construction circles last"
+  ],
+  "notes": [
+    "Measured on ref.png (1233 × 945): head radius 443 px at (617, 470); line 44 px = 0.10 R; band centerline 150 px above center, 25 px lower at its ends → latitude 12° with an 8° tilt; eyes 213 × 240 px, 149 px off-axis, 47 px below center → longitude 20°, latitude −13.6°; can face ellipse ratio 0.42 → splay 26.5°; antenna tube 150 px wide.",
+    "Inks: outline (8, 68, 24) ≈ Deep #0A4528; lime (216, 232, 22) → Lime #D0EC60; the cream face is replaced by white.",
+    "Folds are seeded (23). Every value is drawn per render; nothing is a bitmap."
+  ]
+}

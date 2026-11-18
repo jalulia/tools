@@ -29,7 +29,7 @@ window.STUDY={"id": "pl-49-particle-wave", "code": "PL-49", "fig": "4.49", "titl
 })(window.STUDY);
 
 /* PL-49 · Particle wave · drawn by its source page's own code: Mindgut-Worlds-V2.html #hero-art. Dials and inks measured by _build/qa/lift-probe.mjs; see _build/engines/lift-canvas.js. */
-window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "sel": "#hero-art", "w": 1195, "h": 850, "crop": [0.42, 0.0, 1.0, 1.0], "ground": "#101113", "dials": ["turn", "tilt", "tube", "twist", "density", "coral", "mark"], "inks": ["#88b82b", "#ff5032", "#ff6640", "#8fbe30", "#ff6841", "#d2fe63", "#ff653f", "#ff5d3a"], "t0": 2, "extra": {"turn": {"value": 0, "range": [-1.5, 1.5], "step": 0.01, "label": "Turn", "note": "How far the loop is turned about its axis, added to the page’s own angle.", "unit": "rad"}, "tilt": {"value": 0, "range": [-0.8, 0.8], "step": 0.01, "label": "Tilt", "note": "How far the loop leans toward you, added to the page’s 0.85 rad.", "unit": "rad"}, "tube": {"value": 1, "range": [0.2, 2.2], "step": 0.01, "label": "Tube", "note": "Thickness of the ring’s tube, as a multiple of the page’s 0.32.", "unit": "×"}, "twist": {"value": 1, "range": [0, 4], "step": 0.01, "label": "Twist", "note": "Height of the three-lobed twist along the ring, as a multiple of the page’s own.", "unit": "×"}, "density": {"value": 1, "range": [0.35, 1.4], "step": 0.01, "label": "Mark density", "note": "How many of the ring’s 13,500 sample points are kept as marks. 1 is the page’s own thinning.", "unit": "×"}, "coral": {"value": 0.175, "range": [0, 0.5], "step": 0.005, "label": "Coral share", "note": "How much of the ring turns coral where it catches the light. 0 is all lime."}, "rings": {"value": 45, "range": [6, 90], "step": 1, "label": "Rings", "note": "How many afterimage ellipses are drawn."}, "spacing": {"value": 1, "range": [0.4, 2.5], "step": 0.01, "label": "Ring spacing", "note": "Gap between rings, as a multiple of the page’s 5 px.", "unit": "×"}, "squash": {"value": 1, "range": [0.3, 1.6], "step": 0.01, "label": "Squash", "note": "Height of each ring against its width, as a multiple of the page’s 0.64.", "unit": "×"}, "rotate": {"value": 0, "range": [-1.6, 1.6], "step": 0.01, "label": "Rotation", "note": "Turn of the rings, added to the page’s −0.4 rad.", "unit": "rad"}, "freq": {"value": 1, "range": [0.3, 3], "step": 0.01, "label": "Wave frequency", "note": "How many beats each exchange’s wave packs in, as a multiple of what its letters give.", "unit": "×"}, "amp": {"value": 1, "range": [0.2, 1.6], "step": 0.01, "label": "Amplitude", "note": "Height of each wave in its row, as a multiple of the page’s own.", "unit": "×"}, "env": {"value": 0.7, "range": [0.1, 3], "step": 0.01, "label": "Envelope", "note": "How the wave swells from its ends: the power on the page’s sine envelope. Low is full width, high pinches to the middle."}, "pitch": {"value": 2, "range": [1, 8], "step": 1, "label": "Bar pitch", "note": "Spacing of the vertical bars that build each wave, in px.", "unit": "px"}, "oturn": {"value": 0, "range": [-3.1, 3.1], "step": 0.01, "label": "Turn", "note": "Turn of the helix, added to the angle you set by dragging across it.", "unit": "rad"}, "radius": {"value": 1, "range": [0.3, 1.6], "step": 0.01, "label": "Radius", "note": "Width of the helix, as a multiple of the page’s 0.28 of the frame.", "unit": "×"}, "glyphs": {"value": 120, "range": [10, 240], "step": 1, "label": "Glyphs per strand", "note": "Most letters each strand may set (its count of letters, up to this)."}, "gstep": {"value": 1, "range": [0.2, 3], "step": 0.01, "label": "Coil", "note": "How far each letter turns along its strand, as a multiple of the page’s 0.045 rad.", "unit": "×"}}, "patches": [["function sculpture(x,w,h,phase=.3,small=false){", "function sculpture(x,w,h,phase=.3,small=false){phase+=((window.__P||{}).turn==null?0:window.__P.turn);"], ["r=1+.32*Math.cos(v)", "r=1+.32*((window.__P||{}).tube==null?1:window.__P.tube)*Math.cos(v)"], ["pz=.32*Math.sin(v)", "pz=.32*((window.__P||{}).tube==null?1:window.__P.tube)*Math.sin(v)"], ["yy=py*Math.cos(.85)-pz*Math.sin(.85),zz=py*Math.sin(.85)+pz*Math.cos(.85)", "TL=.85+((window.__P||{}).tilt==null?0:window.__P.tilt),yy=py*Math.cos(TL)-pz*Math.sin(TL),zz=py*Math.sin(TL)+pz*Math.cos(TL)"], ["tw=.18*Math.sin(u*3)", "tw=.18*((window.__P||{}).twist==null?1:window.__P.twist)*Math.sin(u*3)"], ["if(hash(p.i,p.j)>p.light*.82+.16)continue;", "if(hash(p.i,p.j)>(p.light*.82+.16)*((window.__P||{}).density==null?1:window.__P.density))continue;"], ["let hot=Math.sin(p.u+phase*1.2)>.65;", "let hot=Math.sin(p.u+phase*1.2)>1-2*((window.__P||{}).coral==null?0.175:window.__P.coral);"], ["for(let i=0;i<45;i++){x.beginPath();x.ellipse(w*.75,h*.6,i*5,i*3.2,-.4,0,TAU);x.stroke()}", "for(let i=0;i<((window.__P||{}).rings==null?45:window.__P.rings);i++){x.beginPath();x.ellipse(w*.75,h*.6,i*5*((window.__P||{}).spacing==null?1:window.__P.spacing),i*3.2*((window.__P||{}).spacing==null?1:window.__P.spacing)*((window.__P||{}).squash==null?1:window.__P.squash),-.4+((window.__P||{}).rotate==null?0:window.__P.rotate),0,TAU);x.stroke()}"], ["val=Math.sin(f*TAU*(c.f[0]*9+2))*Math.sin(f*TAU*(c.f[1]*11+1))", "val=Math.sin(f*TAU*(c.f[0]*9+2)*((window.__P||{}).freq==null?1:window.__P.freq))*Math.sin(f*TAU*(c.f[1]*11+1)*((window.__P||{}).freq==null?1:window.__P.freq))"], ["amp=(row*.37)*env*", "amp=(row*.37*((window.__P||{}).amp==null?1:window.__P.amp))*env*"], ["env=Math.sin(f*Math.PI)**.7", "env=Math.sin(f*Math.PI)**((window.__P||{}).env==null?0.7:window.__P.env)"], ["for(let j=0;j<width;j+=2){", "for(let j=0;j<width;j+=((window.__P||{}).pitch==null?2:window.__P.pitch)){"], ["let a=i*.62+j*.045+objectAngle,px=w*.57+Math.cos(a)*w*.28", "let a=i*.62+j*.045*((window.__P||{}).gstep==null?1:window.__P.gstep)+objectAngle+((window.__P||{}).oturn==null?0:window.__P.oturn),px=w*.57+Math.cos(a)*w*.28*((window.__P||{}).radius==null?1:window.__P.radius)"], ["for(let j=0;j<Math.min(c.n,120);j++){", "for(let j=0;j<Math.min(c.n,((window.__P||{}).glyphs==null?120:window.__P.glyphs));j++){"]], "overlay": true};
+window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "sel": "#hero-art", "w": 1195, "h": 850, "crop": [0.42, 0.0, 1.0, 1.0], "ground": "#101113", "inks": ["#88b82b", "#ff5032", "#ff6640", "#8fbe30", "#ff6841", "#d2fe63", "#ff653f", "#ff5d3a"], "t0": 2, "overlay": true, "dpr": 2, "dials": ["turn", "tilt", "tube", "twist", "density", "coral", "mark"], "extra": {"turn": {"value": 0, "range": [-45, 45], "step": 1, "label": "Turn", "note": "How far the loop is turned about its axis, added to the page’s own angle; past 45° it swings out of the frame.", "unit": "°"}, "tilt": {"value": 0, "range": [-45, 45], "step": 1, "label": "Tilt", "note": "How far the loop leans toward you, added to the page’s 49°.", "unit": "°"}, "tube": {"value": 1, "range": [0.3, 1.6], "step": 0.01, "label": "Tube", "note": "Thickness of the ring’s tube, as a multiple of the page’s 0.32.", "unit": "×"}, "twist": {"value": 1, "range": [0, 3], "step": 0.01, "label": "Twist", "note": "Height of the three-lobed twist along the ring, as a multiple of the page’s own.", "unit": "×"}, "density": {"value": 1, "range": [0.55, 1], "step": 0.01, "label": "Mark density", "note": "How many of the ring’s 13,500 sample points are kept as marks. 1 is the page’s own thinning; lower thins the shadow side first.", "unit": "×"}, "coral": {"value": 0.175, "range": [0, 0.5], "step": 0.005, "label": "Coral share", "note": "How much of the ring turns coral where it catches the light. 0 is all lime."}, "mark": {"value": 1, "range": [0.75, 1.6], "step": 0.01, "label": "Mark size", "note": "Size of every mark the loop is printed in, as a multiple of the page’s own.", "unit": "×"}}, "patches": [["function sculpture(x,w,h,phase=.3,small=false){", "function sculpture(x,w,h,phase=.3,small=false){phase+=(((window.__P||{}).turn==null?0:window.__P.turn)*Math.PI/180);"], ["r=1+.32*Math.cos(v)", "r=1+.32*((window.__P||{}).tube==null?1:window.__P.tube)*Math.cos(v)"], ["pz=.32*Math.sin(v)", "pz=.32*((window.__P||{}).tube==null?1:window.__P.tube)*Math.sin(v)"], ["yy=py*Math.cos(.85)-pz*Math.sin(.85),zz=py*Math.sin(.85)+pz*Math.cos(.85)", "TL=.85+(((window.__P||{}).tilt==null?0:window.__P.tilt)*Math.PI/180),yy=py*Math.cos(TL)-pz*Math.sin(TL),zz=py*Math.sin(TL)+pz*Math.cos(TL)"], ["tw=.18*Math.sin(u*3)", "tw=.18*((window.__P||{}).twist==null?1:window.__P.twist)*Math.sin(u*3)"], ["if(hash(p.i,p.j)>p.light*.82+.16)continue;", "if(hash(p.i,p.j)>(p.light*.82+.16)*((window.__P||{}).density==null?1:window.__P.density))continue;"], ["let hot=Math.sin(p.u+phase*1.2)>.65;", "let hot=Math.sin(p.u+phase*1.2)>1-2*((window.__P||{}).coral==null?0.175:window.__P.coral);"], ["for(let i=0;i<45;i++){x.beginPath();x.ellipse(w*.75,h*.6,i*5,i*3.2,-.4,0,TAU);x.stroke()}", "for(let i=0;i<((window.__P||{}).rings==null?45:window.__P.rings);i++){x.beginPath();x.ellipse(w*.75,h*.6,i*5*((window.__P||{}).spacing==null?1:window.__P.spacing),i*3.2*((window.__P||{}).spacing==null?1:window.__P.spacing)*((window.__P||{}).squash==null?1:window.__P.squash),-.4+(((window.__P||{}).rotate==null?0:window.__P.rotate)*Math.PI/180),0,TAU);x.stroke()}"], ["val=Math.sin(f*TAU*(c.f[0]*9+2))*Math.sin(f*TAU*(c.f[1]*11+1))", "val=Math.sin(f*TAU*(c.f[0]*9+2)*((window.__P||{}).freq==null?1:window.__P.freq))*Math.sin(f*TAU*(c.f[1]*11+1)*((window.__P||{}).freq==null?1:window.__P.freq))"], ["amp=(row*.37)*env*", "amp=(row*.37*((window.__P||{}).amp==null?1:window.__P.amp))*env*"], ["env=Math.sin(f*Math.PI)**.7", "env=Math.sin(f*Math.PI)**((window.__P||{}).env==null?0.7:window.__P.env)"], ["for(let j=0;j<width;j+=2){", "for(let j=0;j<width;j+=((window.__P||{}).pitch==null?2:window.__P.pitch)){"], ["let a=i*.62+j*.045+objectAngle,px=w*.57+Math.cos(a)*w*.28", "let a=i*.62+j*.045*((window.__P||{}).gstep==null?1:window.__P.gstep)+objectAngle+(((window.__P||{}).oturn==null?0:window.__P.oturn)*Math.PI/180),px=w*.57+Math.cos(a)*w*.28*((window.__P||{}).radius==null?1:window.__P.radius)"], ["for(let j=0;j<Math.min(c.n,120);j++){", "for(let j=0;j<Math.min(c.n,((window.__P||{}).glyphs==null?120:window.__P.glyphs));j++){"], ["x.globalAlpha=.18+(p.z+1)*.38;", "x.globalAlpha=.94-.76*((window.__P||{}).depth==null?1:window.__P.depth)*(1-p.z)/2;"]]};
 
 /* lift-canvas · shared engine for plates whose figure is one canvas or one SVG on its source page.
    Appended to each plate's study.js by _build/plates.py after that plate's lc-figure.js (window.LC_FIG: source page,
@@ -40,6 +40,8 @@ window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "
    uses, measured by _build/qa/lift-probe.mjs (lc-head.js there is a copy of the HEAD function below; keep them in step), which also keeps only the dials that change this figure's pixels.
    An SVG figure is serialized with its computed styles; its strokes, type and colors take the same dials and inks.
    With composite, every layer the page stacks over the figure is copied (see layersOf); with overlay, its HTML type too.
+   FIG.dpr: the pixel ratio the page draws at (as the filed still was captured), so its marks keep their measured size.
+   FIG.blurKeep (px): blurs this narrow or less are the subject in focus, and the Focus blur dial leaves them alone.
    Nothing in the source file changes. */
 (function (S) {
   'use strict';
@@ -55,6 +57,13 @@ window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "
     });
   }
   var FIG = window.LC_FIG || {}, ON = {}; (FIG.dials || []).forEach(function (k) { ON[k] = 1; });
+  /* FIG.fit: one figure whose live crop has another shape than the filed still: the plate takes the figure's shape (its
+     margins kept), so the figure fills its stage instead of floating in it; callouts on it move with it */
+  if (FIG.fit && S.panels && S.panels.length === 1 && FIG.w && FIG.h) (function () {
+    var c0 = FIG.crop || [0, 0, 1, 1], a = (FIG.w * (c0[2] - c0[0])) / (FIG.h * (c0[3] - c0[1])), p0 = S.panels[0], nh = Math.round(p0.w / a * 100) / 100, H1 = Math.round(p0.y * 2 + nh);
+    S.panels[0] = Object.assign({}, p0, { h: nh, a: Math.round(a * 1e5) / 1e5 }); S.ref = { w: S.ref.w, h: H1 };
+    (S.points || []).forEach(function (q) { if (q.pi === 0 && q.rv != null) q.v = Math.round((p0.y + nh * q.rv) / H1 * 1e4) / 1e4; });
+  })();
   var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
   var ALL = {
     weight: leaf(1, 0.25, 3, 0.01, 'Line weight', '×', 'Weight of every line the figure draws, as a multiple of its own.'),
@@ -65,7 +74,7 @@ window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "
     moment: leaf(FIG.t0 || 2, 0, 12, 0.1, 'Moment', 's', 'Where in its motion the figure is shown, in seconds from the start of its clock.')
   };
   /* dials particular to one source page: FIG.extra holds their leaves, FIG.patches the string patches that wire them (window.__P.<key>) */
-  Object.keys(FIG.extra || {}).forEach(function (k) { var e = FIG.extra[k]; ALL[k] = leaf(e.value, e.range[0], e.range[1], e.step, e.label, e.unit, e.note); });
+  Object.keys(FIG.extra || {}).forEach(function (k) { var e = FIG.extra[k]; ALL[k] = leaf(e.value, e.range[0], e.range[1], e.step, e.label, e.unit, e.note); if (e.options) ALL[k].options = e.options; if (e.scale) ALL[k].scale = e.scale; if (e.when) ALL[k].when = e.when; });
   var P0 = {}; (FIG.dials || []).forEach(function (k) { if (ALL[k]) P0[k] = ALL[k]; });
   var read = (S.spec.techniques || [])[0] || {}, TID = read.id || 'lift';
   S.spec.techniques = [{ id: TID, short: (read.short || 'FIG'), name: read.name || 'Figure', layer: 1, pass: 1, atoms: read.atoms || [], params: P0,
@@ -88,6 +97,8 @@ window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "
     var W = window, q = [], n = 0, d0 = Date.now();
     /* a page that keeps its place in the URL (history.replaceState) cannot inside a frame of another address: let it pass */
     ['replaceState', 'pushState'].forEach(function (k) { var o = history[k]; history[k] = function () { try { return o.apply(history, arguments); } catch (e) {} }; });
+    /* FIG.dpr: the page draws its canvases at this pixel ratio, as the filed still was captured */
+    if (W.__DPR) try { Object.defineProperty(W, 'devicePixelRatio', { configurable: true, get: function () { return W.__DPR; } }); } catch (e) {}
     W.__NOW = 0; W.__P = W.__P0 || {}; W.__MAP = W.__MAP0 || {}; W.__MAPK = JSON.stringify(W.__MAP); W.__UC = new WeakMap(); W.__UO = { lw: 0, mark: 0, al: 0, font: 0, img: 0, col: {} };
     var UU = function (ctx) { var c = ctx && ctx.canvas; if (!c || !c.isConnected) return W.__UO; var o = W.__UC.get(c); if (!o) { o = { lw: 0, mark: 0, al: 0, font: 0, img: 0, col: {} }; W.__UC.set(c, o); } return o; };
     if (W.__REAL) W.__step = function () {}; else {
@@ -113,7 +124,7 @@ window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "
     var P = function (k, dflt) { var v = W.__P[k]; return v == null ? dflt : v; };
     wrap('lineWidth', function (v, c) { UU(c).lw++; return v * P('weight', 1); }, function (v) { return v / P('weight', 1); });
     wrap('globalAlpha', function (v, c) { UU(c).al++; return Math.max(0, Math.min(1, v * P('ink', 1))); });
-    wrap('filter', function (v) { var b = P('blur', 1); return b === 1 || typeof v !== 'string' ? v : v.replace(/blur\(([\d.]+)px\)/g, function (m, x) { return 'blur(' + (+x * b) + 'px)'; }); });
+    wrap('filter', function (v) { var b = P('blur', 1); return b === 1 || typeof v !== 'string' ? v : v.replace(/blur\(([\d.]+)px\)/g, function (m, x) { return +x <= (W.__BK || 0) ? m : 'blur(' + (+x * b) + 'px)'; }); });
     wrap('font', function (v, c) { UU(c).font++; var f = P('type', 1); return f === 1 ? v : String(v).replace(/([\d.]+)px/, function (s, x) { return (+x * f) + 'px'; }); });
     ['fillStyle', 'strokeStyle', 'shadowColor'].forEach(function (k) { wrap(k, mapc); });
     var di = C.drawImage; C.drawImage = function () { UU(this).img++; return di.apply(this, arguments); };
@@ -129,7 +140,7 @@ window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "
     return fetchSrc().then(function (html) {
       (FIG.patches || []).forEach(function (q) { var n = html.split(q[0]).length - 1; if (n < 1) { if (/debug/.test(location.search)) console.info('[lift-canvas] not wired:', q[0]); return; } html = html.split(q[0]).join(q[1]); });
       /* the dials are in place before the page's own scripts run, so a figure drawn once at load is drawn with them */
-      var PRE = '<script>window.__P0=' + JSON.stringify(Q) + ';window.__MAP0=' + JSON.stringify(MAP) + ';' + (FIG.real ? 'window.__REAL=1;' : '') + (FIG.sid ? 'try{location.hash=' + JSON.stringify(FIG.sid) + '}catch(e){}' : '') + '<\/script>';
+      var PRE = '<script>window.__P0=' + JSON.stringify(Q) + ';window.__MAP0=' + JSON.stringify(MAP) + ';' + (FIG.real ? 'window.__REAL=1;' : '') + (FIG.blurKeep ? 'window.__BK=' + (+FIG.blurKeep) + ';' : '') + (FIG.dpr ? 'window.__DPR=' + (+FIG.dpr) + ';' : '') + (FIG.sid ? 'try{location.hash=' + JSON.stringify(FIG.sid) + '}catch(e){}' : '') + '<\/script>';
       html = html.replace(/<head[^>]*>/i, function (m) { return m + '<base href="' + new URL(FIG.src, location.href).href + '">' + PRE + HEAD; });
       return new Promise(function (res, rej) {
         if (frame) frame.remove();
@@ -152,7 +163,8 @@ window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "
               try { el.scrollIntoView({ block: 'center' }); } catch (e) {}
               if (FIG.real) return setTimeout(function () { res({ w: w, el: el }); }, FIG.settle || 1500);
               var T = Q.moment != null ? Q.moment : (FIG.t0 || 2), steps = Math.round(T * 30) + 2, i = 0;
-              (function run() { for (var j = 0; j < 30 && i < steps; j++, i++) w.__step(1 / 30); if (i < steps) setTimeout(run, 0); else res({ w: w, el: el }); })();
+              /* settle: real time for the page's own data to arrive before its clock runs */
+              setTimeout(function run() { for (var j = 0; j < 30 && i < steps; j++, i++) w.__step(1 / 30); if (i < steps) setTimeout(run, 0); else res({ w: w, el: el }); }, FIG.settle || 0);
             } else if (++tries < 80) setTimeout(wait, 100); else rej(new Error('figure not found: ' + FIG.sel));
           })();
         };
@@ -239,11 +251,13 @@ window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "
       var dt = pe.closest('details'); if (dt && !dt.open && !pe.closest('summary')) continue;
       rng.selectNodeContents(n); var br = rng.getBoundingClientRect(); if (!br.width || br.right < R.left || br.left > R.right || br.bottom < R.top || br.top > R.bottom) continue;
       var cs = w.getComputedStyle(pe), op = 1, hid = false; for (var q = pe; q && q.nodeType === 1; q = q.parentElement) { var qs = w.getComputedStyle(q); op *= +qs.opacity; if (qs.visibility === 'hidden') hid = true; } if (hid || op < .05) continue;
-      var lines = [], cur = null;
+      var lines = [], cur = null, g0 = ops.length;
       for (var i = 0; i < t.length; i++) { if (!cur && /\s/.test(t[i])) continue; rng.setStart(n, i); rng.setEnd(n, i + 1); var cr = rng.getClientRects()[0]; if (!cr) continue;
         if (!cur || Math.abs(cr.top - cur.top) > cr.height * .5) { if (/\s/.test(t[i])) { cur = null; continue; } cur = { top: cr.top, bottom: cr.bottom, left: cr.left, s: '' }; lines.push(cur); } cur.s += t[i]; }
       lines.forEach(function (L) { var str = L.s.replace(/\s+/g, ' ').trim(); if (!str) return; if (cs.textTransform === 'uppercase') str = str.toUpperCase();
         ops.push({ s: str, x: L.left - R.left, y: (L.top + L.bottom) / 2 - R.top, st: cs.fontStyle + ' ' + cs.fontWeight + ' ', px: parseFloat(cs.fontSize), fam: famMap(cs.fontFamily), color: cs.color, ls: cs.letterSpacing === 'normal' ? '0px' : cs.letterSpacing, a: op }); });
+      /* the lines of one text keep their leading as type grows: each is placed from the first line's center */
+      for (var gi = g0; gi < ops.length; gi++) ops[gi].gy = ops[g0].y;
     }
     return ops;
   }
@@ -267,10 +281,54 @@ window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "
     return Promise.all(out.map(function (L) { return L.n.tagName.toLowerCase() === 'svg' ? svgImage(w, L.n).then(function (im) { L.img = im; return L; }) : Promise.resolve((L.img = L.n, L)); }));
   }
   var lastKey = '', live = null;
+  /* A figure built of page elements (cards, type, borders, gradients, its own small canvases) is copied as the page lays it
+     out: the subtree is cloned with every element's computed style written onto it, its canvases and images turned into
+     data, its web fonts carried inside, and the whole drawn as one picture (SVG foreignObject). Type size and line weight
+     act on the computed styles; colors pass through the ink map. */
+  function toData(w, src) { return fetch(new URL(src, w.document.baseURI).href).then(function (r) { return r.ok ? r.blob() : null; }).then(function (b) { return b ? new Promise(function (res) { var fr = new FileReader(); fr.onload = function () { res(fr.result); }; fr.onerror = function () { res(null); }; fr.readAsDataURL(b); }) : null; }).catch(function () { return null; }); }
+  var TOK = 0;
+  function domImage(w, el) {
+    var Q = w.__P || {}, MAP = w.__MAP || {}, ty = Q.type == null ? 1 : Q.type, wt = Q.weight == null ? 1 : Q.weight, r = el.getBoundingClientRect();
+    var A = [el].concat([].slice.call(el.querySelectorAll('*'))), c = el.cloneNode(true), B = [c].concat([].slice.call(c.querySelectorAll('*'))), jobs = [], fams = {}, txt = el.textContent || '';
+    var px = function (v, k) { return v.replace(/([\d.]+)px/g, function (m, n) { return (+n * k) + 'px'; }); };
+    var SKIP = /^(transition|animation|will-change|cursor|pointer-events|user-select|-webkit-user|caret|scroll|overscroll|touch-action|content-visibility|contain)/;
+    function styleOf(n, pseudo, urls) {
+      var cs = w.getComputedStyle(n, pseudo), out = [];
+      for (var i = 0; i < cs.length; i++) { var k = cs[i]; if (SKIP.test(k)) continue; var v = cs.getPropertyValue(k); if (!v) continue;
+        if (k === 'font-size' || k === 'line-height' || k === 'letter-spacing') { if (ty !== 1 && /px/.test(v)) v = px(v, ty); }
+        else if (/^border(-(top|right|bottom|left))?-width$|^outline-width$|^stroke-width$/.test(k)) { if (wt !== 1 && /px/.test(v)) v = px(v, wt); }
+        if (/color|^fill$|^stroke$|background-image|box-shadow|text-shadow|^border/.test(k) && /rgba?\(/.test(v)) v = v.replace(/rgba?\([^)]*\)/g, function (m) { return mapCol(m, MAP); });
+        if (/url\(/.test(v) && !/url\(["']?(data:|#)/.test(v)) { var m = /url\(["']?([^"')]+)["']?\)/.exec(v); if (m && urls) { var tok = '__lcu' + (TOK++) + '__'; urls.push(toData(w, m[1]).then(function (v0, m0, t0) { return function (d) { return [t0, d ? v0.replace(m0, 'url("' + d + '")') : 'none']; }; }(v, m[0], tok))); v = tok; } else if (m) v = 'none'; }
+        out.push(k + ':' + v); }
+      return out;
+    }
+    A.forEach(function (n, i) {
+      var o = B[i]; if (!o || o.nodeType !== 1) return; var tag = n.tagName.toLowerCase(), pend = [], st = styleOf(n, null, pend);
+      w.getComputedStyle(n).fontFamily.split(',').forEach(function (f) { fams[f.replace(/["']/g, '').trim().toLowerCase()] = 1; });
+      if (i === 0) st = st.filter(function (d) { return !/^(margin|position|left|top|right|bottom|inset|transform|translate|rotate|scale|float):/.test(d); }).concat(['margin:0', 'position:relative', 'left:0', 'top:0']);
+      o.setAttribute('style', st.join(';')); o.removeAttribute('class');
+      if (pend.length) jobs.push(Promise.all(pend).then(function (kv) { var css = o.getAttribute('style'); kv.forEach(function (p) { css = css.split(p[0]).join(p[1]); }); o.setAttribute('style', css); }));
+      if (tag === 'canvas') { var im = w.document.createElementNS('http://www.w3.org/1999/xhtml', 'img'); try { im.setAttribute('src', n.toDataURL()); } catch (e) {} im.setAttribute('style', o.getAttribute('style')); o.parentNode.replaceChild(im, o); }
+      else if (tag === 'img' && n.getAttribute('src') && !/^data:/.test(n.getAttribute('src'))) jobs.push(toData(w, n.currentSrc || n.src).then(function (d) { if (d) o.setAttribute('src', d); else o.removeAttribute('src'); }));
+      else if (tag === 'input' || tag === 'textarea') o.setAttribute('value', n.value);
+      ['::before', '::after'].forEach(function (ps) { var pc = w.getComputedStyle(n, ps), ct = pc.content; if (!ct || ct === 'none' || ct === 'normal') return; var sp = w.document.createElementNS('http://www.w3.org/1999/xhtml', 'span'); sp.setAttribute('style', styleOf(n, ps).filter(function (d) { return !/^content:/.test(d); }).join(';')); var m = /^"([\s\S]*)"$/.exec(ct); if (m) sp.textContent = m[1]; if (ps === '::before') o.insertBefore(sp, o.firstChild); else o.appendChild(sp); });
+    });
+    var faces = faceRules(w).then(function (rules) {
+      var cps = []; for (var i = 0; i < txt.length; i++) { var cc = txt.codePointAt(i); if (cc > 32 && cps.indexOf(cc) < 0) cps.push(cc); }
+      var pick = rules.filter(function (b) { var f = /font-family:\s*['"]?([^;'"]+)/.exec(b), ur = /unicode-range:\s*([^;}]+)/.exec(b); return f && fams[f[1].trim().toLowerCase()] && inRange(ur && ur[1], cps); });
+      return Promise.all(pick.map(function (b) { var m = /url\((['"]?)([^'")]+)\1\)/.exec(b); if (!m) return ''; return asData(m[2]).then(function (d) { return d ? b.replace(/src:[^;}]+/, 'src: url("' + d + '")') : ''; }); }));
+    });
+    return Promise.all([faces, Promise.all(jobs)]).then(function (res) {
+      var Wd = Math.ceil(r.width), Hd = Math.ceil(r.height), K = 2;
+      var xml = new XMLSerializer().serializeToString(c);
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + Wd * K + '" height="' + Hd * K + '" viewBox="0 0 ' + Wd + ' ' + Hd + '"><style>' + res[0].join('\n') + '</style><foreignObject x="0" y="0" width="' + Wd + '" height="' + Hd + '"><div xmlns="http://www.w3.org/1999/xhtml" style="width:' + Wd + 'px;height:' + Hd + 'px;overflow:hidden">' + xml + '</div></foreignObject></svg>';
+      return new Promise(function (res2) { var im = new Image(); im.onload = function () { res2(im); }; im.onerror = function () { console.error('[lift-canvas] dom figure did not draw'); res2(null); }; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); });
+    });
+  }
   /* one figure as the page shows it: the element itself, or (composite) every layer over it; (overlay) its HTML type */
   function prep(E, el) {
     var fig = { el: el };
-    return (FIG.composite ? Promise.resolve(null) : el.tagName.toLowerCase() === 'svg' ? svgImage(E.w, el) : Promise.resolve(el)).then(function (img) {
+    return (FIG.composite ? Promise.resolve(null) : FIG.dom ? domImage(E.w, el) : el.tagName.toLowerCase() === 'svg' ? svgImage(E.w, el) : Promise.resolve(el)).then(function (img) {
       fig.img = img; if (!FIG.composite) return;
       return layersOf(E.w, el).then(function (Ls) { fig.layers = Ls; var rb = E.w.getComputedStyle(el.closest('.plate') || el.parentElement || el).backgroundColor; fig.bg = /^rgba\(.*,\s*0\)$|transparent/.test(rb) ? null : rb; });
     }).then(function () {
@@ -308,7 +366,7 @@ window.LC_FIG={"src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "
           } else if (img) try { x.drawImage(img, cr[0] * nw, cr[1] * nh, (cr[2] - cr[0]) * nw, (cr[3] - cr[1]) * nh, ox, oy, iw * k, ih * k); } catch (e) { console.error('[lift-canvas]', e); }
           if (F.ops && F.ops.length) { var ks = fw * k / cw0, ty = Q.type == null ? 1 : Q.type;
             x.save(); x.beginPath(); x.rect(ox, oy, iw * k, ih * k); x.clip(); x.translate(ox - cr[0] * cw0 * ks, oy - cr[1] * ch0 * ks); x.scale(ks, ks); x.textBaseline = 'middle'; x.textAlign = 'left';
-            F.ops.forEach(function (o) { x.font = o.st + (o.px * ty) + 'px ' + o.fam; x.fillStyle = mapCol(o.color, MAP); x.globalAlpha = Math.min(1, o.a * (Q.ink == null ? 1 : Q.ink)); if ('letterSpacing' in x) x.letterSpacing = o.ls; x.fillText(o.s, o.x, o.y); });
+            F.ops.forEach(function (o) { x.font = o.st + (o.px * ty) + 'px ' + o.fam; x.fillStyle = mapCol(o.color, MAP); x.globalAlpha = Math.min(1, o.a * (Q.ink == null ? 1 : Q.ink)); if ('letterSpacing' in x) x.letterSpacing = o.ls; x.fillText(o.s, o.x, o.gy == null ? o.y : o.gy + (o.y - o.gy) * ty); });
             x.restore(); }
           x.restore(); x.strokeStyle = Vt.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
         });

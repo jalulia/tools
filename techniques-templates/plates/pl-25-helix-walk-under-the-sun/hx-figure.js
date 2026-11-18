@@ -1,2 +1,2 @@
 /* PL-25 · The climb · people and the robot on the helix steps · drawn by its source page's own code: A07_microsite.html #c-climb. See _build/engines/helix-step.js. */
-window.HX_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A07_microsite.html", "id": "c-climb", "dials": ["curl", "turn", "rise", "tread", "block", "yaw", "pitch", "crystal", "moment"], "w": 694, "h": 694, "robot": 1, "crop": [0, 0, 1, 0.8]};
+window.HX_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A07_microsite.html", "id": "c-climb", "dials": ["radius", "block", "yaw", "pitch", "crystal"], "w": 694, "h": 694, "robot": 1, "crop": [0, 0, 1, 0.8], "t": 7.4, "paper": "#FFFFFF", "grain": false};

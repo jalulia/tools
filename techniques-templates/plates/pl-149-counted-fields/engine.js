@@ -14,11 +14,11 @@
   var TECH = [
     { id: 'counted-stipple', short: 'CNT', name: 'Counted screen', layer: 1, pass: 1, atoms: ['screen-tone', 'stipple'],
       params: {
-        cell: leaf(3.4, 2, 8, 0.1, 'Cell', 'px', 'Side of one screen cell, in screen pixels. Held at this size at any plate size, so a larger plate prints more dots, not bigger ones.'),
-        dot: leaf(1.5, 1, 3, 0.05, 'Dot', 'px', 'Side of one dot, in screen pixels. Dots print as whole pixels; a fractional size is kept by thinning the count, so tone does not jump.'),
+        cell: leaf(3.4, 2, 5, 0.1, 'Cell', 'px', 'Side of one screen cell, in screen pixels. Held at this size at any plate size, so a larger plate prints more dots, not bigger ones.'),
+        dot: leaf(1.5, 1.5, 3, 0.05, 'Dot', 'px', 'Side of one dot, in screen pixels. Dots print as whole pixels; a fractional size is kept by thinning the count, so tone does not jump. Below 1.5 every dot is one pixel and the screen thins to dust.'),
         perCell: leaf(3, 1, 6, 1, 'Dots per cell', '', 'Most dots one cell can hold. Tone is the count: density times this, the remainder kept by the hash.'),
         jitter: leaf(1, 0, 1, 0.01, 'Scatter', '', 'Where a dot may land in its cell. 1 is anywhere (the stochastic screen); 0 stacks every dot on the cell center, an ordered screen.'),
-        round: leaf(2.5, 1.5, 4, 0.05, 'Round from', 'px', 'Dots this size and larger print round; smaller ones are square pixels.'),
+        round: 2.5,
         seed: leaf(11, 1, 99, 1, 'Seed', '', 'Re-rolls every hash: which dots are kept and where they land.')
       },
       implementation: 'Each cell of a jittered grid prints up to N dots at hashed positions and keeps the last one with probability equal to the remainder, so density is carried by the count of marks and nothing is blended.' },
@@ -33,11 +33,11 @@
       implementation: 'density = floor + (top - floor) · (x / W)^curve, screened by the counted screen; the split ramp prints the top in dark green and the bottom in teal.' },
     { id: 'ring-interference', short: 'RING', name: 'Ring interference', layer: 2, pass: 3, atoms: ['interference'],
       params: {
-        pitchA: leaf(44, 12, 90, 0.1, 'Pitch, you', 'u', 'Ring pitch of the first source, in figure units.'),
-        pitchB: leaf(38.6, 12, 90, 0.1, 'Pitch, Mir', 'u', 'Ring pitch of the second source. Close to the first, the beat between them opens into wide lozenges.'),
+        pitchA: leaf(44, 12, 90, 0.1, 'Ring pitch, you', 'u', 'Spacing of the rings around your source, in figure units.'),
+        pitchB: leaf(38.6, 12, 90, 0.1, 'Ring pitch, Mir', 'u', 'Spacing of the rings around Mir’s source. Close to the first, the beat between them opens into wide lozenges.'),
         gain: leaf(0.85, 0.3, 1.2, 0.01, 'Gain', '', 'Density at a shared crest: (0.02 + gain · (A·B)^1.25) under the falloff.'),
         reach: leaf(0.42, 0.2, 0.9, 0.01, 'Reach', '', 'Width of the falloff that fades the rings toward the edges, as a share of the figure width.'),
-        peak: leaf(0.93, 0.8, 1, 0.005, 'Purple peak', '', 'Where both crests stand above this near the first source, the cell prints one purple count. 1 removes it.')
+        peak: 0.93
       },
       implementation: 'Two ring screens A = ½ + ½cos(2π dA / pA) and B likewise; their product, under a gaussian falloff, is the density; the cell takes dark green where A leads and teal where B does.' },
     { id: 'counted-cells', short: 'CELL', name: 'Counted letters', layer: 2, pass: 4, atoms: ['count'],
@@ -50,7 +50,7 @@
   var keep = (S.spec.techniques || []).filter(function (t) { return t.id !== 'counted-stipple'; });
   S.spec.techniques = TECH.concat(keep);
   S.spec.pass_order = ['ground · plate', 'counted screen · cells at screen size', 'ramps · rings · counted letters, one density field each', 'read · points measured from the filed figures'];
-  S.body = [S.body[0], 'The four figures are drawn here by the counted screen of Mindgut Direction 01, with its dials. Cell and dot are held in screen pixels, so the plate prints finer as it grows, and every dial redraws the figures: curve, split, floor and top for the ramps; both pitches, gain, reach and the purple peak for the rings; tone and inset for the letters.'];
+  S.body = [S.body[0], 'The four figures are drawn here by the counted screen of Mindgut Direction 01, with its dials. Cell and dot are held in screen pixels, so the plate prints finer as it grows, and every dial redraws the figures: curve, split, floor and top for the ramps; both ring pitches, gain and reach for the rings; tone and inset for the letters.'];
   S.paramsHint = 'Every dial of the counted screen and the four figures. Cell and dot are screen pixels; the figures are in their own units.';
   S.liveOnLoad = false; delete S.live;
 

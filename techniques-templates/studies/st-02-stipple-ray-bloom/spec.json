@@ -31,7 +31,7 @@
     "vine": "#2A4830"
   },
   "ground": {
-    "colour": "#EEE6D5",
+    "color": "#EEE6D5",
     "mottle": "hash noise 3.4 u cells ±0.8 %, plus bilinear value noise 28 u and 87 u cells ±0.6 % each",
     "vignette": "1 − 0.085·exp(−d_TR²/0.30) − 0.03·exp(−d_BR²/0.25), d in frame widths",
     "area_ref": 0.75
@@ -49,23 +49,26 @@
           100,
           116
         ],
-        "ray_count": {
-          "value": 1,
+        "rays": {
+          "value": 108,
           "range": [
-            0.2,
-            2
+            65,
+            145
           ],
-          "step": 0.01,
-          "note": "multiplies the rays on every head"
+          "step": 1,
+          "label": "Rays per head",
+          "note": "beaded rays round each flower head, on average (each head varies by about 8 %)"
         },
         "bead_pitch_u": {
           "value": 6,
           "range": [
-            3,
-            14
+            4.8,
+            9
           ],
           "step": 0.1,
-          "unit": "u"
+          "unit": "u",
+          "label": "Bead spacing",
+          "note": "distance between the dots strung along each ray"
         },
         "seed": {
           "value": 2202,
@@ -73,7 +76,8 @@
             1,
             9999
           ],
-          "step": 1
+          "step": 1,
+          "note": "deals new ray lengths, bead jitter and stipple with the same settings"
         },
         "bead_pitch_ref_px": 6.9,
         "bead_d_u": [
@@ -140,7 +144,7 @@
           214,
           208
         ],
-        "centres_u": [
+        "centers_u": [
           [
             700,
             300
@@ -197,7 +201,7 @@
         "pitch_ref_px": 2.8,
         "rows": "1 on the ellipse (±2 u jitter) + 1 outside it (1.5–5 u), second row kept 20–100 % toward the near side",
         "keep": "strength·(0.35 + 0.55·near) + (1 − strength)·0.08, strength = smoothstep(9° … 40°) of tilt",
-        "colour": "#4A5BDC (→ #95A3E8 on flat heads) mixed with #3343D6 by 0.55·near·strength",
+        "color": "#4A5BDC (→ #95A3E8 on flat heads) mixed with #3343D6 by 0.55·near·strength",
         "over_corolla": "near half restroked after the corolla"
       },
       "implementation": "Beads are placed around the projected rim at 2.4 u pitch, thinned on the far side and doubled and darkened on the near side; on top-down heads 92 % of the rim beads are dropped so the rays read as one continuous fan."
@@ -247,21 +251,22 @@
         "ring_pitch": {
           "value": 4.2,
           "range": [
-            2.5,
-            10
+            2.8,
+            8
           ],
           "step": 0.1,
           "unit": "u",
-          "note": "spacing of the corolla’s dot rings"
+          "label": "Corolla ring spacing",
+          "note": "distance between the rings of cream dots in each corolla"
         },
         "lobes": "Rc·(0.82 + 0.26·|sin 2.5φ|^0.9 + 0.03 cos3φ), five lobes",
-        "dot_colour": "#F6EEDA (15 % #FFFFFF)",
+        "dot_color": "#F6EEDA (15 % #FFFFFF)",
         "dot_d_u": 3.5,
         "ring_pitch_u": 4.2,
         "jitter_u": 1,
         "fringe": "white dots Ø 1.8–2.8 u, pitch 3.6 u, 2–8 u outside the lobe",
         "speckle": {
-          "colour": "#E2B84E",
+          "color": "#E2B84E",
           "n": 1100,
           "d_u": [
             1.5,
@@ -283,7 +288,7 @@
       "layer": 2,
       "pass": 2,
       "params": {
-        "colours": "#F7F0DC 45 %, #FFFFFF 55 %",
+        "colors": "#F7F0DC 45 %, #FFFFFF 55 %",
         "dot_d_u": [
           1.6,
           3
@@ -303,15 +308,17 @@
       "layer": 1,
       "pass": 1,
       "params": {
-        "colour": "#27432D",
+        "color": "#27432D",
         "grid_pitch_u": {
           "value": 8.6,
           "range": [
-            4,
-            20
+            6.5,
+            12
           ],
           "step": 0.1,
-          "unit": "u"
+          "unit": "u",
+          "label": "Leaf screen pitch",
+          "note": "spacing of the dark-green dot screen over the leaves"
         },
         "grid_pitch_ref_px": 9.9,
         "rotation_deg": [
@@ -326,7 +333,7 @@
         "margin_falloff": "Ø · smoothstep(−2 … +10 u inside the edge) → nothing outside",
         "interior": "Ø × (1 − 0.4·smoothstep(30 … 80 u depth))",
         "pale_screen": {
-          "colour": "#8FA282",
+          "color": "#8FA282",
           "pitch_u": 8.6,
           "offset": "half cell",
           "d_u": 2.4,
@@ -352,10 +359,13 @@
         "candidates_per_1000u2": {
           "value": 150,
           "range": [
-            0,
-            500
+            40,
+            400
           ],
-          "step": 5
+          "step": 5,
+          "unit": "/1000 u²",
+          "label": "Fine leaf stipple",
+          "note": "small dots scattered inside each leaf, per 1000 u² of leaf"
         },
         "keep": "(0.12 + 0.88·smoothstep(4 … 42 u depth)) × (0.25 + 0.75·noise 44 u) × (0.55 + 0.45·noise 12 u)"
       },
@@ -368,7 +378,7 @@
       "layer": 4,
       "pass": 4,
       "params": {
-        "colour": "#2A4830 α0.97",
+        "color": "#2A4830 α0.97",
         "curve": "ONE cubic (980,−40)→(620,520)→(560,1140)→(40,1800), plus one thin vine (−40,140)→(380,640)→(640,1180)→(1040,1790) crossing it",
         "width_u": {
           "stem": [
@@ -400,7 +410,7 @@
       "layer": 0,
       "pass": 0,
       "params": {
-        "colour": "#EEE6D5",
+        "color": "#EEE6D5",
         "hf": "hash noise, 3.4 u cell, ±0.8 %",
         "lf": "bilinear value noise on an 8 px lattice, 28 u and 87 u cells, ±0.6 % each",
         "vignette": "−8.5 % gaussian toward the top-right corner (σ² 0.30 frame widths), −3 % toward the bottom-right (σ² 0.25)",

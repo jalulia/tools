@@ -8,7 +8,7 @@ export const CENSUS = path.join(ROOT, 'library/census.json');
 
 export const RULES = {
   has_dials: 'at least 1 working control that changes the piece (editing text counts); layout-only dials on still plates do not count',
-  complete: 'at least 4 technique dials plus Reset',
+  complete: 'at least 4 technique dials plus Reset (a named switch counts as one dial; a Re-deal action does not)',
   new_pages: 'a page added after the census must have dials (Julia, 2026-11-13: nothing goes on tools without parameters)',
   removal: 'a census page may only disappear if a .quarantine/*/MANIFEST.md names its folder, or library/_build/edits.json archives or removes it',
   measured: 'controls in the rendered Parameters pane (#mParams), headless Chromium at 1440x900'
@@ -70,7 +70,7 @@ export async function measure(pages, { root = ROOT, concurrency = 4, log = () =>
     try {
       await pg.goto(base + '/' + p.path + 'index.html', { waitUntil: 'load', timeout: 30000 }); await pg.waitForTimeout(2500);
       r = await pg.evaluate(() => { const P = document.getElementById('mParams'), C = document.getElementById('mColor'); const q = (el, s) => el ? el.querySelectorAll(s).length : 0; const bl = document.getElementById('bLive');
-        return { dials: q(P, 'input[type=range],select,input[type=number],input[type=text],textarea'), ranges: q(P, 'input[type=range]'), texts: q(P, 'input[type=text],textarea'), colors: q(C, 'input,button.sw,[data-pal]'),
+        return { dials: q(P, 'input[type=range],select,input[type=number],input[type=text],textarea,[role=radiogroup],.prm.rd'), ranges: q(P, 'input[type=range]'), switches: q(P, '[role=radiogroup]'), texts: q(P, 'input[type=text],textarea'), colors: q(C, 'input,button.sw,[data-pal]'),
           reset: [...document.querySelectorAll('button')].some(x => /reset/i.test(x.textContent)), live_toggle: !!(bl && !bl.hidden), own_controls_note: /keeps its own controls/i.test(document.body.innerText), redirect: !P && /moved/i.test(document.title) }; });
     } catch (e) { r = { error: String(e.message).slice(0, 160) }; }
     await ctx.close();

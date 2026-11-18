@@ -1,7 +1,7 @@
 /* PL-58 · River and riverbed — engine. The robots on the banks are the page's own: the Mindgut brand character from the green landing page, colorways on the Color tab. Appended to study.js by _build/plates.py ("engine" in plates.json); edit this file.
    The painted river from the A07 microsite runs here with its dials. The page's own script is read, its river code is
    given a parameter object (RVP) in place of its fixed numbers, and it runs in a hidden frame; its draw function paints
-   straight into this plate. Nothing in the source file changes. Grain is laid at screen pixels, not page pixels. */
+   straight into this plate. Nothing in the source file changes. Grain is laid as the page lays it, one grain to a page pixel. */
 (function (S) {
   'use strict';
   /* until the source page has loaded, the panel shows the figure as filed (its f01 still), not an empty frame */
@@ -22,8 +22,8 @@
   var TECH = [
     { id: read.id || 'pixel-river', short: 'GRN', name: 'Painted grain', layer: 1, pass: 1, atoms: ['grain', 'ramp'],
       params: {
-        grain: leaf(1, 1, 3, 0.25, 'Grain', 'px', 'Size of one grain, in screen pixels. Every grain takes one color from a short ramp; 1 lays the ground at the screen’s own pixel, the page drew it at 2 on a retina screen.'),
-        speck: leaf(1, 0, 2.5, 0.01, 'Speckle', '×', 'How far chance moves a grain along its ramp. 0 leaves only the light field and the brush streaks; higher breaks every tone into speckle.'),
+        grain: 2,   /* the page's own grain: one grain to a pixel of the page (2 screen pixels on a retina screen) */
+        speck: leaf(1, 0.6, 2, 0.01, 'Speckle', '×', 'How far chance moves a grain along its ramp: low lets the light field and the brush streaks show; high breaks every tone into speckle. Held above the point where tones band.'),
         fray: leaf(1, 0, 3, 0.01, 'Bank fray', '×', 'How ragged the water’s edge is, grain by grain.'),
         flowers: leaf(1, 0, 3, 0.01, 'Flowers', '×', 'Share of grains in the meadow patches that print as pink, pale yellow and violet flowers.'),
         record: leaf(1, 0, 1.25, 0.01, 'Riverbed glow', '×', 'Share of grains over each strand of the record that print as its glow: green for yours, white for the model’s.')
@@ -31,7 +31,7 @@
       implementation: 'Ground and water are laid in as grain: every pixel takes one color from a short ramp, chosen by a field of light, a streak of brushwork and chance, so light blooms and falls off in speckle and nothing has a hard edge. The record lies on the bed as two kinds of glow.' },
     { id: 'river-form', short: 'RIV', name: 'River', layer: 1, pass: 2, atoms: ['field'],
       params: {
-        width: leaf(1, 0.5, 1.6, 0.01, 'Width', '×', 'Half-width of the river against the height of the plate.'),
+        width: leaf(1, 0.5, 1.3, 0.01, 'Width', '×', 'Half-width of the river against the height of the plate: held where the banks keep their labels.'),
         meander: leaf(1, 0, 2.5, 0.01, 'Meander', '×', 'Depth of the river’s long bend.'),
         sun: leaf(1, 0.2, 1.4, 0.01, 'Sun along the river', '×', 'Where the light on the water sits along the current.'),
         light: leaf(1, 0, 1.8, 0.01, 'Sun on the water', '×', 'Reach and strength of the bloom of light on the water.')
@@ -46,17 +46,17 @@
       implementation: 'Tapered strokes of a loaded brush over the grain: grass on land, current in the water, a dark line at the bank that thickens, thins and breaks.' },
     { id: 'river-time', short: 'TIME', name: 'Time', layer: 3, pass: 4, atoms: ['motion'],
       params: {
-        speed: leaf(1, 0, 3, 0.01, 'Speed', '×', 'How fast the river’s clock runs when the plate plays: current, koi, canoe, walkers, kite.'),
-        moment: leaf(6, 0, 120, 0.1, 'Moment', 's', 'The time on the river’s clock the still shows, and where Play starts.')
+        speed: 1,
+        moment: 6
       },
       implementation: 'Everything that moves reads one clock: glints and koi ride the current, the canoe passes from one model’s reach to the next, people and robots walk the banks.' }
   ];
   S.spec.techniques = TECH.concat((S.spec.techniques || []).filter(function (t) { return t.id !== read.id; }));
   S.spec.pass_order = ['ground · plate', 'fields · light, water, record, trees, flowers, drawn small and read back soft', 'grain · one color per screen pixel', 'hand · grass, current, bank line, reeds, stones', 'life · the clock: water, koi, canoe, people, birds'];
-  S.body = [S.body[0], 'The river runs here from the page’s own code, with its dials. The grain is laid at the screen’s pixel, so it stays fine however large the plate is drawn; width, meander, light, speckle, bank fray, flowers, the riverbed glow, grass, current and the bank line redraw the scene, and Play runs its clock.'];
-  S.paramsHint = 'Every dial of the painted river. Grain is in screen pixels; the rest are multiples of the page’s own numbers.';
+  S.body = [S.body[0], 'The river runs here from the page’s own code, with its dials. The grain is laid as the page lays it, one grain to a pixel of the page; width, meander, light, speckle, bank fray, flowers, the riverbed glow, grass, current and the bank line redraw the scene, and Play runs its clock.'];
+  S.paramsHint = 'Every dial of the painted river, as multiples of the page’s own numbers.';
   S.motionHint = 'Play runs the river’s clock: the current, the koi, the canoe, the people and robots on the banks.';
-  S.motionOnLoad = true; S.liveOnLoad = false; delete S.live;
+  S.motionOnLoad = false; S.liveOnLoad = false; delete S.live;
   S.refHint = 'The figure is its own reference: it runs from the page’s code. The source is named in the spec.';
 
   /* seasons: the ramps of land, water and canopy */
@@ -101,7 +101,7 @@
     ['i<(nar?50:tall?80:130)', 'i<Math.round((nar?50:tall?80:130)*RVP.current)'],
     ['i<(nar?26:tall?44:70)', 'i<Math.round((nar?26:tall?44:70)*RVP.current)'],
     ['lw=2.7*sc*', 'lw=2.7*RVP.bank*sc*'],
-    ['if(r3<sy*.8)col=YO', 'if(r3<sy*.8*RVP.record)col=YO'], ['else if(r3<sy*.8+sm*.8)col=MO', 'else if(r3<(sy*.8+sm*.8)*RVP.record)col=MO'],
+    ['if(r3<sy*.8)col=YO', 'if(r3<Math.min(1,sy*1.3)*RVP.record)col=YO'], ['else if(r3<sy*.8+sm*.8)col=MO', 'else if(r3<(Math.min(1,sy*1.3)+Math.min(1,sm*1.3))*RVP.record)col=MO'],
     ['var f1=FM[o]/255*.2,f2=FM[o+1]/255*.22,f3=FM[o+2]/255*.2;', 'var f1=FM[o]/255*.2*RVP.flowers,f2=FM[o+1]/255*.22*RVP.flowers,f3=FM[o+2]/255*.2*RVP.flowers;'],
     ['fs=tall?8:9;', 'fs=(tall?8:9)*RVP.k;'], ["x.lineWidth=3.2;x.strokeStyle='#131c63'", "x.lineWidth=3.2*RVP.k;x.strokeStyle='#131c63'"]
   ];
@@ -128,9 +128,10 @@
     });
     return boot;
   }
-  var lastKey = '';
-  function setUp(w, A, V, dpr) {
-    var G = A[TECH[0].id], R = A['river-form'], H = A['river-hand'], k = Math.max(1, dpr / Math.max(.5, G.grain));
+  var lastKey = '', RW = 1440;
+  function setUp(w, A, V, dpr, d) {
+    /* type and the bank line are held at no less than 0.83 of their page size, so labels stay legible on a small plate */
+    var G = A[TECH[0].id], R = A['river-form'], H = A['river-hand'], k = Math.max(1, .83 * dpr / d);
     var P = w.RVP; P.width = R.width; P.meander = R.meander; P.sun = R.sun; P.light = R.light; P.speck = G.speck; P.fray = G.fray; P.flowers = G.flowers; P.record = G.record; P.grass = H.grass; P.current = H.current; P.bank = H.bank; P.k = k;
     var D = w.__DEF; V = V || {}; w.__RV.LR = V.land || D.LR; w.__RV.WR = V.water || D.WR; w.__RV.CAN = V.canopy || D.CAN;
     if (V.record) { w.__RV.YOU = V.record.you || D.YOU; w.__RV.MOD = V.record.model || D.MOD; } if (V.flowers) w.__RV.FL = V.flowers;
@@ -141,10 +142,14 @@
   function paint(w, canvas, x, V, A, dpr, t) {
     var W = canvas.width, Hh = canvas.height, u = W / 1000, v = Hh / S.ref.h, p = S.panels[0];
     var bx = Math.round(p.x * u), by = Math.round(p.y * v), bw = Math.round(p.w * u), bh = Math.round(p.h * v);
-    var k = setUp(w, A, V, dpr), d = dpr / k, sw2 = bw / d, sh2 = bh / d;
+    /* the river is laid out at the page's own size (RW units across, one grain to a unit) and scaled into the panel, so
+       its grain, strands and strokes keep the proportions of the filed still; below one device pixel a grain is
+       averaged, as the page's grain is when its figure is seen this small */
+    var d = bw / RW, k = setUp(w, A, V, dpr, d), sw2 = bw / d, sh2 = bh / d;
     x.setTransform(1, 0, 0, 1, 0, 0); x.globalAlpha = 1; x.fillStyle = V.paper; x.fillRect(0, 0, W, Hh);
     x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip(); x.setTransform(d, 0, 0, d, bx, by);
-    w.__RIVER(x, sw2, sh2, { t: t }, 0, d);
+    x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+    w.__RIVER(x, sw2, sh2, { t: t }, 0, Math.max(1, d));
     x.restore(); x.setTransform(1, 0, 0, 1, 0, 0);
     x.strokeStyle = V.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(bx + .5, by + .5, bw - 1, bh - 1);
   }

@@ -533,3 +533,48 @@ body.embed .plate{top:0;left:0;right:0;bottom:0;border:0;grid-template-columns:m
 @media (max-width:960px){ .panel{overflow:visible} .tabp{overflow:visible} .tb{height:52px} }
 /* embed (?embed, a shared set): nothing that leads back to the site */
 body.embed #bWide,body.embed #tabMore,body.embed #mExport{display:none!important}
+/* touch: switch options and per-row resets get a finger-sized target on coarse pointers (charter U6) */
+@media (pointer:coarse){ .prm .seg.sm{height:40px;} .prm .rst{position:relative;} .prm .rst::after{content:"";position:absolute;inset:-14px -12px;} }
+.prm.rd{grid-template-columns:minmax(0,1fr) auto auto 14px;grid-template-areas:"lb rdv rdb rst";align-items:center;padding:7px 0;}
+.prm.rd .rdv{grid-area:rdv;font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--ink-2);white-space:nowrap;}
+.prm.rd .rdb{grid-area:rdb;padding:0 12px;height:26px;}
+@media (pointer:coarse){ .prm.rd .rdb{height:40px;} }
+/* phone: the figure comes right after the title and lede (charter U2); the controls follow it; the longer notes close the page */
+@media (max-width:960px){
+  body.plate-page .plate,body.plate-page.wide .plate{display:flex;flex-direction:column;}
+  body.plate-page .notes,body.plate-page.wide .notes{display:contents;}
+  .plate-page .notes>*{padding-left:20px;padding-right:20px;}
+  .plate-page .notes>.kicker{order:0;padding-top:22px;}
+  .plate-page .notes>.title,.plate-page .notes>.lede{order:0;}
+  .plate-page .notes>.lede{padding-bottom:18px;margin-bottom:0;border-bottom:1px solid var(--hair);}
+  .plate-page .figure{order:1;}
+  .plate-page .panel{order:2;}
+  .plate-page .notes>:not(.kicker):not(.title):not(.lede){order:3;}
+  .plate-page .notes>.body{border-top:1px solid var(--hair);padding-top:20px;margin-top:0;}
+  .plate-page .notes>:last-child{padding-bottom:22px;}
+}
+/* UX pass 2 (Nov 18): focus rings the all:unset buttons had lost, finger-sized targets for switches and resets on touch,
+   palette names that are not cut off (charter U6, U7) */
+.seg button:focus-visible,.pal button:focus-visible,.pgh:focus-visible,.pgr:focus-visible,.ghost:focus-visible,.prm .rst:focus-visible,.prm.rd .rdb:focus-visible{outline:1.5px solid var(--focus);}
+.pgr:focus-visible,.ghost:focus-visible,.prm .rst:focus-visible{outline-offset:2px;}
+.prm .num:focus-visible{outline:1.5px solid var(--focus);outline-offset:1px;}
+.pal button{grid-template-columns:minmax(0,1fr) auto auto;}
+.pal .pl{order:2;min-width:0;} .pal .sws{order:3;} .pal .ed{order:4;}
+@media (pointer:coarse){
+  .prm .seg.sm{height:46px;}
+  .pgr,#bParamReset{position:relative;}
+  .pgr::after,#bParamReset::after{content:"";position:absolute;inset:-13px -10px;}
+  .gnav [role=tab]{height:40px;}
+}
+/* a control whose mode is off (leaf.when) stays in place, quiet */
+.prm.gated{opacity:.38;}
+.prm.gated input,.prm.gated button{cursor:default;}
+.pal button.on .pl{font-weight:500;} .pal .sws i{width:8px;} .pal button{gap:7px;}
+.pal .pl{white-space:normal;line-height:1.12;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+/* the row's note, under it while it has focus (touch, keyboard) */
+.prm{grid-template-areas:"lb vf rst" "rg rg rg" "nt nt nt";}
+.prm.txt,.prm.ch{grid-template-areas:"lb rst" "rg rg" "nt nt";}
+.prm.rd{grid-template-areas:"lb rdv rdb rst" "nt nt nt nt";}
+.prm .nt{grid-area:nt;display:none;margin:0 0 6px;font-size:11.5px;line-height:1.4;color:var(--ink-2);max-width:60ch;}
+.prm:focus-within .nt{display:block;}
+.prm.noted .nt{display:block;}

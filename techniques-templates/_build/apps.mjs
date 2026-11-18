@@ -71,7 +71,9 @@ SET.usages.forEach((u, i) => {
   const eff = { ...DEF }; for (const id in u.overrides || {}) eff[id] = Object.assign({}, DEF[id], u.overrides[id]);
   const techniques = u.uses.map((id) => { const e = EFX[id], params = {};
     for (const p of e.params) { const v = eff[id][p.key]; if (p.type !== 'range' || typeof v !== 'number' || typeof p.min !== 'number') continue;
-      params[p.key] = Object.assign({ value: v, range: [Math.min(p.min, v), Math.max(p.max, v)], label: p.label }, p.step ? { step: p.step } : {}, p.unit ? { unit: p.unit } : {}, p.note ? { note: p.note } : {}); }
+      /* the effect's own limit zones at either end of a dial are where it stops working (charter C10): the slider stops at them */
+      let lo = p.min, hi = p.max; for (const z of (Array.isArray(p.limits) ? p.limits : [])) { if (!Array.isArray(z) || typeof z[0] !== 'number' || typeof z[1] !== 'number') continue; if (z[0] <= lo + 1e-9 && z[1] < v) lo = z[1]; if (z[1] >= hi - 1e-9 && z[0] > v) hi = z[0]; }
+      params[p.key] = Object.assign({ value: v, range: [Math.min(lo, v), Math.max(hi, v)], label: p.label }, p.step ? { step: p.step } : {}, p.unit ? { unit: p.unit } : {}, p.note ? { note: p.note } : {}, p.curve > 1 && lo > 0 ? { scale: 'log' } : {}); }
     return { id, name: e.name, short: e.code, atoms: (e.mechanism || []).map((m) => String(m).toLowerCase()), params, implementation: e.recipe ? (Array.isArray(e.recipe) ? e.recipe.join(' ') : String(e.recipe)) : (e.sub || ''), limits: Array.isArray(e.limits) ? e.limits.map((l) => Array.isArray(l) ? (l[0] + ' ' + l[1] + ': ' + l.slice(2).join(' ')) : String(l)).join('. ') : (e.limits || '') }; });
   const sub = sentences(u.sub), lede = sub[0];
   const S = { id: s, code, title: u.title, fig: '4.' + n, kicker: 'Application · ' + n, lede, body: [sub.slice(1).join(' ')].filter(Boolean),

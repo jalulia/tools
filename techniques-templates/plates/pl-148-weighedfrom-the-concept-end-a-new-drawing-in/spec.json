@@ -8,7 +8,7 @@
       "id": "source",
       "label": "Source",
       "swatches": [
-        "#1a1816"
+        "#A0CEE6"
       ]
     }
   ],
@@ -43,6 +43,26 @@
         "subject-construction"
       ],
       "params": {
+        "nogram": {
+          "value": 0,
+          "range": [
+            0,
+            1
+          ],
+          "step": 1,
+          "label": "Grammar",
+          "note": "Measured draws with the whole grammar; Plain keeps only the flat fills, for comparison. While Plain, the pass switches rest.",
+          "options": [
+            {
+              "v": 0,
+              "label": "Measured"
+            },
+            {
+              "v": 1,
+              "label": "Plain"
+            }
+          ]
+        },
         "fills": {
           "value": 1,
           "range": [
@@ -51,7 +71,23 @@
           ],
           "step": 1,
           "label": "Fills",
-          "note": "1 lays the flat fills; 0 takes them out."
+          "note": "The flat inks of every shape: green cast, cream paper, brown wood. Off leaves each shape in plain paper.",
+          "options": [
+            {
+              "v": 0,
+              "label": "Off"
+            },
+            {
+              "v": 1,
+              "label": "On"
+            }
+          ],
+          "when": {
+            "path": "nogram",
+            "is": [
+              0
+            ]
+          }
         },
         "stacks": {
           "value": 1,
@@ -61,7 +97,23 @@
           ],
           "step": 1,
           "label": "Stacks",
-          "note": "1 draws the stacked forms; 0 takes them out."
+          "note": "The envelope stack’s edge rules at the measured 4 px pitch, alternating a full and a thin line.",
+          "options": [
+            {
+              "v": 0,
+              "label": "Off"
+            },
+            {
+              "v": 1,
+              "label": "On"
+            }
+          ],
+          "when": {
+            "path": "nogram",
+            "is": [
+              0
+            ]
+          }
         },
         "marks": {
           "value": 1,
@@ -71,7 +123,23 @@
           ],
           "step": 1,
           "label": "Marks",
-          "note": "1 lays the marks; 0 takes them out."
+          "note": "The drawn details: dial ticks and needle, the address hand, stamp and postmark, the name-plate rules, the wood grain.",
+          "options": [
+            {
+              "v": 0,
+              "label": "Off"
+            },
+            {
+              "v": 1,
+              "label": "On"
+            }
+          ],
+          "when": {
+            "path": "nogram",
+            "is": [
+              0
+            ]
+          }
         },
         "key": {
           "value": 1,
@@ -81,7 +149,40 @@
           ],
           "step": 1,
           "label": "Key",
-          "note": "1 draws the keyline; 0 takes it out."
+          "note": "The measured 1 px keyline around every shape; off, the fills meet edge to edge.",
+          "options": [
+            {
+              "v": 0,
+              "label": "Off"
+            },
+            {
+              "v": 1,
+              "label": "On"
+            }
+          ],
+          "when": {
+            "path": "nogram",
+            "is": [
+              0
+            ]
+          }
+        },
+        "keyw": {
+          "value": 1,
+          "range": [
+            0.6,
+            1.6
+          ],
+          "step": 0.05,
+          "label": "Keyline weight",
+          "note": "Width of the key in the drawing’s reference pixels (1000 across). The measured key is 1 px; the thin rules of the stacks and marks stay half of it.",
+          "unit": "px",
+          "when": {
+            "path": "key",
+            "is": [
+              1
+            ]
+          }
         },
         "texture": {
           "value": 1,
@@ -91,20 +192,26 @@
           ],
           "step": 1,
           "label": "Texture",
-          "note": "1 lays the texture pass; 0 leaves the drawing flat."
-        },
-        "nogram": {
-          "value": 0,
-          "range": [
-            0,
-            1
+          "note": "Per-ink grain at each ink’s measured strength, fine and unrepeated; the keylines stay clean.",
+          "options": [
+            {
+              "v": 0,
+              "label": "Off"
+            },
+            {
+              "v": 1,
+              "label": "On"
+            }
           ],
-          "step": 1,
-          "label": "Without the grammar",
-          "note": "1 draws the same subject without the measured grammar, for comparison."
+          "when": {
+            "path": "nogram",
+            "is": [
+              0
+            ]
+          }
         }
       },
-      "implementation": "A scale, an envelope and a stamp drawn in flat color from measured proportions. Drawn by the source page’s own code; each dial sets one of the page’s own controls."
+      "implementation": "A scale, an envelope and a stamp drawn in flat color from measured proportions. Drawn by the source page’s own code; each dial sets one of the page’s own controls or one of the numbers its drawing is built from."
     },
     {
       "id": "ink-palette",

@@ -7,6 +7,8 @@
    uses, measured by _build/qa/lift-probe.mjs (lc-head.js there is a copy of the HEAD function below; keep them in step), which also keeps only the dials that change this figure's pixels.
    An SVG figure is serialized with its computed styles; its strokes, type and colors take the same dials and inks.
    With composite, every layer the page stacks over the figure is copied (see layersOf); with overlay, its HTML type too.
+   FIG.dpr: the pixel ratio the page draws at (as the filed still was captured), so its marks keep their measured size.
+   FIG.blurKeep (px): blurs this narrow or less are the subject in focus, and the Focus blur dial leaves them alone.
    Nothing in the source file changes. */
 (function (S) {
   'use strict';
@@ -22,6 +24,13 @@
     });
   }
   var FIG = window.LC_FIG || {}, ON = {}; (FIG.dials || []).forEach(function (k) { ON[k] = 1; });
+  /* FIG.fit: one figure whose live crop has another shape than the filed still: the plate takes the figure's shape (its
+     margins kept), so the figure fills its stage instead of floating in it; callouts on it move with it */
+  if (FIG.fit && S.panels && S.panels.length === 1 && FIG.w && FIG.h) (function () {
+    var c0 = FIG.crop || [0, 0, 1, 1], a = (FIG.w * (c0[2] - c0[0])) / (FIG.h * (c0[3] - c0[1])), p0 = S.panels[0], nh = Math.round(p0.w / a * 100) / 100, H1 = Math.round(p0.y * 2 + nh);
+    S.panels[0] = Object.assign({}, p0, { h: nh, a: Math.round(a * 1e5) / 1e5 }); S.ref = { w: S.ref.w, h: H1 };
+    (S.points || []).forEach(function (q) { if (q.pi === 0 && q.rv != null) q.v = Math.round((p0.y + nh * q.rv) / H1 * 1e4) / 1e4; });
+  })();
   var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
   var ALL = {
     weight: leaf(1, 0.25, 3, 0.01, 'Line weight', '×', 'Weight of every line the figure draws, as a multiple of its own.'),
@@ -32,7 +41,7 @@
     moment: leaf(FIG.t0 || 2, 0, 12, 0.1, 'Moment', 's', 'Where in its motion the figure is shown, in seconds from the start of its clock.')
   };
   /* dials particular to one source page: FIG.extra holds their leaves, FIG.patches the string patches that wire them (window.__P.<key>) */
-  Object.keys(FIG.extra || {}).forEach(function (k) { var e = FIG.extra[k]; ALL[k] = leaf(e.value, e.range[0], e.range[1], e.step, e.label, e.unit, e.note); });
+  Object.keys(FIG.extra || {}).forEach(function (k) { var e = FIG.extra[k]; ALL[k] = leaf(e.value, e.range[0], e.range[1], e.step, e.label, e.unit, e.note); if (e.options) ALL[k].options = e.options; if (e.scale) ALL[k].scale = e.scale; if (e.when) ALL[k].when = e.when; });
   var P0 = {}; (FIG.dials || []).forEach(function (k) { if (ALL[k]) P0[k] = ALL[k]; });
   var read = (S.spec.techniques || [])[0] || {}, TID = read.id || 'lift';
   S.spec.techniques = [{ id: TID, short: (read.short || 'FIG'), name: read.name || 'Figure', layer: 1, pass: 1, atoms: read.atoms || [], params: P0,
@@ -55,6 +64,8 @@
     var W = window, q = [], n = 0, d0 = Date.now();
     /* a page that keeps its place in the URL (history.replaceState) cannot inside a frame of another address: let it pass */
     ['replaceState', 'pushState'].forEach(function (k) { var o = history[k]; history[k] = function () { try { return o.apply(history, arguments); } catch (e) {} }; });
+    /* FIG.dpr: the page draws its canvases at this pixel ratio, as the filed still was captured */
+    if (W.__DPR) try { Object.defineProperty(W, 'devicePixelRatio', { configurable: true, get: function () { return W.__DPR; } }); } catch (e) {}
     W.__NOW = 0; W.__P = W.__P0 || {}; W.__MAP = W.__MAP0 || {}; W.__MAPK = JSON.stringify(W.__MAP); W.__UC = new WeakMap(); W.__UO = { lw: 0, mark: 0, al: 0, font: 0, img: 0, col: {} };
     var UU = function (ctx) { var c = ctx && ctx.canvas; if (!c || !c.isConnected) return W.__UO; var o = W.__UC.get(c); if (!o) { o = { lw: 0, mark: 0, al: 0, font: 0, img: 0, col: {} }; W.__UC.set(c, o); } return o; };
     if (W.__REAL) W.__step = function () {}; else {
@@ -80,7 +91,7 @@
     var P = function (k, dflt) { var v = W.__P[k]; return v == null ? dflt : v; };
     wrap('lineWidth', function (v, c) { UU(c).lw++; return v * P('weight', 1); }, function (v) { return v / P('weight', 1); });
     wrap('globalAlpha', function (v, c) { UU(c).al++; return Math.max(0, Math.min(1, v * P('ink', 1))); });
-    wrap('filter', function (v) { var b = P('blur', 1); return b === 1 || typeof v !== 'string' ? v : v.replace(/blur\(([\d.]+)px\)/g, function (m, x) { return 'blur(' + (+x * b) + 'px)'; }); });
+    wrap('filter', function (v) { var b = P('blur', 1); return b === 1 || typeof v !== 'string' ? v : v.replace(/blur\(([\d.]+)px\)/g, function (m, x) { return +x <= (W.__BK || 0) ? m : 'blur(' + (+x * b) + 'px)'; }); });
     wrap('font', function (v, c) { UU(c).font++; var f = P('type', 1); return f === 1 ? v : String(v).replace(/([\d.]+)px/, function (s, x) { return (+x * f) + 'px'; }); });
     ['fillStyle', 'strokeStyle', 'shadowColor'].forEach(function (k) { wrap(k, mapc); });
     var di = C.drawImage; C.drawImage = function () { UU(this).img++; return di.apply(this, arguments); };
@@ -96,7 +107,7 @@
     return fetchSrc().then(function (html) {
       (FIG.patches || []).forEach(function (q) { var n = html.split(q[0]).length - 1; if (n < 1) { if (/debug/.test(location.search)) console.info('[lift-canvas] not wired:', q[0]); return; } html = html.split(q[0]).join(q[1]); });
       /* the dials are in place before the page's own scripts run, so a figure drawn once at load is drawn with them */
-      var PRE = '<script>window.__P0=' + JSON.stringify(Q) + ';window.__MAP0=' + JSON.stringify(MAP) + ';' + (FIG.real ? 'window.__REAL=1;' : '') + (FIG.sid ? 'try{location.hash=' + JSON.stringify(FIG.sid) + '}catch(e){}' : '') + '<\/script>';
+      var PRE = '<script>window.__P0=' + JSON.stringify(Q) + ';window.__MAP0=' + JSON.stringify(MAP) + ';' + (FIG.real ? 'window.__REAL=1;' : '') + (FIG.blurKeep ? 'window.__BK=' + (+FIG.blurKeep) + ';' : '') + (FIG.dpr ? 'window.__DPR=' + (+FIG.dpr) + ';' : '') + (FIG.sid ? 'try{location.hash=' + JSON.stringify(FIG.sid) + '}catch(e){}' : '') + '<\/script>';
       html = html.replace(/<head[^>]*>/i, function (m) { return m + '<base href="' + new URL(FIG.src, location.href).href + '">' + PRE + HEAD; });
       return new Promise(function (res, rej) {
         if (frame) frame.remove();
@@ -207,11 +218,13 @@
       var dt = pe.closest('details'); if (dt && !dt.open && !pe.closest('summary')) continue;
       rng.selectNodeContents(n); var br = rng.getBoundingClientRect(); if (!br.width || br.right < R.left || br.left > R.right || br.bottom < R.top || br.top > R.bottom) continue;
       var cs = w.getComputedStyle(pe), op = 1, hid = false; for (var q = pe; q && q.nodeType === 1; q = q.parentElement) { var qs = w.getComputedStyle(q); op *= +qs.opacity; if (qs.visibility === 'hidden') hid = true; } if (hid || op < .05) continue;
-      var lines = [], cur = null;
+      var lines = [], cur = null, g0 = ops.length;
       for (var i = 0; i < t.length; i++) { if (!cur && /\s/.test(t[i])) continue; rng.setStart(n, i); rng.setEnd(n, i + 1); var cr = rng.getClientRects()[0]; if (!cr) continue;
         if (!cur || Math.abs(cr.top - cur.top) > cr.height * .5) { if (/\s/.test(t[i])) { cur = null; continue; } cur = { top: cr.top, bottom: cr.bottom, left: cr.left, s: '' }; lines.push(cur); } cur.s += t[i]; }
       lines.forEach(function (L) { var str = L.s.replace(/\s+/g, ' ').trim(); if (!str) return; if (cs.textTransform === 'uppercase') str = str.toUpperCase();
         ops.push({ s: str, x: L.left - R.left, y: (L.top + L.bottom) / 2 - R.top, st: cs.fontStyle + ' ' + cs.fontWeight + ' ', px: parseFloat(cs.fontSize), fam: famMap(cs.fontFamily), color: cs.color, ls: cs.letterSpacing === 'normal' ? '0px' : cs.letterSpacing, a: op }); });
+      /* the lines of one text keep their leading as type grows: each is placed from the first line's center */
+      for (var gi = g0; gi < ops.length; gi++) ops[gi].gy = ops[g0].y;
     }
     return ops;
   }
@@ -320,7 +333,7 @@
           } else if (img) try { x.drawImage(img, cr[0] * nw, cr[1] * nh, (cr[2] - cr[0]) * nw, (cr[3] - cr[1]) * nh, ox, oy, iw * k, ih * k); } catch (e) { console.error('[lift-canvas]', e); }
           if (F.ops && F.ops.length) { var ks = fw * k / cw0, ty = Q.type == null ? 1 : Q.type;
             x.save(); x.beginPath(); x.rect(ox, oy, iw * k, ih * k); x.clip(); x.translate(ox - cr[0] * cw0 * ks, oy - cr[1] * ch0 * ks); x.scale(ks, ks); x.textBaseline = 'middle'; x.textAlign = 'left';
-            F.ops.forEach(function (o) { x.font = o.st + (o.px * ty) + 'px ' + o.fam; x.fillStyle = mapCol(o.color, MAP); x.globalAlpha = Math.min(1, o.a * (Q.ink == null ? 1 : Q.ink)); if ('letterSpacing' in x) x.letterSpacing = o.ls; x.fillText(o.s, o.x, o.y); });
+            F.ops.forEach(function (o) { x.font = o.st + (o.px * ty) + 'px ' + o.fam; x.fillStyle = mapCol(o.color, MAP); x.globalAlpha = Math.min(1, o.a * (Q.ink == null ? 1 : Q.ink)); if ('letterSpacing' in x) x.letterSpacing = o.ls; x.fillText(o.s, o.x, o.gy == null ? o.y : o.gy + (o.y - o.gy) * ty); });
             x.restore(); }
           x.restore(); x.strokeStyle = Vt.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
         });

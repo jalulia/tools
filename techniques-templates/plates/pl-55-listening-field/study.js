@@ -28,176 +28,79 @@ window.STUDY={"id": "pl-55-listening-field", "code": "PL-55", "fig": "4.55", "ti
   };
 })(window.STUDY);
 
-/* PL-55 · Listening field · drawn by its source page's own code (Mindgut-Worlds-V2.html); each dial is one of that page's own controls. Spec: _build/pc-specs.json. See _build/engines/page-controls.js. */
-window.PC_FIG={"techName": "Character field", "overlay": true, "ground": "#121714", "body": "The field is drawn here by its source page’s own code (Mindgut Worlds V2), with the type the page sets over it. Each dial is one of the page’s own controls: the world and Mir’s presence state.", "ctl": [{"key": "world", "kind": "choice", "sel": "#tab-frequency, #tab-blue, #tab-red", "value": 1, "range": [1, 3], "step": 1, "label": "World", "note": "The page’s three worlds: 1 Frequency (signal as sculpture), 2 Afterimage (memory), 3 Redline (words under pressure)."}, {"key": "state", "kind": "choice", "sel": "main:nth-child(2) > section:nth-child(5) > div:nth-child(1) > div:nth-child(1) > div:nth-child(4) > button", "value": 1, "range": [1, 3], "step": 1, "label": "Presence", "note": "The page’s three presence states: 1 listening, 2 reaching, 3 at rest."}], "src": "/tools/mindgut/files/Downloads/Mindgut-Worlds-V2.html", "sel": "#presence", "crop": [0, 0, 1, 1], "tab": "", "slide": -1, "sid": ""};
-
-/* page-controls · engine for plates whose figure is driven by its own page's controls (buttons, sliders, keys).
-   Appended to a plate's study.js by _build/plates.py after that plate's pc-figure.js (window.PC_FIG: source page,
-   CSS path to the figure's canvas, the filed crop, and the page controls that become this plate's dials).
-   The page runs in a hidden frame. Each dial sets the page's own control the way a reader would: a choice clicks
-   its button, a range sets its slider and fires input, a step presses its key on the figure. The figure is then
-   copied into the plate. Its inks are the colors its canvas calls use, mapped on the Color tab. Nothing in the
-   source file changes. */
+/* PL-55 · Listening field — engine. Appended to study.js by _build/plates.py ("engine" in plates.json); edit this file.
+   Ported from the presence field of Mindgut Worlds V2 (drawPresence): a field of square dots on a 5 px lattice, each
+   kept when a fixed hash falls under (wave + 1) · coverage. Mir's three states are three waves through the same field:
+   Listening, rings from the center; Reaching, diagonal waves under a ring envelope; At rest, a low swell of small dots.
+   The page's lattice, dot sizes, wave numbers and inks are the defaults; the dials are those numbers. */
 (function (S) {
   'use strict';
-  var FIG = window.PC_FIG || {};
-  var READY = false;
-  function placeholder(canvas, V) {
-    var x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h;
-    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = (V && V.paper) || '#FFFFFF'; x.fillRect(0, 0, W, H);
-    (S.panels || []).forEach(function (p) {
-      if (!p.src) return; var im = new Image();
-      im.onload = function () { if (READY) return; var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, k = Math.min(bw / im.width, bh / im.height); x.save(); x.globalAlpha = .9; x.drawImage(im, bx + (bw - im.width * k) / 2, by + (bh - im.height * k) / 2, im.width * k, im.height * k); x.restore(); };
-      im.src = p.src;
-    });
-  }
-  var leaf = function (c) { var o = { value: c.value, range: c.range, step: c.step || 1, label: c.label, note: c.note }; if (c.unit) o.unit = c.unit; return o; };
-  var params = {}; (FIG.ctl || []).forEach(function (c) { params[c.key] = leaf(c); });
-  var read = (S.spec.techniques || [])[0] || {}, TID = read.id || 'figure';
-  S.spec.techniques = [{ id: TID, short: read.short || 'FIG', name: FIG.techName || read.name || 'Figure', layer: 1, pass: 1, atoms: read.atoms || [], params: params,
-    implementation: (read.implementation || '') + ' Drawn by the source page’s own code; each dial sets one of the page’s own controls.' }]
-    .concat((S.spec.techniques || []).filter(function (t) { return t.id !== TID; }));
-  S.body = [S.body[0], FIG.body || 'The figure is drawn here by its source page’s own code. Each dial is one of that page’s own controls, set the way a reader would set it.'];
-  S.paramsHint = 'Each dial is one of the source page’s own controls.';
+  function h2(a, b, s) { var n = Math.imul(a + 1 + (s | 0) * 7919, 374761393) + Math.imul(b + 1, 668265263); n = Math.imul(n ^ (n >>> 13), 1274126177); return ((n ^ (n >>> 16)) >>> 0) / 4294967295; }
+  var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
+  var TID = (S.spec.techniques[0] || {}).id || 'character-field';
+  var TECH = [{ id: TID, short: 'FLD', name: 'Presence field', layer: 1, pass: 1, atoms: ['dot lattice', 'threshold', 'wave'],
+    params: {
+      state: { value: 0, options: [{ v: 0, label: 'Listening' }, { v: 1, label: 'Reaching' }, { v: 2, label: 'At rest' }], label: 'Presence', note: 'Mir’s state, drawn as the wave through the field: rings from the center, diagonal waves reaching out, or a low swell.' },
+      pitch: Object.assign(leaf(5, 3.5, 9, 0.1, 'Dot pitch', 'px', 'Spacing of the dot lattice, in screen pixels, held at any plate size as on the page. The page’s own is 5.'), { scale: 'linear' }),
+      dot: leaf(34, 30, 55, 1, 'Dot size', '%', 'Side of each square dot as a share of the lattice pitch; the page’s 1.7 px on its 5 px lattice is 34 %. At rest prints at 0.6 of it, as the page does.'),
+      freq: leaf(35, 22, 60, 1, 'Wave number', '', 'How many crests cross the field. 35 is the page’s ring count; Reaching and At rest scale their waves with it.'),
+      cover: leaf(0.35, 0.22, 0.48, 0.005, 'Coverage', '', 'A dot prints where the hash falls under (wave + 1) × this. Higher fills the crests in; lower leaves only their peaks.'),
+      seed: leaf(0, 0, 99, 1, 'Seed', '', 'Re-deals which lattice points print. 0 is the page’s own hash.')
+    },
+    implementation: 'A square-dot lattice thresholded by a fixed hash against a wave: dot printed where hash(x, y) < (wave(x, y, t) + 1) · coverage. The wave is the state: sin(35·r) from the center; sin(20·(x + y)) · cos(20·r); or sin(12·x)·sin(6·y)·0.35.' }];
+  var keep = (S.spec.techniques || []).filter(function (t) { return t.id !== TID; });
+  S.spec.techniques = TECH.concat(keep);
+  S.spec.pass_order = ['ground', 'lattice · one point every pitch', 'wave · the state’s field at each point', 'threshold · keep where hash < (wave + 1) · coverage', 'type · the page’s kicker and the state’s name'];
+  S.body = [S.body[0], 'The field is drawn here from the page’s own code, ported: a square-dot lattice kept or dropped by a fixed hash against a wave. The switch is Mir’s state; the dials are the page’s own numbers: lattice pitch, dot size, wave number and coverage. Play moves the wave.'];
+  S.paramsHint = 'The page’s own numbers for the field, in its pixels.';
+  S.motionHint = 'Play moves the wave at the page’s speed.';
   S.liveOnLoad = false; delete S.live;
-
-  var INK = FIG.inks || [];
-  function V(id, label, list) { var inks = {}; INK.forEach(function (h, i) { inks['ink' + (i + 1)] = list[i]; }); return { id: id, label: label, sw: [FIG.ground || '#FFFFFF'].concat(list.slice(0, 4)), spot: [20, 20, 20], paper: FIG.ground || '#FFFFFF', rule: '#D9D9DC', inks: inks }; }
-  S.variants = [V('source', 'Source', INK.slice())].concat((FIG.palettes || []).map(function (p) { return V(p[0], p[1], p[2]); }));
+  function VAR(id, label, paper, inks) { return { id: id, label: label, sw: [inks.ground, inks.listening, inks.reaching, inks.rest], spot: [20, 20, 20], paper: paper, rule: paper, inks: inks }; }
+  S.variants = [
+    VAR('source', 'Source', '#121714', { ground: '#121714', listening: '#d3ff5c', reaching: '#ff6a4b', rest: '#71895e', type: '#d3ff5c' }),
+    VAR('paper', 'Paper', '#FBFBF7', { ground: '#FBFBF7', listening: '#126b3d', reaching: '#f4551e', rest: '#5e7a52', type: '#0a4528' }),
+    VAR('ink', 'Ink', '#101014', { ground: '#101014', listening: '#f2f2ee', reaching: '#f4551e', rest: '#8a9a80', type: '#f2f2ee' })
+  ];
   S.variantLabel = 'Palette';
-  S.colorHint = FIG.colorHint || 'Each ink is a color the figure’s own drawing calls use. Click one to change it everywhere the figure uses it.';
+  S.colorHint = 'The field’s inks: the ground, one ink per state, and the type.';
+  /* the filed figure is 1419 × 742; the page's canvas sits in it at (10, 45), 1400 × 625, with its type laid over it */
+  var FW = 1419, FH = 742, CX = 10, CY = 45, CW = 1400, CH = 625, NAMES = ['Listening.', 'Reaching.', 'At rest.'];
 
-  /* colors only: the page keeps its own clock */
-  var HEAD = '<script>(' + function () {
-    ['replaceState', 'pushState'].forEach(function (k) { var o = history[k]; history[k] = function () { try { return o.apply(history, arguments); } catch (e) {} }; });
-    var W = window; W.__MAP = {};
-    var C = CanvasRenderingContext2D.prototype, sc = document.createElement('canvas').getContext('2d'), FS = Object.getOwnPropertyDescriptor(C, 'fillStyle'), cache = new Map();
-    function norm(v) { FS.set.call(sc, '#000'); FS.set.call(sc, v); return FS.get.call(sc); }
-    function hex2(v) { return ('0' + (v | 0).toString(16)).slice(-2); }
-    function mapc(v) {
-      if (typeof v !== 'string') return v; var key = v + '|' + W.__MAPK, hit = cache.get(key); if (hit !== undefined) return hit;
-      var s = norm(v), m, hx, a = 1;
-      if (s[0] === '#') hx = s; else if ((m = s.match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?/))) { hx = '#' + hex2(m[1]) + hex2(m[2]) + hex2(m[3]); a = m[4] == null ? 1 : +m[4]; } else { cache.set(key, v); return v; }
-      var to = W.__MAP[hx], out = v; if (to) out = a >= 1 ? to : 'rgba(' + parseInt(to.substr(1, 2), 16) + ',' + parseInt(to.substr(3, 2), 16) + ',' + parseInt(to.substr(5, 2), 16) + ',' + a + ')';
-      cache.set(key, out); return out;
-    }
-    ['fillStyle', 'strokeStyle'].forEach(function (k) { var d = Object.getOwnPropertyDescriptor(C, k); Object.defineProperty(C, k, { configurable: true, get: function () { return d.get.call(this); }, set: function (v) { d.set.call(this, mapc(v)); } }); });
-    var G = CanvasGradient.prototype, acs = G.addColorStop; G.addColorStop = function (o, c) { return acs.call(this, o, mapc(c)); };
-  }.toString() + ')();<\/script>';
-  var boot = null, frame = null;
-  function load() {
-    if (boot) return boot;
-    boot = fetch(FIG.src).then(function (r) { if (!r.ok) throw new Error('source ' + r.status); return r.text(); }).then(function (html) {
-      html = html.replace(/<head[^>]*>/i, function (m) { return m + '<base href="' + new URL(FIG.src, location.href).href + '">' + HEAD; });
-      return new Promise(function (res, rej) {
-        var f = frame = document.createElement('iframe'); f.setAttribute('aria-hidden', 'true'); f.tabIndex = -1; f.title = 'page-controls engine';
-        f.style.cssText = 'position:fixed;left:0;top:0;width:' + (FIG.vw || 1440) + 'px;height:1000px;opacity:0;pointer-events:none;z-index:-1';
-        f.onload = function () {
-          var w = f.contentWindow, d = w.document, tries = 0, sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
-          var shown = function (el) { var r = el.getBoundingClientRect(); if (r.width < 4 || r.height < 4) return false; for (var n = el; n && n.nodeType === 1; n = n.parentElement) { var cs = w.getComputedStyle(n); if (cs.visibility === 'hidden' || cs.display === 'none' || +cs.opacity < .05) return false; } return true; };
-          /* open the figure the way the live lift does: its tab, then its slide */
-          var open = (FIG.tab ? sleep(400).then(function () { var b = [].slice.call(d.querySelectorAll('button,a,[role=tab]')).find(function (e) { var t = e.textContent.trim(); return t.replace(/^\d+/, '').indexOf(FIG.tab) === 0 && t.length < 60; }); if (b) b.click(); return sleep(1200); }) : Promise.resolve());
-          open.then(function () {
-            (function wait() {
-              var el = d.querySelector(FIG.sel), ok = el && (el.tagName.toLowerCase() === 'svg' || el.width);
-              if (!ok) { if (++tries < 120) return setTimeout(wait, 100); return rej(new Error('figure not found: ' + FIG.sel)); }
-              var go = Promise.resolve();
-              if (FIG.slide >= 0 && !shown(el)) go = (FIG.sid ? (w.location.hash = '#' + FIG.sid, sleep(500)) : Promise.resolve()).then(function step(k) { k = k || 0; if (shown(el) || k > 40) return; d.dispatchEvent(new w.KeyboardEvent('keydown', { key: 'ArrowRight', code: 'ArrowRight', keyCode: 39, which: 39, bubbles: true })); return sleep(260).then(function () { return step(k + 1); }); });
-              go.then(function () { try { el.scrollIntoView({ block: 'center' }); } catch (e) {} setTimeout(function () { res({ w: w, el: el, state: {} }); }, FIG.settle || 600); });
-            })();
-          });
-        };
-        f.srcdoc = html; document.body.appendChild(f);
-      });
-    });
-    return boot;
-  }
-  function frames(w, n) { return new Promise(function (res) { (function go(k) { if (k <= 0) return setTimeout(res, 60); w.requestAnimationFrame(function () { go(k - 1); }); })(n || 3); }); }
-  function setControls(E, Q) {
-    var w = E.w, d = w.document;
-    (FIG.ctl || []).forEach(function (c) {
-      var v = Q[c.key] == null ? c.value : Q[c.key];
-      if (c.kind === 'choice') { var b = d.querySelectorAll(c.sel)[Math.round(v) - 1]; if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); }
-      else if (c.kind === 'range') { var i = d.querySelector(c.sel); if (!i) return; var set = Object.getOwnPropertyDescriptor(w.HTMLInputElement.prototype, 'value').set; var raw = v + (c.offset || 0); if (String(i.value) !== String(raw)) { set.call(i, raw); i.dispatchEvent(new w.Event('input', { bubbles: true })); i.dispatchEvent(new w.Event('change', { bubbles: true })); } }
-      else if (c.kind === 'check') { var cb = d.querySelector(c.sel); if (cb && cb.checked !== (v >= .5)) cb.click(); }
-      else if (c.kind === 'toggle') { var tb = d.querySelector(c.sel); if (tb) { var on = tb.getAttribute('aria-pressed') === 'true' || tb.classList.contains(c.onClass || 'on'); if (E.state[c.key] != null) on = E.state[c.key]; if (on !== (v >= .5)) { tb.click(); } E.state[c.key] = v >= .5; } }
-      else if (c.kind === 'select') { var se = d.querySelector(c.sel); if (se && se.selectedIndex !== Math.round(v) - 1) { se.selectedIndex = Math.round(v) - 1; se.dispatchEvent(new w.Event('input', { bubbles: true })); se.dispatchEvent(new w.Event('change', { bubbles: true })); } }
-      else if (c.kind === 'key') { var t = d.querySelector(c.sel) || E.el, have = t.dataset && t.dataset.picked != null ? Number(t.dataset.picked) + c.range[0] : (E.state[c.key] == null ? c.value : E.state[c.key]), n = c.range[1] - c.range[0] + 1, steps = ((Math.round(v) - have) % n + n) % n;
-        for (var s = 0; s < steps; s++) t.dispatchEvent(new w.KeyboardEvent('keydown', { key: c.keyName || 'ArrowRight', bubbles: true, cancelable: true }));
-        E.state[c.key] = Math.round(v); }
+  function paint(canvas, x, V, Q, t, dpr) {
+    var W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h, I = V.inks || S.variants[0].inks;
+    x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = V.paper || I.ground; x.fillRect(0, 0, W, H);
+    var st = Math.round(+Q.state || 0), F = +Q.freq || 35, k = +Q.cover || .35, seed = Q.seed | 0, sp = t * .2, D = Math.max(1, dpr || 1);
+    S.panels.forEach(function (p) {
+      var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, su = Math.min(bw / FW, bh / FH), ox = bx + (bw - FW * su) / 2, oy = by + (bh - FH * su) / 2;
+      x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip(); x.fillStyle = I.ground; x.fillRect(bx, by, bw, bh);
+      /* the lattice is held in screen pixels, as on the page: a larger plate prints more dots, never bigger ones */
+      var step = Math.max(3, +Q.pitch || 5) * D, s = (+Q.dot || 34) / 100 * Math.max(3, +Q.pitch || 5) * (st === 2 ? 1 / 1.7 : 1), sd = Math.max(1, Math.round(s * D)),
+          x0 = ox + (CX + 12) * su, x1 = ox + (CX + CW - 12) * su, y0 = oy + (CY + 45) * su, y1 = oy + (CY + CH - 65) * su, cw = CW * su, ch = CH * su, cx0 = ox + CX * su, cy0 = oy + CY * su;
+      x.fillStyle = st === 1 ? I.reaching : st === 2 ? I.rest : I.listening;
+      for (var iy = 0, yy = y0; yy < y1; yy = y0 + (++iy) * step) {
+        var ny = (yy - cy0) / ch;
+        for (var ix = 0, xx = x0; xx < x1; xx = x0 + (++ix) * step) {
+          var nx = (xx - cx0) / cw, a = Math.hypot(nx - .5, ny - .5), val;
+          if (st === 0) val = Math.sin(a * F - sp * 2);
+          else if (st === 1) val = Math.sin((nx + ny) * F * 20 / 35 - sp * 4) * Math.cos(a * F * 20 / 35);
+          else val = Math.sin(nx * F * 12 / 35) * Math.sin(ny * F * 6 / 35) * .35;
+          if (h2(ix, iy, seed) < (val + 1) * k) x.fillRect(Math.round(xx), Math.round(yy), sd, sd);
+        }
+      }
+      /* the page's type over the field: its kicker, and the state's name in the display face */
+      x.translate(ox, oy); x.fillStyle = I.type; x.textBaseline = 'alphabetic';
+      x.font = '400 ' + (18 * su).toFixed(2) + 'px Inter, "Helvetica Neue", Arial, sans-serif'; x.fillText('MINDGUT / A CHANGE IN THE FIELD', 48 * su, 63 * su);
+      x.font = '400 ' + (78 * su).toFixed(2) + 'px Inter, "Helvetica Neue", Arial, sans-serif';
+      if ('letterSpacing' in x) x.letterSpacing = (-4 * su).toFixed(2) + 'px';
+      x.fillText(NAMES[st] || NAMES[0], 48 * su, 680 * su);
+      if ('letterSpacing' in x) x.letterSpacing = '0px';
+      x.restore();
     });
   }
-  function svgImage(w, el) {
-    var c = el.cloneNode(true), r = el.getBoundingClientRect(), MAP = w.__MAP || {}, sc = 2;
-    c.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); c.setAttribute('width', r.width * sc); c.setAttribute('height', r.height * sc);
-    if (!c.getAttribute('viewBox')) c.setAttribute('viewBox', '0 0 ' + r.width + ' ' + r.height);
-    var PROPS = ['display', 'visibility', 'opacity', 'fill', 'fill-opacity', 'fill-rule', 'stroke', 'stroke-opacity', 'stroke-width', 'stroke-dasharray', 'stroke-linecap', 'stroke-linejoin', 'font-size', 'font-family', 'font-weight', 'font-style', 'letter-spacing', 'text-anchor', 'dominant-baseline', 'paint-order', 'mix-blend-mode', 'stop-color', 'stop-opacity', 'transform', 'transform-origin', 'filter'];
-    var A = [el].concat([].slice.call(el.querySelectorAll('*'))), B = [c].concat([].slice.call(c.querySelectorAll('*')));
-    function col(v) { var m = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/.exec(v); if (!m) return v; var hx = '#' + [m[1], m[2], m[3]].map(function (x) { return ('0' + (+x | 0).toString(16)).slice(-2); }).join(''); var to = MAP[hx]; if (!to) return v; return m[4] != null ? 'rgba(' + [1, 3, 5].map(function (i) { return parseInt(to.substr(i, 2), 16); }).join(',') + ',' + m[4] + ')' : to; }
-    A.forEach(function (n, i) { var cs = w.getComputedStyle(n), st = PROPS.map(function (k) { var v = cs.getPropertyValue(k); if (!v || (k === 'transform' && v === 'none') || (k === 'filter' && v === 'none')) return ''; if (k === 'fill' || k === 'stroke' || k === 'stop-color') v = col(v); return k + ':' + v; }).filter(Boolean).join(';'); B[i].setAttribute('style', st); B[i].removeAttribute('class'); });
-    var url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(c));
-    return new Promise(function (res) { var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = url; });
-  }
-  /* text laid over the figure on its page (titles, labels on a card) is part of the figure: it is read from the page,
-     line by line with its computed style, and set over the copied canvas. The page's own @font-face rules are carried
-     into this page under a prefix, so the type is the page's type. */
-  var FONTS = null, FAMS = {};
-  function fontsFrom(w) {
-    if (FONTS) return FONTS; var css = '';
-    [].forEach.call(w.document.styleSheets, function (sh) {
-      var rules; try { rules = sh.cssRules; } catch (e) { return; } var bh = sh.href || new URL(FIG.src, location.href).href;
-      [].forEach.call(rules || [], function (r) {
-        if (r.type !== 5) return; var fam = (r.style.getPropertyValue('font-family') || '').replace(/["']/g, '').trim(); if (!fam) return; FAMS[fam.toLowerCase()] = 'pc-' + fam;
-        css += r.cssText.replace(/font-family:\s*([^;]+);/, 'font-family: "pc-' + fam + '";').replace(/url\((['"]?)([^'")]+)\1\)/g, function (m, q, u) { return /^data:/.test(u) ? m : 'url("' + new URL(u, bh).href + '")'; }) + '\n';
-      });
-    });
-    var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
-    FONTS = (document.fonts && document.fonts.ready) || Promise.resolve(); return FONTS;
-  }
-  function famMap(list) { return list.split(',').map(function (f) { var k = f.replace(/["']/g, '').trim(); return FAMS[k.toLowerCase()] ? '"' + FAMS[k.toLowerCase()] + '"' : f.trim(); }).join(', '); }
-  function textOps(w, el) {
-    var d = w.document, R = el.getBoundingClientRect(), ops = [], tw = d.createTreeWalker(d.body, 4), n, rng = d.createRange();
-    while ((n = tw.nextNode())) {
-      var t = n.nodeValue, pe = n.parentElement; if (!t || !t.trim() || !pe || el.contains(pe) || /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA|OPTION|TITLE|SELECT)$/.test(pe.tagName)) continue;
-      var dt = pe.closest('details'); if (dt && !dt.open && !pe.closest('summary')) continue;
-      rng.selectNodeContents(n); var br = rng.getBoundingClientRect(); if (!br.width || br.right < R.left || br.left > R.right || br.bottom < R.top || br.top > R.bottom) continue;
-      var cs = w.getComputedStyle(pe), op = 1, hid = false; for (var q = pe; q && q.nodeType === 1; q = q.parentElement) { var qs = w.getComputedStyle(q); op *= +qs.opacity; if (qs.visibility === 'hidden') hid = true; } if (hid || op < .05) continue;
-      var lines = [], cur = null;
-      for (var i = 0; i < t.length; i++) { if (!cur && /\s/.test(t[i])) continue; rng.setStart(n, i); rng.setEnd(n, i + 1); var cr = rng.getClientRects()[0]; if (!cr) continue;
-        if (!cur || Math.abs(cr.top - cur.top) > cr.height * .5) { if (/\s/.test(t[i])) { cur = null; continue; } cur = { top: cr.top, bottom: cr.bottom, left: cr.left, s: '' }; lines.push(cur); } cur.s += t[i]; }
-      lines.forEach(function (L) { var str = L.s.replace(/\s+/g, ' ').trim(); if (!str) return; if (cs.textTransform === 'uppercase') str = str.toUpperCase();
-        ops.push({ s: str, x: L.left - R.left, y: (L.top + L.bottom) / 2 - R.top, font: cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + famMap(cs.fontFamily), color: cs.color, ls: cs.letterSpacing === 'normal' ? '0px' : cs.letterSpacing, a: op }); });
-    }
-    return ops;
-  }
-  var queue = Promise.resolve();
-  S.render = function (canvas, cw, ch, dpr, Vt, done, overrides) {
-    if (!READY) placeholder(canvas, Vt);
-    var A = window.ART.params(S.spec, overrides || {}), Q = A[TID] || {}, MAP = {};
-    INK.forEach(function (h, i) { var to = (Vt.inks || {})['ink' + (i + 1)]; if (to && to.toLowerCase() !== h) MAP[h] = to.toLowerCase(); });
-    queue = queue.then(function () { return load(); }).then(function (E) {
-      E.w.__MAP = MAP; E.w.__MAPK = JSON.stringify(MAP);
-      /* a new ink map needs a fresh draw: the page redraws on resize */
-      if (E.mapk !== E.w.__MAPK) { E.mapk = E.w.__MAPK; E.w.dispatchEvent(new E.w.Event('resize')); try { var st = E.el.style.width; E.el.style.width = (E.el.getBoundingClientRect().width - 1) + 'px'; E.el.getBoundingClientRect(); E.el.style.width = st; } catch (e) {} }
-      setControls(E, Q); return frames(E.w, 4).then(function () { return E.el.tagName.toLowerCase() === 'svg' ? svgImage(E.w, E.el).then(function (im) { E.svgimg = im; return E; }) : E; })
-        .then(function (E) { if (!FIG.overlay) return E; return fontsFrom(E.w).then(function () { E.ops = textOps(E.w, E.el); var fs = E.ops.map(function (o) { return o.font; }); return Promise.all(fs.filter(function (f, i) { return fs.indexOf(f) === i; }).map(function (f) { return document.fonts.load(f).catch(function () {}); })).then(function () { return E; }); }); });
-    }).then(function (E) {
-      READY = true; var el = E.el, x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h, cr = FIG.crop || [0, 0, 1, 1];
-      x.setTransform(1, 0, 0, 1, 0, 0); x.fillStyle = Vt.paper || '#FFFFFF'; x.fillRect(0, 0, W, H);
-      if (el.tagName.toLowerCase() === 'svg') { var img = E.svgimg; el = img; if (!img) { if (done) done(); return; } }
-      var nw = el.naturalWidth || el.width, nh = el.naturalHeight || el.height, sw = (cr[2] - cr[0]) * nw, sh = (cr[3] - cr[1]) * nh;
-      S.panels.forEach(function (p) {
-        var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, k = Math.min(bw / sw, bh / sh), ox = bx + (bw - sw * k) / 2, oy = by + (bh - sh * k) / 2;
-        x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip(); x.fillStyle = FIG.ground || Vt.paper || '#FFFFFF'; x.fillRect(bx, by, bw, bh);
-        x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; try { x.drawImage(el, cr[0] * nw, cr[1] * nh, sw, sh, ox, oy, sw * k, sh * k); } catch (e) { console.error('[page-controls]', e); }
-        if (E.ops && E.ops.length) { var rr = E.el.getBoundingClientRect(), cssW = rr.width, cssH = rr.height, ks = (sw * k) / (cssW * (cr[2] - cr[0]));
-          x.save(); x.translate(ox - cr[0] * cssW * ks, oy - cr[1] * cssH * ks); x.scale(ks, ks); x.textBaseline = 'middle'; x.textAlign = 'left';
-          E.ops.forEach(function (o) { x.font = o.font; x.fillStyle = o.color; x.globalAlpha = o.a; if ('letterSpacing' in x) x.letterSpacing = o.ls; x.fillText(o.s, o.x, o.y); });
-          x.restore(); }
-        x.restore(); x.strokeStyle = Vt.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
-      });
-      if (done) done();
-    }).catch(function (err) { console.error('[page-controls]', err); if (done) done(); });
-    return false;
+  S.render = function (canvas, w, h, dpr, V, done, overrides) {
+    var A = window.ART.params(S.spec, overrides || {}); paint(canvas, canvas.getContext('2d'), V, A[TID] || {}, 0, dpr); if (done) done(); return false;
+  };
+  S.motion = function (canvas, w, h, dpr, V, t, ctx, overrides) {
+    var A = window.ART.params(S.spec, overrides || {}); paint(canvas, ctx || canvas.getContext('2d'), V, A[TID] || {}, t, dpr);
   };
 })(window.STUDY);

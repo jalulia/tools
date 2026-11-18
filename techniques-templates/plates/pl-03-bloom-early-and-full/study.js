@@ -29,7 +29,7 @@ window.STUDY={"id": "pl-03-bloom-early-and-full", "code": "PL-03", "fig": "4.3",
 })(window.STUDY);
 
 /* PL-03 · Bloom, early and full · drawn by its source page's own code: A01_reflection-identity.html #specs > button:nth-child(2) > span:nth-child(1) > canvas:nth-child(1). Dials and inks measured by _build/qa/lift-probe.mjs; see _build/engines/lift-canvas.js. */
-window.LC_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A01_reflection-identity.html", "sel": "#specs > button:nth-child(2) > span:nth-child(1) > canvas:nth-child(1)", "w": 258, "h": 258, "crop": [0, 0, 1, 1], "ground": "#f5f7f0", "dials": ["weight", "mark", "tilt", "spin", "shown", "pitch"], "inks": ["#000000", "#f5f7f0", "#151b17", "#465c3c", "#126b3d", "#b5d6a6", "#ffffff", "#e3e8da"], "t0": 2, "extra": {"tilt": {"value": 0, "range": [0, 80], "step": 1, "label": "View tilt", "note": "Tilt of the record off straight down the axis.", "unit": "°"}, "spin": {"value": 0, "range": [0, 3.14], "step": 0.01, "label": "Spin", "note": "Turn of the record about its axis, added to its own.", "unit": "rad"}, "shown": {"value": 1, "range": [0.05, 1], "step": 0.01, "label": "Crossings shown", "note": "Share of the record’s crossings drawn, from the first. 1 is the whole record."}, "pitch": {"value": 1, "range": [0.6, 2.5], "step": 0.01, "label": "Dot pitch", "note": "Spacing of the dot field each lobe is printed in, as a multiple of the page’s own.", "unit": "×"}}, "patches": [["var rec=recOf(i),pr=cam(rec,0,0,1),T=lobes(rec,pr);T.sig='sp'+i+'_'+Math.round(w);drawTech(x,w,T,'dots',{frame:true});", "var rec=recOf(i),UP=Math.max(2,Math.round(rec.N*((window.__P||{}).shown==null?1:window.__P.shown))),pr=cam(rec,((window.__P||{}).tilt==null?0:window.__P.tilt),((window.__P||{}).spin==null?0:window.__P.spin),1,UP),T=lobes(rec,pr,UP);T.sig='sp'+i+'_'+Math.round(w)+'_'+UP;drawTech(x,w,T,'dots',{frame:true,pitch:Math.max(4.6,1850/w)*((window.__P||{}).pitch==null?1:window.__P.pitch)});"]], "sels": ["#specs > button:nth-child(2) > span:nth-child(1) > canvas:nth-child(1)", "#specs > button:nth-child(6) > span:nth-child(1) > canvas:nth-child(1)"]};
+window.LC_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A01_reflection-identity.html", "sel": "#specs > button:nth-child(2) > span:nth-child(1) > canvas:nth-child(1)", "w": 258, "h": 258, "crop": [0, 0, 1, 1], "ground": "#f5f7f0", "inks": ["#000000", "#f5f7f0", "#151b17", "#465c3c", "#126b3d", "#b5d6a6", "#ffffff", "#e3e8da"], "t0": 2, "sels": ["#specs > button:nth-child(2) > span:nth-child(1) > canvas:nth-child(1)", "#specs > button:nth-child(6) > span:nth-child(1) > canvas:nth-child(1)"], "dpr": 2, "dials": ["pitch", "sangle", "shape", "gain", "misreg"], "extra": {"pitch": {"value": 1.6, "range": [1, 2.4], "step": 0.01, "label": "Dot pitch", "note": "Spacing of the three dot screens the blooms are printed in, as a multiple of the page’s 1.85 px. Larger is coarser.", "unit": "×"}, "sangle": {"value": 0, "range": [-30, 30], "step": 1, "label": "Screen angle", "note": "Turn of all three screens together, added to their own 15°, 45° and 75°.", "unit": "°"}, "shape": {"value": 0, "range": [0, 1], "step": 1, "label": "Dot", "note": "The screen’s dot: round, or a square of the same area.", "options": [{"v": 0, "label": "Round"}, {"v": 1, "label": "Square"}]}, "gain": {"value": 1, "range": [0.7, 1.3], "step": 0.01, "label": "Dot gain", "note": "How far each dot spreads for the tone it carries, as a multiple of the page’s own. Above 1 the screens close into solid.", "unit": "×"}, "misreg": {"value": 1, "range": [0, 5], "step": 0.01, "label": "Misregistration", "note": "How far the sky and black screens slip off the cobalt one, as a multiple of the page’s own (4 and 1.5 units).", "unit": "×"}}, "patches": [["var rec=recOf(i),pr=cam(rec,0,0,1),T=lobes(rec,pr);T.sig='sp'+i+'_'+Math.round(w);drawTech(x,w,T,'dots',{frame:true});", "var rec=recOf(i),UP=Math.max(2,Math.round(rec.N*((window.__P||{}).shown==null?1:window.__P.shown))),pr=cam(rec,((window.__P||{}).tilt==null?0:window.__P.tilt),((window.__P||{}).spin==null?0:window.__P.spin),1,UP),T=lobes(rec,pr,UP);T.sig='sp'+i+'_'+Math.round(w)+'_'+UP;drawTech(x,w,T,'dots',{frame:true,pitch:Math.max(4.6,1850/w)*((window.__P||{}).pitch==null?1:window.__P.pitch)});"], ["g.save();g.translate(4.2,3);dotsRot(g,T,P,.262,{flat:rgba(SKY,.95),lo:.03,hi:.55,k:1.12});g.restore();dotsRot(g,T,P,1.309,{flat:rgba(COBALT,.93),lo:.28});", "var MR=((window.__P||{}).misreg==null?1:window.__P.misreg),GN=((window.__P||{}).gain==null?1:window.__P.gain);g.save();g.translate(4.2*MR,3*MR);dotsRot(g,T,P,.262+((window.__P||{}).sangle||0)*Math.PI/180,{flat:rgba(SKY,.95),lo:.03,hi:.55,k:1.12*GN});g.restore();dotsRot(g,T,P,1.309+((window.__P||{}).sangle||0)*Math.PI/180,{flat:rgba(COBALT,.93),lo:.28,k:GN});"], ["g.save();g.translate(-1.3,1);dotsRot(g,T,P,.785,{flat:rgba(VOID,.9),lo:.6,k:.86});g.restore();", "g.save();g.translate(-1.3*MR,1*MR);dotsRot(g,T,P,.785+((window.__P||{}).sangle||0)*Math.PI/180,{flat:rgba(VOID,.9),lo:.6,k:.86*GN});g.restore();"], ["path.moveTo(px+rad,py);path.arc(px,py,rad,0,TAU)}", "if(((window.__P||{}).shape==null?0:window.__P.shape))path.rect(px-rad*.886,py-rad*.886,rad*1.772,rad*1.772);else{path.moveTo(px+rad,py);path.arc(px,py,rad,0,TAU)}}"]]};
 
 /* lift-canvas · shared engine for plates whose figure is one canvas or one SVG on its source page.
    Appended to each plate's study.js by _build/plates.py after that plate's lc-figure.js (window.LC_FIG: source page,
@@ -40,6 +40,8 @@ window.LC_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
    uses, measured by _build/qa/lift-probe.mjs (lc-head.js there is a copy of the HEAD function below; keep them in step), which also keeps only the dials that change this figure's pixels.
    An SVG figure is serialized with its computed styles; its strokes, type and colors take the same dials and inks.
    With composite, every layer the page stacks over the figure is copied (see layersOf); with overlay, its HTML type too.
+   FIG.dpr: the pixel ratio the page draws at (as the filed still was captured), so its marks keep their measured size.
+   FIG.blurKeep (px): blurs this narrow or less are the subject in focus, and the Focus blur dial leaves them alone.
    Nothing in the source file changes. */
 (function (S) {
   'use strict';
@@ -55,6 +57,13 @@ window.LC_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
     });
   }
   var FIG = window.LC_FIG || {}, ON = {}; (FIG.dials || []).forEach(function (k) { ON[k] = 1; });
+  /* FIG.fit: one figure whose live crop has another shape than the filed still: the plate takes the figure's shape (its
+     margins kept), so the figure fills its stage instead of floating in it; callouts on it move with it */
+  if (FIG.fit && S.panels && S.panels.length === 1 && FIG.w && FIG.h) (function () {
+    var c0 = FIG.crop || [0, 0, 1, 1], a = (FIG.w * (c0[2] - c0[0])) / (FIG.h * (c0[3] - c0[1])), p0 = S.panels[0], nh = Math.round(p0.w / a * 100) / 100, H1 = Math.round(p0.y * 2 + nh);
+    S.panels[0] = Object.assign({}, p0, { h: nh, a: Math.round(a * 1e5) / 1e5 }); S.ref = { w: S.ref.w, h: H1 };
+    (S.points || []).forEach(function (q) { if (q.pi === 0 && q.rv != null) q.v = Math.round((p0.y + nh * q.rv) / H1 * 1e4) / 1e4; });
+  })();
   var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
   var ALL = {
     weight: leaf(1, 0.25, 3, 0.01, 'Line weight', '×', 'Weight of every line the figure draws, as a multiple of its own.'),
@@ -65,7 +74,7 @@ window.LC_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
     moment: leaf(FIG.t0 || 2, 0, 12, 0.1, 'Moment', 's', 'Where in its motion the figure is shown, in seconds from the start of its clock.')
   };
   /* dials particular to one source page: FIG.extra holds their leaves, FIG.patches the string patches that wire them (window.__P.<key>) */
-  Object.keys(FIG.extra || {}).forEach(function (k) { var e = FIG.extra[k]; ALL[k] = leaf(e.value, e.range[0], e.range[1], e.step, e.label, e.unit, e.note); });
+  Object.keys(FIG.extra || {}).forEach(function (k) { var e = FIG.extra[k]; ALL[k] = leaf(e.value, e.range[0], e.range[1], e.step, e.label, e.unit, e.note); if (e.options) ALL[k].options = e.options; if (e.scale) ALL[k].scale = e.scale; if (e.when) ALL[k].when = e.when; });
   var P0 = {}; (FIG.dials || []).forEach(function (k) { if (ALL[k]) P0[k] = ALL[k]; });
   var read = (S.spec.techniques || [])[0] || {}, TID = read.id || 'lift';
   S.spec.techniques = [{ id: TID, short: (read.short || 'FIG'), name: read.name || 'Figure', layer: 1, pass: 1, atoms: read.atoms || [], params: P0,
@@ -88,6 +97,8 @@ window.LC_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
     var W = window, q = [], n = 0, d0 = Date.now();
     /* a page that keeps its place in the URL (history.replaceState) cannot inside a frame of another address: let it pass */
     ['replaceState', 'pushState'].forEach(function (k) { var o = history[k]; history[k] = function () { try { return o.apply(history, arguments); } catch (e) {} }; });
+    /* FIG.dpr: the page draws its canvases at this pixel ratio, as the filed still was captured */
+    if (W.__DPR) try { Object.defineProperty(W, 'devicePixelRatio', { configurable: true, get: function () { return W.__DPR; } }); } catch (e) {}
     W.__NOW = 0; W.__P = W.__P0 || {}; W.__MAP = W.__MAP0 || {}; W.__MAPK = JSON.stringify(W.__MAP); W.__UC = new WeakMap(); W.__UO = { lw: 0, mark: 0, al: 0, font: 0, img: 0, col: {} };
     var UU = function (ctx) { var c = ctx && ctx.canvas; if (!c || !c.isConnected) return W.__UO; var o = W.__UC.get(c); if (!o) { o = { lw: 0, mark: 0, al: 0, font: 0, img: 0, col: {} }; W.__UC.set(c, o); } return o; };
     if (W.__REAL) W.__step = function () {}; else {
@@ -113,7 +124,7 @@ window.LC_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
     var P = function (k, dflt) { var v = W.__P[k]; return v == null ? dflt : v; };
     wrap('lineWidth', function (v, c) { UU(c).lw++; return v * P('weight', 1); }, function (v) { return v / P('weight', 1); });
     wrap('globalAlpha', function (v, c) { UU(c).al++; return Math.max(0, Math.min(1, v * P('ink', 1))); });
-    wrap('filter', function (v) { var b = P('blur', 1); return b === 1 || typeof v !== 'string' ? v : v.replace(/blur\(([\d.]+)px\)/g, function (m, x) { return 'blur(' + (+x * b) + 'px)'; }); });
+    wrap('filter', function (v) { var b = P('blur', 1); return b === 1 || typeof v !== 'string' ? v : v.replace(/blur\(([\d.]+)px\)/g, function (m, x) { return +x <= (W.__BK || 0) ? m : 'blur(' + (+x * b) + 'px)'; }); });
     wrap('font', function (v, c) { UU(c).font++; var f = P('type', 1); return f === 1 ? v : String(v).replace(/([\d.]+)px/, function (s, x) { return (+x * f) + 'px'; }); });
     ['fillStyle', 'strokeStyle', 'shadowColor'].forEach(function (k) { wrap(k, mapc); });
     var di = C.drawImage; C.drawImage = function () { UU(this).img++; return di.apply(this, arguments); };
@@ -129,7 +140,7 @@ window.LC_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
     return fetchSrc().then(function (html) {
       (FIG.patches || []).forEach(function (q) { var n = html.split(q[0]).length - 1; if (n < 1) { if (/debug/.test(location.search)) console.info('[lift-canvas] not wired:', q[0]); return; } html = html.split(q[0]).join(q[1]); });
       /* the dials are in place before the page's own scripts run, so a figure drawn once at load is drawn with them */
-      var PRE = '<script>window.__P0=' + JSON.stringify(Q) + ';window.__MAP0=' + JSON.stringify(MAP) + ';' + (FIG.real ? 'window.__REAL=1;' : '') + (FIG.sid ? 'try{location.hash=' + JSON.stringify(FIG.sid) + '}catch(e){}' : '') + '<\/script>';
+      var PRE = '<script>window.__P0=' + JSON.stringify(Q) + ';window.__MAP0=' + JSON.stringify(MAP) + ';' + (FIG.real ? 'window.__REAL=1;' : '') + (FIG.blurKeep ? 'window.__BK=' + (+FIG.blurKeep) + ';' : '') + (FIG.dpr ? 'window.__DPR=' + (+FIG.dpr) + ';' : '') + (FIG.sid ? 'try{location.hash=' + JSON.stringify(FIG.sid) + '}catch(e){}' : '') + '<\/script>';
       html = html.replace(/<head[^>]*>/i, function (m) { return m + '<base href="' + new URL(FIG.src, location.href).href + '">' + PRE + HEAD; });
       return new Promise(function (res, rej) {
         if (frame) frame.remove();
@@ -240,11 +251,13 @@ window.LC_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
       var dt = pe.closest('details'); if (dt && !dt.open && !pe.closest('summary')) continue;
       rng.selectNodeContents(n); var br = rng.getBoundingClientRect(); if (!br.width || br.right < R.left || br.left > R.right || br.bottom < R.top || br.top > R.bottom) continue;
       var cs = w.getComputedStyle(pe), op = 1, hid = false; for (var q = pe; q && q.nodeType === 1; q = q.parentElement) { var qs = w.getComputedStyle(q); op *= +qs.opacity; if (qs.visibility === 'hidden') hid = true; } if (hid || op < .05) continue;
-      var lines = [], cur = null;
+      var lines = [], cur = null, g0 = ops.length;
       for (var i = 0; i < t.length; i++) { if (!cur && /\s/.test(t[i])) continue; rng.setStart(n, i); rng.setEnd(n, i + 1); var cr = rng.getClientRects()[0]; if (!cr) continue;
         if (!cur || Math.abs(cr.top - cur.top) > cr.height * .5) { if (/\s/.test(t[i])) { cur = null; continue; } cur = { top: cr.top, bottom: cr.bottom, left: cr.left, s: '' }; lines.push(cur); } cur.s += t[i]; }
       lines.forEach(function (L) { var str = L.s.replace(/\s+/g, ' ').trim(); if (!str) return; if (cs.textTransform === 'uppercase') str = str.toUpperCase();
         ops.push({ s: str, x: L.left - R.left, y: (L.top + L.bottom) / 2 - R.top, st: cs.fontStyle + ' ' + cs.fontWeight + ' ', px: parseFloat(cs.fontSize), fam: famMap(cs.fontFamily), color: cs.color, ls: cs.letterSpacing === 'normal' ? '0px' : cs.letterSpacing, a: op }); });
+      /* the lines of one text keep their leading as type grows: each is placed from the first line's center */
+      for (var gi = g0; gi < ops.length; gi++) ops[gi].gy = ops[g0].y;
     }
     return ops;
   }
@@ -353,7 +366,7 @@ window.LC_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-20
           } else if (img) try { x.drawImage(img, cr[0] * nw, cr[1] * nh, (cr[2] - cr[0]) * nw, (cr[3] - cr[1]) * nh, ox, oy, iw * k, ih * k); } catch (e) { console.error('[lift-canvas]', e); }
           if (F.ops && F.ops.length) { var ks = fw * k / cw0, ty = Q.type == null ? 1 : Q.type;
             x.save(); x.beginPath(); x.rect(ox, oy, iw * k, ih * k); x.clip(); x.translate(ox - cr[0] * cw0 * ks, oy - cr[1] * ch0 * ks); x.scale(ks, ks); x.textBaseline = 'middle'; x.textAlign = 'left';
-            F.ops.forEach(function (o) { x.font = o.st + (o.px * ty) + 'px ' + o.fam; x.fillStyle = mapCol(o.color, MAP); x.globalAlpha = Math.min(1, o.a * (Q.ink == null ? 1 : Q.ink)); if ('letterSpacing' in x) x.letterSpacing = o.ls; x.fillText(o.s, o.x, o.y); });
+            F.ops.forEach(function (o) { x.font = o.st + (o.px * ty) + 'px ' + o.fam; x.fillStyle = mapCol(o.color, MAP); x.globalAlpha = Math.min(1, o.a * (Q.ink == null ? 1 : Q.ink)); if ('letterSpacing' in x) x.letterSpacing = o.ls; x.fillText(o.s, o.x, o.gy == null ? o.y : o.gy + (o.y - o.gy) * ty); });
             x.restore(); }
           x.restore(); x.strokeStyle = Vt.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
         });

@@ -1,2 +1,3 @@
-/* PL-10 · Scatter field · the figure is drawn by its source page's own code: A04_directions-v1.html #a-method > div:nth-child(2) > figure:nth-child(3). See _build/engines/dot-record.js. */
-window.DR_FIG={"record": true, "src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A04_directions-v1.html", "sel": "#a-method > div:nth-child(2) > figure:nth-child(3)", "w": 555, "h": 484};
+/* PL-10 · Scatter field · the figure is drawn by its source page's own code: A04_directions-v1.html #a-method > div:nth-child(2) > figure:nth-child(3) (#a-plane).
+   dials: the figure's own decisions it offers (see ALL in _build/engines/dot-record.js); set: per-plate ranges and notes. */
+window.DR_FIG={"src": "/tools/mindgut/files/Mindgut/Claude/collection/sources-2026-11-12/artifacts/A04_directions-v1.html", "sel": "#a-method > div:nth-child(2) > figure:nth-child(3)", "w": 555, "h": 437, "record": true, "dials": ["scale", "axis", "dot", "car", "seed"], "set": {"dot": {"range": [0.7, 1.6], "note": "Radius of every dot, against the page’s own (yours 2, the model’s 1.7)."}}};

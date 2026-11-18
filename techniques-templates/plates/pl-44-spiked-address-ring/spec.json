@@ -8,7 +8,7 @@
       "id": "source",
       "label": "Source",
       "swatches": [
-        "#f5f7f0",
+        "#FBFBF7",
         "#203d31",
         "#244638",
         "#6a756d",
@@ -22,7 +22,7 @@
       1000,
       914
     ],
-    "grammar": ""
+    "grammar": "Every crossing of the record pushed off one ring as a spike, cut by a contour, the held address at its center."
   },
   "units": "design units, 1000 = plate width",
   "palette": {
@@ -38,8 +38,8 @@
   },
   "techniques": [
     {
-      "id": "die-cut-gradient",
-      "short": "DGCC",
+      "id": "dot-record",
+      "short": "SRRP",
       "name": "Record atlas ring",
       "layer": 1,
       "pass": 1,
@@ -55,7 +55,43 @@
           ],
           "step": 1,
           "label": "Finish",
-          "note": "The page’s three renderings: 1 engraving, 2 by number, 3 thermal field."
+          "note": "The page’s own three renderings of the ring: engraved line, numbered cells, or a thermal field.",
+          "options": [
+            {
+              "v": 1,
+              "label": "Engraving"
+            },
+            {
+              "v": 2,
+              "label": "By number"
+            },
+            {
+              "v": 3,
+              "label": "Thermal field"
+            }
+          ]
+        },
+        "spike": {
+          "value": 4.2,
+          "range": [
+            1,
+            5
+          ],
+          "step": 0.1,
+          "label": "Spike reach",
+          "note": "How far each crossing pushes the contour out: radius = 1 + reach × its distance from the baseline. The page’s own is 4.2; at 1 the ring is nearly round. Read on a log track, so equal travel gives an equal change in the spikes.",
+          "scale": "log"
+        },
+        "cut": {
+          "value": 64,
+          "range": [
+            60,
+            68
+          ],
+          "step": 1,
+          "label": "Inner cut",
+          "note": "The inner contour, as a share of each crossing’s radius: it follows the spikes, so this sets how wide the cut band is. The page’s own is 64%; below 60% the band reaches the address, above 68% the numbered finish loses its cells at the spike tips.",
+          "unit": "%"
         },
         "field": {
           "value": 0.35,
@@ -65,20 +101,50 @@
           ],
           "step": 0.01,
           "label": "Field variation",
-          "note": "The page’s field-variation slider: stirs the color inside the cut contour; the held coordinates stay put."
+          "note": "The page’s field-variation slider for the thermal field: stirs the color inside the cut contour; the held coordinates stay put.",
+          "when": {
+            "path": "finish",
+            "is": [
+              3
+            ]
+          }
         },
-        "turn": {
-          "value": 1,
+        "light": {
+          "value": 35,
           "range": [
-            1,
-            10
+            0,
+            359
           ],
           "step": 1,
-          "label": "Turn",
-          "note": "Which of the record’s ten turns of 42 crossings the ring shows."
+          "label": "Light direction",
+          "note": "The page’s own light for the numbered finish: the depth × light ramp the digits 1–9 are read from.",
+          "unit": "°",
+          "when": {
+            "path": "finish",
+            "is": [
+              2
+            ]
+          }
+        },
+        "pitch": {
+          "value": 3.6,
+          "range": [
+            2.6,
+            5
+          ],
+          "step": 0.1,
+          "label": "Line pitch",
+          "note": "Spacing of the engraved lines, in the page’s pixels on its 420 px ring. The page’s own is 3.6.",
+          "unit": "px",
+          "when": {
+            "path": "finish",
+            "is": [
+              1
+            ]
+          }
         }
       },
-      "implementation": "A soft multi-stop gradient fills a card cut to an arch, a step or a notch; a large number sits in the cut. Drawn by the source page’s own code; each dial sets one of the page’s own controls."
+      "implementation": "A record drawn as a ring of its crossings: each crossing is pushed out from the circle as a spike by how much it changed, the field inside the cut contour is laid in one of three finishes, and the held address sits at the center. Drawn by the source page’s own code; each dial sets one of the page’s own controls or one of the numbers its drawing is built from."
     },
     {
       "id": "ink-palette",

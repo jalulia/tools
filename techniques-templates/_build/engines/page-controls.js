@@ -4,7 +4,11 @@
    The page runs in a hidden frame. Each dial sets the page's own control the way a reader would: a choice clicks
    its button, a range sets its slider and fires input, a step presses its key on the figure. The figure is then
    copied into the plate. Its inks are the colors its canvas calls use, mapped on the Color tab. Nothing in the
-   source file changes. */
+   source file changes, except where a plate names the source's own numbers as dials: FIG.patches are exact string
+   replacements made to the fetched page before it loads (each must match once), so that a constant of its drawing reads
+   window.__P instead; a 'var' dial sets window.__P[key], a 'cssvar' dial sets a CSS custom property on the page, and the
+   patched page's own draw, exposed as window.__redraw, is called after any of them changes. FIG.hires (a cap) tells a
+   patched page how many device pixels per CSS pixel the plate needs (window.__P.hires), so it can draw at that size. */
 (function (S) {
   'use strict';
   var FIG = window.PC_FIG || {};
@@ -18,19 +22,27 @@
       im.src = p.src;
     });
   }
-  var leaf = function (c) { var o = { value: c.value, range: c.range, step: c.step || 1, label: c.label, note: c.note }; if (c.unit) o.unit = c.unit; return o; };
+  var leaf = function (c) { var o = { value: c.value, range: c.range, step: c.step || 1, label: c.label, note: c.note }; if (c.unit) o.unit = c.unit; if (c.options) o.options = c.options; if (c.scale) o.scale = c.scale; if (c.when) o.when = c.when; return o; };
   var params = {}; (FIG.ctl || []).forEach(function (c) { params[c.key] = leaf(c); });
   var read = (S.spec.techniques || [])[0] || {}, TID = read.id || 'figure';
   S.spec.techniques = [{ id: TID, short: read.short || 'FIG', name: FIG.techName || read.name || 'Figure', layer: 1, pass: 1, atoms: read.atoms || [], params: params,
-    implementation: (read.implementation || '') + ' Drawn by the source page’s own code; each dial sets one of the page’s own controls.' }]
+    implementation: (read.implementation || '') + (FIG.patches ? ' Drawn by the source page’s own code; each dial sets one of the page’s own controls or one of the numbers its drawing is built from.' : ' Drawn by the source page’s own code; each dial sets one of the page’s own controls.') }]
     .concat((S.spec.techniques || []).filter(function (t) { return t.id !== TID; }));
   S.body = [S.body[0], FIG.body || 'The figure is drawn here by its source page’s own code. Each dial is one of that page’s own controls, set the way a reader would set it.'];
-  S.paramsHint = 'Each dial is one of the source page’s own controls.';
+  S.paramsHint = FIG.patches ? 'Each dial is one of the source page’s own controls or one of the numbers its drawing is built from.' : 'Each dial is one of the source page’s own controls.';
   S.liveOnLoad = false; delete S.live;
 
   var INK = FIG.inks || [];
   function V(id, label, list) { var inks = {}; INK.forEach(function (h, i) { inks['ink' + (i + 1)] = list[i]; }); return { id: id, label: label, sw: [FIG.ground || '#FFFFFF'].concat(list.slice(0, 4)), spot: [20, 20, 20], paper: FIG.ground || '#FFFFFF', rule: '#D9D9DC', inks: inks }; }
   S.variants = [V('source', 'Source', INK.slice())].concat((FIG.palettes || []).map(function (p) { return V(p[0], p[1], p[2]); }));
+  /* a variant can also be one of the page's own renderings (FIG.variants: {id, label, ground, sw, vars}): its vars go to
+     window.__P like a dial's, and its ground is the plate's ground while it is on */
+  (FIG.variants || []).forEach(function (q) { var o = V(q.id, q.label, q.inks || INK.slice()); if (q.ground) o.paper = q.ground; if (q.sw) o.sw = q.sw; o.vars = q.vars || {}; S.variants.push(o); });
+  var VKEYS = []; S.variants.forEach(function (o) { Object.keys(o.vars || {}).forEach(function (k) { if (VKEYS.indexOf(k) < 0) VKEYS.push(k); }); });
+  if (S.variants[0].sw.length < 2 && FIG.sw) S.variants[0].sw = FIG.sw;
+  /* a full-bleed figure (FIG.bleed): its one panel is the whole plate, and the callout points move with it */
+  if (FIG.bleed && S.panels && S.panels.length === 1) { var P0 = S.panels[0]; P0.x = 0; P0.y = 0; P0.w = 1000; P0.h = S.ref.h;
+    (S.points || []).forEach(function (q) { if (q.pi === 0 && q.ru != null) { q.u = q.ru; q.v = q.rv; } }); }
   S.variantLabel = 'Palette';
   S.colorHint = FIG.colorHint || 'Each ink is a color the figure’s own drawing calls use. Click one to change it everywhere the figure uses it.';
 
@@ -55,6 +67,7 @@
   function load() {
     if (boot) return boot;
     boot = fetch(FIG.src).then(function (r) { if (!r.ok) throw new Error('source ' + r.status); return r.text(); }).then(function (html) {
+      (FIG.patches || []).forEach(function (pt) { var k = html.split(pt[0]).length - 1; if (k !== 1) { console.error('[page-controls] patch matched ' + k + ' times: ' + pt[0].slice(0, 60)); return; } html = html.replace(pt[0], function () { return pt[1]; }); });
       html = html.replace(/<head[^>]*>/i, function (m) { return m + '<base href="' + new URL(FIG.src, location.href).href + '">' + HEAD; });
       return new Promise(function (res, rej) {
         var f = frame = document.createElement('iframe'); f.setAttribute('aria-hidden', 'true'); f.tabIndex = -1; f.title = 'page-controls engine';
@@ -80,19 +93,35 @@
     return boot;
   }
   function frames(w, n) { return new Promise(function (res) { (function go(k) { if (k <= 0) return setTimeout(res, 60); w.requestAnimationFrame(function () { go(k - 1); }); })(n || 3); }); }
-  function setControls(E, Q) {
+  /* one page control, set the way a reader would; true when it changed something on the page */
+  function apply(E, c, v) {
     var w = E.w, d = w.document;
-    (FIG.ctl || []).forEach(function (c) {
-      var v = Q[c.key] == null ? c.value : Q[c.key];
-      if (c.kind === 'choice') { var b = d.querySelectorAll(c.sel)[Math.round(v) - 1]; if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); }
-      else if (c.kind === 'range') { var i = d.querySelector(c.sel); if (!i) return; var set = Object.getOwnPropertyDescriptor(w.HTMLInputElement.prototype, 'value').set; var raw = v + (c.offset || 0); if (String(i.value) !== String(raw)) { set.call(i, raw); i.dispatchEvent(new w.Event('input', { bubbles: true })); i.dispatchEvent(new w.Event('change', { bubbles: true })); } }
-      else if (c.kind === 'check') { var cb = d.querySelector(c.sel); if (cb && cb.checked !== (v >= .5)) cb.click(); }
-      else if (c.kind === 'toggle') { var tb = d.querySelector(c.sel); if (tb) { var on = tb.getAttribute('aria-pressed') === 'true' || tb.classList.contains(c.onClass || 'on'); if (E.state[c.key] != null) on = E.state[c.key]; if (on !== (v >= .5)) { tb.click(); } E.state[c.key] = v >= .5; } }
-      else if (c.kind === 'select') { var se = d.querySelector(c.sel); if (se && se.selectedIndex !== Math.round(v) - 1) { se.selectedIndex = Math.round(v) - 1; se.dispatchEvent(new w.Event('input', { bubbles: true })); se.dispatchEvent(new w.Event('change', { bubbles: true })); } }
-      else if (c.kind === 'key') { var t = d.querySelector(c.sel) || E.el, have = t.dataset && t.dataset.picked != null ? Number(t.dataset.picked) + c.range[0] : (E.state[c.key] == null ? c.value : E.state[c.key]), n = c.range[1] - c.range[0] + 1, steps = ((Math.round(v) - have) % n + n) % n;
-        for (var s = 0; s < steps; s++) t.dispatchEvent(new w.KeyboardEvent('keydown', { key: c.keyName || 'ArrowRight', bubbles: true, cancelable: true }));
-        E.state[c.key] = Math.round(v); }
-    });
+    if (c.kind === 'choice') { var b = d.querySelectorAll(c.sel)[Math.round(v) - 1]; if (b && b.getAttribute('aria-pressed') !== 'true') { b.click(); return true; } }
+    else if (c.kind === 'range') { var i = d.querySelector(c.sel); if (!i) return false; var set = Object.getOwnPropertyDescriptor(w.HTMLInputElement.prototype, 'value').set; var raw = +(v * (c.mul || 1) + (c.offset || 0)).toFixed(6); if (+i.value !== raw) { set.call(i, raw); i.dispatchEvent(new w.Event('input', { bubbles: true })); i.dispatchEvent(new w.Event('change', { bubbles: true })); return true; } }
+    else if (c.kind === 'check') { var cb = d.querySelector(c.sel); if (cb && cb.checked !== (v >= .5)) { cb.click(); return true; } }
+    else if (c.kind === 'toggle') { var tb = d.querySelector(c.sel); if (tb) { var on = tb.getAttribute('aria-pressed') === 'true' || tb.classList.contains(c.onClass || 'on'); if (E.state[c.key] != null) on = E.state[c.key]; E.state[c.key] = v >= .5; if (on !== (v >= .5)) { tb.click(); return true; } } }
+    else if (c.kind === 'select') { var se = d.querySelector(c.sel); if (se && se.selectedIndex !== Math.round(v) - 1) { se.selectedIndex = Math.round(v) - 1; se.dispatchEvent(new w.Event('input', { bubbles: true })); se.dispatchEvent(new w.Event('change', { bubbles: true })); return true; } }
+    else if (c.kind === 'key') { var t = d.querySelector(c.sel) || E.el, have = t.dataset && t.dataset.picked != null ? Number(t.dataset.picked) + c.range[0] : (E.state[c.key] == null ? c.value : E.state[c.key]), n = c.range[1] - c.range[0] + 1, steps = ((Math.round(v) - have) % n + n) % n;
+      for (var s = 0; s < steps; s++) t.dispatchEvent(new w.KeyboardEvent('keydown', { key: c.keyName || 'ArrowRight', bubbles: true, cancelable: true }));
+      E.state[c.key] = Math.round(v); return steps > 0; }
+    return false;
+  }
+  /* the source's own numbers first (a patched page reads them when it draws), then the page's own controls in order
+     ('first' ones before the rest), a frame after each one that acts so the page can re-render; a control whose 'when'
+     is off is left alone (the page has no such control in that mode, or another control governs it), unless it
+     is marked 'keep' (the page still reads it in other modes, so the same dials always give the same figure). Then the page's
+     own draw, if any number changed. */
+  function setControls(E, Q, hires, vv) {
+    var w = E.w, d = w.document, P = w.__P || (w.__P = {}), all = FIG.ctl || [], vs = {};
+    VKEYS.forEach(function (k) { var v = (vv || {})[k]; if (v == null) delete P[k]; else P[k] = v; vs['variant.' + k] = v == null ? null : v; });
+    var val = function (c) { return Q[c.key] == null ? c.value : Q[c.key]; };
+    var live = function (c) { if (!c.when || c.keep) return true; var src = all.filter(function (q) { return q.key === c.when.path; })[0], v = src ? val(src) : undefined; return (c.when.is || []).some(function (x) { return +x === +v; }); };
+    all.forEach(function (c) { if (c.kind !== 'var' && c.kind !== 'cssvar') return; var v = +(val(c) * (c.mul || 1) + (c.offset || 0)).toFixed(6); vs[c.key] = v;
+      if (c.kind === 'var') P[c.key] = v; else d.documentElement.style.setProperty(c.cssvar, v + (c.cssunit || '')); });
+    if (hires != null) { P.hires = hires; vs.__hires = hires; }
+    var list = all.filter(function (c) { return c.first; }).concat(all.filter(function (c) { return !c.first; })), chain = Promise.resolve();
+    list.forEach(function (c) { if (c.kind === 'var' || c.kind === 'cssvar') return; chain = chain.then(function () { if (live(c) && apply(E, c, val(c))) return frames(w, 2); }); });
+    return chain.then(function () { var sig = JSON.stringify(vs); if (sig === E.vsig) return; E.vsig = sig; if (typeof w.__redraw === 'function') { try { w.__redraw(); } catch (e) { console.error('[page-controls] redraw', e); } } });
   }
   function svgImage(w, el) {
     var c = el.cloneNode(true), r = el.getBoundingClientRect(), MAP = w.__MAP || {}, sc = 2;
@@ -145,8 +174,12 @@
     queue = queue.then(function () { return load(); }).then(function (E) {
       E.w.__MAP = MAP; E.w.__MAPK = JSON.stringify(MAP);
       /* a new ink map needs a fresh draw: the page redraws on resize */
-      if (E.mapk !== E.w.__MAPK) { E.mapk = E.w.__MAPK; E.w.dispatchEvent(new E.w.Event('resize')); try { var st = E.el.style.width; E.el.style.width = (E.el.getBoundingClientRect().width - 1) + 'px'; E.el.getBoundingClientRect(); E.el.style.width = st; } catch (e) {} }
-      setControls(E, Q); return frames(E.w, 4).then(function () { return E.el.tagName.toLowerCase() === 'svg' ? svgImage(E.w, E.el).then(function (im) { E.svgimg = im; return E; }) : E; })
+      if (E.mapk !== E.w.__MAPK) { E.mapk = E.w.__MAPK; E.vsig = null; E.w.dispatchEvent(new E.w.Event('resize')); try { var st = E.el.style.width; E.el.style.width = (E.el.getBoundingClientRect().width - 1) + 'px'; E.el.getBoundingClientRect(); E.el.style.width = st; } catch (e) {} }
+      /* a patched page can draw at the plate's size: device px per CSS px of the figure, in quarter steps, capped */
+      var hires = null; if (FIG.hires) { var rr = E.el.getBoundingClientRect(), cr = FIG.crop || [0, 0, 1, 1], cu = canvas.width / 1000, cv = canvas.height / S.ref.h, need = 1;
+        S.panels.forEach(function (p) { need = Math.max(need, Math.min(p.w * cu / Math.max(1, rr.width * (cr[2] - cr[0])), p.h * cv / Math.max(1, rr.height * (cr[3] - cr[1])))); });
+        hires = Math.min(FIG.hires, Math.ceil(need * 4) / 4); }
+      return setControls(E, Q, hires, Vt.vars).then(function () { return frames(E.w, 4); }).then(function () { return E.el.tagName.toLowerCase() === 'svg' ? svgImage(E.w, E.el).then(function (im) { E.svgimg = im; return E; }) : E; })
         .then(function (E) { if (!FIG.overlay) return E; return fontsFrom(E.w).then(function () { E.ops = textOps(E.w, E.el); var fs = E.ops.map(function (o) { return o.font; }); return Promise.all(fs.filter(function (f, i) { return fs.indexOf(f) === i; }).map(function (f) { return document.fonts.load(f).catch(function () {}); })).then(function () { return E; }); }); });
     }).then(function (E) {
       READY = true; var el = E.el, x = canvas.getContext('2d'), W = canvas.width, H = canvas.height, u = W / 1000, v = H / S.ref.h, cr = FIG.crop || [0, 0, 1, 1];
@@ -155,13 +188,15 @@
       var nw = el.naturalWidth || el.width, nh = el.naturalHeight || el.height, sw = (cr[2] - cr[0]) * nw, sh = (cr[3] - cr[1]) * nh;
       S.panels.forEach(function (p) {
         var bx = p.x * u, by = p.y * v, bw = p.w * u, bh = p.h * v, k = Math.min(bw / sw, bh / sh), ox = bx + (bw - sw * k) / 2, oy = by + (bh - sh * k) / 2;
-        x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip(); x.fillStyle = FIG.ground || Vt.paper || '#FFFFFF'; x.fillRect(bx, by, bw, bh);
+        x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip(); x.fillStyle = Vt.paper || FIG.ground || '#FFFFFF'; x.fillRect(bx, by, bw, bh);
         x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high'; try { x.drawImage(el, cr[0] * nw, cr[1] * nh, sw, sh, ox, oy, sw * k, sh * k); } catch (e) { console.error('[page-controls]', e); }
         if (E.ops && E.ops.length) { var rr = E.el.getBoundingClientRect(), cssW = rr.width, cssH = rr.height, ks = (sw * k) / (cssW * (cr[2] - cr[0]));
           x.save(); x.translate(ox - cr[0] * cssW * ks, oy - cr[1] * cssH * ks); x.scale(ks, ks); x.textBaseline = 'middle'; x.textAlign = 'left';
           E.ops.forEach(function (o) { x.font = o.font; x.fillStyle = o.color; x.globalAlpha = o.a; if ('letterSpacing' in x) x.letterSpacing = o.ls; x.fillText(o.s, o.x, o.y); });
           x.restore(); }
-        x.restore(); x.strokeStyle = Vt.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
+        x.restore();
+        /* no inset rule: the figure sits on one ground, as filed; a still that has a hairline edge names its ink (FIG.edge) */
+        if (FIG.edge) { var lw = Math.max(1, Math.round(u)); x.strokeStyle = FIG.edge; x.lineWidth = lw; x.strokeRect(Math.round(bx) + lw / 2, Math.round(by) + lw / 2, Math.round(bw) - lw, Math.round(bh) - lw); }
       });
       if (done) done();
     }).catch(function (err) { console.error('[page-controls]', err); if (done) done(); });
