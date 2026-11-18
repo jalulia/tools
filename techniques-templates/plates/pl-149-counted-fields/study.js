@@ -44,10 +44,10 @@ window.STUDY={"id": "pl-149-counted-fields", "code": "PL-149", "fig": "4.149", "
   var TECH = [
     { id: 'counted-stipple', short: 'CNT', name: 'Counted screen', layer: 1, pass: 1, atoms: ['screen-tone', 'stipple'],
       params: {
-        cell: leaf(3.4, 2, 5, 0.1, 'Cell', 'px', 'Side of one screen cell, in screen pixels. Held at this size at any plate size, so a larger plate prints more dots, not bigger ones.'),
-        dot: leaf(1.5, 1.5, 3, 0.05, 'Dot', 'px', 'Side of one dot, in screen pixels. Dots print as whole pixels; a fractional size is kept by thinning the count, so tone does not jump. Below 1.5 every dot is one pixel and the screen thins to dust.'),
+        cell: leaf(3.4, 2.6, 5, 0.1, 'Cell', 'px', 'Side of one screen cell, in screen pixels. Held at this size at any plate size, so a larger plate prints more dots, not bigger ones.'),
+        dot: leaf(1.5, 1.5, 2.4, 0.05, 'Dot', 'px', 'Side of one dot, in screen pixels. Dots print as whole pixels; a fractional size is kept by thinning the count, so tone does not jump. Held between 1.5 (below it every dot is one pixel and the screen thins to dust) and 2.4 (above it the dark tones fill solid).'),
         perCell: leaf(3, 1, 6, 1, 'Dots per cell', '', 'Most dots one cell can hold. Tone is the count: density times this, the remainder kept by the hash.'),
-        jitter: leaf(1, 0, 1, 0.01, 'Scatter', '', 'Where a dot may land in its cell. 1 is anywhere (the stochastic screen); 0 stacks every dot on the cell center, an ordered screen.'),
+        jitter: 1,   /* the stochastic screen: a dot may land anywhere in its cell (below about 0.7 the cells show as a repeating lattice) */
         round: 2.5,
         seed: leaf(11, 1, 99, 1, 'Seed', '', 'Re-rolls every hash: which dots are kept and where they land.')
       },
@@ -95,12 +95,14 @@ window.STUDY={"id": "pl-149-counted-fields", "code": "PL-149", "fig": "4.149", "
   function screen(I, box, su, dens, Q, seedAdd) {
     var cell = Q.cell, sz = Math.max(1, Math.round(Q.dot)), ks = (Q.dot * Q.dot) / (sz * sz), M = Q.perCell, jit = Q.jitter, seed = (Q.seed | 0) + (seedAdd || 0), round = sz >= Q.round;
     var nx = Math.ceil(box.w / cell), ny = Math.ceil(box.h / cell), def = Q.color;
+    /* a cell never takes more dots than leave about a fifth of it white (coverage 1 - e^-(n·dot²/cell²) ≤ 0.78), so the darkest tone is still a count */
+    var NMAX = 1.5 * cell * cell / (sz * sz);
     for (var j = 0; j < ny; j++) for (var i = 0; i < nx; i++) {
       var cx = (i + .5) * cell, cy = (j + .5) * cell; if (cx > box.w || cy > box.h) continue;
       var d = dens(cx / su, cy / su), col = def;
       if (d && typeof d === 'object') { col = d[1]; d = d[0]; }
       if (!d || d <= 0) continue;
-      var n = d * M * ks, k = Math.floor(n) + (h2(i, j, seed + 13) < n - Math.floor(n) ? 1 : 0);
+      var n = Math.min(d * M * ks, NMAX), k = Math.floor(n) + (h2(i, j, seed + 13) < n - Math.floor(n) ? 1 : 0);
       for (var q = 0; q < k; q++) {
         var x = box.x + (i + .5 + (h2(i * 7 + q, j, seed + q * 31) - .5) * jit) * cell, y = box.y + (j + .5 + (h2(i, j * 5 + q, seed + q * 17 + 7) - .5) * jit) * cell;
         dot(I, x, y, sz, round, col);

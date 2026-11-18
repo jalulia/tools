@@ -31,7 +31,7 @@
   var FIG = window.HX_FIG || {}, ON = {}; (FIG.dials || []).forEach(function (k) { ON[k] = 1; });
   var leaf = function (value, lo, hi, step, label, unit, note) { var o = { value: value, range: [lo, hi], step: step, label: label, note: note }; if (unit) o.unit = unit; return o; };
   var ALL = {
-    curl: leaf(1, 0.6, 2, 0.01, 'Curl', '×', 'Radius of the helix the steps climb: smaller winds the flight tighter, larger opens it toward a straight stair.'),
+    curl: leaf(1, 0.5, 1.67, 0.01, 'Curl', '×', 'How tightly the flight winds about its helix, against the page’s: lower opens it toward a straight stair, higher winds it tighter. Set as curvature, so equal travel bends the flight by equal steps.'),
     turn: leaf(0, -30, 30, 1, 'Turn', '°', 'Where on the helix the flight starts: turns the whole stair about its axis.'),
     rise: leaf(1, 0.8, 1.35, 0.01, 'Rise', '×', 'Height of each step against the page’s: held where the flight stays clear of its labels and inside the frame.'),
     tread: leaf(1, 0.75, 1.15, 0.01, 'Tread', '×', 'Depth of each step along the helix, against the page’s: held where the steps still join into one flight.'),
@@ -91,10 +91,17 @@
   function setInks(win, k) {
     if (CRY) { win.__CRY = { ink: k.ink, dim: k.muted, acc: k.accent, gy: k.green }; return; }
     if (BOT != null && k.robot && win.__ROBOTS && win.__ROBOTS[BOT]) { var r = win.__ROBOTS[BOT], c = k.robot; r.head = c.head; r.brain = r.cupc = c.brain; r.suit = r.cup = r.curl = c.suit; r.tip = c.tip; }
+    /* a dark paper: people, pets and the settled record take the line ink; the crystal blooms take the sun ink */
+    var lum = function (h) { var c = [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16) / 255; }); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; }, dark = lum(k.paper) < .3;
+    win.__BG = k.paper; win.__PINK = dark ? k.line : null; win.__GINK = dark ? 'rgba(' + [1, 3, 5].map(function (i) { return parseInt(k.line.substr(i, 2), 16); }).join(',') + ',.42)' : null;
+    if (win.__JISL) win.__JISL[0] = dark ? k.sun : '#fbfcf7';
     if (!win.__setInk) return;
-    win.__setInk({ line: k.line, block: k.block, blockS: [k.block, mix(k.block, '#000000', .16), mix(k.block, '#000000', .32)], modelS: [k.model, mix(k.model, k.line, .1), mix(k.model, k.line, .2)],
-      sun: k.sun, sunS: [k.sun, mix(k.sun, '#000000', .1), mix(k.sun, '#000000', .22)], litS: [mix(k.sun, '#ffffff', .72), mix(k.sun, '#ffffff', .55), mix(k.sun, '#ffffff', .4)],
-      ember: k.ember, violet: k.violet, paper: k.paper, paleS: [mix(k.paper, k.line, .03), mix(k.paper, k.line, .06), mix(k.paper, k.line, .11)] });
+    /* the page's own shades where its own inks stand (so the default is the filed still); shades mixed from any other ink */
+    var PG = k.block === '#126b3d', PM = PG && k.model === '#fbfcf7', PP = k.paper === '#f5f7f0' && k.line === '#151b17', PS = k.sun === '#d0ec60';
+    win.__setInk({ line: k.line, block: k.block, blockS: PG ? ['#126b3d', '#0e5933', '#0a4528'] : [k.block, mix(k.block, '#000000', .16), mix(k.block, '#000000', .32)],
+      modelS: PM ? ['#fbfcf7', '#dfe8d1', '#c5d4b3'] : [k.model, mix(k.model, k.block, .13), mix(k.model, k.block, .26)],
+      sun: k.sun, sunS: PS ? ['#d0ec60', '#bbd84a', '#a2bf36'] : [k.sun, mix(k.sun, '#000000', .1), mix(k.sun, '#000000', .22)], litS: PS ? ['#f1f9c2', '#dde9a0', '#c6d484'] : [mix(k.sun, '#ffffff', .72), mix(k.sun, '#ffffff', .55), mix(k.sun, '#ffffff', .4)],
+      ember: k.ember, violet: k.violet, paper: k.paper, paleS: PP ? ['#eef2e7', '#e4ecd9', '#d3dfc5'] : [mix(k.paper, k.line, .03), mix(k.paper, k.line, .06), mix(k.paper, k.line, .11)] });
   }
   var PATCH = [
     ['var ROBOTS=[', 'var ROBOTS=window.__ROBOTS=['],
@@ -102,7 +109,7 @@
     ["ink='#f5f7f0',dim='#b9c3b1',acc='#d0ec60',GY='#3fb36c'", "ink=(window.__CRY||{}).ink||'#f5f7f0',dim=(window.__CRY||{}).dim||'#b9c3b1',acc=(window.__CRY||{}).acc||'#d0ec60',GY=(window.__CRY||{}).gy||'#3fb36c'"],
     ["function plate(id,draw,opt){var cv=typeof id==='string'?$(id):id;if(!cv)return null;opt=opt||{};", "function plate(id,draw,opt){var cv=typeof id==='string'?$(id):id;if(!cv)return null;opt=opt||{};(window.__DRAWS=window.__DRAWS||{})[typeof id==='string'?id:(cv.id||'')]=draw;"],
     ["RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;", "RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;window.__setRM=function(v){RM=v};"],
-    ["var Rr=o.R||4.6,ac=(o.ac==null?86:o.ac)*Math.PI/180", "var __P=window.__P||{},Rr=(o.R||4.6)*(__P.curl||1),ac=((o.ac==null?86:o.ac)+(__P.turn||0))*Math.PI/180"],
+    ["var Rr=o.R||4.6,ac=(o.ac==null?86:o.ac)*Math.PI/180", "var __P=window.__P||{},Rr=(o.R||4.6)/(__P.curl||1),ac=((o.ac==null?86:o.ac)+(__P.turn||0))*Math.PI/180"],
     ["v:-(k-(n-1)/2)*.27*c2", "v:-(k-(n-1)/2)*.27*(__P.rise||1)*c2"],
     [".46/Rr", ".46*(__P.tread||1)/Rr", 2],
     ["function _kShard(x,cx,cy,S,kind,e,yaw,rot,q){q=q||{};", "function _kShard(x,cx,cy,S,kind,e,yaw,rot,q){q=q||{};var __P=window.__P||{};S*=(__P.block||1);yaw+=(__P.yaw||0);if(__P.pitch&&__P.pitch!==1)q=Object.assign({},q,{pit:(q.pit==null?_kPIT:q.pit)*__P.pitch});"],
@@ -121,6 +128,12 @@
     ["fl=i===2?S*(.34+.05*Math.sin(t*1.4)):0", "fl=i===2?S*(.34+.05*Math.sin(t*1.4))*((window.__P||{}).lift||1):0"],
     ["x.moveTo(cx-S*.6,cy+S*.22);x.lineTo(cx+S*.6,cy-S*.26)", "var __sa=((window.__P||{}).strike==null?21.8:window.__P.strike)*Math.PI/180,__sl=.646*S;x.moveTo(cx-Math.cos(__sa)*__sl,cy-.02*S+Math.sin(__sa)*__sl);x.lineTo(cx+Math.cos(__sa)*__sl,cy-.02*S-Math.sin(__sa)*__sl)"],
     ["glyph(x,cx,h*.27,3.3*u,i)", "glyph(x,cx,h*.27,3.3*u*((window.__P||{}).mark||1),i)"],
+    /* every palette: people and pets read against the plate's own ground (the page passes its paper, #f5f7f0, by hand),
+       and on a dark paper their ink lines take the palette's line ink; the settled record and the crystal blooms follow */
+    ["function person(x,px,py,H,o){o=o||{};", "function person(x,px,py,H,o){o=o||{};if(window.__BG&&o.bg==='#f5f7f0')o=Object.assign({},o,{bg:window.__BG},window.__PINK&&!o.ink?{ink:window.__PINK}:{});"],
+    ["function pet(x,px,py,H,o){o=o||{};", "function pet(x,px,py,H,o){o=o||{};if(window.__BG&&o.bg==='#f5f7f0')o=Object.assign({},o,{bg:window.__BG},window.__PINK&&!o.ink?{ink:window.__PINK}:{});"],
+    ["{cols:GHO,ink:'rgba(21,27,23,.34)'}", "{cols:GHO,ink:window.__GINK||'rgba(21,27,23,.34)'}"],
+    ["JISL=['#fbfcf7','#b79cf2','#7fd69a']", "JISL=window.__JISL=['#fbfcf7','#b79cf2','#7fd69a']"],
     /* a held moment shows its tags at full strength (in the loop they fade in as each phase begins) */
     ["if(J.cur!==ci){J.cur=ci;J.since=T}", "if(J.cur!==ci||window.__HOLD){J.cur=ci;J.since=window.__HOLD?T-9:T}"]
   ];

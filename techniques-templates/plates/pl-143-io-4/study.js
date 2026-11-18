@@ -29,7 +29,7 @@ window.STUDY={"id": "pl-143-io-4", "code": "PL-143", "fig": "4.143", "title": "I
 })(window.STUDY);
 
 /* PL-143 · Io · one day on a clock · drawn by its source page's own code: How a Moth Works.html, Plate p-ionight. See _build/engines/moth.js. */
-window.MO_FIG={"src": "/tools/mindgut/files/Mindgut/How%20a%20Moth%20Works.html", "id": "p-ionight", "also": ["p-io"], "w": 1200, "h": 580, "hour": 21.85, "dials": ["ticks", "stars", "weight", "grain"], "range": {"grain": [0, 1.4]}};
+window.MO_FIG={"src": "/tools/mindgut/files/Mindgut/How%20a%20Moth%20Works.html", "id": "p-ionight", "also": ["p-io"], "w": 1200, "h": 580, "hour": 21.85, "dials": ["ticks", "stars", "weight", "grain"]};
 
 /* moth · shared engine for the plates lifted from Mindgut's "How a Moth Works" (PL-133…143, PL-158, PL-159).
    Appended to each plate's study.js by _build/plates.py after that plate's mo-figure.js (window.MO_FIG: source page
@@ -59,7 +59,7 @@ window.MO_FIG={"src": "/tools/mindgut/files/Mindgut/How%20a%20Moth%20Works.html"
       pitch: leaf(1, 0.6, 1.8, 0.01, 'Stipple pitch', '×', 'Spacing of the stipple lattice every toned area is laid on. Smaller packs the dots; larger opens the screen.'),
       dot: leaf(1, 0.6, 1.8, 0.01, 'Dot size', '×', 'Radius of every stippled dot and every dot population (scales, scent, sonar).'),
       weight: leaf(1, 0.7, 1.6, 0.01, 'Line weight', '×', 'Weight of every line the page draws: keylines, veins, leaders, rules. Held where rings and crosses keep their shape.'),
-      grain: leaf(1, 0, 1.5, 0.01, 'Paper grain', '×', 'The night stock under the figure: mottle, fibers and tooth. 0 leaves flat ground; held below the point where it turns splotchy.'),
+      grain: { value: 1, options: [{ v: 0, label: 'Off' }, { v: 1, label: 'On' }], label: 'Paper grain', note: 'The night stock under the figure, its mottle, fibers and tooth as the page lays them, or a flat ground.' },
       stars: Object.assign(leaf(90, 0, 200, 1, 'Stars', '', 'How many stars come out over the night half of the clock.'), { scale: 'sqrt' }),
       ticks: { value: 96, options: [{ v: 24, label: 'Hours' }, { v: 48, label: 'Half hours' }, { v: 96, label: 'Quarter hours' }], label: 'Dial ticks', note: 'How finely the 24-hour dial is ruled; every hour keeps its long tick.' },
       fur: leaf(1, 0.4, 1.6, 0.01, 'Fur', '×', 'How many hairs stand off the thorax: the insulation the plate is about.'),
@@ -120,6 +120,7 @@ window.MO_FIG={"src": "/tools/mindgut/files/Mindgut/How%20a%20Moth%20Works.html"
     /* the filed moment: how long the plate is warmed before it is held (PL-135: 2.9 s into the cycle), the hour on the Io clock */
     ['for(var i=0;i<(o.warm||90);i++)', 'for(var i=0;i<(window.__WARM!=null?window.__WARM:(o.warm||90));i++)'],
     ['if(RM&&!ptr&&!S.set){S.h=22.1;S.set=1}', 'if(RM&&!ptr&&!S.set){S.h=window.__HOUR!=null?window.__HOUR:22.1;S.set=1}'],
+    ['n=RM?87:Math.min(87,Math.floor(prog))', 'n=RM?(window.__MARKS!=null?window.__MARKS:87):Math.min(87,Math.floor(prog))'],
     /* scale pitch: every wing's scale lay; eyespots: the Io's startle flash; disc cells; clicks in the jam window */
     ['var R=w.root,row=0,r=mul(o.seed);', 'var R=w.root,row=0,r=mul(o.seed);o=Object.assign({},o,{pitch:o.pitch*(' + Pq + '.scale||1)});'],
     ['var a=S.a,shake=', 'var a=' + Pq + '.flash!=null?' + Pq + '.flash/100:S.a,shake='],
@@ -185,7 +186,7 @@ window.MO_FIG={"src": "/tools/mindgut/files/Mindgut/How%20a%20Moth%20Works.html"
   function build(E, Q, V) {
     var w = E.w, P = E.P, K = V.inks || S.variants[0].inks, key = JSON.stringify([Q, K]);
     if (key === lastKey) return Promise.resolve();
-    lastKey = key; w.__P = Q; w.__WARM = FIG.warm != null ? FIG.warm : null; w.__HOUR = FIG.hour != null ? FIG.hour : null;
+    lastKey = key; w.__P = Q; w.__WARM = FIG.warm != null ? FIG.warm : null; w.__HOUR = FIG.hour != null ? FIG.hour : null; w.__MARKS = FIG.marks != null ? FIG.marks : null;
     NAMES.forEach(function (n) { var a = w.__INK[VAR[n]], c = rgb(K[n] || '#000000'); if (a) { a[0] = c[0]; a[1] = c[1]; a[2] = c[2]; } });
     P.ready = false; P.S = {}; P.t = 0; P.size();
     return svgImage(P).then(function (im) { overlay = im; });

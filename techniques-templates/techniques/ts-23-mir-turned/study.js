@@ -41,12 +41,12 @@ window.STUDY={
         limits:'Turn is held to ±35°: past that the near can covers the near eye. Tilt below −10° hides the band behind the brow line.',
         implementation:'Every part is built in head space and taken to the view by one rotation, tilt about x then turn about y, and an orthographic projection. The band is the latitude circle at 12°; only its front half is drawn.' },
       { id:'headphone-cans', short:'CANS', name:'Cans and antennae', layer:1, pass:1, atoms:['cylinder','bevel','convex-hull','tube'],
-        params:{ can_u:{ value:138, range:[100,165], unit:'u', label:'Can size', note:'Radius of each can. Depth is 0.72 of it; the outer edge is rounded at 0.2 of it, the inner edge at 0.12.' }, antenna_u:{ value:170, range:[70,200], unit:'u', label:'Antenna length', note:'How far each antenna stands above the top of its can.' }, splay_deg:26.5, mount:1.0, tuck:0.12, swap:0.1, clear:1.3, drop:-0.21, depth:0.72, round_out:0.2, round_in:0.12, rim_n:144, rod_r:0.12, ant_at:0.5 },
+        params:{ can_u:{ value:138, range:[100,165], unit:'u', label:'Can size', note:'Radius of each can. Depth is 0.72 of it; the outer edge is rounded at 0.2 of it, the inner edge at 0.12.' }, antenna_u:{ value:170, range:[70,200], unit:'u', label:'Antenna length', note:'How far each antenna stands above the top of its can.' }, splay_deg:26.5, mount:1.0, tuck:0.12, swap:0.1, clear:1.3, drop:-0.21, depth:0.72, round_out:0.2, round_in:0.12, rim_n:144, rod_r:0.12, ant_at:0.5, lean_max:22 },
         limits:'Above 165 u the cans meet under the chin at full turn. Below 70 u the antennae hide behind the dome.',
-        implementation:'A can is a puck: a cylinder with rounded edges, its inner face tangent to the sphere. Its outline is the convex hull of 14 rims sampled at 144 points, so ellipse arcs join by true tangent lines. A front can always stands out past the head’s silhouette by at least 1.3 line widths (it slides along the ear axis when the turn would bring the two outlines together), so the head line meets it in clean T-junctions. A can whose axis has turned to within 0.1 of edge-on is drawn behind the head (any overlap at that moment is thinner than the line) and slides up to 0.12 R into it, so it tucks behind the head instead of standing beside it as a slab.' },
+        implementation:'A can is a puck: a cylinder with rounded edges, its inner face tangent to the sphere. Its outline is the convex hull of 14 rims sampled at 144 points, so ellipse arcs join by true tangent lines. A front can always stands out past the head’s silhouette by at least 1.3 line widths (it slides along the ear axis when the turn would bring the two outlines together), so the head line meets it in clean T-junctions. A can whose axis has turned to within 0.1 of edge-on is drawn behind the head (any overlap at that moment is thinner than the line) and slides up to 0.12 R into it, so it tucks behind the head instead of standing beside it as a slab. When a front antenna would run inside the outline close to it and nearly parallel, it tips away from the head’s center in the picture plane (up to 22°, in proportion to the overlap) and slides outward by up to a third of the can radius, so its line never fuses with the head line.' },
       { id:'brain-folds', short:'FOLD', name:'Dome and brain folds', layer:2, pass:2, atoms:['scallop','latitude-rows','sphere-curve'],
         params:{ rows:{ value:3, range:[2,4], step:1, label:'Fold rows', note:'Rows of folds between the band and 80° latitude; each row is cut into long wavy strokes with a hook at one end.' }, seed:23, top_lat_deg:80, margin:0.06, amp:0.075, bump:0.28, arc:0.8, gap:0.18, drift:0.4, hook:0.055, clear:1, min_len:2.5 },
-        limits:'Four rows is the most that stay apart at the heaviest line; one row reads as a hat brim, not a brain. Every fold keeps one stroke width clear of the outline, the band, the front cans and antennas, and every other fold; pieces shorter than 2.5 widths after that cut are dropped. With a heavy line the fold stroke thins, to half at most, until at least as many strokes as rows fit.',
+        limits:'Four rows is the most that stay apart at the heaviest line; one row reads as a hat brim, not a brain. Every fold keeps one stroke width clear of the outline, the band, the front cans and antennas, and every other fold; pieces shorter than 2.5 widths after that cut are dropped. With a heavy line the fold stroke thins, to 0.42 at most, until at least as many strokes as rows fit; pieces shorter than 0.16 R are dropped.',
         implementation:'Each fold is a curve on the sphere: latitude rises in √sin humps 0.075 R high every 0.28 R of arc and drifts by up to 0.4 of a row; one end curls down and back through 112° on a 0.055 R radius. Only the part facing the viewer and clear of the outline is drawn.' },
       { id:'face-decals', short:'FACE', name:'Eyes, look and mouth', layer:2, pass:2, atoms:['decal','gaze','glint'],
         params:{ look_across_deg:{ value:20, range:[-40,40], step:1, unit:'°', label:'Look across', note:'Gaze left (−) or right (+) of where the head points. Moves the glint and shifts the eyes on the sphere.' }, look_up_deg:{ value:30, range:[-20,45], step:1, unit:'°', label:'Look up', note:'Gaze up (+) or down (−). The glint bites the top of the eye when Mir looks up.' }, eye_lon_deg:20, eye_lat_deg:-13.6, eye_r:[0.25,0.28], glint_r:0.12, glint_k:1.4, glint_max:0.85, shift:0.08, limb:0.33, clear:1, mouth_lat_deg:-35, mouth:[0.11,0.13] },
@@ -79,7 +79,7 @@ window.STUDY={
         proj:p=>[X0+p[0]*R, Y0-p[1]*R],
         lat:(phi,n)=>{ const o=[]; for(let i=0;i<=n;i++){ const t=-Math.PI+2*Math.PI*i/n; o.push(toW([Math.cos(phi)*Math.sin(t), Math.sin(phi), Math.cos(phi)*Math.cos(t)])); } return o; },
         band:n=>{ const o=[]; for(let i=0;i<=n;i++){ const t=-Math.PI+2*Math.PI*i/n; o.push(toW([Math.cos(b)*Math.sin(t), Math.sin(b), Math.cos(b)*Math.cos(t)])); } return o; } }; },
-    'headphone-cans': (P,u,A)=>({ clear:P.clear, build:(hd,off)=>{ const D=Math.PI/180, sg=P.splay_deg*D, r=P.can_u/hd.Ru, L=P.antenna_u/hd.Ru, h2=P.depth*r, ro=P.round_out*r, ri=P.round_in*r, W=hd.toW;
+    'headphone-cans': (P,u,A)=>({ clear:P.clear, lean_max:P.lean_max, build:(hd,off)=>{ const D=Math.PI/180, sg=P.splay_deg*D, r=P.can_u/hd.Ru, L=P.antenna_u/hd.Ru, h2=P.depth*r, ro=P.round_out*r, ri=P.round_in*r, W=hd.toW;
         const add=(p,q,s)=>[p[0]+q[0]*s, p[1]+q[1]*s, p[2]+q[2]*s];
         return [-1,1].map(s=>{ const a=[s*Math.cos(sg),0,Math.sin(sg)], e1=[-a[2],0,a[0]], e2=[0,1,0], aw=W(a);
           /* a can turned away slides into the head, so its inner rim hides behind the sphere instead of leaving a sliver */
@@ -159,7 +159,17 @@ window.STUDY={
     const ct=T['headphone-cans'](P['headphone-cans'],u,A), need=ct.clear*P['brush-line'].weight_u/P['head-sphere'].radius_u, off={}, ca=Math.max(0.3,Math.abs(hd.rot[0]));
     const rimsOut=c=>{ let mx=-1e9; for(const q of c.rims)for(const p of rim(q.c,c.e1,c.e2,q.r,48))mx=Math.max(mx,Math.hypot(p[0],p[1])-1); return mx; };
     for(let it=0;it<2;it++){ const cs=ct.build(hd,off); for(const c of cs){ if(!c.front||c.az<0.3)continue; const pr=rimsOut(c); if(pr<need)off[c.side]=(off[c.side]||0)+(need-pr)/ca; } }
-    const cans=ct.build(hd,off).map(c=>{ const out=c.az>=0, cap=out?rim(c.Co,c.e1,c.e2,c.rf,c.n):rim(c.Ci,c.e1,c.e2,c.rin,c.n);
+    /* a front antenna that would run inside the outline, close to it and nearly parallel, tips away from the head's center in the picture plane,
+       in proportion to that stretch, so its line never fuses with the head line */
+    const wH=P['brush-line'].weight_u/P['head-sphere'].radius_u, built=ct.build(hd,off);
+    for(const c of built){ if(!c.front)continue; let f=0; const N=24;
+      for(let i=0;i<=N;i++){ const t=0.4+0.6*i/N, x0=c.B[0]+(c.T[0]-c.B[0])*t, y0=c.B[1]+(c.T[1]-c.B[1])*t, sI=1-Math.hypot(x0,y0); if(sI>-0.5*wH&&sI<c.ra+1.5*wH)f++; }
+      f/=N+1; const k=Math.max(0,Math.min(1,(f-0.15)/0.45)); if(k<=0)continue; const be=ct.lean_max*k*k*(3-2*k)*Math.PI/180, sg=c.B[0]<0?1:-1, dx=c.T[0]-c.B[0], dy=c.T[1]-c.B[1], cs=Math.cos(be*sg), sn=Math.sin(be*sg);
+      c.T=[c.B[0]+dx*cs-dy*sn, c.B[1]+dx*sn+dy*cs, c.T[2]];
+      /* then the rod slides outward in the picture plane (its base stays inside the can, at most a third of the can radius) until its upper part clears the outline by half a line */
+      const need=1+c.ra+1.5*wH, ox=sg>0?-1:1; let sh=0; for(let it=0;it<12;it++){ let worst=0; for(let i=0;i<=N;i++){ const t=0.45+0.55*i/N, x0=c.B[0]+(c.T[0]-c.B[0])*t+ox*sh, y0=c.B[1]+(c.T[1]-c.B[1])*t, r0=Math.hypot(x0,y0); if(r0<need&&r0>1-c.ra-0.5*wH)worst=Math.max(worst,need-r0); } if(worst<=1e-4)break; sh=Math.min(c.r/3,sh+worst*0.6); }
+      if(sh>0){ c.B=[c.B[0]+ox*sh,c.B[1],c.B[2]]; c.T=[c.T[0]+ox*sh,c.T[1],c.T[2]]; } }
+    const cans=built.map(c=>{ const out=c.az>=0, cap=out?rim(c.Co,c.e1,c.e2,c.rf,c.n):rim(c.Ci,c.e1,c.e2,c.rin,c.n);
       const all=[]; for(const q of c.rims)for(const p of rim(q.c,c.e1,c.e2,q.r,c.n))all.push(pj(p));
       const gl=[]; let cur=null; for(const g of c.gloss){ if(g.n[2]>0.08){ (cur||(cur=[])).push(pj(g.p)); } else if(cur){ gl.push(cur); cur=null; } } if(cur)gl.push(cur);
       return Object.assign(c,{ out, hull:hull(all), cap:cap.map(pj), capC:pj(out?c.Co:c.Ci), Bs:pj(c.B), Ts:pj(c.T), glossS:gl.filter(g=>g.length>2) }); });
@@ -176,13 +186,24 @@ window.STUDY={
     const order=back.map(c=>({kind:'can',c})).concat([{kind:'head'}],front.map(c=>({kind:'can',c})));
     return { hd, band, folds, eyes, mouth, mc, cans, order, vis, rim }; },
   /* ---------- per-pixel helpers ---------- */
-  /* fill small pockets that the mask encloses (not touching the box edge) with the ink color, two pixels past their edge */
-  crumbs(x,box,mk,maxA,col){ const bw=box.w, bh=box.h, n=bw*bh, lab=new Int32Array(n), st=[]; let id=0, any=false; const pk=[];
-    for(let i0=0;i0<n;i0++){ if(lab[i0]||mk[i0*4+3]>24)continue; id++; let area=0, edge=false; const px=[]; st.push(i0); lab[i0]=id;
-      while(st.length){ const i=st.pop(), xx=i%bw, yy=(i/bw)|0; area++; px.push(i); if(xx===0||yy===0||xx===bw-1||yy===bh-1)edge=true;
+  /* pockets the mask encloses (not touching the box edge) keep their open body; only their thin parts, the pixels a morphological opening
+     of radius t removes (slivers, specks, needle tips), are filled with the ink color, with one pixel of the wall rim, so a real gap stays open */
+  crumbs(x,box,mk,t,col){ const bw=box.w, bh=box.h, n=bw*bh, lab=new Int32Array(n), st=[], pocket=new Uint8Array(n); let id=0, any=false;
+    for(let i0=0;i0<n;i0++){ if(lab[i0]||mk[i0*4+3]>24)continue; id++; let edge=false; const px=[]; st.push(i0); lab[i0]=id;
+      while(st.length){ const i=st.pop(), xx=i%bw, yy=(i/bw)|0; px.push(i); if(xx===0||yy===0||xx===bw-1||yy===bh-1)edge=true;
         for(const j of [xx>0?i-1:-1, xx<bw-1?i+1:-1, yy>0?i-bw:-1, yy<bh-1?i+bw:-1])if(j>=0&&!lab[j]&&mk[j*4+3]<=24){ lab[j]=id; st.push(j); } }
-      if(!edge&&area<maxA){ pk.push(px); any=true; } }
-    if(!any)return; const id2=x.getImageData(box.x,box.y,bw,bh), d=id2.data; for(const px of pk)for(const i of px){ const xx=i%bw, yy=(i/bw)|0; for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){ const X2=xx+dx, Y2=yy+dy; if(X2<0||Y2<0||X2>=bw||Y2>=bh)continue; const j=(Y2*bw+X2)*4; d[j]=col[0]; d[j+1]=col[1]; d[j+2]=col[2]; d[j+3]=255; } } x.putImageData(id2,box.x,box.y); },
+      if(!edge){ for(const i of px)pocket[i]=1; any=true; } }
+    if(!any)return;
+    /* chamfer distance to the nearest pixel outside the set (inside=1) */
+    const dist=(inside)=>{ const D=new Float32Array(n), B=1e6, r2=1.4142; for(let i=0;i<n;i++)D[i]=inside[i]?B:0;
+      for(let y=0;y<bh;y++)for(let x0=0;x0<bw;x0++){ const i=y*bw+x0; if(!D[i])continue; let v=D[i]; if(x0>0)v=Math.min(v,D[i-1]+1); if(y>0){ v=Math.min(v,D[i-bw]+1); if(x0>0)v=Math.min(v,D[i-bw-1]+r2); if(x0<bw-1)v=Math.min(v,D[i-bw+1]+r2); } D[i]=v; }
+      for(let y=bh-1;y>=0;y--)for(let x0=bw-1;x0>=0;x0--){ const i=y*bw+x0; if(!D[i])continue; let v=D[i]; if(x0<bw-1)v=Math.min(v,D[i+1]+1); if(y<bh-1){ v=Math.min(v,D[i+bw]+1); if(x0<bw-1)v=Math.min(v,D[i+bw+1]+r2); if(x0>0)v=Math.min(v,D[i+bw-1]+r2); } D[i]=v; }
+      return D; };
+    const D1=dist(pocket), notCore=new Uint8Array(n); for(let i=0;i<n;i++)notCore[i]=pocket[i]&&D1[i]>=t?0:1;
+    const D2=dist(notCore), fill=new Uint8Array(n); let k=0; for(let i=0;i<n;i++)if(pocket[i]&&D2[i]>t+0.5){ /* inside the opening: keep */ } else if(pocket[i]){ fill[i]=1; k++; }
+    if(!k)return; const id2=x.getImageData(box.x,box.y,bw,bh), d=id2.data;
+    for(let i=0;i<n;i++){ if(!fill[i])continue; const xx=i%bw, yy=(i/bw)|0; for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){ const X2=xx+dx, Y2=yy+dy; if(X2<0||Y2<0||X2>=bw||Y2>=bh)continue; const j=Y2*bw+X2; if(pocket[j]&&!fill[j])continue; d[j*4]=col[0]; d[j*4+1]=col[1]; d[j*4+2]=col[2]; d[j*4+3]=255; } }
+    x.putImageData(id2,box.x,box.y); },
   /* point inside a convex polygon */
   inside(h,x,y){ let sg=0; for(let i=0;i<h.length;i++){ const a=h[i], b=h[(i+1)%h.length], c=(b[0]-a[0])*(y-a[1])-(b[1]-a[1])*(x-a[0]); if(c!==0){ if(sg&&Math.sign(c)!==sg)return false; sg=Math.sign(c); } } return true; },
   _cv(n){ const S=window.STUDY; S._cvs=S._cvs||[]; if(!S._cvs[n])S._cvs[n]=document.createElement('canvas'); return S._cvs[n]; },
@@ -219,7 +240,7 @@ window.STUDY={
         if(md===4){ nn[0]=px; nn[1]=py; nn[2]=z; hp(px,py,z,nn,dW,hh,0); hp(px,py,z,nn,d2W,hh,2); }
         fin.px(m,tone,Math.floor(X),Math.floor(Y),hh[0],hh[1],hh[2],hh[3],K,o); return cov; });
       /* folds: each kept stroke clears the outline, the band, the front cans and antennas and every stroke kept before it by one stroke width; longest first,
-         pieces shorter than 2.5 widths dropped after the cut. When fewer strokes than rows fit, the fold stroke is thinned (to half at most) and the pick repeats. */
+         pieces shorter than 2.5 widths dropped after the cut. When fewer strokes than rows fit, the fold stroke is thinned (to 0.42 at most) and the pick repeats. */
       const fs=P['brain-folds'], sp0=(fs.top_lat_deg-P['head-sphere'].band_lat_deg)*Math.PI/180/fs.rows, wf0=Math.min(w*ln.fold,0.32*sp0*R), fr=sc.cans.filter(c=>c.front);
       const segD=(p,a,b)=>{ const vx=b[0]-a[0], vy=b[1]-a[1], t=Math.max(0,Math.min(1,((p[0]-a[0])*vx+(p[1]-a[1])*vy)/(vx*vx+vy*vy||1))); return Math.hypot(p[0]-a[0]-t*vx,p[1]-a[1]-t*vy); };
       const len=f=>{ let l=0; for(let k=1;k<f.length;k++)l+=Math.hypot(f[k][0]-f[k-1][0],f[k][1]-f[k-1][1]); return l; }, order=sc.folds.slice().sort((a,b)=>len(b)-len(a));
@@ -227,11 +248,11 @@ window.STUDY={
         const put=(p,r)=>{ const k=key(Math.floor(p[0]/cs),Math.floor(p[1]/cs)); let c=grid.get(k); if(!c)grid.set(k,c=[]); c.push([p[0],p[1],r]); }, reach=Math.ceil((w/2+gap)/cs);
         const free=p=>{ const gx=Math.floor(p[0]/cs), gy=Math.floor(p[1]/cs); for(let i=-reach;i<=reach;i++)for(let j=-reach;j<=reach;j++){ const c=grid.get(key(gx+i,gy+j)); if(c)for(const q of c)if(Math.hypot(p[0]-q[0],p[1]-q[1])<q[2]+gap)return false; } return true; };
         for(const b of sc.band)for(const p of b)put(p,w/2); for(const c of fr)for(let j=0;j<c.hull.length;j+=3)put(c.hull[j],w/2);
-        const ok=p=>Math.hypot(p[0]-hd.X0,p[1]-hd.Y0)<lim&&free(p)&&fr.every(c=>!S.inside(c.hull,p[0],p[1])&&segD(p,c.Bs,c.Ts)>=c.ra*R+w/2+gap), minL=Math.max(fs.min_len*wf,0.13*R);
+        const ok=p=>Math.hypot(p[0]-hd.X0,p[1]-hd.Y0)<lim&&free(p)&&fr.every(c=>!S.inside(c.hull,p[0],p[1])&&segD(p,c.Bs,c.Ts)>=c.ra*R+w/2+gap), minL=Math.max(fs.min_len*wf,0.16*R);
         for(const f of order){ const runs=[]; let cur=[]; for(const p of f){ if(ok(p))cur.push(p); else if(cur.length){ runs.push(cur); cur=[]; } } if(cur.length)runs.push(cur);
           for(const r of runs){ if(len(r)<minL)continue; out.push(r); for(const p of r)put(p,wf/2); } }
         return out; };
-      let wf=wf0, kept=pick(wf); for(const k of [0.8,0.65,0.5]){ if(kept.length>=fs.rows)break; const t=pick(wf0*k); if(t.length>kept.length){ kept=t; wf=wf0*k; } }
+      let wf=wf0, kept=pick(wf); for(const k of [0.8,0.65,0.5,0.42]){ if(kept.length>=fs.rows)break; const t=pick(wf0*k); if(t.length>kept.length){ kept=t; wf=wf0*k; } }
       kept.forEach((r,i)=>stroke(r,wf,ink,false,31+i));
       sc.band.forEach((b,i)=>stroke(b,w,ink,false,7+i));
       /* eyes: the glint is cut out of the dark disc, then filled with the light ink inside the eye only */
@@ -280,10 +301,10 @@ window.STUDY={
         if(gl>=1.5*gw){ x.save(); x.clip(band,'evenodd'); ln.stroke(x,best,gw,V.white,false); x.restore(); } }
       stroke(c.hull,wc,ink,true,61+c.side);
       stroke(c.cap,wc,ink,true,71+c.side);
-      /* crumbs: a speck of fill closed in by the head line, the antenna and the can top is filled with ink */
+      /* crumbs: where the head line, the antenna and the can top close in a pocket, its slivers and specks are filled with ink and its open body stays */
       if(c.front&&!pen){ const bx=S.box([c.Bs,[c.Bs[0]+(c.Ts[0]-c.Bs[0])*0.6,c.Bs[1]+(c.Ts[1]-c.Bs[1])*0.6]],Rr+3*w,W,H), mk=S.mask(bx,1,m=>{ m.strokeStyle='#fff'; m.fillStyle='#fff'; m.lineCap='round'; m.lineJoin='round';
           m.lineWidth=w; m.beginPath(); m.arc(hd.X0,hd.Y0,R,0,2*Math.PI); m.stroke(); m.lineWidth=2*Rr+w; m.beginPath(); m.moveTo(c.Bs[0],c.Bs[1]); m.lineTo(c.Ts[0],c.Ts[1]); m.stroke(); ln.path(m,c.hull,true); m.fill(); m.lineWidth=wc; m.stroke(); });
-        S.crumbs(x,bx,mk,2*w*w,A.hex(ink)); }
+        S.crumbs(x,bx,mk,0.12*w,A.hex(ink)); }
       if(pen)flushPen(S.box(c.hull,w*0.6,W,H)); };
     for(const it of sc.order){ if(it.kind==='head')head(); else can(it.c); }
     if(pen){ /* construction: equator, meridian, the band all round, the eye line, can axes, the hidden rims */

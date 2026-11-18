@@ -36,10 +36,10 @@ window.STUDY={
     techniques:[
       { id:'step-back', short:'DIST', name:'Distance', layer:0, pass:0, atoms:['cell-mosaic','handoff','screen-growth'],
         params:{ distance:{ value:100, range:[0,100], step:1, unit:'%', label:'Distance', note:'0 % up close, 100 % from far' },
-          pitch_near_u:2.4, remap:[[0,0.1,0.25,0.4,0.5,0.6,0.75,0.9,1],[0.0,0.156,0.263,0.353,0.412,0.439,0.491,0.665,1.0]],
-          stages:'on the inner track (the slider maps 25 → 24 %, 50 → 40 %, 75 → 50 %, 90 → 63 %): cells cut from the painting 1.5–7 % · cell pitch 2.4 u → far pitch on a log curve · cells part to show paper 8–42 % · empty ground clears from the corners inward 2–64 %, paced by cleared area · grown cells take the record 56–92 % by density · on the slider, the line comes in over 42–60 % and holds full contrast above' },
+          pitch_near_u:2.4, remap:[[0.0,0.12,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.6,0.7,0.75,0.8,0.9,1.0],[0,0.075,0.115,0.1387,0.1629,0.195,0.2303,0.259,0.2858,0.3164,0.3696,0.4439,0.4613,0.4883,0.6101,1.0]],
+          stages:'on the slider: trees leave one by one 0.6–12.5 %; the outer 2 % band leaves at 13–15 %; then, on the inner track (the slider maps 25 → 16 %, 50 → 37 %, 75 → 46 %, 90 → 61 %): cells cut from the painting 1.5–7 % · cell pitch 2.4 u → far pitch on a log curve · cells part to show paper 8–42 % · empty ground clears behind a front that starts as the plate edge and shrinks to a circle 9–64 %, paced by cleared area · grown cells take the record 56–92 % by density · on the slider, the line comes in over 42–60 % and holds full contrast above' },
         limits:'Steps back from the clearing: the trees go first, then the painting is cut into cells that part to paper and take the record\u2019s dots.',
-        implementation:'Distance sets the cell pitch, how far the cells part, and when each cell trades the painting for the record. A dot that still shows the painting shows the painting\u2019s own pixels, so the plate is never a blurred copy; a cell with more growth trades later, so the empty ground clears first and the ring stays to the end. Trees go first: each leaves whole, canopy and shadow, one after another from the plate edge inward over 0.4–2.8 % of the slider, and the front starts after the last one.' },
+        implementation:'Distance sets the cell pitch, how far the cells part, and when each cell trades the painting for the record. A dot that still shows the painting shows the painting\u2019s own pixels, so the plate is never a blurred copy; a cell with more growth trades later, so the empty ground clears first and the ring stays to the end. Trees go first: each leaves whole, canopy and shadow, one after another from the plate edge inward over 0.6–12.5 % of the slider, and the front starts after the last one, leaving all four sides of the plate together.' },
       { id:'clearing', short:'CLR', name:'Clearing', layer:1, pass:1, atoms:['top-down','illustration','grain','growth'],
         params:{ days:{ value:60, note:'day of the record; Play runs it from 6 to 60' }, walk_days:40, grow_days:16, grain:0.03, tree_ring_u:'reach + 70 … reach + 190', seed:27 },
         limits:'The walk takes 40 days and growth 16 more, so day 60 is the full ring. The painting is drawn once per plate size and palette, and reused along the Distance track.',
@@ -59,7 +59,7 @@ window.STUDY={
           ink:{ value:1, options:[{v:1,label:'Ramp'},{v:2,label:'Deep'},{v:3,label:'Ink'}], label:'Dot ink', note:'Ramp takes the light, mid or deep ink by dot area; Deep prints every dot in the deep ink; Ink prints every dot in the darkest ink' },
           full_dot:0.92, min_tone:0.035, ramp:'light 0 · mid 0.4 · deep 0.8' },
         limits:'Prints the record as dots: cell size, gain, angle, shape and ink. Under 8 u the dots read as a tint; past 25 % gain the core prints solid.',
-        implementation:'Each cell takes one size and one color. Per pixel the four nearest cells add their coverage with a half-pixel edge and share the color by weight, so abutting squares and lines close without seams and dots stay round at any angle; a square or line that would leave a gap under 12 % of the cell fills it.' },
+        implementation:'Each cell takes one size and one color. Per pixel the four nearest cells add their coverage with a half-pixel edge (lines a quarter-pixel edge) and share the color by weight; a dot with two or more filled neighbors fills its cell as a tile in its own ink, so abutting squares and lines close without seams and dots stay round at any angle; a square or line that would leave a gap under 12 % of the cell fills it.' },
       { id:'the-turns', short:'TURN', name:'The turns', layer:4, pass:4, atoms:['polyline','node','halo'],
         params:{ turns:{ value:22, range:[8,28], step:1, label:'Turns', note:'nodes on the ring; the walk visits them in order and closes the loop' },
           line_u:{ value:1.9, range:[1,4.5], unit:'u', scale:'log', label:'Line weight', note:'core of the line; the halo is 4.2 times wider, up to 10 u' },
@@ -80,15 +80,15 @@ window.STUDY={
     'step-back': (P,u,A)=>{ const D=A.clamp(P.distance/100,0,1), p0=P.pitch_near_u;
       /* the slider is remapped onto the track so that equal travel gives an equal change in the plate (measured as mean color change on a 96 px copy) */
       const KD=P.remap[0], KS=P.remap[1]; let k=1; while(k<KD.length-1&&D>KD[k])k++; const s=KS[k-1]+(KS[k]-KS[k-1])*(D-KD[k-1])/(KD[k]-KD[k-1]);
-      /* plate area (1000 × 1000 u) outside a circle of radius r about the center */
-      const out=r=>{ if(r<=500)return 1e6-Math.PI*r*r; if(r>=707.1)return 0; const h=Math.sqrt(r*r-250000); return 1e6-(Math.PI*r*r-4*(r*r*Math.acos(500/r)-500*h)); };
       return { s, D, paintOnly:s<0.015, done:s>=0.985, part:A.sstep(0.08,0.50,s), line:A.sstep(0.42,0.60,D), near:1-A.sstep(0.10,0.35,s),
         /* cell pitch in u for a far pitch pf: 2.4 u at the near end, on a log curve to pf */
         pitch:pf=>{ const a=Math.min(pf,p0), w=Math.pow(A.clamp((s-0.015)/0.985,0,1),0.85); return a*Math.pow(pf/a,w); },
-        /* when a cell trades the painting for the record. Empty ground clears as a front from the corners inward, paced by the share of the plate it has cleared,
-           so the paper grows evenly (2 → 64 %); cells that grew trade later, the densest last (56 → 92 %). nd is a smooth noise in −1…1 that roughens both */
-        center:(rec,nd,r)=>{ const cg=Math.max(0.09,0.09+0.55*Math.pow(A.clamp(out(r)/out(330),0,1),0.7)+0.03*nd), cr=0.56+0.36*Math.pow(rec,0.7)+0.03*nd; return cg+(cr-cg)*A.sstep(0.05,0.35,rec); },
-        take:c=>A.sstep(c-0.04,c+0.04,s), tint:c=>A.sstep(c-0.02,c+0.08,s) }; },
+        /* when a cell trades the painting for the record. Empty ground clears behind a front that starts as the plate's own edge and shrinks to a circle (fr is the
+           share of the plate already behind the front, see front()), so it leaves all four sides together and the paper grows evenly (9 → 64 %); cells that grew
+           trade later, the densest last (56 → 92 %). The outer 2 % band (the first 15 % of the area) leaves almost at once, so the edge is inside the plate from the start. nd is a smooth noise in −1…1 that roughens both; on empty ground it only bites inward and is held back at the plate edge, so the edge never reaches back to the frame */
+        center:(rec,nd,fr)=>{ const g=fr<=0.15?0.13*fr:0.0195+0.9805*Math.pow((fr-0.15)/0.85,0.85), cg=0.09+0.55*g-0.06*A.sstep(0.12,0.25,fr)*(1-nd)/2, cr=0.56+0.36*Math.pow(rec,0.7)+0.03*nd; return cg+(cr-cg)*A.sstep(0.05,0.35,rec); },
+        /* w is the half-width of a cell's hand-off: 0.04 in general, 0.012 for the outer band so it leaves in one short step */
+        take:(c,w)=>A.sstep(c-(w||0.04),c+(w||0.04),s), tint:(c,w)=>A.sstep(c-0.5*(w||0.04),c+2*(w||0.04),s) }; },
     /* nodes of the walk. G: { reach_u, days, walk_days } → nodes [{x,y,th,day}], segs [{a,b,f}] with f the drawn fraction */
     'the-turns': (P,u,A,G)=>{ const r=A.rng(P.seed), N=Math.max(3,Math.round(P.turns)), R=G.reach_u, nodes=[], th0=P.start_deg*Math.PI/180;
       for(let k=0;k<N;k++){ const j=r()-0.5, q=r(), c=r(); const th=th0+6.2832*(k+0.62*j)/N; const rad=R*A.clamp(0.74+(k%2?0.07:-0.06)+0.42*(q-0.5),0.54,0.95); nodes.push({ x:A.clamp(Math.cos(th)*rad*(G.sx||1),-440,440), y:A.clamp(Math.sin(th)*rad*(G.sy||1),-440,440), th, rad, day:1+G.walk_days*k/N, chord:c<P.chords, skip:c<P.chords*0.45?3:2 }); }
@@ -197,14 +197,19 @@ window.STUDY={
           const at=(i,j)=>{ i+=oi; j+=oj; return i<0||j<0||i>=ni||j>=nj?-1:j*ni+i; };
           /* a square or a line that would leave a gap under 12 % of the cell (or under 1 px) fills its cell, so near-touching cells never show hairlines */
           const shut=Math.max(0.12*pd,1), close=h=>pd-2*h<shut?0.5*pd:h;
+          /* squares: a square that would leave a gap under 12 % of its cell fills it; a dot with two or more filled neighbors fills its cell too, in its own ink (three passes),
+             so a solid core prints as tiles with square paper holes where nothing grew, never as outlined boxes */
+          let SQ=null; if(sh===2){ const n=ni*nj, S0=new Uint8Array(n); SQ=new Uint8Array(n); for(let c=0;c<n;c++)if(ar[c]>0&&close(0.5*pd*Math.sqrt(ar[c]>1?1:ar[c]))>=0.5*pd)S0[c]=1;
+            for(let pass=0;pass<3;pass++){ for(let j=0;j<nj;j++)for(let i=0;i<ni;i++){ const c=j*ni+i; if(ar[c]<=0)continue; if(S0[c]){ SQ[c]=1; continue; } const k=(i>0?S0[c-1]:0)+(i<ni-1?S0[c+1]:0)+(j>0?S0[c-ni]:0)+(j<nj-1?S0[c+ni]:0); if(k>=2)SQ[c]=1; } S0.set(SQ); } }
           for(let Y=0;Y<H;Y++){ const dy=Y+0.5-cy; for(let X=0;X<W;X++){ const dx=X+0.5-cx; const a=(dx*ca+dy*sa)/pd, b=(-dx*sa+dy*ca)/pd; const i0=Math.round(a), j0=Math.round(b), fa=a-i0, fb=b-j0, si=fa<0?-1:1, sj=fb<0?-1:1;
             let cov=0, sr=0, sg=0, sb=0, sp=0;
             if(sh!==3){ for(let q=0;q<4;q++){ const ii=i0+(q&1?si:0), jj=j0+(q&2?sj:0); const c=at(ii,jj); if(c<0)continue; const A0=ar[c]; if(A0<=0)continue; let v;
                 if(sh===1){ const ex=a-ii, ey=b-jj; v=pd*Math.sqrt(A0/Math.PI)-pd*Math.sqrt(ex*ex+ey*ey)+0.5; }
-                else { const ex=a-ii, ey=b-jj; v=close(0.5*pd*Math.sqrt(A0>1?1:A0))-pd*Math.max(ex<0?-ex:ex,ey<0?-ey:ey)+0.5; }
-                if(v<=0)continue; if(v>1)v=1; cov+=v; const vp=v*pw[c], vr=v-vp; sp+=vp; sr+=vr*cr[c]; sg+=vr*cg[c]; sb+=vr*cb[c]; } }
+                else { const ex=a-ii, ey=b-jj; v=(SQ[c]?0.5*pd:0.5*pd*Math.sqrt(A0>1?1:A0))-pd*Math.max(ex<0?-ex:ex,ey<0?-ey:ey)+0.5; }
+                if(v<=0)continue; if(v>1)v=1; cov+=v; const vp=v*pw[c], vr=v-vp; sp+=vp; sr+=vr*cr[c]; sg+=vr*cg[c]; sb+=vr*cb[c]; }
+            }
             else { const il=Math.floor(a), tl=a-il; for(let q=0;q<2;q++){ const jj=j0+(q?sj:0); const c1=at(il,jj), c2=at(il+1,jj); if(c1<0&&c2<0)continue; const A1=c1>=0?Math.min(1,ar[c1]):0, A2=c2>=0?Math.min(1,ar[c2]):0, Am=A1+(A2-A1)*tl; if(Am<=0)continue;
-                let v=close(0.5*pd*Am)-pd*Math.abs(b-jj)+0.5; if(v<=0)continue; if(v>1)v=1; const w1=c1<0?0:c2<0?1:1-tl, w2=1-w1, e1=c1<0?c2:c1, e2=c2<0?c1:c2;
+                let v=2*(close(0.5*pd*Am)-pd*Math.abs(b-jj))+0.5; if(v<=0)continue; if(v>1)v=1; const w1=c1<0?0:c2<0?1:1-tl, w2=1-w1, e1=c1<0?c2:c1, e2=c2<0?c1:c2;
                 cov+=v; const vp=v*(pw[e1]*w1+pw[e2]*w2), vr=v-vp; sp+=vp; sr+=vr*(cr[e1]*w1+cr[e2]*w2); sg+=vr*(cg[e1]*w1+cg[e2]*w2); sb+=vr*(cb[e1]*w1+cb[e2]*w2); } }
             const o=(Y*W+X)*4, r0=paper[0], g0=paper[1], b0=paper[2];
             if(cov>0){ if(sp>0&&pix){ const qr=pix[o], qg=pix[o+1], qb=pix[o+2]; sr+=sp*(qr+(G[qr]-qr)*dk); sg+=sp*(qg+(G[qg]-qg)*dk); sb+=sp*(qb+(G[qb]-qb)*dk); }
@@ -220,6 +225,14 @@ window.STUDY={
     const turns=T['the-turns'](P['the-turns'],1,A,{ reach_u:Fp.reach_u, days:C.days, walk_days:C.walk_days, sx:Fp.stretch[0], sy:Fp.stretch[1] });
     if(!S._m||S._m.key!==key){ const field=T['record-field'](Fp,1,A,{ nodes:turns.nodes, walk_days:C.walk_days, grow_days:C.grow_days }); S._m={ key, field, grid:field.grid(520,4), trees:S.treeOrder(Fp.reach_u,Fp.stretch[0],Fp.stretch[1],C.seed) }; }
     return { P, st, key, turns, field:S._m.field, grid:S._m.grid, trees:S._m.trees, F:S._m.grid.day(C.days) }; },
+  /* the clearing front, once per grid: for each cell the share of the plate (by area) that the front has passed when it reaches the cell. The front at level c is
+     the superellipse |x|^p + |y|^p = c^p with p = 2 + 48·((c − 330)/170)^6: a square at the plate edge (c = 500), round by c ≈ 440, a circle at c = 330. */
+  front(GR,gs,gn){ const S=window.STUDY; if(S._fr&&S._fr.gn===gn&&S._fr.GR===GR)return S._fr.F; const N=gn*gn, Lv=new Float32Array(N);
+    const pOf=c=>2+48*Math.pow(Math.min(1,Math.max(0,(c-330)/170)),6), nrm=(x,y,p)=>{ const m=Math.max(x,y); if(m<=0)return 0; return m*Math.pow(Math.pow(x/m,p)+Math.pow(y/m,p),1/p); };
+    for(let j=0;j<gn;j++)for(let i=0;i<gn;i++){ const x=Math.abs(-GR+i*gs), y=Math.abs(-GR+j*gs); let lo=0, hi=760; for(let k=0;k<18;k++){ const c=(lo+hi)/2; if(nrm(x,y,pOf(c))>c)lo=c; else hi=c; } Lv[j*gn+i]=(lo+hi)/2; }
+    const plate=[]; for(let j=0;j<gn;j++)for(let i=0;i<gn;i++){ const x=-GR+i*gs, y=-GR+j*gs; if(Math.abs(x)<=500&&Math.abs(y)<=500)plate.push(Lv[j*gn+i]); } plate.sort((a,b)=>b-a);
+    const rank=v=>{ let lo=0, hi=plate.length; while(lo<hi){ const m=(lo+hi)>>1; if(plate[m]>v)lo=m+1; else hi=m; } return lo; }, end=rank(330);
+    const F=new Float32Array(N); for(let c=0;c<N;c++)F[c]=Math.min(1,rank(Lv[c])/end); S._fr={ GR, gn, F }; return F; },
   /* the painter's trees, replayed with its seed and rng order: rank 0 is the tree furthest out toward the plate edge, which leaves first; -1 is a tree off the plate */
   treeOrder(R,SX,SY,seed){ const A=window.ART, tr=A.rng(seed+29), Rt=R+70, NT=30, T=[];
     for(let i=0;i<NT;i++){ const a=6.2832*(i+(tr()-0.5)*0.6)/NT, rr=Rt+tr()*120, rad=58+tr()*52; const x=Math.cos(a)*rr*SX, y=Math.sin(a)*rr*SY; for(let l=0;l<10;l++){ tr(); tr(); tr(); tr(); } for(let l=0;l<46;l++){ tr(); tr(); tr(); }
@@ -239,14 +252,14 @@ window.STUDY={
   compose(canvas,V,O){ const A=window.ART, S=window.STUDY, T=S.techniques; const W=canvas.width, H=canvas.height, x=canvas.getContext('2d'); x.setTransform(1,0,0,1,0,0);
     const m=S.model(O), P=m.P, st=m.st, u=W/1000, cx=W/2, cy=H/2; const scr=T['am-screen'](P['am-screen'],u,A,V), org=T['origin-dot'](P['origin-dot'],u,A,V), paper=A.hex(V.paper);
     let pic=st.done?null:S.paint(W,H,V,m);
-    /* trees leave whole (canopy and shadow), one after another from the plate edge inward, over 0.4–2.8 % of the slider, before the front starts */
-    if(pic){ const TR=m.trees, n=TR.n; let mk='', gone=0; const keep=i=>{ const r=TR.rank[i]; return r<0||!(st.D>0.004+0.024*r/Math.max(1,n-1)); }; for(let i=0;i<TR.rank.length;i++){ const k=keep(i); mk+=k?'1':'0'; if(!k)gone++; }
+    /* trees leave whole (canopy and shadow), one after another from the plate edge inward, over 0.6–12.5 % of the slider, before the front starts */
+    if(pic){ const TR=m.trees, n=TR.n; let mk='', gone=0; const keep=i=>{ const r=TR.rank[i]; return r<0||!(st.D>0.006+0.119*r/Math.max(1,n-1)); }; for(let i=0;i<TR.rank.length;i++){ const k=keep(i); mk+=k?'1':'0'; if(!k)gone++; }
       if(gone===n)pic={ canvas:pic.bare, data:pic.bareData||(pic.bareData=pic.bare.getContext('2d').getImageData(0,0,W,H).data) }; else if(gone>0)pic=S.paintSome(pic,W,H,V,m,keep,mk); }
     if(st.paintOnly){ x.drawImage(pic.canvas,0,0); }
     else { const pd=st.pitch(P['am-screen'].pitch_u)*u, ang=scr.angle, ca=Math.cos(ang), sa=Math.sin(ang); const half=Math.ceil(Math.hypot(W,H)/2/pd)+2, ni=2*half+1, nj=ni;
       const C={ ni, nj, oi:half, oj:half, ar:new Float32Array(ni*nj), pw:new Float32Array(ni*nj), cr:new Float32Array(ni*nj), cg:new Float32Array(ni*nj), cb:new Float32Array(ni*nj) };
       let smd=null, sw=0, shh=0; if(pic){ sw=Math.max(2,Math.round(W/pd)); shh=Math.max(2,Math.round(H/pd)); const sm=A.off(sw,shh), sc=sm.getContext('2d'); sc.imageSmoothingQuality='high'; sc.drawImage(pic.canvas,0,0,sw,shh); smd=sc.getImageData(0,0,sw,shh).data; }
-      const g=m.grid, F=m.F, ND=g.nd, gn=g.gn, GR=g.GR, gs=g.gs; const cov0=scr.cover(pd), part=st.part;
+      const g=m.grid, F=m.F, ND=g.nd, gn=g.gn, GR=g.GR, gs=g.gs, FR=S.front(GR,gs,gn); const cov0=scr.cover(pd), part=st.part;
       const G8=S._g8||(S._g8=Uint8Array.from({length:256},(_,i)=>Math.round(255*Math.pow(i/255,1.4))));
       const P80=S._p14||(S._p14=Float32Array.from({length:257},(_,i)=>0.9*Math.pow(i/256,1.4)));
       for(let j=-half;j<=half;j++)for(let i=-half;i<=half;i++){ const X=cx+pd*(i*ca-j*sa), Y=cy+pd*(i*sa+j*ca); if(X<-pd||Y<-pd||X>W+pd||Y>H+pd)continue; const c=(j+half)*ni+(i+half);
@@ -255,10 +268,10 @@ window.STUDY={
         if(!smd){ C.ar[c]=ra; C.cr[c]=k2[0]; C.cg[c]=k2[1]; C.cb[c]=k2[2]; continue; }
         const nd=(ND[o]*(1-tx)+ND[o+1]*tx)*(1-ty)+(ND[o+gn]*(1-tx)+ND[o+gn+1]*tx)*ty;
         let sx=X/W*sw-0.5, sy=Y/H*shh-0.5; sx=sx<0?0:sx>sw-1.001?sw-1.001:sx; sy=sy<0?0:sy>shh-1.001?shh-1.001:sy; const qx=sx|0, qy=sy|0, ux=sx-qx, uy=sy-qy, q=(qy*sw+qx)*4, q2=q+sw*4;
-        const cc=st.center(rec,nd,Math.sqrt(wx*wx+wy*wy));
+        const fr=(FR[o]*(1-tx)+FR[o+1]*tx)*(1-ty)+(FR[o+gn]*(1-tx)+FR[o+gn+1]*tx)*ty, cc=st.center(rec,nd,fr), hw=0.012+0.028*A.sstep(0.1,0.2,fr);
         const pr=(smd[q]*(1-ux)+smd[q+4]*ux)*(1-uy)+(smd[q2]*(1-ux)+smd[q2+4]*ux)*uy, pg=(smd[q+1]*(1-ux)+smd[q+5]*ux)*(1-uy)+(smd[q2+1]*(1-ux)+smd[q2+5]*ux)*uy, pb=(smd[q+2]*(1-ux)+smd[q+6]*ux)*(1-uy)+(smd[q2+2]*(1-ux)+smd[q2+6]*ux)*uy;
         const lum=(0.2126*pr+0.7152*pg+0.0722*pb)/255, ti=A.clamp((1-lum)*1.6-0.05,0,1), ap=P80[(ti*256)|0];
-        const tk=st.take(cc), tt=st.tint(cc), pa=cov0+(ap-cov0)*part;
+        const tk=st.take(cc,hw), tt=st.tint(cc,hw), pa=cov0+(ap-cov0)*part;
         C.ar[c]=pa+(ra-pa)*tk; C.pw[c]=1-tt; C.cr[c]=k2[0]; C.cg[c]=k2[1]; C.cb[c]=k2[2]; }
       const id=x.createImageData(W,H);
       scr.print(id.data,W,H,cx,cy,pd,C,paper,pic?pic.data:null,part,G8); x.putImageData(id,0,0); }
@@ -283,11 +296,12 @@ window.STUDY={
     if(segs.length){ put('LINE',near(segs,-60,q=>mid(q))); const h=near(segs,160,q=>mid(q)), L=Math.hypot(h[2],h[3])||1, o=Math.min(Pt.line_u*Pt.halo,Pt.halo_max_u)*0.42; put('HALO',[h[0]-h[3]/L*o,h[1]+h[2]/L*o]); }
     else { const n=nodes[0]; put('LINE',[n.x,n.y]); put('HALO',[n.x,n.y]); } },
   render(canvas,w,h,dpr,V,done,O){ window.STUDY.compose(canvas,V,O); if(done)done(); },
-  /* motion, 20 s: the record grows from day 6 to day 60 seen from far, the view steps in to the clearing and back out, and the record runs back to day 6 */
-  motion(canvas,w,h,dpr,V,t,ctx,UO){ const S=window.STUDY, A=window.ART; const W=canvas.width, H=canvas.height, fw=Math.round(W/2), fh=Math.round(H/2);
+  /* motion, 20 s: the record grows from day 6 to day 60 seen from far, the view steps in to the clearing and back out, and the record runs back to day 6.
+     Frames are drawn at one pixel per CSS pixel, so the fine screen of the step-out stays crisp. */
+  motion(canvas,w,h,dpr,V,t,ctx,UO){ const S=window.STUDY, A=window.ART; const W=canvas.width, H=canvas.height, k=dpr>=1.75?Math.round(dpr):1, fw=Math.round(W/k), fh=Math.round(H/k);   /* one frame pixel per CSS pixel: full resolution at 1x, doubled without smoothing on a 2x screen */
     const ph=(t%20)/20, e=q=>q*q*(3-2*q); let dist=100, days=60;
     if(ph<0.4)days=6+54*e(ph/0.4); else if(ph<0.5){} else if(ph<0.7)dist=100*(1-e((ph-0.5)/0.2)); else if(ph<0.76)dist=0; else if(ph<0.92)dist=100*e((ph-0.76)/0.16); else days=60-54*e((ph-0.92)/0.08);
     const O={}; for(const k of Object.keys(UO||{}))O[k]=Object.assign({},UO[k]); O['step-back']=Object.assign({},O['step-back'],{ distance:dist }); O['clearing']=Object.assign({},O['clearing'],{ days:Math.round(days*4)/4 });
     if(!S._f||S._f.width!==fw||S._f.height!==fh)S._f=A.off(fw,fh);
-    S.compose(S._f,V,O); ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.imageSmoothingEnabled=true; ctx.drawImage(S._f,0,0,W,H); ctx.restore(); }
+    S.compose(S._f,V,O); ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.imageSmoothingEnabled=k===1; ctx.drawImage(S._f,0,0,W,H); ctx.restore(); }
 };

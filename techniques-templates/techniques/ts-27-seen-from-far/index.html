@@ -8,7 +8,7 @@
 <link rel="icon" href="data:,">
 <title>TS-27 · Seen from far · Techniques &amp; Templates</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
-<link rel="stylesheet" href="../../_shared/shell.css?v=202611181003">
+<link rel="stylesheet" href="../../_shared/shell.css?v=202611181154">
 <link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
@@ -16,7 +16,7 @@
   <span class="pager"><a href="../../techniques/ts-26-seen-in-section/index.html" title="Previous: TS-26 Seen in section">← TS-26</a><a class="pos" href="../../../library/#/plates?kind3=technique"><span class="n">20</span>&nbsp;of 20</a><a class="off" aria-disabled="true">→</a></span> <p class="kicker"><span>TS-27</span><span>screen tone</span></p><h1 class="title">Seen from far</h1><p class="lede">A clearing that becomes a field of dots as you step back from it.</p><div class="body"><p>Up close the clearing is painted from above. Stepping back, the painting is cut into cells that grow from 2.4 u to 11.1 u, the cells part to show paper, and one by one each takes the record’s dot instead of the paint, empty ground first.</p><p>At 100 % the plate is the deck’s emblem: dots sized and colored by density, a 62 u hole at zero, 22 turns joined by a 1.9 u line. Play grows the record from day 6 to day 60, then steps in to the clearing and back out.</p></div>
   <div class="accs">
   <details class="acc" name="notes" id="aBuild" open><summary><span>How it is built</span></summary><div class="ab"><ol class="steps"><li><b>clearing</b><span>ground lookup, grain, dabs, grass, path, sprouts, meadow, plantings, trees (drawn once, reused)</span></li><li><b>record</b><span>density per 4 u cell at the current day</span></li><li><b>screen</b><span>per cell size and color from the painting or the record; per pixel coverage from the four nearest cells</span></li><li><b>turns</b><span>halo then core, one path each</span></li><li><b>origin</b><span>lime ring, orange dot</span></li></ol></div></details>
-  <details class="acc" name="notes" id="aTech"><summary><span>Techniques <i>6</i></span></summary><div class="ab"><ul class="vocab" id="chips"><li class="vr"><button type="button" data-t="step-back"><span class="vn">Distance</span><span class="vid">step-back</span></button><span class="at"><a href="../../index.html#techniques?a=cell-mosaic">cell-mosaic</a><a href="../../index.html#techniques?a=handoff">handoff</a><a href="../../index.html#techniques?a=screen-growth">screen-growth</a><a class="mod" href="lib/step-back.js">lib/step-back.js</a></span><p class="ah">Distance sets the cell pitch, how far the cells part, and when each cell trades the painting for the record. A dot that still shows the painting shows the painting’s own pixels, so the plate is never a blurred copy; a cell with more growth trades later, so the empty ground clears first and the ring stays to the end. Trees go first: each leaves whole, canopy and shadow, one after another from the plate edge inward over 0.4–2.8 % of the slider, and the front starts after the last one.</p></li><li class="vr"><button type="button" data-t="clearing"><span class="vn">Clearing</span><span class="vid">clearing</span></button><span class="at"><a href="../../index.html#techniques?a=top-down">top-down</a><a href="../../index.html#techniques?a=illustration">illustration</a><a href="../../index.html#techniques?a=grain">grain</a><a href="../../index.html#techniques?a=growth">growth</a><a class="mod" href="lib/clearing.js">lib/clearing.js</a></span><p class="ah">The trees are drawn last, and the painting is kept once without them. The ground is a lookup from the record density (mown at zero, lawn, meadow, shrub) with 3 % per-pixel grain; dabs, grass ticks, the trodden path, sprouts, grass tufts and flowers where the record is dense, plantings at each turn and tree canopies are drawn over it.</p></li><li class="vr"><button type="button" data-t="record-field"><span class="vn">Record field</span><span class="vid">record-field</span></button><span class="at"><a href="../../index.html#techniques?a=ring">ring</a><a href="../../index.html#techniques?a=density">density</a><a href="../../index.html#techniques?a=noise">noise</a><a href="../../index.html#techniques?a=lobe">lobe</a><a class="mod" href="lib/record-field.js">lib/record-field.js</a></span><p class="ah">density = 1 − (1 − band)(1 − lobe): band rises over 24 u past the round hole, holds to 0.6 R and falls over 0.16 R on a radius stretched 1.16 across and 0.95 down, with the edge moved by noise; each turn adds a 36 u lobe with a flat top and a 0.1 skirt; the field tapers to nothing 445–478 u from the center on each axis, and nodes stay within 440 u, so nothing touches the plate edge; gaps are cut where a second noise passes 0.14–0.26. Growth by day is kept apart, so a new day costs one pass over the 4 u grid.</p></li><li class="vr"><button type="button" data-t="am-screen"><span class="vn">AM screen</span><span class="vid">am-screen</span></button><span class="at"><a href="../../index.html#techniques?a=halftone">halftone</a><a href="../../index.html#techniques?a=am-screen">am-screen</a><a href="../../index.html#techniques?a=dot-gain">dot-gain</a><a href="../../index.html#techniques?a=ramp">ramp</a><a class="mod" href="lib/am-screen.js">lib/am-screen.js</a></span><p class="ah">Each cell takes one size and one color. Per pixel the four nearest cells add their coverage with a half-pixel edge and share the color by weight, so abutting squares and lines close without seams and dots stay round at any angle; a square or line that would leave a gap under 12 % of the cell fills it.</p></li><li class="vr"><button type="button" data-t="the-turns"><span class="vn">The turns</span><span class="vid">the-turns</span></button><span class="at"><a href="../../index.html#techniques?a=polyline">polyline</a><a href="../../index.html#techniques?a=node">node</a><a href="../../index.html#techniques?a=halo">halo</a><a class="mod" href="lib/the-turns.js">lib/the-turns.js</a></span><p class="ah">Nodes sit at 0.54–0.95 of the reach (within 440 u of the center on each axis), one per turn with ±31 % angle jitter; the path joins them in order and 30 % of turns also cut across two or three nodes. The core and the halo are one path each, so crossings do not double the ink.</p></li><li class="vr"><button type="button" data-t="origin-dot"><span class="vn">Origin</span><span class="vid">origin-dot</span></button><span class="at"><a href="../../index.html#techniques?a=marker">marker</a><a href="../../index.html#techniques?a=dot">dot</a><a class="mod" href="lib/origin-dot.js">lib/origin-dot.js</a></span><p class="ah">One orange disc in a lime ring at zero; up close it casts a short shadow on the grass.</p></li></ul></div></details>
+  <details class="acc" name="notes" id="aTech"><summary><span>Techniques <i>6</i></span></summary><div class="ab"><ul class="vocab" id="chips"><li class="vr"><button type="button" data-t="step-back"><span class="vn">Distance</span><span class="vid">step-back</span></button><span class="at"><a href="../../index.html#techniques?a=cell-mosaic">cell-mosaic</a><a href="../../index.html#techniques?a=handoff">handoff</a><a href="../../index.html#techniques?a=screen-growth">screen-growth</a><a class="mod" href="lib/step-back.js">lib/step-back.js</a></span><p class="ah">Distance sets the cell pitch, how far the cells part, and when each cell trades the painting for the record. A dot that still shows the painting shows the painting’s own pixels, so the plate is never a blurred copy; a cell with more growth trades later, so the empty ground clears first and the ring stays to the end. Trees go first: each leaves whole, canopy and shadow, one after another from the plate edge inward over 0.6–12.5 % of the slider, and the front starts after the last one, leaving all four sides of the plate together.</p></li><li class="vr"><button type="button" data-t="clearing"><span class="vn">Clearing</span><span class="vid">clearing</span></button><span class="at"><a href="../../index.html#techniques?a=top-down">top-down</a><a href="../../index.html#techniques?a=illustration">illustration</a><a href="../../index.html#techniques?a=grain">grain</a><a href="../../index.html#techniques?a=growth">growth</a><a class="mod" href="lib/clearing.js">lib/clearing.js</a></span><p class="ah">The trees are drawn last, and the painting is kept once without them. The ground is a lookup from the record density (mown at zero, lawn, meadow, shrub) with 3 % per-pixel grain; dabs, grass ticks, the trodden path, sprouts, grass tufts and flowers where the record is dense, plantings at each turn and tree canopies are drawn over it.</p></li><li class="vr"><button type="button" data-t="record-field"><span class="vn">Record field</span><span class="vid">record-field</span></button><span class="at"><a href="../../index.html#techniques?a=ring">ring</a><a href="../../index.html#techniques?a=density">density</a><a href="../../index.html#techniques?a=noise">noise</a><a href="../../index.html#techniques?a=lobe">lobe</a><a class="mod" href="lib/record-field.js">lib/record-field.js</a></span><p class="ah">density = 1 − (1 − band)(1 − lobe): band rises over 24 u past the round hole, holds to 0.6 R and falls over 0.16 R on a radius stretched 1.16 across and 0.95 down, with the edge moved by noise; each turn adds a 36 u lobe with a flat top and a 0.1 skirt; the field tapers to nothing 445–478 u from the center on each axis, and nodes stay within 440 u, so nothing touches the plate edge; gaps are cut where a second noise passes 0.14–0.26. Growth by day is kept apart, so a new day costs one pass over the 4 u grid.</p></li><li class="vr"><button type="button" data-t="am-screen"><span class="vn">AM screen</span><span class="vid">am-screen</span></button><span class="at"><a href="../../index.html#techniques?a=halftone">halftone</a><a href="../../index.html#techniques?a=am-screen">am-screen</a><a href="../../index.html#techniques?a=dot-gain">dot-gain</a><a href="../../index.html#techniques?a=ramp">ramp</a><a class="mod" href="lib/am-screen.js">lib/am-screen.js</a></span><p class="ah">Each cell takes one size and one color. Per pixel the four nearest cells add their coverage with a half-pixel edge (lines a quarter-pixel edge) and share the color by weight; a dot with two or more filled neighbors fills its cell as a tile in its own ink, so abutting squares and lines close without seams and dots stay round at any angle; a square or line that would leave a gap under 12 % of the cell fills it.</p></li><li class="vr"><button type="button" data-t="the-turns"><span class="vn">The turns</span><span class="vid">the-turns</span></button><span class="at"><a href="../../index.html#techniques?a=polyline">polyline</a><a href="../../index.html#techniques?a=node">node</a><a href="../../index.html#techniques?a=halo">halo</a><a class="mod" href="lib/the-turns.js">lib/the-turns.js</a></span><p class="ah">Nodes sit at 0.54–0.95 of the reach (within 440 u of the center on each axis), one per turn with ±31 % angle jitter; the path joins them in order and 30 % of turns also cut across two or three nodes. The core and the halo are one path each, so crossings do not double the ink.</p></li><li class="vr"><button type="button" data-t="origin-dot"><span class="vn">Origin</span><span class="vid">origin-dot</span></button><span class="at"><a href="../../index.html#techniques?a=marker">marker</a><a href="../../index.html#techniques?a=dot">dot</a><a class="mod" href="lib/origin-dot.js">lib/origin-dot.js</a></span><p class="ah">One orange disc in a lime ring at zero; up close it casts a short shadow on the grass.</p></li></ul></div></details>
   <details class="acc" name="notes" id="aRef"><summary><span>Reference and match</span></summary><div class="ab"><p class="src">Reference 27 · closing emblem of the Mindgut deck: a ring of green halftone dots with the turns drawn through it, 1040 × 1040</p><div class="fid" id="fid"></div></div></details>
   <details class="acc" name="notes" id="aStudy"><summary><span>Study</span></summary><div class="ab"><dl class="kv"><dt>Code</dt><dd>TS-27</dd><dt>Section</dt><dd>Techniques · 20 of 20</dd><dt>Family</dt><dd>screen tone</dd><dt>Spec</dt><dd><a href="spec.json">spec.json</a></dd></dl></div></details>
   <details class="acc" name="notes" id="aPts"><summary><span>Callouts <i>10</i></span></summary><div class="ab"><ol class="steps"><li><b>ZERO · Origin · 12.5 u dot in an 18.5 u lime ring</b><span>u 0.50 · v 0.50 · origin-dot</span></li><li><b>HOLE · Hole at zero · 62 u, dots shrink over 24 u</b><span>u 0.57 · v 0.50 · record-field</span></li><li><b>CORE · Deep core · dots 0.92 of the 11.1 u pitch</b><span>u 0.38 · v 0.60 · am-screen</span></li><li><b>FRNG · Fringe · density under 0.2 prints light dots</b><span>u 0.85 · v 0.50 · am-screen</span></li><li><b>LOBE · Planting at a turn · a 36 u lobe from far</b><span>u 0.30 · v 0.30 · clearing</span></li><li><b>LINE · The turns · 1.9 u line, deep at 85 %</b><span>u 0.60 · v 0.25 · the-turns</span></li><li><b>HALO · Halo · 8 u, deep at 13 %</b><span>u 0.20 · v 0.60 · the-turns</span></li><li><b>GAP · Gap · raggedness opens the ring</b><span>u 0.62 · v 0.62 · record-field</span></li><li><b>DIST · Distance 100 % · cells grown from 2.4 u to 11.1 u</b><span>u 0.62 · v 0.40 · step-back</span></li><li><b>EDGE · Ragged edge · moved by noise, up to 1.7 × raggedness</b><span>u 0.45 · v 0.20 · record-field</span></li></ol></div></details>
@@ -106,31 +106,45 @@
         &quot;remap&quot;: [
           [
             0,
-            0.1,
+            0.12,
+            0.15,
+            0.2,
             0.25,
+            0.3,
+            0.35,
             0.4,
+            0.45,
             0.5,
             0.6,
+            0.7,
             0.75,
+            0.8,
             0.9,
             1
           ],
           [
             0,
-            0.156,
-            0.263,
-            0.353,
-            0.412,
-            0.439,
-            0.491,
-            0.665,
+            0.075,
+            0.115,
+            0.1387,
+            0.1629,
+            0.195,
+            0.2303,
+            0.259,
+            0.2858,
+            0.3164,
+            0.3696,
+            0.4439,
+            0.4613,
+            0.4883,
+            0.6101,
             1
           ]
         ],
-        &quot;stages&quot;: &quot;on the inner track (the slider maps 25 → 24 %, 50 → 40 %, 75 → 50 %, 90 → 63 %): cells cut from the painting 1.5–7 % · cell pitch 2.4 u → far pitch on a log curve · cells part to show paper 8–42 % · empty ground clears from the corners inward 2–64 %, paced by cleared area · grown cells take the record 56–92 % by density · on the slider, the line comes in over 42–60 % and holds full contrast above&quot;
+        &quot;stages&quot;: &quot;on the slider: trees leave one by one 0.6–12.5 %; the outer 2 % band leaves at 13–15 %; then, on the inner track (the slider maps 25 → 16 %, 50 → 37 %, 75 → 46 %, 90 → 61 %): cells cut from the painting 1.5–7 % · cell pitch 2.4 u → far pitch on a log curve · cells part to show paper 8–42 % · empty ground clears behind a front that starts as the plate edge and shrinks to a circle 9–64 %, paced by cleared area · grown cells take the record 56–92 % by density · on the slider, the line comes in over 42–60 % and holds full contrast above&quot;
       },
       &quot;limits&quot;: &quot;Steps back from the clearing: the trees go first, then the painting is cut into cells that part to paper and take the record’s dots.&quot;,
-      &quot;implementation&quot;: &quot;Distance sets the cell pitch, how far the cells part, and when each cell trades the painting for the record. A dot that still shows the painting shows the painting’s own pixels, so the plate is never a blurred copy; a cell with more growth trades later, so the empty ground clears first and the ring stays to the end. Trees go first: each leaves whole, canopy and shadow, one after another from the plate edge inward over 0.4–2.8 % of the slider, and the front starts after the last one.&quot;,
+      &quot;implementation&quot;: &quot;Distance sets the cell pitch, how far the cells part, and when each cell trades the painting for the record. A dot that still shows the painting shows the painting’s own pixels, so the plate is never a blurred copy; a cell with more growth trades later, so the empty ground clears first and the ring stays to the end. Trees go first: each leaves whole, canopy and shadow, one after another from the plate edge inward over 0.6–12.5 % of the slider, and the front starts after the last one, leaving all four sides of the plate together.&quot;,
       &quot;module&quot;: &quot;lib/step-back.js&quot;
     },
     {
@@ -306,7 +320,7 @@
         &quot;ramp&quot;: &quot;light 0 · mid 0.4 · deep 0.8&quot;
       },
       &quot;limits&quot;: &quot;Prints the record as dots: cell size, gain, angle, shape and ink. Under 8 u the dots read as a tint; past 25 % gain the core prints solid.&quot;,
-      &quot;implementation&quot;: &quot;Each cell takes one size and one color. Per pixel the four nearest cells add their coverage with a half-pixel edge and share the color by weight, so abutting squares and lines close without seams and dots stay round at any angle; a square or line that would leave a gap under 12 % of the cell fills it.&quot;,
+      &quot;implementation&quot;: &quot;Each cell takes one size and one color. Per pixel the four nearest cells add their coverage with a half-pixel edge (lines a quarter-pixel edge) and share the color by weight; a dot with two or more filled neighbors fills its cell as a tile in its own ink, so abutting squares and lines close without seams and dots stay round at any angle; a square or line that would leave a gap under 12 % of the cell fills it.&quot;,
       &quot;module&quot;: &quot;lib/am-screen.js&quot;
     },
     {
@@ -458,11 +472,11 @@
   <div class="sh"><span>Spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
   <pre id="specpre">{{SPEC}}</pre>
 </aside>
-<script src="../../_shared/entries.js?v=202611181003"></script>
-<script src="../../_shared/vocab.js?v=202611181003"></script>
-<script src="../../_shared/art.js?v=202611181003"></script>
+<script src="../../_shared/entries.js?v=202611181154"></script>
+<script src="../../_shared/vocab.js?v=202611181154"></script>
+<script src="../../_shared/art.js?v=202611181154"></script>
 <script src="ref.js"></script>
 <script src="study.js"></script>
-<script src="../../_shared/shell.js?v=202611181003"></script>
+<script src="../../_shared/shell.js?v=202611181154"></script>
 </body>
 </html>

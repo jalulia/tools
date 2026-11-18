@@ -29,7 +29,7 @@ window.STUDY={"id": "pl-130-the-garden-read-as-a-sheet", "code": "PL-130", "fig"
 })(window.STUDY);
 
 /* PL-130 · the garden, read as a sheet · drawn by its source page's own code: garden-sheet-g01.html #cv. Dials and inks measured by _build/qa/lift-probe.mjs; see _build/engines/lift-canvas.js. */
-window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.html", "sel": "#cv", "w": 958, "h": 915, "crop": [0.025, 0.04, 0.637, 0.715], "ground": "#ffffff", "inks": ["#ffffff", "#000000", "#101014", "#d8d8d8", "#6f6e6a", "#f4551e", "#d859a3", "#8c8c8c"], "t0": 2, "settle": 2500, "dials": ["plates", "misreg", "hatch", "grain"], "extra": {"plates": {"value": 0, "range": [0, 5], "step": 1, "label": "Plates", "note": "Which of the sheet’s four printing plates are shown, or its second ink set.", "options": [{"v": 0, "label": "All"}, {"v": 1, "label": "Yellow"}, {"v": 2, "label": "Blue"}, {"v": 3, "label": "Pink"}, {"v": 4, "label": "Key"}, {"v": 5, "label": "Ember"}]}, "misreg": {"value": 1, "range": [0, 3], "step": 0.01, "label": "Misregistration", "note": "How far the yellow, blue and pink plates sit off the key plate, as a multiple of the sheet’s own (3–4 units).", "unit": "×"}, "hatch": {"value": 1, "range": [0.6, 2], "step": 0.01, "label": "Hatch pitch", "note": "Spacing of the white dashed hatch cut into the beds and mounds, as a multiple of the sheet’s own.", "unit": "×"}, "grain": {"value": 1, "range": [0, 2], "step": 0.01, "label": "Grain", "note": "The grain each plate is printed with, as a multiple of the sheet’s own.", "unit": "×"}}, "patches": [["fetch(RAW+PATH+'?t='+Date.now(),{cache:'no-store'})", "fetch('/tools/techniques-templates/plates/pl-130-the-garden-read-as-a-sheet/garden-2026-09-06.json',{cache:'no-store'})"], ["fetch(RAW+'encyclopedia/manifest.js?t='+Date.now(),{cache:'no-store'})", "Promise.reject(new Error('snapshot'))"], ["const img=e?`<img src=\"${ROOT}encyclopedia/content/", "const img=false?`<img src=\"${ROOT}encyclopedia/content/"], ["let vi=0; const variant=()=>VARIANTS[vi];", "let vi=((window.__P||{}).plates==null?0:window.__P.plates)|0; const variant=()=>VARIANTS[vi];"], ["const OFFS=u=>[[-3*u,2*u],[1*u,-2*u],[4*u,3*u],[0,0]];", "const OFFS=u=>{u*=((window.__P||{}).misreg==null?1:window.__P.misreg);return [[-3*u,2*u],[1*u,-2*u],[4*u,3*u],[0,0]]};"], ["pitch=pitch||6;", "pitch=(pitch||6)*((window.__P||{}).hatch==null?1:window.__P.hatch);"], ["const amps=[0.10,0.12,0.11,0.05]", "const amps=[0.10,0.12,0.11,0.05].map(v=>v*((window.__P||{}).grain==null?1:window.__P.grain))"]], "fit": true};
+window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.html", "sel": "#cv", "w": 958, "h": 915, "crop": [0.025, 0.04, 0.637, 0.715], "ground": "#ffffff", "inks": ["#ffffff", "#000000", "#101014", "#d8d8d8", "#6f6e6a", "#f4551e", "#d859a3", "#8c8c8c"], "t0": 2, "settle": 2500, "fit": true, "dials": ["plates", "misreg", "caps", "grain"], "extra": {"plates": {"value": 0, "range": [0, 5], "step": 1, "label": "Plates", "note": "Which of the sheet’s four printing plates are shown, or its second ink set.", "options": [{"v": 0, "label": "All"}, {"v": 1, "label": "Yellow"}, {"v": 2, "label": "Blue"}, {"v": 3, "label": "Pink"}, {"v": 4, "label": "Key"}, {"v": 5, "label": "Ember"}]}, "misreg": {"value": 1, "range": [0, 3], "step": 0.01, "label": "Misregistration", "note": "How far the yellow, blue and pink plates sit off the key plate, as a multiple of the sheet’s own (3–4 units).", "unit": "×"}, "grain": {"value": 1, "range": [0, 2], "step": 0.01, "label": "Grain", "note": "The grain each plate is printed with, as a multiple of the sheet’s own.", "unit": "×"}, "caps": {"value": 1, "range": [0, 1], "step": 1, "label": "Captions", "note": "The key plate’s type and furniture: bed labels, counts, north arrow and scale bar.", "options": [{"v": 0, "label": "Off"}, {"v": 1, "label": "On"}]}}, "patches": [["fetch(RAW+PATH+'?t='+Date.now(),{cache:'no-store'})", "fetch('/tools/techniques-templates/plates/pl-130-the-garden-read-as-a-sheet/garden-2026-09-06.json',{cache:'no-store'})"], ["fetch(RAW+'encyclopedia/manifest.js?t='+Date.now(),{cache:'no-store'})", "Promise.reject(new Error('snapshot'))"], ["const img=e?`<img src=\"${ROOT}encyclopedia/content/", "const img=false?`<img src=\"${ROOT}encyclopedia/content/"], ["let vi=0; const variant=()=>VARIANTS[vi];", "let vi=((window.__P||{}).plates==null?0:window.__P.plates)|0; const variant=()=>VARIANTS[vi];"], ["const OFFS=u=>[[-3*u,2*u],[1*u,-2*u],[4*u,3*u],[0,0]];", "const OFFS=u=>{u*=((window.__P||{}).misreg==null?1:window.__P.misreg);return [[-3*u,2*u],[1*u,-2*u],[4*u,3*u],[0,0]]};"], ["pitch=pitch||6;", "pitch=(pitch||6)*((window.__P||{}).hatch==null?1:window.__P.hatch);"], ["const amps=[0.10,0.12,0.11,0.05]", "const amps=[0.10,0.12,0.11,0.05].map(v=>v*((window.__P||{}).grain==null?1:window.__P.grain))"], ["  drawCaptions(X,u);\n  drawPlanFurniture(X,u);", "  if(((window.__P||{}).caps==null?1:window.__P.caps)){drawCaptions(X,u);\n  drawPlanFurniture(X,u);}"]]};
 
 /* lift-canvas · shared engine for plates whose figure is one canvas or one SVG on its source page.
    Appended to each plate's study.js by _build/plates.py after that plate's lc-figure.js (window.LC_FIG: source page,
@@ -38,7 +38,9 @@ window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.
    drawing calls pass through the dials: line weight (every stroke), mark size (dots and pixel marks), ink strength
    (every alpha), type size (every font). Its colors pass through the Color tab: each ink is a color the figure itself
    uses, measured by _build/qa/lift-probe.mjs (lc-head.js there is a copy of the HEAD function below; keep them in step), which also keeps only the dials that change this figure's pixels.
-   An SVG figure is serialized with its computed styles; its strokes, type and colors take the same dials and inks.
+   An SVG figure is serialized with its computed styles; its strokes, type and colors take the same dials and inks
+   (line weight leaves stroked type alone, SVG text and anything a patch marks data-lc-noweight: a title's outline is
+   part of its letterform, not a keyline).
    With composite, every layer the page stacks over the figure is copied (see layersOf); with overlay, its HTML type too.
    FIG.dpr: the pixel ratio the page draws at (as the filed still was captured), so its marks keep their measured size.
    FIG.blurKeep (px): blurs this narrow or less are the subject in focus, and the Focus blur dial leaves them alone.
@@ -77,19 +79,33 @@ window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.
   Object.keys(FIG.extra || {}).forEach(function (k) { var e = FIG.extra[k]; ALL[k] = leaf(e.value, e.range[0], e.range[1], e.step, e.label, e.unit, e.note); if (e.options) ALL[k].options = e.options; if (e.scale) ALL[k].scale = e.scale; if (e.when) ALL[k].when = e.when; });
   var P0 = {}; (FIG.dials || []).forEach(function (k) { if (ALL[k]) P0[k] = ALL[k]; });
   var read = (S.spec.techniques || [])[0] || {}, TID = read.id || 'lift';
-  S.spec.techniques = [{ id: TID, short: (read.short || 'FIG'), name: read.name || 'Figure', layer: 1, pass: 1, atoms: read.atoms || [], params: P0,
+  S.spec.techniques = [{ id: TID, short: (read.short || 'FIG'), name: FIG.tname || read.name || 'Figure', layer: 1, pass: 1, atoms: read.atoms || [], params: P0,
     implementation: (read.implementation || '') + ' Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials.' }]
     .concat((S.spec.techniques || []).filter(function (t) { return t.id !== TID; }));
   S.body = [S.body[0], 'The figure is drawn here by its source page’s own code. The dials act on what that code draws: every line, every dot, every transparency and every label, and the moment of its clock. Only dials measured to change this figure are shown. The Color tab lists the colors the figure itself uses.'];
   S.paramsHint = 'Dials on the page’s own drawing, kept only where they change this figure. Multiples are of the page’s own values.';
   S.liveOnLoad = false; delete S.live;
 
-  /* inks: the figure's own colors, most used first. Source keeps them; One ink proofs every ink as a gray of the same lightness. */
+  /* inks: the figure's own colors, most used first. Source keeps them (each one editable). One ink prints the whole
+     plate, mat included, in a single ink: every pixel of the finished figure becomes a tint of that ink by its value.
+     On a light plate the ink is near-black on Paper (#FBFBF7) and the plate's own ground prints as Paper; on a dark
+     plate (ground darker than a quarter value) the ground stays and the ink is Paper. Paper and ink are editable. */
   var INK = FIG.inks || [];
-  function lum(h) { var c = [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16) / 255; }); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; }
-  function gray(h) { var v = Math.round(Math.pow(lum(h), 1 / 2.2) * 255).toString(16).padStart(2, '0'); return '#' + v + v + v; }
+  function rgbOf(h) { return [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
+  function luma(h) { var c = rgbOf(h); return (.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) / 255; }
+  var G0 = (FIG.ground || '#ffffff').toLowerCase(), DARK = luma(G0) < .25;
+  function mixHex(a, b, t) { var A = rgbOf(a), B = rgbOf(b); return '#' + A.map(function (v, i) { return ('0' + Math.round(v + (B[i] - v) * t).toString(16)).slice(-2); }).join(''); }
   function V(id, label, list) { var inks = {}; INK.forEach(function (h, i) { inks['ink' + (i + 1)] = list[i]; }); return { id: id, label: label, sw: list.slice(0, 5), spot: [20, 20, 20], paper: FIG.ground || '#FFFFFF', rule: '#D9D9DC', inks: inks, src: INK }; }
-  S.variants = INK.length ? [V('source', 'Source', INK.slice()), V('one-ink', 'One ink', INK.map(gray))] : [{ id: 'source', label: 'Source', sw: [], spot: [20, 20, 20], paper: FIG.ground || '#FFFFFF', rule: '#D9D9DC' }];
+  var ONE = (function () { var pa = DARK ? G0 : '#fbfbf7', ik = DARK ? '#fbfbf7' : '#101014'; return { id: 'one-ink', label: 'One ink', sw: [ik, mixHex(pa, ik, .6), mixHex(pa, ik, .3), pa], spot: [20, 20, 20], paper: pa, rule: DARK ? '#3a3a40' : '#D9D9DC', one: ik }; })();
+  S.variants = [INK.length ? V('source', 'Source', INK.slice()) : { id: 'source', label: 'Source', sw: [], spot: [20, 20, 20], paper: FIG.ground || '#FFFFFF', rule: '#D9D9DC' }, ONE];
+  /* the one-ink print of the finished canvas: value → tint of the one ink over the paper (or the dark ground) */
+  function oneInk(x, W, H, Vt) {
+    var lg = luma(G0), ref = DARK ? lg : Math.max(lg, .9), P = rgbOf((Vt.paper || ONE.paper).toLowerCase()), I = rgbOf((Vt.one || ONE.one).toLowerCase()), im;
+    try { im = x.getImageData(0, 0, W, H); } catch (e) { x.save(); x.globalCompositeOperation = 'saturation'; x.fillStyle = '#808080'; x.fillRect(0, 0, W, H); x.restore(); return; }
+    var L = new Uint8ClampedArray(768); for (var v = 0; v < 256; v++) { var t = DARK ? (v / 255 - ref) / (1 - ref) : (ref - v / 255) / ref; t = t < 0 ? 0 : t > 1 ? 1 : t; for (var c = 0; c < 3; c++) L[v * 3 + c] = Math.round(P[c] + (I[c] - P[c]) * t); }
+    var d = im.data; for (var i = 0; i < d.length; i += 4) { var y = (54 * d[i] + 183 * d[i + 1] + 19 * d[i + 2]) >> 8; d[i] = L[y * 3]; d[i + 1] = L[y * 3 + 1]; d[i + 2] = L[y * 3 + 2]; }
+    x.putImageData(im, 0, 0);
+  }
   S.variantLabel = 'Palette';
   S.colorHint = 'Each ink is a color the figure itself uses, most used first. Click one to change it everywhere the figure uses it.';
 
@@ -183,7 +199,7 @@ window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.
       var cs = w.getComputedStyle(n), st = PROPS.map(function (k) {
         var v = cs.getPropertyValue(k); if (!v || ((k === 'filter' || k === 'transform') && v === 'none') || ((k === 'transform-origin' || k === 'transform-box') && !n.style[k === 'transform-origin' ? 'transformOrigin' : 'transformBox'] && cs.getPropertyValue('transform') === 'none')) return '';
         if (n === el && (k === 'transform' || k === 'transform-origin' || k === 'opacity' || k === 'mix-blend-mode' || k === 'filter')) return '';
-        if (k === 'stroke-width') { var px = parseFloat(v); if (!isNaN(px)) v = (px * (Q.weight == null ? 1 : Q.weight)) + 'px'; }
+        if (k === 'stroke-width' && !/^(text|tspan|textPath)$/.test(n.tagName) && !(n.closest && n.closest('[data-lc-noweight]'))) { var px = parseFloat(v); if (!isNaN(px)) v = (px * (Q.weight == null ? 1 : Q.weight)) + 'px'; }
         if (k === 'font-size') { var fz = parseFloat(v); if (!isNaN(fz)) v = (fz * (Q.type == null ? 1 : Q.type)) + 'px'; }
         if (k === 'fill-opacity' || k === 'stroke-opacity') v = String(Math.min(1, parseFloat(v) * (Q.ink == null ? 1 : Q.ink)));
         if (k === 'fill' || k === 'stroke' || k === 'stop-color') v = col(v);
@@ -248,6 +264,8 @@ window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.
     var d = w.document, R = el.getBoundingClientRect(), ops = [], tw = d.createTreeWalker(FIG.composite ? (el.closest('.plate') || el.parentElement || d.body) : d.body, 4), n, rng = d.createRange();
     while ((n = tw.nextNode())) {
       var t = n.nodeValue, pe = n.parentElement; if (!t || !t.trim() || !pe || el.contains(pe) || /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA|OPTION|TITLE|SELECT|PRE|CODE)$/.test(pe.tagName)) continue;
+      /* type set inside an SVG layer is drawn with that layer (its own fill, gradient and filter), not again as flat text */
+      if (FIG.composite && pe.closest('svg')) continue;
       var dt = pe.closest('details'); if (dt && !dt.open && !pe.closest('summary')) continue;
       rng.selectNodeContents(n); var br = rng.getBoundingClientRect(); if (!br.width || br.right < R.left || br.left > R.right || br.bottom < R.top || br.top > R.bottom) continue;
       var cs = w.getComputedStyle(pe), op = 1, hid = false; for (var q = pe; q && q.nodeType === 1; q = q.parentElement) { var qs = w.getComputedStyle(q); op *= +qs.opacity; if (qs.visibility === 'hidden') hid = true; } if (hid || op < .05) continue;
@@ -368,8 +386,11 @@ window.LC_FIG={"src": "/tools/techniques-templates/plates/_src/garden-sheet-g01.
             x.save(); x.beginPath(); x.rect(ox, oy, iw * k, ih * k); x.clip(); x.translate(ox - cr[0] * cw0 * ks, oy - cr[1] * ch0 * ks); x.scale(ks, ks); x.textBaseline = 'middle'; x.textAlign = 'left';
             F.ops.forEach(function (o) { x.font = o.st + (o.px * ty) + 'px ' + o.fam; x.fillStyle = mapCol(o.color, MAP); x.globalAlpha = Math.min(1, o.a * (Q.ink == null ? 1 : Q.ink)); if ('letterSpacing' in x) x.letterSpacing = o.ls; x.fillText(o.s, o.x, o.gy == null ? o.y : o.gy + (o.y - o.gy) * ty); });
             x.restore(); }
+          /* FIG.outline {i, w, c}: a frame the page draws round the figure in CSS (an outline, not on the canvas), in figure px */
+          if (FIG.outline && F === figs[0]) { var OL = FIG.outline, h0 = (OL.i + OL.w / 2) * k; x.save(); x.strokeStyle = MAP[OL.c] || OL.c; x.lineWidth = OL.w * k; x.strokeRect(ox + h0, oy + h0, iw * k - 2 * h0, ih * k - 2 * h0); x.restore(); }
           x.restore(); x.strokeStyle = Vt.rule; x.lineWidth = Math.max(1, u * .8); x.strokeRect(Math.round(bx) + .5, Math.round(by) + .5, Math.round(bw) - 1, Math.round(bh) - 1);
         });
+        if (Vt.one) oneInk(x, W, H, Vt);
         if (done) done();
       });
     }).catch(function (err) { if (err && err.message !== 'superseded') console.error('[lift-canvas]', err); if (done) done(); });

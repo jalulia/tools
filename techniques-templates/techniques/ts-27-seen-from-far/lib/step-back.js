@@ -32,31 +32,45 @@ export const spec={
     "remap": [
       [
         0,
-        0.1,
+        0.12,
+        0.15,
+        0.2,
         0.25,
+        0.3,
+        0.35,
         0.4,
+        0.45,
         0.5,
         0.6,
+        0.7,
         0.75,
+        0.8,
         0.9,
         1
       ],
       [
         0,
-        0.156,
-        0.263,
-        0.353,
-        0.412,
-        0.439,
-        0.491,
-        0.665,
+        0.075,
+        0.115,
+        0.1387,
+        0.1629,
+        0.195,
+        0.2303,
+        0.259,
+        0.2858,
+        0.3164,
+        0.3696,
+        0.4439,
+        0.4613,
+        0.4883,
+        0.6101,
         1
       ]
     ],
-    "stages": "on the inner track (the slider maps 25 → 24 %, 50 → 40 %, 75 → 50 %, 90 → 63 %): cells cut from the painting 1.5–7 % · cell pitch 2.4 u → far pitch on a log curve · cells part to show paper 8–42 % · empty ground clears from the corners inward 2–64 %, paced by cleared area · grown cells take the record 56–92 % by density · on the slider, the line comes in over 42–60 % and holds full contrast above"
+    "stages": "on the slider: trees leave one by one 0.6–12.5 %; the outer 2 % band leaves at 13–15 %; then, on the inner track (the slider maps 25 → 16 %, 50 → 37 %, 75 → 46 %, 90 → 61 %): cells cut from the painting 1.5–7 % · cell pitch 2.4 u → far pitch on a log curve · cells part to show paper 8–42 % · empty ground clears behind a front that starts as the plate edge and shrinks to a circle 9–64 %, paced by cleared area · grown cells take the record 56–92 % by density · on the slider, the line comes in over 42–60 % and holds full contrast above"
   },
   "limits": "Steps back from the clearing: the trees go first, then the painting is cut into cells that part to paper and take the record’s dots.",
-  "implementation": "Distance sets the cell pitch, how far the cells part, and when each cell trades the painting for the record. A dot that still shows the painting shows the painting’s own pixels, so the plate is never a blurred copy; a cell with more growth trades later, so the empty ground clears first and the ring stays to the end. Trees go first: each leaves whole, canopy and shadow, one after another from the plate edge inward over 0.4–2.8 % of the slider, and the front starts after the last one."
+  "implementation": "Distance sets the cell pitch, how far the cells part, and when each cell trades the painting for the record. A dot that still shows the painting shows the painting’s own pixels, so the plate is never a blurred copy; a cell with more growth trades later, so the empty ground clears first and the ring stays to the end. Trees go first: each leaves whole, canopy and shadow, one after another from the plate edge inward over 0.6–12.5 % of the slider, and the front starts after the last one, leaving all four sides of the plate together."
 };
 export const params={
   "distance": 100,
@@ -64,28 +78,42 @@ export const params={
   "remap": [
     [
       0,
-      0.1,
+      0.12,
+      0.15,
+      0.2,
       0.25,
+      0.3,
+      0.35,
       0.4,
+      0.45,
       0.5,
       0.6,
+      0.7,
       0.75,
+      0.8,
       0.9,
       1
     ],
     [
       0,
-      0.156,
-      0.263,
-      0.353,
-      0.412,
-      0.439,
-      0.491,
-      0.665,
+      0.075,
+      0.115,
+      0.1387,
+      0.1629,
+      0.195,
+      0.2303,
+      0.259,
+      0.2858,
+      0.3164,
+      0.3696,
+      0.4439,
+      0.4613,
+      0.4883,
+      0.6101,
       1
     ]
   ],
-  "stages": "on the inner track (the slider maps 25 → 24 %, 50 → 40 %, 75 → 50 %, 90 → 63 %): cells cut from the painting 1.5–7 % · cell pitch 2.4 u → far pitch on a log curve · cells part to show paper 8–42 % · empty ground clears from the corners inward 2–64 %, paced by cleared area · grown cells take the record 56–92 % by density · on the slider, the line comes in over 42–60 % and holds full contrast above"
+  "stages": "on the slider: trees leave one by one 0.6–12.5 %; the outer 2 % band leaves at 13–15 %; then, on the inner track (the slider maps 25 → 16 %, 50 → 37 %, 75 → 46 %, 90 → 61 %): cells cut from the painting 1.5–7 % · cell pitch 2.4 u → far pitch on a log curve · cells part to show paper 8–42 % · empty ground clears behind a front that starts as the plate edge and shrinks to a circle 9–64 %, paced by cleared area · grown cells take the record 56–92 % by density · on the slider, the line comes in over 42–60 % and holds full contrast above"
 };
 export const A={};
 A.clamp=(v,a,b)=>v<a?a:v>b?b:v;
@@ -93,13 +121,13 @@ A.sstep=(a,b,x)=>{ const t=A.clamp((x-a)/(b-a),0,1); return t*t*(3-2*t); };
 export const make=(P,u,A)=>{ const D=A.clamp(P.distance/100,0,1), p0=P.pitch_near_u;
       /* the slider is remapped onto the track so that equal travel gives an equal change in the plate (measured as mean color change on a 96 px copy) */
       const KD=P.remap[0], KS=P.remap[1]; let k=1; while(k<KD.length-1&&D>KD[k])k++; const s=KS[k-1]+(KS[k]-KS[k-1])*(D-KD[k-1])/(KD[k]-KD[k-1]);
-      /* plate area (1000 × 1000 u) outside a circle of radius r about the center */
-      const out=r=>{ if(r<=500)return 1e6-Math.PI*r*r; if(r>=707.1)return 0; const h=Math.sqrt(r*r-250000); return 1e6-(Math.PI*r*r-4*(r*r*Math.acos(500/r)-500*h)); };
       return { s, D, paintOnly:s<0.015, done:s>=0.985, part:A.sstep(0.08,0.50,s), line:A.sstep(0.42,0.60,D), near:1-A.sstep(0.10,0.35,s),
         /* cell pitch in u for a far pitch pf: 2.4 u at the near end, on a log curve to pf */
         pitch:pf=>{ const a=Math.min(pf,p0), w=Math.pow(A.clamp((s-0.015)/0.985,0,1),0.85); return a*Math.pow(pf/a,w); },
-        /* when a cell trades the painting for the record. Empty ground clears as a front from the corners inward, paced by the share of the plate it has cleared,
-           so the paper grows evenly (2 → 64 %); cells that grew trade later, the densest last (56 → 92 %). nd is a smooth noise in −1…1 that roughens both */
-        center:(rec,nd,r)=>{ const cg=Math.max(0.09,0.09+0.55*Math.pow(A.clamp(out(r)/out(330),0,1),0.7)+0.03*nd), cr=0.56+0.36*Math.pow(rec,0.7)+0.03*nd; return cg+(cr-cg)*A.sstep(0.05,0.35,rec); },
-        take:c=>A.sstep(c-0.04,c+0.04,s), tint:c=>A.sstep(c-0.02,c+0.08,s) }; };
+        /* when a cell trades the painting for the record. Empty ground clears behind a front that starts as the plate's own edge and shrinks to a circle (fr is the
+           share of the plate already behind the front, see front()), so it leaves all four sides together and the paper grows evenly (9 → 64 %); cells that grew
+           trade later, the densest last (56 → 92 %). The outer 2 % band (the first 15 % of the area) leaves almost at once, so the edge is inside the plate from the start. nd is a smooth noise in −1…1 that roughens both; on empty ground it only bites inward and is held back at the plate edge, so the edge never reaches back to the frame */
+        center:(rec,nd,fr)=>{ const g=fr<=0.15?0.13*fr:0.0195+0.9805*Math.pow((fr-0.15)/0.85,0.85), cg=0.09+0.55*g-0.06*A.sstep(0.12,0.25,fr)*(1-nd)/2, cr=0.56+0.36*Math.pow(rec,0.7)+0.03*nd; return cg+(cr-cg)*A.sstep(0.05,0.35,rec); },
+        /* w is the half-width of a cell's hand-off: 0.04 in general, 0.012 for the outer band so it leaves in one short step */
+        take:(c,w)=>A.sstep(c-(w||0.04),c+(w||0.04),s), tint:(c,w)=>A.sstep(c-0.5*(w||0.04),c+2*(w||0.04),s) }; };
 export default make;

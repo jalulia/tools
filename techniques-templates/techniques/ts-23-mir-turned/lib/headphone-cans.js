@@ -49,10 +49,11 @@ export const spec={
     "round_in": 0.12,
     "rim_n": 144,
     "rod_r": 0.12,
-    "ant_at": 0.5
+    "ant_at": 0.5,
+    "lean_max": 22
   },
   "limits": "Above 165 u the cans meet under the chin at full turn. Below 70 u the antennae hide behind the dome.",
-  "implementation": "A can is a puck: a cylinder with rounded edges, its inner face tangent to the sphere. Its outline is the convex hull of 14 rims sampled at 144 points, so ellipse arcs join by true tangent lines. A front can always stands out past the head’s silhouette by at least 1.3 line widths (it slides along the ear axis when the turn would bring the two outlines together), so the head line meets it in clean T-junctions. A can whose axis has turned to within 0.1 of edge-on is drawn behind the head (any overlap at that moment is thinner than the line) and slides up to 0.12 R into it, so it tucks behind the head instead of standing beside it as a slab."
+  "implementation": "A can is a puck: a cylinder with rounded edges, its inner face tangent to the sphere. Its outline is the convex hull of 14 rims sampled at 144 points, so ellipse arcs join by true tangent lines. A front can always stands out past the head’s silhouette by at least 1.3 line widths (it slides along the ear axis when the turn would bring the two outlines together), so the head line meets it in clean T-junctions. A can whose axis has turned to within 0.1 of edge-on is drawn behind the head (any overlap at that moment is thinner than the line) and slides up to 0.12 R into it, so it tucks behind the head instead of standing beside it as a slab. When a front antenna would run inside the outline close to it and nearly parallel, it tips away from the head’s center in the picture plane (up to 22°, in proportion to the overlap) and slides outward by up to a third of the can radius, so its line never fuses with the head line."
 };
 export const params={
   "can_u": 138,
@@ -68,11 +69,12 @@ export const params={
   "round_in": 0.12,
   "rim_n": 144,
   "rod_r": 0.12,
-  "ant_at": 0.5
+  "ant_at": 0.5,
+  "lean_max": 22
 };
 export const A={};
 
-export const make=(P,u,A)=>({ clear:P.clear, build:(hd,off)=>{ const D=Math.PI/180, sg=P.splay_deg*D, r=P.can_u/hd.Ru, L=P.antenna_u/hd.Ru, h2=P.depth*r, ro=P.round_out*r, ri=P.round_in*r, W=hd.toW;
+export const make=(P,u,A)=>({ clear:P.clear, lean_max:P.lean_max, build:(hd,off)=>{ const D=Math.PI/180, sg=P.splay_deg*D, r=P.can_u/hd.Ru, L=P.antenna_u/hd.Ru, h2=P.depth*r, ro=P.round_out*r, ri=P.round_in*r, W=hd.toW;
         const add=(p,q,s)=>[p[0]+q[0]*s, p[1]+q[1]*s, p[2]+q[2]*s];
         return [-1,1].map(s=>{ const a=[s*Math.cos(sg),0,Math.sin(sg)], e1=[-a[2],0,a[0]], e2=[0,1,0], aw=W(a);
           /* a can turned away slides into the head, so its inner rim hides behind the sphere instead of leaving a sliver */

@@ -2,7 +2,7 @@
    Lifted from techniques/ts-23-mir-turned/study.js by _build/build.mjs — do not edit here. Self-contained: every helper it uses is inlined.
    make(P,u,A) — P: params as plain values (defaults below; override any), u: device px per design unit
    (canvas.width / 1000), A: the helpers, V: variant colors (hex strings) where the signature asks for them.
-   Limits: Four rows is the most that stay apart at the heaviest line; one row reads as a hat brim, not a brain. Every fold keeps one stroke width clear of the outline, the band, the front cans and antennas, and every other fold; pieces shorter than 2.5 widths after that cut are dropped. With a heavy line the fold stroke thins, to half at most, until at least as many strokes as rows fit. */
+   Limits: Four rows is the most that stay apart at the heaviest line; one row reads as a hat brim, not a brain. Every fold keeps one stroke width clear of the outline, the band, the front cans and antennas, and every other fold; pieces shorter than 2.5 widths after that cut are dropped. With a heavy line the fold stroke thins, to 0.42 at most, until at least as many strokes as rows fit; pieces shorter than 0.16 R are dropped. */
 export const id="brain-folds", name="Dome and brain folds", code="TS-23", entry="ts-23-mir-turned";
 export const atoms=["scallop","latitude-rows","sphere-curve"];
 export const spec={
@@ -39,7 +39,7 @@ export const spec={
     "clear": 1,
     "min_len": 2.5
   },
-  "limits": "Four rows is the most that stay apart at the heaviest line; one row reads as a hat brim, not a brain. Every fold keeps one stroke width clear of the outline, the band, the front cans and antennas, and every other fold; pieces shorter than 2.5 widths after that cut are dropped. With a heavy line the fold stroke thins, to half at most, until at least as many strokes as rows fit.",
+  "limits": "Four rows is the most that stay apart at the heaviest line; one row reads as a hat brim, not a brain. Every fold keeps one stroke width clear of the outline, the band, the front cans and antennas, and every other fold; pieces shorter than 2.5 widths after that cut are dropped. With a heavy line the fold stroke thins, to 0.42 at most, until at least as many strokes as rows fit; pieces shorter than 0.16 R are dropped.",
   "implementation": "Each fold is a curve on the sphere: latitude rises in √sin humps 0.075 R high every 0.28 R of arc and drifts by up to 0.4 of a row; one end curls down and back through 112° on a 0.055 R radius. Only the part facing the viewer and clear of the outline is drawn."
 };
 export const params={

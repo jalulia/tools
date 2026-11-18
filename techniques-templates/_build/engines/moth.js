@@ -26,7 +26,7 @@
       pitch: leaf(1, 0.6, 1.8, 0.01, 'Stipple pitch', '×', 'Spacing of the stipple lattice every toned area is laid on. Smaller packs the dots; larger opens the screen.'),
       dot: leaf(1, 0.6, 1.8, 0.01, 'Dot size', '×', 'Radius of every stippled dot and every dot population (scales, scent, sonar).'),
       weight: leaf(1, 0.7, 1.6, 0.01, 'Line weight', '×', 'Weight of every line the page draws: keylines, veins, leaders, rules. Held where rings and crosses keep their shape.'),
-      grain: leaf(1, 0, 1.5, 0.01, 'Paper grain', '×', 'The night stock under the figure: mottle, fibers and tooth. 0 leaves flat ground; held below the point where it turns splotchy.'),
+      grain: { value: 1, options: [{ v: 0, label: 'Off' }, { v: 1, label: 'On' }], label: 'Paper grain', note: 'The night stock under the figure, its mottle, fibers and tooth as the page lays them, or a flat ground.' },
       stars: Object.assign(leaf(90, 0, 200, 1, 'Stars', '', 'How many stars come out over the night half of the clock.'), { scale: 'sqrt' }),
       ticks: { value: 96, options: [{ v: 24, label: 'Hours' }, { v: 48, label: 'Half hours' }, { v: 96, label: 'Quarter hours' }], label: 'Dial ticks', note: 'How finely the 24-hour dial is ruled; every hour keeps its long tick.' },
       fur: leaf(1, 0.4, 1.6, 0.01, 'Fur', '×', 'How many hairs stand off the thorax: the insulation the plate is about.'),
@@ -87,6 +87,7 @@
     /* the filed moment: how long the plate is warmed before it is held (PL-135: 2.9 s into the cycle), the hour on the Io clock */
     ['for(var i=0;i<(o.warm||90);i++)', 'for(var i=0;i<(window.__WARM!=null?window.__WARM:(o.warm||90));i++)'],
     ['if(RM&&!ptr&&!S.set){S.h=22.1;S.set=1}', 'if(RM&&!ptr&&!S.set){S.h=window.__HOUR!=null?window.__HOUR:22.1;S.set=1}'],
+    ['n=RM?87:Math.min(87,Math.floor(prog))', 'n=RM?(window.__MARKS!=null?window.__MARKS:87):Math.min(87,Math.floor(prog))'],
     /* scale pitch: every wing's scale lay; eyespots: the Io's startle flash; disc cells; clicks in the jam window */
     ['var R=w.root,row=0,r=mul(o.seed);', 'var R=w.root,row=0,r=mul(o.seed);o=Object.assign({},o,{pitch:o.pitch*(' + Pq + '.scale||1)});'],
     ['var a=S.a,shake=', 'var a=' + Pq + '.flash!=null?' + Pq + '.flash/100:S.a,shake='],
@@ -152,7 +153,7 @@
   function build(E, Q, V) {
     var w = E.w, P = E.P, K = V.inks || S.variants[0].inks, key = JSON.stringify([Q, K]);
     if (key === lastKey) return Promise.resolve();
-    lastKey = key; w.__P = Q; w.__WARM = FIG.warm != null ? FIG.warm : null; w.__HOUR = FIG.hour != null ? FIG.hour : null;
+    lastKey = key; w.__P = Q; w.__WARM = FIG.warm != null ? FIG.warm : null; w.__HOUR = FIG.hour != null ? FIG.hour : null; w.__MARKS = FIG.marks != null ? FIG.marks : null;
     NAMES.forEach(function (n) { var a = w.__INK[VAR[n]], c = rgb(K[n] || '#000000'); if (a) { a[0] = c[0]; a[1] = c[1]; a[2] = c[2]; } });
     P.ready = false; P.S = {}; P.t = 0; P.size();
     return svgImage(P).then(function (im) { overlay = im; });

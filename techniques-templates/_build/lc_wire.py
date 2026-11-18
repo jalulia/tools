@@ -263,13 +263,46 @@ WD['patches']=WD['patches']+[
   ["Array.from({length:13},(e,t)=>{let n=30+t*6,r=``;","Array.from({length:Math.round(%s)},(e,t)=>{let n=30+t*6,r=``;"%_P('halo',13)]]
 # US English in the page's own copy that the plates show
 WD['patches']=WD['patches']+[['On the desk in colour.','On the desk in color.'],['`⌖ Centre on this record`','`⌖ Center on this record`']]
-FIX['PL-41']={'dials':['contour','grain','warp','type']}
-FIX['PL-42']={'dials':['contour','grain','warp','type']}
-FIX['PL-47']={'dials':['contour','grain','warp','type'],'extra':{'type':_x(1,0.85,1,0.01,'Type size','Size of every numeral, title and caption, as a multiple of the page’s own. It stops at the page’s own size: any larger and the column titles wrap onto their times.','×')}}
+# Round 2: each world's own field. The Gardener's drawer cards (PL-41) and the Atelier's prints (PL-43) share one field
+# (a six-stop ramp); the Archivist's chips (PL-42) and the Composer's columns (PL-47) have their own. Contour is the snap
+# through the middle tone; Grain is the per-pixel grain each field adds (now wide enough to read at plate size); Warp
+# is the noise fold. Each world adds its own decision instead of a generic type size.
+WD['patches']=[q for q in WD['patches'] if q[0]!='(Ve(i*4+21,a*3)-.5)*.22']+[['a=(Be(n+1010,t)-.5)*5','a=(Be(n+1010,t)-.5)*5*%s'%_P('grain')]]
+WD['extra'].update({
+  'contour':_x(1,0.2,3,0.01,'Contour','How hard the field snaps through its middle tone into a contour edge, as a multiple of the page’s own. Low is a soft blend.','×'),
+  'grain':_x(1,0,8,0.01,'Grain','The per-pixel grain the field is printed with, as a multiple of the page’s own (a few levels).','×'),
+  'stops':_x(6,3,6,1,'Ramp stops','How many inks of the drawer’s ramp the field runs through: three greens and cream, then the pink and the blue.'),
+  'chip':dict(_x(0,0,1,1,'Print','The two ways the index prints a chip: in color, as on the desk, or in graphite with a fine hatch, as filed away.'),options=[{'v':0,'label':'On the desk'},{'v':1,'label':'Filed'}]),
+  'stock':_x(1,0.6,1,0.01,'Stock tone','How much of the stock’s own tone is laid over each print, as a share of the page’s own. Lower shows more of the printed field.'),
+  'num':dict(_x(0,0,1,1,'Field','How the column field is set: a smooth gradient, or stepped into the nine bands the page numbers its paint-by-number view with.'),options=[{'v':0,'label':'Gradient'},{'v':1,'label':'Nine bands'}]),
+  'rw':_x(1,0.5,2,0.01,'Route weight','Weight of the traced route and the paper casing under it, as a multiple of the page’s 2.4 u.','×'),
+  'cw':_x(1,0.5,1.8,0.01,'Contour weight','Weight of the engraved contour lines of the field, every fifth line heavier, as a multiple of the page’s own.','×')})
+_ST=_P('stops',6)
+FIX['PL-41']={'dials':['contour','grain','warp','stops'],
+  'patches':[['a=[[35,85,67],[86,145,109],[214,230,173],[248,245,229],[245,156,132],[94,116,179]];','a=[[35,85,67],[86,145,109],[214,230,173],[248,245,229],[245,156,132],[94,116,179]].slice(0,Math.max(3,Math.min(6,Math.round(%s))));'%_ST]]}
+FIX['PL-42']={'dials':['chip','contour','grain','warp'],'extra':{'grain':_x(1,0,6,0.01,'Grain','The per-pixel grain the chip’s field is printed with, as a multiple of the page’s own (a few levels).','×')},
+  'patches':[['function ve({record:e,active:t}){','function ve({record:e,active:t}){t=(window.__P||{}).chip==null?t:!window.__P.chip;'],
+             ['t.includes(e.id)?`ON THE DESK`:`FILED / KEPT`','((window.__P||{}).chip==null?t.includes(e.id):!window.__P.chip)?`ON THE DESK`:`FILED / KEPT`']]}
+FIX['PL-47']={'dials':['num','contour','grain','spread'],
+  'extra':{'grain':_x(1,0,8,0.01,'Grain','The per-pixel grain the field is printed with, as a multiple of the page’s own (a few levels).','×'),
+           'spread':_x(1,0.85,1.6,0.01,'Scene spread','How far each scene’s color spreads across the columns around its own (its radius grows with its minutes), as a multiple of the page’s own. Tighter than 0.85 the quiet scenes pool into dark wine.','×')},
+  'patches':[['r:.08+e.minutes/a*.7,p:e.participation/9','r:(.08+e.minutes/a*.7)*%s,p:e.participation/9'%_P('spread')],['let r=h((n+.5)/u,(t+.5)/d),i=e[Math.round(r*255)]','let r=h((n+.5)/u,(t+.5)/d),i=e[Math.round(((window.__P||{}).num?(Math.min(9,1+Math.floor(r*9))-.5)/9:r)*255)]']],
+  # the frame stops under the participation chart (the page's gray foot band is cut)
+  'set':{'crop':[0.0083,0.0248,1,0.688],'fit':True}}
 # the table's Aligned and Stacked layouts overlap the cards (text hidden) at the plate's frame width: the scatter stays
-FIX['PL-43']={'dials':['path','contour','grain','warp','arr_seed']}
-# All crossings re-flows the page so the map rises and leaves a blank band in the crop; type re-flows the margins
-FIX['PL-46']={'dials':['route','ci','relief','dash','halo'],'extra':{'route':dict(_x(1,1,2,1,'Route','Which route the atlas traces through the records.'),options=[{'v':1,'label':'A way in'},{'v':2,'label':'The room'}])}}
+FIX['PL-43']={'dials':['path','stock','contour','warp','grain','arr_seed'],
+  'patches':[['(0,f.jsx)(`path`,{className:`atelier-stock-tone`,d:n})','(0,f.jsx)(`path`,{className:`atelier-stock-tone`,d:n,style:{fillOpacity:%s}})'%_P('stock'),],
+             ['.atelier-reading-path polyline{fill:none;stroke:#4147c795;stroke-width:1.4px;stroke-dasharray:5 5}','.atelier-reading-path polyline{fill:none;stroke:#4147c7;stroke-width:2.6px;stroke-dasharray:8 5}'],
+             ['.atelier-reading-path{z-index:3;','.atelier-reading-path{z-index:60;']]}
+# All crossings re-flows the page so the map rises and leaves a blank band in the crop; type re-flows the margins.
+# The route's dash is set by a style rule (5 6), so the dial writes it inline; halo rings (too pale to read) are cut.
+_RW=_P('rw'); _DS=_P('dash',6)
+FIX['PL-46']={'dials':['route','ci','relief','cw','dash','rw'],'unpatch':["strokeDasharray:`6 5`"],
+  'extra':{'route':dict(_x(1,1,2,1,'Route','Which route the atlas traces through the records.'),options=[{'v':1,'label':'A way in'},{'v':2,'label':'The room'}]),
+           'dash':_x(5,4,14,0.5,'Route dash','Length of each dash of the traced route (the gaps keep the page’s 5 : 6).','u')},
+  'patches':[['className:`carto-route-trace`,d:b,fill:`none`,stroke:`var(--carto-accent)`,strokeWidth:`2.4`,strokeDasharray:`6 5`','className:`carto-route-trace`,d:b,fill:`none`,stroke:`var(--carto-accent)`,strokeWidth:2.4*%s,style:{strokeDasharray:%s+` `+%s*6/5}'%(_RW,_DS,_DS)],
+             ['(0,f.jsx)(`path`,{d:b,fill:`none`,stroke:`var(--carto-paper)`,strokeWidth:`10`,strokeLinejoin:`round`})','(0,f.jsx)(`path`,{d:b,fill:`none`,stroke:`var(--carto-paper)`,strokeWidth:10*%s,strokeLinejoin:`round`})'%_RW],
+             ['strokeWidth:t%5==0?1.15:.48,opacity:t%5==0?.54:.27','strokeWidth:(t%%5==0?1.15:.48)*%s,opacity:t%%5==0?.54:.27'%_P('cw')]]}
 
 # ---- A09 one-point illusion (PL-56): the engine's own parameters (FANO.PARAMS), set before the scene is built: grid
 # pitch, stipple density and dot, contour weight, the room's tint and the light. Moment, type, ink and generic dials cut.
@@ -446,7 +479,11 @@ WV['extra'].update({
 for c in ('PL-49','PL-50','PL-51','PL-53','PL-54'): FIX.setdefault(c,{})['set']={'dpr':2}
 FIX['PL-49'].update({'dials':['turn','tilt','tube','twist','density','coral','mark'],'extra':{'turn':_x(0,-45,45,1,'Turn','How far the loop is turned about its axis, added to the page’s own angle; past 45° it swings out of the frame.','°')}})
 FIX['PL-50'].update({'dials':['turn','tilt','tube','twist','density','coral','mark'],'extra':{'tube':_x(1,0.3,1.4,0.01,'Tube','Thickness of the ring’s tube, as a multiple of the page’s 0.32. Past 1.4 it runs under the card’s labels.','×')}})
-FIX['PL-51'].update({'dials':['rings','spacing','squash','rotate','weight']})
+FIX['PL-51'].update({'dials':['rings','spacing','squash','rotate','weight'],'extra':{'rings':_x(45,20,60,1,'Rings','How many afterimage ellipses are drawn; past 60 the outer ones fall off the card.')}})
+# Round 2: the selected card keeps its white outline (the page's 2 px outline, 5 px in from the edge); Turn stops at ±60°,
+# past which the coil runs under the title
+FIX['PL-50']['set'].update({'outline':{'i':3,'w':2,'c':'#ffffff'}})
+FIX['PL-50']['extra']['turn']=_x(0,-30,60,1,'Turn','How far the loop is turned about its axis, added to the page’s own angle. Turned back past 30° or on past 60°, the bright front runs under the type.','°')
 FIX['PL-53'].update({'dials':['freq','amp','env','pitch']})
 FIX['PL-54'].update({'dials':['oturn','radius','gstep','depth','type']})
 
@@ -477,6 +514,35 @@ FIX['PL-153'].update({'dials':['dot','cell','den','count','seed'],'extra':{
 FIX['PL-154'].update({'dials':['dot','cell','den','type','seed'],'extra':{
   'dot':_x(1,0.85,1.4,0.01,'Dot size','Size of every printed dot, as a multiple of the deck’s own. Below 0.85 the bars fade, above 1.4 they fill solid.','×'),
   'cell':_x(1,0.75,1.5,0.01,'Screen pitch','Spacing of the cells each dot is printed in, as a multiple of the deck’s own. Larger is coarser.','×')}})
+
+# Round 2: the deck draws at pixel ratio 4 (its layout unchanged), so a dot is a square of whole device pixels and one
+# pixel is a quarter step of the deck's own dot: Dot size is that count of pixels (even steps, always square and crisp;
+# the deck switched to soft round dots above 2.5 px). The group is named for what each figure counts.
+_DPX="(window.__P||{}).dpx"
+CM['patches']=[
+  ['const want=(o.dot||1.6)*u, cell=(o.cell||3.6)*u, r=Math.max(1,want), seed=o.seed||1, M=o.multi||3,','const want=(o.dot||1.6)*u, cell=(o.cell||3.6)*u*%s, r=%s!=null?+%s:Math.max(1,want), seed=(o.seed||1)+%s, M=o.multi||3,'%(_P('cell'),_DPX,_DPX,_P('seed',0))],
+  ['    d*=ks;\n','    d*=ks*%s;\n'%_P('den')],
+  ['round=r>=2.5, rr=r/2;','round=!!%s, rr=r/2;'%_P('shape',0)],
+  ['ring(ctx,W,H,u,o){const n=o.n||126,cx=W/2,cy=H/2,R0=Math.min(W,H)*.2,R1=Math.min(W,H)*.44,seed=o.seed||1;const step=3.2*u;const r=Math.max(1,1.7*u);','ring(ctx,W,H,u,o){const n=Math.max(3,Math.round((o.n||126)*%s)),cx=W/2,cy=H/2,R0=Math.min(W,H)*.2,R1=Math.min(W,H)*.44,seed=(o.seed||1)+%s;const step=3.2*u*%s;const r=%s!=null?+%s:Math.max(1,1.7*u);'%(_P('count'),_P('seed',0),_P('cell'),_DPX,_DPX)],
+  ['if(h2(k,s,seed+9)<.12)continue;','if(h2(k,s,seed+9)<1-.88*%s)continue;'%_P('den')],
+  ['arcs(ctx,W,H,u,o){const seed=o.seed||1,post=o.post;','arcs(ctx,W,H,u,o){const seed=(o.seed||1)+%s,post=o.post;'%_P('seed',0)],
+  ['r=Math.max(1,1.5*u);\n   for(let k=0;k<(post?40:28);k++){','r=%s!=null?+%s:Math.max(1,1.5*u);\n   for(let k=0;k<Math.round((post?40:28)*%s);k++){'%(_DPX,_DPX,_P('count'))],
+  ['const N=Math.ceil(rx*1.6*Math.PI/2.4);','const N=Math.ceil(rx*1.6*Math.PI/(2.4*%s));'%_P('cell')],
+  ['if(h2(k,s,seed+5)<.35&&k)continue;','if(h2(k,s,seed+5)<1-.65*%s&&k)continue;'%_P('den')],
+  ['const turns=o.turns||1.6, amp=o.amp==null?.28:o.amp, pad=o.pad==null?.07:o.pad;','const turns=(o.turns||1.6)*%s, amp=(o.amp==null?.28:o.amp)*%s, pad=o.pad==null?.07:o.pad;'%(_P('turns'),_P('swing'))],
+  ['gap=pw*.035,bw=(pw-gap*5)/6;','gap=pw*.035*%s,bw=(pw-gap*5)/6;'%_P('gap')]]
+def _dpx(v,lo,hi,what): return _x(v,lo,hi,1,'Dot size','Each dot is a square of whole device pixels; %s The deck prints at %d.'%(what,v),'px')
+CM['extra'].update({'gap':_x(1,0.4,2.6,0.01,'Bar gap','Space between the six bars, as a multiple of the deck’s own (3.5% of the chart’s width); the bars narrow as it opens.','×')})
+for c in ('PL-151','PL-152','PL-153','PL-154'): FIX[c]['set']={'dpr':4}
+FIX['PL-151']['dials']=['dpx','cell','den','turns','swing','seed']; FIX['PL-151']['extra']={'dpx':_dpx(4,3,6,'smaller thins the band into a fine stipple, larger closes it toward solid.')}
+FIX['PL-152']['dials']=['dpx','cell','den','count','seed']; FIX['PL-152']['extra'].update({'dpx':_dpx(6,4,7,'every stroke of the ring is a line of these squares.'),
+  'count':_x(1,0.5,1.6,0.01,'Rays','How many rays the ring counts, as a multiple of the deck’s 126; each ray is one exchange, its length its count.','×')})
+FIX['PL-152']['set'].update({'tname':'Counted rays'})
+FIX['PL-153']['dials']=['dpx','cell','den','count','seed']; FIX['PL-153']['extra'].update({'dpx':_dpx(4,3,6,'each arc is a dotted line of these squares.'),
+  'count':_x(1,0.5,1.6,0.01,'Arcs','How many arcs rise over the baseline, as a multiple of the deck’s 28; each arc spans one exchange.','×')})
+FIX['PL-153']['set'].update({'tname':'Counted arcs'})
+FIX['PL-154']['dials']=['dpx','cell','den','gap','seed']; FIX['PL-154']['extra'].update({'dpx':_dpx(4,3,6,'smaller lightens each bar, larger fills it toward solid.')})
+FIX['PL-154']['set'].update({'tname':'Counted bars'})
 
 # ---- keyline (PL-97 … PL-108): misregistration is the offset between passes (the ink pass off the fills, or each riso run
 # off true); the old dial on each riso filter's edge displacement is Edge shiver. Weights, grain and bleed stop before they
@@ -535,6 +601,24 @@ FIX.update({
     'set':{'ground':'#fbfbf7'},'inkswap':{'#f6f4ef':'#fbfbf7'}},
   'PL-108':{'dials':['weight','misreg','bleed','pitch','grain','dust','seed'],'extra':{'weight':_x(1,0.75,1.5,0.01,'Line weight','Weight of the keyline and of the stroked title, as a multiple of the page’s own.','×')},}})
 
+# Round 2 (keyline): the ink filter's displacement is softened as it grows (its nearest-pixel steps read as aliasing),
+# and Ink bleed stops at 1.4; grain and dust veils widened where they could not be seen at plate size; stroked titles
+# are left out of Line weight by the engine, so the keyline can thin again; PL-105 trades bleed for its screen ruling
+KL['patches']=KL['patches']+[['transform:`translate(${i*adv} 0)`},g)','transform:`translate(${i*adv} 0)`,"data-lc-noweight":1},g)'],['el("feDisplacementMap",{in:"SourceGraphic",in2:"j",scale:fine,xChannelSelector:"R",yChannelSelector:"G",result:"ink"},f);',
+  'el("feDisplacementMap",{in:"SourceGraphic",in2:"j",scale:fine,xChannelSelector:"R",yChannelSelector:"G",result:"ink"},f);if(%s>1)el("feGaussianBlur",{in:"ink",stdDeviation:.35*(%s-1)+.25,result:"ink"},f);'%(_P('bleed'),_P('bleed'))]]
+FIX['PL-100']['extra']=dict(FIX['PL-100'].get('extra',{}),bleed=_x(1,0,1.4,0.01,'Ink bleed','How far each ink wanders off its edge (the displacement in its ink filter), as a multiple of its own; the wander is softened as it grows. 0 prints a clean edge.','×'))
+FIX['PL-105']={'dials':['weight','misreg','pitch','grain','seed'],'inkswap':FIX['PL-105']['inkswap'],'patches':FIX['PL-105']['patches'],
+  'extra':{'weight':_x(1,0.6,1.5,0.01,'Line weight','Weight of the keyline round every shape, as a multiple of the page’s own (the stroked titles keep theirs).','×'),
+           'pitch':_x(1,0.7,2,0.01,'Screen ruling','Spacing of the dot and line screens in all three frames (the pink cone’s dots, the tints), with each dot grown to keep its coverage. Above 1 is coarser.','×'),
+           'grain':_x(1,0,4,0.01,'Grain','The dark grain veil the green and violet frames are printed through, as a multiple of the page’s own.','×')}}
+FIX['PL-107']['extra']={'weight':_x(1,0.5,1.5,0.01,'Line weight','Width of the gold keyline and its ochre underline, as a multiple of the page’s own.','×'),
+  'under':_x(1,0,1,0.01,'Ochre underline','Opacity of the ochre line under the gold that gives the keyline its edge on white, as a share of the page’s own (0.85).')}
+FIX['PL-107']['patches']=[q if 'opacity:.85},svg);' not in q[0] else [q[0],'"stroke-linejoin":"round","stroke-linecap":"round",fill:"none",opacity:.85*%s},svg);'%_P('under')] for q in FIX['PL-107']['patches']]
+FIX['PL-108']={'dials':['weight','misreg','pitch','grain','dust','seed'],
+  'extra':{'weight':_x(1,0.6,1.5,0.01,'Line weight','Weight of the keyline round every shape, as a multiple of the page’s own (the stroked STILLNESS keeps its own).','×'),
+           'grain':_x(1,0,4,0.01,'Grain','The dark grain veil laid over the poster, as a multiple of the page’s own.','×'),
+           'dust':_x(1,0,4,0.01,'Dust','The white speckle where the ink skipped, as a multiple of the page’s own. 0 clears it.','×')}}
+
 # ---- soft-focus (PL-114 … PL-122): blur kept above the point where the soft shapes turn to hard bands, grain fine,
 # rings and fog driven by the page's own numbers (the AURA ring set, the fog call), the flat blossom's skin as a switch
 SF['extra'].update({
@@ -588,6 +672,80 @@ FIX.update({
   'PL-122':{'dials':['blur','frost','spark','grain','type'],
             'extra':{'blur':_x(1,0.7,2,0.01,'Focus blur','Every blur the page lays, the 8 px frost of the glass and the warm washes first, as a multiple of its own. Below 0.7 the pane stops reading as frosted.','×'),
                      'frost':_x(1,0,1.8,0.01,'Frost','How white the glass is (its 18% white tint), as a multiple.','×')}}})
+# Round 2 (soft-focus): dust draws from its own stream. The page's rng is advanced by exactly the draws the page's own
+# dust takes (six per point), so the fog, flowers and grain after it are the page's own at every dust count; more dust
+# than the page's comes from a separate seeded stream.
+_SPK=_P('specks')
+def _dustP(n): return "{const _D=[];for(let i=0;i<%d;i++)_D.push(rng());let _k=0;const _xr=RNG(919);dust(x,B,BH,Math.round(%d*%s),()=>_k<_D.length?_D[_k++]:_xr());}"%(6*n,n,_SPK)
+_dfix={'dust(x,B,BH,220,rng);':'dust(x,B,BH,220,rng);'+'\x00','dust(x,B,BH,180,rng);':None}
+SF['patches']=[[a0,b0] for a0,b0 in SF['patches'] if a0 not in ('dust(x,B,BH,220,rng);','dust(x,B,BH,180,rng);','x.fillStyle="#040406";x.fillRect(0,0,B,BH);dust(x,B,BH,700,rng);')]+[
+  ['dust(x,B,BH,220,rng);',_dustP(220)],['dust(x,B,BH,180,rng);',_dustP(180)],
+  ['x.fillStyle="#040406";x.fillRect(0,0,B,BH);dust(x,B,BH,700,rng);','x.fillStyle="#040406";x.fillRect(0,0,B,BH);'+_dustP(700)]]
+# the blossom turns by a share of one lobe, whatever the lobe count
+SF['patches']=[[a0,b0.replace("((window.__P||{}).turn==null?0:window.__P.turn)*Math.PI/180","((window.__P||{}).turn==null?0:window.__P.turn)*2*Math.PI/((window.__P||{}).lobes==null?5:window.__P.lobes)")] for a0,b0 in SF['patches']]
+SF['extra'].update({
+  'turn':_x(0,-0.5,0.5,0.01,'Turn','Turn of the blossom, as a share of one lobe (360° ÷ lobes): ±0.5 turns it half a lobe either way, which covers every pose.'),
+  'rings':dict(_x(4,2,4,1,'Aura','How much of the aura stack is painted around each flower, from the blue core out.'),options=[{'v':2,'label':'Core and body'},{'v':3,'label':'With halo'},{'v':4,'label':'Full aura'}]),
+  'ptop':_x(250,180,300,1,'Pane line','Where the frosted pane starts: above it the fruit is crisp, below it frosted. Higher frosts more of the fruit.','u'),
+  'wash':_x(1,0,1.6,0.01,'Warm wash','Strength of the two warm orange washes behind the glass, as a multiple of the page’s own.','×'),
+  'slices':_x(10,6,14,1,'Segments','Segments in each citrus round and wedge behind the glass.')})
+SF['patches']=SF['patches']+[
+  ['glass(x,src,W,H,222,250,358,550,{blur:8,tint:"rgba(255,255,255,.18)"});','glass(x,src,W,H,222,%s,358,800-%s,{blur:8,tint:"rgba(255,255,255,.18)"});'%(_P('ptop',250),_P('ptop',250))],
+  ['blob(sx,420,560,170,"#ffb08a",40,.6);blob(sx,360,720,150,"#ff7a59",44,.5);','blob(sx,420,560,170,"#ffb08a",40,Math.min(1,.6*%s));blob(sx,360,720,150,"#ff7a59",44,Math.min(1,.5*%s));'%(_P('wash'),_P('wash'))],
+  ['sx.arc(cx,cy,r,rot,rot+Math.PI);sx.closePath();sx.clip();citrus(sx,cx,cy,r,OR,RIM,PITH,10,rot);','sx.arc(cx,cy,r,rot,rot+Math.PI);sx.closePath();sx.clip();citrus(sx,cx,cy,r,OR,RIM,PITH,%s,rot);'%_P('slices',10)]]
+# the PL-122 frost tint patch is the family's frost patch on its glass call: re-target it to the pane-line call
+SF['patches']=[q for q in SF['patches'] if q[0]!='glass(x,src,W,H,222,250,358,550,{blur:8,tint:"rgba(255,255,255,.18)"});' or 'ptop' in q[1]]
+SF['patches']=[[a0,b0.replace('{blur:8,tint:"rgba(255,255,255,.18)"});','{blur:8,tint:"rgba(255,255,255,"+Math.min(1,.18*%s)+")"});'%_P('frost'))] if 'ptop' in b0 else [a0,b0] for a0,b0 in SF['patches']]
+FIX['PL-115']['dials']=['blur','spread','rings','grain','specks','seed']
+FIX['PL-117']['extra']['panel']=_x(1,0.88,1.3,0.01,'Panel width','Width of the frosted pane, as a multiple of the page’s 270 px; it always covers the product word.','×')
+FIX['PL-119']['extra'].update({'bokeh':dict(_x(1,0,1.8,0.01,'Bokeh size','Size of the two out-of-focus discs. 0 removes them.','×'),scale='sqrt'),
+  'crystal':_x(1,0.3,1.3,0.01,'Crystal size','Size of the small frost crystal; past 1.3 its threads read as scribble.','×')})
+FIX['PL-120']['dials']=['blur','velvet','pads','lotus','type','seed']
+FIX['PL-120']['extra']['velvet']=_x(1,0,1.2,0.01,'Velvet','Depth of the velvet noise multiplied into each petal and pad. 0 lays the color flat; past 1.2 the petals go dusky and blotched.','×')
+FIX['PL-121']['dials']=['blur','spread','specks','fogtop','grain','seed']
+FIX['PL-122']={'dials':['blur','frost','ptop','slices','wash','spark'],
+  'extra':dict(FIX['PL-122']['extra'],frost=_x(1,0.4,1.8,0.01,'Frost','How white the glass is (its 18% white tint), as a multiple. Below 0.4 the slices read as crisp clip art through it.','×'))}
+
+# Round 2 (records): the contour rings get real contrast when Contours is the chosen layer (the page keeps its faint
+# rings under other layers); PL-16's Layer switch acts on both views; PL-11's glow reaches every strand's radius on a
+# wide log track; PL-03 drops the dot-shape switch (its 3 px dots cannot show it) and stops gain and pitch before the
+# blooms close or dissolve; PL-37's continuous screen prints the red as a flat ink over the tone, on a Paper mat
+_RING=["x.strokeStyle = paper ? 'rgba(16,16,20,.16)' : 'rgba(236,238,244,.12)'; x.stroke(); } }","x.strokeStyle = layer === 'contours' ? (paper ? 'rgba(16,16,20,.5)' : 'rgba(236,238,244,.42)') : (paper ? 'rgba(16,16,20,.16)' : 'rgba(236,238,244,.12)'); if (layer === 'contours') x.lineWidth = 1.3; x.stroke(); } }"]
+EX['patches']=EX['patches']+[_RING]
+FIX['PL-19']['patches']=FIX['PL-19']['patches']+[_RING]
+FIX['PL-16']['patches']=FIX['PL-16']['patches']+[["drawRecord(x, W, 440, n2, { tilt: 0, breath: 7, layer: 'glow', dot: 1.9, zoom: 1.12 });","drawRecord(x, W, 440, n2, { tilt: 0, breath: 7, layer: ['glow','contours','dots'][(window.__P||{}).layer|0], dot: 1.9 * %s, zoom: 1.12 });"%_P('dot')]]
+FIX['PL-16']['extra']['layer']=dict(_x(0,0,2,1,'Layer','How both views are drawn: the page’s own (glow from above, filaments and rungs from the side), the turn rings with the filaments, or the dots alone.'),options=[{'v':0,'label':'Path'},{'v':1,'label':'Contours'},{'v':2,'label':'Dots'}])
+A10['patches']=A10['patches']+[["ctx.strokeStyle = rgba(pal.line, [.16, .10, .06][j]);","ctx.strokeStyle = rgba(pal.line, [.34, .24, .16][j]);"]]
+FIX['PL-11']['extra']={'glow':_x(1,0.25,2.2,0.01,'Glow','Radius of the glow laid under the newest strands, as a multiple of the page’s own.','×')}
+FIX['PL-12']['extra']['spacing']=_x(1,0.8,1.12,0.01,'Line spacing','Distance between strands in the side view, as a multiple of the page’s own. Past 1.12 the field reaches the divider; below 0.8 it leaves the panel half empty.','×')
+FIX['PL-12']['extra']['path']=dict(_x(1,0,1,1,'Path','The two faint filaments that thread the strands in order through the top view.'),options=[{'v':0,'label':'Off'},{'v':1,'label':'On'}])
+FIX['PL-03']['dials']=['pitch','sangle','gain','misreg']
+FIX['PL-03']['extra']={'pitch':_x(1.6,1,2,0.01,'Dot pitch','Spacing of the three dot screens the blooms are printed in, as a multiple of the page’s 1.85 px. Larger is coarser; past 2 the rays dissolve.','×'),
+  'gain':_x(1,0.7,1.12,0.01,'Dot gain','How far each dot spreads for the tone it carries, as a multiple of the page’s own. Past 1.12 the full bloom closes into a solid disc.','×')}
+FIX['PL-37']['patches']=[[a0,b0.replace("{ mode: 'line' }","{ mode: 'line', flat: 1 }")] for a0,b0 in FIX['PL-37']['patches']]+[
+  ["D[q++] = lerp(pal.paper[c], lerp(pal.a[c], pal.b[c], b), a) * gn;","D[q++] = (pal.flat ? lerp(lerp(pal.paper[c], pal.a[c], a), pal.b[c], Math.min(1, b * 1.6)) : lerp(pal.paper[c], lerp(pal.a[c], pal.b[c], b), a)) * gn;"]]
+FIX['PL-37']['set']={'ground':'#fbfbf7'}
+FIX['PL-37']['extra']['screen']=dict(_x(0,0,1,1,'Screen','How the press renders tone: one-pixel dots against white noise, as the page prints it, or continuous tone with the red laid flat over it.'),options=[{'v':0,'label':'Stochastic'},{'v':1,'label':'Continuous'}])
+
+# Round 2 (sheet, rig, Shannon): the garden sheet's captions and plan furniture as a layer switch in place of the hatch
+# pitch (invisible at plate size); the projector stays where the mask keeps its terrain; the plan's Beam (an opacity)
+# gives way to the rig's own table distance; Fig. 1 holds the packet at the page's still pose, across the noise
+# junction, and sets its MESSAGE labels over the box gaps; Fig. 7's axis title moves left of its tick labels
+FIX['PL-130']['dials']=['plates','misreg','caps','grain']
+FIX['PL-130']['extra']['caps']=dict(_x(1,0,1,1,'Captions','The key plate’s type and furniture: bed labels, counts, north arrow and scale bar.'),options=[{'v':0,'label':'Off'},{'v':1,'label':'On'}])
+FIX['PL-130']['patches']=FIX['PL-130']['patches']+[['  drawCaptions(X,u);\n  drawPlanFurniture(X,u);','  if(%s){drawCaptions(X,u);\n  drawPlanFurniture(X,u);}'%_P('caps')]]
+CR_X.update({'lampx':_x(0,-1.5,1.5,0.1,'Projector offset','The projector’s place left or right of the wall’s center line; past 1.5 the mask side loses its terrain.','u'),
+  'lampy':_x(2.6,2,4,0.1,'Projector height','Height of the projector’s lens; higher drops every shadow down the wall. Below 2 the mask cuts into a cliff.','u'),
+  'tablez':_x(3.4,2.6,5.4,0.1,'Table distance','How far the turntable stands from the wall: nearer the wall, smaller and sharper shadows; nearer the projector, larger and softer.','u')})
+CR_P.append(['table: { x: 0, y: 1.45, z: 3.4, r: 2.3, t: 0.26 }','table: { x: 0, y: 1.45, z: %s, r: 2.3, t: 0.26 }'%_P('tablez',3.4)])
+FIX['PL-131']={'dials':['tturn','lampz','lampx','lampy','wipe'],'extra':CR_X,'patches':CR_P}
+FIX['PL-132']={'dials':['tturn','lampz','lampx','tablez'],'extra':CR_X,'patches':CR_P}
+SH_P[:]=[q for q in SH_P if q[0]!="x.fillText('H  bits',0,0);"]+[
+  ["x.save(); x.translate(12,Tp+ph/2); x.rotate(-Math.PI/2); x.fillText('H  bits',0,0); x.restore();","x.save(); x.translate(4,Tp+ph/2); x.rotate(-Math.PI/2); x.fillText('H  '+%s,0,0); x.restore();"%_UN],
+  ["x.fillText('MESSAGE',(boxes[0][1]*w+bw+boxes[1][1]*w)/2,wy-14);","x.fillText('MESSAGE',(boxes[0][1]*w+bw+boxes[1][1]*w)/2,by-8);"],
+  ["x.fillText('MESSAGE',(boxes[2][1]*w+bw+boxes[3][1]*w)/2,wy-14);","x.fillText('MESSAGE',(boxes[2][1]*w+bw+boxes[3][1]*w)/2,by-8);"],
+  ["const period=reduced?1e9:9000, ph=reduced?0.62:((now-t0)%period)/period;","const period=9000, ph=0.62;"]]
+
 def refresh(code, by):
     p=by[code]; path='plates/%s/lc-figure.js'%p['slug']; t=open(path).read(); head,body=t.split('window.LC_FIG=',1)
     cur=json.loads(body.rstrip().rstrip(';')); fam=FAM.get(CODE_FAM.get(code,''),{}); fx=FIX.get(code,{})

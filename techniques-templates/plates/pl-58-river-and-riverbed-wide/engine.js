@@ -24,9 +24,9 @@
       params: {
         grain: 2,   /* the page's own grain: one grain to a pixel of the page (2 screen pixels on a retina screen) */
         speck: leaf(1, 0.6, 2, 0.01, 'Speckle', '×', 'How far chance moves a grain along its ramp: low lets the light field and the brush streaks show; high breaks every tone into speckle. Held above the point where tones band.'),
-        fray: leaf(1, 0, 3, 0.01, 'Bank fray', '×', 'How ragged the water’s edge is, grain by grain.'),
+        fray: 1,   /* the page's own bank fray: below plate size to see, so not a dial */
         flowers: leaf(1, 0, 3, 0.01, 'Flowers', '×', 'Share of grains in the meadow patches that print as pink, pale yellow and violet flowers.'),
-        record: leaf(1, 0, 1.25, 0.01, 'Riverbed glow', '×', 'Share of grains over each strand of the record that print as its glow: green for yours, white for the model’s.')
+        record: leaf(1, 0, 1.05, 0.01, 'Riverbed glow', '×', 'Share of grains over each strand of the record that print as its glow: green for yours, white for the model’s.')
       },
       implementation: 'Ground and water are laid in as grain: every pixel takes one color from a short ramp, chosen by a field of light, a streak of brushwork and chance, so light blooms and falls off in speckle and nothing has a hard edge. The record lies on the bed as two kinds of glow.' },
     { id: 'river-form', short: 'RIV', name: 'River', layer: 1, pass: 2, atoms: ['field'],
@@ -39,9 +39,9 @@
       implementation: 'One centerline with a slowly varying width; banks wander about it by noise; three islands part the current; a light field of broad sweeps, a worn path and a sun on the water.' },
     { id: 'river-hand', short: 'HND', name: 'Hand marks', layer: 2, pass: 3, atoms: ['stroke'],
       params: {
-        grass: leaf(1, 0, 2.5, 0.01, 'Grass', '×', 'Count of tapered grass strokes, leaning with the wind.'),
+        grass: 1,   /* grass strokes, bank line: the page's own, too fine to read as dials at plate size */
         current: leaf(1, 0, 2.5, 0.01, 'Current', '×', 'Count of long current strokes that part round the islands, and of the glints running down the water.'),
-        bank: leaf(1, 0, 2.5, 0.01, 'Bank line', '×', 'Weight of the broken dark line where water meets land.')
+        bank: 1
       },
       implementation: 'Tapered strokes of a loaded brush over the grain: grass on land, current in the water, a dark line at the bank that thickens, thins and breaks.' },
     { id: 'river-time', short: 'TIME', name: 'Time', layer: 3, pass: 4, atoms: ['motion'],
@@ -53,7 +53,7 @@
   ];
   S.spec.techniques = TECH.concat((S.spec.techniques || []).filter(function (t) { return t.id !== read.id; }));
   S.spec.pass_order = ['ground · plate', 'fields · light, water, record, trees, flowers, drawn small and read back soft', 'grain · one color per screen pixel', 'hand · grass, current, bank line, reeds, stones', 'life · the clock: water, koi, canoe, people, birds'];
-  S.body = [S.body[0], 'The river runs here from the page’s own code, with its dials. The grain is laid as the page lays it, one grain to a pixel of the page; width, meander, light, speckle, bank fray, flowers, the riverbed glow, grass, current and the bank line redraw the scene, and Play runs its clock.'];
+  S.body = [S.body[0], 'The river runs here from the page’s own code, with its dials. The grain is laid as the page lays it, one grain to a pixel of the page; width, meander, light, speckle, flowers, the riverbed glow and the current redraw the scene, and Play runs its clock.'];
   S.paramsHint = 'Every dial of the painted river, as multiples of the page’s own numbers.';
   S.motionHint = 'Play runs the river’s clock: the current, the koi, the canoe, the people and robots on the banks.';
   S.motionOnLoad = false; S.liveOnLoad = false; delete S.live;
@@ -101,7 +101,9 @@
     ['i<(nar?50:tall?80:130)', 'i<Math.round((nar?50:tall?80:130)*RVP.current)'],
     ['i<(nar?26:tall?44:70)', 'i<Math.round((nar?26:tall?44:70)*RVP.current)'],
     ['lw=2.7*sc*', 'lw=2.7*RVP.bank*sc*'],
-    ['if(r3<sy*.8)col=YO', 'if(r3<Math.min(1,sy*1.3)*RVP.record)col=YO'], ['else if(r3<sy*.8+sm*.8)col=MO', 'else if(r3<(Math.min(1,sy*1.3)+Math.min(1,sm*1.3))*RVP.record)col=MO'],
+    ['if(r3<sy*.8)col=YO', 'if(r3<Math.min(1,sy*.9)*RVP.record)col=YO'], ['else if(r3<sy*.8+sm*.8)col=MO', 'else if(r3<(Math.min(1,sy*.9)+Math.min(1,sm*.9))*RVP.record)col=MO'],
+    /* the model's stones mostly in the deeper of their two inks, so they read gray-lavender as filed, not white */
+    ['col=MO[r2<.72?0:1]', 'col=MO[r2<.25?0:1]'],
     ['var f1=FM[o]/255*.2,f2=FM[o+1]/255*.22,f3=FM[o+2]/255*.2;', 'var f1=FM[o]/255*.2*RVP.flowers,f2=FM[o+1]/255*.22*RVP.flowers,f3=FM[o+2]/255*.2*RVP.flowers;'],
     ['fs=tall?8:9;', 'fs=(tall?8:9)*RVP.k;'], ["x.lineWidth=3.2;x.strokeStyle='#131c63'", "x.lineWidth=3.2*RVP.k;x.strokeStyle='#131c63'"]
   ];

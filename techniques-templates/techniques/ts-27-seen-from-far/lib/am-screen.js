@@ -92,7 +92,7 @@ export const spec={
     "ramp": "light 0 · mid 0.4 · deep 0.8"
   },
   "limits": "Prints the record as dots: cell size, gain, angle, shape and ink. Under 8 u the dots read as a tint; past 25 % gain the core prints solid.",
-  "implementation": "Each cell takes one size and one color. Per pixel the four nearest cells add their coverage with a half-pixel edge and share the color by weight, so abutting squares and lines close without seams and dots stay round at any angle; a square or line that would leave a gap under 12 % of the cell fills it."
+  "implementation": "Each cell takes one size and one color. Per pixel the four nearest cells add their coverage with a half-pixel edge (lines a quarter-pixel edge) and share the color by weight; a dot with two or more filled neighbors fills its cell as a tile in its own ink, so abutting squares and lines close without seams and dots stay round at any angle; a square or line that would leave a gap under 12 % of the cell fills it."
 };
 export const params={
   "pitch_u": 11.1,
@@ -119,14 +119,19 @@ export const make=(P,u,A,V)=>{ const g=P.gain/100, Af=Math.PI/4*P.full_dot*P.ful
           const at=(i,j)=>{ i+=oi; j+=oj; return i<0||j<0||i>=ni||j>=nj?-1:j*ni+i; };
           /* a square or a line that would leave a gap under 12 % of the cell (or under 1 px) fills its cell, so near-touching cells never show hairlines */
           const shut=Math.max(0.12*pd,1), close=h=>pd-2*h<shut?0.5*pd:h;
+          /* squares: a square that would leave a gap under 12 % of its cell fills it; a dot with two or more filled neighbors fills its cell too, in its own ink (three passes),
+             so a solid core prints as tiles with square paper holes where nothing grew, never as outlined boxes */
+          let SQ=null; if(sh===2){ const n=ni*nj, S0=new Uint8Array(n); SQ=new Uint8Array(n); for(let c=0;c<n;c++)if(ar[c]>0&&close(0.5*pd*Math.sqrt(ar[c]>1?1:ar[c]))>=0.5*pd)S0[c]=1;
+            for(let pass=0;pass<3;pass++){ for(let j=0;j<nj;j++)for(let i=0;i<ni;i++){ const c=j*ni+i; if(ar[c]<=0)continue; if(S0[c]){ SQ[c]=1; continue; } const k=(i>0?S0[c-1]:0)+(i<ni-1?S0[c+1]:0)+(j>0?S0[c-ni]:0)+(j<nj-1?S0[c+ni]:0); if(k>=2)SQ[c]=1; } S0.set(SQ); } }
           for(let Y=0;Y<H;Y++){ const dy=Y+0.5-cy; for(let X=0;X<W;X++){ const dx=X+0.5-cx; const a=(dx*ca+dy*sa)/pd, b=(-dx*sa+dy*ca)/pd; const i0=Math.round(a), j0=Math.round(b), fa=a-i0, fb=b-j0, si=fa<0?-1:1, sj=fb<0?-1:1;
             let cov=0, sr=0, sg=0, sb=0, sp=0;
             if(sh!==3){ for(let q=0;q<4;q++){ const ii=i0+(q&1?si:0), jj=j0+(q&2?sj:0); const c=at(ii,jj); if(c<0)continue; const A0=ar[c]; if(A0<=0)continue; let v;
                 if(sh===1){ const ex=a-ii, ey=b-jj; v=pd*Math.sqrt(A0/Math.PI)-pd*Math.sqrt(ex*ex+ey*ey)+0.5; }
-                else { const ex=a-ii, ey=b-jj; v=close(0.5*pd*Math.sqrt(A0>1?1:A0))-pd*Math.max(ex<0?-ex:ex,ey<0?-ey:ey)+0.5; }
-                if(v<=0)continue; if(v>1)v=1; cov+=v; const vp=v*pw[c], vr=v-vp; sp+=vp; sr+=vr*cr[c]; sg+=vr*cg[c]; sb+=vr*cb[c]; } }
+                else { const ex=a-ii, ey=b-jj; v=(SQ[c]?0.5*pd:0.5*pd*Math.sqrt(A0>1?1:A0))-pd*Math.max(ex<0?-ex:ex,ey<0?-ey:ey)+0.5; }
+                if(v<=0)continue; if(v>1)v=1; cov+=v; const vp=v*pw[c], vr=v-vp; sp+=vp; sr+=vr*cr[c]; sg+=vr*cg[c]; sb+=vr*cb[c]; }
+            }
             else { const il=Math.floor(a), tl=a-il; for(let q=0;q<2;q++){ const jj=j0+(q?sj:0); const c1=at(il,jj), c2=at(il+1,jj); if(c1<0&&c2<0)continue; const A1=c1>=0?Math.min(1,ar[c1]):0, A2=c2>=0?Math.min(1,ar[c2]):0, Am=A1+(A2-A1)*tl; if(Am<=0)continue;
-                let v=close(0.5*pd*Am)-pd*Math.abs(b-jj)+0.5; if(v<=0)continue; if(v>1)v=1; const w1=c1<0?0:c2<0?1:1-tl, w2=1-w1, e1=c1<0?c2:c1, e2=c2<0?c1:c2;
+                let v=2*(close(0.5*pd*Am)-pd*Math.abs(b-jj))+0.5; if(v<=0)continue; if(v>1)v=1; const w1=c1<0?0:c2<0?1:1-tl, w2=1-w1, e1=c1<0?c2:c1, e2=c2<0?c1:c2;
                 cov+=v; const vp=v*(pw[e1]*w1+pw[e2]*w2), vr=v-vp; sp+=vp; sr+=vr*(cr[e1]*w1+cr[e2]*w2); sg+=vr*(cg[e1]*w1+cg[e2]*w2); sb+=vr*(cb[e1]*w1+cb[e2]*w2); } }
             const o=(Y*W+X)*4, r0=paper[0], g0=paper[1], b0=paper[2];
             if(cov>0){ if(sp>0&&pix){ const qr=pix[o], qg=pix[o+1], qb=pix[o+2]; sr+=sp*(qr+(G[qr]-qr)*dk); sg+=sp*(qg+(G[qg]-qg)*dk); sb+=sp*(qb+(G[qb]-qb)*dk); }
