@@ -4834,9 +4834,10 @@
             "round_in": 0.12,
             "rim_n": 144,
             "rod_r": 0.12,
-            "ant_at": 0.5
+            "ant_at": 0.5,
+            "lean_max": 22
           },
-          "implementation": "A can is a puck: a cylinder with rounded edges, its inner face tangent to the sphere. Its outline is the convex hull of 14 rims sampled at 144 points, so ellipse arcs join by true tangent lines. A front can always stands out past the head’s silhouette by at least 1.3 line widths (it slides along the ear axis when the turn would bring the two outlines together), so the head line meets it in clean T-junctions. A can whose axis has turned to within 0.1 of edge-on is drawn behind the head (any overlap at that moment is thinner than the line) and slides up to 0.12 R into it, so it tucks behind the head instead of standing beside it as a slab.",
+          "implementation": "A can is a puck: a cylinder with rounded edges, its inner face tangent to the sphere. Its outline is the convex hull of 14 rims sampled at 144 points, so ellipse arcs join by true tangent lines. A front can always stands out past the head’s silhouette by at least 1.3 line widths (it slides along the ear axis when the turn would bring the two outlines together), so the head line meets it in clean T-junctions. A can whose axis has turned to within 0.1 of edge-on is drawn behind the head (any overlap at that moment is thinner than the line) and slides up to 0.12 R into it, so it tucks behind the head instead of standing beside it as a slab. When a front antenna would run inside the outline close to it and nearly parallel, it tips away from the head’s center in the picture plane (up to 22°, in proportion to the overlap) and slides outward by up to a third of the can radius, so its line never fuses with the head line.",
           "limits": "Above 165 u the cans meet under the chin at full turn. Below 70 u the antennae hide behind the dome.",
           "module": "techniques/ts-23-mir-turned/lib/headphone-cans.js"
         }
@@ -4872,7 +4873,7 @@
             "min_len": 2.5
           },
           "implementation": "Each fold is a curve on the sphere: latitude rises in √sin humps 0.075 R high every 0.28 R of arc and drifts by up to 0.4 of a row; one end curls down and back through 112° on a 0.055 R radius. Only the part facing the viewer and clear of the outline is drawn.",
-          "limits": "Four rows is the most that stay apart at the heaviest line; one row reads as a hat brim, not a brain. Every fold keeps one stroke width clear of the outline, the band, the front cans and antennas, and every other fold; pieces shorter than 2.5 widths after that cut are dropped. With a heavy line the fold stroke thins, to half at most, until at least as many strokes as rows fit.",
+          "limits": "Four rows is the most that stay apart at the heaviest line; one row reads as a hat brim, not a brain. Every fold keeps one stroke width clear of the outline, the band, the front cans and antennas, and every other fold; pieces shorter than 2.5 widths after that cut are dropped. With a heavy line the fold stroke thins, to 0.42 at most, until at least as many strokes as rows fit; pieces shorter than 0.16 R are dropped.",
           "module": "techniques/ts-23-mir-turned/lib/brain-folds.js"
         }
       ]
@@ -6683,30 +6684,44 @@
             "remap": [
               [
                 0,
-                0.1,
+                0.12,
+                0.15,
+                0.2,
                 0.25,
+                0.3,
+                0.35,
                 0.4,
+                0.45,
                 0.5,
                 0.6,
+                0.7,
                 0.75,
+                0.8,
                 0.9,
                 1
               ],
               [
                 0,
-                0.156,
-                0.263,
-                0.353,
-                0.412,
-                0.439,
-                0.491,
-                0.665,
+                0.075,
+                0.115,
+                0.1387,
+                0.1629,
+                0.195,
+                0.2303,
+                0.259,
+                0.2858,
+                0.3164,
+                0.3696,
+                0.4439,
+                0.4613,
+                0.4883,
+                0.6101,
                 1
               ]
             ],
-            "stages": "on the inner track (the slider maps 25 → 24 %, 50 → 40 %, 75 → 50 %, 90 → 63 %): cells cut from the painting 1.5–7 % · cell pitch 2.4 u → far pitch on a log curve · cells part to show paper 8–42 % · empty ground clears from the corners inward 2–64 %, paced by cleared area · grown cells take the record 56–92 % by density · on the slider, the line comes in over 42–60 % and holds full contrast above"
+            "stages": "on the slider: trees leave one by one 0.6–12.5 %; the outer 2 % band leaves at 13–15 %; then, on the inner track (the slider maps 25 → 16 %, 50 → 37 %, 75 → 46 %, 90 → 61 %): cells cut from the painting 1.5–7 % · cell pitch 2.4 u → far pitch on a log curve · cells part to show paper 8–42 % · empty ground clears behind a front that starts as the plate edge and shrinks to a circle 9–64 %, paced by cleared area · grown cells take the record 56–92 % by density · on the slider, the line comes in over 42–60 % and holds full contrast above"
           },
-          "implementation": "Distance sets the cell pitch, how far the cells part, and when each cell trades the painting for the record. A dot that still shows the painting shows the painting’s own pixels, so the plate is never a blurred copy; a cell with more growth trades later, so the empty ground clears first and the ring stays to the end. Trees go first: each leaves whole, canopy and shadow, one after another from the plate edge inward over 0.4–2.8 % of the slider, and the front starts after the last one.",
+          "implementation": "Distance sets the cell pitch, how far the cells part, and when each cell trades the painting for the record. A dot that still shows the painting shows the painting’s own pixels, so the plate is never a blurred copy; a cell with more growth trades later, so the empty ground clears first and the ring stays to the end. Trees go first: each leaves whole, canopy and shadow, one after another from the plate edge inward over 0.6–12.5 % of the slider, and the front starts after the last one, leaving all four sides of the plate together.",
           "limits": "Steps back from the clearing: the trees go first, then the painting is cut into cells that part to paper and take the record’s dots.",
           "module": "techniques/ts-27-seen-from-far/lib/step-back.js"
         }
@@ -6870,7 +6885,7 @@
             "min_tone": 0.035,
             "ramp": "light 0 · mid 0.4 · deep 0.8"
           },
-          "implementation": "Each cell takes one size and one color. Per pixel the four nearest cells add their coverage with a half-pixel edge and share the color by weight, so abutting squares and lines close without seams and dots stay round at any angle; a square or line that would leave a gap under 12 % of the cell fills it.",
+          "implementation": "Each cell takes one size and one color. Per pixel the four nearest cells add their coverage with a half-pixel edge (lines a quarter-pixel edge) and share the color by weight; a dot with two or more filled neighbors fills its cell as a tile in its own ink, so abutting squares and lines close without seams and dots stay round at any angle; a square or line that would leave a gap under 12 % of the cell fills it.",
           "limits": "Prints the record as dots: cell size, gain, angle, shape and ink. Under 8 u the dots read as a tint; past 25 % gain the core prints solid.",
           "module": "techniques/ts-27-seen-from-far/lib/am-screen.js"
         }
@@ -36485,11 +36500,11 @@
               "value": 1.6,
               "range": [
                 1,
-                2.4
+                2
               ],
               "step": 0.01,
               "label": "Dot pitch",
-              "note": "Spacing of the three dot screens the blooms are printed in, as a multiple of the page’s 1.85 px. Larger is coarser.",
+              "note": "Spacing of the three dot screens the blooms are printed in, as a multiple of the page’s 1.85 px. Larger is coarser; past 2 the rays dissolve.",
               "unit": "×"
             },
             "sangle": {
@@ -36503,35 +36518,15 @@
               "note": "Turn of all three screens together, added to their own 15°, 45° and 75°.",
               "unit": "°"
             },
-            "shape": {
-              "value": 0,
-              "range": [
-                0,
-                1
-              ],
-              "step": 1,
-              "label": "Dot",
-              "note": "The screen’s dot: round, or a square of the same area.",
-              "options": [
-                {
-                  "v": 0,
-                  "label": "Round"
-                },
-                {
-                  "v": 1,
-                  "label": "Square"
-                }
-              ]
-            },
             "gain": {
               "value": 1,
               "range": [
                 0.7,
-                1.3
+                1.12
               ],
               "step": 0.01,
               "label": "Dot gain",
-              "note": "How far each dot spreads for the tone it carries, as a multiple of the page’s own. Above 1 the screens close into solid.",
+              "note": "How far each dot spreads for the tone it carries, as a multiple of the page’s own. Past 1.12 the full bloom closes into a solid disc.",
               "unit": "×"
             },
             "misreg": {
@@ -43099,8 +43094,8 @@
             "glow": {
               "value": 1,
               "range": [
-                0.4,
-                1.8
+                0.25,
+                2.2
               ],
               "step": 0.01,
               "label": "Glow",
@@ -43184,7 +43179,7 @@
               ],
               "step": 1,
               "label": "Path",
-              "note": "The two filaments and the rungs that join each exchange.",
+              "note": "The two faint filaments that thread the strands in order through the top view.",
               "options": [
                 {
                   "v": 0,
@@ -43200,11 +43195,11 @@
               "value": 1,
               "range": [
                 0.8,
-                1.2
+                1.12
               ],
               "step": 0.01,
               "label": "Line spacing",
-              "note": "Distance between strands in the side view, as a multiple of the page’s own. Past 1.2 the field rises into the top view; below 0.8 it leaves the panel half empty.",
+              "note": "Distance between strands in the side view, as a multiple of the page’s own. Past 1.12 the field reaches the divider; below 0.8 it leaves the panel half empty.",
               "unit": "×"
             }
           },
@@ -43400,7 +43395,7 @@
               ],
               "step": 1,
               "label": "Layer",
-              "note": "How the side view is drawn: the two filaments and their rungs, the turn rings with the filaments, or the dots alone.",
+              "note": "How both views are drawn: the page’s own (glow from above, filaments and rungs from the side), the turn rings with the filaments, or the dots alone.",
               "options": [
                 {
                   "v": 0,
@@ -43570,12 +43565,12 @@
             "curl": {
               "value": 1,
               "range": [
-                0.6,
-                2
+                0.5,
+                1.67
               ],
               "step": 0.01,
               "label": "Curl",
-              "note": "Radius of the helix the steps climb: smaller winds the flight tighter, larger opens it toward a straight stair.",
+              "note": "How tightly the flight winds about its helix, against the page’s: lower opens it toward a straight stair, higher winds it tighter. Set as curvature, so equal travel bends the flight by equal steps.",
               "unit": "×"
             },
             "turn": {
@@ -43665,12 +43660,12 @@
             "curl": {
               "value": 1,
               "range": [
-                0.6,
-                2
+                0.5,
+                1.67
               ],
               "step": 0.01,
               "label": "Curl",
-              "note": "Radius of the helix the steps climb: smaller winds the flight tighter, larger opens it toward a straight stair.",
+              "note": "How tightly the flight winds about its helix, against the page’s: lower opens it toward a straight stair, higher winds it tighter. Set as curvature, so equal travel bends the flight by equal steps.",
               "unit": "×"
             },
             "turn": {
@@ -43760,12 +43755,12 @@
             "curl": {
               "value": 1,
               "range": [
-                0.6,
-                2
+                0.5,
+                1.67
               ],
               "step": 0.01,
               "label": "Curl",
-              "note": "Radius of the helix the steps climb: smaller winds the flight tighter, larger opens it toward a straight stair.",
+              "note": "How tightly the flight winds about its helix, against the page’s: lower opens it toward a straight stair, higher winds it tighter. Set as curvature, so equal travel bends the flight by equal steps.",
               "unit": "×"
             },
             "turn": {
@@ -43928,12 +43923,12 @@
             "curl": {
               "value": 1,
               "range": [
-                0.7,
-                2
+                0.5,
+                1.43
               ],
               "step": 0.01,
               "label": "Curl",
-              "note": "Radius of the helix the steps climb: smaller winds the flight tighter, larger opens it toward a straight stair.",
+              "note": "How tightly the flight winds about its helix, against the page’s: lower opens it toward a straight stair, higher winds it tighter. Set as curvature, so equal travel bends the flight by equal steps.",
               "unit": "×"
             },
             "turn": {
@@ -44074,12 +44069,12 @@
             "curl": {
               "value": 1,
               "range": [
-                0.6,
-                2
+                0.5,
+                1.67
               ],
               "step": 0.01,
               "label": "Curl",
-              "note": "Radius of the helix the steps climb: smaller winds the flight tighter, larger opens it toward a straight stair.",
+              "note": "How tightly the flight winds about its helix, against the page’s: lower opens it toward a straight stair, higher winds it tighter. Set as curvature, so equal travel bends the flight by equal steps.",
               "unit": "×"
             },
             "turn": {
@@ -44192,7 +44187,7 @@
               "value": 1,
               "range": [
                 0.6,
-                1.4
+                1.25
               ],
               "step": 0.01,
               "label": "Dot size",
@@ -44727,7 +44722,7 @@
               ],
               "step": 1,
               "label": "Screen",
-              "note": "How the press renders tone: one-pixel dots against white noise, as the page prints it, or continuous tone.",
+              "note": "How the press renders tone: one-pixel dots against white noise, as the page prints it, or continuous tone with the red laid flat over it.",
               "options": [
                 {
                   "v": 0,
@@ -44807,23 +44802,23 @@
             "contour": {
               "value": 1,
               "range": [
-                0.4,
-                1.6
+                0.2,
+                3
               ],
               "step": 0.01,
               "label": "Contour",
-              "note": "How hard the gradient field snaps through its middle tone into a contour band, as a multiple of the page’s own.",
+              "note": "How hard the field snaps through its middle tone into a contour edge, as a multiple of the page’s own. Low is a soft blend.",
               "unit": "×"
             },
             "grain": {
               "value": 1,
               "range": [
                 0,
-                2
+                8
               ],
               "step": 0.01,
               "label": "Grain",
-              "note": "The per-pixel grain in the gradient field, as a multiple of the page’s own. 0 is a clean blend.",
+              "note": "The per-pixel grain the field is printed with, as a multiple of the page’s own (a few levels).",
               "unit": "×"
             },
             "warp": {
@@ -44837,16 +44832,15 @@
               "note": "How far the noise folds the field back on itself, as a multiple of the page’s own.",
               "unit": "×"
             },
-            "type": {
-              "value": 1,
+            "stops": {
+              "value": 6,
               "range": [
-                0.85,
-                1.15
+                3,
+                6
               ],
-              "step": 0.01,
-              "label": "Type size",
-              "note": "Size of every numeral, title and caption, as a multiple of the page’s own.",
-              "unit": "×"
+              "step": 1,
+              "label": "Ramp stops",
+              "note": "How many inks of the drawer’s ramp the field runs through: three greens and cream, then the pink and the blue."
             }
           },
           "implementation": "A soft multi-stop gradient fills a card cut to an arch, a step or a notch; a large number sits in the cut. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
@@ -44855,26 +44849,46 @@
           "entry": "pl-42-seven-die-cut-gradient-cards",
           "code": "PL-42",
           "params": {
+            "chip": {
+              "value": 0,
+              "range": [
+                0,
+                1
+              ],
+              "step": 1,
+              "label": "Print",
+              "note": "The two ways the index prints a chip: in color, as on the desk, or in graphite with a fine hatch, as filed away.",
+              "options": [
+                {
+                  "v": 0,
+                  "label": "On the desk"
+                },
+                {
+                  "v": 1,
+                  "label": "Filed"
+                }
+              ]
+            },
             "contour": {
               "value": 1,
               "range": [
-                0.4,
-                1.6
+                0.2,
+                3
               ],
               "step": 0.01,
               "label": "Contour",
-              "note": "How hard the gradient field snaps through its middle tone into a contour band, as a multiple of the page’s own.",
+              "note": "How hard the field snaps through its middle tone into a contour edge, as a multiple of the page’s own. Low is a soft blend.",
               "unit": "×"
             },
             "grain": {
               "value": 1,
               "range": [
                 0,
-                2
+                6
               ],
               "step": 0.01,
               "label": "Grain",
-              "note": "The per-pixel grain in the gradient field, as a multiple of the page’s own. 0 is a clean blend.",
+              "note": "The per-pixel grain the chip’s field is printed with, as a multiple of the page’s own (a few levels).",
               "unit": "×"
             },
             "warp": {
@@ -44886,17 +44900,6 @@
               "step": 0.01,
               "label": "Warp",
               "note": "How far the noise folds the field back on itself, as a multiple of the page’s own.",
-              "unit": "×"
-            },
-            "type": {
-              "value": 1,
-              "range": [
-                0.85,
-                1.15
-              ],
-              "step": 0.01,
-              "label": "Type size",
-              "note": "Size of every numeral, title and caption, as a multiple of the page’s own.",
               "unit": "×"
             }
           },
@@ -44926,26 +44929,25 @@
                 }
               ]
             },
+            "stock": {
+              "value": 1,
+              "range": [
+                0.6,
+                1
+              ],
+              "step": 0.01,
+              "label": "Stock tone",
+              "note": "How much of the stock’s own tone is laid over each print, as a share of the page’s own. Lower shows more of the printed field."
+            },
             "contour": {
               "value": 1,
               "range": [
-                0.4,
-                1.6
+                0.2,
+                3
               ],
               "step": 0.01,
               "label": "Contour",
-              "note": "How hard the gradient field snaps through its middle tone into a contour band, as a multiple of the page’s own.",
-              "unit": "×"
-            },
-            "grain": {
-              "value": 1,
-              "range": [
-                0,
-                2
-              ],
-              "step": 0.01,
-              "label": "Grain",
-              "note": "The per-pixel grain in the gradient field, as a multiple of the page’s own. 0 is a clean blend.",
+              "note": "How hard the field snaps through its middle tone into a contour edge, as a multiple of the page’s own. Low is a soft blend.",
               "unit": "×"
             },
             "warp": {
@@ -44957,6 +44959,17 @@
               "step": 0.01,
               "label": "Warp",
               "note": "How far the noise folds the field back on itself, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "grain": {
+              "value": 1,
+              "range": [
+                0,
+                8
+              ],
+              "step": 0.01,
+              "label": "Grain",
+              "note": "The per-pixel grain the field is printed with, as a multiple of the page’s own (a few levels).",
               "unit": "×"
             },
             "arr_seed": {
@@ -45039,10 +45052,21 @@
               "note": "How far the contours swell around each stop on the route, as a multiple of the page’s own.",
               "unit": "×"
             },
-            "dash": {
-              "value": 6,
+            "cw": {
+              "value": 1,
               "range": [
-                2,
+                0.5,
+                1.8
+              ],
+              "step": 0.01,
+              "label": "Contour weight",
+              "note": "Weight of the engraved contour lines of the field, every fifth line heavier, as a multiple of the page’s own.",
+              "unit": "×"
+            },
+            "dash": {
+              "value": 5,
+              "range": [
+                4,
                 14
               ],
               "step": 0.5,
@@ -45050,15 +45074,16 @@
               "note": "Length of each dash of the traced route (the gaps keep the page’s 5 : 6).",
               "unit": "u"
             },
-            "halo": {
-              "value": 13,
+            "rw": {
+              "value": 1,
               "range": [
-                0,
-                13
+                0.5,
+                2
               ],
-              "step": 1,
-              "label": "Halo rings",
-              "note": "How many wavy rings ring each record on the map."
+              "step": 0.01,
+              "label": "Route weight",
+              "note": "Weight of the traced route and the paper casing under it, as a multiple of the page’s 2.4 u.",
+              "unit": "×"
             }
           },
           "implementation": "The same seven entries drawn as a planted plot, a route map, a timed agenda and a sphere of addresses. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
@@ -45067,48 +45092,57 @@
           "entry": "pl-47-agenda-as-gradient-columns",
           "code": "PL-47",
           "params": {
+            "num": {
+              "value": 0,
+              "range": [
+                0,
+                1
+              ],
+              "step": 1,
+              "label": "Field",
+              "note": "How the column field is set: a smooth gradient, or stepped into the nine bands the page numbers its paint-by-number view with.",
+              "options": [
+                {
+                  "v": 0,
+                  "label": "Gradient"
+                },
+                {
+                  "v": 1,
+                  "label": "Nine bands"
+                }
+              ]
+            },
             "contour": {
               "value": 1,
               "range": [
-                0.4,
-                1.6
+                0.2,
+                3
               ],
               "step": 0.01,
               "label": "Contour",
-              "note": "How hard the gradient field snaps through its middle tone into a contour band, as a multiple of the page’s own.",
+              "note": "How hard the field snaps through its middle tone into a contour edge, as a multiple of the page’s own. Low is a soft blend.",
               "unit": "×"
             },
             "grain": {
               "value": 1,
               "range": [
                 0,
-                2
+                8
               ],
               "step": 0.01,
               "label": "Grain",
-              "note": "The per-pixel grain in the gradient field, as a multiple of the page’s own. 0 is a clean blend.",
+              "note": "The per-pixel grain the field is printed with, as a multiple of the page’s own (a few levels).",
               "unit": "×"
             },
-            "warp": {
-              "value": 1,
-              "range": [
-                0.4,
-                1.6
-              ],
-              "step": 0.01,
-              "label": "Warp",
-              "note": "How far the noise folds the field back on itself, as a multiple of the page’s own.",
-              "unit": "×"
-            },
-            "type": {
+            "spread": {
               "value": 1,
               "range": [
                 0.85,
-                1
+                1.6
               ],
               "step": 0.01,
-              "label": "Type size",
-              "note": "Size of every numeral, title and caption, as a multiple of the page’s own. It stops at the page’s own size: any larger and the column titles wrap onto their times.",
+              "label": "Scene spread",
+              "note": "How far each scene’s color spreads across the columns around its own (its radius grows with its minutes), as a multiple of the page’s own. Tighter than 0.85 the quiet scenes pool into dark wine.",
               "unit": "×"
             }
           },
@@ -45225,12 +45259,12 @@
             "turn": {
               "value": 0,
               "range": [
-                -85,
-                85
+                -30,
+                60
               ],
               "step": 1,
               "label": "Turn",
-              "note": "How far the loop is turned about its axis, added to the page’s own angle.",
+              "note": "How far the loop is turned about its axis, added to the page’s own angle. Turned back past 30° or on past 60°, the bright front runs under the type.",
               "unit": "°"
             },
             "tilt": {
@@ -45309,11 +45343,11 @@
               "value": 45,
               "range": [
                 20,
-                90
+                60
               ],
               "step": 1,
               "label": "Rings",
-              "note": "How many afterimage ellipses are drawn."
+              "note": "How many afterimage ellipses are drawn; past 60 the outer ones fall off the card."
             },
             "spacing": {
               "value": 1,
@@ -45751,17 +45785,7 @@
               "note": "How far chance moves a grain along its ramp: low lets the light field and the brush streaks show; high breaks every tone into speckle. Held above the point where tones band.",
               "unit": "×"
             },
-            "fray": {
-              "value": 1,
-              "range": [
-                0,
-                3
-              ],
-              "step": 0.01,
-              "label": "Bank fray",
-              "note": "How ragged the water’s edge is, grain by grain.",
-              "unit": "×"
-            },
+            "fray": 1,
             "flowers": {
               "value": 1,
               "range": [
@@ -45777,7 +45801,7 @@
               "value": 1,
               "range": [
                 0,
-                1.25
+                1.05
               ],
               "step": 0.01,
               "label": "Riverbed glow",
@@ -45852,17 +45876,7 @@
           "entry": "pl-58-river-and-riverbed-wide",
           "code": "PL-58",
           "params": {
-            "grass": {
-              "value": 1,
-              "range": [
-                0,
-                2.5
-              ],
-              "step": 0.01,
-              "label": "Grass",
-              "note": "Count of tapered grass strokes, leaning with the wind.",
-              "unit": "×"
-            },
+            "grass": 1,
             "current": {
               "value": 1,
               "range": [
@@ -45874,17 +45888,7 @@
               "note": "Count of long current strokes that part round the islands, and of the glints running down the water.",
               "unit": "×"
             },
-            "bank": {
-              "value": 1,
-              "range": [
-                0,
-                2.5
-              ],
-              "step": 0.01,
-              "label": "Bank line",
-              "note": "Weight of the broken dark line where water meets land.",
-              "unit": "×"
-            }
+            "bank": 1
           },
           "implementation": "Tapered strokes of a loaded brush over the grain: grass on land, current in the water, a dark line at the bank that thickens, thins and breaks."
         }
@@ -48852,11 +48856,11 @@
               "value": 1,
               "range": [
                 0,
-                2
+                1.4
               ],
               "step": 0.01,
               "label": "Ink bleed",
-              "note": "How far each ink wanders off its edge (the displacement in its ink filter), as a multiple of its own. 0 prints a clean edge.",
+              "note": "How far each ink wanders off its edge (the displacement in its ink filter), as a multiple of its own; the wander is softened as it grows. 0 prints a clean edge.",
               "unit": "×"
             },
             "grain": {
@@ -49096,12 +49100,12 @@
             "weight": {
               "value": 1,
               "range": [
-                0.75,
+                0.6,
                 1.5
               ],
               "step": 0.01,
               "label": "Line weight",
-              "note": "Weight of the keyline and of the stroked title, as a multiple of the page’s own.",
+              "note": "Weight of the keyline round every shape, as a multiple of the page’s own (the stroked titles keep theirs).",
               "unit": "×"
             },
             "misreg": {
@@ -49115,26 +49119,26 @@
               "note": "How far the black keyline pass sits off the color fills, as a multiple of the page’s own (about one unit). 0 prints in register.",
               "unit": "×"
             },
-            "bleed": {
+            "pitch": {
               "value": 1,
               "range": [
-                0,
+                0.7,
                 2
               ],
               "step": 0.01,
-              "label": "Ink bleed",
-              "note": "How far each ink wanders off its edge (the displacement in its ink filter), as a multiple of its own. 0 prints a clean edge.",
+              "label": "Screen ruling",
+              "note": "Spacing of the dot and line screens in all three frames (the pink cone’s dots, the tints), with each dot grown to keep its coverage. Above 1 is coarser.",
               "unit": "×"
             },
             "grain": {
               "value": 1,
               "range": [
                 0,
-                1.5
+                4
               ],
               "step": 0.01,
               "label": "Grain",
-              "note": "The dark grain veil laid over the sheet, as a multiple of the page’s own. 0 leaves the print clean.",
+              "note": "The dark grain veil the green and violet frames are printed through, as a multiple of the page’s own.",
               "unit": "×"
             },
             "seed": {
@@ -49174,7 +49178,7 @@
               "value": 1,
               "range": [
                 0.5,
-                1.8
+                1.5
               ],
               "step": 0.01,
               "label": "Line weight",
@@ -49193,14 +49197,14 @@
               "unit": "×"
             },
             "under": {
-              "value": 0.85,
+              "value": 1,
               "range": [
                 0,
                 1
               ],
               "step": 0.01,
               "label": "Ochre underline",
-              "note": "Opacity of the ochre line under the gold that gives the keyline its edge on white (the page’s 0.85)."
+              "note": "Opacity of the ochre line under the gold that gives the keyline its edge on white, as a share of the page’s own (0.85)."
             },
             "seals": {
               "value": 1,
@@ -49242,12 +49246,12 @@
             "weight": {
               "value": 1,
               "range": [
-                0.75,
+                0.6,
                 1.5
               ],
               "step": 0.01,
               "label": "Line weight",
-              "note": "Weight of the keyline and of the stroked title, as a multiple of the page’s own.",
+              "note": "Weight of the keyline round every shape, as a multiple of the page’s own (the stroked STILLNESS keeps its own).",
               "unit": "×"
             },
             "misreg": {
@@ -49259,17 +49263,6 @@
               "step": 0.01,
               "label": "Misregistration",
               "note": "How far the black keyline pass sits off the color fills, as a multiple of the page’s own (about one unit). 0 prints in register.",
-              "unit": "×"
-            },
-            "bleed": {
-              "value": 1,
-              "range": [
-                0,
-                2
-              ],
-              "step": 0.01,
-              "label": "Ink bleed",
-              "note": "How far each ink wanders off its edge (the displacement in its ink filter), as a multiple of its own. 0 prints a clean edge.",
               "unit": "×"
             },
             "pitch": {
@@ -49287,18 +49280,18 @@
               "value": 1,
               "range": [
                 0,
-                1.5
+                4
               ],
               "step": 0.01,
               "label": "Grain",
-              "note": "The dark grain veil laid over the sheet, as a multiple of the page’s own. 0 leaves the print clean.",
+              "note": "The dark grain veil laid over the poster, as a multiple of the page’s own.",
               "unit": "×"
             },
             "dust": {
               "value": 1,
               "range": [
                 0,
-                2
+                4
               ],
               "step": 0.01,
               "label": "Dust",
@@ -49630,13 +49623,12 @@
             "turn": {
               "value": 0,
               "range": [
-                -36,
-                36
+                -0.5,
+                0.5
               ],
-              "step": 1,
+              "step": 0.01,
               "label": "Turn",
-              "note": "Turn of the blossom, within one lobe (72° apart).",
-              "unit": "°"
+              "note": "Turn of the blossom, as a share of one lobe (360° ÷ lobes): ±0.5 turns it half a lobe either way, which covers every pose."
             },
             "stamens": {
               "value": 22,
@@ -49695,8 +49687,22 @@
                 4
               ],
               "step": 1,
-              "label": "Aura rings",
-              "note": "How many rings of the aura stack are painted, from the blue core out: 2 is core and pink body, 4 adds the orange halo and green fringe."
+              "label": "Aura",
+              "note": "How much of the aura stack is painted around each flower, from the blue core out.",
+              "options": [
+                {
+                  "v": 2,
+                  "label": "Core and body"
+                },
+                {
+                  "v": 3,
+                  "label": "With halo"
+                },
+                {
+                  "v": 4,
+                  "label": "Full aura"
+                }
+              ]
             },
             "grain": {
               "value": 1,
@@ -49843,12 +49849,12 @@
             "panel": {
               "value": 1,
               "range": [
-                0.9,
-                1.15
+                0.88,
+                1.3
               ],
               "step": 0.01,
               "label": "Panel width",
-              "note": "Width of the frosted pane, as a multiple of the page’s 270 px; it always covers the slices and the product word.",
+              "note": "Width of the frosted pane, as a multiple of the page’s 270 px; it always covers the product word.",
               "unit": "×"
             },
             "spark": {
@@ -49978,7 +49984,8 @@
               "step": 0.01,
               "label": "Bokeh size",
               "note": "Size of the two out-of-focus discs. 0 removes them.",
-              "unit": "×"
+              "unit": "×",
+              "scale": "sqrt"
             },
             "streak": {
               "value": 1,
@@ -49995,11 +50002,11 @@
               "value": 1,
               "range": [
                 0.3,
-                1.8
+                1.3
               ],
               "step": 0.01,
               "label": "Crystal size",
-              "note": "Size of the small frost crystal.",
+              "note": "Size of the small frost crystal; past 1.3 its threads read as scribble.",
               "unit": "×"
             }
           },
@@ -50024,11 +50031,11 @@
               "value": 1,
               "range": [
                 0,
-                1.8
+                1.2
               ],
               "step": 0.01,
               "label": "Velvet",
-              "note": "Depth of the velvet noise multiplied into each soft shape. 0 lays the color flat.",
+              "note": "Depth of the velvet noise multiplied into each petal and pad. 0 lays the color flat; past 1.2 the petals go dusky and blotched.",
               "unit": "×"
             },
             "pads": {
@@ -50040,17 +50047,6 @@
               "step": 0.01,
               "label": "Pad haze",
               "note": "Opacity of the out-of-focus pads and washes behind the lotus. 0 leaves the sheet white.",
-              "unit": "×"
-            },
-            "grain": {
-              "value": 1,
-              "range": [
-                0,
-                1.6
-              ],
-              "step": 0.01,
-              "label": "Grain",
-              "note": "The film grain laid once over the plate, as a multiple of its own. 0 leaves the paint clean.",
               "unit": "×"
             },
             "lotus": {
@@ -50146,17 +50142,6 @@
               "note": "The film grain laid once over the plate, as a multiple of its own. 0 leaves the paint clean.",
               "unit": "×"
             },
-            "type": {
-              "value": 1,
-              "range": [
-                0.8,
-                1.2
-              ],
-              "step": 0.01,
-              "label": "Type size",
-              "note": "Size of the poster’s type, as a multiple of its own; lines keep their leading.",
-              "unit": "×"
-            },
             "seed": {
               "value": 0,
               "range": [
@@ -50188,12 +50173,44 @@
             "frost": {
               "value": 1,
               "range": [
-                0,
+                0.4,
                 1.8
               ],
               "step": 0.01,
               "label": "Frost",
-              "note": "How white the glass is (its 18% white tint), as a multiple.",
+              "note": "How white the glass is (its 18% white tint), as a multiple. Below 0.4 the slices read as crisp clip art through it.",
+              "unit": "×"
+            },
+            "ptop": {
+              "value": 250,
+              "range": [
+                180,
+                300
+              ],
+              "step": 1,
+              "label": "Pane line",
+              "note": "Where the frosted pane starts: above it the fruit is crisp, below it frosted. Higher frosts more of the fruit.",
+              "unit": "u"
+            },
+            "slices": {
+              "value": 10,
+              "range": [
+                6,
+                14
+              ],
+              "step": 1,
+              "label": "Segments",
+              "note": "Segments in each citrus round and wedge behind the glass."
+            },
+            "wash": {
+              "value": 1,
+              "range": [
+                0,
+                1.6
+              ],
+              "step": 0.01,
+              "label": "Warm wash",
+              "note": "Strength of the two warm orange washes behind the glass, as a multiple of the page’s own.",
               "unit": "×"
             },
             "spark": {
@@ -50205,28 +50222,6 @@
               "step": 0.01,
               "label": "Sparkle size",
               "note": "Size of the four-point sparkles on the glass. 0 removes them.",
-              "unit": "×"
-            },
-            "grain": {
-              "value": 1,
-              "range": [
-                0,
-                1.6
-              ],
-              "step": 0.01,
-              "label": "Grain",
-              "note": "The film grain laid once over the plate, as a multiple of its own. 0 leaves the paint clean.",
-              "unit": "×"
-            },
-            "type": {
-              "value": 1,
-              "range": [
-                0.8,
-                1.2
-              ],
-              "step": 0.01,
-              "label": "Type size",
-              "note": "Size of the poster’s type, as a multiple of its own; lines keep their leading.",
               "unit": "×"
             }
           },
@@ -50472,16 +50467,25 @@
               "note": "How far the yellow, blue and pink plates sit off the key plate, as a multiple of the sheet’s own (3–4 units).",
               "unit": "×"
             },
-            "hatch": {
+            "caps": {
               "value": 1,
               "range": [
-                0.6,
-                2
+                0,
+                1
               ],
-              "step": 0.01,
-              "label": "Hatch pitch",
-              "note": "Spacing of the white dashed hatch cut into the beds and mounds, as a multiple of the sheet’s own.",
-              "unit": "×"
+              "step": 1,
+              "label": "Captions",
+              "note": "The key plate’s type and furniture: bed labels, counts, north arrow and scale bar.",
+              "options": [
+                {
+                  "v": 0,
+                  "label": "Off"
+                },
+                {
+                  "v": 1,
+                  "label": "On"
+                }
+              ]
             },
             "grain": {
               "value": 1,
@@ -50531,23 +50535,23 @@
             "lampx": {
               "value": 0,
               "range": [
-                -3,
-                3
+                -1.5,
+                1.5
               ],
               "step": 0.1,
               "label": "Projector offset",
-              "note": "The projector’s place left or right of the wall’s center line.",
+              "note": "The projector’s place left or right of the wall’s center line; past 1.5 the mask side loses its terrain.",
               "unit": "u"
             },
             "lampy": {
               "value": 2.6,
               "range": [
-                1.6,
+                2,
                 4
               ],
               "step": 0.1,
               "label": "Projector height",
-              "note": "Height of the projector’s lens; higher drops every shadow down the wall.",
+              "note": "Height of the projector’s lens; higher drops every shadow down the wall. Below 2 the mask cuts into a cliff.",
               "unit": "u"
             },
             "wipe": {
@@ -50592,24 +50596,24 @@
             "lampx": {
               "value": 0,
               "range": [
-                -3,
-                3
+                -1.5,
+                1.5
               ],
               "step": 0.1,
               "label": "Projector offset",
-              "note": "The projector’s place left or right of the wall’s center line.",
+              "note": "The projector’s place left or right of the wall’s center line; past 1.5 the mask side loses its terrain.",
               "unit": "u"
             },
-            "beam": {
-              "value": 0.07,
+            "tablez": {
+              "value": 3.4,
               "range": [
-                0.02,
-                0.18
+                2.6,
+                5.4
               ],
-              "step": 0.01,
-              "label": "Beam",
-              "note": "Opacity of the projector’s beam across the floor plan (the page’s 0.07).",
-              "scale": "linear"
+              "step": 0.1,
+              "label": "Table distance",
+              "note": "How far the turntable stands from the wall: nearer the wall, smaller and sharper shadows; nearer the projector, larger and softer.",
+              "unit": "u"
             }
           },
           "implementation": "A wall, a turntable and a projector drawn in plan and in elevation. Drawn by the source page’s own code on a clock this plate drives; its strokes, marks, inks and type pass through the dials."
@@ -50656,27 +50660,20 @@
               "note": "Radius of every stippled dot and every dot population (scales, scent, sonar).",
               "unit": "×"
             },
-            "weight": {
-              "value": 1,
-              "range": [
-                0.7,
-                1.6
-              ],
-              "step": 0.01,
-              "label": "Line weight",
-              "note": "Weight of every line the page draws: keylines, veins, leaders, rules. Held where rings and crosses keep their shape.",
-              "unit": "×"
-            },
             "grain": {
               "value": 1,
-              "range": [
-                0,
-                1.4
+              "options": [
+                {
+                  "v": 0,
+                  "label": "Off"
+                },
+                {
+                  "v": 1,
+                  "label": "On"
+                }
               ],
-              "step": 0.01,
               "label": "Paper grain",
-              "note": "The night stock under the figure: mottle, fibers and tooth. 0 leaves flat ground; held below the point where it turns splotchy.",
-              "unit": "×"
+              "note": "The night stock under the figure, its mottle, fibers and tooth as the page lays them, or a flat ground."
             }
           },
           "implementation": "A specimen drawn in color on black, with charts and measurements set around it. Drawn by the source page’s own code; its stipple, dots, strokes and stock are given dials."
@@ -50719,14 +50716,18 @@
             },
             "grain": {
               "value": 1,
-              "range": [
-                0,
-                1.4
+              "options": [
+                {
+                  "v": 0,
+                  "label": "Off"
+                },
+                {
+                  "v": 1,
+                  "label": "On"
+                }
               ],
-              "step": 0.01,
               "label": "Paper grain",
-              "note": "The night stock under the figure: mottle, fibers and tooth. 0 leaves flat ground; held below the point where it turns splotchy.",
-              "unit": "×"
+              "note": "The night stock under the figure, its mottle, fibers and tooth as the page lays them, or a flat ground."
             }
           },
           "implementation": "A specimen drawn in color on black, with charts and measurements set around it. Drawn by the source page’s own code; its stipple, dots, strokes and stock are given dials."
@@ -50770,14 +50771,18 @@
             },
             "grain": {
               "value": 1,
-              "range": [
-                0,
-                1.4
+              "options": [
+                {
+                  "v": 0,
+                  "label": "Off"
+                },
+                {
+                  "v": 1,
+                  "label": "On"
+                }
               ],
-              "step": 0.01,
               "label": "Paper grain",
-              "note": "The night stock under the figure: mottle, fibers and tooth. 0 leaves flat ground; held below the point where it turns splotchy.",
-              "unit": "×"
+              "note": "The night stock under the figure, its mottle, fibers and tooth as the page lays them, or a flat ground."
             }
           },
           "implementation": "A specimen drawn in color on black, with charts and measurements set around it. Drawn by the source page’s own code; its stipple, dots, strokes and stock are given dials."
@@ -50821,7 +50826,7 @@
             "scatter": {
               "value": 1,
               "range": [
-                0.6,
+                0.8,
                 1.6
               ],
               "step": 0.01,
@@ -50852,14 +50857,18 @@
             },
             "grain": {
               "value": 1,
-              "range": [
-                0,
-                1.4
+              "options": [
+                {
+                  "v": 0,
+                  "label": "Off"
+                },
+                {
+                  "v": 1,
+                  "label": "On"
+                }
               ],
-              "step": 0.01,
               "label": "Paper grain",
-              "note": "The night stock under the figure: mottle, fibers and tooth. 0 leaves flat ground; held below the point where it turns splotchy.",
-              "unit": "×"
+              "note": "The night stock under the figure, its mottle, fibers and tooth as the page lays them, or a flat ground."
             }
           },
           "implementation": "A specimen drawn in color on black, with charts and measurements set around it. Drawn by the source page’s own code; its stipple, dots, strokes and stock are given dials."
@@ -50939,14 +50948,18 @@
             },
             "grain": {
               "value": 1,
-              "range": [
-                0,
-                1.4
+              "options": [
+                {
+                  "v": 0,
+                  "label": "Off"
+                },
+                {
+                  "v": 1,
+                  "label": "On"
+                }
               ],
-              "step": 0.01,
               "label": "Paper grain",
-              "note": "The night stock under the figure: mottle, fibers and tooth. 0 leaves flat ground; held below the point where it turns splotchy.",
-              "unit": "×"
+              "note": "The night stock under the figure, its mottle, fibers and tooth as the page lays them, or a flat ground."
             }
           },
           "implementation": "A specimen drawn in color on black, with charts and measurements set around it. Drawn by the source page’s own code; its stipple, dots, strokes and stock are given dials."
@@ -51014,14 +51027,18 @@
             },
             "grain": {
               "value": 1,
-              "range": [
-                0,
-                1.4
+              "options": [
+                {
+                  "v": 0,
+                  "label": "Off"
+                },
+                {
+                  "v": 1,
+                  "label": "On"
+                }
               ],
-              "step": 0.01,
               "label": "Paper grain",
-              "note": "The night stock under the figure: mottle, fibers and tooth. 0 leaves flat ground; held below the point where it turns splotchy.",
-              "unit": "×"
+              "note": "The night stock under the figure, its mottle, fibers and tooth as the page lays them, or a flat ground."
             }
           },
           "implementation": "A specimen drawn in color on black, with charts and measurements set around it. Drawn by the source page’s own code; its stipple, dots, strokes and stock are given dials."
@@ -51466,7 +51483,7 @@
             "cell": {
               "value": 3.4,
               "range": [
-                2,
+                2.6,
                 5
               ],
               "step": 0.1,
@@ -51478,11 +51495,11 @@
               "value": 1.5,
               "range": [
                 1.5,
-                3
+                2.4
               ],
               "step": 0.05,
               "label": "Dot",
-              "note": "Side of one dot, in screen pixels. Dots print as whole pixels; a fractional size is kept by thinning the count, so tone does not jump. Below 1.5 every dot is one pixel and the screen thins to dust.",
+              "note": "Side of one dot, in screen pixels. Dots print as whole pixels; a fractional size is kept by thinning the count, so tone does not jump. Held between 1.5 (below it every dot is one pixel and the screen thins to dust) and 2.4 (above it the dark tones fill solid).",
               "unit": "px"
             },
             "perCell": {
@@ -51495,16 +51512,7 @@
               "label": "Dots per cell",
               "note": "Most dots one cell can hold. Tone is the count: density times this, the remainder kept by the hash."
             },
-            "jitter": {
-              "value": 1,
-              "range": [
-                0,
-                1
-              ],
-              "step": 0.01,
-              "label": "Scatter",
-              "note": "Where a dot may land in its cell. 1 is anywhere (the stochastic screen); 0 stacks every dot on the cell center, an ordered screen."
-            },
+            "jitter": 1,
             "round": 2.5,
             "seed": {
               "value": 11,
@@ -51695,16 +51703,16 @@
           "entry": "pl-151-the-strand-in-coarse-dots",
           "code": "PL-151",
           "params": {
-            "dot": {
-              "value": 1,
+            "dpx": {
+              "value": 4,
               "range": [
-                0.7,
-                1.4
+                3,
+                6
               ],
-              "step": 0.01,
+              "step": 1,
               "label": "Dot size",
-              "note": "Size of every printed dot, as a multiple of the deck’s own. Above 1.4 the dots fuse into solid.",
-              "unit": "×"
+              "note": "Each dot is a square of whole device pixels; smaller thins the band into a fine stipple, larger closes it toward solid. The deck prints at 4.",
+              "unit": "px"
             },
             "cell": {
               "value": 1,
@@ -51767,16 +51775,16 @@
           "entry": "pl-152-a-ring-of-strokes",
           "code": "PL-152",
           "params": {
-            "dot": {
-              "value": 1,
+            "dpx": {
+              "value": 6,
               "range": [
-                0.7,
-                1.4
+                4,
+                7
               ],
-              "step": 0.01,
+              "step": 1,
               "label": "Dot size",
-              "note": "Size of every printed dot, as a multiple of the deck’s own. Above 1.4 the dots fuse into solid.",
-              "unit": "×"
+              "note": "Each dot is a square of whole device pixels; every stroke of the ring is a line of these squares. The deck prints at 6.",
+              "unit": "px"
             },
             "cell": {
               "value": 1,
@@ -51807,8 +51815,8 @@
                 1.6
               ],
               "step": 0.01,
-              "label": "Strands",
-              "note": "How many strands (ring) or arcs are counted, as a multiple of the deck’s own.",
+              "label": "Rays",
+              "note": "How many rays the ring counts, as a multiple of the deck’s 126; each ray is one exchange, its length its count.",
               "unit": "×"
             },
             "seed": {
@@ -51828,16 +51836,16 @@
           "entry": "pl-153-arcs-over-a-baseline",
           "code": "PL-153",
           "params": {
-            "dot": {
-              "value": 1,
+            "dpx": {
+              "value": 4,
               "range": [
-                0.7,
-                1.4
+                3,
+                6
               ],
-              "step": 0.01,
+              "step": 1,
               "label": "Dot size",
-              "note": "Size of every printed dot, as a multiple of the deck’s own. Above 1.4 the dots fuse into solid.",
-              "unit": "×"
+              "note": "Each dot is a square of whole device pixels; each arc is a dotted line of these squares. The deck prints at 4.",
+              "unit": "px"
             },
             "cell": {
               "value": 1,
@@ -51868,8 +51876,8 @@
                 1.6
               ],
               "step": 0.01,
-              "label": "Strands",
-              "note": "How many strands (ring) or arcs are counted, as a multiple of the deck’s own.",
+              "label": "Arcs",
+              "note": "How many arcs rise over the baseline, as a multiple of the deck’s 28; each arc spans one exchange.",
               "unit": "×"
             },
             "seed": {
@@ -51889,16 +51897,16 @@
           "entry": "pl-154-counts-printed-as-dots",
           "code": "PL-154",
           "params": {
-            "dot": {
-              "value": 1,
+            "dpx": {
+              "value": 4,
               "range": [
-                0.85,
-                1.4
+                3,
+                6
               ],
-              "step": 0.01,
+              "step": 1,
               "label": "Dot size",
-              "note": "Size of every printed dot, as a multiple of the deck’s own. Below 0.85 the bars fade, above 1.4 they fill solid.",
-              "unit": "×"
+              "note": "Each dot is a square of whole device pixels; smaller lightens each bar, larger fills it toward solid. The deck prints at 4.",
+              "unit": "px"
             },
             "cell": {
               "value": 1,
@@ -51922,15 +51930,15 @@
               "note": "How many dots each cell prints for the count it carries, as a multiple of the deck’s own.",
               "unit": "×"
             },
-            "type": {
+            "gap": {
               "value": 1,
               "range": [
-                0.85,
-                1.2
+                0.4,
+                2.6
               ],
               "step": 0.01,
-              "label": "Type size",
-              "note": "Size of the percentages and the axis labels, as a multiple of the deck’s own.",
+              "label": "Bar gap",
+              "note": "Space between the six bars, as a multiple of the deck’s own (3.5% of the chart’s width); the bars narrow as it opens.",
               "unit": "×"
             },
             "seed": {
