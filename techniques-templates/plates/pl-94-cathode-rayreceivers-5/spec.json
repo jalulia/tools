@@ -8,18 +8,18 @@
       "id": "source",
       "label": "Source",
       "swatches": [
-        "#f5f3ed",
-        "#1a1a1d",
-        "#000000"
+        "#FBFBF7",
+        "#1A1A1D",
+        "#B3B3B1"
       ]
     },
     {
       "id": "cobalt",
       "label": "Cobalt",
       "swatches": [
-        "#f8f8f6",
-        "#0e1122",
-        "#0e1122"
+        "#F3F5F8",
+        "#1B3BD4",
+        "#AEBAEC"
       ]
     },
     {
@@ -27,8 +27,8 @@
       "label": "Ink",
       "swatches": [
         "#101014",
-        "#e7e7e4",
-        "#ffffff"
+        "#E7E7E4",
+        "#555557"
       ]
     }
   ],
@@ -55,116 +55,252 @@
   "techniques": [
     {
       "id": "product-line",
-      "short": "DRW",
+      "short": "PLDR",
       "name": "Product line drawing",
       "layer": 1,
       "pass": 1,
       "atoms": [
         "line",
-        "box",
-        "arrow",
-        "label"
+        "elevation",
+        "parametric"
+      ],
+      "params": {
+        "sheet": "Cathode-Ray Receivers, TD·2608 rev B",
+        "set": "05 CUBE · 1986",
+        "main_px": 1.5,
+        "fine_px": 1,
+        "ink": "#1A1A1D",
+        "sheet_paper": "#F5F3ED",
+        "plate_paper": "#FBFBF7"
+      },
+      "implementation": "A television drawn front-on in one ink at two weights, main 1.5 px and fine 1 px, with no fill; secondary lines are the same ink at lower opacity. Drawn here by code from the sheet’s own numbers."
+    },
+    {
+      "id": "crt-cabinet",
+      "short": "CAB",
+      "name": "Cabinet",
+      "layer": 2,
+      "pass": 2,
+      "atoms": [
+        "rounded-rectangle",
+        "proportion"
+      ],
+      "params": {
+        "corner": {
+          "value": 4.24,
+          "range": [
+            0,
+            14
+          ],
+          "step": 0.1,
+          "label": "Corner radius",
+          "note": "How round the cabinet’s corners are, as a share of its height; the mask and tube follow.",
+          "unit": "%",
+          "scale": "linear"
+        },
+        "prop": {
+          "value": 1.03,
+          "range": [
+            0.95,
+            1.3
+          ],
+          "step": 0.01,
+          "label": "Proportion",
+          "note": "Cabinet width as a multiple of its height; the tube takes the change, the controls stay put.",
+          "unit": "× height"
+        },
+        "handle": {
+          "value": 0,
+          "options": [
+            {
+              "v": 0,
+              "label": "Off"
+            },
+            {
+              "v": 1,
+              "label": "On"
+            }
+          ],
+          "label": "Handle",
+          "note": "The carrying loop over the top of the cabinet."
+        },
+        "antenna": {
+          "value": 1,
+          "options": [
+            {
+              "v": 0,
+              "label": "None"
+            },
+            {
+              "v": 1,
+              "label": "Whip"
+            },
+            {
+              "v": 2,
+              "label": "Rabbit ears"
+            }
+          ],
+          "label": "Antenna",
+          "note": "What stands on top: nothing, the sheet’s telescopic whip, or rabbit ears."
+        }
+      },
+      "limits": "corner radius stops at 14% of the height: the set is fully rounded there, and further the rounding would crowd the controls. Proportion stays where the set still reads as a cube: the tube runs between a tall 0.6 : 1 and about square, and the column keeps its width.",
+      "implementation": "A rounded rectangle with quadratic corners in the main line; rails, handle, feet and antenna are laid from its edges, so they keep their places as the corner and the width change. The mask and tube corners follow the cabinet’s, concentric, once it outgrows them; the sheet’s is 14 px on a 330 px cabinet (4.2%). Proportion: the tube and its mask take the change in width; the column of controls keeps its width at the right. Antenna: Whip is the sheet’s, a telescopic mast solid where it leaves the set with a phantom extension above; Rabbit ears are two masts from a dome; None leaves the top bare."
+    },
+    {
+      "id": "crt-screen",
+      "short": "TUBE",
+      "name": "Tube",
+      "layer": 2,
+      "pass": 3,
+      "atoms": [
+        "pillow",
+        "bow",
+        "hairline"
+      ],
+      "params": {
+        "bulge": {
+          "value": 4.5,
+          "range": [
+            0,
+            12
+          ],
+          "step": 0.1,
+          "label": "Bulge",
+          "note": "How far each edge of the tube face bows out; 0 is a flat rectangle.",
+          "unit": "%"
+        },
+        "glass": {
+          "value": 3,
+          "range": [
+            0,
+            5
+          ],
+          "step": 1,
+          "label": "Glass lines",
+          "note": "Faint lines at the top and bottom of the face; 0 is clear glass.",
+          "unit": "per edge"
+        },
+        "picture": {
+          "value": 0,
+          "options": [
+            {
+              "v": 0,
+              "label": "Off"
+            },
+            {
+              "v": 1,
+              "label": "Raster"
+            }
+          ],
+          "label": "Picture",
+          "note": "Raster lights the set with dashed scan lines, as the sheet’s PVM does."
+        }
+      },
+      "limits": "bulge stops at 12%: past it the face reads as a cushion, not a tube. Glass lines stop at 5 per edge, before they reach the middle of the face.",
+      "implementation": "The mask is a rounded rectangle in fine line; the face is four quadratic edges bowed out by the bulge, with rounded corners. Glass lines sit at the sheet’s fractions of the half-height (0.965, 0.885, 0.77), extended by the same power law (1 − 0.035·k^1.715), each inset to clear the corner."
+    },
+    {
+      "id": "crt-controls",
+      "short": "CTRL",
+      "name": "Controls",
+      "layer": 2,
+      "pass": 4,
+      "atoms": [
+        "dial",
+        "knob",
+        "button",
+        "grille"
+      ],
+      "params": {
+        "fit": {
+          "value": 1,
+          "options": [
+            {
+              "v": 0,
+              "label": "Knobs"
+            },
+            {
+              "v": 1,
+              "label": "Dials"
+            },
+            {
+              "v": 2,
+              "label": "Buttons"
+            }
+          ],
+          "label": "Control set",
+          "note": "A tuner Dial over two knobs (the sheet’s), three Knobs, or five push Buttons."
+        },
+        "grille": {
+          "value": 0,
+          "options": [
+            {
+              "v": 0,
+              "label": "Slots"
+            },
+            {
+              "v": 1,
+              "label": "Dots"
+            },
+            {
+              "v": 2,
+              "label": "None"
+            }
+          ],
+          "label": "Grille",
+          "note": "The speaker grille under the controls: Slots (the sheet’s), a Dots checkerboard, or None."
+        }
+      },
+      "limits": "each control set uses the sheet’s own parts and spacing, laid in the same place, so none is scaled to squeeze in.",
+      "implementation": "Control sets, in the column beside the tube. Dials: a big tuner dial over two knobs, the sheet’s. Knobs: three pointer knobs. Buttons: five push buttons, as on the POCKET. Dials are a main-line circle with a cap at 0.32 of the radius and twelve ticks; knobs a fine circle with a pointer from 0.35 of the radius; buttons small rounded rectangles; grilles fine slots at 0.6 or a checkerboard of dots."
+    },
+    {
+      "id": "crt-line",
+      "short": "LINE",
+      "name": "Line",
+      "layer": 3,
+      "pass": 5,
+      "atoms": [
+        "line-weight",
+        "hand"
       ],
       "params": {
         "weight": {
           "value": 1,
           "range": [
-            0.4,
-            3
+            0.7,
+            2
           ],
           "step": 0.05,
           "label": "Line weight",
-          "note": "Every stroke of the figure at this multiple of its measured width.",
-          "unit": "×"
+          "note": "Fine-line width in the sheet’s px (main lines are 1.5 times it); 1 is the sheet’s hairline.",
+          "unit": "px"
         },
         "hand": {
           "value": 0,
           "range": [
             0,
-            4
+            1
           ],
           "step": 0.05,
           "label": "Hand",
-          "note": "How far a line may wander from its ruled path, in figure units. 0 is ruled; higher redraws every line, box and pole by hand.",
-          "unit": "u"
-        },
-        "corner": {
-          "value": 0,
-          "range": [
-            0,
-            24
-          ],
-          "step": 0.5,
-          "label": "Box corners",
-          "note": "Corner radius of every box, in figure units. A box drawn round in the source keeps at least its own.",
-          "unit": "u"
-        },
-        "arrow": {
-          "value": 1,
-          "range": [
-            0.4,
-            3
-          ],
-          "step": 0.05,
-          "label": "Arrowheads",
-          "note": "Size of the arrowheads on directed lines, as a multiple of a head 7 strokes long.",
-          "unit": "×"
-        },
-        "hatch": {
-          "value": 0,
-          "range": [
-            0,
-            1
-          ],
-          "step": 0.01,
-          "label": "Tone as hatching",
-          "note": "0 fills every toned shape solid; 1 lays the same tone as hatching; between, both."
-        },
-        "gap": {
-          "value": 4,
-          "range": [
-            1.5,
-            14
-          ],
-          "step": 0.25,
-          "label": "Hatch spacing",
-          "note": "Distance between hatch lines, in figure units.",
-          "unit": "u"
-        },
-        "angle": {
-          "value": 45,
-          "range": [
-            0,
-            180
-          ],
-          "step": 1,
-          "label": "Hatch angle",
-          "note": "Direction of the hatch lines.",
-          "unit": "°"
-        },
-        "type": {
-          "value": 1,
-          "range": [
-            0.7,
-            1.6
-          ],
-          "step": 0.01,
-          "label": "Type size",
-          "note": "Every label at this multiple of its measured size, from its own anchor.",
-          "unit": "×"
+          "note": "How far the drawing wanders from ruled, in the sheet’s px; 0 is ruled.",
+          "unit": "px"
         },
         "seed": {
-          "value": 7,
+          "value": 1,
           "range": [
             1,
             99
           ],
           "step": 1,
-          "label": "Seed",
-          "note": "Re-rolls the hand: where each line wanders."
+          "label": "Deal",
+          "note": "Turns the knobs to new settings and deals a new hand; No. 1 is the sheet’s."
         }
       },
-      "implementation": "A television drawn in a single gray line, front and three-quarter, with no fill. The geometry is measured from the source figure; the engine redraws it with weight, hand, corners, arrowheads, hatched tone and type size as dials."
+      "limits": "line weight stops at 0.7 px, where the fine lines would fade into the ground, and at 2 px, where knobs start to fill in. Hand stops at 1 px, past which the set reads as warped rather than drawn.",
+      "implementation": "Every part is flattened to a polyline, then stroked in one ink with round caps and joins. Hand moves every point of the drawing through one smooth seeded field (two octaves, 70 and 22 px), so lines bow as if drawn freehand while joints stay joined and small circles stay round."
     },
     {
       "id": "ink-palette",
@@ -218,11 +354,11 @@
     }
   ],
   "pass_order": [
-    "ground · plate",
-    "tone · fills, solid or hatched",
-    "line · every stroke, ruled or by hand",
-    "arrowheads",
-    "labels"
+    "ground · the plate’s paper",
+    "cabinet · outline, rails, handle, feet, antenna",
+    "tube · mask, bowed face, glass lines, raster",
+    "controls · dials, knobs, buttons, grille",
+    "line · one ink at two weights, ruled or by hand"
   ],
   "notes": [
     "Sources: Local file · Cathode-Ray Receivers"

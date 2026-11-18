@@ -176,7 +176,9 @@ window.CRT_FIG = {
     R = Math.max(0, Math.min(R, H / 2, W / 2));
     var parts = [], marks = {}, dots = [];
     var add = function (pts, closed, w, op, dash, tag) { parts.push({ p: pts, c: closed, w: w, op: op == null ? 1 : op, d: dash || null, tag: tag || '' }); };
-    var rng = window.ART.rng(((Q['crt-line'].seed | 0) * 7919) ^ 0x5bd1);
+    /* ART.rng, or the same generator when the build evaluates study.js without the shell */
+    var mk = (window.ART && window.ART.rng) || function (seed) { var s = seed | 0; return function () { s = s + 0x6D2B79F5 | 0; var t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; };
+    var rng = mk(((Q['crt-line'].seed | 0) * 7919) ^ 0x5bd1);
     var deal = (Q['crt-line'].seed | 0) === 1 ? null : function () { return -150 + rng() * 190; };
     var nextAng = function (a) { return deal ? deal() : a; };   /* knob pointers: the sheet's settings at deal No. 1 */
     /* cabinet */
@@ -270,7 +272,11 @@ window.CRT_FIG = {
   }
 
   /* ---------- the stage: cut to the default set with an even margin, the set scaled to fill it ---------- */
-  var DEF = window.ART.params(S.spec, {}), L0 = layout(DEF), MARGIN = 0.09;
+  /* the defaults at load: ART.params when the page runs; the same walk when the build evaluates study.js without the shell */
+  var defaults = function (spec) { if (window.ART && window.ART.params) return window.ART.params(spec, {}); var out = {};
+    (spec.techniques || []).forEach(function (t) { var walk = function (v) { if (v && typeof v === 'object' && !Array.isArray(v)) { if ('value' in v) return v.value; var o = {}; Object.keys(v).forEach(function (k) { o[k] = walk(v[k]); }); return o; } return v; }; out[t.id] = walk(t.params || {}); });
+    return out; };
+  var DEF = defaults(S.spec), L0 = layout(DEF), MARGIN = 0.09;
   var BW = L0.bb[2] - L0.bb[0], BH = L0.bb[3] - L0.bb[1], M = MARGIN * Math.max(BW, BH) / (1 - 2 * MARGIN), SW = BW + 2 * M, SH = BH + 2 * M;
   S.ref = { w: 1000, h: Math.round(1000 * SH / SW) };
   if (S.panels && S.panels[0]) { S.panels[0].x = 0; S.panels[0].y = 0; S.panels[0].w = 1000; S.panels[0].h = S.ref.h; }
