@@ -119,7 +119,8 @@
               try { el.scrollIntoView({ block: 'center' }); } catch (e) {}
               if (FIG.real) return setTimeout(function () { res({ w: w, el: el }); }, FIG.settle || 1500);
               var T = Q.moment != null ? Q.moment : (FIG.t0 || 2), steps = Math.round(T * 30) + 2, i = 0;
-              (function run() { for (var j = 0; j < 30 && i < steps; j++, i++) w.__step(1 / 30); if (i < steps) setTimeout(run, 0); else res({ w: w, el: el }); })();
+              /* settle: real time for the page's own data to arrive before its clock runs */
+              setTimeout(function run() { for (var j = 0; j < 30 && i < steps; j++, i++) w.__step(1 / 30); if (i < steps) setTimeout(run, 0); else res({ w: w, el: el }); }, FIG.settle || 0);
             } else if (++tries < 80) setTimeout(wait, 100); else rej(new Error('figure not found: ' + FIG.sel));
           })();
         };
@@ -234,10 +235,54 @@
     return Promise.all(out.map(function (L) { return L.n.tagName.toLowerCase() === 'svg' ? svgImage(w, L.n).then(function (im) { L.img = im; return L; }) : Promise.resolve((L.img = L.n, L)); }));
   }
   var lastKey = '', live = null;
+  /* A figure built of page elements (cards, type, borders, gradients, its own small canvases) is copied as the page lays it
+     out: the subtree is cloned with every element's computed style written onto it, its canvases and images turned into
+     data, its web fonts carried inside, and the whole drawn as one picture (SVG foreignObject). Type size and line weight
+     act on the computed styles; colors pass through the ink map. */
+  function toData(w, src) { return fetch(new URL(src, w.document.baseURI).href).then(function (r) { return r.ok ? r.blob() : null; }).then(function (b) { return b ? new Promise(function (res) { var fr = new FileReader(); fr.onload = function () { res(fr.result); }; fr.onerror = function () { res(null); }; fr.readAsDataURL(b); }) : null; }).catch(function () { return null; }); }
+  var TOK = 0;
+  function domImage(w, el) {
+    var Q = w.__P || {}, MAP = w.__MAP || {}, ty = Q.type == null ? 1 : Q.type, wt = Q.weight == null ? 1 : Q.weight, r = el.getBoundingClientRect();
+    var A = [el].concat([].slice.call(el.querySelectorAll('*'))), c = el.cloneNode(true), B = [c].concat([].slice.call(c.querySelectorAll('*'))), jobs = [], fams = {}, txt = el.textContent || '';
+    var px = function (v, k) { return v.replace(/([\d.]+)px/g, function (m, n) { return (+n * k) + 'px'; }); };
+    var SKIP = /^(transition|animation|will-change|cursor|pointer-events|user-select|-webkit-user|caret|scroll|overscroll|touch-action|content-visibility|contain)/;
+    function styleOf(n, pseudo, urls) {
+      var cs = w.getComputedStyle(n, pseudo), out = [];
+      for (var i = 0; i < cs.length; i++) { var k = cs[i]; if (SKIP.test(k)) continue; var v = cs.getPropertyValue(k); if (!v) continue;
+        if (k === 'font-size' || k === 'line-height' || k === 'letter-spacing') { if (ty !== 1 && /px/.test(v)) v = px(v, ty); }
+        else if (/^border(-(top|right|bottom|left))?-width$|^outline-width$|^stroke-width$/.test(k)) { if (wt !== 1 && /px/.test(v)) v = px(v, wt); }
+        if (/color|^fill$|^stroke$|background-image|box-shadow|text-shadow|^border/.test(k) && /rgba?\(/.test(v)) v = v.replace(/rgba?\([^)]*\)/g, function (m) { return mapCol(m, MAP); });
+        if (/url\(/.test(v) && !/url\(["']?(data:|#)/.test(v)) { var m = /url\(["']?([^"')]+)["']?\)/.exec(v); if (m && urls) { var tok = '__lcu' + (TOK++) + '__'; urls.push(toData(w, m[1]).then(function (v0, m0, t0) { return function (d) { return [t0, d ? v0.replace(m0, 'url("' + d + '")') : 'none']; }; }(v, m[0], tok))); v = tok; } else if (m) v = 'none'; }
+        out.push(k + ':' + v); }
+      return out;
+    }
+    A.forEach(function (n, i) {
+      var o = B[i]; if (!o || o.nodeType !== 1) return; var tag = n.tagName.toLowerCase(), pend = [], st = styleOf(n, null, pend);
+      w.getComputedStyle(n).fontFamily.split(',').forEach(function (f) { fams[f.replace(/["']/g, '').trim().toLowerCase()] = 1; });
+      if (i === 0) st = st.filter(function (d) { return !/^(margin|position|left|top|right|bottom|inset|transform|translate|rotate|scale|float):/.test(d); }).concat(['margin:0', 'position:relative', 'left:0', 'top:0']);
+      o.setAttribute('style', st.join(';')); o.removeAttribute('class');
+      if (pend.length) jobs.push(Promise.all(pend).then(function (kv) { var css = o.getAttribute('style'); kv.forEach(function (p) { css = css.split(p[0]).join(p[1]); }); o.setAttribute('style', css); }));
+      if (tag === 'canvas') { var im = w.document.createElementNS('http://www.w3.org/1999/xhtml', 'img'); try { im.setAttribute('src', n.toDataURL()); } catch (e) {} im.setAttribute('style', o.getAttribute('style')); o.parentNode.replaceChild(im, o); }
+      else if (tag === 'img' && n.getAttribute('src') && !/^data:/.test(n.getAttribute('src'))) jobs.push(toData(w, n.currentSrc || n.src).then(function (d) { if (d) o.setAttribute('src', d); else o.removeAttribute('src'); }));
+      else if (tag === 'input' || tag === 'textarea') o.setAttribute('value', n.value);
+      ['::before', '::after'].forEach(function (ps) { var pc = w.getComputedStyle(n, ps), ct = pc.content; if (!ct || ct === 'none' || ct === 'normal') return; var sp = w.document.createElementNS('http://www.w3.org/1999/xhtml', 'span'); sp.setAttribute('style', styleOf(n, ps).filter(function (d) { return !/^content:/.test(d); }).join(';')); var m = /^"([\s\S]*)"$/.exec(ct); if (m) sp.textContent = m[1]; if (ps === '::before') o.insertBefore(sp, o.firstChild); else o.appendChild(sp); });
+    });
+    var faces = faceRules(w).then(function (rules) {
+      var cps = []; for (var i = 0; i < txt.length; i++) { var cc = txt.codePointAt(i); if (cc > 32 && cps.indexOf(cc) < 0) cps.push(cc); }
+      var pick = rules.filter(function (b) { var f = /font-family:\s*['"]?([^;'"]+)/.exec(b), ur = /unicode-range:\s*([^;}]+)/.exec(b); return f && fams[f[1].trim().toLowerCase()] && inRange(ur && ur[1], cps); });
+      return Promise.all(pick.map(function (b) { var m = /url\((['"]?)([^'")]+)\1\)/.exec(b); if (!m) return ''; return asData(m[2]).then(function (d) { return d ? b.replace(/src:[^;}]+/, 'src: url("' + d + '")') : ''; }); }));
+    });
+    return Promise.all([faces, Promise.all(jobs)]).then(function (res) {
+      var Wd = Math.ceil(r.width), Hd = Math.ceil(r.height), K = 2;
+      var xml = new XMLSerializer().serializeToString(c);
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + Wd * K + '" height="' + Hd * K + '" viewBox="0 0 ' + Wd + ' ' + Hd + '"><style>' + res[0].join('\n') + '</style><foreignObject x="0" y="0" width="' + Wd + '" height="' + Hd + '"><div xmlns="http://www.w3.org/1999/xhtml" style="width:' + Wd + 'px;height:' + Hd + 'px;overflow:hidden">' + xml + '</div></foreignObject></svg>';
+      return new Promise(function (res2) { var im = new Image(); im.onload = function () { res2(im); }; im.onerror = function () { console.error('[lift-canvas] dom figure did not draw'); res2(null); }; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); });
+    });
+  }
   /* one figure as the page shows it: the element itself, or (composite) every layer over it; (overlay) its HTML type */
   function prep(E, el) {
     var fig = { el: el };
-    return (FIG.composite ? Promise.resolve(null) : el.tagName.toLowerCase() === 'svg' ? svgImage(E.w, el) : Promise.resolve(el)).then(function (img) {
+    return (FIG.composite ? Promise.resolve(null) : FIG.dom ? domImage(E.w, el) : el.tagName.toLowerCase() === 'svg' ? svgImage(E.w, el) : Promise.resolve(el)).then(function (img) {
       fig.img = img; if (!FIG.composite) return;
       return layersOf(E.w, el).then(function (Ls) { fig.layers = Ls; var rb = E.w.getComputedStyle(el.closest('.plate') || el.parentElement || el).backgroundColor; fig.bg = /^rgba\(.*,\s*0\)$|transparent/.test(rb) ? null : rb; });
     }).then(function () {

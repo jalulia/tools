@@ -36,16 +36,16 @@ window.STUDY={
         params:{ stops:10, order:'navy 0 · blue 0.10 · cyan 0.22 · white 0.34 · yellow 0.44 · orange 0.54 · pink 0.64 · magenta 0.76 · blue 0.88 · navy 1', measured_ref:'(56,110,178) (110,199,209) (242,241,242) (235,233,94) (214,153,172) (170,108,160)' },
         implementation:'ART.lut(stops) gives 256 colors; the shading pass indexes it with the environment coordinate t, so color is a function of normal direction only.' },
       { id:'normal-shading', short:'NRML', name:'Normal-buffer shading of a swept slab', layer:2, pass:1, atoms:['mesh','normal','zbuffer','sweep','twist'],
-        params:{ section:'rounded rectangle 300 × 160 u, fillet 30 u, 56 points', sweep:'L path (−200,1040) → (330,470) → (1200,780), bend radius 230 u, 260 steps', twist_rad:'−0.22 + 0.55·s', tilt_rad:'0.5 about the screen x axis through y = 740 u', env:'t = clamp(0.5 + 0.40·r.y + 0.16·r.x), r = reflect(view, n)', wobble:'n += 0.20–0.22·sin/cos fields of period 260–420 u plus 0.06–0.08 at 90–120 u, then normalize' },
+        params:{ section:'rounded rectangle 300 × 160 u, fillet 30 u, 56 points', sweep:'L path (−200,1040) → (330,470) → (1200,780), bend radius 230 u, 260 steps', twist_rad:'−0.22 + 0.55·s', tilt_rad:'0.5 about the screen x axis through y = 740 u', twist:{ value:0.55, range:[-1,1.5], step:0.01, unit:'rad', note:'twist along the sweep (added to −0.22)' }, tilt:{ value:0.5, range:[0,1.2], step:0.01, unit:'rad', note:'tilt of the slab toward you' }, wobble_scale:{ value:1, range:[0,3], step:0.05, note:'multiplies the normal wobble' }, env:'t = clamp(0.5 + 0.40·r.y + 0.16·r.x), r = reflect(view, n)', wobble:'n += 0.20–0.22·sin/cos fields of period 260–420 u plus 0.06–0.08 at 90–120 u, then normalize' },
         implementation:'Vertices P = C(s) + a·e1 + b·e2 with the section basis rotated by the twist; normals from the cross product of finite differences; triangles rasterized with edge functions into normal + depth buffers; per pixel the reflected ray of the orthographic view picks LUT[t].' },
       { id:'edge-highlight', short:'EDGE', name:'Edge band and specular lobe', layer:2, pass:3, atoms:['rim','specular','band'],
-        params:{ band_center_nz:0.34, band_width:0.06, band_color:'#F0DC6A', band_mix:1, light:'(−0.35,−0.60,0.72)', spec_power:60, spec_mix:0.85 },
+        params:{ band_center_nz:{ value:0.34, range:[0.1,0.7], step:0.01 }, band_width:{ value:0.06, range:[0.01,0.2], step:0.005 }, band_color:'#F0DC6A', band_mix:1, light:'(−0.35,−0.60,0.72)', spec_power:{ value:60, range:[5,200], step:1 }, spec_mix:0.85 },
         implementation:'band = exp(−((|n.z|−0.34)/0.06)²) mixes the edge color in; spec = (n·h)^60 mixes white in; both read from the same normal buffer as the LUT.' },
       { id:'film-grain', short:'GRN', name:'Per-channel film grain', layer:4, pass:5, atoms:['grain','noise','film'],
-        params:{ multiplicative:'ART.grain amp 0.10, pitch 1 px, mono:false, seed 303', additive:'σ 14/255 per channel on the ground, hashed per pixel, seed 304', soften_px:0.7 },
+        params:{ multiplicative:'ART.grain amp 0.10, pitch 1 px, mono:false, seed 303', amp:{ value:0.07, range:[0,0.3], step:0.005, note:'multiplicative grain on the chrome and type' }, additive:'σ 14/255 per channel on the ground, hashed per pixel, seed 304', sigma:{ value:14, range:[0,40], step:1, note:'additive grain on the black ground, /255' }, soften_px:0.7 },
         implementation:'ART.grain multiplies RGB by 1 + 0.10·n per channel (visible on the chrome and the type); a second pass adds signed noise of 14/255 so the black ground carries grain too, as film does.' },
       { id:'channel-split-type', short:'SPLT', name:'RGB channel-split lettering', layer:3, pass:4, atoms:['type','channel','offset','additive'],
-        params:{ offsets_u:{ R:[-2.5,0], G:[0,0], B:[2.5,0] }, small_offsets_u:{ R:[-4,0], G:[0,0.8], B:[4,0] }, blend:'lighter on a transparent layer', type_color:'#F3F3F3 (the three channels sum to white)' },
+        params:{ split:{ value:1, range:[0,5], step:0.05, note:'multiplies every channel offset; 0 sets clean white type' }, offsets_u:{ R:[-2.5,0], G:[0,0], B:[2.5,0] }, small_offsets_u:{ R:[-4,0], G:[0,0.8], B:[4,0] }, blend:'lighter on a transparent layer', type_color:'#F3F3F3 (the three channels sum to white)' },
         implementation:'Each word is filled three times in #FF0000, #00FF00, #0000FF with globalCompositeOperation lighter on a transparent layer, offset per channel; where all three overlap the sum is white, at the edges one or two channels show; the layer is drawn under the chrome.' },
       { id:'display-headline', short:'TYPE', name:'Condensed display headline', layer:3, pass:4, atoms:['type','headline','condensed'],
         params:{ font:'Archivo 900, font-stretch 62 %', cap_u:142, line_pitch_u:175, left_u:38, top_u:28, figure:'right-aligned on line 2, 962 u', small:'Archivo 700, 30 u, 2 columns × 3 rows at x 660 / 840, baselines 372 / 402 / 432' },
@@ -54,8 +54,8 @@ window.STUDY={
     pass_order:['ground · flat fill','headline + small words · channel split on a transparent layer, source-over','slab · rasterize section sweep into normal + depth buffers','shade · LUT[t(reflect)] + edge band + specular, soften 0.7 px, source-over','grain · multiplicative per channel, then additive on the ground'],
     notes:['Measured on ref.png: ground (13,13,13) σ 14–16 per channel; headline white 243 σ 3; cap height 233 px = 142 u; line pitch 288 px = 175 u; small-word fringe 3–5 px at 1644 px.','Seeds 303 (grain), 304 (ground noise). Orthographic view, no perspective.']
   },
-  render(canvas,w,h,dpr,V){
-    const A=window.ART; const W=canvas.width,H=canvas.height; const S=W/1000; const x=canvas.getContext('2d');
+  render(canvas,w,h,dpr,V,done,O){
+    const A=window.ART; const Q=A.params(window.STUDY.spec,O), NS_=Q['normal-shading'], EH=Q['edge-highlight'], FG=Q['film-grain'], SP=Q['channel-split-type'].split; const W=canvas.width,H=canvas.height; const S=W/1000; const x=canvas.getContext('2d');
     const T0=performance.now();
     /* ---------- ground ---------- */
     x.setTransform(1,0,0,1,0,0); x.fillStyle=V.ground; x.fillRect(0,0,W,H);
@@ -66,7 +66,7 @@ window.STUDY={
       tx.save(); tx.setTransform(S,0,0,S,0,0); tx.textBaseline='alphabetic'; tx.textAlign=align||'left'; setFont(tx,weight,size,stretch);
       tx.globalCompositeOperation='lighter';
       const ch=[['#FF0000',off.R],['#00FF00',off.G],['#0000FF',off.B]];
-      for(const [c,o] of ch){ tx.fillStyle=c; tx.fillText(str,px+o[0],py+o[1]); }
+      for(const [c,o] of ch){ tx.fillStyle=c; tx.fillText(str,px+o[0]*SP,py+o[1]*SP); }
       tx.restore(); };
     const big={R:[-2.5,0],G:[0,0],B:[2.5,0]}, small={R:[-4,0],G:[0,0.8],B:[4,0]};
     tx.setTransform(S,0,0,S,0,0); let size=205; for(let i=0;i<40;i++){ setFont(tx,900,size,'extra-condensed'); if(tx.measureText('CHROMATIC').width<=924)break; size*=0.96; }
@@ -93,8 +93,8 @@ window.STUDY={
       const L1=l1-d, L2=l2-d, tot=L1+arc+L2;
       return s=>{ let q=s*tot; if(q<L1)return [PA[0]+u1[0]*q,PA[1]+u1[1]*q]; q-=L1; if(q<arc){ const a=a0+sg*q/RB; return [O[0]+RB*Math.cos(a),O[1]+RB*Math.sin(a)]; } q-=arc; return [K2[0]+u2[0]*q,K2[1]+u2[1]*q]; }; })();
     const bez=s=>{ const p=path(s); return [p[0]*S,p[1]*S]; };
-    const twist=s=>-0.22+0.55*s;
-    const TILT=0.5, cT=Math.cos(TILT), sT=Math.sin(TILT), yc=740*S;
+    const twist=s=>-0.22+NS_.twist*s;
+    const TILT=NS_.tilt, cT=Math.cos(TILT), sT=Math.sin(TILT), yc=740*S;
     const surf=(s,j)=>{ const c=bez(s), c2=bez(Math.min(1,s+0.001)); let tx_=c2[0]-c[0], ty_=c2[1]-c[1]; const tl_=Math.hypot(tx_,ty_)||1; tx_/=tl_; ty_/=tl_;
       const U=[-ty_,tx_,0], th=twist(s), ct=Math.cos(th), st=Math.sin(th); const e1=[ct*U[0],ct*U[1],st], e2=[-st*U[0],-st*U[1],ct]; const q=sec[((j%M)+M)%M];
       const px=c[0]+q[0]*e1[0]+q[1]*e2[0], py=c[1]+q[0]*e1[1]+q[1]*e2[1], pz=q[0]*e1[2]+q[1]*e2[2]; const nx=q[2]*e1[0]+q[3]*e2[0], ny=q[2]*e1[1]+q[3]*e2[1], nz=q[2]*e1[2]+q[3]*e2[2];
@@ -122,20 +122,21 @@ window.STUDY={
     const cl=A.off(W,H); const cx=cl.getContext('2d'); const cid=cx.createImageData(W,H); const cd=cid.data;
     for(let y=0;y<H;y++)for(let X=0;X<W;X++){ const k=y*W+X; if(!MK[k])continue;
       let nx=NB[k*3],ny=NB[k*3+1],nz=NB[k*3+2];
-      nx+=0.20*Math.sin(X/(300*S)+y/(420*S))+0.06*Math.sin(X/(90*S)); ny+=0.22*Math.cos(X/(360*S)-y/(260*S))+0.08*Math.sin(y/(120*S)); const nl=Math.hypot(nx,ny,nz)||1; nx/=nl; ny/=nl; nz/=nl;
+      nx+=NS_.wobble_scale*(0.20*Math.sin(X/(300*S)+y/(420*S))+0.06*Math.sin(X/(90*S))); ny+=NS_.wobble_scale*(0.22*Math.cos(X/(360*S)-y/(260*S))+0.08*Math.sin(y/(120*S))); const nl=Math.hypot(nx,ny,nz)||1; nx/=nl; ny/=nl; nz/=nl;
       const rx=2*nz*nx, ry=2*nz*ny; const t=A.clamp(0.5+0.40*ry+0.16*rx,0,1); let c=L[(t*255)|0];
-      const anz=Math.abs(nz); const bd=Math.exp(-Math.pow((anz-0.34)/0.06,2)); if(bd>0.01)c=A.mix(c,edge,bd);
-      const nh=Math.max(0,nx*Hx+ny*Hy+nz*Hz); const sp=Math.pow(nh,60); if(sp>0.01)c=A.mix(c,spc,0.85*sp);
+      const anz=Math.abs(nz); const bd=Math.exp(-Math.pow((anz-EH.band_center_nz)/EH.band_width,2)); if(bd>0.01)c=A.mix(c,edge,bd);
+      const nh=Math.max(0,nx*Hx+ny*Hy+nz*Hz); const sp=Math.pow(nh,EH.spec_power); if(sp>0.01)c=A.mix(c,spc,0.85*sp);
       const i=k*4; cd[i]=c[0]; cd[i+1]=c[1]; cd[i+2]=c[2]; cd[i+3]=255; }
     cx.putImageData(cid,0,0);
     const soft=A.blur(cl,0.7*dpr); x.drawImage(soft,0,0);
     /* ---------- grain ---------- */
-    A.grain(x,{amp:0.07,pitch:1,mono:false,seed:303});
+    A.grain(x,{amp:FG.amp,pitch:1,mono:false,seed:303});
     { const id=x.getImageData(0,0,W,H); const d=id.data; const seed=304;
       const hash=(x_,y_,k)=>{ let n=(x_*374761393+y_*668265263+k*1274126177+seed*2246822519)|0; n=(n^(n>>>13))*1274126177|0; n=n^(n>>>16); return ((n>>>0)/4294967296)*2-1; };
-      const sig=14*1.73;
+      const sig=FG.sigma*1.73;
       for(let y=0;y<H;y++)for(let X=0;X<W;X++){ const i=(y*W+X)*4; const m=hash(X,y,0); d[i]=d[i]+sig*(0.7*m+0.3*hash(X,y,1)); d[i+1]=d[i+1]+sig*(0.7*m+0.3*hash(X,y,2)); d[i+2]=d[i+2]+sig*(0.7*m+0.3*hash(X,y,3)); }
       x.putImageData(id,0,0); }
     if(window.__TS03_DEBUG)console.log('ts-03 render ms',(performance.now()-T0)|0);
+    if(done)done();
   }
 };

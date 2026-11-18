@@ -8,7 +8,7 @@
 <link rel="icon" href="data:,">
 <title>TS-11 · Worn black box · Techniques &amp; Templates</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
-<link rel="stylesheet" href="../../_shared/shell.css?v=202611172358">
+<link rel="stylesheet" href="../../_shared/shell.css?v=202611180224">
 <link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
@@ -87,6 +87,15 @@
         &quot;silhouette&quot;
       ],
       &quot;params&quot;: {
+        &quot;grain&quot;: {
+          &quot;value&quot;: 0.05,
+          &quot;range&quot;: [
+            0,
+            0.2
+          ],
+          &quot;step&quot;: 0.005,
+          &quot;note&quot;: &quot;mono grain over the sheet&quot;
+        },
         &quot;front&quot;: {
           &quot;spine_u&quot;: [
             222,
@@ -190,6 +199,24 @@
         &quot;noise&quot;
       ],
       &quot;params&quot;: {
+        &quot;wear&quot;: {
+          &quot;value&quot;: 1,
+          &quot;range&quot;: [
+            0,
+            3
+          ],
+          &quot;step&quot;: 0.05,
+          &quot;note&quot;: &quot;how worn every edge, corner and fold is&quot;
+        },
+        &quot;reach&quot;: {
+          &quot;value&quot;: 1,
+          &quot;range&quot;: [
+            0.3,
+            3
+          ],
+          &quot;step&quot;: 0.05,
+          &quot;note&quot;: &quot;how far the scuff runs in from an edge&quot;
+        },
         &quot;edge&quot;: &quot;1.1·exp(−d/2.5 u) + 0.1·exp(−d/10 u)&quot;,
         &quot;haze&quot;: &quot;continuous tint 0.14·exp(−d/3 u) + 0.12·exp(−dc/14 u) + 0.06·exp(−df/2.5 u) under the dots&quot;,
         &quot;corner&quot;: &quot;0.6·exp(−dc/16 u)&quot;,
@@ -197,7 +224,7 @@
         &quot;gate&quot;: &quot;0.15 + 0.85·smoothstep(0.3, 0.8, 0.5+0.5·fbm(p/18 u))&quot;,
         &quot;clump&quot;: &quot;2.2·smoothstep(0.3, 0.72, 0.5+0.5·fbm(x/2.4 u, y/1.6 u))&quot;,
         &quot;dust&quot;: &quot;0.006·exp(−d/10 u), speckle 0.0003&quot;,
-        &quot;value&quot;: &quot;t = 0.2 + 0.75·r^1.6 toward scuff color&quot;,
+        &quot;tone&quot;: &quot;t = 0.2 + 0.75·r^1.6 toward scuff color&quot;,
         &quot;seed&quot;: 1101
       },
       &quot;implementation&quot;: &quot;A chamfer distance transform gives d to the silhouette; dc is the distance to the nearest convex corner or fold junction and df to the spine crease or flap fold. A pixel turns lighter where a uniform random is below the summed density times the patch gate, so the wear reads as clustered abrasion rather than a line.&quot;
@@ -214,8 +241,23 @@
       ],
       &quot;params&quot;: {
         &quot;count_per_panel&quot;: 3,
-        &quot;width_u&quot;: 0.9,
-        &quot;alpha&quot;: 0.11,
+        &quot;width_u&quot;: {
+          &quot;value&quot;: 0.9,
+          &quot;range&quot;: [
+            0.2,
+            3
+          ],
+          &quot;step&quot;: 0.05,
+          &quot;unit&quot;: &quot;u&quot;
+        },
+        &quot;alpha&quot;: {
+          &quot;value&quot;: 0.11,
+          &quot;range&quot;: [
+            0,
+            0.45
+          ],
+          &quot;step&quot;: 0.01
+        },
         &quot;blur_px&quot;: 1.5,
         &quot;path&quot;: &quot;quadratic, 2 control points, length 120–220 u&quot;
       },
@@ -238,7 +280,15 @@
             55,
             37
           ],
-          &quot;rotate_deg&quot;: -6,
+          &quot;rotate_deg&quot;: {
+            &quot;value&quot;: -6,
+            &quot;range&quot;: [
+              -30,
+              30
+            ],
+            &quot;step&quot;: 1,
+            &quot;unit&quot;: &quot;°&quot;
+          },
           &quot;corner_u&quot;: 3,
           &quot;tear&quot;: &quot;jittered polygon, 2 u amplitude on the bottom and right edges&quot;,
           &quot;shadow&quot;: &quot;rgba(0,0,0,0.5) offset 2 u blur 3 u&quot;
@@ -283,7 +333,14 @@
           88,
           39
         ],
-        &quot;bars&quot;: 46,
+        &quot;bars&quot;: {
+          &quot;value&quot;: 46,
+          &quot;range&quot;: [
+            10,
+            90
+          ],
+          &quot;step&quot;: 1
+        },
         &quot;bar_w_u&quot;: &quot;0.7–2.4 random (seed 1103)&quot;,
         &quot;gap_u&quot;: &quot;0.6–1.6&quot;,
         &quot;digits&quot;: &quot;JetBrains Mono 3.2 u under the bars&quot;,
@@ -392,11 +449,11 @@
   <div class="sh"><span>Spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
   <pre id="specpre">{{SPEC}}</pre>
 </aside>
-<script src="../../_shared/entries.js?v=202611172358"></script>
-<script src="../../_shared/vocab.js?v=202611172358"></script>
-<script src="../../_shared/art.js?v=202611172358"></script>
+<script src="../../_shared/entries.js?v=202611180224"></script>
+<script src="../../_shared/vocab.js?v=202611180224"></script>
+<script src="../../_shared/art.js?v=202611180224"></script>
 <script src="ref.js"></script>
 <script src="study.js"></script>
-<script src="../../_shared/shell.js?v=202611172358"></script>
+<script src="../../_shared/shell.js?v=202611180224"></script>
 </body>
 </html>

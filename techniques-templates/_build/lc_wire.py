@@ -96,6 +96,110 @@ FAM['counted-marks']={'dials':['dot','cell','den','seed'],
     ['r=Math.max(1,1.5*u);\n   for(let k=0;k<(post?40:28);k++){','r=Math.max(1,1.5*u*%s);\n   for(let k=0;k<Math.round((post?40:28)*%s);k++){'%(_P('dot'),_P('count'))],
     ['const N=Math.ceil(rx*1.6*Math.PI/2.4);','const N=Math.ceil(rx*1.6*Math.PI/(2.4*%s));'%_P('cell')],
     ['if(h2(k,s,seed+5)<.35&&k)continue;','if(h2(k,s,seed+5)<1-.65*%s&&k)continue;'%_P('den')]]}
+
+FAM['garden']={'auto':True,'settle':2500,
+  'patches':[["fetch(RAW+PATH+'?t='+Date.now(),{cache:'no-store'})","fetch('/tools/techniques-templates/plates/pl-130-the-garden-read-as-a-sheet/garden-2026-09-06.json',{cache:'no-store'})"],
+             ["fetch(RAW+'encyclopedia/manifest.js?t='+Date.now(),{cache:'no-store'})","Promise.reject(new Error('snapshot'))"],
+             ['const img=e?`<img src="${ROOT}encyclopedia/content/','const img=false?`<img src="${ROOT}encyclopedia/content/']]}
+
+FAM['exhibition']={'dials':[],'real':True,'settle':3500,
+  'per':{'PL-13':['tilt','strands','breath','dot'],'PL-16':['vtilt','strands','breath','dot','zoom']},
+  'extra':{'tilt':_x(72,0,90,1,'Tilt','Angle of the right-hand view, held still: 0 is seen from above, 90 from the side. The page sweeps it over time.','°'),
+    'vtilt':_x(0,0,80,1,'View tilt','Tilt of the upper view off straight down (the side view below stays side-on).','°'),
+    'strands':_x(1,0.1,2,0.01,'Strands','How many strands the record holds, as a multiple of the page’s own.','×'),
+    'breath':_x(7,3,9,0.1,'Breath','How much the lightness swells along the record (the page’s breath, 7 on this figure).'),
+    'dot':_x(1,0.4,2.5,0.01,'Dot size','Size of every strand mark, as a multiple of the page’s own.','×'),
+    'zoom':_x(1,0.6,1.6,0.01,'Zoom','Scale of the upper view, as a multiple of the page’s 1.12.','×')},
+  'patches':[["const nodes = R.makeRecord(168, seedsFrom(DEFAULT_LINES));","const nodes = R.makeRecord(Math.max(8, Math.round(168 * %s)), seedsFrom(DEFAULT_LINES));"%_P('strands')],
+    ["const tilt = 90 * (ph * ph * (3 - 2 * ph));","const tilt = (window.__P || {}).tilt != null ? window.__P.tilt : 90 * (ph * ph * (3 - 2 * ph));"],
+    ["drawRecord(x, W * .32, H, nodes, { tilt: 0, breath: 7, layer: 'glow', dot: 1.5 });","drawRecord(x, W * .32, H, nodes, { tilt: 0, breath: %s, layer: 'glow', dot: 1.5 * %s });"%(_P('breath',7),_P('dot'))],
+    ["drawRecord(x, W * .68, H, nodes, { tilt, breath: 7, layer: 'path', dot: 1.8, recall: tilt > 70 });","drawRecord(x, W * .68, H, nodes, { tilt, breath: %s, layer: 'path', dot: 1.8 * %s, recall: tilt > 70 });"%(_P('breath',7),_P('dot'))],
+    ["const n2 = R.makeRecord(210, seedsFrom(DEFAULT_LINES));","const n2 = R.makeRecord(Math.max(8, Math.round(210 * %s)), seedsFrom(DEFAULT_LINES));"%_P('strands')],
+    ["drawRecord(x, W, 440, n2, { tilt: 0, breath: 7, layer: 'glow', dot: 1.9, zoom: 1.12 });","drawRecord(x, W, 440, n2, { tilt: %s, breath: %s, layer: 'glow', dot: 1.9 * %s, zoom: 1.12 * %s });"%(_P('vtilt',0),_P('breath',7),_P('dot'),_P('zoom'))],
+    ["drawSide(x, 0, 500, W, 250, n2, { breath: 7, layer: 'path', dot: 1.7, recall: true });","drawSide(x, 0, 500, W, 250, n2, { breath: %s, layer: 'path', dot: 1.7 * %s, recall: true });"%(_P('breath',7),_P('dot'))]]}
+
+SF=FAM['soft-focus']
+SF['extra'].update({
+  'lobes':_x(5,3,9,1,'Lobes','How many lobes the blossom has.'),
+  'lobek':_x(0.62,0.3,0.9,0.01,'Lobe fullness','Radius of each lobe against the flower’s (the page’s 0.62). Low reads as separate petals, high as one round bloom.'),
+  'turn':_x(0,-1.6,1.6,0.01,'Turn','Turn of the blossom, added to the page’s own.','rad'),
+  'stamens':_x(22,0,48,1,'Stamens','How many stamens rise from the core.'),
+  'reach':_x(1,0.4,1.6,0.01,'Stamen reach','Length of the stamens, as a multiple of the page’s 44 px.','×'),
+  'frost':_x(1,0,2.5,0.01,'Frost','How white the glass is (its 28% white tint), as a multiple.','×'),
+  'panel':_x(1,0.4,1.15,0.01,'Panel width','Width of the frosted panel, as a multiple of the page’s 270 px.','×'),
+  'fruit':_x(1,0.5,1.5,0.01,'Fruit size','Size of every citrus slice behind the glass.','×'),
+  'segs':_x(9,4,16,1,'Segments','Segments in each citrus slice.'),
+  'spark':_x(1,0,2.5,0.01,'Sparkle size','Size of the four-point sparkles on the glass. 0 removes them.','×')})
+SF['patches']=SF['patches']+[
+  ['(x,rng)=>{lobes(x,150,140,86,5,-Math.PI/2);x.fillStyle="#f8493a";x.fill();stamens(x,150,140,22,10,44,"#f7d35c",rng,2.6,1.2)}',
+   '(x,rng)=>{lobes(x,150,140,86,%s,-Math.PI/2+%s,%s);x.fillStyle="#f8493a";x.fill();stamens(x,150,140,%s,10,44*%s,"#f7d35c",rng,2.6,1.2)}'%(_P('lobes',5),_P('turn',0),_P('lobek',.62),_P('stamens',22),_P('reach'))],
+  ['[[120,150,58],[210,190,50],[170,110,44],[262,132,40]].forEach(([cx,cy,r],i)=>citrus(sx,cx,cy,r,["#f3f5a2","#cfe06a"],"#9dbf3a","#f7fbe0",9,i*.4));',
+   '[[120,150,58],[210,190,50],[170,110,44],[262,132,40]].forEach(([cx,cy,r],i)=>citrus(sx,cx,cy,r*%s,["#f3f5a2","#cfe06a"],"#9dbf3a","#f7fbe0",%s,i*.4));'%(_P('fruit'),_P('segs',9))],
+  ['glass(x,src,W,H,70,80,270,180,{blur:14});\n    [[120,150,7],[230,120,5],[300,200,9],[180,220,4]].forEach(([a,b,r])=>sparkle(x,a,b,r));',
+   'glass(x,src,W,H,70,80,270*%s,180,{blur:14,tint:"rgba(255,255,255,"+Math.min(1,.28*%s)+")"});\n    [[120,150,7],[230,120,5],[300,200,9],[180,220,4]].forEach(([a,b,r])=>{if(%s>0)sparkle(x,a,b,r*%s)});'%(_P('panel'),_P('frost'),_P('spark'),_P('spark'))]]
+SF['per']={'PL-114':['lobes','lobek','turn','stamens','reach','seed'],'PL-115':['blur','grain','seed','ink'],'PL-116':['blur','grain','seed','ink'],
+  'PL-117':['blur','frost','panel','fruit','segs','spark']}
+
+
+SF['extra'].update({
+  'bloom':_x(1,0.4,1.8,0.01,'Bloom size','Size of the two blurred blooms behind the type.','×'),
+  'glow':_x(1,0.2,1.4,0.01,'Bloom strength','Opacity of the blooms, as a multiple of the page’s own.','×'),
+  'drift':_x(0,-160,40,1,'Bloom position','Moves the blooms left (negative) or right across the sheet.','px'),
+  'bokeh':_x(1,0,2.5,0.01,'Bokeh size','Size of the out-of-focus discs. 0 removes them.','×'),
+  'streak':_x(1,0,2.4,0.01,'Streak length','Length of the lens-flare streak.','×'),
+  'crystal':_x(1,0.3,2.5,0.01,'Crystal size','Size of the small frost crystal.','×'),
+  'slices':_x(10,4,16,1,'Segments','Segments in each citrus round and wedge.')})
+SF['patches']=SF['patches']+[
+  ['blob(x,270,140,60,"#ff8b7c",26,.7);blob(x,300,220,40,"#ffe27a",22,.6);','blob(x,270+%s,140,60*%s,"#ff8b7c",26,Math.min(1,.7*%s));blob(x,300+%s,220,40*%s,"#ffe27a",22,Math.min(1,.6*%s));'%(_P('drift',0),_P('bloom'),_P('glow'),_P('drift',0),_P('bloom'),_P('glow'))],
+  ['[[60,70,4],[120,60,7],[210,110,11],[300,70,6],[90,190,9],[250,200,5]].forEach(([a,b,r])=>sparkle(x,a,b,r));','[[60,70,4],[120,60,7],[210,110,11],[300,70,6],[90,190,9],[250,200,5]].forEach(([a,b,r])=>{if(%s>0)sparkle(x,a,b,r*%s)});'%(_P('spark'),_P('spark'))],
+  ['[[300,170,18],[330,210,10]].forEach(([a,b,r])=>{blob(x,a,b,r,"rgba(255,255,255,.55)",6);blob(x,a,b,r*.35,"#fff",1)});','[[300,170,18],[330,210,10]].forEach(([a,b,r])=>{r*=%s;if(r>0){blob(x,a,b,r,"rgba(255,255,255,.55)",6);blob(x,a,b,r*.35,"#fff",1)}});'%_P('bokeh')],
+  ['frostStar(x,180,180,20,RNG(9),"rgba(255,255,255,.9)");','frostStar(x,180,180,20*%s,RNG(9+((window.__P||{}).seed|0)),"rgba(255,255,255,.9)");'%_P('crystal')],
+  ['x.moveTo(30,230);x.lineTo(160,226);','x.moveTo(30,230);x.lineTo(30+130*%s,230-4*%s);'%(_P('streak'),_P('streak'))],
+  ['glass(x,src,W,H,222,250,358,550,{blur:8,tint:"rgba(255,255,255,.18)"});','glass(x,src,W,H,222,250,358,550,{blur:8,tint:"rgba(255,255,255,"+Math.min(1,.18*%s)+")"});'%_P('frost')],
+  ['[[300,420,8],[420,470,5],[470,560,11],[330,640,6],[510,700,7],[380,540,4],[260,720,9]].forEach(([a,b,r])=>sparkle(x,a,b,r));','[[300,420,8],[420,470,5],[470,560,11],[330,640,6],[510,700,7],[380,540,4],[260,720,9]].forEach(([a,b,r])=>{if(%s>0)sparkle(x,a,b,r*%s)});'%(_P('spark'),_P('spark'))],
+  ['.forEach(([cx,cy,r,rot])=>citrus(sx,cx,cy,r,OR,RIM,PITH,10,rot));','.forEach(([cx,cy,r,rot])=>citrus(sx,cx,cy,r,OR,RIM,PITH,%s,rot));'%_P('slices',10)]]
+SF['per'].update({'PL-118':['blur','bloom','glow','drift','type'],'PL-119':['blur','spark','bokeh','streak','crystal','type']})
+
+SF['extra'].update({
+  'specks':_x(1,0,3,0.01,'Dust points','How many of the page’s 700 dust points are scattered on the black, as a multiple.','×'),
+  'fogtop':_x(0,-0.3,0.25,0.01,'Fog line','Moves where the fog starts: negative raises it over more of the heads.'),
+  'lotus':_x(1,0.6,1.3,0.01,'Lotus size','Size of the main lotus, as a multiple of the page’s own.','×'),
+  'pads':_x(1,0,2,0.01,'Pad haze','Opacity of the out-of-focus pads and washes behind the lotus. 0 leaves the sheet white.','×')})
+SF['patches']=SF['patches']+[
+  ['x.fillStyle="#040406";x.fillRect(0,0,B,BH);dust(x,B,BH,700,rng);','x.fillStyle="#040406";x.fillRect(0,0,B,BH);dust(x,B,BH,Math.round(700*%s),rng);'%_P('specks')],
+  ['fog(x,B,BH,rng,{top:.66,ribbons:[[.28,.66],[.76,.72]]});','fog(x,B,BH,rng,{top:.66+%s,ribbons:[[.28,.66+%s],[.76,.72+%s]]});'%(_P('fogtop',0),_P('fogtop',0),_P('fogtop',0))],
+  ['lotusProfile(x,cx,cy,190,','lotusProfile(x,cx,cy,190*%s,'%_P('lotus')],
+  ['blob(x,140,640,150,GREEN,40,.55);blob(x,470,690,120,GREEN2,44,.42);blob(x,520,180,110,GREEN,46,.35);blob(x,110,150,80,PALE,40,.6);',
+   'blob(x,140,640,150,GREEN,40,Math.min(1,.55*%s));blob(x,470,690,120,GREEN2,44,Math.min(1,.42*%s));blob(x,520,180,110,GREEN,46,Math.min(1,.35*%s));blob(x,110,150,80,PALE,40,Math.min(1,.6*%s));'%((_P('pads'),)*4)]]
+SF['per'].update({'PL-120':['blur','grain','velvet','seed','lotus','pads','type'],'PL-121':['blur','grain','seed','specks','fogtop','type'],'PL-122':['blur','grain','frost','spark','slices','type']})
+FAM['a01-specs']={'dials':['weight','mark','tilt','spin','shown','pitch'],
+  'extra':{'tilt':_x(0,0,80,1,'View tilt','Tilt of the record off straight down the axis.','°'),
+    'spin':_x(0,0,3.14,0.01,'Spin','Turn of the record about its axis, added to its own.','rad'),
+    'shown':_x(1,0.05,1,0.01,'Crossings shown','Share of the record’s crossings drawn, from the first. 1 is the whole record.'),
+    'pitch':_x(1,0.6,2.5,0.01,'Dot pitch','Spacing of the dot field each lobe is printed in, as a multiple of the page’s own.','×')},
+  'patches':[["var rec=recOf(i),pr=cam(rec,0,0,1),T=lobes(rec,pr);T.sig='sp'+i+'_'+Math.round(w);drawTech(x,w,T,'dots',{frame:true});",
+    "var rec=recOf(i),UP=Math.max(2,Math.round(rec.N*%s)),pr=cam(rec,%s,%s,1,UP),T=lobes(rec,pr,UP);T.sig='sp'+i+'_'+Math.round(w)+'_'+UP;drawTech(x,w,T,'dots',{frame:true,pitch:Math.max(4.6,1850/w)*%s});"%(_P('shown'),_P('tilt',0),_P('spin',0),_P('pitch'))]]}
+
+FAM['worlds-dom']={'dials':['type','weight'],'dom':True,'real':True,'settle':1500,
+  'per':{'PL-41':['contour','grain','warp','type','weight'],'PL-42':['contour','grain','warp','type','weight'],'PL-47':['contour','grain','warp','type','weight'],
+         'PL-43':['layout','arr','path','type','weight'],'PL-46':['route','zoom','panx','type','weight']},
+  'extra':{'contour':_x(1,0,3,0.01,'Contour','How hard the gradient field snaps into contour bands, as a multiple of the page’s own. 0 is a smooth blend.','×'),
+    'grain':_x(1,0,4,0.01,'Grain','The per-pixel grain in the gradient field, as a multiple of the page’s own.','×'),
+    'warp':_x(1,0,3,0.01,'Warp','How far the noise folds the field back on itself, as a multiple of the page’s own.','×'),
+    'layout':_x(1,1,3,1,'Layout','The table’s own layouts: 1 working table (scatter), 2 aligned, 3 stacked.'),
+    'arr':_x(0,0,24,1,'Arrangement','Which arrangement of the scatter the table deals (its “Another arrangement”). 0 is the first.'),
+    'path':_x(0,0,1,1,'Reading path','The table’s reading-path overlay: 0 off, 1 on.'),
+    'route':_x(1,1,3,1,'Route','Which route the atlas traces: 1 A way in, 2 The room, 3 All crossings.'),
+    'zoom':_x(1,0.8,2.4,0.1,'Zoom','The atlas’s own zoom, 80–240%.','×'),
+    'panx':_x(0,-300,300,1,'Pan','Slides the atlas sideways under its frame.','px')},
+  'patches':[['u=m(.52+l*(1+2.7*Math.exp(-l*l/.012)))','u=m(.52+l*(1+2.7*%(ct)s*Math.exp(-l*l/.012)))'],['p=(h(n,t)-.5)*7,g=(t*220+n)*4','p=(h(n,t)-.5)*7*%(gr)s,g=(t*220+n)*4'],['l=_(r*2+s*1.6+e,o*2+c*1.6)','l=_(r*2+s*1.6*%(wp)s+e,o*2+c*1.6*%(wp)s)'],
+    ['s=.44+d*(1+2.5*Math.exp(-d*d/.012))','s=.44+d*(1+2.5*%(ct)s*Math.exp(-d*d/.012))'],['m=(ue(n,e,l)-.5)*9','m=(ue(n,e,l)-.5)*9*%(gr)s'],['s=(fe(r+1.65*a,i+1.65*o,l)-.5)*2.5','s=(fe(r+1.65*%(wp)s*a,i+1.65*%(wp)s*o,l)-.5)*2.5'],
+    ['c=.51+l*(1+1.7*Math.exp(-l*l/.012))','c=.51+l*(1+1.7*%(ct)s*Math.exp(-l*l/.012))'],['(Ve(i*4+21,a*3)-.5)*.22','(Ve(i*4+21,a*3)-.5)*.22*%(gr)s'],['i=e+n*.055,a=t+r*.075','i=e+n*.055*%(wp)s,a=t+r*.075*%(wp)s'],
+    ['[m,h]=(0,l.useState)(()=>Ze(e,`scatter`,!1))','[m,h]=(0,l.useState)(()=>Ze(e,%(lay)s,!1,%(arr)s))'],['s.current||h(Ze(e,`scatter`,re))','s.current||h(Ze(e,%(lay)s,re,%(arr)s))'],
+    ['[g,_]=(0,l.useState)(`scatter`)','[g,_]=(0,l.useState)(%(lay)s)'],['[D,O]=(0,l.useState)(!1),[k,te]=(0,l.useState)(0)','[D,O]=(0,l.useState)(!!((window.__P||{}).path)),[k,te]=(0,l.useState)(%(arr)s)'],
+    ['[s,c]=(0,l.useState)(0),[u,d]=(0,l.useState)(1),[p,m]=(0,l.useState)({x:0,y:0})','[s,c]=(0,l.useState)(Math.min(ne.length-1,Math.max(0,Math.round(((window.__P||{}).route||1))-1))),[u,d]=(0,l.useState)(%(zm)s),[p,m]=(0,l.useState)({x:%(px)s,y:0})']]}
+WD=FAM['worlds-dom']; D=dict(ct=_P('contour'),gr=_P('grain'),wp=_P('warp'),lay='(["scatter","aligned","stacked"][Math.round((window.__P||{}).layout||1)-1]||"scatter")',arr='((window.__P||{}).arr|0)',zm=_P('zoom'),px=_P('panx',0))
+WD['patches']=[[a,b%D] for a,b in WD['patches']]
 FAM['auto']={'auto':True}
 codes=sys.argv[1].split(','); fam=FAM.get(sys.argv[2],{}) if len(sys.argv)>2 else {}
 C=json.load(open('_build/plates.json')); by={p['code']:p for p in C['plates']}
@@ -109,7 +213,7 @@ for code in codes:
     if code in LI and LI[code].get('inks'): inks=LI[code]['inks']; ground=LI[code]['ground']
     dials=list(fam.get('per',{}).get(code, fam.get('dials',[])))
     al=own.get('al',0)+(off.get('al',0) if own.get('img',0) else 0)
-    if al>=3 and 'ink' not in dials and not fam.get('per'): dials.append('ink')
+    if al>=3 and 'ink' not in dials and code not in fam.get('per',{}): dials.append('ink')
     if fam.get('auto'):
         use=dict(own); 
         if own.get('img',0)>0 or not any(own.get(k,0) for k in ('lw','mark','al','font')):
@@ -121,7 +225,7 @@ for code in codes:
     o={'src':L['rt'],'sel':L['sel'],'w':L['w'],'h':L['h'],'crop':L.get('crop',[0,0,1,1]),'ground':ground,'dials':dials,'inks':inks,'t0':2}
     if L.get('slide',-1)>=0: o['slide']=L['slide']; o['sid']=L.get('sid','')
     if L.get('tab'): o['tab']=L['tab']
-    for k in ('real','settle'):
+    for k in ('real','settle','dom'):
         if fam.get(k): o[k]=fam[k]
     if fam.get('extra'): o['extra']=fam['extra']
     if fam.get('patches'): o['patches']=fam['patches']

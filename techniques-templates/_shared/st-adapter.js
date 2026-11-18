@@ -32,7 +32,7 @@ const list=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' and '+a[a.length-
 
 /* render: the shell calls (canvas,w,h,dpr,variant,finish,overrides); the study takes (canvas,w,h,dpr,finish) */
 const R=S.render;
-S.render=function(c,w,h,dpr,V,finish){ const r=R.call(S,c,w,h,dpr,finish); if(r!==false&&R.length<5)finish(); return false; };
+S.render=function(c,w,h,dpr,V,finish,O){ S._O=O||{}; const r=R.call(S,c,w,h,dpr,finish); if(r!==false&&R.length<5)finish(); return false; };
 
 const ui={ gen, on, fire, engine:L, params:[], actions:[], presets:[], view:[], keys:[], palettes:null, motion:null, interactive:null, engineFirst:gen==='B', pointer:gen!=='A' };
 
@@ -123,7 +123,9 @@ if(gen==='B'){
 /* ---------- A: still plates ---------- */
 if(gen==='A'){ if(!S.colorHint)S.colorHint='This plate prints the inks measured from its reference. They are fixed here; the spec lists every value.'; ui.pointer=false; }
 
-S.ui=ui;
+/* a still plate whose spec carries sliderable leaves uses the shell's own parameter rail (as a TS plate does): the render reads
+   window.ART.params(S.spec, S._O), so no study instrument is mapped */
+if(!(gen==='A'&&window.ART&&window.ART.paramLeaves&&window.ART.paramLeaves(S.spec||{}).length))S.ui=ui;
 
 /* ---------- C: the stage (fill, fine grain, full-resolution frames while moving) ----------
    fill: the plate takes the whole stage. "extend": the engine draws a wider (or taller) field at the measured scale;

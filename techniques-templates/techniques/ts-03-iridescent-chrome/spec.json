@@ -91,6 +91,35 @@
         "sweep": "L path (−200,1040) → (330,470) → (1200,780), bend radius 230 u, 260 steps",
         "twist_rad": "−0.22 + 0.55·s",
         "tilt_rad": "0.5 about the screen x axis through y = 740 u",
+        "twist": {
+          "value": 0.55,
+          "range": [
+            -1,
+            1.5
+          ],
+          "step": 0.01,
+          "unit": "rad",
+          "note": "twist along the sweep (added to −0.22)"
+        },
+        "tilt": {
+          "value": 0.5,
+          "range": [
+            0,
+            1.2
+          ],
+          "step": 0.01,
+          "unit": "rad",
+          "note": "tilt of the slab toward you"
+        },
+        "wobble_scale": {
+          "value": 1,
+          "range": [
+            0,
+            3
+          ],
+          "step": 0.05,
+          "note": "multiplies the normal wobble"
+        },
         "env": "t = clamp(0.5 + 0.40·r.y + 0.16·r.x), r = reflect(view, n)",
         "wobble": "n += 0.20–0.22·sin/cos fields of period 260–420 u plus 0.06–0.08 at 90–120 u, then normalize"
       },
@@ -108,12 +137,33 @@
         "band"
       ],
       "params": {
-        "band_center_nz": 0.34,
-        "band_width": 0.06,
+        "band_center_nz": {
+          "value": 0.34,
+          "range": [
+            0.1,
+            0.7
+          ],
+          "step": 0.01
+        },
+        "band_width": {
+          "value": 0.06,
+          "range": [
+            0.01,
+            0.2
+          ],
+          "step": 0.005
+        },
         "band_color": "#F0DC6A",
         "band_mix": 1,
         "light": "(−0.35,−0.60,0.72)",
-        "spec_power": 60,
+        "spec_power": {
+          "value": 60,
+          "range": [
+            5,
+            200
+          ],
+          "step": 1
+        },
         "spec_mix": 0.85
       },
       "implementation": "band = exp(−((|n.z|−0.34)/0.06)²) mixes the edge color in; spec = (n·h)^60 mixes white in; both read from the same normal buffer as the LUT."
@@ -131,7 +181,25 @@
       ],
       "params": {
         "multiplicative": "ART.grain amp 0.10, pitch 1 px, mono:false, seed 303",
+        "amp": {
+          "value": 0.07,
+          "range": [
+            0,
+            0.3
+          ],
+          "step": 0.005,
+          "note": "multiplicative grain on the chrome and type"
+        },
         "additive": "σ 14/255 per channel on the ground, hashed per pixel, seed 304",
+        "sigma": {
+          "value": 14,
+          "range": [
+            0,
+            40
+          ],
+          "step": 1,
+          "note": "additive grain on the black ground, /255"
+        },
         "soften_px": 0.7
       },
       "implementation": "ART.grain multiplies RGB by 1 + 0.10·n per channel (visible on the chrome and the type); a second pass adds signed noise of 14/255 so the black ground carries grain too, as film does."
@@ -149,6 +217,15 @@
         "additive"
       ],
       "params": {
+        "split": {
+          "value": 1,
+          "range": [
+            0,
+            5
+          ],
+          "step": 0.05,
+          "note": "multiplies every channel offset; 0 sets clean white type"
+        },
         "offsets_u": {
           "R": [
             -2.5,

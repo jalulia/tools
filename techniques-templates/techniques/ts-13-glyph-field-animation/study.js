@@ -39,10 +39,10 @@ window.STUDY={
     palette:{ ink:'#09090B', paper:'#FFFFFF', paper_2:'#FAFAFA', bone:'#F6F1E4', glyph:'#FFFFFF', laminar:'#10B981', ice:'#2B8EF5', on_ink:{ ice:'#7CC4FF', laminar:'#4FE3C1', heat:'#FF8A4C', void:'#FF6A8A', signal:'#FFD166', balanced:'#A8F080' } },
     techniques:[
       { id:'glyph-helix', short:'HELX', name:'Projected glyph helix', layer:0, pass:1, atoms:['particle','helix','perspective','depth-sort'],
-        params:{ count:150, turns:7, radius_u:'min(0.18 W, 0.24 H, 240)', height_u:'min(0.78 H, 820)', pinhole_u:800, strands:'2 · phase π by parity', rise:'t_i = i/150 + 0.018 · t (mod 1)', spin:'θ = 7π · t_i + 0.22 · t', project:'sc = P / (P − z); sx = cx + x · sc; sy = cy + y · sc', order:'sort by depth d = (z + R) / 2R, far first' },
+        params:{ count:{ value:150, range:[30,400], step:1, note:'glyphs on the helix' }, turns:{ value:7, range:[1,16], step:0.5 }, pinhole:{ value:800, range:[300,3000], step:10, unit:'u', note:'perspective distance; low is wide-angle' }, radius_u:'min(0.18 W, 0.24 H, 240)', height_u:'min(0.78 H, 820)', pinhole_u:800, strands:'2 · phase π by parity', rise:'t_i = i/150 + 0.018 · t (mod 1)', spin:'θ = 7π · t_i + 0.22 · t', project:'sc = P / (P − z); sx = cx + x · sc; sy = cy + y · sc', order:'sort by depth d = (z + R) / 2R, far first' },
         implementation:'150 particles climb a helix (0.018 of the height per second) while the helix turns (0.22 rad/s); each is projected through a pinhole at 800 u and drawn as text, far to near.' },
       { id:'depth-alpha', short:'DPTH', name:'Depth as alpha and size', layer:0, pass:1, atoms:['alpha-ramp','scale','depth'],
-        params:{ alpha:'0.04 + d^1.5 · 0.85', size_px:'round(10.5 · sc)', size_range:'≈ 9 – 13 px', font:'JetBrains Mono 400', no_color_depth:'glyphs stay white; only alpha and size carry depth' },
+        params:{ alpha:'0.04 + d^1.5 · 0.85', size:{ value:10.5, range:[6,20], step:0.5, unit:'px', note:'glyph size at mid depth' }, size_px:'round(10.5 · sc)', size_range:'≈ 9 – 13 px', font:'JetBrains Mono 400', no_color_depth:'glyphs stay white; only alpha and size carry depth' },
         implementation:'Nothing is shaded: depth is the alpha ramp and the projected font size, so far glyphs are ghosts and near glyphs are ink.' },
       { id:'semantic-label', short:'LABL', name:'Palette label with glow', layer:0, pass:1, atoms:['label','glow','palette'],
         params:{ every:18, offset:7, weight:500, sequence:['ICE','LAMINAR','HEAT','VOID','SIGNAL','BALANCED','Ø','PAPER'], colors:['#7CC4FF','#4FE3C1','#FF8A4C','#FF6A8A','#FFD166','#A8F080','#FF6A8A','#7CC4FF'], glow:'shadowColor = label color, shadowBlur = 6 · d', count_per_150:8 },
@@ -66,7 +66,7 @@ window.STUDY={
         params:{ count:52, radius_u:'min(0.3 W, 0.42 H)', ratio:0.4, spin:'a = 2π · i/52 + 0.3 · t', breath:'r = R · (1 + 0.1 · sin(0.6 · t + 0.3 · i))', alpha:'0.1 + 0.6 · (sin a + 1) / 2', glyph:'ø every 6th, else ·', center:'Ø at alpha .55', canvas_opacity:0.3, font:'JetBrains Mono 400 11 px', color:'#F6F1E4' },
         implementation:'52 glyphs on a flattened ellipse, each with its own breathing radius and an alpha that peaks at the bottom of the orbit; the canvas is held at 30 % under a pull quote.' },
       { id:'still-frame-runtime', short:'LOOP', name:'Frame runtime', layer:3, pass:4, atoms:['raf-loop','dpr','reduced-motion','clear'],
-        params:{ dpr:'min(devicePixelRatio, 2)', resize:'canvas.width = clientWidth · dpr; setTransform(dpr)', loop:'requestAnimationFrame, t = (now − t0) / 1000', clear:'clearRect every frame, no trails', reduced_motion:'draw once at t = now, no loop', text:'textAlign center, textBaseline middle', aria:'canvas aria-hidden' },
+        params:{ moment:{ value:5.9, range:[0,30], step:0.1, unit:'s', note:'the instant the still frame shows' }, dpr:'min(devicePixelRatio, 2)', resize:'canvas.width = clientWidth · dpr; setTransform(dpr)', loop:'requestAnimationFrame, t = (now − t0) / 1000', clear:'clearRect every frame, no trails', reduced_motion:'draw once at t = now, no loop', text:'textAlign center, textBaseline middle', aria:'canvas aria-hidden' },
         implementation:'One setupCanvas and one loop helper serve all four canvases; under prefers-reduced-motion the loop degenerates to a single still frame, so the page keeps its picture without motion.' }
     ],
     pass_order:['vocabulary · the glyph lists and label sequence','helix · project 150 glyphs, sort far to near, draw with depth alpha and glow','mask · elliptical radial mask over the helix canvas, title in the hole','grid · wave, pulse and orbit each from one sine','runtime · rAF loop, DPR cap, reduced-motion still frame'],
@@ -75,7 +75,7 @@ window.STUDY={
 
   /* ---------- shared ---------- */
   _vocab:['·','∙','•','▪','│','─','ø','×','→','▸','001','010','042','077','126','154','218','258','369','396','410','523','808'],
-  _pts(V){ const pts=[]; let cur=0; for(let i=0;i<150;i++){ const t=i/150; if(i%18===7){ const x=V.labels[cur++%V.labels.length]; pts.push({t,l:x[0],c:x[1],s:true,st:i%2}); } else pts.push({t,l:this._vocab[i%this._vocab.length],c:V.glyph,s:false,st:i%2}); } return pts; },
+  _pts(V){ const pts=[]; let cur=0; const NH=(((window.STUDY._Q||{})['glyph-helix']||{}).count??150); for(let i=0;i<NH;i++){ const t=i/NH; if(i%18===7){ const x=V.labels[cur++%V.labels.length]; pts.push({t,l:x[0],c:x[1],s:true,st:i%2}); } else pts.push({t,l:this._vocab[i%this._vocab.length],c:V.glyph,s:false,st:i%2}); } return pts; },
   _rgba(c,a){ return `rgba(${c[0]},${c[1]},${c[2]},${a})`; },
   _mono(size,wt){ return `${wt||400} ${size}px 'JetBrains Mono',ui-monospace,monospace`; },
   _track(x,size,em){ if('letterSpacing' in x)x.letterSpacing=(size*em).toFixed(2)+'px'; },
@@ -83,11 +83,11 @@ window.STUDY={
 
   /* helix into ctx x (already scaled to design units), panel w × h, time t, parallax tx,ty ∈ [−.5,.5]; u = device px per unit (for shadowBlur) */
   _helix(x,w,h,t,V,tx,ty,u){
-    const pts=this._pts(V); const cx=w/2,cy=h/2,R=Math.min(w*.18,h*.24,240),H=Math.min(h*.78,820),P=800,arr=[];
-    for(const p of pts){ const bt=((p.t+t*.018)%1), y=(bt-.5)*H; const th=bt*Math.PI*7+t*.22+(p.st?Math.PI:0);
+    const pts=this._pts(V); const cx=w/2,cy=h/2,R=Math.min(w*.18,h*.24,240),H=Math.min(h*.78,820),P=(((window.STUDY._Q||{})['glyph-helix']||{}).pinhole??800),TN=(((window.STUDY._Q||{})['glyph-helix']||{}).turns??7),GS=(((window.STUDY._Q||{})['depth-alpha']||{}).size??10.5),arr=[];
+    for(const p of pts){ const bt=((p.t+t*.018)%1), y=(bt-.5)*H; const th=bt*Math.PI*TN+t*.22+(p.st?Math.PI:0);
       const px=Math.cos(th)*R+tx*18, z=Math.sin(th)*R, sc=P/(P-z); arr.push({sx:cx+px*sc,sy:cy+(y+ty*14)*sc,sc,d:(z+R)/(2*R),l:p.l,c:p.c,s:p.s}); }
     arr.sort((a,b)=>a.d-b.d); x.textAlign='center'; x.textBaseline='middle';
-    for(const p of arr){ x.globalAlpha=.04+Math.pow(p.d,1.5)*.85; x.font=this._mono(Math.round(10.5*p.sc),p.s?500:400);
+    for(const p of arr){ x.globalAlpha=.04+Math.pow(p.d,1.5)*.85; x.font=this._mono(Math.round(GS*p.sc),p.s?500:400);
       if(p.s){ x.shadowColor=p.c; x.shadowBlur=6*p.d*u; x.fillStyle=p.c; } else { x.shadowBlur=0; x.fillStyle=V.glyph; }
       x.fillText(p.l,p.sx,p.sy); x.shadowBlur=0; }
     x.globalAlpha=1; },
@@ -99,13 +99,13 @@ window.STUDY={
     x.globalCompositeOperation='destination-in'; x.save(); x.translate(500,322); x.scale(440,248);
     const g=x.createRadialGradient(0,0,0,0,0,1); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(.4,'rgba(0,0,0,0)'); g.addColorStop(.8,'rgba(0,0,0,1)'); g.addColorStop(1,'rgba(0,0,0,1)');
     x.fillStyle=g; x.fillRect(-2,-2,4,4); x.restore(); x.globalCompositeOperation='source-over'; return c; },
-  _wave(x,t,V){ const ch='·∙─-━', w=500,h=150,cols=70,rows=8,cw=w/cols,rh=h/rows; x.font=this._mono(12); x.textAlign='center'; x.textBaseline='middle';
+  _wave(x,t,V){ const ch='·∙─-━', w=500,h=150,cols=(((window.STUDY._Q||{})['wave-grid']||{}).cols??70),rows=8,cw=w/cols,rh=h/rows; x.font=this._mono(12); x.textAlign='center'; x.textBaseline='middle';
     for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){ const ph=(c/cols)*Math.PI*4+t*.8+r*.15; const wv=Math.sin(ph)*.5+.5; const dist=Math.abs(r-rows/2+Math.sin(ph)*1.4); const it=Math.max(0,1-dist/2.2); if(it<.05)continue;
       x.fillStyle=this._rgba(V.wave,it*.55); x.fillText(ch[Math.floor(wv*(ch.length-1))],c*cw+cw/2,r*rh+rh/2); } },
   _pulse(x,t,V){ const ch=['·','∙','•','∙','·'], w=250,h=30; x.font=this._mono(11); x.textBaseline='middle'; x.textAlign='left';
     for(let i=0;i<18;i++){ const wv=Math.sin(t*1.6-i*.12); if(wv<=0)continue; x.fillStyle=this._rgba(V.pulse,wv*.5); x.fillText(ch[i%ch.length],14+i*(w-28)/18,h/2); }
     x.fillStyle=this._rgba(V.pulse,.5); x.fillText('▸',4,h/2); },
-  _orbit(x,t,V){ const w=1000,h=310,cx=w/2,cy=h/2,R=Math.min(w*.3,h*.42),N=52; x.font=this._mono(11); x.textAlign='center'; x.textBaseline='middle';
+  _orbit(x,t,V){ const w=1000,h=310,cx=w/2,cy=h/2,R=Math.min(w*.3,h*.42),N=(((window.STUDY._Q||{})['orbit-ring']||{}).count??52); x.font=this._mono(11); x.textAlign='center'; x.textBaseline='middle';
     for(let i=0;i<N;i++){ const a=(i/N)*Math.PI*2+t*.3; const rr=R*(1+Math.sin(t*.6+i*.3)*.1); const d=(Math.sin(a)+1)/2; x.fillStyle=this._rgba(V.orbit,.1+d*.6); x.fillText(i%6===0?'ø':'·',cx+Math.cos(a)*rr,cy+Math.sin(a)*rr*.4); }
     x.fillStyle=this._rgba(V.orbit,.55); x.fillText('Ø',cx,cy); },
 
@@ -146,9 +146,9 @@ window.STUDY={
     x.setTransform(u,0,0,u,0,940*u); x.globalAlpha=.3; this._orbit(x,t,V); x.globalAlpha=1;
     x.setTransform(1,0,0,1,0,0); x.drawImage(L.t,0,0); },
 
-  render(canvas,w,h,dpr,V,done){
-    const x=canvas.getContext('2d'); const u=canvas.width/1000;
-    const go=()=>{ this._frame(x,canvas,V,5.9,0,0); done&&done(); };
+  render(canvas,w,h,dpr,V,done,O){
+    const x=canvas.getContext('2d'); const u=canvas.width/1000; window.STUDY._Q=window.ART.params(window.STUDY.spec,O); const TM=window.STUDY._Q['still-frame-runtime'].moment;
+    const go=()=>{ this._frame(x,canvas,V,TM,0,0); done&&done(); };
     const need=["400 12px 'JetBrains Mono'","500 12px 'JetBrains Mono'","400 condensed 100px Archivo"];
     if(document.fonts&&document.fonts.check&&need.some(s=>!document.fonts.check(s))){ Promise.all(need.map(s=>document.fonts.load(s))).then(go,go); return false; }
     go(); return false;

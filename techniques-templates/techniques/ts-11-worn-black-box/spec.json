@@ -64,6 +64,15 @@
         "silhouette"
       ],
       "params": {
+        "grain": {
+          "value": 0.05,
+          "range": [
+            0,
+            0.2
+          ],
+          "step": 0.005,
+          "note": "mono grain over the sheet"
+        },
         "front": {
           "spine_u": [
             222,
@@ -167,6 +176,24 @@
         "noise"
       ],
       "params": {
+        "wear": {
+          "value": 1,
+          "range": [
+            0,
+            3
+          ],
+          "step": 0.05,
+          "note": "how worn every edge, corner and fold is"
+        },
+        "reach": {
+          "value": 1,
+          "range": [
+            0.3,
+            3
+          ],
+          "step": 0.05,
+          "note": "how far the scuff runs in from an edge"
+        },
         "edge": "1.1·exp(−d/2.5 u) + 0.1·exp(−d/10 u)",
         "haze": "continuous tint 0.14·exp(−d/3 u) + 0.12·exp(−dc/14 u) + 0.06·exp(−df/2.5 u) under the dots",
         "corner": "0.6·exp(−dc/16 u)",
@@ -174,7 +201,7 @@
         "gate": "0.15 + 0.85·smoothstep(0.3, 0.8, 0.5+0.5·fbm(p/18 u))",
         "clump": "2.2·smoothstep(0.3, 0.72, 0.5+0.5·fbm(x/2.4 u, y/1.6 u))",
         "dust": "0.006·exp(−d/10 u), speckle 0.0003",
-        "value": "t = 0.2 + 0.75·r^1.6 toward scuff color",
+        "tone": "t = 0.2 + 0.75·r^1.6 toward scuff color",
         "seed": 1101
       },
       "implementation": "A chamfer distance transform gives d to the silhouette; dc is the distance to the nearest convex corner or fold junction and df to the spine crease or flap fold. A pixel turns lighter where a uniform random is below the summed density times the patch gate, so the wear reads as clustered abrasion rather than a line."
@@ -191,8 +218,23 @@
       ],
       "params": {
         "count_per_panel": 3,
-        "width_u": 0.9,
-        "alpha": 0.11,
+        "width_u": {
+          "value": 0.9,
+          "range": [
+            0.2,
+            3
+          ],
+          "step": 0.05,
+          "unit": "u"
+        },
+        "alpha": {
+          "value": 0.11,
+          "range": [
+            0,
+            0.45
+          ],
+          "step": 0.01
+        },
         "blur_px": 1.5,
         "path": "quadratic, 2 control points, length 120–220 u"
       },
@@ -215,7 +257,15 @@
             55,
             37
           ],
-          "rotate_deg": -6,
+          "rotate_deg": {
+            "value": -6,
+            "range": [
+              -30,
+              30
+            ],
+            "step": 1,
+            "unit": "°"
+          },
           "corner_u": 3,
           "tear": "jittered polygon, 2 u amplitude on the bottom and right edges",
           "shadow": "rgba(0,0,0,0.5) offset 2 u blur 3 u"
@@ -260,7 +310,14 @@
           88,
           39
         ],
-        "bars": 46,
+        "bars": {
+          "value": 46,
+          "range": [
+            10,
+            90
+          ],
+          "step": 1
+        },
         "bar_w_u": "0.7–2.4 random (seed 1103)",
         "gap_u": "0.6–1.6",
         "digits": "JetBrains Mono 3.2 u under the bars",

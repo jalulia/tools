@@ -8,7 +8,7 @@
 <link rel="icon" href="data:,">
 <title>TS-03 · Iridescent chrome on black · Techniques &amp; Templates</title>
 <link rel="stylesheet" href="../../_shared/fonts.css">
-<link rel="stylesheet" href="../../_shared/shell.css?v=202611172358">
+<link rel="stylesheet" href="../../_shared/shell.css?v=202611180222">
 <link rel="alternate" type="application/json" href="spec.json" title="technique spec, machine-readable">
 </head>
 <body class="plate-page" data-root="../../">
@@ -114,6 +114,35 @@
         &quot;sweep&quot;: &quot;L path (−200,1040) → (330,470) → (1200,780), bend radius 230 u, 260 steps&quot;,
         &quot;twist_rad&quot;: &quot;−0.22 + 0.55·s&quot;,
         &quot;tilt_rad&quot;: &quot;0.5 about the screen x axis through y = 740 u&quot;,
+        &quot;twist&quot;: {
+          &quot;value&quot;: 0.55,
+          &quot;range&quot;: [
+            -1,
+            1.5
+          ],
+          &quot;step&quot;: 0.01,
+          &quot;unit&quot;: &quot;rad&quot;,
+          &quot;note&quot;: &quot;twist along the sweep (added to −0.22)&quot;
+        },
+        &quot;tilt&quot;: {
+          &quot;value&quot;: 0.5,
+          &quot;range&quot;: [
+            0,
+            1.2
+          ],
+          &quot;step&quot;: 0.01,
+          &quot;unit&quot;: &quot;rad&quot;,
+          &quot;note&quot;: &quot;tilt of the slab toward you&quot;
+        },
+        &quot;wobble_scale&quot;: {
+          &quot;value&quot;: 1,
+          &quot;range&quot;: [
+            0,
+            3
+          ],
+          &quot;step&quot;: 0.05,
+          &quot;note&quot;: &quot;multiplies the normal wobble&quot;
+        },
         &quot;env&quot;: &quot;t = clamp(0.5 + 0.40·r.y + 0.16·r.x), r = reflect(view, n)&quot;,
         &quot;wobble&quot;: &quot;n += 0.20–0.22·sin/cos fields of period 260–420 u plus 0.06–0.08 at 90–120 u, then normalize&quot;
       },
@@ -131,12 +160,33 @@
         &quot;band&quot;
       ],
       &quot;params&quot;: {
-        &quot;band_center_nz&quot;: 0.34,
-        &quot;band_width&quot;: 0.06,
+        &quot;band_center_nz&quot;: {
+          &quot;value&quot;: 0.34,
+          &quot;range&quot;: [
+            0.1,
+            0.7
+          ],
+          &quot;step&quot;: 0.01
+        },
+        &quot;band_width&quot;: {
+          &quot;value&quot;: 0.06,
+          &quot;range&quot;: [
+            0.01,
+            0.2
+          ],
+          &quot;step&quot;: 0.005
+        },
         &quot;band_color&quot;: &quot;#F0DC6A&quot;,
         &quot;band_mix&quot;: 1,
         &quot;light&quot;: &quot;(−0.35,−0.60,0.72)&quot;,
-        &quot;spec_power&quot;: 60,
+        &quot;spec_power&quot;: {
+          &quot;value&quot;: 60,
+          &quot;range&quot;: [
+            5,
+            200
+          ],
+          &quot;step&quot;: 1
+        },
         &quot;spec_mix&quot;: 0.85
       },
       &quot;implementation&quot;: &quot;band = exp(−((|n.z|−0.34)/0.06)²) mixes the edge color in; spec = (n·h)^60 mixes white in; both read from the same normal buffer as the LUT.&quot;
@@ -154,7 +204,25 @@
       ],
       &quot;params&quot;: {
         &quot;multiplicative&quot;: &quot;ART.grain amp 0.10, pitch 1 px, mono:false, seed 303&quot;,
+        &quot;amp&quot;: {
+          &quot;value&quot;: 0.07,
+          &quot;range&quot;: [
+            0,
+            0.3
+          ],
+          &quot;step&quot;: 0.005,
+          &quot;note&quot;: &quot;multiplicative grain on the chrome and type&quot;
+        },
         &quot;additive&quot;: &quot;σ 14/255 per channel on the ground, hashed per pixel, seed 304&quot;,
+        &quot;sigma&quot;: {
+          &quot;value&quot;: 14,
+          &quot;range&quot;: [
+            0,
+            40
+          ],
+          &quot;step&quot;: 1,
+          &quot;note&quot;: &quot;additive grain on the black ground, /255&quot;
+        },
         &quot;soften_px&quot;: 0.7
       },
       &quot;implementation&quot;: &quot;ART.grain multiplies RGB by 1 + 0.10·n per channel (visible on the chrome and the type); a second pass adds signed noise of 14/255 so the black ground carries grain too, as film does.&quot;
@@ -172,6 +240,15 @@
         &quot;additive&quot;
       ],
       &quot;params&quot;: {
+        &quot;split&quot;: {
+          &quot;value&quot;: 1,
+          &quot;range&quot;: [
+            0,
+            5
+          ],
+          &quot;step&quot;: 0.05,
+          &quot;note&quot;: &quot;multiplies every channel offset; 0 sets clean white type&quot;
+        },
         &quot;offsets_u&quot;: {
           &quot;R&quot;: [
             -2.5,
@@ -297,11 +374,11 @@
   <div class="sh"><span>Spec · <b id="specid"></b> · JSON</span><span><button id="speccopy" type="button">Copy</button><button id="specclose" type="button">Close ×</button></span></div>
   <pre id="specpre">{{SPEC}}</pre>
 </aside>
-<script src="../../_shared/entries.js?v=202611172358"></script>
-<script src="../../_shared/vocab.js?v=202611172358"></script>
-<script src="../../_shared/art.js?v=202611172358"></script>
+<script src="../../_shared/entries.js?v=202611180222"></script>
+<script src="../../_shared/vocab.js?v=202611180222"></script>
+<script src="../../_shared/art.js?v=202611180222"></script>
 <script src="ref.js"></script>
 <script src="study.js"></script>
-<script src="../../_shared/shell.js?v=202611172358"></script>
+<script src="../../_shared/shell.js?v=202611180222"></script>
 </body>
 </html>

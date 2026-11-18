@@ -42,19 +42,19 @@ window.STUDY={
         params:{ plates:['red','yellow','blue'], blend:'multiply on paper', knockout:'each fill clears the same shape on every other plate unless overprinting', green:'yellow + blue 85 % overprint' },
         implementation:'Every closed shape is filled flat on one plate canvas and cleared from the others (destination-out), so plates only overlap where an overprint is intended.' },
       { id:'black-keyline', short:'KEY', name:'Black keyline', layer:3, pass:3, atoms:['outline','stroke','waver'],
-        params:{ width_u:2.2, second_pass_u:1.4, jitter_u:0.6, join:'round', color:'#1C1A18' },
+        params:{ width_u:{ value:2.2, range:[0.6,6], step:0.1, unit:'u', note:'keyline weight on the black plate' }, second_pass_u:1.4, jitter_u:{ value:0.6, range:[0,3], step:0.05, unit:'u', note:'how far the second pass wanders off the first' }, join:'round', color:'#1C1A18' },
         implementation:'Each shape is stroked twice on the black plate: 2.2 u on the path, then 1.4 u on the path shifted by a seeded 0.6 u jitter, which thickens the line unevenly.' },
       { id:'hatch-shade', short:'HTCH', name:'Broken hatch shading', layer:3, pass:3, atoms:['hatch','dash','clip'],
-        params:{ angle_deg:45, pitch_u:6, width_u:1.3, dash_u:[12,4], dash_offset:'seeded per line' },
+        params:{ angle_deg:{ value:45, range:[0,90], step:1, unit:'°' }, pitch_u:{ value:6, range:[3,14], step:0.5, unit:'u' }, width_u:{ value:1.3, range:[0.4,3], step:0.05, unit:'u' }, dash_u:[12,4], dash_offset:'seeded per line' },
         implementation:'The shadow side of a shape is clipped and crossed by 45° lines at a 6 u pitch with a 12/4 dash whose phase changes per line; drawn on the black plate so it never slips.' },
       { id:'misregister', short:'SLIP', name:'Plate misregister', layer:2, pass:2, atoms:['offset','register','trap'],
-        params:{ red_u:[2,2], yellow_u:[1,2.6], blue_u:[2.4,1.4], black_u:[0,0] },
+        params:{ red_u:[2,2], yellow_u:[1,2.6], blue_u:[2.4,1.4], black_u:[0,0], slip:{ value:1, range:[0,4], step:0.05, note:'multiplies every plate offset; 0 prints in register' } },
         implementation:'Each color plate is composited with its own down-right offset before the black plate lands in register, so fills open a paper sliver on the top-left of the line and spill past it bottom-right.' },
       { id:'dot-tint', short:'TINT', name:'Dot-tint screen', layer:1, pass:1, atoms:['halftone','screen','dot'],
-        params:{ pitch_u:5, grid:'square, half-cell stagger per row', coverage:{pink:0.42,sky:0.40,straw:0.45,green_blue:0.85}, radius:'pitch·√(coverage/π)' },
+        params:{ pitch_u:{ value:5, range:[3,12], step:0.5, unit:'u' }, grid:'square, half-cell stagger per row', coverage:{pink:0.42,sky:0.40,straw:0.45,green_blue:0.85}, radius:'pitch·√(coverage/π)' },
         implementation:'A mid-tone is the plate ink drawn as a regular dot grid clipped to the shape; the dot radius is set from the requested coverage.' },
       { id:'aged-stock', short:'PAPR', name:'Aged cream stock', layer:0, pass:0, atoms:['paper','mottle','grain','scan-blur'],
-        params:{ paper:'#F7EDE3', mottle:'perlin fbm 3 oct, cell 120 u, ±3 % multiply', grain:'mono, 1 device px, amp 0.035', blur_px:0.35 },
+        params:{ paper:'#F7EDE3', mottle:'perlin fbm 3 oct, cell 120 u, ±3 % multiply', mottle_scale:{ value:1, range:[0,4], step:0.05, note:'multiplies the stock mottle' }, grain:'mono, 1 device px, amp 0.035', grain_scale:{ value:1, range:[0,4], step:0.05, note:'multiplies the grain over everything' }, blur_px:0.35 },
         implementation:'Cream flat, then a low-frequency perlin multiply, a 0.35 px blur for the scan, then mono grain over everything including the inks.' },
       { id:'caption-label', short:'CAPT', name:'Caption label', layer:3, pass:3, atoms:['lettering','mono','caps'],
         params:{ font:'JetBrains Mono 700', size_u:21, tracking_u:1.5, case:'upper', title_u:26, folio_u:24 },
@@ -63,25 +63,25 @@ window.STUDY={
     pass_order:['stock · cream flat','color plates · flat fills, tints, knockouts per shape','composite · yellow, red, blue plates multiplied at their offsets','black plate · keylines, hatch, captions in register','age · mottle multiply, 0.35 px blur, mono grain'],
     notes:['Measured on ref.png: keyline dark runs 1–3 px at 1006 px (2.2 u); tint dot pitch 4–5 px; fill slip ≈ 2 px down-right; paper (247,237,227) σ 4.5, 72 % of pixels.','Seed 202.']
   },
-  render(canvas,w,h,dpr,V){
-    const A=window.ART; const W=canvas.width,H=canvas.height; const U=W/1000; const su=U/dpr;
+  render(canvas,w,h,dpr,V,done,O){
+    const A=window.ART; const Q=A.params(window.STUDY.spec,O), KY=Q['black-keyline'], HT=Q['hatch-shade'], SL=Q['misregister'].slip, TP=Q['dot-tint'].pitch_u, ST=Q['aged-stock']; const W=canvas.width,H=canvas.height; const U=W/1000; const su=U/dpr;
     const rnd=A.rng(202); const L=()=>A.layer(canvas,su,dpr);
     const plates={}; for(const k in V.plates){ plates[k]=Object.assign({x:L()},V.plates[k]); }
     const K=L(); K.strokeStyle=V.key; K.fillStyle=V.key;
     let ox=0,oy=0,sc=1, box=[0,0,1000,1382];
     const TAU=Math.PI*2;
     const path=(x,fn,jx,jy)=>{ x.beginPath(); x.save(); x.translate(ox+(jx||0),oy+(jy||0)); x.scale(sc,sc); fn(x); x.restore(); };
-    const dots=(x,fn,col,t)=>{ path(x,fn); x.save(); x.clip(); x.fillStyle=col; x.beginPath(); const p=5, r=p*Math.sqrt(t/Math.PI); let row=0;
+    const dots=(x,fn,col,t)=>{ path(x,fn); x.save(); x.clip(); x.fillStyle=col; x.beginPath(); const p=TP, r=p*Math.sqrt(t/Math.PI); let row=0;
       for(let yy=box[1];yy<box[3];yy+=p,row++){ for(let xx=box[0]+(row&1?p/2:0);xx<box[2];xx+=p){ x.moveTo(xx+r,yy); x.arc(xx,yy,r,0,TAU); } } x.fill(); x.restore(); };
     const P={
       fill(ink,fn,over){ const specs=[].concat(V.inks[ink]); for(const k in plates){ const pl=plates[k], x=pl.x; const s=specs.find(q=>q.p===k);
         if(s){ if(s.t>=1){ x.fillStyle=pl.c; path(x,fn); x.fill(); } else dots(x,fn,pl.c,s.t); }
         else if(!over){ x.save(); x.globalCompositeOperation='destination-out'; path(x,fn); x.fill(); x.restore(); } } },
       knock(fn){ for(const k in plates){ const x=plates[k].x; x.save(); x.globalCompositeOperation='destination-out'; path(x,fn); x.fill(); x.restore(); } },
-      key(fn,w){ w=w||2.2; K.lineWidth=w; path(K,fn); K.stroke(); K.lineWidth=w*0.64; path(K,fn,(rnd()-0.5)*1.2,(rnd()-0.5)*1.2); K.stroke(); },
+      key(fn,w){ w=(w||2.2)*KY.width_u/2.2; K.lineWidth=w; path(K,fn); K.stroke(); K.lineWidth=w*0.64; path(K,fn,(rnd()-0.5)*2*KY.jitter_u,(rnd()-0.5)*2*KY.jitter_u); K.stroke(); },
       line(fn,w){ K.lineWidth=w||1.2; path(K,fn); K.stroke(); },
       solid(fn){ path(K,fn); K.fill(); },
-      hatch(fn,ang,pitch,wd){ ang=(ang===undefined?45:ang)*Math.PI/180; pitch=pitch||6; K.save(); path(K,fn); K.clip(); K.lineWidth=wd||1.3; const cx=(box[0]+box[2])/2, cy=(box[1]+box[3])/2, D=Math.hypot(box[2]-box[0],box[3]-box[1])/2; const dx=Math.cos(ang),dy=Math.sin(ang), nx=-dy, ny=dx;
+      hatch(fn,ang,pitch,wd){ ang=((ang===undefined?45:ang)+HT.angle_deg-45)*Math.PI/180; pitch=(pitch||6)*HT.pitch_u/6; K.save(); path(K,fn); K.clip(); K.lineWidth=(wd||1.3)*HT.width_u/1.3; const cx=(box[0]+box[2])/2, cy=(box[1]+box[3])/2, D=Math.hypot(box[2]-box[0],box[3]-box[1])/2; const dx=Math.cos(ang),dy=Math.sin(ang), nx=-dy, ny=dx;
         for(let d=-D;d<D;d+=pitch){ K.beginPath(); K.setLineDash([12,4]); K.lineDashOffset=rnd()*16; const px=cx+nx*d, py=cy+ny*d; K.moveTo(px-dx*D,py-dy*D); K.lineTo(px+dx*D,py+dy*D); K.stroke(); } K.setLineDash([]); K.restore(); },
       text(str,x,y,size,weight){ K.save(); K.font=`${weight||700} ${size}px 'JetBrains Mono', monospace`; try{ K.letterSpacing=(size*0.07)+'px'; }catch(e){} K.textAlign='center'; K.textBaseline='middle'; K.fillText(str,x,y); K.restore(); }
     };
@@ -193,14 +193,15 @@ window.STUDY={
     /* ---- composite ---- */
     const x=canvas.getContext('2d'); x.setTransform(1,0,0,1,0,0); x.globalCompositeOperation='source-over'; x.fillStyle=V.paper; x.fillRect(0,0,W,H);
     x.globalCompositeOperation='multiply'; const order=['B','A','C','K'].filter(k=>plates[k]);
-    for(const k of order){ const pl=plates[k]; x.drawImage(pl.x.canvas,Math.round(pl.dx*U),Math.round(pl.dy*U)); }
+    for(const k of order){ const pl=plates[k]; x.drawImage(pl.x.canvas,Math.round(pl.dx*SL*U),Math.round(pl.dy*SL*U)); }
     x.drawImage(K.canvas,0,0);
     /* aged stock: low-frequency mottle */
     const n=A.perlin(202); const mw=60, mh=Math.round(60*H/W); const mc=A.off(mw,mh); const mx=mc.getContext('2d'); const md=mx.createImageData(mw,mh);
-    for(let j=0;j<mh;j++)for(let i=0;i<mw;i++){ const v=n.fbm(i/7.2,j/7.2,3,0.55); const ex=Math.min(i,mw-1-i,j,mh-1-j)/12; const vig=A.clamp(1-ex,0,1)*0.25; const g=255*(1-V.mottle*(v+0.15+vig)); const q=(j*mw+i)*4; md.data[q]=g; md.data[q+1]=g*(1-V.mottle*0.2); md.data[q+2]=g*(1-V.mottle*0.5); md.data[q+3]=255; }
+    for(let j=0;j<mh;j++)for(let i=0;i<mw;i++){ const v=n.fbm(i/7.2,j/7.2,3,0.55); const ex=Math.min(i,mw-1-i,j,mh-1-j)/12; const vig=A.clamp(1-ex,0,1)*0.25; const g=255*(1-(V.mottle*ST.mottle_scale)*(v+0.15+vig)); const q=(j*mw+i)*4; md.data[q]=g; md.data[q+1]=g*(1-(V.mottle*ST.mottle_scale)*0.2); md.data[q+2]=g*(1-(V.mottle*ST.mottle_scale)*0.5); md.data[q+3]=255; }
     mx.putImageData(md,0,0); x.imageSmoothingEnabled=true; x.imageSmoothingQuality='high'; x.drawImage(mc,0,0,mw,mh,0,0,W,H);
     x.globalCompositeOperation='source-over';
     const soft=A.blur(canvas,0.35*dpr); x.drawImage(soft,0,0);
-    A.grain(x,{amp:V.grain,pitch:1,seed:202,mono:true,corr:0.2});
+    A.grain(x,{amp:V.grain*ST.grain_scale,pitch:1,seed:202,mono:true,corr:0.2});
+    if(done)done();
   }
 };
