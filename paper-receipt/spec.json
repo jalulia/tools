@@ -1,0 +1,814 @@
+{
+  "schema": "paper-receipt/1",
+  "title": "Paper receipt",
+  "kind": "template",
+  "generated": "2026-11-26",
+  "summary": "A receipt as front-end code: a character-grid layout in one monospace face, a paper canvas, a clip-path edge, an SVG ink filter and a falloff stack.",
+  "style": {
+    "id": "r4",
+    "name": "R4 · 80 mm thermal",
+    "recorded": "2026-10-15",
+    "files": [
+      "Mindgut/Coffee/Mir-R4/build/src/receipt.css",
+      "Mindgut/Coffee/Mir-R4/build/src/receipt.js",
+      "Mindgut/Coffee/Mir-R4/build/src/paper.js (thermalInk v2)"
+    ],
+    "edited": []
+  },
+  "techniques": [
+    {
+      "id": "grid-layout",
+      "name": "Character-grid layout",
+      "layer": "type",
+      "pass": 1,
+      "implementation": "DOM rows (flex, white-space:pre); rules and leaders are repeated characters clipped by overflow, or drawn borders",
+      "params": {
+        "face": "receipt",
+        "size": 10,
+        "lineHeight": 1.5,
+        "tracking": 0,
+        "brandFace": "signage",
+        "brandSize": 28,
+        "brandTracking": 0.08,
+        "heads": "center",
+        "headTracking": 0.2,
+        "small": 8,
+        "prose": "mono",
+        "serifSize": 15,
+        "rules": "chars",
+        "ruleTone": 0.7,
+        "leaders": "chars",
+        "leadTone": 0.45,
+        "upper": true
+      },
+      "atoms": [
+        "monospace face",
+        "character rule",
+        "character leader",
+        "centered head"
+      ]
+    },
+    {
+      "id": "ascii-robot",
+      "name": "ASCII robot",
+      "layer": "mark",
+      "pass": 1,
+      "implementation": "<pre> in the body face, font-size = measure × width ÷ (41 columns × 0.6 em)",
+      "params": {
+        "logo": "large",
+        "mark": "robot",
+        "logoScale": 0.9,
+        "logoLead": 1.12
+      },
+      "ascii": {
+        "large": [
+          "              _.---------._",
+          "          _.-'     .--.    '-._",
+          "        .'        (  .'        '.",
+          "       /  .--------'-'--(   )-.  \\",
+          "      /  (  ,-------------'-'  )  \\",
+          "     |    \\ '-----------------' /  |",
+          "     |  .-.'------------------. )  |",
+          "     | (   ),-------------------'  |",
+          "  .-+===============================+-.",
+          " .-.|                               |.-.",
+          "( ()|      .--.           .--.      |() )",
+          " '-'|     ( @@ )   /|    ( @@ )     |'-'",
+          "    |      '--'   /_|     '--'      |",
+          "    |       ._______________.       |",
+          "    |        \\             /        |",
+          "     \\        '-._______.-'        /",
+          "      '-._______________________.-'",
+          "          |_|_|_|_|_|_|_|_|_|_|"
+        ],
+        "small": [
+          "       _.---._",
+          "    .-'  .-.  '-.",
+          "   /  .--'-'---. \\",
+          "  |  (  ,------') |",
+          " .+===============+.",
+          "(o|  @@  /|   @@  |o)",
+          "  |   \\_______/   |",
+          "   '-._________.-'",
+          "     |_|_|_|_|_|"
+        ]
+      }
+    },
+    {
+      "id": "paper-canvas",
+      "name": "Paper tooth",
+      "layer": "substrate",
+      "pass": 2,
+      "implementation": "<canvas> at device resolution under the type: per-pixel seeded tooth, fbm row tone, optional head banding and fiber strands; never tiled",
+      "params": {
+        "paper": "#fbfbfa",
+        "tooth": 5,
+        "tone": 3,
+        "toneScale": 700,
+        "banding": 0,
+        "bandScale": 38,
+        "strands": 0,
+        "seed": 7
+      },
+      "atoms": [
+        "tooth",
+        "tone drift",
+        "banding",
+        "strand"
+      ]
+    },
+    {
+      "id": "cut-edge",
+      "name": "Cut and tear",
+      "layer": "substrate",
+      "pass": 3,
+      "implementation": "clip-path polygon from a seeded profile: zigzag tear bar, fbm torn edge, perforation notches, or straight",
+      "params": {
+        "edgeTop": "zigzag",
+        "edgeBottom": "zigzag",
+        "edgeDepth": 9,
+        "edgePeriod": 9,
+        "edgeIrr": 0
+      },
+      "atoms": [
+        "zigzag",
+        "torn edge",
+        "perforation"
+      ]
+    },
+    {
+      "id": "starved-ink",
+      "name": "Starved ink",
+      "layer": "ink",
+      "pass": 4,
+      "implementation": "SVG: feTurbulence → feDisplacementMap (wobble) → hole mask α = slope·n + offset → feComposite out",
+      "params": {
+        "wobble": 0,
+        "wobFx": 0.8,
+        "wobFy": 0.5,
+        "holeF": 0.9,
+        "holeSlope": 1.3,
+        "holeOffset": -3,
+        "seed": 7
+      },
+      "source": "paper.js thermalInk v1 (R3)"
+    },
+    {
+      "id": "density-mask",
+      "name": "Density field",
+      "layer": "ink",
+      "pass": 5,
+      "implementation": "SVG: slow and fine feTurbulence mixed by feComposite arithmetic (k2 = mix, k3 = 1 − mix) → α = depth·n + floor → feComposite in",
+      "params": {
+        "slowFx": 0.035,
+        "slowFy": 0.012,
+        "slowOct": 3,
+        "fineF": 0.55,
+        "fineOct": 2,
+        "mix": 0.6,
+        "maskSlope": 0.55,
+        "maskFloor": 0.72,
+        "seed": 7
+      },
+      "source": "paper.js thermalInk v2 (R4)"
+    },
+    {
+      "id": "stamp",
+      "name": "Rubber stamp",
+      "layer": "ink",
+      "pass": 5,
+      "implementation": "SVG: feDisplacementMap 1.6 px + void mask α = 3n − 2.3 + pressure",
+      "params": {
+        "stamp": false,
+        "stampPress": 1,
+        "stampRot": -4,
+        "stampInk": "#b73c28"
+      },
+      "source": "paper.js stampInk (R3)"
+    },
+    {
+      "id": "falloff",
+      "name": "Falloff",
+      "layer": "presentation",
+      "pass": 6,
+      "implementation": "field fade gradients over the scroller; three chained drop-shadows; CSS mask-image on the type (length and side falloff, intersected)",
+      "params": {
+        "fade": 90,
+        "shadow": 1,
+        "reach": 1,
+        "fallLen": 0,
+        "fallSpan": 40,
+        "fallEdge": 0,
+        "fallEdgeSpan": 18,
+        "speed": 0.35
+      }
+    }
+  ],
+  "colors": {
+    "ink": "#1b1f23",
+    "paper": "#fbfbfa",
+    "field": "#e7e8ea",
+    "stampInk": "#b73c28"
+  },
+  "recorded_colors": {
+    "r4": {
+      "paper": "#fdfbf5",
+      "ink": "#1b1f23",
+      "field": "#e9e8e3"
+    },
+    "r3": {
+      "paper": "#fffdf7",
+      "ink": "#1b1f23",
+      "stamp": "#b73c28"
+    },
+    "r2": {
+      "paper": "#fffdf8",
+      "ink": "#16191d",
+      "field": "#ebebe6"
+    },
+    "note": "Warm grounds replaced with neutral values (tools house rule)."
+  },
+  "content": {
+    "header": "LOREM IPSUM\nXXIV DOLOR ST · SIT AMET\nMMXXVI · VIII · XLII · #008",
+    "items": "1|LOREM IPSUM|6.50\n1|DOLOR SIT ×3|7.00\n2|AMET CONSECTETUR|3.25\n~adipiscing · elit · sed do\n1|EIUSMOD TEMPOR|4.75",
+    "note": "Lorem ipsum\nDolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.",
+    "served": "SERVED BY LOREM · GRATIAS",
+    "footer": "VALE · GRATIAS\nQUIS NOSTRUD EXERCITATION",
+    "mast": "LOREM PAPER",
+    "issue": "AESTAS · VII",
+    "puzzle": "Ludus · facilis · No. 041",
+    "stamp": "LOREM / IPSUM",
+    "last": "**** LOREM IPSUM DOLOR SIT ****"
+  },
+  "params": {
+    "face": {
+      "value": "receipt",
+      "group": "type",
+      "options": [
+        "receipt",
+        "jet"
+      ],
+      "why": "R2–R4 set every line in the Receipt face (IBM Plex Mono 400)."
+    },
+    "size": {
+      "value": 10,
+      "group": "type",
+      "min": 7,
+      "max": 14,
+      "step": 0.5,
+      "unit": "px",
+      "why": "R4 10 px, R3 11.5 px, R2 10.5 px."
+    },
+    "lineHeight": {
+      "value": 1.5,
+      "group": "type",
+      "min": 1.2,
+      "max": 2,
+      "step": 0.05,
+      "unit": "×"
+    },
+    "tracking": {
+      "value": 0,
+      "group": "type",
+      "min": -0.02,
+      "max": 0.12,
+      "step": 0.005,
+      "unit": "em"
+    },
+    "upper": {
+      "value": true,
+      "group": "type",
+      "options": [
+        true,
+        false
+      ]
+    },
+    "brandFace": {
+      "value": "signage",
+      "group": "type",
+      "options": [
+        "signage",
+        "serif",
+        "body"
+      ]
+    },
+    "brandSize": {
+      "value": 28,
+      "group": "type",
+      "min": 12,
+      "max": 48,
+      "step": 1,
+      "unit": "px"
+    },
+    "brandTracking": {
+      "value": 0.08,
+      "group": "type",
+      "min": 0,
+      "max": 0.3,
+      "step": 0.01,
+      "unit": "em"
+    },
+    "heads": {
+      "value": "center",
+      "group": "type",
+      "options": [
+        "center",
+        "left",
+        "label",
+        "none"
+      ]
+    },
+    "headTracking": {
+      "value": 0.2,
+      "group": "type",
+      "min": 0,
+      "max": 0.4,
+      "step": 0.01,
+      "unit": "em"
+    },
+    "small": {
+      "value": 8,
+      "group": "type",
+      "min": 6,
+      "max": 11,
+      "step": 0.5,
+      "unit": "px"
+    },
+    "prose": {
+      "value": "mono",
+      "group": "type",
+      "options": [
+        "mono",
+        "serif"
+      ]
+    },
+    "serifSize": {
+      "value": 15,
+      "group": "type",
+      "min": 10,
+      "max": 22,
+      "step": 0.5,
+      "unit": "px"
+    },
+    "rules": {
+      "value": "chars",
+      "group": "type",
+      "options": [
+        "chars",
+        "dashes",
+        "colon",
+        "lines",
+        "none"
+      ]
+    },
+    "ruleTone": {
+      "value": 0.7,
+      "group": "type",
+      "min": 0.2,
+      "max": 1,
+      "step": 0.05,
+      "unit": "",
+      "why": "Opacity of character rules."
+    },
+    "leaders": {
+      "value": "chars",
+      "group": "type",
+      "options": [
+        "chars",
+        "dots",
+        "none"
+      ]
+    },
+    "leadTone": {
+      "value": 0.45,
+      "group": "type",
+      "min": 0.1,
+      "max": 1,
+      "step": 0.05,
+      "unit": ""
+    },
+    "logoScale": {
+      "value": 0.9,
+      "group": "type",
+      "min": 0.4,
+      "max": 1,
+      "step": 0.02,
+      "unit": "× measure"
+    },
+    "logoLead": {
+      "value": 1.12,
+      "group": "type",
+      "min": 0.95,
+      "max": 1.4,
+      "step": 0.01,
+      "unit": "×"
+    },
+    "width": {
+      "value": 330,
+      "group": "paper",
+      "min": 240,
+      "max": 420,
+      "step": 1,
+      "unit": "px",
+      "why": "R3 and R4 330 px (80 mm), R2 340 px."
+    },
+    "padX": {
+      "value": 24,
+      "group": "paper",
+      "min": 8,
+      "max": 44,
+      "step": 1,
+      "unit": "px"
+    },
+    "padTop": {
+      "value": 26,
+      "group": "paper",
+      "min": 6,
+      "max": 56,
+      "step": 1,
+      "unit": "px"
+    },
+    "padBottom": {
+      "value": 24,
+      "group": "paper",
+      "min": 6,
+      "max": 80,
+      "step": 1,
+      "unit": "px"
+    },
+    "tooth": {
+      "value": 5,
+      "group": "paper",
+      "min": 0,
+      "max": 24,
+      "step": 0.5,
+      "unit": "levels",
+      "why": "Per device pixel, ± levels on 255. R4 5, R3 14."
+    },
+    "tone": {
+      "value": 3,
+      "group": "paper",
+      "min": 0,
+      "max": 12,
+      "step": 0.5,
+      "unit": "levels",
+      "why": "Slow row-to-row tone. R4 3."
+    },
+    "toneScale": {
+      "value": 700,
+      "group": "paper",
+      "min": 60,
+      "max": 1500,
+      "step": 10,
+      "unit": "px"
+    },
+    "banding": {
+      "value": 0,
+      "group": "paper",
+      "min": 0,
+      "max": 0.08,
+      "step": 0.002,
+      "unit": "",
+      "why": "Faint darker rows from a cheap print head. R3 0.03."
+    },
+    "bandScale": {
+      "value": 38,
+      "group": "paper",
+      "min": 6,
+      "max": 140,
+      "step": 1,
+      "unit": "px"
+    },
+    "strands": {
+      "value": 0,
+      "group": "paper",
+      "min": 0,
+      "max": 200,
+      "step": 1,
+      "unit": "/ 220 px",
+      "why": "R3 drew 70 per 220 px tile; here they are scattered over the whole sheet, no tile."
+    },
+    "edgeTop": {
+      "value": "zigzag",
+      "group": "edges",
+      "options": [
+        "zigzag",
+        "torn",
+        "perforated",
+        "straight"
+      ]
+    },
+    "edgeBottom": {
+      "value": "zigzag",
+      "group": "edges",
+      "options": [
+        "zigzag",
+        "torn",
+        "perforated",
+        "straight"
+      ]
+    },
+    "edgeDepth": {
+      "value": 9,
+      "group": "edges",
+      "min": 2,
+      "max": 18,
+      "step": 0.5,
+      "unit": "px",
+      "why": "R3 and R4 9 px."
+    },
+    "edgePeriod": {
+      "value": 9,
+      "group": "edges",
+      "min": 4,
+      "max": 24,
+      "step": 0.5,
+      "unit": "px",
+      "why": "R3 and R4 9 px."
+    },
+    "edgeIrr": {
+      "value": 0,
+      "group": "edges",
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "unit": ""
+    },
+    "wobble": {
+      "value": 0,
+      "group": "print",
+      "min": 0,
+      "max": 3,
+      "step": 0.05,
+      "unit": "px",
+      "why": "feDisplacementMap scale. R3 0.5."
+    },
+    "wobFx": {
+      "value": 0.8,
+      "group": "print",
+      "min": 0.05,
+      "max": 1.6,
+      "step": 0.01,
+      "unit": "/px"
+    },
+    "wobFy": {
+      "value": 0.5,
+      "group": "print",
+      "min": 0.05,
+      "max": 1.6,
+      "step": 0.01,
+      "unit": "/px"
+    },
+    "holeF": {
+      "value": 0.9,
+      "group": "print",
+      "min": 0.1,
+      "max": 1.8,
+      "step": 0.01,
+      "unit": "/px",
+      "why": "R3 0.9."
+    },
+    "holeSlope": {
+      "value": 1.3,
+      "group": "print",
+      "min": 0,
+      "max": 4,
+      "step": 0.05,
+      "unit": "",
+      "why": "Hole alpha = slope · noise + offset. R3 1.3."
+    },
+    "holeOffset": {
+      "value": -3,
+      "group": "print",
+      "min": -3,
+      "max": 0.5,
+      "step": 0.05,
+      "unit": "",
+      "why": "R3 −0.5. At −3 no holes open."
+    },
+    "stampPress": {
+      "value": 1,
+      "group": "print",
+      "min": 0,
+      "max": 2,
+      "step": 0.05,
+      "unit": "",
+      "why": "Fewer voids as it rises. R3 1."
+    },
+    "stampRot": {
+      "value": -4,
+      "group": "print",
+      "min": -12,
+      "max": 12,
+      "step": 0.5,
+      "unit": "°"
+    },
+    "slowFx": {
+      "value": 0.035,
+      "group": "mask",
+      "min": 0.004,
+      "max": 0.2,
+      "step": 0.001,
+      "unit": "/px",
+      "why": "Long, low patches along the print line. R4 0.035."
+    },
+    "slowFy": {
+      "value": 0.012,
+      "group": "mask",
+      "min": 0.002,
+      "max": 0.2,
+      "step": 0.001,
+      "unit": "/px",
+      "why": "R4 0.012, so patches run three times wider than tall."
+    },
+    "slowOct": {
+      "value": 3,
+      "group": "mask",
+      "min": 1,
+      "max": 5,
+      "step": 1,
+      "unit": ""
+    },
+    "fineF": {
+      "value": 0.55,
+      "group": "mask",
+      "min": 0.1,
+      "max": 1.6,
+      "step": 0.01,
+      "unit": "/px",
+      "why": "Per-glyph speckle. R4 0.55."
+    },
+    "fineOct": {
+      "value": 2,
+      "group": "mask",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "unit": ""
+    },
+    "mix": {
+      "value": 0.6,
+      "group": "mask",
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "unit": "",
+      "why": "R4 0.6 slow, 0.4 fine."
+    },
+    "maskSlope": {
+      "value": 0.55,
+      "group": "mask",
+      "min": 0,
+      "max": 1.5,
+      "step": 0.01,
+      "unit": "",
+      "why": "Ink alpha = depth · noise + floor. R4 0.55."
+    },
+    "maskFloor": {
+      "value": 0.72,
+      "group": "mask",
+      "min": 0.1,
+      "max": 1.2,
+      "step": 0.01,
+      "unit": "",
+      "why": "R4 0.72. Depth 0 with floor 1 turns the mask off."
+    },
+    "seed": {
+      "value": 7,
+      "group": "mask",
+      "min": 1,
+      "max": 99,
+      "step": 1,
+      "unit": "",
+      "why": "Drives every noise: filters, paper, edges. 7 reproduces R3 and R4."
+    },
+    "fade": {
+      "value": 90,
+      "group": "falloff",
+      "min": 0,
+      "max": 200,
+      "step": 1,
+      "unit": "px",
+      "why": "The surface fades over the slip top and bottom. R4 90 px."
+    },
+    "shadow": {
+      "value": 1,
+      "group": "falloff",
+      "min": 0,
+      "max": 2,
+      "step": 0.02,
+      "unit": "×",
+      "why": "R4 stack: 0 1 2 / 3 6 14 / 10 18 36 px at .18, .10, .08."
+    },
+    "reach": {
+      "value": 1,
+      "group": "falloff",
+      "min": 0.3,
+      "max": 3,
+      "step": 0.05,
+      "unit": "×"
+    },
+    "fallLen": {
+      "value": 0,
+      "group": "falloff",
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "unit": "",
+      "why": "Ink lost toward the end of the slip."
+    },
+    "fallSpan": {
+      "value": 40,
+      "group": "falloff",
+      "min": 5,
+      "max": 100,
+      "step": 1,
+      "unit": "%"
+    },
+    "fallEdge": {
+      "value": 0,
+      "group": "falloff",
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "unit": "",
+      "why": "Ink lost at the ends of the print line."
+    },
+    "fallEdgeSpan": {
+      "value": 18,
+      "group": "falloff",
+      "min": 2,
+      "max": 45,
+      "step": 1,
+      "unit": "%"
+    },
+    "speed": {
+      "value": 0.35,
+      "group": "falloff",
+      "min": 0.05,
+      "max": 2,
+      "step": 0.05,
+      "unit": "px/frame",
+      "why": "Play scrolls the slip and reverses at the ends. R4 0.35."
+    },
+    "logo": {
+      "value": "large",
+      "group": "content",
+      "options": [
+        "large",
+        "small",
+        "none"
+      ]
+    },
+    "mark": {
+      "value": "robot",
+      "group": "content",
+      "options": [
+        "robot",
+        "brand",
+        "none"
+      ]
+    },
+    "mast": {
+      "value": "mono",
+      "group": "content",
+      "options": [
+        "mono",
+        "serif",
+        "off"
+      ]
+    },
+    "puzzle": {
+      "value": true,
+      "group": "content",
+      "options": [
+        true,
+        false
+      ]
+    },
+    "barcode": {
+      "value": true,
+      "group": "content",
+      "options": [
+        true,
+        false
+      ]
+    },
+    "stamp": {
+      "value": false,
+      "group": "content",
+      "options": [
+        true,
+        false
+      ]
+    },
+    "tax": {
+      "value": 8.625,
+      "group": "content",
+      "min": 0,
+      "max": 15,
+      "step": 0.125,
+      "unit": "%"
+    }
+  }
+}
