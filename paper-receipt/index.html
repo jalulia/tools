@@ -241,7 +241,7 @@ textarea{resize:vertical;white-space:pre;overflow-x:auto}
    <p class="kicker"><span>Receipt</span> · <span>Front-end component</span></p>
    <h1>Paper receipt</h1>
    <p class="lede">The receipt from the POP work, lifted out as one component: DOM type on a monospace grid, a paper canvas, a cut edge and an SVG ink filter.</p>
-   <p class="body">Three styles came out of it between 14 and 15 October: R2's clean slip, R3's sectioned small paper with starved ink and a stamp, and R4's one-face 80 mm thermal with a density field in the ink. Each is a preset, and each value it recorded is a parameter here. The Mindgut robot heads the slip in ASCII, set in the body face.</p>
+   <p class="body">Three styles came out of it between 14 and 15 October: R2's clean slip, R3's sectioned small paper with starved ink and a stamp, and R4's one-face 80 mm thermal with a density field in the ink. Each is a preset, and each value it recorded is a parameter here; the default is R4 as tuned in this tool on 26 November. The Mindgut robot heads the slip in ASCII, set in the body face.</p>
    <details class="acc" name="notes" open><summary>How it is built</summary><div class="ab"><ol>
     <li><b>Layout.</b> Rows in one monospace face. Rules and leaders are repeated characters clipped by overflow, so they always fill the measure; R2 and R3 draw them as 1 px borders instead.</li>
     <li><b>Paper.</b> One canvas under the type at device resolution: a seeded tooth per pixel, slow row tone, optional head banding and strands. Nothing tiles.</li>
@@ -255,7 +255,7 @@ textarea{resize:vertical;white-space:pre;overflow-x:auto}
    <details class="acc" name="notes"><summary>Keyboard</summary><div class="ab"><dl class="keys"><dt>Space</dt><dd>Play or pause the scroll</dd><dt>Z</dt><dd>Zoom 1×, 2×, 3×</dd><dt>R</dt><dd>Raw layout: no paper, no ink filter</dd><dt>S</dt><dd>New seed</dd><dt>N</dt><dd>Notes</dd></dl></div></details>
   </aside>
   <section class="fig" aria-label="Figure">
-   <div class="cap"><span>Fig. 1 · <span class="hide-s">Paper receipt · </span><span id="capStyle">R4</span></span><span class="state" id="state">STILL</span></div>
+   <div class="cap"><span>Fig. 1 · <span class="hide-s">Paper receipt · </span><span id="capStyle">R4 · tuned</span></span><span class="state" id="state">STILL</span></div>
    <div class="art"><i class="tk tl"></i><i class="tk tr"></i><i class="tk bl"></i><i class="tk br"></i><div class="host" id="host"></div></div>
    <div class="foot"><span>Plate · <i class="sw" id="footInk"></i>INK <b id="footRGB"></b> <span id="edited"></span></span><span class="far">Scroll the slip</span></div>
   </section>
@@ -671,6 +671,12 @@ const BASE = {
   ink: '#1b1f23', paper: '#fbfbfa', field: '#e7e8ea', stampInk: '#b73c28'
 };
 const PRESETS = [
+  { id: 'tex', name: 'R4 · tuned', short: 'TUNED', date: '2026-11-26',
+    line: 'R4 tuned by hand in this tool: JetBrains Mono 12 / 1.35, R3\'s starved ink with holes laid over R4\'s density field, a finer irregular tear, a longer shadow, ink thinning toward the sides and the end.',
+    files: ['Mindgut/Coffee/Mir-R4/build/src/receipt.css', 'Mindgut/Coffee/Mir-R4/build/src/receipt.js', 'Mindgut/Coffee/Mir-R4/build/src/paper.js (thermalInk v2)', 'Mindgut/Coffee/Mir-R3/Mir-R3/build/src/paper.js (thermalInk v1)', 'Tuned in Paper receipt, 2026-11-26'],
+    set: { face: 'jet', size: 12, lineHeight: 1.35, headTracking: .09, small: 9, padX: 18, padTop: 19,
+      edgeDepth: 5, edgePeriod: 6.5, edgeIrr: 1, wobble: 1.1, wobFx: 1.6, wobFy: 1.51, holeF: 1.43, holeOffset: -.5, stampPress: 2, stampRot: 8.5,
+      slowFx: .112, fineF: 1.05, mix: .38, fade: 133, shadow: 1.56, reach: 3, fallLen: .14, fallSpan: 32, fallEdge: .4, fallEdgeSpan: 45, speed: .25 } },
   { id: 'r4', name: 'R4 · 80 mm thermal', short: 'R4', date: '2026-10-15',
     line: 'One monospace face. Rules and leaders are characters. A density field breathes through the ink; fine tooth, no banding; a 9 px tear at both ends.',
     files: ['Mindgut/Coffee/Mir-R4/build/src/receipt.css', 'Mindgut/Coffee/Mir-R4/build/src/receipt.js', 'Mindgut/Coffee/Mir-R4/build/src/paper.js (thermalInk v2)'],
@@ -691,7 +697,7 @@ const PRESETS = [
 const presetState = id => { const p = PRESETS.find(x => x.id === id) || PRESETS[0]; return Object.assign({}, BASE, p.set); };
 
 /* ---------- state ---------- */
-let S = Object.assign(presetState('r4'), { c: Object.assign({}, CONTENT) }), cur = 'r4', group = 'type', ui = { zoom: 1, raw: false };
+let S = Object.assign(presetState('tex'), { c: Object.assign({}, CONTENT) }), cur = 'tex', group = 'type', ui = { zoom: 1, raw: false };
 const get = k => k.startsWith('c.') ? S.c[k.slice(2)] : S[k];
 const setv = (k, v) => { if (k.startsWith('c.')) S.c[k.slice(2)] = v; else S[k] = v; };
 const ref = () => presetState(cur);
@@ -822,7 +828,7 @@ function buildColor() {
 let minis = [];
 function buildPresets() {
   const box = $('#mPresets');
-  box.innerHTML = `<p class="hint">The three receipt styles from the POP work. Choosing one sets every parameter to what it recorded; your text stays.</p>` +
+  box.innerHTML = `<p class="hint">The default, R4 as tuned here, then the three receipt styles from the POP work. Choosing one sets every parameter to what it recorded; your text stays.</p>` +
     PRESETS.map(p => `<button type="button" class="pcard" data-id="${p.id}" aria-pressed="${p.id === cur}"><span class="pv" aria-hidden="true"></span><span class="pt"><b>${esc(p.name)}</b><i>${p.date}</i></span><span class="pl">${esc(p.line)}</span></button>`).join('');
   minis = $$('.pcard', box).map(b => {
     const host = $('.pv', b), st = Object.assign(presetState(b.dataset.id), { content: S.c, zoom: .5, fade: 0 });
