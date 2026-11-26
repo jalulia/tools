@@ -51,23 +51,23 @@ const typePrint = { run(o, W, H, dpr, x) {
   const N = w2 * h2, COV = new Float32Array(N), Pb = new Float32Array(N), TAU = new Float32Array(N);
   const ebite = T.ebite, face = T.face, ga = .1, gc = Math.cos(ga), gs = Math.sin(ga);
   for (let y = 0; y < h2; y++) { const v = (y + by) / dpr; for (let X = 0; X < w2; X++) { const i = y * w2 + X, s0 = sd[i]; if (s0 < -reach) continue;
-    if (s0 > deep) { if (form !== 1) { COV[i] = 1; Pb[i] = T.imp; TAU[i] = face; } continue; } // deep in the stroke: no edge effect reaches here
+    if (s0 > deep) { if (form !== 1) { COV[i] = 1; Pb[i] = T.imp - T.starve; TAU[i] = face; } continue; } // deep in the stroke: no edge effect reaches here
     const u = (X + bx) / dpr, k = clamp((TH[i] / dpr - 1.2) / 3.8, .12, 1); // k: 1 on display letters, .12 on small type
     let ds = s0 + spread * (spread < 0 ? .3 + .7 * k : .6 + .4 * k); if (wa) ds += wa * k * (FX.fbm(u / ws, v / ws, seed + 3, 3, .5) * 2 - 1) * 1.4;
-    const rg = rag && st ? rag * (.5 + .5 * k) * (st.h[i] - hm) : 0, d = ds + rg;
+    const rg = rag && st ? rag * (.2 + .8 * k) * (st.h[i] - hm) : 0, d = ds + rg; // hairlines and small type keep a clean edge
     let c = clamp(d + .5, 0, 1), tau = 1;
     if (ebite > 0 && c > 0) { const near = 1 - clamp(d / (dpr * 2.5 + wa * 2), 0, 1), holes = FX.fbm(u / 2.4, v / 2.4, seed + 41, 3, .55), th = ebite * k * (.2 + .8 * near) * .62; if (holes < th) c *= clamp((holes - th + .04) / .04, 0, 1); }
     const th = TH[i], kc = sstep(.45, .8, k);
     if (form === 1) { if (kc > 0) { const rw = clamp(.24 * th, dpr, 4 * dpr); c *= 1 - clamp(d - rw + .5, 0, 1) * kc; } else if (c > 0 && face < 1) { const rim = 1 - sstep(rimW - .75 * dpr, rimW + .75 * dpr, d); tau = face + (1 - face) * rim; } } // outline: only a rim, in proportion to the stroke; small type stays solid
     else if (c > 0 && face < 1) { const rim = 1 - sstep(rimW - .75 * dpr, rimW + .75 * dpr, d); tau = face + (1 - face) * rim; }
     if (form === 2 && kc > 0 && c > 0) { const ins = .42 * th, lw = clamp(.17 * th, .9 * dpr, 3.2 * dpr); c *= 1 - clamp(lw / 2 - Math.abs(ds - ins) + .5, 0, 1) * kc; } // inline: a line cut along the stroke
-    if (fe > 0 && d < .5) { const cr = clamp(1 + (d - .5) / (fe * (.45 + .55 * k)), 0, 1); if (cr > 0) { // hairlines creep out along the paper's grain
+    if (fe > 0 && d < .5) { const cr = clamp(1 + (d - .5) / (fe * (.25 + .75 * k)), 0, 1); if (cr > 0) { // hairlines creep out along the paper's grain
         const a = (u * gc + v * gs), b = (-u * gs + v * gc), n1 = FX.fbm(a / 2.8, b / .38, seed + 61, 2, .5), n2 = FX.fbm((a * .906 + b * .423) / 2.2, (-a * .423 + b * .906) / .34, seed + 67, 2, .5);
         let f = Math.max(sstep(.66 - .2 * cr, .72 - .2 * cr, n1), .7 * sstep(.7 - .2 * cr, .76 - .2 * cr, n2)) * cr; if (st && st.fib) f = Math.max(f, sstep(.3, .75, st.fib[i]) * cr);
         f *= .88; if (f > c) { c = f; tau = Math.max(tau, .75); } } }
     if (form === 3 && kc > 0 && d < 0) { const lw = clamp(.17 * th, dpr, 3.2 * dpr), gap = clamp(.32 * th, 1.5 * dpr, 5 * dpr), ring = clamp(lw / 2 + rg * .3 - Math.abs(-ds - gap - lw / 2) + .5, 0, 1) * kc; if (ring > c) { c = ring; tau = 1; } } // contour: a line set off outside, off the letter's own edge
-    if (c <= 0) continue; COV[i] = c; Pb[i] = T.imp; TAU[i] = tau; } }
-  const oo = { split: 1.1, bite: T.bite, starve: T.starve, wick: 0, mottle: T.mottle, breakup: T.breakup, density: T.density * (o.dens || 1) };
+    if (c <= 0) continue; COV[i] = c; Pb[i] = 1 - (1 - T.imp + T.starve) * k; TAU[i] = tau; } } // a light impression opens big solids; hairlines and small type hold their ink
+  const oo = { split: 1.1, bite: T.bite, starve: 0, wick: 0, mottle: T.mottle, breakup: T.breakup, density: T.density * (o.dens || 1) };
   // ink at full coverage into a copy, then mix by the letter's own coverage in linear light: an anti-aliased edge pixel is
   // part ink, part paper (a film thinned by coverage would print dark inks half a pixel bold)
   const a2 = crop(alb, W, bx, by, w2, h2, 3), albI = Float32Array.from(a2), A2 = new Float32Array(N), marks = inkChain(Pb, st, oo, o.ink, albI, A2, w2, h2, dpr, seed, 'film', 0, 1.25, TAU);
