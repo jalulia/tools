@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ST-22 ribbon → mindgut · held to a slant grid</title>
+<style>
+/*@CSS*/
+.screen canvas.ov{pointer-events:none}
+.ctl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.ctl .lab{color:rgba(236,238,236,.5);margin-right:4px}
+.rows{display:grid;gap:10px;margin-top:14px}
+.hand{background:var(--paper);padding:18px 20px 20px;display:flex;flex-direction:column;gap:10px}
+.hand h3{font:600 30px/1 "Geist";letter-spacing:-.04em;margin:4px 0 2px}
+.hand .nums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--rule)}
+.hand .nums div{background:var(--paper);padding:8px 10px}
+.hand .nums b{display:block;font:300 24px/1.1 "Geist";letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.hand p{margin:0;color:var(--ink2);font-size:14.5px}
+.finds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 32px;padding:0;margin:0;list-style:none}
+.finds li{border-top:2px solid var(--ink);padding:12px 0 4px;font-size:15.5px}
+.finds li .mono{display:block;color:var(--ink3);margin-bottom:6px}
+.eq{font:400 14px/1.5 "Geist Mono";background:var(--paper);padding:10px 12px;margin-top:8px;display:block}
+.prow{grid-template-columns:minmax(120px,.7fr) repeat(3,minmax(0,1fr))}
+.prow.lrow{grid-template-columns:minmax(120px,.7fr) repeat(6,minmax(0,1fr))}
+#modes{display:inline-flex;border:1px solid rgba(236,238,236,.26);border-radius:999px;padding:3px;gap:2px;margin-right:6px}
+#modes .chip{border:0;min-height:32px;padding:7px 13px}
+#hands{display:flex;gap:6px;flex-wrap:wrap}
+.chip[hidden],.ctl[hidden]{display:none}
+@media (max-width:520px){ .readout{grid-template-columns:repeat(3,minmax(0,1fr))} }
+@media (max-width:900px){ .finds{grid-template-columns:1fr} .prow,.prow.lrow{grid-template-columns:repeat(3,minmax(0,1fr))} #map{aspect-ratio:4/5} }
+.readout{background:none;gap:0;border-top:1px solid rgba(236,238,236,.12)}
+.readout div{border-bottom:1px solid rgba(236,238,236,.12);border-right:1px solid rgba(236,238,236,.12)}
+</style>
+</head>
+<body>
+<header class="top mono"><span>Ribbon study · ST-22 airbrush ribbon, held to a slant grid · for mindgut</span><span>V05 · 2026-11-26</span></header>
+
+<div class="wrap">
+  <section class="intro">
+    <h1>The coil lands on the <em>word</em>.</h1>
+    <p class="lede">The ribbon stays ST-22’s band. Only its constraints change, in nib widths: x-height, ascender, descender, nib angle, slant, stroke pitch. Seen from the front, the coil is a sine wave. Its crests and troughs are the x-height and the baseline, and the wordmark’s own front view says which crests rise and which troughs drop. <b>Three lockups then land it on the real wordmark: the ribbon is never bent into letters.</b></p>
+  </section>
+</div>
+
+<section class="stage" aria-label="Animation">
+  <div class="wrap">
+    <div class="screen"><canvas id="cv" role="img" aria-label="The ST-22 ribbon as a helix on a calligraphic guide sheet"></canvas><canvas id="ov" class="ov" aria-hidden="true"></canvas></div>
+    <div id="mParams" style="display:contents">
+    <div class="bar">
+      <div class="routes"><span id="modes" role="radiogroup" aria-label="Mode"></span><span id="hands" role="radiogroup" aria-label="Lockup or hand"></span></div>
+      <button class="round" id="play" aria-label="Pause"><svg viewBox="0 0 16 16" id="playIcon"><path d="M4 3h2.8v10H4zM9.2 3H12v10H9.2z"/></svg></button>
+      <div class="scrub"><input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Turn of the coil"><div class="ticks"><i style="left:0"></i><i style="left:100%"></i></div></div>
+      <span class="time mono" id="time">turn 0.00</span>
+    </div>
+    <div class="readout" id="readout" aria-live="off"></div>
+    <div class="meta">
+      <p class="line" id="handLine"></p>
+      <div>
+        <div class="ctl" id="viewRow" style="justify-content:flex-end"><span class="lab mono">View</span><span id="views" class="ctl" role="radiogroup" aria-label="View"></span></div>
+        <div class="ctl" style="justify-content:flex-end;margin-top:8px"><span id="toggles" class="ctl"></span><span id="pals" class="ctl" role="radiogroup" aria-label="Color"></span></div>
+        <div class="out" style="margin-top:10px;justify-content:flex-end;display:flex"><button class="btn" id="bReset">Reset</button><button class="btn" id="bPng">Save frame PNG</button><button class="btn" id="bGif">Export GIF</button></div>
+      </div>
+    </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <section class="block" aria-labelledby="h-lock">
+    <div class="head"><h2 id="h-lock">Three <em>lockups</em></h2><p>Each is the Mindgut hand turning, with the wordmark set flat inside the coil. Wrap keeps the ribbon in the lockup; Strike and Settle let it go. Select a frame to open it above.</p></div>
+    <div id="lockPlates"></div>
+  </section>
+
+  <section class="block" aria-labelledby="h-map">
+    <div class="head"><h2 id="h-map">Front, top, <em>side</em></h2><p>Orthographic elevations of the same frame. From the front the coil is a sine wave on the guide sheet; from the top it is a zigzag; from the side every turn is a ring, tall where the wordmark has an ascender. Green ticks are the nib edge.</p></div>
+    <div class="mapgrid">
+      <canvas id="map" aria-label="Front, top and side elevations of the current frame" role="img"></canvas>
+      <div class="hand" id="handCard"></div>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="h-find">
+    <div class="head"><h2 id="h-find">The <em>numbers</em></h2><p>Measured values are marked as measured. Values taken from a calligraphy source say which. Anything this study chose says derived.</p></div>
+    <ul class="finds">
+      <li><span class="mono">Measured · ST-22 p10 defaults</span>ST-22 already has a hand: a band 180 px wide on a coil 594 px across is an x-height of <b>3.30 nib widths</b>, nib at 0°, with a pitch of 0.44 nib widths a turn that opens toward the sweep.</li>
+      <li><span class="mono">Measured · wordmark front view</span>The wordmark’s stems are 45 units and its x-height 128: <b>2.84 nib widths</b>, upright, with ascenders at 1.00 and descenders at 0.76. Inside m, n and u the stems repeat every 81.5 to 82.5 units, <b>1.81 to 1.83 nib widths</b>.</li>
+      <li><span class="mono">Cited · Textura Quadrata · derived comparison</span>Textura Quadrata is written about 5 nib widths high with counters and letter spaces of about one nib width. At a 40° nib a vertical stroke is cos 40° = 0.77 wide, so stroke plus counter is <b>1.77</b>. The wordmark’s stem rhythm, 1.82, sits beside it.</li>
+      <li><span class="mono">Derived · exact</span>A helix of pitch p on a coil of diameter X, seen from the front, leans by its lead angle. Here the cylinder is sheared by that angle, so the near strokes stand on the slant lines and the far strokes become the diagonal hairlines. With variable pitch the shear is taken per sample.<span class="eq">lead = atan(p / (π · X))   ·   x′ = x + (mid − y) · (tan σ + dx/dψ ÷ amplitude)</span></li>
+      <li><span class="mono">Measured · ascenders and descenders from the front view</span>For each of the 13 downstrokes, the ink extent in a ±5-unit column of the wordmark: i and d reach 45 units above the x-height, t 32, and both g strokes 34 below the baseline. That skyline is a field over x, so a crest that passes through the d’s slot rises while the coil turns.<span class="eq">downstroke k at ψ = π/2 + 2πk · crest before k = top(k) · trough after k = bottom(k)</span></li>
+      <li><span class="mono">Derived · spheres</span>ST-22 has twelve spheres; thirteen downstrokes leave twelve counters. Each sphere sits in one, on the axis, at 0.36 nib widths.</li>
+    </ul>
+  </section>
+
+  <section class="block" aria-labelledby="h-plates">
+    <div class="head"><h2 id="h-plates">The hands, three <em>views</em></h2><p>Every hand from the front on its guide sheet, oblique, and down the axis. Select a plate to open it above.</p></div>
+    <div class="plates" id="plates"></div>
+  </section>
+
+  <section class="block" aria-labelledby="h-axes">
+    <div class="head"><h2 id="h-axes">The <em>hands</em>, as constraints</h2><p>Sources disagree, and the table says where. Italic is the clearest case: one guide gives a 45° pen with 4-nib ascenders, another 35° with 2.</p></div>
+    <table id="handsTable"><thead><tr><th>Hand</th><th>X · asc · desc (nib widths)</th><th>Nib · slant</th><th>Source</th></tr></thead><tbody></tbody></table>
+  </section>
+
+  <section class="block" aria-labelledby="h-recs">
+    <div class="head"><h2 id="h-recs">Grids from other <em>records</em></h2><p>The Latin guide sheet is one way to rule a page for writing. These sit beside it; none is the original.</p></div>
+    <div class="recs">
+      <div class="rec"><span class="mono">Northern Europe, 12th–16th c.</span><h3>Minims and the picket fence</h3><p>In formal blackletter the minims reach the regularity of a picket fence, relieved only by hairlines from the nib’s corner (Britannica). Textura, Rotunda, Schwabacher and Fraktur are the four usual families. Blokland (Leiden, 2016) argues that early textura and roman type shared standardized widths in units, a grid inside the type itself.</p><p class="mono"><a href="https://www.britannica.com/art/calligraphy/The-black-letter-or-Gothic-style-9th-to-15th-century">Britannica</a> · <a href="https://scholarlypublications.universiteitleiden.nl/access/item%3A2915023/download">Blokland 2016</a></p></div>
+      <div class="rec"><span class="mono">United States, 19th–20th c.</span><h3>Slant lines</h3><p>Pointed-pen guide sheets rule slant lines at 52° (Spencerian) or 55° (Copperplate) from the baseline. Spencerian adds a second, connective slant of about 30°. A 1903 US patent for a penmanship chart rules unit parallelograms at about 50°, with connectives at about 25°.</p><p class="mono"><a href="https://loveleighloops.com/blog/spencerian-script">Spencerian</a> · <a href="https://patents.google.com/patent/US723338A/en">US 723,338</a></p></div>
+      <div class="rec"><span class="mono">China · and the Arabic proportioned scripts</span><h3>Nine palaces, rice grid, the dot</h3><p>Chinese practice sheets divide each character square into nine (the nine-palace grid, 九宮格), four (the field grid, 田字格) or eight with diagonals (the rice-character grid, 米字格). One study compares the nine-palace grid to painters’ transfer grids and Tang map grids. The proportioned Arabic scripts measure letters in rhombic dots, the mark of the pen’s own width. The rice-character grid is the guide here when the coil is seen down its axis.</p><p class="mono"><a href="https://scholarlypublications.universiteitleiden.nl/access/item%3A3070453/download">Leiden 2020, ch. 4</a> · <a href="https://www.metmuseum.org/learn/educators/curriculum-resources/art-of-the-islamic-world/unit-two/proportional-scripts">The Met</a></p></div>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="h-spec">
+    <div class="head"><h2 id="h-spec">Spec, <em>machine</em>-readable</h2><p>Every hand, constraint, measurement and pass on this page, as JSON.</p></div>
+    <div class="spechead"><span class="mono">ribbon-slant-grid · v05</span><button class="btn" id="copySpec">Copy JSON</button></div>
+    <pre id="spec"></pre>
+  </section>
+
+  <section class="block" aria-labelledby="h-open">
+    <div class="head"><h2 id="h-open">Open</h2><p>Decisions that are yours, and what was not checked.</p></div>
+    <ul class="open">
+      <li><b>Which lockup.</b> Wrap keeps the ribbon in the logo; Strike and Settle end on the wordmark alone. The Mir library rule says the wordmark is never outlined or recolored; none of the three does either, but Wrap lays gel over it.</li>
+      <li><b>Which hand.</b> The Mindgut hand is the only one measured from the brand. The others are references for proportion and rhythm, not proposals.</li>
+      <li><b>The 2.2 mark.</b> Not used: the lockups land on the wordmark alone.</li>
+      <li><b>Not checked.</b> A real GPU’s frame rate (checked in software GL), Safari, a phone, and the coil’s fidelity against p10 at 1:1.</li>
+    </ul>
+  </section>
+</div>
+<footer><div class="wrap mono"><span>Engine after ST-22 · p10 (jalulia/tools) · wordmark: Mir library trace</span><span>Geist and Geist Mono (SIL OFL) · gifenc (MIT, Matt DesLauriers)</span></div></footer>
+<noscript><p class="wrap">This study draws with WebGL and script. With script off, only the text is shown.</p></noscript>
+
+<script>/*@LOGO*/</script>
+<script>/*@GIFENC*/</script>
+<script>/*@GEOM*/</script>
+<script>/*@ROUTES*/</script>
+<script>/*@HANDS*/</script>
+<script>/*@LOCK*/</script>
+<script>/*@GL*/</script>
+<script>/*@MAP*/</script>
+<script>/*@GUIDE*/</script>
+<script>/*@APP*/</script>
+</body>
+</html>
