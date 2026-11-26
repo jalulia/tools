@@ -535,7 +535,7 @@ if(document.fonts){ Promise.all(['700 20px Archivo','400 12px Inter','400 12px "
   function capture(){ if(UI){ const pal=UI.palettes; return { m:'ui', p:pal?pal.current():0, inks:pal&&pal.inks?pal.inks().filter(k=>k.hex!==k.base).map(k=>[k.key,k.hex]):[], r:(UI.params||[]).map(r=>[r.id,r.get()]) }; }
     return { m:'ts', v:vi, inks:Object.assign({},inkEdits[vi]||{}), o:JSON.parse(JSON.stringify(overrides)) }; }
   function apply(d){ if(!d)return; try{
-    if(d.m==='ui'&&UI){ const pal=UI.palettes; if(pal){ pal.set(d.p||0); if(pal.setInk&&d.inks){ const inks=pal.inks?pal.inks():[]; for(const [k,v] of d.inks){ const ink=inks.find(x=>x.key===k); if(ink)pal.setInk(ink,v); } } }
+    if(d.m==='ui'&&UI){ const pal=UI.palettes; if(pal){ pal.set(d.p||0); if(pal.setInk&&d.inks){ const inks=pal.inks?pal.inks():[]; for(const [k,v] of d.inks){ const ink=inks.find(x=>x.key===k); if(ink)pal.setInk(ink.key,v); } } }
       for(const [id,v] of d.r||[])if(P().set)P().set(id,v); setTimeout(()=>{ try{ uiSyncRows(); uiColorDraw(); }catch(e){} },30); }
     else if(d.m==='ts'){ if(typeof d.v==='number'&&d.v!==vi&&variants[d.v]){ vi=d.v; palEl.querySelectorAll('button').forEach((b,k)=>{ b.classList.toggle('on',k===vi); b.setAttribute('aria-checked',String(k===vi)); }); }
       inkEdits[vi]=Object.assign({},d.inks||{}); drawInks();
@@ -564,7 +564,7 @@ if(document.fonts){ Promise.all(['700 20px Archivo','400 12px Inter','400 12px "
   /* on open: a preset in the address wins, then the one marked on load */
   const fromUrl=(location.hash.match(/[#&]preset=([^&]+)/)||[])[1];
   const first=fromUrl?dec(fromUrl):((load().find(x=>x.onload)||{}).d);
-  if(first){ let tries=0; const go=()=>{ if(window.__study_params||++tries>40){ apply(first); } else setTimeout(go,50); }; setTimeout(go,60); }
+  if(first){ let tries=0; const go=()=>{ if(window.__study_params||++tries>400){ apply(first); } else setTimeout(go,50); }; setTimeout(go,60); }   /* waits for the parameter rail, which appears after the first draw (3 s on a slow machine); gives up after 20 s */
 })();
 /* embedded in a shared set: no link on the page leads back to the site */
 if(EMBED){ const seal=()=>document.querySelectorAll('.notes a[href],.rel a[href],.spec a[href]').forEach(a=>{ a.removeAttribute('href'); a.removeAttribute('target'); }); seal(); setTimeout(seal,1500);
