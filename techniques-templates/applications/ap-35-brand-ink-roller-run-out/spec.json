@@ -1,0 +1,368 @@
+{
+  "id": "ap-35-brand-ink-roller-run-out",
+  "code": "AP-35",
+  "title": "Brand ink · roller run-out",
+  "section": "applications",
+  "variants": [
+    {
+      "id": "set",
+      "label": "As drawn",
+      "swatches": []
+    }
+  ],
+  "usage": {
+    "id": "u-drawdown-roller",
+    "job": "brand",
+    "title": "Brand ink · roller run-out",
+    "aspect": "3/2",
+    "uses": [
+      "fx-03-paper-tooth",
+      "fx-02-ink-edge",
+      "ink-transfer",
+      "ink-film"
+    ],
+    "split_of": "u-drawdown",
+    "role": "roller"
+  },
+  "reference": {
+    "grammar": "The drawdown card's roller on its own: every dial changes the roll and nothing else. The spec card for a grocer's one brand color, rolled once across the card over white and over a black opacity band. Paper sets where the speckle can land, Roller where and how fast the ink gives out, Transfer how the film breaks up, Ink the color. The five stations are recomputed from the same film model on every change. The type is printed at AP-36's defaults and does not move."
+  },
+  "techniques": [
+    {
+      "id": "fx-03-paper-tooth",
+      "name": "Paper",
+      "short": "FX-03",
+      "atoms": [
+        "form"
+      ],
+      "params": {
+        "scale": {
+          "value": 1.1,
+          "range": [
+            0.8,
+            4
+          ],
+          "label": "Tooth scale",
+          "step": 0.05,
+          "unit": "px",
+          "scale": "log",
+          "note": "feature size of the board's tooth. The run-out speckle is this tooth: as the ink gives out, only its peaks still take it"
+        },
+        "aniso": {
+          "value": 1.4,
+          "range": [
+            1.3,
+            4
+          ],
+          "label": "Grain stretch",
+          "step": 0.05,
+          "note": "tooth drawn out along the machine direction. Below 1.3 it reads as a stock paper filter"
+        },
+        "fAngle": {
+          "value": 6,
+          "range": [
+            0,
+            180
+          ],
+          "label": "Grain angle",
+          "step": 1,
+          "unit": "°",
+          "note": "machine direction of the tooth and fibers. Along the stroke the speckle joins into streaks; across it, it breaks them"
+        },
+        "fibers": {
+          "value": 1.4,
+          "range": [
+            0,
+            12
+          ],
+          "label": "Fibers",
+          "step": 0.1,
+          "unit": "/100×100 px",
+          "note": "laid fibers in the board. Each one stands proud, takes ink early and wicks it into the run-out"
+        },
+        "form": {
+          "value": 0.25,
+          "range": [
+            0,
+            0.6
+          ],
+          "label": "Formation",
+          "step": 0.01,
+          "note": "the sheet's cloudiness. It lifts the board in broad flocs and thins the film over them"
+        }
+      },
+      "implementation": "The board is FX-03 live: tooth height (gradient noise at the tooth scale, stretched along the grain), formation flocs, laid fibers and pits, under the one sheet light. The roller reads this height: as its ink gives out it inks only the top share of the surface, so the run-out speckle is the board itself.",
+      "limits": "Grain stretch < 1.3: isotropic tooth reads as a stock paper filter. Tooth scale < .8 px: per-pixel noise. Fibers > 12 per 100 × 100 px: felt. Formation > .6: the paper itself turns blotchy."
+    },
+    {
+      "id": "fx-02-ink-edge",
+      "name": "Roller",
+      "short": "FX-02",
+      "atoms": [
+        "deposit"
+      ],
+      "params": {
+        "runAt": {
+          "value": 50,
+          "range": [
+            10,
+            90
+          ],
+          "label": "Runs out at",
+          "step": 1,
+          "unit": "%",
+          "note": "how far along the stroke the roller is down to half its ink"
+        },
+        "runLen": {
+          "value": 102,
+          "range": [
+            6,
+            180
+          ],
+          "label": "Run-out length",
+          "step": 1,
+          "unit": "%",
+          "scale": "log",
+          "note": "share of the stroke the ink takes to give out. Short is an abrupt burst; long is a slow fade that never holds a solid"
+        },
+        "curve": {
+          "value": 0,
+          "label": "Dropoff",
+          "options": [
+            {
+              "v": 0,
+              "label": "Smooth"
+            },
+            {
+              "v": 1,
+              "label": "Long tail"
+            },
+            {
+              "v": 2,
+              "label": "Late drop"
+            },
+            {
+              "v": 3,
+              "label": "Even"
+            }
+          ],
+          "note": "how the ink gives out across the run-out: an S, a fast drop with a long tail, a long hold with a late drop, or a straight line"
+        },
+        "pressure": {
+          "value": 1,
+          "range": [
+            0.65,
+            1
+          ],
+          "label": "Roller pressure",
+          "step": 0.01,
+          "note": "how hard the hand leans on the roller. Below 1 the solid opens onto the board's valleys before the ink runs out"
+        },
+        "skew": {
+          "value": 0,
+          "range": [
+            -20,
+            20
+          ],
+          "label": "Roller skew",
+          "step": 0.5,
+          "unit": "°",
+          "note": "the hand drifts off square, so the run-out line and the streaks turn"
+        },
+        "wAmp": {
+          "value": 5,
+          "range": [
+            0,
+            30
+          ],
+          "label": "Edge warp",
+          "step": 0.5,
+          "unit": "px",
+          "note": "how far the run-out line wanders: an unevenly inked roller"
+        },
+        "wScale": {
+          "value": 120,
+          "range": [
+            20,
+            400
+          ],
+          "label": "Warp scale",
+          "step": 1,
+          "unit": "px",
+          "scale": "log",
+          "note": "wavelength of the wander"
+        },
+        "fall": {
+          "value": 2.5,
+          "range": [
+            0,
+            12
+          ],
+          "label": "Roller ends",
+          "step": 0.1,
+          "unit": "px",
+          "note": "how far pressure falls off where the roller's ends run and where it sets down and lifts. 0 is a die-cut edge"
+        },
+        "ridge": {
+          "value": 0.3,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Edge ridge",
+          "step": 0.01,
+          "note": "ink squeezed to the roller's ends: a darker line along the edges that holds on into the run-out"
+        },
+        "seed": {
+          "value": 41,
+          "range": [
+            1,
+            999
+          ],
+          "label": "Seed",
+          "step": 1,
+          "note": "a new pass of the roller: the same settings, a different film split and wander"
+        }
+      },
+      "implementation": "Pressure along the stroke = the dropoff curve of the distance to a warped run-out line (half the ink gone at Runs out at, over Run-out length). Across the stroke it falls off over Roller ends at the roller's ends, its set-down and its lift, with the board's own wander; the ends carry a ridge of squeezed ink, thicker film that holds longer.",
+      "limits": "Run-out length < 6%: a hard vector edge, no run-out to see. Roller skew past 20°: the run-out leaves the strip before the stations can read it."
+    },
+    {
+      "id": "ink-transfer",
+      "name": "Transfer",
+      "short": "FX-02",
+      "atoms": [
+        "deposit"
+      ],
+      "params": {
+        "bite": {
+          "value": 0.82,
+          "range": [
+            0.3,
+            1
+          ],
+          "label": "Stock bite",
+          "step": 0.01,
+          "note": "how much the board's height, against the film's own split, decides where ink lands. Below .3 the speckle stops following the paper and reads as dither"
+        },
+        "breakup": {
+          "value": 0.94,
+          "range": [
+            0.6,
+            1
+          ],
+          "label": "Break-up ↔ thin",
+          "step": 0.01,
+          "note": "1: the film breaks into marks on the peaks as the ink gives out. Lower: it stays whole and thins to tone. Below .6 the run-out reads as a gradient"
+        },
+        "split": {
+          "value": 0.8,
+          "range": [
+            0.4,
+            2.5
+          ],
+          "label": "Film split",
+          "step": 0.05,
+          "unit": "px",
+          "scale": "log",
+          "note": "clump size of the film as it splits between roller and board: a tacky ink clumps larger"
+        },
+        "streak": {
+          "value": 2.2,
+          "range": [
+            1,
+            6
+          ],
+          "label": "Streak",
+          "step": 0.1,
+          "note": "clumps drawn out along the stroke: a dry roller, a fast pass. Above 6 they read as scanlines"
+        },
+        "starve": {
+          "value": 0.004,
+          "range": [
+            0,
+            0.25
+          ],
+          "label": "Starve",
+          "step": 0.002,
+          "scale": "pow",
+          "curve": 2,
+          "note": "the lowest share of the board never takes ink: pinholes in the solid, placed by the board's valleys"
+        },
+        "mottle": {
+          "value": 0.18,
+          "range": [
+            0,
+            0.6
+          ],
+          "label": "Mottle",
+          "step": 0.01,
+          "note": "the sheet's formation thinning the film in clouds. Past .6 the clouds read as blotches"
+        }
+      },
+      "implementation": "The ink chain: the board's height (blended with film-splitting noise, clumped and streaked along the stroke) is ranked to percentiles, and pressure P inks exactly the top P of the surface, peaks first. Starve keeps the lowest share bare, fibers wick ink into the run-out, mottle thins the film over the formation.",
+      "limits": "Stock bite < .3: speckle stops following the paper and reads as digital dither. Break-up < .6: the run-out becomes a gradient. Film split > 2.5 px: blotches. Streak > 6: scanlines. Mottle > .6: blotches."
+    },
+    {
+      "id": "ink-film",
+      "name": "Ink",
+      "short": "FX-02",
+      "atoms": [
+        "deposit"
+      ],
+      "params": {
+        "L": {
+          "value": 0.64,
+          "range": [
+            0.6,
+            0.76
+          ],
+          "label": "Ink lightness",
+          "step": 0.005,
+          "unit": "L",
+          "note": "OKLCH lightness of the ink. The stations read the printed result, not this number"
+        },
+        "C": {
+          "value": 0.2,
+          "range": [
+            0,
+            0.2
+          ],
+          "label": "Ink chroma",
+          "step": 0.005,
+          "unit": "C",
+          "note": "OKLCH chroma of the ink, mapped into gauge where a hue cannot carry it"
+        },
+        "h": {
+          "value": 38,
+          "range": [
+            0,
+            360
+          ],
+          "label": "Ink hue",
+          "step": 1,
+          "unit": "°",
+          "note": "OKLCH hue of the ink"
+        },
+        "density": {
+          "value": 1.2,
+          "range": [
+            0.6,
+            1.8
+          ],
+          "label": "Film thickness",
+          "step": 0.01,
+          "note": "ink film at full load. Beer–Lambert: thicker prints deeper and more saturated; on the black band a thin film all but disappears"
+        }
+      },
+      "implementation": "One transparent ink, set in OKLCH and printed as a Beer–Lambert film in linear light: absorbance = acceptance × film thickness. Over white it reads as its color; over the black band it all but disappears.",
+      "limits": "Lightness is held between .6 and .76 and chroma at .2 or under: darker, the film prints a dull red-brown; paler, a pastel; past .2 chroma the thin film swings hue as it runs out."
+    }
+  ],
+  "pass_order": [
+    "Paper · the board the roller meets: tooth, fibers, formation.",
+    "Roller · where and how fast the ink gives out along the stroke, and how its ends meet the board.",
+    "Transfer · how the film splits onto the board's peaks.",
+    "Ink · one transparent film, set in OKLCH."
+  ]
+}

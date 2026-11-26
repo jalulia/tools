@@ -10,10 +10,12 @@
   const HERE = (document.currentScript && document.currentScript.src) || location.href;
   let pool = null;
   try { if (location.protocol !== 'file:' && typeof Worker !== 'undefined') { const n = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 4) - 1)); pool = []; for (let i = 0; i < n; i++) { const w = new Worker(new URL('ap-worker.js', HERE)); w.job = null; pool.push(w); } } } catch (e) { pool = null; }
-  const usage = (id) => SET.usages.find((u) => u.id === id);
-  const merged = (u, ov) => { const S = {}; for (const id in DEF) S[id] = Object.assign({}, DEF[id], (u.overrides || {})[id] || {}, (ov || {})[id] || {}); return S; };
+  const usage = (id) => SET.usages.concat(SET.splits || []).find((u) => u.id === id);
+  /* a split page's own dials (u.dials) are defaults too, and may name techniques the set does not have */
+  const dialDef = (u) => { const D = {}; for (const t of u.dials || []) { const o = D[t.id] = {}; for (const k in t.params) o[k] = t.params[k].value; } return D; };
+  const merged = (u, ov) => { const S = {}, DD = dialDef(u); for (const id in DEF) S[id] = Object.assign({}, DEF[id], (u.overrides || {})[id] || {}, DD[id] || {}, (ov || {})[id] || {}); for (const id in DD) if (!S[id]) S[id] = Object.assign({}, DD[id], (ov || {})[id] || {}); return S; };
   const CLIPC = document.createElement('canvas');
-  const clipsOf = (defs, W, H, dpr) => { const out = {}; for (const k in defs || {}) { CLIPC.width = W; CLIPC.height = H; const g = CLIPC.getContext('2d', { willReadFrequently: true }); g.clearRect(0, 0, W, H); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#fff'; defs[k](g, W / dpr, H / dpr, null);
+  const clipsOf = (defs, W, H, dpr, S) => { const out = {}; for (const k in defs || {}) { CLIPC.width = W; CLIPC.height = H; const g = CLIPC.getContext('2d', { willReadFrequently: true }); g.clearRect(0, 0, W, H); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#fff'; defs[k](g, W / dpr, H / dpr, S || null);
     const d = g.getImageData(0, 0, W, H).data, f = new Float32Array(W * H); for (let i = 0, j = 3; i < f.length; i++, j += 4) f[i] = d[j] / 255; out[k] = f; } return out; };
   let fontsReady = null; const fonts = () => fontsReady || (fontsReady = document.fonts ? Promise.all([...document.fonts].map((f) => f.load().catch(() => 0))) : Promise.resolve());
   const compute = (j) => { const u = usage(j.id); FX.LIGHT = SET.lightFor(u, LIGHT); const R = u.run((id) => j.S[id], j.W, j.H, j.dpr, { S: j.S, clips: j.clips }); return FX.toRGBA(R, 'image', j.W, j.H); };
@@ -26,7 +28,7 @@
   window.AP = {
     defaults: (id) => merged(usage(id), {}),
     render(id, c, w, h, dpr, finish, ov) { const u = usage(id); const W = c.width, H = c.height, d = dpr * (u.zoom || 1);
-      fonts().then(() => run({ id, W, H, dpr: d, S: merged(u, ov), clips: clipsOf(u.clips, W, H, d) })).then((m) => {
+      const S = merged(u, ov); fonts().then(() => run({ id, W, H, dpr: d, S, clips: clipsOf(u.clips, W, H, d, u.dials ? S : null) })).then((m) => {
         if (m.dropped) return; if (m.err) { console.error(m.err); finish(); return; }
         const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.putImageData(new ImageData(m.rgba, W, H), 0, 0); finish(); });
       return false; } };

@@ -2199,4 +2199,7 @@ G.FXSET={ code:'T-04', lightFor, clips:(id,W,H,dpr,o,img,mk)=>clipsFor(FXSET.eff
     {id:'added', title:'Added marks', blurb:'Something lands on the stock: ink, graphite, foil, varnish or thread. The stock\'s height decides where it takes.'},
     {id:'changed', title:'Changed in place', blurb:'The stock itself changes. A die presses it, sunlight turns a brushed coating blue, a laser burns it.'}],
   effects:EFFECTS, usages };
+/* kit · the set's own machinery for pages built on it (applications/_engine/splits.js): the same ink chain, stock, type
+   and layout geometry the usages print with, so a page that splits a usage into instruments prints with the same physics. */
+G.FXSET.kit={ chain, inkEdge, tooth, inkChain, stockFor, baseAlb, light, stockPx, stockH, typeAt, proj, sstep, TOOTH, SOLID, a3_DD, a3_PO, a3_station, a3_fs, a3_line, a3_circ, a3_LINE };
 })(typeof window!=='undefined'?window:self);
