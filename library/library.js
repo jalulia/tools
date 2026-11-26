@@ -57,7 +57,7 @@
   var NOFILTER = noF();
 
   /* ---------------------------------------------------------------- state */
-  var S = { view: 'plates', q: '', f: noF(), d: 's', sort: 'modified', r: null, term: null, scheme: '', tsort: 'n', ls: 'acc', ld: 1, open: {} };
+  var S = { view: 'plates', q: '', f: noF(), d: 's', sort: 'new', r: null, term: null, scheme: '', tsort: 'n', ls: 'acc', ld: 1, open: {} };
   var LIST = R;   // the records the drawer pages through
   var MEM = null; // the route, kept here when the host does not let the page write its own address
   var BASE = L.base || '../', PREVIEW = !!L.preview;
@@ -73,7 +73,7 @@
     S.q = p.q || '';
     FACETS.forEach(function (F) { S.f[F.k] = p[F.k] != null ? p[F.k].split(',').map(function (v) { return v === '-' ? '' : v; }).filter(function (v) { return F.values.indexOf(v) >= 0; }) : []; });
     S.d = p.d === 'm' ? 'm' : p.d === 't' ? 't' : 's';
-    S.sort = ['acc', 'title', 'modified', 'shelf'].indexOf(p.sort) >= 0 ? p.sort : 'modified';
+    S.sort = ['new', 'acc', 'title', 'modified', 'shelf'].indexOf(p.sort) >= 0 ? p.sort : 'new';
     S.scheme = p.scheme || '';
     S.tsort = p.ts === 'az' ? 'az' : 'n';
     S.r = p.r && byAcc[p.r] ? p.r : null;
@@ -84,7 +84,7 @@
     if (o.q) qs.push('q=' + encodeURIComponent(o.q));
     FACETS.forEach(function (F) { var v = o.f[F.k]; if (v && v.length) qs.push(F.k + '=' + v.map(function (x) { return x === '' ? '-' : encodeURIComponent(x); }).join(',')); });
     if (o.d === 'm' || o.d === 't') qs.push('d=' + o.d);
-    if (o.sort !== 'modified') qs.push('sort=' + o.sort);
+    if (o.sort !== 'new') qs.push('sort=' + o.sort);
     if (o.scheme) qs.push('scheme=' + encodeURIComponent(o.scheme));
     if (o.tsort === 'az') qs.push('ts=az');
     if (o.r) qs.push('r=' + o.r);
@@ -187,6 +187,8 @@
   function filtered() {
     var tk = tokens(), out = base().filter(function (r) { return match(r, null, tk); });
     if (S.sort === 'title') out.sort(function (a, b) { return a.title.localeCompare(b.title); });
+    // newest first by default: the latest arrival leads every list (Julia, 2026-11-26)
+    else if (S.sort === 'new') out.sort(function (a, b) { return (b.dates.accessioned || '').localeCompare(a.dates.accessioned || '') || b.acc.localeCompare(a.acc) || a._i - b._i; });
     else if (S.sort === 'modified') out.sort(function (a, b) { return (b.dates.modified || '').localeCompare(a.dates.modified || '') || a._i - b._i; });
     else if (S.sort === 'shelf') out.sort(function (a, b) { return COL[a.collection]._i - COL[b.collection]._i || (SHELF[a.id] || 0) - (SHELF[b.id] || 0); });
     return out;
@@ -398,7 +400,7 @@
     var list = filtered(); LIST = list;
     function sel(v) { return S.sort === v ? ' selected' : ''; }
     var tools = seg('Layout', [['data-d="s"', 'Sheet', 's'], ['data-d="m"', 'Cards', 'm'], ['data-d="t"', 'Tabs', 't', 'Die-cut index cards: the cut is the technique family']], S.d) +
-      '<label class="ord">Order <select data-sort><option value="modified"' + sel('modified') + '>Last changed</option><option value="acc"' + sel('acc') + '>Arrival</option><option value="shelf"' + sel('shelf') + '>Shelf</option><option value="title"' + sel('title') + '>Title</option></select></label>';
+      '<label class="ord">Order <select data-sort><option value="new"' + sel('new') + '>Newest</option><option value="modified"' + sel('modified') + '>Last changed</option><option value="acc"' + sel('acc') + '>Arrival</option><option value="shelf"' + sel('shelf') + '>Shelf</option><option value="title"' + sel('title') + '>Title</option></select></label>';
     var body = !list.length ? empty('records')
       : S.d === 's' ? '<div class="sheet">' + strip(list, phone() ? 76 : 104) + '</div>'
       : S.d === 't' ? '<div class="tabs">' + list.filter(function (r) { return r.thumb; }).map(tab).join('') + '</div>' + unpictured(list.filter(function (r) { return !r.thumb; }))

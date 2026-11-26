@@ -209,7 +209,26 @@ textarea{resize:vertical;white-space:pre;overflow-x:auto}
 .inkrow .hex{border:0;border-bottom:1px solid var(--hair);font:11px/18px var(--mono);width:78px}
 .btns{display:flex;flex-wrap:wrap;gap:8px}
 .specpre{margin:18px 0 0;padding:12px;background:var(--sunken);font:10.5px/1.5 var(--mono);white-space:pre;overflow:auto;max-height:46vh;color:var(--ink-2)}
-.pcard{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--hair);padding:0;margin:0 0 12px}
+.pcard{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--hair);padding:0;margin:0 0 12px;cursor:pointer}
+.save{padding:0 0 16px;margin:0 0 4px;border-bottom:1px solid var(--hair)}
+.save label{display:block;font-size:13px;margin:0 0 8px}
+.saverow{display:flex;gap:8px}.saverow .txt{flex:1;font-family:var(--sans);font-size:13px}
+.saverow .txt.need{border-color:var(--accent)}
+.saverow button{background:var(--ink);color:#fff;border:1px solid var(--ink);padding:0 14px;font:10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap}
+.sync{font-size:11.5px;line-height:16px;color:var(--grey);margin:8px 0 0}
+.sync.saving{color:var(--ink)}.sync.saved{color:var(--ink)}.sync.failed{color:var(--accent)}
+.mh b{font-weight:400;color:var(--grey);margin-left:6px}
+.pcard .pa{display:flex;align-items:center;gap:14px;padding:0 12px 12px;font:9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.lnk{background:none;border:0;padding:0;font:inherit;letter-spacing:inherit;text-transform:inherit;color:var(--blue);cursor:pointer}
+.lnk:hover{text-decoration:underline}
+.pcard .def{font-style:normal;color:var(--accent)}
+.pcard .where{margin-left:auto;color:var(--grey-2)}
+details.removed{margin-top:14px;border-top:1px solid var(--hair)}
+details.removed summary{list-style:none;cursor:pointer;font:10px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;padding:14px 0}
+details.removed summary b{font-weight:400;color:var(--grey);margin-left:6px}
+details.removed .rrow{display:flex;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--hair-2);font-size:13px}
+details.removed .rrow i{font:10px/1 var(--mono);font-style:normal;color:var(--grey)}
+details.removed .rrow .lnk{margin-left:auto;font:9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
 .pcard[aria-pressed=true]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .pcard .pv{display:block;position:relative;height:190px;overflow:hidden;border-bottom:1px solid var(--hair);pointer-events:none}
 .pcard .pt{display:flex;justify-content:space-between;align-items:baseline;padding:10px 12px 4px}
@@ -694,7 +713,78 @@ const PRESETS = [
       rules: 'lines', leaders: 'none', width: 340, padX: 28, padTop: 26, padBottom: 26, tooth: 0, tone: 0, edgeTop: 'straight', edgeBottom: 'straight',
       maskSlope: 0, maskFloor: 1, fade: 0, shadow: .6, reach: 1.25, mast: 'off', puzzle: false, barcode: false, mark: 'none', ink: '#16191d' } }
 ];
-const presetState = id => { const p = PRESETS.find(x => x.id === id) || PRESETS[0]; return Object.assign({}, BASE, p.set); };
+/* ---------- saved presets: this browser at once, the repo (paper-receipt/presets.json) with the library's Edit token ---------- */
+const LS_STORE = 'paper-receipt.presets', LS_DRAFT = 'paper-receipt.draft', LS_TOKEN = 'tools.token';
+const REPO = 'jalulia/tools', FILE = 'paper-receipt/presets.json', BRANCH = 'main';
+const ls = { get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
+const token = () => { try { return localStorage.getItem(LS_TOKEN) || ''; } catch (e) { return ''; } };
+const onSite = () => /^https?:$/.test(location.protocol);
+let STORE = { schema: 'paper-receipt-presets/1', default: 'tex', presets: [], removed: [] }, SYNC = { remote: false, state: '', msg: '' };
+const userP = () => STORE.presets;
+const findP = id => STORE.presets.find(x => x.id === id) || PRESETS.find(x => x.id === id);
+const presetState = id => { const p = findP(id) || PRESETS[0]; return Object.assign({}, BASE, p.set); };
+function mergeStore(remote) {
+  // the repo's list, plus anything saved here that has not reached it yet
+  const local = ls.get(LS_STORE) || { presets: [], removed: [] };
+  const R = Object.assign({ schema: 'paper-receipt-presets/1', default: 'tex', presets: [], removed: [] }, remote || {});
+  const ids = new Set(R.presets.map(p => p.id).concat(R.removed.map(p => p.id)));
+  for (const p of local.presets || []) if (!ids.has(p.id)) R.presets.push(Object.assign({}, p, { local: true }));
+  if (!remote && local.default) R.default = local.default;
+  STORE = R; ls.set(LS_STORE, { presets: R.presets, removed: R.removed, default: R.default });
+}
+const b64 = s => { const u = new TextEncoder().encode(s); let o = ''; for (let i = 0; i < u.length; i += 0x8000) o += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(o); };
+const unb64 = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g, '')), c => c.charCodeAt(0)));
+function gh(path, opt = {}) {
+  return fetch('https://api.github.com/repos/' + REPO + path, { method: opt.method || 'GET', headers: { Authorization: 'Bearer ' + token(), Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }, body: opt.body ? JSON.stringify(opt.body) : undefined, cache: 'no-store' })
+    .then(r => r.ok ? r.json() : r.text().then(t => { const e = new Error(t.slice(0, 160)); e.status = r.status; throw e; }));
+}
+/** One change, one commit. Reads the file fresh, applies the change, writes it back; retries once if it moved. */
+function commitStore(change, message, tries = 2) {
+  if (!token()) return Promise.reject(Object.assign(new Error('no token'), { status: 0 }));
+  return gh('/contents/' + FILE + '?ref=' + BRANCH).then(j => ({ D: JSON.parse(unb64(j.content)), sha: j.sha }), e => { if (e.status === 404) return { D: { schema: 'paper-receipt-presets/1', default: 'tex', presets: [], removed: [] }, sha: null }; throw e; })
+    .then(({ D, sha }) => { change(D); const body = { message: message + '\n\nSaved by Paper receipt (presets).', content: b64(JSON.stringify(D, null, 1) + '\n'), branch: BRANCH }; if (sha) body.sha = sha; return gh('/contents/' + FILE, { method: 'PUT', body }).then(() => D); })
+    .catch(e => { if ((e.status === 409 || e.status === 422) && tries > 1) return commitStore(change, message, tries - 1); throw e; });
+}
+function persist(change, message) {
+  change(STORE); ls.set(LS_STORE, { presets: STORE.presets, removed: STORE.removed, default: STORE.default });
+  if (!onSite() || !token()) { SYNC.state = 'local'; buildPresets(); return; }
+  SYNC.state = 'saving'; buildPresets();
+  commitStore(D => {
+    change(D);
+    // carry anything saved only in this browser so far
+    const have = new Set((D.presets || []).map(p => p.id).concat((D.removed || []).map(p => p.id)));
+    for (const p of STORE.presets) if (p.local && !have.has(p.id)) D.presets.push(Object.assign({}, p));
+    D.presets.forEach(p => delete p.local);
+  }, message).then(D => {
+    STORE.presets.forEach(p => delete p.local); SYNC.state = 'saved'; SYNC.at = new Date(); ls.set(LS_STORE, { presets: STORE.presets, removed: STORE.removed, default: STORE.default }); buildPresets();
+  }, e => { SYNC.state = 'failed'; SYNC.msg = e.status === 401 || e.status === 403 ? 'the Edit token was refused' : e.status === 0 ? 'no Edit token in this browser' : 'GitHub said ' + (e.status || 'no'); buildPresets(); });
+}
+const snap = () => { const o = {}; for (const p of P) if (!p.k.startsWith('c.')) o[p.k] = S[p.k]; for (const [k] of COLORS) o[k] = S[k]; return o; };
+function savePreset(name) {
+  const id = 'u-' + Date.now().toString(36), base = findP(cur) || PRESETS[0];
+  const p = { id, name: name.trim().slice(0, 60) || 'Untitled', date: new Date().toISOString().slice(0, 10), base: base.id, set: snap(), content: Object.assign({}, S.c), local: true };
+  cur = id;
+  persist(D => { D.presets = (D.presets || []).filter(x => x.id !== id).concat([D === STORE ? p : Object.assign({}, p)]); }, `Paper receipt preset: save "${p.name}"`);
+  edited(); status(rc.ms); noteStyle();
+}
+function removePreset(id) {
+  const p = STORE.presets.find(x => x.id === id); if (!p) return;
+  persist(D => { const q = (D.presets || []).find(x => x.id === id) || p; D.presets = (D.presets || []).filter(x => x.id !== id); D.removed = (D.removed || []).filter(x => x.id !== id).concat([Object.assign({}, q, { removed: new Date().toISOString().slice(0, 10) })]); if (D.default === id) D.default = 'tex'; }, `Paper receipt preset: remove "${p.name}" (kept under removed)`);
+}
+function restorePreset(id) {
+  const p = STORE.removed.find(x => x.id === id); if (!p) return;
+  persist(D => { const q = Object.assign({}, (D.removed || []).find(x => x.id === id) || p); delete q.removed; D.removed = (D.removed || []).filter(x => x.id !== id); D.presets = (D.presets || []).filter(x => x.id !== id).concat([q]); }, `Paper receipt preset: restore "${p.name}"`);
+}
+function setDefault(id) {
+  const p = findP(id); if (!p) return;
+  persist(D => { D.default = id; if (STORE.presets.find(x => x.id === id) && !(D.presets || []).find(x => x.id === id)) D.presets = (D.presets || []).concat([STORE.presets.find(x => x.id === id)]); }, `Paper receipt preset: default is "${p.name}"`);
+}
+function applyPreset(id, withText) {
+  const p = findP(id); if (!p) return;
+  cur = id; const keep = withText && p.content ? Object.assign({}, CONTENT, p.content) : S.c;
+  S = Object.assign(presetState(id), { c: keep }); refreshAll(); draw();
+  $$('.pcard').forEach(x => x.setAttribute('aria-pressed', x.dataset.id === cur));
+}
 
 /* ---------- state ---------- */
 let S = Object.assign(presetState('tex'), { c: Object.assign({}, CONTENT) }), cur = 'tex', group = 'type', ui = { zoom: 1, raw: false };
@@ -737,7 +827,9 @@ function deps() { $$('#mParams .prm').forEach(r => { const d = DEP[r.dataset.k];
 
 /* ---------- receipt ---------- */
 let rc = null, pending = 0;
-function draw() { if (pending) return; pending = requestAnimationFrame(() => { pending = 0; const ms = rc.update(compState()); status(ms); edited(); deps(); }); }
+let draftT = 0;
+function draft() { clearTimeout(draftT); draftT = setTimeout(() => ls.set(LS_DRAFT, { at: new Date().toISOString(), cur, set: snap(), content: S.c }), 400); }
+function draw() { if (pending) return; pending = requestAnimationFrame(() => { pending = 0; const ms = rc.update(compState()); status(ms); edited(); deps(); if (started) draft(); }); }
 
 /* ---------- panel: parameters ---------- */
 const dec = st => { const s = String(st); return s.includes('.') ? s.split('.')[1].length : 0; };
@@ -826,15 +918,39 @@ function buildColor() {
 
 /* ---------- panel: presets, each one a live receipt ---------- */
 let minis = [];
+function syncLine() {
+  if (!onSite()) return 'Saved in this browser. Open the page on jalulia.github.io to save to the library.';
+  if (!token()) return 'Saved in this browser only. Sign in once under Library → Edit on this site and presets save to the library, for every device.';
+  return { saving: 'Saving to the library…', saved: 'Saved to the library (paper-receipt/presets.json). Live on the site after the next deploy, about two minutes.', failed: 'Saved in this browser; the library save failed: ' + SYNC.msg + '. Save again to retry.', local: 'Saved in this browser.' }[SYNC.state] || 'Saves to the library (paper-receipt/presets.json) with your Edit token, and in this browser.';
+}
+function card(p, mine) {
+  const isDef = STORE.default === p.id;
+  const where = mine ? (p.local ? 'THIS BROWSER' : 'LIBRARY') : '';
+  return `<div class="pcard" data-id="${p.id}" aria-pressed="${p.id === cur}" role="button" tabindex="0"><span class="pv" aria-hidden="true"></span>
+   <span class="pt"><b>${esc(p.name)}</b><i>${esc(p.date || '')}</i></span>
+   <span class="pl">${esc(mine ? 'Saved' + (p.base ? ' from ' + ((findP(p.base) || {}).name || p.base) : '') + '.' : p.line)}</span>
+   <span class="pa">${isDef ? '<em class="def">Default</em>' : `<button type="button" class="lnk" data-def="${p.id}">Make default</button>`}${mine ? `<button type="button" class="lnk" data-rm="${p.id}">Remove</button>` : ''}${where ? `<span class="where">${where}</span>` : ''}</span></div>`;
+}
 function buildPresets() {
-  const box = $('#mPresets');
-  box.innerHTML = `<p class="hint">The default, R4 as tuned here, then the three receipt styles from the POP work. Choosing one sets every parameter to what it recorded; your text stays.</p>` +
-    PRESETS.map(p => `<button type="button" class="pcard" data-id="${p.id}" aria-pressed="${p.id === cur}"><span class="pv" aria-hidden="true"></span><span class="pt"><b>${esc(p.name)}</b><i>${p.date}</i></span><span class="pl">${esc(p.line)}</span></button>`).join('');
+  const box = $('#mPresets'); if (!box) return;
+  minis.forEach(m => { try { m.play(false); } catch (e) {} }); minis = [];
+  const mine = userP().slice().reverse();
+  box.innerHTML = `<div class="save"><label for="pName">Save the current settings</label><div class="saverow"><input id="pName" class="txt" type="text" placeholder="Name" maxlength="60" spellcheck="false"><button type="button" id="pSave">Save preset</button></div><p class="sync ${SYNC.state}">${esc(syncLine())}</p></div>` +
+    (mine.length ? `<div class="mh">Yours <b>${mine.length}</b></div>` + mine.map(p => card(p, true)).join('') : '') +
+    `<div class="mh">Built in</div><p class="hint">The default, R4 as tuned here, then the three receipt styles from the POP work. Choosing one sets every parameter to what it recorded; your text stays.</p>` +
+    PRESETS.map(p => card(p, false)).join('') +
+    (STORE.removed.length ? `<details class="removed"><summary>Removed <b>${STORE.removed.length}</b></summary>${STORE.removed.slice().reverse().map(p => `<div class="rrow"><span>${esc(p.name)}</span><i>${esc(p.removed || '')}</i><button type="button" class="lnk" data-restore="${p.id}">Restore</button></div>`).join('')}</details>` : '');
   minis = $$('.pcard', box).map(b => {
-    const host = $('.pv', b), st = Object.assign(presetState(b.dataset.id), { content: S.c, zoom: .5, fade: 0 });
-    const m = RC.mount(host, st); m.el.classList.add('mini'); return m;
+    const p = findP(b.dataset.id), st = Object.assign(presetState(b.dataset.id), { content: p && p.content ? Object.assign({}, CONTENT, p.content) : S.c, zoom: .5, fade: 0 });
+    const m = RC.mount($('.pv', b), st); m.el.classList.add('mini'); return m;
   });
-  $$('.pcard', box).forEach(b => b.onclick = () => { cur = b.dataset.id; const keep = S.c; S = Object.assign(presetState(cur), { c: keep }); $$('.pcard').forEach(x => x.setAttribute('aria-pressed', x.dataset.id === cur)); refreshAll(); draw(); });
+  $$('.pcard', box).forEach(b => { const go = () => applyPreset(b.dataset.id, true); b.addEventListener('click', e => { if (!e.target.closest('button')) go(); }); b.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target === b) { e.preventDefault(); go(); } }); });
+  $$('[data-def]', box).forEach(x => x.onclick = () => setDefault(x.dataset.def));
+  $$('[data-rm]', box).forEach(x => x.onclick = () => removePreset(x.dataset.rm));
+  $$('[data-restore]', box).forEach(x => x.onclick = () => restorePreset(x.dataset.restore));
+  const nm = $('#pName'), sv = $('#pSave');
+  const doSave = () => { if (!nm.value.trim()) { nm.focus(); nm.classList.add('need'); setTimeout(() => nm.classList.remove('need'), 900); return; } savePreset(nm.value); };
+  sv.onclick = doSave; nm.addEventListener('keydown', e => { if (e.key === 'Enter') doSave(); });
 }
 
 /* ---------- export: the component, isolated ---------- */
@@ -867,7 +983,7 @@ const r = RC.mount(document.getElementById('receipt'), STATE);
 }
 function spec() {
   const pv = keys => Object.fromEntries(keys.map(k => [k, get(k)]));
-  const pre = PRESETS.find(p => p.id === cur);
+  const pre0 = findP(cur) || PRESETS[0], pre = { name: pre0.name, date: pre0.date, files: pre0.files || ((findP(pre0.base) || PRESETS[0]).files || []) };
   return {
     schema: 'paper-receipt/1', title: 'Paper receipt', kind: 'template', generated: new Date().toISOString().slice(0, 10),
     summary: 'A receipt as front-end code: a character-grid layout in one monospace face, a paper canvas, a clip-path edge, an SVG ink filter and a falloff stack.',
@@ -908,8 +1024,8 @@ function showSpec() { const pre = $('#specpre'); if (pre && !$('#mExport').hidde
 
 /* ---------- status, caption, notes ---------- */
 function status(ms) {
-  const [w, h] = rc.size, pre = PRESETS.find(p => p.id === cur);
-  $('#status').textContent = `${pre.short} · SEED ${S.seed} · ${Math.round(w)} × ${Math.round(h)} PX · ${Math.round(ms)} MS`;
+  const [w, h] = rc.size, pre = findP(cur) || PRESETS[0];
+  $('#status').textContent = `${(pre.short || pre.name).toUpperCase()} · SEED ${S.seed} · ${Math.round(w)} × ${Math.round(h)} PX · ${Math.round(ms)} MS`;
   $('#capStyle').textContent = pre.name.toUpperCase();
   showSpec();
 }
@@ -920,7 +1036,7 @@ function edited() {
 }
 const PREVIEW_KEYS = new Set(['rules', 'leaders', 'heads', 'prose', 'mast']);
 function noteStyle() {
-  const pre = PRESETS.find(p => p.id === cur), r = ref();
+  const pre0 = findP(cur) || PRESETS[0], pre = pre0.files ? pre0 : Object.assign({}, findP(pre0.base) || PRESETS[0], { name: pre0.name, date: pre0.date, files: ((findP(pre0.base) || PRESETS[0]).files || []).concat(['Saved preset, ' + pre0.date]) }), r = ref();
   const items = [
     ['Type', `${r.face === 'jet' ? 'JetBrains Mono' : 'Receipt (IBM Plex Mono 400)'} ${r.size} px / ${r.lineHeight}, tracking ${r.tracking} em`],
     ['Brand', `${r.brandFace === 'signage' ? 'Signage (Barlow Condensed 700)' : r.brandFace} ${r.brandSize} px, ${r.brandTracking} em`],
@@ -936,6 +1052,8 @@ function noteStyle() {
   ];
   $('#styleEls').innerHTML = `<p class="src">${esc(pre.name)} · ${pre.date}</p><dl class="kv">${items.map(([a, b]) => `<dt>${a}</dt><dd>${esc(b)}</dd>`).join('')}</dl><p class="src">Files</p><ul class="files">${pre.files.map(f => `<li>~/${esc(f)}</li>`).join('')}</ul>`;
 }
+
+function flash(t) { const s = $('#state'), was = s.textContent; s.textContent = t.toUpperCase(); setTimeout(() => { if (s.textContent === t.toUpperCase()) s.textContent = was; }, 5000); }
 
 /* ---------- tools row, tabs, keys ---------- */
 function tab(id) {
@@ -960,11 +1078,20 @@ function tools() {
 }
 
 /* ---------- start ---------- */
+let started = false;
 async function start() {
   const faces = ['400 10px RcReceipt', '400 10px RcJet', '700 10px RcSignage', '400 10px RcSerif'];
+  const remote = onSite() ? Promise.race([fetch('presets.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null), new Promise(r => setTimeout(() => r(null), 2500))]) : Promise.resolve(null);
   try { await Promise.all(faces.map(f => document.fonts.load(f))); } catch (e) {}
+  mergeStore(await remote); SYNC.remote = onSite();
+  const def = findP(STORE.default) ? STORE.default : 'tex', d = ls.get(LS_DRAFT);
+  cur = def; S = Object.assign(presetState(def), { c: Object.assign({}, CONTENT, (findP(def) || {}).content || {}) });
+  let restored = false;
+  if (d && d.set) { cur = findP(d.cur) ? d.cur : def; S = Object.assign({}, presetState(cur), d.set, { c: Object.assign({}, CONTENT, d.content || {}) }); restored = true; }
   rc = RC.mount($('#host'), compState());
   buildParams(); buildColor(); buildExport(); tools(); noteStyle(); refreshAll(); status(rc.ms); edited(); deps();
+  started = true;
+  if (restored && changed().length) flash('Your last edits are back · Presets to start over');
   const idle = window.requestIdleCallback || (f => setTimeout(f, 300));
   idle(() => buildPresets());
 }
