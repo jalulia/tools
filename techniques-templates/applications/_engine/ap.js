@@ -27,8 +27,8 @@
     else setTimeout(() => { try { res({ rgba: compute(j) }); } catch (e) { res({ err: String(e) }); } }, 0); });
   window.AP = {
     defaults: (id) => merged(usage(id), {}),
-    render(id, c, w, h, dpr, finish, ov) { const u = usage(id); const W = c.width, H = c.height, d = dpr * (u.zoom || 1);
-      const S = merged(u, ov); fonts().then(() => run({ id, W, H, dpr: d, S, clips: clipsOf(u.clips, W, H, d, u.dials ? S : null) })).then((m) => {
+    render(id, c, w, h, dpr, finish, ov, V) { const u = usage(id); const W = c.width, H = c.height, d = dpr * (u.zoom || 1);
+      const S = merged(u, ov); if (u.variants && V) { S.inks = {}; for (const k in V) if (k !== 'id' && k !== 'label' && typeof V[k] === 'string' && /^#[0-9a-f]{6}$/i.test(V[k])) S.inks[k] = V[k]; } /* the Color tab's inks */ fonts().then(() => run({ id, W, H, dpr: d, S, clips: clipsOf(u.clips, W, H, d, u.dials ? S : null) })).then((m) => {
         if (m.dropped) return; if (m.err) { console.error(m.err); finish(); return; }
         const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.putImageData(new ImageData(m.rgba, W, H), 0, 0); finish(); });
       return false; } };

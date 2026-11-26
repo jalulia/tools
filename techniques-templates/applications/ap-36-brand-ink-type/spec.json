@@ -1,0 +1,143 @@
+{
+  "id": "ap-36-brand-ink-type",
+  "code": "AP-36",
+  "title": "Brand ink · type, printed",
+  "section": "applications",
+  "variants": [
+    {
+      "id": "set",
+      "label": "As drawn",
+      "swatches": [
+        "#eb5116",
+        "#0f0f11"
+      ]
+    }
+  ],
+  "usage": {
+    "id": "u-drawdown-type",
+    "job": "brand",
+    "title": "Brand ink · type, printed",
+    "aspect": "3/2",
+    "uses": [
+      "fx-02-ink-edge",
+      "type-edge"
+    ],
+    "split_of": "u-drawdown",
+    "role": "type"
+  },
+  "reference": {
+    "grammar": "The drawdown card's type on its own: every control changes how the letters print and nothing else. Choose the press and the letterform, then the ink, the impression and the wear. The wordmark and key inks are in the Color tab. The roller strip is printed as AP-35 opens and does not move."
+  },
+  "techniques": [
+    {
+      "id": "fx-02-ink-edge",
+      "name": "Press",
+      "short": "FX-02",
+      "atoms": [
+        "deposit"
+      ],
+      "params": {
+        "press": {
+          "value": 0,
+          "options": [
+            {
+              "v": 0,
+              "label": "Letterpress"
+            },
+            {
+              "v": 1,
+              "label": "Offset"
+            },
+            {
+              "v": 2,
+              "label": "Rubber stamp"
+            }
+          ],
+          "label": "Press",
+          "note": "letterpress: a squeezed rim and a light impression; offset: clean and flat; rubber stamp: soft, spread and uneven"
+        },
+        "inkAmt": {
+          "value": 0,
+          "range": [
+            -1,
+            1
+          ],
+          "label": "Ink",
+          "step": 0.01,
+          "note": "−1 starved: thin, eaten edges and pinholes. +1 heavy: ink squeezed past the edge, deeper and darker"
+        },
+        "impression": {
+          "value": 0,
+          "range": [
+            -1,
+            1
+          ],
+          "label": "Impression",
+          "step": 0.01,
+          "note": "−1 kiss: the face only touches the paper's peaks. +1 deep: the ink is pushed to a wide, dark rim"
+        },
+        "wear": {
+          "value": 0,
+          "range": [
+            0,
+            1
+          ],
+          "label": "Wear",
+          "step": 0.01,
+          "note": "0 new type. 1 worn: wavering edges and dings, on the display letters"
+        }
+      },
+      "implementation": "The letters are inked by the same chain as the roll, then their edges are worked on each letter's signed distance. The press sets the character: letterpress squeezes ink to a darker rim with a light impression in the face; offset is clean and flat; a rubber stamp is soft, spread and uneven. Ink, Impression and Wear move it from there; wear and the lines are in proportion to each letter, so the display type takes them and the small setting stays whole.",
+      "limits": "Heavy ink closes the counters of the small mono labels first. A kiss impression opens the face to the paper's valleys; the small setting stops reading below that."
+    },
+    {
+      "id": "type-edge",
+      "name": "Letterform",
+      "short": "Type",
+      "atoms": [
+        "deposit"
+      ],
+      "params": {
+        "form": {
+          "value": 0,
+          "options": [
+            {
+              "v": 0,
+              "label": "Solid"
+            },
+            {
+              "v": 1,
+              "label": "Outline"
+            },
+            {
+              "v": 2,
+              "label": "Inline"
+            },
+            {
+              "v": 3,
+              "label": "Contour"
+            }
+          ],
+          "label": "Letterform",
+          "note": "solid; outline: only the rim prints; inline: a line cut inside the stroke; contour: a line set off outside it"
+        },
+        "seed": {
+          "value": 7,
+          "range": [
+            1,
+            999
+          ],
+          "label": "Pass",
+          "step": 1,
+          "note": "print it again: the same settings, a new pass"
+        }
+      },
+      "implementation": "Each letter's alpha becomes a signed distance in device px. Outline prints only a rim, Inline cuts a line along the inside of the stroke, Contour sets a line off the outside; each line is proportioned to the letter's own stroke (the running maximum of its inside distance), so display letters carry it and small type stays solid. Coverage stays one device px wide, so edges are crisp at any setting.",
+      "limits": "Inline and Contour act only on display letters; the small mono setting keeps its solid form."
+    }
+  ],
+  "pass_order": [
+    "Press · how the type meets the sheet: letterpress, offset or rubber stamp; then ink, impression and wear.",
+    "Letterform · solid, outline, inline or contour, in proportion to each letter."
+  ]
+}
