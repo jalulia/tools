@@ -298,6 +298,22 @@ function renderIndex(tools) {
 
   const html = template.replace('<!-- TOOL_ROWS -->', blocks.join('\n'));
   writeFileSync(join(SITE_DIR, 'index.html'), html);
+
+  // The landscape experiment is a separate page. Reuse the generated tool rows
+  // so its index stays current while the main landing page retains its design.
+  const testIndex = join(SITE_DIR, 'landscape-test', 'index.html');
+  if (existsSync(testIndex)) {
+    const testHtml = readFileSync(testIndex, 'utf8');
+    const rowsSlot = /<!-- TOOL_ROWS_START -->[\s\S]*?<!-- TOOL_ROWS_END -->/;
+    if (!rowsSlot.test(testHtml)) {
+      throw new Error('landscape-test/index.html: missing tool-row markers');
+    }
+    const testRows = blocks.join('\n').replace(/href="\.\//g, 'href="../');
+    writeFileSync(testIndex, testHtml.replace(
+      rowsSlot,
+      '<!-- TOOL_ROWS_START -->\n' + testRows + '\n<!-- TOOL_ROWS_END -->'
+    ));
+  }
 }
 
 function escapeHtml(s) {
@@ -355,3 +371,4 @@ function main() {
 }
 
 main();
+
