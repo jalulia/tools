@@ -9,35 +9,55 @@
   let audioContext=null,analyser=null,frequency=null,timeData=null,fileURL=null,fileName='';
   const track=$('track');
   const signal={bass:0,mid:0,treble:0,rms:0,lift:0};
-  ST.hAvg=.43;ST.sunPos={x:.76,y:.17,size:.68};ST.g.layers=10;
-  ST.gran=.12;ST.epool=.12;ST.edge=.3;ST.wash=.35;ST.grain=.38;
+  ST.hAvg=.43;ST.sunPos={x:.76,y:.14,size:.68};
+  // Preserve Sonic's full material settings: wash, pigment, pooling and tooth.
+  // Their opacity does not change the number of rendering passes.
 
   function makeSky(W,H) {
-    // These are the actual TS-16 cloud, tone-field and dot-lattice primitives,
-    // recomposed in a wide frame; the burst and threshold shimmer are omitted.
+    // TS-16's full mark-making, recomposed above the terrain. Build once per
+    // resize or sky adjustment; fixed seeds keep dots attached to the clouds.
     const A=window.ART,T=window.SkyTech,pad=Math.ceil(60*RS);
-    const cw=W+pad*2,u=Math.max(.6,RS),du=cw/u,dh=H/u;
+    const cw=W+pad*2,u=RS,du=cw/u,dh=H/u;
     const c=A.off(cw,H),x=c.getContext('2d');
-    const cloudY=dh*(.46-settings['cloud-height']*.0018);
+    const shift=dh*(45-settings['cloud-height'])*.0018;
     const scale=.55+settings['cloud-scale']*.009;
-    const bank=T['scallop-bank']({banks:[
-      {fill:'pale',shade:'body',from:[-120,cloudY+24],to:[du+120,cloudY+dh*.065],R:dh*.054,seed:37}
-    ],R_scale:scale,R_var:.36,spacing:1.3,child:.36},u,A).banks[0];
-    const shade=T['shade-field']({rim_depth:.9,rim_floor:.5,body_from:.05,body_to:1.2,wisp_u:90,stretch:3.2,contrast:.2,wisp_mix:.85,gain:settings.density*.011,seed:9},u,A);
-    bank.path(x,cw,H);x.fillStyle='#f1f6f5';x.fill();
-    const wash=T['grain-wash']({amount:.16,grain:1,res_div:4,seed:13},u,A);
-    const washLayer=wash.layer(cw,H,'#c5d6d8',(px,py)=>shade.tone(bank,bank.depth(px,py),px,py));
-    x.save();bank.path(x,cw,H);x.clip();x.drawImage(washLayer.canvas,0,0);x.restore();
-    const lat=T['stipple-fill']({pitch_u:3.8,radius_u:.6,jitter:.42,swell:.35,seed:161},u,A);
-    x.fillStyle='#819fa6';x.beginPath();
-    lat.each(cw,H,(px,py,k)=>{const depth=bank.depth(px,py);if(depth<=0)return;const tone=shade.tone(bank,depth,px,py);if(k<tone){const r=Math.max(.55,lat.r*(.8+tone*.35));x.moveTo(px+r,py);x.arc(px,py,r,0,Math.PI*2);}});
-    x.fill();
-    return {canvas:c,pad};
+    const B=T['scallop-bank']({banks:[
+      {fill:'silver',shade:'body',from:[-100,dh*.30+shift],to:[du*.44,dh*.54+shift],R:dh*.074,seed:11},
+      {fill:'blue',shade:'rim',from:[du+100,dh*.32+shift],to:[du*.56,dh*.55+shift],R:dh*.068,seed:23},
+      {fill:'pale',shade:'body',from:[-100,dh*.45+shift],to:[du+100,dh*.44+shift],R:dh*.064,seed:37}
+    ],R_scale:scale,R_var:.35,spacing:1.25,child:.55},u,A).banks;
+    const V={banks:{
+      silver:{fill:'#dfe9ee',dot:'#718b9c',wash:'#a8bdca'},
+      blue:{fill:'#28485d',dot:'#8fb6d1',wash:'#527c99'},
+      pale:{fill:'#f7faf9',dot:'#94a4a8',wash:'#c5d1d3'}
+    }};
+    const shade=T['shade-field']({rim_depth:.9,rim_floor:.5,body_from:.12,body_to:1.1,wisp_u:150,stretch:3.2,contrast:.2,wisp_mix:.85,gain:settings.density/60,seed:9},u,A);
+    const wash=T['grain-wash']({amount:.5,grain:1,res_div:4,seed:13},u,A);
+    for(const bank of B){
+      const color=V.banks[bank.fill];
+      bank.path(x,cw,H);x.fillStyle=color.fill;x.fill();
+      const layer=wash.layer(cw,H,color.wash,(px,py)=>shade.tone(bank,bank.depth(px,py),px,py));
+      x.save();bank.path(x,cw,H);x.clip();x.imageSmoothingEnabled=false;x.drawImage(layer.canvas,0,0);x.restore();
+    }
+    const lat=T['stipple-fill']({pitch_u:5,radius_u:1.2,jitter:.42,swell:.6,seed:161},u,A),dots=[];
+    lat.each(cw,H,(px,py,k)=>{
+      for(let i=B.length-1;i>=0;i--){const depth=B[i].depth(px,py);if(depth>0){dots.push(px,py,k,i,shade.tone(B[i],depth,px,py));break;}}
+    });
+    // Use the plate's original quantized stamps, including density-based sizes.
+    window.SkyStipple(x,{B,lat,dots},V,0,1,0,0);
+    const tooth=T['paper-tooth']({amp:.03,weave:.025,weave_u:3,seed:5},u,A);
+    tooth.apply(x);
+    const base=A.off(cw,H),bx=base.getContext('2d'),gradient=bx.createLinearGradient(0,0,0,H*.66);
+    gradient.addColorStop(0,labStr(SKY_TOP));gradient.addColorStop(1,labStr(SKY_HOR));
+    bx.fillStyle=gradient;bx.fillRect(0,0,cw,H);tooth.apply(bx);
+    return {canvas:c,base,pad};
   }
-  window.paintSky=(context,W,H,journey)=>{
+  window.paintSky=(context,W,H,journey,sig)=>{
     const key=[W,H,settings['cloud-height'],settings['cloud-scale'],settings.density].join(':');
     if(key!==skyKey){sky=makeSky(W,H);skyKey=key;}
     context.save();context.imageSmoothingEnabled=false;
+    context.drawImage(sky.base,-sky.pad,0);
+    drawSun(W,H,sig);
     context.drawImage(sky.canvas,Math.round(-sky.pad+Math.sin(journey*.16)*sky.pad*.7),0);
     context.restore();
   };

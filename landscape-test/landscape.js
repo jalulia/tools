@@ -6,8 +6,7 @@
    noise generators are cached once and scrolled by a phase; the two
    heavy per-band composites are consolidated into single global passes.
    The look is the landscape tool's; the motion is new.
-   Deliberate divergence from the current artifact: crisp cream sky
-   (#F7F6F1 family) per the Phase-3 direction, not the warm Back_01 sky.
+   Test adaptation: TS-16 blue sky with cached, seeded stipple banks.
 ======================================================================*/
 
 /* ---- OKLab (verbatim from the landscape engine) ---- */
@@ -35,8 +34,8 @@ const BIOMES={maple:{label:'Maple Coffee',hex:['#CBA664','#9C6734','#6E4C2C','#3
 for(const k in BIOMES)BIOMES[k].labs=BIOMES[k].hex.map(h=>okToLab(rgbToOklch(...hex2rgb(h))));
 const BKEYS=Object.keys(BIOMES);
 function biomeLab(labs,t){const n=labs.length-1,i=Math.min(n-1,Math.floor(t*n)),u=t*n-i;return lerpLab(labs[i],labs[i+1],u);}
-/* crisp brand cream sky (#F7F6F1 family) — divergence from the tool's warm sky, per Phase-3 */
-const SKY_TOP=okToLab(rgbToOklch(217,233,240)), SKY_HOR=okToLab(rgbToOklch(239,245,245)), SUN_RGB=[0xec,0xd5,0x6b];
+/* Blue from TS-16, opening into a cool pale horizon. */
+const SKY_TOP=okToLab(rgbToOklch(98,152,193)), SKY_HOR=okToLab(rgbToOklch(215,230,235)), SUN_RGB=[0xec,0xd5,0x6b];
 
 /* ---- noise (verbatim) ---- */
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -178,7 +177,7 @@ function regionColorAt(x,t,C,levels){
 /* ===================== render (per frame) ===================== */
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 let RS=1;
-function resize(){const rect=cv.getBoundingClientRect(),w=rect.width,h=rect.height,dpr=Math.min(1.25,devicePixelRatio||1);
+function resize(){const rect=cv.getBoundingClientRect(),w=rect.width,h=rect.height,dpr=Math.min(1.5,devicePixelRatio||1);
   RS=(w*dpr>2048)?2048/w:dpr; cv.width=Math.round(w*RS);cv.height=Math.round(h*RS);}
 
 
@@ -196,13 +195,9 @@ function drawSun(W,H,sig){const x=ST.sunPos.x*W,y=ST.sunPos.y*H,R=H*0.07*ST.sunP
 function render(sig){
   const W=cv.width,H=cv.height,N=ST.g.layers,CL=compLabs();
   const levels=[sig.bass,sig.mid,sig.treble];                          // biome slots → bands
-  // sky (crisp cream) with rms luminance breath
-  const sg=ctx.createLinearGradient(0,0,0,H*0.66);
-  const lift=l=>({L:Math.min(1,l.L+0.04*sig.rms),a:l.a,b:l.b});
-  sg.addColorStop(0,labStr(lift(SKY_TOP)));sg.addColorStop(1,labStr(lift(SKY_HOR)));
-  ctx.fillStyle=sg;ctx.fillRect(0,0,W,H);
-  if(window.paintSky)window.paintSky(ctx,W,H,ST.journey);
-  drawSun(W,H,sig);
+  // The cached sky includes its paper texture; the sun sits behind the banks.
+  if(window.paintSky)window.paintSky(ctx,W,H,ST.journey,sig);
+  else {ctx.fillStyle=labStr(SKY_TOP);ctx.fillRect(0,0,W,H);drawSun(W,H,sig);}
   let skyline=null;
   for(let i=0;i<N;i++){
     const t=N===1?0:i/(N-1),ys=ridgeYs(W,H,i,N,sig),pts=ys.length-1;

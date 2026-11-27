@@ -1,4 +1,4 @@
-/* Sky primitives adapted from TS-16, Stipple bank and dot burst. Original seeded geometry and tone fields retained. */
+/* TS-16 original seeded primitives, quantized dot stamps and paper tooth. */
 window.SkyTech={"scallop-bank":(P,u,A)=>({ banks:P.banks.map(b=>{ const r=A.rng(b.seed); const fx=b.from[0]*u, fy=b.from[1]*u, tx=b.to[0]*u, ty=b.to[1]*u; const len=Math.hypot(tx-fx,ty-fy); const dx=(tx-fx)/len, dy=(ty-fy)/len; let nx=dy, ny=-dx; if(ny>0){ nx=-nx; ny=-ny; }
         const Rb=b.R*P.R_scale*u; const lobes=[]; let s=0;
         while(s<=len){ const R=Rb*(1+(r()*2-1)*P.R_var); const cx=fx+dx*s, cy=fy+dy*s; lobes.push([cx,cy,R]);
@@ -18,4 +18,14 @@ window.SkyTech={"scallop-bank":(P,u,A)=>({ banks:P.banks.map(b=>{ const r=A.rng(
         const c=A.off(W,H), x=c.getContext('2d'); const id=x.createImageData(W,H), d=id.data; const k=A.hex(color); let s=P.seed|0; const g=P.grain;
         for(let y=0;y<H;y++){ const fy=y/q, j=fy|0, ty=fy-j; for(let X=0;X<W;X++){ const fx=X/q, i=fx|0, tx=fx-i; const o=j*w+i; const a=(F[o]*(1-tx)+F[o+1]*tx)*(1-ty)+(F[o+w]*(1-tx)+F[o+w+1]*tx)*ty;
             s=s+0x6D2B79F5|0; let t=Math.imul(s^s>>>15,1|s); t=t+Math.imul(t^t>>>7,61|t)^t; const n=((t^t>>>14)>>>0)/4294967296; const p=(y*W+X)*4; d[p]=k[0]; d[p+1]=k[1]; d[p+2]=k[2]; d[p+3]=255*((1-g)*a+g*(n<a?1:0)); } }
-        x.putImageData(id,0,0); return { canvas:c, w:W, h:H }; } })};
+        x.putImageData(id,0,0); return { canvas:c, w:W, h:H }; } }),
+"paper-tooth":(P,u,A)=>({ apply:ctx=>{ if(P.amp<=0&&P.weave<=0)return; const c=ctx.canvas, W=c.width, H=c.height; const id=ctx.getImageData(0,0,W,H), d=id.data; const p=Math.max(2,P.weave_u*u); const sx=new Float32Array(W), sy=new Float32Array(H); for(let i=0;i<W;i++)sx[i]=Math.sin(6.2832*i/p); for(let j=0;j<H;j++)sy[j]=Math.sin(6.2832*j/p);
+        let s=P.seed|0; for(let j=0;j<H;j++){ const wy=sy[j]*P.weave; for(let i=0;i<W;i++){ s=s+0x6D2B79F5|0; let t=Math.imul(s^s>>>15,1|s); t=t+Math.imul(t^t>>>7,61|t)^t; const m=1+P.amp*(((t^t>>>14)>>>0)/2147483648-1)+sx[i]*wy; const o=(j*W+i)*4; d[o]*=m; d[o+1]*=m; d[o+2]*=m; } }
+        ctx.putImageData(id,0,0); } })};
+window.SkyStipple=function(x,sc,V,turn,grow,shim,t){ const d=sc.dots, r=sc.lat.r, sw=sc.lat.swell, n=sc.B.length+1; const G=[]; for(let i=0;i<n*3;i++)G.push([]);
+    for(let i=0;i<d.length;i+=5){ const reg=d[i+3]; let k=d[i+2]; if(shim)k+=shim*Math.sin(t*1.9+k*61.7); const D=reg<0?sc.burst.density(d[i],d[i+1],turn,grow):d[i+4]; if(k<D)G[(reg+1)*3+(D>0.8?2:(D>0.45?1:0))].push(d[i],d[i+1]); }
+    /* under 2.4 px radius a dot is a pixel-quantized disc of the same area (rows of whole pixels), so its edge is hard
+       and it still reads round at 2x; under ~0.9 px it is one pixel */
+    const stamp=rr=>{ const R=Math.ceil(rr), out=[]; for(let dy=-R;dy<=R;dy++){ let m=-1; for(let dx=0;dx<=R;dx++)if(dx*dx+dy*dy<=rr*rr+0.3)m=dx; if(m>=0)out.push(dy,m); } return out.length?out:[0,0]; };
+    const put=(arr,color,rr)=>{ if(!arr.length)return; x.fillStyle=color; x.beginPath(); if(rr<2.4){ const st=rr<0.9?[0,0]:stamp(rr); for(let j=0;j<arr.length;j+=2){ const cx=Math.round(arr[j]), cy=Math.round(arr[j+1]); for(let q=0;q<st.length;q+=2)x.rect(cx-st[q+1],cy+st[q],2*st[q+1]+1,1); } } else for(let j=0;j<arr.length;j+=2){ x.moveTo(arr[j]+rr,arr[j+1]); x.arc(arr[j],arr[j+1],rr,0,6.2832); } x.fill(); };
+    for(let g=0;g<n;g++){ const color=g===0?V.ray:V.banks[sc.B[g-1].fill].dot; for(let z=0;z<3;z++)put(G[g*3+z],color,r*(1+sw*z*0.5)); } };
