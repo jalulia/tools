@@ -17,6 +17,7 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, cpSync, rea
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { verifyManifests } from './lib/manifests.mjs';
+import { renderLandscapeRows } from './lib/landscape-index.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -298,6 +299,22 @@ function renderIndex(tools) {
 
   const html = template.replace('<!-- TOOL_ROWS -->', blocks.join('\n'));
   writeFileSync(join(SITE_DIR, 'index.html'), html);
+
+  // The experiment groups the same source tools into illustrated project rows.
+  // Its presentation and Library-item exclusion do not alter the main index.
+  const testIndex = join(SITE_DIR, 'landscape-test', 'index.html');
+  if (existsSync(testIndex)) {
+    const testHtml = readFileSync(testIndex, 'utf8');
+    const rowsSlot = /<!-- TOOL_ROWS_START -->[\s\S]*?<!-- TOOL_ROWS_END -->/;
+    if (!rowsSlot.test(testHtml)) {
+      throw new Error('landscape-test/index.html: missing tool-row markers');
+    }
+    const testRows = renderLandscapeRows(tools);
+    writeFileSync(testIndex, testHtml.replace(
+      rowsSlot,
+      '<!-- TOOL_ROWS_START -->\n' + testRows + '\n<!-- TOOL_ROWS_END -->'
+    ));
+  }
 }
 
 function escapeHtml(s) {
@@ -355,3 +372,4 @@ function main() {
 }
 
 main();
+

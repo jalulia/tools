@@ -1,0 +1,27 @@
+# Landscape index test
+
+A separate `/tools/landscape-test/` page. The existing index changes only by adding a “Try landscape index” link in its header. Its layout, tool metadata, ordering and destinations are preserved.
+
+The test combines the Canvas2D terrain from `jalulia/Ki-Landscapes/sonic.html` with seeded cloud geometry, tone fields and stipple from `TS-16: Stipple bank and dot burst`. The protected organization copy of Sonic was not available for an exact comparison. No Takanaka recording is included.
+
+The texture revision restores Sonic’s 11 layers and original wash, granulation, edge bloom, pooling and grain strengths. The sky now uses three overlapping banks with inward and rim shading, TS-16’s original whole-pixel stipple stamps and density-dependent dot sizes, full-strength stochastic wash, and cached paper grain/weave. Cloud bodies sit higher so their shading remains visible above the terrain. The reference blue replaces the diluted sky ground; the sun is occluded by the clouds. Canvas resolution returns to the original 1.5 DPR cap with a 2048-pixel width limit.
+
+The test page has its own styles and controls. It runs at a capped 30 frames per second, caches sky and scratch canvases, suspends drawing in hidden tabs, and respects reduced-motion preferences. Motion pause is independent of audio playback. Local audio uses an object URL and Web Audio, with no file upload.
+
+The test index now has illustrated project rows: Desktop Bo; Ki with Landscape Atelier; Yoshi with Hill Run and YoshiOS; Library; MeshViz; Gallery. `scripts/lib/landscape-index.mjs` renders these groups from the tool metadata. It omits Paper receipt from the test navigation because it belongs inside the Library; its page and metadata are preserved. Unknown visible tools retain an entry. `scripts/build-site.mjs` fills the test page’s marked rows with this renderer while the root index keeps its original rendering.
+
+Illustrations are isolated from existing source artwork: Bo’s character renderer, Yoshi’s dossier cover, Hill Run’s pixel sprite, the YoshiOS amber van drawings, the Library’s PROFEEL CRT, and the Sonic terrain engine. Bo has a static transparent SVG in the index and a separate transparent blink GIF for reuse. Project icons are static, so pausing the landscape does not leave decorative GIFs running. The icons folder retains source provenance and reusable individual exports.
+
+`tool.json` keeps the experiment out of automatically generated tool lists; the root header supplies the explicit entry point.
+
+## Verification
+
+- JavaScript syntax checks pass.
+- Isolated index-build tests pass: root output preservation, project grouping, escaping, relative URLs, hidden-tool exclusion, test-only receipt omission and missing-marker failure.
+- Renderer and state checks pass with a simulated Canvas/DOM at desktop/mobile sizes, including high-DPI backing scales: finite draw coordinates, no per-frame canvas allocation, pause, reduced motion, settings, reset, visibility recovery and audio selection without autoplay.
+- CSS review finds normal text contrast above 4.5:1; panel focus and action-button semantics were corrected.
+- Browser visual QA and the full repository build/guard remain unverified: this execution environment cannot bind a local HTTP server or access GitHub over shell networking, and browser file URLs are blocked.
+
+## Publication
+
+Run the repository's canonical `node scripts/publish.mjs -m "Add separate landscape index test"` from a current full checkout with working GitHub access after browser QA. Do not replace the root index with this test page. The GitHub Pages workflow rebuilds the site and checks the repository guard.
