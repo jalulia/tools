@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Ki · Tokyo Lounge</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@500&display=swap');
+  :root{--ink:#0a0908;--ink-2:#565553;--ink-3:#9a978e;--gold:#b88a59;--cream:#f7f6f1;--panel:rgba(247,246,241,.8);--hair:rgba(10,9,8,.13);--cola:#c0434a}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#f7f6f1;overscroll-behavior:none}
+  body{font-family:'Schibsted Grotesk',system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+  #cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+  .mark{position:fixed;top:22px;left:24px;z-index:10;display:flex;align-items:center;gap:11px;pointer-events:none;mix-blend-mode:multiply}
+  .kimark{width:30px;height:30px;display:block}
+  .kimark path{fill:var(--ink)}
+  .mark .t{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.mark .t span{color:var(--gold)}
+  button,a{touch-action:manipulation}
+  .bar{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:10;display:flex;align-items:center;gap:14px;
+    background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--hair);padding:9px 13px;max-width:calc(100vw - 32px);flex-wrap:wrap;justify-content:center}
+  .grp{display:flex;align-items:center;gap:6px}.grp+.grp{padding-left:14px;border-left:1px solid var(--hair)}
+  .bar.look{bottom:74px;gap:10px}
+  .lbl{font-size:8px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-right:2px}
+  .pill{background:transparent;border:1px solid var(--hair);color:var(--ink-2);font-family:inherit;font-size:10px;font-weight:600;letter-spacing:.04em;padding:6px 9px;cursor:pointer;transition:.13s;white-space:nowrap}
+  .pill:hover{border-color:var(--ink-3)}.pill.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .sw{display:inline-flex}.sw .pill{border-right:none}.sw .pill:last-child{border-right:1px solid var(--hair)}
+  .fl{display:flex;align-items:center;gap:5px}
+  .dot{width:16px;height:16px;border-radius:50%;border:1px solid var(--hair);cursor:pointer;transition:transform .12s,box-shadow .12s}
+  .dot:hover{transform:scale(1.12)}.dot.on{box-shadow:0 0 0 2px var(--cream),0 0 0 3px var(--gold)}
+  input[type=range]{-webkit-appearance:none;width:84px;height:1px;background:var(--hair);outline:none;cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--ink);transition:.12s}
+  input[type=range]::-webkit-slider-thumb:hover{background:var(--gold);transform:scale(1.12)}
+  .icon{background:transparent;border:1px solid var(--hair);color:var(--ink-2);width:30px;height:30px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:.13s}
+  .icon:hover{border-color:var(--ink-3);color:var(--ink)}
+  .play{background:var(--ink);color:#fff;border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:.13s;padding-left:1px}
+  .play:hover{background:var(--gold)}
+  #file{display:none}
+  .toast{position:fixed;top:108px;right:24px;z-index:10;background:var(--panel);backdrop-filter:blur(14px);border:1px solid var(--hair);padding:8px 12px;font-size:10px;letter-spacing:.04em;color:var(--ink-2);opacity:0;transition:opacity .4s;pointer-events:none;max-width:240px;line-height:1.5}
+  .toast.show{opacity:1}.toast b{color:var(--ink)}
+  .lv{position:fixed;bottom:24px;left:24px;z-index:10;display:flex;gap:3px;align-items:flex-end;height:18px;mix-blend-mode:multiply;opacity:.5}
+  .lv i{width:3px;background:var(--ink);height:2px;display:block;transition:height .06s linear}
+  @media (max-width:720px){.lv,.mark .t{display:none}}
+  .links{position:fixed;top:22px;right:24px;z-index:10;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+  .toollink{display:inline-flex;align-items:center;gap:7px;background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--hair);padding:9px 14px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);text-decoration:none;transition:.13s}
+  .toollink:hover{border-color:var(--ink-3);color:var(--ink)}
+  @media(max-width:560px){.toollink{font-size:9px;padding:8px 10px;letter-spacing:.06em}.bar{gap:10px}.grp+.grp{padding-left:10px}input[type=range]{width:64px}}
+  .veil{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:rgba(247,246,241,.5);backdrop-filter:blur(3px);cursor:pointer;transition:opacity .6s}
+  .veil h1{font-size:14px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+  .veil p{font-size:12px;color:var(--ink-2);letter-spacing:.05em}
+  .veil .d0{width:56px;height:56px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;padding-left:3px}
+  .hint{position:fixed;left:50%;bottom:132px;transform:translateX(-50%);z-index:9;font-size:11px;color:var(--ink-2);background:var(--panel);backdrop-filter:blur(10px);border:1px solid var(--hair);padding:8px 14px;opacity:0;transition:opacity .5s;pointer-events:none;white-space:nowrap}
+  .hint.show{opacity:1}
+  .dock{position:fixed;left:0;right:0;bottom:calc(20px + env(safe-area-inset-bottom));z-index:10;display:flex;flex-direction:column;align-items:center;gap:9px;pointer-events:none}
+  .tbar,.panel{pointer-events:auto;background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--hair)}
+  .tbar{padding:8px 12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 24px)}
+  .panel{padding:12px 14px;width:min(360px,calc(100vw - 24px));display:none;flex-direction:column;gap:10px}
+  .panel.show{display:flex}
+  .pchord,.pdrift{display:flex;flex-direction:column;gap:9px}
+  .ptip{font-size:10.5px;color:var(--ink-2);text-align:center;line-height:1.45}.ptip b{color:var(--gold);font-weight:700}
+  .hh{display:flex;justify-content:space-between;align-items:baseline}.hh .c{font-size:11px;font-weight:700;color:var(--ink)}
+  .hbody{display:flex;gap:12px}
+  #wheel{width:86px;height:86px;flex:none;cursor:pointer}
+  .pad{position:relative;flex:1;height:86px;border:1px solid var(--hair);cursor:crosshair;touch-action:none;overflow:hidden;background:linear-gradient(90deg,rgba(10,9,8,.05) 1px,transparent 1px) 0 0/16.66% 100%,rgba(10,9,8,.02)}
+  .pad .ax{position:absolute;font-size:7px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);pointer-events:none}
+  .pad .ax.x{bottom:3px;left:50%;transform:translateX(-50%)}.pad .ax.y{top:50%;left:3px;transform:rotate(-90deg) translateX(50%);transform-origin:left center}
+  .pad .pdot{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--gold);transform:translate(-50%,-50%);box-shadow:0 0 0 1px var(--panel),0 0 8px rgba(184,138,89,.7);pointer-events:none}
+  .sw.qual{width:100%}.sw.qual .pill{flex:1;text-align:center}.sw.qual .pill.on{background:var(--gold);color:#fff;border-color:var(--gold)}
+  .sw.modes .pill.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  /* ---- touch targets, collapse, mobile dock ---- */
+  .more,.hide{display:none;align-items:center;justify-content:center;width:36px;height:36px;border:1px solid var(--hair);border-radius:11px;background:transparent;color:var(--ink-2);font-size:16px;cursor:pointer;flex:none}
+  .more.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .secondary{display:flex;align-items:center;gap:10px}
+  .secondary .grp+.grp{padding-left:12px;border-left:1px solid var(--hair)}
+  .peek{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:11;display:none;align-items:center;gap:7px;background:var(--panel);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--hair);border-radius:22px;padding:12px 20px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);cursor:pointer}
+  .peek.show{display:flex}.peek b{color:var(--gold);font-size:12px}
+  .dock{transition:transform .4s cubic-bezier(.4,0,.2,1)}
+  .dock.collapsed{transform:translateY(180%)}
+  @media (max-width:680px), (max-height:540px), (pointer:coarse){
+    .dock{gap:8px;bottom:calc(14px + env(safe-area-inset-bottom))}
+    .tbar{gap:9px;padding:9px 11px;border-radius:18px;row-gap:10px}
+    .more,.hide{display:flex}
+    .play{width:44px;height:44px;font-size:15px}
+    .modes .pill{padding:11px 15px;font-size:11.5px}
+    .worldgrp .lbl{display:none}
+    .fl{gap:9px}.dot{width:28px;height:28px}
+    .secondary{display:none;flex-basis:100%;order:9;flex-wrap:wrap;justify-content:center;gap:11px 14px;margin-top:2px}
+    .secondary.show{display:flex}
+    .secondary .grp+.grp{padding-left:0;border-left:none}
+    input[type=range]{height:4px;width:124px}
+    input[type=range]::-webkit-slider-thumb{width:24px;height:24px}
+    input[type=range]::-moz-range-thumb{width:24px;height:24px}
+    .lbl{font-size:9px}
+    .chip,.pill{min-height:38px}
+    .icon{width:38px;height:38px;font-size:15px}
+    .panel{padding:15px 15px 16px;width:min(440px,calc(100vw - 16px));gap:12px}
+    #wheel{width:112px;height:112px}
+    .pad{height:112px}
+    .hbody{gap:14px}
+    .qual .pill{padding:12px 0;font-size:12.5px}
+    .ptip{font-size:11.5px}
+    .hh .c{font-size:13px}
+    .mark{top:calc(16px + env(safe-area-inset-top));left:calc(18px + env(safe-area-inset-left))}
+    .links{top:calc(16px + env(safe-area-inset-top));right:calc(18px + env(safe-area-inset-right))}
+    .hint{bottom:auto;top:calc(64px + env(safe-area-inset-top))}
+  }
+</style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<canvas id="cv"></canvas>
+<div class="mark"><svg class="kimark" viewBox="0 0 65.73 63" xmlns="http://www.w3.org/2000/svg"><path d="M64.22,0H1.51C.68,0,0,.75,0,1.68v59.65c0,.93.68,1.68,1.51,1.68h62.71c.83,0,1.51-.75,1.51-1.68V1.68c0-.93-.68-1.68-1.51-1.68ZM48.06,8.73c.72-.69,1.5-1.72,1.77-2.71.05-.23-.19-.47-.17-.73.07-.46.81-.16,1.04-.07.33.2.79.49.76.88,0,.15-.3.36-.11.46.94.14,2.01,0,2.88-.37.33-.17.75-.27,1.07-.06l.03.03c.36.31.24.8-.14,1.05-.38.31-.87.19-1.31.09-1.09-.16-2.29.13-3.37.34-.28.17-.46.45-.69.67-.58.53-1.24,1.01-2,1.2-.79.07-.02-.6.23-.78ZM54.67,9.21c-.3.04-.61-.04-.92-.01-.75.05-1.35.21-2.11.35-.29.08-.64.08-.8.37-.06.09-.16.14-.27.11-.6-.2-1.09-1.15-.57-1.63.21-.07.46.13.66.16.9.1,1.85-.02,2.7-.29.6-.45.78-.14,1.26.27l.04.03c.25.19.57.57.02.65ZM47.43,10.88c1.18-.02,2.39-.13,3.59-.33,1.24-.24,2.46-.58,3.67-.96.79-.39,1.1-.44,1.79.22l.04.04c.53.54.3.97-.12,1.46-.33.48-.29,1.06-.36,1.64-.04.4-.1.81-.06,1.22.11,1.16,1.25,2.53,2.39,2.89.34.09.77.11,1.03-.16.25-.23.23-.65.39-.93.39-.56.66.14.7.62.37,1.83.5,2.77-1.75,2.28-1.43-.41-2.47-1.44-3.19-2.65-.88-1.24-1.06-2.77-.78-4.24.09-.76.17-1.36-.7-1.23-1.8.18-3.6.59-5.37,1.01-.5.13-1.06.23-1.52-.08-.56-.39-.35-.81.27-.78ZM49.61,13.96c-.31-.26-.64-.5-.94-.77-.31-.27-.41-.68.01-.67.7.08,1.6.67,2.26,1,.55.19.73-.59.92-.95.13-.3-.04-.57-.21-.8-.22-.3.05-.53.37-.54.69-.04,1.65.28,1.72,1.03-.01.26-.21.48-.37.66-.34.42-.82.94-.86,1.47v.03c.41.55,1.42,1.01,1.46,1.79.15.5-.16,1.1-.73,1.08-.86-.05-1.2-1.27-1.86-1.58-.16-.02-.31.09-.44.19-.45.35-.95.68-1.44.96-.63.33-1.55.83-2.33.91-.23,0-.2-.09-.05-.21.97-.77,2.03-1.52,2.93-2.37.1-.1.21-.23.24-.37.08-.32-.38-.6-.69-.86ZM41.89,57.96h-12.97c-.12,0-.23-.06-.29-.15l-9.07-12.32c-.21-.28-.65-.13-.65.21v11.6c0,.36-.29.65-.65.65H5.69c-.36,0-.65-.29-.65-.65v-27.34c0-.36.29-.65.65-.65h12.56c.36,0,.65.29.65.65v9.55c0,.33.41.49.63.23l8.82-10.31c.07-.08.17-.13.28-.13h12.98c.3,0,.47.34.3.58l-9.24,12.9c-.24.34-.25.8,0,1.14l9.52,13.45c.17.24,0,.58-.3.58ZM60.69,57.31c0,.36-.29.65-.65.65h-12.56c-.36,0-.65-.29-.65-.65v-27.34c0-.36.29-.65.65-.65h12.56c.36,0,.65.29.65.65v27.34Z"/></svg><span class="t">Tokyo<span> ·</span> Lounge</span></div>
+<div class="links"><a class="toollink" href="https://jalulia.github.io/Ki-Landscapes/" title="The generative landscapes visualizer">Landscapes ↗</a></div>
+<div class="toast" id="toast"></div>
+<div class="veil" id="veil"><div class="d0">▶</div><h1>Ki · Tokyo Lounge</h1><p>a little Takanaka, a little Dilla · tap to begin</p></div>
+<div class="hint" id="hint">drag anywhere on the landscape</div>
+<div class="dock" id="dock">
+  <div class="panel" id="panel">
+    <div class="pchord" id="pchord">
+      <div class="hh"><span class="lbl">Key · circle of 5ths</span><span class="c" id="chordName">C min9</span></div>
+      <div class="hbody"><svg id="wheel" viewBox="0 0 86 86"></svg><div class="pad" id="pad"><span class="ax x">5ths</span><span class="ax y">colour</span><div class="pdot" id="dot"></div></div></div>
+      <div class="sw qual" id="qual"><button class="pill" data-q="min">Min</button><button class="pill" data-q="maj">Maj</button><button class="pill" data-q="dom">Dom</button></div>
+      <div class="row"><span class="lbl">Density</span><input type="range" id="dens" min="0" max="100" step="1" value="40"><span class="val" id="densv">airy</span></div>
+      <div class="ptip">now <b>strum the hills</b> — left low, right high</div>
+    </div>
+    <div class="pdrift" id="pdrift"><div class="ptip">it plays itself — a slow jazz drift. touch the hills to add <b>flourishes</b>.</div></div>
+  </div>
+  <div class="tbar">
+    <button class="play" id="play" title="Play / pause">⏸</button>
+    <div class="sw modes" id="modes"><button class="pill on" data-m="touch">Touch</button><button class="pill" data-m="chord">Chord</button><button class="pill" data-m="drift">Drift</button></div>
+    <div class="grp worldgrp"><span class="lbl">World</span><div class="fl" id="flavors"></div></div>
+    <button class="more" id="more" title="More controls">⋯</button>
+    <div class="secondary" id="secondary">
+      <div class="grp"><button class="pill on" id="groove"><span id="grooveLbl">Groove</span></button></div>
+      <div class="grp"><span class="lbl">Bpm</span><input type="range" id="bpm" min="58" max="104" step="1" value="72"></div>
+      <div class="grp"><span class="lbl">Tone</span><input type="range" id="tone" min="0" max="100" step="1" value="50"></div>
+      <div class="grp"><span class="lbl">Space</span><input type="range" id="space" min="0" max="100" step="1" value="50"></div>
+      <div class="grp"><span class="lbl">Flow</span><input type="range" id="flow" min="0" max="100" step="1" value="45"></div>
+      <div class="grp"><button class="icon" id="snap" title="Save PNG">⤓</button><button class="icon" id="full2" title="Fullscreen">⛶</button></div>
+    </div>
+    <button class="hide" id="hide" title="Hide">⌄</button>
+  </div>
+</div>
+<div class="peek" id="peek"><b>⌃</b> controls</div>
+<input type="range" id="atmos" hidden><input type="range" id="speed" hidden><button id="full" hidden></button>
+<script>
+
+/* ===================== Ki Landscapes (pure-visual) ==============
+   Built ON the Ki Landscape engine — same OKLab color science, biome
+   palettes, ridgeYs terrain, whisper-fold edge treatment, and paper/
+   wash/granulation tiles. Restructured for 60fps audio animation:
+   noise generators are cached once and scrolled by a phase; the two
+   heavy per-band composites are consolidated into single global passes.
+   The look is the landscape tool's; the motion is new.
+   Deliberate divergence from the current artifact: crisp cream sky
+   (#F7F6F1 family) per the Phase-3 direction, not the warm Back_01 sky.
+======================================================================*/
+
+/* ---- OKLab (verbatim from the landscape engine) ---- */
+function s2l(x){x/=255;return x<=0.04045?x/12.92:((x+0.055)/1.055)**2.4;}
+function rgbToOklch(r,g,b){r=s2l(r);g=s2l(g);b=s2l(b);
+  let l=Math.cbrt(0.4122214708*r+0.5363325363*g+0.0514459929*b),m=Math.cbrt(0.2119034982*r+0.6806995451*g+0.1073969566*b),s=Math.cbrt(0.0883024619*r+0.2817188376*g+0.6299787005*b);
+  let L=0.2104542553*l+0.7936177850*m-0.0040720468*s,A=1.9779984951*l-2.4285922050*m+0.4505937099*s,B=0.0259040371*l+0.7827717662*m-0.8086757660*s;
+  return {L,C:Math.hypot(A,B),H:(Math.atan2(B,A)*180/Math.PI+360)%360};}
+function oklabToRgb(L,a,b){let l=(L+0.3963377774*a+0.2158037573*b)**3,m=(L-0.1055613458*a-0.0638541728*b)**3,s=(L-0.0894841775*a-1.2914855480*b)**3;
+  let r=4.0767416621*l-3.3077115913*m+0.2309699292*s,g=-1.2684380046*l+2.6097574011*m-0.3413193965*s,bl=-0.0041960863*l-0.7034186147*m+1.7076147010*s;
+  const f=x=>{x=Math.max(0,Math.min(1,x));return Math.round((x<=0.0031308?12.92*x:1.055*x**(1/2.4)-0.055)*255);};return [f(r),f(g),f(bl)];}
+const okToLab=ok=>({L:ok.L,a:ok.C*Math.cos(ok.H*Math.PI/180),b:ok.C*Math.sin(ok.H*Math.PI/180)});
+const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const labStr=l=>'rgb('+oklabToRgb(l.L,l.a,l.b).join(',')+')';
+const hex2rgb=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+function smooth(a,b,x){if(a===b)return x<a?0:1;const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);}
+const lerpLab=(p,q,t)=>({L:lerp(p.L,q.L,t),a:lerp(p.a,q.a,t),b:lerp(p.b,q.b,t)});
+
+/* ---- biome palettes (verbatim). Swap to ki-brandworld.tokens.json here. ---- */
+const BIOMES={maple:{label:'Maple Coffee',hex:['#CBA664','#9C6734','#6E4C2C','#332926']},
+  hokkaido:{label:'Hokkaido Mint',hex:['#97C0A4','#738F7D','#3E6956','#18332A']},
+  yuzu:{label:'Yuzu Mint',hex:['#B7BA62','#889A42','#226727','#2D3527']},
+  cola:{label:'Tokyo Cola',hex:['#D14C4F','#A7122B','#602029','#2D1F21']},
+  satsuma:{label:'Satsuma Citrus',hex:['#D9C130','#DBA71F','#E09131','#D37526']}};
+for(const k in BIOMES)BIOMES[k].labs=BIOMES[k].hex.map(h=>okToLab(rgbToOklch(...hex2rgb(h))));
+const BKEYS=Object.keys(BIOMES);
+function biomeLab(labs,t){const n=labs.length-1,i=Math.min(n-1,Math.floor(t*n)),u=t*n-i;return lerpLab(labs[i],labs[i+1],u);}
+/* crisp brand cream sky (#F7F6F1 family) — divergence from the tool's warm sky, per Phase-3 */
+const SKY_TOP=okToLab(rgbToOklch(0xf8,0xf7,0xf4)), SKY_HOR=okToLab(rgbToOklch(0xf2,0xee,0xe6)), SUN_RGB=[0xec,0xd5,0x6b];
+
+/* ---- noise (verbatim) ---- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function makeNoise(seed,nodes){const r=mulberry32(seed);const a=new Array(nodes);for(let i=0;i<nodes;i++)a[i]=r()*2-1;
+  return x=>{const i=Math.floor(x),f=x-i;const a0=a[((i%nodes)+nodes)%nodes],a1=a[(((i+1)%nodes)+nodes)%nodes];const u=f*f*f*(f*(f*6-15)+10);return a0+(a1-a0)*u;};}
+
+/* ---- texture tiles (verbatim) + baked granulation mask ---- */
+function noiseLayer(size,cells,seed){const r=mulberry32(seed),g=new Float32Array(cells*cells);for(let i=0;i<g.length;i++)g[i]=r();
+  return (x,y)=>{const fx=x/size*cells,fy=y/size*cells;const xi=Math.floor(fx),yi=Math.floor(fy),x0=((xi%cells)+cells)%cells,y0=((yi%cells)+cells)%cells,x1=(x0+1)%cells,y1=(y0+1)%cells;
+    let tx=fx-xi,ty=fy-yi;tx=tx*tx*(3-2*tx);ty=ty*ty*(3-2*ty);
+    const a=g[y0*cells+x0],b=g[y0*cells+x1],c=g[y1*cells+x0],d=g[y1*cells+x1];return (a*(1-tx)+b*tx)*(1-ty)+(c*(1-tx)+d*tx)*ty;};}
+function fbm(size,octaves,baseCells,seed){const ls=[];let cells=baseCells;for(let o=0;o<octaves;o++){ls.push({fn:noiseLayer(size,cells,seed+o*317),amp:Math.pow(0.55,o)});cells=Math.min(size,cells*2);}
+  return (x,y)=>{let v=0,n=0;for(const L of ls){v+=L.fn(x,y)*L.amp;n+=L.amp;}return v/n;};}
+function noiseCanvas(size,fn,base,spread){const c=document.createElement('canvas');c.width=c.height=size;const cx=c.getContext('2d'),id=cx.createImageData(size,size);
+  for(let y=0;y<size;y++)for(let x=0;x<size;x++){const v=clamp(base+(fn(x,y)-0.5)*spread,0,255),i=(y*size+x)*4;id.data[i]=id.data[i+1]=id.data[i+2]=v;id.data[i+3]=255;}cx.putImageData(id,0,0);return c;}
+let grainTile,washTile,mottleTile,mottlePat;
+function buildTiles(){
+  // paper grain — FINE tooth, MID-GREY (128) so SOFT-LIGHT perturbs luminance both ways (mean preserved) = tooth, NOT a darkening film
+  // razor grain — PER-PIXEL speckle (sharp 1px tooth), NOT smooth value-noise (which made soft ~2px blobs = 'clunky').
+  // noiseCanvas calls fn once per pixel in scan order, so a stateful PRNG gives true per-pixel white noise; a gentle
+  // low-freq fbm adds paper-fibre variation so it isn't flat TV static.
+  const grng=mulberry32(7), gfib=fbm(256,3,40,21);
+  grainTile=noiseCanvas(256,(x,y)=>0.5+(grng()-0.5)*0.85+(gfib(x,y)-0.5)*0.35,128,80);
+  const wf=fbm(256,4,6,55);washTile=noiseCanvas(256,wf,128,128);
+  // mottle — FINER pigment field (smaller scale) for granulation + edge pooling
+  const mf=fbm(256,6,46,91),mg2=fbm(256,5,104,131);
+  mottleTile=noiseCanvas(256,(x,y)=>0.5+(mf(x,y)-0.5)*0.7+(mg2(x,y)-0.5)*0.42,206,90);
+  mottlePat=document.createElement('canvas').getContext('2d').createPattern(mottleTile,'repeat');  // for edge pooling
+}
+buildTiles();
+/* per-band wavelength → converts the journey scroll to pixels so surface texture travels WITH the land */
+function wlOf(layer){const n=NC&&NC[layer];return n?lerp(0.8,2.7,ST.rug)*n.wlVar:1.4;}
+/* edge-pooling scratch buffer */
+let PL,PLX,plKey=null;
+function ensurePL(W,H){const key=W+'x'+H;if(plKey===key)return;plKey=key;if(!PL){PL=document.createElement('canvas');PLX=PL.getContext('2d');}PL.width=W;PL.height=H;}
+
+/* ===================== STATE ===================== */
+/* each world is a set of 3 biomes; as we travel, regions of each drift past, and each biome reacts to its OWN band (0→bass, 1→mid, 2→treble) */
+const COMP={
+  hokkaido:['hokkaido','satsuma','yuzu'],
+  yuzu:    ['yuzu','maple','hokkaido'],
+  maple:   ['maple','cola','hokkaido'],
+  cola:    ['cola','maple','yuzu'],
+  satsuma: ['satsuma','hokkaido','maple']
+};
+/* per-biome landform personality — the tool's per-flavor form deltas (Lift / Crest↔Trough / Wave height /
+   Wave breadth / Detail), scaled live by ST.variety. As a biome region drifts past, the terrain takes on
+   its character, so the scroll is never one uniform shape. */
+const BFORM={  /* now a LEAN on top of the global character swing — every world morphs, these just bias it */
+  hokkaido:{mv:-0.05, amp:-0.04, dens:0.00, peakW:+0.12, lift:-0.04},   // leans calm & low
+  yuzu:    {mv:+0.07, amp:+0.05, dens:+0.04, peakW:0.00, lift:+0.05},   // leans gentle rolling
+  maple:   {mv:+0.12, amp:+0.06, dens:+0.02, peakW:-0.05, lift:+0.07},  // leans hills
+  cola:    {mv:+0.26, amp:+0.12, dens:+0.05, peakW:-0.16, lift:+0.12},  // leans dramatic crests
+  satsuma: {mv:+0.11, amp:+0.08, dens:-0.04, peakW:+0.14, lift:+0.08}   // leans broad dunes
+};
+const ST={
+  flavor:'hokkaido', seed:2471, sun:true, speed:0.55,
+  g:{layers:11, amp:0.30, dens:0.16, haze:0.50, mv:0.05, peakW:0.62}, rug:0.52, hAvg:0.27, relief:0.55,
+  wash:0.5, crest:0.34, epool:0.30, grain:0.42, gran:0.28, edge:0.5, variety:1.0,   /* LOCKED specs */
+  sunPos:{x:0.72,y:0.17,size:0.55},
+  compP:null,compT:null,fade:1, autoCycle:true, autoT:0, _last:0,
+  journey:0, journeyC:0,
+  reduced:matchMedia('(prefers-reduced-motion: reduce)').matches
+};
+const labsOf=k=>BIOMES[k].labs.map(l=>({...l}));
+const compOf=f=>COMP[f].map(labsOf);
+ST.compP=compOf(ST.flavor);ST.compT=compOf(ST.flavor);
+const MOB=(matchMedia&&matchMedia("(pointer:coarse)").matches)||innerWidth<=680;
+if(MOB){ST.g.layers=8;}   // fewer ridges on phones -> smoother audio + render
+
+/* per-(seed,layers,rug) noise cache — built once, scrolled by phase each frame */
+let NC=null, ncKey=null, CZ=null, CZ2=null;
+function buildCZ(){CZ=makeNoise(ST.seed*53+7,8);CZ2=makeNoise(ST.seed*97+13,11);}  // color-zone + outcrop fields
+function buildNC(){const N=ST.g.layers,rug=ST.rug,oct=3+Math.round(rug*4),nodes=6+Math.round(rug*12);
+  buildCZ();
+  NC=[];for(let layer=0;layer<N;layer++){const set=[];for(let o=0;o<oct;o++)set.push(makeNoise(ST.seed*131+layer*977+o*53,nodes));
+    const sr=mulberry32(ST.seed*7+layer*101+999), wlVar=0.7+sr()*0.85;
+    NC.push({set,detail:makeNoise(ST.seed*333+layer*61,48),ridge:makeNoise(ST.seed*555+layer*71,5),
+      mvN:makeNoise(ST.seed*211+layer*89,7),       // travels: which stretches are peaky (+) vs valleyed (-)
+      elev:makeNoise(ST.seed*709+layer*131,6),     // travels: broad plateaus / basins (the 'rise' analog)
+      wlVar});}  // ridge = long-wavelength rolling landforms
+  ncKey=ST.seed+'_'+N+'_'+rug;}
+buildNC();
+/* deterministic per-(world-cell,layer) landform RNG -> stable features that scroll in/out, never re-rolled per frame */
+function cellRnd(cell,layer){let h=(Math.imul(cell|0,73856093)^Math.imul(layer|0,19349663)^Math.imul(ST.seed|0,83492791))>>>0;
+  const r=()=>{h=Math.imul(h^h>>>15,2246822519);h=Math.imul(h^h>>>13,3266489917);h^=h>>>16;return (h>>>0)/4294967296;};
+  return [r(),r(),r(),r()];}
+/* blended per-biome form delta at world-x (same dominance-biased weighting as the colour regions) */
+function formAt(wx,t){const nz=clamp(CZ(wx*0.6+t*0.5)*0.5+0.5,0,1),v=Math.pow(nz,1.55)*2;
+  const i0=Math.floor(v),i1=Math.min(2,i0+1);let u=v-i0;u=u*u*(3-2*u);
+  const comp=COMP[ST.flavor],A=BFORM[comp[i0]],B=BFORM[comp[i1]],g=ST.variety;
+  return {mv:g*((1-u)*A.mv+u*B.mv),amp:g*((1-u)*A.amp+u*B.amp),dens:g*((1-u)*A.dens+u*B.dens),peakW:g*((1-u)*A.peakW+u*B.peakW),lift:g*((1-u)*A.lift+u*B.lift)};}
+
+/* ===================== terrain — a scrolling panorama (no vertical bop) ===================== */
+function ridgeYs(W,H,layer,N,sig){
+  if(ncKey!==(ST.seed+'_'+ST.g.layers+'_'+ST.rug))buildNC();
+  const nc=NC[layer],rug=ST.rug,set=nc.set,detail=nc.detail,ridge=nc.ridge,oct=set.length;
+  const persist=lerp(0.30,0.66,rug),wl=lerp(0.8,2.7,rug)*nc.wlVar;
+  const t=N===1?0:layer/(N-1);
+  const hAvg=ST.hAvg - sig.lift*0.03;                                   // gentle global breath only
+  const scroll=ST.journey*(0.12+0.9*t);                                // depth parallax: front travels faster
+  const ampF=ST.g.amp,densF=ST.g.dens,relief=ST.relief;
+  // landform candidates — the mv & breadth that gate them now follow the BIOME drifting past (formAt):
+  // cola crests, hokkaido stays calm, satsuma broadens → variety tracks the colour regions (the tool's mechanism).
+  const drama=(0.45+0.4*relief)*(sig.dr||1), mvBase=ST.g.mv, bwBase=clamp(ST.g.peakW,0,1);
+  const PSPAN=3.2, prate=PSPAN/wl, pw0=scroll*prate;
+  const cands=[];
+  if(t>0.10){const cmin=Math.floor(pw0)-1, cmax=Math.ceil(pw0+PSPAN)+1;
+    for(let c=cmin;c<=cmax;c++){const rr=cellRnd(c,layer),cx=(c-pw0)/PSPAN+(rr[1]-0.5)/PSPAN,fd=formAt(cx+ST.journeyC,t);
+      const m=clamp(mvBase+fd.mv+nc.mvN(c*0.45+layer*0.7)*0.45,-1,1),bw=clamp(bwBase+fd.peakW,0,1);
+      const margin=Math.abs(m)*0.7-rr[0];
+      if(margin>0){const gw2=smooth(0,0.16,margin)*(0.55+0.5*t);          // ramp features in/out smoothly (no pop) + gentler on far ridges
+        if(m>0)cands.push({x:cx,w:Math.max(0.012,lerp(0.02,0.16,bw)+rr[2]*(0.016+0.05*bw)),h:-H*(0.10+rr[3]*0.18)*m*drama*gw2}); // peak (up)
+        else   cands.push({x:cx,w:Math.max(0.03,0.06+rr[2]*0.07+bw*0.05),h:H*(0.09+rr[3]*0.16)*(-m)*drama*gw2});}}}            // valley (down)
+  const pts=84,ys=new Array(pts+1);
+  for(let i=0;i<=pts;i++){const fx=i/pts,fd=formAt(fx+ST.journeyC,t);
+    const ground=lerp(H*hAvg,H*0.985,t);
+    const ampE=Math.max(0.04,ampF+fd.amp),densE=Math.max(0,densF+fd.dens),ampPx=H*(0.03+ampE*0.20)*(0.58+0.55*t);
+    let bv=0,a=1,nm=0,fr=wl;for(let o=0;o<oct;o++){bv+=set[o](fx*fr+layer*3.1+scroll)*a;nm+=a;a*=persist;fr*=1.9;}
+    let y=ground+(bv/nm)*ampPx;
+    y-=nc.elev(fx*0.5+layer*0.4+scroll*0.8)*H*0.05;                            // gentle traveling elevation
+    y-=fd.lift*H*0.42;                                                          // per-biome elevation (the tool's 'Lift')
+    y+=detail(fx*(10+rug*22)+layer+scroll*1.6)*H*(0.006+densE*0.016);
+    for(const f of cands){const dx=(fx-f.x)/f.w;y+=f.h*Math.exp(-dx*dx*0.5);}  // peaks & valleys
+    ys[i]=y;
+  }
+  return ys;
+}
+/* color — biome REGIONS drift past as we travel; each biome reacts to its own band (slot 0→bass,1→mid,2→treble) */
+function regionColorAt(x,t,C,levels){
+  const wx=x+ST.journeyC;                                              // color scrolls with the journey
+  const nz=clamp(CZ(wx*0.6+t*0.5)*0.5+0.5,0,1);                        // travelling region field over the 3 biome slots
+  const v=Math.pow(nz,1.55)*2;                                        // bias toward slot 0 -> the puck's world dominates; slots 1 & 2 still drift through
+  const i0=Math.floor(v),i1=Math.min(2,i0+1);let u=v-i0;u=u*u*(3-2*u); // feathered region boundary
+  const w=[0,0,0];w[i0]+=1-u;w[i1]+=u;
+  let L=0,A=0,B=0,boost=0;for(let s=0;s<3;s++){L+=C[s].L*w[s];A+=C[s].a*w[s];B+=C[s].b*w[s];boost+=w[s]*levels[s];}
+  boost=clamp(boost,0,1);
+  L=Math.min(1,L+boost*0.09);A*=1+boost*0.20;B*=1+boost*0.20;          // biome-as-instrument: its region lifts + saturates on its band
+  const hz=clamp(ST.g.haze,0,1)*(1-t)*(1-t);
+  return {L:lerp(L,SKY_HOR.L,hz),a:lerp(A,SKY_HOR.a,hz*0.85),b:lerp(B,SKY_HOR.b,hz*0.85)};}
+
+/* ===================== render (per frame) ===================== */
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+let RS=1;
+function resize(){const w=innerWidth,h=innerHeight,dpr=Math.min(MOB?1.25:1.5,devicePixelRatio||1);
+  RS=(w*dpr>2048)?2048/w:dpr; cv.width=Math.round(w*RS);cv.height=Math.round(h*RS);cv.style.width=w+'px';cv.style.height=h+'px';}
+addEventListener('resize',resize);resize();
+
+function mixLabs(cur,tgt,f){return f>=1?tgt:cur.map((l,i)=>lerpLab(l,tgt[i],f));}
+function compLabs(){return ST.compP.map((ramp,j)=>mixLabs(ramp,ST.compT[j],ST.fade));}
+
+function drawSun(W,H,sig){const x=ST.sunPos.x*W,y=ST.sunPos.y*H,R=H*0.07*ST.sunPos.size*(1+0.03*sig.rms);
+  const g=ctx.createRadialGradient(x,y,R*0.6,x,y,R);const c=`rgb(${SUN_RGB.join(',')})`;
+  g.addColorStop(0,c);g.addColorStop(0.94,c);g.addColorStop(1,`rgba(${SUN_RGB.join(',')},0)`);      // crisp edge (solid to 94%) — CANON, do not soften (julia 2026-06-10)
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,R,0,7);ctx.fill();
+  ctx.save();ctx.beginPath();ctx.arc(x,y,R*0.99,0,7);ctx.clip();                                     // fine grain inside the disc
+  ctx.globalCompositeOperation='soft-light';ctx.globalAlpha=0.3;ctx.drawImage(grainTile,x-R,y-R,R*2,R*2);ctx.restore();
+  ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';}
+
+/* screen-space swell (hills rise where you play) + note blooms */
+const SWN=220,SWt=new Float32Array(SWN),SW=new Float32Array(SWN);let blooms=[];
+function addLift(fx,amp){const c=clamp(fx,0,1)*(SWN-1),s=SWN*0.04,lo=Math.max(0,(c-s*4)|0),hi=Math.min(SWN-1,(c+s*4)|0);for(let j=lo;j<=hi;j++){const d=j-c;SWt[j]=Math.min(1.6,SWt[j]+amp*Math.exp(-(d*d)/(2*s*s)));}}
+function updateSwell(){for(let j=0;j<SWN;j++){SW[j]+=(SWt[j]-SW[j])*0.26;SWt[j]*=0.9;}}
+function swellAt(fx){const q=clamp(fx,0,1)*(SWN-1),i=q|0,f=q-i;return SW[i]*(1-f)+SW[Math.min(SWN-1,i+1)]*f;}
+function applySwell(ys,t,H){const pts=ys.length-1;for(let i=0;i<=pts;i++)ys[i]-=swellAt(i/pts)*H*0.07*(0.3+0.7*t);}
+function drawBlooms(W,H){if(!blooms.length)return;ctx.save();ctx.globalCompositeOperation='lighter';
+ for(let b=blooms.length-1;b>=0;b--){const bl=blooms[b];bl.a*=0.93;if(bl.a<0.03){blooms.splice(b,1);continue;}
+  const rr=H*(0.012+0.05*(1-bl.a));ctx.beginPath();ctx.arc(bl.x*W,bl.y*H,rr,0,7);ctx.fillStyle='rgba(240,216,120,'+(0.26*bl.a).toFixed(3)+')';ctx.fill();
+  ctx.beginPath();ctx.arc(bl.x*W,bl.y*H,H*0.005,0,7);ctx.fillStyle='rgba(255,252,244,'+bl.a.toFixed(3)+')';ctx.fill();}
+ ctx.restore();}
+function pushBloom(fx,fy){blooms.push({x:fx,y:fy,a:1});}
+function render(sig){
+  const W=cv.width,H=cv.height,N=ST.g.layers,CL=compLabs();
+  const levels=[sig.bass,sig.mid,sig.treble];                          // biome slots → bands
+  // sky (crisp cream) with rms luminance breath
+  const sg=ctx.createLinearGradient(0,0,0,H*0.66);
+  const lift=l=>({L:Math.min(1,l.L+0.04*sig.rms),a:l.a,b:l.b});
+  sg.addColorStop(0,labStr(lift(SKY_TOP)));sg.addColorStop(1,labStr(lift(SKY_HOR)));
+  ctx.fillStyle=sg;ctx.fillRect(0,0,W,H);
+  drawSun(W,H,sig);
+  let skyline=null;
+  for(let i=0;i<N;i++){
+    const t=N===1?0:i/(N-1),ys=ridgeYs(W,H,i,N,sig),pts=ys.length-1;
+    applySwell(ys,t,H);
+    if(i===0)skyline=ys;
+    const C=[biomeLab(CL[0],t),biomeLab(CL[1],t),biomeLab(CL[2],t)];   // 3 biome colors at this depth
+    const grad=ctx.createLinearGradient(0,0,W,0);let midCol;
+    for(let s=0;s<=20;s++){const x=s/20,c=regionColorAt(x,t,C,levels);grad.addColorStop(x,labStr(c));if(s===10)midCol=c;}
+    const trace=()=>{ctx.beginPath();ctx.moveTo(0,ys[0]);for(let k=1;k<=pts;k++){const x0=(k-1)/pts*W,x1=k/pts*W,xm=(x0+x1)/2,ym=(ys[k-1]+ys[k])/2;ctx.quadraticCurveTo(x0,ys[k-1],xm,ym);}};
+    trace();ctx.lineTo(W,ys[pts]);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+    ctx.save();ctx.clip();
+    ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+    const top=Math.min(...ys);
+    const gdrift=ST.journey*(0.12+0.9*t)*W/wlOf(i);                      // px scrolled at this depth → texture travels WITH the land
+    const e=clamp(ST.edge,0,1.2);
+    // soft watercolor wash — per-band, soft-light (keeps hue), drifts with the land
+    if(ST.wash>0){ctx.globalCompositeOperation='soft-light';ctx.globalAlpha=Math.min(0.5,0.5*ST.wash);
+      const ws=W*1.1,hs=ws*(H/W)*1.4,wox=((i*131+gdrift*0.6)%(ws*0.5)+(ws*0.5))%(ws*0.5),woy=(i*71)%(hs*0.5);
+      ctx.drawImage(washTile,-wox,top-woy,ws,hs);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';}
+    // granulation — pigment settling in the body (finer mottle masked by a vertical gradient), multiply; bounded to [top,H]
+    if(ST.gran>0.01){ensurePL(W,H);const gy=Math.max(0,Math.floor(top)),gh2=H-gy,mw=mottleTile.width,mh=mottleTile.height,gox=((i*61+gdrift)%mw+mw)%mw,goy=(i*97)%mh;
+      PLX.clearRect(0,gy,W,gh2);PLX.globalCompositeOperation='source-over';
+      PLX.save();PLX.translate(-gox,-goy);PLX.fillStyle=mottlePat;PLX.fillRect(gox,gy+goy,W,gh2);PLX.restore();
+      PLX.globalCompositeOperation='destination-in';const gg=PLX.createLinearGradient(0,top,0,H);
+      gg.addColorStop(0,'rgba(0,0,0,0)');gg.addColorStop(0.45,'rgba(0,0,0,1)');gg.addColorStop(1,'rgba(0,0,0,1)');PLX.fillStyle=gg;PLX.fillRect(0,gy,W,gh2);
+      PLX.globalCompositeOperation='source-over';
+      ctx.save();ctx.globalCompositeOperation='multiply';ctx.globalAlpha=Math.min(0.30,ST.gran*(0.20+0.34*t));ctx.drawImage(PL,0,gy,W,gh2,0,gy,W,gh2);ctx.globalAlpha=1;ctx.restore();}
+    // crisp cut-paper edge line — follows the ridge exactly, eases as bloom grows
+    {const lc=oklabToRgb(Math.max(0,midCol.L-0.19),midCol.a,midCol.b);
+     ctx.save();trace();ctx.strokeStyle=`rgba(${lc[0]},${lc[1]},${lc[2]},${clamp(0.46-0.28*e,0.10,0.46).toFixed(3)})`;ctx.lineWidth=Math.max(1,H*0.0016);ctx.lineJoin=ctx.lineCap='round';ctx.stroke();ctx.restore();}
+    const reach=H*(0.04+0.5*e);
+    // edge bloom — crest-darker shade that HUGS the wave: 1px vertical gradient strip stamped at each column's crest (no seam, no banding)
+    if(e>0.02){const bc=oklabToRgb(Math.max(0,midCol.L-0.16),midCol.a,midCol.b),rh=Math.max(2,Math.ceil(reach));
+      const strip=document.createElement('canvas');strip.width=1;strip.height=rh;const sx=strip.getContext('2d'),lg=sx.createLinearGradient(0,0,0,rh);
+      lg.addColorStop(0,`rgba(${bc[0]},${bc[1]},${bc[2]},${(0.10+0.26*e).toFixed(3)})`);lg.addColorStop(1,`rgba(${bc[0]},${bc[1]},${bc[2]},0)`);sx.fillStyle=lg;sx.fillRect(0,0,1,rh);
+      for(let x=0;x<W;x+=8){const fx=x/W*pts,i0=Math.floor(fx),f=fx-i0,cy=ys[i0]+(ys[Math.min(pts,i0+1)]-ys[i0])*f;ctx.drawImage(strip,x,cy,8,rh);}}
+    // crest light — a thin misty CATCH-LIGHT sliver at the VERY TOP of each ridge. Lift = a fraction of the
+    // remaining headroom to white, so pale/hazed far bands lift GENTLY and never clip into a white lens.
+    if(ST.crest>0.01){const Ll=midCol.L+(1-midCol.L)*0.30,ll=oklabToRgb(Ll,midCol.a*0.82,midCol.b*0.82);
+      const lr=Math.max(2,Math.ceil(H*(0.018+0.055*ST.crest))),ls=document.createElement('canvas');ls.width=1;ls.height=lr;   // thin rim, not a glow
+      const lx=ls.getContext('2d'),lgr=lx.createLinearGradient(0,0,0,lr);
+      lgr.addColorStop(0,`rgba(${ll[0]},${ll[1]},${ll[2]},${(0.5*ST.crest*(0.55+0.45*t)).toFixed(3)})`);lgr.addColorStop(1,`rgba(${ll[0]},${ll[1]},${ll[2]},0)`);lx.fillStyle=lgr;lx.fillRect(0,0,1,lr);
+      for(let x=0;x<W;x+=8){const fx=x/W*pts,i0=Math.floor(fx),f=fx-i0,cy=ys[i0]+(ys[Math.min(pts,i0+1)]-ys[i0])*f;ctx.drawImage(ls,x,cy,8,lr);}}
+    // edge pooling — textured pigment burn inside the bloom (FINER mottle), travels with the land, bounded for perf
+    if(ST.epool>0.01&&e>0.02){ensurePL(W,H);const ry0=Math.max(0,Math.floor(top)-1),rh2=Math.ceil(reach)+3,mw=mottleTile.width,mh=mottleTile.height,pox=((i*53+gdrift)%mw+mw)%mw,poy=(i*89)%mh;
+      PLX.clearRect(0,ry0,W,rh2);PLX.globalCompositeOperation='source-over';
+      PLX.save();PLX.translate(-pox,-poy);PLX.fillStyle=mottlePat;PLX.fillRect(pox,ry0+poy,W,rh2);PLX.restore();
+      PLX.globalCompositeOperation='destination-in';const eg=PLX.createLinearGradient(0,top,0,top+reach);
+      eg.addColorStop(0,'rgba(0,0,0,1)');eg.addColorStop(1,'rgba(0,0,0,0)');PLX.fillStyle=eg;PLX.fillRect(0,ry0,W,rh2);
+      PLX.globalCompositeOperation='source-over';
+      ctx.save();ctx.globalCompositeOperation='multiply';ctx.globalAlpha=Math.min(0.55,ST.epool*(0.4+0.4*e));ctx.drawImage(PL,0,ry0,W,rh2,0,ry0,W,rh2);ctx.globalAlpha=1;ctx.restore();}
+    // fine paper grain — FINE tooth, SOFT-LIGHT over mid-grey (mean-preserving ⇒ tooth, NOT a dirty film), locked to the moving paper
+    {ctx.globalCompositeOperation='soft-light';ctx.globalAlpha=Math.min(0.45,0.52*ST.grain*(1+0.10*sig.treble));
+     const gw=grainTile.width,gh=grainTile.height,gx0=((i*53+gdrift)%gw+gw)%gw,gy0=(i*97)%gh;
+     const gyStart=-gy0+Math.floor((top+gy0)/gh)*gh;                  // skip tiles fully above this ridge
+     for(let gx=-gx0;gx<W;gx+=gw)for(let gy=gyStart;gy<H;gy+=gh)ctx.drawImage(grainTile,gx,gy);
+     ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';}
+    ctx.restore();
+  }
+  // (wash · granulation · edge · bloom · crest-light · pooling · grain are ALL per-band above — matching the current tool; no pinned global film)
+  drawBlooms(W,H);
+  // vignette
+  const vg=ctx.createRadialGradient(W/2,H*0.46,H*0.3,W/2,H*0.5,W*0.8);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(20,14,8,0.09)');ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
+}
+
+/* ===================== flavor controls ===================== */
+function buildFlavors(){const w=document.getElementById('flavors');w.innerHTML='';
+  BKEYS.forEach(k=>{const d=document.createElement('button');d.className='dot'+(k===ST.flavor?' on':'');d.title=BIOMES[k].label;
+    d.style.background=`linear-gradient(135deg,${BIOMES[COMP[k][0]].hex[1]},${BIOMES[COMP[k][2]].hex[1]})`;d.onclick=()=>setFlavor(k);w.appendChild(d);});}
+function setFlavor(k){if(k===ST.flavor&&ST.fade>=1)return;
+  ST.compP=compLabs().map(r=>r.map(l=>({...l})));ST.compT=compOf(k);
+  ST.flavor=k;ST.fade=0;
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('on',BKEYS[i]===k));}
+function cycleFlavor(){setFlavor(BKEYS[(BKEYS.indexOf(ST.flavor)+1)%BKEYS.length]);}
+
+/* ===================== pure-visual driver (no audio) ===================== */
+buildFlavors();
+const $=id=>document.getElementById(id);
+// puck click jumps to that world AND delays the next auto-advance
+document.querySelectorAll('.dot').forEach((d,i)=>d.onclick=()=>{setFlavor(BKEYS[i]);ST.autoT=0;});
+$('atmos').oninput=e=>ST.g.haze=parseFloat(e.target.value);
+$('speed').oninput=e=>ST.speed=parseFloat(e.target.value);
+let playing=true;
+$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'⏸':'▶';};
+$('full').onclick=()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.();};
+$('snap').onclick=()=>{cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='ki_landscape_'+ST.flavor+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);});};
+let toastT;function toast(html){const el=$('toast');if(!el)return;el.innerHTML=html;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3200);}
+
+/* autonomous "weather" — replaces the audio. A slow energy field drives scroll speed + terrain drama;
+   biomes breathe on separate phases; surges push big peaks/outcroppings (the 'stellar moments') as it
+   rolls through the auto-rotating worlds. */
+/* ===== smooth "weather" (no audio, no beats) — a slowly-rotating GLOBAL character that EVERY world
+   morphs through: valleys <-> smooth <-> peaks, narrow spires <-> broad dunes, calm <-> dramatic. The
+   biome (BFORM) only leans it. Colours & speed breathe with a gentle energy. No erratic jumps. ===== */
+const Amv=makeNoise(1107,18), Abr=makeNoise(2203,14), Aamp=makeNoise(3307,16), Aen=makeNoise(4409,13), Amid=makeNoise(5501,15);
+let T=0;
+function frame(now){
+  requestAnimationFrame(frame);
+  if(frame._g&&now-frame._g<23)return;frame._g=now;   // ~42fps cap frees the main thread for the audio scheduler
+  const dt=Math.min(0.05,(now-(ST._last||now))/1000);ST._last=now;
+  const live=playing&&!ST.reduced;
+  if(live)T+=dt;
+  const mvD=Amv(T*0.030)*0.62;                       // -0.62..0.62  valleys(-) <-> peaks(+)
+  const brD=clamp(0.5+0.5*Abr(T*0.024),0,1);          // 0 spires .. 1 broad dunes
+  const ampD=0.23+0.17*(0.5+0.5*Aamp(T*0.036));       // wave height swing
+  const energy=clamp(0.5+0.5*Aen(T*0.045),0,1);       // overall intensity (colour + speed)
+  // write the global form smoothly (mv/amp/peakW are NOT in the noise-cache key -> no rebuild glitch)
+  ST.g.mv=mvD; ST.g.peakW=brD; ST.g.amp=ampD; ST.relief=0.4+0.75*Math.abs(mvD);
+  let sig={
+    bass:clamp(0.22+0.5*energy,0,1),
+    mid:clamp(0.18+0.4*(0.5+0.5*Amid(T*0.5)),0,1),
+    treble:clamp(0.14+0.3*(0.5+0.5*Math.sin(T*0.45+2)),0,1),
+    rms:clamp(0.14+0.5*energy,0,1),
+    lift:clamp(0.12+0.42*energy,0,1),
+    dr:1
+  };
+  if(ST.reduced){const br=0.5+0.5*Math.sin(now/1000*0.4);ST.g.mv=0.05;ST.g.peakW=0.5;ST.g.amp=0.28;ST.relief=0.5;sig={bass:0,mid:0,treble:0,rms:0.12+0.08*br,lift:0.12+0.08*br,dr:1};}
+  const speed=live?(0.04+0.07*ST.speed+0.06*energy):0;
+  ST.journey+=dt*speed; ST.journeyC+=dt*speed*0.55;
+  if(ST.fade<1){ST.fade=Math.min(1,ST.fade+0.012);if(ST.fade>=1)ST.compP=ST.compT.map(r=>r.map(l=>({...l})));}
+  if(ST.autoCycle&&live){ST.autoT+=dt*1000;if(ST.autoT>20000){ST.autoT=0;cycleFlavor();}}
+  updateSwell();
+  if(window.__audioReady&&typeof audioLevels==="function"){frame._af=(frame._af||0)+1;if(frame._af%3===0)frame._L=audioLevels();const L=frame._L;if(L){sig.bass=L.bass;sig.mid=L.mid;sig.treble=L.treble;sig.rms=Math.max(sig.rms*0.4,L.rms);sig.lift=clamp(0.12+0.5*L.rms,0,1);}}
+  render(sig);
+}
+if(ST.reduced)toast('<b>Reduced motion.</b> A calm, still view.');
+
+requestAnimationFrame(frame);
+
+</script>
+
+<script>
+/* ===== Ki · Tokyo Lounge — instrument layer atop the real Landscapes engine ===== */
+ST.autoCycle=false; ST.speed=0.42;
+const NAMES=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+const F=m=>Tone.Frequency(m,'midi').toFrequency();
+const QUAL={min:[0,3,7,10,14],maj:[0,4,7,9,14],dom:[0,4,7,10,14]};
+const SCALEIV={min:[0,2,3,5,7,9,10],maj:[0,2,4,7,9],dom:[0,2,4,7,9,10]};
+const QLAB={min:'min9',maj:'6/9',dom:'9'};
+const COF=[0,7,2,9,4,11,6,1,8,3,10,5], XPC=[1,8,3,10,5,0,7,2,9,4,11,6];
+const GROOVES=[
+  {name:'Dusty', swing:.56, kick:[0,3,6,10,11], snare:[4,12], hat:[0,2,4,6,8,10,12,14], ghost:[7,15], late:0.03, hv:0.32, kv:0.9},
+  {name:'Lo-fi', swing:.32, kick:[0,10], snare:[4,12], hat:[4,12], ghost:[], late:0.014, hv:0.24, kv:0.85},
+  {name:'Brush', swing:.6, kick:[0], snare:[2,4,6,10,12,14], hat:[0,3,4,7,8,11,12,15], ghost:[1,5,9,13], late:0.0, hv:0.2, kv:0.7, brush:true},
+  {name:'Boom', swing:.14, kick:[0,7,8], snare:[4,12], hat:[0,2,4,6,8,10,12,14], ghost:[], late:0.0, hv:0.42, kv:1.0},
+];
+const WMAP={
+ maple:   {quality:'min',bpm:74,swing:.42,groove:0,tone:.5,tens:.28,skank:true,pulse:false,voice:{osc:'fattriangle',sp:18,cut:1500,lfo:.18,lfd:.5,q:2,vib:.03,vibF:4.6,drive:.06,chorus:.24,porta:.02,a:.012,d:.5,s:.25,r:1.0,verb:.4,dly:.42,padCut:680,bassBub:.72}},
+ hokkaido:{quality:'min',bpm:70,swing:.36,groove:1,tone:.48,tens:.2,dub:true,voice:{osc:'triangle',sp:0,cut:1050,lfo:.14,lfd:.5,q:1.4,vib:.03,vibF:4,drive:.03,chorus:.3,porta:.03,a:.02,d:.9,s:.28,r:1.4,verb:.62,dly:.5,padCut:540,bassBub:.8}},
+ yuzu:    {quality:'maj',bpm:84,swing:.2,groove:3,tone:.6,tens:.35,lofi:true,voice:{osc:'fatsawtooth',sp:20,cut:2200,lfo:.1,lfd:.6,q:1.6,vib:.05,vibF:5.4,drive:.16,chorus:.3,porta:.005,a:.006,d:.45,s:.16,r:.8,verb:.3,dly:.32,padCut:900,bassBub:.5}},
+ cola:    {quality:'min',bpm:66,swing:.3,groove:1,tone:.42,tens:.14,organ:true,voice:{osc:'fattriangle',sp:16,cut:760,lfo:.1,lfd:.35,q:1.4,vib:.05,vibF:5.2,drive:.04,chorus:.36,porta:.02,a:.03,d:1.2,s:.6,r:1.9,verb:.44,dly:.22,padCut:520,bassBub:.55}},
+ satsuma: {quality:'dom',bpm:88,swing:.24,groove:3,tone:.58,tens:.3,pulse:true,voice:{osc:'triangle',sp:0,cut:1800,lfo:.22,lfd:.7,q:1.8,vib:.035,vibF:6,drive:.08,chorus:.18,porta:.09,a:.004,d:.28,s:.18,r:.5,verb:.34,dly:.3,padCut:820,bassBub:.45}},
+};
+let WORLD=WMAP[ST.flavor], quality=WORLD.quality, rootPc=0, tension=WORLD.tens, curChord=null, harpNotes=[], playMode='touch', grooveIdx=WORLD.groove, driftAmt=0.45;
+function chordNotes(){let iv=QUAL[quality].slice();if(tension>0.42)iv.push(quality==='min'?17:21);if(tension>0.72)iv.push(quality==='min'?21:26);const root=48+rootPc;return iv.map(i=>root+12+i);}
+function tonicChordNotes(){let iv=QUAL[quality].slice();if(tension>0.42)iv.push(quality==='min'?17:21);return iv.map(i=>48+12+i);}
+function harpSet(notes){const st=new Set();for(const o of [-12,0,12])for(const n of notes)st.add(n+o);return [...st].filter(n=>n>=40&&n<=84).sort((a,b)=>a-b);}
+function chordLabel(){return NAMES[rootPc]+' '+QLAB[quality]+(tension>0.6?' +':'');}
+function touchScale(){const iv=SCALEIV[quality],set=[];for(let o=0;o<=30;o+=12)for(const i of iv){const m=48+o+i;if(m<=81)set.push(m);}return set;}
+let scaleSet=touchScale();
+
+/* audio — decoupled voice pools + shared cheap analog FX + a jank-resilient transport */
+let started=false,audioReady=false,lead,bed,padSynth,voiceFilt,voiceLFO,voiceVib,voiceDrive,voiceChorus,leadDly,leadVerb,padFilt,bass,bassAF,kick,snare,hat,rim,vinyl,crackle,delayBus,reverbBus,rvG,dlG,masterLP,analyser,curStep=0,spaceAmt=.5,flowAmt=.45;
+window.__audioReady=false;
+async function startAudio(){ if(started)return; started=true;
+  await Tone.start();
+  Tone.getContext().lookAhead=0.25;                                  // resilient to main-thread jank (no input-latency cost)
+  masterLP=new Tone.Filter(4600,'lowpass');
+  const tapeSat=new Tone.Distortion({distortion:0.28,wet:0.09});
+  const glue=new Tone.Compressor({threshold:-15,ratio:2.4,attack:0.04,release:0.3});
+  const wow=new Tone.Vibrato({frequency:0.15,depth:0.003});
+  const mg=new Tone.Gain(0.6);const lim=new Tone.Limiter(-1.5);
+  masterLP.chain(tapeSat,glue,wow,mg,lim,Tone.Destination);
+  analyser=new Tone.FFT(32);lim.connect(analyser);
+  reverbBus=new Tone.Reverb({decay:3.4,preDelay:0.02,wet:1});rvG=new Tone.Gain(0.4);reverbBus.connect(rvG);rvG.connect(masterLP);
+  const dlyFilt=new Tone.Filter(2400,'lowpass');
+  delayBus=new Tone.FeedbackDelay({delayTime:'8n.',feedback:0.32,wet:1});dlG=new Tone.Gain(0.24);delayBus.connect(dlyFilt);dlyFilt.connect(dlG);dlG.connect(masterLP);
+  /* shared analog voice chain — ONE filter + LFO for all voices (cheap, but alive) */
+  voiceFilt=new Tone.Filter({type:'lowpass',frequency:1200,Q:1.6,rolloff:-24});
+  voiceLFO=new Tone.LFO({frequency:0.18,min:700,max:1700,type:'sine'});voiceLFO.connect(voiceFilt.frequency);voiceLFO.start();
+  voiceVib=new Tone.Vibrato({frequency:5,depth:0.03});
+  voiceDrive=new Tone.Distortion({distortion:0.5,wet:0});
+  voiceChorus=new Tone.Chorus({frequency:0.5,delayTime:3.2,depth:0.3,wet:0.22}).start();
+  leadDly=new Tone.Gain(0.3);leadVerb=new Tone.Gain(0.4);
+  voiceFilt.chain(voiceVib,voiceDrive,voiceChorus);
+  voiceChorus.connect(masterLP);voiceChorus.connect(leadDly);leadDly.connect(delayBus);voiceChorus.connect(leadVerb);leadVerb.connect(reverbBus);
+  lead=new Tone.PolySynth(Tone.Synth,{maxPolyphony:18,oscillator:{type:'triangle'},envelope:{attack:0.01,decay:0.7,sustain:0.28,release:1.0}});lead.volume.value=-13;lead.connect(voiceFilt);
+  bed=new Tone.PolySynth(Tone.Synth,{maxPolyphony:8,oscillator:{type:'triangle'},envelope:{attack:0.02,decay:0.8,sustain:0.3,release:1.2}});bed.volume.value=-15;bed.connect(voiceFilt);
+  padSynth=new Tone.PolySynth(Tone.Synth,{maxPolyphony:12,oscillator:{type:'fatsawtooth',count:2,spread:16},envelope:{attack:1.6,decay:1.4,sustain:0.68,release:2.4}});padSynth.volume.value=-28;
+  padFilt=new Tone.Filter(600,'lowpass');padSynth.chain(padFilt);padFilt.connect(masterLP);padFilt.connect(reverbBus);
+  bass=new Tone.MonoSynth({oscillator:{type:'sine'},filter:{type:'lowpass',Q:2.5,rolloff:-24},envelope:{attack:0.02,decay:0.3,sustain:0.75,release:0.5},filterEnvelope:{attack:0.02,decay:0.22,sustain:0.5,release:0.5,baseFrequency:60,octaves:2.4},portamento:0.06});bass.volume.value=-10;
+  bassAF=new Tone.AutoFilter({frequency:0.34,depth:0.5,baseFrequency:90,octaves:2.2,filter:{type:'lowpass',Q:3}}).start();bass.chain(bassAF,masterLP);
+  const drumBus=new Tone.Filter(4400,'lowpass');drumBus.connect(masterLP);const dRoom=new Tone.Gain(0.14);drumBus.connect(dRoom);dRoom.connect(reverbBus);
+  kick=new Tone.MembraneSynth({pitchDecay:0.05,octaves:4,envelope:{attack:0.001,decay:0.42,sustain:0,release:0.15}});kick.volume.value=-9;kick.connect(drumBus);
+  snare=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:0.001,decay:0.12,sustain:0}});snare.volume.value=-21;const snBP=new Tone.Filter({type:'bandpass',frequency:1700,Q:0.9});snare.chain(snBP,drumBus);
+  hat=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:0.001,decay:0.026,sustain:0}});hat.volume.value=-32;const hatHP=new Tone.Filter(9000,'highpass');hat.chain(hatHP,drumBus);
+  rim=new Tone.NoiseSynth({noise:{type:'pink'},envelope:{attack:0.001,decay:0.045,sustain:0}});rim.volume.value=-24;const rimBP=new Tone.Filter({type:'bandpass',frequency:1700,Q:1.2});rim.chain(rimBP,drumBus);
+  vinyl=new Tone.Noise('pink');const vf=new Tone.Filter({type:'bandpass',frequency:2000,Q:0.4}),vg2=new Tone.Gain(0.0035);vinyl.chain(vf,vg2,masterLP);vinyl.start();
+  crackle=new Tone.NoiseSynth({noise:{type:'pink'},envelope:{attack:0.001,decay:0.015,sustain:0}});crackle.volume.value=-34;const crHP=new Tone.Filter(3500,'highpass');crackle.chain(crHP,masterLP);
+  audioReady=true;window.__audioReady=true;applyVoice();setBrightness(WORLD.tone);setSpace(spaceAmt);setFlow(flowAmt);setHarmony();grooveSwing();
+  Tone.Transport.bpm.value=WORLD.bpm;Tone.Transport.swingSubdivision='16n';
+  Tone.Transport.scheduleRepeat(tick,'16n');Tone.Transport.start();
+}
+function tick(time){curStep=(curStep+1)%16;const w=WORLD,g=grooveIdx>=0?GROOVES[grooveIdx]:null;
+  if(Math.random()<0.05)crackle.triggerAttackRelease('64n',time,0.14+Math.random()*0.18);
+  if(g){
+    if(g.kick.includes(curStep))kick.triggerAttackRelease('C1','8n',time,g.kv);
+    if(g.snare.includes(curStep))snare.triggerAttackRelease('16n',time+g.late,g.brush?0.32:0.55);
+    if(g.ghost&&g.ghost.includes(curStep))(g.brush?snare:rim).triggerAttackRelease('16n',time,g.brush?0.13:0.34);
+    if(g.hat.includes(curStep))hat.triggerAttackRelease('16n',time,curStep%4===0?g.hv*1.4:g.hv);
+    if(curChord&&curStep%8===0)playBass(time,true);else if(curChord&&curStep===12&&Math.random()<0.35)playBass(time,false);
+  }
+  if(w.skank&&curChord&&(curStep===6||curStep===14)){const s=harpNotes.filter(n=>n>=52&&n<=68).slice(0,3);if(s.length)bed.triggerAttackRelease(s.map(F),'16n',time,0.3);}   // reggae skank on the &
+  if(w.pulse&&playMode==='drift'&&curChord&&curStep%4===0){const r=curChord.root+12;bed.triggerAttackRelease(F(curStep%8===0?r:r+7),'8n',time,0.24);}   // raymond-scott gliding pulse
+  if(playMode==='drift'){
+    if(curStep===0&&Math.random()<lerp(0.12,0.7,flowAmt))driftAdvance();
+    if(curChord&&curStep===8&&Math.random()<lerp(0.2,0.7,flowAmt))compBed(time);
+    if(w.dub&&curStep===12&&Math.random()<0.3){const s=harpNotes.filter(n=>n>=56&&n<=72);if(s.length)bed.triggerAttackRelease(F(s[(Math.random()*s.length)|0]),'8n',time,0.2);}   // dub delay throw
+  }
+}
+function applyVoice(){if(!audioReady)return;const v=WORLD.voice,fat=v.osc.indexOf('fat')===0,osc=fat?{type:v.osc,count:3,spread:v.sp||18}:{type:v.osc};
+  lead.set({oscillator:osc,envelope:{attack:v.a,decay:v.d,sustain:v.s,release:Math.min(v.r,0.9)},portamento:v.porta});
+  bed.set({oscillator:osc,envelope:{attack:v.a+0.01,decay:v.d,sustain:v.s,release:Math.min(v.r*1.1,1.1)},portamento:v.porta});
+  voiceFilt.Q.rampTo(v.q,0.3);voiceLFO.min=v.cut*(1-v.lfo);voiceLFO.max=v.cut*(1+v.lfo);voiceLFO.frequency.rampTo(v.lfd,0.3);
+  voiceVib.frequency.rampTo(v.vibF,0.2);voiceVib.depth.rampTo(v.vib,0.2);
+  voiceDrive.wet.rampTo(v.drive,0.2);voiceChorus.wet.rampTo(v.chorus,0.2);
+  leadDly.gain.rampTo(v.dly,0.3);leadVerb.gain.rampTo(v.verb,0.3);
+  padFilt.frequency.rampTo(v.padCut,0.3);bassAF.depth.rampTo(v.bassBub,0.3);}
+function setBrightness(tn){if(!audioReady)return;masterLP.frequency.rampTo(2200+tn*4600,0.25);}
+function setSpace(x){spaceAmt=x;if(!audioReady)return;rvG.gain.rampTo(0.12+x*0.6,0.2);dlG.gain.rampTo(0.1+x*0.3,0.2);}
+function setFlow(x){flowAmt=x;driftAmt=x;ST.speed=lerp(0.2,0.7,x);}
+function grooveSwing(){if(!audioReady)return;Tone.Transport.swing=grooveIdx>=0?GROOVES[grooveIdx].swing:(WORLD.swing||0.3);}
+function playBass(time,strong){if(!curChord)return;const r=curChord.root-12;let n=r;if(!strong)n=r+(Math.random()<0.5?7:12);else if(Math.random()<0.25)n=r+(Math.random()<0.5?-5:2);bass.triggerAttackRelease(F(n),strong?'4n':'8n',time,strong?0.85:0.62);}
+function compBed(time){if(!harpNotes.length)return;const mids=harpNotes.filter(n=>n>=55&&n<=75);if(!mids.length)return;const k=2+(Math.random()<0.5?1:0),pick=new Set();for(let j=0;j<k;j++)pick.add(mids[(Math.random()*mids.length)|0]);bed.triggerAttackRelease([...pick].map(F),'2n',time,0.22);const gx=0.28+Math.random()*0.44;addLift(gx,0.4);pushBloom(gx,0.5);}
+function setHarmony(){if(!audioReady)return;let notes;if(playMode==='touch'){notes=tonicChordNotes();curChord={root:48,notes};}else{notes=chordNotes();curChord={root:48+rootPc,notes};}harpNotes=harpSet(curChord.notes);strumNotes=strumSet();padSynth.releaseAll();padSynth.triggerAttack(notes.slice(0,4).map(m=>F(m-12)));addLift(0.32,0.28);addLift(0.66,0.3);}
+function driftAdvance(){const i=COF.indexOf(rootPc),step=Math.random()<0.62?1:11;rootPc=COF[(i+step)%12];if(Math.random()<0.25)tension=clamp(tension+(Math.random()<0.5?0.3:-0.3),0,0.9);if(Math.random()<0.16){const qs=['min','maj','dom'];quality=qs[(Math.random()*3)|0];scaleSet=touchScale();selQual();}setHarmony();refreshHarmUI();}
+function audioLevels(){if(!analyser)return null;const v=analyser.getValue(),n=v.length;const band=(a,b)=>{let s=0,c=0;for(let i=a;i<b;i++){s+=clamp((v[i]+90)/70,0,1);c++;}return c?s/c:0;};const bs=band(0,(n*0.16)|0),md=band((n*0.16)|0,(n*0.5)|0),tr=band((n*0.5)|0,n);return {bass:bs,mid:md,treble:tr,rms:clamp(bs*0.6+md*0.3+tr*0.2,0,1)};}
+
+/* interactions */
+function evXY(e){const r=cv.getBoundingClientRect();return [(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height];}
+let strumNotes=[],strumDen=0.4,lastStrumT=0;const pts=new Map();
+function strumSet(){if(!harpNotes.length)return [];const n=Math.max(4,Math.round(lerp(5,harpNotes.length,strumDen)));if(n>=harpNotes.length)return harpNotes.slice();const out=[];for(let i=0;i<n;i++)out.push(harpNotes[Math.round(i*(harpNotes.length-1)/(n-1))]);return [...new Set(out)];}
+function strumGap(){return lerp(150,26,strumDen);}
+const perfNow=()=>(typeof performance!=='undefined'&&performance.now)?performance.now():Date.now();
+function resumeAudio(){try{const c=Tone.getContext();if(c&&c.state!=='running'&&c.resume)c.resume();}catch(_){}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)resumeAudio();else pts.clear();});
+/* multitouch play: every finger is its own voice; fire-and-forget so nothing gets stuck */
+function playAt(fx,fy,st){
+  if(playMode==='chord'){ if(!strumNotes.length)return;const now=perfNow();if(now-st.t<strumGap())return;
+    const idx=clamp(Math.floor(fx*strumNotes.length),0,strumNotes.length-1);if(idx===st.i)return;st.i=idx;st.t=now;
+    const m=strumNotes[idx];if(audioReady)lead.triggerAttackRelease(F(m),'4n',undefined,0.6);addLift(fx,1);pushBloom(fx,fy); }
+  else { if(!scaleSet.length)return;const idx=clamp(Math.floor((1-fy)*scaleSet.length),0,scaleSet.length-1),m=scaleSet[idx];if(m===st.n)return;st.n=m;
+    if(audioReady)lead.triggerAttackRelease(F(m),playMode==='touch'?'8n':'4n',undefined,playMode==='touch'?0.6:0.55);addLift(fx,playMode==='touch'?0.85:0.9);pushBloom(fx,fy); }
+}
+cv.addEventListener('pointerdown',e=>{if(!started)return;resumeAudio();e.preventDefault();const xy=evXY(e),st={n:-1,i:-1,t:0};pts.set(e.pointerId,st);try{cv.setPointerCapture(e.pointerId)}catch(_){}
+  playAt(xy[0],xy[1],st);});
+cv.addEventListener('pointermove',e=>{const st=pts.get(e.pointerId);if(!st)return;const xy=evXY(e);playAt(xy[0],xy[1],st);});
+function endPt(e){pts.delete(e.pointerId);}
+cv.addEventListener('pointerup',endPt);cv.addEventListener('pointercancel',endPt);cv.addEventListener('pointerleave',endPt);
+
+/* harmony UI (wheel + pad) */
+const wheel=document.getElementById('wheel'),pad=document.getElementById('pad'),dot=document.getElementById('dot'),chordName=document.getElementById('chordName');
+const SVGNS='http://www.w3.org/2000/svg';let wheelNodes=[];
+(function(){const cx=43,cy=43,r=32;const needle=document.createElementNS(SVGNS,'line');needle.setAttribute('id','needle');needle.setAttribute('x1',cx);needle.setAttribute('y1',cy);needle.setAttribute('stroke','#b0793a');needle.setAttribute('stroke-width','1.4');wheel.appendChild(needle);
+ const hub=document.createElementNS(SVGNS,'circle');hub.setAttribute('cx',cx);hub.setAttribute('cy',cy);hub.setAttribute('r',2.6);hub.setAttribute('fill','rgba(10,9,8,.3)');wheel.appendChild(hub);
+ COF.forEach((pc,i)=>{const ang=-Math.PI/2+i*(Math.PI*2/12),x=cx+Math.cos(ang)*r,y=cy+Math.sin(ang)*r;const g=document.createElementNS(SVGNS,'g');g.style.cursor='pointer';
+  const c2=document.createElementNS(SVGNS,'circle');c2.setAttribute('cx',x);c2.setAttribute('cy',y);c2.setAttribute('r',6.8);c2.setAttribute('fill','transparent');c2.setAttribute('stroke','rgba(10,9,8,.14)');
+  const hit=document.createElementNS(SVGNS,'circle');hit.setAttribute('cx',x);hit.setAttribute('cy',y);hit.setAttribute('r',8);hit.setAttribute('fill','transparent');
+  const t=document.createElementNS(SVGNS,'text');t.setAttribute('x',x);t.setAttribute('y',y+2.4);t.setAttribute('text-anchor','middle');t.setAttribute('font-size','6');t.setAttribute('font-weight','700');t.setAttribute('fill','#9a978e');t.textContent=NAMES[pc];
+  g.appendChild(hit);g.appendChild(c2);g.appendChild(t);g.addEventListener('pointerdown',ev=>{ev.preventDefault();ev.stopPropagation();rootPc=pc;refreshHarmUI();setHarmony();});wheel.appendChild(g);wheelNodes.push({pc,ring:c2,txt:t});});
+})();
+function refreshHarmUI(){const cx=43,cy=43,r=32,i=COF.indexOf(rootPc),ang=-Math.PI/2+i*(Math.PI*2/12);const nd=document.getElementById('needle');if(nd){nd.setAttribute('x2',cx+Math.cos(ang)*(r-8));nd.setAttribute('y2',cy+Math.sin(ang)*(r-8));}
+ wheelNodes.forEach(n=>{const on=n.pc===rootPc;n.ring.setAttribute('fill',on?'#b0793a':'transparent');n.ring.setAttribute('stroke',on?'#b0793a':'rgba(10,9,8,.14)');n.txt.setAttribute('fill',on?'#fff':'#9a978e');});
+ const xi=XPC.indexOf(rootPc);dot.style.left=((xi+0.5)/12*100)+'%';dot.style.top=((1-tension)*100)+'%';chordName.textContent=chordLabel();}
+let padDown=false;
+function padSet(e){const r=pad.getBoundingClientRect(),xf=clamp((e.clientX-r.left)/r.width,0,1),yf=clamp((e.clientY-r.top)/r.height,0,1);rootPc=XPC[clamp(Math.floor(xf*12),0,11)];tension=clamp(1-yf,0,1);refreshHarmUI();setHarmony();}
+pad.addEventListener('pointerdown',e=>{e.preventDefault();padDown=true;pad.setPointerCapture(e.pointerId);padSet(e);});
+pad.addEventListener('pointermove',e=>{if(padDown)padSet(e);});
+pad.addEventListener('pointerup',()=>padDown=false);pad.addEventListener('pointercancel',()=>padDown=false);
+function selQual(){document.querySelectorAll('#qual .pill').forEach(x=>x.classList.toggle('on',x.dataset.q===quality));}
+document.querySelectorAll('#qual .pill').forEach(b=>b.onclick=()=>{quality=b.dataset.q;scaleSet=touchScale();selQual();refreshHarmUI();setHarmony();});
+
+/* dock wiring */
+const hintEl=document.getElementById('hint'),panel=document.getElementById('panel'),pchord=document.getElementById('pchord'),pdrift=document.getElementById('pdrift'),modesEl=document.getElementById('modes');
+function setMode(m){playMode=m;modesEl.querySelectorAll('.pill').forEach(b=>b.classList.toggle('on',b.dataset.m===m));const show=(m==='chord'||m==='drift');panel.classList.toggle('show',show);pchord.style.display=m==='chord'?'flex':'none';pdrift.style.display=m==='drift'?'flex':'none';setHarmony();
+ hintEl.textContent=m==='touch'?'drag across the hills — they rise where you play':m==='chord'?'pick a key, then strum the hills':'sit back — touch to add flourishes';hintEl.classList.add('show');setTimeout(()=>hintEl.classList.remove('show'),3400);}
+modesEl.querySelectorAll('.pill').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+const grooveBtn=document.getElementById('groove'),grooveLbl=document.getElementById('grooveLbl');
+function reflectGroove(){grooveBtn.classList.toggle('on',grooveIdx>=0);grooveLbl.textContent=grooveIdx<0?'Groove':GROOVES[grooveIdx].name;}
+grooveBtn.onclick=()=>{grooveIdx=grooveIdx>=GROOVES.length-1?-1:grooveIdx+1;reflectGroove();grooveSwing();};
+const bpmEl=document.getElementById('bpm'),toneEl=document.getElementById('tone');
+bpmEl.oninput=()=>{if(audioReady)Tone.Transport.bpm.rampTo(parseInt(bpmEl.value),0.2);};
+toneEl.oninput=()=>setBrightness(parseInt(toneEl.value)/100);
+const spaceEl=document.getElementById('space'),flowEl=document.getElementById('flow');
+spaceEl.oninput=()=>setSpace(parseInt(spaceEl.value)/100);
+flowEl.oninput=()=>setFlow(parseInt(flowEl.value)/100);
+const densEl=document.getElementById('dens'),densv=document.getElementById('densv'),DENL=['sparse','airy','flowing','full'];
+densEl.oninput=()=>{strumDen=parseInt(densEl.value)/100;densv.textContent=DENL[Math.min(3,Math.floor(strumDen/0.26))];strumNotes=strumSet();};
+function applyWorldSound(k){WORLD=WMAP[k];quality=WORLD.quality;tension=WORLD.tens;grooveIdx=WORLD.groove;scaleSet=touchScale();bpmEl.value=WORLD.bpm;toneEl.value=Math.round(WORLD.tone*100);selQual();reflectGroove();if(audioReady){Tone.Transport.bpm.rampTo(WORLD.bpm,0.4);grooveSwing();applyVoice();setBrightness(WORLD.tone);}refreshHarmUI();setHarmony();}
+document.querySelectorAll('.dot').forEach((d,i)=>d.addEventListener('click',()=>applyWorldSound(BKEYS[i])));
+const playBtn=document.getElementById('play');
+playBtn.onclick=()=>{playing=!playing;playBtn.textContent=playing?'⏸':'▶';if(audioReady){if(playing)Tone.Transport.start();else Tone.Transport.pause();}};
+const veil=document.getElementById('veil');
+function begin(){startAudio();veil.style.opacity='0';setTimeout(()=>veil.style.display='none',560);hintEl.classList.add('show');setTimeout(()=>hintEl.classList.remove('show'),4200);}
+veil.addEventListener('click',begin);
+const moreBtn=document.getElementById('more'),secEl=document.getElementById('secondary'),hideBtn=document.getElementById('hide'),peekEl=document.getElementById('peek'),dockEl2=document.getElementById('dock');
+moreBtn.onclick=()=>{const on=secEl.classList.toggle('show');moreBtn.classList.toggle('on',on);};
+hideBtn.onclick=()=>{dockEl2.classList.add('collapsed');peekEl.classList.add('show');};
+peekEl.onclick=()=>{dockEl2.classList.remove('collapsed');peekEl.classList.remove('show');};
+const full2=document.getElementById('full2');if(full2)full2.onclick=()=>{try{if(!document.fullscreenElement)document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();else document.exitFullscreen&&document.exitFullscreen();}catch(_){}};
+selQual();reflectGroove();refreshHarmUI();
+</script>
+
+</body>
+</html>
