@@ -342,7 +342,7 @@ for (const f of ['works.json', 'works-private.json']) {
     raw.push({
       id: w.id, slug: w.id.split(':').pop(), call: w.call || '', title: w.title, sub: w.sub || '', kind: w.kind, collection: w.collection,
       section: w.section || 'pages', section_title: w.section_title || 'Pages', status: w.status ?? null, lane: null, layer: null, style: null,
-      href: w.href || null, thumbSrc: null, source: w.source || f, dirs: [], held_date: w.date || null, ext_fixity: w.fixity || null,
+      href: w.href || null, thumbSrc: w.thumb && exists(w.thumb) ? w.thumb : null, source: w.source || f, dirs: [], held_date: w.date || null, ext_fixity: w.fixity || null,
       plate: { spec: false, points: 0 }, reads: [], rel: w.rel || [], governed_by: [],
       provenance: { kind: 'original', title: w.source || null, author: null, date: w.date || null, license: null, url: null, rights: 'first-party' },
       location: w.location || null, access: w.access || 'public', private: priv, tags: w.tags || [], family: w.family || null, form: w.form || null, order: 1000 + i

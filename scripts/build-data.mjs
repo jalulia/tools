@@ -6,7 +6,7 @@ import { execSync } from 'node:child_process'; import path from 'node:path';
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const steps = [
   ['techniques-templates', 'node _build/build.mjs'],
-  ['.', 'node library/_build/collate.mjs'],
+  ['.', 'node library/_build/collate.mjs --thumbs'],
   ['techniques-templates', 'node _build/registry.mjs'],
   ['techniques-templates', 'node _build/reg-index.mjs'],
   ['.', 'node gallery/_build/build.mjs'],
