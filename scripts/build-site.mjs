@@ -17,6 +17,7 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, cpSync, rea
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { verifyManifests } from './lib/manifests.mjs';
+import { renderLandscapeRows } from './lib/landscape-index.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -299,8 +300,8 @@ function renderIndex(tools) {
   const html = template.replace('<!-- TOOL_ROWS -->', blocks.join('\n'));
   writeFileSync(join(SITE_DIR, 'index.html'), html);
 
-  // The landscape experiment is a separate page. Reuse the generated tool rows
-  // so its index stays current while the main landing page retains its design.
+  // The experiment groups the same source tools into illustrated project rows.
+  // Its presentation and Library-item exclusion do not alter the main index.
   const testIndex = join(SITE_DIR, 'landscape-test', 'index.html');
   if (existsSync(testIndex)) {
     const testHtml = readFileSync(testIndex, 'utf8');
@@ -308,7 +309,7 @@ function renderIndex(tools) {
     if (!rowsSlot.test(testHtml)) {
       throw new Error('landscape-test/index.html: missing tool-row markers');
     }
-    const testRows = blocks.join('\n').replace(/href="\.\//g, 'href="../');
+    const testRows = renderLandscapeRows(tools);
     writeFileSync(testIndex, testHtml.replace(
       rowsSlot,
       '<!-- TOOL_ROWS_START -->\n' + testRows + '\n<!-- TOOL_ROWS_END -->'

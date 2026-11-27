@@ -8,12 +8,16 @@ The texture revision restores Sonic’s 11 layers and original wash, granulation
 
 The test page has its own styles and controls. It runs at a capped 30 frames per second, caches sky and scratch canvases, suspends drawing in hidden tabs, and respects reduced-motion preferences. Motion pause is independent of audio playback. Local audio uses an object URL and Web Audio, with no file upload.
 
-`scripts/build-site.mjs` fills the test page's `TOOL_ROWS_START` / `TOOL_ROWS_END` region from the same generated rows as the root index, correcting links for the subdirectory. The checked-in rows are an offline fallback. `tool.json` keeps the experiment out of automatically generated tool lists; the root header supplies the explicit entry point.
+The test index now has illustrated project rows: Desktop Bo; Ki with Landscape Atelier; Yoshi with Hill Run and YoshiOS; Library; MeshViz; Gallery. `scripts/lib/landscape-index.mjs` renders these groups from the tool metadata. It omits Paper receipt from the test navigation because it belongs inside the Library; its page and metadata are preserved. Unknown visible tools retain an entry. `scripts/build-site.mjs` fills the test page’s marked rows with this renderer while the root index keeps its original rendering.
+
+Illustrations are isolated from existing source artwork: Bo’s character renderer, Yoshi’s dossier cover, Hill Run’s pixel sprite, the YoshiOS amber van drawings, the Library’s PROFEEL CRT, and the Sonic terrain engine. Bo has a static transparent SVG in the index and a separate transparent blink GIF for reuse. Project icons are static, so pausing the landscape does not leave decorative GIFs running. The icons folder retains source provenance and reusable individual exports.
+
+`tool.json` keeps the experiment out of automatically generated tool lists; the root header supplies the explicit entry point.
 
 ## Verification
 
 - JavaScript syntax checks pass.
-- Isolated index-build tests pass: root output preservation, synchronized rows, escaping, relative URLs, ordering, hidden-tool exclusion and missing-marker failure.
+- Isolated index-build tests pass: root output preservation, project grouping, escaping, relative URLs, hidden-tool exclusion, test-only receipt omission and missing-marker failure.
 - Renderer and state checks pass with a simulated Canvas/DOM at desktop/mobile sizes, including high-DPI backing scales: finite draw coordinates, no per-frame canvas allocation, pause, reduced motion, settings, reset, visibility recovery and audio selection without autoplay.
 - CSS review finds normal text contrast above 4.5:1; panel focus and action-button semantics were corrected.
 - Browser visual QA and the full repository build/guard remain unverified: this execution environment cannot bind a local HTTP server or access GitHub over shell networking, and browser file URLs are blocked.
